@@ -39,7 +39,8 @@ public final class KitBook {
                   + " iron sword, along with five golden apples with which it can quickly recover"
                   + " from fights.",
               0,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.CLASSIC),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD").enchanted("sharpness", 1),
@@ -61,7 +62,8 @@ public final class KitBook {
               "An offensive kit with a powerful axe and low armor. Its damage increases by half a heart"
                   + " every kill as it works up a bloodlust.",
               400,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.CLASSIC),
           gear(
               List.of(
                   ItemSpec.of("IRON_AXE").enchanted("sharpness", 2), ItemSpec.of("COOKED_BEEF", 2)),
@@ -84,7 +86,8 @@ public final class KitBook {
                   + " by an enemy, they will explode, dealing severe damage! Additionally, it can fuse"
                   + " and defuse bombs twice as fast!",
               300,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(
               Optional.of(new FuseBonus(FuseType.BOMB_SPEED, 5)),
               List.of(
@@ -115,7 +118,8 @@ public final class KitBook {
                   + " When not sneaking, it will lose power at the same rate as it gained, with a much"
                   + " higher cost for sprinting.",
               500,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.CLASSIC),
           gear(List.of(ItemSpec.of("IRON_SWORD")), fullSet("IRON"), Optional.of("dwarf")),
           new KitSpec.Menu(
               "EXPERIENCE_BOTTLE",
@@ -135,7 +139,8 @@ public final class KitBook {
                   + " thrown. Though they can't be thrown as far or deal as much damage, you will get"
                   + " more over time and can throw multiple at once.",
               150,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.CLASSIC),
           gear(
               List.of(
                   ItemSpec.of("STONE_SWORD").enchanted("knockback", 1),
@@ -164,7 +169,8 @@ public final class KitBook {
                   + " ghost's presence. While it has no armor, it is given enderpearls to help travel"
                   + " around and make hasty escapes.",
               150,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.CLASSIC),
           gear(
               List.of(
                   ItemSpec.of("GOLDEN_SWORD").enchanted("sharpness", 2),
@@ -190,7 +196,8 @@ public final class KitBook {
                   + " fall.\nAdditionally, due to its heavy armor, it's hard to knock a juggernaut"
                   + " back.\nThis comes at great cost to its mobility, as it cannot sprint.",
               350,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("STONE_SWORD")),
               List.of(
@@ -210,7 +217,8 @@ public final class KitBook {
               "Longbow",
               "A supporting archer, this kit receives a bow that will send enemies flying.",
               0,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.RANGED),
           gear(
               List.of(
                   ItemSpec.of("STONE_SWORD"),
@@ -234,7 +242,8 @@ public final class KitBook {
                   + " their heads.\n\n§4§lThis kit loses its healing ability in small games with"
                   + " less than 20 players",
               0,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD"),
@@ -258,7 +267,8 @@ public final class KitBook {
               "A master of fire, this kit is given a flaming bow and sword, and fire resistant leather"
                   + " armor.",
               200,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.RANGED),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD")
@@ -288,7 +298,8 @@ public final class KitBook {
                   + " teleport it where it was 30 seconds in the past. While health is unchanged, if"
                   + " the user was on fire, it will be put out like it never existed.",
               0,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD"), ItemSpec.of("CLOCK").named("Time Machine", "gold")),
@@ -310,7 +321,8 @@ public final class KitBook {
               "Shortbow",
               "A powerful archer, this kit receives a bow with which it deals precise damage.",
               0,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.RANGED),
           gear(
               List.of(
                   ItemSpec.of("WOODEN_SWORD").enchanted("knockback", 1),
@@ -332,7 +344,8 @@ public final class KitBook {
               "Spy",
               "A sneaky kit that always looks like the team of the view. He looks like a trooper!",
               250,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(List.of(ItemSpec.of("IRON_SWORD")), fullSet("IRON"), Optional.of("spy")),
           new KitSpec.Menu(
               "SKELETON_SKULL",
@@ -347,7 +360,8 @@ public final class KitBook {
                   + " Step on one and sneak to use it! Beware, the enemies can easily break the"
                   + " teleporters.",
               0,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD"),
@@ -378,7 +392,8 @@ public final class KitBook {
               "A kit that must pick its early kills carefully, as it only starts with 8 hearts."
                   + " However, every kill grants it a vital reward of 2 hearts, with a maximum of 20.",
               300,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD")
@@ -401,7 +416,8 @@ public final class KitBook {
               "An offensive kit that excels at hit and runs. Its blade is coated in deadly poison and"
                   + " paralyzer, making every hit it lands poison its foe and slow them down!",
               400,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.CLASSIC),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD")
@@ -427,7 +443,8 @@ public final class KitBook {
               "A supportive kit, it has the ability to warp a group of enemies to where it was"
                   + " standing 10 seconds ago, making it useful against an otherwise strong defense.",
               250,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD").enchanted("sharpness", 1),
@@ -450,7 +467,8 @@ public final class KitBook {
                   + " is known as one who can outrun the stronger warriors\nWith fall protection,"
                   + " he's not afraid of heights!",
               200,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("IRON_SWORD"), ItemSpec.of("ENDER_PEARL", 6)),
               List.of(
@@ -472,7 +490,8 @@ public final class KitBook {
               "Master of ice and frost, this special guy can freeze the hands of your enemies for 10"
                   + " seconds!\nWhen frozen, your enemies cannot switch items or use their offhand!",
               150,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("IRON_SWORD")),
               List.of(
@@ -497,7 +516,8 @@ public final class KitBook {
                   + " nearby.\nMuch like an adaptive Spy.\nEvery kill they are defenseless for 3"
                   + " seconds.",
               300,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("IRON_SWORD").enchanted("silk_touch", 1)),
               fullSet("IRON"),
@@ -517,7 +537,8 @@ public final class KitBook {
                   + " differently!\n\nInferior to a normal ghost, wraith has no enderpearls or sword but"
                   + " instead must make do with a bow with power II!",
               200,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.RANGED),
           gear(
               List.of(
                   ItemSpec.of("BOW").enchanted("infinity", 1).enchanted("power", 2),
@@ -536,7 +557,8 @@ public final class KitBook {
               "One of the most feared kits, the bleeder can permanently destroy the health of his foes"
                   + " with every blow",
               400,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("WOODEN_SWORD").named("The Bleeder", "dark_red")),
               fullSet("CHAINMAIL"),
@@ -553,7 +575,8 @@ public final class KitBook {
               "You will always take 3 damage, you will always deal 3 damage. You were born equal and"
                   + " you will die equal.",
               350,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("IRON_SWORD")),
               List.of(
@@ -575,7 +598,8 @@ public final class KitBook {
                   + " increases as you run, sharp turns negate this and running into a wall can be"
                   + " quite painful.",
               350,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.CLASSIC),
           gear(
               List.of(ItemSpec.of("WOODEN_SWORD"), ItemSpec.of("SHIELD")),
               List.of(
@@ -603,7 +627,8 @@ public final class KitBook {
                   + " cautious, for the"
                   + " sacrificial will take 5x more damage when directly attacked!",
               500,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("WOODEN_SWORD").enchanted("knockback", 1),
@@ -628,7 +653,8 @@ public final class KitBook {
               "A bomb disposal expert. Its fuse defuses three seconds faster, and its training means"
                   + " explosions only do it half the harm they do to anyone else.",
               150,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.TACTICAL),
           gear(
               Optional.of(new FuseBonus(FuseType.BOMB_DEFUSING, 3)),
               List.of(ItemSpec.of("IRON_SWORD")),
@@ -649,7 +675,8 @@ public final class KitBook {
               "A quiet bomber. Its fuse arms three seconds faster, and while its team arms a bomb the"
                   + " enemy cannot see how far along the fuse is until there are ten seconds left.",
               200,
-              KitTier.BASIC),
+              KitTier.BASIC,
+              KitCategory.TACTICAL),
           gear(
               Optional.of(new FuseBonus(FuseType.BOMB_ARMING, 3)),
               List.of(ItemSpec.of("STONE_SWORD")),
@@ -674,7 +701,8 @@ public final class KitBook {
               "A scout who marks targets. Looking through its spyglass makes every enemy in sight"
                   + " within 60 blocks glow for its team for six seconds.",
               250,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD"),
@@ -698,7 +726,8 @@ public final class KitBook {
               "A climber with a grappling hook. Cast it and reel in to be pulled to the hook, then"
                   + " land without fall damage.",
               300,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("STONE_SWORD"),
@@ -726,7 +755,8 @@ public final class KitBook {
               "A rallying point for its team. It plants a banner that gives nearby allies"
                   + " Regeneration until the enemy tears it down.",
               300,
-              KitTier.MID),
+              KitTier.MID,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD"),
@@ -755,7 +785,8 @@ public final class KitBook {
               "A builder of cover. It raises a short-lived barricade wherever it looks, though never"
                   + " right beside a bomb.",
               400,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("STONE_SWORD"),
@@ -779,7 +810,8 @@ public final class KitBook {
               "A hunter that reads the ground. It sees the footprints enemies left in the last eight"
                   + " seconds, and its first hit on someone marks them on its team's compasses.",
               400,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.RANGED),
           gear(
               List.of(ItemSpec.of("IRON_SWORD"), ItemSpec.of("CROSSBOW"), ItemSpec.of("ARROW", 32)),
               archerArmor(),
@@ -799,7 +831,8 @@ public final class KitBook {
               "A trickster. It sends a running copy of itself the way it looks and turns invisible"
                   + " while the enemy chases the copy.",
               450,
-              KitTier.ADVANCED),
+              KitTier.ADVANCED,
+              KitCategory.TACTICAL),
           gear(
               List.of(
                   ItemSpec.of("IRON_SWORD"),
@@ -850,7 +883,25 @@ public final class KitBook {
           BANNERMAN,
           ENGINEER,
           TRACKER,
-          DECOY);
+          DECOY,
+          ExpansionKits.DUELIST,
+          ExpansionKits.KNIGHT,
+          ExpansionKits.RAVAGER,
+          ExpansionKits.ACROBAT,
+          ExpansionKits.ALCHEMIST,
+          ExpansionKits.SCAVENGER,
+          ExpansionKits.ARBALIST,
+          ExpansionKits.VOLLEY,
+          ExpansionKits.MARKSMAN,
+          ExpansionKits.WINDRUNNER,
+          ExpansionKits.HARPOONER,
+          ExpansionKits.FLETCHER,
+          ExpansionKits.LANCER,
+          ExpansionKits.MACEGUARD,
+          ExpansionKits.QUARTERMASTER,
+          ExpansionKits.WARDEN,
+          ExpansionKits.SMOKESCREEN,
+          ExpansionKits.TACTICIAN);
 
   /**
    * The four kits The Storm first shipped, offered on their own while the expanded kit list is
@@ -888,7 +939,8 @@ public final class KitBook {
    * @param price its price in credits
    * @param tier its tier
    */
-  private record Card(String id, String name, String description, int price, KitTier tier) {}
+  private record Card(
+      String id, String name, String description, int price, KitTier tier, KitCategory category) {}
 
   /**
    * What a kit carries.
@@ -923,6 +975,7 @@ public final class KitBook {
         card.description(),
         card.price(),
         card.tier(),
+        card.category(),
         card.price() == 0 ? KitAvailability.FREE : KitAvailability.PURCHASE,
         gear.fuse(),
         gear.hotbar(),

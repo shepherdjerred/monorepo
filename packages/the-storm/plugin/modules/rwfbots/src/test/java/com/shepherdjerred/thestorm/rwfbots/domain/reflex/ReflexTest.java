@@ -58,7 +58,54 @@ final class ReflexTest {
         Optional.empty(),
         "engage:fight",
         tick,
-        0);
+        0,
+        java.util.Optional.empty());
+  }
+
+  @Test
+  void anAuthoredDiagonalLeapJumpsFromItsGroundedLaunchBeforeMovingAcrossTheGap() {
+    var direction = new Vec3(1, 0, 1).normalized();
+    var self =
+        combatant(1, RED, new Vec3(4.5, 1, 4.5))
+            .withVel(direction.scale(0.28))
+            .withMotion(true, true);
+    var landing = self.pos().plus(3, 0, 3);
+    var launch =
+        new com.shepherdjerred.thestorm.rwfbots.domain.world.JumpLaunch(
+            self.pos(), self.pos().minus(direction.scale(2)), 0.27, 13);
+    var decision =
+        new Decision(
+            self.id(),
+            Option.TAKE_SLOT,
+            Optional.empty(),
+            List.of(new Waypoint(landing, Hop.LEAP, Optional.of(launch))),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "diagonal leap",
+            20,
+            0,
+            Optional.empty());
+    var input =
+        new ReflexInput(self, world(20, List.of(self), List.of()), decision, Optional.empty(), 0);
+    var step =
+        Reflex.tick(
+            ReflexState.initial(Facing.SOUTH),
+            input,
+            context(levers(0.8)),
+            new SplittableRandom(4));
+    assertThat(step.commands())
+        .contains(new BodyCommand.Jump(), new BodyCommand.MoveToward(landing, true, Hop.LEAP));
+    var airborne = self.withMotion(false, false);
+    var flight =
+        Reflex.tick(
+            step.state(),
+            new ReflexInput(
+                airborne, world(21, List.of(airborne), List.of()), decision, Optional.empty(), 0),
+            context(levers(0.8)),
+            new SplittableRandom(4));
+    assertThat(flight.commands()).doesNotContain(new BodyCommand.Jump());
   }
 
   @Test
@@ -106,7 +153,8 @@ final class ReflexTest {
             Optional.empty(),
             "retreat",
             1,
-            0);
+            0,
+            Optional.empty());
     var state = ReflexState.initial(self.facing());
     var random = new SplittableRandom(7);
     var attacks = 0;
@@ -151,7 +199,8 @@ final class ReflexTest {
             Optional.empty(),
             "following",
             1,
-            0);
+            0,
+            java.util.Optional.empty());
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
@@ -319,12 +368,15 @@ final class ReflexTest {
   }
 
   @Test
-  void fuseClickGapsStayUnderTheResetAtHighSkillAndSlipAtLowSkill() {
+  void fuseClickGapsRemainReliableAtEverySkillWhilePreservingSmallTimingVariation() {
     var skilled = gaps(levers(1), 2000);
     var clumsy = gaps(levers(0).with(Lever.TECHNIQUE, 0.2), 2000);
     assertThat(skilled).allMatch(gap -> gap < Reflex.FUSE_RESET_GAP);
     assertThat(skilled).allMatch(gap -> gap == Reflex.FUSE_BASE_GAP);
-    assertThat(clumsy).anyMatch(gap -> gap >= Reflex.FUSE_RESET_GAP);
+    assertThat(clumsy).allMatch(gap -> gap <= Reflex.FUSE_RESET_GAP - 3);
+    for (var skill = 0; skill <= 10; skill++) {
+      assertThat(gaps(levers(skill / 10.0), 2000)).allMatch(gap -> gap + 1 < Reflex.FUSE_RESET_GAP);
+    }
     assertThat(clumsy.stream().mapToInt(Integer::intValue).average().orElseThrow())
         .isGreaterThan(skilled.stream().mapToInt(Integer::intValue).average().orElseThrow());
   }
@@ -360,7 +412,8 @@ final class ReflexTest {
             Optional.empty(),
             "arm:arm",
             1,
-            0);
+            0,
+            java.util.Optional.empty());
     var state = ReflexState.initial(self.facing());
     var clicks = new ArrayList<Long>();
     for (var tick = 1; tick <= 100; tick++) {
@@ -485,7 +538,8 @@ final class ReflexTest {
             Optional.empty(),
             "take_slot:route",
             1,
-            0);
+            0,
+            java.util.Optional.empty());
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
@@ -526,7 +580,8 @@ final class ReflexTest {
             Optional.empty(),
             "hold-slot:hold",
             1,
-            0);
+            0,
+            java.util.Optional.empty());
     var context = new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.LONGBOW));
     for (var target : List.of(Optional.<CombatantView>empty(), Optional.of(enemy))) {
       var step =
@@ -567,7 +622,8 @@ final class ReflexTest {
             Optional.empty(),
             "hold-slot:hold",
             1,
-            0);
+            0,
+            java.util.Optional.empty());
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),

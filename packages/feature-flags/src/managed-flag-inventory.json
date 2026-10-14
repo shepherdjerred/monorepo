@@ -2420,6 +2420,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-rwf-candidate-visits-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-candidate-visits",
+      "purpose": "Independent flying candidate map visits with an extended voting opportunity",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-rwf-host-settings-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-rwf-host-settings",
+      "purpose": "First-player lobby host controls bot population and difficulty for Red Warfare rounds",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwf-match-flow-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2906,6 +2930,22 @@
           "key": "the-storm-rwfbots-learning-enabled",
           "type": "boolean",
           "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-candidate-visits-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-rwf-host-settings-enabled",
+          "type": "boolean",
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

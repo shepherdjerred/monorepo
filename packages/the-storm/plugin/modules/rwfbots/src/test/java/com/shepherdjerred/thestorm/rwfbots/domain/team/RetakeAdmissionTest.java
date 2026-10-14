@@ -130,7 +130,8 @@ final class RetakeAdmissionTest {
                 0,
                 slots,
                 assigned,
-                0),
+                0,
+                java.util.Map.of()),
             0);
   }
 
@@ -292,7 +293,8 @@ final class RetakeAdmissionTest {
                     plan.push(),
                     List.of(corrected),
                     plan.assignment(),
-                    plan.dealtTick()),
+                    plan.dealtTick(),
+                    plan.groups()),
                 0);
     var pending =
         new RetakeAdmission.Result(
@@ -375,7 +377,8 @@ final class RetakeAdmissionTest {
                   plan.push(),
                   slots,
                   plan.assignment(),
-                  step * 40L),
+                  step * 40L,
+                  plan.groups()),
               step * 40L);
       result =
           RetakeAdmission.verify(

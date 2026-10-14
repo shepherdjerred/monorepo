@@ -96,6 +96,10 @@ public record Situation(
     return known.isEmpty() ? Optional.empty() : Optional.of(known.getFirst());
   }
 
+  public Optional<Vec3> sensorPosition() {
+    return board.sensor().filter(clue -> clue.fresh(now())).map(clue -> clue.position());
+  }
+
   public List<BombView> ownBombs() {
     return snapshot.bombsOf(self.team());
   }
@@ -110,11 +114,11 @@ public record Situation(
         .plan()
         .objective()
         .flatMap(snapshot::bomb)
-        .filter(bomb -> bomb.belongsTo(self.team()) && bomb.state().isLit())
+        .filter(bomb -> bomb.threatens(self.team()) && bomb.state().isLit())
         .or(
             () ->
-                ownBombs().stream()
-                    .filter(bomb -> bomb.state().isLit())
+                snapshot.bombs().stream()
+                    .filter(bomb -> bomb.threatens(self.team()) && bomb.state().isLit())
                     .min(
                         java.util.Comparator.comparingLong(Situation::fuseTicks)
                             .thenComparing(BombView::id)));
@@ -126,6 +130,11 @@ public record Situation(
       case BombState.Defusing(var _, var _, var ticks) -> ticks;
       default -> throw new IllegalArgumentException("defuse target needs a lit fuse");
     };
+  }
+
+  /** Elimination victory is pending only while an armed objective still threatens this team. */
+  public boolean pendingElimination() {
+    return snapshot.aliveEnemiesOf(self.team()).isEmpty() && litOwnBomb().isPresent();
   }
 
   /** A bomb a teammate is arming right now. */

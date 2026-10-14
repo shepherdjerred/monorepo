@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/railcut.ts",
+  "metadata": "tools/maps/authored/railcut.json",
+  "seed": 10503,
+  "dataVersion": 4903,
+  "blocksSha256": "2d3e8afefed0a40f573690cf3e2288064987a360d6a4d16496019879ea252e73"
+}

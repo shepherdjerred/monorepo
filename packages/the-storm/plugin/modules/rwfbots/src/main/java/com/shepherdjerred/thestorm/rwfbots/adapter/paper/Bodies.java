@@ -1,6 +1,10 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.JumpLaunch;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -44,6 +48,26 @@ public interface Bodies {
 
   /** Walks or sprints towards {@code target} this tick. */
   void moveToward(UUID bot, Location target, boolean sprint);
+
+  /** Final motion intent; authored traversal is explicit and bounded by the active arena. */
+  record MotionTarget(
+      Location at,
+      boolean sprint,
+      Hop hop,
+      Optional<GridBounds> bounds,
+      Optional<JumpLaunch> runUp) {
+    public MotionTarget(Location at, boolean sprint, Hop hop, Optional<GridBounds> bounds) {
+      this(at, sprint, hop, bounds, Optional.empty());
+    }
+  }
+
+  /**
+   * Production bodies re-read terrain here; fake bodies can keep deterministic synthetic motion.
+   */
+  default MovementSafety.Reason moveSafely(UUID bot, MotionTarget target) {
+    moveToward(bot, target.at(), target.sprint());
+    return MovementSafety.Reason.CLEAR;
+  }
 
   void stop(UUID bot);
 

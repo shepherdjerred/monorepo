@@ -234,7 +234,7 @@ final class SimWorld {
 
   private void killOwners(SimBomb bomb) {
     for (var body : bodies.values()) {
-      if (bomb.owner.isTeam(body.team)) {
+      if (bomb.view().threatens(body.team)) {
         body.hurt(1000, tick);
       }
     }
@@ -325,7 +325,7 @@ final class SimWorld {
   void apply(SimBody body, BodyCommand command) {
     switch (command) {
       case BodyCommand.Look(var yaw, var pitch) -> body.look = new Facing(yaw, pitch);
-      case BodyCommand.MoveToward(var waypoint, var sprint) -> {
+      case BodyCommand.MoveToward(var waypoint, var sprint, var _) -> {
         body.moveTarget = Optional.of(waypoint);
         body.sprinting = sprint && body.traversal.maySprint();
         physics.steer(body, waypoint.minus(body.pos));

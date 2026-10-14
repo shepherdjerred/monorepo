@@ -12,6 +12,7 @@ function fourTeamMap() {
     id: "original-isles",
     name: "Original Isles",
     author: "builder",
+    description: "Opposing island bases with four approach routes.",
     region: {
       min: { x: 1024, y: 30, z: 2048 },
       max: { x: 1150, y: 60, z: 2174 },

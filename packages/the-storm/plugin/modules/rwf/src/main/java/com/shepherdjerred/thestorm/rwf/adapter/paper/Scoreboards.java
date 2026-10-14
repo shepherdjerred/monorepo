@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityEffect;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -111,6 +112,7 @@ final class Scoreboards {
       hidden.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
     }
     var sidebar = board.registerNewObjective(OBJECTIVE, Criteria.DUMMY, LOBBY_TITLE);
+    sidebar.numberFormat(NumberFormat.blank());
     sidebar.setDisplaySlot(DisplaySlot.SIDEBAR);
     var _ = board.registerNewObjective(KILLS, Criteria.DUMMY, Component.text("Kills"));
     if (medic) {
@@ -408,6 +410,7 @@ final class Scoreboards {
             .append(
                 Component.text(
                     String.valueOf(status.humans() + status.bots()), NamedTextColor.YELLOW)));
+    status.botStatus().ifPresent(value -> lines.add(Component.text(value, NamedTextColor.GRAY)));
     lines.add(Component.empty());
     lines.add(
         Component.text(
@@ -416,6 +419,8 @@ final class Scoreboards {
                   "Waiting for " + status.needed() + " player" + (status.needed() == 1 ? "" : "s");
               case COUNTDOWN, FREEZE -> "Game starting in " + status.secondsLeft();
               case PREPARING -> "Map loading..";
+              case CANDIDATES -> "Preparing visits..";
+              case VOTING -> "Visit / vote: " + status.secondsLeft() + "s";
               case PREVIEW -> "Preview ends in " + status.secondsLeft();
               case RESETTING -> "Resetting the map";
               case LIVE, ENDED -> "";

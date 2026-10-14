@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.e2e.maps;
 
+import com.shepherdjerred.thestorm.rwf.app.BattleSoundLog;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.IdMap;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector;
@@ -52,6 +53,7 @@ import org.bukkit.entity.Player;
 /** Native acceptance driver using the production planner, health search, reflex and baked codec. */
 final class TraversalRoute {
   private static final TeamId TEAM = new TeamId("red");
+  private static final InstantSource TIME = InstantSource.fixed(Instant.EPOCH);
   private final TacticsContext context;
   private final Vec3 goal;
   private final Stance stance;
@@ -62,9 +64,8 @@ final class TraversalRoute {
       new SnapshotCapture(
           new IdMap(),
           id -> Optional.empty(),
-          new StimulusCollector(),
-          new SnapshotCapture.Capabilities(
-              id -> Optional.empty(), InstantSource.fixed(Instant.EPOCH)));
+          new StimulusCollector(new BattleSoundLog(TIME), TIME),
+          new SnapshotCapture.Capabilities(id -> Optional.empty(), TIME));
   private Optional<TraversalState> capturedTraversal = Optional.empty();
   private ReflexState reflex = ReflexState.initial(new Facing(-90, 0));
   private Optional<Decision> decision = Optional.empty();
@@ -132,6 +133,20 @@ final class TraversalRoute {
 
   Optional<TraversalState> capturedTraversal() {
     return capturedTraversal;
+  }
+
+  Optional<com.shepherdjerred.thestorm.rwfbots.domain.world.JumpLaunch> runUp() {
+    return reflex
+        .activeJump()
+        .filter(
+            active ->
+                active.stage()
+                    == com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump.Stage.RUN_UP)
+        .flatMap(active -> active.waypoint().launch());
+  }
+
+  com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds bounds() {
+    return context.nav().grid().bounds();
   }
 
   private CombatantView self(Player player, long tick) {

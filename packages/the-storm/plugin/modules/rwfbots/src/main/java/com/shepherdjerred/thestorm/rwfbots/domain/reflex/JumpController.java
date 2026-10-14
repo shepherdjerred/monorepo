@@ -7,8 +7,11 @@ import java.util.Optional;
 
 /** Executes the actual baked run-up and minimum forward momentum before issuing a sprint jump. */
 public final class JumpController {
-  private static final double MAX_CROSS_TRACK = 0.05;
-  private static final double MAX_HEIGHT_ERROR = 0.05;
+  static final double MAX_CROSS_TRACK = 0.05;
+  static final double MAX_HEIGHT_ERROR = 0.05;
+  static final double MIN_LAUNCH_ALONG = -0.1;
+  static final double MAX_LAUNCH_ALONG = 0.18;
+  static final double RUN_UP_START_REACH = 0.2;
   private static final double MAX_SIDE_SPEED = 0.02;
   private static final double MAX_FORWARD_SPEED = MovementMotor.SPRINT_SPEED + 0.02;
 
@@ -33,16 +36,22 @@ public final class JumpController {
       return new Step(Optional.empty(), self.pos(), false, false);
     if (now - active.startedTick() > 120)
       return new Step(Optional.empty(), self.pos(), false, true);
-    if (active.stage() == ActiveJump.Stage.AIRBORNE)
-      return new Step(Optional.of(active), waypoint.pos(), false, false);
+    if (active.stage() == ActiveJump.Stage.AIRBORNE) return airborne(active, self, now);
     return grounded(active, self, now);
+  }
+
+  private static Step airborne(ActiveJump active, CombatantView self, long now) {
+    // A canceled launch or an off-target landing cannot authorize walking an airborne primitive.
+    if (now > active.launchTick() && self.onGround() && self.vel().y() <= 0)
+      return new Step(Optional.empty(), self.pos(), false, true);
+    return new Step(Optional.of(active), active.waypoint().pos(), false, false);
   }
 
   private static Step grounded(ActiveJump active, CombatantView self, long now) {
     var launch = active.waypoint().launch().orElseThrow();
     if (!self.onGround()) return new Step(Optional.empty(), active.waypoint().pos(), false, true);
     if (active.stage() == ActiveJump.Stage.BACKUP) {
-      if (self.pos().horizontalDistance(launch.runUpStart()) > 0.2)
+      if (self.pos().horizontalDistance(launch.runUpStart()) > RUN_UP_START_REACH)
         return new Step(Optional.of(active), launch.runUpStart(), false, false);
       active = active.stage(ActiveJump.Stage.RUN_UP, now);
     }
@@ -58,16 +67,21 @@ public final class JumpController {
       return new Step(Optional.empty(), self.pos(), false, true);
     if (offCorridor(self, launch.takeoff(), direction) || excessiveMomentum(self, direction))
       return backup(active);
-    if (along >= -0.1 && along <= 0.18 && momentum >= launch.minimumSpeed())
+    if (along >= MIN_LAUNCH_ALONG && along <= MAX_LAUNCH_ALONG && momentum >= launch.minimumSpeed())
       return new Step(
           Optional.of(active.stage(ActiveJump.Stage.AIRBORNE, now)),
           active.waypoint().pos(),
           true,
           false);
-    if (along > 0.18
+    if (along > MAX_LAUNCH_ALONG
         || (along >= -0.8
             && momentum < launch.minimumSpeed()
-            && active.stage() != ActiveJump.Stage.RUN_UP)) return backup(active);
+            && (active.stage() != ActiveJump.Stage.RUN_UP || along >= MIN_LAUNCH_ALONG)))
+      return backup(active);
+    // A destination at takeoff brakes the native motor just before the measured launch window.
+    // Keep forward input for its final sprint step; the body still certifies that grounded step.
+    if (active.stage() == ActiveJump.Stage.RUN_UP && along >= -MovementMotor.SPRINT_SPEED)
+      return new Step(Optional.of(active), active.waypoint().pos(), false, false);
     return new Step(Optional.of(active), launch.takeoff(), false, false);
   }
 

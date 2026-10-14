@@ -41,6 +41,25 @@ public record MatchState(
     bombs = List.copyOf(bombs);
   }
 
+  /** The sole surviving team that still has to defuse an objective before elimination victory. */
+  public Optional<String> pendingElimination() {
+    if (phase != Phase.LIVE) return Optional.empty();
+    var alive =
+        combatants.stream()
+            .filter(Fighter::alive)
+            .flatMap(fighter -> fighter.team().stream())
+            .distinct()
+            .toList();
+    if (alive.size() != 1) return Optional.empty();
+    var team = alive.getFirst();
+    return bombs.stream()
+            .filter(bomb -> bomb.status() instanceof Status.Armed)
+            .anyMatch(
+                bomb -> bomb.team().filter(owner -> owner.equals(team) != bomb.nuke()).isPresent())
+        ? Optional.of(team)
+        : Optional.empty();
+  }
+
   /** The phase, flattened. */
   public enum Phase {
     LOBBY,

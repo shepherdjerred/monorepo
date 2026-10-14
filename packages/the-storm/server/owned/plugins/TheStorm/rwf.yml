@@ -60,7 +60,7 @@ match:
   # flag off the next map is drawn at random and the match goes live when the
   # countdown ends.
   voteLead: PT20S
-  previewLength: PT10S
+  previewLength: PT30S
   freezeLength: PT5S
 
 # The ported Red Warfare constants this build plays by. They are pinned: the

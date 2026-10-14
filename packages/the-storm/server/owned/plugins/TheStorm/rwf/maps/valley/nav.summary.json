@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0",
+  "blocksSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
   "classificationSha256": "5b127ddcfd0bef3a703e7d2a4f93ede6d98d0ef6f981360a0a4b64d344156593",
   "bounds": {
     "origin": { "x": 4096, "y": 0, "z": 5120 },
@@ -18,7 +18,7 @@
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 476122
+      "blocks": 476135
     },
     {
       "state": "minecraft:bedrock",
@@ -102,13 +102,13 @@
       "state": "minecraft:oak_wall_sign[facing=east,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 6
+      "blocks": 3
     },
     {
       "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 6
+      "blocks": 3
     },
     {
       "state": "minecraft:carved_pumpkin[facing=north]",
@@ -120,7 +120,7 @@
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 6
+      "blocks": 3
     },
     {
       "state": "minecraft:lapis_block",
@@ -210,7 +210,7 @@
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 6
+      "blocks": 2
     },
     {
       "state": "minecraft:grass_block[snowy=false]",
@@ -454,17 +454,17 @@
     "retainedFluidPortals": 882
   },
   "edges": {
-    "total": 249406,
-    "damaging": 14730,
+    "total": 252017,
+    "damaging": 15443,
     "maximumRawDamage": 13,
     "CLIMB": 0,
     "DROP": 26648,
     "JUMP": 10196,
-    "LEAP": 95564,
+    "LEAP": 98175,
     "SWIM": 7074,
     "WALK": 109924
   },
-  "regions": 1614,
+  "regions": 1613,
   "coverPoints": 10622,
   "chokepoints": 1080,
   "routes": {
@@ -719,7 +719,7 @@
       {
         "from": "red-spawn-7",
         "to": "blue-1",
-        "length": 455.45776653289795,
+        "length": 454.45776653289795,
         "nodes": 38
       },
       {
@@ -809,7 +809,7 @@
       {
         "from": "red-spawn-10",
         "to": "red-1",
-        "length": 68.88004636764526,
+        "length": 67.88004636764526,
         "nodes": 8
       },
       {
@@ -1763,8 +1763,8 @@
       {
         "from": "red-spawn-36",
         "to": "blue-1",
-        "length": 447.61320781707764,
-        "nodes": 38
+        "length": 451.33781242370605,
+        "nodes": 39
       },
       {
         "from": "red-spawn-37",
@@ -1871,8 +1871,8 @@
       {
         "from": "red-spawn-39",
         "to": "blue-1",
-        "length": 438.33781242370605,
-        "nodes": 38
+        "length": 434.61320781707764,
+        "nodes": 37
       },
       {
         "from": "red-spawn-40",
@@ -1907,8 +1907,8 @@
       {
         "from": "red-spawn-40",
         "to": "blue-1",
-        "length": 460.29130029678345,
-        "nodes": 42
+        "length": 456.56669569015503,
+        "nodes": 41
       },
       {
         "from": "red-spawn-41",
@@ -1943,8 +1943,8 @@
       {
         "from": "red-spawn-41",
         "to": "blue-1",
-        "length": 454.1909284591675,
-        "nodes": 39
+        "length": 457.9155330657959,
+        "nodes": 40
       },
       {
         "from": "red-spawn-42",
@@ -1979,8 +1979,8 @@
       {
         "from": "red-spawn-42",
         "to": "blue-1",
-        "length": 453.1089291572571,
-        "nodes": 38
+        "length": 456.8335337638855,
+        "nodes": 39
       },
       {
         "from": "red-spawn-43",
@@ -2015,8 +2015,8 @@
       {
         "from": "red-spawn-43",
         "to": "blue-1",
-        "length": 449.2120451927185,
-        "nodes": 38
+        "length": 452.9366497993469,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-1",
@@ -2411,7 +2411,7 @@
       {
         "from": "blue-spawn-11",
         "to": "blue-1",
-        "length": 51.10892915725708,
+        "length": 47.255813121795654,
         "nodes": 8
       },
       {
@@ -2483,8 +2483,8 @@
       {
         "from": "blue-spawn-13",
         "to": "blue-1",
-        "length": 41.80660390853882,
-        "nodes": 6
+        "length": 45.531208515167236,
+        "nodes": 7
       },
       {
         "from": "blue-spawn-14",
@@ -2519,8 +2519,8 @@
       {
         "from": "blue-spawn-14",
         "to": "blue-1",
-        "length": 43.60465049743652,
-        "nodes": 7
+        "length": 39.880045890808105,
+        "nodes": 6
       },
       {
         "from": "blue-spawn-15",
@@ -2969,7 +2969,7 @@
       {
         "from": "blue-spawn-27",
         "to": "red-1",
-        "length": 463.10892963409424,
+        "length": 462.10892963409424,
         "nodes": 39
       },
       {
@@ -3005,7 +3005,7 @@
       {
         "from": "blue-spawn-28",
         "to": "red-1",
-        "length": 467.6866502761841,
+        "length": 466.76009225845337,
         "nodes": 40
       },
       {
@@ -3203,8 +3203,8 @@
       {
         "from": "blue-spawn-33",
         "to": "blue-1",
-        "length": 53.8335337638855,
-        "nodes": 9
+        "length": 50.10892915725708,
+        "nodes": 8
       },
       {
         "from": "blue-spawn-34",
@@ -3383,8 +3383,8 @@
       {
         "from": "blue-spawn-38",
         "to": "blue-1",
-        "length": 62.337812423706055,
-        "nodes": 10
+        "length": 67.60465049743652,
+        "nodes": 8
       },
       {
         "from": "blue-spawn-39",
@@ -3527,12 +3527,12 @@
       {
         "from": "blue-spawn-42",
         "to": "blue-1",
-        "length": 53.988975048065186,
-        "nodes": 10
+        "length": 50.26437044143677,
+        "nodes": 9
       }
     ]
   },
   "distanceFields": 87,
   "problems": [],
-  "bytes": 5799891
+  "bytes": 5816133
 }

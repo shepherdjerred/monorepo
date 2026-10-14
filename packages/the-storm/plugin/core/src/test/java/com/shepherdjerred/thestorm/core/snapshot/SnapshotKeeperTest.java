@@ -261,6 +261,10 @@ final class SnapshotKeeperTest {
   @Test
   void aFailedStorePutsThePlayerBackFromMemory() {
     var alice = alice();
+    alice.setAllowFlight(true);
+    alice.setFlying(true);
+    alice.setFlySpeed(0.3f);
+    alice.setMaximumNoDamageTicks(13);
     store.failSaves = true;
     var stored = new AtomicReference<@Nullable Boolean>();
 
@@ -272,6 +276,10 @@ final class SnapshotKeeperTest {
     assertThat(alice.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.DIAMOND_SWORD));
     assertThat(keeper.holds(alice.getUniqueId())).isFalse();
     assertThat(keeper.refusal(alice.getUniqueId())).isEmpty();
+    assertThat(alice.getAllowFlight()).isTrue();
+    assertThat(alice.isFlying()).isTrue();
+    assertThat(alice.getFlySpeed()).isEqualTo(0.3f);
+    assertThat(alice.getMaximumNoDamageTicks()).isEqualTo(13);
   }
 
   @Test
@@ -300,7 +308,7 @@ final class SnapshotKeeperTest {
             bob.getUniqueId(),
             "match-0",
             new Position("world", 1.5, 64, -2.5, 90, 10),
-            new Vitals(17.5, 18, 2.5f, 0.5f, "SURVIVAL"),
+            new Vitals(new Vitals.Condition(17.5, 18, 2.5f, 0.5f), "SURVIVAL"),
             new Experience(12, 0.25f, 300),
             ItemData.of(ItemStack.serializeItemsAsBytes(List.of(new ItemStack(Material.BREAD, 3)))),
             List.of(),
@@ -311,10 +319,16 @@ final class SnapshotKeeperTest {
     restarted.load(() -> {});
     restartedMain.settle();
 
+    bob.setAllowFlight(true);
+    bob.setFlying(true);
+    bob.setMaximumNoDamageTicks(0);
     assertThat(restarted.recover(bob, true)).isEqualTo(SnapshotKeeper.Outcome.RESTORED);
 
     assertThat(bob.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.BREAD, 3));
     assertThat(bob.getLevel()).isEqualTo(12);
+    assertThat(bob.getAllowFlight()).isFalse();
+    assertThat(bob.isFlying()).isFalse();
+    assertThat(bob.getMaximumNoDamageTicks()).isEqualTo(20);
     assertThat(marker.matches(bob, left)).isTrue();
     assertThat(restarted.restoring(bob.getUniqueId())).isFalse();
     restartedMain.settle();
@@ -327,6 +341,37 @@ final class SnapshotKeeperTest {
 
     assertThat(unloaded.refusal(UUID.randomUUID())).contains(SnapshotBook.Refusal.NOT_LOADED);
     assertThat(unloaded.recover(alice(), true)).isEqualTo(SnapshotKeeper.Outcome.NOTHING);
+  }
+
+  @Test
+  void anAppliedHistoricalMarkerRetiresTheRowWithoutReplayingBelongings() {
+    var alice = alice();
+    var capture = PlayerStates.capture(alice, "rwf", T0);
+    var legacy =
+        new Snapshot(
+            capture.player(),
+            capture.scope(),
+            capture.position(),
+            new Vitals(new Vitals.Condition(20, 20, 5, 0), "SURVIVAL"),
+            capture.experience(),
+            capture.inventory(),
+            capture.effects(),
+            capture.takenAt());
+    store.rows.put(alice.getUniqueId(), legacy);
+    marker.record(alice, legacy);
+    // Inventory legitimately changed after the historical restore reached disk.
+    alice.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD, 2));
+    var _ = saved.save(alice);
+    saved.load(alice);
+    var restartedMain = new ManualScheduler();
+    var restarted = keeper(restartedMain, saved);
+    restarted.load(() -> {});
+    restartedMain.settle();
+
+    assertThat(restarted.recover(alice, true)).isEqualTo(SnapshotKeeper.Outcome.RESTORED);
+    restartedMain.settle();
+    assertThat(swords(alice)).isEqualTo(2);
+    assertThat(store.rows).doesNotContainKey(alice.getUniqueId());
   }
 
   /** The steps of a restore after which the server can die. */
@@ -344,7 +389,15 @@ final class SnapshotKeeperTest {
   @ParameterizedTest
   @EnumSource(CrashPoint.class)
   void aCrashAtAnyStepNeitherLosesNorDuplicatesBelongings(CrashPoint crash) {
-    var alice = joined();
+    var alice = alice();
+    alice.setAllowFlight(true);
+    alice.setFlying(true);
+    alice.setFlySpeed(0.25f);
+    keeper.capture(alice, "match-1", ignored -> {});
+    main.settle();
+    alice.setMaximumNoDamageTicks(0);
+    var _ = saved.save(alice);
+    saved.saves = 0;
     switch (crash) {
       case AFTER_APPLY -> saved.dropWrites = true;
       case AFTER_SAVE -> saved.lagReads = true;
@@ -372,6 +425,10 @@ final class SnapshotKeeperTest {
 
     assertThat(swords(alice)).isEqualTo(1);
     assertThat(alice.getLevel()).isEqualTo(7);
+    assertThat(alice.getAllowFlight()).isTrue();
+    assertThat(alice.isFlying()).isTrue();
+    assertThat(alice.getFlySpeed()).isEqualTo(0.25f);
+    assertThat(alice.getMaximumNoDamageTicks()).isEqualTo(20);
     assertThat(store.unrestored()).isEmpty();
     assertThat(restarted.refusal(alice.getUniqueId())).isEmpty();
 

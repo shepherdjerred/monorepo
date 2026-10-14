@@ -4,9 +4,12 @@ import static java.util.Objects.requireNonNull;
 
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.TraversalCapture;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,33 +49,41 @@ public final class CitizensBodies implements Bodies, Listener {
   /** The registry name; one per plugin instance. */
   public static final String REGISTRY = "rwfbots";
 
-  /** An attack speed high enough that the 1.9 cooldown never applies to a bot's swing. */
-  static final double ATTACK_SPEED = 1024;
+  /** Native player base; RWF owns the separate legacy-weapon modifier. */
+  static final double ATTACK_SPEED = 4;
 
   private final NPCRegistry registry;
   private final Map<UUID, NPC> npcs = new HashMap<>();
+  private final Map<UUID, BodyMovement> movement = new HashMap<>();
   private final Set<UUID> known = new HashSet<>();
   private final Consumer<UUID> respawned;
   private final Logger logger;
+  private final TraversalCapture survival;
   private int respawns;
 
-  private CitizensBodies(NPCRegistry registry, Consumer<UUID> respawned, Logger logger) {
+  private CitizensBodies(
+      NPCRegistry registry, Consumer<UUID> respawned, Logger logger, TraversalCapture survival) {
     this.registry = registry;
     this.respawned = respawned;
     this.logger = logger;
+    this.survival = survival;
   }
 
   /**
    * Opens the registry and listens for Citizens' spawn events through {@code plugin}. Citizens must
    * be loaded; {@code respawned} hears every body whose entity was replaced.
    */
-  public static CitizensBodies open(Plugin plugin, Consumer<UUID> respawned) {
+  public static CitizensBodies open(
+      Plugin plugin, Consumer<UUID> respawned, SnapshotCapture.Capabilities capabilities) {
     if (!CitizensAPI.hasImplementation()) {
       throw new IllegalStateException("Citizens is not loaded; rwfbots needs it for bot bodies");
     }
     var bodies =
         new CitizensBodies(
-            CitizensAPI.createInMemoryNPCRegistry(REGISTRY), respawned, plugin.getLogger());
+            CitizensAPI.createInMemoryNPCRegistry(REGISTRY),
+            respawned,
+            plugin.getLogger(),
+            new TraversalCapture(capabilities.noFallUntil(), capabilities.time()));
     plugin.getServer().getPluginManager().registerEvents(bodies, plugin);
     return bodies;
   }
@@ -105,6 +116,7 @@ public final class CitizensBodies implements Bodies, Listener {
 
   @Override
   public void spawn(UUID bot, Location at) {
+    movement.remove(bot);
     var npc = require(bot);
     if (!npc.spawn(at, SpawnReason.PLUGIN)) {
       throw new IllegalStateException("Citizens refused to spawn " + npc.getName() + " at " + at);
@@ -114,6 +126,7 @@ public final class CitizensBodies implements Bodies, Listener {
 
   @Override
   public Player move(UUID bot, Location to) {
+    movement.remove(bot);
     var npc = require(bot);
     var player = entity(bot).orElseThrow();
     if (player.getWorld().equals(requireNonNull(to.getWorld()))) {
@@ -153,6 +166,7 @@ public final class CitizensBodies implements Bodies, Listener {
 
   @Override
   public void despawn(UUID bot) {
+    movement.remove(bot);
     var npc = npcs.remove(bot);
     if (npc == null) {
       return;
@@ -191,25 +205,20 @@ public final class CitizensBodies implements Bodies, Listener {
 
   @Override
   public void moveToward(UUID bot, Location target, boolean sprint) {
+    moveSafely(bot, new MotionTarget(target, sprint, Hop.WALK, Optional.empty()));
+  }
+
+  @Override
+  public MovementSafety.Reason moveSafely(UUID bot, MotionTarget target) {
     var npc = require(bot);
     npc.setMoveDestination(null);
-    entity(bot)
-        .ifPresent(
-            player -> {
-              org.bukkit.entity.Entity body = player;
-              var heading = target.toVector().subtract(body.getLocation().toVector());
-              DoorUse.ahead(player, heading);
-              steer(player, new Vec3(heading.getX(), 0, heading.getZ()), sprint);
-              var location = requireNonNull(player.getLocation());
-              if (player.isClimbing()) {
-                player.setVelocity(
-                    player.getVelocity().setY(MovementMotor.climbVertical(heading.getY())));
-              } else if (BodyFluids.inWater(player)) {
-                var velocity = player.getVelocity();
-                velocity.setY(MovementMotor.swimVertical(target.getY() - location.getY()));
-                player.setVelocity(velocity);
-              }
-            });
+    return entity(bot)
+        .map(
+            player ->
+                movement
+                    .computeIfAbsent(bot, ignored -> new BodyMovement(survival))
+                    .move(player, target))
+        .orElse(MovementSafety.Reason.BLOCKED);
   }
 
   @Override
@@ -221,29 +230,8 @@ public final class CitizensBodies implements Bodies, Listener {
     }
     entity(bot)
         .ifPresent(
-            player -> {
-              steer(player, Vec3.ZERO, false);
-              if (BodyFluids.inWater(player) || player.isClimbing())
-                player.setVelocity(player.getVelocity().setY(0));
-            });
-  }
-
-  private static void steer(Player player, Vec3 heading, boolean sprint) {
-    // Citizens' custom fluid movement does not perform vanilla's accumulated-fall reset.
-    // Cancel only at actual occupied water/climb contact, including native waterlogged data.
-    if (BodyFluids.cancelsFall(player)) player.setFallDistance(0);
-    player.setSprinting(sprint);
-    var velocity = player.getVelocity();
-    var slowdown = player.hasActiveItem() ? 0.2 : player.isSneaking() ? 0.3 : 1.0;
-    var next =
-        MovementMotor.steer(
-            new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
-            new MovementMotor.Control(
-                heading,
-                sprint,
-                SnapshotCapture.onGround(player) || BodyFluids.inWater(player),
-                slowdown));
-    player.setVelocity(new org.bukkit.util.Vector(next.x(), next.y(), next.z()));
+            player ->
+                movement.computeIfAbsent(bot, ignored -> new BodyMovement(survival)).stop(player));
   }
 
   @Override

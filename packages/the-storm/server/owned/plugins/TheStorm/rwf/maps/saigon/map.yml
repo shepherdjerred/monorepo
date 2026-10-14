@@ -2,6 +2,7 @@
   id: saigon,
   name: Saigon,
   author: "Saiwun_, NightWolf9",
+  description: Two teams face off across a broad battlefield. Explore the routes between the bases before choosing your attacking approach or defensive position.,
   region:
     { min: { x: 5120, "y": 0, z: 4096 }, max: { x: 5377, "y": 67, z: 4264 } },
   spectator: { x: 5249, "y": 67, z: 4180.5, yaw: 0, pitch: 45 },
@@ -100,5 +101,5 @@
       { id: blue-1, team: BLUE, at: { x: 5333, "y": 11, z: 4177 } },
     ],
   nukes: [],
-  blocksSha256: d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995,
+  blocksSha256: af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623,
 }

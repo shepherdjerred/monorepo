@@ -369,6 +369,7 @@ records and personal letters are retained. World-bound staff state, including
 spawn overrides, jail coordinates and logout positions, requires an explicit
 position migration before import; IP bans can be retained without moving
 coordinates. Gameplay tables, teleport usage and migration histories start fresh.
+RWF kit selections, inventory layouts and killstreak selections reset with gameplay state.
 Economy balances, transfers and welcome-grant markers reset together, allowing
 returning players to receive the configured starting balance on their next join.
 The retention policy must cover every table produced by the current candidate;

@@ -2,6 +2,7 @@
   id: wonderland,
   name: Wonderland,
   author: A22518Y,
+  description: A fairytale themed map where the Troops of the Ace of Spades and Ace of Hearts fight to the bitter end!,
   region:
     { min: { x: 3072, "y": 11, z: 6144 }, max: { x: 3131, "y": 81, z: 6435 } },
   spectator: { x: 3102, "y": 81, z: 6290, yaw: 0, pitch: 45 },
@@ -532,5 +533,5 @@
       { id: red-1, team: RED, at: { x: 3104, "y": 45, z: 6181 } },
     ],
   nukes: [],
-  blocksSha256: 1a3439362a72d36e168b6b2af278e37bf4b29cb79f5d5bb274962c81c58ea272,
+  blocksSha256: e966c68f5c4e4f5acdd0522c5fe91a75f80a88ceb199c067fe01796f99f61138,
 }

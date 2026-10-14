@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.Services;
+import com.shepherdjerred.thestorm.rwf.app.BotDraftRequest;
 import com.shepherdjerred.thestorm.rwf.app.BotRoster;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import java.util.List;
@@ -31,6 +32,13 @@ final class Bots {
       return List.of();
     }
     return roster().map(r -> r.fill(matchId, slots)).orElseGet(List::of);
+  }
+
+  List<CombatantId.Bot> fill(BotDraftRequest request) {
+    if (request.slots() == 0) {
+      return List.of();
+    }
+    return roster().map(r -> r.fill(request)).orElseGet(List::of);
   }
 
   /** Spawns {@code bot} at {@code at} and returns its entity. */

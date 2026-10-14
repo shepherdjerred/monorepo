@@ -251,8 +251,14 @@ final class Spectating implements Listener {
 
   private void hideFromTheLiving(Player ghost) {
     for (var viewer : context.server().getOnlinePlayers()) {
-      if (!viewer.equals(ghost) && !watching(viewer.getUniqueId())) {
-        viewer.hidePlayer(context.plugin(), ghost);
+      if (!viewer.equals(ghost)) {
+        context
+            .visibility()
+            .set(
+                viewer,
+                ghost,
+                com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason.SPECTATOR,
+                !watching(viewer.getUniqueId()));
       }
     }
   }
@@ -276,7 +282,14 @@ final class Spectating implements Listener {
               player.setInvulnerable(false);
               player.setCollidable(true);
               for (var viewer : context.server().getOnlinePlayers()) {
-                viewer.showPlayer(context.plugin(), player);
+                context
+                    .visibility()
+                    .set(
+                        viewer,
+                        player,
+                        com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason
+                            .SPECTATOR,
+                        false);
               }
             });
   }

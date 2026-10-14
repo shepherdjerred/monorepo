@@ -1,0 +1,168 @@
+# The Search and Destroy lobby: a military war-room base in its own world
+# (rwf.yml worlds.lobby), where every player and bot waits before a match.
+# Owned by the repository; the plugin never writes it. Every key is required
+# and unknown keys are errors.
+#
+# blocks.schem is the frozen output of the `toolkit mc build` program that
+# authored the lobby; it fills region exactly and is pasted at region.min
+# when the module enables and whenever the world's blocks stop matching
+# blocksSha256, like a map. `mise exec -- gradle bakeRwfLobby` bakes the nav
+# files and checks this hash; `verifyRwfLobby` (part of check) fails when the
+# hash, the places below or the nav files drift. Places are world
+# coordinates; yaw 0 faces south (+z), 90 west, 180 north, 270 east.
+name: War Room
+region:
+  min: { x: 0, y: 64, z: 0 }
+  max: { x: 107, y: 99, z: 99 }
+# The plaza centre, between the red and blue halves.
+spawn: { x: 60.5, y: 70.0, z: 50.5, yaw: 180.0, pitch: 0.0 }
+# Each team gathers on its own part of the plaza.
+sides:
+  - team: RED
+    at: { x: 60.5, y: 70.0, z: 39.5, yaw: 0.0, pitch: 0.0 }
+  - team: BLUE
+    at: { x: 60.5, y: 70.0, z: 61.5, yaw: 180.0, pitch: 0.0 }
+  - team: GREEN
+    at: { x: 48.5, y: 70.0, z: 50.5, yaw: 180.0, pitch: 0.0 }
+  - team: PURPLE
+    at: { x: 60.5, y: 70.0, z: 50.5, yaw: 180.0, pitch: 0.0 }
+  - team: YELLOW
+    at: { x: 72.5, y: 70.0, z: 50.5, yaw: 180.0, pitch: 0.0 }
+# One alcove per kit in the armory's three spines, basic, then mid, then
+# advanced, each spine's north face then south, west to east: the kit's item
+# floats over the pedestal at display; stand is in front of it.
+alcoves:
+  - kit: trooper
+    display: { x: 12.5, y: 71.25, z: 37.5 }
+    stand: { x: 12.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: explosive
+    display: { x: 16.5, y: 71.25, z: 37.5 }
+    stand: { x: 16.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: ghost
+    display: { x: 20.5, y: 71.25, z: 37.5 }
+    stand: { x: 20.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: longbow
+    display: { x: 24.5, y: 71.25, z: 37.5 }
+    stand: { x: 24.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: pyro
+    display: { x: 28.5, y: 71.25, z: 37.5 }
+    stand: { x: 28.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: shortbow
+    display: { x: 32.5, y: 71.25, z: 37.5 }
+    stand: { x: 32.5, y: 70.0, z: 34.5, yaw: 0.0, pitch: 0.0 }
+  - kit: ninja
+    display: { x: 12.5, y: 71.25, z: 39.5 }
+    stand: { x: 12.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: frost
+    display: { x: 16.5, y: 71.25, z: 39.5 }
+    stand: { x: 16.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: wraith
+    display: { x: 20.5, y: 71.25, z: 39.5 }
+    stand: { x: 20.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: sapper
+    display: { x: 24.5, y: 71.25, z: 39.5 }
+    stand: { x: 24.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: saboteur
+    display: { x: 28.5, y: 71.25, z: 39.5 }
+    stand: { x: 28.5, y: 70.0, z: 42.5, yaw: 180.0, pitch: 0.0 }
+  - kit: demolitions
+    display: { x: 12.5, y: 71.25, z: 47.5 }
+    stand: { x: 12.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: juggernaut
+    display: { x: 16.5, y: 71.25, z: 47.5 }
+    stand: { x: 16.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: medic
+    display: { x: 20.5, y: 71.25, z: 47.5 }
+    stand: { x: 20.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: rewind
+    display: { x: 24.5, y: 71.25, z: 47.5 }
+    stand: { x: 24.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: spy
+    display: { x: 28.5, y: 71.25, z: 47.5 }
+    stand: { x: 28.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: teleporter
+    display: { x: 32.5, y: 71.25, z: 47.5 }
+    stand: { x: 32.5, y: 70.0, z: 44.5, yaw: 0.0, pitch: 0.0 }
+  - kit: vampire
+    display: { x: 12.5, y: 71.25, z: 49.5 }
+    stand: { x: 12.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: warper
+    display: { x: 16.5, y: 71.25, z: 49.5 }
+    stand: { x: 16.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: skinner
+    display: { x: 20.5, y: 71.25, z: 49.5 }
+    stand: { x: 20.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: equality
+    display: { x: 24.5, y: 71.25, z: 49.5 }
+    stand: { x: 24.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: inertia
+    display: { x: 28.5, y: 71.25, z: 49.5 }
+    stand: { x: 28.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: spotter
+    display: { x: 32.5, y: 71.25, z: 49.5 }
+    stand: { x: 32.5, y: 70.0, z: 52.5, yaw: 180.0, pitch: 0.0 }
+  - kit: grappler
+    display: { x: 12.5, y: 71.25, z: 57.5 }
+    stand: { x: 12.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: bannerman
+    display: { x: 16.5, y: 71.25, z: 57.5 }
+    stand: { x: 16.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: berserker
+    display: { x: 20.5, y: 71.25, z: 57.5 }
+    stand: { x: 20.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: dwarf
+    display: { x: 24.5, y: 71.25, z: 57.5 }
+    stand: { x: 24.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: venom
+    display: { x: 28.5, y: 71.25, z: 57.5 }
+    stand: { x: 28.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: bleeder
+    display: { x: 32.5, y: 71.25, z: 57.5 }
+    stand: { x: 32.5, y: 70.0, z: 54.5, yaw: 0.0, pitch: 0.0 }
+  - kit: sacrificial
+    display: { x: 12.5, y: 71.25, z: 59.5 }
+    stand: { x: 12.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+  - kit: engineer
+    display: { x: 16.5, y: 71.25, z: 59.5 }
+    stand: { x: 16.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+  - kit: tracker
+    display: { x: 20.5, y: 71.25, z: 59.5 }
+    stand: { x: 20.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+  - kit: decoy
+    display: { x: 24.5, y: 71.25, z: 59.5 }
+    stand: { x: 24.5, y: 70.0, z: 62.5, yaw: 180.0, pitch: 0.0 }
+# The armory's west wall: the four kits free this week, one per slot.
+rotation:
+  header: { x: 4.5, y: 75.5, z: 48.5, yaw: 270.0, pitch: 0.0 }
+  slots:
+    - { x: 4.5, y: 72.0, z: 42.5 }
+    - { x: 4.5, y: 72.0, z: 46.5 }
+    - { x: 4.5, y: 72.0, z: 50.5 }
+    - { x: 4.5, y: 72.0, z: 54.5 }
+  stand: { x: 8.5, y: 70.0, z: 48.5, yaw: 90.0, pitch: 0.0 }
+# The three map-vote podiums, in ballot order: right-click the lodestone to
+# vote; the map's name, author and votes float at display.
+podiums:
+  - click: { x: 50, y: 71, z: 15 }
+    display: { x: 50.5, y: 74.25, z: 15.5 }
+    stand: { x: 50.5, y: 71.0, z: 17.5, yaw: 180.0, pitch: 0.0 }
+  - click: { x: 60, y: 71, z: 15 }
+    display: { x: 60.5, y: 74.25, z: 15.5 }
+    stand: { x: 60.5, y: 71.0, z: 17.5, yaw: 180.0, pitch: 0.0 }
+  - click: { x: 70, y: 71, z: 15 }
+    display: { x: 70.5, y: 74.25, z: 15.5 }
+    stand: { x: 70.5, y: 71.0, z: 17.5, yaw: 180.0, pitch: 0.0 }
+# The leaderboard wall facing the plaza.
+leaderboards:
+  - stat: KILLS
+    display: { x: 50.5, y: 76.0, z: 76.5, yaw: 180.0, pitch: 0.0 }
+  - stat: WINS
+    display: { x: 60.5, y: 76.0, z: 76.5, yaw: 180.0, pitch: 0.0 }
+  - stat: WIN_STREAK
+    display: { x: 70.5, y: 76.0, z: 76.5, yaw: 180.0, pitch: 0.0 }
+# The rules on the briefing room's screen, the live match board on the vote
+# terrace's screen wall, and the HQ balcony over the plaza.
+rules: { x: 102.5, y: 79.5, z: 50.5, yaw: 90.0, pitch: 0.0 }
+board: { x: 60.5, y: 81.0, z: 9.5, yaw: 0.0, pitch: 0.0 }
+balcony: { x: 80.5, y: 77.0, z: 50.5, yaw: 90.0, pitch: 0.0 }
+blocksSha256: 2f2abc3b3409acd51831409c321701dfb71d61784c18f7b0539b1cc3ca3ba460

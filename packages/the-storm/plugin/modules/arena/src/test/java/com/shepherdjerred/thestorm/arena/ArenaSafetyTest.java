@@ -609,7 +609,7 @@ final class ArenaSafetyTest {
             alice.getUniqueId(),
             "colosseum",
             new Position("world", 5.5, 70, 5.5, 0, 0),
-            new Vitals(9, 11, 1, 0, "SURVIVAL"),
+            new Vitals(new Vitals.Condition(9, 11, 1, 0), "SURVIVAL"),
             new Experience(3, 0.25f, 40),
             ItemData.of(
                 ItemStack.serializeItemsAsBytes(

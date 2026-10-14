@@ -131,7 +131,7 @@ final class PlaybookTest {
     var guard =
         bombs().stream().filter(bomb -> bomb.id().equals(RED_BOMB)).findFirst().orElseThrow();
     var anchors = plan.slots().stream().filter(slot -> slot.kind() == SlotKind.ANCHOR).toList();
-    assertThat(anchors).hasSize(3);
+    assertThat(anchors).hasSize(2);
     for (var anchor : anchors) {
       assertThat(anchor.pos().horizontalDistance(guard.pos()))
           .isGreaterThanOrEqualTo(Playbook.ANCHOR_MIN);
@@ -158,6 +158,18 @@ final class PlaybookTest {
   }
 
   @Test
+  void everyStrategyKeepsRoughlyThreeAttackersForEachDefender() {
+    for (var strategy : Strategy.values()) {
+      for (var size = 4; size <= 32; size++) {
+        var wants = Playbook.wants(strategy, size, true);
+        assertThat(wants.stream().filter(want -> want.kind() == SlotKind.ANCHOR).count())
+            .as("%s team size %d", strategy, size)
+            .isEqualTo(Math.round(size / 4.0));
+      }
+    }
+  }
+
+  @Test
   void rushesAndSplitsUseLanesOnBothSidesOfTheYard() {
     for (var strategy : List.of(Strategy.RUSH, Strategy.SPLIT)) {
       var plan = deal(strategy, reds(8), 0).plan();
@@ -174,6 +186,19 @@ final class PlaybookTest {
               - plan.slots().stream().mapToDouble(slot -> slot.pos().z()).min().orElseThrow();
       assertThat(widest).as("%s spread across the yard", strategy).isGreaterThan(15);
     }
+  }
+
+  @Test
+  void defenderBalancingPreservesSideAttackRoutesOnSmallAndSplitTeams() {
+    var rush = Playbook.wants(Strategy.RUSH, 4, true);
+    assertThat(rush.stream().filter(want -> want.kind() == SlotKind.LANE).map(Playbook.Want::which))
+        .contains(Lanes.Which.LEFT);
+    var split = Playbook.wants(Strategy.SPLIT, 8, true);
+    assertThat(
+            split.stream()
+                .filter(want -> want.kind() == SlotKind.LANE || want.kind() == SlotKind.FLANK)
+                .map(Playbook.Want::which))
+        .contains(Lanes.Which.LEFT, Lanes.Which.RIGHT);
   }
 
   @Test

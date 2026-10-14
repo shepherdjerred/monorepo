@@ -97,6 +97,10 @@ public final class LobbyTicker {
     this.parts = parts;
   }
 
+  public void communication(BotChat communication) {
+    parts.driver().communication(communication);
+  }
+
   /**
    * {@code bot} walked into the lobby of {@code state}'s match: plans its kits within the time left
    * before the start and returns the kit it picks now.
@@ -159,7 +163,12 @@ public final class LobbyTicker {
       var person = plan.facing().map(inLobby::get).map(LobbyTicker::feet);
       var step = LobbySteering.tick(visitor.steering, plan, body(entity, person), tick);
       visitor.steering = step.state();
-      parts.driver().apply(visitor.bot, step.commands(), noIds, tick);
+      parts
+          .driver()
+          .apply(
+              visitor.bot,
+              step.commands(),
+              new BodyDriver.Navigation(noIds, tick, Optional.of(parts.nav().graph().bounds())));
     }
   }
 

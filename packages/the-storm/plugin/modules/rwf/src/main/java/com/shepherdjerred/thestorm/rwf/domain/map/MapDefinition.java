@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
  * @param id a stable id such as {@code harbour}
  * @param name the display name
  * @param author who built it
+ * @param description authored route and terrain guidance shown before voting
  * @param teams the teams it fields, in scoreboard order
  * @param bombs every bomb and nuke
  * @param border the playable region
@@ -35,6 +36,7 @@ public record MapDefinition(
     String id,
     String name,
     String author,
+    String description,
     List<MapTeam> teams,
     List<BombSite> bombs,
     Cuboid border,
@@ -51,8 +53,8 @@ public record MapDefinition(
     if (!ID.matcher(id).matches()) {
       throw new IllegalArgumentException("map id must be lower-case kebab-case: " + id);
     }
-    if (name.isBlank() || author.isBlank()) {
-      throw new IllegalArgumentException("map name and author must not be blank");
+    if (name.isBlank() || author.isBlank() || description.isBlank()) {
+      throw new IllegalArgumentException("map name, author and description must not be blank");
     }
     if (!SHA256.matcher(blocksSha256).matches()) {
       throw new IllegalArgumentException("blocksSha256 must be 64 lower-case hex digits");

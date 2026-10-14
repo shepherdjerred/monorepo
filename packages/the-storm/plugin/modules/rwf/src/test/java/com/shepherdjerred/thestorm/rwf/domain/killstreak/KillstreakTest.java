@@ -10,15 +10,16 @@ import org.junit.jupiter.api.Test;
 final class KillstreakTest {
 
   @Test
-  void theCompassComesOnceAndTheRestAtEveryMultiple() {
+  void everyRewardHasOneThresholdPerLife() {
     assertThat(Killstreak.COMPASS.earnedAt(2)).isTrue();
     assertThat(Killstreak.COMPASS.earnedAt(4)).isFalse();
     assertThat(Killstreak.SUPPLY_CRATE.earnedAt(4)).isTrue();
-    assertThat(Killstreak.WOLVES.earnedAt(8)).isTrue();
+    assertThat(Killstreak.WOLVES.earnedAt(4)).isTrue();
+    assertThat(Killstreak.WOLVES.earnedAt(8)).isFalse();
     assertThat(Killstreak.IRON_GOLEM.earnedAt(8)).isTrue();
     assertThat(Killstreak.IRON_GOLEM.earnedAt(12)).isFalse();
     assertThat(Killstreak.NAPALM.earnedAt(11)).isTrue();
-    assertThat(Killstreak.NAPALM.earnedAt(22)).isTrue();
+    assertThat(Killstreak.NAPALM.earnedAt(22)).isFalse();
     assertThat(Killstreak.WOLVES.earnedAt(0)).isFalse();
   }
 
@@ -27,17 +28,11 @@ final class KillstreakTest {
     assertThat(Killstreak.earned(1, 2))
         .containsExactly(new Killstreak.Earned(Killstreak.COMPASS, 2));
     assertThat(Killstreak.earned(3, 4))
-        .containsExactly(
-            new Killstreak.Earned(Killstreak.SUPPLY_CRATE, 4),
-            new Killstreak.Earned(Killstreak.WOLVES, 4));
+        .containsExactly(new Killstreak.Earned(Killstreak.SUPPLY_CRATE, 4));
     assertThat(Killstreak.earned(7, 8))
-        .containsExactly(
-            new Killstreak.Earned(Killstreak.SUPPLY_CRATE, 8),
-            new Killstreak.Earned(Killstreak.WOLVES, 8),
-            new Killstreak.Earned(Killstreak.IRON_GOLEM, 8));
+        .containsExactly(new Killstreak.Earned(Killstreak.IRON_GOLEM, 8));
     assertThat(Killstreak.earned(2, 2)).isEmpty();
-    assertThat(Killstreak.earned(10, 11))
-        .containsExactly(new Killstreak.Earned(Killstreak.NAPALM, 11));
+    assertThat(Killstreak.earned(10, 11)).isEmpty();
   }
 
   @Test

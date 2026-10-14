@@ -51,7 +51,12 @@ final class TerrainTest {
                 server.addSimpleWorld("lobby"),
                 world,
                 new AuditedBlockChanges(_ -> {}),
-                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled(),
+                new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(
+                    InstantSource.fixed(Instant.EPOCH)),
+                new com.shepherdjerred.thestorm.rwf.app.TacticalReportLog(
+                    InstantSource.fixed(Instant.EPOCH)),
+                new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin)));
     var terrain =
         new Terrain(
             context,
@@ -94,7 +99,12 @@ final class TerrainTest {
                 server.addSimpleWorld("lobby"),
                 world,
                 new AuditedBlockChanges(_ -> {}),
-                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+                com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled(),
+                new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(
+                    InstantSource.fixed(Instant.EPOCH)),
+                new com.shepherdjerred.thestorm.rwf.app.TacticalReportLog(
+                    InstantSource.fixed(Instant.EPOCH)),
+                new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin)));
     var terrain =
         new Terrain(
             context,

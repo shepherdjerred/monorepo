@@ -24,7 +24,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  * @param sprinting whether sprinting
  * @param onGround whether standing on something
  * @param usingItem whether drawing a bow, eating or otherwise holding right click
- * @param invisible whether the invisibility effect is active
+ * @param invisible whether invisibility conceals the body and both hands; visible equipment is
+ *     still revealed by armour and hurt flashes in perception
  * @param lastHurtTick the tick of the last damage taken, or -1 if none
  * @param traversal actual movement restrictions and survival modifiers at capture time
  */

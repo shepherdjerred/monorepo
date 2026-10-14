@@ -78,6 +78,11 @@ public final class ThinkLoop {
   private final ConcurrentHashMap<CombatantId, BotProfile> profiles = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<CombatantId, Integer> epochs = new ConcurrentHashMap<>();
   private final Set<CombatantId> replans = ConcurrentHashMap.newKeySet();
+  private final ConcurrentHashMap<CombatantId, TeamReport> reports = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<CombatantId, TeamReport> deliveredReports =
+      new ConcurrentHashMap<>();
+  private volatile boolean composedCommunication;
+  private final ConcurrentHashMap<TeamId, SensorEnvelope> sensors = new ConcurrentHashMap<>();
   private final ThinkStats stats = new ThinkStats();
   private final Worker worker;
   private final AtomicReference<@Nullable Failure> failure = new AtomicReference<>();
@@ -112,21 +117,32 @@ public final class ThinkLoop {
   }
 
   /** The match the loop thinks for. */
-  private record Match(int generation, long seed, long navigationRevision, NavArtifact nav) {}
+  private record Match(
+      int generation,
+      long seed,
+      long navigationRevision,
+      NavArtifact nav,
+      List<com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud> clouds) {}
 
   private record Failure(int generation, RuntimeException problem) {}
+
+  private record SensorEnvelope(
+      int generation, com.shepherdjerred.thestorm.rwfbots.domain.team.SensorClue clue) {}
 
   // ---- main thread -----------------------------------------------------------------------------
 
   /** Starts thinking for a match on {@code nav}; forgets every bot of the previous match. */
   public void beginMatch(long seed, NavArtifact nav) {
+    sensors.clear();
+    reports.clear();
+    deliveredReports.clear();
     profiles.clear();
     epochs.clear();
     replans.clear();
     failure.set(null);
     inbox.set(null);
     outbox.set(DecisionBoard.EMPTY);
-    match = new Match(generation.incrementAndGet(), seed, 0, nav);
+    match = new Match(generation.incrementAndGet(), seed, 0, nav, List.of());
   }
 
   /** Publishes fresh door occlusion, preserving plans, memory, life epochs and random seeds. */
@@ -135,11 +151,36 @@ public final class ThinkLoop {
     if (current == null || !current.nav().graph().equals(nav.graph())) {
       throw new IllegalArgumentException("navigation observation is not from the current match");
     }
-    match = new Match(current.generation(), current.seed(), current.navigationRevision() + 1, nav);
+    match =
+        new Match(
+            current.generation(),
+            current.seed(),
+            current.navigationRevision() + 1,
+            nav,
+            current.clouds());
+  }
+
+  /** Main-thread capture of smoke geometry; workers receive only immutable values. */
+  public void observedSmoke(
+      List<com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud> clouds) {
+    var current = match;
+    var copy = List.copyOf(clouds);
+    if (current != null && !current.clouds().equals(copy)) {
+      match =
+          new Match(
+              current.generation(),
+              current.seed(),
+              current.navigationRevision() + 1,
+              current.nav(),
+              copy);
+    }
   }
 
   /** Stops thinking; publishes are ignored until the next match begins. */
   public void endMatch() {
+    sensors.clear();
+    reports.clear();
+    deliveredReports.clear();
     match = null;
     profiles.clear();
     epochs.clear();
@@ -151,6 +192,39 @@ public final class ThinkLoop {
 
   public boolean inMatch() {
     return match != null;
+  }
+
+  /**
+   * Cosmetic chat off uses ordinary delayed coordination; enabled calls share only on completion.
+   */
+  public void composedCommunication(boolean enabled) {
+    composedCommunication = enabled;
+    if (!enabled) {
+      reports.clear();
+      deliveredReports.clear();
+    }
+  }
+
+  public List<TeamReport> drainReports() {
+    var ready =
+        reports.values().stream()
+            .sorted(Comparator.comparing(report -> report.sighting().reporter()))
+            .toList();
+    ready.forEach(report -> reports.remove(report.sighting().reporter(), report));
+    return ready;
+  }
+
+  /**
+   * Called only after the line was successfully sent; worker ownership of team state is retained.
+   */
+  public void delivered(TeamReport report) {
+    if (composedCommunication && profiles.containsKey(report.sighting().reporter()))
+      deliveredReports.put(report.sighting().reporter(), report);
+  }
+
+  public void sensor(TeamId team, com.shepherdjerred.thestorm.rwfbots.domain.team.SensorClue clue) {
+    var current = match;
+    if (current != null) sensors.put(team, new SensorEnvelope(current.generation(), clue));
   }
 
   public void register(BotProfile profile) {
@@ -306,6 +380,7 @@ public final class ThinkLoop {
     long lastPerceived = NEVER;
     long lastThought = NEVER;
     long awaitingSince = NEVER;
+    long lastReportTick = NEVER;
 
     Mind(BotProfile profile, Match match, int epoch) {
       var nav = match.nav();
@@ -314,7 +389,8 @@ public final class ThinkLoop {
       this.epoch = epoch;
       this.perception =
           new Perception(
-              new SenseContext(nav.grid(), nav.graph(), nav.regions(), profile.levers()));
+              new SenseContext(
+                  nav.grid(), nav.graph(), nav.regions(), profile.levers(), match.clouds()));
       this.tacticsContext =
           new TacticsContext(
               nav,
@@ -335,7 +411,8 @@ public final class ThinkLoop {
       navigationRevision = match.navigationRevision();
       perception =
           new Perception(
-              new SenseContext(nav.grid(), nav.graph(), nav.regions(), profile.levers()));
+              new SenseContext(
+                  nav.grid(), nav.graph(), nav.regions(), profile.levers(), match.clouds()));
       tacticsContext =
           new TacticsContext(
               nav,
@@ -354,10 +431,15 @@ public final class ThinkLoop {
      * A new life: the plan is dropped, what the bot remembers of the enemy and its Time Machine's
      * cooldown are kept.
      */
-    void newLife(int newEpoch) {
+    void newLife(int newEpoch, long heardThrough) {
       epoch = newEpoch;
       tacticsState = tacticsState.nextLife(newEpoch);
       decision = null;
+      perceptionState =
+          new PerceptionState(
+              perceptionState.memory(),
+              perceptionState.suspicion(),
+              Math.max(heardThrough, perceptionState.heardThrough()));
       lastPerceived = NEVER;
     }
   }
@@ -614,7 +696,11 @@ public final class ThinkLoop {
           mind = new Mind(profile, current, epoch);
           minds.put(profile.id(), mind);
         } else if (mind.epoch != epoch) {
-          mind.newLife(epoch);
+          mind.newLife(
+              epoch,
+              snapshot.stimuli().isEmpty()
+                  ? mind.perceptionState.heardThrough()
+                  : snapshot.stimuli().getLast().sequence());
         }
         mind.observeNavigation(current);
         if (mind.awaitingSince == NEVER) mind.awaitingSince = snapshot.tick();
@@ -667,9 +753,6 @@ public final class ThinkLoop {
     }
 
     private void share(Match current, Mind mind, Percept percept, WorldSnapshot snapshot) {
-      if (percept.visible().isEmpty()) {
-        return;
-      }
       var reports = new ArrayList<SharedSighting>();
       for (var seen : percept.visible()) {
         reports.add(
@@ -681,6 +764,32 @@ public final class ThinkLoop {
                 snapshot.tick(),
                 mind.profile.id()));
       }
+      percept.state().memory().sightings().entrySet().stream()
+          .filter(
+              entry ->
+                  !entry.getValue().direct() && snapshot.tick() - entry.getValue().tick() <= 30)
+          .sorted(Map.Entry.comparingByKey())
+          .forEach(
+              entry ->
+                  reports.add(
+                      new SharedSighting(
+                          entry.getKey(),
+                          entry.getValue().pos(),
+                          entry.getValue().vel(),
+                          entry.getValue().tick(),
+                          snapshot.tick(),
+                          mind.profile.id())));
+      if (reports.isEmpty()) return;
+      if (composedCommunication) {
+        if (mind.lastReportTick == NEVER || snapshot.tick() - mind.lastReportTick >= 40) {
+          mind.lastReportTick = snapshot.tick();
+          ThinkLoop.this.reports.put(
+              mind.profile.id(),
+              new TeamReport(
+                  current.generation(), mind.epoch, mind.profile.team(), reports.getFirst()));
+        }
+        return;
+      }
       var team = team(current, mind.profile.team());
       team.board =
           team.board.share(
@@ -691,6 +800,10 @@ public final class ThinkLoop {
     }
 
     private PendingTeam prepareTeam(Cycle cycle, Team team) {
+      receiveReports(cycle);
+      var sensor = sensors.remove(team.board.team());
+      if (sensor != null && sensor.generation() == cycle.current().generation())
+        team.board = team.board.sensor(sensor.clue());
       var snapshot = cycle.snapshot();
       var period = rates.teamEveryTicks() * cycle.multiplier();
       var members = new HashMap<CombatantId, SlotFit.Member>();
@@ -735,6 +848,29 @@ public final class ThinkLoop {
                 var mind = minds.get(id);
                 return mind == null || mind.decision == null;
               });
+    }
+
+    private void receiveReports(Cycle cycle) {
+      var ready =
+          deliveredReports.values().stream()
+              .sorted(Comparator.comparing(report -> report.sighting().reporter()))
+              .toList();
+      for (var report : ready) {
+        if (!deliveredReports.remove(report.sighting().reporter(), report)) continue;
+        var reporter = profiles.get(report.sighting().reporter());
+        if (report.generation() != cycle.current().generation()
+            || reporter == null
+            || report.lifeEpoch() != epoch(reporter.id())
+            || !report.team().equals(reporter.team())
+            || cycle.tick() - report.sighting().seenTick() > 120) continue;
+        var recipient = team(cycle.current(), report.team());
+        recipient.board =
+            recipient.board.share(
+                List.of(report.sighting()),
+                1,
+                cycle.tick(),
+                randomFor(cycle.current(), reporter.id(), cycle.tick() + 3));
+      }
     }
 
     private CompletableFuture<List<TeamStep>> dealTeams(Cycle cycle, List<PendingTeam> pending) {

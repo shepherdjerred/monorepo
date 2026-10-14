@@ -6,6 +6,7 @@ import { MapContent } from "#learning/maps/scenario.ts";
 import { freezeInputs } from "./inputs.ts";
 import { root } from "./paper.ts";
 import { exportDetails } from "./details-paper.ts";
+import { Details, isShopSign } from "./content/shops.ts";
 
 const args = parseArgs({
   strict: true,
@@ -107,6 +108,15 @@ async function worker() {
       );
       await inputs.check();
       const file = Bun.file(path.join(target, "details.json"));
+      const rawDetails = Details.parse(await file.json());
+      const signs = rawDetails.signs.filter((sign) => !isShopSign(sign));
+      if (signs.length !== rawDetails.signs.length) {
+        await Bun.write(path.join(target, "original-details.json"), file);
+        await Bun.write(
+          path.join(target, "details.json"),
+          JSON.stringify({ ...rawDetails, signs }, null, 2) + "\n",
+        );
+      }
       const sha256 = new Bun.CryptoHasher("sha256")
         .update(await file.arrayBuffer())
         .digest("hex");
@@ -121,7 +131,7 @@ async function worker() {
             policy:
               "preserve-inventories-and-literal-sign-text-strip-other-payloads",
             producer: inputs.hashes,
-            result,
+            result: { ...result, signs: signs.length },
           },
           null,
           2,
@@ -131,7 +141,7 @@ async function worker() {
         id,
         status: "exported-awaiting-runtime-acceptance",
         containers: result.containers,
-        signs: result.signs,
+        signs: signs.length,
       });
     } catch (error) {
       results.push({

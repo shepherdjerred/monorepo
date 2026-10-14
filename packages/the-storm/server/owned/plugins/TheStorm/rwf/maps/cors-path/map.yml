@@ -2,6 +2,7 @@
   id: cors-path,
   name: "Cor's Path",
   author: libraryaddict,
+  description: A original map made by your favorite server! Hypixel!,
   region:
     { min: { x: 6144, "y": 0, z: 1024 }, max: { x: 6270, "y": 20, z: 1150 } },
   spectator: { x: 6207.5, "y": 20, z: 1087.5, yaw: 0, pitch: 45 },
@@ -400,5 +401,5 @@
       { id: blue-1, team: BLUE, at: { x: 6156, "y": 11, z: 1138 } },
     ],
   nukes: [],
-  blocksSha256: 310af07a8bc3791f5986e2ffb850449cd9f27f003a2785347f3a36a76eed0283,
+  blocksSha256: 1fddc750838f9c991f4c0ab47095674470a79282d9a84aa4ad02fb30d03293da,
 }

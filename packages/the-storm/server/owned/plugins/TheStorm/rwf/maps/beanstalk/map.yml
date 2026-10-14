@@ -2,6 +2,7 @@
   id: beanstalk,
   name: Beanstalk,
   author: "Petlove506, libraryaddict",
+  description: This was inspired by the story of the little prince.,
   region:
     { min: { x: 3072, "y": 2, z: 1024 }, max: { x: 3152, "y": 156, z: 1174 } },
   spectator: { x: 3112.5, "y": 156, z: 1099.5, yaw: 0, pitch: 45 },
@@ -114,5 +115,5 @@
       { id: red-1, team: RED, at: { x: 3120, "y": 20, z: 1046 } },
     ],
   nukes: [],
-  blocksSha256: dc646e9e99b80a7d821dfa13c94e7f6f0e7ae3ff4d1ebe9c1db337b6a54cb0fc,
+  blocksSha256: c58fb426b43af7a85aaf6dd6b51fcee54fe863aea99531f4a86e92ccc9406fe7,
 }

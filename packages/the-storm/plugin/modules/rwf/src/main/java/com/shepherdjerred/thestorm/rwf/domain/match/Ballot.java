@@ -1,8 +1,11 @@
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import static java.util.Collections.unmodifiableMap;
+
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,7 +22,30 @@ import java.util.random.RandomGenerator;
  * @param chosen the map the vote settled on, once it closed
  */
 public record Ballot(
-    List<Candidate> candidates, Map<CombatantId, String> votes, Optional<String> chosen) {
+    List<Candidate> candidates,
+    Map<CombatantId, String> votes,
+    Optional<String> chosen,
+    Optional<Visits> visits) {
+
+  /** Candidate terrain must be ready before the guaranteed voting opportunity begins. */
+  public record Visits(Duration length, Optional<Instant> readyAt) {
+    public Visits {
+      if (length.isNegative() || length.isZero()) {
+        throw new IllegalArgumentException("candidate voting time must be positive");
+      }
+    }
+
+    public Optional<Instant> until(Instant waitingSince) {
+      return readyAt.map(
+          ready -> (ready.isAfter(waitingSince) ? ready : waitingSince).plus(length));
+    }
+  }
+
+  /** Ballots without candidate visits retain the original countdown behavior. */
+  public Ballot(
+      List<Candidate> candidates, Map<CombatantId, String> votes, Optional<String> chosen) {
+    this(candidates, votes, chosen, Optional.empty());
+  }
 
   /** How many maps a ballot offers. */
   public static final int SIZE = 3;
@@ -46,7 +72,7 @@ public record Ballot(
     if (chosen.isPresent() && !ids.contains(chosen.orElseThrow())) {
       throw new IllegalArgumentException("the ballot chose a map it does not offer");
     }
-    votes = Collections.unmodifiableMap(new LinkedHashMap<>(votes));
+    votes = unmodifiableMap(new LinkedHashMap<>(votes));
   }
 
   /**
@@ -67,10 +93,35 @@ public record Ballot(
 
   /** A fresh ballot over {@code candidates}. */
   public static Ballot open(List<Candidate> candidates) {
+    return open(candidates, Optional.empty());
+  }
+
+  static Ballot open(List<Candidate> candidates, Optional<Duration> visitLength) {
     if (candidates.isEmpty()) {
       throw new IllegalArgumentException("a ballot needs at least one map");
     }
-    return new Ballot(candidates, Map.of(), Optional.empty());
+    return new Ballot(
+        candidates,
+        Map.of(),
+        Optional.empty(),
+        visitLength.map(length -> new Visits(length, Optional.empty())));
+  }
+
+  Ballot visitsReady(Instant now) {
+    return new Ballot(
+        candidates,
+        votes,
+        chosen,
+        visits.map(window -> new Visits(window.length(), Optional.of(now))));
+  }
+
+  /** A loading ballot or an unexpired visit opportunity cannot advance automatically. */
+  boolean awaitingVisits(Instant waitingSince, Instant now) {
+    return !closed()
+        && visits
+            .map(
+                window -> window.until(waitingSince).map(until -> now.isBefore(until)).orElse(true))
+            .orElse(false);
   }
 
   /** Whether the ballot has maps to vote on. */
@@ -90,7 +141,7 @@ public record Ballot(
   Ballot vote(CombatantId voter, String mapId) {
     var next = new LinkedHashMap<>(votes);
     next.put(voter, mapId);
-    return new Ballot(candidates, next, chosen);
+    return new Ballot(candidates, next, chosen, visits);
   }
 
   /** {@code voter} left: their vote no longer counts. */
@@ -100,7 +151,7 @@ public record Ballot(
     }
     var next = new LinkedHashMap<>(votes);
     next.remove(voter);
-    return new Ballot(candidates, next, chosen);
+    return new Ballot(candidates, next, chosen, visits);
   }
 
   /** How many votes {@code mapId} has. */
@@ -125,7 +176,8 @@ public record Ballot(
         best.add(candidate.mapId());
       }
     }
-    return new Ballot(candidates, votes, Optional.of(best.get(random.nextInt(best.size()))));
+    return new Ballot(
+        candidates, votes, Optional.of(best.get(random.nextInt(best.size()))), visits);
   }
 
   /** An operator settles the map: it is the only candidate left, and chosen. */
@@ -143,6 +195,6 @@ public record Ballot(
             kept.put(voter, vote);
           }
         });
-    return new Ballot(left, kept, Optional.empty());
+    return new Ballot(left, kept, Optional.empty(), visits);
   }
 }

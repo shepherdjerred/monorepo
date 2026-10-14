@@ -586,18 +586,18 @@ describe("Search and Destroy with humans only", () => {
         true,
       );
       // The lobby is dressed: the rules, the match board, three vote podiums,
-      // three leaderboards, the rotation and a name per each of the 33 kit
-      // alcoves as text (42 displays altogether), and each kit's item.
+      // three leaderboards, the rotation and a name per each of the 51 kit
+      // alcoves as text (60 displays altogether), and each kit's item.
       expect(
         await rcon.command(
           `execute in ${lobbyDimension} if entity @e[type=minecraft:text_display,${box(lobby.region)}]`,
         ),
-      ).toContain("Count: 42");
+      ).toContain("Count: 60");
       expect(
         await rcon.command(
           `execute in ${lobbyDimension} if entity @e[type=minecraft:item_display,${box(lobby.region)}]`,
         ),
-      ).toContain("Count: 33");
+      ).toContain("Count: 51");
       await a.log.until(/The game will begin in /u);
       await waitUntil("the countdown boss bar", () =>
         shown.bars.some((title) => /Match starts in \d+ seconds?/u.test(title)),
@@ -1243,10 +1243,6 @@ async function nukeMatch(
     new RegExp(`${enemy(pairTeam)} Team was defeated!`, "u"),
   );
   await armer.log.until(new RegExp(`${pairTeam} Team wins!`, "u"));
-  expect(humans.map(({ bot: player }) => deaths.get(player.username))).toEqual(
-    humans.map((one) => (one === lone ? 1 : 0)),
-  );
-
   const settled = await settledMatch(server, live.matchId);
   expect(settled.match.winner).toBe(pairTeam.toUpperCase());
   const earned = new Map<string, number>();
@@ -1259,6 +1255,16 @@ async function nukeMatch(
     ).toEqual(won ? ["WIN", 0, 3, 3] : ["LOSE", 1, 1, 1]);
     earned.set(one.bot.username, won ? 3 : 1);
   }
+  // Notices and domain settlement precede the native health packet that Mineflayer turns into
+  // a death event. Require that actual event, retaining the exact spared/victim counts.
+  await waitUntil(
+    "the nuke victim receives its native death event",
+    () => deaths.get(lone.bot.username) === 1,
+    5000,
+  );
+  expect(humans.map(({ bot: player }) => deaths.get(player.username))).toEqual(
+    humans.map((one) => (one === lone ? 1 : 0)),
+  );
   await waitForLobby(rcon);
   return { armer: armer.bot.username, earned };
 }

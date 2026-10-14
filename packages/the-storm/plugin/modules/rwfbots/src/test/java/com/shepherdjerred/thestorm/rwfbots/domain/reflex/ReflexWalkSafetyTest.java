@@ -138,7 +138,8 @@ final class ReflexWalkSafetyTest {
             Optional.empty(),
             "corridor",
             10,
-            1);
+            1,
+            Optional.empty());
     var world =
         new WorldSnapshot(
             10,

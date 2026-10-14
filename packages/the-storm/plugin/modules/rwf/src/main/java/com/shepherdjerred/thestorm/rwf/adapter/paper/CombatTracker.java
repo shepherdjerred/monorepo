@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
+import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
 import com.shepherdjerred.thestorm.rwf.domain.combat.HitWindow;
 import com.shepherdjerred.thestorm.rwf.domain.combat.KillCredit;
 import com.shepherdjerred.thestorm.rwf.domain.combat.Knocked;
@@ -62,6 +63,9 @@ final class CombatTracker {
   private final Map<UUID, Last> last = new HashMap<>();
   private final Map<UUID, Knock> knocks = new HashMap<>();
   private final Map<UUID, Credit> credits = new HashMap<>();
+  private final Map<UUID, Window> windows = new HashMap<>();
+
+  private record Window(int startedTick, double damage) {}
 
   CombatTracker(InstantSource time) {
     this.time = time;
@@ -69,6 +73,16 @@ final class CombatTracker {
 
   /** The victim's invulnerability state as the rules see it. */
   HitWindow.Guard guard(LivingEntity victim) {
+    if (victim.getMaximumNoDamageTicks() == 0) {
+      var window = windows.get(victim.getUniqueId());
+      if (window == null) {
+        return HitWindow.Guard.NONE;
+      }
+      var elapsed = victim.getTicksLived() - window.startedTick();
+      return new HitWindow.Guard(
+          elapsed < 0 ? 0 : Math.max(0, CombatRules.MAX_NO_DAMAGE_TICKS - elapsed),
+          window.damage());
+    }
     var previous = last.get(victim.getUniqueId());
     return new HitWindow.Guard(
         Math.max(0, victim.getNoDamageTicks()), previous == null ? 0 : previous.damage());
@@ -77,6 +91,15 @@ final class CombatTracker {
   /** A hit landed in full: a fresh window opens at {@code damage}. */
   void hit(LivingEntity victim, double damage, Optional<UUID> attacker, AttackType cause) {
     var id = victim.getUniqueId();
+    var previousWindow = windows.get(id);
+    var started = victim.getTicksLived();
+    if (previousWindow != null
+        && guard(victim).inWindow()
+        && !cause.has(AttackType.Flag.IGNORE_RATE)
+        && !cause.has(AttackType.Flag.INSTANT_DEATH)) {
+      started = previousWindow.startedTick();
+    }
+    windows.put(id, new Window(started, damage));
     prune(victim);
     last.put(id, new Last(damage, attacker, cause));
     attacker.ifPresent(
@@ -165,12 +188,14 @@ final class CombatTracker {
     last.remove(victim);
     knocks.remove(victim);
     credits.remove(victim);
+    windows.remove(victim);
   }
 
   void clear() {
     last.clear();
     knocks.clear();
     credits.clear();
+    windows.clear();
   }
 
   /** The combat log drops a healed hit as new damage is logged (see {@link KillCredit}). */

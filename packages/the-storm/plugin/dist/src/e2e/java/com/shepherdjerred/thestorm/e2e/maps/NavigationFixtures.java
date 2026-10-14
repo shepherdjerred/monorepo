@@ -2,6 +2,11 @@ package com.shepherdjerred.thestorm.e2e.maps;
 
 import com.shepherdjerred.thestorm.rwfbots.adapter.citizens.CitizensBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -34,6 +39,8 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
   private static final JsonMapper JSON = JsonMapper.builder().build();
   private static final int X = 200;
   private static final int Z = 200;
+  private static final GridBounds BOUNDS =
+      new GridBounds(new BlockPos(X - 1, 96, Z - 1), 13, 13, 8);
   private final JavaPlugin plugin;
   private final World world;
   private Optional<CitizensBodies> bodies = Optional.empty();
@@ -118,7 +125,16 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
     body.ifPresent(id -> bodies.orElseThrow().despawn(id));
     waterControl.ifPresent(org.bukkit.entity.Entity::remove);
     waterControl = Optional.empty();
-    if (bodies.isEmpty()) bodies = Optional.of(CitizensBodies.open(plugin, id -> {}));
+    if (bodies.isEmpty())
+      bodies =
+          Optional.of(
+              CitizensBodies.open(
+                  plugin,
+                  id -> {},
+                  new com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture
+                      .Capabilities(
+                      id -> Optional.empty(),
+                      java.time.InstantSource.fixed(java.time.Instant.EPOCH))));
     var catalog =
         PersonalityFiles.load(plugin.getDataFolder().toPath().getParent().resolve("TheStorm"));
     var personality =
@@ -128,7 +144,7 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
             .orElseThrow();
     clear();
     for (var x = (X - 1) >> 4; x <= (X + 11) >> 4; x++) {
-      for (var z = (Z - 1) >> 4; z <= (Z + 3) >> 4; z++) world.addPluginChunkTicket(x, z, plugin);
+      for (var z = (Z - 1) >> 4; z <= (Z + 6) >> 4; z++) world.addPluginChunkTicket(x, z, plugin);
     }
     mode = selected;
     switch (mode) {
@@ -181,6 +197,17 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
     maximumY = Math.max(maximumY, position.getY());
     last = List.of(position.getX() - X, position.getY(), position.getZ() - Z);
     if (ticks % 20 == 0) recordPhysics(player, position);
+    if (mode.equals("leap")
+        && ticks > 20
+        && ticks <= 35
+        && (position.getX() - X > 0.8 || position.getY() < 104.9)) {
+      finish(false);
+      return;
+    }
+    if (mode.equals("water") && ticks == 60 && position.getY() < 99.4) {
+      finish(false);
+      return;
+    }
     // Allow normal skin application and gravity before issuing movement commands.
     if (ticks > 20) drive(id, position);
     if (!mode.equals("door-denied") && reached(position)) finish(true);
@@ -204,18 +231,43 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
   }
 
   private void drive(UUID id, Location position) {
-    var target =
-        mode.equals("ladder") && position.getY() < 104.2
-            ? at(1.5, 104.5, 1.5)
-            : mode.equals("ladder") ? at(1.5, 105, 0.5) : at(9.5, 100, 1.5);
-    bodies.orElseThrow().moveToward(id, target, mode.equals("leap"));
-    if (mode.equals("leap") && !jumped) {
+    if (mode.equals("water") && ticks <= 60) {
+      bodies.orElseThrow().stop(id);
+      return;
+    }
+    var result = bodies.orElseThrow().moveSafely(id, movement(position));
+    if (mode.equals("leap") && ticks > 35 && !jumped && result == MovementSafety.Reason.CLEAR) {
       bodies.orElseThrow().jump(id);
       jumped = true;
     }
   }
 
+  private Bodies.MotionTarget movement(Location position) {
+    return switch (mode) {
+      case "ladder" ->
+          new Bodies.MotionTarget(
+              position.getY() < 104.2 ? at(1.5, 104.5, 1.5) : at(1.5, 105, 0.5),
+              false,
+              Hop.CLIMB,
+              Optional.of(BOUNDS));
+      case "leap" -> leapMovement(position);
+      case "door", "door-denied", "water" ->
+          new Bodies.MotionTarget(at(9.5, 100, 1.5), false, Hop.WALK, Optional.of(BOUNDS));
+      default -> throw new IllegalStateException("unknown navigation case " + mode);
+    };
+  }
+
+  private Bodies.MotionTarget leapMovement(Location position) {
+    var crossing = position.getX() - X < 3 || position.getY() > 100.1;
+    return new Bodies.MotionTarget(
+        crossing ? at(3.5, 100, 4.5) : at(9.5, 100, 4.5),
+        true,
+        crossing && ticks > 35 ? Hop.LEAP : Hop.WALK,
+        Optional.of(BOUNDS));
+  }
+
   private boolean reached(Location position) {
+    if (mode.equals("leap") && (!jumped || maximumY < 105.8)) return false;
     return mode.equals("ladder")
         ? position.getY() >= 104.9 && position.getZ() - Z < 1
         : position.getX() - X >= 8.5 && position.getY() >= 99.9;
@@ -247,7 +299,7 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
 
   private void clear() {
     for (var x = -1; x <= 11; x++)
-      for (var z = -1; z <= 3; z++) {
+      for (var z = -1; z <= 6; z++) {
         for (var y = 96; y <= 108; y++) set(x, y, z, Material.AIR);
       }
   }
@@ -293,10 +345,8 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
   }
 
   private void leapArena() {
-    for (var z = 0; z <= 2; z++) {
-      set(0, 104, z, Material.STONE);
-      for (var x = 3; x <= 10; x++) set(x, 99, z, Material.STONE);
-    }
+    for (var z = 0; z <= 2; z++) set(0, 104, z, Material.STONE);
+    for (var z = 3; z <= 5; z++) for (var x = 3; x <= 10; x++) set(x, 99, z, Material.STONE);
   }
 
   @Override
@@ -311,7 +361,7 @@ public final class NavigationFixtures implements BasicCommand, Listener, AutoClo
     body = Optional.empty();
     bodies = Optional.empty();
     for (var x = (X - 1) >> 4; x <= (X + 11) >> 4; x++) {
-      for (var z = (Z - 1) >> 4; z <= (Z + 3) >> 4; z++)
+      for (var z = (Z - 1) >> 4; z <= (Z + 6) >> 4; z++)
         world.removePluginChunkTicket(x, z, plugin);
     }
   }

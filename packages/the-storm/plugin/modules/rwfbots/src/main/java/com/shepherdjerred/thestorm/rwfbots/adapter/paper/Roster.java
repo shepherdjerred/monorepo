@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.BotBodies;
+import com.shepherdjerred.thestorm.rwf.app.BotDifficulty;
+import com.shepherdjerred.thestorm.rwf.app.BotDraftRequest;
 import com.shepherdjerred.thestorm.rwf.app.BotHandle;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
@@ -96,7 +98,11 @@ public final class Roster implements BotBodies {
   // ---- the rwf contract ------------------------------------------------------------------------
 
   @Override
-  public List<BotHandle> fill(UUID matchId, int slots) {
+  public List<BotHandle> fill(BotDraftRequest request) {
+    return fill(request.matchId(), request.slots(), request.difficulty());
+  }
+
+  private List<BotHandle> fill(UUID matchId, int slots, Optional<BotDifficulty> difficulty) {
     var state = parts.view().current().map(MatchState::of);
     var mapId = state.flatMap(MatchState::mapId);
     if (mapId.isEmpty()) {
@@ -123,7 +129,7 @@ public final class Roster implements BotBodies {
             reservedNames(),
             offered(parts.config().draft().availableKits()),
             Math.max(2, state.orElseThrow().teams().size()));
-    var pick =
+    var ordinary =
         harness
             .draft(matchId, slots, parts.personalities())
             .map(bots -> new Director.Pick(bots, 0))
@@ -139,6 +145,12 @@ public final class Roster implements BotBodies {
                                     new IllegalStateException(
                                         "match experience must freeze before draft")),
                         parts.random()));
+    var pick =
+        harness.controlled(matchId)
+            ? ordinary
+            : difficulty
+                .map(level -> Director.inBand(ordinary, level, experience(matchId)))
+                .orElse(ordinary);
     var handles = new ArrayList<BotHandle>();
     // rwf walks bots into the lobby in this order: the ones always late come last.
     var order =

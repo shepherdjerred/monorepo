@@ -2,6 +2,7 @@
   id: mountains,
   name: Hobbits castle,
   author: anthonyvaz,
+  description: "A base under a cliff, a base on top of a hill. Both hate each others guts!",
   region:
     { min: { x: 6144, "y": 0, z: 3072 }, max: { x: 6258, "y": 121, z: 3244 } },
   spectator: { x: 6201.5, "y": 121, z: 3158.5, yaw: 0, pitch: 45 },
@@ -472,5 +473,5 @@
       { id: blue-1, team: BLUE, at: { x: 6235, "y": 87, z: 3193 } },
     ],
   nukes: [],
-  blocksSha256: b00a376da2d2792c0fa675e85f5f4dad506ce719d6c07b8a3e7dae2e287d22f3,
+  blocksSha256: a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea,
 }

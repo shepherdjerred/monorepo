@@ -80,7 +80,25 @@ public enum Kit {
   /** A crossbow, and its targets marked for the team. */
   TRACKER(Build.BOW),
   /** Leaves a running copy and slips away. */
-  DECOY(Build.NONE);
+  DECOY(Build.NONE),
+  DUELIST(Build.NONE),
+  KNIGHT(Build.NONE),
+  RAVAGER(Build.GAPPLES),
+  ACROBAT(Build.NONE),
+  ALCHEMIST(Build.NONE),
+  SCAVENGER(Build.NONE),
+  ARBALIST(Build.BOW),
+  VOLLEY(Build.BOW),
+  MARKSMAN(Build.BOW),
+  WINDRUNNER(Build.BOW),
+  HARPOONER(Build.BOW),
+  FLETCHER(Build.BOW),
+  LANCER(Build.NONE),
+  MACEGUARD(Build.NONE),
+  QUARTERMASTER(Build.NONE),
+  WARDEN(Build.NONE),
+  SMOKESCREEN(Build.NONE),
+  TACTICIAN(Build.NONE);
 
   /** The fighting traits a kit is built with. */
   private enum Build {
@@ -200,6 +218,11 @@ public enum Kit {
   /** The kit items a bot uses, and when; none for a kit whose power is passive. */
   public List<KitMove> moves() {
     return switch (this) {
+      case KNIGHT, LANCER -> List.of(new KitMove("SHIELD", KitMove.Use.AT_ENEMY, 0, 6, 40));
+      case ACROBAT -> List.of(new KitMove("FEATHER", KitMove.Use.TRAVEL, 3, 12, 160));
+      case ALCHEMIST -> List.of(new KitMove("SPLASH_POTION", KitMove.Use.AT_ENEMY, 3, 14, 200));
+      case WINDRUNNER, MACEGUARD ->
+          List.of(new KitMove("WIND_CHARGE", KitMove.Use.TRAVEL, 5, 18, 100));
       case DEMOLITIONS ->
           List.of(new KitMove("STONE_PRESSURE_PLATE", KitMove.Use.PLACE, 20, 0, 100));
       case EXPLOSIVE ->

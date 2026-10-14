@@ -49,7 +49,11 @@ final class JooqStoresTest {
         player,
         arena,
         new Position("world", 12.5, 64, -3.25, 90.5f, -10f),
-        new Vitals(13.5, 17, 3.5f, 1.25f, "ADVENTURE"),
+        new Vitals(
+            new Vitals.Condition(13.5, 17, 3.5f, 1.25f),
+            "ADVENTURE",
+            new Vitals.Flight(true, true, 0.35f),
+            13),
         new Experience(30, 0.5f, 1395),
         ItemData.of(new byte[] {10, 20, 30, 40}),
         effects,

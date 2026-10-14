@@ -172,7 +172,54 @@ public final class Playbook {
     for (var i = 0; out.size() < size; i++) {
       out.add(objective ? want(strategy, i) : guard(i));
     }
+    return objective && size >= 4 ? balanceDefenders(out) : out;
+  }
+
+  private static List<Want> balanceDefenders(List<Want> wants) {
+    var out = new ArrayList<>(wants);
+    var desired = Math.max(1, (int) Math.round(out.size() / 4.0));
+    var present = (int) out.stream().filter(want -> want.kind() == SlotKind.ANCHOR).count();
+    for (var index = out.size() - 1; index >= 0 && present > desired; index--) {
+      if (out.get(index).kind() == SlotKind.ANCHOR) {
+        // Reserve defenders rotate round the flank; another ranked midpoint lane can stop
+        // short of the assault line while duplicating its existing holders.
+        out.set(index, Want.of(SlotKind.FLANK, cycle(index)));
+        present--;
+      }
+    }
+    while (present < desired) {
+      var index = defenderConversion(out);
+      out.set(index, Want.of(SlotKind.ANCHOR, Lanes.Which.MIDDLE));
+      present++;
+    }
     return out;
+  }
+
+  /** Preserve the last attacker on either side; spare an escort before abandoning a route. */
+  private static int defenderConversion(List<Want> wants) {
+    for (var index = wants.size() - 1; index >= 0; index--) {
+      var candidate = wants.get(index);
+      if (fieldAttacker(candidate)
+          && wants.stream()
+                  .filter(Playbook::fieldAttacker)
+                  .filter(want -> want.which() == candidate.which())
+                  .count()
+              > 1) return index;
+    }
+    for (var index = wants.size() - 1; index >= 0; index--) {
+      if (wants.get(index).kind() == SlotKind.ESCORT) return index;
+    }
+    for (var index = wants.size() - 1; index >= 0; index--) {
+      if (fieldAttacker(wants.get(index))) return index;
+    }
+    throw new IllegalStateException("a playbook cannot allocate its defender without an attacker");
+  }
+
+  private static boolean fieldAttacker(Want want) {
+    return switch (want.kind()) {
+      case LANE, FLANK, SWEEP -> true;
+      default -> false;
+    };
   }
 
   private static Want guard(int i) {
@@ -555,7 +602,12 @@ public final class Playbook {
                   : setup.enemyHome().plus(side.scale((pair % 3 - 1) * SWEEP_FAN));
       var regions = setup.nav().regions();
       var node = graph.nearestNodeWithin(target, SNAP);
-      var centre = node.isPresent() ? regions.centroid(regions.regionOf(node.getAsInt())) : target;
+      // A broad region centroid can erase distinct opening lanes; only an actual sighting is
+      // searched by region. Until contact, sweep the authored route itself.
+      var centre =
+          pair < sightings.size() && node.isPresent()
+              ? regions.centroid(regions.regionOf(node.getAsInt()))
+              : target;
       var desired = index % 2 == 0 ? centre : centre.plus(side.scale(SWEEP_PARTNER));
       var at = place(desired);
       return new Slot(

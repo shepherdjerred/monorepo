@@ -31,7 +31,8 @@ final class OriginalStreaksTest {
         .containsExactly(2, 4, 4, 8, 11);
     assertThat(Killstreak.COMPASS.earnedAt(2)).isTrue();
     assertThat(Killstreak.COMPASS.earnedAt(4)).isFalse();
-    assertThat(Killstreak.NAPALM.earnedAt(33)).isTrue();
+    assertThat(Killstreak.NAPALM.earnedAt(11)).isTrue();
+    assertThat(Killstreak.NAPALM.earnedAt(33)).isFalse();
   }
 
   @Test

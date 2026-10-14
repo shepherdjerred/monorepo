@@ -1,1 +1,732 @@
-{"version":1,"blocksSha256":"1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44","containers":[],"signs":[{"at":{"x":52,"y":6,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","10","Grenades","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":54,"y":6,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","3 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":52,"y":7,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":55,"y":7,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","32","Arrows","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":53,"y":6,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":55,"y":6,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":1,"y":1,"z":23},"material":"minecraft:oak_wall_sign","front":{"lines":["Only a pearl","can save you","now",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":98,"y":1,"z":18},"material":"minecraft:oak_wall_sign","front":{"lines":["Drop the noob","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":98,"y":1,"z":32},"material":"minecraft:oak_wall_sign","front":{"lines":["Did you know","that breaking","this sign ","teleports you?"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":6,"y":1,"z":46},"material":"minecraft:oak_wall_sign","front":{"lines":["Dont you hate","it when this ","happens",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":81,"y":1,"z":44},"material":"minecraft:oak_wall_sign","front":{"lines":["Your my closet","thing to a ","friend",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":1,"y":1,"z":59},"material":"minecraft:oak_wall_sign","front":{"lines":["Pro tip:","Dont fall here","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":15,"y":1,"z":59},"material":"minecraft:oak_wall_sign","front":{"lines":["Dont look down","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":95,"y":1,"z":50},"material":"minecraft:oak_wall_sign","front":{"lines":["ALLLL HAILLLL","HYPNOTOADDDDDDD","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":2,"y":1,"z":72},"material":"minecraft:oak_wall_sign","front":{"lines":["Whats worse","than death by ","ghost? Death by","trap"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":10,"y":1,"z":74},"material":"minecraft:oak_wall_sign","front":{"lines":["Wouldnt it be","a shame... if ","you didnt have","enderpearls?"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":16,"y":1,"z":81},"material":"minecraft:oak_wall_sign","front":{"lines":["Problem? :D","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":4,"y":1,"z":79},"material":"minecraft:oak_wall_sign","front":{"lines":["Enjoy a good","read while you ","fall to your","death"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":19,"y":1,"z":69},"material":"minecraft:oak_wall_sign","front":{"lines":["To cure this ","issue please ","see the ","enderpearl sign"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":72,"y":1,"z":95},"material":"minecraft:oak_wall_sign","front":{"lines":["If you are","reading this","you are going","to die"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":92,"y":1,"z":97},"material":"minecraft:oak_wall_sign","front":{"lines":["Trolololol","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":88,"y":1,"z":91},"material":"minecraft:oak_wall_sign","front":{"lines":["Trolololol","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":95,"y":1,"z":94},"material":"minecraft:oak_wall_sign","front":{"lines":["Fall of","Shame","Be","Ashamed"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":94,"y":1,"z":85},"material":"minecraft:oak_wall_sign","front":{"lines":["Trolololol","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":1,"y":1,"z":109},"material":"minecraft:oak_wall_sign","front":{"lines":["Panic mode","[on] off","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":75,"y":1,"z":110},"material":"minecraft:oak_wall_sign","front":{"lines":["Baiiiiiiii","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":76,"y":1,"z":104},"material":"minecraft:oak_wall_sign","front":{"lines":["Your escape is","simple","/suicide",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":1,"y":1,"z":128},"material":"minecraft:oak_wall_sign","front":{"lines":["Enjoy the fall ",":D","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":3,"y":1,"z":117},"material":"minecraft:oak_wall_sign","front":{"lines":["A random hole","has appeared!!","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":1,"z":122},"material":"minecraft:oak_wall_sign","front":{"lines":["Pro tip:","Dont be here","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":81,"y":1,"z":118},"material":"minecraft:oak_wall_sign","front":{"lines":["Bye Bye","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":47,"y":6,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","10","Grenades","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":47,"y":7,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":44,"y":7,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","32","Arrows","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":44,"y":6,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":6,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":45,"y":6,"z":141},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","3 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
+  "containers": [],
+  "signs": [
+    {
+      "at": {
+        "x": 1,
+        "y": 1,
+        "z": 23
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Only a pearl",
+          "can save you",
+          "now",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 98,
+        "y": 1,
+        "z": 18
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Drop the noob",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 98,
+        "y": 1,
+        "z": 32
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Did you know",
+          "that breaking",
+          "this sign ",
+          "teleports you?"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 6,
+        "y": 1,
+        "z": 46
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Dont you hate",
+          "it when this ",
+          "happens",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 81,
+        "y": 1,
+        "z": 44
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Your my closet",
+          "thing to a ",
+          "friend",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 1,
+        "y": 1,
+        "z": 59
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Pro tip:",
+          "Dont fall here",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 15,
+        "y": 1,
+        "z": 59
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Dont look down",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 95,
+        "y": 1,
+        "z": 50
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "ALLLL HAILLLL",
+          "HYPNOTOADDDDDDD",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 2,
+        "y": 1,
+        "z": 72
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Whats worse",
+          "than death by ",
+          "ghost? Death by",
+          "trap"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 10,
+        "y": 1,
+        "z": 74
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Wouldnt it be",
+          "a shame... if ",
+          "you didnt have",
+          "enderpearls?"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 16,
+        "y": 1,
+        "z": 81
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Problem? :D",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 4,
+        "y": 1,
+        "z": 79
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Enjoy a good",
+          "read while you ",
+          "fall to your",
+          "death"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 19,
+        "y": 1,
+        "z": 69
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "To cure this ",
+          "issue please ",
+          "see the ",
+          "enderpearl sign"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 72,
+        "y": 1,
+        "z": 95
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "If you are",
+          "reading this",
+          "you are going",
+          "to die"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 92,
+        "y": 1,
+        "z": 97
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Trolololol",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 88,
+        "y": 1,
+        "z": 91
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Trolololol",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 95,
+        "y": 1,
+        "z": 94
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Fall of",
+          "Shame",
+          "Be",
+          "Ashamed"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 94,
+        "y": 1,
+        "z": 85
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Trolololol",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 1,
+        "y": 1,
+        "z": 109
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Panic mode",
+          "[on] off",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 75,
+        "y": 1,
+        "z": 110
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Baiiiiiiii",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 76,
+        "y": 1,
+        "z": 104
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Your escape is",
+          "simple",
+          "/suicide",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 1,
+        "y": 1,
+        "z": 128
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Enjoy the fall ",
+          ":D",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 3,
+        "y": 1,
+        "z": 117
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "A random hole",
+          "has appeared!!",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 1,
+        "z": 122
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Pro tip:",
+          "Dont be here",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 81,
+        "y": 1,
+        "z": 118
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Bye Bye",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

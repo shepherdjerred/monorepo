@@ -36,7 +36,7 @@ public final class FallRisk {
   }
 
   /** An actual first landing may occur before a projected WALK, without a new DROP edge. */
-  static int landingDamage(
+  public static int landingDamage(
       double remainingDescent, Waypoint.Landing landing, TraversalState state, long arrivalTick) {
     if (!Double.isFinite(remainingDescent) || remainingDescent < 0)
       throw new IllegalArgumentException("remaining fall descent must be finite and non-negative");

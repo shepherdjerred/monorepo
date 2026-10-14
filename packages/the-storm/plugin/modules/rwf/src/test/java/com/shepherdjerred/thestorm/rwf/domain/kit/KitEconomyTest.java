@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.domain.kit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.rwf.domain.ability.Abilities;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -24,9 +25,9 @@ final class KitEconomyTest {
   final class Catalogue {
 
     @Test
-    void thereAreRedWarfaresTwentyFiveKitsAndTheStormsEightInMenuOrder() {
-      assertThat(KitBook.ALL).hasSize(33);
-      assertThat(KitBook.ALL.stream().map(KitSpec::id).distinct()).hasSize(33);
+    void thereAreFiftyOneKitsWithTheOriginalOrderAndEighteenDistinctAdditions() {
+      assertThat(KitBook.ALL).hasSize(51);
+      assertThat(KitBook.ALL.stream().map(KitSpec::id).distinct()).hasSize(51);
       assertThat(KitBook.ALL.subList(0, 22))
           .extracting(KitSpec::id)
           .as("SearchAndDestroy's own kit order")
@@ -67,6 +68,27 @@ final class KitEconomyTest {
               "engineer",
               "tracker",
               "decoy");
+      assertThat(KitBook.ALL.subList(33, 51))
+          .extracting(KitSpec::id)
+          .containsExactly(
+              "duelist",
+              "knight",
+              "ravager",
+              "acrobat",
+              "alchemist",
+              "scavenger",
+              "arbalist",
+              "volley",
+              "marksman",
+              "windrunner",
+              "harpooner",
+              "fletcher",
+              "lancer",
+              "maceguard",
+              "quartermaster",
+              "warden",
+              "smokescreen",
+              "tactician");
     }
 
     @Test
@@ -136,9 +158,24 @@ final class KitEconomyTest {
 
     @Test
     void everyKitWithAnAbilityNamesIt() {
-      var plain = Set.of("trooper", "longbow", "shortbow", "pyro");
+      var plain =
+          Set.of(
+              "trooper",
+              "longbow",
+              "shortbow",
+              "pyro",
+              "arbalist",
+              "volley",
+              "windrunner",
+              "harpooner",
+              "fletcher",
+              "lancer",
+              "maceguard");
       for (var kit : KitBook.ALL) {
         assertThat(kit.ability().isEmpty()).as(kit.id()).isEqualTo(plain.contains(kit.id()));
+        assertThat(Abilities.abilityOf(kit.id()).isPresent())
+            .as(kit.id())
+            .isEqualTo(!plain.contains(kit.id()));
       }
     }
 

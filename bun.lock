@@ -2304,6 +2304,7 @@
       "devDependencies": {
         "@resvg/resvg-js": "^2.6.2",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/mc-build": "workspace:*",
         "@shepherdjerred/mc-harness": "workspace:*",
         "@types/bun": "1.4.2",
         "@typescript/native": "npm:typescript@7.0.2",

@@ -1,1 +1,3019 @@
-{"version":1,"blocksSha256":"32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a","containers":[{"at":{"x":16,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":22,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":20,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":14,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":12,"y":20,"z":24},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":22,"y":17,"z":53},"material":"minecraft:dropper","items":"AQAAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":20,"y":16,"z":65},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":12,"y":17,"z":67},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":13,"y":17,"z":67},"material":"minecraft:trapped_chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":20,"y":17,"z":63},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":9,"y":16,"z":81},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":19,"y":16,"z":164},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":11,"y":16,"z":164},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":40,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":32,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":34,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":38,"y":15,"z":9},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":46,"y":16,"z":131},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":46,"y":16,"z":124},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":45,"y":16,"z":146},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":46,"y":16,"z":137},"material":"minecraft:hopper","items":"AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d\u003d"},{"at":{"x":46,"y":16,"z":153},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"}],"signs":[{"at":{"x":19,"y":11,"z":4},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":19,"z":4},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":16,"z":4},"material":"minecraft:oak_wall_sign","front":{"lines":["","\u003c---MEN","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":19,"z":4},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":25,"y":20,"z":17},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":22,"y":6,"z":12},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":19,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":20,"z":15},"material":"minecraft:oak_wall_sign","front":{"lines":["ARCHIVES","|","|","V"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":19,"z":12},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":19,"z":16},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":19,"z":16},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":19,"z":12},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":19,"z":20},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":19,"z":20},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":19,"z":8},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":20,"z":9},"material":"minecraft:oak_wall_sign","front":{"lines":["","OFFICES","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":20,"y":12,"z":48},"material":"minecraft:oak_wall_sign","front":{"lines":["BUY","God Sword","1 credit",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":4,"z":82},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":17,"y":4,"z":91},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":16,"z":87},"material":"minecraft:oak_wall_sign","front":{"lines":["Map Made By:","MastaCraft123","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":16,"z":90},"material":"minecraft:oak_wall_sign","front":{"lines":["and","DeltaStrike","Force",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":7,"y":15,"z":108},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":9,"y":15,"z":108},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":16,"z":132},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":15,"y":16,"z":132},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":16,"z":130},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":16,"z":124},"material":"minecraft:oak_sign","front":{"lines":["","EXIT","ONLY",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":15,"y":16,"z":130},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":17,"y":17,"z":121},"material":"minecraft:oak_wall_sign","front":{"lines":["","Do Not Enter","Sewer",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":9,"y":16,"z":149},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":23,"y":5,"z":135},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":16,"z":146},"material":"minecraft:oak_sign","front":{"lines":["","Enter","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":10,"y":16,"z":156},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":14,"y":16,"z":159},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":17,"y":17,"z":162},"material":"minecraft:oak_wall_sign","front":{"lines":["","Men\u0027s","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":17,"y":16,"z":152},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":16,"y":16,"z":159},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":17,"y":16,"z":154},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":12,"y":16,"z":152},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":13,"y":16,"z":154},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":20,"y":16,"z":156},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":13,"y":17,"z":162},"material":"minecraft:oak_wall_sign","front":{"lines":["","Women\u0027s","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":16,"z":152},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":25,"y":20,"z":186},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":20,"z":194},"material":"minecraft:oak_wall_sign","front":{"lines":["","COURTROOM","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":21,"y":20,"z":188},"material":"minecraft:oak_wall_sign","front":{"lines":["ARCHIVES","|","|","V"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":16,"z":199},"material":"minecraft:oak_wall_sign","front":{"lines":["","Women---\u003e","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":20,"z":5},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":37,"y":20,"z":5},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":20,"z":5},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":28,"y":16,"z":4},"material":"minecraft:oak_wall_sign","front":{"lines":["","WOMEN---\u003e","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":42,"y":20,"z":5},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":29,"y":20,"z":17},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":27,"y":22,"z":17},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":19,"z":16},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":20,"z":9},"material":"minecraft:oak_wall_sign","front":{"lines":["","COURTROOM","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":20,"z":15},"material":"minecraft:oak_wall_sign","front":{"lines":["ARCHIVES","|","|","V"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":19,"z":10},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":16,"z":48},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":16,"z":39},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":41,"y":20,"z":48},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":41,"y":20,"z":39},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":41,"y":38,"z":41},"material":"minecraft:oak_wall_sign","front":{"lines":["Lookin\u0027 Good","Out Der","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":43,"y":16,"z":45},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":43,"y":20,"z":46},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":43,"y":16,"z":42},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":43,"y":20,"z":41},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":16,"z":56},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":32,"y":17,"z":57},"material":"minecraft:oak_wall_sign","front":{"lines":["The","Piston","Diner",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":16,"z":57},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":16,"z":59},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":32,"y":17,"z":59},"material":"minecraft:oak_wall_sign","front":{"lines":["\"We Extend","Our Arms","in Welcome\"",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":40,"y":16,"z":54},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":16,"z":74},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":16,"z":72},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":43,"y":16,"z":70},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":36,"y":12,"z":101},"material":"minecraft:oak_wall_sign","front":{"lines":["","Congrats","Now go back",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":15,"z":96},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":44,"y":15,"z":96},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":39,"y":16,"z":112},"material":"minecraft:oak_wall_sign","front":{"lines":["and","MastaCraft123","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":38,"y":4,"z":113},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":39,"y":16,"z":115},"material":"minecraft:oak_wall_sign","front":{"lines":["Map made By:","DeltaStrike","Force",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":5,"z":134},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":28,"y":6,"z":147},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":42,"y":16,"z":146},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":44,"y":16,"z":144},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":16,"z":157},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":48,"y":16,"z":162},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":20,"z":159},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":16,"z":159},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":48,"y":16,"z":164},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":16,"z":164},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":48,"y":20,"z":159},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":16,"z":162},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":48,"y":20,"z":157},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":46,"y":20,"z":157},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":5,"z":173},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":20,"z":194},"material":"minecraft:oak_wall_sign","front":{"lines":["","OFFICES","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":20,"z":188},"material":"minecraft:oak_wall_sign","front":{"lines":["ARCHIVES","|","|","V"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":27,"y":22,"z":186},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","2 credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":29,"y":20,"z":186},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":12,"z":199},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":28,"y":16,"z":199},"material":"minecraft:oak_wall_sign","front":{"lines":["","\u003c---Men","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728",
+  "containers": [
+    {
+      "at": {
+        "x": 16,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 22,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 20,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 20,
+        "z": 24
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 22,
+        "y": 17,
+        "z": 53
+      },
+      "material": "minecraft:dropper",
+      "items": "AQAAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 20,
+        "y": 16,
+        "z": 65
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 17,
+        "z": 67
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 13,
+        "y": 17,
+        "z": 67
+      },
+      "material": "minecraft:trapped_chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 20,
+        "y": 17,
+        "z": 63
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 9,
+        "y": 16,
+        "z": 81
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 19,
+        "y": 16,
+        "z": 164
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 11,
+        "y": 16,
+        "z": 164
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 32,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 34,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 38,
+        "y": 15,
+        "z": 9
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 131
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 124
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 45,
+        "y": 16,
+        "z": 146
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 137
+      },
+      "material": "minecraft:hopper",
+      "items": "AQAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 153
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "signs": [
+    {
+      "at": {
+        "x": 19,
+        "y": 11,
+        "z": 4
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 19,
+        "z": 4
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 16,
+        "z": 4
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "<---MEN",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 19,
+        "z": 4
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 22,
+        "y": 6,
+        "z": 12
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 19,
+        "z": 8
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 20,
+        "z": 15
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "ARCHIVES",
+          "|",
+          "|",
+          "V"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 19,
+        "z": 12
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 19,
+        "z": 16
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 19,
+        "z": 16
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 19,
+        "z": 12
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 19,
+        "z": 20
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 19,
+        "z": 20
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 19,
+        "z": 8
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 20,
+        "z": 9
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "OFFICES",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 20,
+        "y": 12,
+        "z": 48
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "BUY",
+          "God Sword",
+          "1 credit",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 4,
+        "z": 82
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 17,
+        "y": 4,
+        "z": 91
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 16,
+        "z": 87
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Map Made By:",
+          "MastaCraft123",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 16,
+        "z": 90
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "and",
+          "DeltaStrike",
+          "Force",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 7,
+        "y": 15,
+        "z": 108
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 9,
+        "y": 15,
+        "z": 108
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 16,
+        "z": 132
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 15,
+        "y": 16,
+        "z": 132
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 16,
+        "z": 130
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 16,
+        "z": 124
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "",
+          "EXIT",
+          "ONLY",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 15,
+        "y": 16,
+        "z": 130
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 17,
+        "y": 17,
+        "z": 121
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Do Not Enter",
+          "Sewer",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 9,
+        "y": 16,
+        "z": 149
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 23,
+        "y": 5,
+        "z": 135
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 16,
+        "z": 146
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "",
+          "Enter",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 10,
+        "y": 16,
+        "z": 156
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 14,
+        "y": 16,
+        "z": 159
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 17,
+        "y": 17,
+        "z": 162
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Men's",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 17,
+        "y": 16,
+        "z": 152
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 16,
+        "y": 16,
+        "z": 159
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 17,
+        "y": 16,
+        "z": 154
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 12,
+        "y": 16,
+        "z": 152
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 13,
+        "y": 16,
+        "z": 154
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 20,
+        "y": 16,
+        "z": 156
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 13,
+        "y": 17,
+        "z": 162
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Women's",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 16,
+        "z": 152
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 20,
+        "z": 194
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "COURTROOM",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 21,
+        "y": 20,
+        "z": 188
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "ARCHIVES",
+          "|",
+          "|",
+          "V"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 16,
+        "z": 199
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Women--->",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 20,
+        "z": 5
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 37,
+        "y": 20,
+        "z": 5
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 20,
+        "z": 5
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 28,
+        "y": 16,
+        "z": 4
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "WOMEN--->",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 42,
+        "y": 20,
+        "z": 5
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 19,
+        "z": 16
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 33,
+        "y": 20,
+        "z": 9
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "COURTROOM",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 33,
+        "y": 20,
+        "z": 15
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "ARCHIVES",
+          "|",
+          "|",
+          "V"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 19,
+        "z": 10
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 16,
+        "z": 48
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 16,
+        "z": 39
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 41,
+        "y": 20,
+        "z": 48
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 41,
+        "y": 20,
+        "z": 39
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 41,
+        "y": 38,
+        "z": 41
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Lookin' Good",
+          "Out Der",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 43,
+        "y": 16,
+        "z": 45
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 43,
+        "y": 20,
+        "z": 46
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 43,
+        "y": 16,
+        "z": 42
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 43,
+        "y": 20,
+        "z": 41
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 16,
+        "z": 56
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 32,
+        "y": 17,
+        "z": 57
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "The",
+          "Piston",
+          "Diner",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 16,
+        "z": 57
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 16,
+        "z": 59
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 32,
+        "y": 17,
+        "z": 59
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "\"We Extend",
+          "Our Arms",
+          "in Welcome\"",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 40,
+        "y": 16,
+        "z": 54
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 16,
+        "z": 74
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 16,
+        "z": 72
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 43,
+        "y": 16,
+        "z": 70
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 36,
+        "y": 12,
+        "z": 101
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Congrats",
+          "Now go back",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 15,
+        "z": 96
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 44,
+        "y": 15,
+        "z": 96
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 39,
+        "y": 16,
+        "z": 112
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "and",
+          "MastaCraft123",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 38,
+        "y": 4,
+        "z": 113
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 39,
+        "y": 16,
+        "z": 115
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Map made By:",
+          "DeltaStrike",
+          "Force",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 33,
+        "y": 5,
+        "z": 134
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 28,
+        "y": 6,
+        "z": 147
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 42,
+        "y": 16,
+        "z": 146
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 44,
+        "y": 16,
+        "z": 144
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 157
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 16,
+        "z": 162
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 20,
+        "z": 159
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 159
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 16,
+        "z": 164
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 164
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 20,
+        "z": 159
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 16,
+        "z": 162
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 20,
+        "z": 157
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 46,
+        "y": 20,
+        "z": 157
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 5,
+        "z": 173
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 33,
+        "y": 20,
+        "z": 194
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "OFFICES",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 33,
+        "y": 20,
+        "z": 188
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "ARCHIVES",
+          "|",
+          "|",
+          "V"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 12,
+        "z": 199
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 28,
+        "y": 16,
+        "z": 199
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "<---Men",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

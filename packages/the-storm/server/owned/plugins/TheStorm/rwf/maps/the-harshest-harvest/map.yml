@@ -2,6 +2,7 @@
   id: the-harshest-harvest,
   name: The Harshest Harvest,
   author: A22518Y,
+  description: "In the Woods of Red villagers grow restless while the King's Troops build their new watch tower. The angry townspeople take cover in the abandoned church, but will that be enough?",
   region:
     { min: { x: 6144, "y": 0, z: 4096 }, max: { x: 6234, "y": 43, z: 4238 } },
   spectator: { x: 6189.5, "y": 43, z: 4167.5, yaw: 0, pitch: 45 },
@@ -281,5 +282,5 @@
       { id: blue-1, team: BLUE, at: { x: 6165, "y": 18, z: 4226 } },
     ],
   nukes: [],
-  blocksSha256: 83be36752e818a81f6e7ec06b17aa7ab3342e8200beddd5193fd9f4d3814804b,
+  blocksSha256: f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13,
 }

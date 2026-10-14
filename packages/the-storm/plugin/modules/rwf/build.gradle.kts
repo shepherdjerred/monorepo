@@ -48,7 +48,9 @@ mapOf(
         "the-storm-rwf-team-chat" to "TEAM_CHAT_FLAG_KEY",
         "the-storm-rwf-spectator-tools" to "SPECTATOR_TOOLS_FLAG_KEY",
         "the-storm-rwf-bomb-effects" to "BOMB_EFFECTS_FLAG_KEY",
-        "the-storm-rwf-stats" to "STATS_FLAG_KEY")
+        "the-storm-rwf-stats" to "STATS_FLAG_KEY",
+        "the-storm-rwf-host-settings" to "HOST_SETTINGS_FLAG_KEY",
+        "the-storm-rwf-candidate-visits" to "CANDIDATE_VISITS_FLAG_KEY")
     .forEach { (flagSourceId, constantName) ->
       val task =
           tasks.register<VerifyManagedFlag>(
@@ -67,6 +69,9 @@ mapOf(
 
 // The content tests parse the rwf config, kits and maps the server ships.
 tasks.test {
+  // Candidate visits prepare two disjoint yards concurrently. MockBukkit chunk snapshots allocate
+  // blocks across the world's full height, so this fixture exceeds the shared 512m test heap.
+  maxHeapSize = "1g"
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/rwf.yml"))
       .withPropertyName("shippedConfig")

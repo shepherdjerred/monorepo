@@ -37,4 +37,8 @@ public record Score(int kills, int assists, double killstreak) {
   public int streak() {
     return (int) Math.floor(killstreak);
   }
+
+  Score withoutStreak() {
+    return new Score(kills, assists, 0);
+  }
 }

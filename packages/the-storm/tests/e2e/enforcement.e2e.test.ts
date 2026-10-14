@@ -29,15 +29,17 @@ function username(prefix: string): string {
 }
 
 describe.skipIf(external)("active enforcement", () => {
-  let brain: FakeBrain;
-  let server: StartedServer;
+  let brain: FakeBrain | undefined;
+  let server: StartedServer | undefined;
   let info: ServerInfo;
   let bot: Bot;
-  let rcon: RconClient;
+  let connectedBot: Bot | undefined;
+  let rcon: RconClient | undefined;
 
   beforeAll(async () => {
     const token = randomBytes(24).toString("hex");
     brain = startFakeBrain(token);
+    const brainBaseUrl = `http://host.docker.internal:${brain.port.toString()}`;
     server = await startServer({
       // Apart from the shared suite's cache: this boot must not disturb the
       // shared server's staging, and the shared boot must not disturb this one.
@@ -51,10 +53,10 @@ describe.skipIf(external)("active enforcement", () => {
         "chat",
       ]),
       ownedConfigDir,
-      // No managed-flag gate or recording runs on these three modules.
-      env: {},
+      // The plugin's typed flag provider bootstraps even when only moderation runs.
+      env: { FLIPT_URL: brainBaseUrl, FLIPT_ENVIRONMENT: "prod" },
       brain: {
-        baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
+        baseUrl: brainBaseUrl,
         token,
       },
       sweep: {
@@ -79,14 +81,15 @@ describe.skipIf(external)("active enforcement", () => {
       port: info.gamePort,
       username: username("e"),
     });
+    connectedBot = bot;
     await rcon.command(`op ${bot.username}`);
   }, 200_000);
 
   afterAll(async () => {
-    await disconnectBot(bot);
-    rcon.close();
-    await server.stop();
-    await brain.stop();
+    if (connectedBot !== undefined) await disconnectBot(connectedBot);
+    rcon?.close();
+    if (server !== undefined) await server.stop();
+    if (brain !== undefined) await brain.stop();
   });
 
   test("repeat bursts climb to rung 1", async () => {

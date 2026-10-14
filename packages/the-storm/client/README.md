@@ -147,6 +147,19 @@ bun run test:client-native
 bun run client preview --vanilla --verify
 ```
 
+For Red Warfare menus and flying candidate visits, use
+`bun run client preview --rwf-experience`. This disposable profile stages
+Training Yard, Copperworks and Tidewatch, enables the existing FakeBrain test
+flags, and opens the preview player's kit and killstreak menus. It uses the
+production 90-second voting opportunity, 20-second preparation interval,
+30-second selected-map preview and five-second freeze, capped at eight
+combatants. It does not change production flags or owned server content.
+The profile is separate from `--vanilla`, `--rwf-duel` and `--rwf-map`.
+After connecting, use `/rwf join`; the map menu is in hotbar slot 6 and host
+settings in slot 7. `/rwf maps`, `/rwf visit <id>` and `/rwf return` drive the
+same candidate flow. Set `/gamemode survival` before joining when checking
+restoration to Survival, since the preview initially grants Creative.
+
 The first two commands run Java quality checks and Java/Bun unit tests.
 `test:client-native` uses Fabric's real-client framework to inspect a loaded
 world, capture its inventory screen, record an actual frame, and verify

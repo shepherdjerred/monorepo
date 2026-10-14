@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "gardens",
-  "blocksSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
-  "detailsSha256": "840953a203844b5c948ec39e3ae90ac0308e947249db87290a960348f6561cb4",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
+  "detailsSha256": "6d0003c26278e59c4278caa8172429f4ea23ec8e03146ef5130c2fbe154b3f07",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 1
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
+    "count": 10
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 11

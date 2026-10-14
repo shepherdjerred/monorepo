@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
+import com.shepherdjerred.thestorm.rwf.app.BotDifficulty;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverOffsets;
@@ -179,6 +180,51 @@ public final class Director {
   /** The personality's lever offsets with its archetype's push on aggression added. */
   static LeverOffsets offsets(Personality personality) {
     return personality.leverOffsets().plus(Lever.AGGRESSION, personality.archetype().aggressionZ());
+  }
+
+  /**
+   * Explicit lobby difficulty replaces the adaptive skill shift, preserving personality offsets.
+   */
+  public static Pick inBand(Pick pick, BotDifficulty difficulty) {
+    var bots =
+        pick.bots().stream()
+            .map(
+                bot ->
+                    new Drafted(
+                        bot.personality(),
+                        bot.kit(),
+                        LeverCurves.at(
+                            difficulty.skill(bot.personality().skill()),
+                            offsets(bot.personality())),
+                        bot.rating(),
+                        bot.style()))
+            .toList();
+    return new Pick(bots, 0);
+  }
+
+  /** Host bands replace mechanical competence while retaining the frozen match's seeded variety. */
+  public static Pick inBand(
+      Pick pick,
+      BotDifficulty difficulty,
+      com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen experience) {
+    return new Pick(
+        pick.bots().stream().map(bot -> banded(bot, difficulty, experience)).toList(), 0);
+  }
+
+  private static Drafted banded(
+      Drafted bot,
+      BotDifficulty difficulty,
+      com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen experience) {
+    var random =
+        new java.util.SplittableRandom(experience.seed() ^ bot.personality().id().hashCode());
+    var spread = experience.settings().variety().spread();
+    var varied = Math.clamp(bot.personality().skill() + random.nextDouble(-spread, spread), 0, 1);
+    return new Drafted(
+        bot.personality(),
+        bot.kit(),
+        LeverCurves.at(difficulty.skill(varied), offsets(bot.personality())),
+        bot.rating(),
+        bot.style());
   }
 
   /** How far apart the best team split of humans plus {@code drafted} would be. */

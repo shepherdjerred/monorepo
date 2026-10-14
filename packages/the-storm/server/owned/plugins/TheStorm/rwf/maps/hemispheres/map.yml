@@ -2,6 +2,7 @@
   id: hemispheres,
   name: Hemispheres,
   author: RuttedBus62940 and Giovani098,
+  description: Floating towers with a giant mountain in the middle,
   region:
     { min: { x: 2048, "y": 1, z: 3072 }, max: { x: 2166, "y": 73, z: 3281 } },
   spectator: { x: 2107.5, "y": 73, z: 3177, yaw: 0, pitch: 45 },
@@ -1396,5 +1397,5 @@
       { id: red-1, team: RED, at: { x: 2107, "y": 62, z: 3256 } },
     ],
   nukes: [],
-  blocksSha256: 0e754b80a8c828de3e92053d7177b1769bfca351338231aedd568c14a7712e6d,
+  blocksSha256: 3c344ec7bfb9fe504491a46054eba9cdf7262c3e0cf2fced1333a262f3a03ba2,
 }

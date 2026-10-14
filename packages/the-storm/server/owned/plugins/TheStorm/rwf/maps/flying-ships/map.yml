@@ -2,6 +2,7 @@
   id: flying-ships,
   name: FlyingShips,
   author: HeraCrossing,
+  description: Flying ships dock on a cloud ready to wage war. Winner gets the other person ship.,
   region:
     { min: { x: 5120, "y": 22, z: 2048 }, max: { x: 5318, "y": 73, z: 2112 } },
   spectator: { x: 5219.5, "y": 73, z: 2080.5, yaw: 0, pitch: 45 },
@@ -237,5 +238,5 @@
       { id: blue-1, team: BLUE, at: { x: 5275, "y": 31, z: 2073 } },
     ],
   nukes: [],
-  blocksSha256: 54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131,
+  blocksSha256: f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311,
 }

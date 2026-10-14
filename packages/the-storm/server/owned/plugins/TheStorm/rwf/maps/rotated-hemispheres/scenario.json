@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "rotated-hemispheres-trooper-duel-v1",
   "map": "rotated-hemispheres",
-  "mapSha256": "5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411",
+  "mapSha256": "9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4",
   "world": "minecraft:rwf",
   "region": {
     "min": {

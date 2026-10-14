@@ -61,8 +61,6 @@ public final class Reflex {
   /** How close the bot must stand to click a bomb. */
   public static final double BOMB_REACH = 3.0;
 
-  private static final double ALLY_SPACING = 0.9;
-
   /** Teammates closer than this push each other apart while fighting. */
   static final double SEPARATION = Playbook.SPACING;
 
@@ -75,14 +73,8 @@ public final class Reflex {
   /** How hard crowding teammates bend a walking bot's heading. */
   static final double SEPARATION_WEIGHT = 1.2;
 
-  /** A bot waits for a moving teammate this close ahead of it. */
-  static final double YIELD = 2.2;
-
   /** A push from teammates stronger than this means the fight is crowded. */
   static final double CROWDED = 0.3;
-
-  /** Slower than this per tick, a teammate counts as standing. */
-  static final double MOVING = 0.05;
 
   private static final double BOW_AIM_TOLERANCE = 5.0;
   private static final int MAX_BOW_HOLD_TICKS = 32;
@@ -115,8 +107,8 @@ public final class Reflex {
             : run.commands.stream()
                 .map(
                     command ->
-                        command instanceof BodyCommand.MoveToward(var point, var _)
-                            ? new BodyCommand.MoveToward(point, false)
+                        command instanceof BodyCommand.MoveToward(var point, var _, var hop)
+                            ? new BodyCommand.MoveToward(point, false, hop)
                             : command)
                 .toList();
     return new Step(run.state, commands);
@@ -128,10 +120,18 @@ public final class Reflex {
    */
   public static boolean hitTest(
       VoxelGrid grid, CombatantView self, Facing look, CombatantView target) {
-    var eye = self.eye();
-    var direction = look.direction();
-    var entry = target.box().rayEntry(eye, direction);
-    if (entry.isEmpty() || entry.getAsDouble() > REACH) {
+    return hitTest(grid, new AttackRay(self, look, target), Weapon.LEGACY);
+  }
+
+  private record AttackRay(CombatantView self, Facing look, CombatantView target) {}
+
+  private static boolean hitTest(VoxelGrid grid, AttackRay ray, Weapon weapon) {
+    var eye = ray.self().eye();
+    var direction = ray.look().direction();
+    var entry = ray.target().box().rayEntry(eye, direction);
+    if (entry.isEmpty()
+        || entry.getAsDouble() > weapon.maxReach()
+        || entry.getAsDouble() < weapon.minReach()) {
       return false;
     }
     var hit = eye.plus(direction.scale(entry.getAsDouble()));
@@ -144,7 +144,7 @@ public final class Reflex {
   public static int fuseGap(Levers levers, RandomGenerator random) {
     var meanSlip = (1 - levers.technique()) * FUSE_SLIP_SCALE;
     var slip = meanSlip <= 0 ? 0 : -StrictMath.log(1 - random.nextDouble()) * meanSlip;
-    return FUSE_BASE_GAP + (int) Math.round(slip);
+    return Math.min(FUSE_RESET_GAP - 3, FUSE_BASE_GAP + (int) Math.round(slip));
   }
 
   /** The gap until the next melee click: never under the CPS floor, log-normally above it. */
@@ -159,6 +159,7 @@ public final class Reflex {
     private final ReflexContext context;
     private final RandomGenerator random;
     private final CombatantView self;
+    private final TeamFootwork footwork;
     private final long now;
     private final List<BodyCommand> commands = new ArrayList<>();
     private ReflexState state;
@@ -169,11 +170,17 @@ public final class Reflex {
       this.context = context;
       this.random = random;
       this.self = input.self();
+      this.footwork = new TeamFootwork(self, input.snapshot().alive(self.team()));
       this.now = input.snapshot().tick();
     }
 
     void execute() {
       if (!self.alive() || !input.snapshot().isLive()) {
+        commands.add(new BodyCommand.Stop());
+        return;
+      }
+      if (input.decision().routeFailure().isPresent()) {
+        stopShooting();
         commands.add(new BodyCommand.Stop());
         return;
       }
@@ -184,10 +191,17 @@ public final class Reflex {
         followFirstContact();
         return;
       }
-      ability();
-      kitItems();
       var target = input.target();
       var bomb = bombInReach();
+      if (workDefuse(bomb, target)) return;
+      ability();
+      kitItems();
+      act(bomb, target);
+      crouchSpam();
+      commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
+    }
+
+    private void act(Optional<BombView> bomb, Optional<CombatantView> target) {
       if (state.isEating() || shouldStartEating(target)) {
         eat(target);
       } else if (bomb.isPresent() && !inReach(target)) {
@@ -202,8 +216,6 @@ public final class Reflex {
         stopShooting();
         walk(Optional.empty());
       }
-      crouchSpam();
-      commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
     }
 
     private void followFirstContact() {
@@ -212,6 +224,17 @@ public final class Reflex {
       state = state.withEating(-1, false).withDrawStart(-1);
       walk(Optional.of(false));
       commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
+    }
+
+    private boolean workDefuse(Optional<BombView> bomb, Optional<CombatantView> target) {
+      if (!defuses(bomb, target)) return false;
+      if (state.isEating()) {
+        commands.add(new BodyCommand.CancelUse());
+        state = state.withEating(-1, false);
+      }
+      fuse(bomb.orElseThrow());
+      commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
+      return true;
     }
 
     /**
@@ -245,6 +268,15 @@ public final class Reflex {
       return input.decision().stance() == Stance.EVASIVE;
     }
 
+    private boolean defuses(Optional<BombView> bomb, Optional<CombatantView> target) {
+      if (input.decision().option() != Option.DEFUSE || bomb.isEmpty()) return false;
+      var threatened =
+          com.shepherdjerred.thestorm.rwfbots.domain.tactics.ObjectivePolicy.immediateThreat(
+              self, target, context.grid(), now);
+      if (threatened) state = state.withNextFuseClick(now + 15);
+      return !threatened;
+    }
+
     private boolean inReach(Optional<CombatantView> target) {
       return target.isPresent() && target.get().pos().distance(self.pos()) <= REACH + 0.5;
     }
@@ -266,7 +298,7 @@ public final class Reflex {
         return;
       }
       for (var item : context.loadout().kitItems()) {
-        var use = KitPlay.choose(item, input, state.waypointIndex());
+        var use = KitPlay.choose(item, input, state.waypointIndex(), Optional.of(context.grid()));
         if (use.isPresent()) {
           commands.add(use.orElseThrow());
           state = state.withNextKitUse(now + item.move().gapTicks());
@@ -333,10 +365,11 @@ public final class Reflex {
 
     private void bow(CombatantView target) {
       var distance = self.pos().horizontalDistance(target.pos());
-      var flight = BowSolver.flightTicks(distance, BowSolver.FULL_DRAW_SPEED);
+      var speed = context.loadout().ranged().projectileSpeed();
+      var flight = BowSolver.flightTicks(distance, speed);
       var lead = target.vel().scale(flight * levers().predictionQuality());
       var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
-      var pitch = BowSolver.solve(self.eye(), aimPoint, BowSolver.FULL_DRAW_SPEED);
+      var pitch = BowSolver.solve(self.eye(), aimPoint, speed);
       if (pitch.isEmpty()) {
         stopShooting();
         walk(Optional.empty());
@@ -360,7 +393,7 @@ public final class Reflex {
         state = state.withDrawStart(now);
         return;
       }
-      var drawn = now - state.drawStart() >= BowSolver.FULL_DRAW_TICKS;
+      var drawn = now - state.drawStart() >= context.loadout().ranged().chargeTicks();
       var aligned = state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE;
       var heldLongEnough = now - state.drawStart() >= MAX_BOW_HOLD_TICKS;
       if (drawn && (aligned || heldLongEnough)) {
@@ -382,17 +415,14 @@ public final class Reflex {
 
     private void melee(CombatantView target) {
       stopShooting();
-      if (self.heldSlot() != context.loadout().swordSlot()) {
-        commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
-      }
+      armForContact(target);
       aimMelee(target);
       var distance = self.pos().distance(target.pos());
       if (state.waypointIndex() < input.decision().waypoints().size()
           && !hitTest(
               context.grid(),
-              self,
-              Facing.looking(self.eye(), target.pos().plus(0, 1.3, 0)),
-              target)) {
+              new AttackRay(self, Facing.looking(self.eye(), target.pos().plus(0, 1.3, 0)), target),
+              context.loadout().melee())) {
         var aim = state.aim();
         walk(Optional.empty());
         state = state.withAim(aim);
@@ -409,9 +439,7 @@ public final class Reflex {
       walk(Optional.empty());
       state = state.withAim(aim);
       aimMelee(target);
-      if (self.heldSlot() != context.loadout().swordSlot()) {
-        commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
-      }
+      armForContact(target);
       click(target, self.pos().distance(target.pos()));
     }
 
@@ -429,13 +457,26 @@ public final class Reflex {
                   state.aim(), Facing.looking(self.eye(), aimPoint), levers(), random));
     }
 
+    private void armForContact(CombatantView target) {
+      if (self.kit().isInvisibleKit()
+          && self.pos().distance(target.pos()) > context.loadout().melee().maxReach() + 0.5) {
+        hideHeldItem();
+      } else if (self.heldSlot() != context.loadout().swordSlot()) {
+        commands.add(new BodyCommand.SelectSlot(context.loadout().swordSlot()));
+      }
+    }
+
     private void click(CombatantView target, double distance) {
       if (now < state.nextClickAt()) {
         return;
       }
-      var landed = hitTest(context.grid(), self, state.aim().look(), target);
+      var landed =
+          hitTest(
+              context.grid(),
+              new AttackRay(self, state.aim().look(), target),
+              context.loadout().melee());
       // Save the next swing for contact rather than spending its cooldown during pursuit.
-      if (!landed && distance > REACH + 0.3) {
+      if (!landed && distance > context.loadout().melee().maxReach() + 0.3) {
         return;
       }
       commands.add(landed ? new BodyCommand.Attack(target.id()) : new BodyCommand.Swing());
@@ -458,7 +499,7 @@ public final class Reflex {
       }
       var radial = toTarget.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var apart = apart(SEPARATION, 0);
+      var apart = footwork.apart(SEPARATION, 0);
       var closing = closing(distance, apart);
       // Outside contact range, pursue rather than spending most acceleration circling.
       var charging = context.loadout().body() == Kit.Body.CHARGE && distance > REACH + 0.5;
@@ -486,7 +527,7 @@ public final class Reflex {
       }
       var radial = away.normalized();
       var side = new Vec3(-radial.z(), 0, radial.x()).scale(state.strafeDir());
-      var move = side.plus(radial.scale(0.6)).plus(apart(SEPARATION, 0));
+      var move = side.plus(radial.scale(0.6)).plus(footwork.apart(SEPARATION, 0));
       commands.add(
           new BodyCommand.MoveToward(
               self.pos().plus(move.isZero() ? radial : move.normalized()), false));
@@ -514,6 +555,7 @@ public final class Reflex {
         hold();
         return;
       }
+      hideHeldItem();
       var waypoint = waypoints.get(index);
       if (waypoint.hop() == Hop.LEAP) {
         leap(waypoint);
@@ -543,23 +585,23 @@ public final class Reflex {
       if (refusesDrop(waypoint)) return;
       var destination = interfaceDestination(waypoint);
       if (walksInterface(waypoint)) sprint = false;
-      var crowded = waypoint.hop() == Hop.WALK && allyAhead(destination);
+      var crowded = waypoint.hop() == Hop.WALK && footwork.allyAhead(destination);
       if (crowded) {
         sprint = false;
-        destination = sidestep(destination);
+        destination = footwork.sidestep(destination, state.strafeDir());
       }
       // Near the end of the path the bot walks straight in: bending there makes it circle the spot.
       if (shouldBend(waypoint, index, count, destination)) {
-        destination = bend(destination, walkingApart());
+        destination = footwork.bend(destination, walkingApart());
       }
       destination = WalkSteering.destination(context.grid(), self, waypoint, destination);
-      if (waypoint.hop() == Hop.WALK && yields(destination)) {
+      if (waypoint.hop() == Hop.WALK && footwork.yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
         var push = walkingApart();
         commands.add(WalkSteering.makeRoom(context.grid(), self, push));
         return;
       }
-      commands.add(new BodyCommand.MoveToward(destination, sprint));
+      commands.add(new BodyCommand.MoveToward(destination, sprint, waypoint.hop()));
       jumpIfNeeded(waypoint);
       lookAhead(destination);
     }
@@ -635,7 +677,16 @@ public final class Reflex {
       commands.add(new BodyCommand.Sneak(false));
       if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
       commands.add(
-          step.failed() ? new BodyCommand.Stop() : new BodyCommand.MoveToward(step.moveTo(), true));
+          step.failed()
+              ? new BodyCommand.Stop()
+              : new BodyCommand.MoveToward(
+                  step.moveTo(),
+                  true,
+                  step.state()
+                          .filter(activeFlight -> activeFlight.stage() == ActiveJump.Stage.AIRBORNE)
+                          .isPresent()
+                      ? Hop.LEAP
+                      : Hop.WALK));
       if (step.jump()) {
         commands.add(new BodyCommand.Jump());
         state = state.withLastJump(now);
@@ -693,7 +744,16 @@ public final class Reflex {
       if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
       state = state.withDrawStart(-1).withEating(-1, false);
       commands.add(
-          step.failed() ? new BodyCommand.Stop() : new BodyCommand.MoveToward(step.moveTo(), true));
+          step.failed()
+              ? new BodyCommand.Stop()
+              : new BodyCommand.MoveToward(
+                  step.moveTo(),
+                  true,
+                  step.state()
+                          .filter(activeFlight -> activeFlight.stage() == ActiveJump.Stage.AIRBORNE)
+                          .isPresent()
+                      ? Hop.LEAP
+                      : Hop.WALK));
     }
 
     private void lookAhead(Vec3 destination) {
@@ -737,116 +797,24 @@ public final class Reflex {
       return distance > SPACING_FAR ? 1.0 : 0.0;
     }
 
-    /**
-     * A horizontal push away from teammates at their closest approach during the reaction window,
-     * stronger the closer they are, so a team does not bunch up in a doorway or a brawl.
-     */
-    private Vec3 apart(double spacing, int aheadTicks) {
-      var push = Vec3.ZERO;
-      for (var other : input.snapshot().alive(self.team())) {
-        if (other.id().equals(self.id()) || !sharesFooting(other)) {
-          continue;
-        }
-        var away = self.pos().minus(other.pos()).horizontal();
-        var distance = away.length();
-        var relative = self.vel().minus(other.vel()).horizontal();
-        var closestTick =
-            relative.isZero()
-                ? 0
-                : Math.clamp(-away.dot(relative) / relative.lengthSquared(), 0, aheadTicks);
-        var separation = away.plus(relative.scale(closestTick));
-        var closest = separation.length();
-        if (closest < spacing && distance > 1.0e-3) {
-          var direction = separation.isZero() ? away : separation;
-          push = push.plus(direction.normalized().scale((spacing - closest) / spacing));
-        }
-      }
-      return push;
-    }
-
     /** Leave room before converging teammates cross the spacing band during reaction delay. */
     private Vec3 walkingApart() {
-      return apart(WALK_SEPARATION, levers().reactionTicks());
+      return footwork.apart(WALK_SEPARATION, levers().reactionTicks());
     }
 
     /** Holding a slot or drawing a bow still leaves room for crowding teammates. */
     private void standApart() {
-      var push = walkingApart();
+      var spacing =
+          switch (input.decision().option()) {
+            case TAKE_SLOT, HOLD_SLOT ->
+                com.shepherdjerred.thestorm.rwfbots.domain.tactics.Planner.COVER_ROOM;
+            default -> WALK_SEPARATION;
+          };
+      var push = footwork.apart(spacing, levers().reactionTicks());
       commands.add(
           push.isZero()
               ? new BodyCommand.Stop()
               : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
-    }
-
-    /**
-     * {@code destination} turned away from crowding teammates: the push bends the heading but never
-     * stops or reverses the walk.
-     */
-    private Vec3 bend(Vec3 destination, Vec3 push) {
-      var heading = destination.minus(self.pos()).horizontal();
-      if (push.isZero() || heading.isZero()) {
-        return destination;
-      }
-      var forward = heading.normalized();
-      var backward = Math.min(0, push.dot(forward));
-      var correction = push.minus(forward.scale(backward));
-      var direction = forward.plus(correction.scale(SEPARATION_WEIGHT));
-      var length = Math.max(heading.length(), 1);
-      return self.pos().plus(direction.normalized().scale(length)).withY(destination.y());
-    }
-
-    /**
-     * Whether to wait a tick for a teammate just ahead walking the same way, so a team files
-     * through a doorway one at a time instead of shoulder to shoulder.
-     */
-    private boolean yields(Vec3 destination) {
-      var heading = destination.minus(self.pos()).horizontal();
-      if (heading.isZero()) {
-        return false;
-      }
-      var forward = heading.normalized();
-      for (var other : input.snapshot().alive(self.team())) {
-        // Only a teammate walking away the same way is followed; one standing or coming back is
-        // walked round, so nobody ever waits on a bot that is waiting too.
-        if (other.id().equals(self.id())
-            || !sharesFooting(other)
-            || other.vel().horizontal().dot(forward) < MOVING) {
-          continue;
-        }
-        var toAlly = other.pos().minus(self.pos()).horizontal();
-        var distance = toAlly.length();
-        if (distance <= YIELD && distance > 1.0e-3 && toAlly.normalized().dot(forward) > 0.5) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    private boolean allyAhead(Vec3 destination) {
-      var heading = destination.minus(self.pos()).horizontal();
-      if (heading.isZero()) {
-        return false;
-      }
-      for (var other : input.snapshot().alive(self.team())) {
-        if (other.id().equals(self.id()) || !sharesFooting(other)) {
-          continue;
-        }
-        var toAlly = other.pos().minus(self.pos());
-        if (toAlly.length() <= ALLY_SPACING && toAlly.dot(heading) > 0) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    private Vec3 sidestep(Vec3 destination) {
-      var heading = destination.minus(self.pos()).horizontal().normalized();
-      var side = new Vec3(-heading.z(), 0, heading.x()).scale(0.6 * state.strafeDir());
-      return destination.plus(side);
-    }
-
-    private boolean sharesFooting(CombatantView other) {
-      return Math.abs(self.pos().y() - other.pos().y()) <= 1.5;
     }
 
     private void jumpIfNeeded(Waypoint waypoint) {
@@ -862,6 +830,7 @@ public final class Reflex {
     }
 
     private void hold() {
+      hideHeldItem();
       var watch = input.decision().watch();
       if (watch.isPresent()) {
         var look = Facing.looking(self.eye(), watch.get());
@@ -869,6 +838,22 @@ public final class Reflex {
       }
       if (sneaksWaiting()) {
         commands.add(new BodyCommand.Sneak(true));
+      }
+    }
+
+    /** Empty hands keep an invisible traveller hidden; attacks and item uses choose their slots. */
+    private void hideHeldItem() {
+      if (!self.kit().isInvisibleKit() || state.isDrawing() || state.isEating()) return;
+      for (var slot = 8; slot >= 0; slot--) {
+        var candidate = slot;
+        if (slot != context.loadout().swordSlot()
+            && slot != context.loadout().bowSlot()
+            && slot != context.loadout().gappleSlot()
+            && slot != context.loadout().fuseSlot()
+            && context.loadout().kitItems().stream().noneMatch(item -> item.slot() == candidate)) {
+          if (self.heldSlot() != slot) commands.add(new BodyCommand.SelectSlot(slot));
+          return;
+        }
       }
     }
 

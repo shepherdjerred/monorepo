@@ -91,6 +91,24 @@ draft:
       engineer,
       tracker,
       decoy,
+      duelist,
+      knight,
+      ravager,
+      acrobat,
+      alchemist,
+      scavenger,
+      arbalist,
+      volley,
+      marksman,
+      windrunner,
+      harpooner,
+      fletcher,
+      lancer,
+      maceguard,
+      quartermaster,
+      warden,
+      smokescreen,
+      tactician,
     ]
 
 # The most line-of-sight rays one think job casts (three per enemy inside a
@@ -108,7 +126,8 @@ traces:
 
 # Bot chat. Bots speak their personality's lines (rwfbots/personalities) to
 # the players in the match world only, members and watchers alike, never to
-# Global, Discord or anyone outside it; every line is framed like player chat
+# Discord or anyone outside it; casual lines use Global and tactical calls use
+# Team, framed like player chat
 # with the dim ✦ bot marker. Also gated by the managed Flipt flag
 # the-storm-rwfbots-chat-enabled (namespace the-storm), evaluated off the main
 # thread every flagRefreshSeconds: the flag off, an evaluation error or a
@@ -118,14 +137,16 @@ traces:
 # At each moment an eligible bot speaks with chance chances.<moment> times its
 # verbosity factor, times small archetype, tone and quirk leanings (trolls
 # taunt more, tacticians rarely), times rivalBoost for a line aimed at a
-# rival, capped at 1. A bot with the always_gg quirk always says a win or loss
-# line. Bots speak only while alive or for recentDeathSeconds after dying
-# (end-of-match lines excepted), wait botCooldownSeconds between lines and
-# never repeat a line within a match. All bots together keep minGapMillis
-# between lines and say at most maxLinesPerWindow per windowSeconds; each line
-# comes reactionMinMillis..reactionMaxMillis after its moment, and one the
-# limit would push past maxDelayMillis is dropped. An idle taunt chance comes
-# about every tauntEverySeconds (0.5x to 1.5x).
+# rival, capped at 1. The always_gg quirk guarantees a proposal, not delivery.
+# These settings govern authored proposals (including recent-death eligibility,
+# cooldowns and taunt timing); final SpeechControl limits apply to every line.
+# Global: 1 line/20s, 1 per bot/45s. Team: 2 lines per team/15s, 1 per bot/15s.
+# Same-channel/team text is deduplicated for 12s. Typing starts after 400-900ms,
+# runs at 5-9 Unicode codepoints/s and lasts 0.8-4s; it pauses other voluntary
+# actions. Danger, injury, fuse work, shield/horn commitment, death, departure,
+# phase/life changes, disabling chat and flag-off cancel unfinished speech.
+# Only nearby teammates within 24 blocks and line of sight see its indicator.
+# Tactical reports enter team memory only after successful spoken delivery.
 chat:
   enabled: true
   flagRefreshSeconds: 30

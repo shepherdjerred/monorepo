@@ -2,8 +2,11 @@ package com.shepherdjerred.thestorm.e2e.maps;
 
 import com.shepherdjerred.thestorm.rwfbots.adapter.citizens.CitizensBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -41,6 +44,7 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
   private Optional<UUID> body = Optional.empty();
   private Optional<Scenario> scenario = Optional.empty();
   private Optional<TraversalRoute> route = Optional.empty();
+  private Optional<GridBounds> courseBounds = Optional.empty();
   private Optional<BukkitTask> clock = Optional.empty();
   private String state = "idle";
   private int ticks;
@@ -180,9 +184,18 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("unknown traversal " + selected));
     body.ifPresent(id -> bodies.orElseThrow().despawn(id));
-    if (bodies.isEmpty()) bodies = Optional.of(CitizensBodies.open(plugin, id -> {}));
+    if (bodies.isEmpty())
+      bodies =
+          Optional.of(
+              CitizensBodies.open(
+                  plugin,
+                  id -> {},
+                  new SnapshotCapture.Capabilities(
+                      id -> Optional.empty(),
+                      java.time.InstantSource.fixed(java.time.Instant.EPOCH))));
     arena.tickets(plugin, true);
     arena.prepare(next.arena());
+    courseBounds = Optional.of(arena.snapshot().bounds());
     route =
         planned
             ? Optional.of(
@@ -233,7 +246,7 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
     var jump = false;
     if (ticks > SETTLE_TICKS) {
       driveTicks++;
-      jump = route.isPresent() ? planned(player, id) : calibrated(selected, position, grounded, id);
+      jump = route.isPresent() ? planned(player, id) : calibrated(selected, player, grounded, id);
     }
     var velocity = player.getVelocity();
     samples.add(
@@ -256,9 +269,13 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
     if (player.isDead() || position.getY() < 94) finish(false);
   }
 
-  private boolean calibrated(Scenario selected, Location position, boolean grounded, UUID id) {
+  private boolean calibrated(Scenario selected, Player player, boolean grounded, UUID id) {
     var owner = bodies.orElseThrow();
-    owner.moveToward(id, target(selected, position), selected.sprint());
+    var position = player.getLocation();
+    var control = calibration(selected, position, grounded || liquid(player));
+    owner.moveSafely(
+        id,
+        new Bodies.MotionTarget(control.target(), selected.sprint(), control.hop(), courseBounds));
     if (!shouldJump(selected, position, grounded)) return false;
     owner.jump(id);
     jumps++;
@@ -266,14 +283,114 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
     return true;
   }
 
+  private record Calibration(Location target, Hop hop) {}
+
+  /** Fixed course instructions exercise the final native gate without substituting the planner. */
+  private Calibration calibration(Scenario selected, Location position, boolean contact) {
+    return switch (selected.arena()) {
+      case "water" -> new Calibration(waterTarget(selected, position), Hop.SWIM);
+      case "water-throat" -> new Calibration(throatTarget(selected, position), Hop.SWIM);
+      case "water-step" -> new Calibration(waterStepTarget(selected, position), Hop.SWIM);
+      case "ladder", "vine", "scaffolding", "wet-ladder" ->
+          new Calibration(target(selected, position), Hop.CLIMB);
+      default -> dryCalibration(selected, position, contact);
+    };
+  }
+
+  private Calibration dryCalibration(Scenario selected, Location position, boolean contact) {
+    var first = firstLanding(selected);
+    if (first.isEmpty()) {
+      var hop = (!contact && selected.arena().equals("flat")) ? Hop.LEAP : Hop.WALK;
+      return new Calibration(
+          hop == Hop.LEAP ? nearbyLanding(selected, position) : arena.at(selected.goal()), hop);
+    }
+    var landing = first.orElseThrow();
+    var origin = arena.at(selected.start()).toVector();
+    var direction = arena.at(selected.goal()).toVector().subtract(origin).setY(0).normalize();
+    var traveled = position.toVector().subtract(origin).setY(0).dot(direction);
+    var required = landing.target().toVector().subtract(origin).setY(0).dot(direction);
+    if (contact && traveled >= required - 0.3)
+      return new Calibration(arena.at(selected.goal()), Hop.WALK);
+    if (position.toVector().subtract(landing.target().toVector()).setY(0).length() > 6)
+      return new Calibration(arena.at(selected.goal()), Hop.WALK);
+    return landing;
+  }
+
+  private Optional<Calibration> firstLanding(Scenario selected) {
+    var height = selected.goal().get(1);
+    return switch (selected.arena()) {
+      case "flat", "low-ceiling" -> Optional.empty();
+      case "step" -> Optional.of(new Calibration(arena.at(List.of(3.5, height, 2.5)), Hop.JUMP));
+      case "diagonal-step" ->
+          Optional.of(new Calibration(arena.at(List.of(3.5, height, 3.5)), Hop.JUMP));
+      case "slab" -> Optional.of(new Calibration(arena.at(List.of(3.5, 100.5, 2.5)), Hop.JUMP));
+      case "gap-two", "gap-two-up" ->
+          Optional.of(new Calibration(arena.at(List.of(5.5, height, 2.5)), Hop.LEAP));
+      case "gap-three", "gap-three-down" ->
+          Optional.of(new Calibration(arena.at(List.of(6.5, height, 2.5)), Hop.LEAP));
+      case "diagonal-gap" ->
+          Optional.of(new Calibration(arena.at(List.of(5.5, height, 5.5)), Hop.LEAP));
+      case "drop-four", "drop-eight", "drop-water" ->
+          Optional.of(new Calibration(arena.at(List.of(3.5, height, 2.5)), Hop.DROP));
+      default ->
+          throw new IllegalArgumentException("unknown dry calibration course " + selected.arena());
+    };
+  }
+
+  private Location nearbyLanding(Scenario selected, Location position) {
+    var goal = arena.at(selected.goal());
+    var direction = goal.toVector().subtract(position.toVector()).setY(0);
+    var distance = Math.min(3, direction.length());
+    if (distance == 0) return goal;
+    var landing = position.clone().add(direction.normalize().multiply(distance));
+    landing.setY(goal.getY());
+    return landing;
+  }
+
+  private Location waterTarget(Scenario selected, Location position) {
+    if (selected.goal().get(0) <= 8.5) return arena.at(selected.goal());
+    if (position.getX() < arena.at(List.of(8.1, 99.6, 2.5)).getX() || position.getY() < 99.35)
+      return arena.at(List.of(8.5, 99.6, 2.5));
+    return arena.at(selected.goal());
+  }
+
+  private Location throatTarget(Scenario selected, Location position) {
+    if (position.getX() < arena.at(List.of(5.4, 96.0, 2.5)).getX()) {
+      if (position.getY() > 96.2) {
+        var down = position.clone();
+        down.setY(96);
+        return down;
+      }
+      return arena.at(List.of(7.5, 96.0, 2.5));
+    }
+    return waterTarget(selected, position);
+  }
+
+  private Location waterStepTarget(Scenario selected, Location position) {
+    if (selected.goal().get(1) < selected.start().get(1)) {
+      return position.getX() > arena.at(List.of(3.7, 100.0, 2.5)).getX()
+          ? arena.at(List.of(3.5, 100.0, 2.5))
+          : arena.at(selected.goal());
+    }
+    return (position.getX() < arena.at(List.of(3.0, 99.6, 2.5)).getX() || position.getY() < 99.35)
+        ? arena.at(List.of(3.5, 99.6, 2.5))
+        : arena.at(selected.goal());
+  }
+
   private boolean planned(Player player, UUID id) {
     var commands = route.orElseThrow().tick(player, ticks);
     var owner = bodies.orElseThrow();
     for (var command : commands) {
       switch (command) {
-        case BodyCommand.MoveToward(var point, var sprint) ->
-            owner.moveToward(
-                id, new Location(player.getWorld(), point.x(), point.y(), point.z()), sprint);
+        case BodyCommand.MoveToward(var point, var sprint, var hop) ->
+            owner.moveSafely(
+                id,
+                new com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies.MotionTarget(
+                    new Location(player.getWorld(), point.x(), point.y(), point.z()),
+                    sprint,
+                    hop,
+                    Optional.of(route.orElseThrow().bounds()),
+                    route.orElseThrow().runUp()));
         case BodyCommand.Look(var yaw, var pitch) -> owner.look(id, (float) yaw, (float) pitch);
         case BodyCommand.Stop _ -> owner.stop(id);
         case BodyCommand.Jump _ -> owner.jump(id);
@@ -303,7 +420,7 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
     if (selected.arena().equals("water-throat")
         && position.getX() < arena.at(List.of(4.8, 96.0, 2.5)).getX())
       return arena.at(List.of(7.5, 96.0, 2.5));
-    if (List.of("ladder", "vine", "scaffolding").contains(selected.arena())
+    if (List.of("ladder", "vine", "scaffolding", "wet-ladder").contains(selected.arena())
         && position.getY() < 104.2) return arena.at(List.of(1.5, 104.5, 2.5));
     return arena.at(selected.goal());
   }

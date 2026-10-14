@@ -2,6 +2,7 @@
   id: perfect-balance,
   name: Perfect Balance,
   author: Retrospectrum and Atarixum,
+  description: Legends tell of a map in perfect harmony. Yin and yang.,
   region:
     { min: { x: 1024, "y": 23, z: 4096 }, max: { x: 1054, "y": 55, z: 4230 } },
   spectator: { x: 1039.5, "y": 55, z: 4163.5, yaw: 0, pitch: 45 },
@@ -114,5 +115,5 @@
       { id: red-1, team: RED, at: { x: 1039, "y": 49, z: 4215 } },
     ],
   nukes: [],
-  blocksSha256: f1ffd6e3cec863b823ce772f0e893bc5a44fe387d7daa38b3db05870e876fcaa,
+  blocksSha256: 9f827db0f7980f3ef30392be0c241e16c57378f9bee72b93f3cbd39c53ae2a1f,
 }

@@ -174,7 +174,10 @@ final class GolemGoals {
 
     private Optional<LivingEntity> target() {
       var target = golem.getTarget();
-      return target == null || target.isDead() || !target.isValid()
+      return target == null
+              || target.isDead()
+              || !target.isValid()
+              || summons.of(golem).filter(summon -> summons.mayTarget(summon, target)).isEmpty()
           ? Optional.empty()
           : Optional.of(target);
     }
@@ -203,7 +206,11 @@ final class GolemGoals {
 
     @Override
     public boolean shouldStayActive() {
-      return target().isPresent() && golem.getPathfinder().hasPath();
+      var target = target();
+      return target.isPresent()
+          && (golem.getPathfinder().hasPath()
+              || where(target.orElseThrow()).distance() <= where(target.orElseThrow()).reach()
+              || hooks.lineOfSight().test(golem, target.orElseThrow()));
     }
 
     @Override
@@ -241,7 +248,12 @@ final class GolemGoals {
       }
       if (step.swing()) {
         golem.swingMainHand();
-        golem.attack(target);
+        summons
+            .of(golem)
+            .ifPresent(
+                summon -> {
+                  if (summons.strike(summon, target)) landed(golem);
+                });
       }
     }
 
@@ -469,8 +481,9 @@ final class GolemGoals {
       var choice =
           switch (seeking) {
             case PLAYER -> {
-              for (var player : golem.getWorld().getPlayers()) {
-                sightings.add(sight(golem, team, player));
+              for (var player : summons.combatants()) {
+                if (player.getWorld().equals(golem.getWorld()))
+                  sightings.add(sight(golem, team, player));
               }
               yield GolemAi.nearestPlayer(feet, golem.getEyeHeight(), sightings);
             }

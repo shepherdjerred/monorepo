@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "saigon",
-  "blocksSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
-  "detailsSha256": "aa150beab2329a92852320491d9ecca83f2733898d83369c7aa60b7c6b4ae7ab",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+  "detailsSha256": "80eb25a60f864fd0c836088e8c52663f0183038b120bc766600c8790e2c26e56",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 6,
+    "signs": 7
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
+    "count": 12
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 6,
     "signs": 19

@@ -186,7 +186,8 @@ final class RwfMatchFlowTest {
     // Trooper's Sharpness I iron sword: (2 + 4 + 1.25) x (1 - 15 / 25) against full iron.
     assertThat(vanilla.isCancelled()).isTrue();
     assertThat(alice.getHealth()).isCloseTo(20 - 2.9, within(0.001));
-    assertThat(alice.getNoDamageTicks()).isEqualTo(20);
+    assertThat(alice.getMaximumNoDamageTicks()).isZero();
+    assertThat(alice.getNoDamageTicks()).isZero();
     assertThat(harness.actions().melee(attacker.id(), new CombatantId.Human(alice.getUniqueId())))
         .as("inside the hit window a hit of the same strength is refused")
         .contains(ActionRefusal.HIT_WINDOW);
@@ -197,6 +198,12 @@ final class RwfMatchFlowTest {
     farAway.entity().teleport(new Location(harness.rwf, 60.5, 65, 60.5));
     assertThat(harness.actions().melee(farAway.id(), new CombatantId.Human(alice.getUniqueId())))
         .contains(ActionRefusal.OUT_OF_REACH);
+    attacker.entity().teleport(new Location(harness.rwf, 31.5, 65, 22.5, 180, 0));
+    RwfHarness.elapseHitWindow(alice);
+    assertThat(harness.actions().melee(attacker.id(), new CombatantId.Human(alice.getUniqueId())))
+        .as("the same hit lands once the match's hit window expires")
+        .isEmpty();
+    assertThat(alice.getHealth()).isCloseTo(20 - 2 * 2.9, within(0.001));
   }
 
   @Test
@@ -642,9 +649,9 @@ final class RwfMatchFlowTest {
 
     // The bot is not an online player: the kill must still be credited through its entity UUID.
     // (MockBukkit's damage(amount, source) skips the by-entity event, so the hit is simulated, and
-    // it never counts down the hit window, so each hit starts from a closed window.)
+    // its scheduler does not age entities, so each victim is ticked through the hit window.)
     for (var i = 0; i < 40 && harness.combatant(alice).alive(); i++) {
-      alice.setNoDamageTicks(0);
+      RwfHarness.elapseHitWindow(alice);
       alice.simulateDamage(6, attacker.entity());
       harness.tick(Duration.ofSeconds(1));
     }

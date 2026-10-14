@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Personality;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ public final class FakeBodies implements Bodies {
   private final List<String> orders = new ArrayList<>();
   private @Nullable Runnable afterNextOrder;
   private int created;
+  private MovementSafety.Reason nextMovement = MovementSafety.Reason.CLEAR;
 
   public FakeBodies(ServerMock server) {
     this.server = server;
@@ -119,6 +121,21 @@ public final class FakeBodies implements Bodies {
     player.teleport(to);
     player.setSprinting(sprint);
     order("move " + player.getName() + (sprint ? " sprint" : ""));
+  }
+
+  /** Models one live movement result without moving the body through a refused destination. */
+  public void nextMovement(MovementSafety.Reason reason) {
+    nextMovement = reason;
+  }
+
+  @Override
+  public MovementSafety.Reason moveSafely(UUID bot, MotionTarget target) {
+    var result = nextMovement;
+    nextMovement = MovementSafety.Reason.CLEAR;
+    if (result == MovementSafety.Reason.CLEAR || result == MovementSafety.Reason.REDIRECTED)
+      moveToward(bot, target.at(), target.sprint());
+    else order(result.name().toLowerCase(java.util.Locale.ROOT) + " " + player(bot).getName());
+    return result;
   }
 
   @Override

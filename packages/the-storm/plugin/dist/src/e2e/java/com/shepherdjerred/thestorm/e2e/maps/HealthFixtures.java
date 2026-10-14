@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.e2e.maps;
 import com.shepherdjerred.thestorm.TheStormPlugin;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.rwf.adapter.content.MapFile;
+import com.shepherdjerred.thestorm.rwf.app.BattleSoundLog;
 import com.shepherdjerred.thestorm.rwf.app.BotActions;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.MatchView;
@@ -170,14 +171,14 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
     match = Optional.of(current.matchId());
     scenario = Optional.of(chosen);
     var port = view();
+    java.time.InstantSource time = () -> port.current().orElseThrow().now();
     capture =
         Optional.of(
             new SnapshotCapture(
                 ids,
                 id -> Optional.ofNullable(plugin.getServer().getPlayer(id)),
-                new StimulusCollector(),
-                new SnapshotCapture.Capabilities(
-                    port::noFallUntil, () -> port.current().orElseThrow().now())));
+                new StimulusCollector(new BattleSoundLog(time), time),
+                new SnapshotCapture.Capabilities(port::noFallUntil, time)));
     setup(
         "kit-selection",
         Map.of(

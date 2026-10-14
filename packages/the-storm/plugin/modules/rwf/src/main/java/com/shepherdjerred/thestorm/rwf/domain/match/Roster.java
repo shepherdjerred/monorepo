@@ -19,6 +19,14 @@ final class Roster {
 
   private Roster() {}
 
+  static Optional<MatchError> pickStreaks(Draft draft, MatchEvent.PickStreaks pick) {
+    var member = draft.member(pick.id());
+    if (member.isEmpty()) return Optional.of(MatchError.NOT_A_MEMBER);
+    if (!draft.phase.kitsOpen()) return Optional.of(MatchError.NOT_PRE_GAME);
+    draft.put(member.orElseThrow().withStreaks(pick.loadout()));
+    return Optional.empty();
+  }
+
   static Optional<MatchError> join(Draft draft, MatchEvent.Join join) {
     if (draft.member(join.id()).isPresent()) {
       return Optional.of(MatchError.ALREADY_JOINED);

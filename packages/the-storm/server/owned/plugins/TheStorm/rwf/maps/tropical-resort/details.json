@@ -1,1 +1,666 @@
-{"version":1,"blocksSha256":"cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144","containers":[{"at":{"x":47,"y":107,"z":125},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":47,"y":107,"z":124},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":48,"y":105,"z":125},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":37,"y":109,"z":116},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":38,"y":109,"z":116},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":39,"y":109,"z":116},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":53,"y":107,"z":125},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":49,"y":104,"z":128},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":50,"y":103,"z":127},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":51,"y":104,"z":125},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":48,"y":105,"z":135},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":51,"y":104,"z":129},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":50,"y":103,"z":132},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":52,"y":105,"z":133},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":314,"y":105,"z":23},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":313,"y":104,"z":30},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":311,"y":104,"z":29},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":312,"y":103,"z":31},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":312,"y":103,"z":26},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":310,"y":105,"z":25},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":314,"y":105,"z":33},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":311,"y":104,"z":33},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":309,"y":107,"z":33},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":315,"y":107,"z":33},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":315,"y":107,"z":34},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":324,"y":109,"z":42},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":323,"y":109,"z":42},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"},{"at":{"x":325,"y":109,"z":42},"material":"minecraft:chest","items":"AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\u003d"}],"signs":[{"at":{"x":68,"y":108,"z":84},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":67,"y":113,"z":86},"material":"minecraft:oak_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":94,"y":108,"z":93},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":107,"z":103},"material":"minecraft:oak_sign","front":{"lines":["Dinnerbone","Got ran over","by a minecart","Day 9"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":107,"z":107},"material":"minecraft:oak_sign","front":{"lines":["Notch","Eaten by","libraryaddict","Day 1"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":27,"y":107,"z":98},"material":"minecraft:oak_sign","front":{"lines":["Snowyflake","Banned by","libraryaddict","Day 666"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":26,"y":107,"z":105},"material":"minecraft:oak_sign","front":{"lines":["Jeb","A creeper","got hungry","Day 5"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":34,"y":120,"z":97},"material":"minecraft:oak_wall_sign","front":{"lines":["Map made by","Snowyflake...","Beware of","libraryaddict!"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":124,"z":100},"material":"minecraft:oak_wall_sign","front":{"lines":["Use this in","case of a","libraryaddict","attack."],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":34,"y":120,"z":100},"material":"minecraft:oak_wall_sign","front":{"lines":["Libraryaddict","loves to eat","fat little kids","in this place!"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":81,"y":109,"z":98},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":102,"y":107,"z":104},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":34,"y":110,"z":114},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":72,"y":108,"z":127},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":50,"y":107,"z":135},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Boat","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":290,"y":108,"z":31},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":312,"y":107,"z":23},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Boat","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":328,"y":110,"z":44},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenade","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":260,"y":107,"z":54},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Enderpearl","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":281,"y":109,"z":60},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":328,"y":120,"z":58},"material":"minecraft:oak_wall_sign","front":{"lines":["Libraryaddict","loves to eat","fat little kids","in this place!"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":336,"y":107,"z":51},"material":"minecraft:oak_sign","front":{"lines":["Notch","Eaten by","libraryaddict","Day 1"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":336,"y":107,"z":55},"material":"minecraft:oak_sign","front":{"lines":["Dinnerbone","Got ran over","by a minecart","Day 9"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":327,"y":124,"z":58},"material":"minecraft:oak_wall_sign","front":{"lines":["Use this in","case of a","libraryaddict","attack."],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":335,"y":107,"z":60},"material":"minecraft:oak_sign","front":{"lines":["Snowyflake","Banned by","libraryaddict","Day 666"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":336,"y":107,"z":53},"material":"minecraft:oak_sign","front":{"lines":["Jeb","A creeper","got hungry","Day 5"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":328,"y":120,"z":61},"material":"minecraft:oak_wall_sign","front":{"lines":["Map made by","Snowyflake...","Beware of","libraryaddict!"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":268,"y":108,"z":65},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":295,"y":113,"z":72},"material":"minecraft:oak_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":294,"y":108,"z":74},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrow","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+  "containers": [
+    {
+      "at": {
+        "x": 47,
+        "y": 107,
+        "z": 125
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 47,
+        "y": 107,
+        "z": 124
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 105,
+        "z": 125
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 37,
+        "y": 109,
+        "z": 116
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 38,
+        "y": 109,
+        "z": 116
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 39,
+        "y": 109,
+        "z": 116
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 53,
+        "y": 107,
+        "z": 125
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 49,
+        "y": 104,
+        "z": 128
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 50,
+        "y": 103,
+        "z": 127
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 51,
+        "y": 104,
+        "z": 125
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 48,
+        "y": 105,
+        "z": 135
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 51,
+        "y": 104,
+        "z": 129
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 50,
+        "y": 103,
+        "z": 132
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 52,
+        "y": 105,
+        "z": 133
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 314,
+        "y": 105,
+        "z": 23
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 313,
+        "y": 104,
+        "z": 30
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 311,
+        "y": 104,
+        "z": 29
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 312,
+        "y": 103,
+        "z": 31
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 312,
+        "y": 103,
+        "z": 26
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 310,
+        "y": 105,
+        "z": 25
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 314,
+        "y": 105,
+        "z": 33
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 311,
+        "y": 104,
+        "z": 33
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 309,
+        "y": 107,
+        "z": 33
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 315,
+        "y": 107,
+        "z": 33
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 315,
+        "y": 107,
+        "z": 34
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 324,
+        "y": 109,
+        "z": 42
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 323,
+        "y": 109,
+        "z": 42
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 325,
+        "y": 109,
+        "z": 42
+      },
+      "material": "minecraft:chest",
+      "items": "AQAAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "signs": [
+    {
+      "at": {
+        "x": 26,
+        "y": 107,
+        "z": 103
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Dinnerbone",
+          "Got ran over",
+          "by a minecart",
+          "Day 9"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 107,
+        "z": 107
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Notch",
+          "Eaten by",
+          "libraryaddict",
+          "Day 1"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 27,
+        "y": 107,
+        "z": 98
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Snowyflake",
+          "Banned by",
+          "libraryaddict",
+          "Day 666"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 26,
+        "y": 107,
+        "z": 105
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Jeb",
+          "A creeper",
+          "got hungry",
+          "Day 5"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 34,
+        "y": 120,
+        "z": 97
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Map made by",
+          "Snowyflake...",
+          "Beware of",
+          "libraryaddict!"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 35,
+        "y": 124,
+        "z": 100
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Use this in",
+          "case of a",
+          "libraryaddict",
+          "attack."
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 34,
+        "y": 120,
+        "z": 100
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Libraryaddict",
+          "loves to eat",
+          "fat little kids",
+          "in this place!"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 328,
+        "y": 120,
+        "z": 58
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Libraryaddict",
+          "loves to eat",
+          "fat little kids",
+          "in this place!"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 336,
+        "y": 107,
+        "z": 51
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Notch",
+          "Eaten by",
+          "libraryaddict",
+          "Day 1"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 336,
+        "y": 107,
+        "z": 55
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Dinnerbone",
+          "Got ran over",
+          "by a minecart",
+          "Day 9"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 327,
+        "y": 124,
+        "z": 58
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Use this in",
+          "case of a",
+          "libraryaddict",
+          "attack."
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 335,
+        "y": 107,
+        "z": 60
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Snowyflake",
+          "Banned by",
+          "libraryaddict",
+          "Day 666"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 336,
+        "y": 107,
+        "z": 53
+      },
+      "material": "minecraft:oak_sign",
+      "front": {
+        "lines": [
+          "Jeb",
+          "A creeper",
+          "got hungry",
+          "Day 5"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 328,
+        "y": 120,
+        "z": 61
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Map made by",
+          "Snowyflake...",
+          "Beware of",
+          "libraryaddict!"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

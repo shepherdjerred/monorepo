@@ -55,11 +55,14 @@ public final class PlayerStates {
             location.getYaw(),
             location.getPitch()),
         new Vitals(
-            player.getHealth(),
-            player.getFoodLevel(),
-            player.getSaturation(),
-            player.getExhaustion(),
-            player.getGameMode().name()),
+            new Vitals.Condition(
+                player.getHealth(),
+                player.getFoodLevel(),
+                player.getSaturation(),
+                player.getExhaustion()),
+            player.getGameMode().name(),
+            new Vitals.Flight(player.getAllowFlight(), player.isFlying(), player.getFlySpeed()),
+            player.getMaximumNoDamageTicks()),
         new Experience(
             player.getLevel(), Math.clamp(player.getExp(), 0f, 1f), player.getTotalExperience()),
         ItemData.of(ItemStack.serializeItemsAsBytes(contents)),
@@ -90,6 +93,12 @@ public final class PlayerStates {
     player.clearActivePotionEffects();
     player.addPotionEffects(effects(snapshot.effects()));
     var vitals = snapshot.vitals();
+    // Apply after the teleport: changing worlds/game mode may change flight permissions.
+    player.setAllowFlight(vitals.allowFlight());
+    player.setFlying(vitals.flying());
+    player.setFlySpeed(vitals.flySpeed());
+    player.setMaximumNoDamageTicks(vitals.maximumNoDamageTicks());
+    player.setNoDamageTicks(0);
     player.setHealth(Math.min(vitals.health(), maxHealth(player)));
     player.setFoodLevel(vitals.food());
     player.setSaturation(vitals.saturation());
@@ -129,6 +138,10 @@ public final class PlayerStates {
   public static void wipe(Player player, GameMode mode) {
     discardHeld(player);
     player.setGameMode(mode);
+    if (mode == GameMode.SURVIVAL || mode == GameMode.ADVENTURE) {
+      player.setFlying(false);
+      player.setAllowFlight(false);
+    }
     player.getInventory().clear();
     player.clearActivePotionEffects();
     player.setLevel(0);

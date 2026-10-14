@@ -303,7 +303,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
             Optional.empty(),
             "duel",
             authored.snapshot().tick(),
-            authored.decision().lifeEpoch());
+            authored.decision().lifeEpoch(),
+            java.util.Optional.empty());
     if (target.isPresent()) {
       seen.put(self.id(), target.orElseThrow().pos());
       pursuit.remove(self.id());
@@ -342,7 +343,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
                     Optional.empty(),
                     "duel:last-seen",
                     input.snapshot().tick(),
-                    input.decision().lifeEpoch()))
+                    input.decision().lifeEpoch(),
+                    java.util.Optional.empty()))
         .orElse(idle);
   }
 

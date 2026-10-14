@@ -1,0 +1,14 @@
+{
+  "id": "railcut",
+  "name": "Railcut",
+  "description": "A freight quarry with a recessed railway, open cargo cars and copper-roofed loading halls. Quarry shoulders offer defensive height, while a guarded gantry and both haul roads link three approaches to each bomb.",
+  "seed": 10503,
+  "anchor": { "x": 2048, "y": 64, "z": 8192 },
+  "size": { "x": 144, "y": 48, "z": 96 },
+  "bombs": [
+    { "x": 14, "y": 9, "z": 48 },
+    { "x": 129, "y": 9, "z": 48 }
+  ],
+  "nukes": [],
+  "spawnY": 9
+}

@@ -113,6 +113,7 @@ public final class RwfBotsPaper {
     var view = services.require(MatchView.class);
     var events = services.require(MatchEvents.class);
     var actions = BotActions.over(services.require(CombatantActions.class), view);
+    var casting = services.require(com.shepherdjerred.thestorm.rwf.app.TacticalCasting.class);
     var governor = new Governor(app.config().governor().toSettings());
     var traces =
         app.config().traces().enabled()
@@ -144,7 +145,10 @@ public final class RwfBotsPaper {
                 app.config(),
                 module.random(),
                 module.logger()));
-    var stimuli = new StimulusCollector();
+    var stimuli =
+        new StimulusCollector(
+            services.require(com.shepherdjerred.thestorm.rwf.app.BattleSounds.class),
+            module.time());
     // Lobby bodies never use a kit ability, so nothing reports a Rewind landing from here.
     var lobby =
         new LobbyTicker(
@@ -154,7 +158,7 @@ public final class RwfBotsPaper {
                 app.lobby(),
                 new BodyDriver(
                     new BodyDriver.Parts(
-                        app.bodies(), actions, app.lobbyWorld(), stimuli, bot -> {})),
+                        app.bodies(), actions, app.lobbyWorld(), stimuli, bot -> {}, casting)),
                 actions,
                 app.config(),
                 module.time(),
@@ -178,7 +182,8 @@ public final class RwfBotsPaper {
                 view));
     var driver =
         new BodyDriver(
-            new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bridge::rewound));
+            new BodyDriver.Parts(
+                app.bodies(), actions, app.world(), stimuli, bridge::rewound, casting));
     var observations =
         new LearningObservations(
             new LearningObservations.Parts(
@@ -186,7 +191,8 @@ public final class RwfBotsPaper {
                 view,
                 module.plugin().getServer(),
                 com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract.load(),
-                module.time()));
+                module.time(),
+                services.require(com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class)));
     var ticker =
         new BotTicker(
             new BotTicker.Parts(
@@ -200,7 +206,12 @@ public final class RwfBotsPaper {
                 System::nanoTime,
                 lobby,
                 observations,
-                app.learning()));
+                app.learning(),
+                new TacticalObservations(
+                    new TacticalObservations.Parts(
+                        services.require(com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class),
+                        services.require(com.shepherdjerred.thestorm.rwf.app.TacticalReports.class),
+                        module.time()))));
     module.plugin().getServer().getPluginManager().registerEvents(stimuli, module.plugin());
     var doors =
         new DoorVisibility(
@@ -237,7 +248,14 @@ public final class RwfBotsPaper {
                         module.time(),
                         module.logger())))
             : Optional.<BotChat>empty();
-    chat.ifPresent(talk -> talk.start(events));
+    chat.ifPresent(
+        talk -> {
+          talk.compose(loop, module.plugin());
+          ticker.communication(talk);
+          driver.communication(talk);
+          lobby.communication(talk);
+          talk.start(events);
+        });
     var heard =
         chat.map(
             talk ->

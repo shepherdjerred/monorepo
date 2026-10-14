@@ -14,6 +14,7 @@ export const MapContent = z.strictObject({
   id: identity,
   name: z.string().min(1),
   author: z.string().min(1),
+  description: z.string().trim().min(1),
   region,
   spectator: spawn,
   teams: z

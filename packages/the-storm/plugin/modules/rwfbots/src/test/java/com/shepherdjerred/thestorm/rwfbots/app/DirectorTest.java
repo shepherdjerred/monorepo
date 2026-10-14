@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwf.app.BotDifficulty;
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
@@ -46,6 +47,56 @@ final class DirectorTest {
 
   private static Director.Request request(int slots, List<Rating> humans, Set<String> excluded) {
     return new Director.Request(catalog(), Map.of(), humans, slots, excluded, SHIPPED, 2);
+  }
+
+  @Test
+  void explicitDifficultyKeepsIdentitiesKitsRatingsAndSkillVariation() {
+    var drafted =
+        Director.pick(request(6, List.of(Rating.DEFAULT), Set.of()), new SplittableRandom(11));
+    var easy = Director.inBand(drafted, BotDifficulty.EASY);
+    var hard = Director.inBand(drafted, BotDifficulty.HARD);
+    assertThat(easy.bots())
+        .extracting(bot -> bot.personality().id())
+        .containsExactlyElementsOf(
+            drafted.bots().stream().map(bot -> bot.personality().id()).toList());
+    assertThat(hard.bots())
+        .extracting(Director.Drafted::kit)
+        .containsExactlyElementsOf(drafted.bots().stream().map(Director.Drafted::kit).toList());
+    assertThat(hard.bots())
+        .extracting(Director.Drafted::rating)
+        .containsExactlyElementsOf(drafted.bots().stream().map(Director.Drafted::rating).toList());
+    for (var i = 0; i < easy.bots().size(); i++) {
+      assertThat(easy.bots().get(i).levers().aimErrorDeg())
+          .isGreaterThan(hard.bots().get(i).levers().aimErrorDeg());
+    }
+    assertThat(easy.bots().stream().map(bot -> bot.levers().aimErrorDeg()).distinct())
+        .hasSizeGreaterThan(1);
+  }
+
+  @Test
+  void hostSkillBandsRetainFrozenMatchStyleAndSeededVariety() {
+    var settings =
+        com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT
+            .withStyle(com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.Style.TEAMPLAY)
+            .withVariety(com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.Variety.HIGH);
+    var frozen =
+        new com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen(
+            new java.util.UUID(0, 1), 7, settings);
+    var drafted = Director.pick(request(6, List.of(), Set.of()), frozen, new SplittableRandom(11));
+    var easy = Director.inBand(drafted, BotDifficulty.EASY, frozen);
+    assertThat(easy.bots())
+        .extracting(Director.Drafted::style)
+        .containsExactlyElementsOf(drafted.bots().stream().map(Director.Drafted::style).toList());
+    assertThat(easy.bots())
+        .extracting(Director.Drafted::kit)
+        .containsExactlyElementsOf(drafted.bots().stream().map(Director.Drafted::kit).toList());
+    assertThat(Director.inBand(drafted, BotDifficulty.EASY, frozen)).isEqualTo(easy);
+    var next =
+        new com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen(
+            frozen.matchId(), 8, settings);
+    assertThat(Director.inBand(drafted, BotDifficulty.EASY, next).bots())
+        .extracting(Director.Drafted::levers)
+        .isNotEqualTo(easy.bots().stream().map(Director.Drafted::levers).toList());
   }
 
   @Test

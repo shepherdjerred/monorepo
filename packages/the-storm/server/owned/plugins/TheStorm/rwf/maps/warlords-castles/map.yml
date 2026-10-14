@@ -2,6 +2,7 @@
   id: warlords-castles,
   name: Warlords Castles,
   author: "libraryaddict, Petlove506, Snowyflake",
+  description: "Four castles were planned, they looked at their previous designs and built on them. Then declared war!",
   region:
     { min: { x: 6144, "y": 0, z: 5120 }, max: { x: 6520, "y": 96, z: 5496 } },
   spectator: { x: 6332.5, "y": 96, z: 5308.5, yaw: 0, pitch: 45 },
@@ -762,5 +763,5 @@
       { id: green-1, team: GREEN, at: { x: 6344, "y": 87, z: 5179 } },
     ],
   nukes: [],
-  blocksSha256: dbf2499bf25527672bc0dc5f6a6c595821186486795293245006845f8c2ee036,
+  blocksSha256: 04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77,
 }

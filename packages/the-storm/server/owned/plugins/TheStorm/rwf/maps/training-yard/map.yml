@@ -9,6 +9,7 @@
 id: training-yard
 name: Training Yard
 author: The Storm
+description: "A compact two-team practice arena with opposing bases, central cover and open flanks. Learn the routes, defend your bomb and test your kit."
 region:
   min: { x: 0, y: 64, z: 0 }
   max: { x: 63, y: 79, z: 63 }

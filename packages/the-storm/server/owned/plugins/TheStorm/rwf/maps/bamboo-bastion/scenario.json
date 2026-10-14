@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "bamboo-bastion-trooper-duel-v1",
+  "map": "bamboo-bastion",
+  "mapSha256": "dcb7a0624d0d046b04349244cd6e0c1141d3e5dff3f274f89bb272c418703164",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 5120,
+      "y": 64,
+      "z": 7168
+    },
+    "max": {
+      "x": 5247,
+      "y": 111,
+      "z": 7295
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [5125.5, 73, 7226.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [5242.5, 73, 7226.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

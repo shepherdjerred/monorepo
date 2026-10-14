@@ -62,7 +62,7 @@ public final class Perception {
   public Percept perceive(
       PerceptionState state, CombatantView self, WorldSnapshot snapshot, RandomGenerator random) {
     var now = snapshot.tick();
-    var suspicion = catchSpies(state.suspicion(), self, snapshot);
+    var suspicion = catchSpies(state.suspicion(), self, snapshot, state.heardThrough());
     var memory = state.memory();
     var visible = new ArrayList<CombatantView>();
     for (var other : snapshot.combatants()) {
@@ -81,10 +81,14 @@ public final class Perception {
         memory = memory.remember(other.id(), new Sighting(other.pos(), other.vel(), now, 1, true));
       }
     }
-    memory = hear(memory, new Frame(self, snapshot, suspicion), random);
+    memory = hear(memory, new Frame(self, snapshot, suspicion, state.heardThrough()), random);
     memory = memory.prune(now, TAU_TICKS);
     visible.sort(comparingDouble(other -> other.pos().distanceSquared(self.pos())));
-    return new Percept(new PerceptionState(memory, suspicion), visible, now);
+    var heardThrough =
+        snapshot.stimuli().isEmpty()
+            ? state.heardThrough()
+            : Math.max(state.heardThrough(), snapshot.stimuli().getLast().sequence());
+    return new Percept(new PerceptionState(memory, suspicion, heardThrough), visible, now);
   }
 
   /** Whether {@code other} is, as far as {@code self} can tell, an enemy. */
@@ -107,7 +111,7 @@ public final class Perception {
     if (!regionsMightSee(self, other)) {
       return false;
     }
-    return hasLineOfSight(context.grid(), self.eye(), other);
+    return hasLineOfSight(context, self.eye(), other);
   }
 
   private static boolean betraysInvisibility(
@@ -151,16 +155,27 @@ public final class Perception {
         || grid.canSee(eye, target.pos().plus(0, FEET_HEIGHT, 0));
   }
 
+  public static boolean hasLineOfSight(SenseContext context, Vec3 eye, CombatantView target) {
+    return clearRay(context, eye, target.eye())
+        || clearRay(context, eye, target.pos().plus(0, CHEST_HEIGHT, 0))
+        || clearRay(context, eye, target.pos().plus(0, FEET_HEIGHT, 0));
+  }
+
+  private static boolean clearRay(SenseContext context, Vec3 from, Vec3 to) {
+    return SightCloud.clear(context.clouds(), from, to) && context.grid().canSee(from, to);
+  }
+
   /** One bot's view of one tick while hearing. */
-  private record Frame(CombatantView self, WorldSnapshot snapshot, Suspicion suspicion) {}
+  private record Frame(
+      CombatantView self, WorldSnapshot snapshot, Suspicion suspicion, long heardThrough) {}
 
   private static Memory hear(Memory memory, Frame frame, RandomGenerator random) {
     var self = frame.self();
     var snapshot = frame.snapshot();
     var suspicion = frame.suspicion();
     var result = memory;
-    for (var stimulus : snapshot.stimuli()) {
-      if (stimulus.source().isEmpty()) {
+    for (var stimulus : snapshot.stimuliAfter(frame.heardThrough())) {
+      if (stimulus.sequence() <= frame.heardThrough() || stimulus.source().isEmpty()) {
         continue;
       }
       var source = snapshot.combatant(stimulus.source().get());
@@ -171,7 +186,7 @@ public final class Perception {
         continue;
       }
       var distance = self.pos().distance(stimulus.pos());
-      var range = stimulus.kind().range();
+      var range = stimulus.radius();
       if (distance > range) {
         continue;
       }
@@ -180,7 +195,7 @@ public final class Perception {
       result =
           result.remember(
               source.get().id(),
-              new Sighting(heard, Vec3.ZERO, snapshot.tick(), SOUND_CONFIDENCE, false));
+              new Sighting(heard, Vec3.ZERO, stimulus.tick(), SOUND_CONFIDENCE, false));
     }
     return result;
   }
@@ -195,9 +210,10 @@ public final class Perception {
    * Reveals disguised enemies that hit one of ours or clicked one of our bombs this tick. Only
    * evidence within the awareness radius counts.
    */
-  private Suspicion catchSpies(Suspicion suspicion, CombatantView self, WorldSnapshot snapshot) {
+  private Suspicion catchSpies(
+      Suspicion suspicion, CombatantView self, WorldSnapshot snapshot, long heardThrough) {
     var result = suspicion;
-    for (var stimulus : snapshot.stimuli()) {
+    for (var stimulus : snapshot.stimuliAfter(heardThrough)) {
       if (stimulus.source().isEmpty()
           || self.pos().distance(stimulus.pos()) > context.levers().awarenessRadius()) {
         continue;
@@ -223,7 +239,7 @@ public final class Perception {
       case FUSE_CLICK ->
           snapshot.bombsOf(self.team()).stream()
               .anyMatch(bomb -> bomb.pos().distance(stimulus.pos()) <= BOMB_TOUCH_RANGE);
-      case FOOTSTEP, BOW_SHOT, EAT, FUSE_HISS -> false;
+      case FOOTSTEP, LAND, SPLASH, BOW_SHOT, EAT, FUSE_HISS -> false;
     };
   }
 

@@ -116,9 +116,13 @@ public record RwfMatch(
           }
           case MatchEvent.PickKit pick ->
               Roster.pickKit(draft, pick.id(), pick.kitId(), Optional.of(pick.access()));
+          case MatchEvent.PickStreaks pick -> Roster.pickStreaks(draft, pick);
           case MatchEvent.ForceKit force ->
               Roster.pickKit(draft, force.id(), force.kitId(), Optional.empty());
-          case MatchEvent.BallotOpened opened -> Voting.opened(draft, opened.candidates());
+          case MatchEvent.BallotOpened opened ->
+              Voting.opened(draft, opened.candidates(), opened.visitLength());
+          case MatchEvent.CandidatesReady ready ->
+              Voting.visitsReady(draft, ready.mapIds(), ready.now());
           case MatchEvent.Vote vote -> Voting.cast(draft, vote.id(), vote.mapId());
           case MatchEvent.CloseVote _ -> Voting.closeVote(draft);
           case MatchEvent.SetMap set -> Voting.set(draft, set.candidate());

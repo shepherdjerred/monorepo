@@ -8,8 +8,12 @@ import com.shepherdjerred.thestorm.rwf.app.shop.Purchase;
 import com.shepherdjerred.thestorm.rwf.app.shop.ShopError;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitBrowser;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -25,6 +29,7 @@ final class KitMenus {
   private final Armory armory;
   private final KitMenu.Opener opener;
   private final RwfAnalytics product;
+  private final Map<UUID, KitBrowser.Query> browsing = new HashMap<>();
 
   KitMenus(PaperContext context, KitFactory items, Armory armory, RwfAnalytics product) {
     this.context = context;
@@ -40,6 +45,18 @@ final class KitMenus {
 
   /** Opens page {@code page} of the kit menu for {@code player}, marking {@code picked}. */
   void open(Player player, Optional<String> picked, int page) {
+    open(player, picked, query(player.getUniqueId()).at(page));
+  }
+
+  KitBrowser.Query query(UUID player) {
+    return browsing.getOrDefault(player, KitBrowser.Query.DEFAULT);
+  }
+
+  void forget(UUID player) {
+    browsing.remove(player);
+  }
+
+  void open(Player player, Optional<String> picked, KitBrowser.Query query) {
     var id = player.getUniqueId();
     armory.load(
         id,
@@ -57,8 +74,9 @@ final class KitMenus {
                   armory.rotation(now),
                   KitMenu.until(now, armory.rotationEnds(now)),
                   Optional.empty(),
-                  page);
+                  query);
           var menu = opener.open(player, view);
+          browsing.put(id, menu.query());
           armory.credits(
               id,
               credits -> {

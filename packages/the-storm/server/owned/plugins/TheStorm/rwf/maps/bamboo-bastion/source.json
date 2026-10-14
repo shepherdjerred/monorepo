@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/bamboo-bastion.ts",
+  "metadata": "tools/maps/authored/bamboo-bastion.json",
+  "seed": 10405,
+  "dataVersion": 4903,
+  "blocksSha256": "dcb7a0624d0d046b04349244cd6e0c1141d3e5dff3f274f89bb272c418703164"
+}

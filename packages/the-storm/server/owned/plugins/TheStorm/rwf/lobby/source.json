@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "kind": "preserved-lobby-with-authored-annex",
+  "program": "tools/maps/lobby/annex.ts",
+  "original": "tools/maps/lobby/base.schem",
+  "originalMetadata": "tools/maps/lobby/base.yml",
+  "originalBlocksSha256": "2f2abc3b3409acd51831409c321701dfb71d61784c18f7b0539b1cc3ca3ba460",
+  "blocksSha256": "140659c1b1c07fed94515524a8eb07c73ec5d76ec6e12fc829080d539a47bfd3",
+  "seed": 20261013,
+  "dataVersion": 4903,
+  "doorwayEdits": [
+    {
+      "min": {
+        "x": 106,
+        "y": 69,
+        "z": 20
+      },
+      "max": {
+        "x": 107,
+        "y": 70,
+        "z": 24
+      }
+    },
+    {
+      "min": {
+        "x": 106,
+        "y": 69,
+        "z": 76
+      },
+      "max": {
+        "x": 107,
+        "y": 70,
+        "z": 80
+      }
+    }
+  ],
+  "originalAlcoves": 33,
+  "newAlcoves": 18,
+  "totalCapacity": 60
+}

@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "cloned-beanstalks",
-  "blocksSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
-  "detailsSha256": "689e0af3ff4dcfccc22c75b373484a48f9676490b052d419297f4d5d0b2c22c4",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+  "detailsSha256": "5ccaa9144da0cf70348f820a2c0ee6e61f1f8cd7ec03e107a36e4c83e9abd56d",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 63,
+    "signs": 0
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
+    "count": 36
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 63,
     "signs": 36

@@ -11,8 +11,12 @@
 # AIR item keeps a slot empty) and a kit's arrow is moved to inventory slot 9;
 # armor names its slot (HELMET, CHESTPLATE, LEGGINGS, BOOTS). An item's look
 # (or null) gives its name's chat colour, lore and lore colour, a glint, and a
-# dye (#RRGGBB, or team for the wearer's team colour). Prices are Red Warfare
-# credits; a kit is PURCHASE exactly when it has a price. tier (BASIC, MID or
+# dye (#RRGGBB, or team for the wearer's team colour).
+# Every hotbar item explicitly lists potions, empty for ordinary items; effects
+# name an amplifier and delivered duration in ticks. category groups kits as
+# CLASSIC, RANGED or TACTICAL independently of the price tier.
+# Prices are Red Warfare credits; a kit is PURCHASE exactly when it has a price.
+# tier (BASIC, MID or
 # ADVANCED) follows the price and drives the weekly free rotation. icon and
 # iconTint are what the kit menu and the lobby alcove show it by; summary is
 # one to four lines of at most 40 characters, the alcove's label. A description
@@ -25,6 +29,7 @@ kits:
       The kit that sets the standards for all others. It receives a set of iron armor and an iron sword, along with five golden apples with which it can quickly recover from fights.
     price: 0
     tier: BASIC
+    category: CLASSIC
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -33,6 +38,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { sharpness: 1 },
+          potions: [],
           look: null,
         }
       - {
@@ -40,6 +46,7 @@ kits:
           amount: 3,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -65,6 +72,7 @@ kits:
       An offensive kit with a powerful axe and low armor. Its damage increases by half a heart every kill as it works up a bloodlust.
     price: 400
     tier: ADVANCED
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -73,6 +81,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { sharpness: 2 },
+          potions: [],
           look: null,
         }
       - {
@@ -80,6 +89,7 @@ kits:
           amount: 2,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -104,6 +114,7 @@ kits:
       A kit equipped with a flaming sword and two landmines which it can set. When triggered by an enemy, they will explode, dealing severe damage! Additionally, it can fuse and defuse bombs twice as fast!
     price: 300
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: { type: BOMB_SPEED, level: 5 }
     hotbar:
@@ -112,6 +123,7 @@ kits:
           amount: 1,
           name: "Flaming Sword",
           enchantments: { fire_aspect: 2 },
+          potions: [],
           look:
             {
               nameColor: "red",
@@ -126,6 +138,7 @@ kits:
           amount: 2,
           name: "Landmine",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "yellow",
@@ -168,6 +181,7 @@ kits:
       A defensive kit that gains power by sneaking. As it levels up, it gets stronger and stronger, but there is a cost. The more powerful a dwarf is, the slower it gets. When not sneaking, it will lose power at the same rate as it gained, with a much higher cost for sprinting.
     price: 500
     tier: ADVANCED
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -176,6 +190,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -201,6 +216,7 @@ kits:
       An offensive kit equipped with RPGs and grenades. When launched, RPGs will soar through the air until they make contact, then explode. Beware, because explosives can be damaged by their own RPGs. Grenades will explode a short time after being thrown. Though they can't be thrown as far or deal as much damage, you will get more over time and can throw multiple at once.
     price: 150
     tier: BASIC
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -209,6 +225,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { knockback: 1 },
+          potions: [],
           look: null,
         }
       - {
@@ -216,6 +233,7 @@ kits:
           amount: 5,
           name: "RPG",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "yellow",
@@ -230,6 +248,7 @@ kits:
           amount: 10,
           name: "Grenade",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "yellow",
@@ -266,6 +285,7 @@ kits:
       This kit is invisible and can sneak around unseen by the enemy, but its invisibility is not perfect. Held items, sprint particles, flames, and arrows will all reveal a ghost's presence. While it has no armor, it is given enderpearls to help travel around and make hasty escapes.
     price: 150
     tier: BASIC
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -274,14 +294,23 @@ kits:
           amount: 1,
           name: null,
           enchantments: { sharpness: 2 },
+          potions: [],
           look: null,
         }
-      - { material: AIR, amount: 1, name: null, enchantments: {}, look: null }
+      - {
+          material: AIR,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+          potions: [],
+        }
       - {
           material: ENDER_PEARL,
           amount: 4,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor: []
@@ -301,6 +330,7 @@ kits:
       This comes at great cost to its mobility, as it cannot sprint.
     price: 350
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -309,6 +339,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -334,6 +365,7 @@ kits:
       A supporting archer, this kit receives a bow that will send enemies flying.
     price: 0
     tier: BASIC
+    category: RANGED
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -342,6 +374,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -349,9 +382,17 @@ kits:
           amount: 1,
           name: null,
           enchantments: { punch: 3, infinity: 1 },
+          potions: [],
           look: null,
         }
-      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
+      - {
+          material: ARROW,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+          potions: [],
+        }
     armor:
       - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
       - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
@@ -384,6 +425,7 @@ kits:
       §4§lThis kit loses its healing ability in small games with less than 20 players
     price: 0
     tier: MID
+    category: TACTICAL
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -392,6 +434,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -399,6 +442,7 @@ kits:
           amount: 1,
           name: "",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -413,6 +457,7 @@ kits:
           amount: 20,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -444,6 +489,7 @@ kits:
       A master of fire, this kit is given a flaming bow and sword, and fire resistant leather armor.
     price: 200
     tier: BASIC
+    category: RANGED
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -452,6 +498,7 @@ kits:
           amount: 1,
           name: "Molten Sword",
           enchantments: { fire_aspect: 2 },
+          potions: [],
           look:
             {
               nameColor: "red",
@@ -466,6 +513,7 @@ kits:
           amount: 1,
           name: "Charred Bow",
           enchantments: { infinity: 1, flame: 2 },
+          potions: [],
           look:
             {
               nameColor: "red",
@@ -475,7 +523,14 @@ kits:
               dye: null,
             },
         }
-      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
+      - {
+          material: ARROW,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+          potions: [],
+        }
     armor:
       - {
           material: CHAINMAIL_BOOTS,
@@ -534,6 +589,7 @@ kits:
       This kit is a master of hitting and running, as it has a magical clock that will teleport it where it was 30 seconds in the past. While health is unchanged, if the user was on fire, it will be put out like it never existed.
     price: 0
     tier: MID
+    category: TACTICAL
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -542,6 +598,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -549,6 +606,7 @@ kits:
           amount: 1,
           name: "Time Machine",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -586,6 +644,7 @@ kits:
       A powerful archer, this kit receives a bow with which it deals precise damage.
     price: 0
     tier: BASIC
+    category: RANGED
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -594,6 +653,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { knockback: 1 },
+          potions: [],
           look: null,
         }
       - {
@@ -601,9 +661,17 @@ kits:
           amount: 1,
           name: null,
           enchantments: { power: 2, infinity: 1 },
+          potions: [],
           look: null,
         }
-      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
+      - {
+          material: ARROW,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+          potions: [],
+        }
     armor:
       - { material: CHAINMAIL_BOOTS, slot: BOOTS, enchantments: {}, dye: null }
       - { material: IRON_LEGGINGS, slot: LEGGINGS, enchantments: {}, dye: null }
@@ -632,6 +700,7 @@ kits:
       A sneaky kit that always looks like the team of the view. He looks like a trooper!
     price: 250
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -640,6 +709,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -665,6 +735,7 @@ kits:
       A supportive kit that can create teleporters to transfer their team across the map. Step on one and sneak to use it! Beware, the enemies can easily break the teleporters.
     price: 0
     tier: MID
+    category: TACTICAL
     availability: FREE
     fuseBonus: null
     hotbar:
@@ -673,6 +744,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -680,6 +752,7 @@ kits:
           amount: 1,
           name: "Teleport Creator",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "blue",
@@ -694,6 +767,7 @@ kits:
           amount: 1,
           name: "Remote Teleporter",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "blue",
@@ -730,6 +804,7 @@ kits:
       A kit that must pick its early kills carefully, as it only starts with 8 hearts. However, every kill grants it a vital reward of 2 hearts, with a maximum of 20.
     price: 300
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -738,6 +813,7 @@ kits:
           amount: 1,
           name: "Vampiric Sword",
           enchantments: { sharpness: 1 },
+          potions: [],
           look:
             {
               nameColor: "red",
@@ -770,6 +846,7 @@ kits:
       An offensive kit that excels at hit and runs. Its blade is coated in deadly poison and paralyzer, making every hit it lands poison its foe and slow them down!
     price: 400
     tier: ADVANCED
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -778,6 +855,7 @@ kits:
           amount: 1,
           name: "Poisoned Sword",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "dark_green",
@@ -814,6 +892,7 @@ kits:
       A supportive kit, it has the ability to warp a group of enemies to where it was standing 10 seconds ago, making it useful against an otherwise strong defense.
     price: 250
     tier: MID
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -822,6 +901,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { sharpness: 1 },
+          potions: [],
           look: null,
         }
       - {
@@ -829,6 +909,7 @@ kits:
           amount: 1,
           name: "Warper's Wand",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -863,6 +944,7 @@ kits:
       With fall protection, he's not afraid of heights!
     price: 200
     tier: BASIC
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -871,6 +953,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -878,6 +961,7 @@ kits:
           amount: 6,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -914,6 +998,7 @@ kits:
       When frozen, your enemies cannot switch items or use their offhand!
     price: 150
     tier: BASIC
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -922,6 +1007,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -964,6 +1050,7 @@ kits:
       Every kill they are defenseless for 3 seconds.
     price: 300
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -972,6 +1059,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { silk_touch: 1 },
+          potions: [],
           look: null,
         }
     armor:
@@ -999,6 +1087,7 @@ kits:
       Inferior to a normal ghost, wraith has no enderpearls or sword but instead must make do with a bow with power II!
     price: 200
     tier: BASIC
+    category: RANGED
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1007,9 +1096,17 @@ kits:
           amount: 1,
           name: null,
           enchantments: { power: 2, infinity: 1 },
+          potions: [],
           look: null,
         }
-      - { material: ARROW, amount: 1, name: null, enchantments: {}, look: null }
+      - {
+          material: ARROW,
+          amount: 1,
+          name: null,
+          enchantments: {},
+          look: null,
+          potions: [],
+        }
     armor: []
     ability: wraith
     icon: TIPPED_ARROW
@@ -1024,6 +1121,7 @@ kits:
       One of the most feared kits, the bleeder can permanently destroy the health of his foes with every blow
     price: 400
     tier: ADVANCED
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1032,6 +1130,7 @@ kits:
           amount: 1,
           name: "The Bleeder",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "dark_red",
@@ -1074,6 +1173,7 @@ kits:
       You will always take 3 damage, you will always deal 3 damage. You were born equal and you will die equal.
     price: 350
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1082,6 +1182,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -1122,6 +1223,7 @@ kits:
       An unstoppable force that can be as much danger to itself as it is to others. Damage increases as you run, sharp turns negate this and running into a wall can be quite painful.
     price: 350
     tier: MID
+    category: CLASSIC
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1130,6 +1232,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1137,6 +1240,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -1177,6 +1281,7 @@ kits:
       This kit will lets the user sacrifice their health in place of one of their allies. When being sacrificed for, the ally will transfer all damage taken to the sacrificial, who must consume their every replenishing steak to survive. Be cautious, for the sacrificial will take 5x more damage when directly attacked!
     price: 500
     tier: ADVANCED
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1185,6 +1290,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: { knockback: 1 },
+          potions: [],
           look: null,
         }
       - {
@@ -1192,6 +1298,7 @@ kits:
           amount: 1,
           name: "Sacrificial Magic",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "red",
@@ -1206,6 +1313,7 @@ kits:
           amount: 10,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1213,6 +1321,7 @@ kits:
           amount: 2,
           name: "Destroy Sacrificial Bonds",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "red",
@@ -1245,6 +1354,7 @@ kits:
       A bomb disposal expert. Its fuse defuses three seconds faster, and its training means explosions only do it half the harm they do to anyone else.
     price: 150
     tier: BASIC
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: { type: BOMB_DEFUSING, level: 3 }
     hotbar:
@@ -1253,6 +1363,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -1288,6 +1399,7 @@ kits:
       A quiet bomber. Its fuse arms three seconds faster, and while its team arms a bomb the enemy cannot see how far along the fuse is until there are ten seconds left.
     price: 200
     tier: BASIC
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: { type: BOMB_ARMING, level: 3 }
     hotbar:
@@ -1296,6 +1408,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -1336,6 +1449,7 @@ kits:
       A scout who marks targets. Looking through its spyglass makes every enemy in sight within 60 blocks glow for its team for six seconds.
     price: 250
     tier: MID
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1344,6 +1458,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1351,6 +1466,7 @@ kits:
           amount: 1,
           name: "Spotter's Glass",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "aqua",
@@ -1388,6 +1504,7 @@ kits:
       A climber with a grappling hook. Cast it and reel in to be pulled to the hook, then land without fall damage.
     price: 300
     tier: MID
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1396,6 +1513,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1403,6 +1521,7 @@ kits:
           amount: 1,
           name: "Grappling Hook",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -1445,6 +1564,7 @@ kits:
       A rallying point for its team. It plants a banner that gives nearby allies Regeneration until the enemy tears it down.
     price: 300
     tier: MID
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1453,6 +1573,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1460,6 +1581,7 @@ kits:
           amount: 1,
           name: "Rallying Banner",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -1492,6 +1614,7 @@ kits:
       A builder of cover. It raises a short-lived barricade wherever it looks, though never right beside a bomb.
     price: 400
     tier: ADVANCED
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1500,6 +1623,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1507,6 +1631,7 @@ kits:
           amount: 1,
           name: "Barricade",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -1539,6 +1664,7 @@ kits:
       A hunter that reads the ground. It sees the footprints enemies left in the last eight seconds, and its first hit on someone marks them on its team's compasses.
     price: 400
     tier: ADVANCED
+    category: RANGED
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1547,6 +1673,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1554,6 +1681,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1561,6 +1689,7 @@ kits:
           amount: 32,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
     armor:
@@ -1591,6 +1720,7 @@ kits:
       A trickster. It sends a running copy of itself the way it looks and turns invisible while the enemy chases the copy.
     price: 450
     tier: ADVANCED
+    category: TACTICAL
     availability: PURCHASE
     fuseBonus: null
     hotbar:
@@ -1599,6 +1729,7 @@ kits:
           amount: 1,
           name: null,
           enchantments: {},
+          potions: [],
           look: null,
         }
       - {
@@ -1606,6 +1737,7 @@ kits:
           amount: 1,
           name: "Decoy",
           enchantments: {},
+          potions: [],
           look:
             {
               nameColor: "gold",
@@ -1632,3 +1764,1081 @@ kits:
       - "Sends a running copy of you"
       - "You turn invisible for 3s"
       - "35 second recharge"
+  - id: duelist
+    name: Duelist
+    description: "Iron sword and chainmail; isolated melee hits add 1.5 damage before armour when nobody else stands within 6 blocks of the victim."
+    price: 250
+    tier: MID
+    category: CLASSIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: duelist
+    icon: IRON_SWORD
+    iconTint: null
+    summary:
+      - "Isolated melee hits add 1.5 damage"
+      - "No third combatant within 6 blocks"
+      - "Iron sword, full chainmail"
+  - id: knight
+    name: Knight
+    description: "Raise your shield just before a hit: blocking within 0.4 seconds primes a counterstrike adding 2 damage for 3 seconds, once every 12 seconds."
+    price: 300
+    tier: MID
+    category: CLASSIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "SHIELD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: knight
+    icon: SHIELD
+    iconTint: null
+    summary:
+      - "Timely shield block primes a counter"
+      - "Next melee hit adds 2 damage"
+      - "3-second counter, 12-second recharge"
+  - id: ravager
+    name: Ravager
+    description: "An axe fighter with two golden apples; striking a raised enemy shield disables it for 3 seconds, once every 12 seconds."
+    price: 200
+    tier: BASIC
+    category: CLASSIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_AXE",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "GOLDEN_APPLE",
+          "amount": 2,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: ravager
+    icon: IRON_AXE
+    iconTint: null
+    summary:
+      - "Axe disables raised shields for 3s"
+      - "12-second shield-break recharge"
+      - "Chainmail, 2 golden apples"
+  - id: acrobat
+    name: Acrobat
+    description: "Right-click your feather while airborne to jump again. One extra jump per landing and an 8-second recharge; light armour and Feather Falling II."
+    price: 250
+    tier: MID
+    category: CLASSIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "FEATHER",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": { "feather_falling": 2 },
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: acrobat
+    icon: FEATHER
+    iconTint: null
+    summary:
+      - "Feather triggers an airborne jump"
+      - "One extra jump, 8-second recharge"
+      - "Light armour, Feather Falling II"
+  - id: alchemist
+    name: Alchemist
+    description: "Three finite flasks weaken and slow enemies within 3 blocks for 5 seconds; allies are safe. Wait 10 seconds between throws."
+    price: 300
+    tier: MID
+    category: CLASSIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "SPLASH_POTION",
+          "amount": 3,
+          "name": "Debilitating Flask",
+          "enchantments": {},
+          "look": null,
+          "potions":
+            [
+              { "effect": "weakness", "amplifier": 0, "ticks": 100 },
+              { "effect": "slowness", "amplifier": 0, "ticks": 100 },
+            ],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: alchemist
+    icon: SPLASH_POTION
+    iconTint: null
+    summary:
+      - "3 flasks: Weakness I and Slowness I"
+      - "Enemies within 3 blocks, lasts 5s"
+      - "10 seconds between throws"
+  - id: scavenger
+    name: Scavenger
+    description: "Your first three credited kills leave salvage for you alone. Collect it within 10 seconds to heal 4 health and receive 8 arrows."
+    price: 200
+    tier: BASIC
+    category: CLASSIC
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: scavenger
+    icon: RAW_IRON
+    iconTint: null
+    summary:
+      - "First 3 kills leave private salvage"
+      - "Collect within 10s: heal 4, 8 arrows"
+      - "Iron sword and full chainmail"
+  - id: arbalist
+    name: Arbalist
+    description: "A precise crossbow with Quick Charge II and Piercing II, 48 finite arrows, a stone sword and archer armour."
+    price: 250
+    tier: MID
+    category: RANGED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "CROSSBOW",
+          "amount": 1,
+          "name": null,
+          "enchantments": { "quick_charge": 2, "piercing": 2 },
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "ARROW",
+          "amount": 48,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "IRON_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "IRON_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: CROSSBOW
+    iconTint: null
+    summary:
+      - "Quick Charge II, Piercing II crossbow"
+      - "48 finite arrows, stone sword"
+      - "Iron and chainmail archer armour"
+  - id: volley
+    name: Volley
+    description: "A spread crossbow with Multishot I and Quick Charge I, 36 finite arrows, a wooden sword and light armour."
+    price: 250
+    tier: MID
+    category: RANGED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "WOODEN_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "CROSSBOW",
+          "amount": 1,
+          "name": null,
+          "enchantments": { "multishot": 1, "quick_charge": 1 },
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "ARROW",
+          "amount": 36,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: CROSSBOW
+    iconTint: null
+    summary:
+      - "Multishot I, Quick Charge I crossbow"
+      - "36 finite arrows, wooden sword"
+      - "Light armour"
+  - id: marksman
+    name: Marksman
+    description: "An Infinity and Power I bow rewards fully drawn shots travelling at least 24 blocks with 2 extra raw damage, once every 8 seconds."
+    price: 350
+    tier: MID
+    category: RANGED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "WOODEN_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "BOW",
+          "amount": 1,
+          "name": null,
+          "enchantments": { "power": 1, "infinity": 1 },
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "SPYGLASS",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "ARROW",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: marksman
+    icon: SPYGLASS
+    iconTint: null
+    summary:
+      - "Power I and Infinity bow, spyglass"
+      - "Full draw at 24+ blocks: +2 damage"
+      - "8-second long-shot recharge"
+  - id: windrunner
+    name: Windrunner
+    description: "A copper spear and Infinity bow with four finite wind charges for positioning; light armour keeps the loadout mobile."
+    price: 300
+    tier: MID
+    category: RANGED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "COPPER_SPEAR",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "BOW",
+          "amount": 1,
+          "name": null,
+          "enchantments": { "infinity": 1 },
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "WIND_CHARGE",
+          "amount": 4,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "ARROW",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: WIND_CHARGE
+    iconTint: null
+    summary:
+      - "Copper spear and Infinity bow"
+      - "4 native wind charges"
+      - "Light armour"
+  - id: harpooner
+    name: Harpooner
+    description: "Throw a Loyalty III trident and wait for its return. A stone sword and archer armour cover the recovery; no Riptide or Channeling."
+    price: 300
+    tier: MID
+    category: RANGED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "TRIDENT",
+          "amount": 1,
+          "name": null,
+          "enchantments": { "loyalty": 3 },
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "IRON_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "IRON_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: TRIDENT
+    iconTint: null
+    summary:
+      - "Loyalty III returning trident"
+      - "Stone sword while it returns"
+      - "Iron and chainmail archer armour"
+  - id: fletcher
+    name: Fletcher
+    description: "A Power I bow with 24 ordinary arrows and eight finite arrows that slow enemies for 3 seconds. Select the tipped stack in your offhand to prioritise it."
+    price: 300
+    tier: MID
+    category: RANGED
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "BOW",
+          "amount": 1,
+          "name": null,
+          "enchantments": { "power": 1 },
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "TIPPED_ARROW",
+          "amount": 8,
+          "name": "Slowing Arrow",
+          "enchantments": {},
+          "look": null,
+          "potions": [{ "effect": "slowness", "amplifier": 0, "ticks": 60 }],
+        }
+      - {
+          "material": "ARROW",
+          "amount": 24,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "IRON_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "IRON_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: TIPPED_ARROW
+    iconTint: null
+    summary:
+      - "Power I bow, 24 ordinary arrows"
+      - "8 arrows: Slowness I for 3 seconds"
+      - "Offhand ammunition takes priority"
+  - id: lancer
+    name: Lancer
+    description: "An iron spear and shield with chainmail. Use native spear reach, timed jabs and kinetic charge attacks to control a lane."
+    price: 300
+    tier: MID
+    category: TACTICAL
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_SPEAR",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "SHIELD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: IRON_SPEAR
+    iconTint: null
+    summary:
+      - "Native iron spear jabs and charges"
+      - "Shield and full chainmail"
+      - "Keep enemies at spear range"
+  - id: maceguard
+    name: Maceguard
+    description: "A native mace with three finite wind charges and light armour with Feather Falling II. Smash damage and landing reset follow the native weapon rules."
+    price: 400
+    tier: ADVANCED
+    category: TACTICAL
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "MACE",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "WIND_CHARGE",
+          "amount": 3,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": { "feather_falling": 2 },
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: null
+    icon: MACE
+    iconTint: null
+    summary:
+      - "Native mace smash and fall reset"
+      - "3 wind charges for positioning"
+      - "Light armour, Feather Falling II"
+  - id: quartermaster
+    name: Quartermaster
+    description: "Three supply bundles give living allies within 6 blocks 8 arrows and Absorption I for 4 seconds. Excludes yourself; 20-second recharge."
+    price: 250
+    tier: MID
+    category: TACTICAL
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "BUNDLE",
+          "amount": 3,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: quartermaster
+    icon: BUNDLE
+    iconTint: null
+    summary:
+      - "3 bundles supply allies within 6"
+      - "8 arrows and Absorption I for 4s"
+      - "Excludes self, 20-second recharge"
+  - id: warden
+    name: Warden
+    description: "Deploy a listening post for 30 seconds. It reports approximate directions of nearby enemy sounds within 12 blocks, at most once every 3 seconds; 35-second recharge."
+    price: 350
+    tier: MID
+    category: TACTICAL
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "CALIBRATED_SCULK_SENSOR",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: warden
+    icon: CALIBRATED_SCULK_SENSOR
+    iconTint: null
+    summary:
+      - "Listening post lasts 30 seconds"
+      - "Hears sounds within 12, reports /3s"
+      - "35-second deployment recharge"
+  - id: smokescreen
+    name: Smokescreen
+    description: "Create a smoke field of radius 4 for 6 seconds, blocking human and bot vision while sounds and projectiles still pass. Recharges in 30 seconds."
+    price: 400
+    tier: ADVANCED
+    category: TACTICAL
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "STONE_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "GRAY_DYE",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "LEATHER_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "LEATHER_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: smokescreen
+    icon: GRAY_DYE
+    iconTint: null
+    summary:
+      - "Radius 4 smoke blocks vision for 6s"
+      - "Sound and projectiles pass through"
+      - "30-second smoke recharge"
+  - id: tactician
+    name: Tactician
+    description: "Hold still for a 1.2-second horn windup to grant nearby allies within 8 blocks Speed I and Resistance I for 6 seconds. Excludes self, never stacks; 40-second recharge."
+    price: 300
+    tier: MID
+    category: TACTICAL
+    availability: PURCHASE
+    fuseBonus: null
+    hotbar:
+      - {
+          "material": "IRON_SWORD",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+      - {
+          "material": "GOAT_HORN",
+          "amount": 1,
+          "name": null,
+          "enchantments": {},
+          "look": null,
+          "potions": [],
+        }
+    armor:
+      - {
+          "material": "CHAINMAIL_BOOTS",
+          "slot": "BOOTS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_LEGGINGS",
+          "slot": "LEGGINGS",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_CHESTPLATE",
+          "slot": "CHESTPLATE",
+          "enchantments": {},
+          "dye": null,
+        }
+      - {
+          "material": "CHAINMAIL_HELMET",
+          "slot": "HELMET",
+          "enchantments": {},
+          "dye": null,
+        }
+    ability: tactician
+    icon: GOAT_HORN
+    iconTint: null
+    summary:
+      - "Stand still 1.2s to sound the horn"
+      - "Allies within 8: speed and resistance"
+      - "6-second buff, 40-second recharge"

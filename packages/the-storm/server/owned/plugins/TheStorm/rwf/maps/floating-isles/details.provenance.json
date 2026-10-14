@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "floating-isles",
-  "blocksSha256": "cbeba029f3699c15adad9338c190a864ef16234551f1e81ca8b29812d5de09fb",
-  "detailsSha256": "50e4d324642d054e648bdfb40fe85e05115c413580c3184fa26bfc187cc39db6",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "20e371135462bd28142a2bed75cd01aa883a23a3f9575416fc733096be4efebc",
+  "detailsSha256": "ff24827a6121f3c438fe7444c56d858a3a8cf31469afa5671d9027d3462649a3",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 13,
+    "signs": 32
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "cbeba029f3699c15adad9338c190a864ef16234551f1e81ca8b29812d5de09fb",
+    "count": 14
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 13,
     "signs": 46

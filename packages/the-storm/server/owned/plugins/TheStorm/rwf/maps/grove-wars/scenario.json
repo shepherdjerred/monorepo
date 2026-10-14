@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "grove-wars-trooper-duel-v1",
   "map": "grove-wars",
-  "mapSha256": "f3d6307d548f2d38c2da90f1714acefe3e51cf94b07737c5e58d2273c272b0bf",
+  "mapSha256": "6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13",
   "world": "minecraft:rwf",
   "region": {
     "min": {

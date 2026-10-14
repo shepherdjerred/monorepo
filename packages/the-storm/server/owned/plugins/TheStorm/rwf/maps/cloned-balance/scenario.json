@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "cloned-balance-trooper-duel-v1",
   "map": "cloned-balance",
-  "mapSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
+  "mapSha256": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
   "world": "minecraft:rwf",
   "region": {
     "min": {

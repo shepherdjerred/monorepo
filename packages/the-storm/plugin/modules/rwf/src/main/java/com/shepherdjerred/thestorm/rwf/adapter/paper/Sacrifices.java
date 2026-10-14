@@ -140,12 +140,13 @@ final class Sacrifices {
             .orElseGet(meant::type);
     var random = runner.match().random(runner.now());
     var attackerSide = attacker.flatMap(a -> runner.kits().side(a.getUniqueId()));
-    var dealt =
+    var computed =
         KitCombat.damage(
             DamageFormula.Hit.of(attack, amount, KitFactory.armor(sac)),
             attackerSide,
             sacSide.orElseThrow(),
             random);
+    var dealt = PaperKitResistance.apply(sac, computed, attack);
     tracker.hit(sac, dealt, meant.credit(), attack);
     sac.setHealth(Math.max(0, sac.getHealth() - dealt));
     attacker.ifPresent(a -> runner.kits().hit(a, sac, attack, dealt));

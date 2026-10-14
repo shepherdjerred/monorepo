@@ -74,21 +74,10 @@ public final class Tactics {
             context.keep());
     var scores = Utilities.score(features, temper);
     KitTactics.lean(context.kit(), scores);
-    var defuser = assignedDefuser(situation);
-    if (!defuser) scores.put(Option.DEFUSE, 0.0);
-    var current =
-        state
-            .plan()
-            .filter(plan -> plan.option() != Option.DEFUSE || defuser)
-            .map(plan -> advance(plan, situation))
-            .filter(plan -> alive(plan, situation))
-            .filter(plan -> Planner.coverFitsSlot(plan, situation, context))
-            .filter(
-                plan ->
-                    plan.current()
-                        .coverNode()
-                        .map(node -> Planner.coverAvailable(situation, context, node))
-                        .orElse(true));
+    var eliminating = situation.pendingElimination();
+    objectiveScores(scores, situation, context);
+    var objective = ObjectivePolicy.direct(state.memory(), situation, context);
+    var current = currentPlan(state, situation, context);
     current.ifPresent(plan -> scores.merge(plan.option(), COMMIT_BONUS, Double::sum));
     var candidates = aboveFloor(scores);
     var temperature =
@@ -96,10 +85,10 @@ public final class Tactics {
             context.levers().decisionTemperature() * context.bias().temperature());
     var pick = Softmax.select(candidates, temperature, random);
     var choice = choose(pick.choice(), current, situation, scores);
-    if (features.ownBombLit() && defuser && !features.inOwnBombPoisonZone()) {
-      choice = Option.DEFUSE;
-    }
-    if (state.lifeEpoch() == 0
+    if (choice != Option.ESCAPE_POISON) choice = objective.forced().orElse(choice);
+    if (eliminating && offensive(choice)) choice = Option.HOLD_ANGLE;
+    if (objective.forced().isEmpty()
+        && state.lifeEpoch() == 0
         && now - born < context.lateStartTicks()
         && quietStart(situation, features)) {
       choice = Option.HOLD_ANGLE;
@@ -116,7 +105,13 @@ public final class Tactics {
                         ? Planner.expand(chosen, situation, context).since(existing.startedTick())
                         : existing)
             .orElseGet(() -> Planner.expand(chosen, situation, context));
-    var decision = Planner.decide(plan, situation, context, state.lifeEpoch());
+    if (chosen == Option.ARM && objective.memory().detour().isPresent()) {
+      plan = Planner.detourPlan(situation, context, objective.memory().detour().orElseThrow());
+    }
+    var routed = route(new Planning(plan, state.lifeEpoch(), objective), situation, context);
+    plan = routed.plan();
+    var memory = routed.memory();
+    var decision = routed.decision();
     if (decision.ability().isPresent()) {
       clock = clock.used(now);
     }
@@ -130,10 +125,70 @@ public final class Tactics {
             temperature,
             pick.draw());
     return new Thought(
-        new TacticsState(Optional.of(plan), now, state.lifeEpoch(), born, clock),
+        new TacticsState(Optional.of(plan), now, state.lifeEpoch(), born, clock, memory),
         decision,
         trace,
-        note(plan, decision, situation, context));
+        note(plan, decision, situation, context).working(memory.defusing()));
+  }
+
+  private static boolean offensive(Option option) {
+    return switch (option) {
+      case ARM, HELP_ARM -> true;
+      default -> false;
+    };
+  }
+
+  private static Optional<Plan> currentPlan(
+      TacticsState state, Situation situation, TacticsContext context) {
+    return state
+        .plan()
+        .filter(plan -> plan.option() != Option.DEFUSE || assignedDefuser(situation))
+        .map(plan -> advance(plan, situation))
+        .filter(plan -> alive(plan, situation))
+        .filter(plan -> Planner.coverFitsSlot(plan, situation, context))
+        .filter(plan -> !situation.pendingElimination() || !offensive(plan.option()))
+        .filter(
+            plan ->
+                plan.current()
+                    .coverNode()
+                    .map(node -> Planner.coverAvailable(situation, context, node))
+                    .orElse(true));
+  }
+
+  private static void objectiveScores(
+      Map<Option, Double> scores, Situation situation, TacticsContext context) {
+    if (situation.nearestEnemy().isEmpty() && situation.sensorPosition().isPresent())
+      scores.put(Option.HUNT, 0.8);
+    if (situation.pendingElimination()) {
+      scores.put(Option.ARM, 0.0);
+      scores.put(Option.HELP_ARM, 0.0);
+    }
+    scores.put(Option.DEFUSE, ObjectivePolicy.responds(situation, context) ? 1.0 : 0);
+    if (!assignedDefuser(situation)) scores.put(Option.DEFUSE, 0.0);
+    if (situation.litOwnBomb().isPresent())
+      scores.put(Option.RETAKE, ObjectivePolicy.guards(situation, context) ? 0.9 : 0);
+  }
+
+  private record Planning(Plan plan, int lifeEpoch, ObjectivePolicy.Directive objective) {}
+
+  private record Routed(Plan plan, Decision decision, TacticalMemory memory) {}
+
+  private static Routed route(Planning planning, Situation situation, TacticsContext context) {
+    var plan = planning.plan();
+    var memory = planning.objective().memory();
+    var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
+    if (decision.routeFailure().isPresent()) {
+      memory = memory.blocked(decision.routeFailure().orElseThrow().goal(), situation.now());
+      plan = Planner.recovery(situation, context);
+      decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
+    } else if (memory.excludes(
+            Planner.slotPoint(situation, context).orElseGet(() -> situation.self().pos()),
+            situation.now())
+        && planning.objective().forced().isEmpty()) {
+      plan = Planner.recovery(situation, context);
+      decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
+    }
+    return new Routed(plan, decision, memory);
   }
 
   /** Without a team assignment anyone may save the fuse; screens yield to live fuse workers. */
@@ -143,7 +198,7 @@ public final class Tactics {
     var assignedFuse =
         plan.objective()
             .flatMap(situation.snapshot()::bomb)
-            .filter(bomb -> bomb.belongsTo(situation.self().team()) && bomb.state().isLit());
+            .filter(bomb -> bomb.threatens(situation.self().team()) && bomb.state().isLit());
     // A pending bounded admission is not permission for the entire screen to pile onto the fuse.
     if (!plan.assignment().isEmpty() && assignedFuse.isPresent()) return false;
     return situation.board().roles().entrySet().stream()

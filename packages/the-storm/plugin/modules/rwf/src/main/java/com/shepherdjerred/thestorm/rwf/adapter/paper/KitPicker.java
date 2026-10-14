@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchView;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitBook;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitBrowser;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchError;
@@ -64,13 +65,21 @@ final class KitPicker {
     if (member.isPresent() && !runner.match().phase().kitsOpen()) {
       return Optional.of(Texts.describe(MatchError.NOT_PRE_GAME));
     }
-    browse(player, 0);
+    browse(player, menus.query(player.getUniqueId()));
     return Optional.empty();
   }
 
   /** Opens page {@code page} of the kit menu, marking the kit {@code player} picked, if any. */
   void browse(Player player, int page) {
     menus.open(player, runner.memberOf(player.getUniqueId()).flatMap(Combatant::kit), page);
+  }
+
+  void browse(Player player, KitBrowser.Query query) {
+    menus.open(player, runner.memberOf(player.getUniqueId()).flatMap(Combatant::kit), query);
+  }
+
+  void browse(Player player) {
+    browse(player, menus.query(player.getUniqueId()));
   }
 
   /** The kits bots may play: every kit while the full list is on for anyone here. */
@@ -109,6 +118,7 @@ final class KitPicker {
 
   /** {@code player} quit: their loaded kits are dropped, and read afresh when they come back. */
   void forget(UUID player) {
+    menus.forget(player);
     menus.armory().forget(player);
   }
 }

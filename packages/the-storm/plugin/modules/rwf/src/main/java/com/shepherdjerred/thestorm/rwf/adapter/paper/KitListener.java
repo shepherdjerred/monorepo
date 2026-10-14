@@ -404,6 +404,8 @@ final class KitListener implements Listener {
   void onHeld(PlayerItemHeldEvent event) {
     if (frozen(event.getPlayer())) {
       event.setCancelled(true);
+    } else if (runner.fighting(event.getPlayer().getUniqueId())) {
+      PlayerAttributes.heldAttackSpeed(event.getPlayer(), event.getNewSlot());
     }
   }
 
@@ -411,6 +413,9 @@ final class KitListener implements Listener {
   void onSwap(PlayerSwapHandItemsEvent event) {
     if (frozen(event.getPlayer())) {
       event.setCancelled(true);
+    } else if (runner.fighting(event.getPlayer().getUniqueId())) {
+      PlayerAttributes.handAttackSpeed(
+          event.getPlayer(), Optional.ofNullable(event.getMainHandItem()));
     }
   }
 

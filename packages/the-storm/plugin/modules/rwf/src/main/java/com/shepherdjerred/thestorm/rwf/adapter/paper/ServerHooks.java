@@ -32,11 +32,13 @@ public record ServerHooks(
    * mob goals.
    */
   public static ServerHooks production(ChunkTickets tickets) {
+    PaperNativeItems.verifyLinkage();
+    PaperNativeDamage.verifyLinkage();
     return new ServerHooks(
         ChunkHolder.shared(tickets),
         display -> display.setBillboard(Display.Billboard.CENTER),
         LivingEntity::hasLineOfSight,
-        player -> player.sendHurtAnimation(0),
+        player -> player.playHurtAnimation(0),
         Bukkit.getMobGoals());
   }
 }

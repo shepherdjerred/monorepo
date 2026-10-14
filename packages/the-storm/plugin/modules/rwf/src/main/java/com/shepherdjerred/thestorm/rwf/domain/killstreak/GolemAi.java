@@ -136,10 +136,10 @@ public final class GolemAi {
    * golem's own team passes it; the match refuses that target when the golem takes it.
    */
   public static boolean selects(Sighting<?> sighting) {
-    if (!sighting.alive()) {
+    if (!sighting.alive() || sighting.ally()) {
       return false;
     }
-    return !sighting.player() || (!sighting.hidden() && !sighting.ally());
+    return !sighting.player() || !sighting.hidden();
   }
 
   /**
@@ -213,7 +213,7 @@ public final class GolemAi {
    * {@link #unseen} counts.
    */
   public static boolean keeps(Sighting<?> target, Vec3 feet) {
-    return target.alive()
+    return selects(target)
         && !(target.player() && target.untouchable())
         && squared(feet, target.pos()) <= FOLLOW_RANGE * FOLLOW_RANGE;
   }

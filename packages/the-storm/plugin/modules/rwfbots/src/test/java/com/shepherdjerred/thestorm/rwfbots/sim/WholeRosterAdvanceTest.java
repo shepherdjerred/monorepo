@@ -169,7 +169,21 @@ final class WholeRosterAdvanceTest {
                 + " slot "
                 + world.boards.get(body.team).plan().slotOf(body.id)
                 + " push "
-                + world.boards.get(body.team).plan().push());
+                + world.boards.get(body.team).plan().push()
+                + " step "
+                + body.tactics.plan().map(plan -> plan.current().toString()).orElse("none")
+                + " commands "
+                + body.lastCommands
+                + " waypoints "
+                + body.decision.map(decision -> decision.waypoints()).orElseGet(List::of)
+                + " nearestAlly "
+                + world.bodies.values().stream()
+                    .filter(
+                        ally ->
+                            ally.alive && ally.team.equals(body.team) && !ally.id.equals(body.id))
+                    .mapToDouble(ally -> ally.pos.distance(body.pos))
+                    .min()
+                    .orElse(Double.POSITIVE_INFINITY));
       }
       return String.join("\n", lines);
     }

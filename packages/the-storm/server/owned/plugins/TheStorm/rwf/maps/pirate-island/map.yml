@@ -2,6 +2,7 @@
   id: pirate-island,
   name: "Pirate's Island",
   author: "Snowyflake, libraryaddict",
+  description: Pirates hate each other. Tis is no secret lad. They built a bridge to each other to wage war!,
   region:
     { min: { x: 2048, "y": 0, z: 4096 }, max: { x: 2111, "y": 90, z: 4274 } },
   spectator: { x: 2080, "y": 90, z: 4185.5, yaw: 0, pitch: 45 },
@@ -414,5 +415,5 @@
       { id: blue-1, team: BLUE, at: { x: 2080, "y": 67, z: 4266 } },
     ],
   nukes: [],
-  blocksSha256: 97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d,
+  blocksSha256: 43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa,
 }

@@ -6,2302 +6,4093 @@ personalities:
     teleporter: 0.44
     sacrificial: 0.26
     bannerman: 0.62
+    alchemist: 0.39
+    quartermaster: 0.68
+    tactician: 0.58
   "arrowgolem5":
     berserker: 0.6
     vampire: 0.46
     bleeder: 0.43
     equality: 0.31
+    duelist: 0.64
+    knight: 0.33
+    scavenger: 0.4
   "arrowotter2":
     demolitions: 0.43
     juggernaut: 0.37
     sapper: 0.68
     engineer: 0.52
+    knight: 0.54
+    lancer: 0.47
+    quartermaster: 0.34
+    warden: 0.63
   "arrowsniper9":
     dwarf: 0.39
     juggernaut: 0.54
     frost: 0.44
     engineer: 0.32
+    knight: 0.55
+    lancer: 0.45
+    warden: 0.43
   "badgercomet5":
     ninja: 0.67
     skinner: 0.37
     decoy: 0.45
+    duelist: 0.51
+    acrobat: 0.45
+    smokescreen: 0.49
   "badgerrider9":
     warper: 0.51
     ninja: 0.4
     grappler: 0.63
+    duelist: 0.38
+    acrobat: 0.5
+    windrunner: 0.56
+    harpooner: 0.41
   "banditlynx5":
     explosive: 0.43
     inertia: 0.48
     sacrificial: 0.34
     decoy: 0.37
+    alchemist: 0.34
+    volley: 0.65
+    maceguard: 0.37
   "banditraven3":
     ninja: 0.39
     saboteur: 0.61
     decoy: 0.33
+    ravager: 0.32
+    acrobat: 0.43
+    smokescreen: 0.58
   "blazebadger3":
     venom: 0.49
     spotter: 0.33
     tracker: 0.69
+    scavenger: 0.3
+    arbalist: 0.37
+    harpooner: 0.43
+    fletcher: 0.5
   "braethvio-07":
     berserker: 0.55
     vampire: 0.56
     bleeder: 0.36
     equality: 0.3
+    duelist: 0.62
+    knight: 0.33
+    scavenger: 0.42
   "braishbryzak-80":
     ninja: 0.59
     skinner: 0.33
     decoy: 0.47
+    duelist: 0.48
+    acrobat: 0.44
+    smokescreen: 0.47
   "bralmor-39":
     ninja: 0.42
     saboteur: 0.65
     decoy: 0.3
+    ravager: 0.32
+    acrobat: 0.35
+    smokescreen: 0.59
   "bravorxaishyt":
     warper: 0.45
     ninja: 0.32
     grappler: 0.6
+    duelist: 0.34
+    acrobat: 0.56
+    windrunner: 0.56
+    harpooner: 0.43
   "brerjith-06":
     medic: 0.6
     teleporter: 0.34
     sacrificial: 0.28
     bannerman: 0.62
+    alchemist: 0.31
+    quartermaster: 0.54
+    tactician: 0.62
   "breshgrazvim-31":
     explosive: 0.57
     inertia: 0.42
     sacrificial: 0.43
     decoy: 0.37
+    alchemist: 0.33
+    volley: 0.62
+    maceguard: 0.41
   "briolxagaming":
     venom: 0.39
     spotter: 0.37
     tracker: 0.69
+    scavenger: 0.39
+    arbalist: 0.43
+    harpooner: 0.47
+    fletcher: 0.47
   "broukxaimpvp":
     warper: 0.45
     ninja: 0.38
     grappler: 0.59
+    duelist: 0.36
+    acrobat: 0.55
+    windrunner: 0.62
+    harpooner: 0.38
   "brouzgrulcomet":
     venom: 0.42
     spotter: 0.4
     tracker: 0.55
+    scavenger: 0.32
+    arbalist: 0.45
+    harpooner: 0.4
+    fletcher: 0.49
   "brukman-61":
     explosive: 0.43
     inertia: 0.44
     sacrificial: 0.4
     decoy: 0.36
+    alchemist: 0.37
+    volley: 0.55
+    maceguard: 0.38
   "brukxoth-71":
     explosive: 0.45
     inertia: 0.46
     sacrificial: 0.42
     decoy: 0.39
+    alchemist: 0.3
+    volley: 0.52
+    maceguard: 0.36
   "brynraexvuktush":
     ninja: 0.45
     saboteur: 0.61
     decoy: 0.27
+    ravager: 0.38
+    acrobat: 0.37
+    smokescreen: 0.63
   "captaindigram":
     medic: 0.43
     teleporter: 0.35
     spotter: 0.46
     bannerman: 0.36
+    quartermaster: 0.42
+    warden: 0.47
+    smokescreen: 0.3
+    tactician: 0.69
   "captainskaixder":
     explosive: 0.56
     inertia: 0.51
     sacrificial: 0.44
     decoy: 0.31
+    alchemist: 0.4
+    volley: 0.54
+    maceguard: 0.42
   "captainskekvael":
     dwarf: 0.46
     juggernaut: 0.62
     frost: 0.41
     engineer: 0.36
+    knight: 0.47
+    lancer: 0.34
+    warden: 0.52
   "captainvymdio":
     berserker: 0.54
     vampire: 0.46
     bleeder: 0.4
     equality: 0.34
+    duelist: 0.58
+    knight: 0.34
+    scavenger: 0.38
   "cobalt-arrow":
     berserker: 0.68
     explosive: 0.4
     grappler: 0.32
+    ravager: 0.57
+    acrobat: 0.31
+    lancer: 0.46
+    maceguard: 0.25
   "cobalt-otter":
     medic: 0.73
     teleporter: 0.45
     sacrificial: 0.33
     bannerman: 0.62
+    alchemist: 0.36
+    quartermaster: 0.58
+    tactician: 0.59
   "cobaltmoth75":
     berserker: 0.57
     vampire: 0.57
     bleeder: 0.41
     equality: 0.34
+    duelist: 0.64
+    knight: 0.39
+    scavenger: 0.42
   "cobaltsniper21":
     dwarf: 0.47
     juggernaut: 0.62
     frost: 0.38
     engineer: 0.39
+    knight: 0.51
+    lancer: 0.38
+    warden: 0.48
   "cobaltthukrem":
     venom: 0.4
     spotter: 0.35
     tracker: 0.59
+    scavenger: 0.33
+    arbalist: 0.44
+    harpooner: 0.47
+    fletcher: 0.55
   "cobaltvaixbrush":
     pyro: 0.27
     spotter: 0.58
     tracker: 0.51
+    arbalist: 0.53
+    volley: 0.27
+    marksman: 0.52
+    fletcher: 0.36
   "cometotter0":
     venom: 0.48
     spotter: 0.37
     tracker: 0.66
+    scavenger: 0.31
+    arbalist: 0.45
+    harpooner: 0.46
+    fletcher: 0.53
   "creeperlynx7":
     ninja: 0.68
     skinner: 0.31
     decoy: 0.46
+    duelist: 0.45
+    acrobat: 0.41
+    smokescreen: 0.52
   "creeperraven5":
     berserker: 0.61
     vampire: 0.46
     bleeder: 0.39
     equality: 0.26
+    duelist: 0.58
+    knight: 0.33
+    scavenger: 0.43
   "crimson-miner":
     pyro: 0.32
     spotter: 0.66
     tracker: 0.42
+    arbalist: 0.55
+    volley: 0.22
+    marksman: 0.58
+    fletcher: 0.4
   "crimsonbandit89":
     medic: 0.63
     teleporter: 0.41
     sacrificial: 0.3
     bannerman: 0.58
+    alchemist: 0.3
+    quartermaster: 0.54
+    tactician: 0.58
   "crimsonmaxzil":
     dwarf: 0.47
     juggernaut: 0.55
     frost: 0.34
     engineer: 0.4
+    knight: 0.56
+    lancer: 0.39
+    warden: 0.57
   "crimsonstorm87":
     medic: 0.57
     teleporter: 0.37
     sacrificial: 0.29
     bannerman: 0.52
+    alchemist: 0.33
+    quartermaster: 0.56
+    tactician: 0.6
   "crimsonvounde":
     explosive: 0.43
     inertia: 0.42
     sacrificial: 0.36
     decoy: 0.4
+    alchemist: 0.35
+    volley: 0.51
+    maceguard: 0.38
   "daikarvuk-59":
     ninja: 0.54
     skinner: 0.4
     decoy: 0.38
+    duelist: 0.45
+    acrobat: 0.39
+    smokescreen: 0.57
   "darkpaeskai":
     demolitions: 0.39
     juggernaut: 0.36
     sapper: 0.55
     engineer: 0.46
+    knight: 0.55
+    lancer: 0.42
+    quartermaster: 0.3
+    warden: 0.53
   "daxgraixbandit":
     dwarf: 0.48
     juggernaut: 0.59
     frost: 0.41
     engineer: 0.31
+    knight: 0.51
+    lancer: 0.4
+    warden: 0.54
   "dershizshummc":
     venom: 0.41
     spotter: 0.33
     tracker: 0.68
+    scavenger: 0.38
+    arbalist: 0.43
+    harpooner: 0.46
+    fletcher: 0.52
   "dethpoumnoodle":
     warper: 0.39
     ninja: 0.3
     grappler: 0.57
+    duelist: 0.37
+    acrobat: 0.48
+    windrunner: 0.62
+    harpooner: 0.45
   "dezmoustnoodle":
     medic: 0.49
     teleporter: 0.43
     spotter: 0.52
     bannerman: 0.31
+    quartermaster: 0.36
+    warden: 0.38
+    smokescreen: 0.39
+    tactician: 0.6
   "dioxskiol-51":
     ninja: 0.55
     skinner: 0.37
     decoy: 0.42
+    duelist: 0.43
+    acrobat: 0.36
+    smokescreen: 0.47
   "dizzy-ninja":
     warper: 0.48
     ninja: 0.37
     grappler: 0.58
+    duelist: 0.4
+    acrobat: 0.45
+    windrunner: 0.67
+    harpooner: 0.38
   "dizzy-waffle":
     venom: 0.5
     spotter: 0.39
     tracker: 0.56
+    scavenger: 0.32
+    arbalist: 0.37
+    harpooner: 0.45
+    fletcher: 0.5
   "dizzyblaze58":
     pyro: 0.29
     spotter: 0.61
     tracker: 0.38
+    arbalist: 0.54
+    volley: 0.28
+    marksman: 0.61
+    fletcher: 0.44
   "dizzygrykketh":
     berserker: 0.48
     vampire: 0.45
     bleeder: 0.35
     equality: 0.27
+    duelist: 0.7
+    knight: 0.36
+    scavenger: 0.37
   "dizzylyzgrouth":
     berserker: 0.65
     explosive: 0.5
     grappler: 0.32
+    ravager: 0.62
+    acrobat: 0.32
+    lancer: 0.43
+    maceguard: 0.27
   "dizzymoth30":
     ninja: 0.62
     skinner: 0.32
     decoy: 0.41
+    duelist: 0.48
+    acrobat: 0.4
+    smokescreen: 0.44
   "dizzypumpkin44":
     venom: 0.5
     spotter: 0.38
     tracker: 0.55
+    scavenger: 0.38
+    arbalist: 0.42
+    harpooner: 0.51
+    fletcher: 0.54
   "dizzyriotux":
     berserker: 0.52
     vampire: 0.55
     bleeder: 0.42
     equality: 0.28
+    duelist: 0.75
+    knight: 0.39
+    scavenger: 0.39
   "dizzyzynthun":
     ninja: 0.39
     saboteur: 0.62
     decoy: 0.28
+    ravager: 0.35
+    acrobat: 0.37
+    smokescreen: 0.6
   "dorjaekblaze":
     medic: 0.59
     teleporter: 0.36
     sacrificial: 0.32
     bannerman: 0.6
+    alchemist: 0.34
+    quartermaster: 0.66
+    tactician: 0.5
   "drbraizdaelzal":
     pyro: 0.31
     spotter: 0.67
     tracker: 0.49
+    arbalist: 0.46
+    volley: 0.24
+    marksman: 0.55
+    fletcher: 0.42
   "drdakkriol":
     medic: 0.61
     teleporter: 0.43
     sacrificial: 0.31
     bannerman: 0.6
+    alchemist: 0.31
+    quartermaster: 0.66
+    tactician: 0.55
   "drdunouz":
     venom: 0.47
     spotter: 0.38
     tracker: 0.58
+    scavenger: 0.33
+    arbalist: 0.35
+    harpooner: 0.39
+    fletcher: 0.46
   "drgryxvax":
     demolitions: 0.43
     juggernaut: 0.32
     sapper: 0.66
     engineer: 0.53
+    knight: 0.53
+    lancer: 0.41
+    quartermaster: 0.34
+    warden: 0.62
   "drnoshzax":
     berserker: 0.62
     vampire: 0.47
     bleeder: 0.38
     equality: 0.32
+    duelist: 0.74
+    knight: 0.34
+    scavenger: 0.45
   "drpemgrukkek":
     venom: 0.51
     spotter: 0.33
     tracker: 0.58
+    scavenger: 0.4
+    arbalist: 0.42
+    harpooner: 0.48
+    fletcher: 0.56
   "drsholkyk":
     venom: 0.41
     spotter: 0.31
     tracker: 0.59
+    scavenger: 0.33
+    arbalist: 0.46
+    harpooner: 0.46
+    fletcher: 0.57
   "drshoviosh":
     ninja: 0.42
     saboteur: 0.69
     decoy: 0.31
+    ravager: 0.39
+    acrobat: 0.36
+    smokescreen: 0.49
   "drskizarlae":
     dwarf: 0.41
     juggernaut: 0.57
     frost: 0.43
     engineer: 0.38
+    knight: 0.58
+    lancer: 0.36
+    warden: 0.45
   "drtaerloul":
     ninja: 0.55
     skinner: 0.33
     decoy: 0.49
+    duelist: 0.51
+    acrobat: 0.46
+    smokescreen: 0.57
   "drxynbroxe":
     medic: 0.74
     teleporter: 0.46
     sacrificial: 0.32
     bannerman: 0.53
+    alchemist: 0.31
+    quartermaster: 0.56
+    tactician: 0.62
   "drzygrer":
     berserker: 0.53
     vampire: 0.48
     bleeder: 0.43
     equality: 0.28
+    duelist: 0.68
+    knight: 0.31
+    scavenger: 0.43
   "drzyxnezpoum":
     pyro: 0.34
     spotter: 0.6
     tracker: 0.52
+    arbalist: 0.55
+    volley: 0.25
+    marksman: 0.61
+    fletcher: 0.46
   "dukthurblaze":
     ninja: 0.35
     saboteur: 0.53
     decoy: 0.29
+    ravager: 0.34
+    acrobat: 0.36
+    smokescreen: 0.5
   "dunjelarrow":
     venom: 0.49
     spotter: 0.34
     tracker: 0.51
+    scavenger: 0.3
+    arbalist: 0.37
+    harpooner: 0.47
+    fletcher: 0.53
   "dusty-golem":
     berserker: 0.56
     vampire: 0.49
     bleeder: 0.43
     equality: 0.3
+    duelist: 0.7
+    knight: 0.39
+    scavenger: 0.45
   "dustyfalcon48":
     medic: 0.62
     teleporter: 0.37
     sacrificial: 0.3
     bannerman: 0.61
+    alchemist: 0.36
+    quartermaster: 0.64
+    tactician: 0.47
   "dustykrirthesh":
     medic: 0.6
     teleporter: 0.37
     sacrificial: 0.27
     bannerman: 0.62
+    alchemist: 0.37
+    quartermaster: 0.63
+    tactician: 0.47
   "dustymoth18":
     demolitions: 0.46
     juggernaut: 0.31
     sapper: 0.66
     engineer: 0.54
+    knight: 0.57
+    lancer: 0.44
+    quartermaster: 0.32
+    warden: 0.52
   "dustyninja34":
     venom: 0.39
     spotter: 0.39
     tracker: 0.59
+    scavenger: 0.3
+    arbalist: 0.35
+    harpooner: 0.47
+    fletcher: 0.56
   "dustyotter63":
     explosive: 0.54
     inertia: 0.5
     sacrificial: 0.45
     decoy: 0.39
+    alchemist: 0.31
+    volley: 0.54
+    maceguard: 0.36
   "dustypemkaeth":
     venom: 0.45
     spotter: 0.35
     tracker: 0.53
+    scavenger: 0.32
+    arbalist: 0.43
+    harpooner: 0.39
+    fletcher: 0.46
   "dustypotato32":
     berserker: 0.56
     explosive: 0.42
     grappler: 0.32
+    ravager: 0.55
+    acrobat: 0.27
+    lancer: 0.41
+    maceguard: 0.22
   "ember-waffle":
     ninja: 0.37
     saboteur: 0.62
     decoy: 0.3
+    ravager: 0.37
+    acrobat: 0.41
+    smokescreen: 0.54
   "emberdirthyk":
     warper: 0.42
     ninja: 0.31
     grappler: 0.57
+    duelist: 0.39
+    acrobat: 0.5
+    windrunner: 0.69
+    harpooner: 0.39
   "emberrazskel":
     medic: 0.48
     teleporter: 0.36
     spotter: 0.48
     bannerman: 0.33
+    quartermaster: 0.39
+    warden: 0.43
+    smokescreen: 0.36
+    tactician: 0.61
   "epic-golem":
     dwarf: 0.48
     juggernaut: 0.54
     frost: 0.4
     engineer: 0.39
+    knight: 0.48
+    lancer: 0.42
+    warden: 0.48
   "epic-pickaxe":
     pyro: 0.32
     spotter: 0.56
     tracker: 0.51
+    arbalist: 0.52
+    volley: 0.28
+    marksman: 0.63
+    fletcher: 0.42
   "epicbrailpist":
     medic: 0.52
     teleporter: 0.37
     spotter: 0.53
     bannerman: 0.37
+    quartermaster: 0.45
+    warden: 0.45
+    smokescreen: 0.34
+    tactician: 0.62
   "epickrainvio":
     ninja: 0.37
     saboteur: 0.59
     decoy: 0.32
+    ravager: 0.35
+    acrobat: 0.39
+    smokescreen: 0.6
   "epicnustskur":
     ninja: 0.45
     saboteur: 0.68
     decoy: 0.3
+    ravager: 0.35
+    acrobat: 0.39
+    smokescreen: 0.54
   "epicpumpkin17":
     medic: 0.73
     teleporter: 0.35
     sacrificial: 0.34
     bannerman: 0.49
+    alchemist: 0.36
+    quartermaster: 0.52
+    tactician: 0.49
   "epicsniper96":
     ninja: 0.42
     saboteur: 0.53
     decoy: 0.34
+    ravager: 0.37
+    acrobat: 0.35
+    smokescreen: 0.55
   "epiczuthxae":
     demolitions: 0.41
     juggernaut: 0.37
     sapper: 0.65
     engineer: 0.56
+    knight: 0.66
+    lancer: 0.43
+    quartermaster: 0.26
+    warden: 0.47
   "falconarrow2":
     ninja: 0.37
     saboteur: 0.64
     decoy: 0.33
+    ravager: 0.31
+    acrobat: 0.42
+    smokescreen: 0.63
   "foxphantom7":
     ninja: 0.55
     skinner: 0.38
     decoy: 0.4
+    duelist: 0.4
+    acrobat: 0.4
+    smokescreen: 0.43
   "frost-creeper":
     dwarf: 0.51
     juggernaut: 0.55
     frost: 0.36
     engineer: 0.38
+    knight: 0.53
+    lancer: 0.4
+    warden: 0.57
   "frost-potato":
     warper: 0.46
     ninja: 0.33
     grappler: 0.69
+    duelist: 0.33
+    acrobat: 0.5
+    windrunner: 0.67
+    harpooner: 0.39
   "frostlelaistnaim":
     medic: 0.58
     teleporter: 0.37
     sacrificial: 0.34
     bannerman: 0.48
+    alchemist: 0.32
+    quartermaster: 0.6
+    tactician: 0.53
   "frostwaffle97":
     ninja: 0.38
     saboteur: 0.64
     decoy: 0.28
+    ravager: 0.39
+    acrobat: 0.44
+    smokescreen: 0.52
   "fusesniper7":
     berserker: 0.62
     explosive: 0.51
     grappler: 0.3
+    ravager: 0.5
+    acrobat: 0.3
+    lancer: 0.43
+    maceguard: 0.27
   "golempickaxe2":
     demolitions: 0.48
     juggernaut: 0.35
     sapper: 0.52
     engineer: 0.56
+    knight: 0.65
+    lancer: 0.43
+    quartermaster: 0.27
+    warden: 0.54
   "grenourgaming":
     ninja: 0.58
     skinner: 0.38
     decoy: 0.48
+    duelist: 0.41
+    acrobat: 0.38
+    smokescreen: 0.51
   "grim-otter":
     medic: 0.66
     teleporter: 0.43
     sacrificial: 0.27
     bannerman: 0.5
+    alchemist: 0.31
+    quartermaster: 0.65
+    tactician: 0.5
   "grimbadger51":
     warper: 0.5
     ninja: 0.3
     grappler: 0.61
+    duelist: 0.35
+    acrobat: 0.57
+    windrunner: 0.59
+    harpooner: 0.45
   "grimfalcon23":
     ninja: 0.34
     saboteur: 0.64
     decoy: 0.26
+    ravager: 0.36
+    acrobat: 0.35
+    smokescreen: 0.62
   "grimgriskio":
     medic: 0.57
     teleporter: 0.46
     sacrificial: 0.34
     bannerman: 0.52
+    alchemist: 0.39
+    quartermaster: 0.54
+    tactician: 0.56
   "grimjaviol":
     medic: 0.46
     teleporter: 0.35
     spotter: 0.5
     bannerman: 0.35
+    quartermaster: 0.4
+    warden: 0.44
+    smokescreen: 0.35
+    tactician: 0.59
   "grimkaelthex":
     venom: 0.49
     spotter: 0.34
     tracker: 0.56
+    scavenger: 0.38
+    arbalist: 0.4
+    harpooner: 0.4
+    fletcher: 0.5
   "grimloul-81":
     medic: 0.47
     teleporter: 0.44
     spotter: 0.48
     bannerman: 0.34
+    quartermaster: 0.39
+    warden: 0.45
+    smokescreen: 0.3
+    tactician: 0.59
   "grimrider47":
     ninja: 0.52
     skinner: 0.33
     decoy: 0.47
+    duelist: 0.51
+    acrobat: 0.4
+    smokescreen: 0.43
   "grimskiolzu":
     medic: 0.64
     teleporter: 0.4
     sacrificial: 0.29
     bannerman: 0.58
+    alchemist: 0.37
+    quartermaster: 0.52
+    tactician: 0.56
   "grothbrastviper":
     ninja: 0.37
     saboteur: 0.57
     decoy: 0.28
+    ravager: 0.38
+    acrobat: 0.43
+    smokescreen: 0.52
   "grounxethfuse":
     demolitions: 0.51
     juggernaut: 0.31
     sapper: 0.56
     engineer: 0.5
+    knight: 0.64
+    lancer: 0.43
+    quartermaster: 0.34
+    warden: 0.56
   "grouthskaestfox":
     medic: 0.5
     teleporter: 0.36
     spotter: 0.52
     bannerman: 0.33
+    quartermaster: 0.43
+    warden: 0.44
+    smokescreen: 0.32
+    tactician: 0.69
   "grouvuk-99":
     berserker: 0.63
     vampire: 0.54
     bleeder: 0.43
     equality: 0.29
+    duelist: 0.73
+    knight: 0.39
+    scavenger: 0.41
   "grumlothfuse":
     dwarf: 0.47
     juggernaut: 0.64
     frost: 0.42
     engineer: 0.37
+    knight: 0.53
+    lancer: 0.35
+    warden: 0.46
   "grypast-66":
     medic: 0.47
     teleporter: 0.39
     spotter: 0.55
     bannerman: 0.39
+    quartermaster: 0.36
+    warden: 0.41
+    smokescreen: 0.33
+    tactician: 0.62
   "hunterpumpkin2":
     medic: 0.69
     teleporter: 0.35
     sacrificial: 0.34
     bannerman: 0.5
+    alchemist: 0.39
+    quartermaster: 0.54
+    tactician: 0.57
   "huntersniper8":
     berserker: 0.63
     explosive: 0.5
     grappler: 0.36
+    ravager: 0.58
+    acrobat: 0.3
+    lancer: 0.49
+    maceguard: 0.24
   "hunterstorm5":
     berserker: 0.49
     vampire: 0.5
     bleeder: 0.4
     equality: 0.31
+    duelist: 0.63
+    knight: 0.38
+    scavenger: 0.37
   "hyper-arrow":
     venom: 0.39
     spotter: 0.32
     tracker: 0.65
+    scavenger: 0.39
+    arbalist: 0.44
+    harpooner: 0.48
+    fletcher: 0.57
   "hyper-comet":
     berserker: 0.55
     vampire: 0.45
     bleeder: 0.44
     equality: 0.26
+    duelist: 0.68
+    knight: 0.31
+    scavenger: 0.37
   "hyperbrekolkriok":
     explosive: 0.43
     inertia: 0.49
     sacrificial: 0.44
     decoy: 0.35
+    alchemist: 0.38
+    volley: 0.64
+    maceguard: 0.36
   "hyperkoustthethy":
     warper: 0.47
     ninja: 0.38
     grappler: 0.65
+    duelist: 0.34
+    acrobat: 0.46
+    windrunner: 0.59
+    harpooner: 0.37
   "hyperpickaxe91":
     medic: 0.69
     teleporter: 0.44
     sacrificial: 0.34
     bannerman: 0.57
+    alchemist: 0.39
+    quartermaster: 0.56
+    tactician: 0.49
   "hyperraven89":
     pyro: 0.28
     spotter: 0.59
     tracker: 0.49
+    arbalist: 0.49
+    volley: 0.23
+    marksman: 0.54
+    fletcher: 0.39
   "hyperrixdair":
     demolitions: 0.43
     juggernaut: 0.31
     sapper: 0.6
     engineer: 0.51
+    knight: 0.66
+    lancer: 0.46
+    quartermaster: 0.34
+    warden: 0.59
   "hypertazpour":
     pyro: 0.33
     spotter: 0.64
     tracker: 0.4
+    arbalist: 0.53
+    volley: 0.26
+    marksman: 0.54
+    fletcher: 0.37
   "hypertazreth":
     medic: 0.42
     teleporter: 0.35
     spotter: 0.55
     bannerman: 0.33
+    quartermaster: 0.44
+    warden: 0.4
+    smokescreen: 0.34
+    tactician: 0.61
   "itsgrythzu":
     medic: 0.61
     teleporter: 0.36
     sacrificial: 0.28
     bannerman: 0.54
+    alchemist: 0.36
+    quartermaster: 0.56
+    tactician: 0.58
   "itslinthur":
     ninja: 0.46
     saboteur: 0.54
     decoy: 0.34
+    ravager: 0.3
+    acrobat: 0.4
+    smokescreen: 0.52
   "itspenjoun":
     warper: 0.5
     ninja: 0.34
     grappler: 0.6
+    duelist: 0.37
+    acrobat: 0.53
+    windrunner: 0.61
+    harpooner: 0.45
   "itsshaelbroujou":
     explosive: 0.46
     inertia: 0.45
     sacrificial: 0.38
     decoy: 0.31
+    alchemist: 0.38
+    volley: 0.62
+    maceguard: 0.38
   "itsthairshok":
     berserker: 0.69
     explosive: 0.51
     grappler: 0.31
+    ravager: 0.51
+    acrobat: 0.33
+    lancer: 0.39
+    maceguard: 0.28
   "itstoumkrex":
     medic: 0.56
     teleporter: 0.36
     sacrificial: 0.27
     bannerman: 0.58
+    alchemist: 0.32
+    quartermaster: 0.65
+    tactician: 0.52
   "jathkrempickaxe":
     medic: 0.43
     teleporter: 0.36
     spotter: 0.46
     bannerman: 0.36
+    quartermaster: 0.36
+    warden: 0.39
+    smokescreen: 0.32
+    tactician: 0.65
   "jeshrustminer":
     warper: 0.49
     ninja: 0.37
     grappler: 0.63
+    duelist: 0.33
+    acrobat: 0.5
+    windrunner: 0.65
+    harpooner: 0.38
   "jeshxarshairpvp":
     berserker: 0.64
     explosive: 0.45
     grappler: 0.31
+    ravager: 0.62
+    acrobat: 0.28
+    lancer: 0.51
+    maceguard: 0.28
   "jiostshokninja":
     warper: 0.39
     ninja: 0.38
     grappler: 0.62
+    duelist: 0.35
+    acrobat: 0.56
+    windrunner: 0.68
+    harpooner: 0.39
   "jixmel-54":
     demolitions: 0.41
     juggernaut: 0.38
     sapper: 0.58
     engineer: 0.52
+    knight: 0.55
+    lancer: 0.48
+    quartermaster: 0.31
+    warden: 0.48
   "jolly-creeper":
     demolitions: 0.41
     juggernaut: 0.3
     sapper: 0.57
     engineer: 0.46
+    knight: 0.67
+    lancer: 0.49
+    quartermaster: 0.3
+    warden: 0.61
   "jolly-golem":
     demolitions: 0.41
     juggernaut: 0.36
     sapper: 0.62
     engineer: 0.57
+    knight: 0.59
+    lancer: 0.5
+    quartermaster: 0.31
+    warden: 0.58
   "jolly-pickaxe":
     explosive: 0.56
     inertia: 0.48
     sacrificial: 0.44
     decoy: 0.36
+    alchemist: 0.31
+    volley: 0.51
+    maceguard: 0.45
   "jollybadger05":
     medic: 0.46
     teleporter: 0.4
     spotter: 0.5
     bannerman: 0.33
+    quartermaster: 0.35
+    warden: 0.51
+    smokescreen: 0.38
+    tactician: 0.63
   "jollybandit78":
     pyro: 0.33
     spotter: 0.63
     tracker: 0.5
+    arbalist: 0.49
+    volley: 0.28
+    marksman: 0.51
+    fletcher: 0.37
   "jollygrostmest":
     medic: 0.51
     teleporter: 0.4
     spotter: 0.51
     bannerman: 0.32
+    quartermaster: 0.35
+    warden: 0.39
+    smokescreen: 0.4
+    tactician: 0.74
   "jollyotter95":
     medic: 0.45
     teleporter: 0.44
     spotter: 0.52
     bannerman: 0.32
+    quartermaster: 0.41
+    warden: 0.45
+    smokescreen: 0.35
+    tactician: 0.71
   "jollypumpkin99":
     dwarf: 0.51
     juggernaut: 0.53
     frost: 0.41
     engineer: 0.38
+    knight: 0.58
+    lancer: 0.43
+    warden: 0.54
   "jollyshathkrai":
     pyro: 0.26
     spotter: 0.67
     tracker: 0.46
+    arbalist: 0.48
+    volley: 0.24
+    marksman: 0.65
+    fletcher: 0.37
   "jollywaffle61":
     medic: 0.51
     teleporter: 0.38
     spotter: 0.47
     bannerman: 0.36
+    quartermaster: 0.35
+    warden: 0.47
+    smokescreen: 0.38
+    tactician: 0.71
   "jonshyth-94":
     berserker: 0.64
     explosive: 0.45
     grappler: 0.34
+    ravager: 0.48
+    acrobat: 0.32
+    lancer: 0.41
+    maceguard: 0.23
   "joustshonslime":
     berserker: 0.49
     vampire: 0.5
     bleeder: 0.39
     equality: 0.31
+    duelist: 0.72
+    knight: 0.33
+    scavenger: 0.4
   "juljulmc":
     berserker: 0.51
     vampire: 0.47
     bleeder: 0.38
     equality: 0.27
+    duelist: 0.59
+    knight: 0.39
+    scavenger: 0.37
   "jushpym-62":
     berserker: 0.59
     vampire: 0.47
     bleeder: 0.46
     equality: 0.29
+    duelist: 0.73
+    knight: 0.33
+    scavenger: 0.39
   "juzvonxircomet":
     berserker: 0.56
     vampire: 0.53
     bleeder: 0.36
     equality: 0.28
+    duelist: 0.63
+    knight: 0.36
+    scavenger: 0.36
   "jykkashkaiktiol":
     medic: 0.65
     teleporter: 0.34
     sacrificial: 0.34
     bannerman: 0.62
+    alchemist: 0.34
+    quartermaster: 0.64
+    tactician: 0.48
   "jyshrouzfalcon":
     venom: 0.42
     spotter: 0.4
     tracker: 0.57
+    scavenger: 0.35
+    arbalist: 0.42
+    harpooner: 0.47
+    fletcher: 0.52
   "kaigrokpvp":
     ninja: 0.39
     saboteur: 0.68
     decoy: 0.34
+    ravager: 0.34
+    acrobat: 0.41
+    smokescreen: 0.59
   "kainskoushiyt":
     warper: 0.48
     ninja: 0.31
     grappler: 0.58
+    duelist: 0.34
+    acrobat: 0.48
+    windrunner: 0.52
+    harpooner: 0.36
   "kajuxlomdaedel":
     explosive: 0.44
     inertia: 0.47
     sacrificial: 0.4
     decoy: 0.31
+    alchemist: 0.38
+    volley: 0.65
+    maceguard: 0.43
   "kakkouwolf":
     medic: 0.46
     teleporter: 0.44
     spotter: 0.56
     bannerman: 0.3
+    quartermaster: 0.34
+    warden: 0.49
+    smokescreen: 0.3
+    tactician: 0.72
   "kaldolskuzshist":
     dwarf: 0.48
     juggernaut: 0.6
     frost: 0.41
     engineer: 0.32
+    knight: 0.52
+    lancer: 0.39
+    warden: 0.47
   "kathjen-85":
     ninja: 0.6
     skinner: 0.37
     decoy: 0.49
+    duelist: 0.46
+    acrobat: 0.37
+    smokescreen: 0.47
   "keshlir-71":
     dwarf: 0.47
     juggernaut: 0.65
     frost: 0.41
     engineer: 0.33
+    knight: 0.61
+    lancer: 0.34
+    warden: 0.47
   "kestvourpro":
     demolitions: 0.52
     juggernaut: 0.39
     sapper: 0.63
     engineer: 0.5
+    knight: 0.65
+    lancer: 0.41
+    quartermaster: 0.29
+    warden: 0.47
   "kishkek-63":
     dwarf: 0.39
     juggernaut: 0.61
     frost: 0.37
     engineer: 0.36
+    knight: 0.58
+    lancer: 0.45
+    warden: 0.54
   "kistkedanom":
     demolitions: 0.51
     juggernaut: 0.32
     sapper: 0.66
     engineer: 0.48
+    knight: 0.6
+    lancer: 0.39
+    quartermaster: 0.29
+    warden: 0.53
   "kothnoustpvp":
     warper: 0.4
     ninja: 0.36
     grappler: 0.66
+    duelist: 0.33
+    acrobat: 0.49
+    windrunner: 0.52
+    harpooner: 0.35
   "krairthaxkrailtv":
     explosive: 0.5
     inertia: 0.5
     sacrificial: 0.45
     decoy: 0.3
+    alchemist: 0.39
+    volley: 0.58
+    maceguard: 0.46
   "kranpioshraim-91":
     ninja: 0.6
     skinner: 0.38
     decoy: 0.48
+    duelist: 0.39
+    acrobat: 0.43
+    smokescreen: 0.43
   "kraxgryzgry-59":
     berserker: 0.54
     vampire: 0.46
     bleeder: 0.41
     equality: 0.29
+    duelist: 0.71
+    knight: 0.39
+    scavenger: 0.43
   "kraxjyxbrost-82":
     medic: 0.58
     teleporter: 0.36
     sacrificial: 0.28
     bannerman: 0.51
+    alchemist: 0.35
+    quartermaster: 0.69
+    tactician: 0.58
   "krinpoupvp":
     berserker: 0.59
     explosive: 0.42
     grappler: 0.32
+    ravager: 0.56
+    acrobat: 0.27
+    lancer: 0.49
+    maceguard: 0.23
   "kriomgrol-28":
     pyro: 0.27
     spotter: 0.6
     tracker: 0.49
+    arbalist: 0.51
+    volley: 0.27
+    marksman: 0.52
+    fletcher: 0.44
   "krojykrouzhd":
     explosive: 0.57
     inertia: 0.5
     sacrificial: 0.46
     decoy: 0.32
+    alchemist: 0.34
+    volley: 0.54
+    maceguard: 0.42
   "krourrultyxshyth":
     warper: 0.41
     ninja: 0.35
     grappler: 0.62
+    duelist: 0.33
+    acrobat: 0.53
+    windrunner: 0.66
+    harpooner: 0.41
   "krourtast-23":
     berserker: 0.63
     vampire: 0.47
     bleeder: 0.36
     equality: 0.29
+    duelist: 0.65
+    knight: 0.3
+    scavenger: 0.41
   "krymurpro":
     berserker: 0.59
     vampire: 0.5
     bleeder: 0.38
     equality: 0.3
+    duelist: 0.67
+    knight: 0.36
+    scavenger: 0.4
   "kryxshy-80":
     venom: 0.46
     spotter: 0.37
     tracker: 0.68
+    scavenger: 0.36
+    arbalist: 0.4
+    harpooner: 0.46
+    fletcher: 0.52
   "kureltolmc":
     ninja: 0.59
     skinner: 0.35
     decoy: 0.47
+    duelist: 0.39
+    acrobat: 0.45
+    smokescreen: 0.44
   "kynjour-07":
     demolitions: 0.49
     juggernaut: 0.35
     sapper: 0.64
     engineer: 0.43
+    knight: 0.6
+    lancer: 0.4
+    quartermaster: 0.26
+    warden: 0.55
   "kystnaigristshy":
     demolitions: 0.39
     juggernaut: 0.38
     sapper: 0.68
     engineer: 0.48
+    knight: 0.6
+    lancer: 0.49
+    quartermaster: 0.27
+    warden: 0.63
   "kythmoukpvp":
     medic: 0.43
     teleporter: 0.35
     spotter: 0.46
     bannerman: 0.39
+    quartermaster: 0.38
+    warden: 0.46
+    smokescreen: 0.4
+    tactician: 0.68
   "laeldaikhunter":
     berserker: 0.6
     explosive: 0.46
     grappler: 0.35
+    ravager: 0.47
+    acrobat: 0.34
+    lancer: 0.43
+    maceguard: 0.26
   "laelshaidaik-87":
     berserker: 0.68
     explosive: 0.42
     grappler: 0.32
+    ravager: 0.52
+    acrobat: 0.34
+    lancer: 0.45
+    maceguard: 0.23
   "laigroshrythmc":
     explosive: 0.43
     inertia: 0.45
     sacrificial: 0.41
     decoy: 0.36
+    alchemist: 0.35
+    volley: 0.59
+    maceguard: 0.44
   "laimzoxyt":
     medic: 0.43
     teleporter: 0.42
     spotter: 0.46
     bannerman: 0.36
+    quartermaster: 0.45
+    warden: 0.47
+    smokescreen: 0.38
+    tactician: 0.64
   "lanmixmc":
     demolitions: 0.4
     juggernaut: 0.37
     sapper: 0.65
     engineer: 0.54
+    knight: 0.58
+    lancer: 0.47
+    quartermaster: 0.3
+    warden: 0.57
   "lerkuthblaze":
     berserker: 0.63
     vampire: 0.52
     bleeder: 0.35
     equality: 0.28
+    duelist: 0.58
+    knight: 0.35
+    scavenger: 0.34
   "lildavon":
     demolitions: 0.4
     juggernaut: 0.34
     sapper: 0.67
     engineer: 0.44
+    knight: 0.57
+    lancer: 0.48
+    quartermaster: 0.3
+    warden: 0.51
   "lillistxiomzior":
     warper: 0.51
     ninja: 0.32
     grappler: 0.54
+    duelist: 0.37
+    acrobat: 0.56
+    windrunner: 0.58
+    harpooner: 0.37
   "lilminjaixpa":
     venom: 0.38
     spotter: 0.39
     tracker: 0.55
+    scavenger: 0.31
+    arbalist: 0.36
+    harpooner: 0.42
+    fletcher: 0.53
   "lilnairioshnoul":
     ninja: 0.4
     saboteur: 0.63
     decoy: 0.34
+    ravager: 0.34
+    acrobat: 0.34
+    smokescreen: 0.47
   "lilraikraik":
     berserker: 0.5
     vampire: 0.53
     bleeder: 0.4
     equality: 0.29
+    duelist: 0.67
+    knight: 0.38
+    scavenger: 0.35
   "lilshainrun":
     venom: 0.48
     spotter: 0.33
     tracker: 0.57
+    scavenger: 0.37
+    arbalist: 0.36
+    harpooner: 0.39
+    fletcher: 0.57
   "lilskaeshbroul":
     warper: 0.48
     ninja: 0.35
     grappler: 0.65
+    duelist: 0.39
+    acrobat: 0.51
+    windrunner: 0.54
+    harpooner: 0.4
   "liltainshypok":
     pyro: 0.29
     spotter: 0.62
     tracker: 0.41
+    arbalist: 0.55
+    volley: 0.28
+    marksman: 0.54
+    fletcher: 0.37
   "liltinzaistpysh":
     berserker: 0.54
     explosive: 0.5
     grappler: 0.37
+    ravager: 0.5
+    acrobat: 0.32
+    lancer: 0.5
+    maceguard: 0.24
   "lirzaek-39":
     ninja: 0.37
     saboteur: 0.59
     decoy: 0.33
+    ravager: 0.35
+    acrobat: 0.43
+    smokescreen: 0.62
   "lorgrast-41":
     dwarf: 0.48
     juggernaut: 0.56
     frost: 0.4
     engineer: 0.37
+    knight: 0.61
+    lancer: 0.37
+    warden: 0.48
   "loumvistskouz-76":
     ninja: 0.61
     skinner: 0.37
     decoy: 0.52
+    duelist: 0.51
+    acrobat: 0.35
+    smokescreen: 0.54
   "louximskuthskox":
     ninja: 0.59
     skinner: 0.37
     decoy: 0.43
+    duelist: 0.44
+    acrobat: 0.45
+    smokescreen: 0.53
   "lucky-noodle":
     medic: 0.65
     teleporter: 0.36
     sacrificial: 0.34
     bannerman: 0.54
+    alchemist: 0.3
+    quartermaster: 0.59
+    tactician: 0.48
   "lucky-waffle":
     dwarf: 0.44
     juggernaut: 0.66
     frost: 0.37
     engineer: 0.38
+    knight: 0.51
+    lancer: 0.39
+    warden: 0.53
   "luckymaikrak":
     demolitions: 0.44
     juggernaut: 0.32
     sapper: 0.63
     engineer: 0.43
+    knight: 0.66
+    lancer: 0.43
+    quartermaster: 0.26
+    warden: 0.58
   "luckyninja54":
     ninja: 0.59
     skinner: 0.32
     decoy: 0.5
+    duelist: 0.46
+    acrobat: 0.44
+    smokescreen: 0.44
   "luckypotato84":
     berserker: 0.57
     explosive: 0.4
     grappler: 0.34
+    ravager: 0.62
+    acrobat: 0.34
+    lancer: 0.44
+    maceguard: 0.25
   "luckypotato95":
     explosive: 0.56
     inertia: 0.42
     sacrificial: 0.39
     decoy: 0.37
+    alchemist: 0.33
+    volley: 0.6
+    maceguard: 0.4
   "luckypumpkin92":
     pyro: 0.32
     spotter: 0.53
     tracker: 0.48
+    arbalist: 0.47
+    volley: 0.24
+    marksman: 0.68
+    fletcher: 0.43
   "luckyskalpaen":
     medic: 0.68
     teleporter: 0.37
     sacrificial: 0.34
     bannerman: 0.5
+    alchemist: 0.37
+    quartermaster: 0.67
+    tactician: 0.58
   "luckyslime10":
     demolitions: 0.51
     juggernaut: 0.36
     sapper: 0.54
     engineer: 0.48
+    knight: 0.57
+    lancer: 0.5
+    quartermaster: 0.32
+    warden: 0.51
   "lumbrytyngroust":
     medic: 0.71
     teleporter: 0.38
     sacrificial: 0.27
     bannerman: 0.56
+    alchemist: 0.38
+    quartermaster: 0.58
+    tactician: 0.58
   "lunardainvol":
     ninja: 0.42
     saboteur: 0.67
     decoy: 0.29
+    ravager: 0.35
+    acrobat: 0.38
+    smokescreen: 0.51
   "lunarfox02":
     berserker: 0.57
     explosive: 0.49
     grappler: 0.32
+    ravager: 0.61
+    acrobat: 0.27
+    lancer: 0.48
+    maceguard: 0.28
   "lunarfuse83":
     demolitions: 0.5
     juggernaut: 0.33
     sapper: 0.6
     engineer: 0.57
+    knight: 0.52
+    lancer: 0.49
+    quartermaster: 0.3
+    warden: 0.49
   "lunarkromlyx":
     warper: 0.5
     ninja: 0.37
     grappler: 0.69
+    duelist: 0.35
+    acrobat: 0.48
+    windrunner: 0.67
+    harpooner: 0.42
   "lunarmoth52":
     demolitions: 0.42
     juggernaut: 0.36
     sapper: 0.54
     engineer: 0.52
+    knight: 0.57
+    lancer: 0.42
+    quartermaster: 0.31
+    warden: 0.5
   "lunarphantom16":
     berserker: 0.53
     explosive: 0.44
     grappler: 0.4
+    ravager: 0.51
+    acrobat: 0.33
+    lancer: 0.44
+    maceguard: 0.25
   "lunarthyjaest":
     ninja: 0.57
     skinner: 0.36
     decoy: 0.42
+    duelist: 0.4
+    acrobat: 0.4
+    smokescreen: 0.46
   "lunartulthek":
     ninja: 0.61
     skinner: 0.3
     decoy: 0.46
+    duelist: 0.51
+    acrobat: 0.45
+    smokescreen: 0.52
   "lynxminer8":
     dwarf: 0.42
     juggernaut: 0.6
     frost: 0.45
     engineer: 0.3
+    knight: 0.61
+    lancer: 0.45
+    warden: 0.53
   "lynxotter0":
     berserker: 0.51
     vampire: 0.48
     bleeder: 0.36
     equality: 0.3
+    duelist: 0.71
+    knight: 0.33
+    scavenger: 0.42
   "lynxpumpkin8":
     medic: 0.42
     teleporter: 0.45
     spotter: 0.43
     bannerman: 0.3
+    quartermaster: 0.39
+    warden: 0.48
+    smokescreen: 0.3
+    tactician: 0.58
   "lyshpuzdae-51":
     berserker: 0.59
     explosive: 0.46
     grappler: 0.39
+    ravager: 0.47
+    acrobat: 0.33
+    lancer: 0.38
+    maceguard: 0.26
   "lystshomdethtu":
     medic: 0.56
     teleporter: 0.39
     sacrificial: 0.32
     bannerman: 0.59
+    alchemist: 0.3
+    quartermaster: 0.53
+    tactician: 0.57
   "lyxskaertv":
     ninja: 0.6
     skinner: 0.32
     decoy: 0.49
+    duelist: 0.47
+    acrobat: 0.38
+    smokescreen: 0.5
   "maijy-52":
     demolitions: 0.47
     juggernaut: 0.38
     sapper: 0.65
     engineer: 0.46
+    knight: 0.51
+    lancer: 0.43
+    quartermaster: 0.29
+    warden: 0.5
   "mainmaiz-97":
     venom: 0.51
     spotter: 0.38
     tracker: 0.62
+    scavenger: 0.37
+    arbalist: 0.4
+    harpooner: 0.5
+    fletcher: 0.43
   "mamlezmekmc":
     medic: 0.51
     teleporter: 0.35
     spotter: 0.47
     bannerman: 0.34
+    quartermaster: 0.41
+    warden: 0.47
+    smokescreen: 0.33
+    tactician: 0.6
   "meklaishloumzaek":
     berserker: 0.59
     vampire: 0.55
     bleeder: 0.4
     equality: 0.33
+    duelist: 0.62
+    knight: 0.33
+    scavenger: 0.4
   "meshkyxioshlynx":
     explosive: 0.51
     inertia: 0.49
     sacrificial: 0.37
     decoy: 0.36
+    alchemist: 0.31
+    volley: 0.68
+    maceguard: 0.44
   "minerbadger5":
     explosive: 0.55
     inertia: 0.47
     sacrificial: 0.42
     decoy: 0.34
+    alchemist: 0.33
+    volley: 0.69
+    maceguard: 0.44
   "mothblaze0":
     pyro: 0.27
     spotter: 0.61
     tracker: 0.46
+    arbalist: 0.49
+    volley: 0.27
+    marksman: 0.65
+    fletcher: 0.45
   "mothlynx8":
     explosive: 0.55
     inertia: 0.47
     sacrificial: 0.41
     decoy: 0.33
+    alchemist: 0.34
+    volley: 0.52
+    maceguard: 0.43
   "mothsniper8":
     pyro: 0.34
     spotter: 0.57
     tracker: 0.52
+    arbalist: 0.53
+    volley: 0.26
+    marksman: 0.62
+    fletcher: 0.36
   "moukpynhunter":
     medic: 0.45
     teleporter: 0.46
     spotter: 0.52
     bannerman: 0.31
+    quartermaster: 0.4
+    warden: 0.48
+    smokescreen: 0.32
+    tactician: 0.68
   "moundol-05":
     explosive: 0.56
     inertia: 0.45
     sacrificial: 0.44
     decoy: 0.31
+    alchemist: 0.4
+    volley: 0.6
+    maceguard: 0.39
   "mouthjaivoxfuse":
     ninja: 0.58
     skinner: 0.34
     decoy: 0.47
+    duelist: 0.44
+    acrobat: 0.4
+    smokescreen: 0.44
   "mrkruzraemthosh":
     berserker: 0.56
     explosive: 0.47
     grappler: 0.38
+    ravager: 0.52
+    acrobat: 0.26
+    lancer: 0.43
+    maceguard: 0.26
   "mrmeshpaeshke":
     berserker: 0.59
     explosive: 0.39
     grappler: 0.39
+    ravager: 0.61
+    acrobat: 0.31
+    lancer: 0.44
+    maceguard: 0.25
   "mrnestzaiz":
     berserker: 0.64
     explosive: 0.51
     grappler: 0.31
+    ravager: 0.55
+    acrobat: 0.26
+    lancer: 0.39
+    maceguard: 0.22
   "mrnothleshjast":
     ninja: 0.46
     saboteur: 0.68
     decoy: 0.29
+    ravager: 0.31
+    acrobat: 0.45
+    smokescreen: 0.56
   "mrraenskovul":
     explosive: 0.5
     inertia: 0.51
     sacrificial: 0.41
     decoy: 0.38
+    alchemist: 0.39
+    volley: 0.55
+    maceguard: 0.37
   "mrshiosttok":
     warper: 0.45
     ninja: 0.4
     grappler: 0.61
+    duelist: 0.35
+    acrobat: 0.49
+    windrunner: 0.65
+    harpooner: 0.39
   "mrtaembroth":
     medic: 0.48
     teleporter: 0.39
     spotter: 0.56
     bannerman: 0.35
+    quartermaster: 0.38
+    warden: 0.48
+    smokescreen: 0.35
+    tactician: 0.69
   "mumxenkraez-82":
     demolitions: 0.38
     juggernaut: 0.37
     sapper: 0.55
     engineer: 0.52
+    knight: 0.52
+    lancer: 0.49
+    quartermaster: 0.29
+    warden: 0.56
   "mustnaer-20":
     ninja: 0.59
     skinner: 0.31
     decoy: 0.46
+    duelist: 0.51
+    acrobat: 0.45
+    smokescreen: 0.57
   "mykkaestnainmc":
     berserker: 0.48
     vampire: 0.54
     bleeder: 0.37
     equality: 0.32
+    duelist: 0.65
+    knight: 0.35
+    scavenger: 0.37
   "mylgriorpro":
     berserker: 0.55
     vampire: 0.43
     bleeder: 0.44
     equality: 0.29
+    duelist: 0.71
+    knight: 0.32
+    scavenger: 0.39
   "mynporyt":
     pyro: 0.29
     spotter: 0.66
     tracker: 0.49
+    arbalist: 0.43
+    volley: 0.26
+    marksman: 0.58
+    fletcher: 0.43
   "mysticbrylzaez":
     ninja: 0.36
     saboteur: 0.59
     decoy: 0.28
+    ravager: 0.34
+    acrobat: 0.35
+    smokescreen: 0.51
   "mysticshaixjoun":
     pyro: 0.32
     spotter: 0.62
     tracker: 0.45
+    arbalist: 0.55
+    volley: 0.27
+    marksman: 0.54
+    fletcher: 0.34
   "mysticstorm13":
     ninja: 0.67
     skinner: 0.3
     decoy: 0.41
+    duelist: 0.39
+    acrobat: 0.37
+    smokescreen: 0.52
   "naithnim-13":
     demolitions: 0.39
     juggernaut: 0.32
     sapper: 0.63
     engineer: 0.44
+    knight: 0.6
+    lancer: 0.49
+    quartermaster: 0.29
+    warden: 0.54
   "namrainthevez":
     venom: 0.4
     spotter: 0.36
     tracker: 0.54
+    scavenger: 0.35
+    arbalist: 0.36
+    harpooner: 0.43
+    fletcher: 0.5
   "nastvioxmioktain":
     ninja: 0.6
     skinner: 0.36
     decoy: 0.48
+    duelist: 0.49
+    acrobat: 0.35
+    smokescreen: 0.52
   "neonarrow71":
     berserker: 0.62
     vampire: 0.5
     bleeder: 0.35
     equality: 0.33
+    duelist: 0.72
+    knight: 0.32
+    scavenger: 0.42
   "neoncomet75":
     ninja: 0.43
     saboteur: 0.52
     decoy: 0.31
+    ravager: 0.35
+    acrobat: 0.43
+    smokescreen: 0.57
   "neonraekdour":
     berserker: 0.6
     explosive: 0.51
     grappler: 0.33
+    ravager: 0.63
+    acrobat: 0.26
+    lancer: 0.5
+    maceguard: 0.28
   "neonskaenjuz":
     venom: 0.47
     spotter: 0.37
     tracker: 0.53
+    scavenger: 0.31
+    arbalist: 0.41
+    harpooner: 0.39
+    fletcher: 0.57
   "neonslime85":
     demolitions: 0.52
     juggernaut: 0.38
     sapper: 0.56
     engineer: 0.47
+    knight: 0.51
+    lancer: 0.43
+    quartermaster: 0.33
+    warden: 0.63
   "ninjapickaxe7":
     medic: 0.74
     teleporter: 0.37
     sacrificial: 0.32
     bannerman: 0.52
+    alchemist: 0.37
+    quartermaster: 0.61
+    tactician: 0.53
   "niokadae-83":
     pyro: 0.27
     spotter: 0.63
     tracker: 0.5
+    arbalist: 0.49
+    volley: 0.25
+    marksman: 0.53
+    fletcher: 0.37
   "nirkathluxninja":
     dwarf: 0.42
     juggernaut: 0.56
     frost: 0.44
     engineer: 0.39
+    knight: 0.58
+    lancer: 0.42
+    warden: 0.44
   "noodlecomet0":
     ninja: 0.66
     skinner: 0.39
     decoy: 0.42
+    duelist: 0.47
+    acrobat: 0.35
+    smokescreen: 0.5
   "noodlemoth7":
     berserker: 0.59
     vampire: 0.48
     bleeder: 0.41
     equality: 0.33
+    duelist: 0.74
+    knight: 0.33
+    scavenger: 0.41
   "noodlephantom5":
     pyro: 0.3
     spotter: 0.63
     tracker: 0.4
+    arbalist: 0.51
+    volley: 0.26
+    marksman: 0.68
+    fletcher: 0.45
   "noodlewolf7":
     ninja: 0.35
     saboteur: 0.54
     decoy: 0.29
+    ravager: 0.39
+    acrobat: 0.36
+    smokescreen: 0.47
   "nouxmiolgaming":
     ninja: 0.36
     saboteur: 0.65
     decoy: 0.26
+    ravager: 0.34
+    acrobat: 0.43
+    smokescreen: 0.59
   "nozxuxpounshynvu":
     venom: 0.43
     spotter: 0.33
     tracker: 0.6
+    scavenger: 0.35
+    arbalist: 0.38
+    harpooner: 0.43
+    fletcher: 0.45
   "nukouzgaming":
     berserker: 0.55
     vampire: 0.43
     bleeder: 0.42
     equality: 0.33
+    duelist: 0.66
+    knight: 0.37
+    scavenger: 0.37
   "nuzjaiktaethkek":
     warper: 0.43
     ninja: 0.37
     grappler: 0.67
+    duelist: 0.37
+    acrobat: 0.46
+    windrunner: 0.53
+    harpooner: 0.37
   "nyshxaix-38":
     explosive: 0.51
     inertia: 0.51
     sacrificial: 0.45
     decoy: 0.34
+    alchemist: 0.36
+    volley: 0.52
+    maceguard: 0.46
   "nyxmoush-25":
     explosive: 0.48
     inertia: 0.51
     sacrificial: 0.34
     decoy: 0.32
+    alchemist: 0.38
+    volley: 0.57
+    maceguard: 0.43
   "nyxshashtv":
     explosive: 0.51
     inertia: 0.44
     sacrificial: 0.4
     decoy: 0.3
+    alchemist: 0.37
+    volley: 0.67
+    maceguard: 0.43
   "otterbadger3":
     venom: 0.49
     spotter: 0.31
     tracker: 0.57
+    scavenger: 0.38
+    arbalist: 0.45
+    harpooner: 0.45
+    fletcher: 0.48
   "otterwaffle4":
     explosive: 0.5
     inertia: 0.39
     sacrificial: 0.41
     decoy: 0.39
+    alchemist: 0.39
+    volley: 0.61
+    maceguard: 0.39
   "paethty-65":
     demolitions: 0.5
     juggernaut: 0.3
     sapper: 0.61
     engineer: 0.49
+    knight: 0.58
+    lancer: 0.52
+    quartermaster: 0.32
+    warden: 0.53
   "paimshaez-73":
     pyro: 0.34
     spotter: 0.59
     tracker: 0.47
+    arbalist: 0.54
+    volley: 0.28
+    marksman: 0.54
+    fletcher: 0.38
   "paishvouz-12":
     warper: 0.44
     ninja: 0.3
     grappler: 0.58
+    duelist: 0.4
+    acrobat: 0.52
+    windrunner: 0.64
+    harpooner: 0.45
   "paistjaezrozyt":
     medic: 0.59
     teleporter: 0.39
     sacrificial: 0.27
     bannerman: 0.56
+    alchemist: 0.34
+    quartermaster: 0.65
+    tactician: 0.5
   "pastkroxpro":
     berserker: 0.69
     explosive: 0.45
     grappler: 0.3
+    ravager: 0.5
+    acrobat: 0.28
+    lancer: 0.49
+    maceguard: 0.23
   "pastpek-35":
     venom: 0.48
     spotter: 0.33
     tracker: 0.66
+    scavenger: 0.35
+    arbalist: 0.43
+    harpooner: 0.44
+    fletcher: 0.57
   "phantomarrow7":
     demolitions: 0.44
     juggernaut: 0.3
     sapper: 0.65
     engineer: 0.48
+    knight: 0.53
+    lancer: 0.42
+    quartermaster: 0.29
+    warden: 0.51
   "phantombandit2":
     dwarf: 0.38
     juggernaut: 0.67
     frost: 0.41
     engineer: 0.37
+    knight: 0.5
+    lancer: 0.46
+    warden: 0.44
   "phantompickaxe3":
     dwarf: 0.4
     juggernaut: 0.65
     frost: 0.45
     engineer: 0.3
+    knight: 0.49
+    lancer: 0.39
+    warden: 0.51
   "phantomsniper7":
     dwarf: 0.42
     juggernaut: 0.56
     frost: 0.37
     engineer: 0.38
+    knight: 0.63
+    lancer: 0.35
+    warden: 0.54
   "pickaxenoodle4":
     berserker: 0.64
     explosive: 0.44
     grappler: 0.34
+    ravager: 0.49
+    acrobat: 0.33
+    lancer: 0.51
+    maceguard: 0.22
   "pickaxeviper9":
     demolitions: 0.49
     juggernaut: 0.32
     sapper: 0.63
     engineer: 0.57
+    knight: 0.54
+    lancer: 0.45
+    quartermaster: 0.29
+    warden: 0.61
   "piozliost-40":
     pyro: 0.29
     spotter: 0.52
     tracker: 0.39
+    arbalist: 0.55
+    volley: 0.22
+    marksman: 0.51
+    fletcher: 0.42
   "piozpith-58":
     ninja: 0.35
     saboteur: 0.67
     decoy: 0.27
+    ravager: 0.32
+    acrobat: 0.37
+    smokescreen: 0.49
   "pixelduvoukryr":
     venom: 0.44
     spotter: 0.38
     tracker: 0.57
+    scavenger: 0.3
+    arbalist: 0.36
+    harpooner: 0.44
+    fletcher: 0.48
   "pixelnazvoulon":
     explosive: 0.52
     inertia: 0.44
     sacrificial: 0.45
     decoy: 0.4
+    alchemist: 0.34
+    volley: 0.54
+    maceguard: 0.45
   "pixelpeshxam":
     warper: 0.47
     ninja: 0.31
     grappler: 0.52
+    duelist: 0.39
+    acrobat: 0.47
+    windrunner: 0.52
+    harpooner: 0.4
   "potatofalcon8":
     medic: 0.5
     teleporter: 0.43
     spotter: 0.46
     bannerman: 0.33
+    quartermaster: 0.39
+    warden: 0.42
+    smokescreen: 0.4
+    tactician: 0.56
   "potatofox2":
     pyro: 0.3
     spotter: 0.62
     tracker: 0.42
+    arbalist: 0.48
+    volley: 0.23
+    marksman: 0.64
+    fletcher: 0.37
   "potatoninja0":
     medic: 0.42
     teleporter: 0.44
     spotter: 0.51
     bannerman: 0.33
+    quartermaster: 0.44
+    warden: 0.45
+    smokescreen: 0.34
+    tactician: 0.73
   "potatootter0":
     explosive: 0.55
     inertia: 0.51
     sacrificial: 0.38
     decoy: 0.3
+    alchemist: 0.36
+    volley: 0.69
+    maceguard: 0.43
   "puznyk-42":
     berserker: 0.52
     vampire: 0.54
     bleeder: 0.45
     equality: 0.31
+    duelist: 0.64
+    knight: 0.3
+    scavenger: 0.38
   "pytaegaming":
     ninja: 0.62
     skinner: 0.36
     decoy: 0.46
+    duelist: 0.45
+    acrobat: 0.41
+    smokescreen: 0.44
   "quiet-wolf":
     warper: 0.39
     ninja: 0.34
     grappler: 0.62
+    duelist: 0.4
+    acrobat: 0.54
+    windrunner: 0.52
+    harpooner: 0.36
   "quietbandit77":
     explosive: 0.44
     inertia: 0.49
     sacrificial: 0.41
     decoy: 0.31
+    alchemist: 0.39
+    volley: 0.56
+    maceguard: 0.46
   "quietblaze51":
     medic: 0.46
     teleporter: 0.38
     spotter: 0.47
     bannerman: 0.38
+    quartermaster: 0.4
+    warden: 0.42
+    smokescreen: 0.39
+    tactician: 0.67
   "quietgrouthshur":
     berserker: 0.63
     vampire: 0.55
     bleeder: 0.35
     equality: 0.27
+    duelist: 0.59
+    knight: 0.3
+    scavenger: 0.42
   "quiethunter22":
     venom: 0.43
     spotter: 0.33
     tracker: 0.64
+    scavenger: 0.32
+    arbalist: 0.44
+    harpooner: 0.44
+    fletcher: 0.43
   "quietslime59":
     berserker: 0.64
     explosive: 0.5
     grappler: 0.36
+    ravager: 0.58
+    acrobat: 0.28
+    lancer: 0.49
+    maceguard: 0.26
   "quietzyldouz":
     medic: 0.64
     teleporter: 0.35
     sacrificial: 0.26
     bannerman: 0.48
+    alchemist: 0.34
+    quartermaster: 0.51
+    tactician: 0.55
   "raekradyzdoum":
     ninja: 0.34
     saboteur: 0.61
     decoy: 0.32
+    ravager: 0.4
+    acrobat: 0.44
+    smokescreen: 0.51
   "ravenlynx4":
     dwarf: 0.5
     juggernaut: 0.62
     frost: 0.46
     engineer: 0.31
+    knight: 0.62
+    lancer: 0.34
+    warden: 0.48
   "ravenotter9":
     ninja: 0.67
     skinner: 0.33
     decoy: 0.52
+    duelist: 0.5
+    acrobat: 0.46
+    smokescreen: 0.5
   "rershorider":
     medic: 0.42
     teleporter: 0.46
     spotter: 0.49
     bannerman: 0.35
+    quartermaster: 0.39
+    warden: 0.47
+    smokescreen: 0.39
+    tactician: 0.6
   "reshrelgrulbrul":
     medic: 0.45
     teleporter: 0.45
     spotter: 0.49
     bannerman: 0.32
+    quartermaster: 0.43
+    warden: 0.49
+    smokescreen: 0.34
+    tactician: 0.62
   "rexaeshtoush-37":
     demolitions: 0.4
     juggernaut: 0.3
     sapper: 0.67
     engineer: 0.45
+    knight: 0.51
+    lancer: 0.4
+    quartermaster: 0.31
+    warden: 0.48
   "rionaesttaimmel":
     demolitions: 0.5
     juggernaut: 0.31
     sapper: 0.65
     engineer: 0.54
+    knight: 0.62
+    lancer: 0.48
+    quartermaster: 0.28
+    warden: 0.55
   "roguecomet03":
     ninja: 0.4
     saboteur: 0.55
     decoy: 0.27
+    ravager: 0.34
+    acrobat: 0.43
+    smokescreen: 0.57
   "rogueraven61":
     explosive: 0.51
     inertia: 0.49
     sacrificial: 0.44
     decoy: 0.35
+    alchemist: 0.31
+    volley: 0.61
+    maceguard: 0.36
   "roguerushshaeth":
     venom: 0.41
     spotter: 0.32
     tracker: 0.62
+    scavenger: 0.31
+    arbalist: 0.38
+    harpooner: 0.44
+    fletcher: 0.51
   "roguethimkrist":
     berserker: 0.56
     explosive: 0.51
     grappler: 0.36
+    ravager: 0.63
+    acrobat: 0.27
+    lancer: 0.38
+    maceguard: 0.25
   "roguewolf00":
     medic: 0.56
     teleporter: 0.43
     sacrificial: 0.3
     bannerman: 0.63
+    alchemist: 0.31
+    quartermaster: 0.65
+    tactician: 0.62
   "roumgraistgolem":
     berserker: 0.62
     explosive: 0.49
     grappler: 0.37
+    ravager: 0.52
+    acrobat: 0.33
+    lancer: 0.42
+    maceguard: 0.28
   "royal-falcon":
     warper: 0.39
     ninja: 0.4
     grappler: 0.51
+    duelist: 0.39
+    acrobat: 0.52
+    windrunner: 0.67
+    harpooner: 0.38
   "royalminer36":
     ninja: 0.58
     skinner: 0.3
     decoy: 0.43
+    duelist: 0.5
+    acrobat: 0.45
+    smokescreen: 0.53
   "runpaethishir":
     pyro: 0.34
     spotter: 0.53
     tracker: 0.4
+    arbalist: 0.43
+    volley: 0.26
+    marksman: 0.61
+    fletcher: 0.41
   "shadowkoukkoush":
     dwarf: 0.42
     juggernaut: 0.65
     frost: 0.46
     engineer: 0.34
+    knight: 0.5
+    lancer: 0.4
+    warden: 0.43
   "shazyzbadger":
     medic: 0.73
     teleporter: 0.44
     sacrificial: 0.28
     bannerman: 0.48
+    alchemist: 0.39
+    quartermaster: 0.69
+    tactician: 0.48
   "shemshiothpro":
     medic: 0.42
     teleporter: 0.39
     spotter: 0.54
     bannerman: 0.33
+    quartermaster: 0.35
+    warden: 0.43
+    smokescreen: 0.32
+    tactician: 0.73
   "shiollummc":
     venom: 0.49
     spotter: 0.38
     tracker: 0.52
+    scavenger: 0.38
+    arbalist: 0.35
+    harpooner: 0.4
+    fletcher: 0.48
   "shixmylsniper":
     ninja: 0.57
     skinner: 0.38
     decoy: 0.51
+    duelist: 0.48
+    acrobat: 0.43
+    smokescreen: 0.48
   "shizshoumfuse":
     pyro: 0.3
     spotter: 0.63
     tracker: 0.39
+    arbalist: 0.57
+    volley: 0.23
+    marksman: 0.55
+    fletcher: 0.41
   "silentbandit65":
     pyro: 0.26
     spotter: 0.53
     tracker: 0.4
+    arbalist: 0.52
+    volley: 0.25
+    marksman: 0.58
+    fletcher: 0.4
   "silentjoki":
     ninja: 0.38
     saboteur: 0.66
     decoy: 0.3
+    ravager: 0.39
+    acrobat: 0.44
+    smokescreen: 0.53
   "silentvouldorjin":
     dwarf: 0.39
     juggernaut: 0.6
     frost: 0.41
     engineer: 0.33
+    knight: 0.49
+    lancer: 0.37
+    warden: 0.55
   "sirjaixbral":
     demolitions: 0.47
     juggernaut: 0.37
     sapper: 0.52
     engineer: 0.43
+    knight: 0.55
+    lancer: 0.5
+    quartermaster: 0.26
+    warden: 0.57
   "sirkioththy":
     medic: 0.44
     teleporter: 0.37
     spotter: 0.5
     bannerman: 0.35
+    quartermaster: 0.38
+    warden: 0.47
+    smokescreen: 0.38
+    tactician: 0.58
   "sirlanskoumpesh":
     dwarf: 0.39
     juggernaut: 0.53
     frost: 0.44
     engineer: 0.4
+    knight: 0.47
+    lancer: 0.36
+    warden: 0.48
   "sirlouthrildoum":
     dwarf: 0.52
     juggernaut: 0.52
     frost: 0.35
     engineer: 0.37
+    knight: 0.6
+    lancer: 0.45
+    warden: 0.47
   "sirromxon":
     berserker: 0.57
     vampire: 0.45
     bleeder: 0.46
     equality: 0.29
+    duelist: 0.72
+    knight: 0.39
+    scavenger: 0.37
   "sirronnem":
     venom: 0.41
     spotter: 0.39
     tracker: 0.64
+    scavenger: 0.31
+    arbalist: 0.39
+    harpooner: 0.43
+    fletcher: 0.43
   "skalaenmc":
     warper: 0.44
     ninja: 0.37
     grappler: 0.56
+    duelist: 0.38
+    acrobat: 0.57
+    windrunner: 0.68
+    harpooner: 0.35
   "skastnairpro":
     explosive: 0.53
     inertia: 0.45
     sacrificial: 0.41
     decoy: 0.4
+    alchemist: 0.33
+    volley: 0.51
+    maceguard: 0.36
   "skekrek-36":
     warper: 0.48
     ninja: 0.35
     grappler: 0.68
+    duelist: 0.39
+    acrobat: 0.51
+    windrunner: 0.58
+    harpooner: 0.38
   "skilbryrlaiztom":
     pyro: 0.34
     spotter: 0.6
     tracker: 0.44
+    arbalist: 0.53
+    volley: 0.27
+    marksman: 0.69
+    fletcher: 0.43
   "skiothjik-27":
     berserker: 0.48
     vampire: 0.54
     bleeder: 0.38
     equality: 0.27
+    duelist: 0.57
+    knight: 0.31
+    scavenger: 0.35
   "skopostarrow":
     berserker: 0.59
     vampire: 0.51
     bleeder: 0.35
     equality: 0.3
+    duelist: 0.66
+    knight: 0.34
+    scavenger: 0.43
   "skozskaethpvp":
     berserker: 0.51
     vampire: 0.48
     bleeder: 0.37
     equality: 0.29
+    duelist: 0.65
+    knight: 0.36
+    scavenger: 0.38
   "skupil-24":
     medic: 0.59
     teleporter: 0.38
     sacrificial: 0.26
     bannerman: 0.51
+    alchemist: 0.36
+    quartermaster: 0.63
+    tactician: 0.59
   "skyzpiokvain-41":
     berserker: 0.63
     explosive: 0.47
     grappler: 0.38
+    ravager: 0.62
+    acrobat: 0.33
+    lancer: 0.39
+    maceguard: 0.25
   "slimelynx9":
     berserker: 0.59
     explosive: 0.48
     grappler: 0.35
+    ravager: 0.49
+    acrobat: 0.27
+    lancer: 0.5
+    maceguard: 0.22
   "slimeraven9":
     ninja: 0.57
     skinner: 0.32
     decoy: 0.43
+    duelist: 0.5
+    acrobat: 0.42
+    smokescreen: 0.57
   "slimesniper2":
     medic: 0.44
     teleporter: 0.45
     spotter: 0.44
     bannerman: 0.3
+    quartermaster: 0.37
+    warden: 0.51
+    smokescreen: 0.38
+    tactician: 0.6
   "sneaky-pickaxe":
     dwarf: 0.45
     juggernaut: 0.59
     frost: 0.4
     engineer: 0.38
+    knight: 0.48
+    lancer: 0.36
+    warden: 0.57
   "sneakybadger09":
     dwarf: 0.39
     juggernaut: 0.53
     frost: 0.45
     engineer: 0.3
+    knight: 0.47
+    lancer: 0.35
+    warden: 0.52
   "sneakyninja61":
     medic: 0.74
     teleporter: 0.43
     sacrificial: 0.31
     bannerman: 0.48
+    alchemist: 0.34
+    quartermaster: 0.55
+    tactician: 0.52
   "sneakypumpiok":
     warper: 0.41
     ninja: 0.39
     grappler: 0.52
+    duelist: 0.35
+    acrobat: 0.57
+    windrunner: 0.69
+    harpooner: 0.35
   "sneakytildyl":
     venom: 0.41
     spotter: 0.32
     tracker: 0.55
+    scavenger: 0.37
+    arbalist: 0.45
+    harpooner: 0.42
+    fletcher: 0.54
   "sniperslime8":
     ninja: 0.41
     saboteur: 0.65
     decoy: 0.3
+    ravager: 0.34
+    acrobat: 0.44
+    smokescreen: 0.52
   "solar-fuse":
     medic: 0.4
     teleporter: 0.46
     spotter: 0.44
     bannerman: 0.36
+    quartermaster: 0.38
+    warden: 0.43
+    smokescreen: 0.38
+    tactician: 0.59
   "solarjixpashjy":
     demolitions: 0.46
     juggernaut: 0.36
     sapper: 0.64
     engineer: 0.44
+    knight: 0.63
+    lancer: 0.51
+    quartermaster: 0.32
+    warden: 0.61
   "solarkashtush":
     ninja: 0.52
     skinner: 0.39
     decoy: 0.4
+    duelist: 0.42
+    acrobat: 0.36
+    smokescreen: 0.54
   "solarlionshur":
     demolitions: 0.41
     juggernaut: 0.3
     sapper: 0.68
     engineer: 0.56
+    knight: 0.53
+    lancer: 0.41
+    quartermaster: 0.34
+    warden: 0.53
   "solarsniper64":
     dwarf: 0.47
     juggernaut: 0.55
     frost: 0.43
     engineer: 0.38
+    knight: 0.59
+    lancer: 0.4
+    warden: 0.46
   "spooky-arrow":
     pyro: 0.31
     spotter: 0.56
     tracker: 0.48
+    arbalist: 0.52
+    volley: 0.21
+    marksman: 0.62
+    fletcher: 0.35
   "spookynoodle41":
     pyro: 0.27
     spotter: 0.52
     tracker: 0.47
+    arbalist: 0.44
+    volley: 0.27
+    marksman: 0.56
+    fletcher: 0.4
   "spookytimbryk":
     dwarf: 0.42
     juggernaut: 0.56
     frost: 0.36
     engineer: 0.37
+    knight: 0.61
+    lancer: 0.38
+    warden: 0.53
   "staticraven26":
     demolitions: 0.44
     juggernaut: 0.34
     sapper: 0.65
     engineer: 0.47
+    knight: 0.62
+    lancer: 0.39
+    quartermaster: 0.28
+    warden: 0.5
   "swift-falcon":
     ninja: 0.67
     skinner: 0.34
     decoy: 0.4
+    duelist: 0.43
+    acrobat: 0.36
+    smokescreen: 0.52
   "swiftarrow03":
     ninja: 0.38
     saboteur: 0.65
     decoy: 0.28
+    ravager: 0.32
+    acrobat: 0.42
+    smokescreen: 0.57
   "swiftkikran":
     ninja: 0.37
     saboteur: 0.63
     decoy: 0.29
+    ravager: 0.32
+    acrobat: 0.42
+    smokescreen: 0.51
   "swiftkrashtim":
     berserker: 0.53
     explosive: 0.5
     grappler: 0.39
+    ravager: 0.53
+    acrobat: 0.31
+    lancer: 0.5
+    maceguard: 0.21
   "swiftnerzash":
     pyro: 0.31
     spotter: 0.52
     tracker: 0.46
+    arbalist: 0.43
+    volley: 0.27
+    marksman: 0.66
+    fletcher: 0.37
   "swiftpickaxe68":
     pyro: 0.28
     spotter: 0.58
     tracker: 0.49
+    arbalist: 0.44
+    volley: 0.25
+    marksman: 0.57
+    fletcher: 0.38
   "swiftskaixtouz":
     berserker: 0.6
     explosive: 0.51
     grappler: 0.32
+    ravager: 0.53
+    acrobat: 0.32
+    lancer: 0.47
+    maceguard: 0.22
   "taestroshwaffle":
     berserker: 0.64
     explosive: 0.47
     grappler: 0.34
+    ravager: 0.57
+    acrobat: 0.33
+    lancer: 0.42
+    maceguard: 0.24
   "taistluzhd":
     medic: 0.58
     teleporter: 0.43
     sacrificial: 0.28
     bannerman: 0.5
+    alchemist: 0.34
+    quartermaster: 0.57
+    tactician: 0.57
   "tankrekroumpro":
     dwarf: 0.4
     juggernaut: 0.55
     frost: 0.35
     engineer: 0.36
+    knight: 0.55
+    lancer: 0.44
+    warden: 0.5
   "thaeraizdiothpvp":
     pyro: 0.32
     spotter: 0.65
     tracker: 0.49
+    arbalist: 0.56
+    volley: 0.25
+    marksman: 0.52
+    fletcher: 0.36
   "thaezmylhd":
     medic: 0.73
     teleporter: 0.42
     sacrificial: 0.28
     bannerman: 0.55
+    alchemist: 0.32
+    quartermaster: 0.53
+    tactician: 0.47
   "thekemviosh":
     warper: 0.49
     ninja: 0.39
     grappler: 0.52
+    duelist: 0.4
+    acrobat: 0.52
+    windrunner: 0.56
+    harpooner: 0.36
   "thelkast-55":
     medic: 0.4
     teleporter: 0.45
     spotter: 0.52
     bannerman: 0.39
+    quartermaster: 0.41
+    warden: 0.43
+    smokescreen: 0.37
+    tactician: 0.73
   "themostkraish":
     explosive: 0.44
     inertia: 0.51
     sacrificial: 0.45
     decoy: 0.34
+    alchemist: 0.34
+    volley: 0.52
+    maceguard: 0.37
   "theneztar":
     venom: 0.44
     spotter: 0.32
     tracker: 0.52
+    scavenger: 0.39
+    arbalist: 0.43
+    harpooner: 0.48
+    fletcher: 0.53
   "thepaemthai":
     medic: 0.44
     teleporter: 0.44
     spotter: 0.51
     bannerman: 0.36
+    quartermaster: 0.4
+    warden: 0.41
+    smokescreen: 0.35
+    tactician: 0.57
   "thethiolpyk":
     demolitions: 0.44
     juggernaut: 0.39
     sapper: 0.6
     engineer: 0.44
+    knight: 0.62
+    lancer: 0.5
+    quartermaster: 0.34
+    warden: 0.5
   "thexezpioz":
     medic: 0.72
     teleporter: 0.35
     sacrificial: 0.29
     bannerman: 0.56
+    alchemist: 0.35
+    quartermaster: 0.67
+    tactician: 0.47
   "thexiozjouzdim":
     demolitions: 0.46
     juggernaut: 0.3
     sapper: 0.6
     engineer: 0.47
+    knight: 0.63
+    lancer: 0.44
+    quartermaster: 0.29
+    warden: 0.53
   "thezaxmost":
     demolitions: 0.4
     juggernaut: 0.31
     sapper: 0.58
     engineer: 0.45
+    knight: 0.55
+    lancer: 0.43
+    quartermaster: 0.32
+    warden: 0.62
   "thiolgraiztaijix":
     berserker: 0.51
     explosive: 0.44
     grappler: 0.35
+    ravager: 0.62
+    acrobat: 0.26
+    lancer: 0.39
+    maceguard: 0.27
   "thistlekramlynx":
     warper: 0.42
     ninja: 0.34
     grappler: 0.69
+    duelist: 0.39
+    acrobat: 0.54
+    windrunner: 0.64
+    harpooner: 0.45
   "thothgryxdostxel":
     explosive: 0.56
     inertia: 0.5
     sacrificial: 0.34
     decoy: 0.4
+    alchemist: 0.3
+    volley: 0.69
+    maceguard: 0.37
   "thouklelpumpkin":
     ninja: 0.58
     skinner: 0.35
     decoy: 0.44
+    duelist: 0.44
+    acrobat: 0.34
+    smokescreen: 0.46
   "thoultoukwaffle":
     pyro: 0.31
     spotter: 0.64
     tracker: 0.47
+    arbalist: 0.44
+    volley: 0.25
+    marksman: 0.59
+    fletcher: 0.45
   "thozgromvioshan":
     dwarf: 0.39
     juggernaut: 0.6
     frost: 0.44
     engineer: 0.39
+    knight: 0.57
+    lancer: 0.37
+    warden: 0.43
   "thukjoushjoztv":
     berserker: 0.6
     explosive: 0.39
     grappler: 0.4
+    ravager: 0.55
+    acrobat: 0.32
+    lancer: 0.47
+    maceguard: 0.26
   "tikkrouhd":
     explosive: 0.49
     inertia: 0.51
     sacrificial: 0.35
     decoy: 0.3
+    alchemist: 0.3
+    volley: 0.66
+    maceguard: 0.35
   "tionki-82":
     warper: 0.43
     ninja: 0.31
     grappler: 0.64
+    duelist: 0.3
+    acrobat: 0.53
+    windrunner: 0.6
+    harpooner: 0.36
   "tirdaez-88":
     medic: 0.48
     teleporter: 0.38
     spotter: 0.56
     bannerman: 0.32
+    quartermaster: 0.36
+    warden: 0.43
+    smokescreen: 0.32
+    tactician: 0.63
   "tirtukphantom":
     warper: 0.38
     ninja: 0.4
     grappler: 0.58
+    duelist: 0.39
+    acrobat: 0.51
+    windrunner: 0.58
+    harpooner: 0.42
   "tishshaiz-39":
     berserker: 0.61
     explosive: 0.5
     grappler: 0.33
+    ravager: 0.58
+    acrobat: 0.34
+    lancer: 0.52
+    maceguard: 0.23
   "tizvurmestbandit":
     pyro: 0.3
     spotter: 0.6
     tracker: 0.4
+    arbalist: 0.54
+    volley: 0.25
+    marksman: 0.58
+    fletcher: 0.44
   "tomvaenkriozmc":
     warper: 0.44
     ninja: 0.32
     grappler: 0.66
+    duelist: 0.37
+    acrobat: 0.51
+    windrunner: 0.55
+    harpooner: 0.44
   "tothmiokgaming":
     medic: 0.42
     teleporter: 0.35
     spotter: 0.44
     bannerman: 0.3
+    quartermaster: 0.43
+    warden: 0.51
+    smokescreen: 0.32
+    tactician: 0.57
   "toulxestwaffle":
     medic: 0.43
     teleporter: 0.35
     spotter: 0.47
     bannerman: 0.3
+    quartermaster: 0.34
+    warden: 0.51
+    smokescreen: 0.33
+    tactician: 0.64
   "toxic-badger":
     medic: 0.6
     teleporter: 0.36
     sacrificial: 0.32
     bannerman: 0.59
+    alchemist: 0.39
+    quartermaster: 0.62
+    tactician: 0.58
   "toxic-bandit":
     berserker: 0.52
     explosive: 0.47
     grappler: 0.32
+    ravager: 0.49
+    acrobat: 0.29
+    lancer: 0.43
+    maceguard: 0.23
   "toxic-comet":
     pyro: 0.31
     spotter: 0.64
     tracker: 0.42
+    arbalist: 0.54
+    volley: 0.26
+    marksman: 0.53
+    fletcher: 0.42
   "toxicgolem97":
     ninja: 0.39
     saboteur: 0.67
     decoy: 0.28
+    ravager: 0.32
+    acrobat: 0.41
+    smokescreen: 0.63
   "toxicslime11":
     ninja: 0.55
     skinner: 0.4
     decoy: 0.41
+    duelist: 0.43
+    acrobat: 0.37
+    smokescreen: 0.53
   "toxicthionkek":
     explosive: 0.55
     inertia: 0.41
     sacrificial: 0.37
     decoy: 0.36
+    alchemist: 0.33
+    volley: 0.59
+    maceguard: 0.45
   "toxicxenjax":
     explosive: 0.47
     inertia: 0.43
     sacrificial: 0.39
     decoy: 0.37
+    alchemist: 0.38
+    volley: 0.64
+    maceguard: 0.39
   "turbolukthiol":
     pyro: 0.31
     spotter: 0.54
     tracker: 0.39
+    arbalist: 0.52
+    volley: 0.28
+    marksman: 0.65
+    fletcher: 0.36
   "turboraven99":
     ninja: 0.43
     saboteur: 0.62
     decoy: 0.32
+    ravager: 0.33
+    acrobat: 0.36
+    smokescreen: 0.56
   "turborider74":
     venom: 0.45
     spotter: 0.34
     tracker: 0.61
+    scavenger: 0.38
+    arbalist: 0.37
+    harpooner: 0.5
+    fletcher: 0.47
   "turbostorm60":
     berserker: 0.63
     explosive: 0.43
     grappler: 0.34
+    ravager: 0.61
+    acrobat: 0.26
+    lancer: 0.49
+    maceguard: 0.25
   "varrulbandit":
     medic: 0.71
     teleporter: 0.38
     sacrificial: 0.26
     bannerman: 0.57
+    alchemist: 0.38
+    quartermaster: 0.58
+    tactician: 0.56
   "vioxdashgaming":
     venom: 0.45
     spotter: 0.37
     tracker: 0.59
+    scavenger: 0.4
+    arbalist: 0.4
+    harpooner: 0.41
+    fletcher: 0.52
   "viperfuse4":
     ninja: 0.35
     saboteur: 0.66
     decoy: 0.28
+    ravager: 0.31
+    acrobat: 0.36
+    smokescreen: 0.63
   "vipergolem6":
     warper: 0.41
     ninja: 0.4
     grappler: 0.57
+    duelist: 0.38
+    acrobat: 0.51
+    windrunner: 0.57
+    harpooner: 0.43
   "viperphantom2":
     venom: 0.43
     spotter: 0.32
     tracker: 0.59
+    scavenger: 0.37
+    arbalist: 0.46
+    harpooner: 0.42
+    fletcher: 0.43
   "viperpickaxe6":
     demolitions: 0.39
     juggernaut: 0.32
     sapper: 0.56
     engineer: 0.44
+    knight: 0.57
+    lancer: 0.47
+    quartermaster: 0.33
+    warden: 0.54
   "vivid-raven":
     ninja: 0.4
     saboteur: 0.52
     decoy: 0.32
+    ravager: 0.39
+    acrobat: 0.43
+    smokescreen: 0.58
   "vivid-rider":
     medic: 0.65
     teleporter: 0.35
     sacrificial: 0.29
     bannerman: 0.55
+    alchemist: 0.39
+    quartermaster: 0.69
+    tactician: 0.6
   "vividbadger76":
     pyro: 0.31
     spotter: 0.62
     tracker: 0.49
+    arbalist: 0.46
+    volley: 0.28
+    marksman: 0.64
+    fletcher: 0.35
   "vividminer63":
     dwarf: 0.45
     juggernaut: 0.58
     frost: 0.41
     engineer: 0.34
+    knight: 0.59
+    lancer: 0.4
+    warden: 0.46
   "vividmioxjoukpo":
     dwarf: 0.5
     juggernaut: 0.64
     frost: 0.39
     engineer: 0.36
+    knight: 0.53
+    lancer: 0.36
+    warden: 0.45
   "vividstorm26":
     medic: 0.45
     teleporter: 0.37
     spotter: 0.49
     bannerman: 0.37
+    quartermaster: 0.36
+    warden: 0.47
+    smokescreen: 0.32
+    tactician: 0.62
   "vividthekux":
     medic: 0.47
     teleporter: 0.38
     spotter: 0.53
     bannerman: 0.38
+    quartermaster: 0.36
+    warden: 0.42
+    smokescreen: 0.32
+    tactician: 0.72
   "volxunpro":
     berserker: 0.6
     explosive: 0.46
     grappler: 0.4
+    ravager: 0.55
+    acrobat: 0.26
+    lancer: 0.41
+    maceguard: 0.24
   "vukrak-05":
     dwarf: 0.49
     juggernaut: 0.67
     frost: 0.35
     engineer: 0.36
+    knight: 0.53
+    lancer: 0.45
+    warden: 0.53
   "vustskemzionkouk":
     ninja: 0.6
     skinner: 0.4
     decoy: 0.39
+    duelist: 0.44
+    acrobat: 0.35
+    smokescreen: 0.51
   "vutiondai-24":
     venom: 0.51
     spotter: 0.4
     tracker: 0.56
+    scavenger: 0.39
+    arbalist: 0.37
+    harpooner: 0.49
+    fletcher: 0.57
   "vykzithninja":
     dwarf: 0.44
     juggernaut: 0.68
     frost: 0.44
     engineer: 0.32
+    knight: 0.63
+    lancer: 0.38
+    warden: 0.46
   "waffleraven2":
     ninja: 0.37
     saboteur: 0.51
     decoy: 0.34
+    ravager: 0.33
+    acrobat: 0.42
+    smokescreen: 0.54
   "wafflewaffle6":
     explosive: 0.52
     inertia: 0.43
     sacrificial: 0.34
     decoy: 0.31
+    alchemist: 0.37
+    volley: 0.57
+    maceguard: 0.42
   "xadaishwaffle":
     ninja: 0.61
     skinner: 0.39
     decoy: 0.5
+    duelist: 0.5
+    acrobat: 0.41
+    smokescreen: 0.53
   "xashjythfox":
     explosive: 0.47
     inertia: 0.47
     sacrificial: 0.35
     decoy: 0.36
+    alchemist: 0.35
+    volley: 0.51
+    maceguard: 0.38
   "xastdounyt":
     ninja: 0.64
     skinner: 0.33
     decoy: 0.39
+    duelist: 0.45
+    acrobat: 0.36
+    smokescreen: 0.56
   "xelshaemmc":
     ninja: 0.39
     saboteur: 0.6
     decoy: 0.32
+    ravager: 0.32
+    acrobat: 0.36
+    smokescreen: 0.61
   "xillyzyt":
     pyro: 0.34
     spotter: 0.52
     tracker: 0.45
+    arbalist: 0.57
+    volley: 0.24
+    marksman: 0.64
+    fletcher: 0.45
   "xiokjixraven":
     pyro: 0.31
     spotter: 0.53
     tracker: 0.43
+    arbalist: 0.47
+    volley: 0.23
+    marksman: 0.6
+    fletcher: 0.46
   "xiskaikzithskouk":
     ninja: 0.65
     skinner: 0.35
     decoy: 0.43
+    duelist: 0.39
+    acrobat: 0.41
+    smokescreen: 0.49
   "xokkobandit":
     warper: 0.46
     ninja: 0.39
     grappler: 0.61
+    duelist: 0.32
+    acrobat: 0.52
+    windrunner: 0.53
+    harpooner: 0.45
   "xoljithblaze":
     venom: 0.42
     spotter: 0.38
     tracker: 0.68
+    scavenger: 0.34
+    arbalist: 0.43
+    harpooner: 0.43
+    fletcher: 0.52
   "xouzist-95":
     ninja: 0.52
     skinner: 0.3
     decoy: 0.48
+    duelist: 0.39
+    acrobat: 0.41
+    smokescreen: 0.46
   "xoxvaiznex-10":
     ninja: 0.34
     saboteur: 0.51
     decoy: 0.33
+    ravager: 0.31
+    acrobat: 0.38
+    smokescreen: 0.58
   "xozbryrriolkyz":
     berserker: 0.5
     vampire: 0.51
     bleeder: 0.39
     equality: 0.29
+    duelist: 0.7
+    knight: 0.36
+    scavenger: 0.43
   "xuzjayt":
     berserker: 0.51
     vampire: 0.46
     bleeder: 0.36
     equality: 0.28
+    duelist: 0.56
+    knight: 0.33
+    scavenger: 0.4
   "xxarrowphantomxx":
     pyro: 0.28
     spotter: 0.68
     tracker: 0.4
+    arbalist: 0.45
+    volley: 0.21
+    marksman: 0.68
+    fletcher: 0.42
   "xxbadgerninjaxx":
     berserker: 0.55
     explosive: 0.4
     grappler: 0.4
+    ravager: 0.48
+    acrobat: 0.32
+    lancer: 0.5
+    maceguard: 0.27
   "xxbadgerstormxx":
     explosive: 0.44
     inertia: 0.43
     sacrificial: 0.45
     decoy: 0.31
+    alchemist: 0.39
+    volley: 0.65
+    maceguard: 0.35
   "xxbanditbanditxx":
     ninja: 0.36
     saboteur: 0.66
     decoy: 0.28
+    ravager: 0.33
+    acrobat: 0.42
+    smokescreen: 0.51
   "xxbanditpotatoxx":
     warper: 0.44
     ninja: 0.4
     grappler: 0.6
+    duelist: 0.3
+    acrobat: 0.54
+    windrunner: 0.65
+    harpooner: 0.42
   "xxblazeslimexx":
     berserker: 0.49
     vampire: 0.54
     bleeder: 0.38
     equality: 0.34
+    duelist: 0.56
+    knight: 0.36
+    scavenger: 0.43
   "xxbrydaen":
     demolitions: 0.44
     juggernaut: 0.35
     sapper: 0.56
     engineer: 0.48
+    knight: 0.58
+    lancer: 0.5
+    quartermaster: 0.29
+    warden: 0.57
   "xxcometgolemxx":
     medic: 0.45
     teleporter: 0.39
     spotter: 0.5
     bannerman: 0.34
+    quartermaster: 0.45
+    warden: 0.38
+    smokescreen: 0.38
+    tactician: 0.61
   "xxcometlynxxx":
     venom: 0.49
     spotter: 0.32
     tracker: 0.54
+    scavenger: 0.31
+    arbalist: 0.44
+    harpooner: 0.42
+    fletcher: 0.55
   "xxcometriderxx":
     berserker: 0.55
     explosive: 0.42
     grappler: 0.39
+    ravager: 0.52
+    acrobat: 0.28
+    lancer: 0.47
+    maceguard: 0.27
   "xxcometwafflexx":
     warper: 0.44
     ninja: 0.36
     grappler: 0.6
+    duelist: 0.38
+    acrobat: 0.47
+    windrunner: 0.65
+    harpooner: 0.36
   "xxfalconcometxx":
     dwarf: 0.39
     juggernaut: 0.53
     frost: 0.38
     engineer: 0.34
+    knight: 0.56
+    lancer: 0.41
+    warden: 0.53
   "xxfalconravenxx":
     berserker: 0.53
     vampire: 0.54
     bleeder: 0.42
     equality: 0.26
+    duelist: 0.66
+    knight: 0.3
+    scavenger: 0.44
   "xxfuseravenxx":
     dwarf: 0.48
     juggernaut: 0.64
     frost: 0.41
     engineer: 0.38
+    knight: 0.62
+    lancer: 0.42
+    warden: 0.51
   "xxgolemblazexx":
     berserker: 0.48
     vampire: 0.53
     bleeder: 0.4
     equality: 0.32
+    duelist: 0.67
+    knight: 0.31
+    scavenger: 0.4
   "xxgolemhunterxx":
     warper: 0.51
     ninja: 0.39
     grappler: 0.54
+    duelist: 0.33
+    acrobat: 0.44
+    windrunner: 0.55
+    harpooner: 0.42
   "xxhunterwolfxx":
     demolitions: 0.4
     juggernaut: 0.31
     sapper: 0.62
     engineer: 0.46
+    knight: 0.69
+    lancer: 0.45
+    quartermaster: 0.3
+    warden: 0.54
   "xxkronbrai":
     medic: 0.74
     teleporter: 0.37
     sacrificial: 0.34
     bannerman: 0.62
+    alchemist: 0.39
+    quartermaster: 0.57
+    tactician: 0.61
   "xxlaimmamthaist":
     pyro: 0.34
     spotter: 0.57
     tracker: 0.48
+    arbalist: 0.55
+    volley: 0.26
+    marksman: 0.59
+    fletcher: 0.43
   "xxmaelpak":
     dwarf: 0.5
     juggernaut: 0.61
     frost: 0.44
     engineer: 0.31
+    knight: 0.62
+    lancer: 0.37
+    warden: 0.48
   "xxminerphantomxx":
     ninja: 0.66
     skinner: 0.36
     decoy: 0.49
+    duelist: 0.48
+    acrobat: 0.39
+    smokescreen: 0.54
   "xxminerpickaxexx":
     explosive: 0.48
     inertia: 0.51
     sacrificial: 0.36
     decoy: 0.38
+    alchemist: 0.34
+    volley: 0.53
+    maceguard: 0.38
   "xxmothblazexx":
     explosive: 0.5
     inertia: 0.39
     sacrificial: 0.43
     decoy: 0.32
+    alchemist: 0.32
+    volley: 0.55
+    maceguard: 0.46
   "xxmothpumpkinxx":
     berserker: 0.61
     explosive: 0.4
     grappler: 0.36
+    ravager: 0.49
+    acrobat: 0.26
+    lancer: 0.42
+    maceguard: 0.26
   "xxninjacometxx":
     berserker: 0.62
     explosive: 0.43
     grappler: 0.37
+    ravager: 0.53
+    acrobat: 0.34
+    lancer: 0.38
+    maceguard: 0.22
   "xxninjariderxx":
     pyro: 0.28
     spotter: 0.56
     tracker: 0.48
+    arbalist: 0.45
+    volley: 0.26
+    marksman: 0.68
+    fletcher: 0.36
   "xxotterbanditxx":
     venom: 0.46
     spotter: 0.35
     tracker: 0.6
+    scavenger: 0.32
+    arbalist: 0.4
+    harpooner: 0.52
+    fletcher: 0.57
   "xxpickaxemothxx":
     explosive: 0.47
     inertia: 0.45
     sacrificial: 0.41
     decoy: 0.34
+    alchemist: 0.32
+    volley: 0.52
+    maceguard: 0.44
   "xxpickaxeslimexx":
     venom: 0.38
     spotter: 0.37
     tracker: 0.52
+    scavenger: 0.32
+    arbalist: 0.42
+    harpooner: 0.48
+    fletcher: 0.46
   "xxpickaxestormxx":
     berserker: 0.65
     explosive: 0.48
     grappler: 0.34
+    ravager: 0.48
+    acrobat: 0.26
+    lancer: 0.46
+    maceguard: 0.26
   "xxpotatobadgerxx":
     ninja: 0.67
     skinner: 0.38
     decoy: 0.46
+    duelist: 0.5
+    acrobat: 0.37
+    smokescreen: 0.57
   "xxpotatoslimexx":
     berserker: 0.56
     explosive: 0.43
     grappler: 0.31
+    ravager: 0.47
+    acrobat: 0.29
+    lancer: 0.49
+    maceguard: 0.27
   "xxpumpkinravenxx":
     explosive: 0.44
     inertia: 0.44
     sacrificial: 0.45
     decoy: 0.39
+    alchemist: 0.4
+    volley: 0.63
+    maceguard: 0.35
   "xxpumpkinwolfxx":
     medic: 0.45
     teleporter: 0.44
     spotter: 0.52
     bannerman: 0.32
+    quartermaster: 0.43
+    warden: 0.42
+    smokescreen: 0.34
+    tactician: 0.61
   "xxrarjiozjioz":
     berserker: 0.58
     vampire: 0.56
     bleeder: 0.4
     equality: 0.34
+    duelist: 0.64
+    knight: 0.31
+    scavenger: 0.36
   "xxravenbadgerxx":
     warper: 0.51
     ninja: 0.33
     grappler: 0.67
+    duelist: 0.4
+    acrobat: 0.44
+    windrunner: 0.58
+    harpooner: 0.35
   "xxravencreeperxx":
     warper: 0.49
     ninja: 0.38
     grappler: 0.55
+    duelist: 0.39
+    acrobat: 0.43
+    windrunner: 0.54
+    harpooner: 0.44
   "xxriderfalconxx":
     dwarf: 0.39
     juggernaut: 0.57
     frost: 0.43
     engineer: 0.39
+    knight: 0.55
+    lancer: 0.36
+    warden: 0.57
   "xxriderlynxxx":
     berserker: 0.5
     vampire: 0.49
     bleeder: 0.37
     equality: 0.28
+    duelist: 0.6
+    knight: 0.37
+    scavenger: 0.38
   "xxriderpickaxexx":
     medic: 0.51
     teleporter: 0.44
     spotter: 0.53
     bannerman: 0.36
+    quartermaster: 0.37
+    warden: 0.44
+    smokescreen: 0.34
+    tactician: 0.6
   "xxriderriderxx":
     ninja: 0.38
     saboteur: 0.69
     decoy: 0.26
+    ravager: 0.38
+    acrobat: 0.35
+    smokescreen: 0.54
   "xxroushrouz":
     demolitions: 0.52
     juggernaut: 0.39
     sapper: 0.66
     engineer: 0.48
+    knight: 0.54
+    lancer: 0.45
+    quartermaster: 0.29
+    warden: 0.5
   "xxslimegolemxx":
     ninja: 0.44
     saboteur: 0.52
     decoy: 0.32
+    ravager: 0.37
+    acrobat: 0.39
+    smokescreen: 0.6
   "xxslimeninjaxx":
     dwarf: 0.45
     juggernaut: 0.62
     frost: 0.38
     engineer: 0.37
+    knight: 0.61
+    lancer: 0.45
+    warden: 0.5
   "xxslimepotatoxx":
     ninja: 0.35
     saboteur: 0.64
     decoy: 0.29
+    ravager: 0.32
+    acrobat: 0.37
+    smokescreen: 0.6
   "xxslimeravenxx":
     venom: 0.39
     spotter: 0.35
     tracker: 0.55
+    scavenger: 0.32
+    arbalist: 0.35
+    harpooner: 0.44
+    fletcher: 0.46
   "xxsniperbadgerxx":
     medic: 0.47
     teleporter: 0.37
     spotter: 0.51
     bannerman: 0.35
+    quartermaster: 0.37
+    warden: 0.42
+    smokescreen: 0.38
+    tactician: 0.61
   "xxsniperslimexx":
     ninja: 0.58
     skinner: 0.37
     decoy: 0.46
+    duelist: 0.5
+    acrobat: 0.45
+    smokescreen: 0.54
   "xxstormarrowxx":
     medic: 0.73
     teleporter: 0.44
     sacrificial: 0.26
     bannerman: 0.63
+    alchemist: 0.31
+    quartermaster: 0.59
+    tactician: 0.61
   "xxstormfoxxx":
     medic: 0.67
     teleporter: 0.44
     sacrificial: 0.33
     bannerman: 0.61
+    alchemist: 0.38
+    quartermaster: 0.68
+    tactician: 0.52
   "xxstormsniperxx":
     pyro: 0.29
     spotter: 0.65
     tracker: 0.41
+    arbalist: 0.52
+    volley: 0.23
+    marksman: 0.66
+    fletcher: 0.42
   "xxvipergolemxx":
     warper: 0.44
     ninja: 0.3
     grappler: 0.57
+    duelist: 0.39
+    acrobat: 0.53
+    windrunner: 0.51
+    harpooner: 0.39
   "xxviperslimexx":
     dwarf: 0.43
     juggernaut: 0.6
     frost: 0.39
     engineer: 0.3
+    knight: 0.56
+    lancer: 0.39
+    warden: 0.57
   "xxwafflehunterxx":
     explosive: 0.53
     inertia: 0.43
     sacrificial: 0.39
     decoy: 0.34
+    alchemist: 0.34
+    volley: 0.6
+    maceguard: 0.36
   "xxwolfcreeperxx":
     ninja: 0.63
     skinner: 0.39
     decoy: 0.48
+    duelist: 0.46
+    acrobat: 0.44
+    smokescreen: 0.57
   "xxzalmoztun":
     venom: 0.42
     spotter: 0.37
     tracker: 0.56
+    scavenger: 0.39
+    arbalist: 0.44
+    harpooner: 0.42
+    fletcher: 0.54
   "zaeljaeninja":
     dwarf: 0.4
     juggernaut: 0.58
     frost: 0.37
     engineer: 0.39
+    knight: 0.52
+    lancer: 0.36
+    warden: 0.43
   "zaezlyxyt":
     warper: 0.45
     ninja: 0.32
     grappler: 0.53
+    duelist: 0.34
+    acrobat: 0.53
+    windrunner: 0.51
+    harpooner: 0.34
   "zaixpyzpro":
     pyro: 0.33
     spotter: 0.6
     tracker: 0.39
+    arbalist: 0.51
+    volley: 0.25
+    marksman: 0.59
+    fletcher: 0.4
   "zathnounpunpro":
     demolitions: 0.48
     juggernaut: 0.37
     sapper: 0.6
     engineer: 0.47
+    knight: 0.64
+    lancer: 0.42
+    quartermaster: 0.27
+    warden: 0.47
   "zertaxpro":
     medic: 0.56
     teleporter: 0.43
     sacrificial: 0.26
     bannerman: 0.63
+    alchemist: 0.3
+    quartermaster: 0.68
+    tactician: 0.52
   "ziokraithpvp":
     medic: 0.6
     teleporter: 0.39
     sacrificial: 0.3
     bannerman: 0.56
+    alchemist: 0.39
+    quartermaster: 0.57
+    tactician: 0.55
   "ziolkrukgaming":
     dwarf: 0.47
     juggernaut: 0.54
     frost: 0.39
     engineer: 0.36
+    knight: 0.51
+    lancer: 0.42
+    warden: 0.57
   "zistdytuthrou":
     ninja: 0.6
     skinner: 0.34
     decoy: 0.48
+    duelist: 0.42
+    acrobat: 0.34
+    smokescreen: 0.54
   "zolvishpixotter":
     explosive: 0.43
     inertia: 0.51
     sacrificial: 0.41
     decoy: 0.32
+    alchemist: 0.36
+    volley: 0.65
+    maceguard: 0.41
   "zordethpvp":
     warper: 0.4
     ninja: 0.3
     grappler: 0.56
+    duelist: 0.32
+    acrobat: 0.45
+    windrunner: 0.62
+    harpooner: 0.45
   "zoukxeshrekbrae":
     medic: 0.44
     teleporter: 0.43
     spotter: 0.56
     bannerman: 0.39
+    quartermaster: 0.43
+    warden: 0.5
+    smokescreen: 0.35
+    tactician: 0.63
   "zukti-20":
     demolitions: 0.38
     juggernaut: 0.34
     sapper: 0.56
     engineer: 0.5
+    knight: 0.57
+    lancer: 0.41
+    quartermaster: 0.34
+    warden: 0.6
   "zunioxpaith-90":
     ninja: 0.36
     saboteur: 0.64
     decoy: 0.28
+    ravager: 0.36
+    acrobat: 0.46
+    smokescreen: 0.61

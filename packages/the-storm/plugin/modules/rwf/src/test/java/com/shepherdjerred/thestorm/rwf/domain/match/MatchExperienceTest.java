@@ -39,6 +39,7 @@ final class MatchExperienceTest {
         id,
         name,
         "The Storm",
+        map.description(),
         map.teams(),
         map.bombs(),
         map.border(),

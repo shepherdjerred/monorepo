@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "dbf2499bf25527672bc0dc5f6a6c595821186486795293245006845f8c2ee036",
+  "blocksSha256": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
   "classificationSha256": "087c42d88e1fe7496adfcad64db9e39ed2c0458d97772aaa3843591be71e88d5",
   "bounds": {
     "origin": { "x": 6144, "y": 0, "z": 5120 },
@@ -42,7 +42,7 @@
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 4784825
+      "blocks": 4784853
     },
     {
       "state": "minecraft:cobblestone",
@@ -273,12 +273,6 @@
       "blocks": 8
     },
     {
-      "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]",
-      "shape": "PASSABLE",
-      "blocksSight": false,
-      "blocks": 7
-    },
-    {
       "state": "minecraft:oak_planks",
       "shape": "FULL",
       "blocksSight": true,
@@ -309,18 +303,6 @@
       "blocks": 1
     },
     {
-      "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]",
-      "shape": "PASSABLE",
-      "blocksSight": false,
-      "blocks": 7
-    },
-    {
-      "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]",
-      "shape": "PASSABLE",
-      "blocksSight": false,
-      "blocks": 7
-    },
-    {
       "state": "minecraft:oak_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
@@ -337,12 +319,6 @@
       "shape": "STAIRS",
       "blocksSight": true,
       "blocks": 1
-    },
-    {
-      "state": "minecraft:oak_wall_sign[facing=east,waterlogged=false]",
-      "shape": "PASSABLE",
-      "blocksSight": false,
-      "blocks": 7
     },
     {
       "state": "minecraft:redstone_wall_torch[facing=west,lit=false]",
@@ -646,19 +622,19 @@
     "retainedFluidPortals": 17899
   },
   "edges": {
-    "total": 1764950,
-    "damaging": 119616,
+    "total": 1769681,
+    "damaging": 120078,
     "maximumRawDamage": 29,
     "CLIMB": 0,
     "DROP": 248981,
     "JUMP": 33619,
-    "LEAP": 509367,
+    "LEAP": 514098,
     "SWIM": 151869,
     "WALK": 821114
   },
-  "regions": 18366,
+  "regions": 18342,
   "coverPoints": 70360,
-  "chokepoints": 10715,
+  "chokepoints": 10710,
   "routes": {
     "count": 2328,
     "spawnToBomb": [
@@ -839,7 +815,7 @@
       {
         "from": "blue-spawn-3",
         "to": "purple-1",
-        "length": 1155.68900680542,
+        "length": 1154.68900680542,
         "nodes": 140
       },
       {
@@ -857,7 +833,7 @@
       {
         "from": "blue-spawn-3",
         "to": "red-1",
-        "length": 1190.2031559944153,
+        "length": 1189.2031559944153,
         "nodes": 123
       },
       {
@@ -875,7 +851,7 @@
       {
         "from": "blue-spawn-3",
         "to": "green-1",
-        "length": 1108.0378942489624,
+        "length": 1107.0378942489624,
         "nodes": 134
       },
       {
@@ -5573,7 +5549,7 @@
       {
         "from": "purple-spawn-20",
         "to": "blue-1",
-        "length": 1134.1811060905457,
+        "length": 1133.1811060905457,
         "nodes": 126
       },
       {
@@ -5645,7 +5621,7 @@
       {
         "from": "purple-spawn-21",
         "to": "blue-1",
-        "length": 1138.8322687149048,
+        "length": 1137.8322687149048,
         "nodes": 127
       },
       {
@@ -5681,7 +5657,7 @@
       {
         "from": "purple-spawn-21",
         "to": "red-1",
-        "length": 1133.9411978721619,
+        "length": 1132.9411978721619,
         "nodes": 129
       },
       {
@@ -5699,7 +5675,7 @@
       {
         "from": "purple-spawn-21",
         "to": "green-1",
-        "length": 1163.0477147102356,
+        "length": 1162.0477147102356,
         "nodes": 120
       },
       {
@@ -13133,7 +13109,7 @@
       {
         "from": "green-spawn-29",
         "to": "blue-1",
-        "length": 1118.0097045898438,
+        "length": 1117.0097045898438,
         "nodes": 138
       },
       {
@@ -13151,7 +13127,7 @@
       {
         "from": "green-spawn-29",
         "to": "purple-1",
-        "length": 1183.5789232254028,
+        "length": 1182.5789232254028,
         "nodes": 124
       },
       {
@@ -13169,7 +13145,7 @@
       {
         "from": "green-spawn-29",
         "to": "red-1",
-        "length": 1132.6033854484558,
+        "length": 1131.6033854484558,
         "nodes": 124
       },
       {
@@ -13241,7 +13217,7 @@
       {
         "from": "green-spawn-30",
         "to": "red-1",
-        "length": 1127.9522228240967,
+        "length": 1126.9522228240967,
         "nodes": 123
       },
       {
@@ -14634,5 +14610,5 @@
   },
   "distanceFields": 198,
   "problems": [],
-  "bytes": 91396416
+  "bytes": 91408606
 }

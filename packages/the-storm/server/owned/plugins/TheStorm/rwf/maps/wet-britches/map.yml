@@ -2,6 +2,7 @@
   id: wet-britches,
   name: Wet Britches,
   author: Ethron97,
+  description: Light this map up on fire! Go on laddies! I dare ya! (Oh and if you know who the author is. Please make a forum post),
   region:
     { min: { x: 2048, "y": 0, z: 6144 }, max: { x: 2148, "y": 22, z: 6184 } },
   spectator: { x: 2098.5, "y": 22, z: 6164.5, yaw: 0, pitch: 45 },
@@ -94,5 +95,5 @@
       { id: blue-1, team: BLUE, at: { x: 2147, "y": 6, z: 6164 } },
     ],
   nukes: [],
-  blocksSha256: 090bb066a36be83a3b4f31bcafeccddea55e46cfabb6f44b68f74faa326875af,
+  blocksSha256: 82d8b307b299bf0a1a35a526de0e7b5f662834535467abb91dfbbb8485c6ed6f,
 }

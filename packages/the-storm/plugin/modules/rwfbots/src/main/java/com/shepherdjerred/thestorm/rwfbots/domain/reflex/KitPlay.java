@@ -35,6 +35,15 @@ public final class KitPlay {
    */
   public static Optional<BodyCommand.UseKit> choose(
       Loadout.KitItem item, ReflexInput input, int waypointIndex) {
+    return choose(item, input, waypointIndex, Optional.empty());
+  }
+
+  public static Optional<BodyCommand.UseKit> choose(
+      Loadout.KitItem item,
+      ReflexInput input,
+      int waypointIndex,
+      Optional<com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid> grid) {
+    if (item.move().item().equals("WIND_CHARGE")) return windJump(item, input, waypointIndex, grid);
     var move = item.move();
     var self = input.self();
     var target = input.target().filter(enemy -> within(self, enemy.pos(), move));
@@ -72,6 +81,57 @@ public final class KitPlay {
               : Optional.empty();
       case TRAVEL -> travel(item, input, waypointIndex);
     };
+  }
+
+  /** A wind charge jumps from broad supported ground, aimed at the feet rather than a waypoint. */
+  private static Optional<BodyCommand.UseKit> windJump(
+      Loadout.KitItem item,
+      ReflexInput input,
+      int index,
+      Optional<com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid> grid) {
+    var self = input.self();
+    if (grid.isEmpty() || !self.onGround() || self.effectiveHealth() < LOW) return Optional.empty();
+    var climb =
+        index < input.decision().waypoints().size()
+            && input.decision().waypoints().get(index).pos().y() > self.pos().y() + 1;
+    var smash =
+        self.kit() == com.shepherdjerred.thestorm.rwfbots.domain.world.Kit.MACEGUARD
+            && input.target().filter(enemy -> enemy.pos().distance(self.pos()) <= 5).isPresent();
+    if ((!climb && !smash) || !safeLaunch(grid.orElseThrow(), self.pos())) return Optional.empty();
+    return Optional.of(
+        new BodyCommand.UseKit(
+            item.slot(), Optional.empty(), Optional.of(self.pos().plus(0, -0.1, 0))));
+  }
+
+  public static boolean safeLaunch(
+      com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid grid, Vec3 feet) {
+    var x = (int) Math.floor(feet.x());
+    var y = (int) Math.floor(feet.y());
+    var z = (int) Math.floor(feet.z());
+    for (var dx = -2; dx <= 2; dx++) {
+      for (var dz = -2; dz <= 2; dz++) {
+        if (!safeColumn(
+            grid, new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(x + dx, y, z + dz)))
+          return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean safeColumn(
+      com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid grid,
+      com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos feet) {
+    var below =
+        new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(
+            feet.x(), feet.y() - 1, feet.z());
+    if (!grid.bounds().contains(below) || !grid.blocksMovement(below)) return false;
+    for (var dy = 0; dy <= 3; dy++) {
+      var cell =
+          new com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos(
+              feet.x(), feet.y() + dy, feet.z());
+      if (!grid.bounds().contains(cell) || grid.blocksMovement(cell)) return false;
+    }
+    return true;
   }
 
   private static Optional<BodyCommand.UseKit> here(Loadout.KitItem item) {

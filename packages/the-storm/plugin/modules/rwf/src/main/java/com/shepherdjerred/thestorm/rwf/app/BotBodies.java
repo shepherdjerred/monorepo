@@ -14,7 +14,12 @@ import org.bukkit.entity.Player;
 public interface BotBodies {
 
   /** Chooses up to {@code slots} bots for {@code matchId}; fewer when the roster is short. */
-  List<BotHandle> fill(UUID matchId, int slots);
+  default List<BotHandle> fill(UUID matchId, int slots) {
+    return fill(new BotDraftRequest(matchId, slots, Optional.empty()));
+  }
+
+  /** Drafts under a host's round settings. */
+  List<BotHandle> fill(BotDraftRequest request);
 
   /** Puts {@code bot}'s entity into the world at {@code at}; {@link #entity} is present after. */
   void spawn(BotHandle bot, Location at);

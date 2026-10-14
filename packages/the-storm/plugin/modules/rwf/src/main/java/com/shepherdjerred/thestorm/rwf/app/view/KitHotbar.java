@@ -20,7 +20,7 @@ public record KitHotbar(String kit, List<Slot> slots) {
    * @param slot its slot, 1 to 8
    * @param material its material, as {@code IRON_SWORD}
    */
-  public record Slot(int slot, String material) {}
+  public record Slot(int slot, String material, WeaponProfile weapon) {}
 
   public KitHotbar {
     slots = List.copyOf(slots);
@@ -40,6 +40,7 @@ public record KitHotbar(String kit, List<Slot> slots) {
   }
 
   private static Slot slot(KitSpec.Placement placement) {
-    return new Slot(placement.slot(), placement.item().material());
+    return new Slot(
+        placement.slot(), placement.item().material(), WeaponProfile.of(placement.item()));
   }
 }

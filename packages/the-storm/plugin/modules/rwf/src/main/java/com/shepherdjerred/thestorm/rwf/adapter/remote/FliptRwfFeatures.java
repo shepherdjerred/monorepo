@@ -23,6 +23,8 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
   private static final String SPECTATOR_TOOLS_FLAG_KEY = "the-storm-rwf-spectator-tools-enabled";
   private static final String BOMB_EFFECTS_FLAG_KEY = "the-storm-rwf-bomb-effects-enabled";
   private static final String STATS_FLAG_KEY = "the-storm-rwf-stats-enabled";
+  private static final String HOST_SETTINGS_FLAG_KEY = "the-storm-rwf-host-settings-enabled";
+  private static final String CANDIDATE_VISITS_FLAG_KEY = "the-storm-rwf-candidate-visits-enabled";
   private static final String ENTITY_ID = "the-storm-rwf-features";
 
   private final HttpClient client;
@@ -60,7 +62,9 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
     var spectate = flag(SPECTATOR_TOOLS_FLAG_KEY);
     var bombs = flag(BOMB_EFFECTS_FLAG_KEY);
     var stats = flag(STATS_FLAG_KEY);
-    return CompletableFuture.allOf(flow, carry, feed, chat, spectate, bombs, stats)
+    var host = flag(HOST_SETTINGS_FLAG_KEY);
+    var visits = flag(CANDIDATE_VISITS_FLAG_KEY);
+    return CompletableFuture.allOf(flow, carry, feed, chat, spectate, bombs, stats, host, visits)
         .thenApply(
             ignored ->
                 new RwfFeatures(
@@ -70,7 +74,9 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
                     chat.join(),
                     spectate.join(),
                     bombs.join(),
-                    stats.join()));
+                    stats.join(),
+                    host.join(),
+                    visits.join()));
   }
 
   private CompletableFuture<Boolean> flag(String key) {

@@ -146,7 +146,8 @@ final class CombatControlsTest {
               Optional.empty(),
               "traversal",
               100,
-              1);
+              1,
+              Optional.empty());
       var input = new ReflexInput(source.self(), source.snapshot(), decision, source.target(), 3);
       var context = context(authored, input);
       assertThat(CombatCommands.eligible(context)).as("planned %s", hop).isFalse();
@@ -172,7 +173,8 @@ final class CombatControlsTest {
             Optional.empty(),
             "combat-walk",
             100,
-            1);
+            1,
+            Optional.empty());
     var authored =
         List.<BodyCommand>of(
             new BodyCommand.Look(90, 5), new BodyCommand.MoveToward(new Vec3(5.5, 1, 5.5), false));

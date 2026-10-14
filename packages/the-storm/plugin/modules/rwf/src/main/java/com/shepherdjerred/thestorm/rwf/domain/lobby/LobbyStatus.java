@@ -27,7 +27,13 @@ public record LobbyStatus(
     int bots,
     int needed,
     int secondsLeft,
-    double progress) {
+    double progress,
+    Optional<String> botStatus) {
+
+  public LobbyStatus withBotStatus(String status) {
+    return new LobbyStatus(
+        stage, map, humans, bots, needed, secondsLeft, progress, Optional.of(status));
+  }
 
   /** Where the match is, as the lobby tells it. */
   public enum Stage {
@@ -35,6 +41,10 @@ public record LobbyStatus(
     EMPTY,
     /** Players are in, but too few to count down. */
     WAITING,
+    /** Offered maps are being prepared serially for visits. */
+    CANDIDATES,
+    /** All offered maps are ready; independent visits and voting remain open. */
+    VOTING,
     /** Counting down to the start. */
     COUNTDOWN,
     /** The chosen map is still loading. */
@@ -69,39 +79,66 @@ public record LobbyStatus(
             .or(() -> match.ballot().flatMap(LobbyStatus::proposed).map(Ballot.Candidate::name));
     var bots = (int) match.members().stream().filter(member -> member.id().isBot()).count();
     var humans = match.members().size() - bots;
-    var settings = match.settings();
+    var picture = new Picture(map, humans, bots);
     return switch (match.phase()) {
-      case Phase.Lobby lobby -> {
-        var waited = lobby.waitingSince().map(since -> Duration.between(since, now));
-        var required = settings.requiredPlayers(waited.orElse(Duration.ZERO));
-        var present = match.members().size();
-        yield new LobbyStatus(
-            present == 0 ? Stage.EMPTY : Stage.WAITING,
-            map,
-            humans,
-            bots,
-            Math.max(0, required - present),
-            0,
-            Math.min(1, present / (double) required));
-      }
-      case Phase.Countdown countdown -> {
-        var left = Duration.between(now, countdown.startsAt());
-        var seconds = left.isNegative() ? 0 : (int) Math.ceil(left.toMillis() / 1000D);
-        var total = settings.countdown().toMillis();
-        var remaining = Math.clamp(left.toMillis(), 0, total);
-        yield new LobbyStatus(
-            Stage.COUNTDOWN, map, humans, bots, 0, seconds, remaining / (double) total);
-      }
-      case Phase.Preparing _ -> new LobbyStatus(Stage.PREPARING, map, humans, bots, 0, 0, 1);
+      case Phase.Lobby lobby -> waiting(match, lobby, picture, now);
+      case Phase.Countdown countdown -> countdown(match, countdown, picture, now);
+      case Phase.Preparing _ -> picture.status(Stage.PREPARING, 0, 0, 1);
       case Phase.Preview preview ->
-          new LobbyStatus(
-              Stage.PREVIEW, map, humans, bots, 0, secondsUntil(now, preview.until()), 1);
+          picture.status(Stage.PREVIEW, 0, secondsUntil(now, preview.until()), 1);
       case Phase.Freeze freeze ->
-          new LobbyStatus(Stage.FREEZE, map, humans, bots, 0, secondsUntil(now, freeze.until()), 1);
-      case Phase.Live _ -> new LobbyStatus(Stage.LIVE, map, humans, bots, 0, 0, 1);
-      case Phase.Ended _ -> new LobbyStatus(Stage.ENDED, map, humans, bots, 0, 0, 1);
-      case Phase.Resetting _ -> new LobbyStatus(Stage.RESETTING, map, humans, bots, 0, 0, 0);
+          picture.status(Stage.FREEZE, 0, secondsUntil(now, freeze.until()), 1);
+      case Phase.Live _ -> picture.status(Stage.LIVE, 0, 0, 1);
+      case Phase.Ended _ -> picture.status(Stage.ENDED, 0, 0, 1);
+      case Phase.Resetting _ -> picture.status(Stage.RESETTING, 0, 0, 0);
     };
+  }
+
+  private record Picture(Optional<String> map, int humans, int bots) {
+    LobbyStatus status(Stage stage, int needed, int seconds, double progress) {
+      return new LobbyStatus(stage, map, humans, bots, needed, seconds, progress, Optional.empty());
+    }
+  }
+
+  private static LobbyStatus waiting(
+      RwfMatch match, Phase.Lobby lobby, Picture picture, Instant now) {
+    var window = lobby.ballot().visits().filter(_ -> !lobby.ballot().closed());
+    if (window.isPresent()) {
+      var visits = window.orElseThrow();
+      var until = visits.until(lobby.waitingSince().orElse(now));
+      if (until.isEmpty()) return picture.status(Stage.CANDIDATES, 0, 0, 0);
+      if (now.isBefore(until.orElseThrow())) {
+        var seconds = secondsUntil(now, until.orElseThrow());
+        return picture.status(
+            Stage.VOTING,
+            0,
+            seconds,
+            Math.clamp(seconds / (double) visits.length().toSeconds(), 0, 1));
+      }
+    }
+    var waited = lobby.waitingSince().map(since -> Duration.between(since, now));
+    var required = match.settings().requiredPlayers(waited.orElse(Duration.ZERO));
+    var present = match.members().size();
+    return picture.status(
+        present == 0 ? Stage.EMPTY : Stage.WAITING,
+        Math.max(0, required - present),
+        0,
+        Math.min(1, present / (double) required));
+  }
+
+  private static LobbyStatus countdown(
+      RwfMatch match, Phase.Countdown countdown, Picture picture, Instant now) {
+    var left = Duration.between(now, countdown.startsAt());
+    var total =
+        countdown.ballot().visits().isPresent()
+            ? match.settings().voteLead().toMillis()
+            : match.settings().countdown().toMillis();
+    var remaining = Math.clamp(left.toMillis(), 0, total);
+    return picture.status(
+        Stage.COUNTDOWN,
+        0,
+        secondsUntil(now, countdown.startsAt()),
+        total == 0 ? 0 : remaining / (double) total);
   }
 
   private static int secondsUntil(Instant now, Instant until) {

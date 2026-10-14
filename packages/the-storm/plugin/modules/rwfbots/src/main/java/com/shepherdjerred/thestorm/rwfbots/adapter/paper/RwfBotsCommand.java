@@ -328,6 +328,13 @@ public final class RwfBotsCommand {
     info(
         to,
         "refusals " + bot.refusals() + bot.lastRefusal().map(r -> " (last " + r + ")").orElse(""));
+    info(
+        to,
+        "movement recoveries "
+            + bot.movementRecoveries()
+            + bot.lastMovementProblem()
+                .map(reason -> "; last " + reason + " at tick " + bot.lastMovementProblemTick())
+                .orElse(""));
     return OK;
   }
 

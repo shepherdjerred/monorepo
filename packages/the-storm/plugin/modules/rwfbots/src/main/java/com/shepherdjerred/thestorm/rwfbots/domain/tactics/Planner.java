@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.CoverPoints;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
@@ -21,10 +22,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
-import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -125,7 +124,7 @@ public final class Planner {
   static final double CLOSE_FIGHT = 4;
 
   /** Cover this close to a teammate, or to cover a teammate claimed, is theirs. */
-  public static final double COVER_ROOM = 2.5;
+  public static final double COVER_ROOM = 3;
 
   /** Cover this close to an enemy is no cover. */
   static final double TOO_CLOSE_COVER = 4;
@@ -134,6 +133,29 @@ public final class Planner {
   private static final int SNAP = 3;
 
   private Planner() {}
+
+  static Plan detourPlan(Situation situation, TacticsContext context, BombId bomb) {
+    return bombPlan(Option.ARM, situation, context, situation.snapshot().bomb(bomb).orElseThrow());
+  }
+
+  /** A reachable adjacent staging step while a failed goal remains excluded. */
+  static Plan recovery(Situation situation, TacticsContext context) {
+    var graph = context.nav().graph();
+    var from = graph.nearestNodeWithin(situation.self().pos(), 3);
+    if (from.isEmpty()) return holdHere(Option.HOLD_ANGLE, situation, context);
+    var start = from.getAsInt();
+    if (graph.edgeStart(start) == graph.edgeEnd(start))
+      return holdHere(Option.HOLD_ANGLE, situation, context);
+    var edge =
+        graph.edgeStart(start)
+            + Math.floorMod(
+                situation.self().id().value() + situation.now() / 20,
+                graph.edgeEnd(start) - graph.edgeStart(start));
+    return Plan.of(
+        Option.HUNT,
+        situation.now(),
+        new PlanStep.Route(graph.feet(graph.edgeTarget(edge)), Stance.CAUTIOUS));
+  }
 
   /** The plan carrying out {@code option} from {@code situation}. */
   public static Plan expand(Option option, Situation situation, TacticsContext context) {
@@ -183,7 +205,19 @@ public final class Planner {
                           new PlanStep.Route(
                               around(situation, context, enemy.pos(), HUNT_RING),
                               stanceFor(situation, context))))
-              .orElseGet(() -> holdHere(option, situation, context));
+              .orElseGet(
+                  () ->
+                      situation
+                          .sensorPosition()
+                          .map(
+                              position ->
+                                  Plan.of(
+                                      option,
+                                      now,
+                                      new PlanStep.Route(
+                                          around(situation, context, position, HUNT_RING),
+                                          Stance.CAUTIOUS)))
+                          .orElseGet(() -> holdHere(option, situation, context)));
       case ESCAPE_POISON ->
           Plan.of(option, now, new PlanStep.Route(poisonExit(situation, context), Stance.CAUTIOUS));
       case REWIND ->
@@ -424,7 +458,7 @@ public final class Planner {
     var moving = !pinned || mover(situation, window);
     var next = moving ? nextCover(situation, context, goal, threat) : Optional.<CoverSpot>empty();
     if (next.isPresent()) {
-      return toCover(now, self, next.orElseThrow(), threat);
+      return toCover(situation, next.orElseThrow(), threat);
     }
     var here = coverNear(situation, context, new CoverSearch(self, threat, IN_COVER));
     if (here.isEmpty()) {
@@ -438,7 +472,7 @@ public final class Planner {
                   feet.horizontalDistance(goal) <= remaining + GIVE_GROUND
                       && clearOfSpawn(situation, feet));
       if (nearby.isPresent()) {
-        return toCover(now, self, nearby.orElseThrow(), threat);
+        return toCover(situation, nearby.orElseThrow(), threat);
       }
     }
     if (!moving) {
@@ -460,14 +494,18 @@ public final class Planner {
         new PlanStep.Route(step, pinned ? Stance.CAUTIOUS : Stance.AGGRESSIVE));
   }
 
-  /** A dash to {@code point}, then a beat in it. */
-  private static Plan toCover(long now, Vec3 self, CoverSpot point, Vec3 threat) {
-    var travel = (long) Math.ceil(point.pos().horizontalDistance(self) / WALK_PER_TICK);
+  /** Pause under close fire; a distant sighting keeps a safe cover-to-cover advance moving. */
+  private static Plan toCover(Situation situation, CoverSpot point, Vec3 threat) {
+    var now = situation.now();
+    var self = situation.self();
+    var hurt = self.lastHurtTick() >= 0 && now - self.lastHurtTick() <= 20;
+    var pinned = threat.horizontalDistance(self.pos()) <= PINNED_RANGE || hurt;
+    var travel = (long) Math.ceil(point.pos().horizontalDistance(self.pos()) / WALK_PER_TICK);
+    var until = pinned ? now + travel + SETTLE_TICKS : now;
     return Plan.of(
         Option.TAKE_SLOT,
         now,
-        new PlanStep.Cover(
-            Optional.of(point.node()), point.pos(), threat, now + travel + SETTLE_TICKS));
+        new PlanStep.Cover(Optional.of(point.node()), point.pos(), threat, until));
   }
 
   /**
@@ -478,8 +516,13 @@ public final class Planner {
     var self = situation.self().id();
     var partners =
         situation.board().plan().partners(self).stream()
-            .filter(
-                id -> situation.snapshot().combatant(id).map(CombatantView::alive).orElse(false))
+            .flatMap(id -> situation.snapshot().combatant(id).stream())
+            .filter(CombatantView::alive)
+            // Persistent squad membership shares information across duties; alternating bounds
+            // requires an actual nearby teammate who can cover this movement.
+            .filter(bot -> bot.pos().horizontalDistance(situation.self().pos()) <= BOUND_REACH)
+            .filter(bot -> Math.abs(bot.pos().y() - situation.self().pos().y()) <= 1.5)
+            .map(CombatantView::id)
             .toList();
     if (partners.isEmpty()) {
       return window % 3 != 2;
@@ -804,7 +847,7 @@ public final class Planner {
                   plan.option(),
                   holdTarget(situation, context, !atHold(plan, situation, pos)),
                   atHold(plan, situation, pos)
-                      ? List.of()
+                      ? new RouteResult.Arrived()
                       : pathTo(situation, context, pos, new Way(stance, true)),
                   stance,
                   Optional.empty(),
@@ -819,7 +862,7 @@ public final class Planner {
                   plan.option(),
                   holdTarget(situation, context, !inCover(self.pos(), pos)),
                   inCover(self.pos(), pos)
-                      ? List.of()
+                      ? new RouteResult.Arrived()
                       : pathTo(situation, context, pos, new Way(Stance.AGGRESSIVE, false)),
                   inCover(self.pos(), pos) ? Stance.CAUTIOUS : Stance.AGGRESSIVE,
                   Optional.empty(),
@@ -834,7 +877,7 @@ public final class Planner {
                   plan.option(),
                   holdTarget(situation, context, true),
                   reached(self.pos(), cover)
-                      ? List.of()
+                      ? new RouteResult.Arrived()
                       : pathTo(situation, context, cover, new Way(Stance.CAUTIOUS, false)),
                   Stance.CAUTIOUS,
                   Optional.empty(),
@@ -861,7 +904,7 @@ public final class Planner {
               new Parts(
                   plan.option(),
                   Optional.empty(),
-                  List.of(),
+                  new RouteResult.Arrived(),
                   Stance.EVASIVE,
                   Optional.empty(),
                   Optional.empty(),
@@ -891,7 +934,7 @@ public final class Planner {
   private record Parts(
       Option option,
       Optional<CombatantId> target,
-      List<Waypoint> waypoints,
+      RouteResult route,
       Stance stance,
       Optional<BombId> bomb,
       Optional<Vec3> watch,
@@ -903,14 +946,15 @@ public final class Planner {
         situation.self().id(),
         parts.option(),
         parts.target(),
-        parts.waypoints(),
+        parts.route().waypoints(),
         parts.stance(),
         parts.bomb(),
         parts.watch(),
         parts.ability(),
         parts.label(),
         situation.now(),
-        lifeEpoch);
+        lifeEpoch,
+        parts.route().failure());
   }
 
   /** Who is deciding, with what, for which life. */
@@ -932,7 +976,11 @@ public final class Planner {
           scene,
           plan,
           new Engagement(
-              Optional.of(target), List.of(), Stance.AGGRESSIVE, Optional.empty(), label));
+              Optional.of(target),
+              new RouteResult.Arrived(),
+              Stance.AGGRESSIVE,
+              Optional.empty(),
+              label));
     }
     var enemy = known.orElseThrow();
     if (!enemy.visible() && context.keep().ranged()) {
@@ -941,7 +989,7 @@ public final class Planner {
       var wait =
           new Engagement(
               Optional.empty(),
-              List.of(),
+              new RouteResult.Arrived(),
               Stance.CAUTIOUS,
               Optional.of(enemy.pos()),
               label + "-wait");
@@ -950,7 +998,7 @@ public final class Planner {
     }
     if (!enemy.visible()
         || (!context.keep().ranged()
-            && needsMeleeRoute(context.nav().grid(), situation.self().pos(), enemy.pos()))) {
+            && needsMeleeRoute(context.nav(), situation.self().pos(), enemy.pos()))) {
       return fightDecision(
           scene,
           plan,
@@ -963,7 +1011,11 @@ public final class Planner {
     }
     var shoot =
         new Engagement(
-            Optional.of(target), List.of(), Stance.AGGRESSIVE, Optional.of(enemy.pos()), label);
+            Optional.of(target),
+            new RouteResult.Arrived(),
+            Stance.AGGRESSIVE,
+            Optional.of(enemy.pos()),
+            label);
     if (!context.keep().ranged()) {
       return fightDecision(scene, plan, shoot);
     }
@@ -981,12 +1033,25 @@ public final class Planner {
   }
 
   /** Sight through glass or over a low wall does not establish a level walking approach. */
-  private static boolean needsMeleeRoute(VoxelGrid grid, Vec3 from, Vec3 to) {
+  private static boolean needsMeleeRoute(NavArtifact nav, Vec3 from, Vec3 to) {
+    var grid = nav.grid();
     return Math.abs(from.y() - to.y()) > 0.5
+        || !continuousFloor(nav, from, to)
         || grid.raycast(from.plus(0, 0.1, 0), to.plus(0, 0.1, 0), VoxelGrid.Layer.MOVEMENT)
             .isPresent()
         || grid.raycast(from.plus(0, 1.7, 0), to.plus(0, 1.7, 0), VoxelGrid.Layer.MOVEMENT)
             .isPresent();
+  }
+
+  private static boolean continuousFloor(NavArtifact nav, Vec3 from, Vec3 to) {
+    var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / 0.25));
+    for (var index = 0; index <= count; index++) {
+      var cell =
+          com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos.of(
+              from.lerp(to, (double) index / count));
+      if (nav.graph().nodeAt(cell).isEmpty()) return false;
+    }
+    return true;
   }
 
   /**
@@ -1068,7 +1133,7 @@ public final class Planner {
                       Stance.AGGRESSIVE,
                       Optional.of(enemy),
                       label + "-support"))
-          .filter(engagement -> !engagement.waypoints().isEmpty());
+          .filter(engagement -> engagement.route() instanceof RouteResult.Path);
     }
 
     /** Two archers on one spot make one target: step sideways, away from the teammate. */
@@ -1097,7 +1162,7 @@ public final class Planner {
     for (var point : nav.cover().points()) {
       var feet = nav.graph().feet(point.node());
       var distance = feet.horizontalDistance(self);
-      if (distance > PEEK_SEARCH || distance >= bestDistance) {
+      if (distance > PEEK_SEARCH) {
         continue;
       }
       var sector = CoverPoints.sectorOf(feet, enemy);
@@ -1110,13 +1175,33 @@ public final class Planner {
       if (point.protectsStanding(sector)
           || !beside
           || crowded
+          || !nav.grid().canSee(feet.plus(0, CombatantView.EYE_HEIGHT, 0), enemy.plus(0, 1.3, 0))
           || !coverAvailable(situation, context, point.node())) {
         continue;
       }
+      var retreats = retreatConnections(nav.graph(), point.node(), enemy);
+      var score =
+          RangedPosition.cost(
+              new RangedPosition.Candidate(
+                  distance, feet.y() - enemy.y(), retreats, feet.horizontalDistance(enemy)),
+              context.keep());
+      if (score >= bestDistance) continue;
       best = Optional.of(new CoverSpot(point.node(), feet));
-      bestDistance = distance;
+      bestDistance = score;
     }
     return best;
+  }
+
+  private static int retreatConnections(
+      com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph graph, int node, Vec3 enemy) {
+    var retreats = 0;
+    var distance = graph.feet(node).horizontalDistance(enemy);
+    for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
+      var next = graph.feet(graph.edgeTarget(edge));
+      if (graph.edgeHop(edge) != com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP
+          && next.horizontalDistance(enemy) > distance + 0.25) retreats++;
+    }
+    return retreats;
   }
 
   /** The peek spot an archer fighting {@code plan}'s target would claim, if it would. */
@@ -1161,7 +1246,7 @@ public final class Planner {
   /** How a fight is carried out this think. */
   private record Engagement(
       Optional<CombatantId> target,
-      List<Waypoint> waypoints,
+      RouteResult route,
       Stance stance,
       Optional<Vec3> watch,
       String label) {}
@@ -1172,7 +1257,7 @@ public final class Planner {
         new Parts(
             plan.option(),
             engagement.target(),
-            engagement.waypoints(),
+            engagement.route(),
             engagement.stance(),
             Optional.empty(),
             engagement.watch(),
@@ -1187,9 +1272,9 @@ public final class Planner {
     var lifeEpoch = scene.lifeEpoch();
     var view = situation.snapshot().bomb(bomb);
     var label = plan.option().name().toLowerCase(Locale.ROOT) + ":" + plan.current().label();
-    var waypoints =
+    var route =
         view.filter(b -> b.pos().distance(situation.self().eye()) > Reflex.BOMB_REACH - 0.5)
-            .map(
+            .<RouteResult>map(
                 b ->
                     pathTo(
                         situation,
@@ -1198,13 +1283,13 @@ public final class Planner {
                             ? defusePoint(situation, context.nav(), b)
                             : approach(context.nav(), b),
                         new Way(Stance.CAUTIOUS, false)))
-            .orElseGet(List::of);
+            .orElseGet(RouteResult.Arrived::new);
     return decision(
         situation,
         new Parts(
             plan.option(),
-            holdTarget(situation, context, !waypoints.isEmpty()),
-            waypoints,
+            holdTarget(situation, context, route instanceof RouteResult.Path),
+            route,
             Stance.CAUTIOUS,
             Optional.of(bomb),
             view.map(BombView::pos),
@@ -1227,7 +1312,8 @@ public final class Planner {
       throw new IllegalArgumentException("worker eligibility requires a retake station");
     }
     return atWorker(situation, context, worker)
-        || !pathTo(situation, context, worker.pos(), new Way(Stance.AGGRESSIVE, false)).isEmpty();
+        || pathTo(situation, context, worker.pos(), new Way(Stance.AGGRESSIVE, false))
+            instanceof RouteResult.Path;
   }
 
   /** A valid zero-length route must already occupy the station and be able to click its fuse. */
@@ -1262,17 +1348,15 @@ public final class Planner {
         || (self.onGround() && self.traversal().fallDistance() == 0);
   }
 
-  /** The waypoints from the bot to {@code goal}; empty when there is no path. */
-  static List<Waypoint> pathTo(Situation situation, TacticsContext context, Vec3 goal, Way way) {
+  /** The route to a goal, with arrival and failure kept distinct. */
+  static RouteResult pathTo(Situation situation, TacticsContext context, Vec3 goal, Way way) {
     var graph = context.nav().graph();
     var from = graph.nearestNode(situation.self().pos());
-    var to = graph.nearestNode(goal);
-    if (to.isEmpty()) {
-      to = graph.nearestNodeWithin(goal, SNAP);
-    }
-    if (from.isEmpty() || to.isEmpty()) {
-      return List.of();
-    }
+    var to = graph.nearestNodeWithin(goal, SNAP);
+    if (from.isEmpty())
+      return new RouteResult.Unreachable(goal, RouteResult.Problem.START_OUTSIDE_NAVIGATION);
+    if (to.isEmpty())
+      return new RouteResult.Unreachable(goal, RouteResult.Problem.GOAL_OUTSIDE_NAVIGATION);
     Optional<Set<Integer>> corridor =
         way.alongLane()
             ? situation.slot().flatMap(situation.board().plan()::laneOf).map(Lane::corridor)
@@ -1288,10 +1372,17 @@ public final class Planner {
             context.seed(),
             new RoutePenalty.Tolls(
                 situation.board().pathsOfOthers(situation.self().id()), corridor, extra));
-    return RouteNavigator.find(
-        context,
-        new RouteNavigator.Endpoints(from.getAsInt(), to.getAsInt(), situation.self().pos(), goal),
-        new RouteNavigator.Tolls(risk, penalty));
+    var points =
+        RouteNavigator.find(
+            context,
+            new RouteNavigator.Endpoints(
+                from.getAsInt(), to.getAsInt(), situation.self().pos(), goal),
+            new RouteNavigator.Tolls(risk, penalty));
+    if (!points.isEmpty()) return new RouteResult.Path(points);
+    if (from.getAsInt() == to.getAsInt()
+        && situation.self().pos().distance(goal) <= 0.45
+        && workerSettled(situation, context)) return new RouteResult.Arrived();
+    return new RouteResult.Unreachable(goal, RouteResult.Problem.DISCONNECTED);
   }
 
   private static IntToDoubleFunction stealthPenalty(Situation situation, TacticsContext context) {

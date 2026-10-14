@@ -131,7 +131,10 @@ public record Bomb(BombSite site, BombState state) {
     return switch (state) {
       case Idle _ -> new Bomb(site, new Idle(attempts));
       case Armed armed ->
-          new Bomb(site, new Armed(armed.team(), armed.fusedAt(), armed.remaining(), attempts));
+          new Bomb(
+              site,
+              new Armed(
+                  armed.team(), armed.plantedBy(), armed.fusedAt(), armed.remaining(), attempts));
       case Destroyed destroyed -> new Bomb(site, destroyed);
     };
   }
@@ -149,7 +152,11 @@ public record Bomb(BombSite site, BombState state) {
               new Bomb(
                   site,
                   new Armed(
-                      site.owner().team().orElseGet(winner::team), now, FUSE_SECONDS, List.of())),
+                      site.owner().team().orElseGet(winner::team),
+                      winner.team(),
+                      now,
+                      FUSE_SECONDS,
+                      List.of())),
               List.of(new BombOutcome.Armed(winner.team(), winner.clickers())));
       case Armed _ ->
           new Step(restore(), List.of(new BombOutcome.Defused(winner.team(), winner.clickers())));
@@ -169,7 +176,10 @@ public record Bomb(BombSite site, BombState state) {
     }
     // The fuse burning down leaves any defuse attempts in progress exactly as they were.
     var next =
-        new Bomb(site, new Armed(armed.team(), armed.fusedAt(), remaining, armed.attempts()));
+        new Bomb(
+            site,
+            new Armed(
+                armed.team(), armed.plantedBy(), armed.fusedAt(), remaining, armed.attempts()));
     return new Step(remaining == armed.remaining() ? this : next, outcomes);
   }
 

@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.zip.ZipException;
+import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -29,7 +30,14 @@ import org.bukkit.persistence.PersistentDataType;
 final class MemorySavedData implements SavedPlayerData {
 
   /** One saved file. */
-  record File(ItemData items, int level, Map<NamespacedKey, String> values) {}
+  record File(
+      ItemData items,
+      int level,
+      GameMode mode,
+      boolean allowFlight,
+      boolean flying,
+      float flySpeed,
+      Map<NamespacedKey, String> values) {}
 
   final Map<UUID, File> files = new HashMap<>();
   private final List<Runnable> lagged = new ArrayList<>();
@@ -64,7 +72,16 @@ final class MemorySavedData implements SavedPlayerData {
                 Arrays.stream(player.getInventory().getContents())
                     .map(item -> item == null ? ItemStack.empty() : item)
                     .toList()));
-    files.put(player.getUniqueId(), new File(items, player.getLevel(), Map.copyOf(values)));
+    files.put(
+        player.getUniqueId(),
+        new File(
+            items,
+            player.getLevel(),
+            player.getGameMode(),
+            player.getAllowFlight(),
+            player.isFlying(),
+            player.getFlySpeed(),
+            Map.copyOf(values)));
     return CompletableFuture.completedFuture(null);
   }
 
@@ -112,11 +129,20 @@ final class MemorySavedData implements SavedPlayerData {
     }
     player.getInventory().clear();
     player.setLevel(0);
+    player.setGameMode(GameMode.SURVIVAL);
+    player.setFlying(false);
+    player.setAllowFlight(false);
+    player.setFlySpeed(0.1f);
+    player.setMaximumNoDamageTicks(20);
     if (file == null) {
       return;
     }
     player.getInventory().setContents(ItemStack.deserializeItemsFromBytes(file.items().bytes()));
     player.setLevel(file.level());
+    player.setGameMode(file.mode());
+    player.setAllowFlight(file.allowFlight());
+    player.setFlying(file.flying());
+    player.setFlySpeed(file.flySpeed());
     file.values().forEach((key, value) -> container.set(key, PersistentDataType.STRING, value));
   }
 }

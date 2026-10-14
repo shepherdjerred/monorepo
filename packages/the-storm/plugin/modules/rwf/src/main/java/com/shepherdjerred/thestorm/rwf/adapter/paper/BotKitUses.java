@@ -3,12 +3,14 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.KitUse;
 import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityInput;
+import com.shepherdjerred.thestorm.rwf.domain.ability.ExpansionInput;
 import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Medic;
 import com.shepherdjerred.thestorm.rwf.domain.ability.kits.Warper;
 import java.util.Optional;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -38,6 +40,23 @@ final class BotKitUses {
 
   /** {@code bot}, a {@code kit}, uses {@code item} as {@code use} says. */
   Optional<ActionRefusal> use(Player bot, String kit, ItemStack item, KitUse use) {
+    return switch (item.getType()) {
+      case BUNDLE, CALIBRATED_SCULK_SENSOR, GRAY_DYE, GOAT_HORN ->
+          act(bot, runner.powers().tactical().input(bot, item.getType()).orElseThrow());
+      case FEATHER ->
+          act(
+              bot,
+              new ExpansionInput.AirJump(!((Entity) bot).isOnGround(), bot.getVelocity().getY()));
+      case SPLASH_POTION -> act(bot, new ExpansionInput.ThrowFlask());
+      case SHIELD, WIND_CHARGE -> {
+        PaperNativeItems.start(bot);
+        yield Optional.empty();
+      }
+      default -> legacy(bot, kit, item, use);
+    };
+  }
+
+  private Optional<ActionRefusal> legacy(Player bot, String kit, ItemStack item, KitUse use) {
     return switch (item.getType()) {
       case BLAZE_ROD -> wand(bot, kit, use);
       case EGG -> act(bot, new AbilityInput.LaunchRpg());

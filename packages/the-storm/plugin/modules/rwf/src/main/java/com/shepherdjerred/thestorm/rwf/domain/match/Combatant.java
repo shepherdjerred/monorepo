@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.domain.match;
 import com.shepherdjerred.thestorm.rwf.domain.bomb.FuseBonus;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.killstreak.StreakLoadout;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -35,7 +36,8 @@ public record Combatant(
     Optional<Instant> leftAt,
     boolean forfeited,
     boolean afk,
-    Score score) {
+    Score score,
+    StreakLoadout streaks) {
 
   public Combatant {
     if (name.isBlank()) {
@@ -57,7 +59,8 @@ public record Combatant(
         Optional.empty(),
         false,
         false,
-        Score.ZERO);
+        Score.ZERO,
+        StreakLoadout.DEFAULT);
   }
 
   public boolean onTeam(TeamColor color) {
@@ -77,7 +80,8 @@ public record Combatant(
         leftAt,
         forfeited,
         afk,
-        score);
+        score,
+        streaks);
   }
 
   /**
@@ -97,7 +101,8 @@ public record Combatant(
         leftAt,
         forfeited,
         true,
-        score);
+        score,
+        streaks);
   }
 
   Combatant withFuse(FuseBonus bonus) {
@@ -113,13 +118,15 @@ public record Combatant(
         leftAt,
         forfeited,
         afk,
-        score);
+        score,
+        streaks);
   }
 
   /** They looked around, so they are not AFK. */
   Combatant active() {
     return new Combatant(
-        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, false, score);
+        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, false, score,
+        streaks);
   }
 
   /**
@@ -139,7 +146,8 @@ public record Combatant(
         leftAt,
         forfeited || forfeit,
         afk && !forfeit,
-        score);
+        score.withoutStreak(),
+        streaks);
   }
 
   /** Gone from the match; leaving a live match forfeits its rewards. */
@@ -156,18 +164,27 @@ public record Combatant(
         Optional.of(now),
         forfeited || forfeit,
         afk && !forfeit,
-        score);
+        score.withoutStreak(),
+        streaks);
   }
 
   /** The kit's own fuse bonus, or none, replacing the fuse they carried. */
   Combatant withFuseOrNone(Optional<FuseBonus> bonus) {
     return new Combatant(
-        id, name, joinedAt, kit, team, alive, bonus, diedAt, leftAt, forfeited, afk, score);
+        id, name, joinedAt, kit, team, alive, bonus, diedAt, leftAt, forfeited, afk, score,
+        streaks);
   }
 
   Combatant scored(Score newScore) {
     return new Combatant(
-        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, afk, newScore);
+        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, afk, newScore,
+        streaks);
+  }
+
+  Combatant withStreaks(StreakLoadout selected) {
+    return new Combatant(
+        id, name, joinedAt, kit, team, alive, fuse, diedAt, leftAt, forfeited, afk, score,
+        selected);
   }
 
   /**
@@ -187,6 +204,7 @@ public record Combatant(
         Optional.empty(),
         false,
         false,
-        Score.ZERO);
+        Score.ZERO,
+        streaks);
   }
 }

@@ -1992,5 +1992,12 @@
       "y": 5,
       "z": 162
     }
-  ]
+  ],
+  "shopRemoval": {
+    "policy": "remove-legacy-buy-signs-both-faces",
+    "originalBlocksSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
+    "blocksSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+    "count": 36,
+    "receipt": "removed-shops.json"
+  }
 }

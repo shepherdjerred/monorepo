@@ -1,7 +1,9 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
 import com.shepherdjerred.thestorm.rwf.app.view.KitHotbar;
+import com.shepherdjerred.thestorm.rwf.app.view.WeaponProfile;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Weapon;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,7 @@ public final class Loadouts {
   /** The hotbar slot rwf locks the Bomb Fuse into. */
   public static final int FUSE_SLOT = 0;
 
-  private static final Set<String> BOWS = Set.of("BOW", "CROSSBOW");
+  private static final Set<String> BOWS = Set.of("BOW", "CROSSBOW", "TRIDENT");
 
   private Loadouts() {}
 
@@ -47,11 +49,34 @@ public final class Loadouts {
         slot(hotbar, "GOLDEN_APPLE"::equals).orElse(-1),
         FUSE_SLOT,
         items,
-        kit.body());
+        kit.body(),
+        hotbar.stream()
+            .filter(item -> item.slot() == weapon)
+            .map(item -> profile(item.weapon()))
+            .findFirst()
+            .orElseThrow(),
+        hotbar.stream()
+            .filter(item -> BOWS.contains(item.material()))
+            .map(item -> profile(item.weapon()))
+            .findFirst()
+            .orElse(Weapon.NONE));
+  }
+
+  private static Weapon profile(WeaponProfile profile) {
+    return new Weapon(
+        Weapon.Kind.valueOf(profile.kind().name()),
+        profile.minReach(),
+        profile.maxReach(),
+        profile.chargeTicks(),
+        profile.projectileSpeed());
   }
 
   private static boolean weapon(String material) {
-    return material.endsWith("_SWORD") || material.endsWith("_AXE");
+    return material.endsWith("_SWORD")
+        || material.endsWith("_AXE")
+        || material.endsWith("_SPEAR")
+        || material.equals("TRIDENT")
+        || material.equals("MACE");
   }
 
   private static Optional<Integer> slot(List<KitHotbar.Slot> hotbar, Predicate<String> material) {

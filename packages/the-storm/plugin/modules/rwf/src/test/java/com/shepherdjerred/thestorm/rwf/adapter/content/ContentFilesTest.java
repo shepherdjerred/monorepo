@@ -85,6 +85,17 @@ final class ContentFilesTest {
   }
 
   @Test
+  void mapDescriptionsAreRequiredAndCannotBeBlank() {
+    shippedCopy();
+    edit("rwf/maps/training-yard/map.yml", "description: [^\\n]+", "description: ''");
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasMessageContaining("description");
+    edit("rwf/maps/training-yard/map.yml", "description: ''\\n", "");
+    assertThatThrownBy(() -> ContentFiles.catalog(directory, PARSER))
+        .hasMessageContaining("description");
+  }
+
+  @Test
   void runtimeCatalogDefersTerrainDecodingButStillRejectsItBeforePlay() throws IOException {
     shippedCopy();
     Files.write(directory.resolve("rwf/maps/training-yard/blocks.schem"), new byte[] {1, 2, 3});

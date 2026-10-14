@@ -26,6 +26,9 @@ final class PaperContext {
   private final BlockChanges blocks;
   private final com.shepherdjerred.thestorm.core.analytics.GameActivity activity;
   private final com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics;
+  private final com.shepherdjerred.thestorm.rwf.app.BattleSounds battleSounds;
+  private final com.shepherdjerred.thestorm.rwf.app.TacticalReports tacticalReports;
+  private final com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility;
 
   /**
    * What the context is made of.
@@ -47,7 +50,10 @@ final class PaperContext {
       World lobbyWorld,
       World mapWorld,
       BlockChanges blocks,
-      com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics) {}
+      com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics,
+      com.shepherdjerred.thestorm.rwf.app.BattleSounds battleSounds,
+      com.shepherdjerred.thestorm.rwf.app.TacticalReports tacticalReports,
+      com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility) {}
 
   PaperContext(Parts parts) {
     this.plugin = parts.plugin();
@@ -59,6 +65,9 @@ final class PaperContext {
     this.mapWorld = parts.mapWorld();
     this.blocks = parts.blocks();
     this.analytics = parts.analytics();
+    this.battleSounds = parts.battleSounds();
+    this.tacticalReports = parts.tacticalReports();
+    this.visibility = parts.visibility();
     this.activity =
         new com.shepherdjerred.thestorm.core.analytics.GameActivity(
             parts.analytics(),
@@ -67,6 +76,18 @@ final class PaperContext {
 
   Plugin plugin() {
     return plugin;
+  }
+
+  com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility() {
+    return visibility;
+  }
+
+  com.shepherdjerred.thestorm.rwf.app.BattleSounds battleSounds() {
+    return battleSounds;
+  }
+
+  com.shepherdjerred.thestorm.rwf.app.TacticalReports tacticalReports() {
+    return tacticalReports;
   }
 
   Server server() {

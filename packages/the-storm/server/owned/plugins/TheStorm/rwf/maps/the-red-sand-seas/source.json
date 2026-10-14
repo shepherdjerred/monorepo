@@ -4874,5 +4874,12 @@
       "y": 14,
       "z": 64
     }
-  ]
+  ],
+  "shopRemoval": {
+    "policy": "remove-legacy-buy-signs-both-faces",
+    "originalBlocksSha256": "bc17708264a6fca8d9eb7c2a2d7351ee0da40eda89b0855576e04ff9627b800d",
+    "blocksSha256": "3536cd852e0d9a52fdb02ac90e343bf04df802714fffdc3a3c134b7c30c0c5af",
+    "count": 10,
+    "receipt": "removed-shops.json"
+  }
 }

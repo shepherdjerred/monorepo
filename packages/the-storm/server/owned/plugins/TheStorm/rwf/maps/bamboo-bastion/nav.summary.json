@@ -1,0 +1,898 @@
+{
+  "mapId": "bamboo-bastion",
+  "formatVersion": 2,
+  "generatorVersion": 4,
+  "movementModelVersion": 4,
+  "costUnit": "server-ticks",
+  "damageUnit": "health-points",
+  "blocksSha256": "dcb7a0624d0d046b04349244cd6e0c1141d3e5dff3f274f89bb272c418703164",
+  "classificationSha256": "36c7dbbf633deeaf3cda1bb834a8c2c6e860f03d15146dca8e9466fd79f46095",
+  "bounds": {
+    "origin": { "x": 5120, "y": 64, "z": 7168 },
+    "sizeX": 128,
+    "sizeY": 48,
+    "sizeZ": 128
+  },
+  "palette": [
+    {
+      "state": "minecraft:stone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 129792
+    },
+    {
+      "state": "minecraft:stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 14164
+    },
+    {
+      "state": "minecraft:moss_block",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 14921
+    },
+    {
+      "state": "minecraft:gravel",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1466
+    },
+    {
+      "state": "minecraft:polished_andesite",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 342
+    },
+    {
+      "state": "minecraft:air",
+      "shape": "PASSABLE",
+      "blocksSight": false,
+      "blocks": 617256
+    },
+    {
+      "state": "minecraft:azalea_leaves[distance=7,persistent=true,waterlogged=false]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 348
+    },
+    {
+      "state": "minecraft:mossy_stone_bricks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 120
+    },
+    {
+      "state": "minecraft:bamboo[age=0,leaves=large,stage=0]",
+      "shape": "PANE",
+      "blocksSight": false,
+      "blocks": 481
+    },
+    {
+      "state": "minecraft:cherry_wood[axis=y]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 36
+    },
+    {
+      "state": "minecraft:red_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 128
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 40
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 38
+    },
+    {
+      "state": "minecraft:stripped_dark_oak_log[axis=y]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 230
+    },
+    {
+      "state": "minecraft:bamboo_planks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1135
+    },
+    {
+      "state": "minecraft:dark_oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 40
+    },
+    {
+      "state": "minecraft:tnt[unstable=false]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:dark_oak_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 40
+    },
+    {
+      "state": "minecraft:glowstone",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 12
+    },
+    {
+      "state": "minecraft:mossy_stone_brick_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 20
+    },
+    {
+      "state": "minecraft:gray_stained_glass",
+      "shape": "FULL",
+      "blocksSight": false,
+      "blocks": 56
+    },
+    {
+      "state": "minecraft:cherry_leaves[distance=7,persistent=true,waterlogged=false]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 248
+    },
+    {
+      "state": "minecraft:stone_brick_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 84
+    },
+    {
+      "state": "minecraft:lantern[hanging=false,waterlogged=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 4
+    },
+    {
+      "state": "minecraft:white_terracotta",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1014
+    },
+    {
+      "state": "minecraft:flowering_azalea_leaves[distance=7,persistent=true,waterlogged=false]",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 62
+    },
+    {
+      "state": "minecraft:dark_oak_planks",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 993
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=bottom,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 18
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 270
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=bottom,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 18
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 162
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=top,shape=inner_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 224
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=top,shape=inner_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 162
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 128
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 128
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=top,shape=inner_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=top,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 238
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=south,half=top,shape=inner_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=bottom,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 18
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 270
+    },
+    {
+      "state": "minecraft:deepslate_tile_stairs[facing=north,half=bottom,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 18
+    },
+    {
+      "state": "minecraft:dark_oak_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 104
+    },
+    {
+      "state": "minecraft:deepslate_tiles",
+      "shape": "FULL",
+      "blocksSight": true,
+      "blocks": 1524
+    },
+    {
+      "state": "minecraft:deepslate_tile_slab[type=bottom,waterlogged=false]",
+      "shape": "SLAB_BOTTOM",
+      "blocksSight": true,
+      "blocks": 14
+    }
+  ],
+  "cells": {
+    "total": 786432,
+    "walkable": 18564,
+    "fluidIntervals": 0,
+    "retainedFluidPortals": 0
+  },
+  "edges": {
+    "total": 421661,
+    "damaging": 11330,
+    "maximumRawDamage": 11,
+    "CLIMB": 0,
+    "DROP": 8815,
+    "JUMP": 3718,
+    "LEAP": 282072,
+    "SWIM": 0,
+    "WALK": 127056
+  },
+  "regions": 570,
+  "coverPoints": 2464,
+  "chokepoints": 107,
+  "routes": {
+    "count": 96,
+    "spawnToBomb": [
+      {
+        "from": "red-spawn-1",
+        "to": "red-1",
+        "length": 48.61320781707764,
+        "nodes": 8
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "red-1",
+        "length": 53.15544128417969,
+        "nodes": 6
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "red-1",
+        "length": 54.880045890808105,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "blue-1",
+        "length": 403.228883266449,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "blue-1",
+        "length": 408.8066039085388,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "blue-1",
+        "length": 409.228883266449,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "red-1",
+        "length": 53.15544128417969,
+        "nodes": 6
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "red-1",
+        "length": 55.19092845916748,
+        "nodes": 9
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "red-1",
+        "length": 55.880045890808105,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "blue-1",
+        "length": 405.8066039085388,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "blue-1",
+        "length": 409.53120851516724,
+        "nodes": 33
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "blue-1",
+        "length": 410.65116262435913,
+        "nodes": 31
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "red-1",
+        "length": 61.61320781707764,
+        "nodes": 9
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "red-1",
+        "length": 63.30232524871826,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "red-1",
+        "length": 64.45776653289795,
+        "nodes": 8
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "blue-1",
+        "length": 412.9534878730774,
+        "nodes": 33
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "blue-1",
+        "length": 413.65116262435913,
+        "nodes": 31
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "blue-1",
+        "length": 415.65116262435913,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "red-1",
+        "length": 55.03548717498779,
+        "nodes": 8
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "red-1",
+        "length": 60.73316192626953,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "red-1",
+        "length": 67.8800458908081,
+        "nodes": 8
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "blue-1",
+        "length": 409.228883266449,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "blue-1",
+        "length": 412.65116262435913,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "blue-1",
+        "length": 414.65116262435913,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "red-1",
+        "length": 44.9155330657959,
+        "nodes": 9
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "red-1",
+        "length": 45.73316192626953,
+        "nodes": 6
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "red-1",
+        "length": 50.30232524871826,
+        "nodes": 6
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "blue-1",
+        "length": 397.65116262435913,
+        "nodes": 31
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "blue-1",
+        "length": 402.1089291572571,
+        "nodes": 33
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "blue-1",
+        "length": 402.228883266449,
+        "nodes": 31
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "red-1",
+        "length": 50.30232524871826,
+        "nodes": 6
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "red-1",
+        "length": 51.49325370788574,
+        "nodes": 10
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "red-1",
+        "length": 55.880045890808105,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "blue-1",
+        "length": 401.9534878730774,
+        "nodes": 33
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "blue-1",
+        "length": 410.228883266449,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "blue-1",
+        "length": 410.26437044143677,
+        "nodes": 35
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "red-1",
+        "length": 57.9155330657959,
+        "nodes": 10
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "red-1",
+        "length": 64.45776653289795,
+        "nodes": 8
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "red-1",
+        "length": 67.30232524871826,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "blue-1",
+        "length": 407.9534878730774,
+        "nodes": 33
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "blue-1",
+        "length": 414.8066039085388,
+        "nodes": 33
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "blue-1",
+        "length": 415.228883266449,
+        "nodes": 32
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "red-1",
+        "length": 51.337812423706055,
+        "nodes": 9
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "red-1",
+        "length": 55.880045890808105,
+        "nodes": 7
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "red-1",
+        "length": 60.577720642089844,
+        "nodes": 6
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "blue-1",
+        "length": 403.65116262435913,
+        "nodes": 31
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "blue-1",
+        "length": 406.228883266449,
+        "nodes": 31
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "blue-1",
+        "length": 408.228883266449,
+        "nodes": 32
+      },
+      {
+        "from": "blue-spawn-1",
+        "to": "red-1",
+        "length": 401.65116262435913,
+        "nodes": 31
+      },
+      {
+        "from": "blue-spawn-1",
+        "to": "red-1",
+        "length": 406.9534878730774,
+        "nodes": 31
+      },
+      {
+        "from": "blue-spawn-1",
+        "to": "red-1",
+        "length": 411.53120851516724,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-1",
+        "to": "blue-1",
+        "length": 41.30232524871826,
+        "nodes": 5
+      },
+      {
+        "from": "blue-spawn-1",
+        "to": "blue-1",
+        "length": 45.577720642089844,
+        "nodes": 5
+      },
+      {
+        "from": "blue-spawn-1",
+        "to": "blue-1",
+        "length": 47.880045890808105,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "red-1",
+        "length": 402.65116262435913,
+        "nodes": 30
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "red-1",
+        "length": 407.9534878730774,
+        "nodes": 31
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "red-1",
+        "length": 413.9534878730774,
+        "nodes": 34
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "blue-1",
+        "length": 47.880045890808105,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "blue-1",
+        "length": 48.880045890808105,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "blue-1",
+        "length": 51.73316192626953,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "red-1",
+        "length": 416.9534878730774,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "red-1",
+        "length": 421.1089291572571,
+        "nodes": 34
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "red-1",
+        "length": 423.53120851516724,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "blue-1",
+        "length": 55.30232524871826,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "blue-1",
+        "length": 59.80660438537598,
+        "nodes": 7
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "blue-1",
+        "length": 61.0,
+        "nodes": 5
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "red-1",
+        "length": 413.38432455062866,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "red-1",
+        "length": 418.6866497993469,
+        "nodes": 34
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "red-1",
+        "length": 422.38432455062866,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "blue-1",
+        "length": 49.30232524871826,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "blue-1",
+        "length": 58.22888374328613,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "blue-1",
+        "length": 58.577720642089844,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "red-1",
+        "length": 395.228883266449,
+        "nodes": 30
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "red-1",
+        "length": 400.53120851516724,
+        "nodes": 31
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "red-1",
+        "length": 404.9534878730774,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "blue-1",
+        "length": 36.30232524871826,
+        "nodes": 5
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "blue-1",
+        "length": 39.18237113952637,
+        "nodes": 7
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "blue-1",
+        "length": 43.880045890808105,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "red-1",
+        "length": 401.9534878730774,
+        "nodes": 32
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "red-1",
+        "length": 409.53120851516724,
+        "nodes": 32
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "red-1",
+        "length": 412.53120851516724,
+        "nodes": 34
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "blue-1",
+        "length": 44.18237113952637,
+        "nodes": 7
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "blue-1",
+        "length": 48.880045890808105,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "blue-1",
+        "length": 51.73316192626953,
+        "nodes": 6
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "red-1",
+        "length": 412.1089291572571,
+        "nodes": 34
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "red-1",
+        "length": 420.1089291572571,
+        "nodes": 34
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "red-1",
+        "length": 422.38432455062866,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "blue-1",
+        "length": 52.18237113952637,
+        "nodes": 8
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "blue-1",
+        "length": 59.80660438537598,
+        "nodes": 7
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "blue-1",
+        "length": 60.60465049743652,
+        "nodes": 8
+      },
+      {
+        "from": "blue-spawn-8",
+        "to": "red-1",
+        "length": 409.38432455062866,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-8",
+        "to": "red-1",
+        "length": 412.1089291572571,
+        "nodes": 33
+      },
+      {
+        "from": "blue-spawn-8",
+        "to": "red-1",
+        "length": 413.38432455062866,
+        "nodes": 32
+      },
+      {
+        "from": "blue-spawn-8",
+        "to": "blue-1",
+        "length": 45.60465049743652,
+        "nodes": 7
+      },
+      {
+        "from": "blue-spawn-8",
+        "to": "blue-1",
+        "length": 46.65116310119629,
+        "nodes": 5
+      },
+      {
+        "from": "blue-spawn-8",
+        "to": "blue-1",
+        "length": 53.18237113952637,
+        "nodes": 8
+      }
+    ]
+  },
+  "distanceFields": 18,
+  "problems": [],
+  "bytes": 1577731
+}

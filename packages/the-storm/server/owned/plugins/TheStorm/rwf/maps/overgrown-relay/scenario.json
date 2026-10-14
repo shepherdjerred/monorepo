@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "overgrown-relay-trooper-duel-v1",
+  "map": "overgrown-relay",
+  "mapSha256": "180ebc58d1d8e38ebef99bf8a946458dce5e8af5e7d2da801917a9691836f9e7",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 64,
+      "z": 8192
+    },
+    "max": {
+      "x": 3199,
+      "y": 111,
+      "z": 8319
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3077.5, 73, 8250.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3194.5, 73, 8250.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

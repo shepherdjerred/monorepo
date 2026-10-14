@@ -174,6 +174,8 @@ public final class RwfModule implements StormModule {
                 features(context, config),
                 new JooqStatsStore(context.database()),
                 new com.shepherdjerred.thestorm.rwf.adapter.db.JooqQuarantineStore(
+                    context.database()),
+                new com.shepherdjerred.thestorm.rwf.adapter.db.JooqStreakStore(
                     context.database())));
     paper = started;
     context

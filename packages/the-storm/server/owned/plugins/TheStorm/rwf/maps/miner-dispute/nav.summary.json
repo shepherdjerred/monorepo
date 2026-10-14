@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
+  "blocksSha256": "3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7",
   "classificationSha256": "4b68576cb202e01fc23790b95b8a270410673074bc3819c75f001079609438a8",
   "bounds": {
     "origin": { "x": 4096, "y": 48, "z": 3072 },
@@ -180,7 +180,7 @@
       "state": "minecraft:air",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 178056
+      "blocks": 178068
     },
     {
       "state": "minecraft:repeater[delay=1,facing=north,locked=false,powered=true]",
@@ -486,7 +486,7 @@
       "state": "minecraft:oak_wall_sign[facing=east,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 10
+      "blocks": 8
     },
     {
       "state": "minecraft:rail[shape=ascending_south,waterlogged=false]",
@@ -552,7 +552,7 @@
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 10
+      "blocks": 5
     },
     {
       "state": "minecraft:gray_wool",
@@ -672,7 +672,7 @@
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]",
       "shape": "PASSABLE",
       "blocksSight": false,
-      "blocks": 11
+      "blocks": 6
     },
     {
       "state": "minecraft:lever[face=wall,facing=north,powered=true]",
@@ -1108,13 +1108,13 @@
     "retainedFluidPortals": 435
   },
   "edges": {
-    "total": 231271,
-    "damaging": 5564,
+    "total": 232648,
+    "damaging": 5837,
     "maximumRawDamage": 41,
     "CLIMB": 84,
     "DROP": 12236,
     "JUMP": 6562,
-    "LEAP": 130100,
+    "LEAP": 131477,
     "SWIM": 3057,
     "WALK": 79232
   },
@@ -1241,8 +1241,8 @@
       {
         "from": "red-spawn-4",
         "to": "red-1",
-        "length": 124.13585901260376,
-        "nodes": 19
+        "length": 123.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-4",
@@ -1877,8 +1877,8 @@
       {
         "from": "red-spawn-21",
         "to": "blue-1",
-        "length": 400.0893473625183,
-        "nodes": 41
+        "length": 399.66706800460815,
+        "nodes": 42
       },
       {
         "from": "red-spawn-22",
@@ -3059,8 +3059,8 @@
       {
         "from": "blue-spawn-5",
         "to": "blue-1",
-        "length": 135.2093014717102,
-        "nodes": 20
+        "length": 134.55813884735107,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-5",
@@ -3695,8 +3695,8 @@
       {
         "from": "blue-spawn-23",
         "to": "red-1",
-        "length": 391.01590490341187,
-        "nodes": 40
+        "length": 390.13585901260376,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-23",
@@ -3839,8 +3839,8 @@
       {
         "from": "blue-spawn-27",
         "to": "red-1",
-        "length": 404.01590490341187,
-        "nodes": 41
+        "length": 403.13585901260376,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-27",
@@ -4235,7 +4235,7 @@
       {
         "from": "blue-spawn-38",
         "to": "red-1",
-        "length": 391.13585901260376,
+        "length": 390.13585901260376,
         "nodes": 38
       },
       {
@@ -4271,8 +4271,8 @@
       {
         "from": "blue-spawn-39",
         "to": "red-1",
-        "length": 399.29130029678345,
-        "nodes": 40
+        "length": 398.33781242370605,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-39",
@@ -4379,7 +4379,7 @@
       {
         "from": "blue-spawn-42",
         "to": "red-1",
-        "length": 404.13585901260376,
+        "length": 403.13585901260376,
         "nodes": 39
       },
       {
@@ -4656,5 +4656,5 @@
   },
   "distanceFields": 100,
   "problems": [],
-  "bytes": 3855201
+  "bytes": 3861185
 }

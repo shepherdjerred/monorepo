@@ -195,7 +195,7 @@ final class RwfWatchTest {
                 bob.getUniqueId(),
                 "rwf_watch",
                 new Position("world", 5.5, 70, 5.5, 0, 0),
-                new Vitals(9, 11, 1, 0, "SURVIVAL"),
+                new Vitals(new Vitals.Condition(9, 11, 1, 0), "SURVIVAL"),
                 new Experience(3, 0.25f, 40),
                 ItemData.of(ItemStack.serializeItemsAsBytes(belongings)),
                 List.of(new EffectRecord("minecraft:haste", 0, 400, false, true, true)),

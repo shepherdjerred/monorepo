@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "mountains",
-  "blocksSha256": "b00a376da2d2792c0fa675e85f5f4dad506ce719d6c07b8a3e7dae2e287d22f3",
-  "detailsSha256": "cae9d8d84db2277a2ebd3838e8aeb8ec105f0c9f74edf40fb84ddb975ad1f5b7",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+  "detailsSha256": "6725b66a622c1e03d0041102cbc64fe12f194c6f27604471e61e3426cc2d3792",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 10,
+    "signs": 3
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "b00a376da2d2792c0fa675e85f5f4dad506ce719d6c07b8a3e7dae2e287d22f3",
+    "count": 13
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 10,
     "signs": 16

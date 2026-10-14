@@ -1,0 +1,14 @@
+{
+  "id": "frostline",
+  "name": "Frostline",
+  "description": "A snowbound alpine supply station lies between broken mountain ridges. Connected lodges shelter close fights, open snow lanes reward patient archers, and timber canopies cover the outer approach routes.",
+  "seed": 10404,
+  "anchor": { "x": 4096, "y": 64, "z": 7168 },
+  "size": { "x": 144, "y": 48, "z": 112 },
+  "bombs": [
+    { "x": 14, "y": 9, "z": 56 },
+    { "x": 129, "y": 9, "z": 56 }
+  ],
+  "nukes": [],
+  "spawnY": 9
+}

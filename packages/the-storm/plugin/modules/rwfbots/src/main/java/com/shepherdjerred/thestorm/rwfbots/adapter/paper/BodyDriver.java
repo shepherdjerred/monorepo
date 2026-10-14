@@ -2,17 +2,24 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
 import com.shepherdjerred.thestorm.rwf.app.BotActions;
+import com.shepherdjerred.thestorm.rwf.app.WeaponUse;
 import com.shepherdjerred.thestorm.rwf.app.view.Point;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.CrossbowMeta;
 
 /**
  * Applies a tick's {@link BodyCommand}s to a bot's body, in order. Motion, looking, slots, swings
@@ -40,6 +47,12 @@ public final class BodyDriver {
   private final World world;
   private final StimulusCollector stimuli;
   private final Consumer<BotBody> rewound;
+  private final com.shepherdjerred.thestorm.rwf.app.TacticalCasting casting;
+  private Optional<BodyActivity> chat = Optional.empty();
+
+  public void communication(BodyActivity communication) {
+    chat = Optional.of(communication);
+  }
 
   /**
    * What the driver needs.
@@ -55,7 +68,8 @@ public final class BodyDriver {
       BotActions actions,
       World world,
       StimulusCollector stimuli,
-      Consumer<BotBody> rewound) {}
+      Consumer<BotBody> rewound,
+      com.shepherdjerred.thestorm.rwf.app.TacticalCasting casting) {}
 
   public BodyDriver(Parts parts) {
     this.bodies = parts.bodies();
@@ -63,42 +77,120 @@ public final class BodyDriver {
     this.world = parts.world();
     this.stimuli = parts.stimuli();
     this.rewound = parts.rewound();
+    this.casting = parts.casting();
   }
 
   /** Applies {@code commands} to {@code bot} at {@code tick}, resolving ids through {@code ids}. */
   public void apply(BotBody bot, List<BodyCommand> commands, IdMap ids, long tick) {
+    apply(bot, commands, new Navigation(ids, tick, Optional.empty()));
+  }
+
+  /** The active arena accompanies all production movement, including externally controlled bots. */
+  public record Navigation(IdMap ids, long tick, Optional<GridBounds> bounds) {}
+
+  public void apply(BotBody bot, List<BodyCommand> commands, Navigation navigation) {
+    var fuse = commands.stream().anyMatch(command -> command instanceof BodyCommand.ClickBomb);
+    if (fuse || bot.shieldUntil() > navigation.tick() || casting.stationary(bot.uuid())) {
+      chat.ifPresent(talk -> talk.cancel(bot.uuid()));
+    }
+    if (typing(bot)) return;
     var look = look(commands);
     look.ifPresent(facing -> bodies.look(bot.uuid(), (float) facing.yaw(), (float) facing.pitch()));
+    if (holdShield(bot, navigation.tick(), fuse)) return;
+    if (casting.stationary(bot.uuid())) {
+      bodies.stop(bot.uuid());
+      return;
+    }
+    var steeringAccepted = true;
+    var frame = new Frame(navigation.ids(), navigation.tick(), look, navigation.bounds());
     for (var command : commands) {
+      if (casting.stationary(bot.uuid())) {
+        bodies.stop(bot.uuid());
+        return;
+      }
       if (!(command instanceof BodyCommand.Look)) {
-        apply(bot, command, new Frame(ids, tick, look));
+        steeringAccepted = applyCommand(bot, command, frame, steeringAccepted);
+        if (bot.shieldUntil() > navigation.tick()) {
+          bodies.stop(bot.uuid());
+          return;
+        }
       }
     }
   }
 
+  private boolean applyCommand(
+      BotBody bot, BodyCommand command, Frame frame, boolean steeringAccepted) {
+    if (command instanceof BodyCommand.MoveToward movement) return move(bot, movement, frame);
+    if (command instanceof BodyCommand.Jump && !steeringAccepted) {
+      bot.reflex(
+          bot.reflex()
+              .withActiveJump(
+                  bot.reflex()
+                      .activeJump()
+                      .filter(
+                          active ->
+                              active.stage() != ActiveJump.Stage.AIRBORNE
+                                  || active.launchTick() != frame.tick())));
+      return false;
+    }
+    apply(bot, command, frame);
+    return steeringAccepted;
+  }
+
+  private boolean typing(BotBody bot) {
+    if (chat.filter(talk -> talk.typing(bot.uuid())).isEmpty()) return false;
+    bodies.stop(bot.uuid());
+    if (bot.drawStart() >= 0) {
+      if (nativeUse(bot)) record(bot, actions.useWeapon(bot.uuid(), WeaponUse.CANCEL));
+      else bodies.stopUsing(bot.uuid(), false);
+      bot.drawStart(-1);
+      bot.reflex(bot.reflex().withDrawStart(-1).withEating(-1, false));
+    }
+    return true;
+  }
+
+  private boolean holdShield(BotBody bot, long tick, boolean fuse) {
+    if (bot.shieldUntil() <= 0) return false;
+    var safe =
+        bodies
+            .entity(bot.uuid())
+            .filter(player -> !player.isDead() && player.getHealth() > 6)
+            .isPresent();
+    if (!fuse && safe && bot.shieldUntil() > tick) {
+      bodies.stop(bot.uuid());
+      return true;
+    }
+    record(bot, actions.useWeapon(bot.uuid(), WeaponUse.CANCEL));
+    bot.shieldUntil(0);
+    return false;
+  }
+
   /** The tick's fixed inputs. */
-  private record Frame(IdMap ids, long tick, Optional<Facing> look) {}
+  private record Frame(IdMap ids, long tick, Optional<Facing> look, Optional<GridBounds> bounds) {}
 
   private void apply(BotBody bot, BodyCommand command, Frame frame) {
     var id = bot.uuid();
     switch (command) {
       case BodyCommand.Look(var yaw, var pitch) -> bodies.look(id, (float) yaw, (float) pitch);
-      case BodyCommand.MoveToward(var waypoint, var sprint) ->
-          move(bot, waypoint, sprint, frame.tick());
+      case BodyCommand.MoveToward movement -> move(bot, movement, frame);
       case BodyCommand.Stop _ -> {
         bot.motion(MotionRecovery.State.INITIAL);
         bodies.stop(id);
       }
       case BodyCommand.Jump _ -> bodies.jump(id);
       case BodyCommand.Sneak(var sneaking) -> bodies.sneak(id, sneaking);
-      case BodyCommand.SelectSlot(var slot) -> bodies.selectSlot(id, slot);
+      case BodyCommand.SelectSlot(var slot) -> bodies.selectSlot(id, emptyHandSlot(bot, slot));
       case BodyCommand.Swing _ -> bodies.swing(id);
       case BodyCommand.Attack(var target) ->
           frame.ids().uuid(target).ifPresent(victim -> record(bot, actions.melee(id, victim)));
       case BodyCommand.StartUse _ -> startUse(bot, frame.tick());
       case BodyCommand.ReleaseUse _ -> releaseUse(bot, frame);
       case BodyCommand.CancelUse _ -> {
-        bodies.stopUsing(bot.uuid(), false);
+        if (nativeUse(bot)) {
+          record(bot, actions.useWeapon(bot.uuid(), WeaponUse.CANCEL));
+        } else {
+          bodies.stopUsing(bot.uuid(), false);
+        }
         bot.drawStart(-1);
       }
       case BodyCommand.ClickBomb(var bomb) ->
@@ -109,6 +201,28 @@ public final class BodyDriver {
     }
   }
 
+  private int emptyHandSlot(BotBody bot, int requested) {
+    var loadout = bot.loadout();
+    var unreserved =
+        requested != loadout.swordSlot()
+            && requested != loadout.bowSlot()
+            && requested != loadout.gappleSlot()
+            && requested != loadout.fuseSlot()
+            && loadout.kitItems().stream().noneMatch(item -> item.slot() == requested);
+    if (!bot.drafted().kit().isInvisibleKit() || !unreserved) return requested;
+    return bodies
+        .entity(bot.uuid())
+        .map(
+            player -> {
+              for (var slot = 8; slot >= 0; slot--) {
+                var item = player.getInventory().getItem(slot);
+                if (item == null || item.getType().isAir()) return slot;
+              }
+              return requested;
+            })
+        .orElse(requested);
+  }
+
   /**
    * Uses a kit item: an aimed one is used looking at its point, and the tick's own look is put back
    * after.
@@ -117,7 +231,18 @@ public final class BodyDriver {
     use.at().ifPresent(point -> lookAt(bot, point));
     var target = use.target().flatMap(frame.ids()::uuid);
     var at = use.at().map(point -> new Point(point.x(), point.y(), point.z()));
-    record(bot, actions.useKit(bot.uuid(), use.slot(), target, at));
+    var refusal = actions.useKit(bot.uuid(), use.slot(), target, at);
+    record(bot, refusal);
+    var shield =
+        bodies
+            .entity(bot.uuid())
+            .map(player -> player.getInventory().getItem(use.slot()))
+            .filter(item -> item.getType() == Material.SHIELD)
+            .isPresent();
+    if (shield && refusal.isEmpty()) {
+      bot.shieldUntil(frame.tick() + 12);
+      chat.ifPresent(talk -> talk.cancel(bot.uuid()));
+    }
     if (use.at().isPresent()) {
       frame
           .look()
@@ -138,34 +263,82 @@ public final class BodyDriver {
   }
 
   private void startUse(BotBody bot, long tick) {
+    if (nativeUse(bot)) {
+      var refusal = actions.useWeapon(bot.uuid(), WeaponUse.START);
+      record(bot, refusal);
+      bot.drawStart(refusal.isEmpty() ? tick : -1);
+      if (refusal.isPresent()
+          || bodies.entity(bot.uuid()).filter(Player::hasActiveItem).isEmpty()) {
+        bot.reflex(bot.reflex().withDrawStart(-1));
+      }
+      return;
+    }
     bodies.startUsing(bot.uuid());
     bot.drawStart(tick);
   }
 
-  private void move(BotBody bot, Vec3 waypoint, boolean sprint, long tick) {
-    bodies
+  private boolean move(BotBody bot, BodyCommand.MoveToward movement, Frame frame) {
+    return bodies
         .entity(bot.uuid())
-        .ifPresent(
+        .map(
             player -> {
               var position = Places.at(player);
               var step =
                   MotionRecovery.tick(
                       bot.motion(),
                       new Vec3(position.getX(), position.getY(), position.getZ()),
-                      waypoint,
-                      tick);
+                      movement.waypoint(),
+                      frame.tick());
               bot.motion(step.state());
-              bodies.moveToward(bot.uuid(), location(step.destination()), sprint);
-              if (step.jump()) {
+              var recovering = step.state().escapingUntil() > frame.tick();
+              var hop = recovering ? Hop.WALK : movement.hop();
+              var checked =
+                  bodies.moveSafely(
+                      bot.uuid(),
+                      new Bodies.MotionTarget(
+                          location(step.destination()),
+                          movement.sprint(),
+                          hop,
+                          frame.bounds(),
+                          recovering
+                              ? Optional.empty()
+                              : bot.reflex()
+                                  .activeJump()
+                                  .filter(active -> active.stage() == ActiveJump.Stage.RUN_UP)
+                                  .flatMap(active -> active.waypoint().launch())));
+              if (step.jump() && checked != MovementSafety.Reason.BLOCKED) {
                 bodies.jump(bot.uuid());
               }
-              if (step.replan()) {
-                bot.requestRecovery();
+              if (checked == MovementSafety.Reason.BLOCKED
+                  || checked == MovementSafety.Reason.REDIRECTED) {
+                bot.requestMovementRecovery(checked.name(), frame.tick());
               }
-            });
+              if (step.replan()) {
+                bot.requestMovementRecovery("STALLED", frame.tick());
+              }
+              return !recovering
+                  && (checked == MovementSafety.Reason.CLEAR
+                      || checked == MovementSafety.Reason.REDIRECTED);
+            })
+        .orElse(false);
   }
 
   private void releaseUse(BotBody bot, Frame frame) {
+    if (nativeUse(bot)) {
+      record(bot, actions.useWeapon(bot.uuid(), WeaponUse.RELEASE));
+      bodies
+          .entity(bot.uuid())
+          .ifPresent(
+              player -> {
+                var held = player.getInventory().getItemInMainHand();
+                if (held.getItemMeta() instanceof CrossbowMeta crossbow
+                    && crossbow.hasChargedProjectiles()) {
+                  record(bot, actions.useWeapon(bot.uuid(), WeaponUse.START));
+                }
+              });
+      bot.drawStart(-1);
+      return;
+    }
     var active = bodies.activeItem(bot.uuid());
     if (active.isEmpty()) {
       bot.drawStart(-1);
@@ -182,6 +355,24 @@ public final class BodyDriver {
       bodies.stopUsing(bot.uuid(), false);
     }
     bot.drawStart(-1);
+  }
+
+  /** Ranged weapons use the server's actual draw, item and ammunition state. */
+  private boolean nativeUse(BotBody bot) {
+    return bodies
+        .entity(bot.uuid())
+        .map(
+            player -> {
+              var held = player.getInventory().getItemInMainHand();
+              var type = held.getType();
+              return type == Material.BOW
+                  || type == Material.CROSSBOW
+                  || type == Material.TRIDENT
+                  || type == Material.WIND_CHARGE
+                  || type == Material.SHIELD
+                  || type.name().endsWith("_SPEAR");
+            })
+        .orElse(false);
   }
 
   private void fire(BotBody bot, Bodies.ActiveItem bow, Frame frame) {

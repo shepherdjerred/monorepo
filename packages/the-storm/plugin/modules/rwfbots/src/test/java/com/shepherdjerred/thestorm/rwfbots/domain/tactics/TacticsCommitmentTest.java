@@ -98,7 +98,8 @@ final class TacticsCommitmentTest {
                   0.5,
                   List.of(slot),
                   Map.of(self.id(), slot.key()),
-                  0),
+                  0,
+                  Map.of()),
               0);
     }
     var snapshot =
@@ -381,7 +382,7 @@ final class TacticsCommitmentTest {
             null);
     var thought =
         Tactics.think(
-            new TacticsState(ROUTE, 90, 0, 0, RewindClock.UNSTARTED),
+            new TacticsState(ROUTE, 90, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
             quiet,
             context,
             new SplittableRandom(1));
@@ -404,7 +405,7 @@ final class TacticsCommitmentTest {
             NAV.mapId(),
             List.of());
     return Tactics.think(
-        new TacticsState(Optional.of(plan), 90, 0, 0, RewindClock.UNSTARTED),
+        new TacticsState(Optional.of(plan), 90, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
         new Situation(
             self,
             snapshot,
@@ -445,7 +446,8 @@ final class TacticsCommitmentTest {
     assertThat(Planner.coverFitsSlot(old, situation, context)).isFalse();
     var thought =
         Tactics.think(
-            new TacticsState(Optional.of(old), 95, 0, 0, RewindClock.UNSTARTED),
+            new TacticsState(
+                Optional.of(old), 95, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
             situation,
             context,
             new SplittableRandom(1));
@@ -475,7 +477,8 @@ final class TacticsCommitmentTest {
             Option.TAKE_SLOT,
             95,
             new PlanStep.Cover(Optional.of(node), SELF, SELF.plus(20, 0, 0), 200));
-    var state = new TacticsState(Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED);
+    var state =
+        new TacticsState(Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY);
     var board =
         situation
             .board()

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.world;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
  * @param planLabel a short human-readable label of the plan step, for traces and debug HUDs
  * @param snapshotTick the tick of the snapshot this was decided from
  * @param lifeEpoch how many times this bot has (re)spawned; stale decisions are dropped
+ * @param routeFailure why the requested route could not be followed, rather than arrival
  */
 public record Decision(
     CombatantId bot,
@@ -31,7 +33,8 @@ public record Decision(
     Optional<String> ability,
     String planLabel,
     long snapshotTick,
-    int lifeEpoch) {
+    int lifeEpoch,
+    Optional<RouteResult.Unreachable> routeFailure) {
 
   public Decision {
     waypoints = List.copyOf(waypoints);
@@ -40,6 +43,9 @@ public record Decision(
     }
     if (snapshotTick < 0 || lifeEpoch < 0) {
       throw new IllegalArgumentException("ticks and epochs must not be negative");
+    }
+    if (routeFailure.isPresent() && !waypoints.isEmpty()) {
+      throw new IllegalArgumentException("an unreachable route cannot carry waypoints");
     }
   }
 
@@ -56,7 +62,8 @@ public record Decision(
         Optional.empty(),
         "idle",
         tick,
-        lifeEpoch);
+        lifeEpoch,
+        java.util.Optional.empty());
   }
 
   public Decision withWaypoints(List<Waypoint> newWaypoints) {
@@ -71,6 +78,7 @@ public record Decision(
         ability,
         planLabel,
         snapshotTick,
-        lifeEpoch);
+        lifeEpoch,
+        newWaypoints.isEmpty() ? routeFailure : Optional.empty());
   }
 }

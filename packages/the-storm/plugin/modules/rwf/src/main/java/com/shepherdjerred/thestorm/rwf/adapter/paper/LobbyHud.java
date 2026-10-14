@@ -84,7 +84,14 @@ final class LobbyHud {
   /** Redraws the bar for {@code status}. */
   void update(LobbyStatus status) {
     also.accept(status);
-    bar.name(Component.text(text(status)));
+    var waiting =
+        status.stage() == LobbyStatus.Stage.WAITING
+            || status.stage() == LobbyStatus.Stage.COUNTDOWN
+            || status.stage() == LobbyStatus.Stage.PREPARING;
+    bar.name(
+        Component.text(
+            text(status)
+                + (waiting ? status.botStatus().map(value -> " | " + value).orElse("") : "")));
     bar.progress((float) status.progress());
     bar.color(
         status.stage() == LobbyStatus.Stage.COUNTDOWN ? BossBar.Color.GREEN : BossBar.Color.YELLOW);
@@ -94,6 +101,8 @@ final class LobbyHud {
   static String text(LobbyStatus status) {
     return switch (status.stage()) {
       case EMPTY -> "Waiting for players";
+      case CANDIDATES -> "Preparing candidate maps for visits";
+      case VOTING -> "Visit maps and vote: " + status.secondsLeft() + "s";
       case WAITING ->
           "Waiting for "
               + status.needed()

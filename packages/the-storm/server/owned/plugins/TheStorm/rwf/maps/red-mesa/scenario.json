@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "red-mesa-trooper-duel-v1",
+  "map": "red-mesa",
+  "mapSha256": "6799261020e00954e234589ff858015f0402d5ee4a9dd8d456e46e47e9f0c7c1",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 3072,
+      "y": 64,
+      "z": 7168
+    },
+    "max": {
+      "x": 3199,
+      "y": 111,
+      "z": 7295
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [3077.5, 73, 7226.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [3194.5, 73, 7226.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

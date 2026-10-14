@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
  *     legacy section-sign colours where it coloured them
  * @param price credits to buy it; 0 for free kits
  * @param tier how involved it is to play
+ * @param category the kind of play it offers, independent of its tier
  * @param availability who may pick it
  * @param fuseBonus the bonus on the kit's Bomb Fuse, if any
  * @param hotbar the items after the fuse, in slot order
@@ -33,6 +34,7 @@ public record KitSpec(
     String description,
     int price,
     KitTier tier,
+    KitCategory category,
     KitAvailability availability,
     Optional<FuseBonus> fuseBonus,
     List<ItemSpec> hotbar,

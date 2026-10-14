@@ -100,6 +100,7 @@ final class PlayerListener implements Listener {
         .memberOf(id)
         .ifPresent(member -> runner.handle(new MatchEvent.Disconnect(member.id(), runner.now())));
     runner.picker().forget(id);
+    runner.streakPicker().forget(id);
     watchers.quit(event.getPlayer());
   }
 
@@ -263,7 +264,16 @@ final class PlayerListener implements Listener {
     }
     event.setUseInteractedBlock(Event.Result.DENY);
     event.setUseItemInHand(Event.Result.DENY);
-    runner.voteAt(player, podium.orElseThrow()).ifPresent(refusal -> Texts.error(player, refusal));
+    if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+      return true;
+    }
+    if (runner.features().candidateVisits() && runner.features().matchFlow()) {
+      runner.openCandidates(player);
+    } else {
+      runner
+          .voteAt(player, podium.orElseThrow())
+          .ifPresent(refusal -> Texts.error(player, refusal));
+    }
     return true;
   }
 
@@ -272,6 +282,20 @@ final class PlayerListener implements Listener {
    * Returns whether {@code item} was one of them.
    */
   private boolean lobbyItem(PlayerInteractEvent event, Player player, ItemStack item) {
+    if (keys.isMapMenu(item)) {
+      event.setUseItemInHand(Event.Result.DENY);
+      event.setUseInteractedBlock(Event.Result.DENY);
+      if (event.getHand() == org.bukkit.inventory.EquipmentSlot.HAND) runner.openCandidates(player);
+      return true;
+    }
+    if (keys.isSettings(item)) {
+      event.setUseItemInHand(Event.Result.DENY);
+      event.setUseInteractedBlock(Event.Result.DENY);
+      if (event.getHand() == org.bukkit.inventory.EquipmentSlot.HAND) {
+        runner.openSettings(player);
+      }
+      return true;
+    }
     if (keys.isSelector(item)) {
       event.setUseItemInHand(Event.Result.DENY);
       event.setUseInteractedBlock(Event.Result.DENY);

@@ -9,7 +9,11 @@ public sealed interface BombOwner {
   record Team(TeamId team) implements BombOwner {}
 
   /** A nuke nobody owns; arming it hurts everyone else. */
-  record Nuke() implements BombOwner {}
+  record Nuke(Optional<TeamId> armedBy) implements BombOwner {
+    public Nuke() {
+      this(Optional.empty());
+    }
+  }
 
   default Optional<TeamId> owningTeam() {
     return this instanceof Team(var team) ? Optional.of(team) : Optional.empty();

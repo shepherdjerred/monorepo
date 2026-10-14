@@ -28,7 +28,8 @@ public record TeamPlan(
     double push,
     List<Slot> slots,
     Map<CombatantId, String> assignment,
-    long dealtTick) {
+    long dealtTick,
+    Map<CombatantId, Integer> groups) {
 
   public static final TeamPlan NONE =
       new TeamPlan(
@@ -39,7 +40,8 @@ public record TeamPlan(
           0,
           List.of(),
           Map.of(),
-          -1);
+          -1,
+          Map.of());
 
   public TeamPlan {
     lanes = List.copyOf(lanes);
@@ -48,6 +50,7 @@ public record TeamPlan(
     }
     slots = List.copyOf(slots);
     assignment = Map.copyOf(assignment);
+    groups = Map.copyOf(groups);
     var keys = new HashSet<String>();
     for (var slot : slots) {
       if (!keys.add(slot.key())) {
@@ -83,6 +86,15 @@ public record TeamPlan(
 
   /** The other bots whose slots share {@code bot}'s pair, in id order. */
   public List<CombatantId> partners(CombatantId bot) {
+    if (!groups.isEmpty()) {
+      var group = groups.getOrDefault(bot, -1);
+      if (group < 0) return List.of();
+      return assignment.keySet().stream()
+          .filter(other -> !other.equals(bot))
+          .filter(other -> groups.getOrDefault(other, -1).equals(group))
+          .sorted()
+          .toList();
+    }
     var mine = slotOf(bot).filter(Slot::paired);
     if (mine.isEmpty()) {
       return List.of();

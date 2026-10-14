@@ -7,7 +7,7 @@
       "kind": "rwf-map-scenario",
       "id": "apex-expanse-trooper-duel-v1",
       "map": "apex-expanse",
-      "mapSha256": "57743aaebc82047c15a592ba1ffd8271c10c5549c0df72e51a09cb1a3152e430",
+      "mapSha256": "e4a52c56945c660123110b128f07f1ff9cfdff3b5b165517d17b02ff2990f4ad",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -43,9 +43,47 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "bamboo-bastion-trooper-duel-v1",
+      "map": "bamboo-bastion",
+      "mapSha256": "dcb7a0624d0d046b04349244cd6e0c1141d3e5dff3f274f89bb272c418703164",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 64,
+          "z": 7168
+        },
+        "max": {
+          "x": 5247,
+          "y": 111,
+          "z": 7295
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5125.5, 73, 7226.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5242.5, 73, 7226.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "battle-scarred-trooper-duel-v1",
       "map": "battle-scarred",
-      "mapSha256": "1d6b2ba3993700aa17f7a185c2874543cc41e7190d56ab35d55767528f6cbc44",
+      "mapSha256": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -83,7 +121,7 @@
       "kind": "rwf-map-scenario",
       "id": "beanstalk-trooper-duel-v1",
       "map": "beanstalk",
-      "mapSha256": "dc646e9e99b80a7d821dfa13c94e7f6f0e7ae3ff4d1ebe9c1db337b6a54cb0fc",
+      "mapSha256": "c58fb426b43af7a85aaf6dd6b51fcee54fe863aea99531f4a86e92ccc9406fe7",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -119,9 +157,47 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "catacombs-trooper-duel-v1",
+      "map": "catacombs",
+      "mapSha256": "0d7892c50f7103585c0e0ecb96dcf4b12a9196882a13779d108e8fe0c695f9fb",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 64,
+          "z": 7168
+        },
+        "max": {
+          "x": 6255,
+          "y": 111,
+          "z": 7279
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6149.5, 73, 7218.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6250.5, 73, 7218.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "cloned-balance-trooper-duel-v1",
       "map": "cloned-balance",
-      "mapSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
+      "mapSha256": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -159,7 +235,7 @@
       "kind": "rwf-map-scenario",
       "id": "cloned-beanstalks-trooper-duel-v1",
       "map": "cloned-beanstalks",
-      "mapSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
+      "mapSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -195,9 +271,47 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "copperworks-trooper-duel-v1",
+      "map": "copperworks",
+      "mapSha256": "bc8b1f6b37121f9c5b13385315f9084137accb095cf302c086086ef929a32d38",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 64,
+          "z": 7168
+        },
+        "max": {
+          "x": 1151,
+          "y": 111,
+          "z": 7279
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1029.5, 73, 7218.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1146.5, 73, 7218.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "cors-path-trooper-duel-v1",
       "map": "cors-path",
-      "mapSha256": "310af07a8bc3791f5986e2ffb850449cd9f27f003a2785347f3a36a76eed0283",
+      "mapSha256": "1fddc750838f9c991f4c0ab47095674470a79282d9a84aa4ad02fb30d03293da",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -235,7 +349,7 @@
       "kind": "rwf-map-scenario",
       "id": "fairylands-trooper-duel-v1",
       "map": "fairylands",
-      "mapSha256": "f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3",
+      "mapSha256": "e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -273,7 +387,7 @@
       "kind": "rwf-map-scenario",
       "id": "fancy-castles-trooper-duel-v1",
       "map": "fancy-castles",
-      "mapSha256": "bc5e294bec0480d895fc8e84b42241732fb7201847a64e5535be9d7fae7aa6a5",
+      "mapSha256": "aa970c11a7fc22ae3415edd611db6b1eedb713fd8f70790b2865b365665ce785",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -311,7 +425,7 @@
       "kind": "rwf-map-scenario",
       "id": "fjords-trooper-duel-v1",
       "map": "fjords",
-      "mapSha256": "fb861c2db949ff3d44276b157f62f94794d7dc272c8be298e96b34e9c6dd4ccf",
+      "mapSha256": "be2c84582e3fe8bd766b61ba7e85c2c22067f26180066383cc50707d7d3b127e",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -349,7 +463,7 @@
       "kind": "rwf-map-scenario",
       "id": "floating-isles-trooper-duel-v1",
       "map": "floating-isles",
-      "mapSha256": "cbeba029f3699c15adad9338c190a864ef16234551f1e81ca8b29812d5de09fb",
+      "mapSha256": "20e371135462bd28142a2bed75cd01aa883a23a3f9575416fc733096be4efebc",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -387,7 +501,7 @@
       "kind": "rwf-map-scenario",
       "id": "flying-ships-trooper-duel-v1",
       "map": "flying-ships",
-      "mapSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
+      "mapSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -423,9 +537,47 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "frostline-trooper-duel-v1",
+      "map": "frostline",
+      "mapSha256": "91e709e4621b1c3121d5454f1996910989f60f9571999b4dc60c4183b30a4865",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 64,
+          "z": 7168
+        },
+        "max": {
+          "x": 4239,
+          "y": 111,
+          "z": 7279
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4101.5, 73, 7218.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4234.5, 73, 7218.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "gardens-trooper-duel-v1",
       "map": "gardens",
-      "mapSha256": "8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f",
+      "mapSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -463,7 +615,7 @@
       "kind": "rwf-map-scenario",
       "id": "grove-wars-trooper-duel-v1",
       "map": "grove-wars",
-      "mapSha256": "f3d6307d548f2d38c2da90f1714acefe3e51cf94b07737c5e58d2273c272b0bf",
+      "mapSha256": "6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -501,7 +653,7 @@
       "kind": "rwf-map-scenario",
       "id": "hemispheres-trooper-duel-v1",
       "map": "hemispheres",
-      "mapSha256": "0e754b80a8c828de3e92053d7177b1769bfca351338231aedd568c14a7712e6d",
+      "mapSha256": "3c344ec7bfb9fe504491a46054eba9cdf7262c3e0cf2fced1333a262f3a03ba2",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -539,7 +691,7 @@
       "kind": "rwf-map-scenario",
       "id": "main-street-trooper-duel-v1",
       "map": "main-street",
-      "mapSha256": "32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a",
+      "mapSha256": "9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -577,7 +729,7 @@
       "kind": "rwf-map-scenario",
       "id": "miner-dispute-trooper-duel-v1",
       "map": "miner-dispute",
-      "mapSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
+      "mapSha256": "3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -615,7 +767,7 @@
       "kind": "rwf-map-scenario",
       "id": "modified-tropicals-trooper-duel-v1",
       "map": "modified-tropicals",
-      "mapSha256": "fa19015ad0e22739301df29f81c9d3198a92660d95cf8142286e11f91f9ddfc6",
+      "mapSha256": "a0d1c097adc2f3ea157dff78278435e22a1d6d714d1d1d2029f51544f05e548b",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -653,7 +805,7 @@
       "kind": "rwf-map-scenario",
       "id": "mountains-trooper-duel-v1",
       "map": "mountains",
-      "mapSha256": "b00a376da2d2792c0fa675e85f5f4dad506ce719d6c07b8a3e7dae2e287d22f3",
+      "mapSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -689,9 +841,47 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "overgrown-relay-trooper-duel-v1",
+      "map": "overgrown-relay",
+      "mapSha256": "180ebc58d1d8e38ebef99bf8a946458dce5e8af5e7d2da801917a9691836f9e7",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 64,
+          "z": 8192
+        },
+        "max": {
+          "x": 3199,
+          "y": 111,
+          "z": 8319
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3077.5, 73, 8250.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3194.5, 73, 8250.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "perfect-balance-trooper-duel-v1",
       "map": "perfect-balance",
-      "mapSha256": "f1ffd6e3cec863b823ce772f0e893bc5a44fe387d7daa38b3db05870e876fcaa",
+      "mapSha256": "9f827db0f7980f3ef30392be0c241e16c57378f9bee72b93f3cbd39c53ae2a1f",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -729,7 +919,7 @@
       "kind": "rwf-map-scenario",
       "id": "pirate-island-trooper-duel-v1",
       "map": "pirate-island",
-      "mapSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
+      "mapSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -765,9 +955,85 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "railcut-trooper-duel-v1",
+      "map": "railcut",
+      "mapSha256": "2d3e8afefed0a40f573690cf3e2288064987a360d6a4d16496019879ea252e73",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 64,
+          "z": 8192
+        },
+        "max": {
+          "x": 2191,
+          "y": 111,
+          "z": 8287
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2053.5, 73, 8234.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2186.5, 73, 8234.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "red-mesa-trooper-duel-v1",
+      "map": "red-mesa",
+      "mapSha256": "6799261020e00954e234589ff858015f0402d5ee4a9dd8d456e46e47e9f0c7c1",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 64,
+          "z": 7168
+        },
+        "max": {
+          "x": 3199,
+          "y": 111,
+          "z": 7295
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3077.5, 73, 7226.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3194.5, 73, 7226.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "rival-castles-trooper-duel-v1",
       "map": "rival-castles",
-      "mapSha256": "6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23",
+      "mapSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -805,7 +1071,7 @@
       "kind": "rwf-map-scenario",
       "id": "rotated-hemispheres-trooper-duel-v1",
       "map": "rotated-hemispheres",
-      "mapSha256": "5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411",
+      "mapSha256": "9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -843,7 +1109,7 @@
       "kind": "rwf-map-scenario",
       "id": "saigon-trooper-duel-v1",
       "map": "saigon",
-      "mapSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
+      "mapSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -879,9 +1145,85 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "stormbreak-trooper-duel-v1",
+      "map": "stormbreak",
+      "mapSha256": "429743d80dfa8e2f3381c79d7c439412cf53a3c4f1506d83fcd6cc3fdb73c23b",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 64,
+          "z": 8192
+        },
+        "max": {
+          "x": 4255,
+          "y": 111,
+          "z": 8335
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4101.5, 73, 8258.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4250.5, 73, 8258.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "sunspire-trooper-duel-v1",
+      "map": "sunspire",
+      "mapSha256": "ad97058ae6dea2bedcf7f1629a3740c0a44e996a2ec078b12d958d49a850f102",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 64,
+          "z": 8192
+        },
+        "max": {
+          "x": 1183,
+          "y": 111,
+          "z": 8319
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1029.5, 73, 8250.5],
+          "yaw": 270,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1178.5, 73, 8250.5],
+          "yaw": 90,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "the-harshest-harvest-trooper-duel-v1",
       "map": "the-harshest-harvest",
-      "mapSha256": "83be36752e818a81f6e7ec06b17aa7ab3342e8200beddd5193fd9f4d3814804b",
+      "mapSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -917,47 +1259,9 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
-      "id": "the-red-sand-seas-trooper-duel-v1",
-      "map": "the-red-sand-seas",
-      "mapSha256": "bc17708264a6fca8d9eb7c2a2d7351ee0da40eda89b0855576e04ff9627b800d",
-      "world": "minecraft:rwf",
-      "region": {
-        "min": {
-          "x": 1024,
-          "y": 0,
-          "z": 5120
-        },
-        "max": {
-          "x": 1157,
-          "y": 51,
-          "z": 5206
-        }
-      },
-      "sourceTeams": ["BLUE", "RED"],
-      "spawnPolicy": "source",
-      "spawns": [
-        {
-          "team": "red",
-          "sourceTeam": "RED",
-          "position": [1136.5, 18, 5169.5],
-          "yaw": 97.51214599609375,
-          "pitch": 0
-        },
-        {
-          "team": "blue",
-          "sourceTeam": "BLUE",
-          "position": [1043.5, 14, 5137.5],
-          "yaw": 298.6949157714844,
-          "pitch": 0
-        }
-      ]
-    },
-    {
-      "schema": 1,
-      "kind": "rwf-map-scenario",
       "id": "the-lost-kingdom-trooper-duel-v1",
       "map": "the-lost-kingdom",
-      "mapSha256": "9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a",
+      "mapSha256": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -993,189 +1297,37 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
-      "id": "tropical-resort-trooper-duel-v1",
-      "map": "tropical-resort",
-      "mapSha256": "cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144",
-      "world": "minecraft:rwf",
-      "region": {
-        "min": {
-          "x": 3072,
-          "y": 0,
-          "z": 5120
-        },
-        "max": {
-          "x": 3436,
-          "y": 129,
-          "z": 5279
-        }
-      },
-      "sourceTeams": ["RED", "BLUE"],
-      "spawnPolicy": "source",
-      "spawns": [
-        {
-          "team": "red",
-          "sourceTeam": "RED",
-          "position": [3127.5, 107, 5217.5],
-          "yaw": 262.1543273925781,
-          "pitch": 0
-        },
-        {
-          "team": "blue",
-          "sourceTeam": "BLUE",
-          "position": [3372.5, 106, 5175.5],
-          "yaw": 78.27050018310547,
-          "pitch": 0
-        }
-      ]
-    },
-    {
-      "schema": 1,
-      "kind": "rwf-map-scenario",
-      "id": "valley-trooper-duel-v1",
-      "map": "valley",
-      "mapSha256": "901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0",
-      "world": "minecraft:rwf",
-      "region": {
-        "min": {
-          "x": 4096,
-          "y": 0,
-          "z": 5120
-        },
-        "max": {
-          "x": 4190,
-          "y": 70,
-          "z": 5310
-        }
-      },
-      "sourceTeams": ["RED", "BLUE"],
-      "spawnPolicy": "source",
-      "spawns": [
-        {
-          "team": "red",
-          "sourceTeam": "RED",
-          "position": [4143.5, 40, 5153.5],
-          "yaw": 0,
-          "pitch": 0
-        },
-        {
-          "team": "blue",
-          "sourceTeam": "BLUE",
-          "position": [4143.5, 40, 5274.5],
-          "yaw": 180,
-          "pitch": 0
-        }
-      ]
-    },
-    {
-      "schema": 1,
-      "kind": "rwf-map-scenario",
-      "id": "village-skirmish-trooper-duel-v1",
-      "map": "village-skirmish",
-      "mapSha256": "e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950",
-      "world": "minecraft:rwf",
-      "region": {
-        "min": {
-          "x": 5120,
-          "y": 129,
-          "z": 5120
-        },
-        "max": {
-          "x": 5226,
-          "y": 188,
-          "z": 5331
-        }
-      },
-      "sourceTeams": ["RED", "BLUE"],
-      "spawnPolicy": "source",
-      "spawns": [
-        {
-          "team": "red",
-          "sourceTeam": "RED",
-          "position": [5167.5, 147, 5305.5],
-          "yaw": 184.31602478027344,
-          "pitch": 0
-        },
-        {
-          "team": "blue",
-          "sourceTeam": "BLUE",
-          "position": [5167.5, 147, 5146.5],
-          "yaw": 355.6839599609375,
-          "pitch": 0
-        }
-      ]
-    },
-    {
-      "schema": 1,
-      "kind": "rwf-map-scenario",
-      "id": "warlords-castles-trooper-duel-v1",
-      "map": "warlords-castles",
-      "mapSha256": "dbf2499bf25527672bc0dc5f6a6c595821186486795293245006845f8c2ee036",
-      "world": "minecraft:rwf",
-      "region": {
-        "min": {
-          "x": 6144,
-          "y": 0,
-          "z": 5120
-        },
-        "max": {
-          "x": 6520,
-          "y": 96,
-          "z": 5496
-        }
-      },
-      "sourceTeams": ["BLUE", "PURPLE", "RED", "GREEN"],
-      "spawnPolicy": "source",
-      "spawns": [
-        {
-          "team": "red",
-          "sourceTeam": "RED",
-          "position": [6439.5, 62, 5306.5],
-          "yaw": 88.9291763305664,
-          "pitch": 0
-        },
-        {
-          "team": "blue",
-          "sourceTeam": "BLUE",
-          "position": [6218.5, 62, 5305.5],
-          "yaw": 271.5074462890625,
-          "pitch": 0
-        }
-      ]
-    },
-    {
-      "schema": 1,
-      "kind": "rwf-map-scenario",
-      "id": "warzone-trooper-duel-v1",
-      "map": "warzone",
-      "mapSha256": "0f7db396d9f6099f13d097fcfdc6d22bd0910daf65bf14bc7fe5ee80aa5f7329",
+      "id": "the-red-sand-seas-trooper-duel-v1",
+      "map": "the-red-sand-seas",
+      "mapSha256": "3536cd852e0d9a52fdb02ac90e343bf04df802714fffdc3a3c134b7c30c0c5af",
       "world": "minecraft:rwf",
       "region": {
         "min": {
           "x": 1024,
-          "y": 55,
-          "z": 6144
+          "y": 0,
+          "z": 5120
         },
         "max": {
-          "x": 1182,
-          "y": 78,
-          "z": 6208
+          "x": 1157,
+          "y": 51,
+          "z": 5206
         }
       },
-      "sourceTeams": ["RED", "BLUE"],
+      "sourceTeams": ["BLUE", "RED"],
       "spawnPolicy": "source",
       "spawns": [
         {
           "team": "red",
           "sourceTeam": "RED",
-          "position": [1027.5, 65, 6161.5],
-          "yaw": 281.1648864746094,
+          "position": [1136.5, 18, 5169.5],
+          "yaw": 97.51214599609375,
           "pitch": 0
         },
         {
           "team": "blue",
           "sourceTeam": "BLUE",
-          "position": [1173.5, 65, 6185.5],
-          "yaw": 97.32640838623047,
+          "position": [1043.5, 14, 5137.5],
+          "yaw": 298.6949157714844,
           "pitch": 0
         }
       ]
@@ -1183,20 +1335,20 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
-      "id": "wet-britches-trooper-duel-v1",
-      "map": "wet-britches",
-      "mapSha256": "090bb066a36be83a3b4f31bcafeccddea55e46cfabb6f44b68f74faa326875af",
+      "id": "tidewatch-trooper-duel-v1",
+      "map": "tidewatch",
+      "mapSha256": "e818529123dd5707d78d33110cc3bac160832411bc7c7d3be1a006417249d737",
       "world": "minecraft:rwf",
       "region": {
         "min": {
           "x": 2048,
-          "y": 0,
-          "z": 6144
+          "y": 64,
+          "z": 7168
         },
         "max": {
-          "x": 2148,
-          "y": 22,
-          "z": 6184
+          "x": 2191,
+          "y": 111,
+          "z": 7295
         }
       },
       "sourceTeams": ["RED", "BLUE"],
@@ -1205,15 +1357,15 @@
         {
           "team": "red",
           "sourceTeam": "RED",
-          "position": [2051.5, 4, 6161.5],
-          "yaw": 273.6522216796875,
+          "position": [2053.5, 73, 7226.5],
+          "yaw": 270,
           "pitch": 0
         },
         {
           "team": "blue",
           "sourceTeam": "BLUE",
-          "position": [2140.5, 4, 6161.5],
-          "yaw": 85.91438293457031,
+          "position": [2186.5, 73, 7226.5],
+          "yaw": 90,
           "pitch": 0
         }
       ]
@@ -1259,9 +1411,237 @@
     {
       "schema": 1,
       "kind": "rwf-map-scenario",
+      "id": "tropical-resort-trooper-duel-v1",
+      "map": "tropical-resort",
+      "mapSha256": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 3072,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 3436,
+          "y": 129,
+          "z": 5279
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [3127.5, 107, 5217.5],
+          "yaw": 262.1543273925781,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [3372.5, 106, 5175.5],
+          "yaw": 78.27050018310547,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "valley-trooper-duel-v1",
+      "map": "valley",
+      "mapSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 4096,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 4190,
+          "y": 70,
+          "z": 5310
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [4143.5, 40, 5153.5],
+          "yaw": 0,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [4143.5, 40, 5274.5],
+          "yaw": 180,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "village-skirmish-trooper-duel-v1",
+      "map": "village-skirmish",
+      "mapSha256": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 5120,
+          "y": 129,
+          "z": 5120
+        },
+        "max": {
+          "x": 5226,
+          "y": 188,
+          "z": 5331
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [5167.5, 147, 5305.5],
+          "yaw": 184.31602478027344,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [5167.5, 147, 5146.5],
+          "yaw": 355.6839599609375,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "warlords-castles-trooper-duel-v1",
+      "map": "warlords-castles",
+      "mapSha256": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 6144,
+          "y": 0,
+          "z": 5120
+        },
+        "max": {
+          "x": 6520,
+          "y": 96,
+          "z": 5496
+        }
+      },
+      "sourceTeams": ["BLUE", "PURPLE", "RED", "GREEN"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [6439.5, 62, 5306.5],
+          "yaw": 88.9291763305664,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [6218.5, 62, 5305.5],
+          "yaw": 271.5074462890625,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "warzone-trooper-duel-v1",
+      "map": "warzone",
+      "mapSha256": "73128445bb7b9e58dc1471161b87c354491a22d97eaaa9a6a8c4d80860bf177d",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 1024,
+          "y": 55,
+          "z": 6144
+        },
+        "max": {
+          "x": 1182,
+          "y": 78,
+          "z": 6208
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [1027.5, 65, 6161.5],
+          "yaw": 281.1648864746094,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [1173.5, 65, 6185.5],
+          "yaw": 97.32640838623047,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
+      "id": "wet-britches-trooper-duel-v1",
+      "map": "wet-britches",
+      "mapSha256": "82d8b307b299bf0a1a35a526de0e7b5f662834535467abb91dfbbb8485c6ed6f",
+      "world": "minecraft:rwf",
+      "region": {
+        "min": {
+          "x": 2048,
+          "y": 0,
+          "z": 6144
+        },
+        "max": {
+          "x": 2148,
+          "y": 22,
+          "z": 6184
+        }
+      },
+      "sourceTeams": ["RED", "BLUE"],
+      "spawnPolicy": "source",
+      "spawns": [
+        {
+          "team": "red",
+          "sourceTeam": "RED",
+          "position": [2051.5, 4, 6161.5],
+          "yaw": 273.6522216796875,
+          "pitch": 0
+        },
+        {
+          "team": "blue",
+          "sourceTeam": "BLUE",
+          "position": [2140.5, 4, 6161.5],
+          "yaw": 85.91438293457031,
+          "pitch": 0
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "kind": "rwf-map-scenario",
       "id": "wonderland-trooper-duel-v1",
       "map": "wonderland",
-      "mapSha256": "1a3439362a72d36e168b6b2af278e37bf4b29cb79f5d5bb274962c81c58ea272",
+      "mapSha256": "e966c68f5c4e4f5acdd0522c5fe91a75f80a88ceb199c067fe01796f99f61138",
       "world": "minecraft:rwf",
       "region": {
         "min": {

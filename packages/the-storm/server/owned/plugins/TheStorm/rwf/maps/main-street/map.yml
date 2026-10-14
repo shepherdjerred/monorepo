@@ -2,6 +2,7 @@
   id: main-street,
   name: Main Street,
   author: DeltaStrikeForce and MastaCraft123,
+  description: "The town was divided in two over who owns the fountain.. Nukes were found hidden in the town center, up to you to defend it!",
   region:
     { min: { x: 3072, "y": 1, z: 3072 }, max: { x: 3125, "y": 47, z: 3276 } },
   spectator: { x: 3099, "y": 47, z: 3174.5, yaw: 0, pitch: 45 },
@@ -686,5 +687,5 @@
       { id: blue-1, team: BLUE, at: { x: 3099, "y": 21, z: 3269 } },
     ],
   nukes: [],
-  blocksSha256: 32bb5bc2f66d963c946c59f3e9b3e866b26ef79e58e8d8da6ca11f83672ec60a,
+  blocksSha256: 9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728,
 }

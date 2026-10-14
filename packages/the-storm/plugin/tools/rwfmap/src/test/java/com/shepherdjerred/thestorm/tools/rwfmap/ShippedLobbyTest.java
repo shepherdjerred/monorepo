@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * The shipped lobby's hash, places and nav files agree, and it bakes deterministically into a
@@ -102,13 +104,12 @@ final class ShippedLobbyTest {
       Files.copy(LOBBY.resolve(name), folder.resolve(name));
     }
     var yaml = folder.resolve(LobbyFolder.LOBBY_FILE);
-    var shipped = Files.readString(yaml);
+    var parser = YAMLMapper.builder().build();
+    var shipped = (ObjectNode) parser.readTree(Files.readString(yaml));
     // The balcony floats in the air, and the hash no longer names the schematic.
-    Files.writeString(
-        yaml,
-        shipped
-            .replace("balcony: { x: 80.5, y: 77.0, z: 50.5", "balcony: { x: 80.5, y: 87.0, z: 50.5")
-            .replaceFirst("blocksSha256: [0-9a-f]{64}", "blocksSha256: " + "0".repeat(64)));
+    ((ObjectNode) shipped.path("balcony")).put("y", 87.0);
+    shipped.put("blocksSha256", "0".repeat(64));
+    Files.writeString(yaml, parser.writeValueAsString(shipped));
 
     assertThat(Verifier.verify(LobbyFolder.load(folder)))
         .anySatisfy(failure -> assertThat(failure).contains("blocks.schem hashes to"))

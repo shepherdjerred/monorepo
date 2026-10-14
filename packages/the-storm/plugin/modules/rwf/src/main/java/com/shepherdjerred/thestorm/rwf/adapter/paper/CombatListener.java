@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.ActionRefusal;
+import com.shepherdjerred.thestorm.rwf.app.view.WeaponProfile;
 import com.shepherdjerred.thestorm.rwf.domain.ability.KitCombat;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
@@ -10,17 +11,21 @@ import com.shepherdjerred.thestorm.rwf.domain.combat.Knockback;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import io.papermc.paper.event.entity.EntityKnockbackEvent;
+import io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent;
 import java.util.Optional;
 import java.util.random.RandomGenerator;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.SpectralArrow;
+import org.bukkit.entity.Trident;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -39,11 +44,12 @@ import org.bukkit.inventory.ItemStack;
 
 /**
  * Red Warfare combat, only inside the rwf world and only between living members of a live match.
- * The server's damage event is cancelled and the hit is applied here instead: damage from {@link
+ * Legacy damage events are cancelled and their hits applied here instead: damage from {@link
  * DamageFormula} through {@link HitWindow}, knockback from {@link Knockback} with the attacker's
  * sprint reset, no sweep attacks, no hunger, instant steaks. Everything else (golden apples, fall
- * damage, fire) is vanilla. Bukkit's own damage-modifier API is deprecated, so adjusting the event
- * in place is not an option; cancelling and applying keeps the formula exact.
+ * damage, fire) keeps native mitigation through the same hit window. Modern weapons complete native
+ * damage events with an authoritative final amount through {@link PaperNativeDamage}, preserving
+ * piercing, ammunition effects, absorption and successful item callbacks.
  */
 final class CombatListener implements Listener {
 
@@ -81,27 +87,96 @@ final class CombatListener implements Listener {
     if (!(event.getEntity() instanceof Player victim) || !inWorld(victim)) {
       return;
     }
+    var confirmed = confirmedStrike(event, victim);
+    if (confirmed.isEmpty()) return;
+    var strike = confirmed.orElseThrow();
+    if (PaperNativeDamage.blocked(event) && runner.powers().expansion().shield(strike)) return;
+    if (strike.type().has(AttackType.Flag.PROJECTILE))
+      runner.powers().expansion().projectileFacts(strike);
+    if (nativeWeapon(strike)) {
+      nativeStrike(event, strike);
+    } else {
+      event.setCancelled(true);
+      strike(strike);
+    }
+  }
+
+  private Optional<Strike> confirmedStrike(EntityDamageByEntityEvent event, Player victim) {
     var attacker = responsible(event.getDamager());
     var victimMember = runner.memberOf(victim.getUniqueId()).isPresent();
     if (attacker.isEmpty()) {
       if (victimMember) {
         tracker.hurt(victim, cause(event), event.getFinalDamage());
       }
-      return;
+      return Optional.empty();
     }
     var attackerMember = runner.memberOf(attacker.orElseThrow().getUniqueId()).isPresent();
     if (!victimMember && !attackerMember) {
-      return;
+      return Optional.empty();
     }
-    // Members fight only members, alive, on other teams, and never with a sweep; the rules take
-    // over from here, so the server's own damage is always cancelled.
-    event.setCancelled(true);
+    // Members fight only living members on other teams, and never with a sweep.
     if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
         || !mayFight(attacker.orElseThrow(), victim)) {
-      return;
+      event.setCancelled(true);
+      return Optional.empty();
     }
     var type = event.getDamager() instanceof Player ? AttackType.MELEE : AttackType.PROJECTILE;
-    strike(new Strike(attacker.orElseThrow(), event.getDamager(), victim, type, event.getDamage()));
+    return Optional.of(
+        new Strike(attacker.orElseThrow(), event.getDamager(), victim, type, event.getDamage()));
+  }
+
+  private static boolean nativeWeapon(Strike strike) {
+    if (strike.source() instanceof Trident) {
+      return true;
+    }
+    if (strike.source() instanceof AbstractArrow arrow && arrow.isShotFromCrossbow()) {
+      return true;
+    }
+    if (strike.source() instanceof SpectralArrow) {
+      return true;
+    }
+    if (strike.source() instanceof Arrow arrow
+        && arrow.getItemStack().getType() == Material.TIPPED_ARROW) {
+      return true;
+    }
+    return strike.source() instanceof Player
+        && WeaponProfile.of(
+                KitFactory.spec(
+                    strike.attacker().getInventory().getItemInMainHand(), Optional.empty()))
+            .nativeMelee();
+  }
+
+  /** Native completion owns health, absorption, knockback and successful item callbacks. */
+  private void nativeStrike(EntityDamageByEntityEvent event, Strike strike) {
+    if (PaperNativeDamage.blocked(event)) {
+      return;
+    }
+    var victim = strike.victim();
+    var damage = runner.kits().damage(strike.type(), strike.attacker(), victim, strike.raw());
+    var landed =
+        switch (HitWindow.resolve(damage, strike.type(), tracker.guard(victim))) {
+          case HitWindow.Resolution.Blocked _ -> 0.0;
+          case HitWindow.Resolution.Partial partial -> partial.extra();
+          case HitWindow.Resolution.Full full -> full.damage();
+        };
+    if (landed <= 0
+        || sacrifices.shield(
+            Optional.of(strike.attacker()),
+            victim,
+            hit(strike.type(), strike.attacker(), victim, strike.raw()))) {
+      event.setCancelled(true);
+      return;
+    }
+    PaperNativeDamage.apply(event, landed, victim.getAbsorptionAmount());
+    tracker.hit(victim, damage, Optional.of(strike.attacker().getUniqueId()), strike.type());
+    runner.damaged(victim, Optional.of(strike.attacker().getUniqueId()), landed, strike.type());
+    runner
+        .kits()
+        .hit(
+            strike.attacker(),
+            victim,
+            strike.type(),
+            new KitBridge.Landed(landed, Math.max(0, victim.getHealth() - event.getFinalDamage())));
   }
 
   /**
@@ -134,7 +209,8 @@ final class CombatListener implements Listener {
           case HitWindow.Resolution.Blocked _ -> 0.0;
           case HitWindow.Resolution.Partial partial -> partial.extra();
           case HitWindow.Resolution.Full full -> {
-            victim.setNoDamageTicks(CombatRules.MAX_NO_DAMAGE_TICKS);
+            victim.setNoDamageTicks(
+                victim.getMaximumNoDamageTicks() == 0 ? 0 : CombatRules.MAX_NO_DAMAGE_TICKS);
             yield full.damage();
           }
         };
@@ -208,7 +284,16 @@ final class CombatListener implements Listener {
     var armor = KitFactory.armor(victim);
     if (type.has(AttackType.Flag.MELEE)) {
       var weapon = KitFactory.spec(attacker.getInventory().getItemInMainHand(), Optional.empty());
-      return DamageFormula.Hit.melee(weapon, armor);
+      if (WeaponProfile.of(weapon).nativeMelee()) {
+        // Native raw damage already includes charge, enchantments and the mace's fall bonus.
+        // Keeping the weapon absent prevents the legacy Sharpness formula applying it twice.
+        return DamageFormula.Hit.of(type, raw, armor);
+      }
+      var melee = DamageFormula.Hit.melee(weapon, armor);
+      var weakness = attacker.getPotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS);
+      return weakness == null
+          ? melee
+          : melee.withBase(Math.max(0, melee.baseDamage() - 4 * (weakness.getAmplifier() + 1)));
     }
     return DamageFormula.Hit.of(type, raw, armor);
   }
@@ -261,6 +346,35 @@ final class CombatListener implements Listener {
   }
 
   /** Damage from the world (fall, fire, lava) is left to vanilla but remembered for attribution. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onWorldHitWindow(EntityDamageEvent event) {
+    if (event instanceof EntityDamageByEntityEvent
+        || !(event.getEntity() instanceof Player victim)
+        || !inWorld(victim)
+        || !runner.fighting(victim.getUniqueId())
+        || victim.getMaximumNoDamageTicks() != 0) {
+      return;
+    }
+    var amount = PaperNativeDamage.beforeAbsorption(event);
+    var attack = cause(event);
+    if (attack.equals(AttackType.FALL) && runner.powers().noFall(victim.getUniqueId())) {
+      return;
+    }
+    var landed =
+        switch (HitWindow.resolve(amount, attack, tracker.guard(victim))) {
+          case HitWindow.Resolution.Blocked _ -> 0.0;
+          case HitWindow.Resolution.Partial partial -> partial.extra();
+          case HitWindow.Resolution.Full full -> full.damage();
+        };
+    if (landed <= 0) {
+      event.setCancelled(true);
+      return;
+    }
+    PaperNativeDamage.apply(event, landed, victim.getAbsorptionAmount());
+    tracker.hit(victim, amount, Optional.empty(), attack);
+  }
+
+  /** Damage from the world is remembered after native mitigation and the shared hit window. */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
   void onWorldDamage(EntityDamageEvent event) {
     if (event instanceof EntityDamageByEntityEvent
@@ -348,10 +462,29 @@ final class CombatListener implements Listener {
     if (event.getEntity() instanceof Player victim
         && inWorld(victim)
         && runner.memberOf(victim.getUniqueId()).isPresent()
+        && !nativePush(event, victim)
         && (event.getCause() == EntityKnockbackEvent.Cause.ENTITY_ATTACK
             || event.getCause() == EntityKnockbackEvent.Cause.SWEEP_ATTACK)) {
       event.setCancelled(true);
     }
+  }
+
+  private boolean nativePush(EntityKnockbackEvent event, Player victim) {
+    if (!(event instanceof EntityPushedByEntityAttackEvent pushed)) {
+      return false;
+    }
+    var source = pushed.getPushedBy();
+    var attacker = responsible(source);
+    if (attacker.isEmpty() || !mayFight(attacker.orElseThrow(), victim)) {
+      return false;
+    }
+    return nativeWeapon(
+        new Strike(
+            attacker.orElseThrow(),
+            source,
+            victim,
+            source instanceof Player ? AttackType.MELEE : AttackType.PROJECTILE,
+            0));
   }
 
   /** A fighter's arrow counts towards their shots, for the match statistics. */

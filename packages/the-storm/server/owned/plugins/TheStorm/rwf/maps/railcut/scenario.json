@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "railcut-trooper-duel-v1",
+  "map": "railcut",
+  "mapSha256": "2d3e8afefed0a40f573690cf3e2288064987a360d6a4d16496019879ea252e73",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 2048,
+      "y": 64,
+      "z": 8192
+    },
+    "max": {
+      "x": 2191,
+      "y": 111,
+      "z": 8287
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [2053.5, 73, 8234.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [2186.5, 73, 8234.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

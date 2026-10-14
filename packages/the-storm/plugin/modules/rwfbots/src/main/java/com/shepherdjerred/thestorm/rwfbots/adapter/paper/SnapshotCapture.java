@@ -47,6 +47,25 @@ public final class SnapshotCapture {
   private final Function<UUID, Optional<Player>> entities;
   private final StimulusCollector stimuli;
   private final TraversalCapture traversal;
+  private final Capabilities capabilities;
+  private final Map<UUID, SoundMotion> soundMotion = new HashMap<>();
+  private boolean emitMotion = true;
+  private long soundBaseline;
+
+  private record SoundMotion(Vec3 position, boolean grounded, boolean wet) {}
+
+  /**
+   * Separate velocity/perception history, reading the same sound log without generating duplicates.
+   */
+  SnapshotCapture independent() {
+    var capture =
+        new SnapshotCapture(
+            ids, entities, new StimulusCollector(stimuli.sounds(), stimuli.time()), capabilities);
+    capture.emitMotion = false;
+    capture.soundBaseline = soundBaseline;
+    return capture;
+  }
+
   private final Map<UUID, Last> last = new HashMap<>();
   private long poisonStartedTick = -1;
 
@@ -69,6 +88,9 @@ public final class SnapshotCapture {
     this.entities = entities;
     this.stimuli = stimuli;
     this.traversal = new TraversalCapture(capabilities.noFallUntil(), capabilities.time());
+    this.capabilities = capabilities;
+    var existing = stimuli.sounds().since(0);
+    soundBaseline = existing.isEmpty() ? 0 : existing.getLast().sequence();
   }
 
   /** The world at {@code tick}, as rwf's {@code state} and the entities describe it. */
@@ -135,9 +157,16 @@ public final class SnapshotCapture {
         entity.isSprinting(),
         onGround(entity),
         entity.isHandRaised(),
-        entity.isInvisible(),
+        hiddenHands(entity),
         hurtTick,
         captureTraversal(entity, fighter.kit().orElseThrow(), tick));
+  }
+
+  /** Vanilla invisibility leaves either held item visible, for humans and NPC perception alike. */
+  static boolean hiddenHands(Player entity) {
+    return entity.isInvisible()
+        && entity.getInventory().getItemInMainHand().getType().isAir()
+        && entity.getInventory().getItemInOffHand().getType().isAir();
   }
 
   /**
@@ -177,7 +206,7 @@ public final class SnapshotCapture {
   private BombView bomb(MatchState.Bomb bomb) {
     BombOwner owner =
         bomb.nuke()
-            ? new BombOwner.Nuke()
+            ? new BombOwner.Nuke(bomb.team().map(IdMap::team))
             : new BombOwner.Team(
                 IdMap.team(
                     bomb.team()
@@ -223,26 +252,64 @@ public final class SnapshotCapture {
   }
 
   private List<Stimulus> stimuli(long tick, Map<UUID, Player> present) {
+    if (emitMotion) motionSounds(tick, present);
+    stimuli.drain();
     var result = new ArrayList<Stimulus>();
-    if (tick % FOOTSTEP_EVERY_TICKS == 0) {
-      for (var entity : present.values()) {
-        if (entity.isSprinting()) {
-          stimuli.footstep(entity);
-        }
-      }
-    }
-    for (var raw : stimuli.drain()) {
-      if (!present.containsKey(raw.source())) {
-        continue;
-      }
-      var source = ids.combatant(raw.source());
-      var victim = raw.victim().filter(present::containsKey).map(ids::combatant);
-      if (raw.kind() == Stimulus.Kind.HIT && victim.isEmpty()) {
-        continue;
-      }
-      result.add(new Stimulus(raw.kind(), vec(raw.at()), tick, Optional.of(source), victim));
+    var now = stimuli.time().instant();
+    for (var cue : stimuli.sounds().since(soundBaseline)) {
+      var sound = cue.sound();
+      var entity = present.get(sound.source());
+      if (entity == null || !entity.getWorld().getUID().equals(sound.world())) continue;
+      var kind = soundKind(sound.kind());
+      if (kind.isEmpty()) continue;
+      var at = sound.position();
+      var age = Math.max(0, java.time.Duration.between(cue.at(), now).toMillis() / 50);
+      result.add(
+          new Stimulus(
+              kind.orElseThrow(),
+              new Vec3(at.x(), at.y(), at.z()),
+              Math.max(0, tick - age),
+              Optional.of(ids.combatant(sound.source())),
+              sound.victim().filter(present::containsKey).map(ids::combatant),
+              cue.sequence(),
+              sound.radius()));
     }
     return result;
+  }
+
+  private void motionSounds(long tick, Map<UUID, Player> present) {
+    soundMotion.keySet().retainAll(present.keySet());
+    for (var entity :
+        present.values().stream()
+            .sorted(java.util.Comparator.comparing(Player::getUniqueId))
+            .toList()) {
+      var position = vec(Places.at(entity));
+      var grounded = onGround(entity);
+      var wet = Places.at(entity).getBlock().getType() == Material.WATER;
+      var before = soundMotion.put(entity.getUniqueId(), new SoundMotion(position, grounded, wet));
+      if (before == null) continue;
+      if (grounded && !before.grounded()) stimuli.motion(entity, Stimulus.Kind.LAND);
+      if (wet && !before.wet()) stimuli.motion(entity, Stimulus.Kind.SPLASH);
+      var every = entity.isSprinting() ? FOOTSTEP_EVERY_TICKS : FOOTSTEP_EVERY_TICKS * 2;
+      if (grounded
+          && !entity.isSneaking()
+          && tick % every == 0
+          && position.horizontalDistance(before.position()) > 0.03) stimuli.footstep(entity);
+    }
+  }
+
+  private static Optional<Stimulus.Kind> soundKind(
+      com.shepherdjerred.thestorm.rwf.app.BattleSounds.Kind kind) {
+    return switch (kind) {
+      case STEP -> Optional.of(Stimulus.Kind.FOOTSTEP);
+      case LAND -> Optional.of(Stimulus.Kind.LAND);
+      case SPLASH -> Optional.of(Stimulus.Kind.SPLASH);
+      case MELEE, HURT -> Optional.of(Stimulus.Kind.HIT);
+      case BOW -> Optional.of(Stimulus.Kind.BOW_SHOT);
+      case EAT -> Optional.of(Stimulus.Kind.EAT);
+      case FUSE -> Optional.of(Stimulus.Kind.FUSE_CLICK);
+      case CHAT -> Optional.empty();
+    };
   }
 
   static MatchPhase phase(MatchState.Phase phase) {

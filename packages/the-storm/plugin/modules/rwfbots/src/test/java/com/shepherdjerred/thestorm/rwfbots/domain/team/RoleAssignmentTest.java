@@ -78,7 +78,8 @@ final class RoleAssignmentTest {
             0,
             slots,
             Map.of(bots.getFirst().id(), slots.getFirst().key()),
-            0);
+            0,
+            Map.of());
     var dealing =
         new TeamBrain.Dealing(
             previous, new TeamBrain.TeamSituation(nav, snapshot, bots, members), bots, false);

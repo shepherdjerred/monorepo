@@ -32,7 +32,6 @@ import com.shepherdjerred.thestorm.rwf.app.map.MapResources;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.FakeBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
-import com.shepherdjerred.thestorm.rwfbots.adapter.paper.TraversalPlayerMock;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
@@ -55,7 +54,6 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
 import org.bukkit.Material;
-import org.bukkit.WorldCreator;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
@@ -175,7 +173,7 @@ public final class RwfBotsHarness implements AutoCloseable {
   public static RwfBotsHarness start(
       Path directory, UnaryOperator<String> config, Consumer<RwfBotsHarness> before) {
     var server = MockBukkit.mock();
-    var world = new WorldMock(new WorldCreator("rwf"));
+    var world = new com.shepherdjerred.thestorm.rwfbots.testing.VisibilityWorldMock(server, "rwf");
     server.addWorld(world);
     for (var x = 0; x < SyntheticMap.SIZE; x++) {
       for (var z = 0; z < SyntheticMap.SIZE; z++) {
@@ -235,6 +233,16 @@ public final class RwfBotsHarness implements AutoCloseable {
   private void enable(Path directory) {
     provideChat();
     services.provide(MatchView.class, match);
+    services.provide(
+        com.shepherdjerred.thestorm.rwf.app.BattleSounds.class,
+        new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(clock));
+    services.provide(com.shepherdjerred.thestorm.rwf.app.TacticalCasting.class, id -> false);
+    services.provide(
+        com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class,
+        new com.shepherdjerred.thestorm.rwf.app.SmokeFields());
+    services.provide(
+        com.shepherdjerred.thestorm.rwf.app.TacticalReports.class,
+        new com.shepherdjerred.thestorm.rwf.app.TacticalReportLog(clock));
     services.provide(MatchEvents.class, match);
     services.provide(CombatantActions.class, match);
     services.provide(MapResources.class, maps);
@@ -288,13 +296,13 @@ public final class RwfBotsHarness implements AutoCloseable {
     return module.paper().orElseThrow();
   }
 
-  public BotRoster roster() {
-    return services.require(BotRoster.class);
+  /** Human viewer with the fixture's supported full-cube line-of-sight contract. */
+  public PlayerMock player(String name) {
+    return com.shepherdjerred.thestorm.rwfbots.testing.SightPlayers.add(server, name);
   }
 
-  /** A native-capability mock player, including vanilla fall attributes omitted by MockBukkit. */
-  public PlayerMock player(String name) {
-    return new TraversalPlayerMock(server, name);
+  public BotRoster roster() {
+    return services.require(BotRoster.class);
   }
 
   /** One server tick. */

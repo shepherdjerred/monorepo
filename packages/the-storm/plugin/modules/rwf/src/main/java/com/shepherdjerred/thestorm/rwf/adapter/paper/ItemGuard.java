@@ -23,9 +23,9 @@ import org.bukkit.inventory.ItemStack;
 
 /**
  * Keeps kit items in the match and the Bomb Fuse in slot 0. A member opens only their own inventory
- * and the kit and spectator menus, drops nothing, places nothing, picks up only kit items, and
- * cannot move, swap or drop the fuse. Anyone outside who somehow holds a kit item loses it the
- * moment they open, click, close or pick it up.
+ * and the owned match menus, drops nothing, places nothing, picks up only kit items, and cannot
+ * move, swap or drop the fuse. Anyone outside who somehow holds a kit item loses it the moment they
+ * open, click, close or pick it up.
  */
 final class ItemGuard implements Listener {
 
@@ -82,6 +82,9 @@ final class ItemGuard implements Listener {
           && !(event.getInventory().getHolder() instanceof KitMenu)
           && !(event.getInventory().getHolder() instanceof KitPurchaseMenu)
           && !(event.getInventory().getHolder() instanceof KitLayoutMenu)
+          && !(event.getInventory().getHolder() instanceof SettingsMenu)
+          && !(event.getInventory().getHolder() instanceof CandidateMenu)
+          && !(event.getInventory().getHolder() instanceof StreakMenu)
           && !TeleporterMenus.isMenu(event.getInventory().getHolder())
           && !(event.getInventory().getHolder() instanceof Spectating.Menu)) {
         event.setCancelled(true);

@@ -48,6 +48,11 @@ public final class RwfPaper {
   public com.shepherdjerred.thestorm.rwf.app.ShowcaseControl showcases() {
     return new com.shepherdjerred.thestorm.rwf.app.ShowcaseControl() {
       @Override
+      public Optional<String> prepare(java.util.UUID lobbyId) {
+        return runner.prepareShowcase(lobbyId);
+      }
+
+      @Override
       public Optional<String> start(int combatants) {
         return runner.startShowcase(combatants);
       }
@@ -140,11 +145,18 @@ public final class RwfPaper {
       ServerHooks hooks,
       RwfFeatures.Source features,
       StatsStore stats,
-      com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines) {}
+      com.shepherdjerred.thestorm.rwf.app.store.QuarantineStore quarantines,
+      com.shepherdjerred.thestorm.rwf.app.store.StreakStore streaks) {}
 
   /** Starts the module's Paper side. The configured worlds must be loaded already. */
   public static RwfPaper start(
       ModuleContext module, RwfCatalog content, MapResourceRegistry resources, App app) {
+    var battleSounds = new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(module.time());
+    var tacticalReports = new com.shepherdjerred.thestorm.rwf.app.TacticalReportLog(module.time());
+    module
+        .services()
+        .provide(com.shepherdjerred.thestorm.rwf.app.TacticalReports.class, tacticalReports);
+    module.services().provide(com.shepherdjerred.thestorm.rwf.app.BattleSounds.class, battleSounds);
     var config = content.config();
     var lobbyWorld = loadedWorld(module, config.worlds().lobby());
     var mapWorld = loadedWorld(module, config.worlds().maps());
@@ -166,7 +178,13 @@ public final class RwfPaper {
                 module
                     .services()
                     .require(com.shepherdjerred.thestorm.core.world.BlockChanges.class),
-                module.analytics()));
+                module.analytics(),
+                battleSounds,
+                tacticalReports,
+                module
+                    .services()
+                    .require(
+                        com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class)));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
     var armory = new Armory(context, app.shop(), app.kitGates().kits(), content.kits());
@@ -240,8 +258,17 @@ public final class RwfPaper {
                 keys,
                 app.features(),
                 app.kitGates().killstreaks(),
-                productEvents));
+                productEvents,
+                app.streaks()));
     runner.powers().streaks().hooks(app.hooks());
+    module
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class, runner.powers().tactical());
+    module
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.rwf.app.TacticalCasting.class, runner.powers().tactical());
     var teleporterMenus = new TeleporterMenus(runner, context, kits);
     var kitClicks = new KitListener(runner, context, keys, teleporterMenus);
     var kitWorld = new KitWorldListener(runner, context, keys, app.hooks());
@@ -314,11 +341,15 @@ public final class RwfPaper {
                     runner, snapshots, guard, actions, tracker, context, keys, bombs, watchers)),
             guard,
             new KitMenuListener(runner, context, menus),
+            new StreakMenuListener(runner, context),
+            new SettingsListener(runner, context),
             new KitLayoutListener(keys, menus.armory()),
             new CombatListener(runner, tracker, context, app.hooks()),
             new WorldListener(runner, context, bombs),
             new AfkWatch(runner),
             kitClicks,
+            new ExpansionKitListener(runner, keys),
+            new TacticalKitListener(runner, keys),
             kitWorld,
             new KillstreakListener(runner, context),
             new SacrificeListener(runner, context, tracker),
@@ -459,6 +490,12 @@ public final class RwfPaper {
     teamChat.unregister();
     watchers.stop();
     runner.stop();
+    context
+        .visibility()
+        .release(com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason.COMBAT);
+    context
+        .visibility()
+        .release(com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.Reason.SPECTATOR);
     clock.cancel();
     listeners.forEach(HandlerList::unregisterAll);
     context

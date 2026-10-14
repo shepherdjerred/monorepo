@@ -93,6 +93,7 @@ record BodyState(
       int fireTicks,
       int air,
       int noDamageTicks,
+      int maximumNoDamageTicks,
       double lastDamage) {
     static Vitals capture(Player player) {
       return new Vitals(
@@ -104,6 +105,7 @@ record BodyState(
           player.getFireTicks(),
           player.getRemainingAir(),
           player.getNoDamageTicks(),
+          player.getMaximumNoDamageTicks(),
           player.getLastDamage());
     }
 
@@ -116,6 +118,7 @@ record BodyState(
       player.setFireTicks(fireTicks);
       player.setRemainingAir(air);
       player.setNoDamageTicks(noDamageTicks);
+      player.setMaximumNoDamageTicks(maximumNoDamageTicks);
       player.setLastDamage(lastDamage);
     }
   }

@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "fairylands",
-  "blocksSha256": "f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3",
-  "detailsSha256": "2a890008e9d9f2929a6ffbf545b8f510e3cb7d9d4ecd285165d5ad6bd4c8914f",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83",
+  "detailsSha256": "34ec30de72dab97106de561dd154d15c11fda0daaa9c108127047815e39a6240",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 1,
+    "signs": 7
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3",
+    "count": 10
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 1,
     "signs": 17

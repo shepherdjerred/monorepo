@@ -2,6 +2,7 @@
   id: the-lost-kingdom,
   name: The Lost Kingdom,
   author: ChocoNChipss,
+  description: After years of building and pestering she finally got an accepted map,
   region:
     { min: { x: 2048, "y": 1, z: 5120 }, max: { x: 2204, "y": 216, z: 5280 } },
   spectator: { x: 2126.5, "y": 216, z: 5200.5, yaw: 0, pitch: 45 },
@@ -256,5 +257,5 @@
       { id: red-1, team: RED, at: { x: 2126, "y": 6, z: 5121 } },
     ],
   nukes: [],
-  blocksSha256: 9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a,
+  blocksSha256: e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee,
 }

@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "tropical-resort",
-  "blocksSha256": "cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144",
-  "detailsSha256": "ad25bc615d624a20a61bd30d0c90ecd1220f773ec2a98a222863fde1e11791fe",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+  "detailsSha256": "df09cf5423931bcbaa4ce6357fb45c7b4c1adef6be601f1c8bddd727384701fc",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 28,
+    "signs": 14
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144",
+    "count": 16
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 28,
     "signs": 30

@@ -162,7 +162,12 @@ final class RwfBotsFlowTest {
 
   @Test
   void authoredControllerRespectsGovernorThinningForIsolatedBots() {
-    var harness = start();
+    running =
+        RwfBotsHarness.start(
+            directory,
+            java.util.function.UnaryOperator.identity(),
+            harness -> harness.chatFlag.set(false));
+    var harness = harness();
     var controller = new AuthoredController();
     harness.paper().roster().harness().attachAuthored(4, controller);
     var alice = harness.player("Alice");

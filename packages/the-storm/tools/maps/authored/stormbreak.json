@@ -1,0 +1,14 @@
+{
+  "id": "stormbreak",
+  "name": "Stormbreak",
+  "description": "Cross three guarded causeways into a layered coastal fortress beneath its striped lighthouse. A central nuke court and roofed chapel reward high-ground control; shallow moat routes have frequent stone-bank and ladder exits.",
+  "seed": 10505,
+  "anchor": { "x": 4096, "y": 64, "z": 8192 },
+  "size": { "x": 160, "y": 48, "z": 144 },
+  "bombs": [
+    { "x": 14, "y": 9, "z": 72 },
+    { "x": 145, "y": 9, "z": 72 }
+  ],
+  "nukes": [{ "x": 79, "y": 14, "z": 72 }],
+  "spawnY": 9
+}

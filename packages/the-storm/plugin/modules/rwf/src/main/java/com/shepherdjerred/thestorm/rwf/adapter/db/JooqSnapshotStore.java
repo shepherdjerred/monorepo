@@ -53,6 +53,11 @@ public final class JooqSnapshotStore implements SnapshotStore {
                   .set(RWF_SNAPSHOTS.SATURATION, (double) vitals.saturation())
                   .set(RWF_SNAPSHOTS.EXHAUSTION, (double) vitals.exhaustion())
                   .set(RWF_SNAPSHOTS.GAME_MODE, vitals.gameMode())
+                  .set(RWF_SNAPSHOTS.ALLOW_FLIGHT, vitals.allowFlight())
+                  .set(RWF_SNAPSHOTS.FLYING, vitals.flying())
+                  .set(RWF_SNAPSHOTS.FLY_SPEED, vitals.flySpeed())
+                  .set(RWF_SNAPSHOTS.MAXIMUM_NO_DAMAGE_TICKS, vitals.maximumNoDamageTicks())
+                  .set(RWF_SNAPSHOTS.VITALS_VERSION, vitals.formatVersion())
                   .set(RWF_SNAPSHOTS.LEVEL, experience.level())
                   .set(RWF_SNAPSHOTS.PROGRESS, (double) experience.progress())
                   .set(RWF_SNAPSHOTS.TOTAL_EXPERIENCE, experience.total())
@@ -135,11 +140,16 @@ public final class JooqSnapshotStore implements SnapshotStore {
             row.getYaw().floatValue(),
             row.getPitch().floatValue()),
         new Vitals(
-            row.getHealth(),
-            row.getFood(),
-            row.getSaturation().floatValue(),
-            row.getExhaustion().floatValue(),
-            row.getGameMode()),
+            new Vitals.Condition(
+                row.getHealth(),
+                row.getFood(),
+                row.getSaturation().floatValue(),
+                row.getExhaustion().floatValue()),
+            row.getGameMode(),
+            new Vitals.Flight(
+                row.getAllowFlight(), row.getFlying(), row.getFlySpeed().floatValue()),
+            row.getMaximumNoDamageTicks(),
+            row.getVitalsVersion()),
         new Experience(row.getLevel(), row.getProgress().floatValue(), row.getTotalExperience()),
         ItemData.of(row.getInventory()),
         effects.stream().map(JooqSnapshotStore::toEffect).toList(),

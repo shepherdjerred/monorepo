@@ -112,11 +112,11 @@ export const RemovedData = z.array(
 );
 
 export function mapContent(
-  id: string,
-  index: number,
+  identity: { id: string; index: number; description: string },
   map: ReturnType<typeof legacyMap>,
   terrain: Extract<z.infer<typeof ExportState>, { state: "complete" }>,
 ) {
+  const { id, index, description } = identity;
   const dx = 1024 + (index % 6) * 1024 - map.bounds.minX;
   const dz = 1024 + Math.floor(index / 6) * 1024 - map.bounds.minZ;
   const centerX = (map.bounds.minX + map.bounds.maxX) / 2;
@@ -133,6 +133,12 @@ export function mapContent(
     id,
     name: map.source.Name,
     author: map.source.Author,
+    description: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((value) => value !== "null", "Author a map description")
+      .parse(description),
     region: {
       min: {
         x: map.bounds.minX + dx,

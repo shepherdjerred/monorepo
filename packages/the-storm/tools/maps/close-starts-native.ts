@@ -174,6 +174,11 @@ try {
     return s.ready && s.phase === "Lobby";
   }, "initial original map preparation");
   for (let round = 0; round < selected.length * 8; round++) {
+    await console.command("storm-fixture-map-lifecycle start");
+    await wait(async () => {
+      const s = await status(console);
+      return s.ready && s.phase === "Live";
+    }, "ordinary showcase map admission");
     const match = await status(console);
     visited.push(match.map);
     const scenario = scenarios.get(match.map);
@@ -246,11 +251,6 @@ try {
       );
     }
     if (results.length === selected.length) break;
-    await console.command("storm-fixture-map-lifecycle start");
-    await wait(async () => {
-      const s = await status(console);
-      return s.ready && s.phase === "Live";
-    }, "ordinary showcase start");
     // Let the first off-thread bot decision finish before fixture teardown.
     await Bun.sleep(2000);
     await console.command("storm-fixture-map-lifecycle stop");

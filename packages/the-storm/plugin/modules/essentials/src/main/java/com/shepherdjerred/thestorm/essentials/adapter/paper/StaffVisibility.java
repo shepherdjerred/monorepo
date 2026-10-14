@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 import com.shepherdjerred.thestorm.core.players.Humans;
 import com.shepherdjerred.thestorm.core.players.PlayerJoinAnnouncementEvent;
 import com.shepherdjerred.thestorm.core.players.PlayerVisibility;
+import com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl;
 import com.shepherdjerred.thestorm.essentials.app.StaffState;
 import com.shepherdjerred.thestorm.essentials.app.StaffStore;
 import java.time.Duration;
@@ -21,10 +22,12 @@ import org.bukkit.event.player.PlayerQuitEvent;
 /** Persistent vanish and session accounting. Never treats Citizens bodies as players. */
 final class StaffVisibility implements Listener {
   private final StaffCommands tools;
+  private final PlayerVisibilityControl visibility;
   private final Map<UUID, Instant> joined = new HashMap<>();
 
   StaffVisibility(StaffCommands tools) {
     this.tools = tools;
+    this.visibility = tools.context.services().require(PlayerVisibilityControl.class);
   }
 
   void register() {
@@ -110,9 +113,11 @@ final class StaffVisibility implements Listener {
   private void set(Player player, boolean hidden) {
     PlayerVisibility.set(player, hidden);
     for (var viewer : tools.context.plugin().getServer().getOnlinePlayers()) {
-      if (PlayerVisibility.visibleTo(viewer, player))
-        viewer.showPlayer(tools.context.plugin(), player);
-      else viewer.hidePlayer(tools.context.plugin(), player);
+      visibility.set(
+          viewer,
+          player,
+          PlayerVisibilityControl.Reason.STAFF,
+          !PlayerVisibility.visibleTo(viewer, player));
     }
   }
 
@@ -122,9 +127,11 @@ final class StaffVisibility implements Listener {
       if (PlayerVisibility.hidden(player) && !player.hasPermission("thestorm.essentials.vanish"))
         set(player, false);
       for (var other : tools.context.plugin().getServer().getOnlinePlayers()) {
-        if (PlayerVisibility.hidden(other) && !PlayerVisibility.visibleTo(player, other))
-          player.hidePlayer(tools.context.plugin(), other);
-        else player.showPlayer(tools.context.plugin(), other);
+        visibility.set(
+            player,
+            other,
+            PlayerVisibilityControl.Reason.STAFF,
+            !PlayerVisibility.visibleTo(player, other));
       }
     }
   }

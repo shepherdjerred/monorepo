@@ -113,11 +113,71 @@ async function kill(
 
 describe("The match experience behind its flags", () => {
   test(
+    "candidate visits keep players independent and start automatically after the voting opportunity",
+    { timeout: 150_000 },
+    async ({ bot, secondBot, rcon, brain }) => {
+      await waitForLobby(rcon);
+      await withFeatures(rcon, brain.port, rwfFeatureFlags, async () => {
+        const a = human(bot);
+        const b = human(secondBot);
+        await join(a);
+        await join(b);
+        bot.chat("/rwf visit training-yard");
+        await a.log.until(/Visiting Training Yard/u);
+        await arrives(rcon, bot, dimension, yard.region);
+        expect(bot.game.gameMode).toBe("adventure");
+        expect(secondBot.game.gameMode).toBe("survival");
+        const visiting = await status(rcon);
+        expect(visiting.phase).toBe("Lobby");
+        bot.chat("/rwf maps");
+        await waitUntil(
+          "the candidate map menu",
+          () => bot.currentWindow?.inventoryStart === 45,
+        );
+        const window = bot.currentWindow;
+        expect(window?.slots[10]?.name).toBe("paper");
+        expect(window?.slots[19]?.name).toBe("feather");
+        if (window !== null) await bot.closeWindow(window);
+        bot.chat("/rwf vote training-yard");
+        secondBot.chat("/rwf visit training-yard");
+        await b.log.until(/Visiting Training Yard/u);
+        bot.chat("/rwf return");
+        await arrives(rcon, bot, lobbyDimension, lobby.region);
+        expect(bot.game.gameMode).toBe("survival");
+        expect(secondBot.game.gameMode).toBe("adventure");
+        bot.chat("/rwf visit training-yard");
+        await arrives(rcon, bot, dimension, yard.region);
+        await eventually(
+          "automatic vote close after the candidate opportunity",
+          async () => {
+            const stage = await status(rcon);
+            return stage.phase !== "Lobby";
+          },
+          105_000,
+        );
+        await a.log.until(/The game has begun!/u, 20_000);
+        expect(bot.game.gameMode).toBe("survival");
+        expect(secondBot.game.gameMode).toBe("survival");
+        for (const player of [bot, secondBot]) {
+          expect(
+            await rcon.command(
+              `execute if data entity ${player.username} abilities{mayfly:0b,flying:0b}`,
+            ),
+          ).toContain("Test passed");
+        }
+      });
+    },
+  );
+
+  test(
     "the map previews, everyone freezes, team chat stays on the team, and the next match follows without joining again",
     { timeout: 240_000 },
     async ({ bot, secondBot, rcon, brain }) => {
       await waitForLobby(rcon);
-      await withFeatures(rcon, brain.port, rwfFeatureFlags, async () => {
+      const legacyFlowFlags = rwfFeatureFlags.filter(
+        (flag) => flag !== "the-storm-rwf-candidate-visits-enabled",
+      );
+      await withFeatures(rcon, brain.port, legacyFlowFlags, async () => {
         const a = human(bot);
         const b = human(secondBot);
         await join(a);

@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 final class LobbyTextsTest {
 
   private static LobbyStatus status(LobbyStatus.Stage stage, int needed, int seconds) {
-    return new LobbyStatus(stage, Optional.of("Training Yard"), 1, 7, needed, seconds, 0.5);
+    return new LobbyStatus(
+        stage, Optional.of("Training Yard"), 1, 7, needed, seconds, 0.5, Optional.empty());
   }
 
   @Test
@@ -26,7 +27,8 @@ final class LobbyTextsTest {
         .isEqualTo("Match in progress");
     assertThat(
             LobbyDisplays.boardLines(
-                new LobbyStatus(LobbyStatus.Stage.EMPTY, Optional.empty(), 0, 0, 1, 0, 0)))
+                new LobbyStatus(
+                    LobbyStatus.Stage.EMPTY, Optional.empty(), 0, 0, 1, 0, 0, Optional.empty())))
         .contains("Map: choosing", "Waiting for players");
   }
 

@@ -2,6 +2,7 @@
   id: gardens,
   name: Gardens,
   author: Giovani098,
+  description: "Replaced Overgrown... Much nicer and more modernized",
   region:
     { min: { x: 6144, "y": 9, z: 2048 }, max: { x: 6202, "y": 23, z: 2183 } },
   spectator: { x: 6173.5, "y": 23, z: 2116, yaw: 0, pitch: 45 },
@@ -436,5 +437,5 @@
       { id: red-1, team: RED, at: { x: 6174, "y": 12, z: 2159 } },
     ],
   nukes: [],
-  blocksSha256: 8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f,
+  blocksSha256: 169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074,
 }

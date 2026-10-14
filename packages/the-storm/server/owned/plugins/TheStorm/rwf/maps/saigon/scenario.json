@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "saigon-trooper-duel-v1",
   "map": "saigon",
-  "mapSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
+  "mapSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
   "world": "minecraft:rwf",
   "region": {
     "min": {

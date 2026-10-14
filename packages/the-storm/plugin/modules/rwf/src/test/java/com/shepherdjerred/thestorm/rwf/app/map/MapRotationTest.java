@@ -17,6 +17,7 @@ class MapRotationTest {
     private boolean ready;
     private int prepares;
     private int releases;
+    private int activations;
 
     Entry(String id) {
       this.id = id;
@@ -40,6 +41,12 @@ class MapRotationTest {
     @Override
     public boolean ready() {
       return ready;
+    }
+
+    @Override
+    public void activate(Consumer<Boolean> done) {
+      activations++;
+      done.accept(ready);
     }
 
     @Override
@@ -186,6 +193,80 @@ class MapRotationTest {
       assertThat(rotation.quarantine("missing")).isFalse();
       assertThatThrownBy(() -> rotation.quarantine("one"))
           .isInstanceOf(IllegalStateException.class);
+    }
+  }
+
+  @Test
+  void candidateTerrainLoadsSeriallyAndOnlyTheSelectedWinnerActivates() {
+    var old = new Entry("old");
+    var one = new Entry("one");
+    var two = new Entry("two");
+    var three = new Entry("three");
+    try (var rotation = new MapRotation<>(List.of(old, one, two, three), new Random(8))) {
+      rotation.play(old);
+      var results = new ArrayList<Boolean>();
+      rotation.prepareCandidates(List.of(one, two, three), results::add);
+      assertThat(old.releases).isEqualTo(1);
+      assertThat(one.prepares).isEqualTo(1);
+      assertThat(two.prepares).isZero();
+      one.completion.accept(true);
+      assertThat(rotation.visitable("one")).isTrue();
+      assertThat(rotation.visitable("two")).isFalse();
+      assertThat(two.prepares).isEqualTo(1);
+      two.completion.accept(true);
+      assertThat(three.prepares).isEqualTo(1);
+      three.completion.accept(true);
+      assertThat(results).containsExactly(true);
+      assertThat(one.activations + two.activations + three.activations).isZero();
+      var selected = new ArrayList<Boolean>();
+      rotation.prepare(two, selected::add);
+      assertThat(selected).containsExactly(true);
+      assertThat(two.prepares).isEqualTo(1);
+      assertThat(two.activations).isEqualTo(1);
+      assertThat(one.releases).isEqualTo(1);
+      assertThat(three.releases).isEqualTo(1);
+      rotation.play(two);
+      assertThat(old.releases).isEqualTo(1);
+      assertThat(rotation.active()).contains(two);
+    }
+  }
+
+  @Test
+  void replacingOrCancellingCandidatePreparationDropsLateCompletions() {
+    var one = new Entry("one");
+    var two = new Entry("two");
+    var three = new Entry("three");
+    try (var rotation = new MapRotation<>(List.of(one, two, three), new Random(9))) {
+      var results = new ArrayList<Boolean>();
+      rotation.prepareCandidates(List.of(one, two), results::add);
+      var oldCompletion = one.completion;
+      rotation.prepareCandidates(List.of(three), results::add);
+      oldCompletion.accept(true);
+      assertThat(two.prepares).isZero();
+      assertThat(one.releases).isEqualTo(1);
+      assertThat(results).isEmpty();
+      rotation.cancelVisits();
+      three.completion.accept(true);
+      assertThat(results).isEmpty();
+      assertThat(three.releases).isEqualTo(1);
+      assertThat(rotation.visitable("three")).isFalse();
+    }
+  }
+
+  @Test
+  void aFailedCandidateStopsSerialLoadingAndReportsFailureWithoutChoosingAnotherMap() {
+    var one = new Entry("one");
+    var two = new Entry("two");
+    try (var rotation = new MapRotation<>(List.of(one, two), new Random(10))) {
+      var results = new ArrayList<Boolean>();
+      rotation.prepareCandidates(List.of(one, two), results::add);
+      one.completion.accept(false);
+      assertThat(results).containsExactly(false);
+      assertThat(two.prepares).isZero();
+      assertThat(one.releases).isEqualTo(1);
+      assertThat(rotation.active()).isEmpty();
+      rotation.cancelVisits();
+      assertThat(one.releases).isEqualTo(1);
     }
   }
 }

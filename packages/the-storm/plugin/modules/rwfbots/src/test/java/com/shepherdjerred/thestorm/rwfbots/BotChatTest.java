@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.chat.app.ChatChannel;
 import com.shepherdjerred.thestorm.chat.domain.ChatProfile;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
@@ -17,6 +18,7 @@ import com.shepherdjerred.thestorm.rwfbots.adapter.content.RwfBotsConfig;
 import com.shepherdjerred.thestorm.rwfbots.domain.chat.Chattiness;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Lines;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +70,7 @@ final class BotChatTest {
 
   /**
    * The shipped config with only {@code certain}'s line certain (base chance 1, every verbosity at
-   * its 4x cap) and said the moment it happens; every other moment silent.
+   * its 4x cap); every other moment silent. The body still reacts and types before delivery.
    */
   private static String only(String yaml, String certain) {
     var out = yaml;
@@ -127,11 +129,17 @@ final class BotChatTest {
       harness.match.fireJoin(bot, harness.roster().entity(bot).orElseThrow().getName());
     }
     harness.match.fighting(alice.getUniqueId(), TeamColor.BLUE, "trooper");
-    alice.teleport(new Location(harness.world, 30.5, 1, 30.5));
+    // The wall keeps unrelated initial sightings out of these authored-line delivery fixtures.
+    alice.teleport(new Location(harness.world, 30.5, 1, 5.5));
     var red = true;
     for (var bot : bots) {
       var kit = harness.match.member(bot.uuid()).kit().orElse("trooper");
       harness.match.fighting(bot.uuid(), red ? TeamColor.RED : TeamColor.BLUE, kit);
+      harness
+          .roster()
+          .entity(bot)
+          .orElseThrow()
+          .teleport(new Location(harness.world, red ? 5.5 : 26.5, 1, 5.5));
       red = !red;
     }
     harness.match.phase(MatchSnapshot.PhaseKind.LIVE);
@@ -160,7 +168,24 @@ final class BotChatTest {
             AttackType.MELEE,
             FakeMatch.T0),
         List.of());
-    harness.tick();
+    speechTicks(1);
+    assertThat(heard(alice))
+        .as("a kill line cannot arrive before its reaction and typing")
+        .isEmpty();
+    speechTicks(100);
+  }
+
+  /** Advance authored speech and fresh bodies without adding autonomous movement or reports. */
+  private void speechTicks(int count) {
+    var harness = harness();
+    var session = harness.paper().roster().session().orElseThrow();
+    var chat = harness.paper().chat().orElseThrow();
+    for (var step = 0; step < count; step++) {
+      harness.clock.advance(Duration.ofMillis(50));
+      var tick = Duration.between(FakeMatch.T0, harness.clock.instant()).toMillis() / 50;
+      chat.tick(
+          Optional.of(session.capture().capture(tick, MatchState.of(harness.match.snapshot()))));
+    }
   }
 
   private String name(CombatantId.Bot bot) {
@@ -216,7 +241,7 @@ final class BotChatTest {
       assertThat(heard(entity)).as("bot bodies are not an audience").isEmpty();
     }
 
-    harness.ticks(40);
+    speechTicks(40);
     assertThat(heard(alice)).as("one kill, one line").isEmpty();
   }
 
@@ -268,7 +293,9 @@ final class BotChatTest {
     harness.match.fire(
         new MatchEvent.BombClicked(blueBot, FakeMatch.RED_BOMB, FakeMatch.T0),
         List.of(new MatchEffect.RecordStat(blueBot, "Armed")));
-    harness.tick();
+    speechTicks(1);
+    assertThat(heard(alice)).as("the team call is typed before it is sent").isEmpty();
+    speechTicks(100);
 
     assertThat(heard(alice))
         .as("Alice is blue, so she hears her teammate's call")
@@ -283,15 +310,26 @@ final class BotChatTest {
     var harness = start("onPlant", BotChatTest::teams);
     var alice = harness.player("Alice");
     var redBot = live(alice).getFirst();
+    var redViewer = harness.player("Robin");
+    harness.match.fireJoin(new CombatantId.Human(redViewer.getUniqueId()), redViewer.getName());
+    harness.match.fighting(redViewer.getUniqueId(), TeamColor.RED, "trooper");
+    redViewer.teleport(new Location(harness.world, 1.5, 1, 5.5));
     heard(alice);
+    heard(redViewer);
 
     harness.match.blueArmed(true);
     harness.match.fire(
         new MatchEvent.BombClicked(redBot, FakeMatch.BLUE_BOMB, FakeMatch.T0),
         List.of(new MatchEffect.RecordStat(redBot, "Armed")));
-    harness.tick();
+    assertThat(heard(alice)).as("the opponent's plant has not completed typing").isEmpty();
+    speechTicks(100);
 
     assertThat(heard(alice)).as("a red bot's call stays with the red team").isEmpty();
+    assertThat(heard(redViewer))
+        .as("the completed plant call reaches its own team")
+        .singleElement()
+        .asString()
+        .startsWith("[Tm][● " + name(redBot) + " ✦]: ");
   }
 
   @Test
@@ -305,6 +343,36 @@ final class BotChatTest {
     killAlice(alice, bots.getFirst());
 
     assertThat(heard(alice)).isEmpty();
+  }
+
+  @Test
+  void deathCancelsAnUnfinishedLineAndRemovesItsTypingIndicator() {
+    var harness = start(h -> {});
+    var alice = harness.player("Alice");
+    var killer = live(alice).getFirst();
+    heard(alice);
+    harness.match.kill(alice.getUniqueId());
+    harness.match.fire(
+        new MatchEvent.Died(
+            new CombatantId.Human(alice.getUniqueId()),
+            Optional.of(killer),
+            AttackType.MELEE,
+            FakeMatch.T0),
+        List.of());
+    speechTicks(20);
+    var chat = harness.paper().chat().orElseThrow();
+    assertThat(chat.typing(killer.uuid())).isTrue();
+    assertThat(harness.world.getEntitiesByClass(org.bukkit.entity.TextDisplay.class)).isNotEmpty();
+    assertThat(harness.world.getEntitiesByClass(org.bukkit.entity.TextDisplay.class))
+        .allMatch(display -> !display.isVisibleByDefault() && !alice.canSee(display));
+    assertThat(heard(alice)).isEmpty();
+    harness.match.kill(killer.uuid());
+    harness.match.fire(
+        new MatchEvent.Died(killer, Optional.empty(), AttackType.MELEE, FakeMatch.T0), List.of());
+    assertThat(chat.typing(killer.uuid())).isFalse();
+    assertThat(harness.world.getEntitiesByClass(org.bukkit.entity.TextDisplay.class)).isEmpty();
+    speechTicks(100);
+    assertThat(heard(alice)).as("death discards the unfinished call").isEmpty();
   }
 
   /** The colour of the first component in {@code message} whose own text is {@code text}. */

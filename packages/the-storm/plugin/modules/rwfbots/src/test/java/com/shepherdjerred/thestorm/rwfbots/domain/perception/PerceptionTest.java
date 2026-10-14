@@ -166,4 +166,41 @@ final class PerceptionTest {
     var older = new Sighting(new Vec3(1, 0, 0), Vec3.ZERO, 50, 1, true);
     assertThat(memory.remember(new CombatantId(2), older)).isSameAs(memory);
   }
+
+  @Test
+  void retainedSoundsSurviveSkippedSnapshotsWithoutRefreshingAgeOrRerollingPosition() {
+    var self = viewer(5.5);
+    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5));
+    var sound =
+        new Stimulus(
+            Stimulus.Kind.LAND,
+            shooter.pos(),
+            10,
+            java.util.Optional.of(shooter.id()),
+            java.util.Optional.empty(),
+            51,
+            20);
+    var first = perceive(self, world(20, List.of(self, shooter), List.of(sound)));
+    var heard = first.state().memory().of(shooter.id()).orElseThrow();
+    assertThat(heard.tick()).isEqualTo(10);
+    var later =
+        perception.perceive(
+            first.state(),
+            self,
+            world(30, List.of(self, shooter), List.of(sound)),
+            new SplittableRandom(999));
+    assertThat(later.state().memory().of(shooter.id())).contains(heard);
+    assertThat(later.state().heardThrough()).isEqualTo(51);
+    var quiet =
+        new Stimulus(
+            Stimulus.Kind.LAND,
+            shooter.pos(),
+            31,
+            java.util.Optional.of(shooter.id()),
+            java.util.Optional.empty(),
+            52,
+            5);
+    var unheard = perceive(self, world(31, List.of(self, shooter), List.of(quiet)));
+    assertThat(unheard.state().memory().of(shooter.id())).isEmpty();
+  }
 }

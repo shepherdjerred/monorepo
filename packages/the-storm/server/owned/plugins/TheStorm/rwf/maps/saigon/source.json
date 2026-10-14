@@ -2453,5 +2453,12 @@
     ],
     "previousBlocksSha256": "9ce20402a3e4c092cb5b2d633a13a58136d6dad3a9b1260f281f88ed6b9c8a19",
     "blocksSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995"
+  },
+  "shopRemoval": {
+    "policy": "remove-legacy-buy-signs-both-faces",
+    "originalBlocksSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
+    "blocksSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+    "count": 12,
+    "receipt": "removed-shops.json"
   }
 }

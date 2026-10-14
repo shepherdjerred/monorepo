@@ -49,28 +49,12 @@ public final class MapLifecycleFixtures implements BasicCommand {
     }
     if (args.length != 1)
       throw new IllegalArgumentException(
-          "expected status, contents, start, stop or verify-contents id payload");
-    switch (args[0]) {
-      case "contents" -> {
-        source.getSender().sendMessage(Component.text(GSON.toJson(contents(storm))));
-        return;
-      }
-      case "start" -> {
-        var lobby = storm.service(MatchView.class).current().orElseThrow();
-        var error =
-            storm.service(ShowcaseControl.class).startSeeded(lobby.matchId(), 8, 610090002L);
-        if (error.isPresent()) throw new IllegalStateException(error.orElseThrow());
-      }
-      case "stop" -> {
-        var match = storm.service(MatchView.class).current().orElseThrow();
-        var error = storm.service(ShowcaseControl.class).stop(match.matchId());
-        if (error.isPresent()) throw new IllegalStateException(error.orElseThrow());
-      }
-      case "status" -> {
-        /* read only */
-      }
-      default -> throw new IllegalArgumentException("unknown map lifecycle request");
+          "expected status, contents, prepare, start, stop or verify-contents id payload");
+    if (args[0].equals("contents")) {
+      source.getSender().sendMessage(Component.text(GSON.toJson(contents(storm))));
+      return;
     }
+    transition(storm, args[0]);
     var heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
     source
         .getSender()
@@ -92,6 +76,31 @@ public final class MapLifecycleFixtures implements BasicCommand {
                         plugin.getServer().getTickTimes(),
                         "loadedChunks",
                         loadedChunks(storm)))));
+  }
+
+  private static void transition(TheStormPlugin storm, String request) {
+    switch (request) {
+      case "start" -> {
+        var lobby = storm.service(MatchView.class).current().orElseThrow();
+        var error =
+            storm.service(ShowcaseControl.class).startSeeded(lobby.matchId(), 8, 610090002L);
+        if (error.isPresent()) throw new IllegalStateException(error.orElseThrow());
+      }
+      case "prepare" -> {
+        var lobby = storm.service(MatchView.class).current().orElseThrow();
+        var error = storm.service(ShowcaseControl.class).prepare(lobby.matchId());
+        if (error.isPresent()) throw new IllegalStateException(error.orElseThrow());
+      }
+      case "stop" -> {
+        var match = storm.service(MatchView.class).current().orElseThrow();
+        var error = storm.service(ShowcaseControl.class).stop(match.matchId());
+        if (error.isPresent()) throw new IllegalStateException(error.orElseThrow());
+      }
+      case "status" -> {
+        /* read only */
+      }
+      default -> throw new IllegalArgumentException("unknown map lifecycle request");
+    }
   }
 
   private String payloadRequest(TheStormPlugin storm, String[] args) {

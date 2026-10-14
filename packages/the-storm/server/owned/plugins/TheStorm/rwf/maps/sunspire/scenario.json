@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "sunspire-trooper-duel-v1",
+  "map": "sunspire",
+  "mapSha256": "ad97058ae6dea2bedcf7f1629a3740c0a44e996a2ec078b12d958d49a850f102",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 1024,
+      "y": 64,
+      "z": 8192
+    },
+    "max": {
+      "x": 1183,
+      "y": 111,
+      "z": 8319
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [1029.5, 73, 8250.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [1178.5, 73, 8250.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

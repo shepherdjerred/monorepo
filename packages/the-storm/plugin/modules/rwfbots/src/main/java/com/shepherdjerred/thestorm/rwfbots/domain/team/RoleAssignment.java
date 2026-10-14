@@ -69,6 +69,8 @@ final class RoleAssignment {
       throw new IllegalArgumentException("role-distance matrix does not match the prepared deal");
     }
     var profit = new double[bots.size()][slots.size()];
+    var groups = Squads.deal(dealing.previous().groups(), bots, dealing.situation().members());
+    var lanes = slots.stream().mapToInt(Slot::lane).max().orElse(-1) + 1;
     for (var i = 0; i < bots.size(); i++) {
       var bot = bots.get(i);
       for (var j = 0; j < slots.size(); j++) {
@@ -77,7 +79,10 @@ final class RoleAssignment {
             dealing.situation().memberOf(bot.id()).archetype() == Archetype.TROLL
                 ? TeamBrain.ERRATIC * random.nextDouble()
                 : 0;
-        profit[i][j] = TeamBrain.profit(dealing, bot, slots.get(j), distance) + erratic;
+        profit[i][j] =
+            TeamBrain.profit(dealing, bot, slots.get(j), distance)
+                + erratic
+                + SquadCohesion.fit(groups, bot.id(), slots.get(j), lanes);
       }
     }
     var columns = Hungarian.maximize(profit);

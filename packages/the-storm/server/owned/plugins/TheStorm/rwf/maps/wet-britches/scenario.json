@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "wet-britches-trooper-duel-v1",
   "map": "wet-britches",
-  "mapSha256": "090bb066a36be83a3b4f31bcafeccddea55e46cfabb6f44b68f74faa326875af",
+  "mapSha256": "82d8b307b299bf0a1a35a526de0e7b5f662834535467abb91dfbbb8485c6ed6f",
   "world": "minecraft:rwf",
   "region": {
     "min": {

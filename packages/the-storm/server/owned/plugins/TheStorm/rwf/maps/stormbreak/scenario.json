@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "kind": "rwf-map-scenario",
+  "id": "stormbreak-trooper-duel-v1",
+  "map": "stormbreak",
+  "mapSha256": "429743d80dfa8e2f3381c79d7c439412cf53a3c4f1506d83fcd6cc3fdb73c23b",
+  "world": "minecraft:rwf",
+  "region": {
+    "min": {
+      "x": 4096,
+      "y": 64,
+      "z": 8192
+    },
+    "max": {
+      "x": 4255,
+      "y": 111,
+      "z": 8335
+    }
+  },
+  "sourceTeams": ["RED", "BLUE"],
+  "spawnPolicy": "source",
+  "spawns": [
+    {
+      "team": "red",
+      "sourceTeam": "RED",
+      "position": [4101.5, 73, 8258.5],
+      "yaw": 270,
+      "pitch": 0
+    },
+    {
+      "team": "blue",
+      "sourceTeam": "BLUE",
+      "position": [4250.5, 73, 8258.5],
+      "yaw": 90,
+      "pitch": 0
+    }
+  ]
+}

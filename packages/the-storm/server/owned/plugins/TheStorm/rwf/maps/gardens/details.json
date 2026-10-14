@@ -1,1 +1,36 @@
-{"version":1,"blocksSha256":"8ae724071164ac04878f479b718aa732c39cb89544ad499746c1cc6d0a3e5c8f","containers":[],"signs":[{"at":{"x":28,"y":7,"z":25},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":5,"z":16},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","5","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":5,"z":26},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":27,"y":5,"z":16},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","10","Arrows","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":25,"y":5,"z":26},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Grenades","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":17,"y":3,"z":69},"material":"minecraft:oak_wall_sign","front":{"lines":["\u003d-\u003d-\u003d-\u003d-\u003d-\u003d-\u003d-\u003d","Built by:","Giovani098","\u003d-\u003d-\u003d-\u003d-\u003d-\u003d-\u003d-\u003d"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":33,"y":5,"z":122},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","12","Arrows","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":35,"y":5,"z":112},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Grenades","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":32,"y":7,"z":113},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":25,"y":5,"z":112},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","3","RPG","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":27,"y":5,"z":122},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","5","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
+  "containers": [],
+  "signs": [
+    {
+      "at": {
+        "x": 17,
+        "y": 3,
+        "z": 69
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "=-=-=-=-=-=-=-=",
+          "Built by:",
+          "Giovani098",
+          "=-=-=-=-=-=-=-="
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

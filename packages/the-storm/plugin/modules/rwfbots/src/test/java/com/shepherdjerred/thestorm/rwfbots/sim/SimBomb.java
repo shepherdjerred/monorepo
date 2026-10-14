@@ -35,6 +35,7 @@ final class SimBomb {
   final Vec3 pos;
   Phase phase = Phase.IDLE;
   Optional<TeamId> armingTeam = Optional.empty();
+  Optional<TeamId> armedBy = Optional.empty();
   final Map<CombatantId, Long> clickers = new HashMap<>();
   long lastClick = -1;
   int progressTicks;
@@ -48,6 +49,7 @@ final class SimBomb {
     this.id = id;
     this.owner = owner;
     this.pos = pos;
+    if (owner instanceof BombOwner.Nuke nuke) armedBy = nuke.armedBy();
   }
 
   /** Lights the fuse directly, for scenarios that start armed. */
@@ -61,7 +63,11 @@ final class SimBomb {
 
   /** A fuse click by {@code clicker} of {@code team}; {@code lastAlive} is the instant-arm rule. */
   void click(CombatantId clicker, TeamId team, long tick, boolean lastAlive) {
-    var accepted = owner.isTeam(team) ? acceptDefuseClick() : acceptArmClick(team);
+    var defending =
+        owner.isTeam(team)
+            || (owner instanceof BombOwner.Nuke
+                && armedBy.filter(armed -> !armed.equals(team)).isPresent());
+    var accepted = defending ? acceptDefuseClick() : acceptArmClick(team);
     if (!accepted) {
       return;
     }
@@ -137,12 +143,14 @@ final class SimBomb {
 
   private void complete(long tick) {
     if (phase == Phase.ARMING) {
+      armedBy = armingTeam;
       phase = Phase.ARMED;
       remaining = FUSE_TICKS;
       armedAtTick = tick;
     } else if (phase == Phase.DEFUSING) {
       phase = Phase.IDLE;
       defusedAtTick = tick;
+      armedBy = Optional.empty();
     }
     armingTeam = Optional.empty();
     resetAttempt();
@@ -168,7 +176,8 @@ final class SimBomb {
           case DEFUSING -> new BombState.Defusing(progress(), clickers.size(), remaining);
           case DESTROYED -> new BombState.Destroyed();
         };
-    return new BombView(id, owner, pos, state);
+    var visibleOwner = owner instanceof BombOwner.Nuke ? new BombOwner.Nuke(armedBy) : owner;
+    return new BombView(id, visibleOwner, pos, state);
   }
 
   private double progress() {

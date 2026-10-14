@@ -317,14 +317,18 @@ final class Texts {
                   gold)
               .append(team(value(notice, "team")));
       case BOMB_ARMED ->
-          magic()
+          Component.empty()
+              .decoration(TextDecoration.OBFUSCATED, false)
+              .append(magic())
               .append(named(" ", value(notice, "team"), ""))
               .append(Component.text(" just armed ", gold))
               .append(named("", value(notice, "owner"), "'s"))
               .append(Component.text(" bomb! ", gold))
               .append(magic());
       case NUKE_ARMED ->
-          magic()
+          Component.empty()
+              .decoration(TextDecoration.OBFUSCATED, false)
+              .append(magic())
               .append(named(" ", value(notice, "team"), ""))
               .append(Component.text(" just armed a nuke! ", gold))
               .append(magic());

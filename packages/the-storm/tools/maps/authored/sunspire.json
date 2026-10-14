@@ -1,0 +1,14 @@
+{
+  "id": "sunspire",
+  "name": "Sunspire",
+  "description": "Storm a sandstone citadel around a golden sun obelisk. Its raised central nuke courtyard overlooks a vaulted shortcut, while an oasis and market galleries provide two sheltered flanks with broad stair access.",
+  "seed": 10502,
+  "anchor": { "x": 1024, "y": 64, "z": 8192 },
+  "size": { "x": 160, "y": 48, "z": 128 },
+  "bombs": [
+    { "x": 14, "y": 9, "z": 64 },
+    { "x": 145, "y": 9, "z": 64 }
+  ],
+  "nukes": [{ "x": 72, "y": 15, "z": 64 }],
+  "spawnY": 9
+}

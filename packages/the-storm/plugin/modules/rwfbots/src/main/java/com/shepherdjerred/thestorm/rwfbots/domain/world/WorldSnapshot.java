@@ -34,6 +34,10 @@ public record WorldSnapshot(
     combatants = combatants instanceof CombatantList ? combatants : new CombatantList(combatants);
     bombs = List.copyOf(bombs);
     stimuli = List.copyOf(stimuli);
+    for (var index = 1; index < stimuli.size(); index++) {
+      if (stimuli.get(index).sequence() < stimuli.get(index - 1).sequence())
+        throw new IllegalArgumentException("sound history must be ordered by sequence");
+    }
     var bombIds = bombs.stream().map(BombView::id).distinct().count();
     if (bombIds != bombs.size()) {
       throw new IllegalArgumentException("bomb ids must be unique");
@@ -79,5 +83,17 @@ public record WorldSnapshot(
   /** Whether the match is in a phase where fighting matters. */
   public boolean isLive() {
     return matchPhase == MatchPhase.LIVE || matchPhase == MatchPhase.GRACE;
+  }
+
+  /** Finds new sounds without rescanning the retained events already consumed by this bot. */
+  public List<Stimulus> stimuliAfter(long sequence) {
+    var low = 0;
+    var high = stimuli.size();
+    while (low < high) {
+      var middle = (low + high) >>> 1;
+      if (stimuli.get(middle).sequence() <= sequence) low = middle + 1;
+      else high = middle;
+    }
+    return stimuli.subList(low, stimuli.size());
   }
 }

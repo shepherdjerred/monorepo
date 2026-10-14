@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "cors-path",
-  "blocksSha256": "310af07a8bc3791f5986e2ffb850449cd9f27f003a2785347f3a36a76eed0283",
-  "detailsSha256": "8d357795bc37754399dbc52c94c0ba7a7d697cc7bc84ddbe3b5892c9b7ae7eb6",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "1fddc750838f9c991f4c0ab47095674470a79282d9a84aa4ad02fb30d03293da",
+  "detailsSha256": "d27a7e522843dc81872e876c4f5b55208c9b329e7c61a052e9928f97e32822d1",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 0
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "310af07a8bc3791f5986e2ffb850449cd9f27f003a2785347f3a36a76eed0283",
+    "count": 24
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 24

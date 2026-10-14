@@ -17,7 +17,8 @@ final class RetakeFormation {
   private RetakeFormation() {}
 
   static Optional<BombView> urgent(WorldSnapshot snapshot, TeamId team) {
-    return snapshot.bombsOf(team).stream()
+    return snapshot.bombs().stream()
+        .filter(bomb -> bomb.threatens(team))
         .filter(bomb -> bomb.state().isLit())
         .min(Comparator.comparingLong(RetakeFormation::remaining).thenComparing(BombView::id));
   }

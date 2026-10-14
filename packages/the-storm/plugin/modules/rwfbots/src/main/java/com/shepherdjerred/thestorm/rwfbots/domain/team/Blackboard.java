@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.team;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import java.util.Comparator;
@@ -37,7 +38,9 @@ public record Blackboard(
     long rolesAssignedTick,
     TeamPlan plan,
     Map<CombatantId, CombatantId> chasing,
-    Map<CombatantId, Set<Integer>> paths) {
+    Map<CombatantId, Set<Integer>> paths,
+    Map<CombatantId, BombId> workers,
+    Optional<SensorClue> sensor) {
 
   /** The longest a sighting is delayed, at zero coordination, in ticks. */
   public static final int MAX_SHARE_DELAY_TICKS = 30;
@@ -50,6 +53,7 @@ public record Blackboard(
     roles = Map.copyOf(roles);
     claimedCover = Map.copyOf(claimedCover);
     chasing = Map.copyOf(chasing);
+    workers = Map.copyOf(workers);
     var copiedPaths = new HashMap<CombatantId, Set<Integer>>();
     paths.forEach((bot, nodes) -> copiedPaths.put(bot, Set.copyOf(nodes)));
     paths = Map.copyOf(copiedPaths);
@@ -57,7 +61,17 @@ public record Blackboard(
 
   public static Blackboard open(TeamId team, Strategy strategy) {
     return new Blackboard(
-        team, strategy, Map.of(), Map.of(), Map.of(), -1, TeamPlan.NONE, Map.of(), Map.of());
+        team,
+        strategy,
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        -1,
+        TeamPlan.NONE,
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Optional.empty());
   }
 
   /**
@@ -88,7 +102,17 @@ public record Blackboard(
       }
     }
     return new Blackboard(
-        team, strategy, copy, roles, claimedCover, rolesAssignedTick, plan, chasing, paths);
+        team,
+        strategy,
+        copy,
+        roles,
+        claimedCover,
+        rolesAssignedTick,
+        plan,
+        chasing,
+        paths,
+        workers,
+        sensor);
   }
 
   /**
@@ -119,7 +143,17 @@ public record Blackboard(
     var chases = new HashMap<>(chasing);
     chases.values().removeIf(enemy::equals);
     return new Blackboard(
-        team, strategy, copy, roles, claimedCover, rolesAssignedTick, plan, chases, paths);
+        team,
+        strategy,
+        copy,
+        roles,
+        claimedCover,
+        rolesAssignedTick,
+        plan,
+        chases,
+        paths,
+        workers,
+        sensor);
   }
 
   /** Drops the claims, chases and paths of teammates for whom {@code gone} holds. */
@@ -127,16 +161,29 @@ public record Blackboard(
     var cover = new HashMap<>(claimedCover);
     var chases = new HashMap<>(chasing);
     var walking = new HashMap<>(paths);
+    var objectives = new HashMap<>(workers);
     cover.keySet().removeIf(gone);
     chases.keySet().removeIf(gone);
     walking.keySet().removeIf(gone);
+    objectives.keySet().removeIf(gone);
     if (cover.size() == claimedCover.size()
         && chases.size() == chasing.size()
-        && walking.size() == paths.size()) {
+        && walking.size() == paths.size()
+        && objectives.size() == workers.size()) {
       return this;
     }
     return new Blackboard(
-        team, strategy, sightings, roles, cover, rolesAssignedTick, plan, chases, walking);
+        team,
+        strategy,
+        sightings,
+        roles,
+        cover,
+        rolesAssignedTick,
+        plan,
+        chases,
+        walking,
+        objectives,
+        sensor);
   }
 
   public Optional<Role> roleOf(CombatantId bot) {
@@ -145,7 +192,17 @@ public record Blackboard(
 
   public Blackboard withRoles(Map<CombatantId, Role> newRoles, long now) {
     return new Blackboard(
-        team, strategy, sightings, newRoles, claimedCover, now, plan, chasing, paths);
+        team,
+        strategy,
+        sightings,
+        newRoles,
+        claimedCover,
+        now,
+        plan,
+        chasing,
+        paths,
+        workers,
+        sensor);
   }
 
   /** A new deal: the plan and the roles its slots carry. */
@@ -155,7 +212,17 @@ public record Blackboard(
         .assignment()
         .forEach((bot, key) -> newRoles.put(bot, newPlan.slot(key).orElseThrow().role()));
     return new Blackboard(
-        team, strategy, sightings, newRoles, claimedCover, now, newPlan, chasing, paths);
+        team,
+        strategy,
+        sightings,
+        newRoles,
+        claimedCover,
+        now,
+        newPlan,
+        chasing,
+        paths,
+        workers,
+        sensor);
   }
 
   /** The slot {@code bot} holds, if the playbook has dealt it one. */
@@ -176,7 +243,17 @@ public record Blackboard(
     var copy = new HashMap<>(claimedCover);
     copy.put(bot, node);
     return new Blackboard(
-        team, strategy, sightings, roles, copy, rolesAssignedTick, plan, chasing, paths);
+        team,
+        strategy,
+        sightings,
+        roles,
+        copy,
+        rolesAssignedTick,
+        plan,
+        chasing,
+        paths,
+        workers,
+        sensor);
   }
 
   public Blackboard releaseCover(CombatantId bot) {
@@ -186,7 +263,17 @@ public record Blackboard(
     var copy = new HashMap<>(claimedCover);
     copy.remove(bot);
     return new Blackboard(
-        team, strategy, sightings, roles, copy, rolesAssignedTick, plan, chasing, paths);
+        team,
+        strategy,
+        sightings,
+        roles,
+        copy,
+        rolesAssignedTick,
+        plan,
+        chasing,
+        paths,
+        workers,
+        sensor);
   }
 
   /** Whether some other bot already holds cover {@code node}. */
@@ -200,6 +287,9 @@ public record Blackboard(
     var cover = new HashMap<>(claimedCover);
     var chases = new HashMap<>(chasing);
     var walking = new HashMap<>(paths);
+    var objectives = new HashMap<>(workers);
+    note.objective()
+        .ifPresentOrElse(bomb -> objectives.put(bot, bomb), () -> objectives.remove(bot));
     note.cover().ifPresentOrElse(node -> cover.put(bot, node), () -> cover.remove(bot));
     note.chasing().ifPresentOrElse(enemy -> chases.put(bot, enemy), () -> chases.remove(bot));
     if (note.path().isEmpty()) {
@@ -208,7 +298,32 @@ public record Blackboard(
       walking.put(bot, note.path());
     }
     return new Blackboard(
-        team, strategy, sightings, roles, cover, rolesAssignedTick, plan, chases, walking);
+        team,
+        strategy,
+        sightings,
+        roles,
+        cover,
+        rolesAssignedTick,
+        plan,
+        chases,
+        walking,
+        objectives,
+        sensor);
+  }
+
+  public Blackboard sensor(SensorClue clue) {
+    return new Blackboard(
+        team,
+        strategy,
+        sightings,
+        roles,
+        claimedCover,
+        rolesAssignedTick,
+        plan,
+        chasing,
+        paths,
+        workers,
+        Optional.of(clue));
   }
 
   /** How many teammates other than {@code except} are fighting {@code enemy}. */

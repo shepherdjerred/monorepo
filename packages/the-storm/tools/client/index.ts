@@ -17,6 +17,7 @@ const parsed = parseArgs({
     vanilla: { type: "boolean", default: false },
     verify: { type: "boolean", default: false },
     "rwf-duel": { type: "boolean", default: false },
+    "rwf-experience": { type: "boolean", default: false },
     "rwf-map": { type: "string" },
     "verify-duel-clock": { type: "boolean", default: false },
     "verify-duel-video": { type: "boolean", default: false },
@@ -28,7 +29,7 @@ async function main(): Promise<void> {
   const action = parsed.positionals[0];
   if (action === undefined || parsed.values.help) {
     process.stdout.write(
-      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel] [--rwf-map <map-id>] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
+      "client preview [--world <directory>] [--vanilla] [--verify] [--rwf-duel|--rwf-experience|--rwf-map <map-id>] [--verify-duel-clock|--verify-duel-video]\nclient video-encode --args '{\"receipt\":\"/path/to/frames.json\"}'\nclient <status|look|input|attack|use|hotbar|inventory|close|click|command|capture|video-ready|video-arm|video-duel-arm|video-start|video-status|video-cancel|duel-arm|duel-status|duel-seal|duel-cancel|release|viewpoint|tour|smoke|stop> --session <session.json> [--args '<JSON object>']\n",
     );
     process.stdout.write(
       'client frame-pacing-start --session <session.json> --args \'{"name":"baseline","durationMs":60000,"targetFrames":36000}\'\nclient frame-pacing-status --session <session.json>\n',
@@ -40,6 +41,7 @@ async function main(): Promise<void> {
       vanilla: parsed.values.vanilla,
       verify: parsed.values.verify,
       rwfDuel: parsed.values["rwf-duel"],
+      rwfExperience: parsed.values["rwf-experience"],
       verifyDuelClock: parsed.values["verify-duel-clock"],
       verifyDuelVideo: parsed.values["verify-duel-video"],
       ...(parsed.values.world === undefined

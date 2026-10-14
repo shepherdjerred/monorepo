@@ -2,6 +2,7 @@
   id: rival-castles,
   name: Rival Castles,
   author: "Snowyflake, Petlove506, libraryaddict",
+  description: 2 castles in a lonely forest. Both built for war. Who shall crumble and who will rise. We see in this battle.,
   region:
     { min: { x: 3072, "y": 0, z: 4096 }, max: { x: 3424, "y": 96, z: 4478 } },
   spectator: { x: 3248.5, "y": 96, z: 4287.5, yaw: 0, pitch: 45 },
@@ -492,5 +493,5 @@
       { id: blue-1, team: BLUE, at: { x: 3261, "y": 87, z: 4155 } },
     ],
   nukes: [],
-  blocksSha256: 6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23,
+  blocksSha256: 7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc,
 }

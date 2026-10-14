@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "village-skirmish",
-  "blocksSha256": "e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950",
-  "detailsSha256": "f745235433c1f5f7638017c6838f5f0d7b693283907fde8a94926e64703011f2",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+  "detailsSha256": "1b8be74c381cd1bbd674f1527298612d85e7ae875f1baf9068697aad1e0b9378",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 0
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950",
+    "count": 12
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 12

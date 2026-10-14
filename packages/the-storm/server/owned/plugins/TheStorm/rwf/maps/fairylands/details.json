@@ -1,1 +1,220 @@
-{"version":1,"blocksSha256":"f620e3ecda7f712b5c2cdcf3d9f58bf90a22d2cfde05f631d6be7f1f2c2455e3","containers":[{"at":{"x":88,"y":84,"z":76},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA\u003d"}],"signs":[{"at":{"x":61,"y":56,"z":31},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenades","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":65,"y":56,"z":31},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","4","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":83,"y":53,"z":46},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrows","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":80,"y":53,"z":38},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":77,"y":53,"z":48},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":39,"y":90,"z":79},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":41,"y":57,"z":77},"material":"minecraft:oak_wall_sign","front":{"lines":["","Map Makers","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":42,"y":56,"z":76},"material":"minecraft:oak_wall_sign","front":{"lines":["~~~~~~~~~~~~~~~","MastaCraft123","","~~~~~~~~~~~~~~~"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":42,"y":90,"z":79},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":42,"y":56,"z":78},"material":"minecraft:oak_wall_sign","front":{"lines":["Delta  \u003c\u003c\u003c\u003c\u003e\u003e\u003e\u003e","Strike","\u003c\u003c\u003c\u003c\u003e\u003e\u003e\u003e  Force",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":42,"y":90,"z":81},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":39,"y":90,"z":81},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":89,"y":53,"z":109},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":84,"y":53,"z":108},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":61,"y":56,"z":123},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","4","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":65,"y":56,"z":123},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","6","Grenades","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":83,"y":53,"z":116},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrows","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83",
+  "containers": [
+    {
+      "at": {
+        "x": 88,
+        "y": 84,
+        "z": 76
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "signs": [
+    {
+      "at": {
+        "x": 39,
+        "y": 90,
+        "z": 79
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 41,
+        "y": 57,
+        "z": 77
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "Map Makers",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 42,
+        "y": 56,
+        "z": 76
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "~~~~~~~~~~~~~~~",
+          "MastaCraft123",
+          "",
+          "~~~~~~~~~~~~~~~"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 42,
+        "y": 90,
+        "z": 79
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 42,
+        "y": 56,
+        "z": 78
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "Delta  <<<<>>>>",
+          "Strike",
+          "<<<<>>>>  Force",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 42,
+        "y": 90,
+        "z": 81
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 39,
+        "y": 90,
+        "z": 81
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

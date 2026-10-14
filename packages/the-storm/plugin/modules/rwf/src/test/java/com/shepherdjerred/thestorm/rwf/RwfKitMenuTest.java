@@ -196,8 +196,17 @@ final class RwfKitMenuTest {
     var top = openMenu(harness, alice).getTopInventory();
 
     var icons = new ArrayList<ItemStack>();
-    for (var slot = 0; slot < KitBook.ALL.size(); slot++) {
-      icons.add(requireNonNull(top.getItem(slot)));
+    for (var offset = 0; offset < KitBook.ALL.size(); offset += 36) {
+      var count = Math.min(36, KitBook.ALL.size() - offset);
+      for (var slot = 0; slot < count; slot++) {
+        icons.add(requireNonNull(top.getItem(slot)));
+      }
+      if (offset + count < KitBook.ALL.size()) {
+        assertThat(top.getItem(53)).as("another page is available").isNotNull();
+        click(harness, alice.getOpenInventory(), ClickType.LEFT, 53);
+        harness.ticks(2);
+        top = alice.getOpenInventory().getTopInventory();
+      }
     }
     assertThat(icons)
         .extracting(RwfKitMenuTest::name)
@@ -219,7 +228,35 @@ final class RwfKitMenuTest {
         .anyMatch(line -> line.startsWith("The kit that sets the"));
     assertThat(requireNonNull(top.getItem(48)).getType()).isEqualTo(Material.EMERALD);
     assertThat(requireNonNull(top.getItem(50)).getType()).isEqualTo(Material.CLOCK);
-    assertThat(top.getItem(53)).as("one page holds every kit").isNull();
+    assertThat(top.getItem(53)).as("the final page has no next arrow").isNull();
+    assertThat(name(requireNonNull(top.getItem(49)))).startsWith("Page ");
+  }
+
+  @Test
+  void sortingSurvivesPurchaseCancellationAndEveryControlKeepsTheMenuReadOnly() {
+    var harness = start();
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    var view = openMenu(harness, alice);
+    assertThat(click(harness, view, ClickType.LEFT, 46).isCancelled()).isTrue();
+    harness.ticks(2);
+    var top = alice.getOpenInventory().getTopInventory();
+    assertThat(name(requireNonNull(top.getItem(46)))).isEqualTo("Sort: Name");
+    var locked = lockedThisWeek();
+    var slot =
+        java.util.stream.IntStream.range(0, 36)
+            .filter(index -> top.getItem(index) != null)
+            .filter(index -> name(requireNonNull(top.getItem(index))).equals(locked.name()))
+            .findFirst()
+            .orElseThrow();
+    click(harness, alice.getOpenInventory(), ClickType.LEFT, slot);
+    harness.ticks(2);
+    assertThat(open(alice, PURCHASE)).isTrue();
+    click(harness, alice.getOpenInventory(), ClickType.LEFT, CANCEL);
+    harness.ticks(2);
+    assertThat(menuOpen(alice)).isTrue();
+    assertThat(name(requireNonNull(alice.getOpenInventory().getTopInventory().getItem(46))))
+        .isEqualTo("Sort: Name");
   }
 
   @Test
@@ -232,10 +269,26 @@ final class RwfKitMenuTest {
     var top = openMenu(harness, alice).getTopInventory();
 
     assertThat(free).hasSize(KitRotation.SIZE);
-    for (var kit : free) {
-      assertThat(lore(requireNonNull(top.getItem(KitBook.ALL.indexOf(kit)))))
-          .contains("FREE THIS WEEK");
+    var marked = new HashSet<KitSpec>();
+    for (var offset = 0; offset < KitBook.ALL.size(); offset += 36) {
+      var count = Math.min(36, KitBook.ALL.size() - offset);
+      for (var slot = 0; slot < count; slot++) {
+        var kit = KitBook.ALL.get(offset + slot);
+        if (free.contains(kit)) {
+          var icon = requireNonNull(top.getItem(slot));
+          assertThat(name(icon)).isEqualTo(kit.name());
+          assertThat(lore(icon)).contains("FREE THIS WEEK");
+          marked.add(kit);
+        }
+      }
+      if (offset + count < KitBook.ALL.size()) {
+        assertThat(top.getItem(53)).isNotNull();
+        click(harness, alice.getOpenInventory(), ClickType.LEFT, 53);
+        harness.ticks(2);
+        top = alice.getOpenInventory().getTopInventory();
+      }
     }
+    assertThat(marked).containsExactlyInAnyOrderElementsOf(free);
     assertThat(lore(requireNonNull(top.getItem(50))))
         .containsAll(
             free.stream().map(kit -> kit.name() + " (" + kit.tier().displayName() + ")").toList());

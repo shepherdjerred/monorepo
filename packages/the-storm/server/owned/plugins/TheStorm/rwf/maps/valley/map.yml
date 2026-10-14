@@ -2,6 +2,7 @@
   id: valley,
   name: Valley of Death,
   author: YockaPockaPazzi,
+  description: A valley of death where only one team may rule,
   region:
     { min: { x: 4096, "y": 0, z: 5120 }, max: { x: 4190, "y": 70, z: 5310 } },
   spectator: { x: 4143.5, "y": 70, z: 5215.5, yaw: 0, pitch: 45 },
@@ -375,5 +376,5 @@
       { id: blue-1, team: BLUE, at: { x: 4146, "y": 41, z: 5285 } },
     ],
   nukes: [],
-  blocksSha256: 901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0,
+  blocksSha256: aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea,
 }

@@ -25,6 +25,7 @@ import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
 import com.shepherdjerred.thestorm.rwf.testing.FakeMobGoals;
 import com.shepherdjerred.thestorm.rwf.testing.FakeSavedPlayerData;
 import com.shepherdjerred.thestorm.rwf.testing.FakeWallets;
+import com.shepherdjerred.thestorm.rwf.testing.RwfServerMock;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -175,7 +176,7 @@ public final class RwfHarness implements AutoCloseable {
 
   /** Starts a server and database; {@link #enable} starts the module. */
   public static RwfHarness prepare(Path directory) {
-    var server = MockBukkit.mock();
+    var server = MockBukkit.mock(RwfServerMock.create());
     var overworld = new RwfWorldMock("world");
     var rwf = new RwfWorldMock("rwf");
     var lobby = new RwfWorldMock("rwf_lobby");
@@ -190,6 +191,8 @@ public final class RwfHarness implements AutoCloseable {
           config,
           Files.readString(config)
               .replace("automaticSizing: true", "automaticSizing: false")
+              // Keep original flow scenarios explicit and short; native acceptance uses 30s.
+              .replace("previewLength: PT30S", "previewLength: PT10S")
               // The gameplay cases count down as soon as Alice is in, as before the relaxing
               // requirement; RwfLobbyFillTest plays the shipped 4-to-2 rule.
               .replace("minPlayers: 4", "minPlayers: 1")
@@ -218,7 +221,8 @@ public final class RwfHarness implements AutoCloseable {
       until(() -> view().current().isPresent(), PREPARATION, "lobby admission");
       // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
       // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
-      if (((RwfWorldMock) rwf).chunkLoads.isDone()) {
+      if (((RwfWorldMock) rwf).chunkLoads.isDone()
+          && !(features.matchFlow() && features.candidateVisits())) {
         until(
             () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
             PREPARATION,
@@ -263,20 +267,24 @@ public final class RwfHarness implements AutoCloseable {
                 Optional.of(() -> CompletableFuture.completedFuture(features)),
                 Optional.of(kitGates)));
     enabling =
-        plugin ->
-            module.enable(
-                new ModuleContext(
-                    plugin,
-                    plugin.getLifecycleManager(),
-                    new PaperScheduler(plugin),
-                    new DirectComputePool(),
-                    database,
-                    services,
-                    directory,
-                    clock,
-                    RandomGenerator.of("L64X128MixRandom"),
-                    plugin.getComponentLogger(),
-                    com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+        plugin -> {
+          services.provide(
+              com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class,
+              new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin));
+          module.enable(
+              new ModuleContext(
+                  plugin,
+                  plugin.getLifecycleManager(),
+                  new PaperScheduler(plugin),
+                  new DirectComputePool(),
+                  database,
+                  services,
+                  directory,
+                  clock,
+                  RandomGenerator.of("L64X128MixRandom"),
+                  plugin.getComponentLogger(),
+                  com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled()));
+        };
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,
@@ -284,6 +292,9 @@ public final class RwfHarness implements AutoCloseable {
     } catch (RuntimeException e) {
       close();
       throw e;
+    } finally {
+      // onEnable runs synchronously; retaining its callback would retain this server between tests.
+      enabling = plugin -> {};
     }
   }
 
@@ -401,6 +412,16 @@ public final class RwfHarness implements AutoCloseable {
   public void ticks(int count) {
     for (var i = 0; i < count; i++) {
       tick(Duration.ofMillis(50));
+    }
+  }
+
+  /**
+   * Ages a damage fixture through one second of entity ticks. MockBukkit's scheduler does not tick
+   * entities; clearing native invulnerability cannot expire the match's authoritative hit window.
+   */
+  public static void elapseHitWindow(PlayerMock victim) {
+    for (var tick = 0; tick < 20; tick++) {
+      victim.tick();
     }
   }
 

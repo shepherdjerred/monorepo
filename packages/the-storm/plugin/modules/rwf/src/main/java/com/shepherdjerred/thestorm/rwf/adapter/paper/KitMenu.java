@@ -4,6 +4,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitAccess;
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitBrowser;
 import com.shepherdjerred.thestorm.rwf.domain.kit.KitSpec;
 import java.time.Duration;
 import java.time.Instant;
@@ -44,6 +45,11 @@ final class KitMenu implements InventoryHolder {
   static final int CREDITS = 48;
   static final int ROTATION = 50;
   static final int NEXT = 53;
+  static final int SORT = 46;
+  static final int CATEGORY = 47;
+  static final int PAGE = 49;
+  static final int ACCESS = 51;
+  static final int STREAKS = 52;
 
   static final Component TITLE = Component.text("Pick a kit", NamedTextColor.DARK_BLUE);
 
@@ -51,13 +57,15 @@ final class KitMenu implements InventoryHolder {
   private final Map<Integer, String> kits = new HashMap<>();
   private final int page;
   private final int pages;
+  private final KitBrowser.Query query;
 
   private KitMenu(Server server, KitFactory items, View view) {
-    this.pages = Math.max(1, (view.kits().size() + PER_PAGE - 1) / PER_PAGE);
-    this.page = Math.clamp(view.page(), 0, pages - 1);
+    var filtered = view.query().select(view.kits(), view.access());
+    this.pages = Math.max(1, (filtered.size() + PER_PAGE - 1) / PER_PAGE);
+    this.page = Math.clamp(view.query().page(), 0, pages - 1);
+    this.query = view.query().at(page);
     this.inventory = server.createInventory(this, SIZE, TITLE);
-    var shown =
-        view.kits().subList(page * PER_PAGE, Math.min(view.kits().size(), (page + 1) * PER_PAGE));
+    var shown = filtered.subList(page * PER_PAGE, Math.min(filtered.size(), (page + 1) * PER_PAGE));
     for (var i = 0; i < shown.size(); i++) {
       var kit = shown.get(i);
       kits.put(i, kit.id());
@@ -71,6 +79,41 @@ final class KitMenu implements InventoryHolder {
     }
     showCredits(view.credits());
     inventory.setItem(ROTATION, rotation(view));
+    inventory.setItem(
+        STREAKS,
+        control(
+            Material.FIREWORK_ROCKET,
+            "Choose killstreaks",
+            List.of("Pick three rewards before the round starts")));
+    inventory.setItem(
+        SORT,
+        control(
+            Material.HOPPER,
+            "Sort: " + query.sort().displayName(),
+            List.of("Click to change order")));
+    inventory.setItem(
+        CATEGORY,
+        control(Material.BOOK, query.categoryLabel(), List.of("Click to change category")));
+    inventory.setItem(
+        ACCESS,
+        control(
+            Material.IRON_DOOR,
+            query.access().displayName(),
+            List.of("Click to change access filter")));
+    inventory.setItem(
+        PAGE,
+        control(
+            Material.PAPER,
+            "Page " + (page + 1) + " / " + pages,
+            List.of(filtered.size() + " matching kits")));
+    if (filtered.isEmpty()) {
+      inventory.setItem(
+          13,
+          control(
+              Material.BARRIER,
+              "No matching kits",
+              List.of("Change category or access filter below")));
+    }
   }
 
   /** Shows the player's credits, once read. */
@@ -96,7 +139,7 @@ final class KitMenu implements InventoryHolder {
    * @param rotation this week's free kits
    * @param rotationLeft how long until the rotation changes
    * @param credits their credits, once known
-   * @param page the page to show, from 0
+   * @param query the page, sort and filters
    */
   record View(
       List<KitSpec> kits,
@@ -105,7 +148,7 @@ final class KitMenu implements InventoryHolder {
       List<KitSpec> rotation,
       Duration rotationLeft,
       Optional<Long> credits,
-      int page) {
+      KitBrowser.Query query) {
 
     View {
       kits = List.copyOf(kits);
@@ -148,6 +191,10 @@ final class KitMenu implements InventoryHolder {
 
   int pages() {
     return pages;
+  }
+
+  KitBrowser.Query query() {
+    return query;
   }
 
   @Override

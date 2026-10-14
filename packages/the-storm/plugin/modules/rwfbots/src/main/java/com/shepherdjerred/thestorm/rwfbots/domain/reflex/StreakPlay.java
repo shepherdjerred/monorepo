@@ -21,6 +21,8 @@ public final class StreakPlay {
    */
   public static boolean now(int carried, ReflexInput input, long next) {
     return carried > 0
+        && input.decision().option()
+            != com.shepherdjerred.thestorm.rwfbots.domain.world.Option.DEFUSE
         && input.snapshot().tick() >= next
         && input.target().isEmpty()
         && input.self().alive()

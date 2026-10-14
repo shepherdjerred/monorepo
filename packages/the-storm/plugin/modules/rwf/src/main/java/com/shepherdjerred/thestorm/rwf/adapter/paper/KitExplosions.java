@@ -150,9 +150,10 @@ final class KitExplosions {
                 .map(
                     kit ->
                         new KitCombat.Side(kit, runner.match().abilities().state(blast.owner())));
-    var damage =
+    var computed =
         KitCombat.damage(
             hit, attackerSide, victimSide.orElseThrow(), runner.match().random(runner.now()));
+    var damage = PaperKitResistance.apply(victim, computed, cause);
     if (damage <= 0) {
       return;
     }

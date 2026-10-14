@@ -2,6 +2,7 @@
   id: rotated-hemispheres,
   name: Rotated Hemispheres,
   author: RuttedBus62940 and Giovani098,
+  description: Four floating towers with a giant mountain in the middle,
   region:
     { min: { x: 4096, "y": 1, z: 4096 }, max: { x: 4304, "y": 73, z: 4305 } },
   spectator: { x: 4200.5, "y": 73, z: 4201, yaw: 0, pitch: 45 },
@@ -2102,5 +2103,5 @@
       { id: red-1, team: RED, at: { x: 4199, "y": 62, z: 4281 } },
     ],
   nukes: [],
-  blocksSha256: 5bf76677d0927149d8d70d96d0ccae30cdbc068b07f24193db8af708a2f40411,
+  blocksSha256: 9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4,
 }

@@ -169,12 +169,13 @@ final class KitWorld {
               }
               var hit =
                   DamageFormula.Hit.of(damage.cause(), damage.amount(), KitFactory.armor(victim));
-              var dealt =
+              var computed =
                   KitCombat.damage(
                       hit,
                       Optional.empty(),
                       side.orElseThrow(),
                       runner.match().random(runner.now()));
+              var dealt = PaperKitResistance.apply(victim, computed, damage.cause());
               tracker.hit(victim, dealt, damage.by().map(CombatantId::uuid), damage.cause());
               victim.setHealth(Math.max(0, victim.getHealth() - dealt));
             });

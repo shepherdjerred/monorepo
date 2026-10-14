@@ -163,7 +163,11 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           new Change.Operated();
       case MatchEvent.Damaged damaged ->
           new Change.Damaged(damaged.victim().uuid(), damaged.attacker().map(CombatantId::uuid));
-      case MatchEvent.Tick _, MatchEvent.Online _ -> new Change.Ticked();
+      case MatchEvent.Tick _,
+          MatchEvent.Online _,
+          MatchEvent.CandidatesReady _,
+          MatchEvent.PickStreaks _ ->
+          new Change.Ticked();
       case MatchEvent.ForceStart _ -> new Change.ForceStarted();
       case MatchEvent.Stop _ -> new Change.Stopped();
       case MatchEvent.Died died ->

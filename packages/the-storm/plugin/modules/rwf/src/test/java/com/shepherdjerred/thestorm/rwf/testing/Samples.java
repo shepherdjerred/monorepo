@@ -82,6 +82,7 @@ public final class Samples {
         "harbour",
         "Harbour",
         "libraryaddict",
+        "Two opposing harbour bases with a bomb to defend on each side.",
         teams,
         bombs,
         BORDER,

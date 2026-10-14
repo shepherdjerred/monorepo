@@ -1,1 +1,265 @@
-{"version":1,"blocksSha256":"d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995","containers":[{"at":{"x":34,"y":11,"z":121},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA="},{"at":{"x":37,"y":11,"z":122},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA="},{"at":{"x":50,"y":11,"z":44},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA="},{"at":{"x":53,"y":11,"z":45},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA="},{"at":{"x":41,"y":11,"z":66},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA="},{"at":{"x":38,"y":11,"z":65},"material":"minecraft:furnace","items":"AQAAAAMAAAAAAAAAAAAAAAA="}],"signs":[{"at":{"x":51,"y":13,"z":85},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Grenades","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":51,"y":12,"z":86},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":51,"y":14,"z":86},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","4","RPG","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":51,"y":13,"z":87},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","4","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":51,"y":12,"z":88},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":51,"y":12,"z":84},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrows","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":97,"y":5,"z":80},"material":"minecraft:oak_wall_sign","front":{"lines":["***************","Map Maker","Room","***************"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":98,"y":5,"z":82},"material":"minecraft:oak_wall_sign","front":{"lines":["***************","Saiwun_","***************",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":96,"y":5,"z":82},"material":"minecraft:oak_wall_sign","front":{"lines":["***************","NightWolf9","***************",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":97,"y":5,"z":86},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":96,"y":5,"z":80},"material":"minecraft:oak_wall_sign","front":{"lines":["***************","NightWolf9","***************",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":98,"y":5,"z":80},"material":"minecraft:oak_wall_sign","front":{"lines":["***************","Saiwun_","***************",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":97,"y":4,"z":86},"material":"minecraft:oak_wall_sign","front":{"lines":["","","",""],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":198,"y":11,"z":101},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Bow","4 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":198,"y":14,"z":100},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","4","RPG","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":199,"y":12,"z":100},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","16","Arrows","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":199,"y":12,"z":102},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","1","Landmine","1 Credit"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":199,"y":13,"z":101},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","4","Enderpearls","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false},{"at":{"x":198,"y":14,"z":102},"material":"minecraft:oak_wall_sign","front":{"lines":["§4[Buy]","8","Grenades","2 Credits"],"color":"BLACK","glowing":false},"back":{"lines":["","","",""],"color":"BLACK","glowing":false},"waxed":false}]}
+{
+  "version": 1,
+  "blocksSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+  "containers": [
+    {
+      "at": {
+        "x": 34,
+        "y": 11,
+        "z": 121
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 37,
+        "y": 11,
+        "z": 122
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 50,
+        "y": 11,
+        "z": 44
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 53,
+        "y": 11,
+        "z": 45
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 41,
+        "y": 11,
+        "z": 66
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    },
+    {
+      "at": {
+        "x": 38,
+        "y": 11,
+        "z": 65
+      },
+      "material": "minecraft:furnace",
+      "items": "AQAAAAMAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "signs": [
+    {
+      "at": {
+        "x": 97,
+        "y": 5,
+        "z": 80
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "***************",
+          "Map Maker",
+          "Room",
+          "***************"
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 98,
+        "y": 5,
+        "z": 82
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "***************",
+          "Saiwun_",
+          "***************",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 96,
+        "y": 5,
+        "z": 82
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "***************",
+          "NightWolf9",
+          "***************",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 97,
+        "y": 5,
+        "z": 86
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 96,
+        "y": 5,
+        "z": 80
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "***************",
+          "NightWolf9",
+          "***************",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 98,
+        "y": 5,
+        "z": 80
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "***************",
+          "Saiwun_",
+          "***************",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    },
+    {
+      "at": {
+        "x": 97,
+        "y": 4,
+        "z": 86
+      },
+      "material": "minecraft:oak_wall_sign",
+      "front": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "back": {
+        "lines": [
+          "",
+          "",
+          "",
+          ""
+        ],
+        "color": "BLACK",
+        "glowing": false
+      },
+      "waxed": false
+    }
+  ]
+}

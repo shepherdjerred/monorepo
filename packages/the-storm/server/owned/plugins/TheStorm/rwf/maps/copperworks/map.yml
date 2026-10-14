@@ -1,0 +1,54 @@
+{
+  "id": "copperworks",
+  "name": "Copperworks",
+  "author": "The Storm",
+  "description": "Fight through brick foundries beneath oxidized copper gantries. The furnace hall splits direct sightlines, while raised walkways and crate yards provide three interlinked approaches to each bomb.",
+  "region":
+    {
+      "min": { "x": 1024, "y": 64, "z": 7168 },
+      "max": { "x": 1151, "y": 111, "z": 7279 },
+    },
+  "spectator": { "x": 1088.5, "y": 107, "z": 7224.5, "yaw": 0, "pitch": 65 },
+  "teams":
+    [
+      {
+        "color": "RED",
+        "spawns":
+          [
+            { "x": 1029.5, "y": 73, "z": 7218.5, "yaw": 270, "pitch": 0 },
+            { "x": 1029.5, "y": 73, "z": 7220.5, "yaw": 270, "pitch": 0 },
+            { "x": 1029.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 1029.5, "y": 73, "z": 7230.5, "yaw": 270, "pitch": 0 },
+            { "x": 1031.5, "y": 73, "z": 7218.5, "yaw": 270, "pitch": 0 },
+            { "x": 1031.5, "y": 73, "z": 7220.5, "yaw": 270, "pitch": 0 },
+            { "x": 1031.5, "y": 73, "z": 7228.5, "yaw": 270, "pitch": 0 },
+            { "x": 1031.5, "y": 73, "z": 7230.5, "yaw": 270, "pitch": 0 },
+          ],
+      },
+      {
+        "color": "BLUE",
+        "spawns":
+          [
+            { "x": 1146.5, "y": 73, "z": 7218.5, "yaw": 90, "pitch": 0 },
+            { "x": 1146.5, "y": 73, "z": 7220.5, "yaw": 90, "pitch": 0 },
+            { "x": 1146.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 1146.5, "y": 73, "z": 7230.5, "yaw": 90, "pitch": 0 },
+            { "x": 1144.5, "y": 73, "z": 7218.5, "yaw": 90, "pitch": 0 },
+            { "x": 1144.5, "y": 73, "z": 7220.5, "yaw": 90, "pitch": 0 },
+            { "x": 1144.5, "y": 73, "z": 7228.5, "yaw": 90, "pitch": 0 },
+            { "x": 1144.5, "y": 73, "z": 7230.5, "yaw": 90, "pitch": 0 },
+          ],
+      },
+    ],
+  "bombs":
+    [
+      { "id": "red-1", "team": "RED", "at": { "x": 1038, "y": 73, "z": 7224 } },
+      {
+        "id": "blue-1",
+        "team": "BLUE",
+        "at": { "x": 1137, "y": 73, "z": 7224 },
+      },
+    ],
+  "nukes": [],
+  "blocksSha256": "bc8b1f6b37121f9c5b13385315f9084137accb095cf302c086086ef929a32d38",
+}

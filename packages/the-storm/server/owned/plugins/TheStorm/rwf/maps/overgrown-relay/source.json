@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "original-mc-build-program",
+  "program": "tools/maps/authored/overgrown-relay.ts",
+  "metadata": "tools/maps/authored/overgrown-relay.json",
+  "seed": 10504,
+  "dataVersion": 4903,
+  "blocksSha256": "180ebc58d1d8e38ebef99bf8a946458dce5e8af5e7d2da801917a9691836f9e7"
+}

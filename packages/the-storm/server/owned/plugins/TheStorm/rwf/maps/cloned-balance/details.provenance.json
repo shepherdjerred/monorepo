@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "cloned-balance",
-  "blocksSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
-  "detailsSha256": "22ebb3f6b9ed5c86fa4d981adeec6a3748f9a844bd3fabf726445253581a99c6",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
+  "detailsSha256": "a3041a7fa82fab13a01e8659b628780dd8f272b0d3ab081c32a8799b20b58256",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 0,
+    "signs": 0
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
+    "count": 11
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 0,
     "signs": 11

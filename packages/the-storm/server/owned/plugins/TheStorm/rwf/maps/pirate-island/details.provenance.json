@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "id": "pirate-island",
-  "blocksSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
-  "detailsSha256": "a2ab3ea63cb7fa29503f956006d937234e334c45aacd7f8f31b5f1dd50153ea3",
-  "policy": "preserve-inventories-and-literal-sign-text-strip-other-payloads",
+  "blocksSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
+  "detailsSha256": "67f297a9126e122a91641f8871584376267ba268bd18e6984e835e89395dbeb1",
+  "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
       "file": "TheStorm.jar",
@@ -1579,6 +1579,15 @@
     }
   ],
   "result": {
+    "state": "complete",
+    "containers": 40,
+    "signs": 4
+  },
+  "shopRemoval": {
+    "originalBlocksSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
+    "count": 14
+  },
+  "nativeExportResult": {
     "state": "complete",
     "containers": 40,
     "signs": 18

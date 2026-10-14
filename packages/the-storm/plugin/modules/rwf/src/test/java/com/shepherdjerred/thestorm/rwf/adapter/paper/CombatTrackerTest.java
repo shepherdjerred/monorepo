@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
+import com.shepherdjerred.thestorm.rwf.domain.combat.HitWindow;
 import com.shepherdjerred.thestorm.rwf.testing.FakeClock;
 import com.shepherdjerred.thestorm.rwf.testing.Samples;
 import java.time.Duration;
@@ -119,5 +120,69 @@ final class CombatTrackerTest {
     clock.advance(Duration.ofMinutes(2));
 
     assertThat(tracker.credit(victim)).map(CombatTracker.Credit::attacker).contains(PUSHER);
+  }
+
+  @Test
+  void nativeAndLegacyDamageShareOneWindowWithoutNativeInvulnerability() {
+    victim.setMaximumNoDamageTicks(0);
+    victim.setTicksLived(100);
+    tracker.hit(victim, 3, Optional.of(PUSHER), AttackType.MELEE);
+    assertThat(tracker.guard(victim).noDamageTicks()).isEqualTo(20);
+    assertThat(victim.getNoDamageTicks()).isZero();
+
+    victim.setTicksLived(105);
+    tracker.hit(victim, 5, Optional.of(PUSHER), AttackType.PROJECTILE);
+    assertThat(tracker.guard(victim).noDamageTicks()).isEqualTo(15);
+    assertThat(tracker.guard(victim).lastDamage()).isEqualTo(5);
+
+    victim.setTicksLived(111);
+    assertThat(tracker.guard(victim).inWindow()).isFalse();
+    tracker.hit(victim, 2, Optional.of(PUSHER), AttackType.MELEE);
+    assertThat(tracker.guard(victim).noDamageTicks()).isEqualTo(20);
+    tracker.forget(victim.getUniqueId());
+    assertThat(tracker.guard(victim)).isEqualTo(HitWindow.Guard.NONE);
+  }
+
+  @Test
+  void clearingNativeInvulnerabilityDoesNotBypassTheMatchWindow() {
+    victim.setMaximumNoDamageTicks(0);
+    victim.setTicksLived(100);
+    tracker.hit(victim, 3, Optional.of(PUSHER), AttackType.MELEE);
+    victim.setNoDamageTicks(0);
+
+    assertThat(HitWindow.resolve(3, AttackType.PROJECTILE, tracker.guard(victim)))
+        .isInstanceOf(HitWindow.Resolution.Blocked.class);
+    assertThat(HitWindow.resolve(5, AttackType.PROJECTILE, tracker.guard(victim)))
+        .isEqualTo(new HitWindow.Resolution.Partial(2));
+
+    victim.setTicksLived(110);
+    assertThat(HitWindow.resolve(3, AttackType.MELEE, tracker.guard(victim)))
+        .isEqualTo(new HitWindow.Resolution.Full(3));
+  }
+
+  @Test
+  void rateIgnoringDamageOpensItsOwnWindowAndClearingAMatchForgetsIt() {
+    victim.setMaximumNoDamageTicks(0);
+    victim.setTicksLived(100);
+    tracker.hit(victim, 3, Optional.of(PUSHER), AttackType.MELEE);
+    victim.setTicksLived(105);
+    assertThat(HitWindow.resolve(2, AttackType.FALL, tracker.guard(victim)))
+        .isEqualTo(new HitWindow.Resolution.Full(2));
+    tracker.hit(victim, 2, Optional.empty(), AttackType.FALL);
+
+    assertThat(tracker.guard(victim)).isEqualTo(new HitWindow.Guard(20, 2));
+    tracker.clear();
+    assertThat(tracker.guard(victim)).isEqualTo(HitWindow.Guard.NONE);
+  }
+
+  @Test
+  void entitiesOutsideMatchSetupKeepTheirNativeWindow() {
+    victim.setMaximumNoDamageTicks(20);
+    victim.setNoDamageTicks(14);
+    tracker.hit(victim, 3, Optional.of(PUSHER), AttackType.MELEE);
+
+    assertThat(tracker.guard(victim)).isEqualTo(new HitWindow.Guard(14, 3));
+    victim.setNoDamageTicks(0);
+    assertThat(tracker.guard(victim)).isEqualTo(new HitWindow.Guard(0, 3));
   }
 }
