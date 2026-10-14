@@ -2,6 +2,7 @@ import { realpath } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { stopOwnedMacProcess } from "./mac-process-owner";
 import {
   packageRoot,
   iosBundle,
@@ -317,19 +318,7 @@ export async function launch(
   );
   if (selected.includes("macos")) {
     const executable = path.join(app, "Contents/MacOS/FacetAcceptance");
-    const owned = await ownedMacProcesses(executable);
-    for (const pid of owned) {
-      await runCommand(["kill", "-TERM", pid]);
-    }
-    const deadline = Date.now() + 15_000;
-    let remaining = await ownedMacProcesses(executable);
-    while (remaining.length > 0) {
-      remainingMS();
-      if (Date.now() >= deadline)
-        throw new Error("Owned acceptance app did not finish shutting down");
-      await Bun.sleep(100);
-      remaining = await ownedMacProcesses(executable);
-    }
+    await stopOwnedMacProcess(executable, remainingMS);
     await runCommand([
       "open",
       "-n",
@@ -339,34 +328,6 @@ export async function launch(
       clientState(manifest, "macos").descriptor,
     ]);
   }
-}
-
-async function ownedMacProcesses(executable: string): Promise<string[]> {
-  const inspection = Bun.spawn(
-    ["/usr/sbin/lsof", "-t", "-a", "-d", "txt", "--", executable],
-    {
-      stdout: "pipe",
-      stderr: "pipe",
-      timeout: 1000,
-      killSignal: "SIGKILL",
-    },
-  );
-  const [processes, diagnostic, exitCode] = await Promise.all([
-    new Response(inspection.stdout).text(),
-    new Response(inspection.stderr).text(),
-    inspection.exited,
-  ]);
-  if (exitCode !== 0 && (exitCode !== 1 || diagnostic.trim() !== ""))
-    throw new Error("Could not inspect the owned acceptance app process");
-  return processes
-    .split("\n")
-    .filter(Boolean)
-    .map((pid) =>
-      z
-        .string()
-        .regex(/^[1-9]\d*$/u)
-        .parse(pid),
-    );
 }
 
 export async function statuses(manifest: Manifest) {
