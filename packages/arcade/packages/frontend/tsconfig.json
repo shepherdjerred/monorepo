@@ -1,0 +1,10 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "@types/node", "@types/dom-webcodecs"],
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": ["src", "test", "vite.config.ts", "eslint.config.ts"]
+}

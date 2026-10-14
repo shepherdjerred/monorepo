@@ -9,6 +9,7 @@ type ImageTargetRegistration = {
 export const IMAGE_TARGET_REGISTRY: Readonly<
   Record<string, ImageTargetRegistration>
 > = {
+  arcade: { owner: "@arcade/backend", ghcrVisibility: "public" },
   tracker: {
     owner: "@shepherdjerred/tracker",
     ghcrVisibility: "public",

@@ -1,12 +1,13 @@
 import * as Sentry from "@sentry/bun";
 import type { Client as BotClient } from "discord.js";
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
 import type {
   Session,
   SessionStopReason,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
-import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
-import type { ScreenMode } from "#src/emulator/mk64-state.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session";
+import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
+import type { Mk64Snapshot, ScreenMode } from "#src/emulator/mk64-state.ts";
+import type { SeatPlayer } from "#src/leaderboard/race-watcher.ts";
 import {
   assertEepromIntact,
   createGameEngine,
@@ -92,6 +93,9 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
   private readonly stats: LeaderboardStoreFactory;
   private botClient: BotClient | null = null;
   private active: ActiveSessionRuntime | null = null;
+  private readonly seatPlayers: (() => (SeatPlayer | null)[]) | undefined;
+  private readonly onSnapshot: ((snapshot: Mk64Snapshot) => void) | undefined;
+  private readonly onRaceRecorded: (() => void) | undefined;
 
   constructor(params: {
     config: Config;
@@ -99,11 +103,17 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     driverFeed?: DriverFeedService | undefined;
     /** Race history, shared with the web page's stats. */
     stats: LeaderboardStoreFactory;
+    seatPlayers?: () => (SeatPlayer | null)[];
+    onSnapshot?: (snapshot: Mk64Snapshot) => void;
+    onRaceRecorded?: () => void;
   }) {
     this.config = params.config;
     this.build = params.build;
     this.driverFeed = params.driverFeed;
     this.stats = params.stats;
+    this.seatPlayers = params.seatPlayers;
+    this.onSnapshot = params.onSnapshot;
+    this.onRaceRecorded = params.onRaceRecorded;
   }
 
   /** Wire the bot client after createGameBot constructs it. Must be called before /play. */
@@ -183,6 +193,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         logger.info("emulator running", { guildId: session.guildId });
       },
       onSessionEnded: () => {
+        if (this.active === null) return;
         try {
           emulator.restartFromStartMenu("stream_session_ended");
         } catch (error) {
@@ -197,16 +208,19 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // closure so the RaceTracker can pick up the real broadcast once it's set.
     let broadcast: () => Promise<void> = () => Promise.resolve();
     const raceTracker = new RaceTracker({
-      seatPlayers: () =>
-        seatManager
-          .users()
-          .map((user) =>
-            user === null
-              ? null
-              : { discordId: user.discordId, name: user.name },
-          ),
+      seatPlayers:
+        this.seatPlayers ??
+        (() =>
+          seatManager
+            .users()
+            .map((user) =>
+              user === null
+                ? null
+                : { discordId: user.discordId, name: user.name },
+            )),
       store: leaderboardStore,
       onRaceRecorded: () => {
+        this.onRaceRecorded?.();
         void broadcast();
       },
     });
@@ -214,6 +228,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // delivers one every snapshotEveryNFrames frames; feed each to the tracker.
     emulator.onSnapshot((snap) => {
       raceTracker.updateFromSnapshot(snap);
+      this.onSnapshot?.(snap);
     });
 
     const overlayContext: StreamOverlayContextProvider = () => ({
@@ -297,22 +312,27 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     if (runtime === null) {
       return;
     }
+    const failures: unknown[] = [];
     try {
-      await runtime.streamer.stop();
+      await runtime.streamer.shutdown();
     } catch (error) {
-      logger.error("streamer stop failed", error);
-    }
-    try {
-      runtime.streamer.destroy();
-    } catch (error) {
-      logger.error("streamer destroy failed", error);
+      failures.push(error);
+      logger.error("streamer shutdown failed", error);
     }
     // No save flush: the game writes default.sav into its home as it saves.
     try {
       await runtime.emulator.stop();
     } catch (error) {
+      failures.push(error);
       logger.error("emulator stop failed", error);
     }
+    try {
+      await runtime.raceTracker.flush();
+    } catch (error) {
+      failures.push(error);
+    }
+    if (failures.length > 0)
+      throw new AggregateError(failures, "Mario Kart shutdown failed");
   }
 
   welcomeMessage(session: Session<SelfbotPooledUserbot>): string {

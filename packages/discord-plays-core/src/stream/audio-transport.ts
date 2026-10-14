@@ -1,5 +1,5 @@
 import { createServer, type Server, type Socket } from "node:net";
-import { PassThrough } from "node:stream";
+import { PcmSink } from "./pcm-sink.ts";
 
 // The emulator emits raw PCM (games differ in sample format and rate: pokemon
 // hands ffmpeg the m4a mixer's un-quantised Float32 LRLR PCM at 13379 Hz;
@@ -35,7 +35,7 @@ export function buildAudioInputOptions(
 
 export type AudioTransport = {
   /** Write raw PCM (in the configured format) here; piped to ffmpeg's audio input once it connects. */
-  readonly sink: PassThrough;
+  readonly sink: PcmSink;
   /** ffmpeg input source — a loopback TCP url ffmpeg dials as a client. */
   readonly source: string;
   /** ffmpeg input options describing the raw PCM format (see buildAudioInputOptions). */
@@ -71,7 +71,9 @@ function listenOnLoopback(server: Server): Promise<number> {
 export async function createAudioTransport(
   options: AudioTransportOptions,
 ): Promise<AudioTransport> {
-  const sink = new PassThrough();
+  const sampleBytes = (options.format === "f32le" ? 4 : 2) * options.channels;
+  const quantum = Math.ceil(options.sampleRate / 100) * sampleBytes;
+  const sink = new PcmSink(quantum * 12, quantum);
   let socket: Socket | null = null;
   const server = createServer((connection) => {
     socket = connection;
@@ -97,7 +99,7 @@ export async function createAudioTransport(
     close: () => {
       if (closed) return;
       closed = true;
-      sink.end();
+      sink.close();
       if (socket !== null) socket.destroy();
       server.close();
     },

@@ -100,6 +100,7 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     "temporal-worker": ["packages/toolkit/"],
     "discord-plays-pokemon": ["packages/discord-plays-pokemon/"],
     "discord-plays-mario-kart": ["packages/discord-plays-mario-kart/"],
+    arcade: ["packages/discord-plays-mario-kart/spaghetti-src/"],
     infra: [
       "packages/homelab/src/domain-registry.json",
       "packages/homelab/src/domain-registry.ts",

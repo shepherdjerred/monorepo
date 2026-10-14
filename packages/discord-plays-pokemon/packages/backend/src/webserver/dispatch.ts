@@ -70,27 +70,31 @@ async function handleCommand(
   user: DiscordUser | undefined,
   deps: DispatchDeps,
 ): Promise<void> {
-  const reply = (response: InputResultResponse["value"]) => {
-    const message: InputResultResponse = {
-      kind: "input-result",
-      value: response,
-    };
-    socket.emit("response", message);
+  const message: InputResultResponse = {
+    kind: "input-result",
+    value: await runInteractiveCommand(text, user, deps),
   };
+  socket.emit("response", message);
+}
+
+/** Shared command boundary for the standalone page and Arcade game module. */
+export async function runInteractiveCommand(
+  text: string,
+  user: DiscordUser | undefined,
+  deps: Pick<DispatchDeps, "driver" | "config" | "policy">,
+): Promise<InputResultResponse["value"]> {
   const command = text.trim();
 
   const blocker = deps.policy.blockerFor(user);
   if (blocker !== null) {
-    reply({ accepted: false, command, reason: blocker });
-    return;
+    return { accepted: false, command, reason: blocker };
   }
   if (user === undefined)
     throw new Error("play policy admitted an unsigned player");
 
   const active = deps.driver.getActiveRuntime();
   if (active === null) {
-    reply({ accepted: false, command, reason: "no-session" });
-    return;
+    return { accepted: false, command, reason: "no-session" };
   }
 
   let chord: Chord | undefined;
@@ -108,8 +112,7 @@ async function handleCommand(
       maxQuantityPerAction: limits.max_quantity_per_action,
     })
   ) {
-    reply({ accepted: false, command, reason: "invalid" });
-    return;
+    return { accepted: false, command, reason: "invalid" };
   }
 
   const accepted = await executeInteractiveChord(
@@ -122,13 +125,11 @@ async function handleCommand(
     ),
   );
   if (!accepted) {
-    reply({ accepted: false, command, reason: "goal-mode" });
-    return;
+    return { accepted: false, command, reason: "goal-mode" };
   }
   if (deps.driver.getActiveRuntime() !== active) {
-    reply({ accepted: false, command, reason: "no-session" });
-    return;
+    return { accepted: false, command, reason: "no-session" };
   }
   deps.driver.inputLog.record({ user: user.name, source: "web", command });
-  reply({ accepted: true, command });
+  return { accepted: true, command };
 }

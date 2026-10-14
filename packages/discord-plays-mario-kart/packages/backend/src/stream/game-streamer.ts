@@ -6,29 +6,24 @@ import {
   type PlayStreamOptions,
   type StreamObserver,
 } from "@shepherdjerred/discord-video-stream";
-import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
 import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { LatestFrameSink } from "@shepherdjerred/discord-plays-core/stream/latest-frame-sink.ts";
-import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
-  streamFfmpegBitrateKbps,
-  streamFfmpegFps,
-  streamFfmpegSpeedRatio,
   streamFrameIntervalMs,
   streamFramesDroppedTotal,
   streamFrameWriteMs,
-  streamHwEncodeEngaged,
 } from "#src/observability/metrics.ts";
 import {
   createStreamObserver,
   newSessionStats,
-  prometheusLatencyObservations,
-  resetStreamLatencyMetrics,
+  createLatencyObservations,
   type SessionStats,
 } from "#src/stream/stream-observer.ts";
+import { createStreamMetrics, type StreamMetrics } from "./session-metrics.ts";
 import {
   StreamLatencyTracker,
   type VideoSourceTiming,
@@ -46,6 +41,9 @@ export type GameStreamerOptions = {
   channelId: string;
   /** The engine's frames and audio; sizes the raw inputs handed to ffmpeg. */
   format: FrameFormat;
+  pixelFormat?: "bgra" | "rgba";
+  displayAspect?: number;
+  onMediaOverrun?: (kind: "audio") => void;
   // Height of the 16:9 output canvas; the 4:3 game is pillarboxed onto it.
   canvasHeight: number;
   frameRate: number;
@@ -94,6 +92,7 @@ export class GameStreamer extends GameStreamerBase {
   private streamObserver: StreamObserver | undefined;
   private videoSink: LatestFrameSink<VideoSourceTiming> | undefined;
   private latencyTracker: StreamLatencyTracker | undefined;
+  private streamMetrics: StreamMetrics | undefined;
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -127,14 +126,14 @@ export class GameStreamer extends GameStreamerBase {
     sink.writeFrame(frame, sourceTiming);
     // A slow write is backpressure showing up before the buffer gauge moves.
     streamFrameWriteMs.observe(performance.now() - pushAt);
-    sinkBufferBytes.set(this.videoSink?.bufferedBytes ?? 0);
+    this.bufferMetric.set(this.videoSink?.bufferedBytes ?? 0);
   }
 
   override pushAudio(pcm: Buffer, contentEndMs?: number): void {
     const transport = this.audioTransport;
     if (transport === null) return;
     const availableAtMs = performance.timeOrigin + performance.now();
-    transport.sink.write(pcm);
+    if (!transport.sink.write(pcm)) this.options.onMediaOverrun?.("audio");
     if (contentEndMs !== undefined) {
       this.latencyTracker?.recordAudioSource({
         pcmBytes: pcm.byteLength,
@@ -145,6 +144,7 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected override beforeActorStop(): void {
+    this.streamMetrics?.close();
     this.sendToActor({ type: "SHUTDOWN" });
   }
 
@@ -159,8 +159,10 @@ export class GameStreamer extends GameStreamerBase {
       throw new DOMException("encoder preparation aborted", "AbortError");
     }
 
+    const metrics = createStreamMetrics();
+    this.streamMetrics = metrics;
     const latencyTracker = new StreamLatencyTracker(
-      prometheusLatencyObservations,
+      createLatencyObservations(metrics),
       format.audioSampleRate,
     );
     this.latencyTracker = latencyTracker;
@@ -181,11 +183,11 @@ export class GameStreamer extends GameStreamerBase {
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
     const { content, canvas } = computeLetterbox(
-      DISPLAY_ASPECT,
+      this.options.displayAspect ?? DISPLAY_ASPECT,
       this.options.canvasHeight,
     );
     const session = newSessionStats();
-    const observer = createStreamObserver(session, { latencyTracker });
+    const observer = createStreamObserver(session, { latencyTracker, metrics });
     this.session = session;
     this.sessionStartedAt = performance.now();
     this.lastPushAt = undefined;
@@ -223,7 +225,7 @@ export class GameStreamer extends GameStreamerBase {
         // Declaring rgba here swaps red/blue in the broadcast; ffmpeg drops
         // the X byte converting to yuv420p.
         "-pix_fmt",
-        "bgra",
+        this.options.pixelFormat ?? "bgra",
         "-video_size",
         `${String(format.width)}x${String(format.height)}`,
         // ffmpeg assigns presentation timestamps from this rate, so it must
@@ -274,12 +276,9 @@ export class GameStreamer extends GameStreamerBase {
   private resetStreamMetrics(): void {
     this.videoSink = undefined;
     this.latencyTracker = undefined;
-    resetStreamLatencyMetrics();
-    sinkBufferBytes.set(0);
-    streamFfmpegSpeedRatio.set(0);
-    streamFfmpegFps.set(0);
-    streamFfmpegBitrateKbps.set(0);
-    streamHwEncodeEngaged.set(0);
+    this.streamMetrics?.close();
+    this.streamMetrics = undefined;
+    this.bufferMetric.set(0);
     this.lastPushAt = undefined;
     this.streamObserver = undefined;
   }

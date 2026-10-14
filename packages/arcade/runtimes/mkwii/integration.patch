@@ -1,0 +1,77 @@
+--- a/runtime/src/audio_backend.cpp
++++ b/runtime/src/audio_backend.cpp
+@@ -8,6 +8,9 @@
+ #include <iostream>
+ 
+ #include <SDL3/SDL_init.h>
++#if defined(__EMSCRIPTEN__)
++#include <emscripten.h>
++#endif
+ 
+ AudioBackend& AudioBackend::Instance() {
+     static AudioBackend instance;
+@@ -206,6 +209,12 @@
+     }
+ 
+     const int lenBytes = static_cast<int>(frameCount * 2 * sizeof(int16_t));
++    #if defined(__EMSCRIPTEN__)
++    if (EM_ASM_INT({
++        if (!Module.onArcadeAudio) return 0;
++        Module.onArcadeAudio($0, $1, $2); return 1;
++    }, m_convertBuffer.data(), lenBytes, static_cast<int>(m_sampleRate))) return true;
++    #endif
+     if (!QueueHasCapacityLocked(lenBytes)) {
+         return true;
+     }
+@@ -228,6 +237,12 @@
+     }
+ 
+     const int lenBytes = static_cast<int>(sampleCount * sizeof(int16_t));
++    #if defined(__EMSCRIPTEN__)
++    if (EM_ASM_INT({
++        if (!Module.onArcadeAudio) return 0;
++        Module.onArcadeAudio($0, $1, $2); return 1;
++    }, samples, lenBytes, static_cast<int>(m_sampleRate))) return true;
++    #endif
+     if (!QueueHasCapacityLocked(lenBytes)) {
+         return true;
+     }
+--- a/runtime/src/hle/input/pad.cpp
++++ b/runtime/src/hle/input/pad.cpp
+@@ -16,6 +16,7 @@
+ 
+ #if defined(__EMSCRIPTEN__)
+ #include "web_input.h"
++extern "C" int arcade_mkw_override_pads(PADStatus*);
+ #endif
+ 
+ namespace {
+@@ -127,6 +128,7 @@
+     if (!InputBindings::InputBlocked()) {
+         WebInput::ApplyTouch(statuses, PAD_CHANMAX);
+     }
++    arcade_mkw_override_pads(statuses);
+     // [web] The page's input debug view shows exactly these statuses.
+     WebInput::PublishPadStatus(statuses, PAD_CHANMAX, rumbleMask);
+ #endif
+--- a/runtime/cmake/PublicProducts.cmake
++++ b/runtime/cmake/PublicProducts.cmake
+@@ -236,7 +236,7 @@
+         -sMAXIMUM_MEMORY=4GB
+         # The main stack hosts the scheduler; guest threads own their own shadow stacks.
+         -sSTACK_SIZE=8MB
+-        -sEXPORTED_RUNTIME_METHODS=FS,ENV
++        -sEXPORTED_RUNTIME_METHODS=FS,ENV,HEAPU8,HEAP16
+         # <target>.js.symbols maps wasm function indices to names, so a stack from a player's
+         # error report ("wasm-function[N]") can be symbolized without shipping a name section.
+         --emit-symbol-map
+--- a/web/js/library_mkw_host.js
++++ b/web/js/library_mkw_host.js
+@@ -97,6 +97,7 @@
+   // One call per presented frame (Module.mkwFramesPresented).
+   mkw_host_note_frame: () => {
+     Module['mkwFramesPresented'] = (Module['mkwFramesPresented'] || 0) + 1;
++    if (Module['onArcadeFrame']) Module['onArcadeFrame'](Module['mkwFramesPresented']);
+   },
+ 
+   // The runtime's fatal report (ShowRuntimeFatalPopup), for the page's error overlay. Not a

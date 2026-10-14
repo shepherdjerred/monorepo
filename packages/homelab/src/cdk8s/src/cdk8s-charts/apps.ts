@@ -52,6 +52,7 @@ import { createPinchtabApp } from "@shepherdjerred/homelab/cdk8s/src/resources/a
 import { createFliptApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/flipt.ts";
 import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/pokemon.ts";
 import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/mario-kart.ts";
+import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-db.ts";
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/s3-static-sites.ts";
@@ -195,6 +196,7 @@ export async function createAppsChart(app: App) {
   createFliptApp(chart);
   createPokemonApp(chart);
   createMarioKartApp(chart);
+  createArcadeApp(chart);
   createGickupApp(chart);
   createGrafanaDbApp(chart);
   createBugsinkApp(chart);

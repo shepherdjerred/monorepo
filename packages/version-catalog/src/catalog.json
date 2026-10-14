@@ -3,6 +3,16 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "shepherdjerred/arcade",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": { "managed": false },
+      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "Arcade is dormant until the first CI image release and verified account handover"
+      ]
+    },
+    {
       "name": "shepherdjerred/tracker",
       "category": "internal-image",
       "artifactType": "image",

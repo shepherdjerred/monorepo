@@ -1,0 +1,20 @@
+# Non-secret typed configuration. Credentials remain in the two legacy TOMLs.
+controllerActive = false
+enabled = false
+mkwiiEnabled = false
+meleeEnabled = false
+brawlEnabled = false
+maxSessions = 2
+maxHeavySessions = 1
+port = 8081
+stateRoot = "/data/saves"
+databasePath = "/data/db/arcade.db"
+runtimeAssets = "/data/assets"
+mk64Config = "/config/mk64.toml"
+emeraldConfig = "/config/emerald.toml"
+webAssets = "/app/packages/arcade/packages/frontend/dist"
+chromium = "/usr/bin/chromium"
+dolphin = "/opt/dolphin/bin/dolphin-emu-nogui"
+runtimePort = 9082
+runtimeStartupTimeoutMs = 180000
+goalGuildIds = []

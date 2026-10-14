@@ -18,6 +18,7 @@ import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-po
  * Flipt management remains authenticated even from an allowed namespace.
  */
 const CONSUMER_NAMESPACES = [
+  "arcade",
   "starlight-karma-bot-beta",
   "starlight-karma-bot-prod",
   "scout-beta",

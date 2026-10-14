@@ -6,7 +6,7 @@ import { registry } from "#src/observability/metrics.ts";
 
 export const driverFeedEncoderRunning = new Gauge({
   name: "driver_feed_encoder_running",
-  help: "1 while the driver-feed ffmpeg process is alive, else 0. Independent of the Go-Live encoder — the driver feed can be off while the stream is healthy",
+  help: "Number of live driver-feed ffmpeg processes, independent of the Go-Live encoders",
   registers: [registry],
 });
 
@@ -70,7 +70,7 @@ export const driverFeedInputToUnitMs = new Histogram({
 
 export const driverFeedSinkFrames = new Gauge({
   name: "driver_feed_sink_frames",
-  help: "Raw frames queued in the driver-feed sink ahead of ffmpeg, sampled on every push. A standing value above 1 is latency added before encoding",
+  help: "Total raw frames queued ahead of ffmpeg across live driver feeds, sampled on every push",
   registers: [registry],
 });
 

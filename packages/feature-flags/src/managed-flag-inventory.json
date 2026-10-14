@@ -2,6 +2,11 @@
   "version": 3,
   "namespaces": [
     {
+      "key": "arcade",
+      "name": "Arcade",
+      "description": "Arcade game rollout controls."
+    },
+    {
       "key": "tracker",
       "name": "Tracker",
       "description": "Tracker cutover and runtime controls."
@@ -63,6 +68,114 @@
     }
   ],
   "flags": [
+    {
+      "key": "arcade_enabled",
+      "owner": "arcade",
+      "namespace": "arcade",
+      "source": "code",
+      "purpose": "Enable Arcade session creation after game and migration acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "arcade-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "environment",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "arcade_mkwii_enabled",
+      "owner": "arcade",
+      "namespace": "arcade",
+      "source": "code",
+      "purpose": "Enable Mario Kart Wii after runtime and telemetry acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "arcade-mkwii-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "environment",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "arcade_melee_enabled",
+      "owner": "arcade",
+      "namespace": "arcade",
+      "source": "code",
+      "purpose": "Enable Melee after runtime and telemetry acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "arcade-melee-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "environment",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "arcade_brawl_enabled",
+      "owner": "arcade",
+      "namespace": "arcade",
+      "source": "code",
+      "purpose": "Enable Brawl after runtime and telemetry acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "arcade-brawl-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "environment",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
     {
       "key": "scout_durable_orchestration_enabled",
       "owner": "scout",

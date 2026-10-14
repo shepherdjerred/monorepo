@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 export const MANAGED_NAMESPACES = [
+  "arcade",
   "tracker",
   "woodpecker",
   "justin",
@@ -18,6 +19,26 @@ export const MANAGED_NAMESPACES = [
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
+
+export const ARCADE_BOOLEAN_FLAG_KEYS = [
+  "arcade_enabled",
+  "arcade_mkwii_enabled",
+  "arcade_melee_enabled",
+  "arcade_brawl_enabled",
+] as const;
+
+export type ArcadeBooleanFlagKey = (typeof ARCADE_BOOLEAN_FLAG_KEYS)[number];
+
+export const ARCADE_VARIANT_FLAG_KEYS = [] as const;
+
+export type ArcadeVariantFlagKey = (typeof ARCADE_VARIANT_FLAG_KEYS)[number];
+
+export const ARCADE_FLAG_KEYS = [
+  ...ARCADE_BOOLEAN_FLAG_KEYS,
+  ...ARCADE_VARIANT_FLAG_KEYS,
+] as const;
+
+export type ArcadeFlagKey = (typeof ARCADE_FLAG_KEYS)[number];
 
 export const TRACKER_BOOLEAN_FLAG_KEYS = [
   "tracker-writes-enabled",
@@ -378,6 +399,7 @@ export const STORM_FLAG_KEYS = [
 export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
+  ...ARCADE_FLAG_KEYS,
   ...TRACKER_FLAG_KEYS,
   ...WOODPECKER_FLAG_KEYS,
   ...JUSTIN_FLAG_KEYS,
@@ -395,6 +417,7 @@ export const MANAGED_FLAG_KEYS = [
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
 
 export const MANAGED_BOOLEAN_FLAG_KEYS = [
+  ...ARCADE_BOOLEAN_FLAG_KEYS,
   ...TRACKER_BOOLEAN_FLAG_KEYS,
   ...WOODPECKER_BOOLEAN_FLAG_KEYS,
   ...JUSTIN_BOOLEAN_FLAG_KEYS,
@@ -412,6 +435,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
 
 export const MANAGED_VARIANT_FLAG_KEYS = [
+  ...ARCADE_VARIANT_FLAG_KEYS,
   ...TRACKER_VARIANT_FLAG_KEYS,
   ...WOODPECKER_VARIANT_FLAG_KEYS,
   ...JUSTIN_VARIANT_FLAG_KEYS,

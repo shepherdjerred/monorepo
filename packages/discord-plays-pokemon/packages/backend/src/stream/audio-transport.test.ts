@@ -115,7 +115,18 @@ async function renderBroadcast(pcm: Buffer): Promise<string> {
   const frame = Buffer.alloc(WIDTH * HEIGHT * 4, 0x80);
   await Promise.all([
     (async () => {
-      await writeWithBackpressure(transport.sink, pcm);
+      // Live producers emit short PCM blocks. A whole recording written at
+      // once exceeds the transport's deliberately bounded latency window.
+      await once(transport.sink, "resume");
+      const blockBytes =
+        Math.ceil(AUDIO_SAMPLE_RATE / 100) * AUDIO_CHANNELS * 4;
+      for (let offset = 0; offset < pcm.length; offset += blockBytes) {
+        expect(
+          transport.sink.write(pcm.subarray(offset, offset + blockBytes)),
+        ).toBe(true);
+        await Bun.sleep(10);
+      }
+      expect(transport.sink.droppedBytes).toBe(0);
       transport.sink.end();
     })(),
     (async () => {

@@ -2,6 +2,21 @@
   "$schema": "./services.schema.json",
   "services": [
     {
+      "id": "arcade",
+      "title": "Arcade",
+      "kind": "product",
+      "package": "arcade",
+      "namespaces": ["arcade"],
+      "argoApps": ["arcade"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/arcade",
+          "argoApp": "arcade"
+        }
+      ]
+    },
+    {
       "id": "scout-for-lol",
       "title": "Scout for LoL",
       "kind": "product",

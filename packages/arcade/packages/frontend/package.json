@@ -1,0 +1,42 @@
+{
+  "name": "@arcade/frontend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && vite build",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@arcade/common": "workspace:*",
+    "@shepherdjerred/discord-plays-web": "workspace:*",
+    "@shepherdjerred/discord-plays-core": "workspace:*",
+    "@tanstack/react-query": "^5.70.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "socket.io-client": "^4.8.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/dom-webcodecs": "^0.1.18",
+    "@types/node": "^26.1.1",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11"
+  }
+}

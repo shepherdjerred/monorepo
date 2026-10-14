@@ -267,7 +267,7 @@ describe("Flipt chart", () => {
       'git -C "$staging" init --initial-branch=main',
     );
     expect(initializationScript).toContain(
-      'git -C "$staging" add -- "tracker/features.yaml" "woodpecker/features.yaml" "justin/features.yaml" "scout/features.yaml"',
+      'git -C "$staging" add -- "arcade/features.yaml" "tracker/features.yaml" "woodpecker/features.yaml" "justin/features.yaml" "scout/features.yaml"',
     );
     expect(initializationScript).toContain('if [ -e "$repo" ]');
     expect(initializationScript).not.toContain("data-beta");
@@ -288,6 +288,7 @@ describe("Flipt chart", () => {
       ["beta", "prod"]
         .flatMap((environment) =>
           [
+            "arcade",
             "woodpecker",
             "justin",
             "scout",
@@ -407,6 +408,7 @@ describe("Flipt network policy", () => {
     ["storm-brain to read its classify/triage gates", "storm-brain"],
     ["the production forum to read registration and season", "storm-forum"],
     ["the private forum to read registration and season", "storm-forum-beta"],
+    ["Arcade to read per-game rollout gates", "arcade"],
     ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
   ])("allows %s", (_label, namespace) => {
     const policy = z

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: arcade
+description: Multi-game Discord arcade application
+type: application
+version: "$version"
+appVersion: "$appVersion"

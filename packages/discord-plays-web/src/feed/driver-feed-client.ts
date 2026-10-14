@@ -140,10 +140,10 @@ export function retainDriverFeedEntryPoint(
  */
 export type DriverFeedQuery = Readonly<Record<string, string>>;
 
-function feedUrl(query: DriverFeedQuery): string {
+function feedUrl(query: DriverFeedQuery, path: string): string {
   const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
   const search = new URLSearchParams(query).toString();
-  return `${protocol}//${globalThis.location.host}${DRIVER_FEED_PATH}${search === "" ? "" : `?${search}`}`;
+  return `${protocol}//${globalThis.location.host}${path}${search === "" ? "" : `?${search}`}`;
 }
 
 /**
@@ -155,6 +155,7 @@ function feedUrl(query: DriverFeedQuery): string {
 export function connectDriverFeed(
   callbacks: DriverFeedCallbacks,
   query: DriverFeedQuery = {},
+  path: string = DRIVER_FEED_PATH,
 ): () => void {
   if (!("VideoDecoder" in globalThis)) {
     callbacks.onStatus({ kind: "unsupported" });
@@ -305,7 +306,7 @@ export function connectDriverFeed(
     if (disposed) return;
     pendingEntryPoint = undefined;
     callbacks.onStatus({ kind: "connecting" });
-    const ws = new WebSocket(feedUrl(query));
+    const ws = new WebSocket(feedUrl(query, path));
     ws.binaryType = "arraybuffer";
     socket = ws;
 

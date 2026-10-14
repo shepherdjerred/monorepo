@@ -58,25 +58,25 @@ export const streamFramesDroppedTotal = new Counter({
 
 export const streamFfmpegSpeedRatio = new Gauge({
   name: "stream_ffmpeg_speed_ratio",
-  help: "Media seconds encoded per wall-clock second, derived from ffmpeg timemark advance; sustained <1 means the encoder cannot keep realtime",
+  help: "Slowest live instrumented encoder's media seconds per wall-clock second; sustained <1 means an encoder cannot keep realtime",
   registers: [registry],
 });
 
 export const streamFfmpegFps = new Gauge({
   name: "stream_ffmpeg_fps",
-  help: "ffmpeg's reported output frame rate",
+  help: "Combined reported output frame rate of live instrumented encoders",
   registers: [registry],
 });
 
 export const streamFfmpegBitrateKbps = new Gauge({
   name: "stream_ffmpeg_bitrate_kbps",
-  help: "ffmpeg's reported output bitrate, in kbps",
+  help: "Combined reported output bitrate of live instrumented encoders, in kbps",
   registers: [registry],
 });
 
 export const streamHwEncodeEngaged = new Gauge({
   name: "stream_hw_encode_engaged",
-  help: "1 if the running ffmpeg command uses the VAAPI hardware encoder, else 0",
+  help: "Number of live instrumented ffmpeg commands using the VAAPI hardware encoder",
   registers: [registry],
 });
 
@@ -133,7 +133,7 @@ export const streamInputToSendCompleteMs = new Histogram({
 
 export const streamAvContentOffsetMs = new Gauge({
   name: "stream_av_content_offset_ms",
-  help: "Video source-content offset minus audio source-content offset at encoded output, in ms; positive means audio content lags video",
+  help: "Largest absolute signed video-minus-audio source-content offset across live streams, in ms; positive means audio content lags video",
   registers: [registry],
 });
 

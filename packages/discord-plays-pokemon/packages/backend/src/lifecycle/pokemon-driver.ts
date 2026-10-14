@@ -1,11 +1,11 @@
 import path from "node:path";
 import type { Client as BotClient } from "discord.js";
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
 import type {
   Session,
   SessionStopReason,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
-import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session";
+import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { Emulator, type EmulatorOptions } from "#src/emulator/emulator.ts";
 import {
   framesFromMs,
@@ -56,7 +56,13 @@ export const POKEMON_SAVE_HISTORY_ENTRIES = [
 /** The streamer surface a session drives; GameStreamer in production. */
 export type SessionStreamer = Pick<
   GameStreamer,
-  "login" | "start" | "stop" | "destroy" | "pushFrame" | "pushAudio"
+  | "login"
+  | "start"
+  | "stop"
+  | "shutdown"
+  | "destroy"
+  | "pushFrame"
+  | "pushAudio"
 >;
 
 /** Seams for building a session's emulator and streamer (tests substitute fakes). */
@@ -90,6 +96,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
   private readonly goalGuildIds: ReadonlySet<string>;
   private readonly factories: PokemonDriverFactories;
   private readonly driverFeed: DriverFeedService | undefined;
+  private readonly controlPort: number | undefined;
   private botClient: BotClient | null = null;
   /** Per-active-session bag of teardown handles. Null when idle. */
   private active: ActiveSessionRuntime | null = null;
@@ -106,11 +113,14 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     factories?: PokemonDriverFactories;
     /** The in-browser live feed; encodes every frame while a session runs. */
     driverFeed?: DriverFeedService | undefined;
+    /** Arcade sessions request port 0; the resulting port is passed to the goal agent. */
+    controlPort?: number;
   }) {
     this.config = params.config;
     this.goalGuildIds = params.goalGuildIds;
     this.factories = params.factories ?? defaultFactories;
     this.driverFeed = params.driverFeed;
+    this.controlPort = params.controlPort;
   }
 
   /** Subscribe to in-game events (catches, badges, …) from every session. */
@@ -268,7 +278,12 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
           goalManager,
           config: { ...config, game: { ...config.game, goal: goalConfig } },
           token: controlToken,
+          ...(this.controlPort === undefined ? {} : { port: this.controlPort }),
         });
+        const controlPort = goalControlServer.port;
+        if (controlPort === undefined)
+          throw new Error("goal control server did not bind a TCP port");
+        goalManager.setControlPort(controlPort);
         parts.goalControlServer = goalControlServer;
       }
 
@@ -412,14 +427,9 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     }
     if (parts.streamer !== undefined) {
       try {
-        await parts.streamer.stop();
+        await parts.streamer.shutdown();
       } catch (error) {
         logger.error("streamer stop failed", error);
-      }
-      try {
-        parts.streamer.destroy();
-      } catch (error) {
-        logger.error("streamer destroy failed", error);
       }
     }
     // Commit live progress to the flash save before halting, so a goal-driven
@@ -429,15 +439,27 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     // rather than swallowing it (shared with the goal-end path). The emulator
     // loop is still running here, so a cutscene/animation can clear between
     // attempts; it is halted just below.
-    if (parts.goalManager !== undefined) {
-      await checkpointWithRetry(
-        () => parts.emulator.checkpointSave(),
-        `session stop (guild ${session.guildId})`,
-      );
+    const failures: unknown[] = [];
+    try {
+      if (parts.goalManager !== undefined) {
+        await checkpointWithRetry(
+          () => parts.emulator.checkpointSave(),
+          `session stop (guild ${session.guildId})`,
+        );
+      }
+    } catch (error) {
+      failures.push(error);
     }
     // Halt the loop and wait for the final flash write to be durable before the
     // session ends, so the next /play (this guild or another) never races it.
-    await parts.emulator.stopAndFlush();
+    try {
+      await parts.emulator.stopAndFlush();
+    } catch (error) {
+      failures.push(error);
+    }
+    if (failures.length === 1) throw failures[0];
+    if (failures.length > 1)
+      throw new AggregateError(failures, "Pokémon save flush failed");
   }
 
   welcomeMessage(session: Session<SelfbotPooledUserbot>): string {

@@ -66,4 +66,15 @@ describe("parseCatalogPins", () => {
   test("rejects text that is not a valid catalog", () => {
     expect(() => parseCatalogPins("{}")).toThrow();
   });
+
+  test("does not turn a declared unpublished image into a published release", () => {
+    const catalog = JSON.stringify({
+      $schema: "./schema.json",
+      schemaVersion: 1,
+      entries: [
+        entry("shepherdjerred/arcade", `0.0.0@sha256:${"0".repeat(64)}`),
+      ],
+    });
+    expect(parseCatalogPins(catalog).has("shepherdjerred/arcade")).toBe(false);
+  });
 });

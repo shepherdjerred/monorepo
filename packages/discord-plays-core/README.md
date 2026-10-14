@@ -15,6 +15,11 @@ fix lands once.
 - `src/observability/metrics.ts` — the shared prom-client registry plus the
   emulator/stream instruments both games record identically; games register
   their extra instruments against the exported registry.
+- `src/observability/gauge-contribution.ts` — producer-owned gauge values for
+  concurrent broadcasts. Closing a producer removes only its contribution.
+  Counts, Go-Live buffered bytes, and throughput sum. Browser backlog reports
+  the worst client; encoder speed reports the slowest live encoder, and signed
+  A/V offset reports the largest absolute offset.
 - `src/stream/audio-transport.ts` — the loopback-TCP PCM transport ffmpeg
   reads its audio input from, parameterized on sample format, rate, and
   channels.

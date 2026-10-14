@@ -1,5 +1,23 @@
 [
   {
+    "namespace": "arcade",
+    "name": "arcade-assets",
+    "backup": "disabled",
+    "reason": "Private immutable game assets can be rebuilt from operator-owned dumps"
+  },
+  {
+    "namespace": "arcade",
+    "name": "arcade-saves",
+    "backup": "enabled",
+    "reason": "Guild save progress and pre-session history"
+  },
+  {
+    "namespace": "arcade",
+    "name": "arcade-database",
+    "backup": "enabled",
+    "reason": "Discord player attribution and durable per-game statistics"
+  },
+  {
     "namespace": "ops-restore-rehearsal-incremental",
     "name": "pgdata-temporal-postgresql-0",
     "backup": "disabled",

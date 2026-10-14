@@ -2,6 +2,7 @@
 
 // Files that may contain Intel GPU resources
 const filesToPatch = [
+  "dist/arcade.k8s.yaml",
   "dist/media.k8s.yaml",
   "dist/pokemon.k8s.yaml",
   "dist/mario-kart.k8s.yaml",

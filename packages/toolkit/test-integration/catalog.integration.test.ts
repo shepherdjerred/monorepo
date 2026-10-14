@@ -2,6 +2,7 @@ import { test, expect, describe } from "vitest";
 import { SERVICES, resolveServiceSelector } from "#lib/deployed/catalog.ts";
 import { showCatalogAt } from "#lib/deployed/git.ts";
 import { parseCatalogPins } from "#lib/deployed/catalog-pins.ts";
+import { parseVersionCatalogText } from "@shepherdjerred/version-catalog";
 
 /**
  * Drift guard: every versionKey in the service registry must exist in the real
@@ -11,16 +12,26 @@ import { parseCatalogPins } from "#lib/deployed/catalog-pins.ts";
  * than checking scripts/ci/src/catalog.ts.
  */
 describe("deployed service registry", () => {
-  test("every registry versionKey exists in the version catalog on HEAD", async () => {
+  test("every registry versionKey has a published pin or an explicit bootstrap marker on HEAD", async () => {
     const text = await showCatalogAt("HEAD");
     if (text == null) {
       throw new Error("could not read the version catalog on HEAD");
     }
     const pins = parseCatalogPins(text);
+    const pending = new Set(
+      parseVersionCatalogText(text)
+        .entries.filter(
+          (entry) =>
+            entry.category === "internal-image" &&
+            entry.artifactType === "image" &&
+            entry.value === `0.0.0@sha256:${"0".repeat(64)}`,
+        )
+        .map((entry) => entry.name),
+    );
     const missing: string[] = [];
     for (const service of SERVICES) {
       for (const variant of service.variants) {
-        if (!pins.has(variant.versionKey)) {
+        if (!pins.has(variant.versionKey) && !pending.has(variant.versionKey)) {
           missing.push(variant.versionKey);
         }
       }

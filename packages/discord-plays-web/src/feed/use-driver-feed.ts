@@ -7,6 +7,8 @@ import {
 } from "./driver-feed-client.ts";
 
 export type UseDriverFeedOptions = {
+  /** Session-specific route when a server hosts multiple games. */
+  readonly path?: string;
   /** Query parameters the game's admission policy reads. */
   readonly query?: DriverFeedQuery;
   /**
@@ -41,6 +43,7 @@ export function useDriverFeed(options: UseDriverFeedOptions = {}): DriverFeed {
   const optionsRef = useRef(options);
   optionsRef.current = options;
   const queryKey = JSON.stringify(options.query ?? {});
+  const path = options.path;
 
   useEffect(() => {
     // Resolve the 2D context once: getContext per frame is a measurable cost at
@@ -77,9 +80,10 @@ export function useDriverFeed(options: UseDriverFeedOptions = {}): DriverFeed {
         },
       },
       optionsRef.current.query,
+      path,
     );
     // queryKey stands in for the query's contents; the ref holds its value.
-  }, [queryKey]);
+  }, [queryKey, path]);
 
   return { canvasRef, status };
 }

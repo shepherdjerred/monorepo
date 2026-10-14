@@ -90,6 +90,10 @@
   "workspaces": [
     "packages/alert-dashboard",
     "packages/architecture",
+    "packages/arcade",
+    "packages/arcade/packages/backend",
+    "packages/arcade/packages/common",
+    "packages/arcade/packages/frontend",
     "packages/astro-opengraph-images",
     "packages/better-skill-capped",
     "packages/birmel",

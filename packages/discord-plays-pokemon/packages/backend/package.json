@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
   "imports": {
     "#architecture": "./architecture.config.ts",
     "#src/*": "./src/*"

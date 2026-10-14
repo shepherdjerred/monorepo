@@ -9,9 +9,10 @@ import type {
   RawGoLiveDeps,
 } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
-import { type Actor, createActor } from "xstate";
+import { type Actor, createActor, toPromise } from "xstate";
 import type { Logger } from "#src/logger.ts";
-import { streamActive } from "#src/observability/metrics.ts";
+import { streamActive, sinkBufferBytes } from "#src/observability/metrics.ts";
+import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
 
@@ -51,6 +52,9 @@ export abstract class GameStreamerBase {
   // Loopback PCM transport — sink fed by `pushAudio`, piped to ffmpeg. Created
   // in the subclass's buildEncoder() and torn down when the broadcast stops.
   protected audioTransport: AudioTransport | null = null;
+  private pendingJoin: ReturnType<Streamer["joinVoice"]> | undefined;
+  private readonly activeMetric = contributeGauge(streamActive, "sum");
+  protected readonly bufferMetric = contributeGauge(sinkBufferBytes, "sum");
 
   constructor(options: GameStreamerBaseOptions) {
     this.logger = options.logger;
@@ -79,9 +83,12 @@ export abstract class GameStreamerBase {
       const next = snapshot.context.frameSink;
       // The machine ends the video sink when a broadcast stops; tear the audio
       // transport down in lockstep so its socket/server don't leak.
-      if (next === null) this.teardownAudio();
+      if (next === null) {
+        this.teardownAudio();
+        this.bufferMetric.set(0);
+      }
       this.frameSink = next;
-      streamActive.set(this.frameSink === null ? 0 : 1);
+      this.activeMetric.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
   }
@@ -123,12 +130,32 @@ export abstract class GameStreamerBase {
     return Promise.resolve();
   }
 
+  /** Wait for voice/encoder teardown before returning the account to its pool. */
+  async shutdown(): Promise<void> {
+    const child = this.actor.getSnapshot().children.rawGoLive;
+    this.actor.send({ type: "SHUTDOWN" });
+    try {
+      await Promise.all([
+        child === undefined ? Promise.resolve() : toPromise(child),
+        this.pendingJoin,
+      ]);
+    } finally {
+      this.destroy();
+    }
+  }
+
   /** Stop the actor and tear down resources. Subclasses customize via the hooks below. */
   destroy(): void {
-    this.beforeActorStop();
-    this.actor.stop();
-    this.teardownAudio();
-    this.destroyClient();
+    try {
+      this.beforeActorStop();
+      this.actor.stop();
+      this.teardownAudio();
+      // The pool owns the gateway client. Only detach this session's voice call.
+      this.streamer.leaveVoice();
+    } finally {
+      this.activeMetric.close();
+      this.bufferMetric.close();
+    }
   }
 
   /**
@@ -137,27 +164,6 @@ export abstract class GameStreamerBase {
    */
   protected beforeActorStop(): void {
     // no-op by default
-  }
-
-  /**
-   * Destroy the underlying selfbot client.
-   *
-   * discord.js-selfbot-v13's client.destroy() dereferences `this.connection`
-   * on each shard, which is null when the gateway never fully connected (or was
-   * already torn down) — it throws "null is not an object (this.connection.
-   * readyState)". Left unguarded that abort propagates out of session teardown,
-   * so the userbot/voice/ffmpeg handles for the just-ended session are never
-   * released and pile up across sessions. Swallow it: destroy() is best-effort
-   * cleanup and there's nothing to recover here.
-   */
-  protected destroyClient(): void {
-    try {
-      this.streamer.client.destroy();
-    } catch (error) {
-      this.logger.warn("selfbot client destroy failed (ignored)", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
   }
 
   /** Send an event to the desired-stream machine (for subclass teardown hooks). */
@@ -204,7 +210,16 @@ export abstract class GameStreamerBase {
     return {
       joinVoice: ({ target }, signal) =>
         withSpan("stream.joinVoice", async () => {
-          await this.streamer.joinVoice(target.guildId, target.channelId);
+          const joining = this.streamer.joinVoice(
+            target.guildId,
+            target.channelId,
+          );
+          this.pendingJoin = joining;
+          try {
+            await joining;
+          } finally {
+            if (this.pendingJoin === joining) this.pendingJoin = undefined;
+          }
           // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
           // while we were connecting, the actor was aborted and leaveVoice already ran;
           // tear down the connection we just established so it isn't orphaned.

@@ -31,6 +31,7 @@ import {
   driverFeedUnitsSentTotal,
 } from "./metrics.ts";
 import type { AccessUnit } from "./annex-b.ts";
+import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 
 /**
  * Prefix the one-byte header the client needs to classify the chunk. Built once
@@ -73,6 +74,12 @@ type ClientState = {
 export class DriverFeedHub {
   private readonly options: DriverFeedHubOptions;
   private readonly clients = new Map<FeedClient, ClientState>();
+  private metrics:
+    | {
+        clients: ReturnType<typeof contributeGauge>;
+        buffer: ReturnType<typeof contributeGauge>;
+      }
+    | undefined;
 
   constructor(options: DriverFeedHubOptions) {
     this.options = options;
@@ -89,13 +96,13 @@ export class DriverFeedHub {
   add(client: FeedClient): boolean {
     if (this.clients.size >= this.options.maxClients) return false;
     this.clients.set(client, { needsKeyframe: true });
-    driverFeedClients.set(this.clients.size);
+    this.publishClientCount();
     return true;
   }
 
   remove(client: FeedClient): void {
     if (this.clients.delete(client)) {
-      driverFeedClients.set(this.clients.size);
+      this.publishClientCount();
     }
   }
 
@@ -132,7 +139,7 @@ export class DriverFeedHub {
       client.send(payload);
       driverFeedUnitsSentTotal.inc();
     }
-    driverFeedClientBufferBytes.set(peakBuffered);
+    this.metrics?.buffer.set(peakBuffered);
   }
 
   /**
@@ -160,7 +167,20 @@ export class DriverFeedHub {
       client.close(reason);
     }
     this.clients.clear();
-    driverFeedClients.set(0);
-    driverFeedClientBufferBytes.set(0);
+    this.publishClientCount();
+  }
+
+  private publishClientCount(): void {
+    if (this.clients.size === 0) {
+      this.metrics?.clients.close();
+      this.metrics?.buffer.close();
+      this.metrics = undefined;
+      return;
+    }
+    this.metrics ??= {
+      clients: contributeGauge(driverFeedClients, "sum"),
+      buffer: contributeGauge(driverFeedClientBufferBytes, "max-absolute"),
+    };
+    this.metrics.clients.set(this.clients.size);
   }
 }
