@@ -3,7 +3,9 @@ package com.shepherdjerred.thestorm.rwfbots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
+import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import com.shepherdjerred.thestorm.rwfbots.domain.chat.GreetingExpectations;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -119,7 +121,17 @@ final class BotLobbyChatTest {
               .filter(b -> b.name().equals(speaker))
               .findFirst()
               .orElseThrow();
-      assertThat(body.drafted().personality().lines().greet())
+      var team =
+          harness.match.snapshot().combatants().stream()
+              .filter(member -> member.id().uuid().equals(body.uuid()))
+              .findFirst()
+              .orElseThrow()
+              .team()
+              .map(TeamColor::displayName);
+      assertThat(
+              GreetingExpectations.rendered(
+                  body.drafted().personality().lines().greet(), team, RwfBotsHarness.CHAT_FILTER))
+          .as("rendered greeting from %s in %s: %s", speaker, team, reply)
           .anyMatch(line -> reply.endsWith("]: " + line));
     }
     assertThat(heard(bob)).as("nobody outside the rwf world hears bots").isEmpty();

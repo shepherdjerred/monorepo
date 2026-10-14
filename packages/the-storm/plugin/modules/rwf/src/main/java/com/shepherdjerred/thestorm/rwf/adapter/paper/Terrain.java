@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.adapter.content.MapBlocks;
-import com.shepherdjerred.thestorm.rwf.adapter.content.Schematic;
+import com.shepherdjerred.thestorm.rwf.adapter.content.SchematicDigest;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.BlockPos;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
 import java.time.Duration;
@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 
 /**
  * A schematic's blocks standing in the world: a map's or the lobby's. Its chunks are held loaded,
@@ -291,34 +292,33 @@ final class Terrain {
         throw new IllegalArgumentException("duplicate chunk coordinates");
       }
     }
-    var indices = new int[schematic.blockCount()];
-    var position = 0;
+    var digest = new SchematicDigest(schematic.size(), schematic.palette());
+    var palette = new SnapshotPalette(blocks);
     for (var y = region.min().y(); y <= region.max().y(); y++) {
       for (var z = region.min().z(); z <= region.max().z(); z++) {
         for (var x = region.min().x(); x <= region.max().x(); x++) {
-          var state = blockState(byChunk, x, y, z);
-          var index = blocks.paletteIndexOf(state);
+          var index = palette.index(blockState(byChunk, x, y, z));
           if (index < 0) {
             return "";
           }
-          indices[position++] = index;
+          digest.add(index);
         }
       }
     }
-    return Schematic.sha256(schematic.size(), schematic.palette(), indices);
+    return digest.finish();
   }
 
   private static long chunkKey(int x, int z) {
     return ((long) x << 32) | (z & 0xffffffffL);
   }
 
-  private static String blockState(Map<Long, ChunkSnapshot> snapshots, int x, int y, int z) {
+  private static BlockData blockState(Map<Long, ChunkSnapshot> snapshots, int x, int y, int z) {
     var snapshot = snapshots.get(chunkKey(x >> 4, z >> 4));
     if (snapshot == null) {
       throw new IllegalStateException(
           "chunk " + (x >> 4) + "," + (z >> 4) + " is outside the snapshots");
     }
-    return snapshot.getBlockData(x & 15, y, z & 15).getAsString();
+    return snapshot.getBlockData(x & 15, y, z & 15);
   }
 
   /** Pastes the whole schematic, {@link #PASTE_BATCH} blocks a tick; {@code done} runs after. */

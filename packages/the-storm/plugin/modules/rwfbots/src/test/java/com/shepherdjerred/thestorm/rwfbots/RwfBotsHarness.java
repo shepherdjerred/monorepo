@@ -69,6 +69,7 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
  * and a chat flag tests flip.
  */
 public final class RwfBotsHarness implements AutoCloseable {
+  public static final FilterSettings CHAT_FILTER = new FilterSettings(256, 4, 30);
 
   public static final NavArtifact NAV = SyntheticMap.bake();
 
@@ -194,7 +195,7 @@ public final class RwfBotsHarness implements AutoCloseable {
         new ChatService(
             new ChatConfig(
                 "global",
-                new FilterSettings(256, 4, 30),
+                CHAT_FILTER,
                 "Calm down",
                 new ChannelFormats(
                     "[G][<prefix><player>]: <message>",

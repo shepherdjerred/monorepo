@@ -1,28 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { qualifyCapacity } from "./qualification.ts";
-import { requiredRuntimeSettings, runtimeFingerprint } from "#capacity-runtime";
-import { thirdPartyPlugins } from "#e2e/harness/pins.ts";
+import { runtimeFingerprint } from "#capacity-runtime";
+import { runtimeIdentityFixture } from "#capacity-fixtures/runtime-identity.ts";
+import {
+  capacityBehaviorFixture,
+  authoredExperienceFixture,
+  capacityFeatureReceiptFixture,
+} from "#capacity-fixtures/behavior.ts";
 
 const hash = (digit: string) => digit.repeat(64);
-const runtime = {
-  serverImage: "fixture-image",
-  imageId: `sha256:${hash("7")}`,
-  paperSha256: hash("3"),
-  paperRuntimeSha256: hash("4"),
-  javaExecutableSha256: hash("5"),
-  javaReleaseSha256: hash("6"),
-  javaArgumentsSha256: hash("8"),
-  plugins: thirdPartyPlugins.map((plugin) => ({
-    file: `${plugin.name}-${plugin.version}.jar`,
-    sha256: plugin.sha256,
-  })),
-  settings: requiredRuntimeSettings.map((file) => ({
-    file,
-    sha256: hash("a"),
-  })),
-  worldOverrides: { status: "absent", files: [] },
-};
+const runtime = runtimeIdentityFixture();
 const candidate = {
   artifactSha256: hash("a"),
   fixtureSha256: hash("b"),
@@ -30,6 +18,8 @@ const candidate = {
   botConfigSha256: hash("d"),
   runtimeSha256: runtimeFingerprint(runtime),
   personalityCount: 512,
+  hostDifficulty: "NORMAL",
+  authoredExperience: authoredExperienceFixture.description,
 };
 const maps = ["apex-expanse", "warlords-castles"].map((map) => ({
   map,
@@ -70,7 +60,7 @@ const memory = {
 };
 const lifecycle = { elapsedMs: 1000, windows: [window], memory: [memory] };
 
-function phase(total: number, beganAt: number) {
+function phase(total: number, beganAt: number, map: string) {
   const baseline = total === 0;
   const match = randomUUID();
   const count = baseline ? 90 : 150;
@@ -98,6 +88,10 @@ function phase(total: number, beganAt: number) {
               endedAt: beganAt + 96_000,
             },
             startup: telemetry,
+            behavior: {
+              observedAt: beganAt + 97_000,
+              snapshot: capacityBehaviorFixture(match, total, map),
+            },
             resetMs: 1000,
             reset: {
               ...lifecycle,
@@ -135,6 +129,9 @@ function evidence() {
         map,
         inputs: {
           ...candidate,
+          bootstrap: { initialHeap: "8G", source: "default" },
+          authoredExperienceReadout: authoredExperienceFixture.readout,
+          features: structuredClone(capacityFeatureReceiptFixture),
           runtime: structuredClone(runtime),
           ...identity,
           containerId: index.toString().repeat(64),
@@ -144,7 +141,7 @@ function evidence() {
         resources: { cpus: 8, heap: "8G", memoryLimit: "10g" },
         rayBudget: "shipped",
         profile: "none",
-        phases: [phase(0, beganAt), phase(64, beganAt)],
+        phases: [phase(0, beganAt, map), phase(64, beganAt, map)],
         // Forged summary labels must not override original observations.
         verdicts: [{ check: "all passed", pass: true }],
       },
@@ -153,7 +150,7 @@ function evidence() {
   return {
     manifest: {
       schema: 1,
-      candidate,
+      candidate: { ...candidate },
       maps,
       reports: sources.map((source) => source.file),
     },
@@ -166,6 +163,7 @@ describe("capacity qualification from original repeated runs", () => {
     const { manifest, sources } = evidence();
     const result = qualifyCapacity(manifest, sources);
     expect(result.recommendation).toEqual({ total: 64, cpus: 8, workers: 6 });
+    expect(result.behaviorLabel).toBe("HOST_NORMAL");
     expect(result.pairs.find((pair) => pair.cpus === 8)?.fullMatrixPassed).toBe(
       false,
     );
@@ -178,6 +176,10 @@ describe("capacity qualification from original repeated runs", () => {
     const fourth = sources[3];
     if (fourth === undefined) throw new Error("missing fixture");
     fourth.value.map = "apex-expanse";
+    const actual = fourth.value.phases[1]?.matches[0];
+    if (actual === undefined) throw new Error("missing fixture match");
+    expect(() => qualifyCapacity(manifest, sources)).toThrow("candidate");
+    actual.behavior.snapshot.map = "apex-expanse";
     expect(qualifyCapacity(manifest, sources).recommendation).toBeNull();
   });
 
@@ -338,4 +340,112 @@ describe("capacity qualification from original repeated runs", () => {
       "runtime details differ",
     );
   });
+});
+
+describe("capacity heap bootstrap qualification", () => {
+  it("qualifies a consistent1G bootstrap and rejects a requested floor that actual JVM flags did not apply", () => {
+    const wrong = evidence();
+    const first = wrong.sources[0];
+    if (first === undefined) throw new Error("missing fixture");
+    first.value.inputs.bootstrap = { initialHeap: "1G", source: "environment" };
+    expect(() => qualifyCapacity(wrong.manifest, wrong.sources)).toThrow(
+      "declared bootstrap",
+    );
+    const data = evidence();
+    for (const source of data.sources) {
+      source.value.inputs.bootstrap = {
+        initialHeap: "1G",
+        source: "environment",
+      };
+      source.value.inputs.runtime.heap.initialBytes = 1024 ** 3;
+      source.value.inputs.runtimeSha256 = runtimeFingerprint(
+        source.value.inputs.runtime,
+      );
+    }
+    const updated = data.sources[0];
+    if (updated === undefined) throw new Error("missing fixture");
+    data.manifest.candidate.runtimeSha256 = updated.value.inputs.runtimeSha256;
+    expect(
+      qualifyCapacity(data.manifest, data.sources).recommendation,
+    ).not.toBeNull();
+    updated.value.inputs.bootstrap = {
+      initialHeap: "8G",
+      source: "environment",
+    };
+    expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow(
+      "declared bootstrap",
+    );
+  });
+});
+
+describe("capacity actual host behavior qualification", () => {
+  it("rejects old reports without the actual live profile receipt or candidate band", () => {
+    const data = evidence();
+    const match = data.sources[0]?.value.phases[1]?.matches[0];
+    if (match === undefined) throw new Error("missing fixture match");
+    Reflect.deleteProperty(match, "behavior");
+    expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow();
+    const old = evidence();
+    Reflect.deleteProperty(old.manifest.candidate, "hostDifficulty");
+    expect(() => qualifyCapacity(old.manifest, old.sources)).toThrow();
+  });
+
+  it("never counts a Hard host match toward a Normal candidate despite authored Hard metadata", () => {
+    const data = evidence();
+    const match = data.sources[0]?.value.phases[1]?.matches[0];
+    if (match === undefined) throw new Error("missing fixture match");
+    expect(match.behavior.snapshot.experience).toContain("difficulty=hard");
+    match.behavior.snapshot.host.currentDifficulty = "HARD";
+    match.behavior.snapshot.host.selectedDifficulty = "HARD";
+    expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow(
+      "candidate",
+    );
+  });
+
+  it("requires the whole actual roster and captures it before measurement", () => {
+    const data = evidence();
+    const match = data.sources[0]?.value.phases[1]?.matches[0];
+    if (match === undefined) throw new Error("missing fixture match");
+    match.behavior.snapshot.profiles.pop();
+    expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow(
+      "roster",
+    );
+    const late = evidence();
+    const first = late.sources[0];
+    const original = first?.value.phases[1]?.matches[0];
+    if (first === undefined || original === undefined)
+      throw new Error("missing fixture match");
+    original.behavior.observedAt = first.value.beganAt + 121_000;
+    expect(() => qualifyCapacity(late.manifest, late.sources)).toThrow(
+      "before measurement",
+    );
+  });
+});
+
+it("rejects cross-match authored style and pool changes under the same host band", () => {
+  for (const [before, after] of [
+    ["style=varied", "style=push"],
+    ["kits=", "kits=trooper"],
+  ]) {
+    const data = evidence();
+    const original =
+      data.sources[0]?.value.phases[1]?.matches[0]?.behavior.snapshot;
+    if (original === undefined || before === undefined || after === undefined)
+      throw new Error("missing synthetic match mutation");
+    original.experience = original.experience.replace(before, after);
+    original.experienceFingerprint = new Bun.CryptoHasher("sha256")
+      .update(original.experience)
+      .digest("hex");
+    expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow(
+      "candidate settings",
+    );
+  }
+  const data = evidence();
+  const first = data.sources[0];
+  if (first === undefined) throw new Error("missing synthetic report");
+  first.value.inputs.authoredExperienceReadout =
+    authoredExperienceFixture.readout.replace("varied", "push");
+  expect(() => qualifyCapacity(data.manifest, data.sources)).toThrow(
+    "runtime settings readout",
+  );
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { inject } from "vitest";
 import path from "node:path";
 import {
   docker,
@@ -12,6 +13,7 @@ import {
   capacityMap,
   capacityResources,
   capacityWorkers,
+  capacityBootstrap,
 } from "#e2e/gameplay-fixtures.ts";
 import { sampleWindow } from "#load/samples.ts";
 import {
@@ -22,7 +24,16 @@ import {
   type Lifecycle,
 } from "./capacity-bars.ts";
 import { recordFlight } from "#e2e/harness/flight.ts";
-import { runtimeIdentity, stagedDigest } from "./runtime.ts";
+import {
+  runtimeIdentity,
+  stagedDigest,
+  verifyCapacityHeap,
+} from "./runtime.ts";
+import {
+  capacityHostDifficulty,
+  authoredExperienceFromReadout,
+} from "./behavior.ts";
+import { CapacityFeatureReceiptSchema } from "./features.ts";
 
 /** Optional post-measurement diagnostics, always separate from release acceptance. */
 export async function profileAfterMeasurement(
@@ -112,7 +123,7 @@ export async function profileAfterMeasurement(
 }
 
 /** Bind local evidence to the actual binary, catalog, navigation and enforced resource limits. */
-export async function evidence(server: ServerInfo) {
+export async function evidence(server: ServerInfo, rcon: RconClient) {
   if (server.kind !== "container")
     throw new Error("Capacity evidence requires Docker");
   const { stdout } = await docker([
@@ -142,9 +153,24 @@ export async function evidence(server: ServerInfo) {
   const manifest = z
     .object({ personalities: z.array(z.unknown()) })
     .parse(await Bun.file(path.join(packageRoot, manifestFile)).json());
+  const bootstrap = capacityBootstrap();
+  const runtime = await runtimeIdentity(server.containerId);
+  verifyCapacityHeap(bootstrap, runtime.runtime.heap);
+  const authoredExperienceReadout = await rcon.command("rwf admin settings");
+  const authoredExperience = authoredExperienceFromReadout(
+    authoredExperienceReadout,
+  );
+  const features = CapacityFeatureReceiptSchema.parse(
+    inject("capacityFeatures"),
+  );
   return {
     containerId: server.containerId,
-    ...(await runtimeIdentity(server.containerId)),
+    ...runtime,
+    bootstrap,
+    hostDifficulty: capacityHostDifficulty,
+    authoredExperience,
+    authoredExperienceReadout,
+    features,
     computeWorkers: await computeWorkers(server),
     artifactSha256: await digest(
       "plugin/dist/build/libs/TheStorm.jar",

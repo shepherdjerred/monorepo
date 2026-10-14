@@ -122,8 +122,10 @@ final class TeamPlayTest {
    * output: a deliberate change to how bots play moves it, and the new value is pasted here in the
    * same change; an accidental one fails here.
    */
-  // Certified launch/landing recovery, local squad bounds, safe advances and committed fuse work.
-  private static final String PINNED_YARD_HASH = "ce05544e755cab1d";
+  // Duration-weighted route density avoids needless run-ups; uncovered bounds finish before
+  // replanning, with predictive teammate spacing and supported native wall sliding.
+  // Composed with certified launch recovery, local squad bounds and committed fuse work.
+  private static final String PINNED_YARD_HASH = "b9bae78678e6a5f2";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

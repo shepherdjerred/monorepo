@@ -77,6 +77,8 @@ public final class MapLifecycleFixtures implements BasicCommand {
                         storm.service(NavLoading.class).decoded(),
                         "heapUsed",
                         heap.getUsed(),
+                        "heapCommitted",
+                        heap.getCommitted(),
                         "heapMax",
                         heap.getMax(),
                         "tick",

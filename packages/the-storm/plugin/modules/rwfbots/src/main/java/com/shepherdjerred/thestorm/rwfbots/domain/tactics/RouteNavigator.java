@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalDensity;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.WaterRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
@@ -21,7 +22,11 @@ final class RouteNavigator {
 
   record Endpoints(int from, int to, Vec3 source, Vec3 goal) {}
 
-  record Tolls(TraversalRisk.Query risk, IntToDoubleFunction penalty) {}
+  record Tolls(TraversalRisk.Query risk, IntToDoubleFunction penalty) {
+    Tolls {
+      penalty = TraversalDensity.memoized(penalty);
+    }
+  }
 
   record Candidate(List<Waypoint> points, double ticks, double cost) {
     Candidate {
@@ -66,20 +71,19 @@ final class RouteNavigator {
 
   private static Optional<Candidate> graph(
       TacticsContext context, Endpoints endpoints, Tolls tolls, HealthRoutes.RiskPolicy policy) {
-    var request =
-        new HealthRoutes.Request(
-            endpoints.from(),
-            endpoints.to(),
-            policy,
-            tolls.penalty(),
-            HealthRoutes.PenaltyUnits.BLOCK);
-    var edges = tolls.risk().edges();
+    var request = new HealthRoutes.Request(endpoints.from(), endpoints.to(), policy, node -> 0);
+    var edges =
+        tolls
+            .risk()
+            .edges()
+            .withToll(TraversalDensity.edges(context.nav().graph(), tolls.penalty()));
     var found = planned(context, endpoints, tolls, new Search(request, edges));
     if (found.isPresent() || !edges.timed()) return found;
     // Virtual depth legs can outlast an effect that protected the compressed portal route.
     var conservative =
         new HealthRoutes.EdgePolicy(
-            edge -> edges.damage().damage(edge, (double) Long.MAX_VALUE), edges.motion());
+                edge -> edges.damage().damage(edge, (double) Long.MAX_VALUE), edges.motion())
+            .withToll(edges.toll());
     return planned(context, endpoints, tolls, new Search(request, conservative));
   }
 
@@ -110,7 +114,7 @@ final class RouteNavigator {
 
   private static Optional<Candidate> water(
       TacticsContext context, Endpoints endpoints, Tolls tolls) {
-    return WaterRoutes.find(
+    return WaterRoutes.findDensity(
             context.nav().graph().water(),
             context.nav().grid(),
             new WaterRoutes.Endpoints(endpoints.source(), endpoints.goal()),
@@ -132,7 +136,7 @@ final class RouteNavigator {
       while (index + 1 < points.size() && refinable(context, point.pos(), points.get(index + 1)))
         point = points.get(++index);
       var route =
-          WaterRoutes.find(
+          WaterRoutes.findDensity(
               context.nav().graph().water(),
               context.nav().grid(),
               new WaterRoutes.Endpoints(previous, point.pos()),
@@ -179,9 +183,7 @@ final class RouteNavigator {
         damage = Math.addExact(damage, tolls.risk().edges().damage().damage(leg.edge(), ticks));
       if (damage > tolls.risk().policy().damageBudget()) return Optional.empty();
       cost +=
-          leg.ticks()
-              + penalty(context, tolls.penalty(), point.pos())
-                  * Math.max(1, previous.distance(point.pos()));
+          leg.ticks() + densityCost(context, tolls, new Span(previous, point.pos(), leg.ticks()));
       previous = point.pos();
     }
     cost += damage * tolls.risk().policy().ticksPerHealthPoint();
@@ -228,6 +230,15 @@ final class RouteNavigator {
 
   private static boolean submerged(TacticsContext context, Vec3 point) {
     return context.nav().graph().water().at(BlockPos.of(point)).isPresent();
+  }
+
+  record Span(Vec3 from, Vec3 to, double ticks) {}
+
+  static double densityCost(TacticsContext context, Tolls tolls, Span span) {
+    return TraversalDensity.cost(
+        penalty(context, tolls.penalty(), span.from()),
+        penalty(context, tolls.penalty(), span.to()),
+        span.ticks());
   }
 
   private static double penalty(TacticsContext context, IntToDoubleFunction penalty, Vec3 point) {

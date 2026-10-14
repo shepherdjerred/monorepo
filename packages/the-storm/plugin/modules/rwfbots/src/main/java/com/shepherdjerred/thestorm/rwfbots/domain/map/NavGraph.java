@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.IntPredicate;
 import java.util.function.IntToDoubleFunction;
 
@@ -56,6 +57,7 @@ public final class NavGraph {
   private final byte[] edgeHop;
   private final float[] edgeCost;
   private final EdgeCapabilities capabilities;
+  private final AtomicLongArray runUpDistances;
   private final WaterIndex water;
   private final float heuristicScale;
   private final int[] reverseStart;
@@ -130,6 +132,7 @@ public final class NavGraph {
     this.edgeHop = edges.hop().clone();
     this.edgeCost = edges.cost().clone();
     capabilities = edges.capabilities();
+    runUpDistances = new AtomicLongArray(capabilities.launch().size());
     water = nodes.water();
     if (!bounds.equals(water.bounds()))
       throw new IllegalArgumentException("water index bounds differ from graph");
@@ -536,7 +539,14 @@ public final class NavGraph {
 
   /** Reconstructs the complete baked primitive, including its launch/run-up prerequisite. */
   public Waypoint waypoint(int edge) {
-    var from = feet(edgeSource(edge));
+    return waypoint(edge, edgeSource(edge));
+  }
+
+  /** Reuses a known CSR source without searching for the edge's row a second time. */
+  public Waypoint waypoint(int edge, int source) {
+    if (!edgeLeaves(edge, source))
+      throw new IllegalArgumentException("edge does not leave the supplied node");
+    var from = feet(source);
     var to = feet(edgeTarget(edge));
     var landing =
         water.contains(BlockPos.of(to))
@@ -544,6 +554,30 @@ public final class NavGraph {
             : edgeHop(edge) == Hop.CLIMB ? Waypoint.Landing.CLIMB : Waypoint.Landing.GROUND;
     return new Waypoint(
         to, edgeHop(edge), capabilities.launch().launch(edge, from, to, edgeCost(edge)), landing);
+  }
+
+  /** Membership in one known CSR row; an unknown source cannot own an edge. */
+  public boolean edgeLeaves(int edge, int source) {
+    return source >= 0
+        && source < nodeCount()
+        && edge >= edgeStart[source]
+        && edge < edgeStart[source + 1];
+  }
+
+  /**
+   * Caches the exact reconstructed horizontal distance for each sparse LEAP row. The geometric
+   * result may differ in its last bits from the baked run-up scalar, so it is never substituted.
+   */
+  public double runUpDistance(int edge) {
+    var index = capabilities.launch().indexOf(edge);
+    if (index < 0) throw new IllegalArgumentException("edge has no sprint-jump launch");
+    var known = runUpDistances.get(index);
+    if (known != 0) return Double.longBitsToDouble(known);
+    var launch = waypoint(edge).launch().orElseThrow();
+    var distance = launch.takeoff().horizontalDistance(launch.runUpStart());
+    // JumpLaunch requires at least half a block, so zero bits unambiguously mean uninitialized.
+    runUpDistances.compareAndSet(index, 0, Double.doubleToRawLongBits(distance));
+    return distance;
   }
 
   /** The edges arriving at {@code node}, as edge indices. */
@@ -617,8 +651,43 @@ public final class NavGraph {
     }
   }
 
-  public record PathWeights(
-      IntToDoubleFunction node, IntToDoubleFunction edge, EdgeMotion motion) {}
+  @FunctionalInterface
+  public interface EdgeToll {
+    double cost(int edge, int source, double physicalDuration);
+  }
+
+  public record PathWeights(IntToDoubleFunction node, EdgeToll edge, EdgeMotion motion) {
+    public PathWeights(IntToDoubleFunction node, IntToDoubleFunction edge, EdgeMotion motion) {
+      this(node, (index, source, duration) -> edge.applyAsDouble(index), motion);
+    }
+  }
+
+  public record WeightedPath(NavPath path, double weightedCost) {}
+
+  /** Keeps exact selected-edge discretionary costs separate from physical route time. */
+  public Optional<WeightedPath> weightedPath(
+      int from, int to, PathWeights weights, SearchWorkspace workspace) {
+    workspace.acquire(cellOfNode.length);
+    try {
+      return search(from, to, weights, workspace)
+          .map(path -> new WeightedPath(path, weightedCost(from, to, weights, workspace)));
+    } finally {
+      workspace.release();
+    }
+  }
+
+  private double weightedCost(int from, int to, PathWeights weights, SearchWorkspace scratch) {
+    var cost = 0.0;
+    for (var node = to; node != from; node = scratch.cameFrom[node]) {
+      var edge = scratch.viaEdge[node];
+      var duration = weights.motion().duration().applyAsDouble(edge);
+      cost +=
+          duration
+              + weights.node().applyAsDouble(node)
+              + weights.edge().cost(edge, scratch.cameFrom[node], duration);
+    }
+    return cost;
+  }
 
   public Optional<NavPath> path(int from, int to, PathWeights weights, SearchWorkspace workspace) {
     workspace.acquire(cellOfNode.length);
@@ -656,8 +725,11 @@ public final class NavGraph {
     if (search.closed[next]) {
       return;
     }
+    var duration = weights.motion().duration().applyAsDouble(edge);
+    if (!Double.isFinite(duration) || duration < 0)
+      throw new IllegalArgumentException("motion duration must be finite and non-negative");
     var nodePenalty = weights.node().applyAsDouble(next);
-    var edgePenalty = weights.edge().applyAsDouble(edge);
+    var edgePenalty = weights.edge().cost(edge, current, duration);
     if (!Double.isFinite(nodePenalty)
         || nodePenalty < 0
         || !Double.isFinite(edgePenalty)
@@ -665,9 +737,6 @@ public final class NavGraph {
       throw new IllegalArgumentException("penalties must be finite and non-negative");
     }
     var extra = nodePenalty + edgePenalty;
-    var duration = weights.motion().duration().applyAsDouble(edge);
-    if (!Double.isFinite(duration) || duration < 0)
-      throw new IllegalArgumentException("motion duration must be finite and non-negative");
     var tentative = search.g[current] + (float) duration + (float) extra;
     if (tentative < search.g[next]) {
       search.g[next] = tentative;

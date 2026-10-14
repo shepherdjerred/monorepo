@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -97,8 +96,7 @@ final class VideoCapture implements AutoCloseable {
   }
 
   private final Path artifacts;
-  private final ExecutorService io =
-      Executors.newSingleThreadExecutor(Thread.ofVirtual().name("storm-frame-writer").factory());
+  private final ExecutorService io = VideoFrames.encoders();
   private @Nullable Run run;
   private int previousFov;
   private double previousEffect;

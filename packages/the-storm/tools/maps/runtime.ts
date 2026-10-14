@@ -10,6 +10,7 @@ import { RconClient } from "#e2e/harness/rcon.ts";
 import { status } from "#e2e/harness/rwf-match.ts";
 import { freezeInputs } from "./inputs.ts";
 import { root, runtimeMapServerConfig, waitForMapState } from "./paper.ts";
+import { runtimeSequence, selectRuntimeMap } from "./lifecycle/selection.ts";
 import {
   Lifecycle,
   verifyBounds,
@@ -24,6 +25,7 @@ const args = parseArgs({
     output: { type: "string" },
     rotations: { type: "string", default: "3" },
     "require-map": { type: "string", multiple: true },
+    "visit-map": { type: "string", multiple: true },
   },
 });
 const maps = path.resolve(z.string().min(1).parse(args.values.maps));
@@ -160,6 +162,12 @@ try {
     return s.ready && s.phase === "Lobby";
   }, "initial arena admission");
   const initial = await observe();
+  const catalog = initial.maps.map((map) => map.id);
+  const sequence = runtimeSequence(args.values["visit-map"], {
+    minimumRotations: rotations,
+    catalog,
+    requiredMaps,
+  });
   for (const id of requiredMaps)
     if (!initial.maps.some((map) => map.id === id))
       throw new Error(`Unknown required runtime map: ${id}`);
@@ -168,13 +176,22 @@ try {
   for (let round = 0; ; round++) {
     const before = await status(rcon);
     if (
-      completedRotations >= rotations &&
+      completedRotations >= (sequence?.length ?? rotations) &&
       requiredMaps.every((id) => visited.includes(id))
     )
       break;
     if (round >= 12)
       throw new Error(
         "Ordinary rotation did not visit all required maps within twelve transitions",
+      );
+    const selectedMap = sequence?.[round];
+    if (sequence !== undefined && selectedMap === undefined)
+      throw new Error(
+        "Explicit sequence ended before the required resource proof completed",
+      );
+    if (selectedMap !== undefined)
+      await selectRuntimeMap(selectedMap, catalog, (request) =>
+        rcon.command(request),
       );
     verifyBounds(
       Lifecycle.parse(
@@ -189,6 +206,7 @@ try {
         selected.phase === "Lobby" &&
         selected.matchId === before.matchId &&
         selected.map !== "none" &&
+        (selectedMap === undefined || selected.map === selectedMap) &&
         snapshot.maps.some((map) => map.id === selected.map && map.ready)
       );
     }, "chosen map resources before pristine contents verification");
@@ -204,6 +222,10 @@ try {
     }, "native bots to enter combat");
     const live = await status(rcon);
     verifyLiveShowcase(before.matchId, live);
+    if (selectedMap !== undefined && live.map !== selectedMap)
+      throw new Error(
+        "The actual live map differs from the explicit operator selection",
+      );
     visited.push(live.map);
     await observe();
     await Bun.sleep(2000);
@@ -239,6 +261,11 @@ try {
   const released = last.maps.filter((map) => map.releases > 0);
   if (released.length === 0)
     throw new Error("No ordinary rotation released a map");
+  if (
+    sequence !== undefined &&
+    requiredMaps.some((id) => !released.some((map) => map.id === id))
+  )
+    throw new Error("An explicitly required map was never retired");
   const report = {
     schema: 1,
     kind: "rwf-native-map-lifecycle",
@@ -246,6 +273,7 @@ try {
     rolloutEnabled: false,
     rotations: completedRotations,
     minimumRotations: rotations,
+    requestedSequence: sequence,
     requiredMaps,
     visited,
     verifiedContents: [...verifiedContents].sort(),
@@ -256,6 +284,7 @@ try {
     ),
     peakNavigation: Math.max(...samples.map((s) => s.navigation.length)),
     peakHeapBytes: Math.max(...samples.map((s) => s.heapUsed)),
+    peakCommittedBytes: Math.max(...samples.map((s) => s.heapCommitted)),
     heapMaxBytes: last.heapMax,
     released: released.map((m) => ({
       id: m.id,

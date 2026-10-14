@@ -35,6 +35,7 @@ await writeFile(output, JSON.stringify(result, null, 2) + "\n", {
 console.warn(
   JSON.stringify({
     recommendation: result.recommendation,
+    behaviorLabel: result.behaviorLabel,
     deploymentAccepted: result.deploymentAccepted,
     output,
   }),

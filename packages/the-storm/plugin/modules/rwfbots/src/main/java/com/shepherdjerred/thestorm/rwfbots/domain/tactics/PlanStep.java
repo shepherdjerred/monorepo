@@ -9,8 +9,12 @@ import java.util.Optional;
 /** One step of a plan: what the body is asked to achieve until the step is done. */
 public sealed interface PlanStep {
 
-  /** Get to {@code goal}. */
-  record Route(Vec3 goal, Stance stance) implements PlanStep {}
+  /** Get to {@code goal}; an authored uncovered bound finishes before choosing the next bound. */
+  record Route(Vec3 goal, Stance stance, boolean committedBound) implements PlanStep {
+    public Route(Vec3 goal, Stance stance) {
+      this(goal, stance, false);
+    }
+  }
 
   /** Kill {@code target}. */
   record Fight(CombatantId target) implements PlanStep {}

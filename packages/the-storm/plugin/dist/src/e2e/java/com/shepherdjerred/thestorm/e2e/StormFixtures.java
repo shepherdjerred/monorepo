@@ -31,6 +31,7 @@ public final class StormFixtures extends JavaPlugin {
   private com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures pursuit;
   private com.shepherdjerred.thestorm.e2e.maps.TraversalFixtures traversal;
   private com.shepherdjerred.thestorm.e2e.maps.HealthFixtures health;
+  private com.shepherdjerred.thestorm.e2e.maps.AuthoredCombatFixtures authoredCombat;
   private com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures closeStarts;
   private com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures detailsExporter;
 
@@ -79,6 +80,7 @@ public final class StormFixtures extends JavaPlugin {
     new InferenceLoadFixtures(this).register();
     new RegressionFixtures(this).register();
     new CapacityCombatFixtures(this).register();
+    new com.shepherdjerred.thestorm.e2e.maps.CapacityBehaviorFixtures(this).register();
     new BotTransferFixtures(this).register();
     mapExporter = new com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures(this, world);
     mapExporter.register();
@@ -90,6 +92,8 @@ public final class StormFixtures extends JavaPlugin {
     traversal.register();
     health = new com.shepherdjerred.thestorm.e2e.maps.HealthFixtures(this);
     health.register();
+    authoredCombat = new com.shepherdjerred.thestorm.e2e.maps.AuthoredCombatFixtures(this);
+    authoredCombat.register();
     closeStarts = new com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures(this);
     closeStarts.register();
     detailsExporter = new com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures(this, world);
@@ -104,6 +108,7 @@ public final class StormFixtures extends JavaPlugin {
     if (pursuit != null) pursuit.close();
     if (traversal != null) traversal.close();
     if (health != null) health.close();
+    if (authoredCombat != null) authoredCombat.close();
     if (closeStarts != null) closeStarts.close();
     if (detailsExporter != null) detailsExporter.close();
   }

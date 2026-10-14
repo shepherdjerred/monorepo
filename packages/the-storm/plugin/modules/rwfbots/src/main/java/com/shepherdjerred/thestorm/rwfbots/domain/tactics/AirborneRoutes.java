@@ -74,7 +74,10 @@ final class AirborneRoutes {
               var prefixCost =
                   contact.ticks()
                       + contact.damage() * tolls.risk().policy().ticksPerHealthPoint()
-                      + tolls.penalty().applyAsDouble(contact.node());
+                      + RouteNavigator.densityCost(
+                          context,
+                          tolls,
+                          new RouteNavigator.Span(endpoints.source(), start, contact.ticks()));
               return new RouteNavigator.Candidate(
                   points, contact.ticks() + route.ticks(), prefixCost + route.cost());
             });

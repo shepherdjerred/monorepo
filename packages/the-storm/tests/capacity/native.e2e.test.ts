@@ -10,6 +10,7 @@ import { startCapacityClient } from "./native-client.ts";
 import { request, StatusSchema, type Session } from "#client/protocol.ts";
 import { evidence } from "./probes.ts";
 import { CapacityCombatCapture, verifyNativeCombat } from "./native-combat.ts";
+import { captureCapacityBehavior } from "./behavior.ts";
 
 async function state(session: Session) {
   const value = StatusSchema.parse(await request(session, "status"));
@@ -27,9 +28,7 @@ test(
   { timeout: 50 * 60_000 },
   async ({ rcon, server }) => {
     const total = capacityNativeTotal();
-    const inputs = await evidence(server);
     const beganAt = Date.now();
-    expect(inputs.personalityCount).toBe(512);
     await eventually(
       "the imported map to finish preparing",
       async () => {
@@ -38,6 +37,8 @@ test(
       },
       15 * 60_000,
     );
+    const inputs = await evidence(server, rcon);
+    expect(inputs.personalityCount).toBe(512);
     const { session, artifacts, client } = await startCapacityClient(
       server,
       "capacity-native",
@@ -55,6 +56,13 @@ test(
       );
       const live = await status(rcon);
       expect([live.humans, live.bots]).toEqual([1, total - 1]);
+      const behavior = await captureCapacityBehavior(rcon, {
+        match: live.matchId,
+        map: capacityMap(),
+        total,
+        hostDifficulty: inputs.hostDifficulty,
+        authoredExperience: inputs.authoredExperience,
+      });
       CapacityCombatCapture.parse(
         JSON.parse(await rcon.command(`rwfcapacitycombat arm ${live.matchId}`)),
       );
@@ -170,6 +178,7 @@ test(
         JSON.stringify(
           {
             inputs,
+            behavior,
             beganAt,
             completedAt: Date.now(),
             total,

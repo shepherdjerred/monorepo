@@ -1,11 +1,23 @@
 import { z } from "zod";
-import { RuntimeSchema, runtimeFingerprint } from "#capacity-runtime";
+import {
+  CapacityBootstrapSchema,
+  RuntimeSchema,
+  runtimeFingerprint,
+} from "#capacity-runtime";
 import {
   CapacityPhaseSchema,
   capacityTierVerdicts,
   totals,
   type Lifecycle,
 } from "#capacity-bars";
+import {
+  HostDifficulty,
+  CapacityBehaviorObservation,
+  verifyCapacityBehavior,
+  AuthoredExperienceDescription,
+  authoredExperienceFromReadout,
+} from "#capacity-behavior";
+import { CapacityFeatureReceiptSchema } from "#capacity-features";
 
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const Timestamp = z.number().int().positive();
@@ -17,6 +29,8 @@ const Identity = z.strictObject({
   botConfigSha256: Hash,
   runtimeSha256: Hash,
   personalityCount: z.literal(512),
+  hostDifficulty: HostDifficulty,
+  authoredExperience: AuthoredExperienceDescription,
 });
 const MapIdentity = z.strictObject({
   map: MapId,
@@ -45,6 +59,9 @@ const Report = z.object({
   map: MapId,
   inputs: Identity.extend({
     runtime: RuntimeSchema,
+    bootstrap: CapacityBootstrapSchema,
+    authoredExperienceReadout: z.string().min(1),
+    features: CapacityFeatureReceiptSchema,
     containerId: z.string().regex(/^[a-f0-9]{12,64}$/u),
     computeWorkers: z.number().int().min(1).max(10),
     navigationSha256: Hash,
@@ -66,6 +83,11 @@ const Report = z.object({
     .array(
       CapacityPhaseSchema.extend({
         measurementWindows: z.array(Interval).min(1),
+        matches: z.array(
+          CapacityPhaseSchema.shape.matches.element.extend({
+            behavior: CapacityBehaviorObservation,
+          }),
+        ),
       }),
     )
     .min(1)
@@ -97,6 +119,14 @@ function validateCandidate(manifest: Manifest, report: Report) {
     throw new Error("Capacity evidence belongs to a different candidate");
   if (runtimeFingerprint(report.inputs.runtime) !== report.inputs.runtimeSha256)
     throw new Error("Capacity runtime details differ from their fingerprint");
+  const initialGiB = report.inputs.bootstrap.initialHeap === "1G" ? 1 : 8;
+  if (
+    report.inputs.runtime.heap.initialBytes !== initialGiB * 1024 ** 3 ||
+    report.inputs.runtime.heap.maxBytes !== 8 * 1024 ** 3
+  )
+    throw new Error(
+      "Capacity actual JVM heap differs from its declared bootstrap",
+    );
   const { map: _map, ...mapIdentity } = map;
   if (!sameFields(mapIdentity, report.inputs))
     throw new Error("Capacity map/configuration inputs changed between runs");
@@ -113,6 +143,42 @@ function validateCandidate(manifest: Manifest, report: Report) {
       "Capacity resource pair was not the declared, enforced experiment",
     );
   validateIntervals(report);
+  if (
+    authoredExperienceFromReadout(report.inputs.authoredExperienceReadout) !==
+    report.inputs.authoredExperience
+  )
+    throw new Error(
+      "Capacity frozen runtime settings readout differs from its candidate identity",
+    );
+  validateBehavior(report);
+}
+
+function validateBehavior(report: Report) {
+  for (const phase of report.phases) {
+    for (const match of phase.matches) {
+      verifyCapacityBehavior(match.behavior.snapshot, {
+        match: match.id,
+        map: report.map,
+        total: phase.total,
+        hostDifficulty: report.inputs.hostDifficulty,
+        authoredExperience: report.inputs.authoredExperience,
+      });
+      if (
+        match.arrival.endedAt === undefined ||
+        match.behavior.observedAt < match.arrival.endedAt ||
+        match.behavior.observedAt >
+          (report.completedAt ?? report.checkpointAt) ||
+        phase.measurementWindows.some(
+          (window) =>
+            window.match === match.id &&
+            window.startedAt < match.behavior.observedAt,
+        )
+      )
+        throw new Error(
+          "Capacity behavior was not captured after arrival and before measurement",
+        );
+    }
+  }
 }
 
 function validateIntervals(report: Report) {
@@ -192,6 +258,7 @@ function validateLifecycleTimes(
 
 function validateClock(report: Report) {
   if (
+    report.inputs.features.configuredAt > report.beganAt ||
     report.checkpointAt < report.beganAt ||
     (report.completedAt !== undefined &&
       (report.completedAt < report.beganAt ||
@@ -300,6 +367,7 @@ export function qualifyCapacity(rawManifest: unknown, sources: Source[]) {
     schema: 1,
     kind: "rwf-capacity-matrix-qualification",
     candidate: manifest.candidate,
+    behaviorLabel: `HOST_${manifest.candidate.hostDifficulty}`,
     evidence: sources.map(({ file, sha256 }) => ({ file, sha256 })),
     pairs,
     recommendation:

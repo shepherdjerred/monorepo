@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { startServer } from "#e2e/harness/server.ts";
+import type { RwfOverlay } from "#e2e/harness/config-overlays.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import {
   rwfTestSettings,
@@ -71,6 +72,36 @@ export async function runtimeMapServerConfig(
     },
     resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },
   };
+}
+
+/** Disposable ordinary-match proofs share the same boot and recording ownership. */
+export async function startRuntimeMapServer(options: {
+  inputs: ConversionInputs;
+  content: string;
+  brain: { baseUrl: string; token: string };
+  match: Pick<RwfOverlay, "countdown"> &
+    Partial<
+      Pick<
+        RwfOverlay,
+        "targetCombatants" | "maxCombatants" | "automaticSizing" | "endLinger"
+      >
+    >;
+  cacheDir: string;
+  recordingsDir: string;
+}) {
+  const config = await runtimeMapServerConfig(
+    options.inputs,
+    options.content,
+    options.brain,
+  );
+  return startServer({
+    ...config,
+    rwf: { ...config.rwf, ...options.match },
+    cacheDir: options.cacheDir,
+    warmCache: true,
+    bootTimeoutMs: 600_000,
+    exportRecordingsDir: options.recordingsDir,
+  });
 }
 
 /** Poll the same native owner with a bounded transition deadline and retained observations. */

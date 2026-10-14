@@ -292,7 +292,8 @@ public final class Tactics {
   private static boolean refresh(Plan plan) {
     var slotPlan = plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT;
     return slotPlan
-        && (plan.current() instanceof PlanStep.Route || plan.current() instanceof PlanStep.Hold);
+        && ((plan.current() instanceof PlanStep.Route route && !route.committedBound())
+            || plan.current() instanceof PlanStep.Hold);
   }
 
   private static boolean landsSafer(RewindClock clock, Situation situation) {

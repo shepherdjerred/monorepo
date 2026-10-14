@@ -7,7 +7,81 @@ import { thirdPartyPlugins } from "#e2e/harness/pins.ts";
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 const FileIdentity = z.strictObject({ file: z.string().min(1), sha256: Hash });
 const propertiesIdentity =
-  "server.properties (without comments or rcon.password)";
+  "server.properties (without comments, rcon.password or management-server-secret)";
+export const CapacityBootstrapSchema = z
+  .strictObject({
+    initialHeap: z.enum(["1G", "8G"]),
+    source: z.enum(["default", "environment"]),
+  })
+  .refine((value) => value.source !== "default" || value.initialHeap === "8G", {
+    message: "The default capacity bootstrap preserves its8G initial heap",
+  });
+export const RuntimeHeapSchema = z
+  .strictObject({
+    initialBytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+    maxBytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  })
+  .refine((value) => value.initialBytes <= value.maxBytes, {
+    message: "Initial heap exceeds maximum heap",
+  });
+
+/** Only explicit heap flags leave the container; all other JVM arguments remain hashed. */
+export function runtimeHeapFromFlags(flags: unknown) {
+  const values: Record<string, number> = {};
+  for (const flag of z.array(z.string()).length(2).parse(flags)) {
+    const matched = /^-Xm(?<kind>[sx])(?<amount>\d+)(?<unit>[kKmMgG]?)$/u.exec(
+      flag,
+    );
+    const fields = z
+      .object({
+        kind: z.enum(["s", "x"]),
+        amount: z.coerce.number().int().positive(),
+        unit: z.enum(["", "K", "M", "G"]),
+      })
+      .parse(
+        matched?.groups === undefined
+          ? undefined
+          : { ...matched.groups, unit: matched.groups["unit"]?.toUpperCase() },
+      );
+    if (values[fields.kind] !== undefined)
+      throw new Error("Duplicate JVM heap flag");
+    const power = ["", "K", "M", "G"].indexOf(fields.unit);
+    values[fields.kind] = fields.amount * 1024 ** power;
+  }
+  return RuntimeHeapSchema.parse({
+    initialBytes: values["s"],
+    maxBytes: values["x"],
+  });
+}
+
+export function verifyCapacityHeap(bootstrap: unknown, heap: unknown) {
+  const expected = CapacityBootstrapSchema.parse(bootstrap);
+  const actual = RuntimeHeapSchema.parse(heap);
+  if (
+    actual.initialBytes !==
+      (expected.initialHeap === "1G" ? 1 : 8) * 1024 ** 3 ||
+    actual.maxBytes !== 8 * 1024 ** 3
+  )
+    throw new Error(
+      "Actual JVM heap differs from the selected capacity bootstrap",
+    );
+}
+/** Capture the read status before hashing; a failed pipeline must never become SHA256(empty). */
+export const runtimePropertiesDigestCommand = String.raw`
+set -eu
+canonical=$(sed -e '/^#/d' -e '/^rcon[.]password=/d' -e '/^management-server-secret=/d' -e '/^$/d' "$1")
+[ -n "$canonical" ]
+printf '%s\n' "$canonical" | LC_ALL=C sort | sha256sum
+`;
+/** Newlines are unsupported: reject them before replacing NULs, preserving argv boundaries. */
+export const runtimeJavaArgumentsDigestCommand = `
+set -eu
+runtime_newlines=$(LC_ALL=C tr -cd '\\n' < "$1" && printf '.') || exit $?
+[ "$runtime_newlines" = "." ]
+runtime_arguments=$(tr '\\000' '\\n' < "$1" && printf '.') || exit $?
+[ "$runtime_arguments" != "." ]
+printf '%s' "\${runtime_arguments%.}" | sed '/^-XX:ActiveProcessorCount=[0-9][0-9]*$/d' | sha256sum
+`;
 export const requiredRuntimeSettings = [
   "bukkit.yml",
   "spigot.yml",
@@ -41,6 +115,7 @@ export const RuntimeSchema = z
     javaExecutableSha256: Hash,
     javaReleaseSha256: Hash,
     javaArgumentsSha256: Hash,
+    heap: RuntimeHeapSchema,
     plugins: z.array(FileIdentity).min(1),
     settings: z.array(FileIdentity).min(1),
     worldOverrides: WorldOverrides,
@@ -175,18 +250,17 @@ done
 [ "$count" -eq 1 ] || exit 1
 sha256sum "$jvm_executable"
 sha256sum "$(dirname "$(dirname "$jvm_executable")")/release"
-tr '\\000' '\\n' < "/proc/$jvm_pid/cmdline" | sed '/^-XX:ActiveProcessorCount=/d' | sha256sum
+set -- "/proc/$jvm_pid/cmdline"
+${runtimeJavaArgumentsDigestCommand}
+printf '%s' "\${runtime_arguments%.}" | sed -n '/^-Xm[sx]/p'
 `,
   ]);
+  const jvmLines = jvm.stdout.trim().split("\n");
   const hashes = z
     .array(Hash)
     .length(3)
-    .parse(
-      jvm.stdout
-        .trim()
-        .split("\n")
-        .map((line) => line.split(/\s+/u)[0]),
-    );
+    .parse(jvmLines.slice(0, 3).map((line) => line.split(/\s+/u)[0]));
+  const heap = runtimeHeapFromFlags(jvmLines.slice(3));
   const settings: z.infer<typeof FileIdentity>[] = await Promise.all(
     requiredRuntimeSettings
       .filter((file) => file !== propertiesIdentity)
@@ -195,13 +269,15 @@ tr '\\000' '\\n' < "/proc/$jvm_pid/cmdline" | sed '/^-XX:ActiveProcessorCount=/d
         sha256: await stagedDigest(containerId, `/data/${file}`),
       })),
   );
-  // A generated comment and the per-run RCON credential do not change simulation behavior.
+  // Generated comments and per-run RCON/management credentials do not change simulation behavior.
   const properties = await docker([
     "exec",
     containerId,
     "sh",
     "-c",
-    "sed -e '/^#/d' -e '/^rcon.password=/d' -e '/^$/d' /data/server.properties | LC_ALL=C sort | sha256sum",
+    runtimePropertiesDigestCommand,
+    "runtime-properties",
+    "/data/server.properties",
   ]);
   settings.push({
     file: propertiesIdentity,
@@ -243,6 +319,7 @@ tr '\\000' '\\n' < "/proc/$jvm_pid/cmdline" | sed '/^-XX:ActiveProcessorCount=/d
     javaExecutableSha256: hashes[0],
     javaReleaseSha256: hashes[1],
     javaArgumentsSha256: hashes[2],
+    heap,
     plugins,
     settings,
     worldOverrides: {

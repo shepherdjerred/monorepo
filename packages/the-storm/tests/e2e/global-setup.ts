@@ -1,23 +1,30 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import path from "node:path";
 import type { TestProject } from "vitest/node";
 import { z } from "zod";
-import { startFakeBrain } from "./harness/fake-brain.ts";
+import { startFakeBrain, type FakeBrain } from "./harness/fake-brain.ts";
 import {
   e2eProfile,
   gameplayFixtures,
   loadResources,
   capacityResources,
+  capacityBootstrapEnvironment,
+  type E2eProfile,
 } from "./gameplay-fixtures.ts";
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { startServer, type ServerInfo } from "./harness/server.ts";
+import {
+  configureCapacityFeatures,
+  type CapacityFeatureReceipt,
+} from "#capacity-features";
 
 declare module "vitest" {
   // Declaration merging with Vitest's ProvidedContext requires an interface.
   export interface ProvidedContext {
     server: ServerInfo;
     brain: { port: number };
+    capacityFeatures: CapacityFeatureReceipt | null;
   }
 }
 
@@ -57,6 +64,12 @@ const ExternalServerSchema = z.object({
   STORM_E2E_BRAIN_TOKEN: z.string().min(1),
 });
 
+function externalServerEnvironment(profile: E2eProfile) {
+  if (profile === "capacity")
+    throw new Error("Capacity requires its owned preboot feature fixture");
+  return ExternalServerSchema.parse(Bun.env);
+}
+
 async function arenaAdmission(server: ServerInfo): Promise<void> {
   // An idle runner can report "open" before asynchronous map validation finishes.
   for (let attempt = 0; attempt < 120; attempt++) {
@@ -67,15 +80,40 @@ async function arenaAdmission(server: ServerInfo): Promise<void> {
   throw new Error("The authored arenas did not open after Paper startup");
 }
 
+/** Publish the validated preboot receipt before any Paper process can evaluate its first lobby. */
+async function capacityFeatureSetup(
+  project: TestProject,
+  profile: E2eProfile,
+  brain: FakeBrain,
+) {
+  try {
+    const features = await configureCapacityFeatures(profile, brain.port);
+    if (features !== null)
+      await Bun.write(
+        path.join(
+          packageRoot,
+          ".cache/e2e/capacity",
+          `feature-bootstrap-${randomUUID()}.json`,
+        ),
+        JSON.stringify(features, null, 2) + "\n",
+      );
+    project.provide("capacityFeatures", features);
+  } catch (error) {
+    await brain.stop();
+    throw error;
+  }
+}
+
 export default async function setup(project: TestProject) {
   const profile = e2eProfile();
+  const bootstrap = capacityBootstrapEnvironment(profile);
   // The load profile is full plus the load-test switch and production limits.
   const full = profile !== "e2e";
   // The agent refuses to start without its token, so both local and sidecar
   // runs use the same strict fake brain contract.
   const external = Bun.env["STORM_E2E_HOST"] !== undefined;
   if (external) {
-    const env = ExternalServerSchema.parse(Bun.env);
+    const env = externalServerEnvironment(profile);
     const server: ServerInfo = {
       kind: "external",
       host: env.STORM_E2E_HOST,
@@ -87,10 +125,12 @@ export default async function setup(project: TestProject) {
     if (full) await arenaAdmission(server);
     project.provide("server", server);
     project.provide("brain", { port: env.STORM_E2E_BRAIN_PORT });
+    project.provide("capacityFeatures", null);
     return;
   }
   const brainToken = randomBytes(24).toString("hex");
   const brain = startFakeBrain(brainToken);
+  await capacityFeatureSetup(project, profile, brain);
   const brainBaseUrl = `http://host.docker.internal:${brain.port.toString()}`;
   if (!(await Bun.file(stormJar).exists())) {
     await brain.stop();
@@ -114,6 +154,7 @@ export default async function setup(project: TestProject) {
     ...(profile === "capacity" ? { resources: capacityResources() } : {}),
     ownedConfigDir,
     env: {
+      ...bootstrap,
       // The managed-flag gates (rwf join here; crier and merchant in the full
       // suite) evaluate against the fake brain's Flipt double.
       FLIPT_URL: brainBaseUrl,

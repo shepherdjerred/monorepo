@@ -35,6 +35,27 @@ public final class WaterRoutes {
 
   public static Optional<Route> find(
       WaterIndex water, VoxelGrid grid, Endpoints endpoints, ToDoubleFunction<Vec3> penalty) {
+    return find(water, grid, endpoints, (from, to, duration) -> penalty.applyAsDouble(to));
+  }
+
+  public static Optional<Route> findDensity(
+      WaterIndex water, VoxelGrid grid, Endpoints endpoints, ToDoubleFunction<Vec3> density) {
+    return find(
+        water,
+        grid,
+        endpoints,
+        (from, to, duration) ->
+            TraversalDensity.cost(
+                density.applyAsDouble(from), density.applyAsDouble(to), duration));
+  }
+
+  @FunctionalInterface
+  private interface SegmentToll {
+    double cost(Vec3 from, Vec3 to, double duration);
+  }
+
+  private static Optional<Route> find(
+      WaterIndex water, VoxelGrid grid, Endpoints endpoints, SegmentToll penalty) {
     if (!water.bounds().equals(grid.bounds()))
       throw new IllegalArgumentException("water route collision bounds differ");
     var source = water.at(BlockPos.of(endpoints.from()));
@@ -67,7 +88,7 @@ public final class WaterRoutes {
     private final WaterIndex water;
     private final Endpoints endpoints;
     private final VoxelGrid grid;
-    private final ToDoubleFunction<Vec3> penalty;
+    private final SegmentToll penalty;
     private final int goal;
     private final int[] criticalHeights;
     private final Map<State, Weight> best = new HashMap<>();
@@ -78,7 +99,7 @@ public final class WaterRoutes {
                 .thenComparingInt(label -> label.state.interval())
                 .thenComparingDouble(label -> label.state.height()));
 
-    Search(WaterIndex water, VoxelGrid grid, Endpoints endpoints, ToDoubleFunction<Vec3> penalty) {
+    Search(WaterIndex water, VoxelGrid grid, Endpoints endpoints, SegmentToll penalty) {
       this.water = water;
       this.grid = grid;
       this.endpoints = endpoints;
@@ -151,7 +172,7 @@ public final class WaterRoutes {
       for (var point : points) {
         var duration = time(previous, point);
         if (duration == 0) continue;
-        var extra = penalty.applyAsDouble(point);
+        var extra = penalty.cost(previous, point, duration);
         if (!Double.isFinite(extra) || extra < 0)
           throw new IllegalArgumentException("water route penalty must be finite and non-negative");
         ticks += duration;

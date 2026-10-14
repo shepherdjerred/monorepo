@@ -1,10 +1,5 @@
 package com.shepherdjerred.thestorm.rwf.adapter.content;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.List;
 
 /**
@@ -129,22 +124,8 @@ public final class Schematic {
 
   /** {@link #sha256()} for a candidate the verifier read back from the world. */
   public static String sha256(Dimensions size, List<String> palette, int[] indices) {
-    try {
-      var digest = MessageDigest.getInstance("SHA-256");
-      digest.update(
-          ("sponge-v3\n" + size.width() + " " + size.height() + " " + size.length() + "\n")
-              .getBytes(StandardCharsets.UTF_8));
-      for (var i = 0; i < palette.size(); i++) {
-        digest.update((i + "\t" + palette.get(i) + "\n").getBytes(StandardCharsets.UTF_8));
-      }
-      var buffer = ByteBuffer.allocate(indices.length * Integer.BYTES);
-      for (var index : indices) {
-        buffer.putInt(index);
-      }
-      digest.update(buffer.array());
-      return HexFormat.of().formatHex(digest.digest());
-    } catch (NoSuchAlgorithmException impossible) {
-      throw new IllegalStateException("SHA-256 is required by Java", impossible);
-    }
+    var digest = new SchematicDigest(size, palette);
+    for (var index : indices) digest.add(index);
+    return digest.finish();
   }
 }

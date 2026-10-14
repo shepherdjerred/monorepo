@@ -28,6 +28,23 @@ final class WaterNavigationTest {
   }
 
   @Test
+  void densityUsesPhysicalSwimTimeWithoutChangingDepthOrArrivalTime() {
+    var blocks = new Pool(16, -1);
+    var graph = NavGraphBuilder.build(blocks);
+    var endpoints = new WaterRoutes.Endpoints(new Vec3(1.5, 12.5, 1.5), new Vec3(5.5, 12.5, 1.5));
+    var zero =
+        WaterRoutes.findDensity(graph.water(), VoxelGrid.from(blocks), endpoints, point -> 0)
+            .orElseThrow();
+    var exposed =
+        WaterRoutes.findDensity(graph.water(), VoxelGrid.from(blocks), endpoints, point -> 12)
+            .orElseThrow();
+    assertThat(exposed.waypoints()).isEqualTo(zero.waypoints());
+    assertThat(exposed.ticks()).isEqualTo(zero.ticks());
+    assertThat(exposed.weightedCost())
+        .isCloseTo(exposed.ticks() + TraversalDensity.cost(12, 12, exposed.ticks()), within(1e-10));
+  }
+
+  @Test
   void depthDoesNotMultiplyTheRetainedGraphAndEveryInteriorDepthResolves() {
     var graph = NavGraphBuilder.build(new Pool(64, -1));
     assertThat(graph.nodeCount()).isEqualTo(7 * 3 * 2);

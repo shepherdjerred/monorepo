@@ -13,14 +13,55 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.jspecify.annotations.Nullable;
 
-/** One ordered, bounded disk writer. GPU images always have an explicit owner and close path. */
+/** Two bounded encoders with an ordered manifest. Every GPU image has an owner and close path. */
 final class VideoFrames {
+  interface Image extends AutoCloseable {
+    int width();
+
+    int height();
+
+    int[] pixels();
+
+    @Override
+    void close();
+  }
+
+  private record NativeFrame(NativeImage image) implements Image {
+    @Override
+    public int width() {
+      return image.getWidth();
+    }
+
+    @Override
+    public int height() {
+      return image.getHeight();
+    }
+
+    @Override
+    public int[] pixels() {
+      return image.getPixels();
+    }
+
+    @Override
+    public void close() {
+      image.close();
+    }
+  }
+
+  static ExecutorService encoders() {
+    return Executors.newFixedThreadPool(
+        2, Thread.ofVirtual().name("storm-frame-writer-", 0).factory());
+  }
+
   record Frame(int index, long elapsedNanos, long worldTick, VideoCapture.Camera camera) {}
 
   record Written(Frame frame, String file, String sha256) {}
@@ -52,7 +93,7 @@ final class VideoFrames {
   private final ExecutorService io;
   private final Semaphore pending = new Semaphore(8);
   private final AtomicReference<String> failure = new AtomicReference<>("");
-  private final List<Written> written = new ArrayList<>();
+  private final ConcurrentMap<Integer, Written> written = new ConcurrentHashMap<>();
   private final CompletableFuture<Written> terminal = new CompletableFuture<>();
   private final List<CompletableFuture<?>> holds = new ArrayList<>();
 
@@ -86,6 +127,10 @@ final class VideoFrames {
   }
 
   void write(NativeImage image, Frame frame, boolean terminalFrame) {
+    write(new NativeFrame(image), frame, terminalFrame);
+  }
+
+  void write(Image image, Frame frame, boolean terminalFrame) {
     try {
       io.execute(() -> persist(image, frame, terminalFrame));
     } catch (RuntimeException e) {
@@ -95,16 +140,16 @@ final class VideoFrames {
     }
   }
 
-  private void persist(NativeImage image, Frame frame, boolean terminalFrame) {
+  private void persist(Image image, Frame frame, boolean terminalFrame) {
     try (image) {
-      if (image.getWidth() != 1280 || image.getHeight() != 720) {
+      if (image.width() != 1280 || image.height() != 720) {
         throw new IllegalStateException("Capture requires actual 1280x720 render pixels");
       }
       var name = name(frame.index());
       var destination = directory.resolve(name);
-      FramePng.write(destination, image.getWidth(), image.getHeight(), image.getPixels());
+      FramePng.write(destination, image.width(), image.height(), image.pixels());
       var saved = new Written(frame, name, sha256(destination));
-      written.add(saved);
+      remember(saved);
       if (terminalFrame && !terminal.complete(saved))
         throw new IllegalStateException("Terminal image was captured twice");
     } catch (IOException | RuntimeException e) {
@@ -134,7 +179,7 @@ final class VideoFrames {
                     var hash = sha256(destination);
                     if (!hash.equals(saved.sha256()))
                       throw new IllegalStateException("Terminal pixels changed during hold");
-                    written.add(new Written(frame, name, hash));
+                    remember(new Written(frame, name, hash));
                   } catch (IOException | RuntimeException e) {
                     failure.compareAndSet("", e.toString());
                   } finally {
@@ -154,8 +199,13 @@ final class VideoFrames {
     return String.format(java.util.Locale.ROOT, "%06d.png", index);
   }
 
+  private void remember(Written frame) {
+    if (written.putIfAbsent(frame.frame().index(), frame) != null)
+      throw new IllegalStateException("Rendered image was persisted twice");
+  }
+
   boolean drained() {
-    return pending.availablePermits() == 8;
+    return pending.availablePermits() == 8 && holds.stream().allMatch(CompletableFuture::isDone);
   }
 
   String failure() {
@@ -172,7 +222,7 @@ final class VideoFrames {
                 "Frame inventory is incomplete without a failure reason");
           }
           var inventory =
-              written.stream()
+              written.values().stream()
                   .sorted(java.util.Comparator.comparingInt(entry -> entry.frame().index()))
                   .toList();
           Object result;
