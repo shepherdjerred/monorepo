@@ -16,7 +16,10 @@ export function createArcadeApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "arcade",
       },
-      syncPolicy: { automated: { enabled: true } },
+      syncPolicy: {
+        automated: { enabled: true },
+        syncOptions: ["CreateNamespace=true"],
+      },
     },
   });
 }
