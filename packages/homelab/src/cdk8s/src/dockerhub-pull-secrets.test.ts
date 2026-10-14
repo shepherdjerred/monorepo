@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { ApiObject, App, Chart } from "cdk8s";
 import { z } from "zod";
 import { prepareDockerHubPullSecrets } from "./dockerhub-pull-secrets.ts";
+import { createWoodpeckerCredentialBoundaries } from "./resources/argo-applications/ci/woodpecker-credentials.ts";
 
 function fixtures() {
   const app = new App();
   const chart = new Chart(app, "woodpecker", { namespace: "woodpecker" });
+  createWoodpeckerCredentialBoundaries(chart);
   new ApiObject(chart, "extension", {
     apiVersion: "apps/v1",
     kind: "Deployment",
@@ -36,7 +38,11 @@ function secrets(app: App) {
   return app.node
     .findAll()
     .filter((node) => ApiObject.isApiObject(node))
-    .filter((resource) => resource.kind === "OnePasswordItem")
+    .filter(
+      (resource) =>
+        resource.kind === "OnePasswordItem" &&
+        resource.metadata.name?.startsWith("dockerhub-pull-"),
+    )
     .map((resource) => schema.parse(resource.toJson()));
 }
 

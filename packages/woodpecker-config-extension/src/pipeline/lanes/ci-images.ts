@@ -1,4 +1,8 @@
 import type { CiImages } from "#src/images.ts";
+import {
+  DOCKERHUB_PUBLISH,
+  DOCKERHUB_PUBLISH_LOGIN,
+} from "#src/pipeline/lanes/registry.ts";
 import { admissionGate } from "#src/pipeline/lanes/release.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { IMAGE_ORCHESTRATION_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
@@ -49,6 +53,7 @@ function refreshStep(
       `if ! bun --no-install ci/scripts/selectors/ci-changed.ts ${lane}; then exit 0; fi`,
       "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
       "bun --no-install ci/scripts/reporting/buildkit-env.ts",
+      DOCKERHUB_PUBLISH_LOGIN,
       ...names.flatMap((name) => [
         `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
         `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json`,
@@ -59,7 +64,7 @@ function refreshStep(
     resources: IMAGE_ORCHESTRATION_TIER,
     defaultBranchOnly: true,
     concurrency: { limit: 1, group: `${lane}-refresh` },
-    secrets: [GITHUB_DOWNLOAD, GHCR_PUSH, ...GITHUB_APP],
+    secrets: [GITHUB_DOWNLOAD, GHCR_PUSH, ...DOCKERHUB_PUBLISH, ...GITHUB_APP],
   };
 }
 

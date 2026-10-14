@@ -56,11 +56,8 @@ export function prepareDockerHubPullSecrets(app: App): void {
     }
     namespaces.set(namespace, chart);
   }
-  // CI step and clone pods are created by Woodpecker, outside the chart tree.
-  const woodpecker = namespaces.get("woodpecker");
-  if (woodpecker === undefined)
-    throw new Error("Woodpecker image consumer is missing");
-  namespaces.set("woodpecker-ci", woodpecker);
+  // Woodpecker owns its CI namespace credential declaration alongside grants.
+  namespaces.delete("woodpecker-ci");
   for (const [namespace, chart] of namespaces) {
     new OnePasswordItem(chart, `dockerhub-pull-${namespace}`, {
       metadata: { name: dockerHubPullSecretName(namespace), namespace },

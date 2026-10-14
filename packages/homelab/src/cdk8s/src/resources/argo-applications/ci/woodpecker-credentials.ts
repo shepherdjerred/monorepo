@@ -52,6 +52,11 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  */
 const CI_CREDENTIAL_ITEMS = [
   {
+    secretName: "dockerhub-pull-woodpecker-ci",
+    itemId: "ngzmppq52zm7sii6ato2mv3sbi",
+    type: "kubernetes.io/dockerconfigjson",
+  },
+  {
     secretName: "ci-dockerhub-publisher-credentials",
     itemId: "mqgjqj7xmludkliupnmm2aic6y",
   },
@@ -147,10 +152,11 @@ export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
     },
   });
 
-  for (const { secretName, itemId } of CI_CREDENTIAL_ITEMS) {
-    new OnePasswordItem(chart, secretName, {
-      spec: { itemPath: vaultItemPath(itemId) },
-      metadata: { name: secretName, namespace: WOODPECKER_CI_NAMESPACE },
+  for (const item of CI_CREDENTIAL_ITEMS) {
+    new OnePasswordItem(chart, item.secretName, {
+      spec: { itemPath: vaultItemPath(item.itemId) },
+      metadata: { name: item.secretName, namespace: WOODPECKER_CI_NAMESPACE },
+      ...("type" in item ? { type: item.type } : {}),
     });
   }
 

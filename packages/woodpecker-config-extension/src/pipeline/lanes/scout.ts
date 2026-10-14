@@ -1,4 +1,10 @@
 import type { CiImages } from "#src/images.ts";
+import {
+  DOCKERHUB_PUBLISH,
+  DOCKERHUB_PUBLISH_LOGIN,
+  DOCKERHUB_READ,
+  DOCKERHUB_READ_LOGIN,
+} from "#src/pipeline/lanes/registry.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { admissionGate } from "#src/pipeline/lanes/release.ts";
@@ -66,6 +72,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         "bun --no-install run --cwd packages/astro-opengraph-images build",
         "bun --no-install run --cwd packages/glitter-context build",
         ...AWS_ALIASES,
+        DOCKERHUB_READ_LOGIN,
         "mkdir -p .scout-release",
         "bun --no-install scripts/ci/read-ci-handoff.ts version-catalog > .scout-release/version-catalog.json",
         'if [ -n "$scout_candidate" ]; then',
@@ -86,7 +93,12 @@ export function scoutSteps(images: CiImages): CiStep[] {
       resources: VERIFY_TIER,
       defaultBranchOnly: true,
       concurrency: SITE_DEPLOY_GROUP,
-      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS, ...HANDOFF_KEYS],
+      secrets: [
+        GITHUB_DOWNLOAD,
+        DOCKERHUB_READ,
+        ...DEPLOY_KEYS,
+        ...HANDOFF_KEYS,
+      ],
     },
     {
       key: "scout-tag-release",
@@ -102,6 +114,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         ". ci/scripts/toolchain.sh",
         ...AWS_ALIASES,
         "printf '%s' \"$GITHUB_PACKAGES_TOKEN\" | docker login ghcr.io -u shepherdjerred --password-stdin",
+        DOCKERHUB_PUBLISH_LOGIN,
         'bun --no-install scripts/release/scout-site-release.ts tag-release --state "$scout_state"',
       ],
       dependsOn: ["scout-beta-release"],
@@ -111,6 +124,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
       secrets: [
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
+        ...DOCKERHUB_PUBLISH,
         ...DEPLOY_KEYS,
         ...HANDOFF_KEYS,
       ],
@@ -126,6 +140,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         ),
         ". ci/scripts/toolchain.sh",
         ...AWS_ALIASES,
+        DOCKERHUB_READ_LOGIN,
         'prod_pin="$(bun --no-install scripts/release/scout-site-release.ts resolve-prod-pin)"',
         'bun --no-install scripts/release/scout-site-release.ts reconcile-prod-pin --prod-pin "$prod_pin"',
       ],
@@ -134,7 +149,12 @@ export function scoutSteps(images: CiImages): CiStep[] {
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
       concurrency: SITE_DEPLOY_GROUP,
-      secrets: [GITHUB_DOWNLOAD, ...DEPLOY_KEYS, ...HANDOFF_KEYS],
+      secrets: [
+        GITHUB_DOWNLOAD,
+        DOCKERHUB_READ,
+        ...DEPLOY_KEYS,
+        ...HANDOFF_KEYS,
+      ],
     },
     {
       key: "release-please",
