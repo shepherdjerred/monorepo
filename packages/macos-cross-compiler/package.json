@@ -6,7 +6,7 @@
   "scripts": {
     "stage": "./scripts/stage-xcode.sh",
     "image:smoke": "docker build --target smoke --build-arg SDK=27 .",
-    "image:build": "docker build --target image --build-arg SDK=27 -t macos-cross-compiler:27 .",
+    "image:build": "docker build --target image --build-arg SDK=27 -t docker.io/shepherdjerred/macos-cross-compiler:27 .",
     "macros:check": "./macros/check-against-xcode.sh"
   }
 }

@@ -124,7 +124,7 @@ tarballs are the only inputs that are not in this repository:
 ```bash
 scripts/stage-xcode.sh --developer-dir /Applications/Xcode.app/Contents/Developer
 # → .stage/<sdk>/ and .stage/sdk-<sdk>.tar.zst (+ .sha256)
-docker build --build-arg SDK=27 -t macos-cross-compiler:27 .
+docker build --build-arg SDK=27 -t docker.io/shepherdjerred/macos-cross-compiler:27 .
 docker build --target smoke --build-arg SDK=27 .
 ```
 
