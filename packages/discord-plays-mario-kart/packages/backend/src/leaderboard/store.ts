@@ -150,6 +150,7 @@ export function createPrismaLeaderboardStore(
   return {
     async latestGuildId() {
       const race = await prisma.race.findFirst({
+        where: { gameId: "mk64" },
         orderBy: { id: "desc" },
         select: { guildId: true },
       });
@@ -159,7 +160,9 @@ export function createPrismaLeaderboardStore(
     forGuild(guildId: string): LeaderboardStore {
       const ranked = {
         discordId: { not: null },
-        race: { is: { guildId, gameMode: { in: RANKED_MODES } } },
+        race: {
+          is: { guildId, gameId: "mk64", gameMode: { in: RANKED_MODES } },
+        },
       };
       const raceInclude = {
         results: {
@@ -181,6 +184,7 @@ export function createPrismaLeaderboardStore(
           await prisma.race.create({
             data: {
               guildId,
+              gameId: "mk64",
               courseId: race.courseId,
               gameMode: race.gameMode,
               humanCount: race.humanCount,
@@ -282,6 +286,7 @@ export function createPrismaLeaderboardStore(
           const recentRaces: RaceRow[] = await prisma.race.findMany({
             where: {
               guildId,
+              gameId: "mk64",
               gameMode: { in: RANKED_MODES },
               results: { some: { discordId } },
             },
@@ -310,6 +315,7 @@ export function createPrismaLeaderboardStore(
           const races: RaceRow[] = await prisma.race.findMany({
             where: {
               guildId,
+              gameId: "mk64",
               gameMode: { in: RANKED_MODES },
               results: { some: { discordId: { not: null } } },
             },

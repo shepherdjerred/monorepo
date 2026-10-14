@@ -55,6 +55,10 @@ function fakeStreamer(events: Events, loginError?: Error): SessionStreamer {
       events.push("streamer:stop");
       await Promise.resolve();
     },
+    shutdown: async () => {
+      events.push("streamer:stop", "streamer:destroy");
+      await Promise.resolve();
+    },
     destroy: () => {
       events.push("streamer:destroy");
     },

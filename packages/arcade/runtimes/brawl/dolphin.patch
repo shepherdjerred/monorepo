@@ -1,0 +1,170 @@
+diff --git a/Source/Core/AudioCommon/NullSoundStream.cpp b/Source/Core/AudioCommon/NullSoundStream.cpp
+index d731f16..75bcc42 100644
+--- a/Source/Core/AudioCommon/NullSoundStream.cpp
++++ b/Source/Core/AudioCommon/NullSoundStream.cpp
+@@ -2,17 +2,37 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ 
+ #include "AudioCommon/NullSoundStream.h"
++#include "Common/ArcadeBridge.h"
++#include "AudioCommon/Mixer.h"
++#include <array>
++#include <chrono>
+ 
+ bool NullSound::Init()
+ {
+   // Make Mixer aware that audio output is disabled.
+-  GetMixer()->SetSampleRate(0);
++  GetMixer()->SetSampleRate(ArcadeBridge::Enabled() ? 48000 : 0);
+ 
+   return true;
+ }
+ 
+ bool NullSound::SetRunning(bool running)
+ {
++  if (!ArcadeBridge::Enabled()) return true;
++  if (!running) {
++    m_arcade_audio.request_stop();
++    if (m_arcade_audio.joinable()) m_arcade_audio.join();
++  } else if (!m_arcade_audio.joinable()) {
++    m_arcade_audio = std::jthread([this](std::stop_token stop) {
++      std::array<s16, 960> samples{};
++      auto deadline = std::chrono::steady_clock::now();
++      while (!stop.stop_requested()) {
++        deadline += std::chrono::milliseconds(10);
++        GetMixer()->Mix(samples.data(), 480);
++        ArcadeBridge::Audio(samples.data(), 480);
++        std::this_thread::sleep_until(deadline);
++      }
++    });
++  }
+   return true;
+ }
+ 
+diff --git a/Source/Core/AudioCommon/NullSoundStream.h b/Source/Core/AudioCommon/NullSoundStream.h
+index f186787..f7e30e2 100644
+--- a/Source/Core/AudioCommon/NullSoundStream.h
++++ b/Source/Core/AudioCommon/NullSoundStream.h
+@@ -4,6 +4,7 @@
+ #pragma once
+ 
+ #include "AudioCommon/SoundStream.h"
++#include <thread>
+ 
+ class NullSound final : public SoundStream
+ {
+@@ -13,4 +14,6 @@ public:
+   void SetVolume(int volume) override;
+ 
+   static bool IsValid() { return true; }
++private:
++  std::jthread m_arcade_audio;
+ };
+diff --git a/Source/Core/Common/CMakeLists.txt b/Source/Core/Common/CMakeLists.txt
+index 2447d1e..e5bfe97 100644
+--- a/Source/Core/Common/CMakeLists.txt
++++ b/Source/Core/Common/CMakeLists.txt
+@@ -1,4 +1,7 @@
+ add_library(common
++  ArcadeBridge.cpp
++  ArcadeBridge.h
++  ArcadeWire.h
+   Analytics.cpp
+   Analytics.h
+   Assembler/AssemblerShared.cpp
+diff --git a/Source/Core/Core/CMakeLists.txt b/Source/Core/Core/CMakeLists.txt
+index be75ba8..b3375d2 100644
+--- a/Source/Core/Core/CMakeLists.txt
++++ b/Source/Core/Core/CMakeLists.txt
+@@ -1,4 +1,6 @@
+ add_library(core
++  ArcadeTelemetry.cpp
++  ArcadeTelemetry.h
+   AchievementManager.cpp
+   AchievementManager.h
+   ActionReplay.cpp
+diff --git a/Source/Core/Core/Core.cpp b/Source/Core/Core/Core.cpp
+index 0dbfda5..35e6321 100644
+--- a/Source/Core/Core/Core.cpp
++++ b/Source/Core/Core/Core.cpp
+@@ -77,6 +77,8 @@
+ 
+ #ifdef USE_MEMORYWATCHER
+ #include "Core/MemoryWatcher.h"
++#include "Core/ArcadeTelemetry.h"
++#include "Common/ArcadeBridge.h"
+ #endif
+ 
+ #include "DiscIO/RiivolutionPatcher.h"
+@@ -152,6 +154,10 @@ void FrameUpdateOnCPUThread()
+ 
+ void OnFrameEnd(Core::System& system)
+ {
++  if (ArcadeBridge::Enabled()) {
++    const CPUThreadGuard guard(system);
++    ArcadeBrawl::Observe(guard);
++  }
+ #ifdef USE_MEMORYWATCHER
+   if (s_memory_watcher)
+   {
+diff --git a/Source/Core/DolphinNoGUI/MainNoGUI.cpp b/Source/Core/DolphinNoGUI/MainNoGUI.cpp
+index 9c8f938..02776eb 100644
+--- a/Source/Core/DolphinNoGUI/MainNoGUI.cpp
++++ b/Source/Core/DolphinNoGUI/MainNoGUI.cpp
+@@ -16,6 +16,7 @@
+ #endif
+ 
+ #include "Common/ScopeGuard.h"
++#include "Common/ArcadeBridge.h"
+ #include "Common/StringUtil.h"
+ #include "Core/Boot/Boot.h"
+ #include "Core/BootManager.h"
+@@ -316,6 +317,7 @@ int main(const int argc, char* argv[])
+   Discord::UpdateDiscordPresence();
+ #endif
+ 
++  ArcadeBridge::SetStopCallback([] { Host_Message(HostMessageID::WMUserStop); });
+   s_platform->MainLoop();
+   Core::Stop(Core::System::GetInstance());
+ 
+diff --git a/Source/Core/VideoCommon/FrameDumper.cpp b/Source/Core/VideoCommon/FrameDumper.cpp
+index 8bb9883..1e1aa72 100644
+--- a/Source/Core/VideoCommon/FrameDumper.cpp
++++ b/Source/Core/VideoCommon/FrameDumper.cpp
+@@ -2,6 +2,7 @@
+ // SPDX-License-Identifier: GPL-2.0-or-later
+ 
+ #include "VideoCommon/FrameDumper.h"
++#include "Common/ArcadeBridge.h"
+ 
+ #include "Common/Assert.h"
+ #include "Common/FileUtil.h"
+@@ -43,10 +44,12 @@ void FrameDumper::DumpCurrentFrame(const AbstractTexture* src_texture,
+                                    const MathUtil::Rectangle<int>& target_rect, u64 ticks,
+                                    int frame_number)
+ {
++  if (ArcadeBridge::Enabled() && frame_number % 2 != 0 && !m_screenshot_request.IsSet()) return;
+   int source_width = src_rect.GetWidth();
+   int source_height = src_rect.GetHeight();
+   int target_width = target_rect.GetWidth();
+   int target_height = target_rect.GetHeight();
++  if (ArcadeBridge::Enabled()) { target_width = 640; target_height = 480; }
+ 
+   // We only need to render a copy if we need to stretch/scale the XFB copy.
+   MathUtil::Rectangle<int> copy_rect = src_rect;
+@@ -220,6 +223,7 @@ void FrameDumper::FrameDumpThreadFunc()
+       break;
+ 
+     auto frame = m_frame_dump_data;
++    if (ArcadeBridge::Enabled()) ArcadeBridge::Video(frame.data, frame.width, frame.height, frame.stride);
+ 
+     // Save screenshot
+     if (m_screenshot_request.TestAndClear())
+@@ -347,6 +351,7 @@ void FrameDumper::SaveScreenshot(std::string filename)
+ 
+ bool FrameDumper::IsFrameDumping() const
+ {
++  if (ArcadeBridge::Enabled()) return true;
+   if (m_screenshot_request.IsSet())
+     return true;
+ 

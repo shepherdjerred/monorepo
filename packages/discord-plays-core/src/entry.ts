@@ -68,6 +68,47 @@ export type BootGameBotOptions = {
 export function bootGameBot(
   options: BootGameBotOptions,
 ): GameBotRuntime<SelfbotPooledUserbot> {
+  initializeGameObservability(options);
+
+  const runtime = createGameBot<SelfbotPooledUserbot>({
+    ...options.wiring,
+    userbotFactory: createSelfbotPooledUserbotFactory(),
+    aloneGraceMs: 30_000,
+    peerUserbotIds: readPeerUserbotIds(),
+    logger: {
+      info: (message, metadata) => {
+        options.logger.info(message, metadata);
+      },
+      warn: (message, metadata) => {
+        options.logger.warn(message, metadata);
+      },
+      error: (message, metadata) => {
+        options.logger.error(message, metadata);
+      },
+    },
+  });
+
+  async function shutdownAndExit(): Promise<void> {
+    await runtime.shutdown();
+    await options.onShutdown?.();
+    process.exit(0);
+  }
+  process.once("SIGTERM", () => {
+    void shutdownAndExit();
+  });
+  process.once("SIGINT", () => {
+    void shutdownAndExit();
+  });
+  return runtime;
+}
+
+/** Shared process observability, independent of a single-slot game bot. */
+export function initializeGameObservability(
+  options: Pick<
+    BootGameBotOptions,
+    "serviceName" | "sentryDsn" | "logger" | "wrapSpanProcessor"
+  >,
+): void {
   Sentry.init({
     dataCollection: sentryDataCollection(),
     dsn: Bun.env["SENTRY_DSN"] ?? options.sentryDsn,
@@ -90,44 +131,4 @@ export function bootGameBot(
       ? {}
       : { wrapSpanProcessor: options.wrapSpanProcessor }),
   });
-
-  const runtime = createGameBot<SelfbotPooledUserbot>({
-    ...options.wiring,
-    userbotFactory: createSelfbotPooledUserbotFactory(),
-    aloneGraceMs: 30_000,
-    peerUserbotIds: readPeerUserbotIds(),
-    logger: {
-      info: (message, metadata) => {
-        options.logger.info(message, metadata);
-      },
-      warn: (message, metadata) => {
-        options.logger.warn(message, metadata);
-      },
-      error: (message, metadata) => {
-        options.logger.error(message, metadata);
-      },
-    },
-  });
-
-  async function shutdown(): Promise<void> {
-    await runtime.shutdown();
-    if (options.onShutdown !== undefined) {
-      await options.onShutdown();
-    }
-  }
-
-  async function shutdownAndExit(): Promise<void> {
-    await shutdown();
-    process.exit(0);
-  }
-
-  process.once("SIGTERM", () => {
-    void shutdownAndExit();
-  });
-
-  process.once("SIGINT", () => {
-    void shutdownAndExit();
-  });
-
-  return runtime;
 }

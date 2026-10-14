@@ -16,9 +16,9 @@ export function handleMessages(
   driver: PokemonGameDriver,
   config: Config,
   fn: (commandInput: CommandInput) => Promise<void>,
-): void {
+): () => void {
   logger.info("ready to handle commands");
-  client.on(Events.MessageCreate, (messageEvent) => {
+  const listener = (messageEvent: Message) => {
     void (async () => {
       try {
         await handleMessage(messageEvent, driver, config, fn);
@@ -29,7 +29,11 @@ export function handleMessages(
         );
       }
     })();
-  });
+  };
+  client.on(Events.MessageCreate, listener);
+  return () => {
+    client.off(Events.MessageCreate, listener);
+  };
 }
 
 async function handleMessage(

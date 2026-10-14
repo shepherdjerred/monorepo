@@ -9,6 +9,7 @@
 // mount on that server or preserve Engine.IO's upgrade behaviour. `ws` provides
 // the noServer upgrade path that lets both protocols safely coexist.
 import type { Server as HttpServer, IncomingMessage } from "node:http";
+import type { Duplex } from "node:stream";
 import { WebSocketServer, WebSocket, type RawData } from "ws";
 import type { Logger } from "#src/logger.ts";
 import type { DriverFeedConfig } from "./config.ts";
@@ -125,18 +126,29 @@ export class DriverFeedService {
    * (webserver/socket.ts) turns that off and ends unserved upgrades itself.
    * `attach.test.ts` pins both behaviours.
    */
-  attach(server: HttpServer): void {
+  attach(server: HttpServer): () => void {
     const wss = new WebSocketServer({ noServer: true });
-    server.on("upgrade", (request, socket, head) => {
+    const upgrade = (
+      request: IncomingMessage,
+      socket: Duplex,
+      head: Buffer,
+    ) => {
       if (requestPath(request) !== this.path) return;
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit("connection", ws, request);
       });
-    });
+    };
+    server.on("upgrade", upgrade);
     wss.on("connection", (ws: WebSocket, request: IncomingMessage) => {
       void this.onConnection(ws, request);
     });
     this.logger.info("driver feed websocket attached", { path: this.path });
+    return () => {
+      this.stopSession();
+      server.off("upgrade", upgrade);
+      for (const client of wss.clients) client.terminate();
+      wss.close();
+    };
   }
 
   /**
@@ -185,6 +197,7 @@ export class DriverFeedService {
   /** Feed one chunk of the game's interleaved s16le audio. */
   pushAudio(pcm: Buffer): void {
     if (this.encoder === undefined) return;
+    this.removeInactiveClients();
     this.hub.broadcastAudio(pcm);
   }
 

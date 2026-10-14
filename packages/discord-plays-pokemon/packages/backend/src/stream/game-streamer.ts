@@ -5,7 +5,7 @@ import {
   Encoders,
   computeLetterbox,
 } from "@shepherdjerred/discord-video-stream";
-import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import {
   WIDTH,

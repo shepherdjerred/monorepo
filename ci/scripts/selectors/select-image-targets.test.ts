@@ -121,7 +121,7 @@ describe("selectImageTargets", () => {
     ).toEqual(["discord-plays-pokemon"]);
     expect(
       await select(["packages/discord-plays-mario-kart/spaghetti-src/a.patch"]),
-    ).toEqual(["discord-plays-mario-kart"]);
+    ).toEqual(["arcade", "discord-plays-mario-kart"]);
   });
 
   test("groups the homelab image family", async () => {
@@ -555,7 +555,7 @@ describe("patch attribution", () => {
   // version-exact, so a patch whose pinned version nothing resolves anymore
   // (a stale patch) correctly selects no image.
   test("a patch selects only the images whose closure resolves it", async () => {
-    // node-datachannel reaches exactly the three voice/streaming images and
+    // node-datachannel reaches exactly the voice/streaming images and
     // nothing else, which is the attribution property: a patch must not
     // rebuild images that never resolve the patched package.
     expect(
@@ -563,6 +563,7 @@ describe("patch attribution", () => {
         "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
       ]),
     ).toEqual([
+      "arcade",
       "discord-plays-mario-kart",
       "discord-plays-pokemon",
       "streambot",
@@ -575,6 +576,7 @@ describe("patch attribution", () => {
         "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
       ]),
     ).toEqual([
+      "arcade",
       "discord-plays-mario-kart",
       "discord-plays-pokemon",
       "streambot",

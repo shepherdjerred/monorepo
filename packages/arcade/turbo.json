@@ -1,0 +1,11 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "generate": {
+      "outputs": [
+        "runtimes/wire.generated.h",
+        "packages/common/src/wire.generated.ts"
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { PassThrough } from "node:stream";
+import { PcmSink } from "#src/stream/pcm-sink.ts";
 import { Client } from "discord.js-selfbot-v13";
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "#src/stream/game-streamer-base.ts";
@@ -95,7 +95,7 @@ describe("GameStreamerBase", () => {
     const streamer = makeStreamer();
     let closed = 0;
     const fakeTransport: AudioTransport = {
-      sink: new PassThrough(),
+      sink: new PcmSink(48, 4),
       source: "tcp://127.0.0.1:1",
       inputOptions: [],
       close: () => {
@@ -107,31 +107,20 @@ describe("GameStreamerBase", () => {
     expect(closed).toBe(1);
   });
 
-  test("destroy() swallows the selfbot client's null-connection throw and warns", () => {
-    // discord.js-selfbot-v13 throws "null is not an object (this.connection.
-    // readyState)" from client.destroy() when the gateway never connected.
+  test("session teardown leaves the pooled gateway client alive for reuse", async () => {
+    let destroys = 0;
     class ThrowingClient extends Client {
       override destroy(): void {
-        throw new TypeError(
-          "null is not an object (evaluating 'this.connection.readyState')",
-        );
+        destroys++;
       }
     }
-    const warns: string[] = [];
     const streamer = new TestStreamer({
       selfbotClient: new ThrowingClient(),
       guildId: "guild-1",
       channelId: "channel-1",
-      logger: {
-        ...silentLogger,
-        warn: (message: string) => {
-          warns.push(message);
-        },
-      },
+      logger: silentLogger,
     });
-    expect(() => {
-      streamer.destroy();
-    }).not.toThrow();
-    expect(warns).toEqual(["selfbot client destroy failed (ignored)"]);
+    await streamer.shutdown();
+    expect(destroys).toBe(0);
   });
 });

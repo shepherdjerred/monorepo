@@ -6,7 +6,7 @@ import {
   type PlayStreamOptions,
   type StreamObserver,
 } from "@shepherdjerred/discord-video-stream";
-import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
 import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
@@ -46,6 +46,9 @@ export type GameStreamerOptions = {
   channelId: string;
   /** The engine's frames and audio; sizes the raw inputs handed to ffmpeg. */
   format: FrameFormat;
+  pixelFormat?: "bgra" | "rgba";
+  displayAspect?: number;
+  onMediaOverrun?: (kind: "audio") => void;
   // Height of the 16:9 output canvas; the 4:3 game is pillarboxed onto it.
   canvasHeight: number;
   frameRate: number;
@@ -134,7 +137,7 @@ export class GameStreamer extends GameStreamerBase {
     const transport = this.audioTransport;
     if (transport === null) return;
     const availableAtMs = performance.timeOrigin + performance.now();
-    transport.sink.write(pcm);
+    if (!transport.sink.write(pcm)) this.options.onMediaOverrun?.("audio");
     if (contentEndMs !== undefined) {
       this.latencyTracker?.recordAudioSource({
         pcmBytes: pcm.byteLength,
@@ -181,7 +184,7 @@ export class GameStreamer extends GameStreamerBase {
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
     const { content, canvas } = computeLetterbox(
-      DISPLAY_ASPECT,
+      this.options.displayAspect ?? DISPLAY_ASPECT,
       this.options.canvasHeight,
     );
     const session = newSessionStats();
@@ -223,7 +226,7 @@ export class GameStreamer extends GameStreamerBase {
         // Declaring rgba here swaps red/blue in the broadcast; ffmpeg drops
         // the X byte converting to yuv420p.
         "-pix_fmt",
-        "bgra",
+        this.options.pixelFormat ?? "bgra",
         "-video_size",
         `${String(format.width)}x${String(format.height)}`,
         // ffmpeg assigns presentation timestamps from this rate, so it must

@@ -23,6 +23,8 @@ export class RaceTracker {
   private readonly deps: RaceTrackerDeps;
   private readonly watcher: RaceWatcher;
   private screenMode: ScreenMode | undefined;
+  private readonly pending = new Map<symbol, Promise<void>>();
+  private readonly failures: unknown[] = [];
 
   constructor(deps: RaceTrackerDeps) {
     this.deps = deps;
@@ -51,8 +53,24 @@ export class RaceTracker {
         `race complete: course=${String(completed.courseId)} ` +
           `mode=${completed.gameMode} results=${String(completed.results.length)}`,
       );
-      void this.persist(completed);
+      const race = completed;
+      const writeId = Symbol("race result");
+      const write = (async () => {
+        await Promise.resolve();
+        try {
+          await this.persist(race);
+        } finally {
+          this.pending.delete(writeId);
+        }
+      })();
+      this.pending.set(writeId, write);
     }
+  }
+
+  async flush(): Promise<void> {
+    await Promise.all(this.pending.values());
+    if (this.failures.length > 0)
+      throw new AggregateError(this.failures, "race results were not saved");
   }
 
   private async persist(completed: RaceCompleted): Promise<void> {
@@ -60,6 +78,7 @@ export class RaceTracker {
       await this.deps.store.recordRace(completed);
       this.deps.onRaceRecorded?.();
     } catch (error) {
+      this.failures.push(error);
       logger.error("failed to persist race result", error);
     }
   }

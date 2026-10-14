@@ -87,6 +87,7 @@ group "app" {
     "scout-for-lol",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
+    "arcade",
     "storm-brain",
     "storm-forum",
     "woodpecker-config-extension",
@@ -212,6 +213,30 @@ target "storm-brain" {
   tags       = imagetags("storm-brain")
   cache-from = cachefrom("storm-brain")
   cache-to   = cacheto("storm-brain")
+}
+
+target "_arcade-spaghetti" {
+  context = "."
+  dockerfile = "packages/discord-plays-mario-kart/Dockerfile"
+  target = "spaghetti-builder"
+}
+
+target "_arcade-dolphin" {
+  context = "."
+  dockerfile = "packages/arcade/runtimes/brawl/Dockerfile"
+  target = "dolphin"
+}
+
+target "arcade" {
+  inherits = ["_app"]
+  dockerfile = "packages/arcade/Dockerfile"
+  contexts = {
+    arcade-spaghetti = "target:_arcade-spaghetti"
+    arcade-dolphin = "target:_arcade-dolphin"
+  }
+  tags = imagetags("arcade")
+  cache-from = cachefrom("arcade")
+  cache-to = cacheto("arcade")
 }
 
 target "storm-forum" {

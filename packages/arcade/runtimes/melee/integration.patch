@@ -1,0 +1,62 @@
+diff --git a/platforms/browser/CMakeLists.txt b/platforms/browser/CMakeLists.txt
+index cefa680..90a15cb 100644
+--- a/platforms/browser/CMakeLists.txt
++++ b/platforms/browser/CMakeLists.txt
+@@ -39,7 +39,7 @@ target_include_directories(melee_browser PRIVATE ${CMAKE_SOURCE_DIR}/extern/auro
+ target_link_libraries(melee_browser PRIVATE aurora::core aurora::gx aurora::gd aurora::vi aurora::pad aurora::si aurora::mtx aurora::os aurora::card aurora::thp)
+ target_compile_definitions(melee_browser PRIVATE TARGET_PC=1 MELEE_PC=1 MELEE_USE_BUILTIN_SHA1)
+ target_compile_options(melee_browser PRIVATE -Wno-incompatible-pointer-types -Wno-int-conversion ${MELEE_FP_FLAGS})
+-target_link_options(melee_browser PRIVATE -O1 --profiling-funcs -sEMULATE_FUNCTION_POINTER_CASTS=1 -sSTACK_SIZE=8388608 -sINITIAL_MEMORY=268435456 -sMAXIMUM_MEMORY=2147483648 -sPTHREAD_POOL_SIZE=4 -sEXIT_RUNTIME=0 -sASSERTIONS=0 -lidbfs.js -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=callMain,FS,ENV -sINVOKE_RUN=0 -sASYNCIFY_IMPORTS=browser_disc_read -sASYNCIFY_STACK_SIZE=1048576 -sERROR_ON_UNDEFINED_SYMBOLS=1 -Wl,--error-limit=0)
++target_link_options(melee_browser PRIVATE -O1 --profiling-funcs -sEMULATE_FUNCTION_POINTER_CASTS=1 -sSTACK_SIZE=8388608 -sINITIAL_MEMORY=268435456 -sMAXIMUM_MEMORY=2147483648 -sPTHREAD_POOL_SIZE=4 -sEXIT_RUNTIME=0 -sASSERTIONS=0 -lidbfs.js -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=callMain,FS,ENV,HEAPU8,HEAP16 -sINVOKE_RUN=0 -sASYNCIFY_IMPORTS=browser_disc_read -sASYNCIFY_STACK_SIZE=1048576 -sERROR_ON_UNDEFINED_SYMBOLS=1 -Wl,--error-limit=0)
+ set_target_properties(melee_browser PROPERTIES SUFFIX ".js")
+ # emcc's single-pass link fails validation at -O2/-O3 when --fpcast-emu runs
+ # ahead of the optimizer (direct calls into cast thunks keep the original
+diff --git a/platforms/browser/launch.c b/platforms/browser/launch.c
+index 0dba726..e61765e 100644
+--- a/platforms/browser/launch.c
++++ b/platforms/browser/launch.c
+@@ -46,7 +46,7 @@ void direct_mode_loaded(int kind){
+  if(kind!=GM_VS)return;
+  VsModeData* vs=gmVsMelee_GetVsData();gm_SetupRulesDefaults(&vs->start.rules);vs->start.rules.stkind=stage;
+  GameRules* rules=gmMainLib_GetGameRules();rules->mode=1;rules->stock_count=stocks;rules->stock_time_limit=minutes;
+- for(int i=0;i<GM_MAX_PLAYERS;i++){gm_SetupPlayerDefaults(&vs->start.players[i]);PlayerInitData* p=&vs->start.players[i];p->slot=i;p->slot_type=i<4?(ports[i]>>8)&255:3;if(i<4){p->ckind=(ports[i]&255)==19?18:ports[i]&255;p->color=ports[i]>>16;p->cpu_level=level;p->stocks=stocks;}}
++ for(int i=0;i<GM_MAX_PLAYERS;i++){gm_SetupPlayerDefaults(&vs->start.players[i]);PlayerInitData* p=&vs->start.players[i];p->slot=i+1;p->slot_type=i<4?(ports[i]>>8)&255:3;if(i<4){p->ckind=(ports[i]&255)==19?18:ports[i]&255;p->color=ports[i]>>16;p->cpu_level=level;p->stocks=stocks;}}
+  configured=1;
+ }
+ EMSCRIPTEN_KEEPALIVE unsigned direct_frame_count(void){return VIGetRetraceCount();}
+diff --git a/platforms/browser/runtime.mjs b/platforms/browser/runtime.mjs
+index 5f8c944..8471a80 100644
+--- a/platforms/browser/runtime.mjs
++++ b/platforms/browser/runtime.mjs
+@@ -135,7 +135,7 @@ window.Module={onUploadWait:()=>{if(!playable)report('status',{message:'Compilin
+ const script=document.createElement('script');script.src='./melee_browser.js';script.onerror=()=>fail(Error('Build the upstream Melee engine before launching.'));document.head.append(script);
+ async function select(data){
+  if(!ready||selection)throw Error('The upstream engine is not ready for selection.');
+- const {COSTUME_SLOTS}=await import(base+'local-files.mjs');
++ const COSTUME_SLOTS=(data.costumes?.length ? await import(base+'local-files.mjs') : {COSTUME_SLOTS:[]}).COSTUME_SLOTS;
+  const css=['MnSlChr.dat','MnSlChr.usd','audio/nr_select.ssm','audio/us/nr_select.ssm'];
+  for(const [assets,allowed,max] of [[data.costumes||[],COSTUME_SLOTS,2*1024*1024],[data.cssAssets||[],css,16*1024*1024]]){
+   for(const asset of assets){if(!allowed.includes(asset.filename))throw Error('Invalid replacement asset.');const bytes=new Uint8Array(await asset.blob.arrayBuffer());if(bytes.length<32||bytes.length>max)throw Error('Invalid replacement asset size.');const path='/mod/'+asset.filename;Module.FS.mkdirTree(path.slice(0,path.lastIndexOf('/')));Module.FS.writeFile(path,bytes);}
+@@ -167,8 +167,7 @@ window.addEventListener('message',async event=>{
+   report('status',{message:'Checking WebGPU graphics support…'});
+   await checkGraphics();
+   report('status',{message:'Checking your local Melee disc…'});
+-  const {verifyDisc}=await import(base+'verify-disc.mjs');
+-  if(!data.discVerified)await verifyDisc(data.iso,bytes=>report('status',{message:'Checking your game… '+Math.floor(bytes/data.iso.size*100)+'%'}));
++  if(!data.discVerified){const {verifyDisc}=await import(base+'verify-disc.mjs');await verifyDisc(data.iso,bytes=>report('status',{message:'Checking your game… '+Math.floor(bytes/data.iso.size*100)+'%'}));}
+   report('disc-verified');await runtimeReady;
+   const seedBytes=fetch(base+'upstream/initial_pipeline_cache.db').then(async response=>response.ok?new Uint8Array(await response.arrayBuffer()):null).catch(()=>null);
+   Module.FS.mkdirTree('/mod');Module.FS.mkdirTree('/saves');Module.FS.mkdirTree('/cache');
+diff --git a/tools/browser/compile_game.py b/tools/browser/compile_game.py
+index bc69fe8..0e71138 100644
+--- a/tools/browser/compile_game.py
++++ b/tools/browser/compile_game.py
+@@ -8,7 +8,7 @@ llvm=pathlib.Path(os.environ.get('LLVM_ROOT','/opt/homebrew/opt/llvm@22'));sdk=p
+ out=ROOT/'build/browser/game';out.mkdir(parents=True,exist_ok=True)
+ clang=str(llvm/'bin/clang');lower=os.environ.get('DISC_LOWER',str(ROOT/'build/browser/disc_lower'))
+ flags=['--target=wasm32-unknown-emscripten','--sysroot='+str(sdk/'upstream/emscripten/cache/sysroot'),'-D__EMSCRIPTEN__','-DTARGET_PC=1','-DMELEE_PC=1','-DOPENSMASH_DISC_LOWERING=1','-Iextern/aurora/include','-Isrc','-Isrc/sdk_include','-include','dolphin/gx.h','-include','src/pc/compat.h','-include','tools/browser/disc_access.h','-Wno-everything','-ferror-limit=5','-pthread']
+-sources=[ROOT/x for x in a.source] if a.source else sorted(list((ROOT/'src/melee').rglob('*.c'))+list((ROOT/'src/sysdolphin').rglob('*.c'))+[ROOT/'src/pc/vtxarray.c']+[ROOT/'platforms/browser'/n for n in ['launch.c','presentation.c','skinning.c']])
++sources=[ROOT/x for x in a.source] if a.source else sorted(list((ROOT/'src/melee').rglob('*.c'))+list((ROOT/'src/sysdolphin').rglob('*.c'))+[ROOT/'src/pc/vtxarray.c']+[ROOT/'platforms/browser'/n for n in ['launch.c','presentation.c','skinning.c','arcade_probe.c']])
+ sources=[s for s in sources if s.name!='debugconsole_main.c']
+ # An upstream sync may remove or rename a translation unit. Never link an old
+ # object merely because it remains in the build directory.

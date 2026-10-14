@@ -4,6 +4,7 @@
   "registry": "docker.io",
   "namespace": "shepherdjerred",
   "images": [
+    { "name": "arcade", "visibility": "private" },
     { "name": "alert-dashboard", "visibility": "private" },
     { "name": "birmel", "visibility": "private" },
     { "name": "caddy-s3proxy", "visibility": "private" },

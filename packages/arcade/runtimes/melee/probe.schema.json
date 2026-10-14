@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "scene": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "majorMode": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "prepared": {
+      "type": "boolean"
+    },
+    "aborted": {
+      "type": "boolean"
+    },
+    "matchKind": {
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 3
+    },
+    "teams": {
+      "type": "boolean"
+    },
+    "stageId": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "remainingMs": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "players": {
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "type": {
+            "type": "number",
+            "enum": [0, 1, 2]
+          },
+          "characterId": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32
+          },
+          "damage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "stocks": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 99
+          },
+          "kos": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "falls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "selfDestructs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "placement": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "slot",
+          "port",
+          "type",
+          "characterId",
+          "damage",
+          "stocks",
+          "kos",
+          "falls",
+          "selfDestructs",
+          "score",
+          "placement"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "frame",
+    "scene",
+    "majorMode",
+    "prepared",
+    "aborted",
+    "matchKind",
+    "teams",
+    "stageId",
+    "remainingMs",
+    "players"
+  ],
+  "additionalProperties": false
+}

@@ -67,7 +67,7 @@ export function startGoalControlServer(
 
   const server = Bun.serve({
     hostname: options.config.game.goal.control_host,
-    port: options.config.game.goal.control_port,
+    port: options.port ?? options.config.game.goal.control_port,
     async fetch(request) {
       const token = bearerToken(request);
       const goalId = request.headers.get("x-pokemon-goal-id") ?? undefined;
@@ -161,7 +161,7 @@ export function startGoalControlServer(
 
   logger.info(
     `goal control server listening at ${options.config.game.goal.control_host}:${String(
-      options.config.game.goal.control_port,
+      server.port,
     )}`,
   );
   return server;

@@ -12,6 +12,10 @@ datasource db {
 // One completed (non-battle) race, with one RaceResult row per human seat.
 model Race {
   id         Int          @id @default(autoincrement())
+  gameId     String       @default("mk64")
+  roundId    String?      @unique
+  engineClass String?
+  mirror     Boolean?
   // Discord guild this race was played in. Leaderboards are per-server: queries
   // always filter on `guildId` so server A's standings never leak into server B's.
   guildId    String
@@ -26,6 +30,7 @@ model Race {
   results    RaceResult[]
 
   @@index([guildId])
+  @@index([guildId, gameId])
 }
 
 model RaceResult {
@@ -43,6 +48,7 @@ model RaceResult {
   discordId  String?
   // MK64 character id (0..7); names live in mk64-memory.ts.
   character  Int
+  vehicle    Int?
   // Final placement 1..8 (field includes CPU karts).
   placement  Int
   raceTimeMs Int
@@ -73,4 +79,51 @@ model WebSession {
   expiresAt DateTime
 
   @@index([expiresAt])
+}
+
+model SmashMatch {
+  id         Int @id @default(autoincrement())
+  roundId    String @unique
+  guildId    String
+  gameId     String
+  finishedAt DateTime @default(now())
+  mode       String
+  stageId    Int
+  results    SmashResult[]
+
+  @@index([guildId, gameId, id])
+}
+
+model SmashResult {
+  id           Int @id @default(autoincrement())
+  matchId      Int
+  match        SmashMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  seat         Int
+  discordId    String?
+  playerName   String?
+  character    Int
+  placement    Int
+  winner       Boolean
+  kos          Int
+  falls        Int
+  selfDestructs Int
+
+  @@index([discordId, matchId])
+}
+
+model PokemonMilestone {
+  id        String @id
+  guildId   String
+  at        DateTime
+  kind      String
+  title     String
+  text      String
+
+  @@index([guildId, at])
+}
+
+model PokemonProgress {
+  guildId   String @id
+  updatedAt DateTime @updatedAt
+  stateJson String
 }

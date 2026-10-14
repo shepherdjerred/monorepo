@@ -417,6 +417,10 @@ const commands: Record<
       PORT: "18791",
     },
   },
+  arcade: {
+    command: "cd /app/packages/arcade && bun packages/backend/src/smoke.ts",
+    env: {},
+  },
   "discord-plays-pokemon": {
     command: [
       "set -eu",
@@ -458,6 +462,18 @@ if (target === "discord-plays-pokemon") {
   await Bun.write(
     "/app/packages/discord-plays-pokemon/config.toml",
     pokemonSmokeConfig,
+  );
+}
+if (target === "arcade") {
+  await Bun.write("/tmp/arcade-smoke-mk64.toml", marioSmokeConfig);
+  await Bun.write(
+    "/tmp/arcade-smoke-emerald.toml",
+    pokemonSmokeConfig
+      .replaceAll("000000000000000000", "111111111111111111")
+      .replaceAll(
+        "smoke-test-dummy-selfbot-token",
+        "other-smoke-test-dummy-selfbot-token",
+      ),
   );
 }
 if (target === "discord-plays-mario-kart") {

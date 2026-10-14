@@ -1,0 +1,9 @@
+{
+  "name": "@shepherdjerred/arcade",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "generate": "bun packages/backend/src/runtime/generate-wire.ts"
+  }
+}

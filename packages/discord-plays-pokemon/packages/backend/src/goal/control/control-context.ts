@@ -9,6 +9,8 @@ export type GoalControlServerOptions = {
   goalManager: GoalManager;
   config: Config;
   token: string;
+  /** Session-owned bind port; 0 requests an unused loopback port. */
+  port?: number;
 };
 
 // Per-session control state. The server is recreated per goal session, so

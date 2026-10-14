@@ -1,5 +1,6 @@
 import path from "node:path";
 import { logger } from "#src/logger.ts";
+import { readFinalReport } from "./final-report.ts";
 import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex/codex-auth.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
@@ -77,6 +78,7 @@ export class GoalManager {
   private shuttingDown = false;
   private readonly config: Config["game"]["goal"];
   private readonly controlToken: string;
+  private controlPort: number;
   private readonly sendMessage: GoalMessageSender;
   private readonly spawner: GoalProcessSpawner | undefined;
   private readonly onCodexEventLine: GoalManagerOptions["onCodexEventLine"];
@@ -102,6 +104,7 @@ export class GoalManager {
   constructor(options: GoalManagerOptions) {
     this.config = options.config;
     this.controlToken = options.controlToken;
+    this.controlPort = options.config.control_port;
     this.sendMessage = options.sendMessage;
     this.spawner = options.spawner;
     this.onCodexEventLine = options.onCodexEventLine;
@@ -117,6 +120,12 @@ export class GoalManager {
       this.resolveRuntimePath(this.config.memory_dir),
       this.now,
     );
+  }
+
+  setControlPort(port: number): void {
+    if (!Number.isInteger(port) || port < 1 || port > 65_535)
+      throw new Error("invalid goal control port");
+    this.controlPort = port;
   }
 
   /**
@@ -255,7 +264,7 @@ export class GoalManager {
     let spawned: Awaited<ReturnType<typeof spawnGoalCodex>>;
     try {
       spawned = await spawnGoalCodex({
-        config: this.config,
+        config: { ...this.config, control_port: this.controlPort },
         controlToken: this.controlToken,
         goalId: id,
         goal,
@@ -403,7 +412,7 @@ export class GoalManager {
       const exitCode = await settleGoalProcess(claimed, false, () =>
         this.controlGate.drain(),
       );
-      const report = await this.readFinalReport(claimed.outputPath);
+      const report = await readFinalReport(claimed.outputPath);
       claimed.state.finishedAt = this.now().toISOString();
       claimed.state.exitCode = exitCode;
       claimed.state.status = exitCode === 0 ? "completed" : "failed";
@@ -501,18 +510,6 @@ export class GoalManager {
     // (milestone forwarding no-ops itself once this.active clears).
     clearInterval(active.updateTimer);
     return active;
-  }
-
-  private async readFinalReport(outputPath: string): Promise<string> {
-    const file = Bun.file(outputPath);
-    if (await file.exists()) {
-      const rawText = await file.text();
-      const text = rawText.trim();
-      if (text.length > 0) {
-        return text;
-      }
-    }
-    return "Codex exited without writing a final report.";
   }
 
   private resolveRuntimePath(value: string): string {
