@@ -22,6 +22,13 @@ import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 
 const allSteps = testPipelineSteps;
 
+function credentialHolders(env: string): string[] {
+  return allSteps()
+    .filter((step) => step.secrets?.some((grant) => grant.env === env))
+    .map((step) => step.key)
+    .sort();
+}
+
 /** The worst case: a pull request against the default branch, touching anything. */
 const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
   signRemoteCacheSteps(
@@ -94,6 +101,9 @@ const PR_REACHABLE_SECRETS = [
  * step that publishes, deploys, or mutates infrastructure.
  */
 const RELEASE_ONLY_SECRETS = [
+  "DOCKERHUB_USERNAME",
+  "DOCKERHUB_PUBLISH_TOKEN",
+  "DOCKERHUB_READ_CONFIG_JSON",
   "NPM_TOKEN",
   "CHARTMUSEUM_USERNAME",
   "CHARTMUSEUM_PASSWORD",
@@ -117,6 +127,39 @@ const SITE_WRITERS = [
 ];
 
 describe("what a pull request can reach", () => {
+  test("grants registry writes only to publishers and reads only to site extraction", () => {
+    expect(credentialHolders("DOCKERHUB_PUBLISH_TOKEN")).toEqual([
+      "ci-base-refresh",
+      "ci-playwright-refresh",
+      "images",
+      "scout-tag-release",
+    ]);
+    expect(credentialHolders("DOCKERHUB_READ_CONFIG_JSON")).toEqual([
+      "scout-beta-release",
+      "scout-prod-reconcile",
+      "version-commit-back",
+    ]);
+    for (const step of allSteps()) {
+      for (const grant of step.secrets ?? []) {
+        if (grant.env === "DOCKERHUB_PUBLISH_TOKEN") {
+          expect(grant.secret).toBe("ci-dockerhub-publisher-credentials");
+          expect(step.commands).toContain(
+            "bun --no-install ci/scripts/reporting/dockerhub-env.ts",
+          );
+        }
+        if (grant.env === "DOCKERHUB_READ_CONFIG_JSON") {
+          expect(grant).toEqual({
+            secret: "dockerhub-pull-woodpecker-ci",
+            key: ".dockerconfigjson",
+            env: "DOCKERHUB_READ_CONFIG_JSON",
+          });
+          expect(step.commands).toContain(
+            "bun --no-install ci/scripts/reporting/dockerhub-env.ts --reader",
+          );
+        }
+      }
+    }
+  });
   test("selects no default-branch-only step", () => {
     const steps = allSteps();
     const mainOnly = new Set(

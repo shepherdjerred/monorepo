@@ -74,6 +74,15 @@ back checkout behavior without deleting claims. `CI_CHECKOUT_DIAGNOSTIC` logs
 cache outcome, source SHA, object bytes downloaded, fetch/materialization time,
 and total helper time; object bytes exclude network protocol overhead.
 
+Registry access uses explicit per-lane grants. Image and toolchain publishers
+and Scout tag publication receive the scoped Docker Hub publisher identity.
+Scout site extraction and image-pin metadata verification receive only the reader Docker configuration from
+`dockerhub-pull-woodpecker-ci`. The login helper validates the account and sends
+the token through standard input. These grants are main-only; pull-request
+commands receive neither registry identity. The generated graph authenticates
+Docker Hub alongside GHCR during the registry transition, so changing image
+references later does not depend on undeployed credential grants.
+
 Shared download caches are paired with explicit tool paths: Bun uses
 `/woodpecker/bun-cache/data`, and uv uses `/woodpecker/uv-cache`. The emitter
 only supplies a shared path when its declared volume is mounted. Bun's download

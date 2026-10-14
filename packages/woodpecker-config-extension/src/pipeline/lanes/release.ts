@@ -1,4 +1,8 @@
 import type { CiImages } from "#src/images.ts";
+import {
+  DOCKERHUB_PUBLISH,
+  DOCKERHUB_PUBLISH_LOGIN,
+} from "#src/pipeline/lanes/registry.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { IMAGE_ORCHESTRATION_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import {
@@ -96,6 +100,7 @@ export function releaseChainSteps(
         ),
         "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         "bun --no-install ci/scripts/reporting/buildkit-env.ts",
+        DOCKERHUB_PUBLISH_LOGIN,
         // The Caddyfile is an input to the in-image smoke test. verify builds
         // it; it travels through the handoff store because each Woodpecker
         // workflow gets its own workspace.
@@ -110,6 +115,7 @@ export function releaseChainSteps(
       secrets: [
         GITHUB_DOWNLOAD,
         grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
+        ...DOCKERHUB_PUBLISH,
         ...HANDOFF_KEYS,
       ],
     },

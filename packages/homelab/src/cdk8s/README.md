@@ -14,8 +14,10 @@
 - `src/dockerhub-pull-secrets.ts` — discovers first-party private image consumers
   from the registry catalog and prepares a reader-only `OnePasswordItem` in each
   namespace, including external Helm applications and admission image allowlists.
-  CI and sandbox tokenless service accounts reference that pull secret;
-  publishing uses its separate 1Password item.
+  The CI credential boundary declares its typed reader secret explicitly so
+  step grants can also be checked against the vault snapshot. CI and sandbox
+  tokenless service accounts reference the reader secret; publishing uses its
+  separate 1Password item.
 
 ## Static-site SPA routes
 
