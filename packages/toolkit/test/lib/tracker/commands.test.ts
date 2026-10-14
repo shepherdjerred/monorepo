@@ -31,7 +31,12 @@ function fixture() {
       const data =
         procedure === "states.list"
           ? [{ name: "In progress", type: "started" }]
-          : { identifier: "AI-42", revision: 3 };
+          : procedure === "issues.list"
+            ? {
+                items: [{ identifier: "AI-42", revision: 3 }],
+                nextCursor: null,
+              }
+            : { identifier: "AI-42", revision: 3 };
       return Response.json({ result: { data } });
     },
   });
@@ -71,7 +76,10 @@ test("read filters preserve repeated values, pagination and archived search with
     "all",
     "--include-archived",
   ]);
-  await issueCommand(context, ["list"], values);
+  const result = await issueCommand(context, ["list"], values);
+  expect(result).toMatchObject({
+    items: [{ identifier: "AI-42", url: context.url + "/issues/AI-42" }],
+  });
   expect(requests[0]).toMatchObject({
     procedure: "issues.list",
     method: "GET",

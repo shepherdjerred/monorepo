@@ -12,7 +12,7 @@ export function taskPullRequestBody(
 
 ${state.issue.description ?? state.issue.title}
 
-Linear: ${state.issue.url}
+Tracker: ${state.issue.url}
 
 ## What
 

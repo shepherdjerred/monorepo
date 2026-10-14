@@ -4,7 +4,10 @@ import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 
 import { AgentOutputSchema, ConfigSchema } from "#src/domain/schemas.ts";
-import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
+import {
+  fakeTrackerRunner,
+  recordedLabelMutations,
+} from "#src/integrations/fake-tracker.ts";
 import { Reconciler } from "#src/reconcile.ts";
 import { runtimePaths } from "#src/runtime/paths.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
@@ -14,11 +17,11 @@ import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
-import { DEVEX_PROJECT_ID } from "#src/domain/autonomy.ts";
+import { DEVEX_PROJECT_SLUG } from "#src/domain/autonomy.ts";
 import { GitWorkspace } from "#src/host/git-workspace.ts";
 import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
 import { DockerAgentRunner } from "#src/host/docker.ts";
-import { LinearClient } from "#src/integrations/linear.ts";
+import { TrackerClient } from "#src/integrations/tracker.ts";
 import { checkGitHubAccess } from "#src/integrations/github-access.ts";
 
 vi.mock("#src/integrations/github-access.ts", () => ({
@@ -76,14 +79,16 @@ describe("reconcile lock reporting", () => {
     );
     try {
       await expect(
-        new Reconciler(config, paths, fakeLinearRunner(calls)).reconcile(),
+        new Reconciler(config, paths, fakeTrackerRunner(calls)).reconcile(),
       ).rejects.toThrow("HTTP 403");
       expect(calls).toEqual([]);
       expect(await new StateStore(paths).list()).toEqual([]);
       // The failed preflight releases the lock, so corrected permissions
       // permit the next scheduled reconcile without manual recovery.
-      await new Reconciler(config, paths, fakeLinearRunner(calls)).reconcile();
-      expect(calls.some((args) => args[3] === "query")).toBe(true);
+      await new Reconciler(config, paths, fakeTrackerRunner(calls)).reconcile();
+      expect(
+        calls.some((args) => args[1] === "tracker" && args[3] === "list"),
+      ).toBe(true);
     } finally {
       await cleanup();
     }
@@ -92,8 +97,8 @@ describe("reconcile lock reporting", () => {
   test("a quiet successful reconcile does not report lock contention", async () => {
     const { paths, config, messages, cleanup } = await fixture();
     try {
-      await new Reconciler(config, paths, fakeLinearRunner()).reconcile();
-      expect(messages).toEqual(["Queue is quiet: no eligible Linear issue\n"]);
+      await new Reconciler(config, paths, fakeTrackerRunner()).reconcile();
+      expect(messages).toEqual(["Queue is quiet: no eligible Tracker issue\n"]);
     } finally {
       await cleanup();
     }
@@ -110,7 +115,7 @@ describe("reconcile lock reporting", () => {
     });
     try {
       await acquired.promise;
-      await new Reconciler(config, paths, fakeLinearRunner(calls)).reconcile();
+      await new Reconciler(config, paths, fakeTrackerRunner(calls)).reconcile();
       expect(calls).toEqual([]);
       expect(messages).toEqual([
         "Another reconciler owns the local lock; exiting\n",
@@ -145,7 +150,7 @@ describe("CI authorization recovery", () => {
       },
     });
     const calls: string[][] = [];
-    const linearRun = fakeLinearRunner(calls);
+    const trackerRun = fakeTrackerRunner(calls);
     const health = {
       prNumber: 1,
       prUrl: "https://github.com/owner/repo/pull/1",
@@ -185,7 +190,7 @@ describe("CI authorization recovery", () => {
         expect(options?.env?.["WOODPECKER_REPO_ID"]).toBe("1");
         return respond(health);
       }
-      if (args[1] === "linear") return await linearRun(args, options);
+      if (args[1] === "tracker") return await trackerRun(args, options);
       throw new Error(`Unexpected command: ${args.join(" ")}`);
     };
     const request = vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -213,15 +218,13 @@ describe("CI authorization recovery", () => {
       expect(saved?.resumePhase).toBe("awaiting_ci");
       expect(saved?.latestHeadSha).toBe(head);
       expect(saved?.failureCount).toBe(0);
-      const mutation = calls.find(
-        (args) => args[3]?.includes("issueUpdate") === true,
-      );
+      const mutation = recordedLabelMutations(calls)[0];
       expect(mutation).toBeDefined();
-      expect(
-        JSON.parse(
-          mutation?.[mutation.indexOf("--variables-json") + 1] ?? "{}",
-        ),
-      ).toEqual({ id: "node-1", add: ["sj-needs-human-id"], remove: [] });
+      expect(mutation).toEqual({
+        id: "SJ-1",
+        add: ["agent:needs-human"],
+        remove: [],
+      });
       await new Reconciler(config, paths, run).reconcile();
       const parked = await store.list();
       expect(parked[0]?.phase).toBe("needs_human");
@@ -255,7 +258,11 @@ async function autonomousFixture() {
       url: "https://linear.app/example/issue/AI-104",
       priority: 1,
       team: { key: "AI" },
-      project: { id: DEVEX_PROJECT_ID, name: "Developer Experience" },
+      project: {
+        id: "project-developer-experience",
+        slug: DEVEX_PROJECT_SLUG,
+        name: "Developer Experience",
+      },
       createdAt: "2026-01-01T00:00:00Z",
       state: { name: "In Progress", type: "started" },
       labels: {
@@ -276,11 +283,11 @@ async function autonomousFixture() {
     author: { login: "app/justin-principal-engineer", is_bot: true },
   };
   const calls: string[][] = [];
-  const linearRun = fakeLinearRunner(calls, { refreshNodes: [state.issue] });
+  const trackerRun = fakeTrackerRunner(calls, { refreshNodes: [state.issue] });
   const run: CommandRunner = async (args, options) => {
     if (args[0] === "op")
       return { ...respond(null), stdout: "fixture-credential" };
-    if (args[1] === "linear") return await linearRun(args, options);
+    if (args[1] === "tracker") return await trackerRun(args, options);
     if (args[0] === "git")
       return {
         ...respond(null),
@@ -438,7 +445,7 @@ describe("autonomous promotion review", () => {
       findings: [finding],
       blockedReasons: [],
     });
-    vi.spyOn(LinearClient.prototype, "agentContext").mockResolvedValue(
+    vi.spyOn(TrackerClient.prototype, "agentContext").mockResolvedValue(
       "Current private acceptance criteria",
     );
     vi.spyOn(GitWorkspace.prototype, "changedPaths").mockResolvedValue([
@@ -535,7 +542,7 @@ describe("autonomous promotion review", () => {
         expect(restack).toHaveBeenCalledTimes(phase === "publishing" ? 0 : 1);
         expect(agent).not.toHaveBeenCalled();
         expect(f.merge).not.toHaveBeenCalled();
-        expect(f.calls.some((args) => args.includes("Done"))).toBe(false);
+        expect(f.calls.some((args) => args.includes("completed"))).toBe(false);
       } finally {
         await f.cleanup();
       }
@@ -544,10 +551,10 @@ describe("autonomous promotion review", () => {
 });
 
 describe("autonomous merge acceptance", () => {
-  test("a due blocked claim retries Linear claim and preserves its continuation", async () => {
+  test("a due blocked claim retries Tracker claim and preserves its continuation", async () => {
     const f = await autonomousFixture();
     const claim = vi
-      .spyOn(LinearClient.prototype, "claim")
+      .spyOn(TrackerClient.prototype, "claim")
       .mockResolvedValue(undefined);
     try {
       await f.store.save({
@@ -612,7 +619,7 @@ describe("autonomous publication and completion", () => {
         verification: [],
         resolvedFindings: [finding],
       });
-      vi.spyOn(LinearClient.prototype, "agentContext").mockResolvedValue("");
+      vi.spyOn(TrackerClient.prototype, "agentContext").mockResolvedValue("");
       vi.spyOn(GitWorkspace.prototype, "preparePublication").mockResolvedValue([
         output,
         ["packages/toolkit/src/handlers/pr.ts"],
@@ -691,13 +698,13 @@ describe("autonomous publication and completion", () => {
       expect(f.approval).not.toHaveBeenCalled();
       expect(f.merge).toHaveBeenCalledOnce();
       expect(f.confirmation).toHaveBeenCalledOnce();
-      expect(f.calls.some((args) => args.includes("Done"))).toBe(true);
+      expect(f.calls.some((args) => args.includes("completed"))).toBe(true);
     } finally {
       await f.cleanup();
     }
   });
 
-  test("failed base ancestry leaves Linear non-terminal and yields a retryable task", async () => {
+  test("failed base ancestry leaves Tracker non-terminal and yields a retryable task", async () => {
     const f = await autonomousFixture();
     f.confirmation.mockRejectedValue(new Error("Merge commit is not on main"));
     try {
@@ -708,7 +715,7 @@ describe("autonomous publication and completion", () => {
       expect(states[0]?.phase).toBe("blocked");
       expect(states[0]?.nextAttemptAt).not.toBeNull();
       expect(states[0]?.mergeCommitSha).toBeNull();
-      expect(f.calls.some((args) => args.includes("Done"))).toBe(false);
+      expect(f.calls.some((args) => args.includes("completed"))).toBe(false);
     } finally {
       await f.cleanup();
     }
@@ -723,7 +730,7 @@ describe("autonomous publication and completion", () => {
       expect(states[0]?.phase).toBe("blocked");
       expect(states[0]?.blockedReason).toContain("flag is disabled");
       expect(f.merge).not.toHaveBeenCalled();
-      expect(f.calls.some((args) => args.includes("Done"))).toBe(false);
+      expect(f.calls.some((args) => args.includes("completed"))).toBe(false);
     } finally {
       await f.cleanup();
     }

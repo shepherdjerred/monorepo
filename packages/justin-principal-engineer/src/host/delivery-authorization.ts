@@ -6,7 +6,7 @@ import {
 import { autonomyEnabled } from "#src/host/autonomy-policy.ts";
 import { assertAutonomousScope } from "#src/host/autonomy-scope.ts";
 import type { GitWorkspace } from "#src/host/git-workspace.ts";
-import type { LinearClient } from "#src/integrations/linear.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import type { CommandRunner } from "#src/runtime/process.ts";
 import type { WithGitHub } from "#src/reconcile-merge.ts";
@@ -17,21 +17,21 @@ export class DeliveryAuthorization {
     private readonly input: {
       config: Config;
       paths: RuntimePaths;
-      linear: LinearClient;
+      tracker: TrackerClient;
       git: GitWorkspace;
       run: CommandRunner;
       withGitHub: WithGitHub;
     },
   ) {}
   public async authorizeAutonomous(state: TaskState): Promise<TaskState> {
-    const issue = await this.input.linear.refreshIssue(state.issue.identifier);
+    const issue = await this.input.tracker.refreshIssue(state.issue.identifier);
     if (issue === null)
       throw new AutonomousBlocker("Autonomous issue disappeared");
     const blocker = autonomyIssueBlocker(issue);
     if (blocker !== null) throw new AutonomousBlocker(blocker);
     if (!(await autonomyEnabled(issue, this.input.paths)))
       throw new AutonomousBlocker("Autonomous delivery flag is disabled", true);
-    await this.input.linear.resumeBlocked(issue);
+    await this.input.tracker.resumeBlocked(issue);
     return { ...state, issue };
   }
 
@@ -47,8 +47,8 @@ export class DeliveryAuthorization {
   public async mergeReady(state: TaskState): Promise<boolean> {
     if (state.deliveryMode === "autonomous") {
       if (state.autonomyReviewPending) return false;
-      // This readiness hook is read-only; do not change task or Linear state.
-      const issue = await this.input.linear.refreshIssue(
+      // This readiness hook is read-only; do not change task or Tracker state.
+      const issue = await this.input.tracker.refreshIssue(
         state.issue.identifier,
       );
       if (

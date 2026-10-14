@@ -7,9 +7,9 @@
     "slug": "shepherdjerred/monorepo",
     "baseBranch": "main"
   },
-  "linear": {
-    "team": "SJ",
-    "apiKey": "op://Automation/Linear/credential"
+  "tracker": {
+    "team": "AI",
+    "url": "https://tracker.tailnet-1a49.ts.net"
   },
   "woodpecker": {
     "apiToken": "op://Automation/Woodpecker/credential",

@@ -35,7 +35,7 @@ const PROTECTED_WORKSPACES = new Set([
 const PROTECTED_PATH =
   /(?:^|\/)(?:AGENTS\.md|CLAUDE\.md|SKILL\.md|[^/]*\.lock|[^/]*lock\.json|\.agents|\.github|\.woodpecker|skills)(?:\/|$)|(?:^|\/)(?:auth(?:entication|orization)?|credentials?|secrets?|tokens?)(?:[./_-]|$)|^packages\/toolkit\/src\/(?:commands\/pr\/(?:health|review)|lib\/(?:woodpecker|review|git))/i;
 const CREDENTIAL_EDIT =
-  /GH_TOKEN|LINEAR_API_KEY|WOODPECKER_TOKEN|OP_SERVICE_ACCOUNT_TOKEN|op:\/\/|privateKey|apiKey|Authorization|authToken/i;
+  /GH_TOKEN|WOODPECKER_TOKEN|OP_SERVICE_ACCOUNT_TOKEN|op:\/\/|privateKey|apiKey|Authorization|authToken/i;
 
 function workspaceOwner(
   file: string,

@@ -97,6 +97,15 @@ snapshot pair makes no new writes. Removals, changed catalog definitions and
 edited vote records fail preflight and need explicit reconciliation. Back up the
 new snapshot and verify it against Linear before closing the import window.
 
+`--retain-removed <ID>` explicitly preserves an already archived issue missing
+from the newer export, along with its first import event. Repeat the option for
+each historical copy to retain. It rejects active or unknown identifiers and
+other removed records. Retained issues keep their original fields and remain
+outside the active queue. Existing actors keep their original observations when
+the source still identifies the same actor key and kind.
+For later snapshot pairs, provide `--retention-source OLD` with the original
+checksummed export containing those archived copies and repeat `--retain-removed`.
+
 Backups use the private `tracker-attachments/import/` prefix and verify every
 object by reading its bytes back. Keep the export directory private; never
 commit or upload its contents through `pr asset`.

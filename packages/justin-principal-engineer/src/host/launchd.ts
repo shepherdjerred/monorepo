@@ -22,7 +22,6 @@ export function renderLaunchAgent(input: {
   cli: string;
   checkout: string;
   path: string;
-  linearApiKeyReference: string;
   woodpeckerTokenReference: string;
   woodpeckerBaseUrl: string;
   woodpeckerRepoId: number;
@@ -39,7 +38,6 @@ export function renderLaunchAgent(input: {
   <key>ProgramArguments</key>
   <array>
     <string>/usr/bin/env</string>
-    <string>LINEAR_API_KEY=${escapeXml(input.linearApiKeyReference)}</string>
     <string>WOODPECKER_TOKEN=${escapeXml(input.woodpeckerTokenReference)}</string>
     <string>WOODPECKER_URL=${escapeXml(input.woodpeckerBaseUrl)}</string>
     <string>WOODPECKER_REPO_ID=${String(input.woodpeckerRepoId)}</string>
@@ -123,7 +121,6 @@ export class LaunchdService {
         cli,
         checkout: config.repository.stableCheckout,
         path: processPath,
-        linearApiKeyReference: config.linear.apiKey,
         woodpeckerTokenReference: config.woodpecker.apiToken,
         woodpeckerBaseUrl: config.woodpecker.baseUrl,
         woodpeckerRepoId: config.woodpecker.repoId,

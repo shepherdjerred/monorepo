@@ -1,6 +1,6 @@
 import { MAX_REPAIR_TURNS, AutonomousBlocker } from "#src/domain/autonomy.ts";
 import type { TaskState } from "#src/domain/schemas.ts";
-import type { LinearClient } from "#src/integrations/linear.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 import { WorkspaceVerificationFailure } from "#src/host/docker.ts";
@@ -10,7 +10,7 @@ export async function handleAutonomousFailure(input: {
   latest: TaskState;
   error: unknown;
   store: StateStore;
-  linear: LinearClient;
+  tracker: TrackerClient;
   save: (
     state: TaskState,
     phase: TaskState["phase"],
@@ -43,7 +43,7 @@ export async function handleAutonomousFailure(input: {
     reason,
     retryable:
       error instanceof AutonomousBlocker ? error.retryable : !codingStarted,
-    linear: input.linear,
+    tracker: input.tracker,
     store: input.store,
   });
 }
@@ -54,7 +54,7 @@ export async function blockAutonomousTask(input: {
   state: TaskState;
   reason: string;
   retryable?: boolean;
-  linear: LinearClient;
+  tracker: TrackerClient;
   store: StateStore;
 }): Promise<void> {
   const attempts = input.state.blockedAttempts + 1;
@@ -74,7 +74,7 @@ export async function blockAutonomousTask(input: {
     updatedAt: currentTimestamp(),
   };
   await input.store.save(next);
-  await input.linear.blocked(input.state.issue, input.reason, retryAt, {
+  await input.tracker.blocked(input.state.issue, input.reason, retryAt, {
     comment: input.state.blockedReason !== input.reason,
   });
   console.error(

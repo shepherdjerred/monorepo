@@ -113,7 +113,6 @@ async function main(): Promise<void> {
         env: {
           ...Bun.env,
           PATH: `${toolkitDirectory}:${Bun.env["PATH"] ?? ""}`,
-          LINEAR_API_KEY: config.linear.apiKey,
           WOODPECKER_TOKEN: config.woodpecker.apiToken,
           WOODPECKER_URL: config.woodpecker.baseUrl,
           WOODPECKER_REPO_ID: String(config.woodpecker.repoId),

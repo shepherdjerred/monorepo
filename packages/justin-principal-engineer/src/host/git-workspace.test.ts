@@ -16,7 +16,7 @@ const config: Config = {
     slug: "example/repo",
     baseBranch: "main",
   },
-  linear: { team: "SJ", apiKey: "op://test/linear/key" },
+  tracker: { team: "AI", url: "https://tracker.tailnet-1a49.ts.net" },
   woodpecker: {
     apiToken: "op://test/woodpecker/key",
     baseUrl: "https://woodpecker.sjer.red",
