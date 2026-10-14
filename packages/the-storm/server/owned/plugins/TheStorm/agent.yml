@@ -87,9 +87,9 @@ faq:
 onboarding:
   enabled: true
   lines:
-    - "Welcome to The Storm! A few tips to start:"
-    - "Your welcome book explains how to get started. Your starting supplies arrive automatically."
-    - "Run /rules to read the server rules."
+    - "Your starting supplies arrive automatically. Read your welcome book or /guide for your first steps."
+    - "Start with /rules, then /rtp to find land. Save your spot with /sethome."
+    - "PvP is on outside spawn. Use /pvp off if you prefer; you can change it once a week."
     - "Need staff? File a ticket: /ticket <what happened>."
 
 ladders:

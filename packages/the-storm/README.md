@@ -82,6 +82,18 @@ cleanup. These checks are also committer-run.
 
 ## Essentials command surface
 
+`/guide` opens the same welcome book delivered by the starter kit. It is optional
+and available to every player; successful opens record `guide_opened` analytics.
+The shipped pages explain survival, PvP opt-out, free newcomer RTP, towns, locks,
+quests and help. The delayed arrival tips point back to it.
+
+The console-only `storm-maintenance begin <owner>` atomically checks for human
+players and closes login admission when empty. Its versioned JSON response
+follows `maintenance-status.json`. Vanished humans count; NPCs do not. Repeating
+the same owner is safe. `storm-maintenance end <owner>` reopens admission only
+for that owner. The mining-reset worker uses this gate before stopping the
+always-running server; a restart clears the in-memory gate.
+
 The Storm implements the selected EssentialsX-style surface inside its own
 Essentials, Chat and Mail modules. Commands resolve players by real username
 and UUID; nicknames never become command identifiers. `/help` shows the

@@ -61,10 +61,12 @@ checks the payload pair and reapplies beta settings before reopening requests.
 Closing registration and replacing the production URL keep restored production
 settings from exposing the test installation.
 
-## Status preserves Minecraft hibernation
+## Status observes the Minecraft backend
 
 The forum reads the server's desired state and queries its backend directly.
-Contacting the player-facing router would wake the server just to refresh a widget.
+Production remains running for both Java and Bedrock arrivals. Direct backend
+probes report availability without asking the player-facing router to recover
+or scale the server for a widget refresh.
 The [status activity](https://github.com/shepherdjerred/monorepo/blob/343728604bf9afcb35b6aa526b40ca1c6354f682/packages/storm-forum/src/minecraft.ts)
 distinguishes sleeping, starting, online, and unavailable states. Its public cache
 contains only public player names and counts. The [Minecraft query listener](https://github.com/shepherdjerred/monorepo/blob/343728604bf9afcb35b6aa526b40ca1c6354f682/packages/the-storm/plugin/modules/messages/src/main/java/com/shepherdjerred/thestorm/messages/adapter/paper/PublicQueryListener.java)

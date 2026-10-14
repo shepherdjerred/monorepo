@@ -12,6 +12,8 @@ class FakeCluster {
   job: Record<string, unknown> | undefined;
   serverImage = "server@sha256:example";
   serverReplicas = 0;
+  onlinePlayers = 0;
+  admissionClosed = false;
   failNextJob = false;
   failReleaseOnce = false;
 
@@ -95,6 +97,10 @@ class FakeCluster {
       ? this.serverAnnotations
       : this.serviceAnnotations;
     for (const operation of operations) {
+      if (operation.path === "/spec/replicas" && operation.op === "replace") {
+        this.serverReplicas = z.number().parse(operation.value);
+        continue;
+      }
       if (!operation.path.startsWith("/metadata/annotations/")) {
         continue;
       }
@@ -144,6 +150,17 @@ class FakeCluster {
   async command(args: readonly string[], input?: string): Promise<FakeResult> {
     const joined = args.join(" ");
     this.events.push(joined);
+    if (joined.includes("rcon-cli storm-maintenance begin")) {
+      const state = this.onlinePlayers > 0 ? "occupied" : "ready";
+      this.admissionClosed = state === "ready";
+      return this.ok({
+        schemaVersion: 1,
+        owner: "2026q4",
+        state,
+        players: this.onlinePlayers,
+      });
+    }
+    if (joined.includes(" wait --for=delete ")) return this.ok({});
     if (joined.includes(" patch ")) {
       return this.patch(joined, args.at(-1) ?? "[]");
     }
@@ -207,11 +224,13 @@ describe("mining reset orchestration", () => {
     expect(
       cluster.serviceAnnotations["mc-router.itzg.me/autoScaleUp"],
     ).toBeUndefined();
+    expect(cluster.serverReplicas).toBe(1);
   });
 
   test("defers without a lock or backup while players keep the server awake", async () => {
     const cluster = new FakeCluster();
     cluster.serverReplicas = 1;
+    cluster.onlinePlayers = 1;
 
     const result = await resetMiningWorldWithDependencies("2026q4", {
       command: cluster.command.bind(cluster),
@@ -227,6 +246,55 @@ describe("mining reset orchestration", () => {
     expect(cluster.serverAnnotations).toEqual({});
     expect(cluster.backup).toBeUndefined();
     expect(cluster.job).toBeUndefined();
+    expect(cluster.admissionClosed).toBe(false);
+  });
+
+  test("closes admission on an empty running server before stopping and restores one replica", async () => {
+    const cluster = new FakeCluster();
+    cluster.serverReplicas = 1;
+    await resetMiningWorldWithDependencies("2026q4", {
+      command: cluster.command.bind(cluster),
+      heartbeat: (phase) => {
+        cluster.events.push(`heartbeat-${phase}`);
+      },
+      sleep: async () => {
+        cluster.events.push("sleep");
+      },
+    });
+    expect(cluster.admissionClosed).toBe(true);
+    expect(
+      cluster.events.findIndex((event) =>
+        event.includes("rcon-cli storm-maintenance begin"),
+      ),
+    ).toBeLessThan(
+      cluster.events.findIndex((event) => event.includes(" patch statefulset")),
+    );
+    expect(
+      cluster.events.some((event) => event.includes(" wait --for=delete ")),
+    ).toBe(true);
+    expect(cluster.serverReplicas).toBe(1);
+  });
+
+  test("a failed admission check cannot stop the server or create a backup", async () => {
+    const cluster = new FakeCluster();
+    cluster.serverReplicas = 1;
+    await expect(
+      resetMiningWorldWithDependencies("2026q4", {
+        command: async (args, input) =>
+          args.join(" ").includes("rcon-cli")
+            ? { stdout: "unrecognized command", stderr: "", exitCode: 0 }
+            : cluster.command(args, input),
+        heartbeat: (phase) => {
+          cluster.events.push(`heartbeat-${phase}`);
+        },
+        sleep: async () => {
+          cluster.events.push("sleep");
+        },
+      }),
+    ).rejects.toThrow();
+    expect(cluster.serverReplicas).toBe(1);
+    expect(cluster.backup).toBeUndefined();
+    expect(cluster.serverAnnotations).toEqual({});
   });
 
   test("recreates a validated failed Job for the same period", async () => {

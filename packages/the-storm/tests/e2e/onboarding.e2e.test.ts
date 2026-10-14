@@ -6,6 +6,7 @@ import {
   connectBot,
   disconnectBot,
   waitForMessage,
+  waitUntil,
 } from "./harness/bot.ts";
 
 function username(prefix: string): string {
@@ -13,22 +14,95 @@ function username(prefix: string): string {
 }
 
 describe("onboarding", () => {
+  test("a non-operator can reopen the guide without receiving another kit", async ({
+    bot,
+  }) => {
+    await waitUntil("starter book delivered", () =>
+      bot.inventory.items().some((item) => item.name === "written_book"),
+    );
+    const before = bot.inventory.items().map((item) => [item.name, item.count]);
+    let opened = false;
+    bot._client.once("open_book", () => {
+      opened = true;
+    });
+    bot.chat("/guide");
+    await waitUntil("guide book opened", () => opened);
+    expect(
+      bot.inventory.items().map((item) => [item.name, item.count]),
+    ).toEqual(before);
+  });
+
+  test("maintenance defers for humans, blocks empty-server admission and reopens for its owner", async ({
+    server,
+    rcon,
+  }) => {
+    const owner = "onboarding-check";
+    const player = await connectBot({
+      host: server.host,
+      port: server.gamePort,
+      username: username("m"),
+    });
+    try {
+      expect(
+        JSON.parse(await rcon.command(`storm-maintenance begin ${owner}`)),
+      ).toMatchObject({ state: "occupied", players: 1 });
+    } finally {
+      await disconnectBot(player);
+    }
+    try {
+      // Client socket closure precedes Paper's removal on its next tick.
+      await waitUntil("server observed the departure", async () => {
+        const online = await rcon.command("list");
+        return online.includes("There are 0 of");
+      });
+      expect(
+        JSON.parse(await rcon.command(`storm-maintenance begin ${owner}`)),
+      ).toMatchObject({ state: "ready", players: 0 });
+      expect(
+        JSON.parse(await rcon.command("storm-maintenance end wrong-owner")),
+      ).toMatchObject({ state: "conflict" });
+      await expect(
+        connectBot({
+          host: server.host,
+          port: server.gamePort,
+          username: username("g"),
+        }),
+      ).rejects.toThrow(/undergoing maintenance/);
+    } finally {
+      expect(
+        JSON.parse(await rcon.command(`storm-maintenance end ${owner}`)),
+      ).toMatchObject({ state: "open" });
+    }
+    const admitted = await connectBot({
+      host: server.host,
+      port: server.gamePort,
+      username: username("o"),
+    });
+    await disconnectBot(admitted);
+  });
+
   test("first-joiners are greeted with starter tips", async ({ server }) => {
+    const arrival: string[] = [];
     const newcomer = await connectBot({
       host: server.host,
       port: server.gamePort,
       username: username("n"),
+      onMessage: (line) => {
+        arrival.push(line);
+      },
     });
     try {
       // The greeting lands seconds after the arrival burst; one window
       // catches every line no matter how the packets batch.
-      const seen = await collectMessages(newcomer, 8000);
+      const seen = [...arrival, ...(await collectMessages(newcomer, 8000))];
       const shown = (pattern: RegExp) =>
         seen.some((line) => pattern.test(line));
       expect(shown(/Welcome to The Storm/)).toBe(true);
       expect(shown(/starting supplies arrive automatically/)).toBe(true);
       expect(shown(/\/kit\b|You received the .* kit/)).toBe(false);
-      expect(shown(/Run \/rules/)).toBe(true);
+      expect(shown(/Start with \/rules/)).toBe(true);
+      expect(shown(/\/guide/)).toBe(true);
+      expect(shown(/PvP is on outside spawn/)).toBe(true);
       expect(shown(/File a ticket/)).toBe(true);
     } finally {
       await disconnectBot(newcomer);
@@ -37,25 +111,46 @@ describe("onboarding", () => {
 
   test("returning players are not greeted again", async ({ server }) => {
     const name = username("r");
+    const firstArrival: string[] = [];
     const first = await connectBot({
       host: server.host,
       port: server.gamePort,
       username: name,
+      onMessage: (line) => {
+        firstArrival.push(line);
+      },
     });
-    await waitForMessage(first, /Welcome to The Storm/);
+    // Essentials' welcome is immediate; the delayed agent tips can be observed
+    // after connectBot resolves, independently of the spawn packet timing.
+    await waitForMessage(first, /starting supplies arrive automatically/);
+    expect(
+      firstArrival.some((line) => line.includes("Welcome to The Storm")),
+    ).toBe(true);
     await disconnectBot(first);
 
+    const returningArrival: string[] = [];
     const again = await connectBot({
       host: server.host,
       port: server.gamePort,
       username: name,
+      onMessage: (line) => {
+        returningArrival.push(line);
+      },
     });
     try {
       // Past the greeting delay: silence proves the server remembered.
-      const seen = await collectMessages(again, 6000);
+      const seen = [
+        ...returningArrival,
+        ...(await collectMessages(again, 6000)),
+      ];
       expect(seen.some((line) => line.includes("Welcome to The Storm"))).toBe(
         false,
       );
+      expect(
+        seen.some((line) =>
+          line.includes("starting supplies arrive automatically"),
+        ),
+      ).toBe(false);
     } finally {
       await disconnectBot(again);
     }

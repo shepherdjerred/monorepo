@@ -50,6 +50,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/maintenance-status.json \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
@@ -429,6 +430,7 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/maintenance-status.json \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \

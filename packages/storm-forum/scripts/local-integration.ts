@@ -403,6 +403,16 @@ try {
       ]),
     );
   }
+  process.stdout.write(
+    await run([
+      "exec",
+      "-w",
+      "/app/forum",
+      app,
+      "php",
+      "/opt/storm-forum/test/announcement.php",
+    ]),
+  );
   if (preview) {
     await run([
       "exec",
@@ -422,6 +432,12 @@ try {
       "cp",
       `${path.resolve(import.meta.dirname, "../../storm-theme/assets")}/.`,
       `${app}:/app/forum/styles/storm/`,
+    ]);
+    await run(["exec", app, "mkdir", "-p", "/app/forum/styles/storm/gameplay"]);
+    await run([
+      "cp",
+      `${path.resolve(import.meta.dirname, "../assets/gameplay")}/.`,
+      `${app}:/app/forum/styles/storm/gameplay/`,
     ]);
     await run([
       "cp",

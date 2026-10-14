@@ -7,7 +7,7 @@ decommissioned OVH/Netlify-era infrastructure).
 
 ## Content
 
-Player-facing pages only: welcome, norms, world downloads, and the
+Player-facing pages only: welcome, joining, first session, norms, world downloads, and the
 survival section. Accuracy fixes applied during the port:
 
 - LiveMap links use `bluemap.ts-mc.net`.

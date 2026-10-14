@@ -4,10 +4,7 @@ description: How members of The Storm are expected to behave.
 ---
 
 This page describes how members of The Storm are expected to behave.
-Violation will result in you being banned.
-
-This is not a comprehensive list; use your common sense. In general, be a
-decent person and you'll be fine. Rules are intentionally left vague.
+In game, `/rules` opens the server rules. Staff review reports and apply moderation according to the offense and its history.
 
 ## General
 
@@ -22,5 +19,13 @@ Minecraft server and Discord server.
 
 These items apply specifically to the survival Minecraft server.
 
-- No griefing or stealing
-- Cheating is obviously not permitted
+- No griefing. Build on your own land or with permission. Staff can roll griefing back.
+- Unlocked containers are fair game where you have access. Locked containers are off-limits. Newly placed containers lock automatically; `/lock info` checks the container you look at.
+- Do not kill other players' animals, pets, or villagers.
+- No harassment, following, trapping, or spamming other players.
+- PvP is enabled by default outside protected spawn. `/pvp off` opts out; you can change your setting once a week.
+- No hacks or bug exploits.
+
+Your grave is protected for two hours. After that, other players can take its contents; `/graves` lists your graves.
+
+What you type to NPCs may be sent to an AI provider to write their replies. See [transparency](/survival/transparency/) for more about the server.

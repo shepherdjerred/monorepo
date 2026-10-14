@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "states": ["ready", "occupied", "conflict", "open"],
+  "ownerPattern": "^[a-z0-9-]{1,64}$"
+}

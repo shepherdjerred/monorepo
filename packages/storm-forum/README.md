@@ -131,6 +131,17 @@ and renderer/artwork revision. Personal appearance choices do not change cards.
 
 ## Configuration and bootstrap
 
+The homepage keeps the chronological news feed and historical posts. Its join
+panel links to Java/Bedrock instructions and the first-session guide; gameplay
+images are native captures under `assets/gameplay`.
+
+The reviewed `config/welcome-announcement.json` is an editorial post, separate
+from generated seed threads. Run `php cmd.php storm:announce` inside the forum
+runtime to preview it. After live joining and `/guide` have been verified,
+`php cmd.php storm:announce --publish` creates it once through XenForo's native
+thread service. A registry receipt prevents duplicates and preserves later
+edits and replies. Ordinary releases never publish it automatically.
+
 Product behavior uses typed configuration and the managed `storm` feature flag
 namespace. Registration defaults closed. The season flag accepts `auto` or a
 catalog ID; registration and calendar flags target the production stage. Automatic
@@ -162,8 +173,9 @@ does not advance the production release inventory.
 
 Java players can use `ts-mc.net` through SRV discovery, or explicitly connect to
 `mc.ts-mc.net:30000`. Bedrock uses `mc.ts-mc.net` with port `30004`; the website
-apex is not its game endpoint. Java can wake a sleeping server; Bedrock can join
-once it is awake. Cached versions remain labelled as last verified during outages.
+apex is not its game endpoint. Production remains running so either edition can
+join without a wake-up delay. Cached versions remain labelled as last verified
+during outages.
 
 Production prerequisites can be prepared with
 `scripts/onepassword/with-service-account.sh bun packages/storm-forum/scripts/prepare-production.ts <fresh-upload> <style-exports> <private-output-directory> --apply`.

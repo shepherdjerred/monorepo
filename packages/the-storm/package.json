@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./maintenance-status.json": "./maintenance-status.json",
     "./public-status.json": "./public-status.json",
     "./server/owned/plugins/TheStorm/plot-reconcile.json": "./server/owned/plugins/TheStorm/plot-reconcile.json",
     "./server/owned/plugins/TheStorm/rwf-archive.json": "./server/owned/plugins/TheStorm/rwf-archive.json"
@@ -42,6 +43,8 @@
   },
   "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) — scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims. tests/e2e is the TypeScript real-server harness.",
   "scripts": {
+    "icon:render": "bun server/render-icon.ts",
+    "icon:check": "bun server/render-icon.ts --check",
     "client": "bun --no-install tools/client/index.ts",
     "build:plugin": "mise exec -- gradle -p plugin assemble --console=plain",
     "build:client": "mise exec -- gradle -p client assemble --console=plain",
@@ -50,7 +53,7 @@
     "test:client-native": "mise exec -- gradle -p client runClientGameTest --console=plain",
     "build": "bun run build:plugin && bun run build:client",
     "test": "bun run test:server && mise exec -- gradle -p plugin test --console=plain && bun --no-install --bun vitest --config ../../vitest.config.ts run tests/rcon.test.ts tests/rwf-recording.test.ts tests/rwf-status.test.ts tests/capacity/capacity-bars.test.ts scripts/bots/mineskin.test.ts && bun run test:client && bun run test:learning && bun run test:maps && bun run test:capacity-tools",
-    "test:server": "python3 -m unittest discover -s server -p 'test_livemap.py'",
+    "test:server": "bun run icon:check && python3 -m unittest discover -s server -p 'test_livemap.py'",
     "test:smoke": "bun --no-install --bun vitest run --config vitest.e2e.config.ts tests/e2e/plugin.e2e.test.ts tests/e2e/server.e2e.test.ts",
     "test:e2e": "bun --no-install --bun vitest run --config vitest.e2e.config.ts",
     "test:full": "STORM_E2E_FULL=1 bun --no-install --bun vitest run --config vitest.full.config.ts",

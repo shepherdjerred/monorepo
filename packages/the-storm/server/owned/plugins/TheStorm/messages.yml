@@ -230,11 +230,11 @@ deaths:
 # The server list, two lines each, shown in rotation.
 motd:
   - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
-    bottom: "<gray>Why is it always raining? Because it's The Storm.</gray>"
+    bottom: "<gray>Build a town. Trade. Brave The Storm.</gray>"
   - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
-    bottom: "<gray>Towns, crystals and Storm Shards. Since 2014.</gray>"
+    bottom: "<gray>Towns, quests and Storm Shards. Java + Bedrock.</gray>"
   - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
-    bottom: "<gray>The windmill is waiting. So is the rain.</gray>"
+    bottom: "<gray>Find your first home. Your story starts here.</gray>"
   - top: "<#4DCCC4><bold>The Storm</bold></#4DCCC4> <dark_gray>//</dark_gray> <gray>Survival</gray>"
     bottom: "<gray>Found a town. Earn crystals. Don't dig straight down.</gray>"
 
@@ -251,7 +251,8 @@ announcements:
       - "To use a Storm Shard, stand on the emerald block inside the windmill at spawn. It only works while it's raining. Don't worry, it usually is."
       - "A Storm Shard makes a weapon hit harder or armor hold up better, all the way up to Storm V."
       - "Lost in the rain? Head back to the windmill at spawn and start again from there."
-      - "Your stuff drops where you die. Keep your coordinates handy, and maybe don't dig straight down."
+      - "Died? <#4DCCC4>/graves</#4DCCC4> lists your graves. Recover your things before their protection expires."
+      - "New here? <#4DCCC4>/guide</#4DCCC4> explains your first home, town, quests and safety."
       - "Respect other players and staff. Everyone came here to have fun."
       - "No griefing: if someone built it, leave it be. Mobs are fair game."
       - "Died a few times in a row? We stop announcing it after a while. You're welcome."

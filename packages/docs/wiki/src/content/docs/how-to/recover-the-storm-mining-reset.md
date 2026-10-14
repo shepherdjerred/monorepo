@@ -20,7 +20,11 @@ The [quarterly schedule](https://github.com/shepherdjerred/monorepo/blob/main/pa
 
 4. Read the matching `mining-reset-YYYYqN` Job in namespace `minecraft-tsmc`. A terminally failed Job is deleted and recreated by the Activity only after its exact command, image, quarter, and PVC are validated; inspect repeated failures and Pod logs before manual intervention. The Job atomically renames `/data/mining` to `/data/.mining-reset/YYYYqN.deleting`, removes the contents, installs `.mining-reset/YYYYqN.done`, then removes the empty checkpoint. A retry resumes deletion even if the checkpoint is empty and leaves any newly regenerated `/data/mining` alone. Do not substitute a different Job or PVC.
 
-5. If the server is still occupied at the scheduled time, the Workflow waits in five-minute durable steps for up to four hours without taking a lock or backup. If it is still occupied after that window, the Workflow fails visibly. If the Workflow is running a reset, let its retry continue only when the Backup and Job match the intended quarter and claim. If the Workflow failed or either object has an unexpected spec, leave the lock in place for a controlled recovery. After a successful Workflow completion, confirm the lock, pinned image, and router maintenance annotations are gone before allowing a client to wake the server.
+5. If the server is occupied, the Workflow waits in five-minute durable steps for up to four hours without a lock or backup. After that window, it fails visibly. For a running reset, allow retries only when the Backup and Job match the intended quarter and claim. For a failed Workflow or unexpected object spec, leave the lock in place for controlled recovery.
+
+6. If admission is closed but no Kubernetes lock was acquired, inspect the Activity failure before reopening it. The console-only `storm-maintenance end YYYYqN` releases only that quarter's in-memory gate. Do not reopen admission while the reset owns a lock. A normal server restart clears the gate.
+
+7. After successful completion, confirm the lock, pinned image, and router maintenance annotations are gone. Verify desired replicas and ready replicas are both one. The [Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/mining-reset.ts) closes empty-server admission before stopping it, waits for Pod deletion, and restores one replica when releasing the lock.
 
 ## Related
 

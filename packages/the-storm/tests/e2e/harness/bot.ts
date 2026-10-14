@@ -7,6 +7,7 @@ export type BotOptions = {
   port: number;
   username: string;
   timeoutMs?: number;
+  onMessage?: (message: string) => void;
 };
 
 /** Connects an offline-mode bot and resolves once it has spawned in the world. */
@@ -22,6 +23,8 @@ export async function connectBot(options: BotOptions): Promise<Bot> {
     hideErrors: true,
   });
   const timeoutMs = options.timeoutMs ?? 20_000;
+  // Arrival messages may precede the spawn packet that resolves connectBot.
+  if (options.onMessage !== undefined) bot.on("messagestr", options.onMessage);
   await new Promise<void>((resolve, reject) => {
     const onKicked = (reason: unknown) => {
       finish(
@@ -119,11 +122,11 @@ export async function collectMessages(
 /** Polls bot-observed state until the predicate holds. */
 export async function waitUntil(
   description: string,
-  predicate: () => boolean,
+  predicate: () => boolean | Promise<boolean>,
   timeoutMs = 10_000,
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
-  while (!predicate()) {
+  while (!(await predicate())) {
     if (Date.now() > deadline) {
       throw new Error(`Timed out waiting for ${description}`);
     }

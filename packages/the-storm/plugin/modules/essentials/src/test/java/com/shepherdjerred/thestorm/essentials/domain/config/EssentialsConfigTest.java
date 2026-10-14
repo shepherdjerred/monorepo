@@ -70,6 +70,29 @@ final class EssentialsConfigTest {
   }
 
   @Test
+  void theGuideUsesTheDeliveredWelcomeBookAndExplainsRealProtectionAndTravel() throws IOException {
+    var config = parsed(shipped());
+    assertThat(config.kits().guide()).isSameAs(config.kits().starterKit().books().getFirst());
+    assertThat(String.join("\n", config.kits().guide().pages()))
+        .contains("/guide", "/rtp", "seven days", "/sethome", "/town create", "/claim")
+        .contains("/pvp off", "once a week", "automatically", "/lock info", "/graves");
+  }
+
+  @Test
+  void aMissingGuideFailsAtStartupInsteadOfHidingTheBrokenStarterContract() {
+    var kit =
+        new Kit(
+            List.of(new KitItem("BREAD", 1, Optional.empty(), Map.of())),
+            List.of(),
+            Duration.ZERO,
+            true);
+    var settings = new KitSettings("starter", Map.of("starter", kit));
+    assertThatThrownBy(settings::guide)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("exactly one welcome book");
+  }
+
+  @Test
   void theRulesAreTheOfficialRulesWithTheChatPointersAndTheAiDisclosure() throws IOException {
     var rules = parsed(shipped()).rules();
     var text = String.join("\n", rules.pages()).toLowerCase(Locale.ROOT);

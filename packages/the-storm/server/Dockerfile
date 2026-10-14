@@ -68,6 +68,7 @@ COPY server/owned/plugins/ /plugins/
 COPY server/owned.roots server/remove.list /bundle/
 COPY server/patches/ /bundle/patches/
 COPY server/plugins.json /opt/the-storm/plugins.json
+COPY server/assets/server-icon.png /opt/the-storm/server-icon.png
 COPY server/archive-progression.py /opt/the-storm/archive-progression.py
 COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.domain.config;
 
+import com.shepherdjerred.thestorm.essentials.domain.kit.BookContent;
 import com.shepherdjerred.thestorm.essentials.domain.kit.Kit;
 import com.shepherdjerred.thestorm.essentials.domain.place.PlaceName;
 import java.util.Map;
@@ -33,5 +34,14 @@ public record KitSettings(String starter, Map<String, Kit> kits) {
       throw new IllegalStateException("starter kit vanished: " + starter);
     }
     return kit;
+  }
+
+  /** The same welcome book is delivered once and available through {@code /guide}. */
+  public BookContent guide() {
+    var books = starterKit().books();
+    if (books.size() != 1) {
+      throw new IllegalArgumentException("the starter kit must contain exactly one welcome book");
+    }
+    return books.getFirst();
   }
 }
