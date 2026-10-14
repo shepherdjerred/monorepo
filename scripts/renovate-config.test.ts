@@ -141,6 +141,16 @@ test("extracts every managed structured version-catalog field", async () => {
   });
   expect(nginx.currentValue).toMatch(/^\d+\.\d+\.\d+-alpine$/);
   expect(actual).toContainEqual(nginx);
+  for (const image of ["scout-for-lol", "starlight-karma-bot"]) {
+    expect(actual).toContainEqual(
+      expect.objectContaining({
+        depName: `shepherdjerred/${image}/prod`,
+        datasource: "docker",
+        registryUrl: "https://docker.io",
+        packageName: `shepherdjerred/${image}`,
+      }),
+    );
+  }
 });
 
 test("excludes all sandbox dependency files", async () => {

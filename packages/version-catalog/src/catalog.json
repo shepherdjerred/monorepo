@@ -795,7 +795,7 @@
       "management": {
         "managed": true,
         "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
+        "registryUrl": "https://docker.io",
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
@@ -918,7 +918,7 @@
       "management": {
         "managed": true,
         "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
+        "registryUrl": "https://docker.io",
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
