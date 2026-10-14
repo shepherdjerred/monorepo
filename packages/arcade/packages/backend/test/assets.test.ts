@@ -5,6 +5,46 @@ import { describe, expect, it } from "vitest";
 import { AssetManifestSchema, verifyAssets } from "#src/runtime/assets.ts";
 
 describe("private assets", () => {
+  it("verifies the hashed Wii WASM filename selected by the upstream product catalog", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "arcade-products-"));
+    const revision = "b19270fb9c1590673528a52d34ce4afb780cbee5";
+    const files = new Map([
+      ["main.js", "site"],
+      ["WiiCompiled.js", "glue"],
+      ["WiiCompiled.01234567.wasm", "private-wasm"],
+      [
+        "products.json",
+        JSON.stringify([
+          {
+            id: "WiiCompiled",
+            glue: "WiiCompiled.js",
+            wasm: "WiiCompiled.01234567.wasm",
+          },
+        ]),
+      ],
+    ]);
+    try {
+      for (const [name, contents] of files)
+        await Bun.write(path.join(root, name), contents);
+      await Bun.write(
+        path.join(root, "arcade-assets.json"),
+        JSON.stringify({
+          version: 1,
+          gameId: "mkwii",
+          sourceRevision: revision,
+          files: [...files].map(([name, contents]) => ({
+            path: name,
+            sha256: new Bun.CryptoHasher("sha256")
+              .update(contents)
+              .digest("hex"),
+          })),
+        }),
+      );
+      await verifyAssets(root, "mkwii", revision);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
   it("rejects traversal and detects altered data before executing the runtime", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "arcade-assets-"));
     const revision = "2614969fa80dfeb87d2a4ad3bdaa703237127074";

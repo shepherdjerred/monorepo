@@ -159,6 +159,9 @@ try {
       2,
     ),
   );
+} catch (error) {
+  console.error("Runtime probe failed", error);
+  throw error;
 } finally {
   await host.stop();
 }

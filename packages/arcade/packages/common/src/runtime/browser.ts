@@ -8,12 +8,11 @@ import {
   type PacketKind,
 } from "@arcade/common/wire.ts";
 import {
-  gameModule,
-  readProbe,
   remoteDisc,
   upstreamCommand,
   UpstreamMessageSchema,
 } from "./native-module.ts";
+import { gameModule, mkwConfiguration, readProbe } from "./probe.ts";
 
 class BrowserRuntime {
   private readonly pads = new BrowserPads();
@@ -70,12 +69,13 @@ class BrowserRuntime {
   }
 
   installMkw(): void {
-    const module = gameModule();
-    module.onArcadeFrame = (frame) => {
+    const configuration = mkwConfiguration();
+    configuration.onArcadeFrame = (frame) => {
       this.frame(frame);
     };
-    module.onArcadeAudio = (pointer, bytes, rate) => {
+    configuration.onArcadeAudio = (pointer, bytes, rate) => {
       try {
+        const module = gameModule();
         if (
           pointer % 2 !== 0 ||
           bytes % 4 !== 0 ||
@@ -93,7 +93,9 @@ class BrowserRuntime {
         this.fail(error);
       }
     };
-    this.pads.apply("mkwii", 0);
+    configuration.arcadePads = Array.from({ length: 4 }, () => [
+      0, 0, 0, 0, 0, 0, 0,
+    ]);
   }
 
   installMelee(): void {

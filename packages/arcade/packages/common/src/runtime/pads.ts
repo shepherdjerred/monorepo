@@ -1,5 +1,5 @@
 import type { CubePad } from "./input.ts";
-import { gameModule } from "./native-module.ts";
+import { gameModule } from "./probe.ts";
 
 function centered(seat: number): CubePad {
   return {

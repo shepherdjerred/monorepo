@@ -47,8 +47,28 @@ export async function verifyAssets(
       ? ["disc.iso", "engine/melee_browser.wasm"]
       : gameId === "brawl"
         ? ["disc.wbfs"]
-        : ["main.js", "WiiCompiled.wasm"];
+        : ["main.js", "products.json"];
   for (const file of required)
     if (!paths.has(file))
       throw new Error(`Missing required private asset: ${file}`);
+  if (gameId === "mkwii") await verifyWiiProduct(root, paths);
+}
+
+async function verifyWiiProduct(
+  root: string,
+  paths: ReadonlySet<string>,
+): Promise<void> {
+  const products = z
+    .array(
+      z.looseObject({ id: z.string(), glue: z.string(), wasm: z.string() }),
+    )
+    .parse(await Bun.file(path.join(root, "products.json")).json());
+  const product = products.find((entry) => entry.id === "WiiCompiled");
+  if (product === undefined)
+    throw new Error("Wii assets have no base game product");
+  for (const file of [product.glue, product.wasm])
+    if (!paths.has(file))
+      throw new Error(
+        `Wii product is outside the verified asset manifest: ${file}`,
+      );
 }

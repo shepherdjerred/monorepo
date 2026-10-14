@@ -71,3 +71,13 @@ preparation script's checksum manifest. Saves live under
 The homelab chart starts with zero replicas and an inactive controller. Account
 handover and rollback use the wiki's Arcade migration guide. Source tests do not
 replace real-game controller, audio/video, latency, and concurrent-session acceptance.
+
+ROM-gated media acceptance can run without Discord accounts:
+
+```sh
+bun packages/arcade/packages/backend/src/runtime/probe.ts --game melee --assets /private/arcade/assets --output /private/arcade/probe --seconds 30
+```
+
+The probe writes a screenshot and bounded observations. It exercises the raw
+runtime bridge; full broadcast, statistics, and controller acceptance require
+the active Arcade application in the beta environment.
