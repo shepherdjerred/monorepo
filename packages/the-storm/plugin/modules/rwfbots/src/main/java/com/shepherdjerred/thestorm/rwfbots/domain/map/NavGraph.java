@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.IntPredicate;
 import java.util.function.IntToDoubleFunction;
 
@@ -56,6 +57,7 @@ public final class NavGraph {
   private final byte[] edgeHop;
   private final float[] edgeCost;
   private final EdgeCapabilities capabilities;
+  private final AtomicLongArray runUpDistances;
   private final WaterIndex water;
   private final float heuristicScale;
   private final int[] reverseStart;
@@ -130,6 +132,7 @@ public final class NavGraph {
     this.edgeHop = edges.hop().clone();
     this.edgeCost = edges.cost().clone();
     capabilities = edges.capabilities();
+    runUpDistances = new AtomicLongArray(capabilities.launch().size());
     water = nodes.water();
     if (!bounds.equals(water.bounds()))
       throw new IllegalArgumentException("water index bounds differ from graph");
@@ -536,7 +539,14 @@ public final class NavGraph {
 
   /** Reconstructs the complete baked primitive, including its launch/run-up prerequisite. */
   public Waypoint waypoint(int edge) {
-    var from = feet(edgeSource(edge));
+    return waypoint(edge, edgeSource(edge));
+  }
+
+  /** Reuses a known CSR source without searching for the edge's row a second time. */
+  public Waypoint waypoint(int edge, int source) {
+    if (!edgeLeaves(edge, source))
+      throw new IllegalArgumentException("edge does not leave the supplied node");
+    var from = feet(source);
     var to = feet(edgeTarget(edge));
     var landing =
         water.contains(BlockPos.of(to))
@@ -544,6 +554,30 @@ public final class NavGraph {
             : edgeHop(edge) == Hop.CLIMB ? Waypoint.Landing.CLIMB : Waypoint.Landing.GROUND;
     return new Waypoint(
         to, edgeHop(edge), capabilities.launch().launch(edge, from, to, edgeCost(edge)), landing);
+  }
+
+  /** Membership in one known CSR row; an unknown source cannot own an edge. */
+  public boolean edgeLeaves(int edge, int source) {
+    return source >= 0
+        && source < nodeCount()
+        && edge >= edgeStart[source]
+        && edge < edgeStart[source + 1];
+  }
+
+  /**
+   * Caches the exact reconstructed horizontal distance for each sparse LEAP row. The geometric
+   * result may differ in its last bits from the baked run-up scalar, so it is never substituted.
+   */
+  public double runUpDistance(int edge) {
+    var index = capabilities.launch().indexOf(edge);
+    if (index < 0) throw new IllegalArgumentException("edge has no sprint-jump launch");
+    var known = runUpDistances.get(index);
+    if (known != 0) return Double.longBitsToDouble(known);
+    var launch = waypoint(edge).launch().orElseThrow();
+    var distance = launch.takeoff().horizontalDistance(launch.runUpStart());
+    // JumpLaunch requires at least half a block, so zero bits unambiguously mean uninitialized.
+    runUpDistances.compareAndSet(index, 0, Double.doubleToRawLongBits(distance));
+    return distance;
   }
 
   /** The edges arriving at {@code node}, as edge indices. */

@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
@@ -13,11 +14,11 @@ public final class FallRisk {
   public static int damage(NavGraph graph, int edge, TraversalState state, long arrivalTick) {
     var hop = graph.edgeHop(edge);
     if (hop != Hop.DROP && hop != Hop.LEAP) return 0;
-    var point = graph.waypoint(edge);
+    var target = graph.feet(graph.edgeTarget(edge));
     var distance =
-        Math.max(0, graph.feet(graph.edgeSource(edge)).y() - point.pos().y())
+        Math.max(0, graph.feet(graph.edgeSource(edge)).y() - target.y())
             + (hop == Hop.LEAP ? 1.3 : 0);
-    return mitigated(distance, point.landing() == Waypoint.Landing.WATER, state, arrivalTick);
+    return mitigated(distance, graph.water().contains(BlockPos.of(target)), state, arrivalTick);
   }
 
   /** Rechecks current equipment and effects at the actual entry to a prepared primitive. */

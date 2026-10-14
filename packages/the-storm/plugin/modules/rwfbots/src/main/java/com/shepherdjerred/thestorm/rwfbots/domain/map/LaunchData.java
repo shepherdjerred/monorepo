@@ -92,6 +92,15 @@ public final class LaunchData {
             takeoff, takeoff.minus(direction.scale(runUp[index])), speed[index], durationTicks));
   }
 
+  /** Sparse launch-row lookup; computed geometry belongs to its containing graph. */
+  int indexOf(int edge) {
+    return Arrays.binarySearch(edges, edge);
+  }
+
+  int size() {
+    return edges.length;
+  }
+
   @Override
   public boolean equals(Object other) {
     return other instanceof LaunchData that

@@ -22,11 +22,14 @@ public enum Hop {
 
   /** The hop stored as {@code code}; anything else is corrupt data. */
   public static Hop ofCode(byte code) {
-    for (var hop : values()) {
-      if (hop.code == code) {
-        return hop;
-      }
-    }
-    throw new IllegalArgumentException("unknown hop code: " + code);
+    return switch (code) {
+      case 0 -> WALK;
+      case 1 -> JUMP;
+      case 2 -> DROP;
+      case 3 -> CLIMB;
+      case 4 -> LEAP;
+      case 5 -> SWIM;
+      default -> throw new IllegalArgumentException("unknown hop code: " + code);
+    };
   }
 }

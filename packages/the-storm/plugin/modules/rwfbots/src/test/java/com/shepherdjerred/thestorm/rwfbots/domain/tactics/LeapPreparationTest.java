@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.OptionalDouble;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,20 @@ final class LeapPreparationTest {
     var currentlyAligned = combatant(1, RED, launch.takeoff()).withVel(new Vec3(0, 0, 0.28));
     assertThat(LeapPreparation.ticks(graph, 3, currentlyAligned, 0)).isGreaterThan(20);
     assertThat(LeapPreparation.ticks(graph, 3, currentlyAligned, 2)).isZero();
+  }
+
+  @Test
+  void cachedFuturePreparationRetainsTheExactOriginalGeometricCalculation() {
+    var graph = graph();
+    var self = combatant(1, RED, graph.feet(0));
+    for (var edge : new int[] {1, 3}) {
+      var launch = graph.waypoint(edge).launch().orElseThrow();
+      var runUp = launch.takeoff().horizontalDistance(launch.runUpStart());
+      var expected = Double.doubleToRawLongBits(2 * runUp / MovementMotor.SPRINT_SPEED + 6);
+      for (var attempt = 0; attempt < 3; attempt++)
+        assertThat(Double.doubleToRawLongBits(LeapPreparation.ticks(graph, edge, self, -1)))
+            .isEqualTo(expected);
+    }
   }
 
   @Test

@@ -2720,6 +2720,11 @@ use exact traversal of the condensed directed graph with exclusive search scratc
 The index is built during graph preparation, including asynchronous runtime map
 loading, and retires with the graph. It does not change the navigation artifact
 format or retain a separate cache of inactive maps.
+Future sprint-jump setup distances reuse the exact original waypoint geometry in
+a graph-owned, thread-safe lazy cache with eight bytes per baked LEAP edge.
+It retires with the graph and leaves the artifact format, physical travel times
+and health costs unchanged. Fall-damage queries read the same node heights and
+water landing directly instead of constructing unused jump-launch geometry.
 The cycle runs perception (10 Hz), the team step
 (about 1 Hz) and tactics (4 Hz) for the bots whose slot is due
 (`(tick + slot) % period == 0`), under a line-of-sight ray budget, with a

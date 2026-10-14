@@ -15,11 +15,11 @@ final class LeapPreparation {
   private LeapPreparation() {}
 
   static double ticks(NavGraph graph, int edge, CombatantView self, int initialNode) {
-    var waypoint = graph.waypoint(edge);
+    if (!graph.edgeLeaves(edge, initialNode))
+      return 2 * graph.runUpDistance(edge) / MovementMotor.SPRINT_SPEED + TURN_AND_ACCELERATE_TICKS;
+    var waypoint = graph.waypoint(edge, initialNode);
     var launch = waypoint.launch().orElseThrow();
     var runUp = launch.takeoff().horizontalDistance(launch.runUpStart());
-    if (graph.edgeSource(edge) != initialNode)
-      return 2 * runUp / MovementMotor.SPRINT_SPEED + TURN_AND_ACCELERATE_TICKS;
     var request =
         new JumpController.Request(waypoint, new ActiveJump.Intent(Option.HUNT, waypoint.pos()));
     var entry = JumpController.tick(Optional.empty(), request, self, 0);
