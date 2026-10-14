@@ -11,10 +11,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
-import org.mockbukkit.mockbukkit.world.WorldMock;
 
 final class MovementTerrainTest {
-  private WorldMock world;
+  private MovementWorldMock world;
   private MovementTerrain terrain;
 
   @BeforeEach
@@ -27,7 +26,11 @@ final class MovementTerrainTest {
       for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.STONE);
     }
     terrain =
-        new MovementTerrain(world, Optional.of(new GridBounds(new BlockPos(0, 0, 0), 5, 8, 5)));
+        new MovementTerrain(
+            world,
+            Optional.of(new GridBounds(new BlockPos(0, 0, 0), 5, 8, 5)),
+            world::collides,
+            false);
   }
 
   @AfterEach

@@ -22,6 +22,9 @@ public final class MovementSafety {
 
     boolean supported(Vec3 feet, double drop);
 
+    /** Actual current ground contact, even when part of the standing footprint overhangs. */
+    boolean grounded(Vec3 feet);
+
     boolean hazardous(Vec3 feet);
 
     boolean inside(Vec3 feet);
@@ -53,9 +56,7 @@ public final class MovementSafety {
           : new Result(Optional.empty(), Reason.BLOCKED);
     }
     if (request.hop() == Hop.SWIM) {
-      return swimCorridor(terrain, request.from(), request.target())
-          ? new Result(Optional.of(request.target()), Reason.CLEAR)
-          : new Result(Optional.empty(), Reason.BLOCKED);
+      return swim(terrain, request.from(), request.target());
     }
     if (request.hop() == Hop.LEAP || request.hop() == Hop.DROP || request.hop() == Hop.JUMP) {
       return traversal(terrain, request)
@@ -92,10 +93,14 @@ public final class MovementSafety {
       var point = from.lerp(to, (double) index / count);
       if (!terrain.inside(point) || !terrain.clear(point)) return false;
       if (!escaping || index == count) {
-        if (terrain.hazardous(point) || !terrain.supported(point, WALK_DROP)) return false;
+        if (terrain.hazardous(point) || !floor(terrain, point, index)) return false;
       }
     }
     return true;
+  }
+
+  private static boolean floor(Terrain terrain, Vec3 point, int index) {
+    return terrain.supported(point, WALK_DROP) || (index == 0 && terrain.grounded(point));
   }
 
   private static boolean clearCorridor(Terrain terrain, Vec3 from, Vec3 to) {
@@ -113,6 +118,15 @@ public final class MovementSafety {
       if (!safe(terrain, point) || !terrain.supported(point, WALK_DROP)) return false;
     }
     return true;
+  }
+
+  private static Result swim(Terrain terrain, Vec3 from, Vec3 target) {
+    if (swimCorridor(terrain, from, target)) return new Result(Optional.of(target), Reason.CLEAR);
+    // A bank face needs ascent before crossing; a lowered pool needs crossing before descent.
+    var corner = target.y() > from.y() ? from.withY(target.y()) : target.withY(from.y());
+    if (swimCorridor(terrain, from, corner) && swimCorridor(terrain, corner, target))
+      return new Result(Optional.of(corner), Reason.CLEAR);
+    return new Result(Optional.empty(), Reason.BLOCKED);
   }
 
   private static boolean traversal(Terrain terrain, Request request) {

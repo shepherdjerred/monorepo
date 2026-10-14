@@ -293,6 +293,10 @@ final class RwfCommands {
                 .requires(permission(RwfPermissions.PLAY))
                 .executes(ctx -> size(ctx.getSource().getSender())))
         .then(
+            Commands.literal("options")
+                .requires(permission(RwfPermissions.PLAY))
+                .executes(ctx -> asPlayer(ctx, runner::openSettings)))
+        .then(
             Commands.literal("settings")
                 .requires(permission(RwfPermissions.PLAY).or(permission(RwfPermissions.SPECTATE)))
                 .executes(ctx -> experience.read(ctx.getSource().getSender())))
@@ -444,7 +448,7 @@ final class RwfCommands {
         sender,
         "/rwf join, /rwf leave, /rwf kit <kit>, /rwf kits, /rwf buy <kit>, /rwf rotation, /rwf"
             + " credits, /rwf maps, /rwf visit <map>, /rwf return, /rwf vote <map>, /rwf time, /rwf who, /rwf size, /rwf teamchat, /rwf"
-            + " stats, /rwf top, /rwf history, /rwf recording, /rwf settings, /rwf killstreaks, /rwf spectate [next|previous], /rwf goto <player>,"
+            + " stats, /rwf top, /rwf history, /rwf recording, /rwf settings, /rwf options, /rwf killstreaks, /rwf spectate [next|previous], /rwf goto <player>,"
             + " /suicide");
     return OK;
   }

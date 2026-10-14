@@ -1421,7 +1421,8 @@ prepare serially before a 90-second voting opportunity. Members independently
 fly over candidates with /rwf visit, switch maps or return; selection then
 activates the winning map's resources before bot arrivals and the selected
 preview. The host settings gate gives the first admitted human a comparator
-in hotbar slot 7: Auto fills the map target, Off disables bots, or a fixed
+in hotbar slot 7. Members can also open that menu with `/rwf options`; only
+the host can edit it. Auto fills the map target, Off disables bots, or a fixed
 count requests bots around admitted humans. Easy, Normal and Hard retain
 personality variation within their skill bands. Settings lock at vote close;
 later edits apply next round.

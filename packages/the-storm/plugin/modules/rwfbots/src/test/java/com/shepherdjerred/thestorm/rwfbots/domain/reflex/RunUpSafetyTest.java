@@ -24,6 +24,11 @@ final class RunUpSafetyTest {
     }
 
     @Override
+    public boolean grounded(Vec3 feet) {
+      return floor.test(feet);
+    }
+
+    @Override
     public boolean hazardous(Vec3 feet) {
       return danger.test(feet);
     }

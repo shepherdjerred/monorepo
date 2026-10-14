@@ -43,7 +43,7 @@ final class BodyMovementTest {
     world.getBlockAt(2, 1, 2).setType(Material.LADDER);
     world.getBlockAt(2, 2, 2).setType(Material.LADDER);
     player.teleport(new Location(world, 2.5, 1, 2.5));
-    new BodyMovement(survival(Optional.empty()))
+    motion(survival(Optional.empty()))
         .move(
             player,
             new Bodies.MotionTarget(
@@ -60,8 +60,7 @@ final class BodyMovementTest {
     }
     player.teleport(new Location(world, 2.4, 3.8, 2.5));
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
-    new BodyMovement(
-            survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()))
+    motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()))
         .move(
             player,
             new Bodies.MotionTarget(
@@ -84,12 +83,11 @@ final class BodyMovementTest {
             new Location(world, 3.5, 1, 2.5), false, Hop.DROP, Optional.empty());
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
     var ordinary =
-        new BodyMovement(
-            survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
     assertThat(ordinary.move(player, target)).isEqualTo(MovementSafety.Reason.BLOCKED);
     assertThat(player.getVelocity().getX()).isZero();
     var immune =
-        new BodyMovement(
+        motion(
             survival(Optional.of(java.time.Instant.MAX)),
             (body, heading) -> doorRequests.add(heading.clone()));
     assertThat(immune.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
@@ -107,8 +105,7 @@ final class BodyMovementTest {
     player.setHealth(2);
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
     var motion =
-        new BodyMovement(
-            survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
     assertThat(
             motion.move(
                 player,
@@ -129,7 +126,7 @@ final class BodyMovementTest {
     var player = TraversalPlayerMock.add(server, "diver");
     for (var y = 1; y <= 6; y++) world.getBlockAt(2, y, 2).setType(Material.WATER);
     player.teleport(new Location(world, 2.5, 4, 2.5));
-    var motion = new BodyMovement(survival(Optional.empty()));
+    var motion = motion(survival(Optional.empty()));
     assertThat(
             motion.move(
                 player,
@@ -149,6 +146,16 @@ final class BodyMovementTest {
         id -> immunity, java.time.InstantSource.fixed(java.time.Instant.EPOCH));
   }
 
+  private BodyMovement motion(TraversalCapture capabilities) {
+    return motion(capabilities, DoorUse::ahead);
+  }
+
+  private BodyMovement motion(
+      TraversalCapture capabilities,
+      java.util.function.BiConsumer<org.bukkit.entity.Player, org.bukkit.util.Vector> doors) {
+    return new BodyMovement(capabilities, doors, world::collides);
+  }
+
   @Test
   void lowHealthDoesNotFreezeSafeWalkingOrARedirectedRecoveryFromAnUnsafeGoal() {
     var player = TraversalPlayerMock.add(server, "recovering");
@@ -158,8 +165,7 @@ final class BodyMovementTest {
     player.setHealth(0.5);
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
     var motion =
-        new BodyMovement(
-            survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
     assertThat(
             motion.move(
                 player,
@@ -194,8 +200,7 @@ final class BodyMovementTest {
             Optional.of(launch));
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
     var motion =
-        new BodyMovement(
-            survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
     assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
     assertThat(player.getVelocity().getX())
         .isCloseTo(MovementMotor.SPRINT_SPEED, org.assertj.core.api.Assertions.within(1e-9));
@@ -219,8 +224,7 @@ final class BodyMovementTest {
     player.teleport(new Location(world, 2.5, 3, 2.28));
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
     var motion =
-        new BodyMovement(
-            survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
     var target =
         new Bodies.MotionTarget(
             new Location(world, 2.5, 3, 1.5), false, Hop.CLIMB, Optional.empty());
@@ -238,5 +242,119 @@ final class BodyMovementTest {
     assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.BLOCKED);
     assertThat(player.getVelocity().getZ()).isZero();
     assertThat(doorRequests).hasSize(3);
+  }
+
+  @Test
+  void aGroundedPartialLandingRecoversIntoFullSupportWithoutAuthorizingWalkingIntoTheGap() {
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    var player = TraversalPlayerMock.add(server, "partial-landing");
+    player.teleport(new Location(world, 2.246253, 1, 2.246253));
+    var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
+    var motion =
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+    assertThat(
+            motion.move(
+                player,
+                new Bodies.MotionTarget(
+                    new Location(world, 2.5, 1, 2.5), false, Hop.WALK, Optional.empty())))
+        .isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(player.getVelocity().getX()).isPositive();
+    assertThat(player.getVelocity().getZ()).isPositive();
+    player.setVelocity(new org.bukkit.util.Vector());
+    assertThat(
+            motion.move(
+                player,
+                new Bodies.MotionTarget(
+                    new Location(world, 1.5, 1, 1.5), false, Hop.WALK, Optional.empty())))
+        .isEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(player.getVelocity().getX()).isZero();
+    assertThat(player.getVelocity().getZ()).isZero();
+    assertThat(doorRequests).hasSize(2);
+  }
+
+  @Test
+  void aNearFloorAirborneOverhangCannotUseTheActualGroundContactRecoveryException() {
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    var player = TraversalPlayerMock.add(server, "airborne-overhang");
+    player.teleport(new Location(world, 2.246253, 1.04, 2.246253));
+    assertThat(com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture.onGround(player))
+        .isTrue();
+    var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
+    var motion =
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+    assertThat(
+            motion.move(
+                player,
+                new Bodies.MotionTarget(
+                    new Location(world, 2.5, 1, 2.5), false, Hop.WALK, Optional.empty())))
+        .isEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(player.getVelocity().getX()).isZero();
+    assertThat(player.getVelocity().getZ()).isZero();
+    assertThat(doorRequests).hasSize(1);
+  }
+
+  @Test
+  void nativeScaffoldCollisionContextAllowsAscentButStillRejectsASolidCeiling() {
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    for (var y = 1; y <= 3; y++) world.getBlockAt(2, y, 2).setType(Material.SCAFFOLDING);
+    var player = TraversalPlayerMock.add(server, "scaffold-climber");
+    player.teleport(new Location(world, 2.5, 1, 2.5));
+    var motion = motion(survival(Optional.empty()));
+    var target =
+        new Bodies.MotionTarget(
+            new Location(world, 2.5, 4, 2.5), false, Hop.CLIMB, Optional.empty());
+    assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(player.getVelocity().getY()).isGreaterThanOrEqualTo(0.2);
+    world.getBlockAt(2, 3, 2).setType(Material.STONE);
+    assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(player.getVelocity().getY()).isZero();
+  }
+
+  @Test
+  void aDeepSwimmerAscendsBeforeCrossingTheBankAndThenKeepsTheNativeExitStroke() {
+    for (var y = 1; y <= 3; y++) {
+      world.getBlockAt(2, y, 2).setType(Material.WATER);
+      world.getBlockAt(3, y, 2).setType(Material.STONE);
+    }
+    var player = TraversalPlayerMock.add(server, "deep-bank");
+    player.teleport(new Location(world, 2.7, 2.735, 2.5));
+    var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
+    var motion =
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+    var target =
+        new Bodies.MotionTarget(
+            new Location(world, 3.5, 4.1, 2.5), false, Hop.SWIM, Optional.empty());
+    assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(player.getVelocity().getY()).isEqualTo(0.16);
+    assertThat(player.getVelocity().getX()).isZero();
+    player.teleport(new Location(world, 2.7, 3.6, 2.5));
+    assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(player.getVelocity().getY()).isGreaterThanOrEqualTo(0.3);
+    assertThat(player.getVelocity().getX()).isPositive();
+    assertThat(doorRequests).hasSize(2);
+  }
+
+  @Test
+  void aDescendingSwimmerClearsTheUpperFloorAtItsCurrentHeightBeforeDiving() {
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    world.getBlockAt(2, 1, 2).setType(Material.WATER);
+    world.getBlockAt(2, 2, 2).setType(Material.WATER);
+    world.getBlockAt(3, 2, 2).setType(Material.STONE);
+    world.getBlockAt(3, 3, 2).setType(Material.WATER);
+    var player = TraversalPlayerMock.add(server, "lower-pool");
+    player.teleport(new Location(world, 3.866576, 3, 2.5));
+    var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
+    var motion =
+        motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
+    var target =
+        new Bodies.MotionTarget(
+            new Location(world, 2.5, 2, 2.5), false, Hop.SWIM, Optional.empty());
+    assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(player.getVelocity().getX()).isNegative();
+    assertThat(player.getVelocity().getY()).isZero();
+    player.teleport(new Location(world, 2.5, 3, 2.5));
+    assertThat(motion.move(player, target)).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(player.getVelocity().getY()).isEqualTo(-0.16);
+    assertThat(doorRequests).hasSize(2);
   }
 }

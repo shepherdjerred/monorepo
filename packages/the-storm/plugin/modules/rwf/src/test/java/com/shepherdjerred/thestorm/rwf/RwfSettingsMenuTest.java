@@ -100,6 +100,45 @@ final class RwfSettingsMenuTest {
   }
 
   @Test
+  void optionsOpensTheHostMenuWhileSettingsStillReadsTheExperience() {
+    var harness = start(true);
+    var alice = harness.loadedPlayer("Alice");
+    var bob = harness.loadedPlayer("Bob");
+    harness.enter(alice);
+    harness.enter(bob);
+    alice.closeInventory();
+    RwfHarness.messages(alice);
+    alice.performCommand("rwf settings");
+    assertThat(RwfHarness.messages(alice)).anyMatch(line -> line.contains("Next draft:"));
+    assertThat(alice.getOpenInventory().getTopInventory()).isNull();
+    alice.performCommand("rwf options");
+    assertThat(label(alice, 4)).isEqualTo("Host: Alice");
+    click(harness, alice, 11);
+    assertThat(label(alice, 13)).isEqualTo("Population: Off");
+    bob.performCommand("rwf options");
+    click(harness, bob, 14);
+    assertThat(label(bob, 13)).isEqualTo("Population: Off");
+  }
+
+  @Test
+  void optionsRequiresMembershipWhenTheRolloutIsEnabled() {
+    var harness = start(true);
+    var alice = harness.loadedPlayer("Alice");
+    alice.performCommand("rwf options");
+    assertThat(alice.getOpenInventory().getTopInventory()).isNull();
+  }
+
+  @Test
+  void rolloutOffDoesNotAllowOptionsEvenForAMember() {
+    var harness = start(false);
+    var alice = harness.loadedPlayer("Alice");
+    harness.enter(alice);
+    alice.closeInventory();
+    alice.performCommand("rwf options");
+    assertThat(alice.getOpenInventory().getTopInventory()).isNull();
+  }
+
+  @Test
   void rolloutOffRetainsAdaptiveDifficultyAndHasNoSettingsItem() {
     var harness = start(false);
     var alice = harness.loadedPlayer("Alice");

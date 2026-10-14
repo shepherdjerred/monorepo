@@ -20,6 +20,7 @@ final class BodyMovement {
   private Optional<Flight> flight = Optional.empty();
   private final TraversalCapture survival;
   private final java.util.function.BiConsumer<Player, Vector> doors;
+  private final java.util.function.BiPredicate<Player, org.bukkit.util.BoundingBox> collisions;
 
   BodyMovement(TraversalCapture survival) {
     this(survival, DoorUse::ahead);
@@ -27,8 +28,17 @@ final class BodyMovement {
 
   /** Keeps the native interaction query independent from collision/motion adapter tests. */
   BodyMovement(TraversalCapture survival, java.util.function.BiConsumer<Player, Vector> doors) {
+    this(survival, doors, Player::wouldCollideUsing);
+  }
+
+  /** Production always uses the actual entity collision context; tests provide its native seam. */
+  BodyMovement(
+      TraversalCapture survival,
+      java.util.function.BiConsumer<Player, Vector> doors,
+      java.util.function.BiPredicate<Player, org.bukkit.util.BoundingBox> collisions) {
     this.survival = survival;
     this.doors = doors;
+    this.collisions = collisions;
   }
 
   private record Flight(Vec3 origin, Vec3 target, Hop hop, int started) {}
@@ -39,7 +49,7 @@ final class BodyMovement {
     var position = feet(player);
     var destination = target.at();
     var goal = new Vec3(destination.getX(), destination.getY(), destination.getZ());
-    var terrain = new MovementTerrain(player.getWorld(), target.bounds());
+    var terrain = terrain(player, target.bounds());
     var hop = target.hop();
     if (BodyFluids.cancelsFall(player) || terrain.climbable(position)) player.setFallDistance(0);
     var bank = bankExit(terrain, position, goal, hop);
@@ -109,9 +119,16 @@ final class BodyMovement {
   void stop(Player player) {
     flight = Optional.empty();
     steer(
-        player,
-        new Steering(Vec3.ZERO, false, false, Hop.WALK),
-        new MovementTerrain(player.getWorld(), Optional.empty()));
+        player, new Steering(Vec3.ZERO, false, false, Hop.WALK), terrain(player, Optional.empty()));
+  }
+
+  private MovementTerrain terrain(
+      Player player, Optional<com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds> bounds) {
+    return new MovementTerrain(
+        player.getWorld(),
+        bounds,
+        body -> collisions.test(player, body),
+        SnapshotCapture.onGround(player));
   }
 
   private static Optional<Vec3> bankExit(

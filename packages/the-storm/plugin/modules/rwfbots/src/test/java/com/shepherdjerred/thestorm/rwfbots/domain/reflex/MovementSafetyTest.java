@@ -10,8 +10,16 @@ import org.junit.jupiter.api.Test;
 final class MovementSafetyTest {
   private static final Vec3 START = new Vec3(0.5, 1, 0.5);
 
-  private record Terrain(Predicate<Vec3> floor, Predicate<Vec3> obstruction, Predicate<Vec3> danger)
+  private record Terrain(
+      Predicate<Vec3> floor,
+      Predicate<Vec3> obstruction,
+      Predicate<Vec3> danger,
+      Predicate<Vec3> contact)
       implements MovementSafety.Terrain {
+    Terrain(Predicate<Vec3> floor, Predicate<Vec3> obstruction, Predicate<Vec3> danger) {
+      this(floor, obstruction, danger, floor);
+    }
+
     @Override
     public boolean clear(Vec3 feet) {
       return !obstruction.test(feet);
@@ -20,6 +28,11 @@ final class MovementSafetyTest {
     @Override
     public boolean supported(Vec3 feet, double drop) {
       return floor.test(feet);
+    }
+
+    @Override
+    public boolean grounded(Vec3 feet) {
+      return contact.test(feet);
     }
 
     @Override
@@ -65,6 +78,19 @@ final class MovementSafetyTest {
     var result = move(terrain, START.plus(3, 0, 0), Hop.WALK);
     assertThat(result.reason()).isEqualTo(MovementSafety.Reason.BLOCKED);
     assertThat(result.destination()).isEmpty();
+  }
+
+  @Test
+  void aPartialGroundContactCanRecoverOnlyTowardFullySupportedOnwardTerrain() {
+    var floor = (Predicate<Vec3>) point -> point.x() >= 0.55;
+    var grounded = new Terrain(floor, point -> false, point -> false, START::equals);
+    assertThat(move(grounded, START.plus(0.5, 0, 0), Hop.WALK).reason())
+        .isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(move(grounded, START.plus(-0.5, 0, 0), Hop.WALK).reason())
+        .isEqualTo(MovementSafety.Reason.BLOCKED);
+    var airborne = new Terrain(floor, point -> false, point -> false, point -> false);
+    assertThat(move(airborne, START.plus(0.5, 0, 0), Hop.WALK).reason())
+        .isEqualTo(MovementSafety.Reason.BLOCKED);
   }
 
   @Test
@@ -118,6 +144,33 @@ final class MovementSafetyTest {
         .contains(START.plus(0, 2, 0));
     assertThat(move(terrain, START.plus(0, -2, 0), Hop.SWIM).destination())
         .contains(START.plus(0, -2, 0));
+  }
+
+  @Test
+  void swimmingAscendsInItsClearColumnBeforeCrossingARaisedBankFace() {
+    var bank = new Terrain(point -> true, point -> point.x() >= 1 && point.y() < 2, point -> false);
+    var target = new Vec3(1.5, 2, 0.5);
+    assertThat(move(bank, target, Hop.SWIM).destination()).contains(START.withY(2));
+    var blockedColumn =
+        new Terrain(
+            bank.floor(),
+            point -> bank.obstruction().test(point) || (point.x() < 1 && point.y() >= 1.6),
+            point -> false);
+    assertThat(move(blockedColumn, target, Hop.SWIM).reason())
+        .isEqualTo(MovementSafety.Reason.BLOCKED);
+  }
+
+  @Test
+  void swimmingClearsTheUpperFloorHorizontallyBeforeDescendingIntoTheLowerColumn() {
+    var from = START.withY(2);
+    var target = START.plus(1, 0, 0);
+    var floor = new Terrain(point -> true, point -> point.x() < 1 && point.y() < 2, point -> false);
+    var request = new MovementSafety.Request(from, target, Hop.SWIM);
+    assertThat(MovementSafety.choose(floor, request).destination()).contains(target.withY(2));
+    var unsafeSecondLeg =
+        new Terrain(floor.floor(), floor.obstruction(), point -> point.x() >= 1 && point.y() < 1.8);
+    assertThat(MovementSafety.choose(unsafeSecondLeg, request).reason())
+        .isEqualTo(MovementSafety.Reason.BLOCKED);
   }
 
   @Test

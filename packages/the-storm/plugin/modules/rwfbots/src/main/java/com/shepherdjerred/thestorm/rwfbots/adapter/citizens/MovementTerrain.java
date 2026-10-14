@@ -34,16 +34,23 @@ final class MovementTerrain implements MovementSafety.Terrain {
 
   private final World world;
   private final Optional<GridBounds> bounds;
+  private final Predicate<BoundingBox> collisions;
+  private final boolean standing;
 
-  MovementTerrain(World world, Optional<GridBounds> bounds) {
+  MovementTerrain(
+      World world,
+      Optional<GridBounds> bounds,
+      Predicate<BoundingBox> collisions,
+      boolean standing) {
     this.world = world;
     this.bounds = bounds;
+    this.collisions = collisions;
+    this.standing = standing;
   }
 
   @Override
   public boolean clear(Vec3 feet) {
-    var body = box(feet);
-    return !any(body, block -> !block.isPassable() && block.getBoundingBox().overlaps(body));
+    return inside(feet) && !collisions.test(box(feet));
   }
 
   @Override
@@ -75,6 +82,11 @@ final class MovementTerrain implements MovementSafety.Terrain {
       }
     }
     return true;
+  }
+
+  @Override
+  public boolean grounded(Vec3 feet) {
+    return standing && supportAt(feet, EPSILON, false);
   }
 
   private boolean supportAt(Vec3 point, double drop, boolean allowWater) {
