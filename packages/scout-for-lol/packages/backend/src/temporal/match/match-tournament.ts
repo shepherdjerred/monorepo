@@ -1,4 +1,6 @@
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
+import { ApplicationFailure } from "@temporalio/common";
+import { matchEffectsAllowed } from "#src/evidence/admission.ts";
 import type { RawMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutTournamentResultResult } from "@scout-for-lol/temporal/activity-contracts";
@@ -28,6 +30,11 @@ import { resolveScoutMatchContext } from "#src/temporal/match/match-context.ts";
 export async function finalizeTournamentResult(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutTournamentResultResult> {
+  if (!(await matchEffectsAllowed(input.riotMatchId)))
+    throw ApplicationFailure.nonRetryable(
+      `Historical match ${input.riotMatchId} cannot finalize operational results`,
+      "HistoryOnlyEffectDenied",
+    );
   const context = await resolveScoutMatchContext(input.riotMatchId);
   return await finalizeTournamentMatch(
     context.matchData,

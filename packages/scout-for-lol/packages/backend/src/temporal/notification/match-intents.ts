@@ -154,7 +154,7 @@ export async function matchMayAnnounce(
       `Refusing to mint notification intents for ${matchId}: no observation stands for it, so whether it is owed a public delivery is unknown`,
     );
   }
-  return observation.deliveryMode === "live";
+  return observation.policy === "FULL" && observation.deliveryMode === "live";
 }
 
 /**

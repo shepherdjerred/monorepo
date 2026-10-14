@@ -1,4 +1,9 @@
 import {
+  restrictEffectMatchRelation,
+  restrictEffectTimelineRelation,
+} from "#src/evidence/lake-eligibility.ts";
+import { effectTimelineMatchIds } from "#src/evidence/admission.ts";
+import {
   type LeaguePuuid,
   LeaguePuuidSchema,
 } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -153,17 +158,17 @@ export async function fetchTimelineEventCounts(options: {
   return await withLakeQueryRetry(
     options.lakeDir ?? resolveLakeDir(),
     async (files) => {
-      const matchIds = [
+      const matchIds = await effectTimelineMatchIds([
         ...new Set(options.matchPuuids.map((row) => row.matchId)),
-      ];
+      ]);
       const puuids = [...new Set(options.matchPuuids.map((row) => row.puuid))];
       const events = buildTimelineEventsSource(files, {
         sql: "match_id IN (SELECT unnest(?))",
-        params: [listParam(matchIds)],
+        params: [listParam([...matchIds])],
       });
       const participants = buildTimelineEventParticipantsSource(files, {
         sql: "match_id IN (SELECT unnest(?)) AND puuid IN (SELECT unnest(?))",
-        params: [listParam(matchIds), listParam(puuids)],
+        params: [listParam([...matchIds]), listParam(puuids)],
       });
       if (events === undefined || participants === undefined) return new Map();
       const rows = await withDuckDBConnection(async (session) => {
@@ -248,24 +253,32 @@ export async function fetchProgressionMatches(options: {
         coverage === undefined
           ? "false AS timeline_complete"
           : "CASE WHEN c.match_id IS NULL THEN false ELSE c.coverage_state = 'complete' END AS timeline_complete";
-      const coverageCte =
-        coverage === undefined ? "" : `, coverage AS (${coverage.sql})`;
       const coverageJoinSql =
         coverage === undefined
           ? ""
-          : " LEFT JOIN coverage c ON c.match_id = m.match_id";
+          : " LEFT JOIN progression_timeline_coverage c ON c.match_id = m.match_id";
       const limit = Math.floor(options.limit ?? 100_000);
       return await withDuckDBConnection(async (session) => {
+        await session.run(
+          `CREATE TEMP TABLE matches_for_progression AS ${source.sql}`,
+          bindParams(session, source.params),
+        );
+        await restrictEffectMatchRelation(session, "matches_for_progression");
+        if (coverage !== undefined) {
+          await session.run(
+            `CREATE TEMP TABLE progression_timeline_coverage AS ${coverage.sql}`,
+            bindParams(session, coverage.params),
+          );
+          await restrictEffectTimelineRelation(
+            session,
+            "progression_timeline_coverage",
+          );
+        }
         const rows = await session.run(
-          `WITH matches_for_progression AS (${source.sql})${coverageCte} ` +
-            `SELECT ${MATCH_COLUMNS}, ${coverageJoin} ` +
+          `SELECT ${MATCH_COLUMNS}, ${coverageJoin} ` +
             `FROM matches_for_progression m${coverageJoinSql} ` +
             `ORDER BY m.game_end_at ASC, m.match_id ASC, m.puuid ASC LIMIT ?`,
-          bindParams(session, [
-            ...source.params,
-            ...(coverage?.params ?? []),
-            scalarParam(limit),
-          ]),
+          bindParams(session, [scalarParam(limit)]),
         );
         return rows.map((row) => ProgressionMatchRowSchema.parse(row));
       });

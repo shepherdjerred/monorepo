@@ -6,7 +6,24 @@ import { SCOUT_CLIENT_DATA_VERSION, type RawMatch } from "@scout-for-lol/data";
 
 /** Adapter from pinned raw bytes to the same result vocabulary used by LCU. */
 export function gameResultFromMatch(match: RawMatch): GameResult {
-  return GameResultSchema.parse({
+  return GameResultSchema.parse(gameResultDocument(match));
+}
+
+/** Raw upstream captures can describe cancelled/unsupported games rather than results. */
+export function parseResultFromMatch(
+  match: RawMatch,
+  sourceId: string,
+): GameResult | null {
+  const parsed = GameResultSchema.safeParse({
+    ...gameResultDocument(match),
+    source: "RIOT",
+    sourceId,
+  });
+  return parsed.success ? parsed.data : null;
+}
+
+function gameResultDocument(match: RawMatch) {
+  return {
     matchId: match.metadata.matchId,
     source:
       match.metadata.dataVersion === SCOUT_CLIENT_DATA_VERSION
@@ -39,5 +56,5 @@ export function gameResultFromMatch(match: RawMatch): GameResult {
       minions: player.totalMinionsKilled,
       level: player.champLevel,
     })),
-  });
+  };
 }

@@ -24,6 +24,13 @@ explicitly frozen result, and leaves contradictory peer outcomes unresolved.
 Source adapters and persistence live outside this
 package.
 
+`src/artifacts/resolution.ts` gives artifact consumers explicit availability,
+pending deadlines, conflict evidence, coverage and frozen-state metadata.
+`src/match-processing/eligibility.ts` defines source-independent admission:
+explicit history or discovery more than 15 minutes after completion is
+`HISTORY_ONLY`. The policy permits historical projections and permanently
+excludes live effects; `ARCHIVE_ONLY` remains the capture-only policy.
+
 ## Workflow start requests
 
 `src/recovery/workflow-start.ts` is the contract for a recorded request to

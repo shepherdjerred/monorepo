@@ -32,8 +32,9 @@ const { upsertClashGameSighting } =
   await import("#src/league/clash/sighting.ts");
 const { readClashHistoryForGuild } =
   await import("#src/league/clash/history.ts");
-const { readClientPrematch, getActiveGameWithClientEvidence } =
-  await import("./prematch.ts");
+const { readClientPrematch } = await import("./prematch-evidence.ts");
+const { resolvePrematch: getActiveGameWithClientEvidence } =
+  await import("#src/evidence/prematch.ts");
 
 const OWNER = DiscordAccountIdSchema.parse("160509172704739328");
 const OTHER = DiscordAccountIdSchema.parse("160509172704739329");
@@ -43,6 +44,7 @@ let deviceId: string;
 let sequence = 0;
 
 beforeEach(async () => {
+  await prisma.matchEvidenceAdmission.deleteMany();
   await prisma.scoutClientClashEntity.deleteMany();
   await prisma.scoutClientGameResult.deleteMany();
   await prisma.leagueIdentityAlias.deleteMany();

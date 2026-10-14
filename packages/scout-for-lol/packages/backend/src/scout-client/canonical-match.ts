@@ -173,6 +173,25 @@ export async function readTimelineSelection(
     where: { riotMatchId },
     include: { sourceObservation: true },
   });
+  const candidates = await readClientTimelineCandidates(
+    riotMatchId,
+    expectedMatch,
+  );
+  const timeline = candidates[0]?.timeline;
+  return selected === null
+    ? {
+        source: "RIOT",
+        ...(timeline === undefined ? {} : { clientTimeline: timeline }),
+      }
+    : { source: "SCOUT_CLIENT", timeline: timeline ?? null };
+}
+
+/** Timeline candidates are independent of which source supplied the result. */
+export async function readClientTimelineCandidates(
+  riotMatchId: RiotMatchId,
+  expectedMatch?: RawMatch,
+) {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
   const platform = platformRouteOf(riotMatchId);
   const candidates = await prisma.scoutClientObservation.findMany({
     where: {
@@ -183,6 +202,7 @@ export async function readTimelineSelection(
     },
     orderBy: [{ capturedAt: "asc" }, { observationId: "asc" }],
   });
+  const timelines: { observationId: string; timeline: RawTimeline }[] = [];
   for (const candidate of candidates) {
     const bundle = TimelineBundleSchema.safeParse(
       embeddedPayload(candidate.payload),
@@ -196,13 +216,9 @@ export async function readTimelineSelection(
     );
     if (timeline === null || !timelineMatchesResult(timeline, expectedMatch))
       continue;
-    return selected === null
-      ? { source: "RIOT", clientTimeline: timeline }
-      : { source: "SCOUT_CLIENT", timeline };
+    timelines.push({ observationId: candidate.observationId, timeline });
   }
-  return selected === null
-    ? { source: "RIOT" }
-    : { source: "SCOUT_CLIENT", timeline: null };
+  return timelines;
 }
 
 /** Once used by processing, the archived timeline is immutable across retries. */
@@ -286,9 +302,19 @@ export async function resolveLocalCanonicalMatch(
   const selected = await readSelectedLocalCanonicalMatch(riotMatchId);
   if (selected !== null) return selected;
 
+  const candidates = await readLocalCanonicalCandidates(riotMatchId);
+  const valid = candidates.filter((entry) => entry.eligibleAt <= now);
+  return valid.length === 0
+    ? null
+    : await selectLocalCanonicalMatch(riotMatchId, valid, now);
+}
+
+/** Source adapter: expose compatible candidates without choosing against Riot. */
+export async function readLocalCanonicalCandidates(riotMatchId: RiotMatchId) {
+  if (isFeatureHardDisabled("scout_client_ingestion")) return [];
+
   const platform = platformRouteOf(riotMatchId);
   const gameId = riotMatchId.slice(riotMatchId.indexOf("_") + 1);
-  const cutoff = new Date(now.getTime() - LOCAL_CANONICAL_DELAY_MS);
   const candidates = await prisma.scoutClientObservation.findMany({
     where: {
       kind: "post_game",
@@ -308,15 +334,32 @@ export async function resolveLocalCanonicalMatch(
   // two-minute window is applied here rather than in the query.
   const valid = parsed.flatMap(({ candidate, identities }) => {
     const match = parseLocalCanonicalMatch(riotMatchId, candidate, identities);
-    return match === null ||
-      (candidate.receivedAt > cutoff && !riotWithholdsMatchResult(match.info))
+    return match === null
       ? []
-      : [{ candidate, match }];
+      : [
+          {
+            candidate,
+            match,
+            eligibleAt: new Date(
+              candidate.receivedAt.getTime() +
+                (riotWithholdsMatchResult(match.info)
+                  ? 0
+                  : LOCAL_CANONICAL_DELAY_MS),
+            ),
+          },
+        ];
   });
-  if (valid.length === 0) return null;
+  return valid;
+}
 
+export async function selectLocalCanonicalMatch(
+  riotMatchId: RiotMatchId,
+  valid: Awaited<ReturnType<typeof readLocalCanonicalCandidates>>,
+  now = new Date(),
+): Promise<RawMatch> {
   const first = valid[0];
-  if (first === undefined) return null;
+  if (first === undefined)
+    throw new Error("Cannot select an empty candidate set");
   if (
     valid.some(({ match }) => !localCanonicalMatchesAgree(first.match, match))
   ) {

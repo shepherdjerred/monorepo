@@ -204,7 +204,7 @@ const PREMATCH_SENDING_OBSERVED_INTENT = intentKeyFor(
 
 async function seedObservation(args: {
   matchId: RiotMatchId;
-  policy: "ARCHIVE_ONLY" | "FULL";
+  policy: "ARCHIVE_ONLY" | "HISTORY_ONLY" | "FULL";
   owner: PipelineOwner;
 }): Promise<void> {
   expect(
@@ -665,6 +665,11 @@ let page: ScoutReconciliationScanResult;
 beforeAll(async () => {
   await seedMatchProcessingFamily();
   await seedNotificationFamily();
+  await seedObservation({
+    matchId: UNPROJECTED_MATCH,
+    policy: "HISTORY_ONLY",
+    owner: { kind: "temporal-v2" },
+  });
   await seedLakeReceipts(UNPROJECTED_MATCH, "archived-only");
   await seedLakeReceipts(PROJECTED_MATCH, "archived-and-staged");
 
@@ -883,6 +888,7 @@ describe("the lake-projection family", () => {
       REQUESTED_LAKE_MATCH,
     ]);
     expect(page.pending.lakeProjections).not.toContain(PROJECTED_MATCH);
+    expect(page.pending.matchProcessing).not.toContain(UNPROJECTED_MATCH);
   });
 });
 

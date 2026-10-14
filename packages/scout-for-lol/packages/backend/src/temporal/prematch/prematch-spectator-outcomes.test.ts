@@ -23,8 +23,8 @@ const mocks = vi.hoisted(() => ({
   getAccountsWithState: vi.fn(),
 }));
 
-vi.mock("#src/scout-client/prematch.ts", () => ({
-  getActiveGameWithClientEvidence: mocks.getActiveGame,
+vi.mock("#src/evidence/prematch.ts", () => ({
+  resolvePrematch: mocks.getActiveGame,
 }));
 vi.mock("#src/database/index.ts", () => ({
   prisma: {},

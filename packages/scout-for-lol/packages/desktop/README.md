@@ -86,6 +86,11 @@ game need not appear in the newest history page to be recovered. Full game
 reads must agree with the requested ID, platform and observer before becoming
 qualified recovery work.
 
+Malformed history pages defer their scan checkpoint while already discovered
+games continue recovering. A validated full game is cached in SQLite before
+enqueueing its result, so a crash or enqueue failure can retry the captured
+bytes even if the LCU endpoint later stops serving the game.
+
 Result and timeline collection have separate durable checkpoints. Full history
 is sent even without EOG or timing; a list row remains discovery evidence.
 Missing artifacts retry with bounded backoff and no attempt cutoff. Recovery

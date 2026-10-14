@@ -5,19 +5,22 @@ import {
   RawMatchSchema,
   type RawTimeline,
 } from "@scout-for-lol/data";
-import type { TimelineSelection } from "#src/scout-client/canonical-match.ts";
 
 const mocks = vi.hoisted(() => ({
-  selection: vi.fn<() => Promise<TimelineSelection>>(async () => ({
-    source: "RIOT",
-  })),
+  candidates: vi.fn<
+    () => Promise<{ observationId: string; timeline: RawTimeline }[]>
+  >(async () => []),
   record: vi.fn(async () => true),
   fetchMatchTimeline: vi.fn<() => Promise<RawTimeline | undefined>>(),
 }));
 
 vi.mock("#src/scout-client/canonical-match.ts", () => ({
-  readTimelineSelection: mocks.selection,
+  readClientTimelineCandidates: mocks.candidates,
   readFrozenTimeline: () => Promise.resolve(null),
+  timelineMatchesResult: () => true,
+}));
+vi.mock("#src/evidence/admission.ts", () => ({
+  evidenceRecoveryEnabled: () => false,
 }));
 vi.mock("#src/report-store/live-ingest.ts", () => ({
   recordTimelineForReportStore: mocks.record,
@@ -100,10 +103,9 @@ describe("timelines for client-sourced matches", () => {
   });
 
   test("stages the client's timeline and never asks Riot", async () => {
-    mocks.selection.mockResolvedValueOnce({
-      source: "SCOUT_CLIENT",
-      timeline: clientTimeline,
-    });
+    mocks.candidates.mockResolvedValueOnce([
+      { observationId: "client", timeline: clientTimeline },
+    ]);
     const fixture = await arenaFixture();
     const matchId = fixture.match.metadata.matchId;
 
@@ -113,17 +115,14 @@ describe("timelines for client-sourced matches", () => {
     expect(mocks.record).toHaveBeenCalledWith(
       expect.objectContaining({
         timeline: clientTimeline,
-        source: "timeline_scout_client",
+        source: "timeline_live",
       }),
     );
     expect(mocks.fetchMatchTimeline).not.toHaveBeenCalled();
   });
 
   test("keeps required client timeline evidence retryable", async () => {
-    mocks.selection.mockResolvedValueOnce({
-      source: "SCOUT_CLIENT",
-      timeline: null,
-    });
+    mocks.candidates.mockResolvedValueOnce([]);
     const fixture = await arenaFixture();
     const matchId = fixture.match.metadata.matchId;
 

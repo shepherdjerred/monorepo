@@ -118,6 +118,9 @@ export async function processDiscoveredMatchesThroughDispatcher(
     gameEndTimestamp: match.gameEndTimestamp,
     readyAt,
     completionTargets: [{ workflowId: info.workflowId, runId: info.runId }],
+    ...(patched("scout-dispatch-explicit-ordering")
+      ? { orderingAssured: true }
+      : {}),
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
   const dispatcher = getExternalWorkflowHandle(dispatcherId);

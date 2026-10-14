@@ -9,8 +9,15 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { withRiotIdentities } from "#src/scout-client/identity-alias.ts";
-import { enrichClashTeamResults } from "./client-clash-results.ts";
+import {
+  readIdentityAliases,
+  lcuUuidsIn,
+  translatePayloadIdentities,
+} from "#src/scout-client/identity-alias.ts";
+import {
+  enrichClashTeamResults,
+  type ClashResultEvidence,
+} from "#src/evidence/clash-results.ts";
 import { MatchDataSourceSchema } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
   ClientClashLabels,
@@ -171,41 +178,13 @@ export async function readClientClashTeams(
   const capturedAt = includeHistory
     ? {}
     : { gte: new Date(now.getTime() - CLIENT_CLASH_FRESHNESS_MS) };
-  const entities = await prisma.scoutClientClashEntity.findMany({
-    where: {
-      observerPuuid: { in: [...puuids] },
-      resource: { in: ["clash_roster", "clash_bracket"] },
-      capturedAt,
-    },
-    include: { observation: { select: { payload: true } } },
-    orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
-  });
-  const legacy = await prisma.scoutClientPlayerSnapshot.findMany({
-    where: {
-      localPuuid: { in: [...puuids] },
-      resource: { in: ["clash_roster", "clash_bracket"] },
-      capturedAt,
-    },
-    include: { observation: { select: { payload: true, platformId: true } } },
-    orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
-  });
-  const snapshots: {
-    platformId: string | null;
-    capturedAt: Date;
-    isPrimary: boolean;
-    observation: { payload: unknown };
-  }[] = [
-    ...entities.map((entity) => ({
-      ...entity,
-      localPuuid: entity.observerPuuid,
-    })),
-    ...legacy.map((snapshot) => ({
-      ...snapshot,
-      platformId: snapshot.observation.platformId,
-      isPrimary: snapshot.resource === "clash_roster",
-    })),
-  ];
-  const { rosters, brackets } = await parseClashEvidence(snapshots);
+  const rosters: RosterEvidence[] = [];
+  const brackets: BracketEvidence[] = [];
+  for await (const snapshots of readClashSnapshotPages(puuids, capturedAt)) {
+    const page = await parseClashEvidence(snapshots);
+    rosters.push(...page.rosters);
+    brackets.push(...page.brackets);
+  }
   const teams = new Map<string, ClientClashTeam>();
   for (const entry of rosters) {
     if (
@@ -254,13 +233,27 @@ async function readClashResults(
         ),
   );
   if (games.length === 0) return retained;
-  const results = await prisma.clashGameSighting.findMany({
-    where: { OR: games, source: "match", puuid: { in: [...puuids] } },
-  });
-  const evidence = results.map((row) => ({
-    ...row,
-    resultSource: MatchDataSourceSchema.parse(row.resultSource),
-  }));
+  const evidence: ClashResultEvidence[] = [];
+  const unique = [
+    ...new Map(
+      games.map((game) => [`${game.platform}:${game.gameId}`, game]),
+    ).values(),
+  ];
+  for (let offset = 0; offset < unique.length; offset += 100) {
+    const results = await prisma.clashGameSighting.findMany({
+      where: {
+        OR: unique.slice(offset, offset + 100),
+        source: "match",
+        puuid: { in: [...puuids] },
+      },
+    });
+    evidence.push(
+      ...results.map((row) => ({
+        ...row,
+        resultSource: MatchDataSourceSchema.parse(row.resultSource),
+      })),
+    );
+  }
   return retained.map((team) => enrichClashTeamResults(team, evidence));
 }
 
@@ -269,8 +262,17 @@ async function parseClashEvidence(
 ): Promise<{ rosters: RosterEvidence[]; brackets: BracketEvidence[] }> {
   const rosters: RosterEvidence[] = [];
   const brackets: BracketEvidence[] = [];
+  const uuids = new Set(
+    snapshots.flatMap((snapshot) => [
+      ...lcuUuidsIn(snapshot.observation.payload),
+    ]),
+  );
+  const aliases = await readIdentityAliases(uuids);
   for (const snapshot of snapshots) {
-    const payload = await withRiotIdentities(snapshot.observation.payload);
+    const payload = translatePayloadIdentities(
+      snapshot.observation.payload,
+      aliases,
+    );
     const roster = RosterPayloadSchema.safeParse(payload);
     if (roster.success)
       rosters.push({
@@ -296,6 +298,75 @@ type ClashSnapshot = {
   isPrimary: boolean;
   observation: { payload: unknown };
 };
+
+type ClashPageCursor = { capturedAt: Date; observationId: string };
+function afterClashPage(after: ClashPageCursor | undefined) {
+  return after === undefined
+    ? {}
+    : {
+        OR: [
+          { capturedAt: { lt: after.capturedAt } },
+          {
+            capturedAt: after.capturedAt,
+            observationId: { gt: after.observationId },
+          },
+        ],
+      };
+}
+
+/** Retain all weekends while buffering at most one page of raw payloads. */
+async function* readClashSnapshotPages(
+  puuids: readonly string[],
+  capturedAt: { gte?: Date },
+) {
+  const readers: ((
+    after: ClashPageCursor | undefined,
+  ) => Promise<(ClashSnapshot & ClashPageCursor)[]>)[] = [
+    async (after) =>
+      await prisma.scoutClientClashEntity.findMany({
+        where: {
+          observerPuuid: { in: [...puuids] },
+          resource: { in: ["clash_roster", "clash_bracket"] },
+          capturedAt,
+          ...afterClashPage(after),
+        },
+        include: { observation: { select: { payload: true } } },
+        take: 100,
+        orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
+      }),
+    async (after) => {
+      const rows = await prisma.scoutClientPlayerSnapshot.findMany({
+        where: {
+          localPuuid: { in: [...puuids] },
+          resource: { in: ["clash_roster", "clash_bracket"] },
+          capturedAt,
+          ...afterClashPage(after),
+        },
+        include: {
+          observation: { select: { payload: true, platformId: true } },
+        },
+        take: 100,
+        orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
+      });
+      return rows.map((row) => ({
+        ...row,
+        platformId: row.observation.platformId,
+        isPrimary: row.resource === "clash_roster",
+      }));
+    },
+  ];
+  for (const read of readers) {
+    let after: ClashPageCursor | undefined;
+    for (;;) {
+      const page = await read(after);
+      yield page;
+      if (page.length < 100) break;
+      after = page.at(-1);
+      if (after === undefined)
+        throw new Error("A full Clash page must have a cursor");
+    }
+  }
+}
 type RosterEvidence = {
   roster: LcuClashRoster;
   platform: string | null;

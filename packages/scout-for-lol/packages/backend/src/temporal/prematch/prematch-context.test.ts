@@ -4,7 +4,7 @@ import type { RawCurrentGameInfo } from "@scout-for-lol/data";
 import {
   isPrematchRosterComplete,
   prematchRosterCompletion,
-} from "#src/temporal/prematch/prematch-context.ts";
+} from "#src/evidence/prematch-roster.ts";
 
 function gameWith(overrides: {
   participants: number;

@@ -26,6 +26,8 @@ export type ScoutMatchActivities = Pick<
   | "readMatchPipelineState"
   | "readLegacyMatchCompletionV2"
   | "archiveMatchArtifacts"
+  | "prepareMatchEvidence"
+  | "queueHistoryMatch"
   | "commitMatchObservation"
   | "settleMatchMarkets"
   | "applyMatchProgression"

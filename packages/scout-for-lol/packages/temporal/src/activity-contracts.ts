@@ -199,6 +199,17 @@ export type ScoutMatchObservationInput = z.infer<
   typeof ScoutMatchObservationInputSchema
 >;
 
+export const ScoutMatchEvidencePreparationSchema = z.discriminatedUnion(
+  "kind",
+  [
+    z.strictObject({ kind: z.literal("ready") }),
+    z.strictObject({ kind: z.literal("pending"), retryAt: IsoInstantSchema }),
+  ],
+);
+export type ScoutMatchEvidencePreparation = z.infer<
+  typeof ScoutMatchEvidencePreparationSchema
+>;
+
 export const ScoutMatchObservationResultSchema = z.strictObject({
   commit: ScoutDurableCommitSchema,
   owner: PipelineOwnerSchema,

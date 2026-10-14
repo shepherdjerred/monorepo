@@ -18,6 +18,7 @@ import { z } from "zod";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 import * as Sentry from "@sentry/bun";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
+import { admitMatchEvidence } from "#src/evidence/admission.ts";
 
 const logger = createLogger("backfill-to-s3");
 
@@ -227,6 +228,12 @@ export async function backfillMatchesToS3(
         continue;
       }
 
+      await admitMatchEvidence({
+        matchId,
+        completedAt: matchData.info.gameEndTimestamp,
+        historical: true,
+        riotHistoryListed: true,
+      });
       await recordMatchForReportStore({
         match: matchData,
         source: "recovery_backfill",

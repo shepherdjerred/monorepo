@@ -136,6 +136,23 @@ impl ObservationOutbox {
             .map_err(OutboxError::Sqlite)
     }
 
+    /// Cache a qualified full-game response before attempting outbox writes.
+    ///
+    /// # Errors
+    /// Returns a SQLite error when the recovery cache cannot be saved.
+    pub fn cache_recovery_game(
+        &self,
+        observer: &str,
+        game: &RecoveryGame,
+        body: &[u8],
+    ) -> Result<(), OutboxError> {
+        self.connection()?.execute(
+            "UPDATE game_recovery SET full_game = ?4 WHERE observer = ?1 AND platform = ?2 AND game_id = ?3",
+            params![observer, game.platform, game.game_id, body],
+        )?;
+        Ok(())
+    }
+
     /// Record only fragments already persisted in the at-least-once outbox.
     /// Missing fragments remain retryable without a retry-count cutoff.
     ///
@@ -250,6 +267,12 @@ mod tests {
         outbox.discover_game("observer", "EUW1", "123", false)?;
         outbox.discover_game("other", "NA1", "123", false)?;
         let game = outbox.recovery_games("observer", 0, 1)?.remove(0);
+        outbox.cache_recovery_game("observer", &game, b"{\"cached\":true}")?;
+        let cached = ObservationOutbox::open(&path)?
+            .recovery_games("observer", 0, 1)?
+            .remove(0);
+        assert!(!cached.result_queued);
+        assert_eq!(cached.full_game, Some(b"{\"cached\":true}".to_vec()));
         outbox.checkpoint_game("observer", &game, Some(b"{}"), true, false, 0)?;
         let reopened = ObservationOutbox::open(&path)?;
         let pending = reopened.recovery_games("observer", 10_000, 10)?;

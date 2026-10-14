@@ -334,7 +334,10 @@ export type PromoteObservationResult =
   | { outcome: "already-applied" }
   | {
       outcome: "conflict";
-      reason: "promotion-target-born-full" | "observation-differs";
+      reason:
+        | "promotion-target-born-full"
+        | "history-only-is-permanent"
+        | "observation-differs";
     };
 
 /**
@@ -388,6 +391,22 @@ function promotionGuard(stored: MatchObservationRow) {
  * back to compare against what stands NOW, where a different identity is
  * `observation-differs` and an agreeing one promotes.
  */
+function promotionData(
+  stored: MatchObservationRow,
+  incoming: MatchObservationRow,
+  promotedAt: IsoInstant,
+) {
+  const historical = incoming.processingPolicy === "HISTORY_ONLY";
+  return {
+    processingPolicy: historical ? "HISTORY_ONLY" : "FULL",
+    promotedAt: historical ? null : dateFromIsoInstant(promotedAt),
+    matchObjectKey: stored.matchObjectKey ?? incoming.matchObjectKey,
+    matchDigest: stored.matchDigest ?? incoming.matchDigest,
+    timelineObjectKey: stored.timelineObjectKey ?? incoming.timelineObjectKey,
+    timelineDigest: stored.timelineDigest ?? incoming.timelineDigest,
+  };
+}
+
 export async function promoteObservation(
   db: Db,
   args: { observation: MatchObservationRecord; promotedAt: IsoInstant },
@@ -409,16 +428,15 @@ export async function promoteObservation(
       return { outcome: "conflict", reason: "observation-differs" };
     }
     if (stored.processingPolicy !== "ARCHIVE_ONLY") {
+      if (stored.processingPolicy === "HISTORY_ONLY")
+        return { outcome: "conflict", reason: "history-only-is-permanent" };
       return stored.promotedAt === null
         ? { outcome: "conflict", reason: "promotion-target-born-full" }
         : { outcome: "already-applied" };
     }
     const promoted = await db.matchObservation.updateMany({
       where: promotionGuard(stored),
-      data: {
-        processingPolicy: "FULL",
-        promotedAt: dateFromIsoInstant(args.promotedAt),
-      },
+      data: promotionData(stored, incoming, args.promotedAt),
     });
     if (promoted.count === 1) {
       return { outcome: "applied" };

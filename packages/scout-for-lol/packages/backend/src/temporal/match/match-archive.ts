@@ -1,4 +1,8 @@
 import { ApplicationFailure } from "@temporalio/common";
+import {
+  admitMatchEvidence,
+  admittedDeliveryMode,
+} from "#src/evidence/admission.ts";
 import type { ArtifactDescriptor } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -389,12 +393,10 @@ async function resolveDeliveryMode(
  * the STORED owner rather than the one this run asked for — which is what lets
  * the Workflow stop instead of double-applying v1's effects.
  *
- * The policy asked for is FULL because post-match discovery only surfaces
- * matches whose complete pipeline should run. A row already standing as
- * ARCHIVE_ONLY under this pipeline's own ownership is promoted rather than
- * refused — see {@link reconcileObservationConflict} — and the result then
- * reports the promoted policy, so the Workflow runs the downstream effects
- * instead of skipping them on a stale policy.
+ * Admission supplies FULL or permanent HISTORY_ONLY independently of source.
+ * An ARCHIVE_ONLY row under this pipeline's ownership may resolve to either
+ * admitted policy through the guarded transition. Historical completion never
+ * creates a promotion record or permits live effects.
  */
 export async function commitMatchObservation(
   input: Pick<
@@ -407,12 +409,17 @@ export async function commitMatchObservation(
     requireDiscoverySourceTracked(context, input.sourcePuuid);
   }
   const deliveryMode = await resolveDeliveryMode(input);
+  const policy = await admitMatchEvidence({
+    matchId: input.riotMatchId,
+    completedAt: context.matchData.info.gameEndTimestamp,
+    historical: deliveryMode === "silent-backfill",
+  });
   const archived = await readArchivedMatchArtifact(input.riotMatchId);
   const record: MatchObservationRecord = {
     matchId: input.riotMatchId,
     platformRoute: platformRouteOf(input.riotMatchId),
-    policy: "FULL",
-    deliveryMode,
+    policy,
+    deliveryMode: admittedDeliveryMode(policy, deliveryMode),
     matchDataSource: context.matchDataSource,
     owner: { kind: "temporal-v2" },
     promotion: null,

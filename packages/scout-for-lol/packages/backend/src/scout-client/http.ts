@@ -26,11 +26,8 @@ import {
   ScoutClientObservationConflict,
   startAcceptedClientMatches,
 } from "./ingress.ts";
-import {
-  MAX_REPLAY_BYTES,
-  ReplayUploadError,
-  uploadReplay,
-} from "./replay-upload.ts";
+import { MAX_REPLAY_BYTES, uploadReplay } from "./replay-upload.ts";
+import { ReplayUploadError } from "./replay/upload-result.ts";
 import { drainRequestBody } from "./replay/drain.ts";
 import { ReplayOfferRequestSchema, decideReplayOffer } from "./replay/offer.ts";
 

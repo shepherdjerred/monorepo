@@ -210,6 +210,7 @@ export function scoutMatchActivityStubs(store: ScoutMatchStore) {
     }
   };
   return {
+    prepareMatchEvidence: () => ({ kind: "ready" as const }),
     readMatchPipelineState: (): ScoutMatchPipelineStateResult => {
       record("readMatchPipelineState");
       if (!store.observed) return { kind: "absent" };

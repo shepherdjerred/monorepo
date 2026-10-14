@@ -23,7 +23,7 @@ import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts"
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { prematchDeliveryKeyPrefix } from "#src/durable/match/delivery-intents.ts";
-import { getActiveGameWithClientEvidence as getActiveGame } from "#src/scout-client/prematch.ts";
+import { resolvePrematch as getActiveGame } from "#src/evidence/prematch.ts";
 import { LIVE_GAME_TTL_MS } from "#src/temporal/prematch/prematch-intents.ts";
 import { createLogger } from "#src/logger.ts";
 import { prematchDetectionsTotal } from "#src/metrics/index.ts";
@@ -35,7 +35,7 @@ import { readArchivedPrematchSnapshot } from "#src/report-lake/receipted-archive
 import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { DRIVABLE_INTENT_STATES } from "#src/temporal/match/match-reads.ts";
-import { isPrematchRosterReady } from "#src/temporal/prematch/prematch-context.ts";
+import { isPrematchRosterReady } from "#src/evidence/prematch-roster.ts";
 
 /**
  * The V2 prematch path's reads: which live games exist, and what one game's

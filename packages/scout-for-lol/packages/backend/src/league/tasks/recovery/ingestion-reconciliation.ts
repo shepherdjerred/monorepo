@@ -14,6 +14,8 @@ import { ingestionReconciliationSkipsTotal } from "#src/metrics/recovery.ts";
 import * as Sentry from "@sentry/bun";
 import { reconcileAcceptedClientEvidence } from "#src/scout-client/reconciliation.ts";
 import { reconcileRawClientObservations } from "#src/scout-client/archive/reconciliation.ts";
+import { reconcileMatchHistory } from "#src/temporal/match/history-recovery.ts";
+import { reconcileRawRiotPayloads } from "#src/evidence/raw-riot.ts";
 
 const logger = createLogger("ingestion-reconciliation");
 
@@ -123,7 +125,9 @@ async function reconcileIngestion(): Promise<void> {
   logger.info("Running ingestion reconciliation");
   for (const [phase, reconcile] of [
     ["raw-client-archive", reconcileRawClientObservations],
+    ["raw-riot-archive", reconcileRawRiotPayloads],
     ["client-evidence", reconcileAcceptedClientEvidence],
+    ["match-history", reconcileMatchHistory],
   ] as const) {
     try {
       await reconcile();

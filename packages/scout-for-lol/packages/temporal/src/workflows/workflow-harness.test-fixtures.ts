@@ -3,6 +3,8 @@ import { WorkflowFailedError, type Client } from "@temporalio/client";
 import { ApplicationFailure, type Duration } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
+import { scoutTaskQueues } from "#src/identifiers.ts";
+import type { ScoutStage } from "#src/contracts.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
 /**
@@ -45,7 +47,9 @@ export type ScoutWorkflowHarness = {
  * scenario inherits another's executions, and the workers are drained before
  * it is torn down.
  */
-export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
+export function useScoutWorkflowHarness(
+  stage: ScoutStage = "dev",
+): ScoutWorkflowHarness {
   const pool = createScoutWorkerPool();
   let environment: TestWorkflowEnvironment | null = null;
 
@@ -78,7 +82,7 @@ export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
       await pool.start(
         await Worker.create({
           connection: live.nativeConnection,
-          taskQueue: "scout-dev",
+          taskQueue: scoutTaskQueues(stage).workflow,
           workflowsPath: new URL("index.ts", import.meta.url).pathname,
           maxConcurrentWorkflowTaskExecutions: 4,
         }),
@@ -86,7 +90,7 @@ export function useScoutWorkflowHarness(): ScoutWorkflowHarness {
       await pool.start(
         await Worker.create({
           connection: live.nativeConnection,
-          taskQueue: "scout-dev-realtime",
+          taskQueue: scoutTaskQueues(stage).realtime,
           activities,
           maxConcurrentActivityTaskExecutions: 4,
         }),

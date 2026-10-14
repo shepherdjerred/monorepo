@@ -699,11 +699,12 @@ model ScoutClientReplayArtifact {
 /// canonical merge, and a conflicting id/sequence is rejected rather than
 /// overwritten.
 model ScoutClientObservation {
-  observationId           String    @id
+  normalizedEvidence      MatchResultEvidence?
+  observationId           String               @id
   deviceId                String
   sequence                BigInt
   capturedAt              DateTime
-  receivedAt              DateTime  @default(now())
+  receivedAt              DateTime             @default(now())
   protocolVersion         Int
   schemaVersion           Int
   appVersion              String
@@ -731,13 +732,13 @@ model ScoutClientObservation {
   rawArchiveBytes         BigInt?
   rawArchivedAt           DateTime?
   rawArchiveAttemptAt     DateTime?
-  rawArchiveNextAttemptAt DateTime  @default(now())
+  rawArchiveNextAttemptAt DateTime             @default(now())
   rawArchiveClaimId       String?
   rawArchiveError         String?
   /// Projection checkpoints never change the immutable envelope or payload.
-  recoveryVersion         Int       @default(0)
+  recoveryVersion         Int                  @default(0)
   recoveryAttemptAt       DateTime?
-  recoveryComplete        Boolean   @default(false)
+  recoveryComplete        Boolean              @default(false)
 
   device         ScoutClientDevice                    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   canonicalMatch ScoutClientCanonicalMatch?
@@ -2803,7 +2804,7 @@ model DuelRecord {
 model MatchObservation {
   riotMatchId      String    @id
   platformRoute    String
-  processingPolicy String // MatchProcessingPolicy: ARCHIVE_ONLY | FULL
+  processingPolicy String // MatchProcessingPolicy: ARCHIVE_ONLY | HISTORY_ONLY | FULL
   deliveryMode     String // MatchDeliveryMode: live | silent-backfill; decided at discovery, never derivable later
   matchDataSource  String    @default("RIOT") // MatchDataSource: RIOT | SCOUT_CLIENT; canonical payload provenance, fixed at commit
   pipelineOwner    String? // LEGACY_V1 | TEMPORAL_V2; NULL = unowned
@@ -2826,6 +2827,63 @@ model MatchObservation {
 
   @@index([processingPolicy, observedAt])
   @@index([gameCreatedAt])
+}
+
+/// Source-independent discovery decision, fixed before queueing or source-selection delays.
+model MatchEvidenceAdmission {
+  riotMatchId              String    @id
+  policy                   String // FULL | HISTORY_ONLY; immutable after admission
+  reason                   String // live-completion | history-discovery | late-discovery | legacy-live | legacy-history
+  firstDiscoveredAt        DateTime
+  completedAt              DateTime? // Legacy completion remains unknown until resolved evidence supplies it.
+  riotHistoryListed        Boolean   @default(false)
+  timelineDeadlineAt       DateTime?
+  timelineFinalizedAt      DateTime?
+  timelineMissing          Boolean   @default(false)
+  historyReportComplete    Boolean   @default(false)
+  historyTimelineRecovered Boolean   @default(false)
+  recoveryNextAttemptAt    DateTime  @default(now())
+  recoveryClaimId          String?
+  recoveryError            String?
+  legacyPolicy             String?
+  legacyPromotedAt         DateTime?
+  createdAt                DateTime  @default(now())
+
+  @@index([historyReportComplete, recoveryNextAttemptAt], map: "MatchEvidenceAdmission_recovery_idx")
+}
+
+/// Raw upstream responses are retained even when validation or source selection rejects them.
+model RiotPayloadCapture {
+  normalizedEvidence MatchResultEvidence?
+  id                 String               @id @default(uuid())
+  source             String
+  document           Json
+  capturedAt         DateTime             @default(now())
+  archiveKey         String?
+  archiveDigest      String?
+  archiveBytes       BigInt?
+  archivedAt         DateTime?
+  nextAttemptAt      DateTime             @default(now())
+  claimId            String?
+  lastError          String?
+
+  @@index([archivedAt, nextAttemptAt])
+}
+
+/// Both adapters publish to the same result evidence registry; ownership stays at query boundaries.
+model MatchResultEvidence {
+  source              String
+  sourceId            String
+  riotMatchId         String
+  result              Json
+  capturedAt          DateTime
+  clientObservationId String?                 @unique
+  clientObservation   ScoutClientObservation? @relation(fields: [clientObservationId], references: [observationId], onDelete: Cascade)
+  riotCaptureId       String?                 @unique
+  riotCapture         RiotPayloadCapture?     @relation(fields: [riotCaptureId], references: [id], onDelete: Cascade)
+
+  @@id([source, sourceId])
+  @@index([riotMatchId])
 }
 
 /// Frozen 10-player Flex roster for community MVP votes. Match-global: the

@@ -6,6 +6,12 @@
  */
 
 import type { RawParticipant, RawChallenges } from "@scout-for-lol/data";
+import { RiotTransportError } from "#src/league/api/client/errors.ts";
+
+/** An expected transport outage, distinct from a corrupt internal contract. */
+export function makeRiotTransportFailure() {
+  return new RiotTransportError("fixture-match", new Error("offline"));
+}
 
 const DEFAULT_PERKS = {
   statPerks: { defense: 0, flex: 0, offense: 0 },

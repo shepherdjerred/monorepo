@@ -1,5 +1,11 @@
 import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test, vi } from "vitest";
+import type { RawMatch } from "@scout-for-lol/data";
+import {
+  createTestDatabase,
+  testDatabaseModule,
+} from "#src/testing/test-database.ts";
+import { writeEligibleMatchStagingFile } from "#src/testing/report-lake/effect-match.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,15 +14,18 @@ import {
   dareSqlTimelineForMatch,
   loadDareSqlMatchFixture as loadMatchFixture,
 } from "#src/betting/dares/sql/dare-sql-test-fixture.ts";
-import {
-  compileDareSql,
-  decisiveTargetDependencies,
-  executeDareSql,
-} from "#src/betting/dares/sql/dare-sql.ts";
-import {
-  writeMatchStagingFile,
-  writeTimelineStagingFiles,
-} from "#src/report-lake/staging.ts";
+import { writeTimelineStagingFiles } from "#src/report-lake/staging.ts";
+
+const { prisma } = createTestDatabase("dare-sql-admitted-matches");
+vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
+const { compileDareSql, decisiveTargetDependencies, executeDareSql } =
+  await import("#src/betting/dares/sql/dare-sql.ts");
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+async function writeMatchStagingFile(lakeDir: string, match: RawMatch) {
+  return await writeEligibleMatchStagingFile(prisma, lakeDir, match);
+}
 
 const KILL_PARTICIPATION_SQL = `WITH games AS (
   SELECT p.match_id, p.game_end_at,

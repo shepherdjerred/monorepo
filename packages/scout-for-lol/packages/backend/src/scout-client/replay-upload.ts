@@ -18,6 +18,11 @@ import { resolveReplayProvenance } from "./replay/evidence.ts";
 import type { QualifiedReplayProvenance } from "./replay/evidence-selection.ts";
 import { persistReplayFile } from "./replay/object-store.ts";
 import {
+  completedReplay,
+  ReplayUploadError,
+  type ReplayUploadResult,
+} from "./replay/upload-result.ts";
+import {
   replayUploadClaimIsStale,
   replayUploadLeaseCutoff,
 } from "./replay-lease.ts";
@@ -35,21 +40,6 @@ const BodyChunkSchema = z.instanceof(Uint8Array);
 const s3 = createS3Client();
 const logger = createLogger("scout-client-replay-upload");
 
-export class ReplayUploadError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
-  }
-}
-
-type ReplayUploadResult = {
-  readonly outcome: "accepted" | "already_accepted";
-  readonly digest: string;
-  readonly bytes: number;
-};
-
 type ReplayMetadata = {
   readonly gameId: string;
   /** Platform the replay names, when the client could recover it. */
@@ -64,6 +54,7 @@ type ReplayClaim =
       readonly state: "claimed";
       readonly artifactId: string;
       readonly leasedAt: Date;
+      readonly objectKey: string;
     }
   | { readonly state: "completed"; readonly replay: ReplayUploadResult };
 
@@ -77,27 +68,6 @@ type ReplayClaimDatabase = Pick<
   Db,
   "$executeRaw" | "scoutClientReplayArtifact"
 >;
-
-function completedReplay(
-  existing: {
-    readonly gameId: string;
-    readonly digest: string;
-    readonly bytes: bigint;
-  },
-  requestedGameId: string,
-): ReplayUploadResult {
-  if (existing.gameId !== requestedGameId) {
-    throw new ReplayUploadError(
-      "Replay digest already belongs to another game",
-      400,
-    );
-  }
-  return {
-    outcome: "already_accepted",
-    digest: existing.digest,
-    bytes: Number(existing.bytes),
-  };
-}
 
 async function existingReplay(
   metadata: Pick<ReplayMetadata, "digest" | "gameId" | "platformId">,
@@ -231,6 +201,7 @@ async function claimReplayArtifact(
         bytes: true,
         lastError: true,
         updatedAt: true,
+        objectKey: true,
       },
     });
     if (
@@ -280,7 +251,7 @@ async function claimReplayArtifact(
         },
         select: { id: true },
       });
-      return { state: "claimed", artifactId: artifact.id, leasedAt };
+      return { state: "claimed", artifactId: artifact.id, leasedAt, objectKey };
     }
     const reclaimed = await transaction.scoutClientReplayArtifact.updateMany({
       where: {
@@ -306,7 +277,12 @@ async function claimReplayArtifact(
     if (reclaimed.count !== 1) {
       throw new ReplayUploadError("Replay upload cannot be resumed yet", 409);
     }
-    return { state: "claimed", artifactId: existing.id, leasedAt };
+    return {
+      state: "claimed",
+      artifactId: existing.id,
+      leasedAt,
+      objectKey: existing.objectKey,
+    };
   });
 }
 
@@ -478,7 +454,12 @@ async function acceptReplay(
         ...(await lcuUuidsFor(LeaguePuuidSchema.parse(provenance.localPuuid))),
       ]),
     );
-    await uploadReplayObject(metadata, objectKey, temporaryPath, received);
+    await uploadReplayObject(
+      metadata,
+      claim.objectKey,
+      temporaryPath,
+      received,
+    );
     const completed = await prisma.scoutClientReplayArtifact.updateMany({
       where: {
         id: claim.artifactId,

@@ -1,7 +1,7 @@
 import type {
   ClientClashTeam,
   ClientClashMatch,
-} from "./client-clash-types.ts";
+} from "#src/league/clash/client-clash-types.ts";
 import type { MatchDataSource } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { z } from "zod";
 import type { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";

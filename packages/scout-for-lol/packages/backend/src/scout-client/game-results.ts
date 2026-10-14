@@ -1,29 +1,25 @@
 import {
   GameResultSchema,
-  resolveGameResult,
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
+import { admitMatchEvidence } from "#src/evidence/admission.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
-import {
-  ClashCupQueueSchema,
-  PlatformRouteSchema,
-  resolveQueueTypeFromGame,
-  type ScoutClientObservation,
-} from "@scout-for-lol/data";
+import type { ScoutClientObservation } from "@scout-for-lol/data";
 import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 import { prisma } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { upsertClashGameSighting } from "#src/league/clash/sighting.ts";
+import { projectResultEvidence } from "#src/evidence/result-projection.ts";
 import { parseLocalGameResult } from "./canonical/local-result.ts";
-import { gameResultFromMatch } from "./canonical/riot-result.ts";
-import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
-import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
+import { resolveResultEvidence } from "#src/evidence/results.ts";
+import { z } from "zod";
 
 const NORMALIZER_VERSION = 1;
+const HistoryResourceSchema = z.object({
+  resource: z.string().startsWith("match_history_game:"),
+});
 
 /** Projection only: never dispatch settlement, progression or notifications here. */
 export async function projectClientGameResult(
@@ -48,6 +44,11 @@ export async function projectClientGameResult(
     observation.observationId,
   );
   if (result === null) return;
+  await admitMatchEvidence({
+    matchId: matchId.data,
+    completedAt: result.gameCreation + result.durationSeconds * 1000,
+    historical: HistoryResourceSchema.safeParse(observation.payload).success,
+  });
   await prisma.scoutClientGameResult.upsert({
     where: { observationId: observation.observationId },
     create: {
@@ -60,39 +61,7 @@ export async function projectClientGameResult(
     },
     update: { result, normalizerVersion: NORMALIZER_VERSION },
   });
-  const queue = ClashCupQueueSchema.safeParse(
-    resolveQueueTypeFromGame(result.queueId, result.gameMode, result.gameType),
-  );
-  if (!queue.success) return;
-  // Guild visibility is still the intersection with that guild's tracked accounts.
-  const puuids = result.participants.flatMap((player) =>
-    player.identity.kind === "riot" ? [player.identity.puuid] : [],
-  );
-  const accounts = await prisma.account.findMany({
-    where: { puuid: { in: puuids } },
-    distinct: ["puuid"],
-    select: { puuid: true },
-  });
-  const tracked = new Set(accounts.map((account) => account.puuid));
-  for (const player of result.participants) {
-    if (
-      player.identity.kind !== "riot" ||
-      !tracked.has(LeaguePuuidSchema.parse(player.identity.puuid))
-    )
-      continue;
-    await upsertClashGameSighting({
-      platform: PlatformRouteSchema.parse(observation.platformId),
-      gameId: observation.gameId,
-      puuid: LeaguePuuidSchema.parse(player.identity.puuid),
-      source: "match",
-      resultSource: "SCOUT_CLIENT",
-      queue: queue.data,
-      championId: player.championId,
-      teamId: player.teamId,
-      observedAt: new Date(result.gameCreation),
-      win: player.win,
-    });
-  }
+  await projectResultEvidence(result, new Date(observation.capturedAt));
 }
 
 /** Only the caller's registered accounts can reveal their recovered results. */
@@ -130,6 +99,9 @@ export async function readClientGameResults(
     orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
   });
   const games = new Map<string, GameResult[]>();
+  const authorizedPuuids = new Set<string>(
+    accounts.map((account) => account.puuid),
+  );
   for (const row of rows) {
     const result = GameResultSchema.parse(row.result);
     const candidates = games.get(result.matchId) ?? [];
@@ -140,19 +112,16 @@ export async function readClientGameResults(
     [...games.values()].map(async (candidates) => {
       const first = candidates[0];
       if (first === undefined) throw new Error("Result group has no evidence");
-      const archive = await storedRawArchiveDescriptor(
-        prisma,
-        first.matchId,
-        "match",
-      );
-      // Completed processing pinned these bytes. Late client facts remain evidence,
-      // while the already-published scoreboard remains exactly the same.
+      const resolved = await resolveResultEvidence(first.matchId, candidates);
       const result =
-        archive === null
-          ? resolveGameResult(candidates)
-          : gameResultFromMatch(
-              await readArchivedMatchPayload(archive, first.matchId),
-            );
+        resolved.kind === "available" &&
+        resolved.value.participants.some(
+          (player) =>
+            player.identity.kind === "riot" &&
+            authorizedPuuids.has(player.identity.puuid),
+        )
+          ? resolved.value
+          : null;
       return {
         result,
         matchId: first.matchId,

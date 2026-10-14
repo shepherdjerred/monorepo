@@ -20,6 +20,7 @@ import {
   type RawClashTournament,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { RiotPayloadCaptureError } from "./errors.ts";
 import {
   RateLimiter,
   type RateLimitedRequestOptions,
@@ -43,6 +44,9 @@ export type FetchFunction = (
 export type RiotClientOptions = RateLimiterOptions & {
   apiKey: string;
   fetchFn?: FetchFunction | undefined;
+  onPayload?:
+    | ((response: { url: string; payload: unknown }) => Promise<void>)
+    | undefined;
 };
 
 const MatchIdListSchema = z.array(RiotMatchIdSchema);
@@ -51,6 +55,7 @@ export class RiotClient {
   private readonly apiKey: string;
   private readonly rateLimiter: RateLimiter;
   private readonly fetchFn: FetchFunction;
+  private readonly onPayload: RiotClientOptions["onPayload"];
 
   constructor(options: RiotClientOptions) {
     this.apiKey = options.apiKey;
@@ -59,6 +64,7 @@ export class RiotClient {
       maxRetries: options.maxRetries,
     });
     this.fetchFn = options.fetchFn ?? fetch;
+    this.onPayload = options.onPayload;
   }
 
   private async fetchJson(
@@ -76,7 +82,13 @@ export class RiotClient {
         }),
       requestOptions,
     );
-    return response.json();
+    const payload: unknown = await response.json();
+    try {
+      await this.onPayload?.({ url, payload });
+    } catch (error) {
+      throw new RiotPayloadCaptureError(error);
+    }
+    return payload;
   }
 
   public readonly account = {

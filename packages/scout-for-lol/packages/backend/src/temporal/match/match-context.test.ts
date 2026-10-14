@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { RawMatchSchema } from "@scout-for-lol/data";
+import { makeRiotTransportFailure } from "#src/testing/riot-mocks.ts";
 
 const mocks = vi.hoisted(() => ({
   fetchMatchData: vi.fn(),
@@ -8,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   readArchivedMatchPayload: vi.fn(),
   readSelectedLocalCanonicalMatch: vi.fn(),
   resolveLocalCanonicalMatch: vi.fn(),
+  readLocalCanonicalCandidates: vi.fn(),
+  selectLocalCanonicalMatch: vi.fn(),
   storedRawArchiveDescriptor: vi.fn(),
 }));
 
@@ -23,9 +26,12 @@ vi.mock("#src/discord/utils/guild-membership.ts", () => ({
 vi.mock("#src/league/tasks/postmatch/match-data-fetcher.ts", () => ({
   fetchMatchData: mocks.fetchMatchData,
 }));
-vi.mock("#src/scout-client/canonical-match.ts", () => ({
+vi.mock("#src/scout-client/canonical-match.ts", async (original) => ({
+  ...(await original()),
   readSelectedLocalCanonicalMatch: mocks.readSelectedLocalCanonicalMatch,
   resolveLocalCanonicalMatch: mocks.resolveLocalCanonicalMatch,
+  readLocalCanonicalCandidates: mocks.readLocalCanonicalCandidates,
+  selectLocalCanonicalMatch: mocks.selectLocalCanonicalMatch,
 }));
 vi.mock("#src/report-lake/durable-receipts.ts", () => ({
   storedRawArchiveDescriptor: mocks.storedRawArchiveDescriptor,
@@ -35,10 +41,20 @@ vi.mock("#src/report-lake/receipted-archive.ts", () => ({
 }));
 
 const { resolveScoutMatchContext } = await import("./match-context.ts");
+const { resolveCompleteMatch } = await import("#src/evidence/matches.ts");
 const fixture = RawMatchSchema.parse(
   await Bun.file("../../testdata/rift.json").json(),
 );
 const riotMatchId = fixture.metadata.matchId;
+const localFixture = RawMatchSchema.parse({
+  ...fixture,
+  metadata: { ...fixture.metadata, dataVersion: "local-1" },
+});
+const localCandidate = {
+  candidate: { observationId: "client-fixture" },
+  match: localFixture,
+  eligibleAt: new Date(0),
+};
 const trackedPuuid = fixture.metadata.participants[0];
 
 beforeEach(() => {
@@ -60,6 +76,8 @@ beforeEach(() => {
   mocks.storedRawArchiveDescriptor.mockResolvedValue(null);
   mocks.readSelectedLocalCanonicalMatch.mockResolvedValue(null);
   mocks.resolveLocalCanonicalMatch.mockResolvedValue(null);
+  mocks.readLocalCanonicalCandidates.mockResolvedValue([]);
+  mocks.selectLocalCanonicalMatch.mockResolvedValue(localFixture);
   mocks.fetchMatchData.mockResolvedValue(fixture);
 });
 
@@ -76,9 +94,7 @@ test("reuses an archived canonical match while retaining its source provenance",
     descriptor,
     riotMatchId,
   );
-  expect(mocks.readSelectedLocalCanonicalMatch).toHaveBeenCalledWith(
-    riotMatchId,
-  );
+  expect(mocks.readSelectedLocalCanonicalMatch).not.toHaveBeenCalled();
   expect(mocks.fetchMatchData).not.toHaveBeenCalled();
   expect(mocks.resolveLocalCanonicalMatch).not.toHaveBeenCalled();
 });
@@ -86,12 +102,12 @@ test("reuses an archived canonical match while retaining its source provenance",
 test("retains local provenance after the selected payload is archived", async () => {
   const descriptor = { key: "canonical-match" };
   mocks.storedRawArchiveDescriptor.mockResolvedValue(descriptor);
-  mocks.readArchivedMatchPayload.mockResolvedValue(fixture);
-  mocks.readSelectedLocalCanonicalMatch.mockResolvedValue(fixture);
+  mocks.readArchivedMatchPayload.mockResolvedValue(localFixture);
+  mocks.readSelectedLocalCanonicalMatch.mockResolvedValue(localFixture);
 
   const context = await resolveScoutMatchContext(riotMatchId);
 
-  expect(context.matchData).toBe(fixture);
+  expect(context.matchData).toBe(localFixture);
   expect(context.matchDataSource).toBe("SCOUT_CLIENT");
   expect(mocks.fetchMatchData).not.toHaveBeenCalled();
   expect(mocks.resolveLocalCanonicalMatch).not.toHaveBeenCalled();
@@ -99,26 +115,66 @@ test("retains local provenance after the selected payload is archived", async ()
 
 test("uses local evidence only after Riot definitively lacks the match", async () => {
   mocks.fetchMatchData.mockResolvedValue(undefined);
-  mocks.resolveLocalCanonicalMatch.mockResolvedValue(fixture);
+  mocks.readLocalCanonicalCandidates.mockResolvedValue([localCandidate]);
 
   const context = await resolveScoutMatchContext(riotMatchId);
 
-  expect(context.matchData).toBe(fixture);
+  expect(context.matchData).toBe(localFixture);
   expect(context.matchDataSource).toBe("SCOUT_CLIENT");
   expect(mocks.fetchMatchData).toHaveBeenCalledWith(
     riotMatchId,
     "NA1",
     "return_undefined_on_404",
   );
-  expect(mocks.resolveLocalCanonicalMatch).toHaveBeenCalledWith(riotMatchId);
+  expect(mocks.selectLocalCanonicalMatch).toHaveBeenCalledWith(riotMatchId, [
+    localCandidate,
+  ]);
 });
 
-test("propagates a retryable Riot failure before selecting local evidence", async () => {
+test("propagates an internal Riot failure without masking it with client evidence", async () => {
   const failure = new Error("temporary Riot failure");
   mocks.fetchMatchData.mockRejectedValue(failure);
-  mocks.resolveLocalCanonicalMatch.mockResolvedValue(fixture);
+  mocks.readLocalCanonicalCandidates.mockResolvedValue([localCandidate]);
 
   await expect(resolveScoutMatchContext(riotMatchId)).rejects.toBe(failure);
 
   expect(mocks.resolveLocalCanonicalMatch).not.toHaveBeenCalled();
+  expect(mocks.selectLocalCanonicalMatch).not.toHaveBeenCalled();
+});
+
+test("uses compatible client evidence during a typed upstream outage", async () => {
+  mocks.fetchMatchData.mockRejectedValue(makeRiotTransportFailure());
+  mocks.readLocalCanonicalCandidates.mockResolvedValue([localCandidate]);
+  const resolved = await resolveScoutMatchContext(riotMatchId);
+  expect(resolved.matchData).toBe(localFixture);
+});
+
+test("conflicting complete peer evidence remains explicit and unselected", async () => {
+  mocks.fetchMatchData.mockResolvedValue(undefined);
+  const conflicting = RawMatchSchema.parse({
+    ...localFixture,
+    info: {
+      ...localFixture.info,
+      participants: localFixture.info.participants.map((player) => ({
+        ...player,
+        kills: player.kills + 1,
+      })),
+    },
+  });
+  mocks.readLocalCanonicalCandidates.mockResolvedValue([
+    localCandidate,
+    {
+      ...localCandidate,
+      candidate: { observationId: "conflicting-client" },
+      match: conflicting,
+    },
+  ]);
+  expect(await resolveCompleteMatch(riotMatchId)).toMatchObject({
+    kind: "conflict",
+    evidence: [
+      { source: "SCOUT_CLIENT", sourceId: "client-fixture" },
+      { source: "SCOUT_CLIENT", sourceId: "conflicting-client" },
+    ],
+  });
+  expect(mocks.selectLocalCanonicalMatch).not.toHaveBeenCalled();
 });

@@ -6,11 +6,16 @@ import { AccountIdSchema } from "#src/identity/database-ids.ts";
 
 /**
  * How a match is processed. ARCHIVE_ONLY captures raw payloads without
- * downstream effects; FULL runs the complete pipeline. A FULL match never
+ * downstream effects; HISTORY_ONLY permits history projections and can never
+ * be promoted; FULL runs the complete pipeline. A FULL match never
  * downgrades: no transition produces ARCHIVE_ONLY from FULL.
  */
 export type MatchProcessingPolicy = z.infer<typeof MatchProcessingPolicySchema>;
-export const MatchProcessingPolicySchema = z.enum(["ARCHIVE_ONLY", "FULL"]);
+export const MatchProcessingPolicySchema = z.enum([
+  "ARCHIVE_ONLY",
+  "HISTORY_ONLY",
+  "FULL",
+]);
 
 /**
  * How a match was discovered, decided at discovery time and fixed on the
@@ -153,10 +158,10 @@ export const MatchProcessingStateSchema = z
     receipts: z.array(MatchProcessingReceiptSchema).readonly(),
   })
   .superRefine((state, ctx) => {
-    if (state.policy === "ARCHIVE_ONLY" && state.promotion !== null) {
+    if (state.policy !== "FULL" && state.promotion !== null) {
       ctx.addIssue({
         code: "custom",
-        message: "an ARCHIVE_ONLY state cannot carry a promotion record",
+        message: `${state.policy} state cannot carry a promotion record`,
         path: ["promotion"],
       });
     }

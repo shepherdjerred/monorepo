@@ -17,6 +17,12 @@ vi.mock("#src/league/tasks/postmatch/match-history-polling.ts", () => ({
   discoverPostMatchIntents: discovery.discoverPostMatchIntents,
 }));
 vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
+vi.mock("#src/evidence/admission.ts", () => ({
+  admitMatchEvidence: async (input: { historical: boolean }) =>
+    input.historical ? "HISTORY_ONLY" : "FULL",
+  admittedDeliveryMode: (policy: string) =>
+    policy === "FULL" ? "live" : "silent-backfill",
+}));
 
 const { discoverPostMatchIds } =
   await import("#src/temporal/match/match-reads.ts");

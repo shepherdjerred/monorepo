@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import {
   enrichClashTeamResults,
   type ClashResultEvidence,
-} from "./client-clash-results.ts";
+} from "#src/evidence/clash-results.ts";
 import type { ClientClashTeam } from "./client-clash-types.ts";
 
 const team: ClientClashTeam = {

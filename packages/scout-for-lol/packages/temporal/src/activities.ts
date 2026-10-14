@@ -39,6 +39,7 @@ import type {
 } from "./workflow-contracts.ts";
 import type {
   ScoutArchiveResult,
+  ScoutMatchEvidencePreparation,
   ScoutFanOutResult,
   ScoutGuardedEffectResult,
   ScoutLakeStagingResult,
@@ -153,6 +154,12 @@ export type ScoutPipelineActivities = {
 
   // Per-match core — Riot fetch, S3 write and short domain commits, realtime.
   archiveMatchArtifacts: (input: ScoutMatchRef) => Promise<ScoutArchiveResult>;
+  prepareMatchEvidence: (
+    input: ScoutMatchRef,
+  ) => Promise<ScoutMatchEvidencePreparation>;
+  queueHistoryMatch: (
+    input: ScoutMatchRef & { gameEndTimestamp: number },
+  ) => Promise<void>;
   commitMatchObservation: (
     input: ScoutMatchObservationInput,
   ) => Promise<ScoutMatchObservationResult>;

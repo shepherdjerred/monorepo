@@ -19,12 +19,16 @@ const mocks = vi.hoisted(() => ({
   fetchTimeline: vi.fn(),
   processDuel: vi.fn(),
   readLegacyCompletion: vi.fn(),
+  effectsAllowed: vi.fn(),
 }));
 
 vi.mock("#src/configuration.ts", () => ({
   default: { environment: "beta" },
 }));
 vi.mock("#src/database/index.ts", () => ({ prisma: mocks.prisma }));
+vi.mock("#src/evidence/admission.ts", () => ({
+  matchEffectsAllowed: mocks.effectsAllowed,
+}));
 vi.mock("#src/customs/riot-result-publication.ts", () => ({
   finalizeAndPublishManagedCustomResult: mocks.finalizeCustom,
 }));
@@ -111,6 +115,7 @@ function expectBindingProjectors(): void {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.effectsAllowed.mockResolvedValue(true);
   mocks.readState.mockResolvedValue({ kind: "absent" });
   mocks.resolveContext.mockResolvedValue({
     riotMatchId,
@@ -215,7 +220,8 @@ test("checkpoints and mints earnings created by a live late binding", async () =
   });
 });
 
-test("keeps late-binding earnings silent for a backfill", async () => {
+test("historical late binding cannot create earnings or notifications", async () => {
+  mocks.effectsAllowed.mockResolvedValue(false);
   mocks.awardBucks.mockResolvedValue([
     {
       serverId: "1337623164146155593",
@@ -240,11 +246,10 @@ test("keeps late-binding earnings silent for a backfill", async () => {
     true,
   );
 
-  expect(mocks.lateBindingSink).toHaveBeenCalledWith(riotMatchId, false);
-  expect(mocks.mintStandingIntents).toHaveBeenCalledWith({
-    riotMatchId,
-    gameCreation,
-  });
+  expect(mocks.lateBindingSink).not.toHaveBeenCalled();
+  expect(mocks.awardBucks).not.toHaveBeenCalled();
+  expect(mocks.finalizeCustom).not.toHaveBeenCalled();
+  expect(mocks.mintStandingIntents).not.toHaveBeenCalled();
 });
 
 test("retains the ingress retry when durable delivery minting fails", async () => {
@@ -272,6 +277,7 @@ test("retains the ingress retry when durable delivery minting fails", async () =
 });
 
 test("keeps ARCHIVE_ONLY late binding free of financial and progression effects", async () => {
+  mocks.effectsAllowed.mockResolvedValue(false);
   mocks.readState.mockResolvedValue(
     pipelineState([SCOUT_MATCH_RECEIPT_KINDS.tournament], {
       policy: "ARCHIVE_ONLY",
@@ -282,11 +288,7 @@ test("keeps ARCHIVE_ONLY late binding free of financial and progression effects"
     true,
   );
 
-  expect(mocks.finalizeCustom).toHaveBeenCalledWith(
-    mocks.prisma,
-    matchData,
-    "SCOUT_CLIENT",
-  );
+  expect(mocks.finalizeCustom).not.toHaveBeenCalled();
   expect(mocks.awardBucks).not.toHaveBeenCalled();
   expect(mocks.mintStandingIntents).not.toHaveBeenCalled();
   expect(mocks.duelNeedsTimeline).not.toHaveBeenCalled();

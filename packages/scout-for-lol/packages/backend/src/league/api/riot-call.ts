@@ -15,6 +15,7 @@ import {
   extractHttpStatus,
   isExpectedUpstreamError,
   RiotTransportError,
+  RiotPayloadCaptureError,
 } from "#src/league/api/client/errors.ts";
 
 const logger = createLogger("riot-call");
@@ -134,6 +135,7 @@ async function runRiotCall<T>(
       payload = await withTimeout(fn());
       break;
     } catch (error) {
+      if (error instanceof RiotPayloadCaptureError) throw error;
       riotApiRequestsTotal.inc({
         source,
         status: isTimeoutError(error) ? "timeout" : "error",

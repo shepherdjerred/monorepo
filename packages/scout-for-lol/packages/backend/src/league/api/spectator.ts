@@ -16,6 +16,7 @@ import { withTimeout } from "#src/utils/timeout.ts";
 import {
   extractHttpStatus,
   isExpectedUpstreamError,
+  RiotPayloadCaptureError,
 } from "#src/league/api/client/errors.ts";
 import * as Sentry from "@sentry/bun";
 
@@ -105,82 +106,91 @@ export async function getActiveGame(
     );
     return { kind: "in-game", game: parseResult.data };
   } catch (error: unknown) {
-    // 404 = player not in a game — expected/normal case
-    const httpStatus = extractHttpStatus(error);
+    return spectatorFailure(error, puuid, region);
+  }
+}
 
-    if (httpStatus === 404) {
-      riotApiRequestsTotal.inc({ source: "spectator", status: "not_found" });
-      updateRiotApiHealth(true);
-      logger.debug(`[getActiveGame] Player ${puuid} not in game`);
-      // The only confirmed absence: Riot looked and there is no game.
-      return { kind: "not-in-game" };
-    }
+function spectatorFailure(
+  error: unknown,
+  puuid: LeaguePuuid,
+  region: Region,
+): SpectatorResult {
+  if (error instanceof RiotPayloadCaptureError) throw error;
+  // 404 = player not in a game — expected/normal case
+  const httpStatus = extractHttpStatus(error);
 
-    // 502/503/504 = Riot upstream outage — expected during maintenance windows.
-    // Do NOT report to Sentry here; the caller's circuit breaker handles
-    // rate-limited reporting. Just log at warn level and signal upstreamError.
-    if (httpStatus !== undefined && isExpectedUpstreamError(httpStatus)) {
-      riotApiRequestsTotal.inc({
-        source: "spectator",
-        status: "upstream_error",
-      });
-      riotApiErrorsTotal.inc({
-        source: "spectator",
-        http_status: httpStatus.toString(),
-      });
-      updateRiotApiHealth(false);
-      logger.warn(
-        `[getActiveGame] Riot API returned ${httpStatus.toString()} for ${puuid} (expected upstream error)`,
-      );
-      return {
-        kind: "unavailable",
-        upstream: true,
-        reason: `upstream-${httpStatus.toString()}`,
-      };
-    }
+  if (httpStatus === 404) {
+    riotApiRequestsTotal.inc({ source: "spectator", status: "not_found" });
+    updateRiotApiHealth(true);
+    logger.debug(`[getActiveGame] Player ${puuid} not in game`);
+    // The only confirmed absence: Riot looked and there is no game.
+    return { kind: "not-in-game" };
+  }
 
+  // 502/503/504 = Riot upstream outage — expected during maintenance windows.
+  // Do NOT report to Sentry here; the caller's circuit breaker handles
+  // rate-limited reporting. Just log at warn level and signal upstreamError.
+  if (httpStatus !== undefined && isExpectedUpstreamError(httpStatus)) {
     riotApiRequestsTotal.inc({
       source: "spectator",
-      status:
-        error instanceof Error && error.message.includes("timed out")
-          ? "timeout"
-          : "error",
+      status: "upstream_error",
+    });
+    riotApiErrorsTotal.inc({
+      source: "spectator",
+      http_status: httpStatus.toString(),
     });
     updateRiotApiHealth(false);
-
-    if (httpStatus === undefined) {
-      logger.error(
-        `[getActiveGame] ❌ Error checking active game for ${puuid}:`,
-        error,
-      );
-      riotApiErrorsTotal.inc({ source: "spectator", http_status: "unknown" });
-    } else {
-      logger.error(
-        `[getActiveGame] ❌ HTTP Error ${httpStatus.toString()} for ${puuid}`,
-      );
-      riotApiErrorsTotal.inc({
-        source: "spectator",
-        http_status: httpStatus.toString(),
-      });
-      Sentry.captureException(error, {
-        tags: {
-          source: "spectator",
-          puuid,
-          region,
-          httpStatus: httpStatus.toString(),
-        },
-      });
-    }
-
-    // A timeout, a 401, a 429, a network fault: the request did not come back
-    // with an answer, so this call establishes nothing about the account.
+    logger.warn(
+      `[getActiveGame] Riot API returned ${httpStatus.toString()} for ${puuid} (expected upstream error)`,
+    );
     return {
       kind: "unavailable",
-      upstream: false,
-      reason:
-        httpStatus === undefined
-          ? "unreachable"
-          : `http-${httpStatus.toString()}`,
+      upstream: true,
+      reason: `upstream-${httpStatus.toString()}`,
     };
   }
+
+  riotApiRequestsTotal.inc({
+    source: "spectator",
+    status:
+      error instanceof Error && error.message.includes("timed out")
+        ? "timeout"
+        : "error",
+  });
+  updateRiotApiHealth(false);
+
+  if (httpStatus === undefined) {
+    logger.error(
+      `[getActiveGame] ❌ Error checking active game for ${puuid}:`,
+      error,
+    );
+    riotApiErrorsTotal.inc({ source: "spectator", http_status: "unknown" });
+  } else {
+    logger.error(
+      `[getActiveGame] ❌ HTTP Error ${httpStatus.toString()} for ${puuid}`,
+    );
+    riotApiErrorsTotal.inc({
+      source: "spectator",
+      http_status: httpStatus.toString(),
+    });
+    Sentry.captureException(error, {
+      tags: {
+        source: "spectator",
+        puuid,
+        region,
+        httpStatus: httpStatus.toString(),
+      },
+    });
+  }
+
+  // A timeout, a 401, a 429, a network fault: the request did not come back
+  // with an answer, so this call establishes nothing about the account.
+  return {
+    kind: "unavailable",
+    upstream: false,
+    reason:
+      httpStatus === undefined
+        ? "unreachable"
+        : `http-${httpStatus.toString()}`,
+  };
 }

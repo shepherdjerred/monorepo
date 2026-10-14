@@ -23,6 +23,23 @@ import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-su
  */
 export function createScoutMatchActivities(): ScoutMatchActivities {
   return {
+    queueHistoryMatch: async (input) => {
+      const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
+      await admitMatchEvidence({
+        matchId: input.riotMatchId,
+        completedAt: input.gameEndTimestamp,
+        historical: true,
+      });
+    },
+    prepareMatchEvidence: async (input) =>
+      await heartbeatWhile(
+        { riotMatchId: input.riotMatchId, phase: "preparing-match-evidence" },
+        async () => {
+          const { prepareMatchEvidence } =
+            await import("#src/temporal/match/match-evidence.ts");
+          return await prepareMatchEvidence(input);
+        },
+      ),
     discoverPostMatchIds: async () =>
       await heartbeatWhile({ phase: "discovering-post-match-v2" }, async () => {
         const { discoverPostMatchIds } =

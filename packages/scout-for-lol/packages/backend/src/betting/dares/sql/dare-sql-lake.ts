@@ -19,6 +19,10 @@ import {
 } from "#src/reports/duckdb/relational-scoutql-json.ts";
 import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
 import {
+  restrictEffectMatchRelation,
+  restrictEffectTimelineRelation,
+} from "#src/evidence/lake-eligibility.ts";
+import {
   buildMatchesSource,
   buildMatchTeamBansSource,
   buildMatchTeamsSource,
@@ -110,6 +114,7 @@ export async function createDareSqlLakeRelations(
     buildMatchesSource(files, windowPredicate),
     MATCH_LAKE_COLUMNS,
   );
+  await restrictEffectMatchRelation(session, "_dare_match_window");
   await session.run(
     `CREATE TEMP TABLE _dare_remake_ids AS
      SELECT match_id
@@ -205,6 +210,13 @@ export async function createDareSqlLakeRelations(
     TIMELINE_COVERAGE_LAKE_COLUMNS,
   );
   await createTargetRelations(session, input.targets);
+  for (const table of [
+    "timeline_coverage",
+    "timeline_events",
+    "timeline_event_participants",
+    "timeline_participant_frames",
+  ] as const)
+    await restrictEffectTimelineRelation(session, table);
 }
 
 function isTeamIdReference(value: JsonValue | undefined): boolean {
