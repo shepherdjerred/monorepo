@@ -7,7 +7,10 @@ import type { Collaboration } from "#infrastructure/collaboration.ts";
 import type { Catalog } from "#infrastructure/catalog.ts";
 import type { Importer } from "#infrastructure/importer.ts";
 import type { Attachments } from "#infrastructure/attachments.ts";
-import { ImportRecordSchema } from "#shared/import-schema.ts";
+import {
+  ImportRecordSchema,
+  ReconcileRecordSchema,
+} from "#shared/import-schema.ts";
 import { presentActor } from "#infrastructure/issue-repository.ts";
 import {
   ColorSchema,
@@ -61,6 +64,19 @@ const mutation = procedure.input(MutationSchema).use(async ({ ctx, next }) => {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Tracker writes are paused",
+    });
+  return next();
+});
+const importMutation = procedure.use(async ({ ctx, next }) => {
+  if (!(await ctx.importsEnabled()))
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Tracker imports are paused",
+    });
+  if (await ctx.writesEnabled())
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Pause normal writes before importing",
     });
   return next();
 });
@@ -162,21 +178,21 @@ export const appRouter = t.router({
     ),
   }),
   import: t.router({
-    record: procedure
-      .input(ImportRecordSchema)
-      .mutation(async ({ ctx, input }) => {
-        if (!(await ctx.importsEnabled()))
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Tracker imports are paused",
-          });
-        if (await ctx.writesEnabled())
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "Pause normal writes before importing",
-          });
-        return ctx.importer.apply(input, ctx.requestId);
+    manifest: procedure.query(({ ctx }) =>
+      ctx.issues.database.importMapping.findMany({
+        where: { source: "linear" },
+        select: { entityType: true, externalId: true },
+        orderBy: [{ entityType: "asc" }, { externalId: "asc" }],
       }),
+    ),
+    reconcileRecord: importMutation
+      .input(ReconcileRecordSchema)
+      .mutation(({ ctx, input }) =>
+        ctx.importer.reconcile(input, ctx.requestId),
+      ),
+    record: importMutation
+      .input(ImportRecordSchema)
+      .mutation(({ ctx, input }) => ctx.importer.apply(input, ctx.requestId)),
   }),
   meta: t.router({
     bootstrap: procedure.query(async ({ ctx }) => {
@@ -193,6 +209,7 @@ export const appRouter = t.router({
           ctx.writesEnabled(),
         ]);
       return {
+        importCapabilities: ["reconcile-record-v1"],
         teams,
         states,
         labels,

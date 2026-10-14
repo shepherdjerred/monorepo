@@ -160,6 +160,11 @@ export const ImportRecordSchema = z.discriminatedUnion("entityType", [
   attachment,
 ]);
 export type ImportRecord = z.infer<typeof ImportRecordSchema>;
+export const ReconcileRecordSchema = z.union([
+  z.object({ previous: issue, next: issue }),
+  z.object({ previous: comment, next: comment }),
+]);
+export type ReconcileRecord = z.infer<typeof ReconcileRecordSchema>;
 export type ImportEntity<K extends ImportRecord["entityType"]> = Extract<
   ImportRecord,
   { entityType: K }

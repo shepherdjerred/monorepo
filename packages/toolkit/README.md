@@ -72,6 +72,8 @@ toolkit tracker migration backup-linear --input /private/tmp/linear-export --pro
 toolkit tracker migration verify-linear --input /private/tmp/linear-export
 toolkit tracker migration import-linear --input /private/tmp/linear-export
 toolkit tracker migration import-linear --input /private/tmp/linear-export --resume
+toolkit tracker migration catch-up-linear --previous /private/tmp/linear-export --input /private/tmp/linear-export-new --dry-run
+toolkit tracker migration catch-up-linear --previous /private/tmp/linear-export --input /private/tmp/linear-export-new
 ```
 
 `--resume` on export continues downloads from the frozen source snapshot.
@@ -86,6 +88,14 @@ Open `tracker-imports-enabled` only for the explicit import window, then close
 it before enabling native writes. Compare the final source snapshot with Linear
 before cutover; new or changed source data requires reconciliation rather than
 silently overwriting an earlier imported record.
+
+Catch-up takes two checksummed snapshots. It appends new records in dependency
+order and reconciles source issue/comment edits only when the previous import
+hash and current destination fields still match. Every edit adds an audit event;
+the first import event and original actor observations remain intact. A repeated
+snapshot pair makes no new writes. Removals, changed catalog definitions and
+edited vote records fail preflight and need explicit reconciliation. Back up the
+new snapshot and verify it against Linear before closing the import window.
 
 Backups use the private `tracker-attachments/import/` prefix and verify every
 object by reading its bytes back. Keep the export directory private; never
