@@ -763,7 +763,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:282e64c4cc77c5cf7f764ef476bfaed861b64dfd4078f216a260552d2713d261",
+      "value": "2.0.0-1009844@sha256:60816967af13de2c020dacf4618b199f00ef7377fb331a6cf5b47d9441bcb09a",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
@@ -807,7 +807,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009613@sha256:a8d5f37f66df717d7c6cd5b763275a2387068623a14a49c7b20fce453ea53a4b",
+      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
@@ -846,7 +846,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009046@sha256:203652ad0822a3cf46af6d5c586b6b7ff38d1a1e00887ebf1ef66e75bd4eb2f4",
+      "value": "2.0.0-1009613@sha256:a8d5f37f66df717d7c6cd5b763275a2387068623a14a49c7b20fce453ea53a4b",
       "notes": [
         "Stable Scout beta Workflow Worker image - bootstrapped from the accepted beta backend image; later pins are promoted after a healthy 100% ramp",
         "not managed by renovate"
