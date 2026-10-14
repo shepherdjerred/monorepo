@@ -1,4 +1,4 @@
-import { ApiObject, JsonPatch, Size } from "cdk8s";
+import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
 import type { Chart } from "cdk8s";
 import {
   ConfigMap,
@@ -33,6 +33,8 @@ export function createArcadeDeployment(chart: Chart) {
   const deployment = createBurstDeployment(chart, "arcade", {
     replicas: 0,
     strategy: DeploymentStrategy.recreate(),
+    // Emerald's goal worker and save retries use the same budget as its legacy pod.
+    terminationGracePeriod: Duration.seconds(120),
     securityContext: { fsGroup: 1000 },
     metadata: {
       annotations: {

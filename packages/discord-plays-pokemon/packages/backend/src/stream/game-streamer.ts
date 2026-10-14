@@ -13,7 +13,6 @@ import {
   GBA_FPS,
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
-import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 
@@ -63,7 +62,7 @@ export class GameStreamer extends GameStreamerBase {
     if (this.frameSink) {
       this.frameSink.write(frame);
       // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
-      sinkBufferBytes.set(this.frameSink.writableLength);
+      this.bufferMetric.set(this.frameSink.writableLength);
     }
   }
 

@@ -5,8 +5,8 @@ description: Copy game progress, transfer exclusive Discord account ownership, a
 
 Migrate by copying progress first, stopping legacy account owners, and enabling Arcade only after beta acceptance.
 
-1. Build the Arcade image through CI and retain its immutable digest. Prepare private game assets with the [package tools](https://github.com/shepherdjerred/monorepo/tree/d86c974e99f046904ceeb0ca12d5af2b7e4fba5a/packages/arcade/runtimes). Keep dumps and generated WASM outside Git and images.
-2. Reconcile the [dormant Arcade chart](https://github.com/shepherdjerred/monorepo/blob/d86c974e99f046904ceeb0ca12d5af2b7e4fba5a/packages/homelab/src/cdk8s/src/resources/arcade.ts) through the [homelab release procedure](/how-to/cut-a-homelab-release/). Populate its private asset claim. Leave account ownership inactive.
+1. Build the Arcade image through CI and retain its immutable digest. Prepare private game assets with the [package tools](https://github.com/shepherdjerred/monorepo/tree/3c52fad53400789c802236e9a1be4837336022e6/packages/arcade/runtimes). Keep dumps and generated WASM outside Git and images.
+2. Reconcile the [dormant Arcade chart](https://github.com/shepherdjerred/monorepo/blob/3c52fad53400789c802236e9a1be4837336022e6/packages/homelab/src/cdk8s/src/resources/arcade.ts) through the [homelab release procedure](/how-to/cut-a-homelab-release/). Populate its private asset claim. Leave account ownership inactive.
 3. Stop both legacy bot deployments through GitOps. Verify their sessions and streaming accounts have disconnected. Retain both original save claims and the original leaderboard database.
 4. Download the stopped legacy save roots and database into a private working directory. Run `packages/arcade/runtimes/prepare-migration.py` with explicit MK64 save, Emerald save, database, and new output paths. The tool verifies every copied save and SQLite integrity. Keep its manifest with the backup.
 5. Copy the verified save and database outputs into the corresponding Arcade claims. Preserve their directory structure. Initialize the additive database schema with the Arcade image; startup refuses destructive schema changes.
@@ -19,4 +19,4 @@ To roll back, stop Arcade through GitOps and verify both streaming accounts are 
 ## Related
 
 - [About the homelab](/explanation/homelab/overview/)
-- [Arcade package reference](https://github.com/shepherdjerred/monorepo/tree/d86c974e99f046904ceeb0ca12d5af2b7e4fba5a/packages/arcade)
+- [Arcade package reference](https://github.com/shepherdjerred/monorepo/tree/3c52fad53400789c802236e9a1be4837336022e6/packages/arcade)

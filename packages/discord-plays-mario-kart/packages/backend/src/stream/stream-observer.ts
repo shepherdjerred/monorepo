@@ -11,11 +11,6 @@
 import type { StreamObserver } from "@shepherdjerred/discord-video-stream";
 import { logger } from "#src/logger.ts";
 import {
-  streamFfmpegBitrateKbps,
-  streamFfmpegFps,
-  streamFfmpegSpeedRatio,
-  streamHwEncodeEngaged,
-  streamAvContentOffsetMs,
   streamAvContentSkewAbsMs,
   streamInputToPacketReadyMs,
   streamInputToSendCompleteMs,
@@ -25,8 +20,8 @@ import {
   streamSendFrametimeRatio,
   streamSendLateFramesTotal,
   streamSendIntervalMs,
-  streamTrackerVideoSourceDepth,
 } from "#src/observability/metrics.ts";
+import type { StreamMetrics } from "./session-metrics.ts";
 import type {
   StreamLatencyTracker,
   StreamLatencyObservations,
@@ -77,40 +72,40 @@ const SLOW_SAMPLES_BEFORE_WARN = 5;
 const SLOW_WARN_INTERVAL_MS = 60_000;
 const SLOW_RATIO_THRESHOLD = 0.95;
 
-export const prometheusLatencyObservations: StreamLatencyObservations = {
-  observePacketReady: (kind, delayMs) => {
-    streamPacketReadyDelayMs.observe({ kind }, delayMs);
-  },
-  observeSendComplete: (kind, delayMs) => {
-    streamSendCompleteDelayMs.observe({ kind }, delayMs);
-  },
-  observeInputToPacketReady: (delayMs) => {
-    streamInputToPacketReadyMs.observe(delayMs);
-  },
-  observeInputToSendComplete: (delayMs) => {
-    streamInputToSendCompleteMs.observe(delayMs);
-  },
-  observeAvContentOffset: (offsetMs) => {
-    streamAvContentOffsetMs.set(offsetMs);
-    streamAvContentSkewAbsMs.observe(Math.abs(offsetMs));
-  },
-  correlationFailure: (kind, reason) => {
-    streamLatencyCorrelationFailuresTotal.inc({ kind, reason });
-  },
-  videoSourceDepth: (depth) => {
-    streamTrackerVideoSourceDepth.set(depth);
-  },
-  sendInterval: (kind, intervalMs) => {
-    streamSendIntervalMs.observe({ kind }, intervalMs);
-  },
-};
-
-export function resetStreamLatencyMetrics(): void {
-  streamAvContentOffsetMs.set(0);
-  streamTrackerVideoSourceDepth.set(0);
+export function createLatencyObservations(
+  metrics: StreamMetrics,
+): StreamLatencyObservations {
+  return {
+    observePacketReady: (kind, delayMs) => {
+      streamPacketReadyDelayMs.observe({ kind }, delayMs);
+    },
+    observeSendComplete: (kind, delayMs) => {
+      streamSendCompleteDelayMs.observe({ kind }, delayMs);
+    },
+    observeInputToPacketReady: (delayMs) => {
+      streamInputToPacketReadyMs.observe(delayMs);
+    },
+    observeInputToSendComplete: (delayMs) => {
+      streamInputToSendCompleteMs.observe(delayMs);
+    },
+    observeAvContentOffset: (offsetMs) => {
+      metrics.avOffset.set(offsetMs);
+      streamAvContentSkewAbsMs.observe(Math.abs(offsetMs));
+    },
+    correlationFailure: (kind, reason) => {
+      streamLatencyCorrelationFailuresTotal.inc({ kind, reason });
+    },
+    videoSourceDepth: (depth) => {
+      metrics.sourceDepth.set(depth);
+    },
+    sendInterval: (kind, intervalMs) => {
+      streamSendIntervalMs.observe({ kind }, intervalMs);
+    },
+  };
 }
 
 export type StreamObserverOptions = {
+  metrics: StreamMetrics;
   now?: () => number;
   latencyTracker?: StreamLatencyTracker;
 };
@@ -121,7 +116,7 @@ export type StreamObserverOptions = {
  */
 export function createStreamObserver(
   session: SessionStats,
-  options: StreamObserverOptions = {},
+  options: StreamObserverOptions,
 ): StreamObserver {
   const now = options.now ?? (() => performance.timeOrigin + performance.now());
   let prevMediaSeconds: number | undefined;
@@ -132,7 +127,7 @@ export function createStreamObserver(
   return {
     onCommand: (command) => {
       const engaged = commandUsesHardwareEncode(command);
-      streamHwEncodeEngaged.set(engaged ? 1 : 0);
+      options.metrics.hardware.set(engaged ? 1 : 0);
       logger.info("ffmpeg command", { command, hwEncodeEngaged: engaged });
     },
     onCodecData: (data) => {
@@ -143,10 +138,10 @@ export function createStreamObserver(
     },
     onProgress: (progress) => {
       if (typeof progress.currentFps === "number") {
-        streamFfmpegFps.set(progress.currentFps);
+        options.metrics.fps.set(progress.currentFps);
       }
       if (typeof progress.currentKbps === "number") {
-        streamFfmpegBitrateKbps.set(progress.currentKbps);
+        options.metrics.bitrate.set(progress.currentKbps);
       }
       const mediaSeconds = parseTimemarkSeconds(progress.timemark);
       const wallMs = now();
@@ -162,7 +157,7 @@ export function createStreamObserver(
         // "catastrophically behind realtime" on the dashboard.
         if (deltaWall > 0 && deltaMedia > 0) {
           const ratio = deltaMedia / deltaWall;
-          streamFfmpegSpeedRatio.set(ratio);
+          options.metrics.speedRatio.set(ratio);
           session.lastSpeedRatio = ratio;
           if (ratio < SLOW_RATIO_THRESHOLD) {
             slowSamples++;

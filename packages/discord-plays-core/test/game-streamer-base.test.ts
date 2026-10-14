@@ -4,6 +4,7 @@ import { Client } from "discord.js-selfbot-v13";
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "#src/stream/game-streamer-base.ts";
 import { streamActive } from "#src/observability/metrics.ts";
+import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
 
 const silentLogger = {
@@ -57,6 +58,19 @@ async function gaugeValue(name: string): Promise<number | undefined> {
 }
 
 describe("GameStreamerBase", () => {
+  test("constructing and destroying an idle streamer preserves another live stream", async () => {
+    const active = contributeGauge(streamActive, "sum");
+    active.set(1);
+    const idle = makeStreamer();
+    try {
+      expect(await gaugeValue("stream_active")).toBe(1);
+      idle.destroy();
+      expect(await gaugeValue("stream_active")).toBe(1);
+    } finally {
+      idle.destroy();
+      active.close();
+    }
+  });
   test("starts idle: not streaming and the stream_active gauge reads 0", async () => {
     const streamer = makeStreamer();
     try {

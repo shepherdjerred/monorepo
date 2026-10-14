@@ -11,7 +11,8 @@ import type {
 import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
 import { type Actor, createActor, toPromise } from "xstate";
 import type { Logger } from "#src/logger.ts";
-import { streamActive } from "#src/observability/metrics.ts";
+import { streamActive, sinkBufferBytes } from "#src/observability/metrics.ts";
+import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
 
@@ -52,6 +53,8 @@ export abstract class GameStreamerBase {
   // in the subclass's buildEncoder() and torn down when the broadcast stops.
   protected audioTransport: AudioTransport | null = null;
   private pendingJoin: ReturnType<Streamer["joinVoice"]> | undefined;
+  private readonly activeMetric = contributeGauge(streamActive, "sum");
+  protected readonly bufferMetric = contributeGauge(sinkBufferBytes, "sum");
 
   constructor(options: GameStreamerBaseOptions) {
     this.logger = options.logger;
@@ -80,9 +83,12 @@ export abstract class GameStreamerBase {
       const next = snapshot.context.frameSink;
       // The machine ends the video sink when a broadcast stops; tear the audio
       // transport down in lockstep so its socket/server don't leak.
-      if (next === null) this.teardownAudio();
+      if (next === null) {
+        this.teardownAudio();
+        this.bufferMetric.set(0);
+      }
       this.frameSink = next;
-      streamActive.set(this.frameSink === null ? 0 : 1);
+      this.activeMetric.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
   }
@@ -140,11 +146,16 @@ export abstract class GameStreamerBase {
 
   /** Stop the actor and tear down resources. Subclasses customize via the hooks below. */
   destroy(): void {
-    this.beforeActorStop();
-    this.actor.stop();
-    this.teardownAudio();
-    // The pool owns the gateway client. Only detach this session's voice call.
-    this.streamer.leaveVoice();
+    try {
+      this.beforeActorStop();
+      this.actor.stop();
+      this.teardownAudio();
+      // The pool owns the gateway client. Only detach this session's voice call.
+      this.streamer.leaveVoice();
+    } finally {
+      this.activeMetric.close();
+      this.bufferMetric.close();
+    }
   }
 
   /**

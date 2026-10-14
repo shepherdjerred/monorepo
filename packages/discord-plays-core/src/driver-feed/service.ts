@@ -14,11 +14,6 @@ import { WebSocketServer, WebSocket, type RawData } from "ws";
 import type { Logger } from "#src/logger.ts";
 import type { DriverFeedConfig } from "./config.ts";
 import {
-  driverFeedClientBufferBytes,
-  driverFeedClients,
-  driverFeedEncoderRunning,
-} from "./metrics.ts";
-import {
   DRIVER_FEED_PATH,
   type DriverFeedInit,
   DriverFeedReadySchema,
@@ -215,7 +210,6 @@ export class DriverFeedService {
     this.encoder = undefined;
     this.hub.closeAll("session ended");
     this.activeClients.clear();
-    resetDriverFeedGauges();
   }
 
   private async onConnection(
@@ -324,13 +318,6 @@ export class DriverFeedService {
       this.removeClient(client);
     }
   }
-}
-
-/** Zero the feed's gauges so Grafana does not show a phantom feed after `/stop`. */
-export function resetDriverFeedGauges(): void {
-  driverFeedEncoderRunning.set(0);
-  driverFeedClients.set(0);
-  driverFeedClientBufferBytes.set(0);
 }
 
 function requestUrl(request: IncomingMessage): URL | undefined {

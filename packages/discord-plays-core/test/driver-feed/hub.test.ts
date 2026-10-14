@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  driverFeedClients,
+  driverFeedClientBufferBytes,
+} from "#src/driver-feed/metrics.ts";
 import {
   DRIVER_FEED_AUDIO_FLAG,
   DRIVER_FEED_HEADER_BYTES,
@@ -41,11 +45,22 @@ class FakeClient implements FeedClient {
   }
 }
 
+const feeds: DriverFeedHub[] = [];
+afterEach(() => {
+  for (const feed of feeds.splice(0)) feed.closeAll("test complete");
+});
 function hub(overrides?: Partial<{ maxClients: number; maxBuffer: number }>) {
-  return new DriverFeedHub({
+  const feed = new DriverFeedHub({
     maxClients: overrides?.maxClients ?? 4,
     maxClientBufferBytes: overrides?.maxBuffer ?? 1000,
   });
+  feeds.push(feed);
+  return feed;
+}
+
+async function metricValue(gauge: typeof driverFeedClients) {
+  const metric = await gauge.get();
+  return metric.values[0]?.value;
 }
 
 describe("frameDriverFeedMessage", () => {
@@ -69,6 +84,26 @@ describe("frameDriverFeedMessage", () => {
 });
 
 describe("DriverFeedHub", () => {
+  it("preserves another feed's clients and worst backlog when a session closes", async () => {
+    const first = hub();
+    const second = hub();
+    const a = new FakeClient();
+    const b = new FakeClient();
+    a.bufferedBytes = 600;
+    b.bufferedBytes = 300;
+    first.add(a);
+    second.add(b);
+    first.broadcast(ENTRY);
+    second.broadcast(ENTRY);
+    expect(await metricValue(driverFeedClients)).toBe(2);
+    expect(await metricValue(driverFeedClientBufferBytes)).toBe(600);
+    first.closeAll("session ended");
+    expect(await metricValue(driverFeedClients)).toBe(1);
+    expect(await metricValue(driverFeedClientBufferBytes)).toBe(300);
+    second.closeAll("session ended");
+    expect(await metricValue(driverFeedClients)).toBe(0);
+    expect(await metricValue(driverFeedClientBufferBytes)).toBe(0);
+  });
   it("withholds deltas from a new client until a decoder entry point arrives", () => {
     const feed = hub();
     const client = new FakeClient();

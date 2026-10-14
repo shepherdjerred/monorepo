@@ -1,15 +1,30 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   commandUsesHardwareEncode,
-  createStreamObserver,
+  createStreamObserver as createObservedStream,
   newSessionStats,
   parseTimemarkSeconds,
-  prometheusLatencyObservations,
-  resetStreamLatencyMetrics,
+  createLatencyObservations,
+  type StreamObserverOptions,
+  type SessionStats,
 } from "./stream-observer.ts";
+import { createStreamMetrics, type StreamMetrics } from "./session-metrics.ts";
 import { notifyStreamSessionEnded } from "./game-streamer.ts";
 import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
+
+const scopes: StreamMetrics[] = [];
+afterEach(() => {
+  for (const scope of scopes.splice(0)) scope.close();
+});
+function createStreamObserver(
+  session: SessionStats,
+  options: Omit<StreamObserverOptions, "metrics"> = {},
+) {
+  const metrics = createStreamMetrics();
+  scopes.push(metrics);
+  return createObservedStream(session, { ...options, metrics });
+}
 
 // The registry is shared across this process's tests — always assert deltas.
 async function metricValue(
@@ -107,13 +122,31 @@ describe("notifyStreamSessionEnded", () => {
   });
 });
 
-describe("resetStreamLatencyMetrics", () => {
-  it("clears the signed A/V gauge between sessions", async () => {
-    prometheusLatencyObservations.observeAvContentOffset(-198.5);
+describe("stream metric ownership", () => {
+  it("preserves the other stream's measurements through teardown and late callbacks", async () => {
+    const first = createStreamMetrics();
+    const second = createStreamMetrics();
+    scopes.push(first, second);
+    const firstLatency = createLatencyObservations(first);
+    const secondLatency = createLatencyObservations(second);
+    firstLatency.observeAvContentOffset(-198.5);
+    secondLatency.observeAvContentOffset(50);
+    first.fps.set(30);
+    second.fps.set(60);
+    first.speedRatio.set(0.8);
+    second.speedRatio.set(1);
     expect(await metricValue("stream_av_content_offset_ms")).toBe(-198.5);
-
-    resetStreamLatencyMetrics();
+    expect(await metricValue("stream_ffmpeg_fps")).toBe(90);
+    expect(await metricValue("stream_ffmpeg_speed_ratio")).toBe(0.8);
+    first.close();
+    firstLatency.observeAvContentOffset(999);
+    expect(await metricValue("stream_av_content_offset_ms")).toBe(50);
+    expect(await metricValue("stream_ffmpeg_fps")).toBe(60);
+    expect(await metricValue("stream_ffmpeg_speed_ratio")).toBe(1);
+    second.close();
     expect(await metricValue("stream_av_content_offset_ms")).toBe(0);
+    expect(await metricValue("stream_ffmpeg_fps")).toBe(0);
+    expect(await metricValue("stream_ffmpeg_speed_ratio")).toBe(0);
   });
 });
 

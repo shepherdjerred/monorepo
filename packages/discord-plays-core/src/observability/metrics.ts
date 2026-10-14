@@ -62,6 +62,6 @@ export const sinkBufferBytes = new Gauge({
 
 export const streamActive = new Gauge({
   name: "stream_active",
-  help: "1 while a Go-Live broadcast is running and accepting frames, else 0",
+  help: "Number of Go-Live broadcasts running and accepting frames",
   registers: [registry],
 });

@@ -15,6 +15,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import * as Sentry from "@sentry/bun";
 import type { Logger } from "#src/logger.ts";
+import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 import { LatestFrameSink } from "#src/stream/latest-frame-sink.ts";
 import {
   driverFeedAccessUnitBytes,
@@ -265,6 +266,14 @@ export class DriverFeedEncoder {
   private started = false;
   private warnedSizeMismatch = false;
   private readonly frameBytes: number;
+  private readonly runningMetric = contributeGauge(
+    driverFeedEncoderRunning,
+    "sum",
+  );
+  private readonly bufferedMetric = contributeGauge(
+    driverFeedSinkFrames,
+    "sum",
+  );
 
   constructor(
     options: DriverFeedEncoderOptions,
@@ -304,7 +313,7 @@ export class DriverFeedEncoder {
 
     const child = this.processFactory(executable, args);
     this.child = child;
-    driverFeedEncoderRunning.set(1);
+    this.runningMetric.set(1);
 
     const sink = new LatestFrameSink<DriverFeedFrameTiming>({
       frameBytes: this.frameBytes,
@@ -408,7 +417,7 @@ export class DriverFeedEncoder {
       pushedAtMs: performance.timeOrigin + performance.now(),
       ...(inputReceivedAtMs === undefined ? {} : { inputReceivedAtMs }),
     });
-    driverFeedSinkFrames.set(sink.bufferedBytes / this.frameBytes);
+    this.bufferedMetric.set(sink.bufferedBytes / this.frameBytes);
   }
 
   stop(): void {
@@ -431,6 +440,7 @@ export class DriverFeedEncoder {
     if (this.child !== child) return;
     this.child = undefined;
     this.sink = undefined;
-    driverFeedEncoderRunning.set(0);
+    this.runningMetric.close();
+    this.bufferedMetric.close();
   }
 }

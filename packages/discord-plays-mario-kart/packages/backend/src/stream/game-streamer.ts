@@ -12,23 +12,18 @@ import { DISPLAY_ASPECT } from "#src/emulator/constants.ts";
 import { frameBytes, type FrameFormat } from "#src/engine/format.ts";
 import { createAudioTransport } from "#src/stream/audio-transport.ts";
 import { LatestFrameSink } from "@shepherdjerred/discord-plays-core/stream/latest-frame-sink.ts";
-import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
-  streamFfmpegBitrateKbps,
-  streamFfmpegFps,
-  streamFfmpegSpeedRatio,
   streamFrameIntervalMs,
   streamFramesDroppedTotal,
   streamFrameWriteMs,
-  streamHwEncodeEngaged,
 } from "#src/observability/metrics.ts";
 import {
   createStreamObserver,
   newSessionStats,
-  prometheusLatencyObservations,
-  resetStreamLatencyMetrics,
+  createLatencyObservations,
   type SessionStats,
 } from "#src/stream/stream-observer.ts";
+import { createStreamMetrics, type StreamMetrics } from "./session-metrics.ts";
 import {
   StreamLatencyTracker,
   type VideoSourceTiming,
@@ -97,6 +92,7 @@ export class GameStreamer extends GameStreamerBase {
   private streamObserver: StreamObserver | undefined;
   private videoSink: LatestFrameSink<VideoSourceTiming> | undefined;
   private latencyTracker: StreamLatencyTracker | undefined;
+  private streamMetrics: StreamMetrics | undefined;
 
   constructor(options: GameStreamerOptions) {
     super({
@@ -130,7 +126,7 @@ export class GameStreamer extends GameStreamerBase {
     sink.writeFrame(frame, sourceTiming);
     // A slow write is backpressure showing up before the buffer gauge moves.
     streamFrameWriteMs.observe(performance.now() - pushAt);
-    sinkBufferBytes.set(this.videoSink?.bufferedBytes ?? 0);
+    this.bufferMetric.set(this.videoSink?.bufferedBytes ?? 0);
   }
 
   override pushAudio(pcm: Buffer, contentEndMs?: number): void {
@@ -148,6 +144,7 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected override beforeActorStop(): void {
+    this.streamMetrics?.close();
     this.sendToActor({ type: "SHUTDOWN" });
   }
 
@@ -162,8 +159,10 @@ export class GameStreamer extends GameStreamerBase {
       throw new DOMException("encoder preparation aborted", "AbortError");
     }
 
+    const metrics = createStreamMetrics();
+    this.streamMetrics = metrics;
     const latencyTracker = new StreamLatencyTracker(
-      prometheusLatencyObservations,
+      createLatencyObservations(metrics),
       format.audioSampleRate,
     );
     this.latencyTracker = latencyTracker;
@@ -188,7 +187,7 @@ export class GameStreamer extends GameStreamerBase {
       this.options.canvasHeight,
     );
     const session = newSessionStats();
-    const observer = createStreamObserver(session, { latencyTracker });
+    const observer = createStreamObserver(session, { latencyTracker, metrics });
     this.session = session;
     this.sessionStartedAt = performance.now();
     this.lastPushAt = undefined;
@@ -277,12 +276,9 @@ export class GameStreamer extends GameStreamerBase {
   private resetStreamMetrics(): void {
     this.videoSink = undefined;
     this.latencyTracker = undefined;
-    resetStreamLatencyMetrics();
-    sinkBufferBytes.set(0);
-    streamFfmpegSpeedRatio.set(0);
-    streamFfmpegFps.set(0);
-    streamFfmpegBitrateKbps.set(0);
-    streamHwEncodeEngaged.set(0);
+    this.streamMetrics?.close();
+    this.streamMetrics = undefined;
+    this.bufferMetric.set(0);
     this.lastPushAt = undefined;
     this.streamObserver = undefined;
   }
