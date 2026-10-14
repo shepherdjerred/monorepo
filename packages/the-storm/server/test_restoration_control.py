@@ -2162,7 +2162,10 @@ class RestorationControlTest(unittest.TestCase):
             self.assertEqual(pod.object("spec")["imagePullSecrets"], [{"name": "dockerhub-pull-" + namespace}])
             self.assertFalse(pod.object("spec")["automountServiceAccountToken"])
             self.assertNotIn("env", pod.object("spec").objects("containers")[0])
-        self.assertEqual(control.writer_manifest(journal).object("spec")["imagePullSecrets"], [{"name": "dockerhub-pull-" + control.NAMESPACE}])
+        self.assertEqual(
+            control.writer_manifest(journal).object("spec")["imagePullSecrets"],
+            [{"name": "dockerhub-pull-" + control.NAMESPACE}],
+        )
 
     def test_restore_reader_waits_for_the_operator_and_keeps_credential_failure_closed(self):
         journal, pods = self.reader_fixture()

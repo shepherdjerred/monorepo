@@ -1326,7 +1326,9 @@ def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: boo
 
 def revise_installation(path: Path, journal: JsonObject, staging: Path, candidate: Path, image: str) -> None:
     """Rebind an unstarted, stopped installation to a new sealed plan under the same lease."""
-    if not re.fullmatch(r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image):
+    if not re.fullmatch(
+        r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image
+    ):
         raise ValueError("Revision requires an immutable replacement image")
     if journal.get("privateStartup") is not None or journal.get("acceptance") is not None:
         raise ValueError("An installation that has started requires whole-volume rollback")
