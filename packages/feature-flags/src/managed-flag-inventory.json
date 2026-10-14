@@ -3029,30 +3029,15 @@
         {
           "key": "woodpecker-maintenance-lanes-enabled",
           "type": "boolean",
-          "default": false,
-          "rollouts": [
-            {
-              "segmentKey": "woodpecker-maintenance-manual-beta",
-              "segmentOperator": "OR_SEGMENT_OPERATOR",
-              "matchType": "ALL_SEGMENT_MATCH_TYPE",
-              "constraints": [
-                {
-                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-                  "property": "stage",
-                  "operator": "eq",
-                  "value": "beta"
-                }
-              ],
-              "result": true
-            }
-          ],
+          "default": true,
+          "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
         },
         {
           "key": "ci-maintenance-dispatch-enabled",
           "type": "boolean",
-          "default": false,
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
