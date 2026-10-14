@@ -2206,8 +2206,10 @@ outcome. The separate complete duel journal retains that outcome.
 `video-encode` verifies both receipt versions, original PNG hashes and the
 encoded 1280x720, 30-fps, silent stream without overwriting evidence. The
 recorder uses a private lossless PNG writer with fast Deflate compression;
-channel order, alpha and rows are preserved, and the eight-image backlog limit
-still fails on overload. It does not change Minecraft's global encoder settings.
+two encoder workers share an eight-image backlog and seal the manifest in
+original frame order. Channel order, alpha and rows are preserved, and the
+backlog limit still fails on overload. It does not change Minecraft's global
+encoder settings.
 The native video check first runs a separate unrecorded warm-up duel to initialize Paper
 combat code and client entity rendering, then records one authored/basic duel.
 It retains the warm-up identity, the recorded match's separate clock and
