@@ -56,7 +56,16 @@ final class RouteNavigatorTest {
     var edges =
         new HealthRoutes.EdgePolicy(
             edge -> 0, new NavGraph.EdgeMotion(graph::edgeCost, edge -> true, 1));
-    var risk = new TraversalRisk.Query(new HealthRoutes.RiskPolicy(19, 0), edges, node -> 0, false);
+    var risk =
+        new TraversalRisk.Query(
+            new HealthRoutes.RiskPolicy(19, 0),
+            edges,
+            node -> 0,
+            false,
+            new TraversalRisk.Source(
+                com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant(
+                    1, com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED, graph.feet(0)),
+                0));
     var low = new Vec3(1.5, 99, 1.5);
     var high = new Vec3(5.5, 100, 1.5);
     for (var endpoints :
@@ -126,7 +135,16 @@ final class RouteNavigatorTest {
             Set.of(),
             196,
             graph.workspace());
-    var risk = new TraversalRisk.Query(policy, edges, node -> 0, false);
+    var risk =
+        new TraversalRisk.Query(
+            policy,
+            edges,
+            node -> 0,
+            false,
+            new TraversalRisk.Source(
+                com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant(
+                    1, com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED, source),
+                0));
     assertThat(
             RouteNavigator.find(
                 context,

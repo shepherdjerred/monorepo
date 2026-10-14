@@ -24,7 +24,7 @@ final class FairObservationTest {
     var body = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var capabilities =
         new com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState(
-            true, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 30);
+            true, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 30, 0);
     var juggernaut = body.withTraversal(capabilities).withHealth(30, 0);
     var percept = new Percept(PerceptionState.EMPTY, List.of(), 1);
     var grid = SyntheticMap.bake().grid();

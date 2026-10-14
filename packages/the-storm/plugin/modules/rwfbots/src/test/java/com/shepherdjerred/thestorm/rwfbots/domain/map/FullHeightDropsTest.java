@@ -47,7 +47,7 @@ final class FullHeightDropsTest {
   @Test
   void aTwentyFourBlockDropIsIntentionalAtThirtyHealthAndRejectedAtTwenty() {
     var nav = new Course(24, false).bake();
-    var juggernaut = new TraversalState(false, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 30);
+    var juggernaut = new TraversalState(false, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 30, 0);
     assertThat(route(nav, 30, juggernaut).orElseThrow().damage()).isEqualTo(21);
     assertThat(route(nav, 20, TraversalState.UNMODIFIED)).isEmpty();
   }
@@ -67,7 +67,7 @@ final class FullHeightDropsTest {
     assertThat(graph.edgeData().capabilities().overflow().edges()).containsExactly(edge);
     assertThat(route(back, 20, TraversalState.UNMODIFIED)).isEmpty();
     var immune =
-        new TraversalState(true, 3, 1, 0, -1, -1, Long.MAX_VALUE, -1, 0, -1, -1, -1, -1, 20);
+        new TraversalState(true, 3, 1, 0, -1, -1, Long.MAX_VALUE, -1, 0, -1, -1, -1, -1, 20, 0);
     assertThat(route(back, 20, immune).orElseThrow().damage()).isZero();
     assertThat(
             route(new Course(340, true).bake(), 20, TraversalState.UNMODIFIED)

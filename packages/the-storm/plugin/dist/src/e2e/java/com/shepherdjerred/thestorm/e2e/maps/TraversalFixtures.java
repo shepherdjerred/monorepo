@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.adapter.citizens.CitizensBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.PersonalityFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -69,7 +70,8 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
       boolean inWater,
       boolean climbing,
       boolean jump,
-      double damage) {}
+      double damage,
+      List<TraversalState> capturedTraversal) {}
 
   private record Status(
       int version,
@@ -85,15 +87,17 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
       List<String> states,
       List<String> status,
       List<String> sample,
+      List<String> traversal,
       List<Scenario> scenarios) {
     static Wire load() {
       try (var stream = TraversalFixtures.class.getResourceAsStream("/rwf-traversal.json")) {
         if (stream == null) throw new IllegalStateException("traversal contract missing");
         var wire = JSON.readValue(stream, Wire.class);
-        if (wire.version() != 2
+        if (wire.version() != 3
             || !wire.states().equals(List.of("idle", "running", "passed", "failed"))
             || !wire.status().equals(components(Status.class))
             || !wire.sample().equals(components(Sample.class))
+            || !wire.traversal().equals(components(TraversalState.class))
             || wire.scenarios().isEmpty())
           throw new IllegalStateException("traversal contract differs from producer");
         var ids = new java.util.HashSet<String>();
@@ -223,6 +227,9 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
     var selected = scenario.orElseThrow();
     var position = player.getLocation();
     var grounded = SnapshotCapture.onGround(player);
+    // Compare capture to the same pre-command phase: the real motor can cancel fall distance
+    // during this command after verified water/climb contact, without changing health.
+    var fallDistance = player.getFallDistance();
     var jump = false;
     if (ticks > SETTLE_TICKS) {
       driveTicks++;
@@ -235,16 +242,17 @@ public final class TraversalFixtures implements BasicCommand, Listener, AutoClos
             point(position),
             List.of(velocity.getX(), velocity.getY(), velocity.getZ()),
             player.getHealth(),
-            player.getFallDistance(),
+            fallDistance,
             grounded,
             liquid(player),
             player.isClimbing(),
             jump,
-            damage));
+            damage,
+            route.flatMap(TraversalRoute::capturedTraversal).stream().toList()));
     var goal = arena.at(selected.goal());
     if (driveTicks >= selected.minimumDriveTicks()
         && position.distanceSquared(goal) <= 0.49
-        && (grounded || liquid(player) || player.isClimbing())) finish(true);
+        && ((grounded && fallDistance == 0) || liquid(player) || player.isClimbing())) finish(true);
     if (player.isDead() || position.getY() < 94) finish(false);
   }
 

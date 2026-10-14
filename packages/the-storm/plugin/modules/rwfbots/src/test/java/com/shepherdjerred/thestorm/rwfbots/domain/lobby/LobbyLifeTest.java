@@ -167,9 +167,8 @@ final class LobbyLifeTest {
   @Test
   void steeringWalksThePathThenTapsSneakAndLetsGoWhenThePlanEnds() {
     var path =
-        LOBBY
-            .graph()
-            .path(
+        LobbyNav.walk(
+                LOBBY,
                 LOBBY.graph().nearestNode(new Vec3(6.5, 1, 12.5)).getAsInt(),
                 LOBBY.graph().nearestNode(new Vec3(10.5, 1, 12.5)).getAsInt())
             .orElseThrow()

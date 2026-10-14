@@ -179,6 +179,10 @@ public final class Reflex {
       if (state.decisionTick() != input.decision().snapshotTick()) {
         state = state.withPath(0, input.decision().snapshotTick());
       }
+      if (ownsFirstContact()) {
+        followFirstContact();
+        return;
+      }
       ability();
       kitItems();
       var target = input.target();
@@ -201,24 +205,32 @@ public final class Reflex {
       commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
     }
 
+    private void followFirstContact() {
+      commands.add(new BodyCommand.Sneak(false));
+      if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
+      state = state.withEating(-1, false).withDrawStart(-1);
+      walk(Optional.of(false));
+      commands.add(new BodyCommand.Look(state.aim().look().yaw(), state.aim().look().pitch()));
+    }
+
     /**
      * A crouch-spamming bot taps sneak in bursts while it stands idle, and over an enemy it has
      * just killed; otherwise it stands up unless it is sneaking on purpose.
      */
     private void crouchSpam() {
-      if (!context.habits().crouchSpam()) {
-        return;
-      }
       var decision = input.decision();
       var killed =
-          decision
-              .target()
-              .flatMap(input.snapshot()::combatant)
-              .map(target -> !target.alive())
-              .orElse(false);
+          context.habits().crouchSpam()
+              && decision
+                  .target()
+                  .flatMap(input.snapshot()::combatant)
+                  .map(target -> !target.alive())
+                  .orElse(false);
       var idle =
           decision.target().isEmpty() && state.waypointIndex() >= decision.waypoints().size();
-      var burst = killed || (idle && (now / CROUCH_BURST_TICKS) % 3 == 0);
+      var burst =
+          context.habits().crouchSpam()
+              && (killed || (idle && (now / CROUCH_BURST_TICKS) % 3 == 0));
       var tap = burst && (now / CROUCH_TAP_TICKS) % 2 == 0;
       var stealth = idle && sneaksWaiting();
       commands.add(new BodyCommand.Sneak(tap || stealth));
@@ -529,7 +541,7 @@ public final class Reflex {
     private void walkSegment(Waypoint waypoint, int index, int count, boolean sprint) {
       if (refusesDrop(waypoint)) return;
       var destination = interfaceDestination(waypoint);
-      if (waypoint.hop() == Hop.SWIM || waypoint.hop() == Hop.CLIMB) sprint = false;
+      if (walksInterface(waypoint)) sprint = false;
       var crowded = waypoint.hop() == Hop.WALK && allyAhead(destination);
       if (crowded) {
         sprint = false;
@@ -539,18 +551,41 @@ public final class Reflex {
       if (shouldBend(waypoint, index, count, destination)) {
         destination = bend(destination, walkingApart());
       }
+      destination = WalkSteering.destination(context.grid(), self, waypoint, destination);
       if (waypoint.hop() == Hop.WALK && yields(destination)) {
         // Waiting for the teammate ahead: make room for the others while it clears.
         var push = walkingApart();
-        commands.add(
-            push.isZero()
-                ? new BodyCommand.Stop()
-                : new BodyCommand.MoveToward(self.pos().plus(push.normalized()), false));
+        commands.add(WalkSteering.makeRoom(context.grid(), self, push));
         return;
       }
       commands.add(new BodyCommand.MoveToward(destination, sprint));
       jumpIfNeeded(waypoint);
       lookAhead(destination);
+    }
+
+    private boolean walksInterface(Waypoint waypoint) {
+      return waypoint.hop() == Hop.SWIM
+          || waypoint.hop() == Hop.CLIMB
+          || self.traversal().fallDistance() > 0;
+    }
+
+    /** A certified pending first contact owns its forecast controls until actual contact. */
+    private boolean ownsFirstContact() {
+      var active = state.activeJump().filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE);
+      var points = input.decision().waypoints();
+      if (points.isEmpty() || self.traversal().fallDistance() <= 0) return false;
+      var refuge = points.getFirst();
+      if ((refuge.hop() != Hop.DROP && refuge.hop() != Hop.CLIMB)
+          || active.filter(jump -> compatibleLanding(jump.waypoint(), refuge)).isPresent()
+          || !safePrimitive(refuge)) return false;
+      state = state.withActiveJump(Optional.empty()).withPath(0, input.decision().snapshotTick());
+      return true;
+    }
+
+    private static boolean compatibleLanding(Waypoint committed, Waypoint contact) {
+      return committed.landing() == contact.landing()
+          && Math.abs(committed.pos().y() - contact.pos().y()) <= 0.2
+          && committed.pos().horizontalDistance(contact.pos()) <= 0.45;
     }
 
     private Vec3 interfaceDestination(Waypoint waypoint) {

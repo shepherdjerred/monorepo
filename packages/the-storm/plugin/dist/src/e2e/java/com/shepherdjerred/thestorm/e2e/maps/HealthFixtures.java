@@ -32,6 +32,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -46,6 +47,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   private final List<HealthProtocol.Fall> falls = new ArrayList<>();
   private final List<HealthProtocol.Setup> setups = new ArrayList<>();
   private final List<HealthProtocol.Prediction> predictions = new ArrayList<>();
+  private final List<HealthProtocol.Regain> regains = new ArrayList<>();
   private final IdentityHashMap<EntityDamageEvent, HealthProtocol.Sample> before =
       new IdentityHashMap<>();
   private Optional<UUID> match = Optional.empty();
@@ -54,13 +56,16 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   private Optional<HealthProtocol.Scenario> scenario = Optional.empty();
   private Optional<SnapshotCapture> capture = Optional.empty();
   private Optional<HealthCourse> course = Optional.empty();
+  private Optional<HealthEnvironment> environment = Optional.empty();
   private Optional<BukkitTask> clock = Optional.empty();
   private String state = "idle";
   private long sequence;
   private int observedTicks;
   private int placements;
   private int pendingFalls;
+  private int pendingRegains;
   private boolean resistanceSeen;
+  private boolean awaitingVulnerability;
 
   public HealthFixtures(JavaPlugin plugin) {
     this.plugin = plugin;
@@ -92,7 +97,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
           .getSender()
           .sendMessage(Component.text(HealthProtocol.JSON.writeValueAsString(status())));
     } catch (IllegalArgumentException | IllegalStateException failure) {
-      state = "failed";
+      fail(failure);
       source
           .getSender()
           .sendMessage(
@@ -190,6 +195,13 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   }
 
   private MatchState live() {
+    var current = joinedLive();
+    if (player().isInvulnerable())
+      throw new IllegalStateException("health trial subject became invulnerable");
+    return current;
+  }
+
+  private MatchState joinedLive() {
     var current = current();
     var fighter = current.combatant(subject.orElseThrow()).orElseThrow();
     if (match.filter(current.matchId()::equals).isEmpty()
@@ -198,10 +210,14 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
         || fighter.bot()
         || !fighter.kit().filter(scenario.orElseThrow().kit()::equals).isPresent())
       throw new IllegalStateException("health case lost its original live member or selected kit");
-    if (player().isDead()
-        || player().isInvulnerable()
-        || player().getGameMode() != org.bukkit.GameMode.SURVIVAL)
-      throw new IllegalStateException("health case requires a vulnerable living survival member");
+    if (player().isDead() || player().getGameMode() != org.bukkit.GameMode.SURVIVAL)
+      throw new IllegalStateException(
+          "health case requires a vulnerable living survival member: mode="
+              + player().getGameMode()
+              + ", dead="
+              + player().isDead()
+              + ", invulnerable="
+              + player().isInvulnerable());
     var currentWorld = player().getWorld().getUID();
     if (world.isPresent() && world.filter(currentWorld::equals).isEmpty())
       throw new IllegalStateException("health case world changed");
@@ -215,17 +231,51 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
     try {
       if (++observedTicks > WIRE.maximumTicks())
         throw new IllegalStateException("health proof tick bound exceeded");
-      snapshot();
+      if (state.equals("bound") && awaitVulnerability()) return;
+      var sample = snapshot();
+      if (state.equals("observing") && !sample.onGround() && sample.traversal().fallDistance() > 0)
+        prediction(sample, captured(live()));
       if (resistanceSeen && player().getPotionEffect(PotionEffectType.RESISTANCE) == null) {
         resistanceSeen = false;
         setup(
             "effect-expired", Map.of("effect", "resistance", "source", "actual-body-observation"));
       }
     } catch (IllegalArgumentException | IllegalStateException failure) {
-      setup("failure", Map.of("message", failure.getMessage()));
-      state = "failed";
-      clock.ifPresent(BukkitTask::cancel);
+      fail(failure);
     }
+  }
+
+  /** A dimension transfer may expose a removed body before its native replacement is usable. */
+  private boolean awaitVulnerability() {
+    joinedLive();
+    var body = player();
+    if (body.isInvulnerable()) {
+      if (!awaitingVulnerability)
+        setup(
+            "awaiting-native-vulnerability",
+            Map.of(
+                "valid",
+                Boolean.toString(body.isValid()),
+                "invulnerable",
+                "true",
+                "directProtectionChange",
+                "false"));
+      awaitingVulnerability = true;
+      return true;
+    }
+    if (awaitingVulnerability) {
+      setup(
+          "native-body-vulnerable",
+          Map.of(
+              "valid",
+              Boolean.toString(body.isValid()),
+              "invulnerable",
+              "false",
+              "directProtectionChange",
+              "false"));
+      awaitingVulnerability = false;
+    }
+    return false;
   }
 
   private CombatantView captured(MatchState current) {
@@ -259,13 +309,19 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
             player.getNoDamageTicks(),
             self.sprinting(),
             player.isInWater(),
+            player.getFoodLevel(),
+            player.getSaturation(),
+            player.getWorld().getDifficulty().name(),
             self.traversal());
     samples.add(sample);
     return sample;
   }
 
   private void place() {
-    if (!List.of("bound", "observing").contains(state) || !before.isEmpty() || pendingFalls != 0)
+    if (!List.of("bound", "observing").contains(state)
+        || !before.isEmpty()
+        || pendingFalls != 0
+        || pendingRegains != 0)
       throw new IllegalStateException("health placement requires an idle bound native trial");
     live();
     if (++placements > scenario.orElseThrow().maximumDrops() + 1)
@@ -287,10 +343,14 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
             "true",
             "directHealthChange",
             "false"));
-    var source = snapshot();
-    var self = captured(live());
+    var prediction = prediction(snapshot(), captured(live()));
+    state = prediction.affordable() ? "observing" : "refused";
+  }
+
+  private HealthProtocol.Prediction prediction(HealthProtocol.Sample source, CombatantView self) {
     var destination = course.orElseThrow().landing();
-    var arrival = tick() + (long) Math.ceil(TraversalCosts.drop(8)) + 2;
+    var remaining = Math.max(1, (int) Math.ceil(self.pos().y() - destination.pos().y()));
+    var arrival = tick() + (long) Math.ceil(TraversalCosts.drop(remaining)) + 2;
     var damage = FallRisk.damage(destination, self, arrival);
     var prediction =
         new HealthProtocol.Prediction(
@@ -302,12 +362,16 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
             self.effectiveHealth(),
             damage <= self.effectiveHealth() - 1,
             !self.traversal().maySprint(),
-            point(destination.pos()));
+            point(destination.pos()),
+            self.traversal().fallDistance());
     predictions.add(prediction);
-    state = prediction.affordable() ? "observing" : "refused";
+    return prediction;
   }
 
   private void prepareCourse() {
+    environment = Optional.of(new HealthEnvironment(player(), WIRE.environment()));
+    environment.orElseThrow().apply();
+    setup("environment-control", environment.orElseThrow().evidence());
     var definition =
         ConfigFiles.load(
                 plugin
@@ -401,9 +465,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
               after.health(),
               after.lastHurtTick()));
     } catch (IllegalArgumentException | IllegalStateException failure) {
-      setup("failure", Map.of("message", failure.toString()));
-      state = "failed";
-      clock.ifPresent(BukkitTask::cancel);
+      fail(failure);
     } finally {
       pendingFalls--;
     }
@@ -411,6 +473,56 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
 
   private void setup(String kind, Map<String, String> details) {
     setups.add(new HealthProtocol.Setup(++sequence, tick(), kind, details));
+  }
+
+  /** Observe native healing without cancelling it or inferring its result from the event. */
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void afterRegain(EntityRegainHealthEvent event) {
+    if (!List.of("observing", "refused").contains(state)
+        || subject.filter(event.getEntity().getUniqueId()::equals).isEmpty()) return;
+    var source = snapshot();
+    var pending =
+        new HealthProtocol.Regain(
+            0,
+            tick(),
+            0,
+            source.sequence(),
+            0,
+            event.getRegainReason().name(),
+            event.getAmount(),
+            event.isCancelled(),
+            source.health(),
+            0,
+            source.foodLevel(),
+            source.saturation(),
+            source.difficulty());
+    pendingRegains++;
+    plugin.getServer().getScheduler().runTask(plugin, () -> completeRegain(pending));
+  }
+
+  private void completeRegain(HealthProtocol.Regain pending) {
+    try {
+      var after = snapshot();
+      regains.add(
+          new HealthProtocol.Regain(
+              ++sequence,
+              pending.eventTick(),
+              tick(),
+              pending.sourceSequence(),
+              after.sequence(),
+              pending.reason(),
+              pending.amount(),
+              pending.cancelled(),
+              pending.before(),
+              after.health(),
+              pending.foodLevel(),
+              pending.saturation(),
+              pending.difficulty()));
+    } catch (IllegalArgumentException | IllegalStateException failure) {
+      fail(failure);
+    } finally {
+      pendingRegains--;
+    }
   }
 
   private HealthProtocol.Status status() {
@@ -426,7 +538,30 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
         List.copyOf(samples),
         List.copyOf(falls),
         List.copyOf(setups),
-        List.copyOf(predictions));
+        List.copyOf(predictions),
+        List.copyOf(regains));
+  }
+
+  private void restoreEnvironment() {
+    environment.ifPresent(
+        controlled -> {
+          controlled.restore();
+          setup("environment-restored", controlled.evidence());
+        });
+    environment = Optional.empty();
+  }
+
+  private void fail(RuntimeException failure) {
+    setup("failure", Map.of("message", failure.toString()));
+    state = "failed";
+    clock.ifPresent(BukkitTask::cancel);
+    try {
+      restoreEnvironment();
+    } catch (IllegalArgumentException | IllegalStateException cleanup) {
+      setup("cleanup-failure", Map.of("message", cleanup.toString()));
+    }
+    course.ifPresent(HealthCourse::close);
+    course = Optional.empty();
   }
 
   private static List<Double> point(com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3 value) {
@@ -434,8 +569,9 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   }
 
   private void finish() {
-    if (!List.of("observing", "refused").contains(state) || pendingFalls != 0)
-      throw new IllegalStateException("no live health trial to close");
+    if (!List.of("observing", "refused").contains(state)
+        || pendingFalls != 0
+        || pendingRegains != 0) throw new IllegalStateException("no live health trial to close");
     course.orElseThrow().release(player());
     setup(
         "course-release",
@@ -448,6 +584,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
             "true",
             "directHealthChange",
             "false"));
+    restoreEnvironment();
     snapshot();
     if (!state.equals("refused")) state = "closed";
     clock.ifPresent(BukkitTask::cancel);
@@ -458,7 +595,11 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   @Override
   public void close() {
     clock.ifPresent(BukkitTask::cancel);
-    course.ifPresent(HealthCourse::close);
-    HandlerList.unregisterAll(this);
+    try {
+      restoreEnvironment();
+    } finally {
+      course.ifPresent(HealthCourse::close);
+      HandlerList.unregisterAll(this);
+    }
   }
 }

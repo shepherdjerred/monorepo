@@ -66,6 +66,7 @@ final class SimWorld {
   record Spawn(int id, TeamId team, Kit kit, Vec3 pos) {}
 
   final NavArtifact nav;
+  final SimPhysics physics;
   final long seed;
   final SplittableRandom random;
   final Map<CombatantId, SimBody> bodies = new LinkedHashMap<>();
@@ -79,6 +80,7 @@ final class SimWorld {
 
   SimWorld(NavArtifact nav, long seed) {
     this.nav = nav;
+    this.physics = new SimPhysics(nav);
     this.seed = seed;
     this.random = new SplittableRandom(seed);
   }
@@ -320,19 +322,21 @@ final class SimWorld {
     boards.put(body.team, board.share(reports, body.levers.coordination(), tick, random));
   }
 
-  private void apply(SimBody body, BodyCommand command) {
+  void apply(SimBody body, BodyCommand command) {
     switch (command) {
       case BodyCommand.Look(var yaw, var pitch) -> body.look = new Facing(yaw, pitch);
       case BodyCommand.MoveToward(var waypoint, var sprint) -> {
         body.moveTarget = Optional.of(waypoint);
-        body.sprinting = sprint;
+        body.sprinting = sprint && body.traversal.maySprint();
+        physics.steer(body, waypoint.minus(body.pos));
       }
       case BodyCommand.Stop _ -> {
         body.moveTarget = Optional.empty();
         body.sprinting = false;
+        physics.steer(body, Vec3.ZERO);
       }
-      case BodyCommand.Jump _ -> body.jumpTick = tick;
-      case BodyCommand.Sneak _ -> {}
+      case BodyCommand.Jump _ -> physics.jump(body, tick);
+      case BodyCommand.Sneak(var sneaking) -> body.sneaking = sneaking;
       case BodyCommand.SelectSlot(var slot) -> body.heldSlot = slot;
       case BodyCommand.Swing _ -> {}
       case BodyCommand.Attack(var target) -> attack(body, target);
@@ -382,7 +386,7 @@ final class SimWorld {
     var loadout = body.reflexContext == null ? null : body.reflexContext.loadout();
     var eating = loadout != null && body.heldSlot == loadout.gappleSlot() && body.gapples > 0;
     if (body.usingItem && eating && tick - body.useStart >= Reflex.EAT_TICKS) {
-      body.health = Math.min(20, body.health + 4);
+      body.health = Math.min(body.traversal.maxHealth(), body.health + 4);
       body.absorption = 4;
       body.gapples--;
       stimuli.add(Stimulus.by(Stimulus.Kind.EAT, body.pos, tick, body.id));
@@ -403,44 +407,11 @@ final class SimWorld {
   }
 
   private void move(SimBody body) {
-    if (body.moveTarget.isEmpty()) {
-      return;
-    }
-    var target = body.moveTarget.get();
-    var delta = target.minus(body.pos).horizontal();
-    if (delta.isZero()) {
-      return;
-    }
-    var speed = body.sprinting ? SPRINT_SPEED : WALK_SPEED;
-    var step = delta.length() <= speed ? delta : delta.normalized().scale(speed);
-    var next = body.pos.plus(step);
-    var stepUp = target.y() > body.pos.y() + 0.5 && tick - body.jumpTick <= 6;
-    if (fits(next)) {
-      body.pos = next;
-    } else if (stepUp && fits(next.plus(0, 1, 0))) {
-      body.pos = next.plus(0, 1, 0);
-    } else if (fits(body.pos.plus(step.x(), 0, 0))) {
-      body.pos = body.pos.plus(step.x(), 0, 0);
-    } else if (fits(body.pos.plus(0, 0, step.z()))) {
-      body.pos = body.pos.plus(0, 0, step.z());
-    }
-    settle(body);
+    if (!body.bot) body.moveTarget.ifPresent(target -> physics.steer(body, target.minus(body.pos)));
+    physics.move(body, tick);
     if (body.sprinting && tick % 10 == 0) {
       stimuli.add(Stimulus.by(Stimulus.Kind.FOOTSTEP, body.pos, tick, body.id));
     }
-  }
-
-  private void settle(SimBody body) {
-    var below = BlockPos.of(body.pos).down();
-    var grid = nav.grid();
-    if (!grid.blocksMovement(below) && body.pos.y() > 1) {
-      body.pos = body.pos.plus(0, -1, 0);
-    }
-    body.onGround = grid.blocksMovement(BlockPos.of(body.pos).down());
-  }
-
-  private boolean fits(Vec3 feet) {
-    return passable(feet) && passable(feet.plus(0, 1, 0));
   }
 
   private boolean passable(Vec3 point) {

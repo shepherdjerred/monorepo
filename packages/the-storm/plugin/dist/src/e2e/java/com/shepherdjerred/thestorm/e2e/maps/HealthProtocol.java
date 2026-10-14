@@ -14,6 +14,7 @@ record HealthProtocol(
     int version,
     String kind,
     boolean humanDemonstration,
+    Environment environment,
     int maximumTicks,
     Map<String, List<String>> records,
     List<Scenario> scenarios) {
@@ -25,6 +26,8 @@ record HealthProtocol(
           .build();
 
   record Scenario(String id, String kit, String landing, String mode, int maximumDrops) {}
+
+  record Environment(String difficulty, int foodLevel, double saturation) {}
 
   record Sample(
       long sequence,
@@ -45,6 +48,9 @@ record HealthProtocol(
       int noDamageTicks,
       boolean sprinting,
       boolean inWater,
+      int foodLevel,
+      double saturation,
+      String difficulty,
       TraversalState traversal) {}
 
   record Fall(
@@ -65,6 +71,21 @@ record HealthProtocol(
 
   record Setup(long sequence, int serverTick, String kind, Map<String, String> details) {}
 
+  record Regain(
+      long sequence,
+      int eventTick,
+      int observedTick,
+      long sourceSequence,
+      long resultSequence,
+      String reason,
+      double amount,
+      boolean cancelled,
+      double before,
+      double after,
+      int foodLevel,
+      double saturation,
+      String difficulty) {}
+
   record Prediction(
       long sequence,
       int serverTick,
@@ -74,7 +95,8 @@ record HealthProtocol(
       double effectiveHealth,
       boolean affordable,
       boolean noSprint,
-      List<Double> waypoint) {}
+      List<Double> waypoint,
+      double fallDistance) {}
 
   record Status(
       int version,
@@ -88,7 +110,8 @@ record HealthProtocol(
       List<Sample> samples,
       List<Fall> falls,
       List<Setup> setups,
-      List<Prediction> predictions) {}
+      List<Prediction> predictions,
+      List<Regain> regains) {}
 
   static HealthProtocol load() {
     try (var stream = HealthProtocol.class.getResourceAsStream("/rwf-health-proof.json")) {
@@ -103,6 +126,10 @@ record HealthProtocol(
               Fall.class,
               "Setup",
               Setup.class,
+              "Regain",
+              Regain.class,
+              "Environment",
+              Environment.class,
               "Prediction",
               Prediction.class,
               "Status",
@@ -125,9 +152,10 @@ record HealthProtocol(
   }
 
   private static void validate(HealthProtocol wire) {
-    if (wire.version() != 1
+    if (wire.version() != 3
         || !wire.kind().equals("controlled-route-diagnostic")
         || wire.humanDemonstration()
+        || !wire.environment().equals(new Environment("HARD", 7, 0))
         || wire.maximumTicks() != 600
         || wire.scenarios().isEmpty())
       throw new IllegalStateException("health proof contract incompatible");

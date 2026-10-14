@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,6 +97,11 @@ public final class SnapshotCapture {
         stimuli(tick, present));
   }
 
+  /** Actual body capabilities, using the same authoritative immunity source and match clock. */
+  public TraversalState captureTraversal(Player player, String realKit, long tick) {
+    return traversal.capture(player, realKit, tick);
+  }
+
   private CombatantView view(long tick, MatchState.Fighter fighter, Player entity) {
     var location = Places.at(entity);
     var pos = vec(location);
@@ -131,7 +137,7 @@ public final class SnapshotCapture {
         entity.isHandRaised(),
         entity.isInvisible(),
         hurtTick,
-        traversal.capture(entity, fighter.kit().orElseThrow(), tick));
+        captureTraversal(entity, fighter.kit().orElseThrow(), tick));
   }
 
   /**

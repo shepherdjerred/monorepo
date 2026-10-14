@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.MatchSession;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -45,7 +46,9 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
     return id.equals(MATCH_ID)
         ? Optional.of(
             new com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen(
-                MATCH_ID, 7, com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT))
+                MATCH_ID,
+                MatchSession.seedOf(MATCH_ID),
+                com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT))
         : Optional.empty();
   }
 

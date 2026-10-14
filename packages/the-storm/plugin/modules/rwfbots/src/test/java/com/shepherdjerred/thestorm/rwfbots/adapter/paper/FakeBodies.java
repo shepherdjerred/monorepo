@@ -44,7 +44,7 @@ public final class FakeBodies implements Bodies {
   @Override
   public UUID create(Personality personality) {
     created++;
-    var player = new PlayerMock(server, personality.name(), UUID.randomUUID());
+    var player = new TraversalPlayerMock(server, personality.name(), UUID.randomUUID());
     pending.put(player.getUniqueId(), player);
     known.add(player.getUniqueId());
     return player.getUniqueId();

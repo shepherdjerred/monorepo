@@ -19,14 +19,18 @@ public record TraversalState(
     long regenerationUntilTick,
     int jumpBoostAmplifier,
     long jumpBoostUntilTick,
-    double maxHealth) {
+    double maxHealth,
+    double fallDistance) {
   /** Explicit ordinary vanilla capabilities for synthetic bodies only. */
   public static final TraversalState UNMODIFIED =
-      new TraversalState(true, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 20);
+      new TraversalState(true, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 20, 0);
 
   public TraversalState {
     if (!Double.isFinite(maxHealth) || maxHealth <= 0)
       throw new IllegalArgumentException("Maximum health must be positive and finite");
+    if (!Double.isFinite(fallDistance) || fallDistance < 0)
+      throw new IllegalArgumentException(
+          "Accumulated fall distance must be finite and non-negative");
     if (!Double.isFinite(safeFallDistance)
         || safeFallDistance < 0
         || !Double.isFinite(fallDamageMultiplier)
@@ -40,6 +44,25 @@ public record TraversalState(
     effect(jumpBoostAmplifier, jumpBoostUntilTick);
     if (noFallUntilTick < -1 || slowFallingUntilTick < -1)
       throw new IllegalArgumentException("Invalid traversal expiry");
+  }
+
+  public TraversalState withFallDistance(double distance) {
+    return new TraversalState(
+        maySprint,
+        safeFallDistance,
+        fallDamageMultiplier,
+        fallProtectionPoints,
+        resistanceAmplifier,
+        resistanceUntilTick,
+        noFallUntilTick,
+        slowFallingUntilTick,
+        healingConsumables,
+        regenerationAmplifier,
+        regenerationUntilTick,
+        jumpBoostAmplifier,
+        jumpBoostUntilTick,
+        maxHealth,
+        distance);
   }
 
   private static void effect(int amplifier, long untilTick) {

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   HealthSample,
+  HealthCapabilities,
   HealthFall,
+  HealthRegain,
   HealthPrediction,
   HealthStatus,
   healthContract,
+  inspectNativeRegains,
   summarizeHealth,
 } from "./health-wire.ts";
 
@@ -28,12 +31,13 @@ const traversal = {
   jumpBoostAmplifier: -1,
   jumpBoostUntilTick: -1,
   maxHealth: 20,
+  fallDistance: 0,
 };
 
 /** Synthetic contract examples are never native acceptance evidence. */
 function fixture(kit = "trooper", drops = 1, refused = false) {
   const maximum = kit === "juggernaut" ? 30 : 20;
-  let sequence = 0;
+  let sequence = 1;
   const sample = (serverTick: number, health: number, y: number) =>
     HealthSample.parse({
       sequence: ++sequence,
@@ -46,23 +50,27 @@ function fixture(kit = "trooper", drops = 1, refused = false) {
       maxHealth: maximum,
       lastHurtTick: y === 65 ? serverTick : -1,
       position: [22.5, y, 6.5],
-      velocity: [0, 0, 0],
-      onGround: true,
-      fallDistance: 0,
+      velocity: [0, y === 69 ? -0.6 : 0, 0],
+      onGround: y !== 69,
+      fallDistance: y === 69 ? 4 : 0,
       noDamageTicks: 0,
       sprinting: false,
       inWater: false,
+      foodLevel: 7,
+      saturation: 0,
+      difficulty: "HARD",
       traversal: {
         ...traversal,
         maxHealth: maximum,
         maySprint: kit !== "juggernaut",
+        fallDistance: y === 69 ? 4 : 0,
       },
     });
   const samples: ReturnType<typeof HealthSample.parse>[] = [];
   const predictions: ReturnType<typeof HealthPrediction.parse>[] = [];
   const falls: ReturnType<typeof HealthFall.parse>[] = [];
   for (let index = 0; index < drops; index++) {
-    const before = sample(10 + index * 20, maximum - index * 5, 73);
+    const before = sample(10 + index * 20, maximum - index * 5, 69);
     samples.push(before);
     const prediction = HealthPrediction.parse({
       sequence: ++sequence,
@@ -74,6 +82,7 @@ function fixture(kit = "trooper", drops = 1, refused = false) {
       affordable: true,
       noSprint: kit === "juggernaut",
       waypoint: [25.5, 65, 6.5],
+      fallDistance: before.traversal.fallDistance,
     });
     predictions.push(prediction);
     const after = sample(before.serverTick + 10, before.health - 5, 65);
@@ -111,11 +120,42 @@ function fixture(kit = "trooper", drops = 1, refused = false) {
         affordable: false,
         noSprint: kit === "juggernaut",
         waypoint: [25.5, 65, 6.5],
+        fallDistance: 0,
       }),
     );
   }
+  const last = samples.at(-1);
+  if (last === undefined) throw new Error("Test native captures missing");
+  const details = {
+    difficulty: "HARD",
+    foodLevel: "7",
+    saturation: "0.0",
+    originalDifficulty: "NORMAL",
+    originalFoodLevel: "20",
+    originalSaturation: "5.0",
+    directHealthChange: "false",
+    source: "explicit-controlled-diagnostic-environment",
+  };
+  const restored = {
+    sequence: ++sequence,
+    serverTick: last.serverTick,
+    kind: "environment-restored",
+    details: {
+      ...details,
+      difficulty: "NORMAL",
+      foodLevel: "20",
+      saturation: "5.0",
+    },
+  };
+  samples.push({
+    ...last,
+    sequence: ++sequence,
+    foodLevel: 20,
+    saturation: 5,
+    difficulty: "NORMAL",
+  });
   return HealthStatus.parse({
-    version: 1,
+    version: 3,
     kind: "controlled-route-diagnostic",
     humanDemonstration: false,
     scenario:
@@ -129,9 +169,227 @@ function fixture(kit = "trooper", drops = 1, refused = false) {
     samples,
     predictions,
     falls,
-    setups: [],
+    setups: [
+      { sequence: 1, serverTick: 10, kind: "environment-control", details },
+      restored,
+    ],
+    regains: [],
   });
 }
+
+describe("captured accumulated fall distance", () => {
+  it("requires actual accumulated fall metadata and binds it to the risk source", () => {
+    for (const invalid of [undefined, -1, Number.NaN, Number.POSITIVE_INFINITY])
+      expect(() =>
+        HealthCapabilities.parse({ ...traversal, fallDistance: invalid }),
+      ).toThrow();
+    const original = fixture();
+    const airborne = {
+      ...original,
+      samples: original.samples.map((sample, index) =>
+        index === 0
+          ? {
+              ...sample,
+              onGround: false,
+              position: [22.5, 69, 6.5],
+              velocity: [0, -0.6, 0],
+              fallDistance: 4,
+              traversal: { ...sample.traversal, fallDistance: 4 },
+            }
+          : sample,
+      ),
+      predictions: original.predictions.map((prediction) => ({
+        ...prediction,
+        fallDistance: 4,
+      })),
+    };
+    expect(summarizeHealth(airborne).nativeFalls).toBe(1);
+    expect(() =>
+      summarizeHealth({
+        ...airborne,
+        samples: airborne.samples.map((sample, index) =>
+          index === 0
+            ? {
+                ...sample,
+                traversal: { ...sample.traversal, fallDistance: 0 },
+              }
+            : sample,
+        ),
+      }),
+    ).toThrow(/Captured fall distance/);
+    expect(() =>
+      summarizeHealth({
+        ...airborne,
+        predictions: original.predictions.map((planned) => ({
+          ...planned,
+          fallDistance: 0,
+        })),
+      }),
+    ).toThrow(/prediction/);
+  });
+
+  it("rejects a ground fall supported only by a zero-prefix pre-placement prediction", () => {
+    const original = fixture();
+    const missing = {
+      ...original,
+      samples: original.samples.map((sample, index) =>
+        index === 0
+          ? {
+              ...sample,
+              fallDistance: 0,
+              traversal: { ...sample.traversal, fallDistance: 0 },
+            }
+          : sample,
+      ),
+      predictions: original.predictions.map((planned) => ({
+        ...planned,
+        fallDistance: 0,
+      })),
+    };
+    expect(() => summarizeHealth(missing)).toThrow(
+      /positive captured accumulated-fall/,
+    );
+  });
+});
+
+describe("passive native healing observations", () => {
+  it("rejects an uncontrolled prediction and any HP change during restoration", () => {
+    const original = fixture();
+    expect(() =>
+      summarizeHealth({
+        ...original,
+        predictions: original.predictions.map((row) => ({
+          ...row,
+          sequence: 0,
+        })),
+        falls: original.falls.map((row) => ({ ...row, predictionSequence: 0 })),
+      }),
+    ).toThrow(/Native trials/);
+    expect(() =>
+      summarizeHealth({
+        ...original,
+        samples: original.samples.map((sample, index) =>
+          index === original.samples.length - 1
+            ? { ...sample, health: sample.health + 1 }
+            : sample,
+        ),
+      }),
+    ).toThrow(/Health changed while restoring/);
+  });
+
+  it("requires the controlled native captures and exact reversible environment receipts", () => {
+    const original = fixture();
+    expect(summarizeHealth(original).nativeRegains).toBe(0);
+    for (const kind of ["environment-control", "environment-restored"])
+      expect(() =>
+        summarizeHealth({
+          ...original,
+          setups: original.setups.filter((setup) => setup.kind !== kind),
+        }),
+      ).toThrow(/environment/);
+    for (const changed of [
+      { difficulty: "PEACEFUL" },
+      { foodLevel: "20" },
+      { saturation: "5.0" },
+      { originalDifficulty: "HARD" },
+      { originalFoodLevel: "7" },
+      { originalSaturation: "0.0" },
+      { directHealthChange: "true" },
+    ])
+      expect(() =>
+        summarizeHealth({
+          ...original,
+          setups: original.setups.map((setup) =>
+            setup.kind === "environment-control"
+              ? { ...setup, details: { ...setup.details, ...changed } }
+              : setup,
+          ),
+        }),
+      ).toThrow();
+    expect(() =>
+      summarizeHealth({
+        ...original,
+        samples: original.samples.map((sample, index) =>
+          index === 0 ? { ...sample, difficulty: "PEACEFUL" } : sample,
+        ),
+      }),
+    ).toThrow(/Native captures/);
+    expect(() =>
+      summarizeHealth({
+        ...original,
+        samples: original.samples.slice(0, -1),
+      }),
+    ).toThrow(/Native captures/);
+  });
+
+  it("binds passive regain causes and nutrition to the exact before and next-tick captures", () => {
+    const original = fixture();
+    const landing = original.samples.at(-1);
+    if (landing === undefined) throw new Error("Test landing capture missing");
+    const source = { ...landing, sequence: 12, serverTick: 21 };
+    const result = { ...source, sequence: 13, serverTick: 22, health: 16 };
+    const regain = HealthRegain.parse({
+      sequence: 14,
+      eventTick: 21,
+      observedTick: 22,
+      sourceSequence: 12,
+      resultSequence: 13,
+      reason: "SATIATED",
+      amount: 1,
+      cancelled: false,
+      before: 15,
+      after: 16,
+      foodLevel: 20,
+      saturation: 5,
+      difficulty: "NORMAL",
+    });
+    const receipt = {
+      ...original,
+      samples: [...original.samples, source, result],
+      regains: [regain],
+    };
+    expect(inspectNativeRegains(receipt)).toHaveLength(1);
+    expect(() => summarizeHealth(receipt)).toThrow(/native healing/);
+    for (const change of [
+      { sourceSequence: 999 },
+      { resultSequence: 999 },
+      { observedTick: 21 },
+      { before: 14 },
+      { after: 17 },
+      { foodLevel: 19 },
+      { saturation: 0 },
+      { difficulty: "PEACEFUL" },
+    ])
+      expect(() =>
+        inspectNativeRegains({
+          ...receipt,
+          regains: [{ ...regain, ...change }],
+        }),
+      ).toThrow();
+    expect(
+      inspectNativeRegains({
+        ...receipt,
+        samples: [...original.samples, source, { ...result, health: 15 }],
+        regains: [{ ...regain, cancelled: true, after: 15 }],
+      }),
+    ).toHaveLength(1);
+  });
+
+  it("requires actual bounded nutrition and difficulty instead of assuming normal regeneration", () => {
+    const sample = fixture().samples[0];
+    if (sample === undefined) throw new Error("Test capture missing");
+    for (const invalid of [
+      { foodLevel: undefined },
+      { foodLevel: -1 },
+      { foodLevel: 21 },
+      { saturation: Number.NaN },
+      { saturation: -1 },
+      { difficulty: "UNKNOWN" },
+    ])
+      expect(() => HealthSample.parse({ ...sample, ...invalid })).toThrow();
+    expect(() => HealthStatus.parse({ ...fixture(), version: 1 })).toThrow();
+  });
+});
 
 describe("joined RWF native health evidence contract", () => {
   it("pins five diagnostic cases without claiming human or autonomous evidence", () => {
@@ -283,6 +541,12 @@ describe("joined RWF native health evidence contract", () => {
         snapshotHealth: fall.snapshotHealth + 1,
       })),
       setups: [
+        ...original.setups.map((setup) => ({
+          ...setup,
+          serverTick:
+            setup.serverTick +
+            (setup.kind === "environment-restored" ? 100 : 0),
+        })),
         {
           sequence: 0,
           serverTick: 10,
@@ -290,7 +554,7 @@ describe("joined RWF native health evidence contract", () => {
           details: { effect: "resistance", durationTicks: "80" },
         },
         {
-          sequence: 9,
+          sequence: 12,
           serverTick: 140,
           kind: "effect-expired",
           details: { effect: "resistance" },
@@ -304,7 +568,9 @@ describe("joined RWF native health evidence contract", () => {
     expect(() =>
       summarizeHealth({
         ...protectedTrial,
-        setups: protectedTrial.setups.slice(0, 1),
+        setups: protectedTrial.setups.filter(
+          (setup) => setup.kind !== "effect-expired",
+        ),
       }),
     ).toThrow(/protection/);
   });

@@ -28,9 +28,23 @@ public final class FallRisk {
             .launch()
             .map(launch -> Math.max(self.pos().y(), launch.takeoff().y()))
             .orElseGet(() -> self.pos().y());
-    var distance = Math.max(0, start - point.pos().y()) + (point.hop() == Hop.LEAP ? 1.3 : 0);
+    var certified = Math.max(0, start - point.pos().y()) + (point.hop() == Hop.LEAP ? 1.3 : 0);
+    var pending = self.traversal().fallDistance() + Math.max(0, self.pos().y() - point.pos().y());
+    var distance = Math.max(certified, pending);
     return mitigated(
         distance, point.landing() == Waypoint.Landing.WATER, self.traversal(), arrivalTick);
+  }
+
+  /** An actual first landing may occur before a projected WALK, without a new DROP edge. */
+  static int landingDamage(
+      double remainingDescent, Waypoint.Landing landing, TraversalState state, long arrivalTick) {
+    if (!Double.isFinite(remainingDescent) || remainingDescent < 0)
+      throw new IllegalArgumentException("remaining fall descent must be finite and non-negative");
+    return mitigated(
+        state.fallDistance() + remainingDescent,
+        landing == Waypoint.Landing.WATER || landing == Waypoint.Landing.CLIMB,
+        state,
+        arrivalTick);
   }
 
   private static int mitigated(

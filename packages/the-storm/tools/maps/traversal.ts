@@ -14,6 +14,7 @@ import {
   traversalContract,
   summarizeTraversal,
   compareFlatTraversal,
+  validateCapturedTraversal,
 } from "./traversal-wire.ts";
 
 const args = parseArgs({
@@ -111,6 +112,7 @@ try {
         ),
       );
       const latest = await waitForTrial(rcon, scenario.id, repetition);
+      if (driver === "graph") validateCapturedTraversal(latest);
       const summary = summarizeTraversal(latest);
       results.push({ repetition, summary });
       if (!summary.reached)

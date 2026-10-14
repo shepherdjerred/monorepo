@@ -68,7 +68,7 @@ final class RwfBotsLobbyTest {
   void botsTryKitsThroughThePickPathAndEndOnTheirDraftedKit() {
     var harness = RwfBotsHarness.start(directory);
     running = harness;
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     countdown(harness, alice, 6);
 
     harness.ticks(57 * 20);
@@ -91,7 +91,7 @@ final class RwfBotsLobbyTest {
   void botsMoveAboutTheLobbyUntilTheMatchGoesLive() {
     var harness = RwfBotsHarness.start(directory);
     running = harness;
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     countdown(harness, alice, 4);
     var start = new HashMap<String, Location>();
     for (var bot : harness.paper().roster().live()) {

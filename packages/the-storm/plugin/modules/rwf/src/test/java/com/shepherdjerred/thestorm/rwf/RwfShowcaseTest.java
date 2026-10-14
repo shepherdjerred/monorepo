@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.rwf.adapter.db.JooqMatchStore;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
 import com.shepherdjerred.thestorm.rwf.app.ShowcaseControl;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
 import com.shepherdjerred.thestorm.rwf.domain.record.MatchRecord;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPInputStream;
 import org.bukkit.GameMode;
 import org.jspecify.annotations.Nullable;
@@ -126,6 +128,79 @@ final class RwfShowcaseTest {
     assertThat(control.startSeeded(before.matchId(), 2, seed + 1)).isPresent();
     assertThat(harness().snapshot()).isEqualTo(started);
     assertThat(harness().rwf.getTime()).isEqualTo(expected);
+  }
+
+  @Test
+  void anAlreadyReadySeededShowcaseRestoresItsSeedAndLightingWhenEverySpawnFails() {
+    running = RwfHarness.start(directory);
+    var before = harness().snapshot();
+    var experience = harness().view().experience(before.matchId());
+    harness().rwf.setTime(1234);
+    harness().bots.failNextSpawns(4);
+    var control = harness().services.require(ShowcaseControl.class);
+
+    assertThat(control.startSeeded(before.matchId(), 4, 600_090_001L)).isPresent();
+
+    assertThat(harness().snapshot()).isEqualTo(before);
+    assertThat(harness().view().experience(before.matchId())).isEqualTo(experience);
+    assertThat(harness().rwf.getTime()).isEqualTo(1234);
+    assertThat(harness().bots.spawned()).isEmpty();
+    assertThat(harness().bots.drafted()).isZero();
+    assertThat(control.startSeeded(before.matchId(), 4, 600_090_001L)).isEmpty();
+    assertThat(harness().snapshot().combatants()).hasSize(4);
+  }
+
+  @Test
+  void aShowcaseWaitsForChosenMapListenersBeforeDraftingItsExactRoster() {
+    running = RwfHarness.prepare(directory);
+    var loaded = harness().deferMapChunks();
+    harness().enable(directory);
+    var before = harness().snapshot();
+    var heardReady = new AtomicBoolean();
+    var subscription =
+        harness()
+            .events()
+            .subscribe(
+                notification -> {
+                  if (notification.event() instanceof MatchEvent.MapReady) {
+                    assertThat(harness().bots.known())
+                        .as("map listeners run before drafting")
+                        .isEmpty();
+                    heardReady.set(true);
+                  }
+                });
+    var control = harness().services.require(ShowcaseControl.class);
+
+    assertThat(control.startSeeded(before.matchId(), 4, 600_090_001L)).isEmpty();
+    assertThat(harness().snapshot().matchId()).isEqualTo(before.matchId());
+    assertThat(harness().snapshot().combatants()).isEmpty();
+    assertThat(harness().bots.known()).isEmpty();
+    assertThat(control.startSeeded(before.matchId(), 4, 600_090_002L)).isPresent();
+    assertThat(harness().rwf.getTime()).isZero();
+
+    loaded.complete(null);
+    harness().until(() -> harness().snapshot().combatants().size() == 4);
+    assertThat(heardReady).isTrue();
+    assertThat(harness().bots.known()).hasSize(4);
+    subscription.close();
+  }
+
+  @Test
+  void stoppingAPendingShowcaseCancelsItsDraftBeforeTheMapFinishesLoading() {
+    running = RwfHarness.prepare(directory);
+    var loaded = harness().deferMapChunks();
+    harness().enable(directory);
+    var control = harness().services.require(ShowcaseControl.class);
+    var id = harness().snapshot().matchId();
+    assertThat(control.startSeeded(id, 4, 600_090_001L)).isEmpty();
+    assertThat(control.stop(id)).isEmpty();
+
+    loaded.complete(null);
+    harness().until(() -> !harness().snapshot().matchId().equals(id));
+    harness().until(() -> !harness().snapshot().teams().isEmpty());
+
+    assertThat(harness().bots.known()).isEmpty();
+    assertThat(harness().snapshot().combatants()).isEmpty();
   }
 
   @Test

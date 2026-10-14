@@ -1156,13 +1156,15 @@ if a committed `nav.rwfnav` or summary differs
 byte for byte; the bake is deterministic, so a diff means the map, the block
 table or the baker changed and the artifacts must be rebaked. A bake that
 `NavArtifact.validate()` rejects (a spawn inside a wall, a bomb no spawn can
-reach) fails too; fix the map, not the tool. Navigation format 2, generator 3
-and movement model 3 use server ticks for travel costs and health points for
+reach) fails too; fix the map, not the tool. Navigation format 2, generator 4
+and movement model 4 use server ticks for travel costs and health points for
 fall damage. Directed edges include climbing, surface and submerged swimming,
 ordinary wooden doors, jump-up steps, and sprint jumps with certified run-up
 and flight clearance. Compressed water intervals preserve intermediate depths
 without storing a graph node for every submerged block. Nodes retain actual
-half-block standing heights, and prepared run-ups survive equivalent replans;
+half-block standing heights and exact climbable-cell metadata. A climb edge
+alone does not certify that the body's feet touch a ladder or vine. Prepared
+run-ups survive equivalent replans;
 takeoff rechecks position, momentum, health and expiring protection. Routes account for
 cumulative fall damage, actual movement and protection capabilities, effect
 expiry, available healing, known enemy exposure and bomb deadlines. A
@@ -1172,6 +1174,16 @@ Distance fields store lossless float-bit deltas in byte planes before
 compression. The artifact declares this encoding explicitly; unknown encodings
 and invalid distances fail decoding. Positive infinity represents unreachable
 nodes.
+`rwfmap upgrade-model3 <privateMapDir>` explicitly migrates a format-2,
+generator-3, model-3 artifact in a private map copy. It requires the declared
+distance encoding and matching original terrain, classification, sites and
+legacy summary. It preserves all eight analysis sections and the existing
+graph prefix byte for byte, adds the authoritative climbable-node bitset,
+and verifies the result with the current strict decoder. It writes only that
+copy's navigation artifact and summary. Validate the complete candidate catalog
+before copying artifacts into owned content. Rebuild the lobby with
+`bake-lobby` and `verify-lobby`. Ordinary runtime loading rejects the older
+model; use a full bake for other source versions.
 Walk-off drops extend to the first landing within the authored map's vertical
 bounds. Sprint-jump certification separately bounds descents to sixteen blocks
 and simulated flight to eighty ticks; an uncertified jump does not become a
@@ -1293,6 +1305,14 @@ water landings and protection expiry. Use repeated `--scenario <id>` arguments
 to select cases. These controlled diagnostics supply neither human
 demonstrations nor proof of autonomous route choice. Build the same three
 artifacts as the traversal runner and keep this extended check outside CI.
+The diagnostic waits for the real body to become vulnerable after a world
+transfer. It records that transition without changing protection, and keeps
+requiring vulnerability throughout the trial. Passive healing observations
+include the native cause, actual health change, nutrition and world difficulty.
+The controlled cases temporarily use Hard difficulty, food level seven and
+zero saturation to isolate cumulative damage from peaceful and satiated
+regeneration. They record the setup and restore the original difficulty and
+nutrition on completion or failure, without changing health or healing rules.
 
 `bun tools/maps/pursuit.ts --output .cache/rwf-pursuit/batch-a` checks the
 production planner, reflex and Citizens motor together in a small disposable
@@ -2536,6 +2556,16 @@ so repeated enemy lookups do not scan the entire lobby.
 Role assignment prepares all teams before flattening their distinct source-node
 distance rows into one parallel batch. Scoring follows the original bot and slot
 order after the distance barrier, preserving assignments and random draw order.
+Before publishing a retake plan, a separate parallel stage checks its two fuse
+workers with their actual planner, health, movement capabilities and perception.
+Each team step permits at most four planner evaluations, rotating through
+replacement candidates across steps. An uncertified worker becomes a reserve;
+screens wait for certified workers rather than all crowding the fuse. Changes to
+an admitted worker's health, movement state or temporary protection trigger an
+earlier check. Search scratch belongs exclusively to each batch, and Flight
+Recorder spans expose both stage and individual route costs. This query-count
+bound does not establish a latency bound; capacity tests still judge the entire
+thinking cycle.
 Role distances stop at the scoring cap of 128; directed reachability distinguishes
 long reachable paths from unreachable targets, which retain their existing
 horizontal-distance scoring. Other path queries keep their full search.

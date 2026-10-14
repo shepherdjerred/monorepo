@@ -47,6 +47,7 @@ final class TraversalCaptureTest {
     player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 0));
     player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 10, 2));
     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 5, 0));
+    player.setFallDistance(4.25f);
     var capture =
         new TraversalCapture(
             id -> Optional.of(Instant.EPOCH.plusMillis(3499)), InstantSource.fixed(Instant.EPOCH));
@@ -65,6 +66,7 @@ final class TraversalCaptureTest {
     assertThat(state.jumpBoostAmplifier()).isEqualTo(2);
     assertThat(state.jumpBoostUntilTick()).isEqualTo(110);
     assertThat(state.maxHealth()).isEqualTo(20);
+    assertThat(state.fallDistance()).isEqualTo(4.25);
   }
 
   @Test

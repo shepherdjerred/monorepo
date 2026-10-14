@@ -10,7 +10,12 @@ import { RconClient } from "#e2e/harness/rcon.ts";
 import { status } from "#e2e/harness/rwf-match.ts";
 import { freezeInputs } from "./inputs.ts";
 import { root, runtimeMapServerConfig, waitForMapState } from "./paper.ts";
-import { Lifecycle, verifyBounds } from "./lifecycle.ts";
+import {
+  Lifecycle,
+  verifyBounds,
+  verifyLiveShowcase,
+  isSuccessorLobby,
+} from "./lifecycle.ts";
 
 const args = parseArgs({
   strict: true,
@@ -80,6 +85,7 @@ let server: Awaited<ReturnType<typeof startServer>> | undefined;
 let console: RconClient | undefined;
 const samples: Lifecycle[] = [];
 const visited: string[] = [];
+let completedRotations = 0;
 const verifiedContents = new Set<string>();
 const deadline = Date.now() + 2_700_000;
 try {
@@ -161,26 +167,51 @@ try {
     throw new Error("Initial admission read every map");
   for (let round = 0; ; round++) {
     const before = await status(rcon);
-    visited.push(before.map);
-    await contents();
-    if (round >= rotations && requiredMaps.every((id) => visited.includes(id)))
+    if (
+      completedRotations >= rotations &&
+      requiredMaps.every((id) => visited.includes(id))
+    )
       break;
     if (round >= 12)
       throw new Error(
         "Ordinary rotation did not visit all required maps within twelve transitions",
       );
-    await rcon.command("storm-fixture-map-lifecycle start");
+    await wait(async () => {
+      const selected = await status(rcon);
+      const snapshot = await observe();
+      return (
+        selected.ready &&
+        selected.phase === "Lobby" &&
+        selected.matchId === before.matchId &&
+        selected.map !== "none" &&
+        snapshot.maps.some((map) => map.id === selected.map && map.ready)
+      );
+    }, "chosen map resources before pristine contents verification");
+    await contents();
+    verifyBounds(
+      Lifecycle.parse(
+        JSON.parse(await rcon.command("storm-fixture-map-lifecycle start")),
+      ),
+    );
     await wait(async () => {
       const s = await status(rcon);
       return s.ready && s.phase === "Live";
     }, "native bots to enter combat");
+    const live = await status(rcon);
+    verifyLiveShowcase(before.matchId, live);
+    visited.push(live.map);
     await observe();
     await Bun.sleep(2000);
-    await rcon.command("storm-fixture-map-lifecycle stop");
+    verifyBounds(
+      Lifecycle.parse(
+        JSON.parse(await rcon.command("storm-fixture-map-lifecycle stop")),
+      ),
+    );
     await wait(async () => {
       const s = await status(rcon);
-      return s.ready && s.phase === "Lobby" && s.map !== before.map;
-    }, "rotation to a ready successor");
+      return isSuccessorLobby(before.matchId, s);
+    }, "reset to an admitted successor lobby");
+    completedRotations++;
     await observe();
   }
   await wait(async () => {
@@ -198,6 +229,8 @@ try {
       throw new Error("Native proof map inputs changed");
   }
   const last = await observe();
+  if (visited.some((id) => !verifiedContents.has(id)))
+    throw new Error("A visited map lacks pristine loot and sign verification");
   const released = last.maps.filter((map) => map.releases > 0);
   if (released.length === 0)
     throw new Error("No ordinary rotation released a map");
@@ -206,7 +239,7 @@ try {
     kind: "rwf-native-map-lifecycle",
     acceptance: "unaccepted",
     rolloutEnabled: false,
-    rotations: visited.length - 1,
+    rotations: completedRotations,
     minimumRotations: rotations,
     requiredMaps,
     visited,

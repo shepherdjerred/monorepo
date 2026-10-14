@@ -1,5 +1,10 @@
 import { z } from "zod";
 import wire from "#health-wire";
+import {
+  HealthEnvironment as Environment,
+  healthNutrition as nutrition,
+  validateEnvironment,
+} from "./health-environment.ts";
 
 const tick = z.number().int().nonnegative();
 const expiry = z.number().int().min(-1);
@@ -19,6 +24,7 @@ export const HealthCapabilities = z.strictObject({
   jumpBoostAmplifier: z.number().int().min(-1),
   jumpBoostUntilTick: expiry,
   maxHealth: z.number().positive(),
+  fallDistance: z.number().nonnegative(),
 });
 export const HealthSample = z.strictObject({
   sequence: tick,
@@ -39,6 +45,7 @@ export const HealthSample = z.strictObject({
   noDamageTicks: tick,
   sprinting: z.boolean(),
   inWater: z.boolean(),
+  ...nutrition,
   traversal: HealthCapabilities,
 });
 export const HealthFall = z.strictObject({
@@ -63,6 +70,19 @@ export const HealthSetup = z.strictObject({
   kind: z.string().min(1),
   details: z.record(z.string(), z.string()),
 });
+export const HealthRegain = z.strictObject({
+  sequence: tick,
+  eventTick: tick,
+  observedTick: tick,
+  sourceSequence: tick,
+  resultSequence: tick,
+  reason: z.string().regex(/^[A-Z][A-Z_]+$/u),
+  amount: z.number().nonnegative(),
+  cancelled: z.boolean(),
+  before: z.number().nonnegative(),
+  after: z.number().nonnegative(),
+  ...nutrition,
+});
 export const HealthPrediction = z.strictObject({
   sequence: tick,
   serverTick: tick,
@@ -73,9 +93,10 @@ export const HealthPrediction = z.strictObject({
   affordable: z.boolean(),
   noSprint: z.boolean(),
   waypoint: point,
+  fallDistance: z.number().nonnegative(),
 });
 export const HealthStatus = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(3),
   kind: z.literal("controlled-route-diagnostic"),
   humanDemonstration: z.literal(false),
   scenario: z.string(),
@@ -87,6 +108,7 @@ export const HealthStatus = z.strictObject({
   falls: z.array(HealthFall),
   setups: z.array(HealthSetup),
   predictions: z.array(HealthPrediction),
+  regains: z.array(HealthRegain),
 });
 const Scenario = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]+$/u),
@@ -96,18 +118,21 @@ const Scenario = z.strictObject({
   maximumDrops: z.number().int().min(1).max(5),
 });
 const Contract = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(3),
   kind: z.literal("controlled-route-diagnostic"),
   humanDemonstration: z.literal(false),
+  environment: Environment,
   maximumTicks: z.literal(600),
   records: z.record(z.string(), z.array(z.string())),
   scenarios: z.array(Scenario).min(1),
 });
 export const healthContract = Contract.parse(wire);
 const records = {
+  Environment,
   Sample: HealthSample,
   Fall: HealthFall,
   Setup: HealthSetup,
+  Regain: HealthRegain,
   Prediction: HealthPrediction,
   Status: HealthStatus,
   Traversal: HealthCapabilities,
@@ -154,6 +179,8 @@ export function summarizeHealth(raw: unknown) {
   const bounds = validateSamples(status, scenario);
   validateJournal(status, scenario, bounds);
   validatePredictions(status);
+  validateRegains(status);
+  validateEnvironment(status, healthContract.environment);
   for (const fall of status.falls) validateFall(fall, { status, ...bounds });
   const maximumHealth = validateKit(status, scenario, bounds);
   validateOutcome(status, scenario, prediction);
@@ -164,15 +191,23 @@ export function summarizeHealth(raw: unknown) {
     autonomousRoutingVerified: false,
     maximumHealth,
     nativeFalls: status.falls.length,
+    nativeRegains: status.regains.length,
     finalHealth: bounds.last.health,
     riskRefused: status.state === "refused",
     capturedTicks: status.samples.length,
+    positivePrefixPredictions: status.predictions.filter(
+      (planned) => planned.fallDistance > 0,
+    ).length,
   };
 }
 
 function validateSamples(status: State, scenario: Scenario) {
   let previous = -1;
   for (const sample of status.samples) {
+    if (sample.fallDistance !== sample.traversal.fallDistance)
+      throw new Error(
+        "Captured fall distance differs from actual body observation",
+      );
     if (
       sample.sequence <= previous ||
       sample.match !== status.match ||
@@ -204,6 +239,7 @@ function validateJournal(
     ...status.falls,
     ...status.setups,
     ...status.predictions,
+    ...status.regains,
   ];
   if (
     new Set(allRows.map((row) => row.sequence)).size !== allRows.length ||
@@ -232,6 +268,44 @@ function validateJournal(
     );
 }
 
+/** Passive diagnostics may identify native healing causes without passing a controlled trial. */
+export function inspectNativeRegains(raw: unknown) {
+  const status = HealthStatus.parse(raw);
+  validateRegains(status);
+  return status.regains;
+}
+
+function validateRegains(status: State) {
+  const samples = new Map(
+    status.samples.map((sample) => [sample.sequence, sample]),
+  );
+  for (const regain of status.regains) {
+    const source = samples.get(regain.sourceSequence);
+    const result = samples.get(regain.resultSequence);
+    if (
+      source?.serverTick !== regain.eventTick ||
+      result?.serverTick !== regain.observedTick ||
+      regain.observedTick !== regain.eventTick + 1 ||
+      regain.resultSequence <= regain.sourceSequence ||
+      regain.sequence <= regain.resultSequence ||
+      source.match !== status.match ||
+      source.body !== status.body ||
+      source.world !== status.world ||
+      result.match !== status.match ||
+      result.body !== status.body ||
+      result.world !== status.world ||
+      source.health !== regain.before ||
+      result.health !== regain.after ||
+      source.foodLevel !== regain.foodLevel ||
+      source.saturation !== regain.saturation ||
+      source.difficulty !== regain.difficulty
+    )
+      throw new Error(
+        "Native healing receipt differs from its original body captures",
+      );
+  }
+}
+
 function validatePredictions(status: State) {
   for (const planned of status.predictions) {
     const source = status.samples.find(
@@ -242,7 +316,8 @@ function validatePredictions(status: State) {
       source.health + source.absorption !== planned.effectiveHealth ||
       planned.arrivalTick <= planned.serverTick ||
       planned.affordable !== planned.damage <= planned.effectiveHealth - 1 ||
-      planned.noSprint === source.traversal.maySprint
+      planned.noSprint === source.traversal.maySprint ||
+      planned.fallDistance !== source.traversal.fallDistance
     )
       throw new Error(
         "Controlled risk prediction differs from the actual captured body",
@@ -257,6 +332,17 @@ function validateFall(
   const planned = context.status.predictions.find(
     (candidate) => candidate.sequence === fall.predictionSequence,
   );
+  const source = context.status.samples.find(
+    (sample) => sample.sequence === planned?.sourceSequence,
+  );
+  if (
+    source === undefined ||
+    source.onGround ||
+    source.traversal.fallDistance <= 0
+  )
+    throw new Error(
+      "Native FALL lacks a positive captured accumulated-fall prediction",
+    );
   if (
     planned === undefined ||
     fall.observedTick <= fall.eventTick ||

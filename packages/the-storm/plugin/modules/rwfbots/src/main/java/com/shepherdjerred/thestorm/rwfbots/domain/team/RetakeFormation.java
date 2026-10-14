@@ -90,7 +90,7 @@ final class RetakeFormation {
   }
 
   /** Space shortage retains an existing valid job, including while its owner is airborne. */
-  private static Vec3 reserve(NavArtifact nav, CombatantView bot, TeamPlan previous) {
+  static Vec3 reserve(NavArtifact nav, CombatantView bot, TeamPlan previous) {
     var graph = nav.graph();
     var held =
         previous

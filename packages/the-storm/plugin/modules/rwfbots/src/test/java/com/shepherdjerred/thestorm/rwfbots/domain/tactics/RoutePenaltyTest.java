@@ -39,7 +39,13 @@ final class RoutePenaltyTest {
   @Test
   void aTeammatesPathPushesTheRouteAside() {
     var first = route(3, Set.of());
-    var second = route(3, Set.copyOf(first.subList(2, first.size() - 2)));
+    // Shared endpoints are unavoidable; trim physical distance, since one LEAP is many blocks.
+    var occupied =
+        first.stream()
+            .filter(node -> GRAPH.feet(node).horizontalDistance(GRAPH.feet(FROM)) > 2)
+            .filter(node -> GRAPH.feet(node).horizontalDistance(GRAPH.feet(TO)) > 2)
+            .toList();
+    var second = route(3, Set.copyOf(occupied));
     var shared = new HashSet<>(second);
     shared.retainAll(first);
     assertThat(shared.size()).isLessThan(first.size() / 2);
@@ -55,7 +61,14 @@ final class RoutePenaltyTest {
     for (var node = 0; node < GRAPH.nodeCount(); node++) {
       var near = occupied.contains(node);
       for (var edge = GRAPH.edgeStart(node); edge < GRAPH.edgeEnd(node); edge++) {
-        near |= occupied.contains(GRAPH.edgeTarget(edge));
+        var target = GRAPH.edgeTarget(edge);
+        var a = GRAPH.feet(node);
+        var b = GRAPH.feet(target);
+        near |=
+            occupied.contains(target)
+                && Math.abs(a.x() - b.x()) <= 1
+                && Math.abs(a.z() - b.z()) <= 1
+                && Math.abs(a.y() - b.y()) <= 1.5;
       }
       var cell = GRAPH.cell(node);
       var expected =
@@ -67,6 +80,31 @@ final class RoutePenaltyTest {
       expected += node % 3 * 0.1;
       assertThat(penalty.applyAsDouble(node)).isEqualTo(expected);
     }
+  }
+
+  @Test
+  void aDistantJumpDestinationDoesNotPretendItsTeammateIsBesideTheLaunch() {
+    var distant = -1;
+    var neighbor = -1;
+    for (var edge = GRAPH.edgeStart(FROM); edge < GRAPH.edgeEnd(FROM); edge++) {
+      var target = GRAPH.edgeTarget(edge);
+      var distance = GRAPH.feet(FROM).horizontalDistance(GRAPH.feet(target));
+      if (distance > 3) distant = target;
+      if (distance <= 1 && distance > 0) neighbor = target;
+    }
+    assertThat(distant).as("baked long jump destination").isNotNegative();
+    assertThat(neighbor).as("baked adjacent walk destination").isNotNegative();
+    var base =
+        RoutePenalty.of(GRAPH, 9, new RoutePenalty.Tolls(Set.of(), Optional.empty(), _ -> 0));
+    var far =
+        RoutePenalty.of(
+            GRAPH, 9, new RoutePenalty.Tolls(Set.of(distant), Optional.empty(), _ -> 0));
+    var close =
+        RoutePenalty.of(
+            GRAPH, 9, new RoutePenalty.Tolls(Set.of(neighbor), Optional.empty(), _ -> 0));
+    assertThat(far.applyAsDouble(FROM)).isEqualTo(base.applyAsDouble(FROM));
+    assertThat(close.applyAsDouble(FROM))
+        .isEqualTo(base.applyAsDouble(FROM) + RoutePenalty.OCCUPIED);
   }
 
   @Test

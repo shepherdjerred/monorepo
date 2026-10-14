@@ -75,6 +75,7 @@ async function capture(scenario: Scenario, frozen: ConversionInputs) {
     "training-yard",
     { duel: false, mapTool: path.join(frozen.mapTool, "bin/rwfmap") },
   );
+  await prepareNavigation(frozen, staged, directory);
   const token = randomBytes(24).toString("hex");
   const brain = startFakeBrain(token);
   let server: Awaited<ReturnType<typeof startServer>> | undefined;
@@ -194,6 +195,11 @@ async function capture(scenario: Scenario, frozen: ConversionInputs) {
       retries: 0,
       message: error instanceof Error ? error.message : String(error),
     });
+    if (player !== undefined && rcon !== undefined)
+      await save(
+        "body-failure-state.json",
+        await bodyFailureState(player, rcon),
+      );
     throw error;
   } finally {
     player?.clearControlStates();
@@ -215,6 +221,60 @@ async function capture(scenario: Scenario, frozen: ConversionInputs) {
         }
       }
     }
+  }
+}
+
+/** Read only the subject's vulnerability fields after a failed private diagnostic. */
+async function bodyFailureState(player: Client, rcon: RconClient) {
+  const fields: Record<string, string> = {};
+  try {
+    for (const field of [
+      "Health",
+      "Invulnerable",
+      "playerGameType",
+      "abilities.invulnerable",
+      "abilities.flying",
+      "abilities.mayfly",
+    ])
+      fields[field] = await rcon.command(
+        `data get entity RwfHealthProof ${field}`,
+      );
+  } catch (error) {
+    fields["readFailure"] =
+      error instanceof Error ? error.message : String(error);
+  }
+  return { clientGameMode: player.game.gameMode, fields };
+}
+
+async function prepareNavigation(
+  frozen: ConversionInputs,
+  staged: Awaited<ReturnType<typeof stageMap>>,
+  directory: string,
+) {
+  const lobby = path.join(staged.content, "rwf/lobby");
+  for (const [action, folder] of [
+    ["bake", staged.selected],
+    ["verify", staged.selected],
+    ["bake-lobby", lobby],
+    ["verify-lobby", lobby],
+  ] as const) {
+    const child = Bun.spawn(
+      [
+        "mise",
+        "exec",
+        "--",
+        path.join(frozen.mapTool, "bin/rwfmap"),
+        action,
+        folder,
+      ],
+      {
+        stdout: Bun.file(path.join(directory, `${action}.log`)),
+        stderr: "pipe",
+      },
+    );
+    const stderr = await new Response(child.stderr).text();
+    if ((await child.exited) !== 0)
+      throw new Error(`Private health map ${action} failed: ${stderr}`);
   }
 }
 

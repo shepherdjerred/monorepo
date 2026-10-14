@@ -24,7 +24,10 @@ public final class TraversalRisk {
       HealthRoutes.RiskPolicy policy,
       HealthRoutes.EdgePolicy edges,
       IntToDoubleFunction exposure,
-      boolean sprint) {}
+      boolean sprint,
+      Source source) {}
+
+  public record Source(CombatantView self, long tick) {}
 
   public static Query assess(
       Situation situation, TacticsContext context, Vec3 goal, Stance stance) {
@@ -64,7 +67,11 @@ public final class TraversalRisk {
         capabilities.maySprint() && (stance == Stance.AGGRESSIVE || stance == Stance.EVASIVE);
     var slowFalling = FallRisk.active(capabilities.slowFallingUntilTick(), situation.now());
     var movement =
-        new Movement(situation, sprint, graph.nearestNode(situation.self().pos()).orElse(-1));
+        new Movement(
+            situation.self(),
+            situation.now(),
+            sprint,
+            graph.nearestNode(situation.self().pos()).orElse(-1));
     var motion =
         new NavGraph.EdgeMotion(
             edge -> duration(graph, movement, edge),
@@ -78,7 +85,61 @@ public final class TraversalRisk {
         new HealthRoutes.EdgePolicy(
             damage, motion, FallRisk.expires(capabilities, situation.now())),
         exposure,
-        sprint);
+        sprint,
+        new Source(situation.self(), situation.now()));
+  }
+
+  static Query afterLanding(Query previous, NavGraph graph, InitialLanding.Contact contact) {
+    var source = previous.source();
+    var now = arrivalTick(source.tick(), contact.ticks());
+    var self =
+        source
+            .self()
+            .withPos(graph.feet(contact.node()))
+            .withVel(Vec3.ZERO)
+            .withMotion(
+                false,
+                contact.landing()
+                    == com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint.Landing.GROUND)
+            .withTraversal(source.self().traversal().withFallDistance(0));
+    var deadline = previous.policy().deadlineTicks();
+    var policy =
+        new HealthRoutes.RiskPolicy(
+            previous.policy().damageBudget() - contact.damage(),
+            previous.policy().ticksPerHealthPoint(),
+            deadline.isPresent()
+                ? OptionalDouble.of(Math.max(0, deadline.orElseThrow() - contact.ticks()))
+                : OptionalDouble.empty());
+    var movement = new Movement(self, now, previous.sprint(), contact.node());
+    var motion =
+        new NavGraph.EdgeMotion(
+            edge -> duration(graph, movement, edge),
+            edge ->
+                graph.edgeHop(edge) != Hop.LEAP
+                    || (self.traversal().maySprint()
+                        && !FallRisk.active(self.traversal().slowFallingUntilTick(), now)),
+            previous.sprint() ? 0.76 : 1);
+    HealthRoutes.DamageAt damage =
+        (edge, elapsed) ->
+            FallRisk.damage(graph, edge, self.traversal(), arrivalTick(now, elapsed));
+    return new Query(
+        policy,
+        new HealthRoutes.EdgePolicy(damage, motion, FallRisk.expires(self.traversal(), now)),
+        previous.exposure(),
+        previous.sprint(),
+        new Source(self, now));
+  }
+
+  /** Water/climb contact cancels debt at the actual pose, without a trip to a graph portal. */
+  static Query afterCancellation(Query previous) {
+    var source = previous.source();
+    var self = source.self().withTraversal(source.self().traversal().withFallDistance(0));
+    return new Query(
+        previous.policy(),
+        previous.edges(),
+        previous.exposure(),
+        previous.sprint(),
+        new Source(self, source.tick()));
   }
 
   private static long arrivalTick(long now, double elapsed) {
@@ -86,14 +147,14 @@ public final class TraversalRisk {
     return now + (long) Math.ceil(elapsed) + 2;
   }
 
-  private record Movement(Situation situation, boolean sprint, int initialNode) {}
+  private record Movement(CombatantView self, long now, boolean sprint, int initialNode) {}
 
   private static double duration(NavGraph graph, Movement movement, int edge) {
-    var situation = movement.situation();
+    var self = movement.self();
     var sprint = movement.sprint();
     var cost = graph.edgeCost(edge);
     if (graph.edgeHop(edge) == Hop.DROP
-        && FallRisk.active(situation.self().traversal().slowFallingUntilTick(), situation.now())) {
+        && FallRisk.active(self.traversal().slowFallingUntilTick(), movement.now())) {
       var depth = graph.cell(graph.edgeSource(edge)).y() - graph.cell(graph.edgeTarget(edge)).y();
       cost = TraversalCosts.slowDrop(Math.max(1, depth));
     }
@@ -102,7 +163,7 @@ public final class TraversalRisk {
     if (sprint && graph.edgeHop(edge) == Hop.DROP)
       return cost - TraversalCosts.WALK + 1 / MovementMotor.SPRINT_SPEED;
     if (graph.edgeHop(edge) == Hop.LEAP)
-      return cost + LeapPreparation.ticks(graph, edge, situation.self(), movement.initialNode());
+      return cost + LeapPreparation.ticks(graph, edge, self, movement.initialNode());
     return cost;
   }
 

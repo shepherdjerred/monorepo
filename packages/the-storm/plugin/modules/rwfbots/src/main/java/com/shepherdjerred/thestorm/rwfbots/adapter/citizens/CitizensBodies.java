@@ -229,6 +229,9 @@ public final class CitizensBodies implements Bodies, Listener {
   }
 
   private static void steer(Player player, Vec3 heading, boolean sprint) {
+    // Citizens' custom fluid movement does not perform vanilla's accumulated-fall reset.
+    // Cancel only at actual occupied water/climb contact, including native waterlogged data.
+    if (BodyFluids.cancelsFall(player)) player.setFallDistance(0);
     player.setSprinting(sprint);
     var velocity = player.getVelocity();
     var slowdown = player.hasActiveItem() ? 0.2 : player.isSneaking() ? 0.3 : 1.0;

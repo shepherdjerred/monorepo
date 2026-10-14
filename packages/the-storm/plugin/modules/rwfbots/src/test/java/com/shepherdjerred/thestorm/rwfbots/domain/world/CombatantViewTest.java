@@ -72,7 +72,7 @@ final class CombatantViewTest {
 
   @Test
   void snapshotCopiesRetainActualCapabilities() {
-    var capabilities = new TraversalState(false, 5, 0.5, 12, 1, 80, 50, -1, 3, 0, 60, 2, 90, 30);
+    var capabilities = new TraversalState(false, 5, 0.5, 12, 1, 80, 50, -1, 3, 0, 60, 2, 90, 30, 0);
     var body = combatant(1, RED, Vec3.ZERO).withTraversal(capabilities);
     var copies =
         List.of(

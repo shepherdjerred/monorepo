@@ -1,9 +1,13 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.lobby;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavPath;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * The lobby's baked navigation, as the rwfmap tool names its places and bots read them: the lobby
@@ -34,6 +38,15 @@ public final class LobbyNav {
     return "side-" + team.toLowerCase(Locale.ROOT);
   }
 
+  /** Lobby steering walks and climbs; it does not execute committed sprint-jump run-ups. */
+  public static Optional<NavPath> walk(NavArtifact artifact, int from, int to) {
+    var graph = artifact.graph();
+    var motion =
+        new NavGraph.EdgeMotion(graph::edgeCost, edge -> graph.edgeHop(edge) != Hop.LEAP, 1);
+    return graph.path(
+        from, to, new NavGraph.PathWeights(node -> 0, edge -> 0, motion), graph.workspace());
+  }
+
   /** Everything that makes {@code artifact} unusable as the lobby; empty when it is usable. */
   public static List<String> problems(NavArtifact artifact) {
     var problems = new ArrayList<String>();
@@ -60,7 +73,7 @@ public final class LobbyNav {
       var node = artifact.graph().nodeAt(site.cell());
       if (node.isEmpty()) {
         problems.add(site.name() + " at " + site.cell() + " is not walkable");
-      } else if (artifact.graph().path(from.getAsInt(), node.getAsInt()).isEmpty()) {
+      } else if (walk(artifact, from.getAsInt(), node.getAsInt()).isEmpty()) {
         problems.add(site.name() + " cannot be reached from " + SPAWN);
       }
     }

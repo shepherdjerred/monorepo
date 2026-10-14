@@ -78,7 +78,7 @@ final class NavFilesTest {
     var loaded = NavFiles.load(directory);
     assertThat(loaded.artifacts()).isEmpty();
     assertThat(loaded.problems())
-        .containsEntry("synthetic", "nav.rwfnav uses an obsolete generator; rebake the map");
+        .containsEntry("synthetic", "nav.rwfnav does not decode: unsupported generator version 1");
   }
 
   @Test

@@ -79,7 +79,7 @@ final class OrdinaryLearningTest {
   }
 
   private static void beginCombat(RwfBotsHarness harness) {
-    var human = harness.server.addPlayer("Alice");
+    var human = harness.player("Alice");
     // Start the target directly ahead in clear sight; seeing it must not depend on wandering.
     human.teleport(new Location(harness.world, 6.5, 1, 8.5));
     harness.match.fireJoin(new CombatantId.Human(human.getUniqueId()), human.getName());

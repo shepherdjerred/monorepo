@@ -59,11 +59,12 @@ export async function runtimeMapServerConfig(
     ownedConfigDir: content,
     stormConfig: stormModuleConfig(
       await Bun.file(path.join(content, "config.yml")).text(),
-      ["economy", "mail", "tracks", "rwf", "rwfbots"],
+      ["economy", "mail", "tracks", "chat", "rwf", "rwfbots"],
     ),
     rwf: {
       ...rwfTestSettings,
       countdown: "PT1S",
+      voteLead: "PT0S",
       endLinger: "PT1S",
       targetCombatants: 8,
       maxCombatants: 16,

@@ -73,7 +73,8 @@ final class RunnerRulesTest {
             Duration.ZERO,
             Duration.ZERO,
             Duration.ZERO,
-            false);
+            false,
+            com.shepherdjerred.thestorm.rwf.domain.kit.KitPool.ALL);
     assertThat(
             RunnerRules.arrivalBudget(
                 RwfMatch.open(shortCountdown, Samples.MATCH, Samples.SEED), T0))

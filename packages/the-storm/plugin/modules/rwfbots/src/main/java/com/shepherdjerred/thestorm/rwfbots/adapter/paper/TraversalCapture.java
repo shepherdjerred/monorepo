@@ -47,7 +47,8 @@ final class TraversalCapture {
         untilTick(regeneration, tick),
         amplifier(jumpBoost),
         untilTick(jumpBoost, tick),
-        attribute(player, Attribute.MAX_HEALTH));
+        attribute(player, Attribute.MAX_HEALTH),
+        player.getFallDistance());
   }
 
   private long immunity(Player player, double multiplier, long tick) {

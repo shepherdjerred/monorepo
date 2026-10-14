@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.CoverPoints;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
@@ -296,6 +297,9 @@ public final class Planner {
   }
 
   private static Vec3 slotPoint(Situation situation, TacticsContext context, Slot slot) {
+    if (poisonDanger(situation, slot.pos(), POISON_MARGIN)) {
+      return poisonExit(situation, context);
+    }
     if (slot.kind() != SlotKind.ESCORT) {
       return slot.pos();
     }
@@ -358,17 +362,18 @@ public final class Planner {
         heldCover(situation, context, goal, threat.orElseThrow())
             .or(
                 () ->
-                    coverNear(
+                    coverWhere(
                         situation,
                         context,
-                        new CoverSearch(goal, threat.orElseThrow(), HOLD_SEARCH)))
+                        new CoverSearch(goal, threat.orElseThrow(), HOLD_SEARCH),
+                        feet -> holdsGround(situation, goal, threat.orElseThrow(), feet)))
             .or(
                 () ->
-                    coverNear(
+                    coverWhere(
                         situation,
                         context,
-                        new CoverSearch(
-                            situation.self().pos(), threat.orElseThrow(), BOUND_REACH)));
+                        new CoverSearch(situation.self().pos(), threat.orElseThrow(), BOUND_REACH),
+                        feet -> holdsGround(situation, goal, threat.orElseThrow(), feet)));
     return cover
         .map(
             point ->
@@ -386,6 +391,22 @@ public final class Planner {
                     Option.HOLD_SLOT,
                     now,
                     new PlanStep.Hold(goal, threat.orElseThrow(), Stance.CAUTIOUS)));
+  }
+
+  /** A distant sighting does not justify abandoning the assigned line for rearward cover. */
+  private static boolean holdsGround(Situation situation, Vec3 goal, Vec3 threat, Vec3 feet) {
+    var self = situation.self().pos();
+    return threat.horizontalDistance(self) <= PINNED_RANGE
+        || feet.horizontalDistance(goal) <= self.horizontalDistance(goal) + GIVE_GROUND;
+  }
+
+  /** Static cover holds expire when their slot moves away or the team assigns a different job. */
+  static boolean coverFitsSlot(Plan plan, Situation situation, TacticsContext context) {
+    if (plan.option() != Option.HOLD_SLOT || !(plan.current() instanceof PlanStep.Cover cover))
+      return true;
+    return slotPoint(situation, context)
+        .map(goal -> cover.pos().horizontalDistance(goal) <= HOLD_SEARCH + 1)
+        .orElse(false);
   }
 
   /**
@@ -509,6 +530,7 @@ public final class Planner {
         .findFirst()
         .filter(point -> point.protectsStanding(CoverPoints.sectorOf(feet, threat)))
         .filter(point -> feet.horizontalDistance(goal) <= HOLD_SEARCH + 1)
+        .filter(point -> holdsGround(situation, goal, threat, feet))
         .map(point -> new CoverSpot(node, feet));
   }
 
@@ -534,6 +556,7 @@ public final class Planner {
   static boolean coverAvailable(Situation situation, TacticsContext context, int node) {
     var graph = context.nav().graph();
     var point = graph.feet(node);
+    if (poisonDanger(situation, point, POISON_MARGIN)) return false;
     return situation.board().claimedCover().entrySet().stream()
         .filter(entry -> !entry.getKey().equals(situation.self().id()))
         .noneMatch(entry -> graph.feet(entry.getValue()).horizontalDistance(point) < COVER_ROOM);
@@ -568,6 +591,7 @@ public final class Planner {
     for (var point : nav.cover().protectingFrom(nav.graph(), near, threat, radius)) {
       var feet = nav.graph().feet(point.node());
       if (situation.board().isCoverClaimed(point.node(), self)
+          || poisonDanger(situation, feet, POISON_MARGIN)
           || feet.horizontalDistance(threat) <= TOO_CLOSE_COVER
           || taken.stream().anyMatch(other -> other.horizontalDistance(feet) < COVER_ROOM)
           || !wanted.test(feet)) {
@@ -634,7 +658,20 @@ public final class Planner {
         return cover.orElseThrow();
       }
     }
-    return new CoverSpot(-1, ownSpawn(situation, context).orElseGet(self::pos));
+    var fallback = ownSpawn(situation, context).orElseGet(self::pos);
+    return new CoverSpot(
+        -1,
+        poisonDanger(situation, fallback, POISON_MARGIN)
+            ? poisonExit(situation, context)
+            : fallback);
+  }
+
+  /** Poison safety uses known own objectives, with room to avoid immediately stepping back in. */
+  static boolean poisonDanger(Situation situation, Vec3 point, double margin) {
+    var poison = situation.snapshot().poison();
+    return poison.active()
+        && situation.ownBombs().stream()
+            .anyMatch(bomb -> bomb.pos().distance(point) <= poison.bombRadius() + margin);
   }
 
   /** Away from the own bomb: towards the nearest armable bomb, else the enemy spawn. */
@@ -1176,6 +1213,47 @@ public final class Planner {
    * @param alongLane whether to keep to the corridor of the bot's slot lane
    */
   record Way(Stance stance, boolean alongLane) {}
+
+  /** Uses the same actual-health, capability, fluid-entry and deadline policy as DEFUSE. */
+  public static boolean canReachWorker(Situation situation, TacticsContext context, Slot worker) {
+    if (worker.role() != Role.RETAKE) {
+      throw new IllegalArgumentException("worker eligibility requires a retake station");
+    }
+    return atWorker(situation, context, worker)
+        || !pathTo(situation, context, worker.pos(), new Way(Stance.AGGRESSIVE, false)).isEmpty();
+  }
+
+  /** A valid zero-length route must already occupy the station and be able to click its fuse. */
+  private static boolean atWorker(Situation situation, TacticsContext context, Slot worker) {
+    var self = situation.self();
+    var graph = context.nav().graph();
+    var cell = BlockPos.of(self.pos());
+    var node = graph.nodeAt(cell);
+    var station = graph.nodeAt(BlockPos.of(worker.pos()));
+    if (node.isEmpty()
+        || station.isEmpty()
+        || node.getAsInt() != station.getAsInt()
+        || !reached(self.pos(), worker.pos())
+        || Math.abs(self.pos().y() - worker.pos().y()) > 0.15
+        || !workerSettled(situation, context)) return false;
+    return situation
+        .litOwnBomb()
+        .filter(bomb -> bomb.pos().distance(worker.watch()) < 0.01)
+        .filter(bomb -> bomb.pos().distance(self.eye()) <= Reflex.BOMB_REACH)
+        .map(
+            bomb -> {
+              var hit =
+                  context.nav().grid().raycast(self.eye(), bomb.pos(), VoxelGrid.Layer.PROJECTILE);
+              return hit.isEmpty() || hit.orElseThrow().equals(BlockPos.of(bomb.pos()));
+            })
+        .orElse(false);
+  }
+
+  private static boolean workerSettled(Situation situation, TacticsContext context) {
+    var self = situation.self();
+    return context.nav().graph().water().contains(BlockPos.of(self.pos()))
+        || (self.onGround() && self.traversal().fallDistance() == 0);
+  }
 
   /** The waypoints from the bot to {@code goal}; empty when there is no path. */
   static List<Waypoint> pathTo(Situation situation, TacticsContext context, Vec3 goal, Way way) {

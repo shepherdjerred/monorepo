@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.BLUE;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
@@ -92,6 +93,143 @@ final class ReflexJumpCommitmentTest {
   }
 
   @Test
+  void unsafeCommittedLandingYieldsToTheNewCertifiedWaterFirstContact() {
+    var jump = leap(1.5, 8);
+    var self =
+        combatant(1, RED, new Vec3(4.5, 5, 1.5))
+            .withMotion(true, false)
+            .withHealth(4, 0)
+            .withTraversal(TraversalState.UNMODIFIED.withFallDistance(3));
+    var refuge =
+        new Waypoint(new Vec3(6.5, 1, 1.5), Hop.DROP, Optional.empty(), Waypoint.Landing.WATER);
+    var ordinary = route(Option.HUNT, GOAL);
+    var decision =
+        new Decision(
+            ordinary.bot(),
+            ordinary.option(),
+            Optional.empty(),
+            List.of(refuge, GOAL),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "certified first contact",
+            10,
+            1);
+    var step = tick(self, active(jump, ActiveJump.Stage.AIRBORNE), decision, 10);
+    assertThat(step.state().activeJump()).isEmpty();
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(refuge.pos(), false));
+    assertThat(step.commands()).doesNotContain(new BodyCommand.Jump());
+  }
+
+  @Test
+  void pendingFallDoesNotDiscardASafeCommittedLandingForAnotherPlannersRow() {
+    var self =
+        combatant(1, RED, new Vec3(4.5, 2, 1.5))
+            .withMotion(true, false)
+            .withTraversal(TraversalState.UNMODIFIED.withFallDistance(1));
+    var active = active(ORIGINAL, ActiveJump.Stage.AIRBORNE);
+    var step = tick(self, active, route(Option.RETAKE, GOAL), 10);
+    assertThat(step.state().activeJump()).contains(active);
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true));
+  }
+
+  @Test
+  void compatibleFirstContactPreservesTheCommittedAirborneLanding() {
+    var self =
+        combatant(1, RED, new Vec3(4.5, 2, 1.5))
+            .withMotion(true, false)
+            .withTraversal(TraversalState.UNMODIFIED.withFallDistance(1));
+    var contact = new Waypoint(ORIGINAL.pos(), Hop.DROP);
+    var active = active(ORIGINAL, ActiveJump.Stage.AIRBORNE);
+    var step =
+        tick(self, active, route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL)), 10);
+    assertThat(step.state().activeJump()).contains(active);
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(ORIGINAL.pos(), true));
+  }
+
+  @Test
+  void aDifferentCertifiedGroundContactReplacesTheOldNominallySafeLanding() {
+    var self =
+        combatant(1, RED, new Vec3(4.5, 2, 1.5))
+            .withMotion(true, false)
+            .withTraversal(TraversalState.UNMODIFIED.withFallDistance(1));
+    var contact = new Waypoint(new Vec3(4.5, 1, 1.5), Hop.DROP);
+    var step =
+        tick(
+            self,
+            active(ORIGINAL, ActiveJump.Stage.AIRBORNE),
+            route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL)),
+            10);
+    assertThat(step.state().activeJump()).isEmpty();
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(contact.pos(), false));
+  }
+
+  @Test
+  void lowHealthKnockbackCannotTrustTheOldWaterCorridorOverACertifiedGroundContact() {
+    var oldWater =
+        new Waypoint(ORIGINAL.pos(), Hop.LEAP, ORIGINAL.launch(), Waypoint.Landing.WATER);
+    var self =
+        combatant(1, RED, new Vec3(4.5, 3, 1.5))
+            .withMotion(true, false)
+            .withHealth(4, 0)
+            .withTraversal(TraversalState.UNMODIFIED.withFallDistance(3));
+    var contact = new Waypoint(new Vec3(4.5, 1, 1.5), Hop.DROP);
+    var step =
+        tick(
+            self,
+            active(oldWater, ActiveJump.Stage.AIRBORNE),
+            route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL)),
+            10);
+    assertThat(step.state().activeJump()).isEmpty();
+    assertThat(step.commands()).contains(new BodyCommand.MoveToward(contact.pos(), false));
+    assertThat(step.commands()).doesNotContain(new BodyCommand.MoveToward(oldWater.pos(), true));
+  }
+
+  @Test
+  void eatingAndNearbyCombatCannotReplaceTheCertifiedPendingContactControls() {
+    var self =
+        combatant(1, RED, new Vec3(2.5, 3, 1.5))
+            .withMotion(false, false)
+            .withHealth(3, 0)
+            .withHands(7, true)
+            .withTraversal(TraversalState.UNMODIFIED.withFallDistance(4));
+    var enemy = combatant(2, BLUE, self.pos().plus(0.5, 0, 0));
+    var contact =
+        new Waypoint(new Vec3(4.5, 1, 1.5), Hop.DROP, Optional.empty(), Waypoint.Landing.WATER);
+    var decision = route(Option.HUNT, GOAL).withWaypoints(List.of(contact, GOAL));
+    var world =
+        new WorldSnapshot(
+            10,
+            MatchPhase.LIVE,
+            List.of(self, enemy),
+            List.of(),
+            PoisonView.NONE,
+            "first-contact-test",
+            List.of());
+    for (var target : List.of(Optional.<CombatantView>empty(), Optional.of(enemy))) {
+      var step =
+          Reflex.tick(
+              ReflexState.initial(self.facing()).withEating(1, true),
+              new ReflexInput(self, world, decision, target, 3),
+              CONTEXT,
+              new SplittableRandom(196));
+      var move = new BodyCommand.MoveToward(contact.pos(), false);
+      assertThat(step.commands())
+          .contains(new BodyCommand.Sneak(false), new BodyCommand.CancelUse(), move);
+      assertThat(step.commands().indexOf(new BodyCommand.Sneak(false)))
+          .isLessThan(step.commands().indexOf(move));
+      assertThat(step.commands().indexOf(new BodyCommand.CancelUse()))
+          .isLessThan(step.commands().indexOf(move));
+      assertThat(step.commands())
+          .noneMatch(
+              command ->
+                  command instanceof BodyCommand.Attack || command instanceof BodyCommand.StartUse);
+      assertThat(step.state().isEating()).isFalse();
+    }
+  }
+
+  @Test
   void currentHealthLossRefusesAPreviouslyAffordableDamagingLaunch() {
     var jump = leap(1.5, 8);
     var self = atTakeoff(jump);
@@ -105,7 +243,7 @@ final class ReflexJumpCommitmentTest {
   @Test
   void protectionMustLastThroughLandingAfterTheRunUpDelay() {
     var jump = leap(1.5, 8);
-    var protection = new TraversalState(true, 3, 1, 0, -1, -1, 25, -1, 0, -1, -1, -1, -1, 20);
+    var protection = new TraversalState(true, 3, 1, 0, -1, -1, 25, -1, 0, -1, -1, -1, -1, 20, 0);
     var self = atTakeoff(jump).withTraversal(protection).withHealth(3, 0);
     var active = active(jump, ActiveJump.Stage.RUN_UP);
     assertThat(tick(self, active, route(Option.HUNT, GOAL), 8).commands())

@@ -3,11 +3,12 @@ import {
   TraversalStatus,
   summarizeTraversal,
   compareFlatTraversal,
+  validateCapturedTraversal,
 } from "./traversal-wire.ts";
 
 function trial(state: "passed" | "failed") {
   return TraversalStatus.parse({
-    version: 2,
+    version: 3,
     state,
     scenario: "drop-four",
     ticks: 22,
@@ -24,6 +25,7 @@ function trial(state: "passed" | "failed") {
       climbing: false,
       jump: false,
       damage: index < 21 ? 0 : 1,
+      capturedTraversal: [],
     })),
   });
 }
@@ -37,6 +39,49 @@ it("retains observed damage and failed outcomes in calibration summaries", () =>
     driveTicks: 2,
   });
   expect(summarizeTraversal(trial("failed")).reached).toBe(false);
+});
+
+it("binds graph inputs to actual per-tick accumulated falls and requires real captures", () => {
+  const value = trial("passed");
+  expect(() => validateCapturedTraversal(value)).toThrow("omitted or changed");
+  const captured = TraversalStatus.parse({
+    ...value,
+    samples: value.samples.map((sample) => ({
+      ...sample,
+      capturedTraversal: [
+        {
+          maySprint: true,
+          safeFallDistance: 3,
+          fallDamageMultiplier: 1,
+          fallProtectionPoints: 0,
+          resistanceAmplifier: -1,
+          resistanceUntilTick: -1,
+          noFallUntilTick: -1,
+          slowFallingUntilTick: -1,
+          healingConsumables: 0,
+          regenerationAmplifier: -1,
+          regenerationUntilTick: -1,
+          jumpBoostAmplifier: -1,
+          jumpBoostUntilTick: -1,
+          maxHealth: 20,
+          fallDistance: sample.fallDistance,
+        },
+      ],
+    })),
+  });
+  expect(validateCapturedTraversal(captured)).toMatchObject({
+    capturedTicks: 2,
+    fallingTicks: 1,
+  });
+  expect(() =>
+    validateCapturedTraversal({
+      ...captured,
+      samples: captured.samples.map((sample) => ({
+        ...sample,
+        fallDistance: 0,
+      })),
+    }),
+  ).toThrow("omitted or changed");
 });
 
 it("rejects truncated/reordered physics instead of reporting a calibrated success", () => {
@@ -141,4 +186,37 @@ it("requires observed climbing while actually immersed for the waterlogged ladde
       samples: wet.samples.map((sample) => ({ ...sample, inWater: false })),
     }),
   ).toThrow("not actually climbed while immersed");
+});
+
+it("requires an extended native swim followed by dry paid-contact arrival without stale fall damage", () => {
+  const original = trial("passed");
+  const value = TraversalStatus.parse({
+    ...original,
+    scenario: "water-throat-exit",
+    ticks: 52,
+    driveTicks: 32,
+    samples: Array.from({ length: 52 }, (_, index) => ({
+      ...original.samples[0],
+      tick: index + 1,
+      position:
+        index === 51
+          ? [414.5, 100, 402.5]
+          : [401.5, index === 25 ? 96 : 98, 402.5],
+      inWater: index !== 51,
+      onGround: index === 51,
+      fallDistance: index === 51 ? 0 : 0.16,
+      health: 20,
+      damage: 0,
+    })),
+  });
+  expect(summarizeTraversal(value).reached).toBe(true);
+  for (const residue of [{ fallDistance: 8 }, { damage: 1 }, { inWater: true }])
+    expect(() =>
+      summarizeTraversal({
+        ...value,
+        samples: value.samples.map((sample, index) =>
+          index === 51 ? { ...sample, ...residue } : sample,
+        ),
+      }),
+    ).toThrow("canceled fall debt");
 });

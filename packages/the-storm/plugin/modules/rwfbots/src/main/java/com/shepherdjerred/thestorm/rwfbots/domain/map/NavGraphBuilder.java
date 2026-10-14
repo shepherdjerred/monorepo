@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,12 +121,20 @@ final class NavGraphBuilder {
     var cells = cellOfNode.stream().mapToInt(Integer::intValue).toArray();
     return new NavGraph(
         bounds,
-        new NavGraph.NodeData(cells, water.index(cell -> nodeOfCell[cell]), elevations(cells)),
+        new NavGraph.NodeData(
+            cells, water.index(cell -> nodeOfCell[cell]), elevations(cells), climbable(cells)),
         new NavGraph.Topology(edgeStart, edgeTo),
         new NavGraph.EdgeData(hop, cost, new EdgeCapabilities(risk, LaunchData.standard(hop))));
   }
 
   private record Edge(int to, Hop hop, float cost, int damage) {}
+
+  private BitSet climbable(int[] cells) {
+    var result = new BitSet(cells.length);
+    for (var node = 0; node < cells.length; node++)
+      result.set(node, shape(bounds.cell(cells[node])).climbable());
+    return result;
+  }
 
   private byte[] elevations(int[] cells) {
     var result = new byte[cells.length];

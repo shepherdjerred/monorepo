@@ -1,7 +1,10 @@
 {
   "mapId": "miner-dispute",
-  "formatVersion": 1,
-  "generatorVersion": 2,
+  "formatVersion": 2,
+  "generatorVersion": 4,
+  "movementModelVersion": 4,
+  "costUnit": "server-ticks",
+  "damageUnit": "health-points",
   "blocksSha256": "6dc474c75af0848f965cc83b103f22e69d1d97eeff2b05b4cc1e50053ea5ad24",
   "classificationSha256": "4b68576cb202e01fc23790b95b8a270410673074bc3819c75f001079609438a8",
   "bounds": {
@@ -1100,3553 +1103,3558 @@
   ],
   "cells": {
     "total": 376320,
-    "walkable": 14364
+    "walkable": 14561,
+    "fluidIntervals": 257,
+    "retainedFluidPortals": 435
   },
   "edges": {
-    "total": 94452,
+    "total": 231271,
+    "damaging": 5564,
+    "maximumRawDamage": 41,
     "CLIMB": 84,
-    "DROP": 5446,
-    "JUMP": 3534,
-    "LEAP": 4952,
-    "WALK": 80436
+    "DROP": 12236,
+    "JUMP": 6562,
+    "LEAP": 130100,
+    "SWIM": 3057,
+    "WALK": 79232
   },
-  "regions": 923,
-  "coverPoints": 3588,
-  "chokepoints": 411,
+  "regions": 960,
+  "coverPoints": 3659,
+  "chokepoints": 413,
   "routes": {
     "count": 588,
     "spawnToBomb": [
       {
         "from": "red-spawn-1",
         "to": "red-1",
-        "length": 28.82841992378235,
+        "length": 106.55813837051392,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "red-1",
+        "length": 108.48469638824463,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "red-1",
+        "length": 145.9534878730774,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "blue-1",
+        "length": 397.667067527771,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "blue-1",
+        "length": 415.6401376724243,
+        "nodes": 40
+      },
+      {
+        "from": "red-spawn-1",
+        "to": "blue-1",
+        "length": 420.51162672042847,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "red-1",
+        "length": 108.48469638824463,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "red-1",
+        "length": 111.48469638824463,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "red-1",
+        "length": 121.64013767242432,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "blue-1",
+        "length": 395.7405095100403,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "blue-1",
+        "length": 410.9889750480652,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-2",
+        "to": "blue-1",
+        "length": 414.62055587768555,
+        "nodes": 45
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "red-1",
+        "length": 113.13585901260376,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "red-1",
+        "length": 121.64013767242432,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "red-1",
+        "length": 150.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "blue-1",
+        "length": 393.96939277648926,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "blue-1",
+        "length": 406.33781242370605,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-3",
+        "to": "blue-1",
+        "length": 409.9693932533264,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "red-1",
+        "length": 117.78702163696289,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "red-1",
+        "length": 124.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "red-1",
+        "length": 151.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "blue-1",
+        "length": 389.3182301521301,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "blue-1",
+        "length": 404.41125440597534,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-4",
+        "to": "blue-1",
+        "length": 405.3182306289673,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "red-1",
+        "length": 119.55813837051392,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "red-1",
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "red-1",
+        "length": 151.9534878730774,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "blue-1",
+        "length": 384.667067527771,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "blue-1",
+        "length": 400.6401376724243,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-5",
+        "to": "blue-1",
+        "length": 407.244788646698,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "red-1",
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "red-1",
+        "length": 124.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "red-1",
+        "length": 155.9534878730774,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "blue-1",
+        "length": 382.7405095100403,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "blue-1",
+        "length": 397.9889750480652,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-6",
+        "to": "blue-1",
+        "length": 401.62055587768555,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "red-1",
+        "length": 126.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "red-1",
+        "length": 129.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "red-1",
+        "length": 156.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "blue-1",
+        "length": 380.96939277648926,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "blue-1",
+        "length": 393.33781242370605,
+        "nodes": 37
+      },
+      {
+        "from": "red-spawn-7",
+        "to": "blue-1",
+        "length": 396.9693932533264,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "red-1",
+        "length": 101.90697574615479,
+        "nodes": 16
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "red-1",
+        "length": 113.13585901260376,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "red-1",
+        "length": 145.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "blue-1",
+        "length": 395.7405095100403,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "blue-1",
+        "length": 412.41125440597534,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-8",
+        "to": "blue-1",
+        "length": 417.244788646698,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-9",
+        "to": "red-1",
+        "length": 106.55813837051392,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-9",
+        "to": "red-1",
+        "length": 115.06241703033447,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-9",
+        "to": "red-1",
+        "length": 145.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-9",
+        "to": "blue-1",
+        "length": 391.08934688568115,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-9",
+        "to": "blue-1",
+        "length": 409.0624170303345,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-9",
+        "to": "blue-1",
+        "length": 415.3182306289673,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-10",
+        "to": "red-1",
+        "length": 111.20930099487305,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-10",
+        "to": "red-1",
+        "length": 118.06241703033447,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-10",
+        "to": "red-1",
+        "length": 145.9534878730774,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-10",
+        "to": "blue-1",
+        "length": 392.04283475875854,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-10",
+        "to": "blue-1",
+        "length": 404.41125440597534,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-10",
+        "to": "blue-1",
+        "length": 411.89595127105713,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-11",
+        "to": "red-1",
+        "length": 115.86046361923218,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-11",
+        "to": "red-1",
+        "length": 122.7135796546936,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-11",
+        "to": "red-1",
+        "length": 146.9534878730774,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-11",
+        "to": "blue-1",
+        "length": 387.3916721343994,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-11",
+        "to": "blue-1",
+        "length": 401.33781242370605,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-11",
+        "to": "blue-1",
+        "length": 407.244788646698,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-12",
+        "to": "red-1",
+        "length": 114.90697574615479,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-12",
+        "to": "red-1",
+        "length": 126.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-12",
+        "to": "red-1",
+        "length": 151.25581312179565,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-12",
+        "to": "blue-1",
+        "length": 382.7405095100403,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-12",
+        "to": "blue-1",
+        "length": 399.41125440597534,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-12",
+        "to": "blue-1",
+        "length": 404.244788646698,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-13",
+        "to": "red-1",
+        "length": 119.55813837051392,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-13",
+        "to": "red-1",
+        "length": 128.06241703033447,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-13",
+        "to": "red-1",
+        "length": 151.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-13",
+        "to": "blue-1",
+        "length": 378.08934688568115,
+        "nodes": 40
+      },
+      {
+        "from": "red-spawn-13",
+        "to": "blue-1",
+        "length": 396.0624170303345,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-13",
+        "to": "blue-1",
+        "length": 402.3182306289673,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-14",
+        "to": "red-1",
+        "length": 124.20930099487305,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-14",
+        "to": "red-1",
+        "length": 131.06241703033447,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-14",
+        "to": "red-1",
+        "length": 152.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-14",
+        "to": "blue-1",
+        "length": 379.04283475875854,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-14",
+        "to": "blue-1",
+        "length": 391.41125440597534,
+        "nodes": 37
+      },
+      {
+        "from": "red-spawn-14",
+        "to": "blue-1",
+        "length": 398.89595127105713,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-15",
+        "to": "red-1",
+        "length": 106.55813837051392,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-15",
+        "to": "red-1",
+        "length": 113.13585901260376,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-15",
+        "to": "red-1",
+        "length": 142.25581312179565,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-15",
+        "to": "blue-1",
+        "length": 397.667067527771,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-15",
+        "to": "blue-1",
+        "length": 413.36474227905273,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-15",
+        "to": "blue-1",
+        "length": 413.66706800460815,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-16",
+        "to": "red-1",
+        "length": 108.48469638824463,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-16",
+        "to": "red-1",
+        "length": 117.78702163696289,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-16",
+        "to": "red-1",
+        "length": 140.9534878730774,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-16",
+        "to": "blue-1",
+        "length": 393.01590490341187,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-16",
+        "to": "blue-1",
+        "length": 408.7135796546936,
+        "nodes": 40
+      },
+      {
+        "from": "red-spawn-16",
+        "to": "blue-1",
+        "length": 411.74050998687744,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-17",
+        "to": "red-1",
+        "length": 112.90697574615479,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-17",
+        "to": "red-1",
+        "length": 121.64013767242432,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-17",
+        "to": "red-1",
+        "length": 141.9534878730774,
+        "nodes": 17
+      },
+      {
+        "from": "red-spawn-17",
+        "to": "blue-1",
+        "length": 393.96939277648926,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-17",
+        "to": "blue-1",
+        "length": 404.0624170303345,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-17",
+        "to": "blue-1",
+        "length": 409.9693932533264,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-18",
+        "to": "red-1",
+        "length": 117.55813837051392,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-18",
+        "to": "red-1",
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-18",
+        "to": "red-1",
+        "length": 146.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-18",
+        "to": "blue-1",
+        "length": 389.3182301521301,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-18",
+        "to": "blue-1",
+        "length": 399.41125440597534,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-18",
+        "to": "blue-1",
+        "length": 405.3182306289673,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-19",
+        "to": "red-1",
+        "length": 119.55813837051392,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-19",
+        "to": "red-1",
+        "length": 126.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "red-spawn-19",
+        "to": "red-1",
+        "length": 146.60465049743652,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-19",
+        "to": "blue-1",
+        "length": 384.667067527771,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-19",
+        "to": "blue-1",
+        "length": 400.36474227905273,
+        "nodes": 40
+      },
+      {
+        "from": "red-spawn-19",
+        "to": "blue-1",
+        "length": 400.66706800460815,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-20",
+        "to": "red-1",
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "red-spawn-20",
+        "to": "red-1",
+        "length": 130.7870216369629,
         "nodes": 20
       },
       {
-        "from": "red-spawn-1",
+        "from": "red-spawn-20",
         "to": "red-1",
-        "length": 31.414209961891174,
-        "nodes": 23
+        "length": 146.9534878730774,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-1",
+        "from": "red-spawn-20",
+        "to": "blue-1",
+        "length": 380.01590490341187,
+        "nodes": 40
+      },
+      {
+        "from": "red-spawn-20",
+        "to": "blue-1",
+        "length": 395.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-20",
+        "to": "blue-1",
+        "length": 398.74050998687744,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-21",
         "to": "red-1",
-        "length": 35.6568398475647,
-        "nodes": 26
+        "length": 125.90697574615479,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-1",
-        "to": "blue-1",
-        "length": 119.6568398475647,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-1",
-        "to": "blue-1",
-        "length": 124.28419923782349,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-1",
-        "to": "blue-1",
-        "length": 126.97051954269409,
-        "nodes": 108
-      },
-      {
-        "from": "red-spawn-2",
+        "from": "red-spawn-21",
         "to": "red-1",
-        "length": 29.82841992378235,
-        "nodes": 21
-      },
-      {
-        "from": "red-spawn-2",
-        "to": "red-1",
-        "length": 32.414209961891174,
-        "nodes": 24
-      },
-      {
-        "from": "red-spawn-2",
-        "to": "red-1",
-        "length": 42.313679695129395,
-        "nodes": 31
-      },
-      {
-        "from": "red-spawn-2",
-        "to": "blue-1",
-        "length": 118.6568398475647,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-2",
-        "to": "blue-1",
-        "length": 123.28419923782349,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-2",
-        "to": "blue-1",
-        "length": 125.97051954269409,
-        "nodes": 109
-      },
-      {
-        "from": "red-spawn-3",
-        "to": "red-1",
-        "length": 30.82841992378235,
-        "nodes": 22
-      },
-      {
-        "from": "red-spawn-3",
-        "to": "red-1",
-        "length": 33.414209961891174,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-3",
-        "to": "red-1",
-        "length": 42.72788965702057,
-        "nodes": 31
-      },
-      {
-        "from": "red-spawn-3",
-        "to": "blue-1",
-        "length": 117.6568398475647,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-3",
-        "to": "blue-1",
-        "length": 122.28419923782349,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-3",
-        "to": "blue-1",
-        "length": 126.97051954269409,
-        "nodes": 108
-      },
-      {
-        "from": "red-spawn-4",
-        "to": "red-1",
-        "length": 31.82841992378235,
-        "nodes": 23
-      },
-      {
-        "from": "red-spawn-4",
-        "to": "red-1",
-        "length": 34.414209961891174,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-4",
-        "to": "red-1",
-        "length": 43.14209961891174,
-        "nodes": 31
-      },
-      {
-        "from": "red-spawn-4",
-        "to": "blue-1",
-        "length": 116.6568398475647,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-4",
-        "to": "blue-1",
-        "length": 121.28419923782349,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-4",
-        "to": "blue-1",
-        "length": 123.97051954269409,
-        "nodes": 107
-      },
-      {
-        "from": "red-spawn-5",
-        "to": "red-1",
-        "length": 32.82841992378235,
-        "nodes": 24
-      },
-      {
-        "from": "red-spawn-5",
-        "to": "red-1",
-        "length": 35.414209961891174,
-        "nodes": 27
-      },
-      {
-        "from": "red-spawn-5",
-        "to": "red-1",
-        "length": 43.55630958080292,
-        "nodes": 31
-      },
-      {
-        "from": "red-spawn-5",
-        "to": "blue-1",
-        "length": 115.6568398475647,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-5",
-        "to": "blue-1",
-        "length": 120.28419923782349,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-5",
-        "to": "blue-1",
-        "length": 122.97051954269409,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-6",
-        "to": "red-1",
-        "length": 33.82841992378235,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-6",
-        "to": "red-1",
-        "length": 36.414209961891174,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-6",
-        "to": "red-1",
-        "length": 43.97051954269409,
-        "nodes": 31
-      },
-      {
-        "from": "red-spawn-6",
-        "to": "blue-1",
-        "length": 114.6568398475647,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-6",
-        "to": "blue-1",
-        "length": 119.28419923782349,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-6",
-        "to": "blue-1",
-        "length": 123.97051954269409,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-7",
-        "to": "red-1",
-        "length": 34.82841992378235,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-7",
-        "to": "red-1",
-        "length": 37.414209961891174,
-        "nodes": 29
-      },
-      {
-        "from": "red-spawn-7",
-        "to": "red-1",
-        "length": 44.384729504585266,
-        "nodes": 31
-      },
-      {
-        "from": "red-spawn-7",
-        "to": "blue-1",
-        "length": 113.6568398475647,
-        "nodes": 100
-      },
-      {
-        "from": "red-spawn-7",
-        "to": "blue-1",
-        "length": 118.28419923782349,
-        "nodes": 100
-      },
-      {
-        "from": "red-spawn-7",
-        "to": "blue-1",
-        "length": 120.97051954269409,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-8",
-        "to": "red-1",
-        "length": 28.414209961891174,
+        "length": 134.64013767242432,
         "nodes": 20
       },
       {
-        "from": "red-spawn-8",
+        "from": "red-spawn-21",
         "to": "red-1",
-        "length": 31.82841992378235,
-        "nodes": 23
+        "length": 147.9534878730774,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-8",
+        "from": "red-spawn-21",
+        "to": "blue-1",
+        "length": 380.96939277648926,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-21",
+        "to": "blue-1",
+        "length": 391.0624170303345,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-21",
+        "to": "blue-1",
+        "length": 400.0893473625183,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-22",
         "to": "red-1",
-        "length": 40.89946973323822,
-        "nodes": 30
+        "length": 106.55813837051392,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-8",
-        "to": "blue-1",
-        "length": 119.24262988567352,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-8",
-        "to": "blue-1",
-        "length": 123.86998927593231,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-8",
-        "to": "blue-1",
-        "length": 130.45577931404114,
-        "nodes": 109
-      },
-      {
-        "from": "red-spawn-9",
+        "from": "red-spawn-22",
         "to": "red-1",
-        "length": 29.414209961891174,
-        "nodes": 21
+        "length": 115.06241703033447,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-9",
+        "from": "red-spawn-22",
         "to": "red-1",
-        "length": 32.82841992378235,
-        "nodes": 24
+        "length": 137.60465049743652,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-9",
+        "from": "red-spawn-22",
+        "to": "blue-1",
+        "length": 399.5936255455017,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-22",
+        "to": "blue-1",
+        "length": 411.56669569015503,
+        "nodes": 40
+      },
+      {
+        "from": "red-spawn-22",
+        "to": "blue-1",
+        "length": 417.74050998687744,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-23",
         "to": "red-1",
-        "length": 41.313679695129395,
-        "nodes": 30
+        "length": 111.20930099487305,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-9",
-        "to": "blue-1",
-        "length": 118.24262988567352,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-9",
-        "to": "blue-1",
-        "length": 122.86998927593231,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-9",
-        "to": "blue-1",
-        "length": 129.45577931404114,
-        "nodes": 108
-      },
-      {
-        "from": "red-spawn-10",
+        "from": "red-spawn-23",
         "to": "red-1",
-        "length": 30.414209961891174,
-        "nodes": 22
+        "length": 119.7135796546936,
+        "nodes": 19
       },
       {
-        "from": "red-spawn-10",
+        "from": "red-spawn-23",
         "to": "red-1",
-        "length": 33.82841992378235,
-        "nodes": 25
+        "length": 139.53120851516724,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-10",
+        "from": "red-spawn-23",
+        "to": "blue-1",
+        "length": 396.5936255455017,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-23",
+        "to": "blue-1",
+        "length": 406.9155330657959,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-23",
+        "to": "blue-1",
+        "length": 413.0893473625183,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-24",
         "to": "red-1",
-        "length": 41.72788965702057,
-        "nodes": 30
+        "length": 115.06241703033447,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-10",
-        "to": "blue-1",
-        "length": 117.24262988567352,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-10",
-        "to": "blue-1",
-        "length": 121.86998927593231,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-10",
-        "to": "blue-1",
-        "length": 128.45577931404114,
-        "nodes": 107
-      },
-      {
-        "from": "red-spawn-11",
+        "from": "red-spawn-24",
         "to": "red-1",
-        "length": 31.414209961891174,
-        "nodes": 23
-      },
-      {
-        "from": "red-spawn-11",
-        "to": "red-1",
-        "length": 34.82841992378235,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-11",
-        "to": "red-1",
-        "length": 42.14209961891174,
-        "nodes": 30
-      },
-      {
-        "from": "red-spawn-11",
-        "to": "blue-1",
-        "length": 116.24262988567352,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-11",
-        "to": "blue-1",
-        "length": 120.86998927593231,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-11",
-        "to": "blue-1",
-        "length": 125.45577931404114,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-12",
-        "to": "red-1",
-        "length": 32.414209961891174,
-        "nodes": 24
-      },
-      {
-        "from": "red-spawn-12",
-        "to": "red-1",
-        "length": 35.24262988567352,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-12",
-        "to": "red-1",
-        "length": 42.55630958080292,
-        "nodes": 30
-      },
-      {
-        "from": "red-spawn-12",
-        "to": "blue-1",
-        "length": 115.24262988567352,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-12",
-        "to": "blue-1",
-        "length": 119.86998927593231,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-12",
-        "to": "blue-1",
-        "length": 126.45577931404114,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-13",
-        "to": "red-1",
-        "length": 33.414209961891174,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-13",
-        "to": "red-1",
-        "length": 36.24262988567352,
-        "nodes": 27
-      },
-      {
-        "from": "red-spawn-13",
-        "to": "red-1",
-        "length": 42.97051954269409,
-        "nodes": 30
-      },
-      {
-        "from": "red-spawn-13",
-        "to": "blue-1",
-        "length": 114.24262988567352,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-13",
-        "to": "blue-1",
-        "length": 118.86998927593231,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-13",
-        "to": "blue-1",
-        "length": 123.45577931404114,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-14",
-        "to": "red-1",
-        "length": 34.414209961891174,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-14",
-        "to": "red-1",
-        "length": 37.24262988567352,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-14",
-        "to": "red-1",
-        "length": 43.384729504585266,
-        "nodes": 30
-      },
-      {
-        "from": "red-spawn-14",
-        "to": "blue-1",
-        "length": 113.24262988567352,
-        "nodes": 100
-      },
-      {
-        "from": "red-spawn-14",
-        "to": "blue-1",
-        "length": 117.86998927593231,
-        "nodes": 100
-      },
-      {
-        "from": "red-spawn-14",
-        "to": "blue-1",
-        "length": 122.45577931404114,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-15",
-        "to": "red-1",
-        "length": 28.82841992378235,
+        "length": 124.36474227905273,
         "nodes": 20
       },
       {
-        "from": "red-spawn-15",
+        "from": "red-spawn-24",
         "to": "red-1",
-        "length": 32.82841992378235,
-        "nodes": 24
+        "length": 141.9534878730774,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-15",
+        "from": "red-spawn-24",
+        "to": "blue-1",
+        "length": 394.01590490341187,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-24",
+        "to": "blue-1",
+        "length": 404.9889750480652,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-24",
+        "to": "blue-1",
+        "length": 411.89595127105713,
+        "nodes": 44
+      },
+      {
+        "from": "red-spawn-25",
         "to": "red-1",
-        "length": 39.89946973323822,
-        "nodes": 29
+        "length": 114.90697574615479,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-15",
-        "to": "blue-1",
-        "length": 119.6568398475647,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-15",
-        "to": "blue-1",
-        "length": 123.45577931404114,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-15",
-        "to": "blue-1",
-        "length": 128.14209961891174,
-        "nodes": 110
-      },
-      {
-        "from": "red-spawn-16",
+        "from": "red-spawn-25",
         "to": "red-1",
-        "length": 29.82841992378235,
-        "nodes": 21
+        "length": 122.48469638824463,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-16",
+        "from": "red-spawn-25",
         "to": "red-1",
-        "length": 33.24262988567352,
-        "nodes": 24
+        "length": 143.25581312179565,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-16",
+        "from": "red-spawn-25",
+        "to": "blue-1",
+        "length": 391.24478816986084,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-25",
+        "to": "blue-1",
+        "length": 402.9889750480652,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-25",
+        "to": "blue-1",
+        "length": 407.244788646698,
+        "nodes": 43
+      },
+      {
+        "from": "red-spawn-26",
         "to": "red-1",
-        "length": 40.313679695129395,
-        "nodes": 29
+        "length": 119.55813837051392,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-16",
-        "to": "blue-1",
-        "length": 118.6568398475647,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-16",
-        "to": "blue-1",
-        "length": 122.45577931404114,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-16",
-        "to": "blue-1",
-        "length": 126.55630958080292,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-17",
+        "from": "red-spawn-26",
         "to": "red-1",
-        "length": 30.82841992378235,
-        "nodes": 22
+        "length": 125.48469638824463,
+        "nodes": 18
       },
       {
-        "from": "red-spawn-17",
+        "from": "red-spawn-26",
         "to": "red-1",
-        "length": 34.24262988567352,
-        "nodes": 25
+        "length": 141.9534878730774,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-17",
+        "from": "red-spawn-26",
+        "to": "blue-1",
+        "length": 386.5936255455017,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-26",
+        "to": "blue-1",
+        "length": 398.56669569015503,
+        "nodes": 39
+      },
+      {
+        "from": "red-spawn-26",
+        "to": "blue-1",
+        "length": 404.74050998687744,
+        "nodes": 42
+      },
+      {
+        "from": "red-spawn-27",
         "to": "red-1",
-        "length": 40.72788965702057,
-        "nodes": 29
+        "length": 124.20930099487305,
+        "nodes": 19
       },
       {
-        "from": "red-spawn-17",
-        "to": "blue-1",
-        "length": 117.6568398475647,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-17",
-        "to": "blue-1",
-        "length": 121.45577931404114,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-17",
-        "to": "blue-1",
-        "length": 125.55630958080292,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-18",
+        "from": "red-spawn-27",
         "to": "red-1",
-        "length": 31.82841992378235,
-        "nodes": 23
+        "length": 130.13585901260376,
+        "nodes": 19
       },
       {
-        "from": "red-spawn-18",
+        "from": "red-spawn-27",
         "to": "red-1",
-        "length": 35.24262988567352,
-        "nodes": 26
+        "length": 142.9534878730774,
+        "nodes": 17
       },
       {
-        "from": "red-spawn-18",
+        "from": "red-spawn-27",
+        "to": "blue-1",
+        "length": 383.5936255455017,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-27",
+        "to": "blue-1",
+        "length": 393.9155330657959,
+        "nodes": 38
+      },
+      {
+        "from": "red-spawn-27",
+        "to": "blue-1",
+        "length": 400.0893473625183,
+        "nodes": 41
+      },
+      {
+        "from": "red-spawn-28",
         "to": "red-1",
-        "length": 41.14209961891174,
-        "nodes": 29
+        "length": 128.06241703033447,
+        "nodes": 19
       },
       {
-        "from": "red-spawn-18",
-        "to": "blue-1",
-        "length": 116.6568398475647,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-18",
-        "to": "blue-1",
-        "length": 120.45577931404114,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-18",
-        "to": "blue-1",
-        "length": 123.14209961891174,
-        "nodes": 107
-      },
-      {
-        "from": "red-spawn-19",
+        "from": "red-spawn-28",
         "to": "red-1",
-        "length": 32.82841992378235,
-        "nodes": 24
-      },
-      {
-        "from": "red-spawn-19",
-        "to": "red-1",
-        "length": 36.24262988567352,
-        "nodes": 27
-      },
-      {
-        "from": "red-spawn-19",
-        "to": "red-1",
-        "length": 41.55630958080292,
-        "nodes": 29
-      },
-      {
-        "from": "red-spawn-19",
-        "to": "blue-1",
-        "length": 115.6568398475647,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-19",
-        "to": "blue-1",
-        "length": 119.45577931404114,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-19",
-        "to": "blue-1",
-        "length": 124.14209961891174,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-20",
-        "to": "red-1",
-        "length": 33.82841992378235,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-20",
-        "to": "red-1",
-        "length": 37.24262988567352,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-20",
-        "to": "red-1",
-        "length": 41.97051954269409,
-        "nodes": 29
-      },
-      {
-        "from": "red-spawn-20",
-        "to": "blue-1",
-        "length": 114.6568398475647,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-20",
-        "to": "blue-1",
-        "length": 118.45577931404114,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-20",
-        "to": "blue-1",
-        "length": 123.14209961891174,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-21",
-        "to": "red-1",
-        "length": 34.82841992378235,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-21",
-        "to": "red-1",
-        "length": 38.24262988567352,
-        "nodes": 29
-      },
-      {
-        "from": "red-spawn-21",
-        "to": "red-1",
-        "length": 42.384729504585266,
-        "nodes": 29
-      },
-      {
-        "from": "red-spawn-21",
-        "to": "blue-1",
-        "length": 113.6568398475647,
-        "nodes": 100
-      },
-      {
-        "from": "red-spawn-21",
-        "to": "blue-1",
-        "length": 117.45577931404114,
-        "nodes": 100
-      },
-      {
-        "from": "red-spawn-21",
-        "to": "blue-1",
-        "length": 122.14209961891174,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-22",
-        "to": "red-1",
-        "length": 29.242629885673523,
+        "length": 134.7870216369629,
         "nodes": 20
       },
       {
-        "from": "red-spawn-22",
-        "to": "red-1",
-        "length": 33.82841992378235,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-22",
-        "to": "red-1",
-        "length": 38.89946973323822,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-22",
-        "to": "blue-1",
-        "length": 119.72788965702057,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-22",
-        "to": "blue-1",
-        "length": 123.48525977134705,
-        "nodes": 109
-      },
-      {
-        "from": "red-spawn-22",
-        "to": "blue-1",
-        "length": 125.86998927593231,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-23",
-        "to": "red-1",
-        "length": 30.242629885673523,
-        "nodes": 21
-      },
-      {
-        "from": "red-spawn-23",
-        "to": "red-1",
-        "length": 34.24262988567352,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-23",
-        "to": "red-1",
-        "length": 39.313679695129395,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-23",
-        "to": "blue-1",
-        "length": 118.72788965702057,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-23",
-        "to": "blue-1",
-        "length": 124.48525977134705,
-        "nodes": 108
-      },
-      {
-        "from": "red-spawn-23",
-        "to": "blue-1",
-        "length": 124.86998927593231,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-24",
-        "to": "red-1",
-        "length": 31.242629885673523,
-        "nodes": 22
-      },
-      {
-        "from": "red-spawn-24",
-        "to": "red-1",
-        "length": 34.6568398475647,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-24",
-        "to": "red-1",
-        "length": 39.72788965702057,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-24",
-        "to": "blue-1",
-        "length": 117.72788965702057,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-24",
-        "to": "blue-1",
-        "length": 121.48525977134705,
-        "nodes": 107
-      },
-      {
-        "from": "red-spawn-24",
-        "to": "blue-1",
-        "length": 123.86998927593231,
-        "nodes": 104
-      },
-      {
-        "from": "red-spawn-25",
-        "to": "red-1",
-        "length": 32.24262988567352,
-        "nodes": 23
-      },
-      {
-        "from": "red-spawn-25",
-        "to": "red-1",
-        "length": 35.6568398475647,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-25",
-        "to": "red-1",
-        "length": 40.14209961891174,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-25",
-        "to": "blue-1",
-        "length": 116.72788965702057,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-25",
-        "to": "blue-1",
-        "length": 122.48525977134705,
-        "nodes": 106
-      },
-      {
-        "from": "red-spawn-25",
-        "to": "blue-1",
-        "length": 122.86998927593231,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-26",
-        "to": "red-1",
-        "length": 33.24262988567352,
-        "nodes": 24
-      },
-      {
-        "from": "red-spawn-26",
-        "to": "red-1",
-        "length": 36.6568398475647,
-        "nodes": 27
-      },
-      {
-        "from": "red-spawn-26",
-        "to": "red-1",
-        "length": 40.55630958080292,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-26",
-        "to": "blue-1",
-        "length": 115.72788965702057,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-26",
-        "to": "blue-1",
-        "length": 121.48525977134705,
-        "nodes": 105
-      },
-      {
-        "from": "red-spawn-26",
-        "to": "blue-1",
-        "length": 121.86998927593231,
-        "nodes": 102
-      },
-      {
-        "from": "red-spawn-27",
-        "to": "red-1",
-        "length": 34.24262988567352,
-        "nodes": 25
-      },
-      {
-        "from": "red-spawn-27",
-        "to": "red-1",
-        "length": 37.6568398475647,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-27",
-        "to": "red-1",
-        "length": 40.97051954269409,
-        "nodes": 28
-      },
-      {
-        "from": "red-spawn-27",
-        "to": "blue-1",
-        "length": 114.72788965702057,
-        "nodes": 101
-      },
-      {
-        "from": "red-spawn-27",
-        "to": "blue-1",
-        "length": 117.89946973323822,
-        "nodes": 103
-      },
-      {
-        "from": "red-spawn-27",
-        "to": "blue-1",
-        "length": 120.86998927593231,
-        "nodes": 101
-      },
-      {
         "from": "red-spawn-28",
         "to": "red-1",
-        "length": 35.24262988567352,
-        "nodes": 26
-      },
-      {
-        "from": "red-spawn-28",
-        "to": "red-1",
-        "length": 38.6568398475647,
-        "nodes": 29
-      },
-      {
-        "from": "red-spawn-28",
-        "to": "red-1",
-        "length": 41.384729504585266,
-        "nodes": 28
+        "length": 147.60465049743652,
+        "nodes": 18
       },
       {
         "from": "red-spawn-28",
         "to": "blue-1",
-        "length": 113.72788965702057,
-        "nodes": 100
+        "length": 381.01590490341187,
+        "nodes": 40
       },
       {
         "from": "red-spawn-28",
         "to": "blue-1",
-        "length": 117.48525977134705,
-        "nodes": 103
+        "length": 391.9889750480652,
+        "nodes": 38
       },
       {
         "from": "red-spawn-28",
         "to": "blue-1",
-        "length": 119.86998927593231,
-        "nodes": 100
+        "length": 398.89595127105713,
+        "nodes": 43
       },
       {
         "from": "red-spawn-29",
         "to": "red-1",
-        "length": 30.242629885673523,
-        "nodes": 21
+        "length": 108.48469638824463,
+        "nodes": 17
       },
       {
         "from": "red-spawn-29",
         "to": "red-1",
-        "length": 34.24262988567352,
-        "nodes": 25
+        "length": 119.7135796546936,
+        "nodes": 19
       },
       {
         "from": "red-spawn-29",
         "to": "red-1",
-        "length": 37.89946973323822,
-        "nodes": 27
+        "length": 132.9534878730774,
+        "nodes": 16
       },
       {
         "from": "red-spawn-29",
         "to": "blue-1",
-        "length": 119.3136796951294,
-        "nodes": 106
+        "length": 401.3916721343994,
+        "nodes": 43
       },
       {
         "from": "red-spawn-29",
         "to": "blue-1",
-        "length": 123.89946973323822,
-        "nodes": 109
+        "length": 409.6401376724243,
+        "nodes": 40
       },
       {
         "from": "red-spawn-29",
         "to": "blue-1",
-        "length": 126.86998927593231,
-        "nodes": 105
+        "length": 417.3916726112366,
+        "nodes": 44
       },
       {
         "from": "red-spawn-30",
         "to": "red-1",
-        "length": 30.656839847564697,
-        "nodes": 21
+        "length": 113.13585901260376,
+        "nodes": 18
       },
       {
         "from": "red-spawn-30",
         "to": "red-1",
-        "length": 35.24262988567352,
-        "nodes": 26
+        "length": 120.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-30",
         "to": "red-1",
-        "length": 38.313679695129395,
-        "nodes": 27
+        "length": 137.25581312179565,
+        "nodes": 18
       },
       {
         "from": "red-spawn-30",
         "to": "blue-1",
-        "length": 118.3136796951294,
-        "nodes": 105
+        "length": 396.7405095100403,
+        "nodes": 42
       },
       {
         "from": "red-spawn-30",
         "to": "blue-1",
-        "length": 124.89946973323822,
-        "nodes": 108
+        "length": 404.9889750480652,
+        "nodes": 39
       },
       {
         "from": "red-spawn-30",
         "to": "blue-1",
-        "length": 125.86998927593231,
-        "nodes": 104
+        "length": 412.74050998687744,
+        "nodes": 43
       },
       {
         "from": "red-spawn-31",
         "to": "red-1",
-        "length": 31.656839847564697,
-        "nodes": 22
+        "length": 117.78702163696289,
+        "nodes": 19
       },
       {
         "from": "red-spawn-31",
         "to": "red-1",
-        "length": 35.6568398475647,
-        "nodes": 26
+        "length": 125.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-31",
         "to": "red-1",
-        "length": 38.72788965702057,
-        "nodes": 27
+        "length": 137.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-31",
         "to": "blue-1",
-        "length": 117.3136796951294,
-        "nodes": 104
+        "length": 392.08934688568115,
+        "nodes": 41
       },
       {
         "from": "red-spawn-31",
         "to": "blue-1",
-        "length": 123.89946973323822,
-        "nodes": 107
+        "length": 403.0624170303345,
+        "nodes": 39
       },
       {
         "from": "red-spawn-31",
         "to": "blue-1",
-        "length": 124.86998927593231,
-        "nodes": 103
+        "length": 408.0893473625183,
+        "nodes": 42
       },
       {
         "from": "red-spawn-32",
         "to": "red-1",
-        "length": 32.6568398475647,
-        "nodes": 23
+        "length": 115.90697574615479,
+        "nodes": 17
       },
       {
         "from": "red-spawn-32",
         "to": "red-1",
-        "length": 35.485259771347046,
-        "nodes": 25
+        "length": 127.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-32",
         "to": "red-1",
-        "length": 39.14209961891174,
-        "nodes": 27
+        "length": 138.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-32",
         "to": "blue-1",
-        "length": 116.3136796951294,
-        "nodes": 103
+        "length": 393.04283475875854,
+        "nodes": 43
       },
       {
         "from": "red-spawn-32",
         "to": "blue-1",
-        "length": 120.89946973323822,
-        "nodes": 106
+        "length": 401.29130029678345,
+        "nodes": 40
       },
       {
         "from": "red-spawn-32",
         "to": "blue-1",
-        "length": 123.86998927593231,
-        "nodes": 102
+        "length": 409.0428352355957,
+        "nodes": 44
       },
       {
         "from": "red-spawn-33",
         "to": "red-1",
-        "length": 33.6568398475647,
-        "nodes": 24
+        "length": 120.55813837051392,
+        "nodes": 18
       },
       {
         "from": "red-spawn-33",
         "to": "red-1",
-        "length": 36.485259771347046,
-        "nodes": 26
+        "length": 127.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-33",
         "to": "red-1",
-        "length": 39.55630958080292,
-        "nodes": 27
+        "length": 138.9534878730774,
+        "nodes": 16
       },
       {
         "from": "red-spawn-33",
         "to": "blue-1",
-        "length": 115.3136796951294,
-        "nodes": 102
+        "length": 388.3916721343994,
+        "nodes": 42
       },
       {
         "from": "red-spawn-33",
         "to": "blue-1",
-        "length": 121.89946973323822,
-        "nodes": 105
+        "length": 396.6401376724243,
+        "nodes": 39
       },
       {
         "from": "red-spawn-33",
         "to": "blue-1",
-        "length": 122.86998927593231,
-        "nodes": 101
+        "length": 404.3916726112366,
+        "nodes": 43
       },
       {
         "from": "red-spawn-34",
         "to": "red-1",
-        "length": 34.6568398475647,
-        "nodes": 25
+        "length": 125.20930099487305,
+        "nodes": 19
       },
       {
         "from": "red-spawn-34",
         "to": "red-1",
-        "length": 37.485259771347046,
-        "nodes": 27
+        "length": 130.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-34",
         "to": "red-1",
-        "length": 39.97051954269409,
-        "nodes": 27
+        "length": 142.9534878730774,
+        "nodes": 17
       },
       {
         "from": "red-spawn-34",
         "to": "blue-1",
-        "length": 114.3136796951294,
-        "nodes": 101
+        "length": 383.7405095100403,
+        "nodes": 41
       },
       {
         "from": "red-spawn-34",
         "to": "blue-1",
-        "length": 118.3136796951294,
-        "nodes": 103
+        "length": 391.9889750480652,
+        "nodes": 38
       },
       {
         "from": "red-spawn-34",
         "to": "blue-1",
-        "length": 121.86998927593231,
-        "nodes": 100
+        "length": 399.74050998687744,
+        "nodes": 42
       },
       {
         "from": "red-spawn-35",
         "to": "red-1",
-        "length": 35.6568398475647,
-        "nodes": 26
+        "length": 129.86046361923218,
+        "nodes": 20
       },
       {
         "from": "red-spawn-35",
         "to": "red-1",
-        "length": 38.485259771347046,
-        "nodes": 28
+        "length": 135.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-35",
         "to": "red-1",
-        "length": 40.384729504585266,
-        "nodes": 27
+        "length": 143.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-35",
         "to": "blue-1",
-        "length": 113.3136796951294,
-        "nodes": 100
+        "length": 379.08934688568115,
+        "nodes": 40
       },
       {
         "from": "red-spawn-35",
         "to": "blue-1",
-        "length": 117.3136796951294,
-        "nodes": 102
+        "length": 390.0624170303345,
+        "nodes": 38
       },
       {
         "from": "red-spawn-35",
         "to": "blue-1",
-        "length": 120.86998927593231,
-        "nodes": 99
+        "length": 395.0893473625183,
+        "nodes": 41
       },
       {
         "from": "red-spawn-36",
         "to": "red-1",
-        "length": 30.656839847564697,
-        "nodes": 21
+        "length": 113.13585901260376,
+        "nodes": 18
       },
       {
         "from": "red-spawn-36",
         "to": "red-1",
-        "length": 36.89946973323822,
-        "nodes": 26
+        "length": 126.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-36",
         "to": "red-1",
-        "length": 35.24262988567352,
-        "nodes": 26
+        "length": 132.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-36",
         "to": "blue-1",
-        "length": 119.72788965702057,
-        "nodes": 106
+        "length": 399.7405095100403,
+        "nodes": 42
       },
       {
         "from": "red-spawn-36",
         "to": "blue-1",
-        "length": 124.3136796951294,
-        "nodes": 109
+        "length": 415.21785831451416,
+        "nodes": 41
       },
       {
         "from": "red-spawn-36",
         "to": "blue-1",
-        "length": 127.28419923782349,
-        "nodes": 105
+        "length": 417.74050998687744,
+        "nodes": 43
       },
       {
         "from": "red-spawn-37",
         "to": "red-1",
-        "length": 31.656839847564697,
-        "nodes": 22
+        "length": 113.90697574615479,
+        "nodes": 17
       },
       {
         "from": "red-spawn-37",
         "to": "red-1",
-        "length": 37.313679695129395,
-        "nodes": 26
+        "length": 125.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-37",
         "to": "red-1",
-        "length": 35.6568398475647,
-        "nodes": 26
+        "length": 132.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-37",
         "to": "blue-1",
-        "length": 118.72788965702057,
-        "nodes": 105
+        "length": 395.08934688568115,
+        "nodes": 41
       },
       {
         "from": "red-spawn-37",
         "to": "blue-1",
-        "length": 123.3136796951294,
-        "nodes": 108
+        "length": 410.56669569015503,
+        "nodes": 40
       },
       {
         "from": "red-spawn-37",
         "to": "blue-1",
-        "length": 126.28419923782349,
-        "nodes": 106
+        "length": 413.0893473625183,
+        "nodes": 42
       },
       {
         "from": "red-spawn-38",
         "to": "red-1",
-        "length": 32.07104980945587,
-        "nodes": 22
+        "length": 118.55813837051392,
+        "nodes": 18
       },
       {
         "from": "red-spawn-38",
         "to": "red-1",
-        "length": 37.72788965702057,
-        "nodes": 26
+        "length": 122.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-38",
         "to": "red-1",
-        "length": 36.6568398475647,
-        "nodes": 27
+        "length": 132.9534878730774,
+        "nodes": 16
       },
       {
         "from": "red-spawn-38",
         "to": "blue-1",
-        "length": 117.72788965702057,
-        "nodes": 104
+        "length": 390.438184261322,
+        "nodes": 40
       },
       {
         "from": "red-spawn-38",
         "to": "blue-1",
-        "length": 124.3136796951294,
-        "nodes": 107
+        "length": 408.41125440597534,
+        "nodes": 39
       },
       {
         "from": "red-spawn-38",
         "to": "blue-1",
-        "length": 125.28419923782349,
-        "nodes": 105
+        "length": 411.1627893447876,
+        "nodes": 42
       },
       {
         "from": "red-spawn-39",
         "to": "red-1",
-        "length": 33.07104980945587,
-        "nodes": 23
+        "length": 120.55813837051392,
+        "nodes": 18
       },
       {
         "from": "red-spawn-39",
         "to": "red-1",
-        "length": 38.14209961891174,
-        "nodes": 26
+        "length": 127.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-39",
         "to": "red-1",
-        "length": 37.07104980945587,
-        "nodes": 27
+        "length": 133.9534878730774,
+        "nodes": 16
       },
       {
         "from": "red-spawn-39",
         "to": "blue-1",
-        "length": 116.72788965702057,
-        "nodes": 103
+        "length": 391.3916721343994,
+        "nodes": 42
       },
       {
         "from": "red-spawn-39",
         "to": "blue-1",
-        "length": 120.72788965702057,
-        "nodes": 105
+        "length": 407.9424629211426,
+        "nodes": 41
       },
       {
         "from": "red-spawn-39",
         "to": "blue-1",
-        "length": 124.28419923782349,
-        "nodes": 102
+        "length": 409.3916726112366,
+        "nodes": 43
       },
       {
         "from": "red-spawn-40",
         "to": "red-1",
-        "length": 34.07104980945587,
-        "nodes": 24
+        "length": 120.90697574615479,
+        "nodes": 17
       },
       {
         "from": "red-spawn-40",
         "to": "red-1",
-        "length": 38.55630958080292,
-        "nodes": 26
+        "length": 131.7870216369629,
+        "nodes": 20
       },
       {
         "from": "red-spawn-40",
         "to": "red-1",
-        "length": 37.485259771347046,
-        "nodes": 27
+        "length": 138.25581312179565,
+        "nodes": 18
       },
       {
         "from": "red-spawn-40",
         "to": "blue-1",
-        "length": 115.72788965702057,
-        "nodes": 102
+        "length": 386.7405095100403,
+        "nodes": 41
       },
       {
         "from": "red-spawn-40",
         "to": "blue-1",
-        "length": 122.3136796951294,
-        "nodes": 105
+        "length": 402.21785831451416,
+        "nodes": 40
       },
       {
         "from": "red-spawn-40",
         "to": "blue-1",
-        "length": 123.28419923782349,
-        "nodes": 101
+        "length": 404.74050998687744,
+        "nodes": 42
       },
       {
         "from": "red-spawn-41",
         "to": "red-1",
-        "length": 35.07104980945587,
-        "nodes": 25
+        "length": 125.55813837051392,
+        "nodes": 18
       },
       {
         "from": "red-spawn-41",
         "to": "red-1",
-        "length": 38.97051954269409,
-        "nodes": 26
+        "length": 134.06241703033447,
+        "nodes": 19
       },
       {
         "from": "red-spawn-41",
         "to": "red-1",
-        "length": 38.485259771347046,
-        "nodes": 28
+        "length": 138.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-41",
         "to": "blue-1",
-        "length": 114.72788965702057,
-        "nodes": 101
+        "length": 382.08934688568115,
+        "nodes": 40
       },
       {
         "from": "red-spawn-41",
         "to": "blue-1",
-        "length": 119.3136796951294,
-        "nodes": 104
+        "length": 397.56669569015503,
+        "nodes": 39
       },
       {
         "from": "red-spawn-41",
         "to": "blue-1",
-        "length": 122.28419923782349,
-        "nodes": 100
+        "length": 400.0893473625183,
+        "nodes": 41
       },
       {
         "from": "red-spawn-42",
         "to": "red-1",
-        "length": 36.07104980945587,
-        "nodes": 26
+        "length": 130.20930099487305,
+        "nodes": 19
       },
       {
         "from": "red-spawn-42",
         "to": "red-1",
-        "length": 39.97051954269409,
-        "nodes": 27
+        "length": 135.48469638824463,
+        "nodes": 19
       },
       {
         "from": "red-spawn-42",
         "to": "red-1",
-        "length": 39.485259771347046,
-        "nodes": 29
+        "length": 140.53120851516724,
+        "nodes": 17
       },
       {
         "from": "red-spawn-42",
         "to": "blue-1",
-        "length": 113.72788965702057,
-        "nodes": 100
+        "length": 377.438184261322,
+        "nodes": 39
       },
       {
         "from": "red-spawn-42",
         "to": "blue-1",
-        "length": 118.3136796951294,
-        "nodes": 103
+        "length": 395.41125440597534,
+        "nodes": 38
       },
       {
         "from": "red-spawn-42",
         "to": "blue-1",
-        "length": 121.28419923782349,
-        "nodes": 99
+        "length": 398.1627893447876,
+        "nodes": 41
       },
       {
         "from": "red-spawn-43",
         "to": "red-1",
-        "length": 31.656839847564697,
-        "nodes": 22
+        "length": 117.78702163696289,
+        "nodes": 19
       },
       {
         "from": "red-spawn-43",
         "to": "red-1",
-        "length": 35.89946973323822,
-        "nodes": 25
+        "length": 122.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-43",
         "to": "red-1",
-        "length": 36.24262988567352,
-        "nodes": 27
+        "length": 129.25581312179565,
+        "nodes": 17
       },
       {
         "from": "red-spawn-43",
         "to": "blue-1",
-        "length": 120.14209961891174,
-        "nodes": 106
+        "length": 401.667067527771,
+        "nodes": 42
       },
       {
         "from": "red-spawn-43",
         "to": "blue-1",
-        "length": 124.72788965702057,
-        "nodes": 109
+        "length": 418.21785831451416,
+        "nodes": 41
       },
       {
         "from": "red-spawn-43",
         "to": "blue-1",
-        "length": 127.69840919971466,
-        "nodes": 107
+        "length": 419.66706800460815,
+        "nodes": 43
       },
       {
         "from": "red-spawn-44",
         "to": "red-1",
-        "length": 32.07104980945587,
-        "nodes": 22
+        "length": 118.55813837051392,
+        "nodes": 18
       },
       {
         "from": "red-spawn-44",
         "to": "red-1",
-        "length": 36.313679695129395,
-        "nodes": 25
+        "length": 127.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-44",
         "to": "red-1",
-        "length": 36.6568398475647,
-        "nodes": 27
+        "length": 127.95348787307739,
+        "nodes": 16
       },
       {
         "from": "red-spawn-44",
         "to": "blue-1",
-        "length": 119.14209961891174,
-        "nodes": 105
+        "length": 397.01590490341187,
+        "nodes": 41
       },
       {
         "from": "red-spawn-44",
         "to": "blue-1",
-        "length": 125.72788965702057,
-        "nodes": 108
+        "length": 414.7135796546936,
+        "nodes": 40
       },
       {
         "from": "red-spawn-44",
         "to": "blue-1",
-        "length": 126.69840919971466,
-        "nodes": 106
+        "length": 417.74050998687744,
+        "nodes": 43
       },
       {
         "from": "red-spawn-45",
         "to": "red-1",
-        "length": 33.07104980945587,
-        "nodes": 23
+        "length": 115.90697574615479,
+        "nodes": 17
       },
       {
         "from": "red-spawn-45",
         "to": "red-1",
-        "length": 36.72788965702057,
-        "nodes": 25
+        "length": 127.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-45",
         "to": "red-1",
-        "length": 37.07104980945587,
-        "nodes": 27
+        "length": 128.9534878730774,
+        "nodes": 16
       },
       {
         "from": "red-spawn-45",
         "to": "blue-1",
-        "length": 118.14209961891174,
-        "nodes": 104
+        "length": 395.08934688568115,
+        "nodes": 41
       },
       {
         "from": "red-spawn-45",
         "to": "blue-1",
-        "length": 122.72788965702057,
-        "nodes": 107
+        "length": 411.56669569015503,
+        "nodes": 40
       },
       {
         "from": "red-spawn-45",
         "to": "blue-1",
-        "length": 125.69840919971466,
-        "nodes": 105
+        "length": 413.59362602233887,
+        "nodes": 43
       },
       {
         "from": "red-spawn-46",
         "to": "red-1",
-        "length": 33.485259771347046,
-        "nodes": 23
+        "length": 120.55813837051392,
+        "nodes": 18
       },
       {
         "from": "red-spawn-46",
         "to": "red-1",
-        "length": 37.14209961891174,
-        "nodes": 25
+        "length": 127.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-46",
         "to": "red-1",
-        "length": 38.07104980945587,
-        "nodes": 28
+        "length": 133.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-46",
         "to": "blue-1",
-        "length": 117.14209961891174,
-        "nodes": 103
+        "length": 393.3182301521301,
+        "nodes": 42
       },
       {
         "from": "red-spawn-46",
         "to": "blue-1",
-        "length": 121.72788965702057,
-        "nodes": 106
+        "length": 406.9155330657959,
+        "nodes": 39
       },
       {
         "from": "red-spawn-46",
         "to": "blue-1",
-        "length": 124.69840919971466,
-        "nodes": 104
+        "length": 411.3182306289673,
+        "nodes": 43
       },
       {
         "from": "red-spawn-47",
         "to": "red-1",
-        "length": 34.485259771347046,
-        "nodes": 24
+        "length": 125.20930099487305,
+        "nodes": 19
       },
       {
         "from": "red-spawn-47",
         "to": "red-1",
-        "length": 37.55630958080292,
-        "nodes": 25
+        "length": 132.13585901260376,
+        "nodes": 19
       },
       {
         "from": "red-spawn-47",
         "to": "red-1",
-        "length": 38.485259771347046,
-        "nodes": 28
+        "length": 133.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-47",
         "to": "blue-1",
-        "length": 116.14209961891174,
-        "nodes": 102
+        "length": 388.667067527771,
+        "nodes": 41
       },
       {
         "from": "red-spawn-47",
         "to": "blue-1",
-        "length": 120.72788965702057,
-        "nodes": 105
+        "length": 405.0624170303345,
+        "nodes": 39
       },
       {
         "from": "red-spawn-47",
         "to": "blue-1",
-        "length": 123.69840919971466,
-        "nodes": 103
+        "length": 406.66706800460815,
+        "nodes": 42
       },
       {
         "from": "red-spawn-48",
         "to": "red-1",
-        "length": 35.485259771347046,
-        "nodes": 25
+        "length": 127.48469638824463,
+        "nodes": 18
       },
       {
         "from": "red-spawn-48",
         "to": "red-1",
-        "length": 38.55630958080292,
-        "nodes": 26
+        "length": 136.7870216369629,
+        "nodes": 20
       },
       {
         "from": "red-spawn-48",
         "to": "red-1",
-        "length": 38.89946973323822,
-        "nodes": 28
+        "length": 138.25581312179565,
+        "nodes": 18
       },
       {
         "from": "red-spawn-48",
         "to": "blue-1",
-        "length": 115.14209961891174,
-        "nodes": 101
+        "length": 384.01590490341187,
+        "nodes": 40
       },
       {
         "from": "red-spawn-48",
         "to": "blue-1",
-        "length": 121.72788965702057,
-        "nodes": 104
+        "length": 401.7135796546936,
+        "nodes": 39
       },
       {
         "from": "red-spawn-48",
         "to": "blue-1",
-        "length": 122.69840919971466,
-        "nodes": 102
+        "length": 404.74050998687744,
+        "nodes": 42
       },
       {
         "from": "red-spawn-49",
         "to": "red-1",
-        "length": 36.485259771347046,
-        "nodes": 26
+        "length": 128.90697574615479,
+        "nodes": 18
       },
       {
         "from": "red-spawn-49",
         "to": "red-1",
-        "length": 39.55630958080292,
-        "nodes": 27
+        "length": 136.48469638824463,
+        "nodes": 19
       },
       {
         "from": "red-spawn-49",
         "to": "red-1",
-        "length": 39.89946973323822,
-        "nodes": 29
+        "length": 138.60465049743652,
+        "nodes": 17
       },
       {
         "from": "red-spawn-49",
         "to": "blue-1",
-        "length": 114.14209961891174,
-        "nodes": 100
+        "length": 382.08934688568115,
+        "nodes": 40
       },
       {
         "from": "red-spawn-49",
         "to": "blue-1",
-        "length": 118.72788965702057,
-        "nodes": 103
+        "length": 398.56669569015503,
+        "nodes": 39
       },
       {
         "from": "red-spawn-49",
         "to": "blue-1",
-        "length": 121.69840919971466,
-        "nodes": 101
+        "length": 400.59362602233887,
+        "nodes": 42
       },
       {
         "from": "blue-spawn-1",
         "to": "red-1",
-        "length": 111.82841992378235,
-        "nodes": 99
+        "length": 368.7870216369629,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-1",
         "to": "red-1",
-        "length": 116.69840919971466,
-        "nodes": 98
+        "length": 381.24478816986084,
+        "nodes": 41
       },
       {
         "from": "blue-spawn-1",
         "to": "red-1",
-        "length": 121.48525977134705,
-        "nodes": 103
+        "length": 387.7135796546936,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-1",
         "to": "blue-1",
-        "length": 36.6568398475647,
-        "nodes": 27
+        "length": 132.7135796546936,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-1",
         "to": "blue-1",
-        "length": 40.07104980945587,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-1",
-        "to": "blue-1",
-        "length": 46.213149428367615,
-        "nodes": 32
-      },
-      {
-        "from": "blue-spawn-2",
-        "to": "red-1",
-        "length": 112.82841992378235,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-2",
-        "to": "red-1",
-        "length": 117.69840919971466,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-2",
-        "to": "red-1",
-        "length": 121.6568398475647,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-2",
-        "to": "blue-1",
-        "length": 35.6568398475647,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-2",
-        "to": "blue-1",
-        "length": 37.6568398475647,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-2",
-        "to": "blue-1",
-        "length": 45.79893946647644,
-        "nodes": 32
-      },
-      {
-        "from": "blue-spawn-3",
-        "to": "red-1",
-        "length": 113.82841992378235,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-3",
-        "to": "red-1",
-        "length": 118.69840919971466,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-3",
-        "to": "red-1",
-        "length": 122.6568398475647,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-3",
-        "to": "blue-1",
-        "length": 34.6568398475647,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-3",
-        "to": "blue-1",
-        "length": 37.24262988567352,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-3",
-        "to": "blue-1",
-        "length": 45.384729504585266,
-        "nodes": 32
-      },
-      {
-        "from": "blue-spawn-4",
-        "to": "red-1",
-        "length": 114.82841992378235,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-4",
-        "to": "red-1",
-        "length": 119.69840919971466,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-4",
-        "to": "red-1",
-        "length": 122.14209961891174,
-        "nodes": 106
-      },
-      {
-        "from": "blue-spawn-4",
-        "to": "blue-1",
-        "length": 33.6568398475647,
-        "nodes": 24
-      },
-      {
-        "from": "blue-spawn-4",
-        "to": "blue-1",
-        "length": 37.07104980945587,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-4",
-        "to": "blue-1",
-        "length": 44.97051954269409,
-        "nodes": 32
-      },
-      {
-        "from": "blue-spawn-5",
-        "to": "red-1",
-        "length": 115.82841992378235,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-5",
-        "to": "red-1",
-        "length": 120.69840919971466,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-5",
-        "to": "red-1",
-        "length": 123.14209961891174,
-        "nodes": 107
-      },
-      {
-        "from": "blue-spawn-5",
-        "to": "blue-1",
-        "length": 32.6568398475647,
-        "nodes": 23
-      },
-      {
-        "from": "blue-spawn-5",
-        "to": "blue-1",
-        "length": 36.07104980945587,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-5",
-        "to": "blue-1",
-        "length": 44.55630958080292,
-        "nodes": 32
-      },
-      {
-        "from": "blue-spawn-6",
-        "to": "red-1",
-        "length": 116.82841992378235,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-6",
-        "to": "red-1",
-        "length": 121.69840919971466,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-6",
-        "to": "red-1",
-        "length": 125.6568398475647,
-        "nodes": 108
-      },
-      {
-        "from": "blue-spawn-6",
-        "to": "blue-1",
-        "length": 31.656839847564697,
-        "nodes": 22
-      },
-      {
-        "from": "blue-spawn-6",
-        "to": "blue-1",
-        "length": 36.24262988567352,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-6",
-        "to": "blue-1",
-        "length": 38.485259771347046,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-7",
-        "to": "red-1",
-        "length": 117.82841992378235,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-7",
-        "to": "red-1",
-        "length": 122.69840919971466,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-7",
-        "to": "red-1",
-        "length": 126.6568398475647,
-        "nodes": 109
-      },
-      {
-        "from": "blue-spawn-7",
-        "to": "blue-1",
-        "length": 30.656839847564697,
+        "length": 144.86046409606934,
         "nodes": 21
       },
       {
+        "from": "blue-spawn-1",
+        "to": "blue-1",
+        "length": 158.96939277648926,
+        "nodes": 25
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "red-1",
+        "length": 373.438184261322,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "red-1",
+        "length": 385.89595079421997,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "red-1",
+        "length": 392.36474227905273,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "blue-1",
+        "length": 128.06241703033447,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "blue-1",
+        "length": 140.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-2",
+        "to": "blue-1",
+        "length": 154.31823015213013,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "red-1",
+        "length": 378.08934688568115,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "red-1",
+        "length": 390.5471134185791,
+        "nodes": 43
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "red-1",
+        "length": 396.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "blue-1",
+        "length": 123.41125440597534,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "blue-1",
+        "length": 135.55813884735107,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-3",
+        "to": "blue-1",
+        "length": 151.31823015213013,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "red-1",
+        "length": 379.8604636192322,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "red-1",
+        "length": 395.13585901260376,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "red-1",
+        "length": 398.7870216369629,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "blue-1",
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "blue-1",
+        "length": 132.55813884735107,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-4",
+        "to": "blue-1",
+        "length": 149.3916721343994,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "red-1",
+        "length": 381.7870216369629,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "red-1",
+        "length": 394.24478816986084,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "red-1",
+        "length": 400.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "blue-1",
+        "length": 119.7135796546936,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "blue-1",
+        "length": 135.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-5",
+        "to": "blue-1",
+        "length": 145.96939277648926,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "red-1",
+        "length": 386.438184261322,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "red-1",
+        "length": 398.89595079421997,
+        "nodes": 43
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "red-1",
+        "length": 405.36474227905273,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "blue-1",
+        "length": 115.06241703033447,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "blue-1",
+        "length": 132.71358013153076,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-6",
+        "to": "blue-1",
+        "length": 141.31823015213013,
+        "nodes": 23
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "red-1",
+        "length": 391.08934688568115,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "red-1",
+        "length": 403.5471134185791,
+        "nodes": 44
+      },
+      {
+        "from": "blue-spawn-7",
+        "to": "red-1",
+        "length": 409.7135796546936,
+        "nodes": 40
+      },
+      {
         "from": "blue-spawn-7",
         "to": "blue-1",
-        "length": 35.24262988567352,
-        "nodes": 24
+        "length": 110.41125440597534,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-7",
         "to": "blue-1",
-        "length": 37.485259771347046,
-        "nodes": 27
+        "length": 122.55813884735107,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-8",
-        "to": "red-1",
-        "length": 111.41420996189117,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-8",
-        "to": "red-1",
-        "length": 116.28419923782349,
-        "nodes": 98
-      },
-      {
-        "from": "blue-spawn-8",
-        "to": "red-1",
-        "length": 119.6568398475647,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-8",
+        "from": "blue-spawn-7",
         "to": "blue-1",
-        "length": 36.24262988567352,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-8",
-        "to": "blue-1",
-        "length": 40.485259771347046,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-8",
-        "to": "blue-1",
-        "length": 45.213149428367615,
-        "nodes": 31
-      },
-      {
-        "from": "blue-spawn-9",
-        "to": "red-1",
-        "length": 112.41420996189117,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-9",
-        "to": "red-1",
-        "length": 117.28419923782349,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-9",
-        "to": "red-1",
-        "length": 119.82841992378235,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-9",
-        "to": "blue-1",
-        "length": 35.24262988567352,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-9",
-        "to": "blue-1",
-        "length": 39.485259771347046,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-9",
-        "to": "blue-1",
-        "length": 44.79893946647644,
-        "nodes": 31
-      },
-      {
-        "from": "blue-spawn-10",
-        "to": "red-1",
-        "length": 113.41420996189117,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-10",
-        "to": "red-1",
-        "length": 118.28419923782349,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-10",
-        "to": "red-1",
-        "length": 120.82841992378235,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-10",
-        "to": "blue-1",
-        "length": 34.24262988567352,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-10",
-        "to": "blue-1",
-        "length": 38.485259771347046,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-10",
-        "to": "blue-1",
-        "length": 44.384729504585266,
-        "nodes": 31
-      },
-      {
-        "from": "blue-spawn-11",
-        "to": "red-1",
-        "length": 114.41420996189117,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-11",
-        "to": "red-1",
-        "length": 119.28419923782349,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-11",
-        "to": "red-1",
-        "length": 121.82841992378235,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-11",
-        "to": "blue-1",
-        "length": 33.24262988567352,
-        "nodes": 24
-      },
-      {
-        "from": "blue-spawn-11",
-        "to": "blue-1",
-        "length": 37.485259771347046,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-11",
-        "to": "blue-1",
-        "length": 43.97051954269409,
-        "nodes": 31
-      },
-      {
-        "from": "blue-spawn-12",
-        "to": "red-1",
-        "length": 115.41420996189117,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-12",
-        "to": "red-1",
-        "length": 120.28419923782349,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-12",
-        "to": "red-1",
-        "length": 122.82841992378235,
-        "nodes": 106
-      },
-      {
-        "from": "blue-spawn-12",
-        "to": "blue-1",
-        "length": 32.24262988567352,
+        "length": 138.31823015213013,
         "nodes": 23
       },
       {
-        "from": "blue-spawn-12",
-        "to": "blue-1",
-        "length": 36.485259771347046,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-12",
-        "to": "blue-1",
-        "length": 43.55630958080292,
-        "nodes": 31
-      },
-      {
-        "from": "blue-spawn-13",
+        "from": "blue-spawn-8",
         "to": "red-1",
-        "length": 116.41420996189117,
-        "nodes": 104
+        "length": 366.8604636192322,
+        "nodes": 38
       },
       {
-        "from": "blue-spawn-13",
+        "from": "blue-spawn-8",
         "to": "red-1",
-        "length": 121.28419923782349,
-        "nodes": 103
+        "length": 383.01590490341187,
+        "nodes": 40
       },
       {
-        "from": "blue-spawn-13",
+        "from": "blue-spawn-8",
         "to": "red-1",
-        "length": 123.82841992378235,
-        "nodes": 107
+        "length": 385.7870216369629,
+        "nodes": 38
       },
       {
-        "from": "blue-spawn-13",
+        "from": "blue-spawn-8",
         "to": "blue-1",
-        "length": 31.242629885673523,
-        "nodes": 22
+        "length": 130.7870216369629,
+        "nodes": 20
       },
       {
-        "from": "blue-spawn-13",
+        "from": "blue-spawn-8",
         "to": "blue-1",
-        "length": 34.6568398475647,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-13",
-        "to": "blue-1",
-        "length": 43.14209961891174,
-        "nodes": 31
-      },
-      {
-        "from": "blue-spawn-14",
-        "to": "red-1",
-        "length": 117.41420996189117,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-14",
-        "to": "red-1",
-        "length": 122.28419923782349,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-14",
-        "to": "red-1",
-        "length": 124.82841992378235,
-        "nodes": 108
-      },
-      {
-        "from": "blue-spawn-14",
-        "to": "blue-1",
-        "length": 30.242629885673523,
+        "length": 146.78702211380005,
         "nodes": 21
       },
       {
-        "from": "blue-spawn-14",
+        "from": "blue-spawn-8",
         "to": "blue-1",
-        "length": 33.6568398475647,
+        "length": 160.89595079421997,
+        "nodes": 25
+      },
+      {
+        "from": "blue-spawn-9",
+        "to": "red-1",
+        "length": 371.5116262435913,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-9",
+        "to": "red-1",
+        "length": 387.3916721343994,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-9",
+        "to": "red-1",
+        "length": 390.438184261322,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-9",
+        "to": "blue-1",
+        "length": 126.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-9",
+        "to": "blue-1",
+        "length": 142.13585948944092,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-9",
+        "to": "blue-1",
+        "length": 158.96939277648926,
+        "nodes": 25
+      },
+      {
+        "from": "blue-spawn-10",
+        "to": "red-1",
+        "length": 376.16278886795044,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-10",
+        "to": "red-1",
+        "length": 389.3182301521301,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-10",
+        "to": "red-1",
+        "length": 393.7870216369629,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-10",
+        "to": "blue-1",
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-10",
+        "to": "blue-1",
+        "length": 139.13585948944092,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-10",
+        "to": "blue-1",
+        "length": 155.31823015213013,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-11",
+        "to": "red-1",
+        "length": 375.20930099487305,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-11",
+        "to": "red-1",
+        "length": 391.7870216369629,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-11",
+        "to": "red-1",
+        "length": 394.13585901260376,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-11",
+        "to": "blue-1",
+        "length": 116.8335337638855,
+        "nodes": 17
+      },
+      {
+        "from": "blue-spawn-11",
+        "to": "blue-1",
+        "length": 137.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-11",
+        "to": "blue-1",
+        "length": 152.31823015213013,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-12",
+        "to": "red-1",
+        "length": 379.8604636192322,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-12",
+        "to": "red-1",
+        "length": 396.01590490341187,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-12",
+        "to": "red-1",
+        "length": 398.7870216369629,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-12",
+        "to": "blue-1",
+        "length": 117.78702163696289,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-12",
+        "to": "blue-1",
+        "length": 133.78702211380005,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-12",
+        "to": "blue-1",
+        "length": 149.31823015213013,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-13",
+        "to": "red-1",
+        "length": 384.5116262435913,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-13",
+        "to": "red-1",
+        "length": 400.3916721343994,
+        "nodes": 43
+      },
+      {
+        "from": "blue-spawn-13",
+        "to": "red-1",
+        "length": 403.438184261322,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-13",
+        "to": "blue-1",
+        "length": 113.13585901260376,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-13",
+        "to": "blue-1",
+        "length": 129.13585948944092,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-13",
+        "to": "blue-1",
+        "length": 145.96939277648926,
         "nodes": 24
       },
       {
         "from": "blue-spawn-14",
+        "to": "red-1",
+        "length": 389.16278886795044,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-14",
+        "to": "red-1",
+        "length": 402.3182301521301,
+        "nodes": 43
+      },
+      {
+        "from": "blue-spawn-14",
+        "to": "red-1",
+        "length": 406.7870216369629,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-14",
         "to": "blue-1",
-        "length": 38.485259771347046,
-        "nodes": 28
+        "length": 108.48469638824463,
+        "nodes": 17
       },
       {
-        "from": "blue-spawn-15",
-        "to": "red-1",
-        "length": 111.48525977134705,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-15",
-        "to": "red-1",
-        "length": 115.86998927593231,
-        "nodes": 98
-      },
-      {
-        "from": "blue-spawn-15",
-        "to": "red-1",
-        "length": 119.24262988567352,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-15",
+        "from": "blue-spawn-14",
         "to": "blue-1",
-        "length": 36.6568398475647,
-        "nodes": 27
+        "length": 126.13585948944092,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-15",
+        "from": "blue-spawn-14",
         "to": "blue-1",
-        "length": 40.89946973323822,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-15",
-        "to": "blue-1",
-        "length": 44.213149428367615,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-16",
-        "to": "red-1",
-        "length": 112.48525977134705,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-16",
-        "to": "red-1",
-        "length": 116.86998927593231,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-16",
-        "to": "red-1",
-        "length": 120.24262988567352,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-16",
-        "to": "blue-1",
-        "length": 35.6568398475647,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-16",
-        "to": "blue-1",
-        "length": 38.485259771347046,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-16",
-        "to": "blue-1",
-        "length": 43.79893946647644,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-17",
-        "to": "red-1",
-        "length": 113.48525977134705,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-17",
-        "to": "red-1",
-        "length": 117.86998927593231,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-17",
-        "to": "red-1",
-        "length": 121.24262988567352,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-17",
-        "to": "blue-1",
-        "length": 34.6568398475647,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-17",
-        "to": "blue-1",
-        "length": 38.07104980945587,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-17",
-        "to": "blue-1",
-        "length": 43.384729504585266,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-18",
-        "to": "red-1",
-        "length": 114.48525977134705,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-18",
-        "to": "red-1",
-        "length": 118.86998927593231,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-18",
-        "to": "red-1",
-        "length": 122.24262988567352,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-18",
-        "to": "blue-1",
-        "length": 33.6568398475647,
-        "nodes": 24
-      },
-      {
-        "from": "blue-spawn-18",
-        "to": "blue-1",
-        "length": 37.89946973323822,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-18",
-        "to": "blue-1",
-        "length": 42.97051954269409,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-19",
-        "to": "red-1",
-        "length": 115.48525977134705,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-19",
-        "to": "red-1",
-        "length": 119.86998927593231,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-19",
-        "to": "red-1",
-        "length": 123.24262988567352,
-        "nodes": 106
-      },
-      {
-        "from": "blue-spawn-19",
-        "to": "blue-1",
-        "length": 32.6568398475647,
+        "length": 142.31823015213013,
         "nodes": 23
       },
       {
-        "from": "blue-spawn-19",
-        "to": "blue-1",
-        "length": 36.89946973323822,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-19",
-        "to": "blue-1",
-        "length": 42.55630958080292,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-20",
+        "from": "blue-spawn-15",
         "to": "red-1",
-        "length": 116.48525977134705,
-        "nodes": 104
+        "length": 368.7870216369629,
+        "nodes": 38
       },
       {
-        "from": "blue-spawn-20",
+        "from": "blue-spawn-15",
         "to": "red-1",
-        "length": 120.86998927593231,
-        "nodes": 103
+        "length": 383.36474227905273,
+        "nodes": 39
       },
       {
-        "from": "blue-spawn-20",
+        "from": "blue-spawn-15",
         "to": "red-1",
-        "length": 124.24262988567352,
-        "nodes": 107
+        "length": 388.9889750480652,
+        "nodes": 38
       },
       {
-        "from": "blue-spawn-20",
+        "from": "blue-spawn-15",
         "to": "blue-1",
-        "length": 31.656839847564697,
-        "nodes": 22
+        "length": 132.48469638824463,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-20",
+        "from": "blue-spawn-15",
         "to": "blue-1",
-        "length": 35.07104980945587,
-        "nodes": 25
+        "length": 145.55813884735107,
+        "nodes": 20
       },
       {
-        "from": "blue-spawn-20",
+        "from": "blue-spawn-15",
         "to": "blue-1",
-        "length": 42.14209961891174,
-        "nodes": 30
+        "length": 158.74050951004028,
+        "nodes": 24
       },
       {
-        "from": "blue-spawn-21",
+        "from": "blue-spawn-16",
         "to": "red-1",
-        "length": 117.48525977134705,
-        "nodes": 105
+        "length": 370.5581383705139,
+        "nodes": 37
       },
       {
-        "from": "blue-spawn-21",
+        "from": "blue-spawn-16",
         "to": "red-1",
-        "length": 121.86998927593231,
-        "nodes": 104
+        "length": 385.89595079421997,
+        "nodes": 42
       },
       {
-        "from": "blue-spawn-21",
+        "from": "blue-spawn-16",
         "to": "red-1",
-        "length": 125.24262988567352,
-        "nodes": 108
+        "length": 390.08934688568115,
+        "nodes": 40
       },
       {
-        "from": "blue-spawn-21",
+        "from": "blue-spawn-16",
         "to": "blue-1",
-        "length": 30.656839847564697,
+        "length": 127.8335337638855,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-16",
+        "to": "blue-1",
+        "length": 145.71358013153076,
         "nodes": 21
       },
       {
-        "from": "blue-spawn-21",
+        "from": "blue-spawn-16",
         "to": "blue-1",
-        "length": 36.07104980945587,
-        "nodes": 24
+        "length": 154.53120851516724,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-21",
+        "from": "blue-spawn-17",
+        "to": "red-1",
+        "length": 374.13585901260376,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-17",
+        "to": "red-1",
+        "length": 387.0624170303345,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-17",
+        "to": "red-1",
+        "length": 395.7405095100403,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-17",
         "to": "blue-1",
-        "length": 41.72788965702057,
-        "nodes": 30
+        "length": 123.41125440597534,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-22",
-        "to": "red-1",
-        "length": 111.07104980945587,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-22",
-        "to": "red-1",
-        "length": 115.45577931404114,
-        "nodes": 98
-      },
-      {
-        "from": "blue-spawn-22",
-        "to": "red-1",
-        "length": 119.6568398475647,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-22",
+        "from": "blue-spawn-17",
         "to": "blue-1",
-        "length": 37.07104980945587,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-22",
-        "to": "blue-1",
-        "length": 42.485259771347046,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-22",
-        "to": "blue-1",
-        "length": 43.213149428367615,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-23",
-        "to": "red-1",
-        "length": 112.07104980945587,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-23",
-        "to": "red-1",
-        "length": 116.45577931404114,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-23",
-        "to": "red-1",
-        "length": 120.6568398475647,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-23",
-        "to": "blue-1",
-        "length": 36.07104980945587,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-23",
-        "to": "blue-1",
-        "length": 40.313679695129395,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-23",
-        "to": "blue-1",
-        "length": 42.79893946647644,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-24",
-        "to": "red-1",
-        "length": 113.07104980945587,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-24",
-        "to": "red-1",
-        "length": 117.45577931404114,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-24",
-        "to": "red-1",
-        "length": 121.6568398475647,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-24",
-        "to": "blue-1",
-        "length": 35.07104980945587,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-24",
-        "to": "blue-1",
-        "length": 39.313679695129395,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-24",
-        "to": "blue-1",
-        "length": 42.384729504585266,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-25",
-        "to": "red-1",
-        "length": 114.07104980945587,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-25",
-        "to": "red-1",
-        "length": 118.45577931404114,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-25",
-        "to": "red-1",
-        "length": 122.6568398475647,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-25",
-        "to": "blue-1",
-        "length": 34.07104980945587,
-        "nodes": 24
-      },
-      {
-        "from": "blue-spawn-25",
-        "to": "blue-1",
-        "length": 36.89946973323822,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-25",
-        "to": "blue-1",
-        "length": 41.97051954269409,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-26",
-        "to": "red-1",
-        "length": 115.07104980945587,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-26",
-        "to": "red-1",
-        "length": 119.45577931404114,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-26",
-        "to": "red-1",
-        "length": 123.6568398475647,
-        "nodes": 106
-      },
-      {
-        "from": "blue-spawn-26",
-        "to": "blue-1",
-        "length": 33.07104980945587,
-        "nodes": 23
-      },
-      {
-        "from": "blue-spawn-26",
-        "to": "blue-1",
-        "length": 35.89946973323822,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-26",
-        "to": "blue-1",
-        "length": 41.55630958080292,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-27",
-        "to": "red-1",
-        "length": 116.07104980945587,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-27",
-        "to": "red-1",
-        "length": 120.45577931404114,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-27",
-        "to": "red-1",
-        "length": 124.6568398475647,
-        "nodes": 107
-      },
-      {
-        "from": "blue-spawn-27",
-        "to": "blue-1",
-        "length": 32.07104980945587,
-        "nodes": 22
-      },
-      {
-        "from": "blue-spawn-27",
-        "to": "blue-1",
-        "length": 34.89946973323822,
-        "nodes": 24
-      },
-      {
-        "from": "blue-spawn-27",
-        "to": "blue-1",
-        "length": 41.14209961891174,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-28",
-        "to": "red-1",
-        "length": 117.07104980945587,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-28",
-        "to": "red-1",
-        "length": 121.45577931404114,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-28",
-        "to": "red-1",
-        "length": 125.6568398475647,
-        "nodes": 108
-      },
-      {
-        "from": "blue-spawn-28",
-        "to": "blue-1",
-        "length": 31.07104980945587,
+        "length": 141.86046409606934,
         "nodes": 21
       },
       {
-        "from": "blue-spawn-28",
+        "from": "blue-spawn-17",
         "to": "blue-1",
-        "length": 35.07104980945587,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-28",
-        "to": "blue-1",
-        "length": 40.72788965702057,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-29",
-        "to": "red-1",
-        "length": 110.6568398475647,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-29",
-        "to": "red-1",
-        "length": 115.04156935214996,
-        "nodes": 98
-      },
-      {
-        "from": "blue-spawn-29",
-        "to": "red-1",
-        "length": 120.07104980945587,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-29",
-        "to": "blue-1",
-        "length": 37.485259771347046,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-29",
-        "to": "blue-1",
-        "length": 42.79893946647644,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-29",
-        "to": "blue-1",
-        "length": 42.89946973323822,
-        "nodes": 30
-      },
-      {
-        "from": "blue-spawn-30",
-        "to": "red-1",
-        "length": 111.6568398475647,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-30",
-        "to": "red-1",
-        "length": 116.04156935214996,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-30",
-        "to": "red-1",
-        "length": 121.07104980945587,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-30",
-        "to": "blue-1",
-        "length": 36.485259771347046,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-30",
-        "to": "blue-1",
-        "length": 41.79893946647644,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-30",
-        "to": "blue-1",
-        "length": 40.72788965702057,
-        "nodes": 29
-      },
-      {
-        "from": "blue-spawn-31",
-        "to": "red-1",
-        "length": 112.6568398475647,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-31",
-        "to": "red-1",
-        "length": 117.04156935214996,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-31",
-        "to": "red-1",
-        "length": 122.07104980945587,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-31",
-        "to": "blue-1",
-        "length": 35.485259771347046,
-        "nodes": 25
-      },
-      {
-        "from": "blue-spawn-31",
-        "to": "blue-1",
-        "length": 41.384729504585266,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-31",
-        "to": "blue-1",
-        "length": 39.72788965702057,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-32",
-        "to": "red-1",
-        "length": 113.6568398475647,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-32",
-        "to": "red-1",
-        "length": 118.04156935214996,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-32",
-        "to": "red-1",
-        "length": 123.07104980945587,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-32",
-        "to": "blue-1",
-        "length": 34.485259771347046,
+        "length": 153.3916721343994,
         "nodes": 24
       },
       {
-        "from": "blue-spawn-32",
-        "to": "blue-1",
-        "length": 38.72788965702057,
-        "nodes": 27
-      },
-      {
-        "from": "blue-spawn-32",
-        "to": "blue-1",
-        "length": 40.97051954269409,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-33",
+        "from": "blue-spawn-18",
         "to": "red-1",
-        "length": 114.6568398475647,
-        "nodes": 103
+        "length": 378.7870216369629,
+        "nodes": 39
       },
       {
-        "from": "blue-spawn-33",
+        "from": "blue-spawn-18",
         "to": "red-1",
-        "length": 119.04156935214996,
-        "nodes": 102
+        "length": 391.7135796546936,
+        "nodes": 39
       },
       {
-        "from": "blue-spawn-33",
+        "from": "blue-spawn-18",
         "to": "red-1",
-        "length": 124.07104980945587,
-        "nodes": 106
+        "length": 397.33781242370605,
+        "nodes": 38
       },
       {
-        "from": "blue-spawn-33",
+        "from": "blue-spawn-18",
         "to": "blue-1",
-        "length": 33.485259771347046,
+        "length": 121.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-18",
+        "to": "blue-1",
+        "length": 137.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-18",
+        "to": "blue-1",
+        "length": 148.74050951004028,
         "nodes": 23
       },
       {
-        "from": "blue-spawn-33",
-        "to": "blue-1",
-        "length": 37.72788965702057,
-        "nodes": 26
-      },
-      {
-        "from": "blue-spawn-33",
-        "to": "blue-1",
-        "length": 40.55630958080292,
-        "nodes": 28
-      },
-      {
-        "from": "blue-spawn-34",
+        "from": "blue-spawn-19",
         "to": "red-1",
-        "length": 115.6568398475647,
-        "nodes": 104
+        "length": 381.7870216369629,
+        "nodes": 39
       },
       {
-        "from": "blue-spawn-34",
+        "from": "blue-spawn-19",
         "to": "red-1",
-        "length": 120.04156935214996,
-        "nodes": 103
+        "length": 396.36474227905273,
+        "nodes": 40
       },
       {
-        "from": "blue-spawn-34",
+        "from": "blue-spawn-19",
         "to": "red-1",
-        "length": 125.07104980945587,
-        "nodes": 107
+        "length": 401.9889750480652,
+        "nodes": 39
       },
       {
-        "from": "blue-spawn-34",
+        "from": "blue-spawn-19",
         "to": "blue-1",
-        "length": 32.485259771347046,
-        "nodes": 22
+        "length": 119.48469638824463,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-34",
+        "from": "blue-spawn-19",
         "to": "blue-1",
-        "length": 37.313679695129395,
-        "nodes": 26
+        "length": 132.55813884735107,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-34",
+        "from": "blue-spawn-19",
         "to": "blue-1",
-        "length": 40.14209961891174,
-        "nodes": 28
+        "length": 145.74050951004028,
+        "nodes": 23
       },
       {
-        "from": "blue-spawn-35",
+        "from": "blue-spawn-20",
         "to": "red-1",
-        "length": 116.6568398475647,
-        "nodes": 105
+        "length": 383.5581383705139,
+        "nodes": 38
       },
       {
-        "from": "blue-spawn-35",
+        "from": "blue-spawn-20",
         "to": "red-1",
-        "length": 121.04156935214996,
-        "nodes": 104
+        "length": 398.89595079421997,
+        "nodes": 43
       },
       {
-        "from": "blue-spawn-35",
+        "from": "blue-spawn-20",
         "to": "red-1",
-        "length": 126.07104980945587,
-        "nodes": 108
+        "length": 403.08934688568115,
+        "nodes": 41
       },
       {
-        "from": "blue-spawn-35",
+        "from": "blue-spawn-20",
         "to": "blue-1",
-        "length": 31.485259771347046,
+        "length": 114.8335337638855,
+        "nodes": 17
+      },
+      {
+        "from": "blue-spawn-20",
+        "to": "blue-1",
+        "length": 132.71358013153076,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-20",
+        "to": "blue-1",
+        "length": 145.04283475875854,
+        "nodes": 24
+      },
+      {
+        "from": "blue-spawn-21",
+        "to": "red-1",
+        "length": 387.13585901260376,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-21",
+        "to": "red-1",
+        "length": 400.0624170303345,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-21",
+        "to": "red-1",
+        "length": 408.7405095100403,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-21",
+        "to": "blue-1",
+        "length": 110.41125440597534,
+        "nodes": 17
+      },
+      {
+        "from": "blue-spawn-21",
+        "to": "blue-1",
+        "length": 128.86046409606934,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-21",
+        "to": "blue-1",
+        "length": 147.53120851516724,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-22",
+        "to": "red-1",
+        "length": 369.5581383705139,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-22",
+        "to": "red-1",
+        "length": 382.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-22",
+        "to": "red-1",
+        "length": 387.36474227905273,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-22",
+        "to": "blue-1",
+        "length": 129.8335337638855,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-22",
+        "to": "blue-1",
+        "length": 146.55813884735107,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-22",
+        "to": "blue-1",
+        "length": 154.18237113952637,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-23",
+        "to": "red-1",
+        "length": 371.48469638824463,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-23",
+        "to": "red-1",
+        "length": 384.667067527771,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-23",
+        "to": "red-1",
+        "length": 391.01590490341187,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-23",
+        "to": "blue-1",
+        "length": 129.98897504806519,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-23",
+        "to": "blue-1",
+        "length": 145.86046409606934,
         "nodes": 21
       },
       {
-        "from": "blue-spawn-35",
+        "from": "blue-spawn-23",
         "to": "blue-1",
-        "length": 38.07104980945587,
-        "nodes": 26
+        "length": 154.18237113952637,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-35",
+        "from": "blue-spawn-24",
+        "to": "red-1",
+        "length": 376.13585901260376,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-24",
+        "to": "red-1",
+        "length": 388.5936255455017,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-24",
+        "to": "red-1",
+        "length": 393.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-24",
         "to": "blue-1",
-        "length": 39.72788965702057,
-        "nodes": 28
+        "length": 126.13585901260376,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-36",
-        "to": "red-1",
-        "length": 111.07104980945587,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-36",
-        "to": "red-1",
-        "length": 114.48525977134705,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-36",
-        "to": "red-1",
-        "length": 120.86998927593231,
-        "nodes": 99
-      },
-      {
-        "from": "blue-spawn-36",
+        "from": "blue-spawn-24",
         "to": "blue-1",
-        "length": 37.89946973323822,
-        "nodes": 27
+        "length": 141.2093014717102,
+        "nodes": 20
       },
       {
-        "from": "blue-spawn-36",
+        "from": "blue-spawn-24",
         "to": "blue-1",
-        "length": 42.384729504585266,
-        "nodes": 29
+        "length": 149.53120851516724,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-36",
+        "from": "blue-spawn-25",
+        "to": "red-1",
+        "length": 380.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-25",
+        "to": "red-1",
+        "length": 392.7405095100403,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-25",
+        "to": "red-1",
+        "length": 395.7135796546936,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-25",
         "to": "blue-1",
-        "length": 42.14209961891174,
-        "nodes": 30
+        "length": 121.48469638824463,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-37",
-        "to": "red-1",
-        "length": 112.07104980945587,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-37",
-        "to": "red-1",
-        "length": 115.48525977134705,
-        "nodes": 103
-      },
-      {
-        "from": "blue-spawn-37",
-        "to": "red-1",
-        "length": 121.86998927593231,
-        "nodes": 100
-      },
-      {
-        "from": "blue-spawn-37",
+        "from": "blue-spawn-25",
         "to": "blue-1",
-        "length": 36.89946973323822,
-        "nodes": 26
+        "length": 136.55813884735107,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-37",
+        "from": "blue-spawn-25",
         "to": "blue-1",
-        "length": 41.384729504585266,
-        "nodes": 28
+        "length": 148.53120851516724,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-37",
+        "from": "blue-spawn-26",
+        "to": "red-1",
+        "length": 382.5581383705139,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-26",
+        "to": "red-1",
+        "length": 395.7135796546936,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-26",
+        "to": "red-1",
+        "length": 400.36474227905273,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-26",
         "to": "blue-1",
-        "length": 41.14209961891174,
-        "nodes": 29
+        "length": 116.8335337638855,
+        "nodes": 17
       },
       {
-        "from": "blue-spawn-38",
-        "to": "red-1",
-        "length": 113.07104980945587,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-38",
-        "to": "red-1",
-        "length": 116.48525977134705,
-        "nodes": 104
-      },
-      {
-        "from": "blue-spawn-38",
-        "to": "red-1",
-        "length": 122.86998927593231,
-        "nodes": 101
-      },
-      {
-        "from": "blue-spawn-38",
+        "from": "blue-spawn-26",
         "to": "blue-1",
-        "length": 35.89946973323822,
-        "nodes": 25
+        "length": 133.55813884735107,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-38",
+        "from": "blue-spawn-26",
         "to": "blue-1",
-        "length": 40.384729504585266,
-        "nodes": 27
+        "length": 149.8335337638855,
+        "nodes": 19
       },
       {
-        "from": "blue-spawn-38",
+        "from": "blue-spawn-27",
+        "to": "red-1",
+        "length": 384.48469638824463,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-27",
+        "to": "red-1",
+        "length": 397.667067527771,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-27",
+        "to": "red-1",
+        "length": 404.01590490341187,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-27",
         "to": "blue-1",
-        "length": 38.72788965702057,
-        "nodes": 27
+        "length": 116.98897504806519,
+        "nodes": 18
       },
       {
-        "from": "blue-spawn-39",
-        "to": "red-1",
-        "length": 114.07104980945587,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-39",
-        "to": "red-1",
-        "length": 117.48525977134705,
-        "nodes": 105
-      },
-      {
-        "from": "blue-spawn-39",
-        "to": "red-1",
-        "length": 123.86998927593231,
-        "nodes": 102
-      },
-      {
-        "from": "blue-spawn-39",
+        "from": "blue-spawn-27",
         "to": "blue-1",
-        "length": 34.89946973323822,
+        "length": 135.43818473815918,
+        "nodes": 21
+      },
+      {
+        "from": "blue-spawn-27",
+        "to": "blue-1",
+        "length": 148.3916721343994,
         "nodes": 24
       },
       {
+        "from": "blue-spawn-28",
+        "to": "red-1",
+        "length": 389.13585901260376,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-28",
+        "to": "red-1",
+        "length": 401.5936255455017,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-28",
+        "to": "red-1",
+        "length": 406.7135796546936,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-28",
+        "to": "blue-1",
+        "length": 113.13585901260376,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-28",
+        "to": "blue-1",
+        "length": 130.78702211380005,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-28",
+        "to": "blue-1",
+        "length": 146.10892915725708,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-29",
+        "to": "red-1",
+        "length": 364.9069757461548,
+        "nodes": 36
+      },
+      {
+        "from": "blue-spawn-29",
+        "to": "red-1",
+        "length": 379.6401376724243,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-29",
+        "to": "red-1",
+        "length": 387.9889750480652,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-29",
+        "to": "blue-1",
+        "length": 130.8335337638855,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-29",
+        "to": "blue-1",
+        "length": 150.86046409606934,
+        "nodes": 21
+      },
+      {
+        "from": "blue-spawn-29",
+        "to": "blue-1",
+        "length": 152.10892915725708,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-30",
+        "to": "red-1",
+        "length": 369.5581383705139,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-30",
+        "to": "red-1",
+        "length": 382.01590490341187,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-30",
+        "to": "red-1",
+        "length": 386.36474227905273,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-30",
+        "to": "blue-1",
+        "length": 131.7870216369629,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-30",
+        "to": "blue-1",
+        "length": 146.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-30",
+        "to": "blue-1",
+        "length": 150.18237113952637,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-31",
+        "to": "red-1",
+        "length": 374.20930099487305,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-31",
+        "to": "red-1",
+        "length": 386.667067527771,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-31",
+        "to": "red-1",
+        "length": 391.01590490341187,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-31",
+        "to": "blue-1",
+        "length": 127.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-31",
+        "to": "blue-1",
+        "length": 141.55813884735107,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-31",
+        "to": "blue-1",
+        "length": 149.53120851516724,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-32",
+        "to": "red-1",
+        "length": 378.8604636192322,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-32",
+        "to": "red-1",
+        "length": 389.13585901260376,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-32",
+        "to": "red-1",
+        "length": 392.7870216369629,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-32",
+        "to": "blue-1",
+        "length": 122.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-32",
+        "to": "blue-1",
+        "length": 138.55813884735107,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-32",
+        "to": "blue-1",
+        "length": 145.53120851516724,
+        "nodes": 17
+      },
+      {
+        "from": "blue-spawn-33",
+        "to": "red-1",
+        "length": 377.9069757461548,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-33",
+        "to": "red-1",
+        "length": 392.6401376724243,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-33",
+        "to": "red-1",
+        "length": 400.9889750480652,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-33",
+        "to": "blue-1",
+        "length": 117.8335337638855,
+        "nodes": 17
+      },
+      {
+        "from": "blue-spawn-33",
+        "to": "blue-1",
+        "length": 138.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-33",
+        "to": "blue-1",
+        "length": 145.18237113952637,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-34",
+        "to": "red-1",
+        "length": 382.5581383705139,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-34",
+        "to": "red-1",
+        "length": 395.01590490341187,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-34",
+        "to": "red-1",
+        "length": 399.36474227905273,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-34",
+        "to": "blue-1",
+        "length": 119.7135796546936,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-34",
+        "to": "blue-1",
+        "length": 136.2093014717102,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-34",
+        "to": "blue-1",
+        "length": 144.18237113952637,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-35",
+        "to": "red-1",
+        "length": 387.20930099487305,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-35",
+        "to": "red-1",
+        "length": 399.667067527771,
+        "nodes": 42
+      },
+      {
+        "from": "blue-spawn-35",
+        "to": "red-1",
+        "length": 404.01590490341187,
+        "nodes": 41
+      },
+      {
+        "from": "blue-spawn-35",
+        "to": "blue-1",
+        "length": 115.06241703033447,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-35",
+        "to": "blue-1",
+        "length": 131.55813884735107,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-35",
+        "to": "blue-1",
+        "length": 143.8335337638855,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-36",
+        "to": "red-1",
+        "length": 369.5581383705139,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-36",
+        "to": "red-1",
+        "length": 377.7135796546936,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-36",
+        "to": "red-1",
+        "length": 383.33781242370605,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-36",
+        "to": "blue-1",
+        "length": 135.48469638824463,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-36",
+        "to": "blue-1",
+        "length": 150.18237113952637,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-36",
+        "to": "blue-1",
+        "length": 151.2093014717102,
+        "nodes": 21
+      },
+      {
+        "from": "blue-spawn-37",
+        "to": "red-1",
+        "length": 369.9069757461548,
+        "nodes": 36
+      },
+      {
+        "from": "blue-spawn-37",
+        "to": "red-1",
+        "length": 382.36474227905273,
+        "nodes": 39
+      },
+      {
+        "from": "blue-spawn-37",
+        "to": "red-1",
+        "length": 389.9889750480652,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-37",
+        "to": "blue-1",
+        "length": 132.13585901260376,
+        "nodes": 19
+      },
+      {
+        "from": "blue-spawn-37",
+        "to": "blue-1",
+        "length": 146.55813884735107,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-37",
+        "to": "blue-1",
+        "length": 147.10892915725708,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-38",
+        "to": "red-1",
+        "length": 374.5581383705139,
+        "nodes": 37
+      },
+      {
+        "from": "blue-spawn-38",
+        "to": "red-1",
+        "length": 385.438184261322,
+        "nodes": 40
+      },
+      {
+        "from": "blue-spawn-38",
+        "to": "red-1",
+        "length": 391.13585901260376,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-38",
+        "to": "blue-1",
+        "length": 127.48469638824463,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-38",
+        "to": "blue-1",
+        "length": 145.13585948944092,
+        "nodes": 20
+      },
+      {
+        "from": "blue-spawn-38",
+        "to": "blue-1",
+        "length": 145.18237113952637,
+        "nodes": 18
+      },
+      {
+        "from": "blue-spawn-39",
+        "to": "red-1",
+        "length": 379.20930099487305,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-39",
+        "to": "red-1",
+        "length": 386.0624170303345,
+        "nodes": 38
+      },
+      {
+        "from": "blue-spawn-39",
+        "to": "red-1",
+        "length": 399.29130029678345,
+        "nodes": 40
+      },
+      {
         "from": "blue-spawn-39",
         "to": "blue-1",
-        "length": 39.97051954269409,
-        "nodes": 27
+        "length": 122.8335337638855,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-39",
         "to": "blue-1",
-        "length": 38.313679695129395,
-        "nodes": 27
+        "length": 142.86046409606934,
+        "nodes": 21
+      },
+      {
+        "from": "blue-spawn-39",
+        "to": "blue-1",
+        "length": 144.8335337638855,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-40",
         "to": "red-1",
-        "length": 115.07104980945587,
-        "nodes": 103
+        "length": 382.5581383705139,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-40",
         "to": "red-1",
-        "length": 118.48525977134705,
-        "nodes": 106
+        "length": 390.7135796546936,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-40",
         "to": "red-1",
-        "length": 124.86998927593231,
-        "nodes": 103
+        "length": 396.33781242370605,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-40",
         "to": "blue-1",
-        "length": 33.89946973323822,
-        "nodes": 23
+        "length": 122.48469638824463,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-40",
         "to": "blue-1",
-        "length": 39.55630958080292,
-        "nodes": 27
+        "length": 138.2093014717102,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-40",
         "to": "blue-1",
-        "length": 38.72788965702057,
-        "nodes": 27
+        "length": 140.53120851516724,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-41",
         "to": "red-1",
-        "length": 116.07104980945587,
-        "nodes": 104
+        "length": 382.9069757461548,
+        "nodes": 37
       },
       {
         "from": "blue-spawn-41",
         "to": "red-1",
-        "length": 119.48525977134705,
-        "nodes": 107
+        "length": 395.36474227905273,
+        "nodes": 40
       },
       {
         "from": "blue-spawn-41",
         "to": "red-1",
-        "length": 125.86998927593231,
-        "nodes": 104
+        "length": 402.9889750480652,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-41",
         "to": "blue-1",
-        "length": 32.89946973323822,
-        "nodes": 22
+        "length": 120.48469638824463,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-41",
         "to": "blue-1",
-        "length": 39.14209961891174,
-        "nodes": 27
+        "length": 133.55813884735107,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-41",
         "to": "blue-1",
-        "length": 38.313679695129395,
-        "nodes": 27
+        "length": 139.53120851516724,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-42",
         "to": "red-1",
-        "length": 117.07104980945587,
-        "nodes": 105
+        "length": 387.5581383705139,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-42",
         "to": "red-1",
-        "length": 120.48525977134705,
-        "nodes": 108
+        "length": 398.438184261322,
+        "nodes": 41
       },
       {
         "from": "blue-spawn-42",
         "to": "red-1",
-        "length": 126.86998927593231,
-        "nodes": 105
+        "length": 404.13585901260376,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-42",
         "to": "blue-1",
-        "length": 32.485259771347046,
-        "nodes": 22
+        "length": 115.8335337638855,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-42",
         "to": "blue-1",
-        "length": 38.72788965702057,
-        "nodes": 27
+        "length": 136.2093014717102,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-42",
         "to": "blue-1",
-        "length": 37.313679695129395,
-        "nodes": 26
+        "length": 139.18237113952637,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-43",
         "to": "red-1",
-        "length": 111.48525977134705,
-        "nodes": 99
+        "length": 372.48469638824463,
+        "nodes": 37
       },
       {
         "from": "blue-spawn-43",
         "to": "red-1",
-        "length": 114.89946973323822,
-        "nodes": 102
+        "length": 379.6401376724243,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-43",
         "to": "red-1",
-        "length": 121.28419923782349,
-        "nodes": 99
+        "length": 387.9889750480652,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-43",
         "to": "blue-1",
-        "length": 38.313679695129395,
-        "nodes": 27
+        "length": 135.48469638824463,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-43",
         "to": "blue-1",
-        "length": 41.384729504585266,
-        "nodes": 28
+        "length": 148.41125440597534,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-43",
         "to": "blue-1",
-        "length": 42.55630958080292,
-        "nodes": 30
+        "length": 150.55813884735107,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-44",
         "to": "red-1",
-        "length": 112.48525977134705,
-        "nodes": 100
+        "length": 374.5581383705139,
+        "nodes": 37
       },
       {
         "from": "blue-spawn-44",
         "to": "red-1",
-        "length": 115.89946973323822,
-        "nodes": 103
+        "length": 384.29130029678345,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-44",
         "to": "red-1",
-        "length": 122.28419923782349,
-        "nodes": 100
+        "length": 389.9155330657959,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-44",
         "to": "blue-1",
-        "length": 37.313679695129395,
-        "nodes": 26
+        "length": 130.8335337638855,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-44",
         "to": "blue-1",
-        "length": 40.97051954269409,
-        "nodes": 28
+        "length": 145.18237113952637,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-44",
         "to": "blue-1",
-        "length": 40.72788965702057,
-        "nodes": 29
+        "length": 147.55813884735107,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-45",
         "to": "red-1",
-        "length": 113.48525977134705,
-        "nodes": 101
+        "length": 376.48469638824463,
+        "nodes": 37
       },
       {
         "from": "blue-spawn-45",
         "to": "red-1",
-        "length": 116.89946973323822,
-        "nodes": 104
+        "length": 388.9424629211426,
+        "nodes": 40
       },
       {
         "from": "blue-spawn-45",
         "to": "red-1",
-        "length": 123.28419923782349,
-        "nodes": 101
+        "length": 397.29130029678345,
+        "nodes": 40
       },
       {
         "from": "blue-spawn-45",
         "to": "blue-1",
-        "length": 36.313679695129395,
-        "nodes": 25
+        "length": 129.41125440597534,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-45",
         "to": "blue-1",
-        "length": 39.97051954269409,
-        "nodes": 27
+        "length": 144.8335337638855,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-45",
         "to": "blue-1",
-        "length": 39.14209961891174,
-        "nodes": 27
+        "length": 147.86046409606934,
+        "nodes": 21
       },
       {
         "from": "blue-spawn-46",
         "to": "red-1",
-        "length": 114.48525977134705,
-        "nodes": 102
+        "length": 381.13585901260376,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-46",
         "to": "red-1",
-        "length": 117.89946973323822,
-        "nodes": 105
+        "length": 390.7135796546936,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-46",
         "to": "red-1",
-        "length": 124.28419923782349,
-        "nodes": 102
+        "length": 399.21785831451416,
+        "nodes": 40
       },
       {
         "from": "blue-spawn-46",
         "to": "blue-1",
-        "length": 35.313679695129395,
-        "nodes": 24
+        "length": 127.13585901260376,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-46",
         "to": "blue-1",
-        "length": 38.97051954269409,
-        "nodes": 26
+        "length": 140.18237113952637,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-46",
         "to": "blue-1",
-        "length": 40.14209961891174,
-        "nodes": 28
+        "length": 143.2093014717102,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-47",
         "to": "red-1",
-        "length": 115.48525977134705,
-        "nodes": 103
+        "length": 385.48469638824463,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-47",
         "to": "red-1",
-        "length": 118.89946973323822,
-        "nodes": 106
+        "length": 392.6401376724243,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-47",
         "to": "red-1",
-        "length": 125.28419923782349,
-        "nodes": 103
+        "length": 400.9889750480652,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-47",
         "to": "blue-1",
-        "length": 34.313679695129395,
-        "nodes": 23
+        "length": 122.48469638824463,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-47",
         "to": "blue-1",
-        "length": 38.55630958080292,
-        "nodes": 26
+        "length": 138.55813884735107,
+        "nodes": 19
       },
       {
         "from": "blue-spawn-47",
         "to": "blue-1",
-        "length": 38.313679695129395,
-        "nodes": 27
+        "length": 140.18237113952637,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-48",
         "to": "red-1",
-        "length": 116.48525977134705,
-        "nodes": 104
+        "length": 387.5581383705139,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-48",
         "to": "red-1",
-        "length": 119.89946973323822,
-        "nodes": 107
+        "length": 397.29130029678345,
+        "nodes": 40
       },
       {
         "from": "blue-spawn-48",
         "to": "red-1",
-        "length": 126.28419923782349,
-        "nodes": 104
+        "length": 402.9155330657959,
+        "nodes": 39
       },
       {
         "from": "blue-spawn-48",
         "to": "blue-1",
-        "length": 33.89946973323822,
-        "nodes": 23
+        "length": 117.8335337638855,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-48",
         "to": "blue-1",
-        "length": 38.14209961891174,
-        "nodes": 26
+        "length": 135.53120851516724,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-48",
         "to": "blue-1",
-        "length": 38.72788965702057,
-        "nodes": 27
+        "length": 138.2093014717102,
+        "nodes": 20
       },
       {
         "from": "blue-spawn-49",
         "to": "red-1",
-        "length": 117.48525977134705,
-        "nodes": 105
+        "length": 389.48469638824463,
+        "nodes": 38
       },
       {
         "from": "blue-spawn-49",
         "to": "red-1",
-        "length": 120.89946973323822,
-        "nodes": 108
+        "length": 401.9424629211426,
+        "nodes": 41
       },
       {
         "from": "blue-spawn-49",
         "to": "red-1",
-        "length": 127.28419923782349,
-        "nodes": 105
+        "length": 410.29130029678345,
+        "nodes": 41
       },
       {
         "from": "blue-spawn-49",
         "to": "blue-1",
-        "length": 32.89946973323822,
-        "nodes": 22
+        "length": 120.48469638824463,
+        "nodes": 18
       },
       {
         "from": "blue-spawn-49",
         "to": "blue-1",
-        "length": 37.72788965702057,
-        "nodes": 26
+        "length": 134.53120851516724,
+        "nodes": 17
       },
       {
         "from": "blue-spawn-49",
         "to": "blue-1",
-        "length": 38.313679695129395,
-        "nodes": 27
+        "length": 138.2093014717102,
+        "nodes": 20
       }
     ]
   },
   "distanceFields": 100,
   "problems": [],
-  "bytes": 1849110
+  "bytes": 3855201
 }

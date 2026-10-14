@@ -69,11 +69,18 @@ public final class RoutePenalty {
       return true;
     }
     for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
-      if (occupied.get(graph.edgeTarget(edge))) {
+      var target = graph.edgeTarget(edge);
+      if (occupied.get(target) && adjacent(graph, node, target)) {
         return true;
       }
     }
     return false;
+  }
+
+  /** Long jump and compressed fluid edges are routes, rather than neighboring bodies. */
+  private static boolean adjacent(NavGraph graph, int node, int target) {
+    var delta = graph.feet(node).minus(graph.feet(target));
+    return Math.abs(delta.x()) <= 1 && Math.abs(delta.z()) <= 1 && Math.abs(delta.y()) <= 1.5;
   }
 
   /** A uniform value in [0, 1) for patch ({@code x}, {@code z}) under {@code seed}. */

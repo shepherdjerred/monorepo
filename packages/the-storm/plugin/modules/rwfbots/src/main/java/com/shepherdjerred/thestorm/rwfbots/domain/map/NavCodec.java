@@ -79,17 +79,7 @@ public final class NavCodec {
         buffer.writeTo(out);
       }
       out.flush();
-      var raw = body.toByteArray();
-      var compressed = deflate(raw);
-      var file = new ByteArrayOutputStream();
-      var header = new DataOutputStream(file);
-      header.writeInt(MAGIC);
-      header.writeInt(FORMAT_VERSION);
-      header.writeInt(raw.length);
-      header.writeInt(compressed.length);
-      header.write(compressed);
-      header.flush();
-      return file.toByteArray();
+      return writeFrame(body.toByteArray());
     } catch (IOException e) {
       throw new UncheckedIOException("in-memory streams do not fail", e);
     }
@@ -105,6 +95,11 @@ public final class NavCodec {
   }
 
   private static NavArtifact read(byte[] bytes) throws IOException {
+    return new Reader(readFrame(bytes), FORMAT_VERSION).artifact();
+  }
+
+  /** Exact framing shared only with the explicitly invoked offline model upgrade. */
+  static byte[] readFrame(byte[] bytes) throws IOException {
     var in = new DataInputStream(new ByteArrayInputStream(bytes));
     if (in.readInt() != MAGIC) {
       throw new Corrupt("not a nav artifact: bad magic");
@@ -118,9 +113,20 @@ public final class NavCodec {
     if (rawLength < 0 || compressedLength < 0 || compressedLength != in.available()) {
       throw new Corrupt("length prefix does not match the data");
     }
-    var raw = inflate(bytes, bytes.length - compressedLength, rawLength);
-    var reader = new Reader(raw, formatVersion);
-    return reader.artifact();
+    return inflate(bytes, bytes.length - compressedLength, rawLength);
+  }
+
+  static byte[] writeFrame(byte[] raw) throws IOException {
+    var compressed = deflate(raw);
+    var file = new ByteArrayOutputStream();
+    var header = new DataOutputStream(file);
+    header.writeInt(MAGIC);
+    header.writeInt(FORMAT_VERSION);
+    header.writeInt(raw.length);
+    header.writeInt(compressed.length);
+    header.write(compressed);
+    header.flush();
+    return file.toByteArray();
   }
 
   private static byte[] deflate(byte[] raw) {
@@ -155,6 +161,9 @@ public final class NavCodec {
       }
       if (total != rawLength || !inflater.finished()) {
         throw new Corrupt("decompressed length does not match the header");
+      }
+      if (inflater.getRemaining() != 0) {
+        throw new Corrupt("compressed body has trailing bytes");
       }
       return raw;
     } catch (DataFormatException e) {
@@ -265,6 +274,7 @@ public final class NavCodec {
     writeFloats(launch.runUp(), out);
     writeFloats(launch.speed(), out);
     writeFloats(launch.offset(), out);
+    writeBits(graph.climbableNodes(), out);
   }
 
   private static void writeWater(WaterIndex water, DataOutput out) throws IOException {
@@ -318,7 +328,7 @@ public final class NavCodec {
     }
   }
 
-  private static void writeBits(BitSet bits, DataOutput out) throws IOException {
+  static void writeBits(BitSet bits, DataOutput out) throws IOException {
     var words = bits.toLongArray();
     out.writeInt(words.length);
     for (var word : words) {
@@ -400,6 +410,8 @@ public final class NavCodec {
       switch (section) {
         case META -> {
           generatorVersion = in.readInt();
+          if (generatorVersion != MapBaker.GENERATOR_VERSION)
+            throw new Corrupt("unsupported generator version " + generatorVersion);
           if (in.readInt() != TraversalCosts.MODEL_VERSION || !in.readUTF().equals("server-ticks"))
             throw new Corrupt("unsupported traversal model or scoring units");
           if (!in.readUTF().equals(DistanceLayout.ENCODING))
@@ -458,7 +470,8 @@ public final class NavCodec {
       var launch = new LaunchData(readInts(in), readFloats(in), readFloats(in), readFloats(in));
       return new NavGraph(
           bounds,
-          new NavGraph.NodeData(cellOfNode, water, elevations),
+          new NavGraph.NodeData(
+              cellOfNode, water, elevations, readClimbable(in, cellOfNode.length)),
           topology,
           new NavGraph.EdgeData(hop, cost, new EdgeCapabilities(damage, overflow, launch)));
     }
@@ -469,6 +482,15 @@ public final class NavCodec {
           readInts(in),
           new WaterIndex.Intervals(readInts(in), readInts(in), readInts(in)),
           new WaterIndex.Portals(readInts(in), readInts(in)));
+    }
+
+    private static BitSet readClimbable(DataInput in, int nodes) throws IOException {
+      var count = count(in);
+      if (count > (nodes + Long.SIZE - 1) / Long.SIZE)
+        throw new Corrupt("climb capability bitset exceeds graph nodes");
+      var words = new long[count];
+      for (var index = 0; index < count; index++) words[index] = in.readLong();
+      return BitSet.valueOf(words);
     }
 
     private static BombScreens readBombScreens(DataInput in) throws IOException {

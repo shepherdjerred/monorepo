@@ -49,6 +49,7 @@ public final class NavGraph {
   private final GridBounds bounds;
   private final int[] cellOfNode;
   private final byte[] halfHeight;
+  private final BitSet climbable;
   private final int[] nodeOfCell;
   private final int[] edgeStart;
   private final int[] edgeTo;
@@ -76,6 +77,7 @@ public final class NavGraph {
     private final int[] cells;
     private final WaterIndex water;
     private final byte[] halfHeight;
+    private final BitSet climbable;
 
     /** Explicit whole-block node elevations for synthetic graph fixtures. */
     public NodeData(int[] cells, WaterIndex water) {
@@ -83,9 +85,17 @@ public final class NavGraph {
     }
 
     public NodeData(int[] cells, WaterIndex water, byte[] halfHeight) {
+      this(cells, water, halfHeight, new BitSet());
+    }
+
+    /** Exact occupied-cell climbing capability from the authoritative block classification. */
+    public NodeData(int[] cells, WaterIndex water, byte[] halfHeight, BitSet climbable) {
       this.cells = cells.clone();
       this.water = water;
       this.halfHeight = halfHeight.clone();
+      this.climbable = (BitSet) climbable.clone();
+      if (climbable.length() > cells.length)
+        throw new IllegalArgumentException("climb capability extends past graph nodes");
       if (cells.length != halfHeight.length)
         throw new IllegalArgumentException("node elevations do not align");
       for (var value : halfHeight)
@@ -104,12 +114,17 @@ public final class NavGraph {
     public byte[] halfHeight() {
       return halfHeight.clone();
     }
+
+    public BitSet climbable() {
+      return (BitSet) climbable.clone();
+    }
   }
 
   public NavGraph(GridBounds bounds, NodeData nodes, Topology topology, EdgeData edges) {
     this.bounds = bounds;
     this.cellOfNode = nodes.cells();
     this.halfHeight = nodes.halfHeight();
+    this.climbable = nodes.climbable();
     this.edgeStart = topology.edgeStart().clone();
     this.edgeTo = topology.edgeTo().clone();
     this.edgeHop = edges.hop().clone();
@@ -782,7 +797,17 @@ public final class NavGraph {
   }
 
   NodeData nodeData() {
-    return new NodeData(cellOfNode, water, halfHeight);
+    return new NodeData(cellOfNode, water, halfHeight, climbable);
+  }
+
+  /** Whether the feet cell itself is climbable, rather than merely adjacent to a climb edge. */
+  public boolean climbable(int node) {
+    requireNode(node);
+    return climbable.get(node);
+  }
+
+  public BitSet climbableNodes() {
+    return (BitSet) climbable.clone();
   }
 
   byte[] halfHeightArray() {
@@ -795,6 +820,7 @@ public final class NavGraph {
         && bounds.equals(that.bounds)
         && Arrays.equals(cellOfNode, that.cellOfNode)
         && Arrays.equals(halfHeight, that.halfHeight)
+        && climbable.equals(that.climbable)
         && Arrays.equals(edgeStart, that.edgeStart)
         && Arrays.equals(edgeTo, that.edgeTo)
         && Arrays.equals(edgeHop, that.edgeHop)

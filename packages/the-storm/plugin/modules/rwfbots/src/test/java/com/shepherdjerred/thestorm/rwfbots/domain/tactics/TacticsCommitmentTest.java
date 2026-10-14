@@ -424,6 +424,38 @@ final class TacticsCommitmentTest {
   }
 
   @Test
+  void aYoungHoldInOldCoverYieldsWhenTheLatestDealtSlotHasMovedBeyondItsEnvelope() {
+    var situation = situation(Role.ROTATE, 20, -1);
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var node = NAV.graph().nearestNode(SELF).orElseThrow();
+    var old =
+        Plan.of(
+            Option.HOLD_SLOT,
+            95,
+            new PlanStep.Cover(Optional.of(node), SELF, SELF.plus(20, 0, 0), 200));
+    assertThat(Planner.coverFitsSlot(old, situation, context)).isFalse();
+    var thought =
+        Tactics.think(
+            new TacticsState(Optional.of(old), 95, 0, 0, RewindClock.UNSTARTED),
+            situation,
+            context,
+            new SplittableRandom(1));
+    assertThat(thought.decision().option()).isEqualTo(Option.TAKE_SLOT);
+    assertThat(thought.state().plan().orElseThrow().startedTick()).isEqualTo(100);
+    var advancing = Plan.of(Option.TAKE_SLOT, 95, old.current());
+    assertThat(Planner.coverFitsSlot(advancing, situation, context)).isTrue();
+  }
+
+  @Test
   void aYoungCoverPlanYieldsWhenATeammateClaimsItsSpace() {
     var situation = situation(Role.ROTATE, 20, -1);
     var context =

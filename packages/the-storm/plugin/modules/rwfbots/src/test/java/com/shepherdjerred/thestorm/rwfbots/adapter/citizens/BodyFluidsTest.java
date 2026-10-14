@@ -36,6 +36,8 @@ final class BodyFluidsTest {
     }
     block.setType(Material.AIR);
     assertThat(BodyFluids.containsWater(block)).isFalse();
+    block.setType(Material.LAVA);
+    assertThat(BodyFluids.containsWater(block)).isFalse();
   }
 
   @Test
@@ -50,5 +52,18 @@ final class BodyFluidsTest {
     var player = server.addPlayer();
     assertThat(player.teleport(new Location(world, 0.5, 101, 0.5))).isTrue();
     assertThat(BodyFluids.inWater(player)).isFalse();
+  }
+
+  @Test
+  void nearbyWaterBelowDryFeetCannotCancelAnAccumulatedFall() {
+    var server = MockBukkit.mock();
+    var world = server.addSimpleWorld("fluids");
+    world.getBlockAt(0, 100, 0).setType(Material.WATER);
+    var player = server.addPlayer();
+    assertThat(player.teleport(new Location(world, 0.5, 101.05, 0.5))).isTrue();
+    assertThat(BodyFluids.inWater(player)).isTrue();
+    assertThat(BodyFluids.cancelsFall(player)).isFalse();
+    assertThat(player.teleport(new Location(world, 0.5, 100.5, 0.5))).isTrue();
+    assertThat(BodyFluids.cancelsFall(player)).isTrue();
   }
 }

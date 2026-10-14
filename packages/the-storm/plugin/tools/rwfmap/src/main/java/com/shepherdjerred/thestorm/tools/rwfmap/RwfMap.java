@@ -31,6 +31,7 @@ public final class RwfMap {
       usage:
         rwfmap bake <mapDir> [--out <file>]   bake nav.rwfnav and nav.summary.json
         rwfmap verify <mapDir>                 fail if the committed nav files are stale
+        rwfmap upgrade-model3 <mapDir>        explicitly add exact terrain climb metadata to model 3
         rwfmap verify-health <mapDir>          audit every spawn to selected fuse workers with 19 HP
         rwfmap verify-details <mapDir>         validate allowed payloads against terrain
         rwfmap close-starts <mapDir>           find grounded close-combat starts on original terrain
@@ -56,6 +57,7 @@ public final class RwfMap {
       return switch (args[0]) {
         case "bake" -> bake(Path.of(args[1]), rest, out, err);
         case "verify" -> verify(Path.of(args[1]), out, err);
+        case "upgrade-model3" -> ModelUpgrade.model3(Path.of(args[1]), out);
         case "verify-health" -> verifyHealth(Path.of(args[1]), out, err);
         case "verify-details" -> verifyDetails(Path.of(args[1]), out);
         case "close-starts" -> closeStarts(Path.of(args[1]), out);

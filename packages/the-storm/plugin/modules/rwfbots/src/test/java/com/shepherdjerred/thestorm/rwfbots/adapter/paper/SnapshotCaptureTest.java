@@ -126,6 +126,18 @@ final class SnapshotCaptureTest {
   }
 
   @Test
+  void accumulatedActualFallDistanceReachesEachSnapshotAndResetsWithTheBody() {
+    alice.setFallDistance(4.25f);
+    var falling = capture.capture(1, state(MatchState.Phase.LIVE, Optional.empty()));
+    assertThat(falling.require(ids.combatant(alice.getUniqueId())).traversal().fallDistance())
+        .isEqualTo(4.25);
+    alice.setFallDistance(0);
+    var grounded = capture.capture(2, state(MatchState.Phase.LIVE, Optional.empty()));
+    assertThat(grounded.require(ids.combatant(alice.getUniqueId())).traversal().fallDistance())
+        .isZero();
+  }
+
+  @Test
   void combatantsBombsAndIdsComeFromTheEntitiesAndTheMatch() {
     var snapshot = capture.capture(1, state(MatchState.Phase.LIVE, Optional.empty()));
 

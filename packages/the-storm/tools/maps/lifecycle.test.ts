@@ -1,5 +1,10 @@
 import { expect, it } from "vitest";
-import { verifyBounds, type Lifecycle } from "./lifecycle.ts";
+import {
+  verifyBounds,
+  verifyLiveShowcase,
+  isSuccessorLobby,
+  type Lifecycle,
+} from "./lifecycle.ts";
 
 const row = {
   region: { min: { x: 0, y: 0, z: 0 }, max: { x: 1, y: 1, z: 1 } },
@@ -52,4 +57,39 @@ it("rejects eager loading, stale navigation and ticket leaks", () => {
       })),
     }),
   ).toThrow("retains chunk tickets");
+});
+
+const live = {
+  ready: true,
+  phase: "Live",
+  matchId: "current",
+  map: "training-yard",
+  bots: 8,
+  humans: 0,
+  arriving: 0,
+};
+
+it("requires the selected live map and exact admitted roster before recording a visit", () => {
+  verifyLiveShowcase("current", live);
+  for (const change of [
+    { phase: "Lobby" },
+    { ready: false },
+    { matchId: "stale" },
+    { map: "none" },
+    { bots: 7 },
+    { humans: 1 },
+    { arriving: 1 },
+  ])
+    expect(() => verifyLiveShowcase("current", { ...live, ...change })).toThrow(
+      "unexpected selected map or roster",
+    );
+});
+
+it("counts a successor with repeated terrain and rejects the old lobby identity", () => {
+  expect(isSuccessorLobby("previous", { ...live, phase: "Lobby" })).toBe(true);
+  expect(isSuccessorLobby("current", { ...live, phase: "Lobby" })).toBe(false);
+  expect(isSuccessorLobby("previous", live)).toBe(false);
+  expect(
+    isSuccessorLobby("previous", { ...live, phase: "Lobby", ready: false }),
+  ).toBe(false);
 });

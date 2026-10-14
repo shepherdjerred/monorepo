@@ -156,6 +156,12 @@ public final class TeamBrain {
       return deal.orElseThrow().assignment().distances(row, workspace);
     }
 
+    /** Reuses staged geometric ETAs to shortlist workers without another graph search. */
+    public List<CombatantId> workerCandidates(Slot worker, List<float[]> distances) {
+      return deal.map(value -> value.assignment().workerCandidates(worker, distances))
+          .orElseGet(List::of);
+    }
+
     public Blackboard finish(List<float[]> distances, RandomGenerator random) {
       if (deal.isEmpty()) {
         if (!distances.isEmpty()) throw new IllegalArgumentException("unexpected role distances");

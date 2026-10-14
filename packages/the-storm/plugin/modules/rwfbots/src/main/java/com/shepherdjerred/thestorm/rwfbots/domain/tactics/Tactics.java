@@ -82,6 +82,7 @@ public final class Tactics {
             .filter(plan -> plan.option() != Option.DEFUSE || defuser)
             .map(plan -> advance(plan, situation))
             .filter(plan -> alive(plan, situation))
+            .filter(plan -> Planner.coverFitsSlot(plan, situation, context))
             .filter(
                 plan ->
                     plan.current()
@@ -137,16 +138,23 @@ public final class Tactics {
 
   /** Without a team assignment anyone may save the fuse; screens yield to live fuse workers. */
   static boolean assignedDefuser(Situation situation) {
-    return situation.role() == Role.RETAKE
-        || situation.board().roles().entrySet().stream()
-            .filter(entry -> entry.getValue() == Role.RETAKE)
-            .noneMatch(
-                entry ->
-                    situation
-                        .snapshot()
-                        .combatant(entry.getKey())
-                        .map(fighter -> fighter.alive())
-                        .orElse(false));
+    if (situation.role() == Role.RETAKE) return true;
+    var plan = situation.board().plan();
+    var assignedFuse =
+        plan.objective()
+            .flatMap(situation.snapshot()::bomb)
+            .filter(bomb -> bomb.belongsTo(situation.self().team()) && bomb.state().isLit());
+    // A pending bounded admission is not permission for the entire screen to pile onto the fuse.
+    if (!plan.assignment().isEmpty() && assignedFuse.isPresent()) return false;
+    return situation.board().roles().entrySet().stream()
+        .filter(entry -> entry.getValue() == Role.RETAKE)
+        .noneMatch(
+            entry ->
+                situation
+                    .snapshot()
+                    .combatant(entry.getKey())
+                    .map(fighter -> fighter.alive())
+                    .orElse(false));
   }
 
   private static boolean quietStart(Situation situation, Features features) {
@@ -161,6 +169,11 @@ public final class Tactics {
   static Option choose(
       Option picked, Optional<Plan> current, Situation situation, Map<Option, Double> scores) {
     var now = situation.now();
+    var escaping = current.map(plan -> plan.option() == Option.ESCAPE_POISON).orElse(false);
+    if (Planner.poisonDanger(
+        situation, situation.self().pos(), escaping ? Planner.POISON_MARGIN : 0)) {
+      return Option.ESCAPE_POISON;
+    }
     if (current.map(plan -> plan.option() == Option.TAKE_SLOT).orElse(true)
         && keepsLane(picked, situation)) {
       return Option.TAKE_SLOT;

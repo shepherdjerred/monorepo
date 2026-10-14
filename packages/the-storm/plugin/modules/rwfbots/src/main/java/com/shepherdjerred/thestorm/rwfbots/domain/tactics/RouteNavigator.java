@@ -23,13 +23,21 @@ final class RouteNavigator {
 
   record Tolls(TraversalRisk.Query risk, IntToDoubleFunction penalty) {}
 
-  private record Candidate(List<Waypoint> points, double ticks, double cost) {
+  record Candidate(List<Waypoint> points, double ticks, double cost) {
     Candidate {
       points = List.copyOf(points);
     }
   }
 
   static List<Waypoint> find(TacticsContext context, Endpoints endpoints, Tolls tolls) {
+    if (tolls.risk().source().self().traversal().fallDistance() > 0) {
+      if (InitialLanding.cancelsFall(context.nav().graph(), endpoints.source()))
+        return find(
+            context,
+            endpoints,
+            new Tolls(TraversalRisk.afterCancellation(tolls.risk()), tolls.penalty()));
+      return AirborneRoutes.find(context, endpoints, tolls);
+    }
     var candidates = new ArrayList<Candidate>();
     var risk = tolls.risk().policy();
     graph(context, endpoints, tolls, risk).ifPresent(candidates::add);
@@ -145,7 +153,7 @@ final class RouteNavigator {
     return false;
   }
 
-  private static Optional<Candidate> score(
+  static Optional<Candidate> score(
       TacticsContext context, Vec3 source, List<Waypoint> points, Tolls tolls) {
     double ticks = 0;
     double cost = 0;

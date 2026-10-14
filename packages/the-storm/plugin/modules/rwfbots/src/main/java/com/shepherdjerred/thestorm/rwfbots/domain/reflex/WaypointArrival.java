@@ -20,6 +20,7 @@ public final class WaypointArrival {
             || waypoint.hop() == Hop.LEAP
             || waypoint.hop() == Hop.DROP
             || waypoint.hop() == Hop.SWIM;
-    return vertical <= 0.65 && horizontal <= 0.45 && (!airbornePrimitive || self.onGround());
+    var landed = self.onGround() && self.traversal().fallDistance() == 0;
+    return vertical <= 0.65 && horizontal <= 0.45 && (!airbornePrimitive || landed);
   }
 }

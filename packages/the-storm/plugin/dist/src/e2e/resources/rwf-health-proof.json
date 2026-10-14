@@ -1,9 +1,11 @@
 {
-  "version": 1,
+  "version": 3,
   "kind": "controlled-route-diagnostic",
   "humanDemonstration": false,
+  "environment": { "difficulty": "HARD", "foodLevel": 7, "saturation": 0 },
   "maximumTicks": 600,
   "records": {
+    "Environment": ["difficulty", "foodLevel", "saturation"],
     "Sample": [
       "sequence",
       "serverTick",
@@ -23,6 +25,9 @@
       "noDamageTicks",
       "sprinting",
       "inWater",
+      "foodLevel",
+      "saturation",
+      "difficulty",
       "traversal"
     ],
     "Fall": [
@@ -42,6 +47,21 @@
       "hurtTick"
     ],
     "Setup": ["sequence", "serverTick", "kind", "details"],
+    "Regain": [
+      "sequence",
+      "eventTick",
+      "observedTick",
+      "sourceSequence",
+      "resultSequence",
+      "reason",
+      "amount",
+      "cancelled",
+      "before",
+      "after",
+      "foodLevel",
+      "saturation",
+      "difficulty"
+    ],
     "Prediction": [
       "sequence",
       "serverTick",
@@ -51,7 +71,8 @@
       "effectiveHealth",
       "affordable",
       "noSprint",
-      "waypoint"
+      "waypoint",
+      "fallDistance"
     ],
     "Status": [
       "version",
@@ -65,7 +86,8 @@
       "samples",
       "falls",
       "setups",
-      "predictions"
+      "predictions",
+      "regains"
     ],
     "Traversal": [
       "maySprint",
@@ -81,7 +103,8 @@
       "regenerationUntilTick",
       "jumpBoostAmplifier",
       "jumpBoostUntilTick",
-      "maxHealth"
+      "maxHealth",
+      "fallDistance"
     ]
   },
   "scenarios": [

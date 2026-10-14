@@ -31,7 +31,7 @@ public final class Lanes {
   /** Two lanes closer than this sideways count as the same lane. */
   public static final double MIN_GAP = 5;
 
-  /** How many graph steps around a lane its corridor reaches. */
+  /** How many physically adjacent graph steps around a lane its corridor reaches. */
   static final int CORRIDOR_STEPS = 2;
 
   private static final int SNAP_RADIUS = 6;
@@ -132,7 +132,7 @@ public final class Lanes {
       for (var node : frontier) {
         for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
           var target = graph.edgeTarget(edge);
-          if (seen.add(target)) {
+          if (adjacent(graph, node, target) && seen.add(target)) {
             next.add(target);
           }
         }
@@ -140,6 +140,12 @@ public final class Lanes {
       frontier = next;
     }
     return seen;
+  }
+
+  /** A long leap or fluid portal must not widen a two-block lane across the whole room. */
+  private static boolean adjacent(NavGraph graph, int node, int target) {
+    var delta = graph.feet(node).minus(graph.feet(target));
+    return Math.abs(delta.x()) <= 1 && Math.abs(delta.z()) <= 1 && Math.abs(delta.y()) <= 1.5;
   }
 
   /** The lane that best matches {@code which}: the leftmost, the middle or the rightmost. */

@@ -94,7 +94,8 @@ public final class CombatCommands {
 
   private static boolean authoredMotion(Context context) {
     var input = context.input();
-    if (context.authored().state().activeJump().isPresent()
+    if (input.self().traversal().fallDistance() > 0
+        || context.authored().state().activeJump().isPresent()
         || context.nav().graph().water().contains(BlockPos.of(input.self().pos()))
         || input.decision().bomb().isPresent()
         || input.decision().ability().isPresent()

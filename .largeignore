@@ -27,12 +27,17 @@ packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansC
 # Deterministically baked RWF navigation graphs for large imported maps.
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/apex-expanse/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/cloned-beanstalks/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/fairylands/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/fancy-castles/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/fjords/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/floating-isles/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/hemispheres/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/modified-tropicals/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/mountains/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/rival-castles/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/rotated-hemispheres/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/saigon/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/the-lost-kingdom/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/tropical-resort/nav.rwfnav
+packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/valley/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/warlords-castles/nav.rwfnav

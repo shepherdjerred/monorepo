@@ -5,7 +5,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
 
 /** Server-tick costs calibrated against the native Citizens motor; damage uses health points. */
 public final class TraversalCosts {
-  public static final int MODEL_VERSION = 3;
+  public static final int MODEL_VERSION = 4;
   public static final float WALK = (float) (1 / MovementMotor.WALK_SPEED);
   public static final float DIAGONAL = WALK * 1.41421f;
   public static final float STEP_JUMP = 8;

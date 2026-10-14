@@ -16,7 +16,7 @@ import java.util.HexFormat;
 public final class MapBaker {
 
   /** Bump when the analysis changes so stale artifacts are rebaked. */
-  public static final int GENERATOR_VERSION = 3;
+  public static final int GENERATOR_VERSION = 4;
 
   private MapBaker() {}
 

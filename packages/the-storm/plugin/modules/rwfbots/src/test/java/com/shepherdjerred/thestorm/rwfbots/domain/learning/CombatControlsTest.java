@@ -157,6 +157,38 @@ final class CombatControlsTest {
   }
 
   @Test
+  void actualUnpaidFallKeepsAuthoredLandingEvenWhenTheVisibleCombatDecisionStillSaysWalk() {
+    var body = combatant(1, RED, new Vec3(5, 1, 5)).withHands(1, false);
+    var source = input(body);
+    var decision =
+        new Decision(
+            body.id(),
+            Option.ENGAGE,
+            source.decision().target(),
+            List.of(new Waypoint(body.pos().plus(0, 0, 1), Hop.WALK)),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "combat-walk",
+            100,
+            1);
+    var authored =
+        List.<BodyCommand>of(
+            new BodyCommand.Look(90, 5), new BodyCommand.MoveToward(new Vec3(5.5, 1, 5.5), false));
+    var flat = new ReflexInput(body, source.snapshot(), decision, source.target(), 3);
+    var ticket = ticket(new CombatAction(7, false, false, true, true));
+    assertThat(CombatCommands.eligible(context(authored, flat), ticket)).isTrue();
+    var falling = body.withTraversal(body.traversal().withFallDistance(8));
+    var fallSource = input(falling);
+    var input = new ReflexInput(falling, fallSource.snapshot(), decision, fallSource.target(), 3);
+    var context = context(authored, input);
+    assertThat(CombatCommands.eligible(context)).isFalse();
+    assertThat(CombatCommands.eligible(context, ticket)).isFalse();
+    assertThat(CombatCommands.replace(context, ticket)).isSameAs(context.authored().commands());
+  }
+
+  @Test
   void actualMidDepthWaterKeepsAuthoredControlWithoutAWaypoint() {
     var nav = MapBaker.bake("water", new Water(), new NavSites(List.of(), List.of()));
     var input = input(combatant(1, RED, new Vec3(1.5, 2, 1.5)).withHands(1, false));
@@ -173,7 +205,7 @@ final class CombatControlsTest {
 
   @Test
   void actorCannotReenableSprintWhenTheActualBodyCannotSprint() {
-    var capability = new TraversalState(false, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 20);
+    var capability = new TraversalState(false, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 20, 0);
     var input =
         input(combatant(1, RED, new Vec3(5, 1, 5)).withHands(1, false).withTraversal(capability));
     var context = context(List.of(new BodyCommand.Stop()), input);

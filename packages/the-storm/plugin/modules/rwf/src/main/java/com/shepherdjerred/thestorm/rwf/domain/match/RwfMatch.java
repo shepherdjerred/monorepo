@@ -120,6 +120,7 @@ public record RwfMatch(
               Roster.pickKit(draft, force.id(), force.kitId(), Optional.empty());
           case MatchEvent.BallotOpened opened -> Voting.opened(draft, opened.candidates());
           case MatchEvent.Vote vote -> Voting.cast(draft, vote.id(), vote.mapId());
+          case MatchEvent.CloseVote _ -> Voting.closeVote(draft);
           case MatchEvent.SetMap set -> Voting.set(draft, set.candidate());
           case MatchEvent.MapReady ready -> Flow.mapReady(draft, ready.map(), ready.now());
           case MatchEvent.MapFailed failed -> Voting.failed(draft, failed.mapId());

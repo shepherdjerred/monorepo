@@ -1,0 +1,159 @@
+package com.shepherdjerred.thestorm.rwfbots.sim;
+
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.FallRisk;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
+
+/** Calibrated motor and capsule collisions for the diagnostic sim, never native Paper evidence. */
+final class SimPhysics {
+  private static final double RADIUS = 0.299;
+  private static final double HEIGHT = 1.8;
+  private static final double EPSILON = 1e-6;
+  private final NavArtifact nav;
+
+  SimPhysics(NavArtifact nav) {
+    this.nav = nav;
+  }
+
+  void steer(SimBody body, Vec3 heading) {
+    var slowdown = body.usingItem ? 0.2 : body.sneaking ? 0.3 : 1;
+    body.velocity =
+        MovementMotor.steer(
+            body.velocity,
+            new MovementMotor.Control(
+                heading,
+                body.sprinting && body.traversal.maySprint(),
+                body.onGround || water(body.pos),
+                slowdown));
+    if (water(body.pos))
+      body.velocity = body.velocity.withY(MovementMotor.swimVertical(heading.y()));
+  }
+
+  void jump(SimBody body, long tick) {
+    if (!body.onGround) return;
+    body.velocity = MovementMotor.jump(body.velocity, body.sprinting && body.traversal.maySprint());
+    body.jumpTick = tick;
+    body.onGround = false;
+  }
+
+  void move(SimBody body, long tick) {
+    var grounded = body.onGround || body.jumpTick == tick;
+    var incoming = body.velocity;
+    var distance = Math.max(Math.abs(incoming.y()), incoming.horizontal().length());
+    var divisions = Math.max(1, (int) Math.ceil(distance / 0.2));
+    var delta = incoming.scale(1.0 / divisions);
+    body.onGround = false;
+    for (var step = 0; step < divisions && body.alive; step++) {
+      vertical(body, delta.y(), tick);
+      horizontal(body, delta.horizontal());
+      if (water(body.pos)) body.fallDistance = 0;
+    }
+    if (!body.alive) {
+      body.velocity = Vec3.ZERO;
+      return;
+    }
+    var submerged = water(body.pos);
+    var friction = submerged ? 0.8 : grounded ? 0.546 : 0.91;
+    var gravity = submerged ? 0.02 : slowFalling(body, tick) ? 0.01 : 0.08;
+    var vertical = body.onGround ? 0 : (body.velocity.y() - gravity) * 0.98;
+    body.velocity = new Vec3(body.velocity.x() * friction, vertical, body.velocity.z() * friction);
+    if (body.pos.y() < nav.graph().bounds().origin().y() - 64) body.hurt(1000, tick);
+  }
+
+  private void vertical(SimBody body, double dy, long tick) {
+    var floor = floor(body.pos, body.pos.y() + Math.min(0, dy));
+    if (dy <= 0 && Double.isFinite(floor)) {
+      body.fallDistance += Math.max(0, body.pos.y() - floor);
+      body.pos = body.pos.withY(floor);
+      body.onGround = true;
+      body.velocity = body.velocity.withY(0);
+      land(body, tick);
+      return;
+    }
+    var next = body.pos.plus(0, dy, 0);
+    if (clear(next)) {
+      body.pos = next;
+      body.fallDistance += Math.max(0, -dy);
+    } else {
+      body.velocity = body.velocity.withY(0);
+    }
+  }
+
+  private void land(SimBody body, long tick) {
+    if (body.fallDistance > 0 && !water(body.pos)) {
+      var damage = FallRisk.damage(new Waypoint(body.pos, Hop.DROP), body.view(tick), tick);
+      if (damage > 0) body.hurt(damage, tick);
+    }
+    body.fallDistance = 0;
+  }
+
+  private void horizontal(SimBody body, Vec3 delta) {
+    if (clear(body.pos.plus(delta))) {
+      body.pos = body.pos.plus(delta);
+      return;
+    }
+    var x = new Vec3(delta.x(), 0, 0);
+    var z = new Vec3(0, 0, delta.z());
+    if (clear(body.pos.plus(x))) body.pos = body.pos.plus(x);
+    else body.velocity = new Vec3(0, body.velocity.y(), body.velocity.z());
+    if (clear(body.pos.plus(z))) body.pos = body.pos.plus(z);
+    else body.velocity = new Vec3(body.velocity.x(), body.velocity.y(), 0);
+  }
+
+  private double floor(Vec3 feet, double lower) {
+    var highest = Double.NEGATIVE_INFINITY;
+    for (var x = cell(feet.x() - RADIUS); x <= cell(feet.x() + RADIUS); x++) {
+      for (var z = cell(feet.z() - RADIUS); z <= cell(feet.z() + RADIUS); z++) {
+        for (var y = cell(lower - 1); y <= cell(feet.y()); y++) {
+          var top = top(new BlockPos(x, y, z));
+          if (top >= lower - EPSILON && top <= feet.y() + EPSILON) highest = Math.max(highest, top);
+        }
+      }
+    }
+    return highest;
+  }
+
+  private boolean clear(Vec3 feet) {
+    for (var x = cell(feet.x() - RADIUS); x <= cell(feet.x() + RADIUS); x++) {
+      for (var z = cell(feet.z() - RADIUS); z <= cell(feet.z() + RADIUS); z++) {
+        for (var y = cell(feet.y() + EPSILON); y <= cell(feet.y() + HEIGHT - EPSILON); y++) {
+          var block = new BlockPos(x, y, z);
+          if (outside(block) || top(block) > feet.y() + EPSILON) return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /** The graph retains actual bottom-slab support heights despite the coarse movement bitset. */
+  private double top(BlockPos block) {
+    if (!nav.grid().bounds().contains(block) || !nav.grid().blocksMovement(block))
+      return Double.NEGATIVE_INFINITY;
+    var above = block.up();
+    var node = nav.graph().nodeAt(above);
+    return node.isPresent()
+        ? Math.min(above.y(), nav.graph().feet(node.getAsInt()).y())
+        : above.y();
+  }
+
+  private boolean outside(BlockPos block) {
+    var bounds = nav.grid().bounds();
+    return block.y() >= bounds.origin().y() && !bounds.contains(block);
+  }
+
+  private boolean water(Vec3 pos) {
+    return nav.graph().water().contains(BlockPos.of(pos));
+  }
+
+  private static boolean slowFalling(SimBody body, long tick) {
+    return body.velocity.y() <= 0 && FallRisk.active(body.traversal.slowFallingUntilTick(), tick);
+  }
+
+  private static int cell(double coordinate) {
+    return (int) Math.floor(coordinate);
+  }
+}

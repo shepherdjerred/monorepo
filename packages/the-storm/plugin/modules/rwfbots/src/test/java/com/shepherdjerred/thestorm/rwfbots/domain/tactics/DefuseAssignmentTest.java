@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
@@ -31,9 +32,94 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SplittableRandom;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 final class DefuseAssignmentTest {
+  @Test
+  void pendingAdmissionKeepsScreensOutOfTheFuseAndOnlyTwoAdmittedWorkersDefuse() {
+    var nav = SyntheticMap.bake();
+    var bots =
+        IntStream.rangeClosed(1, 6)
+            .mapToObj(id -> Fixtures.combatant(id, Fixtures.RED, SyntheticMap.RED_SPAWN.feet()))
+            .toList();
+    var bomb =
+        new BombView(
+            new BombId(1),
+            new BombOwner.Team(Fixtures.RED),
+            nav.sites().bombs().getFirst().cell().center(),
+            new BombState.Armed(100));
+    var world =
+        new WorldSnapshot(
+            1, MatchPhase.LIVE, bots, List.of(bomb), PoisonView.NONE, nav.mapId(), List.of());
+    var context =
+        new TacticsContext(
+            nav,
+            Fixtures.levers(1),
+            new Style(.5, .5, .5, .5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    for (var admitted : List.of(false, true)) {
+      var board = defense(nav, world, admitted);
+      var defusing = 0;
+      for (var bot : bots) {
+        var situation =
+            new Situation(
+                bot,
+                world,
+                new Percept(PerceptionState.EMPTY, List.of(), 1),
+                board,
+                board.roleOf(bot.id()).orElseThrow());
+        var thought =
+            Tactics.think(
+                TacticsState.fresh(0), situation, context, new SplittableRandom(bot.id().value()));
+        if (thought.decision().option() == Option.DEFUSE) defusing++;
+      }
+      assertThat(defusing).isEqualTo(admitted ? 2 : 0);
+    }
+  }
+
+  private static Blackboard defense(NavArtifact nav, WorldSnapshot world, boolean admitted) {
+    var bomb = world.bombs().getFirst();
+    var workers = nav.bombScreens().require(nav.sites().bombs().getFirst().name()).workers();
+    var slots =
+        IntStream.range(0, world.combatants().size())
+            .mapToObj(
+                index ->
+                    new Slot(
+                        "station-" + index,
+                        SlotKind.ANCHOR,
+                        admitted && index < 2 ? Role.RETAKE : Role.DEFEND,
+                        nav.graph().feet(workers.get(index % workers.size())),
+                        bomb.pos(),
+                        -1,
+                        -1,
+                        Optional.empty(),
+                        0))
+            .toList();
+    var assignments =
+        IntStream.range(0, slots.size())
+            .boxed()
+            .collect(
+                Collectors.toUnmodifiableMap(
+                    index -> world.combatants().get(index).id(), index -> slots.get(index).key()));
+    var plan =
+        new TeamPlan(
+            Optional.of(Strategy.RUSH),
+            Optional.empty(),
+            Optional.of(bomb.id()),
+            List.of(),
+            0,
+            slots,
+            assignments,
+            0);
+    return Blackboard.open(Fixtures.RED, Strategy.RUSH).withPlan(plan, 0);
+  }
+
   @Test
   void lateWorkersImmediatelyRouteToTheirSeparateCertifiedFusePositions() {
     var nav = SyntheticMap.bake();

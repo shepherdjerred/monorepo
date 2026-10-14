@@ -74,6 +74,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
   private static final GridBounds BOUNDS = new GridBounds(new BlockPos(300, 99, 300), 16, 7, 12);
   private final JavaPlugin plugin;
   private final World world;
+  private final SnapshotCapture capture;
+  private Optional<Vec3> previousPosition = Optional.empty();
   private final List<Observation> observations = new ArrayList<>();
   private final SplittableRandom random = new SplittableRandom(196);
   private Optional<CitizensBodies> bodies = Optional.empty();
@@ -135,6 +137,13 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
   public PursuitFixtures(JavaPlugin plugin, World world) {
     this.plugin = plugin;
     this.world = world;
+    this.capture =
+        new SnapshotCapture(
+            new com.shepherdjerred.thestorm.rwfbots.adapter.paper.IdMap(),
+            id -> Optional.empty(),
+            new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(),
+            new SnapshotCapture.Capabilities(
+                id -> Optional.empty(), java.time.InstantSource.fixed(java.time.Instant.EPOCH)));
   }
 
   public void register() {
@@ -222,22 +231,35 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
       bodies
           .orElseThrow()
           .entity(attacker.orElseThrow())
-          .ifPresent(
-              player -> {
-                var at = player.getLocation();
-                var velocity = player.getVelocity();
-                var self =
-                    view(
-                        1,
-                        RED,
-                        new Pose(
-                            new Vec3(at.getX(), at.getY(), at.getZ()),
-                            new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
-                            new Facing(at.getYaw(), at.getPitch()),
-                            SnapshotCapture.onGround(player)));
-                advance(self);
-              });
+          .ifPresent(player -> advance(self(player)));
     if (state.equals("running") && ticks >= 600) finish(false);
+  }
+
+  private CombatantView self(org.bukkit.entity.Player player) {
+    var at = player.getLocation();
+    var point = new Vec3(at.getX(), at.getY(), at.getZ());
+    var velocity = previousPosition.map(point::minus).orElse(Vec3.ZERO);
+    previousPosition = Optional.of(point);
+    return new CombatantView(
+        new CombatantId(1),
+        RED,
+        false,
+        Kit.TROOPER,
+        !player.isDead(),
+        point,
+        velocity,
+        at.getYaw(),
+        at.getPitch(),
+        player.getHealth(),
+        player.getAbsorptionAmount(),
+        0,
+        player.getInventory().getHeldItemSlot(),
+        player.isSprinting(),
+        SnapshotCapture.onGround(player),
+        player.isHandRaised(),
+        false,
+        -1,
+        capture.captureTraversal(player, "trooper", ticks));
   }
 
   private void advance(CombatantView self) {

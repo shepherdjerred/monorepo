@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.rwf.adapter.content.Schematic;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Cuboid;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementMotor;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -32,9 +33,11 @@ final class CloseStartsTest {
     var second = graph.nearestNode(pair.second()).orElseThrow();
     var limit = pair.first().horizontalDistance(pair.second()) * 1.5;
     assertThat(graph.path(first, second))
-        .hasValueSatisfying(path -> assertThat(path.cost()).isLessThanOrEqualTo(limit));
+        .hasValueSatisfying(
+            path -> assertThat(path.cost() * MovementMotor.WALK_SPEED).isLessThanOrEqualTo(limit));
     assertThat(graph.path(second, first))
-        .hasValueSatisfying(path -> assertThat(path.cost()).isLessThanOrEqualTo(limit));
+        .hasValueSatisfying(
+            path -> assertThat(path.cost() * MovementMotor.WALK_SPEED).isLessThanOrEqualTo(limit));
     var report = JsonMapper.builder().build().readTree(CloseStartReport.of(map, pair).json());
     assertThat(report.path("kind").asString()).isEqualTo("rwf-close-starts");
     assertThat(report.path("blocksSha256").asString()).isEqualTo(before);

@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.e2e.maps;
 
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.IdMap;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.SnapshotCapture;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
@@ -38,6 +40,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
+import java.time.Instant;
+import java.time.InstantSource;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -52,6 +56,16 @@ final class TraversalRoute {
   private final Vec3 goal;
   private final Stance stance;
   private final SplittableRandom random = new SplittableRandom(196);
+  // This modules-disabled fixture has no match-owned power immunity. Bukkit attributes, gear,
+  // effects and accumulated fall distance are still captured by the production adapter.
+  private final SnapshotCapture capture =
+      new SnapshotCapture(
+          new IdMap(),
+          id -> Optional.empty(),
+          new StimulusCollector(),
+          new SnapshotCapture.Capabilities(
+              id -> Optional.empty(), InstantSource.fixed(Instant.EPOCH)));
+  private Optional<TraversalState> capturedTraversal = Optional.empty();
   private ReflexState reflex = ReflexState.initial(new Facing(-90, 0));
   private Optional<Decision> decision = Optional.empty();
   private Optional<Vec3> previous = Optional.empty();
@@ -82,7 +96,8 @@ final class TraversalRoute {
   }
 
   List<BodyCommand> tick(Player player, long tick) {
-    var self = self(player);
+    var self = self(player, tick);
+    capturedTraversal = Optional.of(self.traversal());
     previous = Optional.of(self.pos());
     var snapshot =
         new WorldSnapshot(
@@ -115,7 +130,11 @@ final class TraversalRoute {
     return step.commands();
   }
 
-  private CombatantView self(Player player) {
+  Optional<TraversalState> capturedTraversal() {
+    return capturedTraversal;
+  }
+
+  private CombatantView self(Player player, long tick) {
     var at = player.getLocation();
     var point = new Vec3(at.getX(), at.getY(), at.getZ());
     return new CombatantView(
@@ -137,6 +156,6 @@ final class TraversalRoute {
         player.isHandRaised(),
         false,
         -1,
-        TraversalState.UNMODIFIED);
+        capture.captureTraversal(player, "trooper", tick));
   }
 }
