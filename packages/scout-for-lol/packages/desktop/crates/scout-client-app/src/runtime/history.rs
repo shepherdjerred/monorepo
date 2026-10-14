@@ -7,9 +7,7 @@ use scout_client_core::protocol::{ObservationKind, without_credentials};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
-use super::{
-    ObservationSlot, enqueue_if_changed, enqueue_resource_if_changed, record_post_game_read,
-};
+use super::{ObservationSlot, enqueue_resource_if_changed, record_post_game_read};
 
 pub(super) async fn collect_recent_matches(
     client: &LcuClient,
@@ -240,14 +238,26 @@ fn discover_page(
         outbox
             .discover_game(observer, &platform.to_uppercase(), &game_id, live)
             .map_err(|error| error.to_string())?;
-        enqueue_if_changed(
+        let pending = RecoveryGame {
+            platform: platform.to_uppercase(),
+            game_id: game_id.clone(),
+            live,
+            result_queued: false,
+            timeline_queued: false,
+            full_game: None,
+        };
+        // The first row can already describe a result. Give it the same
+        // witnessed-completion context as the full game before it is uploaded;
+        // server admission is permanent and cannot be upgraded by a later row.
+        let bundle = result_bundle(outbox, &pending, observer, game)?;
+        enqueue_result(
             outbox,
             payloads,
-            &format!("match_history_game:{game_id}"),
-            ObservationKind::PostGame,
-            game,
-            Some(observer),
+            &pending,
+            observer,
+            &bundle,
             diagnostics,
+            "history_row",
         )?;
     }
     Ok(games.len())
@@ -479,10 +489,13 @@ fn contains_observer(value: &Value, observer: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        ObservationOutbox, PendingGameTiming, RecoveryGame, context_agrees, history_games,
-        remember_game_references,
+        ObservationOutbox, PendingGameTiming, RecoveryGame, context_agrees, discover_page,
+        history_games, remember_game_references,
     };
+    use scout_client_core::diagnostics::Diagnostics;
+    use scout_client_core::protocol::ObservationEnvelope;
     use serde_json::json;
+    use std::collections::HashMap;
 
     #[test]
     fn malformed_history_is_distinct_from_a_valid_empty_page() {
@@ -494,6 +507,62 @@ mod tests {
         ] {
             assert!(history_games(&payload).is_none());
         }
+    }
+
+    #[test]
+    fn first_history_snapshot_preserves_valid_witnessed_completion()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!(
+            "scout-history-live-{}.sqlite",
+            uuid::Uuid::new_v4()
+        ));
+        let outbox = ObservationOutbox::open(&path)?;
+        let creation = 1_800_000_000_000_i64;
+        for (id, start) in [("123", creation), ("456", creation - 3_600_000)] {
+            outbox.remember_game_start("owner", id, start)?;
+            outbox.remember_game_end("owner", id, start + 1_800_000)?;
+            outbox.remember_end_of_game(
+                "owner",
+                id,
+                &serde_json::to_vec(&json!({"gameId": id, "platformId": "NA1", "puuid": "owner"}))?,
+            )?;
+        }
+        let rows = json!({"games": {"games": [
+            {"gameId": 123, "platformId": "NA1", "gameCreation": creation},
+            {"gameId": 456, "platformId": "NA1", "gameCreation": creation},
+            {"gameId": 789, "platformId": "NA1", "gameCreation": creation}
+        ]}});
+        discover_page(
+            &outbox,
+            &mut HashMap::new(),
+            "owner",
+            &rows,
+            &Diagnostics::in_memory(),
+        )?;
+        drop(outbox);
+        let reopened = ObservationOutbox::open(&path)?;
+        let snapshots = reopened
+            .pending(100)?
+            .into_iter()
+            .map(|row| serde_json::from_slice::<ObservationEnvelope>(&row.body))
+            .collect::<Result<Vec<_>, _>>()?;
+        assert_eq!(snapshots.len(), 3);
+        assert_eq!(snapshots[0].payload["resource"], "post_game");
+        assert_eq!(
+            snapshots[0].payload["data"]["matchHistory"],
+            rows["games"]["games"][0]
+        );
+        assert_eq!(snapshots[0].payload["data"]["endOfGame"]["puuid"], "owner");
+        assert_eq!(
+            snapshots[0].payload["data"]["timing"]["gameStartTimestamp"],
+            creation
+        );
+        assert_eq!(snapshots[1].payload["resource"], "match_history_game:456");
+        assert!(snapshots[1].payload["data"].get("endOfGame").is_none());
+        assert_eq!(snapshots[2].payload["resource"], "match_history_game:789");
+        drop(reopened);
+        std::fs::remove_file(path)?;
+        Ok(())
     }
 
     #[test]

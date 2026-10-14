@@ -86,6 +86,12 @@ game need not appear in the newest history page to be recovered. Full game
 reads must agree with the requested ID, platform and observer before becoming
 qualified recovery work.
 
+The first history-list snapshot carries any validated witnessed completion,
+using the same observer, platform and timing checks as the full result. A
+background history scan therefore cannot label an already witnessed live
+completion as historical before the enriched result arrives. Unwitnessed
+history retains its historical provenance; server eligibility is permanent.
+
 Malformed history pages defer their scan checkpoint while already discovered
 games continue recovering. A validated full game is cached in SQLite before
 enqueueing its result, so a crash or enqueue failure can retry the captured
