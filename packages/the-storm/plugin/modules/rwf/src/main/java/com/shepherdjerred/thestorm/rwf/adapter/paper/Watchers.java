@@ -5,9 +5,11 @@ import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +35,7 @@ final class Watchers {
   private final Set<UUID> saving = new HashSet<>();
   private final Set<UUID> joining = new LinkedHashSet<>();
   private final Set<UUID> nextGame = new LinkedHashSet<>();
+  private final Map<UUID, Object> admissions = new HashMap<>();
 
   Watchers(MatchRunner runner, Snapshots snapshots, Scoreboards boards, PaperContext context) {
     this.runner = runner;
@@ -99,18 +102,29 @@ final class Watchers {
   /** {@code /rwf join} from a watcher: they become a member under the snapshot they hold. */
   Optional<String> join(Player player) {
     var id = player.getUniqueId();
+    if (!watching.contains(id)) return Optional.of("You are no longer watching this match.");
     if (saving.contains(id)) {
       return Optional.of("Your belongings are still being saved; try again in a moment.");
     }
     var target = player.getSpectatorTarget();
     unfollow(player);
-    var refusal = runner.admitWatcher(player);
+    var attempt = admissions.computeIfAbsent(id, _ -> new Object());
+    var refusal = runner.admitWatcher(player, () -> retry(player, attempt));
     if (runner.memberOf(id).isPresent()) {
       watching.remove(id);
+      joining.remove(id);
+      admissions.remove(id);
     } else if (target != null) {
       follow(player, target);
     }
     return refusal;
+  }
+
+  /** Async preferences may only resume the watcher session that requested admission. */
+  private void retry(Player player, Object attempt) {
+    var id = player.getUniqueId();
+    if (player.isOnline() && watching.contains(id) && attempt.equals(admissions.get(id)))
+      join(player).ifPresent(message -> Texts.error(player, message));
   }
 
   /** {@code /rwf leave} from a watcher: false if {@code player} is not watching. */
@@ -140,11 +154,15 @@ final class Watchers {
         restore(player);
       }
     }
+    joining.clear();
+    admissions.clear();
   }
 
   private void restore(Player player) {
     var id = player.getUniqueId();
     joining.remove(id);
+    admissions.remove(id);
+    runner.streakPicker().forget(id);
     context.activity().left(id);
     watching.remove(id);
     unfollow(player);
@@ -220,10 +238,12 @@ final class Watchers {
         && notification.after().phase() == MatchSnapshot.PhaseKind.LOBBY) {
       admitQueued();
       for (var id : List.copyOf(joining)) {
-        joining.remove(id);
         var player = context.server().getPlayer(id);
         if (player != null && watching.contains(id)) {
           join(player).ifPresent(message -> Texts.error(player, message));
+        } else {
+          joining.remove(id);
+          admissions.remove(id);
         }
       }
       return;

@@ -1300,8 +1300,8 @@ final class MatchRunner implements MatchView, MatchEvents {
    * A watcher asks to join: the snapshot taken when they started watching already holds their
    * belongings, so it is kept and no new one is taken.
    */
-  Optional<String> admitWatcher(Player player) {
-    return admission.admitWatcher(player);
+  Optional<String> admitWatcher(Player player, Runnable retry) {
+    return admission.admitWatcher(player, retry);
   }
 
   /**

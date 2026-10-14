@@ -31,8 +31,8 @@ final class MatchAdmission {
   }
 
   /** A watcher keeps the belongings already captured when they started watching. */
-  Optional<String> admitWatcher(Player player) {
-    var refusal = admission(player).or(() -> runner.streakPicker().admission(player, () -> {}));
+  Optional<String> admitWatcher(Player player, Runnable retry) {
+    var refusal = admission(player).or(() -> runner.streakPicker().admission(player, retry));
     if (refusal.isPresent()) return refusal;
     keepingSnapshot = player.getUniqueId();
     try {
