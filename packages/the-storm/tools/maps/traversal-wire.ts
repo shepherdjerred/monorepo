@@ -1,25 +1,8 @@
 import { z } from "zod";
 import wire from "#traversal-wire";
+import { TraversalCapabilities as Capabilities } from "./traversal-capabilities.ts";
 
 const Point = z.tuple([z.number(), z.number(), z.number()]);
-const Expiry = z.number().min(-1).refine(Number.isInteger);
-const Capabilities = z.strictObject({
-  maySprint: z.boolean(),
-  safeFallDistance: z.number().nonnegative(),
-  fallDamageMultiplier: z.number().nonnegative(),
-  fallProtectionPoints: z.number().int().min(0).max(20),
-  resistanceAmplifier: z.number().int().min(-1),
-  resistanceUntilTick: Expiry,
-  noFallUntilTick: Expiry,
-  slowFallingUntilTick: Expiry,
-  healingConsumables: z.number().int().nonnegative(),
-  regenerationAmplifier: z.number().int().min(-1),
-  regenerationUntilTick: Expiry,
-  jumpBoostAmplifier: z.number().int().min(-1),
-  jumpBoostUntilTick: Expiry,
-  maxHealth: z.number().positive(),
-  fallDistance: z.number().nonnegative(),
-});
 export const TraversalSample = z.strictObject({
   tick: z.number().int().positive(),
   position: Point,
