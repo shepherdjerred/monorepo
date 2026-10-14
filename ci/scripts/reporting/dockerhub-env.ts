@@ -7,6 +7,38 @@ type LoginExecutor = (
   password: string,
 ) => Promise<number>;
 
+function readerCredentials(value: unknown): unknown {
+  const entry = asRecord(value);
+  const auth = entry?.["auth"];
+  if (auth === undefined) return entry;
+  if (
+    typeof auth !== "string" ||
+    auth.length === 0 ||
+    !/^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{2}==|[A-Za-z\d+/]{3}=)?$/u.test(auth)
+  ) {
+    throw new Error("Invalid Docker auth encoding");
+  }
+  const bytes = Buffer.from(auth, "base64");
+  if (bytes.toString("base64") !== auth)
+    throw new Error("Noncanonical Docker auth encoding");
+  const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  const separator = decoded.indexOf(":");
+  if (separator === -1) throw new Error("Invalid Docker auth credentials");
+  const credentials = {
+    username: decoded.slice(0, separator),
+    password: decoded.slice(separator + 1),
+  };
+  if (
+    (entry?.["username"] !== undefined &&
+      entry["username"] !== credentials.username) ||
+    (entry?.["password"] !== undefined &&
+      entry["password"] !== credentials.password)
+  ) {
+    throw new Error("Conflicting Docker auth credentials");
+  }
+  return credentials;
+}
+
 async function executeLogin(
   command: readonly string[],
   password: string,
@@ -31,9 +63,9 @@ export async function dockerHubLogin(
       const config: unknown = JSON.parse(
         environment["DOCKERHUB_READ_CONFIG_JSON"] ?? "",
       );
-      candidate = asRecord(asRecord(config)?.["auths"])?.[
-        "https://index.docker.io/v1/"
-      ];
+      candidate = readerCredentials(
+        asRecord(asRecord(config)?.["auths"])?.["https://index.docker.io/v1/"],
+      );
     } catch {
       // JSON diagnostics can contain credential input. Keep it private.
       throw new Error("Docker Hub reader credentials are missing or invalid");
