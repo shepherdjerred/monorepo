@@ -69,13 +69,16 @@ export async function preparePrettierCache(
     scratch,
     `${shard}-${crypto.randomUUID()}.json`,
   );
+  let restored = false;
   try {
     await cp(published, privateFile);
+    restored = true;
   } catch (error) {
     if (!(error instanceof Error && "code" in error && error.code === "ENOENT"))
       throw error;
   }
   return {
+    restored,
     args: [
       "--cache",
       "--cache-strategy",

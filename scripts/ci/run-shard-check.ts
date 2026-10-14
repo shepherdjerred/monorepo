@@ -202,6 +202,15 @@ export async function runShardCheck(
         ? undefined
         : await preparePrettierCache(REPO_ROOT, cacheRoot, shard);
     try {
+      if (cache !== undefined) {
+        console.log(
+          `CI_FORMAT_CACHE_DIAGNOSTIC ${JSON.stringify({
+            schemaVersion: 1,
+            shard,
+            restored: cache.restored,
+          })}`,
+        );
+      }
       for (const files_ of chunk(files, PRETTIER_CHUNK_SIZE)) {
         await runner(
           [

@@ -46,6 +46,8 @@ test("concurrent jobs publish atomically and keep private cache files", async ()
     preparePrettierCache(root, shared, "root"),
     preparePrettierCache(root, shared, "root"),
   ]);
+  expect(a.restored).toBe(false);
+  expect(b.restored).toBe(false);
   const aFile = a.args.at(-1);
   const bFile = b.args.at(-1);
   if (aFile === undefined || bFile === undefined)
@@ -56,6 +58,7 @@ test("concurrent jobs publish atomically and keep private cache files", async ()
   await Promise.all([a.publish(), b.publish()]);
   await Promise.all([a.cleanup(), b.cleanup()]);
   const reader = await preparePrettierCache(root, shared, "root");
+  expect(reader.restored).toBe(true);
   const file = reader.args.at(-1);
   if (file === undefined) throw new Error("Missing reader path");
   const cached = z
@@ -76,11 +79,13 @@ test("a restored content cache accepts changed mtimes and rejects changed format
       cwd: root,
     });
   const producer = await preparePrettierCache(root, shared, "root");
+  expect(producer.restored).toBe(false);
   expect(run(producer.args).exitCode).toBe(0);
   await producer.publish();
   await producer.cleanup();
   await utimes(source, new Date(0), new Date(0));
   const consumer = await preparePrettierCache(root, shared, "root");
+  expect(consumer.restored).toBe(true);
   expect(run(consumer.args).exitCode).toBe(0);
   await Bun.write(source, "const value=1");
   expect(run(consumer.args).exitCode).toBe(1);
