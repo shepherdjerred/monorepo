@@ -681,6 +681,7 @@ def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
                 "automountServiceAccountToken": False,
                 "enableServiceLinks": False,
                 "terminationGracePeriodSeconds": 10,
+                "imagePullSecrets": [{"name": "dockerhub-pull-" + namespace}],
                 "containers": [
                     {
                         "name": "reader",
@@ -704,6 +705,34 @@ def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
             },
         }
     )
+
+
+def ensure_reader(journal: JsonObject, namespace: str) -> JsonObject:
+    manifest = reader_manifest(journal, namespace)
+    if namespace == RESTORED_NAMESPACE:
+        # The namespace belongs to this restore lease, not to ArgoCD. Declare
+        # its credential through 1Password without reading or copying a Secret.
+        source = read("onepassworditem", "dockerhub-pull-" + NAMESPACE)
+        if source.get("type") != "kubernetes.io/dockerconfigjson":
+            raise ValueError("Storm registry reader must be a Docker config Secret")
+        name = "dockerhub-pull-" + namespace
+        item = ensure_resource(
+            {
+                "apiVersion": "onepassword.com/v1",
+                "kind": "OnePasswordItem",
+                "metadata": {
+                    "name": name,
+                    "namespace": namespace,
+                    "labels": {LEASE: journal.string("requestId")},
+                },
+                "type": "kubernetes.io/dockerconfigjson",
+                "spec": {"itemPath": source.object("spec").string("itemPath")},
+            }
+        )
+        if item.get("type") != "kubernetes.io/dockerconfigjson":
+            raise ValueError("Restored namespace registry reader has changed type")
+        run(["-n", namespace, "wait", "--for=condition=Ready", "onepassworditem/" + name, "--timeout=120s"], 125)
+    return ensure_resource(manifest)
 
 
 def unsafe_helper(pod: JsonObject, expected: JsonObject, write: bool = False) -> bool:
@@ -909,7 +938,7 @@ def verify_backup(path: Path, journal: JsonObject) -> None:
     require_offline(journal, readers=True)
     require_restore(journal)
     for namespace in (NAMESPACE, RESTORED_NAMESPACE):
-        pod = ensure_resource(reader_manifest(journal, namespace))
+        pod = ensure_reader(journal, namespace)
         assert_reader(pod, journal, namespace)
         journal.strings("readers", {})[namespace] = pod.object("metadata").string("uid")
         save(path, journal)
@@ -1622,7 +1651,7 @@ def whole_rollback(path: Path, journal: JsonObject) -> None:
                 journal.strings("readers", {}).pop(namespace, None)
     journal["readersRemoved"] = False
     save(path, journal)
-    reader = ensure_resource(reader_manifest(journal, RESTORED_NAMESPACE))
+    reader = ensure_reader(journal, RESTORED_NAMESPACE)
     assert_reader(reader, journal, RESTORED_NAMESPACE)
     journal.strings("readers", {})[RESTORED_NAMESPACE] = reader.object("metadata").string("uid")
     save(path, journal)
@@ -2116,7 +2145,7 @@ def verify_rollback(path: Path, journal: JsonObject) -> None:
     for key in ("acceptance", "stoppingIncarnation", "stoppedIncarnation", "rollbackVerification"):
         journal.pop(key, None)
     save(path, journal)
-    pod = ensure_resource(reader_manifest(journal, NAMESPACE))
+    pod = ensure_reader(journal, NAMESPACE)
     assert_reader(pod, journal, NAMESPACE)
     journal.strings("readers", {})[NAMESPACE] = pod.object("metadata").string("uid")
     save(path, journal)

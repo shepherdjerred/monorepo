@@ -30,6 +30,12 @@ class Cluster:
         self.extra_writer = False
         self.late_join = False
         self.stale_patch = False
+        self.objects["onepassworditem", "dockerhub-pull-" + control.NAMESPACE] = JsonObject(
+            {
+                "type": "kubernetes.io/dockerconfigjson",
+                "spec": {"itemPath": "vaults/test/items/registry-reader"},
+            }
+        )
         for resource in json.loads(Path(__file__).with_name("restoration-guards.json").read_text()):
             self.objects[resource["kind"].lower(), resource["name"]] = JsonObject(
                 {
@@ -2128,6 +2134,11 @@ class RestorationControlTest(unittest.TestCase):
         def reader_create(manifest: Mapping[str, object]) -> JsonObject:
             manifest = JsonObject(manifest)
             namespace = manifest.object("metadata").string("namespace")
+            if manifest.string("kind") == "OnePasswordItem":
+                key = "onepassworditem", manifest.object("metadata").string("name")
+                if key not in self.cluster.objects:
+                    self.cluster.objects[key] = copy.deepcopy(manifest)
+                return copy.deepcopy(self.cluster.objects[key])
             if namespace not in pods:
                 pods[namespace] = copy.deepcopy(manifest)
                 pods[namespace].object("metadata").update(uid=namespace + "-reader-uid", resourceVersion="1")
@@ -2138,6 +2149,38 @@ class RestorationControlTest(unittest.TestCase):
         patch.object(control, "run", side_effect=reader_run).start()
         patch.object(control, "ensure_resource", side_effect=reader_create).start()
         return journal, pods
+
+    def test_private_restore_readers_and_writer_reference_namespace_pull_credentials(self):
+        journal, pods = self.reader_fixture()
+        with patch.object(control, "remote_fingerprint", return_value={"world/level.dat": "a" * 64}):
+            control.verify_backup(self.path, journal)
+        item = self.cluster.objects["onepassworditem", "dockerhub-pull-" + control.RESTORED_NAMESPACE]
+        self.assertEqual(item.object("spec").string("itemPath"), "vaults/test/items/registry-reader")
+        self.assertEqual(item.string("type"), "kubernetes.io/dockerconfigjson")
+        self.assertEqual(item.object("metadata").strings("labels"), {control.LEASE: REQUEST})
+        for namespace, pod in pods.items():
+            self.assertEqual(pod.object("spec")["imagePullSecrets"], [{"name": "dockerhub-pull-" + namespace}])
+            self.assertFalse(pod.object("spec")["automountServiceAccountToken"])
+            self.assertNotIn("env", pod.object("spec").objects("containers")[0])
+        self.assertEqual(control.writer_manifest(journal).object("spec")["imagePullSecrets"], [{"name": "dockerhub-pull-" + control.NAMESPACE}])
+
+    def test_restore_reader_waits_for_the_operator_and_keeps_credential_failure_closed(self):
+        journal, pods = self.reader_fixture()
+        previous_run = control.run
+
+        def unready(arguments: list[str], timeout: float = 30) -> str:
+            if any(argument.startswith("onepassworditem/") for argument in arguments):
+                raise RuntimeError("Registry reader is not ready")
+            return previous_run(arguments, timeout)
+
+        with patch.object(control, "run", side_effect=unready), self.assertRaisesRegex(RuntimeError, "not ready"):
+            control.ensure_reader(journal, control.RESTORED_NAMESPACE)
+        self.assertNotIn(control.RESTORED_NAMESPACE, pods)
+        source = self.cluster.objects["onepassworditem", "dockerhub-pull-" + control.NAMESPACE]
+        source["type"] = "Opaque"
+        with patch.object(control, "ensure_resource") as creating, self.assertRaisesRegex(ValueError, "Docker config"):
+            control.ensure_reader(journal, control.RESTORED_NAMESPACE)
+        creating.assert_not_called()
 
     def test_complete_volume_comparison_records_only_hashes_and_keeps_admission_closed(self):
         journal, pods = self.reader_fixture()
