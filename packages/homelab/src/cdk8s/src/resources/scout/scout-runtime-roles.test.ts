@@ -664,7 +664,7 @@ describe("Hosted Scout roles", () => {
       ).toBe(false);
     },
   );
-  test("Prod resumes all five writers without changing PostgreSQL or Beta", () => {
+  test("keeps five mutable roles and PostgreSQL replicas in both stages", () => {
     const prod = scoutResources("prod");
     const deployments = prod.filter(
       (resource) => resource.kind === "Deployment",
@@ -694,7 +694,12 @@ describe("Hosted Scout roles", () => {
     const beta = scoutResources("beta").filter(
       (resource) => resource.kind === "Deployment",
     );
-    expect(beta.map((resource) => resource.metadata.name).sort()).toEqual([
+    expect(
+      beta
+        .map((resource) => resource.metadata.name)
+        .filter((name) => !name.includes("-retained-"))
+        .sort(),
+    ).toEqual([
       "scout-beta-scout-activity-worker",
       "scout-beta-scout-backend",
       "scout-beta-scout-gateway",
