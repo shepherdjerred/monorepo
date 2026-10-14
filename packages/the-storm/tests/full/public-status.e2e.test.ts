@@ -5,66 +5,10 @@ import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { parsePortBinding } from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
-import contract from "@shepherdjerred/the-storm/public-status.json";
-
-const publicContract = z
-  .strictObject({
-    schemaVersion: z.literal(2),
-    queryIdentity: z.string().min(1),
-  })
-  .parse(contract);
-const PlayerIdentity = z.strictObject({
-  name: z
-    .string()
-    .min(1)
-    .max(64)
-    .regex(/^[^<>\p{Cc}]+$/u),
-  uuid: z.uuid(),
-});
-const Metadata = z.strictObject({
-  schemaVersion: z.literal(2),
-  players: z.array(PlayerIdentity).max(100_000),
-  games: z
-    .array(
-      z.strictObject({
-        id: z.string().min(1).max(64),
-        kind: z.enum(["ARENA", "RWF"]),
-        name: z.string().min(1).max(64),
-        phase: z.enum(["WAITING", "STARTING", "RUNNING"]),
-        progress: z.string().max(32),
-        players: z.array(z.uuid()).min(1).max(100_000),
-      }),
-    )
-    .max(1000),
-});
-
-/** Paper wraps the sole application entry and appends its empty plugin version. */
-function metadata(plugins: string) {
-  const wrapped = /^Paper on [^:;\p{Cc}]+: (?<application>[^;\p{Cc}]+) $/u.exec(
-    plugins,
-  );
-  const application = z.string().parse(wrapped?.groups?.["application"]);
-  const [identity, encoded] = z
-    .tuple([
-      z.literal(publicContract.queryIdentity),
-      z.string().regex(/^[\w-]+$/u),
-    ])
-    .parse(application.split("|"));
-  const bytes = Buffer.from(encoded, "base64url");
-  expect(bytes.toString("base64url")).toBe(encoded);
-  const decoded: unknown = JSON.parse(bytes.toString("utf8"));
-  const value = Metadata.parse(decoded);
-  expect(value.schemaVersion).toBe(publicContract.schemaVersion);
-  expect(new Set(value.players.map((player) => player.name)).size).toBe(
-    value.players.length,
-  );
-  expect(new Set(value.players.map((player) => player.uuid)).size).toBe(
-    value.players.length,
-  );
-  for (const game of value.games)
-    expect(new Set(game.players).size).toBe(game.players.length);
-  return { identity, metadata: value };
-}
+import {
+  publicContract,
+  publicQueryMetadata,
+} from "#e2e/harness/public-status.ts";
 
 async function query(host: string, port: number) {
   const session = Buffer.from(randomBytes(4).map((value) => value & 15));
@@ -122,7 +66,9 @@ async function query(host: string, port: number) {
       .toString("utf8")
       .split("\0")
       .filter((name) => name !== "");
-    const publicStatus = metadata(z.string().parse(stats.get("plugins")));
+    const publicStatus = publicQueryMetadata(
+      z.string().parse(stats.get("plugins")),
+    );
     const count = z
       .string()
       .regex(/^\d+$/u)
