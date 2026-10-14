@@ -44,6 +44,10 @@ public final class MapLifecycleFixtures implements BasicCommand {
     var found = plugin.getServer().getPluginManager().getPlugin("TheStorm");
     if (!(found instanceof TheStormPlugin storm))
       throw new IllegalStateException("TheStorm missing");
+    if (args.length == 1 && args[0].equals("chat-status")) {
+      source.getSender().sendMessage(Component.text(GSON.toJson(ChatStateProbe.capture(storm))));
+      return;
+    }
     if (args.length == 1 && args[0].startsWith("replay-")) {
       source.getSender().sendMessage(Component.text(GSON.toJson(replay(storm, args[0]))));
       return;

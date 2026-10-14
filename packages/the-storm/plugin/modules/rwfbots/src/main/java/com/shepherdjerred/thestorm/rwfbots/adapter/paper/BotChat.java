@@ -396,6 +396,9 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
       clearSpeech();
     after.combatants().stream()
         .filter(fighter -> !fighter.alive())
+        .filter(
+            fighter ->
+                before.combatant(fighter.uuid()).filter(MatchState.Fighter::alive).isPresent())
         .forEach(fighter -> cancel(fighter.uuid()));
     var now = parts.time().instant();
     var lines = new ArrayList<Utterance>();

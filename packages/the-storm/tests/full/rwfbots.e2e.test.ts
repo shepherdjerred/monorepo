@@ -46,6 +46,7 @@ import {
   type StatsRow,
   type Team,
 } from "#e2e/harness/rwfbots.ts";
+import { watcherChatProbe } from "#e2e/harness/rwfbots-chat-probe.ts";
 import {
   advance,
   dispersion,
@@ -631,14 +632,17 @@ function eachDeathOnce(
  * nobody, records only bots and rates every personality that played.
  */
 async function showcaseSettles(
-  server: ServerInfo,
+  match: Pick<Match, "server" | "rcon">,
   matchId: string,
   size: number,
   statsBefore: Awaited<ReturnType<typeof personalityStats>>,
 ) {
+  const { server, rcon } = match;
+  const probe = watcherChatProbe(rcon);
   await eventually(
     "the showcase to end and its recording to close",
     async () => {
+      await probe.sample();
       const rows = await matchRows(server, matchId);
       return (rows.match?.recording_file ?? null) !== null;
     },
@@ -668,7 +672,11 @@ async function showcaseSettles(
     ([id, row]) => row.matches > (statsBefore.get(id)?.matches ?? 0),
   );
   expect(rated).toHaveLength(size);
-  return { settled, personalities: rated.map(([id]) => id) };
+  return {
+    settled,
+    personalities: rated.map(([id]) => id),
+    chatSnapshots: probe.snapshots,
+  };
 }
 
 /** An entity selector for a bot's Citizens player body. */
@@ -805,7 +813,7 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
     expect(match.catalog.has(followed.groups?.["name"] ?? "")).toBe(true);
 
     const result = await showcaseSettles(
-      server,
+      match,
       live.matchId,
       size,
       statsBefore,

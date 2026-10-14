@@ -9,6 +9,7 @@ import { matchDatabase } from "./rwf-match.ts";
 import type { ServerInfo } from "./server.ts";
 import { querySqlite, stormDataFile } from "./storm-data.ts";
 import { fullRwfTestSettings, rwfTestSettings } from "./rwf-settings.ts";
+import type { ChatState } from "./rwfbots-chat-probe.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import {
   readOccurrence,
@@ -153,6 +154,7 @@ export async function saveWatcherChatReceipt(
   result: {
     settled: { database: string; outDir: string };
     personalities: readonly string[];
+    chatSnapshots: readonly ChatState[];
   },
 ): Promise<void> {
   const rows = await querySqlite(
@@ -185,6 +187,7 @@ export async function saveWatcherChatReceipt(
         settings: { match: rwfTestSettings, fullMatch: fullRwfTestSettings },
         roster,
         receivedMessages: [...match.log.lines],
+        chatSnapshots: result.chatSnapshots,
       },
       null,
       2,

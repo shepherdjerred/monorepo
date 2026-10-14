@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
+import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
@@ -50,6 +51,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.world.WorldMock;
 
@@ -563,6 +566,57 @@ final class BotChatTest {
 
     @Override
     public void close() {}
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = MatchSnapshot.PhaseKind.class,
+      names = {"LOBBY", "COUNTDOWN"})
+  void joiningActorsCanFinishGreetingAcrossRealPregameTicks(MatchSnapshot.PhaseKind phase) {
+    var harness = start("greet", h -> {});
+    var watcher = harness.player("Watcher");
+    watcher.teleport(new Location(harness.world, 5.5, 1, 7.5));
+    harness.match.fireJoin(new CombatantId.Human(watcher.getUniqueId()), watcher.getName());
+    harness.match.fireMapChosen();
+    harness.match.phase(phase);
+    var bot = harness.roster().fill(FakeMatch.MATCH_ID, 1).getFirst();
+    harness.roster().spawn(bot, new Location(harness.world, 5.5, 1, 5.5));
+    var member =
+        Combatant.joining(
+            bot, harness.roster().entity(bot).orElseThrow().getName(), harness.clock.instant());
+    assertThat(member.alive()).as("real joining actors have not begun fighting").isFalse();
+    var existingDisplays =
+        harness.world.getEntities().stream()
+            .filter(org.bukkit.entity.TextDisplay.class::isInstance)
+            .map(org.bukkit.entity.Entity::getUniqueId)
+            .collect(toUnmodifiableSet());
+    heard(watcher);
+    harness.match.fireJoin(member.id(), member.name());
+    pregameTicks(harness, 1);
+    var chat = harness.paper().chat().orElseThrow();
+    assertThat(chat.typing(bot.uuid())).as("the reaction window still applies").isFalse();
+    assertThat(heard(watcher)).isEmpty();
+    pregameTicks(harness, 19);
+    assertThat(chat.typing(bot.uuid())).as("not-yet-fighting is not a death transition").isTrue();
+    assertThat(heard(watcher)).as("typing is not an instant greeting").isEmpty();
+    var indicator = ownedIndicator(harness, bot.uuid(), existingDisplays);
+    pregameTicks(harness, 120);
+    assertThat(heard(watcher))
+        .singleElement()
+        .asString()
+        .startsWith("[G][" + member.name() + " ✦]: ");
+    assertThat(chat.typing(bot.uuid())).isFalse();
+    assertThat(harness.server.getEntity(indicator)).isNull();
+    assertThat(harness.match.member(bot.uuid()).alive()).isFalse();
+    pregameTicks(harness, 100);
+    assertThat(heard(watcher)).as("the greeting is delivered exactly once").isEmpty();
+  }
+
+  private static void pregameTicks(RwfBotsHarness harness, int count) {
+    for (var tick = 0; tick < count; tick++) {
+      harness.match.fireTick();
+      harness.tick();
+    }
   }
 
   @Test
