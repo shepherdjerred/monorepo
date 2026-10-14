@@ -185,6 +185,21 @@
       "analyticsSites": ["ts-mc", "ts-mc-docs"]
     },
     {
+      "id": "tracker",
+      "title": "Tracker",
+      "kind": "product",
+      "package": "tracker",
+      "namespaces": ["tracker"],
+      "argoApps": ["tracker"],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/tracker",
+          "argoApp": "tracker"
+        }
+      ]
+    },
+    {
       "id": "storm-forum",
       "title": "The Storm forum",
       "kind": "product",
