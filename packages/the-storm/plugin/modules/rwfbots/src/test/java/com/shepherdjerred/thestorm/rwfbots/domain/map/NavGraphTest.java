@@ -29,8 +29,14 @@ final class NavGraphTest {
   void aStarRoutesThroughTheDoor() {
     var path = graph.path(node(SyntheticMap.RED_SPAWN), node(new BlockPos(29, 1, 2))).orElseThrow();
     var cells = path.nodes().stream().map(graph::cell).toList();
-    assertThat(cells)
-        .anyMatch(cell -> cell.x() == SyntheticMap.WALL_X && (cell.z() == 15 || cell.z() == 16));
+    var crossings = new java.util.ArrayList<Double>();
+    for (var index = 1; index < cells.size(); index++) {
+      var from = cells.get(index - 1).feet();
+      var to = cells.get(index).feet();
+      var fraction = (SyntheticMap.WALL_X + 0.5 - from.x()) / (to.x() - from.x());
+      if (fraction >= 0 && fraction <= 1) crossings.add(from.z() + fraction * (to.z() - from.z()));
+    }
+    assertThat(crossings).isNotEmpty().allSatisfy(z -> assertThat(z).isBetween(15.0, 17.0));
     assertThat(path.toFollow()).hasSize(path.length() - 1);
   }
 
@@ -50,6 +56,23 @@ final class NavGraphTest {
       java.util.function.IntToDoubleFunction penalty = node -> (node % 11) * 0.2;
       assertThat(graph.path(from, to, penalty, workspace)).isEqualTo(graph.path(from, to, penalty));
       assertThat(graph.path(to, from, node -> 0, workspace)).isEqualTo(graph.path(to, from));
+    }
+  }
+
+  @Test
+  void parentScratchCanBeReusedAfterDistancesShortPathsAndRejectedPenalties() {
+    var workspace = graph.workspace();
+    var failureFrom = node(SyntheticMap.RED_SPAWN);
+    var failureTo = node(new BlockPos(29, 1, 2));
+    for (var from = 0; from < graph.nodeCount(); from += 37) {
+      var to = (from * 7 + 13) % graph.nodeCount();
+      graph.path(from, to, ignored -> 0, workspace);
+      graph.costsToTargets(to, new int[] {from, to, -1}, workspace);
+      graph.cappedCostsToTargets(from, new int[] {to, -1}, 3, workspace);
+      assertThatThrownBy(() -> graph.path(failureFrom, failureTo, ignored -> -1, workspace))
+          .isInstanceOf(IllegalArgumentException.class);
+      assertThat(graph.path(from, from, ignored -> 0, workspace)).isEqualTo(graph.path(from, from));
+      assertThat(graph.path(to, from, ignored -> 0, workspace)).isEqualTo(graph.path(to, from));
     }
   }
 
@@ -97,7 +120,7 @@ final class NavGraphTest {
   }
 
   @Test
-  void legacyPlatformDescentIsCostlyAndLargerFallsAreRejected() {
+  void directedDamagingDescentsCarryMeasuredTickCostsAndDamageBounds() {
     var terrain =
         new BlockClassification() {
           @Override
@@ -121,9 +144,13 @@ final class NavGraphTest {
     var spawn = platforms.nodeAt(new BlockPos(0, 6, 0)).orElseThrow();
     var descent = platforms.path(spawn, low).orElseThrow();
     assertThat(descent.waypoints().getLast().hop()).isEqualTo(Hop.DROP);
-    assertThat(descent.cost()).isEqualTo(14);
+    assertThat(descent.cost()).isEqualTo((double) (12 + (float) (1 / 0.215)));
     var high = platforms.nodeAt(new BlockPos(2, 8, 0)).orElseThrow();
-    assertThat(platforms.path(high, low)).isEmpty();
+    var larger = platforms.path(high, low).orElseThrow();
+    assertThat(larger.waypoints().getLast().hop()).isEqualTo(Hop.DROP);
+    var edge = platforms.edgeStart(high);
+    assertThat(platforms.edgeDamage(edge)).isEqualTo(4);
+    assertThat(platforms.path(low, high)).isEmpty();
   }
 
   @Test
@@ -133,12 +160,12 @@ final class NavGraphTest {
           new BlockClassification() {
             @Override
             public GridBounds bounds() {
-              return new GridBounds(new BlockPos(0, 0, 0), 4, 10, 1);
+              return new GridBounds(new BlockPos(0, 0, 0), 9, 10, 1);
             }
 
             @Override
             public BlockShape shape(int x, int y, int z) {
-              return (x == 0 && y <= 5) || (x == 3 && y == 0) || (blocked && x == 1 && y == 8)
+              return (x <= 2 && y <= 5) || (x >= 5 && y == 0) || (blocked && x == 3 && y == 8)
                   ? BlockShape.FULL
                   : BlockShape.PASSABLE;
             }
@@ -149,8 +176,14 @@ final class NavGraphTest {
             }
           };
       var platforms = NavGraphBuilder.build(terrain);
-      var from = platforms.nodeAt(new BlockPos(0, 6, 0)).orElseThrow();
-      var to = platforms.nodeAt(new BlockPos(3, 1, 0)).orElseThrow();
+      var from = platforms.nodeAt(new BlockPos(2, 6, 0)).orElseThrow();
+      var to = platforms.nodeAt(new BlockPos(5, 1, 0)).orElseThrow();
+      var tooLittleRunUp = platforms.nodeAt(new BlockPos(0, 6, 0)).orElseThrow();
+      assertThat(
+              java.util.stream.IntStream.range(
+                      platforms.edgeStart(tooLittleRunUp), platforms.edgeEnd(tooLittleRunUp))
+                  .mapToObj(platforms::edgeHop))
+          .doesNotContain(Hop.LEAP);
       var path = platforms.path(from, to);
       if (blocked) assertThat(path).isEmpty();
       else assertThat(path.orElseThrow().waypoints().getLast().hop()).isEqualTo(Hop.LEAP);
@@ -178,7 +211,7 @@ final class NavGraphTest {
           }
         };
     var surface = NavGraphBuilder.build(ocean);
-    assertThat(surface.nodeCount()).isEqualTo(3);
+    assertThat(surface.nodeCount()).isEqualTo(5);
     assertThat(surface.nodeAt(new BlockPos(0, 89, 0))).isEmpty();
     var from = surface.nodeAt(new BlockPos(0, 90, 0)).orElseThrow();
     var to = surface.nodeAt(new BlockPos(2, 91, 0)).orElseThrow();
@@ -207,7 +240,9 @@ final class NavGraphTest {
     var from = node(new BlockPos(2, 1, 10));
     var to = node(new BlockPos(14, 1, 10));
     var straight = graph.path(from, to).orElseThrow();
-    assertThat(straight.cost()).isCloseTo(12, within(1e-6));
+    assertThat(straight.cost()).isCloseTo(39, within(1e-6));
+    assertThat(straight.waypoints())
+        .anySatisfy(point -> assertThat(point.hop()).isEqualTo(Hop.LEAP));
     var bent =
         graph.path(from, to, candidate -> graph.cell(candidate).z() == 10 ? 5 : 0).orElseThrow();
     assertThat(bent.cost()).isGreaterThan(straight.cost());

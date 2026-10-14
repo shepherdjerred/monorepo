@@ -26,18 +26,26 @@ public final class LearningObservations implements ObservationSource {
   private final MatchView view;
   private final Server server;
   private final ObservationContract contract;
+  private final java.time.InstantSource time;
   private @Nullable UUID matchId;
   private @Nullable SnapshotCapture capture;
   private @Nullable WorldSnapshot snapshot;
   private final Map<UUID, PerceptionState> memories = new HashMap<>();
   private final Map<UUID, SplittableRandom> random = new HashMap<>();
 
-  public LearningObservations(
-      Roster roster, MatchView view, Server server, ObservationContract contract) {
-    this.roster = roster;
-    this.view = view;
-    this.server = server;
-    this.contract = contract;
+  public record Parts(
+      Roster roster,
+      MatchView view,
+      Server server,
+      ObservationContract contract,
+      java.time.InstantSource time) {}
+
+  public LearningObservations(Parts parts) {
+    this.roster = parts.roster();
+    this.view = parts.view();
+    this.server = parts.server();
+    this.contract = parts.contract();
+    this.time = parts.time();
   }
 
   @Override
@@ -50,7 +58,12 @@ public final class LearningObservations implements ObservationSource {
     var match = session.orElseThrow();
     if (!match.matchId().equals(matchId)) {
       matchId = match.matchId();
-      capture = new SnapshotCapture(match.ids(), roster::anyEntity, new StimulusCollector());
+      capture =
+          new SnapshotCapture(
+              match.ids(),
+              roster::anyEntity,
+              new StimulusCollector(),
+              new SnapshotCapture.Capabilities(view::noFallUntil, time));
       snapshot = null;
       memories.clear();
       random.clear();

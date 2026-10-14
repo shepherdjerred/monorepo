@@ -326,7 +326,11 @@ final class Flow {
     var spectator = map.spectatorPoint().position();
     for (var member : draft.members()) {
       var team = Objects.requireNonNull(assignment.get(member.id()), "every member gets a team");
-      var kitId = member.kit().orElseGet(KitBook.TROOPER::id);
+      var kitId =
+          member
+              .kit()
+              .filter(draft.settings.kitPool()::allows)
+              .orElseGet(draft.settings.kitPool()::defaultKit);
       var kit =
           KitBook.byId(kitId)
               .orElseThrow(() -> new IllegalStateException("picked kit vanished: " + kitId));
@@ -492,7 +496,11 @@ final class Flow {
       if (mode == Release.CARRY && !member.id().isBot() && !member.afk()) {
         draft.effect(
             new MatchEffect.ReturnToLobby(
-                member.id(), member.kit().orElseGet(KitBook.TROOPER::id)));
+                member.id(),
+                member
+                    .kit()
+                    .filter(draft.settings.kitPool()::allows)
+                    .orElseGet(draft.settings.kitPool()::defaultKit)));
       } else {
         draft.remove(member.id());
         draft.effect(new MatchEffect.Restore(member.id()));

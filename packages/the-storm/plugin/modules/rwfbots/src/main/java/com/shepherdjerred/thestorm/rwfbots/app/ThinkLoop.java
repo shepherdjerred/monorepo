@@ -14,7 +14,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.TacticsState;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Thought;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.RetakeAdmission;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Slot;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotFit;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamBrain;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
@@ -362,6 +365,7 @@ public final class ThinkLoop {
   /** The per-team state the job alone touches. */
   private static final class Team {
     Blackboard board;
+    RetakeAdmission.State admission = RetakeAdmission.State.EMPTY;
     long lastTick = NEVER;
 
     Team(Blackboard board) {
@@ -443,6 +447,7 @@ public final class ThinkLoop {
                 try {
                   for (var plan : plans) {
                     plan.team().board = plan.board();
+                    plan.team().admission = plan.admission();
                     plan.team().lastTick = plan.tick();
                   }
                 } finally {
@@ -705,8 +710,11 @@ public final class ThinkLoop {
       }
       // A bot that joined since the last deal must get a slot before it thinks.
       var unassigned = !team.board.plan().assignment().keySet().containsAll(members.keySet());
-      var unchanged = new TeamStep(team, team.board, team.lastTick);
-      if (views.isEmpty() || (!unassigned && !due(team.lastTick, snapshot.tick(), period))) {
+      var unchanged = new TeamStep(team, team.board, team.lastTick, team.admission);
+      if (views.isEmpty()
+          || (!unassigned
+              && !retakeInvalidated(team, snapshot)
+              && !due(team.lastTick, snapshot.tick(), period))) {
         return new PendingTeam(unchanged, Optional.empty());
       }
       var current = cycle.current();
@@ -716,6 +724,17 @@ public final class ThinkLoop {
               TeamBrain.prepare(
                   team.board,
                   new TeamBrain.TeamSituation(current.nav(), snapshot, views, members))));
+    }
+
+    private boolean retakeInvalidated(Team team, WorldSnapshot snapshot) {
+      if (team.admission.invalidated(snapshot)) return true;
+      // newLife clears the decision before this cycle; never carry a reservation across epochs.
+      return team.admission.admitted().keySet().stream()
+          .anyMatch(
+              id -> {
+                var mind = minds.get(id);
+                return mind == null || mind.decision == null;
+              });
     }
 
     private CompletableFuture<List<TeamStep>> dealTeams(Cycle cycle, List<PendingTeam> pending) {
@@ -748,8 +767,81 @@ public final class ThinkLoop {
             new TeamCompletion(team, List.copyOf(distances.subList(cursor, cursor + count))));
         cursor += count;
       }
-      return batches.map(
-          flight(cycle, "team-score"), completions, completion -> finishTeam(cycle, completion));
+      return batches
+          .map(
+              flight(cycle, "team-score"), completions, completion -> finishTeam(cycle, completion))
+          .thenCompose(steps -> admitTeams(cycle, completions, steps));
+    }
+
+    private CompletableFuture<List<TeamStep>> admitTeams(
+        Cycle cycle, List<TeamCompletion> completions, List<TeamStep> steps) {
+      if (!current(cycle)) return CompletableFuture.completedFuture(List.of());
+      var admissions = new ArrayList<AdmissionWork>();
+      for (var index = 0; index < steps.size(); index++)
+        admissions.add(new AdmissionWork(completions.get(index), steps.get(index)));
+      return batches.indexed(
+          flight(cycle, "retake-feasibility"),
+          admissions,
+          (batch, work) -> admitTeam(cycle, work, workspaces.get(batch)));
+    }
+
+    private TeamStep admitTeam(
+        Cycle cycle, AdmissionWork work, NavGraph.SearchWorkspace workspace) {
+      var step = work.step();
+      if (work.completion().pending().prepared().isEmpty()) return step;
+      var routes =
+          new RetakeAdmission.Routes() {
+            @Override
+            public List<CombatantId> candidates(Slot worker) {
+              return workerCandidates(cycle, work, worker);
+            }
+
+            @Override
+            public boolean reachable(CombatantId id, Slot worker, Blackboard provisional) {
+              return workerReachable(cycle, new WorkerRoute(id, worker, provisional), workspace);
+            }
+          };
+      var result =
+          RetakeAdmission.verify(
+              step.board(),
+              step.admission(),
+              new RetakeAdmission.Context(cycle.current().nav(), cycle.snapshot()),
+              routes);
+      return new TeamStep(step.team(), result.board(), step.tick(), result.state());
+    }
+
+    private List<CombatantId> workerCandidates(Cycle cycle, AdmissionWork work, Slot worker) {
+      var prepared = work.completion().pending().prepared().orElseThrow();
+      var staged = prepared.workerCandidates(worker, work.completion().distances());
+      if (!staged.isEmpty()) return staged;
+      return cycle.snapshot().alive(work.step().board().team()).stream()
+          .filter(bot -> work.step().board().plan().assignment().containsKey(bot.id()))
+          .sorted(
+              Comparator.comparingDouble(
+                      (CombatantView bot) -> bot.pos().distanceSquared(worker.pos()))
+                  .thenComparing(CombatantView::id))
+          .map(CombatantView::id)
+          .toList();
+    }
+
+    private boolean workerReachable(
+        Cycle cycle, WorkerRoute route, NavGraph.SearchWorkspace workspace) {
+      var mind = minds.get(route.id());
+      if (mind == null || mind.percept == null || !valid(mind)) return false;
+      var situation =
+          new Situation(
+              cycle.snapshot().require(route.id()),
+              cycle.snapshot(),
+              mind.percept,
+              route.board(),
+              Role.RETAKE);
+      var measurement = ThinkFlight.section(flight(cycle, "retake-route"), 1);
+      try {
+        return Planner.canReachWorker(
+            situation, mind.tacticsContext.withWorkspace(workspace), route.worker());
+      } finally {
+        measurement.close();
+      }
     }
 
     private TeamStep finishTeam(Cycle cycle, TeamCompletion completion) {
@@ -765,7 +857,8 @@ public final class ThinkLoop {
       return new TeamStep(
           team,
           pending.prepared().orElseThrow().finish(completion.distances(), random),
-          cycle.tick());
+          cycle.tick(),
+          team.admission);
     }
 
     private List<TacticsWork> selectTactics(Cycle cycle, List<Mind> active) {
@@ -839,13 +932,18 @@ public final class ThinkLoop {
 
   private record Prepared(Cycle cycle, List<Mind> active, List<Mind> sensing) {}
 
-  private record TeamStep(Team team, Blackboard board, long tick) {}
+  private record TeamStep(
+      Team team, Blackboard board, long tick, RetakeAdmission.State admission) {}
 
   private record PendingTeam(TeamStep unchanged, Optional<TeamBrain.Prepared> prepared) {}
 
   private record RoleRow(TeamBrain.Prepared prepared, int row) {}
 
   private record TeamCompletion(PendingTeam pending, List<float[]> distances) {}
+
+  private record AdmissionWork(TeamCompletion completion, TeamStep step) {}
+
+  private record WorkerRoute(CombatantId id, Slot worker, Blackboard board) {}
 
   private record TacticsWork(Mind mind, Blackboard board) {}
 

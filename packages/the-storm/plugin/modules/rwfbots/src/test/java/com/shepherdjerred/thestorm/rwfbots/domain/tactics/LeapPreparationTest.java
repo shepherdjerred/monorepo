@@ -1,0 +1,82 @@
+package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
+
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.HealthRoutes;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import java.util.OptionalDouble;
+import org.junit.jupiter.api.Test;
+
+final class LeapPreparationTest {
+  private static NavGraph graph() {
+    var bounds = new GridBounds(new BlockPos(0, 0, 0), 9, 3, 5);
+    return new NavGraph(
+        bounds,
+        new int[] {
+          bounds.index(2, 1, 1), bounds.index(4, 1, 1), bounds.index(6, 1, 1), bounds.index(6, 1, 4)
+        },
+        new NavGraph.Topology(new int[] {0, 2, 3, 4, 4}, new int[] {1, 2, 2, 3}),
+        new NavGraph.EdgeData(
+            new byte[] {Hop.WALK.code(), Hop.LEAP.code(), Hop.WALK.code(), Hop.LEAP.code()},
+            new float[] {8, 12, 8, 12}));
+  }
+
+  @Test
+  void firstEntryUsesActualCertifiedMomentumOrPricesItsActualBackup() {
+    var graph = graph();
+    var launch = graph.waypoint(1).launch().orElseThrow();
+    var ready = combatant(1, RED, launch.takeoff()).withVel(new Vec3(0.28, 0, 0));
+    assertThat(LeapPreparation.ticks(graph, 1, ready, 0)).isZero();
+    var stopped = ready.withVel(Vec3.ZERO);
+    assertThat(LeapPreparation.ticks(graph, 1, stopped, 0)).isGreaterThan(14);
+    var displaced = ready.withPos(ready.pos().plus(0, 0, 1));
+    assertThat(LeapPreparation.ticks(graph, 1, displaced, 0))
+        .isGreaterThan(LeapPreparation.ticks(graph, 1, stopped, 0));
+  }
+
+  @Test
+  void futureTurnCannotBorrowCurrentAlignedMomentumEvenAtItsTakeoff() {
+    var graph = graph();
+    var launch = graph.waypoint(3).launch().orElseThrow();
+    var currentlyAligned = combatant(1, RED, launch.takeoff()).withVel(new Vec3(0, 0, 0.28));
+    assertThat(LeapPreparation.ticks(graph, 3, currentlyAligned, 0)).isGreaterThan(20);
+    assertThat(LeapPreparation.ticks(graph, 3, currentlyAligned, 2)).isZero();
+  }
+
+  @Test
+  void setupMakesWalkingPreferableAndPreventsAnOptimisticJumpDeadline() {
+    var graph = graph();
+    var self = combatant(1, RED, graph.feet(0));
+    var motion =
+        new NavGraph.EdgeMotion(
+            edge ->
+                graph.edgeCost(edge)
+                    + (graph.edgeHop(edge) == Hop.LEAP
+                        ? LeapPreparation.ticks(graph, edge, self, 0)
+                        : 0),
+            edge -> true,
+            1);
+    var risk = new HealthRoutes.RiskPolicy(19, 0, OptionalDouble.of(18));
+    var found =
+        HealthRoutes.find(
+            graph,
+            new HealthRoutes.Request(0, 2, risk, node -> 0),
+            new HealthRoutes.EdgePolicy(edge -> 0, motion),
+            null);
+    assertThat(found.orElseThrow().path().nodes()).containsExactly(0, 1, 2);
+    var turnDeadline = new HealthRoutes.RiskPolicy(19, 0, OptionalDouble.of(30));
+    assertThat(
+            HealthRoutes.find(
+                graph,
+                new HealthRoutes.Request(0, 3, turnDeadline, node -> 0),
+                new HealthRoutes.EdgePolicy(edge -> 0, motion),
+                null))
+        .isEmpty();
+  }
+}

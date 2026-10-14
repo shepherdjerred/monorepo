@@ -170,12 +170,12 @@ final class BotChatTest {
   @Test
   void aBotsKillIsSaidOnceFromItsKillLinesToTheRwfWorldOnly() {
     var harness = start(h -> {});
-    var alice = harness.server.addPlayer("Alice");
-    var watcher = harness.server.addPlayer("Carol");
+    var alice = harness.player("Alice");
+    var watcher = harness.player("Carol");
     watcher.teleport(new Location(harness.world, 16.5, 4, 16.5));
     var elsewhere = new WorldMock(new WorldCreator("world"));
     harness.server.addWorld(elsewhere);
-    var bob = harness.server.addPlayer("Bob");
+    var bob = harness.player("Bob");
     bob.teleport(new Location(elsewhere, 0, 5, 0));
     var bots = live(alice);
     assertThat(harness.paper().chat().orElseThrow().enabled()).isTrue();
@@ -223,7 +223,7 @@ final class BotChatTest {
   @Test
   void theLineIsFramedWithTheMarkerAndTheTeamColour() {
     var harness = start(h -> {});
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = live(alice);
     heard(alice);
 
@@ -238,8 +238,8 @@ final class BotChatTest {
   @Test
   void aPlayerWhoIgnoresABotDoesNotHearIt() {
     var harness = start(h -> {});
-    var alice = harness.server.addPlayer("Alice");
-    var carol = harness.server.addPlayer("Carol");
+    var alice = harness.player("Alice");
+    var carol = harness.player("Carol");
     carol.teleport(new Location(harness.world, 16.5, 4, 16.5));
     var bots = live(alice);
     var killer = bots.getFirst();
@@ -258,7 +258,7 @@ final class BotChatTest {
   @Test
   void aPlantIsCalledInTeamChatToTheTeamOnly() {
     var harness = start("onPlant", BotChatTest::teams);
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = live(alice);
     var blueBot = bots.get(1);
     var redBody = (PlayerMock) harness.roster().entity(bots.getFirst()).orElseThrow();
@@ -281,7 +281,7 @@ final class BotChatTest {
   @Test
   void aCallIsNotHeardByTheOtherTeam() {
     var harness = start("onPlant", BotChatTest::teams);
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var redBot = live(alice).getFirst();
     heard(alice);
 
@@ -297,7 +297,7 @@ final class BotChatTest {
   @Test
   void withTheFlagOffBotsSayNothing() {
     var harness = start(h -> h.chatFlag.set(false));
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = live(alice);
     heard(alice);
     assertThat(harness.paper().chat().orElseThrow().enabled()).isFalse();

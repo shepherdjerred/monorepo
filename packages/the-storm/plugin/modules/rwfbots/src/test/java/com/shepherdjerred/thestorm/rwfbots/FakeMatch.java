@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.rwf.domain.match.MatchEffect;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import com.shepherdjerred.thestorm.rwf.domain.match.Outcome;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.MatchSession;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -39,6 +40,17 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   public static final Instant T0 = Instant.parse("2026-10-03T12:00:00Z");
   public static final String RED_BOMB = "red-1";
   public static final String BLUE_BOMB = "blue-1";
+
+  @Override
+  public Optional<com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen> experience(UUID id) {
+    return id.equals(MATCH_ID)
+        ? Optional.of(
+            new com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen(
+                MATCH_ID,
+                MatchSession.seedOf(MATCH_ID),
+                com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT))
+        : Optional.empty();
+  }
 
   /** One member as the fake match knows them. */
   public record Member(

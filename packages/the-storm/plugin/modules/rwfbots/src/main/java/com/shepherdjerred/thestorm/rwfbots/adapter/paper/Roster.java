@@ -86,6 +86,13 @@ public final class Roster implements BotBodies {
     return parts.bodies();
   }
 
+  com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen experience(UUID matchId) {
+    return parts
+        .view()
+        .experience(matchId)
+        .orElseThrow(() -> new IllegalStateException("match experience must freeze before draft"));
+  }
+
   // ---- the rwf contract ------------------------------------------------------------------------
 
   @Override
@@ -120,7 +127,18 @@ public final class Roster implements BotBodies {
         harness
             .draft(matchId, slots, parts.personalities())
             .map(bots -> new Director.Pick(bots, 0))
-            .orElseGet(() -> Director.pick(request, parts.random()));
+            .orElseGet(
+                () ->
+                    Director.pick(
+                        request,
+                        parts
+                            .view()
+                            .experience(matchId)
+                            .orElseThrow(
+                                () ->
+                                    new IllegalStateException(
+                                        "match experience must freeze before draft")),
+                        parts.random()));
     var handles = new ArrayList<BotHandle>();
     // rwf walks bots into the lobby in this order: the ones always late come last.
     var order =

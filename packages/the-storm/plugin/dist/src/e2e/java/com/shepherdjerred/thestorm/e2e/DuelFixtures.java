@@ -200,7 +200,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     sampledReceived = 0;
     result = "waiting";
     var control = storm().service(CombatHarness.class);
-    control.attach(seed, this);
+    control.attachBaseline(seed, this);
     subscription =
         Optional.of(
             storm()
@@ -248,7 +248,10 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
     setup =
         Optional.of(
             DuelSetup.capture(
-                current, new DuelSetup.Selection(seed, side, mode, opponent), this::body));
+                current,
+                new DuelSetup.Selection(seed, side, mode, opponent),
+                this::body,
+                storm().service(CombatHarness.class)));
     result = "live";
     started = 0;
   }
@@ -399,7 +402,7 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
   private List<BodyCommand> authored(CombatHarness.Frame frame) {
     var commands = frame.authored().commands();
     if (opponent.equals("authored")
-        || !CombatCommands.eligible(commands, frame.input())
+        || !CombatCommands.eligible(frame.controls())
         || frame.input().target().isEmpty()) return commands;
     return commands.stream()
         .map(

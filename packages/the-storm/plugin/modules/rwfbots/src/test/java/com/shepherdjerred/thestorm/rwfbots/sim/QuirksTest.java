@@ -69,7 +69,9 @@ final class QuirksTest {
     calm.run(
         TacticsContext.LATE_MIN_TICKS,
         w -> {
-          assertThat(w.body(1).lastCommands).noneMatch(BodyCommand.Sneak.class::isInstance);
+          assertThat(w.body(1).lastCommands)
+              .noneMatch(command -> command instanceof BodyCommand.Sneak(var sneaking) && sneaking);
+          assertThat(w.body(1).sneaking).as("calm bot never physically crouches").isFalse();
           return false;
         });
   }

@@ -32,6 +32,7 @@ final class RwfMapTest {
     assertThat(run("bake")).isEqualTo(RwfMap.USAGE);
     assertThat(run("frobnicate", "x")).isEqualTo(RwfMap.USAGE);
     assertThat(run("verify", "x", "--out", "y")).isEqualTo(RwfMap.USAGE);
+    assertThat(run("verify-health", "x", "--out", "y")).isEqualTo(RwfMap.USAGE);
     assertThat(run("bake", "x", "--outt", "y")).isEqualTo(RwfMap.USAGE);
     assertThat(err()).contains("usage:");
   }
@@ -57,6 +58,24 @@ final class RwfMapTest {
 
     assertThat(run("verify", shipped.toString())).as(err()).isEqualTo(RwfMap.OK);
     assertThat(out.toString(UTF_8)).startsWith("verified training-yard");
+  }
+
+  @Test
+  void verifyHealthPrintsTheBudgetAndEverySpawnWorkerPair() throws IOException {
+    var shipped = ShippedMapsTest.MAPS.resolve("training-yard");
+    var folder = temp.resolve("training-yard");
+    Files.createDirectories(folder);
+    for (var name : new String[] {MapFolder.MAP_FILE, MapFolder.BLOCKS_FILE}) {
+      Files.copy(shipped.resolve(name), folder.resolve(name));
+    }
+    Files.write(folder.resolve(MapFolder.NAV_FILE), Baker.bake(MapFolder.load(folder)).bytes());
+    assertThat(run("verify-health", folder.toString())).as(err()).isEqualTo(RwfMap.OK);
+    var report =
+        tools.jackson.databind.json.JsonMapper.builder().build().readTree(out.toString(UTF_8));
+    assertThat(report.path("map").asString()).isEqualTo("training-yard");
+    assertThat(report.path("healthBudget").asInt()).isEqualTo(19);
+    assertThat(report.path("everySelectedWorkerSafe").asBoolean()).isTrue();
+    assertThat(report.path("sites").size()).isGreaterThan(0);
   }
 
   @Test

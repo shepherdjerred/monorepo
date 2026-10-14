@@ -174,16 +174,19 @@ public final class RwfBotsPaper {
                 module.time(),
                 module.logger(),
                 lobby,
-                app.learning()));
+                app.learning(),
+                view));
     var driver =
         new BodyDriver(
             new BodyDriver.Parts(app.bodies(), actions, app.world(), stimuli, bridge::rewound));
     var observations =
         new LearningObservations(
-            roster,
-            view,
-            module.plugin().getServer(),
-            com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract.load());
+            new LearningObservations.Parts(
+                roster,
+                view,
+                module.plugin().getServer(),
+                com.shepherdjerred.thestorm.rwfbots.adapter.content.LearningContract.load(),
+                module.time()));
     var ticker =
         new BotTicker(
             new BotTicker.Parts(

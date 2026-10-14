@@ -72,11 +72,11 @@ final class BotLobbyChatTest {
   void botsGreetAsTheyArriveAndOneAnswersAHumansHelloOnlyInTheRwfWorld() {
     var harness = RwfBotsHarness.start(directory, BotLobbyChatTest::greetingsOnly, h -> {});
     running = harness;
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     alice.teleport(new Location(harness.world, 4.5, 1, 20.5));
     var elsewhere = new WorldMock(new WorldCreator("world"));
     harness.server.addWorld(elsewhere);
-    var bob = harness.server.addPlayer("Bob");
+    var bob = harness.player("Bob");
     bob.teleport(new Location(elsewhere, 0, 5, 0));
     harness.match.fireJoin(new CombatantId.Human(alice.getUniqueId()), alice.getName());
     harness.match.fireMapChosen();

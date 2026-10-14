@@ -66,6 +66,8 @@ export type StartedServer = {
 
 export type StartServerOptions = ModuleConfigOverrides & {
   cacheDir: string;
+  /** New private host directory for disposable server data; retained by its caller. */
+  dataDir?: string;
   bootTimeoutMs: number;
   /**
    * Seed the pinned Paper jar and share Paperclip's and LuckPerms' downloaded
@@ -385,6 +387,10 @@ export async function startServer(
   const runsDir = path.join(cacheDir, "runs");
   const stagingDir = path.join(runsDir, process.pid.toString());
   await mkdir(runsDir, { recursive: true });
+  const dataDir =
+    options.dataDir === undefined ? undefined : path.resolve(options.dataDir);
+  // Exclusive creation refuses an existing world or symlink instead of modifying its contents.
+  if (dataDir !== undefined) await mkdir(dataDir, { mode: 0o700 });
   await reapPidOwnedContainers({ ownerLabel, pidLabel, runsDir });
   await rm(stagingDir, { recursive: true, force: true });
 
@@ -417,6 +423,7 @@ export async function startServer(
     "127.0.0.1::25565/udp",
     "-v",
     `${pluginsDir}:/plugins:ro`,
+    ...(dataDir === undefined ? [] : ["-v", `${dataDir}:/data`]),
     ...(options.warmCache ? warmMountArgs(cacheDir) : []),
     ...(options.resources === undefined
       ? []

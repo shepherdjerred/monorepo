@@ -1,5 +1,5 @@
 import { mkdir } from "node:fs/promises";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import path from "node:path";
 import type { Bot } from "mineflayer";
 import { expect } from "vitest";
@@ -117,6 +117,7 @@ async function baseline(
     windows: [],
     telemetry: [],
     memory: [],
+    measurementWindows: [],
     matches: [],
   };
   const began = Date.now();
@@ -133,6 +134,11 @@ async function baseline(
     await Bun.sleep(Math.max(0, 1000 - (Date.now() - tick)));
   }
   phase.measuredMs = Date.now() - began;
+  phase.measurementWindows?.push({
+    match: null,
+    startedAt: began,
+    endedAt: Date.now(),
+  });
   return phase;
 }
 
@@ -186,7 +192,16 @@ async function measure(
       armed.match.startup = await telemetry(rcon);
       if (await isLive(rcon)) {
         await rcon.command("rwfbots debug reset");
-        await liveWindow(server, rcon, phase, checkpoint);
+        const startedAt = Date.now();
+        try {
+          await liveWindow(server, rcon, phase, checkpoint);
+        } finally {
+          phase.measurementWindows?.push({
+            match: armed.match.id,
+            startedAt,
+            endedAt: Date.now(),
+          });
+        }
         if (phase.measuredMs >= measureMs && (await isLive(rcon)))
           await profileAfterMeasurement(server, armed.match.id);
       }
@@ -207,6 +222,9 @@ test(
     expect(bot.username).not.toBe("");
     await lobby(rcon);
     const inputs = await evidence(server);
+    const runId = randomUUID();
+    const beganAt = Date.now();
+    const timing: { completedAt?: number } = {};
     const probe = Bun.env["STORM_CAPACITY_PROBE_TOTAL"];
     if (probe === undefined) expect(inputs.personalityCount).toBe(512);
     const outDir = path.join(packageRoot, ".cache/e2e/capacity");
@@ -221,6 +239,11 @@ test(
         file,
         JSON.stringify(
           {
+            schema: 2,
+            runId,
+            beganAt,
+            checkpointAt: Date.now(),
+            completedAt: timing.completedAt,
             map: capacityMap(),
             inputs,
             resources: capacityResources(),
@@ -260,6 +283,7 @@ test(
         windows: [],
         telemetry: [],
         memory: [],
+        measurementWindows: [],
         matches: [],
       };
       phases.push(phase);
@@ -268,6 +292,8 @@ test(
       );
       await measure(server, rcon, phase, checkpoint);
     }
+    timing.completedAt = Date.now();
+    await checkpoint();
     const verdicts = capacityVerdicts(phases);
     console.warn(verdicts);
     for (const verdict of verdicts)

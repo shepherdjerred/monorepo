@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.rwf.domain.record.ControlPacket;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Input;
@@ -70,6 +71,28 @@ final class Inputs implements Listener, PluginMessageListener {
 
   int keys(UUID player) {
     return keys.getOrDefault(player, InputFrame.NONE);
+  }
+
+  /** A read-only packet heartbeat; this never consumes a label or declares dataset eligibility. */
+  List<String> recordingStatus(Player player) {
+    var sample = samples.get(player.getUniqueId());
+    if (sample == null)
+      return List.of(
+          "Training controls: not received. Use the Storm recording client for manual play.");
+    var tick = player.getServer().getCurrentTick();
+    var source = sample.packet().automated() ? "automated" : "manual";
+    var acknowledged = sample.packet().observationTick();
+    var observation =
+        acknowledged < 0
+            ? "waiting for combat observations"
+            : (tick - acknowledged) + " ticks since the latest acknowledgment";
+    return List.of(
+        "Training controls: "
+            + source
+            + "; last packet "
+            + (tick - sample.receivedAt())
+            + " ticks ago.",
+        "Combat observations: " + observation + ". Chat and menus pause control capture.");
   }
 
   @EventHandler(priority = EventPriority.MONITOR)

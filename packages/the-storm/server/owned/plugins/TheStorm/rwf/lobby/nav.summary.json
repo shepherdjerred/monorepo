@@ -1,7 +1,10 @@
 {
   "mapId": "lobby",
-  "formatVersion": 1,
-  "generatorVersion": 2,
+  "formatVersion": 2,
+  "generatorVersion": 4,
+  "movementModelVersion": 4,
+  "costUnit": "server-ticks",
+  "damageUnit": "health-points",
   "blocksSha256": "2f2abc3b3409acd51831409c321701dfb71d61784c18f7b0539b1cc3ca3ba460",
   "classificationSha256": "bb07b92a41a9f387fcaa5f5235dd70f83ad0b614bbc66cd07725ac76f6784ed2",
   "bounds": {
@@ -842,24 +845,29 @@
   ],
   "cells": {
     "total": 388800,
-    "walkable": 12845
+    "walkable": 12845,
+    "fluidIntervals": 0,
+    "retainedFluidPortals": 0
   },
   "edges": {
-    "total": 89211,
+    "total": 247108,
+    "damaging": 7488,
+    "maximumRawDamage": 15,
     "CLIMB": 0,
-    "DROP": 2232,
-    "JUMP": 1301,
-    "LEAP": 3118,
+    "DROP": 7227,
+    "JUMP": 3116,
+    "LEAP": 154205,
+    "SWIM": 0,
     "WALK": 82560
   },
-  "regions": 557,
+  "regions": 573,
   "coverPoints": 2700,
-  "chokepoints": 165,
+  "chokepoints": 157,
   "routes": {
     "count": 0,
     "spawnToBomb": []
   },
   "distanceFields": 40,
   "problems": [],
-  "bytes": 1048113
+  "bytes": 1472307
 }

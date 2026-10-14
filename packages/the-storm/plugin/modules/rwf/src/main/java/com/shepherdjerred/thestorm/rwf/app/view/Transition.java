@@ -155,6 +155,7 @@ public record Transition(Change change, List<Effect> effects, MatchState after) 
           new Change.MapReady(ready.map().id(), ready.map().blocksSha256());
       case MatchEvent.MapFailed failed -> new Change.MapFailed(failed.mapId());
       case MatchEvent.SetMap _,
+          MatchEvent.CloseVote _,
           MatchEvent.Skip _,
           MatchEvent.Extend _,
           MatchEvent.AssignTeam _,

@@ -4,6 +4,7 @@
 // packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.domain.match;
 
+import com.shepherdjerred.thestorm.rwf.domain.kit.KitPool;
 import java.time.Duration;
 
 /**
@@ -36,7 +37,8 @@ public record MatchSettings(
     Duration voteLead,
     Duration previewLength,
     Duration freezeLength,
-    boolean carryOver) {
+    boolean carryOver,
+    KitPool kitPool) {
 
   /** Red Warfare's Search and Destroy server: 4 wanted, 2 at least, 60 at most, 90 s countdown. */
   public static final MatchSettings RED_WARFARE =
@@ -51,9 +53,11 @@ public record MatchSettings(
           Duration.ofSeconds(20),
           Duration.ofSeconds(10),
           Duration.ofSeconds(5),
-          true);
+          true,
+          KitPool.ALL);
 
   public MatchSettings {
+    java.util.Objects.requireNonNull(kitPool);
     if (absoluteMinPlayers < 1 || minPlayers < absoluteMinPlayers || maxPlayers < minPlayers) {
       throw new IllegalArgumentException("need 1 <= absoluteMin <= min <= max players");
     }
@@ -88,7 +92,8 @@ public record MatchSettings(
         voteLead,
         previewLength,
         freezeLength,
-        carryOver);
+        carryOver,
+        kitPool);
   }
 
   /** These settings with a different preview, freeze and carry-over, as the flags decide. */
@@ -105,6 +110,23 @@ public record MatchSettings(
         newVoteLead,
         newPreview,
         newFreeze,
-        newCarryOver);
+        newCarryOver,
+        kitPool);
+  }
+
+  public MatchSettings withKitPool(KitPool pool) {
+    return new MatchSettings(
+        minPlayers,
+        absoluteMinPlayers,
+        maxPlayers,
+        countdown,
+        relaxEvery,
+        endLinger,
+        minimumRewardLength,
+        voteLead,
+        previewLength,
+        freezeLength,
+        carryOver,
+        pool);
   }
 }

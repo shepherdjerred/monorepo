@@ -62,7 +62,8 @@ final class VerifierTest {
             baked.cover(),
             baked.chokepoints(),
             baked.routes(),
-            baked.distanceFields());
+            baked.distanceFields(),
+            baked.bombScreens());
     Files.write(folder.resolve(MapFolder.NAV_FILE), NavCodec.encode(foreign));
 
     var failures = Verifier.verify(MapFolder.load(folder));

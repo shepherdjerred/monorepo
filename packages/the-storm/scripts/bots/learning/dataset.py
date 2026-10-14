@@ -119,6 +119,7 @@ class Recording:
     frames: dict[tuple[str, int], tuple[int, int]] = field(default_factory=dict)
     winner: str = "-"
     reason: str = ""
+    end_tick: int = -1
 
 
 # Version 4 adds structured occurrence rows (ballot, kills, chat, world changes,
@@ -145,11 +146,14 @@ def read(stream: TextIO) -> Recording:
     record: Recording | None = None
     version = ""
     ended = False
+    paid: set[str] = set()
     count = len(features())
     for number, line in enumerate(stream, 1):
         row = line.rstrip("\n").split("\t")
         tag = row[0]
         try:
+            if ended and tag != "P":
+                raise ValueError("only settlement rows may follow the end row")
             if tag == "H":
                 if record is not None or len(row) != 7 or row[1] not in READABLE_VERSIONS:
                     raise ValueError("training requires exactly one schema 3 or 4 header")
@@ -189,15 +193,24 @@ def read(stream: TextIO) -> Recording:
             elif tag == "X":
                 if (ended or len(row) != 4
                         or row[2] not in ("RED", "BLUE", "GREEN", "YELLOW", "PURPLE", "-")
-                        or int(row[1]) < 0):
+                        or int(row[1]) < 0
+                        or row[3] not in ("LAST_TEAM_STANDING", "DRAW", "STOPPED")
+                        or (row[2] != "-") != (row[3] == "LAST_TEAM_STANDING")):
                     raise ValueError("invalid or duplicate end row")
                 record.winner, record.reason = row[2], row[3]
+                record.end_tick = int(row[1])
                 ended = True
+            elif tag == "P":
+                if (not ended or len(row) != 3 or row[1] not in record.roster
+                        or record.roster[row[1]][2] or row[1] in paid
+                        or not -(2**63) <= int(row[2]) < 2**63):
+                    raise ValueError("invalid or duplicate settlement row")
+                paid.add(row[1])
             elif tag in OCCURRENCE_FIELDS:
                 if version != "4":
                     raise ValueError(f"occurrence row {tag} requires schema 4")
                 occurrence(row)
-            elif tag not in ("E", "I", "P"):
+            elif tag not in ("E", "I"):
                 raise ValueError(f"unknown row {tag}")
         except (ValueError, IndexError) as error:
             raise ValueError(f"line {number}: {error}") from error
@@ -206,9 +219,16 @@ def read(stream: TextIO) -> Recording:
     for key in (*record.observations, *record.frames):
         if key[0] not in record.roster:
             raise ValueError("sample refers to an unknown actor")
+        if key[1] > record.end_tick:
+            raise ValueError("sample extends beyond the match end")
+    if record.winner != "-" and not any(
+            team == record.winner for team, _, _ in record.roster.values()):
+        raise ValueError("winner is not a rostered team")
     last: dict[str, Controls] = {}
     last_sequence: dict[str, int] = {}
     for control in record.inputs:
+        if control.tick > record.end_tick:
+            raise ValueError("input extends beyond the match end")
         if control.actor not in record.roster or record.roster[control.actor][2]:
             raise ValueError("input actor must be a rostered human")
         previous = last.get(control.actor)
@@ -245,6 +265,9 @@ def action(control: Controls, observed_yaw: int) -> Action:
 def sequences(record: Recording, *, combatants: int = 2) -> tuple[list[CombatSequence], Counter[str]]:
     chunks: list[CombatSequence] = []
     counts: Counter[str] = Counter()
+    if record.reason not in ("LAST_TEAM_STANDING", "DRAW"):
+        counts["incomplete_duel"] = len(record.inputs)
+        return chunks, counts
     names = features()
     hp, known = names.index("HP"), names.index("TARGET_KNOWN")
     current: dict[str, list[Sample]] = {}

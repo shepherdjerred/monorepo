@@ -334,8 +334,7 @@ public final class LobbyLife {
     if (from.isEmpty() || target.isEmpty()) {
       return List.of();
     }
-    return graph
-        .path(from.getAsInt(), target.getAsInt())
+    return LobbyNav.walk(step.input().nav(), from.getAsInt(), target.getAsInt())
         .map(NavPath::toFollow)
         .orElseGet(List::of);
   }

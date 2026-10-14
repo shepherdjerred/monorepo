@@ -254,7 +254,8 @@ public final class BotTicker {
                         && input.self().kit()
                             == com.shepherdjerred.thestorm.rwfbots.domain.world.Kit.TROOPER)
                 ? observations.capture(bot.uuid())
-                : java.util.Optional.empty());
+                : java.util.Optional.empty(),
+            match.nav());
     var commands =
         roster.harness().active(match.matchId())
             ? roster.harness().commands(controls)

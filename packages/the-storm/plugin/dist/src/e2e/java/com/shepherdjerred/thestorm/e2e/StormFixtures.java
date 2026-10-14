@@ -29,6 +29,8 @@ public final class StormFixtures extends JavaPlugin {
   private com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures mapExporter;
   private com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures navigation;
   private com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures pursuit;
+  private com.shepherdjerred.thestorm.e2e.maps.TraversalFixtures traversal;
+  private com.shepherdjerred.thestorm.e2e.maps.HealthFixtures health;
   private com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures closeStarts;
   private com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures detailsExporter;
 
@@ -76,6 +78,7 @@ public final class StormFixtures extends JavaPlugin {
     new DuelFixtures(this).register();
     new InferenceLoadFixtures(this).register();
     new RegressionFixtures(this).register();
+    new CapacityCombatFixtures(this).register();
     new BotTransferFixtures(this).register();
     mapExporter = new com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures(this, world);
     mapExporter.register();
@@ -83,6 +86,10 @@ public final class StormFixtures extends JavaPlugin {
     navigation.register();
     pursuit = new com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures(this, world);
     pursuit.register();
+    traversal = new com.shepherdjerred.thestorm.e2e.maps.TraversalFixtures(this, world);
+    traversal.register();
+    health = new com.shepherdjerred.thestorm.e2e.maps.HealthFixtures(this);
+    health.register();
     closeStarts = new com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures(this);
     closeStarts.register();
     detailsExporter = new com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures(this, world);
@@ -95,6 +102,8 @@ public final class StormFixtures extends JavaPlugin {
     if (mapExporter != null) mapExporter.close();
     if (navigation != null) navigation.close();
     if (pursuit != null) pursuit.close();
+    if (traversal != null) traversal.close();
+    if (health != null) health.close();
     if (closeStarts != null) closeStarts.close();
     if (detailsExporter != null) detailsExporter.close();
   }

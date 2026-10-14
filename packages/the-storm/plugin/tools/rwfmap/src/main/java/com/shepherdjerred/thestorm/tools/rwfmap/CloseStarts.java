@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.tools.rwfmap;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -102,7 +103,8 @@ final class CloseStarts {
     var second = graph.feet(other.getAsInt());
     var clearCorridor = terrain.corridor(first, second);
     var clearSightline = artifact.grid().canSee(first.plus(0, 1.62, 0), second.plus(0, 1.62, 0));
-    var limit = first.horizontalDistance(second) * 1.5;
+    // Keep the same walking-distance detour bound in the graph's server-tick unit.
+    var limit = TraversalCosts.walkingTicks(first.horizontalDistance(second) * 1.5);
     var shortPaths =
         graph.path(node, other.getAsInt()).filter(path -> path.cost() <= limit).isPresent()
             && graph.path(other.getAsInt(), node).filter(path -> path.cost() <= limit).isPresent();

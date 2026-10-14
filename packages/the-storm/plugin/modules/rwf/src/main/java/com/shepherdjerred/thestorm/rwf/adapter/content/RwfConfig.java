@@ -37,12 +37,14 @@ public record RwfConfig(
     Rewards rewards,
     Recording recording,
     LoadTest loadtest,
+    com.shepherdjerred.thestorm.rwf.app.ExperienceSettings experience,
     Map<String, String> quarantine) {
 
   private static final Pattern WORLD = Pattern.compile("[A-Za-z0-9_.-]+");
   private static final Pattern MAP_ID = Pattern.compile("[a-z0-9]+(?:-[a-z0-9]+)*");
 
   public RwfConfig {
+    java.util.Objects.requireNonNull(experience, "experience is required");
     for (var entry : quarantine.entrySet()) {
       if (!MAP_ID.matcher(entry.getKey()).matches()) {
         throw new IllegalArgumentException("quarantine names no map id: " + entry.getKey());
@@ -52,6 +54,7 @@ public record RwfConfig(
       }
     }
     quarantine = Collections.unmodifiableMap(new TreeMap<>(quarantine));
+    new com.shepherdjerred.thestorm.rwf.domain.kit.KitPool(experience.kits());
   }
 
   /**
@@ -107,7 +110,8 @@ public record RwfConfig(
         match.voteLead(),
         match.previewLength(),
         match.freezeLength(),
-        true);
+        true,
+        new com.shepherdjerred.thestorm.rwf.domain.kit.KitPool(experience.kits()));
   }
 
   /**

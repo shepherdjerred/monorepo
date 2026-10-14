@@ -178,15 +178,12 @@ final class PlaybookTest {
 
   @Test
   void theStrategyNotProximityPicksTheNuke() {
-    var snapshot = snapshot(0, reds(1));
-    assertThat(TeamBrain.objective(Strategy.RUSH, snapshot, RED).orElseThrow().id())
+    assertThat(deal(Strategy.RUSH, reds(1), 0).plan().objective().orElseThrow())
         .isEqualTo(BLUE_BOMB);
-    assertThat(TeamBrain.objective(Strategy.SPLIT, snapshot, RED).orElseThrow().id())
+    assertThat(deal(Strategy.SPLIT, reds(1), 0).plan().objective().orElseThrow())
         .isEqualTo(BLUE_BOMB);
-    assertThat(TeamBrain.objective(Strategy.HUNT, snapshot, RED).orElseThrow().id())
-        .isEqualTo(NUKE);
-    assertThat(TeamBrain.objective(Strategy.TURTLE, snapshot, RED).orElseThrow().id())
-        .isEqualTo(NUKE);
+    assertThat(deal(Strategy.HUNT, reds(1), 0).plan().objective().orElseThrow()).isEqualTo(NUKE);
+    assertThat(deal(Strategy.TURTLE, reds(1), 0).plan().objective().orElseThrow()).isEqualTo(NUKE);
   }
 
   @Test

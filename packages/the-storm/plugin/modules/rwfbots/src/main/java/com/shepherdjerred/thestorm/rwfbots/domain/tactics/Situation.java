@@ -104,9 +104,28 @@ public record Situation(
     return snapshot.bombsArmableBy(self.team());
   }
 
-  /** The own bomb with a lit fuse, if any. */
+  /** The assigned own fuse, or the earliest fuse before the next team deal. */
   public Optional<BombView> litOwnBomb() {
-    return ownBombs().stream().filter(bomb -> bomb.state().isLit()).findFirst();
+    return board
+        .plan()
+        .objective()
+        .flatMap(snapshot::bomb)
+        .filter(bomb -> bomb.belongsTo(self.team()) && bomb.state().isLit())
+        .or(
+            () ->
+                ownBombs().stream()
+                    .filter(bomb -> bomb.state().isLit())
+                    .min(
+                        java.util.Comparator.comparingLong(Situation::fuseTicks)
+                            .thenComparing(BombView::id)));
+  }
+
+  private static long fuseTicks(BombView bomb) {
+    return switch (bomb.state()) {
+      case BombState.Armed(var ticks) -> ticks;
+      case BombState.Defusing(var _, var _, var ticks) -> ticks;
+      default -> throw new IllegalArgumentException("defuse target needs a lit fuse");
+    };
   }
 
   /** A bomb a teammate is arming right now. */

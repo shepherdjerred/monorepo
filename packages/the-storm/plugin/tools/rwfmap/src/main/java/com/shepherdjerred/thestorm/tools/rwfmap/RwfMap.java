@@ -31,6 +31,8 @@ public final class RwfMap {
       usage:
         rwfmap bake <mapDir> [--out <file>]   bake nav.rwfnav and nav.summary.json
         rwfmap verify <mapDir>                 fail if the committed nav files are stale
+        rwfmap upgrade-model3 <mapDir>        explicitly add exact terrain climb metadata to model 3
+        rwfmap verify-health <mapDir>          audit every spawn to selected fuse workers with 19 HP
         rwfmap verify-details <mapDir>         validate allowed payloads against terrain
         rwfmap close-starts <mapDir>           find grounded close-combat starts on original terrain
         rwfmap bake-lobby <lobbyDir>           bake the lobby's nav files
@@ -50,15 +52,17 @@ public final class RwfMap {
       return USAGE;
     }
     var rest = Arrays.asList(args).subList(2, args.length);
+    if (!rest.isEmpty() && !args[0].equals("bake")) return usage(err);
     try {
       return switch (args[0]) {
         case "bake" -> bake(Path.of(args[1]), rest, out, err);
-        case "verify" -> rest.isEmpty() ? verify(Path.of(args[1]), out, err) : usage(err);
-        case "verify-details" -> rest.isEmpty() ? verifyDetails(Path.of(args[1]), out) : usage(err);
-        case "close-starts" -> rest.isEmpty() ? closeStarts(Path.of(args[1]), out) : usage(err);
-        case "bake-lobby" -> rest.isEmpty() ? bakeLobby(Path.of(args[1]), out, err) : usage(err);
-        case "verify-lobby" ->
-            rest.isEmpty() ? verifyLobby(Path.of(args[1]), out, err) : usage(err);
+        case "verify" -> verify(Path.of(args[1]), out, err);
+        case "upgrade-model3" -> ModelUpgrade.model3(Path.of(args[1]), out);
+        case "verify-health" -> verifyHealth(Path.of(args[1]), out, err);
+        case "verify-details" -> verifyDetails(Path.of(args[1]), out);
+        case "close-starts" -> closeStarts(Path.of(args[1]), out);
+        case "bake-lobby" -> bakeLobby(Path.of(args[1]), out, err);
+        case "verify-lobby" -> verifyLobby(Path.of(args[1]), out, err);
         default -> usage(err);
       };
     } catch (IllegalArgumentException | IllegalStateException | UncheckedIOException e) {
@@ -94,6 +98,20 @@ public final class RwfMap {
     var map = MapFolder.load(folder);
     out.println(CloseStartReport.of(map, CloseStarts.select(map, Baker.bake(map))).json());
     return OK;
+  }
+
+  private static int verifyHealth(Path folder, PrintStream out, PrintStream err) {
+    return healthReport(HealthAudit.verify(MapFolder.load(folder)), out, err);
+  }
+
+  static int healthReport(HealthAudit.Report report, PrintStream out, PrintStream err) {
+    out.println(report.json());
+    if (report.passed()) return OK;
+    err.println(
+        "rwfmap: "
+            + report.map()
+            + " has selected fuse workers outside the cumulative 19 HP budget");
+    return FAILED;
   }
 
   private static int bake(Path folder, List<String> options, PrintStream out, PrintStream err) {

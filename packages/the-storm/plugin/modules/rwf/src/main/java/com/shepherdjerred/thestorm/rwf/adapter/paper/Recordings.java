@@ -73,6 +73,17 @@ final class Recordings {
     return recording != null;
   }
 
+  List<String> status(Player player) {
+    var lines = new ArrayList<String>();
+    var state = enabled() ? "enabled; waiting for a match" : "disabled";
+    if (active()) state = "active";
+    lines.add("Match recording: " + state + ".");
+    lines.addAll(inputs.recordingStatus(player));
+    lines.add(
+        "Training requires manual Trooper duels; whole-match eligibility is checked after recording.");
+    return List.copyOf(lines);
+  }
+
   /** The pseudonym of {@code id}; empty when recording is off. */
   Optional<String> pseudonym(CombatantId id) {
     return pseudonyms.map(p -> p.of(id.uuid()));

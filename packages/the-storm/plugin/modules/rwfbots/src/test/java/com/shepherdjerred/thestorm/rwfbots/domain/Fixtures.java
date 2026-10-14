@@ -47,7 +47,8 @@ public final class Fixtures {
         true,
         false,
         false,
-        -1);
+        -1,
+        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
   }
 
   public static Levers levers(double skill) {

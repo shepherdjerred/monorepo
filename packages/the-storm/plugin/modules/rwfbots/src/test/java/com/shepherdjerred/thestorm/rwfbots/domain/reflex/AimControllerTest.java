@@ -11,6 +11,15 @@ import org.junit.jupiter.api.Test;
 final class AimControllerTest {
 
   @Test
+  void aimSettlesGraduallyRatherThanSnappingToSmallTargetChanges() {
+    var skill = levers(1).with(Lever.AIM_ERROR_DEG, 0.5);
+    var before = AimState.looking(Facing.SOUTH);
+    var after = AimController.aim(before, new Facing(8, 0), skill, new SplittableRandom(1));
+    assertThat(before.look().differenceTo(after.look())).isBetween(1.0, 4.5);
+    assertThat(after.look().differenceTo(new Facing(8, 0))).isGreaterThan(3.0);
+  }
+
+  @Test
   void convergesOnAStationaryTargetWithinTheNoiseBand() {
     var levers = levers(0.9).with(Lever.AIM_ERROR_DEG, 0.5);
     var random = new SplittableRandom(3);

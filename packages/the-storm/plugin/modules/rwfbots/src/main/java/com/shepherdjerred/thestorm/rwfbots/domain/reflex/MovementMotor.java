@@ -7,6 +7,9 @@ public final class MovementMotor {
 
   public static final double WALK_SPEED = 0.215;
   public static final double SPRINT_SPEED = 0.28;
+  public static final double JUMP_SPEED = 0.42;
+  private static final double SPRINT_JUMP_IMPULSE = 0.2;
+  private static final double SWIM_VERTICAL_SPEED = 0.16;
   private static final double GROUND_ACCELERATION = 0.1;
   private static final double AIR_ACCELERATION = 0.02;
 
@@ -27,9 +30,44 @@ public final class MovementMotor {
     var horizontal = heading.horizontal();
     var target = horizontal.isZero() ? Vec3.ZERO : horizontal.normalized().scale(speed);
     var delta = target.minus(velocity.horizontal());
+    // Air input can turn or oppose motion, but holding forward must not erase launch momentum.
+    if (!onGround && !horizontal.isZero()) {
+      var direction = horizontal.normalized();
+      var forward = delta.dot(direction);
+      if (forward < 0) delta = delta.minus(direction.scale(forward));
+    }
     var acceleration =
         (onGround ? GROUND_ACCELERATION : AIR_ACCELERATION) * (sprint ? 1.3 : 1) * slowdown;
     var change = delta.length() > acceleration ? delta.normalized().scale(acceleration) : delta;
     return velocity.plus(change);
+  }
+
+  /** A sprint launch follows travel direction, independently of where combat aiming faces. */
+  public static Vec3 jump(Vec3 velocity, boolean sprint) {
+    var horizontal = velocity.horizontal();
+    var impulse =
+        sprint && !horizontal.isZero()
+            ? horizontal.normalized().scale(SPRINT_JUMP_IMPULSE)
+            : Vec3.ZERO;
+    return horizontal.plus(impulse).plus(0, JUMP_SPEED, 0);
+  }
+
+  /**
+   * Directed fluid input: ascend, descend, or hold a submerged waypoint without overriding land
+   * gravity.
+   */
+  public static double swimVertical(double heightError) {
+    if (!Double.isFinite(heightError))
+      throw new IllegalArgumentException("water height error must be finite");
+    return Math.clamp(heightError * 0.5, -SWIM_VERTICAL_SPEED, SWIM_VERTICAL_SPEED);
+  }
+
+  public static double climbVertical(double heightError) {
+    if (!Double.isFinite(heightError))
+      throw new IllegalArgumentException("climb height error must be finite");
+    // A ledge collision requires clearing its exact height, rather than approaching from below.
+    return heightError > 0
+        ? Math.clamp(heightError * 0.5, 0.08, 0.2)
+        : Math.clamp(heightError * 0.5, -0.15, 0);
   }
 }

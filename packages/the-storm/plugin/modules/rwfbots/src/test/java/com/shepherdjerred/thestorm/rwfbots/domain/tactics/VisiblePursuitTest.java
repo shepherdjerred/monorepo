@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Suspicion;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
@@ -104,10 +105,22 @@ final class VisiblePursuitTest {
             new ReflexInput(self, snapshot(self, enemy), route, Optional.of(enemy), 0),
             new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
             new SplittableRandom(196));
+    var first = path.getFirst();
+    assertThat(first.hop()).isEqualTo(Hop.LEAP);
+    var launch = first.launch().orElseThrow();
     assertThat(step.commands())
         .filteredOn(BodyCommand.MoveToward.class::isInstance)
         .singleElement()
-        .isEqualTo(new BodyCommand.MoveToward(path.getFirst().pos(), true));
+        .isEqualTo(new BodyCommand.MoveToward(launch.runUpStart(), true));
+    assertThat(step.state().activeJump())
+        .hasValueSatisfying(
+            active -> {
+              assertThat(active.waypoint()).isEqualTo(first);
+              assertThat(active.stage()).isEqualTo(ActiveJump.Stage.BACKUP);
+            });
+    var desired = Facing.looking(self.eye(), enemy.pos().plus(0, 1.3, 0));
+    assertThat(step.state().aim().look().differenceTo(desired))
+        .isLessThan(self.facing().differenceTo(desired));
     assertThat(step.commands())
         .noneMatch(
             command ->

@@ -929,8 +929,11 @@ final class KitPowers {
 
   /** Whether {@code player} lands without fall damage now. */
   boolean noFall(UUID player) {
-    var until = noFall.get(player);
-    return until != null && runner.now().isBefore(until);
+    return noFallUntil(player).isPresent();
+  }
+
+  Optional<Instant> noFallUntil(UUID player) {
+    return Optional.ofNullable(noFall.get(player)).filter(until -> runner.now().isBefore(until));
   }
 
   /** Takes every kit change off {@code player}: their health modifier, bar and frozen hands. */

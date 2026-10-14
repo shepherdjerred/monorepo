@@ -49,12 +49,6 @@ public final class CitizensBodies implements Bodies, Listener {
   /** An attack speed high enough that the 1.9 cooldown never applies to a bot's swing. */
   static final double ATTACK_SPEED = 1024;
 
-  /** Vanilla's jump velocity. */
-  static final double JUMP_VELOCITY = 0.42;
-
-  /** Upward stroke while steering through water toward a higher waypoint. */
-  private static final double SWIM_UPWARD_VELOCITY = 0.16;
-
   private final NPCRegistry registry;
   private final Map<UUID, NPC> npcs = new HashMap<>();
   private final Set<UUID> known = new HashSet<>();
@@ -207,13 +201,13 @@ public final class CitizensBodies implements Bodies, Listener {
               DoorUse.ahead(player, heading);
               steer(player, new Vec3(heading.getX(), 0, heading.getZ()), sprint);
               var location = requireNonNull(player.getLocation());
-              if (target.getY() > location.getY() + 0.1 && inWater(player)) {
+              if (player.isClimbing()) {
+                player.setVelocity(
+                    player.getVelocity().setY(MovementMotor.climbVertical(heading.getY())));
+              } else if (BodyFluids.inWater(player)) {
                 var velocity = player.getVelocity();
-                velocity.setY(Math.max(velocity.getY(), SWIM_UPWARD_VELOCITY));
+                velocity.setY(MovementMotor.swimVertical(target.getY() - location.getY()));
                 player.setVelocity(velocity);
-              }
-              if (heading.getY() > 0.1 && player.isClimbing()) {
-                player.setVelocity(player.getVelocity().setY(0.2));
               }
             });
   }
@@ -225,31 +219,31 @@ public final class CitizensBodies implements Bodies, Listener {
     if (npc.getNavigator().isNavigating()) {
       npc.getNavigator().cancelNavigation();
     }
-    entity(bot).ifPresent(player -> steer(player, Vec3.ZERO, false));
+    entity(bot)
+        .ifPresent(
+            player -> {
+              steer(player, Vec3.ZERO, false);
+              if (BodyFluids.inWater(player) || player.isClimbing())
+                player.setVelocity(player.getVelocity().setY(0));
+            });
   }
 
   private static void steer(Player player, Vec3 heading, boolean sprint) {
+    // Citizens' custom fluid movement does not perform vanilla's accumulated-fall reset.
+    // Cancel only at actual occupied water/climb contact, including native waterlogged data.
+    if (BodyFluids.cancelsFall(player)) player.setFallDistance(0);
     player.setSprinting(sprint);
     var velocity = player.getVelocity();
     var slowdown = player.hasActiveItem() ? 0.2 : player.isSneaking() ? 0.3 : 1.0;
     var next =
         MovementMotor.steer(
             new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
-            new MovementMotor.Control(heading, sprint, SnapshotCapture.onGround(player), slowdown));
+            new MovementMotor.Control(
+                heading,
+                sprint,
+                SnapshotCapture.onGround(player) || BodyFluids.inWater(player),
+                slowdown));
     player.setVelocity(new org.bukkit.util.Vector(next.x(), next.y(), next.z()));
-  }
-
-  /**
-   * Citizens AI is disabled for these bodies, so explicitly stroke upward when water is in the
-   * entity's occupied blocks and its waypoint is higher. Checking blocks also covers the player NPC
-   * case where Paper's {@code isInWater()} does not report the fluid collision.
-   */
-  private static boolean inWater(Player player) {
-    var feet = requireNonNull(player.getLocation());
-    var eyes = requireNonNull(player.getEyeLocation());
-    return feet.getBlock().isLiquid()
-        || feet.clone().subtract(0, 0.1, 0).getBlock().isLiquid()
-        || eyes.getBlock().isLiquid();
   }
 
   @Override
@@ -261,7 +255,15 @@ public final class CitizensBodies implements Bodies, Listener {
   public void jump(UUID bot) {
     entity(bot)
         .filter(SnapshotCapture::onGround)
-        .ifPresent(player -> player.setVelocity(player.getVelocity().setY(JUMP_VELOCITY)));
+        .ifPresent(
+            player -> {
+              var velocity = player.getVelocity();
+              var launch =
+                  MovementMotor.jump(
+                      new Vec3(velocity.getX(), velocity.getY(), velocity.getZ()),
+                      player.isSprinting());
+              player.setVelocity(new org.bukkit.util.Vector(launch.x(), launch.y(), launch.z()));
+            });
   }
 
   @Override

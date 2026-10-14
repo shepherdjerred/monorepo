@@ -69,6 +69,18 @@ final class Voting {
   }
 
   /** The vote closes now: the winner is announced and loaded. */
+  static Optional<MatchError> closeVote(Draft draft) {
+    if (!(draft.phase instanceof Phase.Lobby) && !(draft.phase instanceof Phase.Countdown)) {
+      return Optional.of(MatchError.NOT_PRE_GAME);
+    }
+    if (draft.ballot().filter(Ballot::opened).isEmpty()) {
+      return Optional.of(MatchError.NO_BALLOT);
+    }
+    close(draft);
+    return Optional.empty();
+  }
+
+  /** The vote closes now: the winner is announced and loaded. */
   static void close(Draft draft) {
     var ballot = draft.ballot().orElseThrow();
     if (ballot.closed()) {

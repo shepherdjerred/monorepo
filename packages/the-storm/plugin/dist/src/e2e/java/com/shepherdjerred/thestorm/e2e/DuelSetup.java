@@ -17,6 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 record DuelSetup(
     int schema,
     String kind,
+    String authoredBaseline,
     UUID match,
     long seed,
     String side,
@@ -53,6 +54,7 @@ record DuelSetup(
   private record Spec(
       int version,
       String kind,
+      String authoredBaseline,
       String world,
       List<Long> worldTimes,
       String kit,
@@ -66,6 +68,7 @@ record DuelSetup(
     roster = List.copyOf(roster);
     if (schema != SPEC.version()
         || !kind.equals(SPEC.kind())
+        || !authoredBaseline.equals(SPEC.authoredBaseline())
         || !map.equals(scenario.map())
         || !scenario.equals(DuelMapScenario.forMap(map))
         || !world.equals(SPEC.world())
@@ -92,7 +95,8 @@ record DuelSetup(
     }
   }
 
-  static DuelSetup capture(MatchState match, Selection selection, Function<UUID, Player> bodies) {
+  static DuelSetup capture(
+      MatchState match, Selection selection, Function<UUID, Player> bodies, CombatHarness harness) {
     if (match.phase() != MatchState.Phase.LIVE || match.combatants().size() != 2)
       throw new IllegalStateException("Native setup requires the original live duel");
     var roster = new ArrayList<Fighter>();
@@ -120,6 +124,12 @@ record DuelSetup(
     return new DuelSetup(
         SPEC.version(),
         SPEC.kind(),
+        harness
+            .baseline(match.matchId())
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "native duel lacks the frozen hard authored baseline")),
         match.matchId(),
         selection.seed(),
         selection.side(),
@@ -142,8 +152,9 @@ record DuelSetup(
     try (var source = CombatHarness.class.getResourceAsStream("/rwf-duel-setup.json")) {
       if (source == null) throw new IllegalStateException("Native duel setup contract missing");
       var spec = json.readValue(source, Spec.class);
-      if (spec.version() != 2
+      if (spec.version() != 3
           || !spec.kind().equals("rwf-native-duel-setup")
+          || !spec.authoredBaseline().equals(CombatHarness.AUTHORED_BASELINE)
           || !spec.fields().equals(names(DuelSetup.class))
           || !spec.fighter().equals(names(Fighter.class)))
         throw new IllegalStateException("Native duel setup contract is incompatible");

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import java.util.BitSet;
 import java.util.Optional;
 import java.util.Set;
@@ -15,13 +16,13 @@ import java.util.function.IntToDoubleFunction;
 public final class RoutePenalty {
 
   /** The most a noisy patch adds per node. */
-  public static final double NOISE = 0.6;
+  public static final double NOISE = TraversalCosts.walkingTicks(0.6);
 
   /** The toll per node a teammate is about to walk, or stands next to. */
-  public static final double OCCUPIED = 1.2;
+  public static final double OCCUPIED = TraversalCosts.walkingTicks(1.2);
 
   /** The toll per node outside the assigned lane's corridor. */
-  public static final double OFF_LANE = 0.8;
+  public static final double OFF_LANE = TraversalCosts.walkingTicks(0.8);
 
   /** Noise is constant over square patches this many blocks wide, so it bends whole routes. */
   static final int PATCH_SHIFT = 2;
@@ -68,11 +69,18 @@ public final class RoutePenalty {
       return true;
     }
     for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
-      if (occupied.get(graph.edgeTarget(edge))) {
+      var target = graph.edgeTarget(edge);
+      if (occupied.get(target) && adjacent(graph, node, target)) {
         return true;
       }
     }
     return false;
+  }
+
+  /** Long jump and compressed fluid edges are routes, rather than neighboring bodies. */
+  private static boolean adjacent(NavGraph graph, int node, int target) {
+    var delta = graph.feet(node).minus(graph.feet(target));
+    return Math.abs(delta.x()) <= 1 && Math.abs(delta.z()) <= 1 && Math.abs(delta.y()) <= 1.5;
   }
 
   /** A uniform value in [0, 1) for patch ({@code x}, {@code z}) under {@code seed}. */

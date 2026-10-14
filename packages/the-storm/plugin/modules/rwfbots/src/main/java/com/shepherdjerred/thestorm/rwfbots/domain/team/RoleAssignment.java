@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,17 @@ final class RoleAssignment {
     var result = new HashMap<CombatantId, String>();
     for (var i = 0; i < bots.size(); i++) result.put(bots.get(i).id(), slots.get(columns[i]).key());
     return result;
+  }
+
+  List<CombatantId> workerCandidates(Slot worker, List<float[]> distances) {
+    var column = slots.indexOf(worker);
+    if (column < 0) throw new IllegalArgumentException("worker is absent from prepared slots");
+    var indexes = new ArrayList<Integer>();
+    for (var index = 0; index < bots.size(); index++) indexes.add(index);
+    indexes.sort(
+        Comparator.<Integer>comparingDouble(index -> distance(index, column, distances))
+            .thenComparing(index -> bots.get(index).id()));
+    return indexes.stream().map(index -> bots.get(index).id()).toList();
   }
 
   private double distance(int bot, int slot, List<float[]> distances) {

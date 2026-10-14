@@ -15,6 +15,7 @@
     "vitest.load.config.ts",
     "vitest.capacity.config.ts",
     "vitest.capacity-native.config.ts",
+    "vitest.capacity-frame-pacing.config.ts",
     "eslint.config.ts"
   ]
 }

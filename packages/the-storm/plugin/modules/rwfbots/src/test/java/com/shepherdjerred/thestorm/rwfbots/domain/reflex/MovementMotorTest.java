@@ -35,4 +35,33 @@ final class MovementMotorTest {
     assertThat(air.x()).isCloseTo(0.02, within(1e-9));
     assertThat(drawing.x()).isCloseTo(0.02, within(1e-9));
   }
+
+  @Test
+  void sprintLaunchFollowsTravelAndAirInputPreservesItsMomentum() {
+    var launch = MovementMotor.jump(new Vec3(0.28, 0, 0), true);
+    assertThat(launch.x()).isCloseTo(0.48, within(1e-9));
+    assertThat(launch.y()).isEqualTo(0.42);
+    var next =
+        MovementMotor.steer(launch, new MovementMotor.Control(new Vec3(1, 0, 0), true, false, 1));
+    assertThat(next.x()).isEqualTo(launch.x());
+    assertThat(next.y()).isEqualTo(launch.y());
+    var reverse =
+        MovementMotor.steer(launch, new MovementMotor.Control(new Vec3(-1, 0, 0), true, false, 1));
+    assertThat(reverse.x()).isLessThan(launch.x());
+  }
+
+  @Test
+  void submergedSteeringCanHoldRiseAndDiveFromTheSameState() {
+    assertThat(MovementMotor.swimVertical(0)).isZero();
+    assertThat(MovementMotor.swimVertical(2)).isEqualTo(0.16);
+    assertThat(MovementMotor.swimVertical(-2)).isEqualTo(-0.16);
+    assertThat(MovementMotor.swimVertical(0.1)).isCloseTo(0.05, within(1e-9));
+  }
+
+  @Test
+  void aClimbExitClearsTheLedgeInsteadOfApproachingItsHeightForever() {
+    assertThat(MovementMotor.climbVertical(0.0004)).isEqualTo(0.08);
+    assertThat(MovementMotor.climbVertical(0)).isZero();
+    assertThat(MovementMotor.climbVertical(-2)).isEqualTo(-0.15);
+  }
 }

@@ -104,7 +104,7 @@ final class RwfBotsFlowTest {
   @Test
   void theLobbyIsFilledWithPersonalitiesThatPickTheirKits() {
     var harness = start();
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
 
     var bots = lobby(alice, 3);
 
@@ -130,7 +130,7 @@ final class RwfBotsFlowTest {
     var attachment = harness.paper().roster().harness();
     var controller = new AuthoredController();
     attachment.attachAuthored(4, controller);
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 4);
     assertThat(attachment.active(FakeMatch.MATCH_ID)).isTrue();
     assertThat(attachment.controlled(FakeMatch.MATCH_ID)).isFalse();
@@ -165,7 +165,7 @@ final class RwfBotsFlowTest {
     var harness = start();
     var controller = new AuthoredController();
     harness.paper().roster().harness().attachAuthored(4, controller);
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 4);
     goLive(alice, bots);
     alice.teleport(new Location(harness.world, 200.5, 1, 200.5));
@@ -185,7 +185,7 @@ final class RwfBotsFlowTest {
     var harness = harness();
     var controller = new AuthoredController();
     harness.paper().roster().harness().attachAuthored(1, controller);
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 1);
     goLive(alice, bots);
     assertThat(harness.paper().loop().profiles())
@@ -244,7 +244,7 @@ final class RwfBotsFlowTest {
   @Test
   void aMapWithoutACurrentNavArtifactRunsHumansOnly() {
     var harness = start();
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     harness.match.fireJoin(new CombatantId.Human(alice.getUniqueId()), alice.getName());
     // The map was chosen with other blocks than the artifact was baked from.
     var stale = new FakeMatch("f".repeat(64));
@@ -278,7 +278,7 @@ final class RwfBotsFlowTest {
     var harness = start();
     var catalog = PersonalityFiles.load(directory);
     var human = catalog.active().getFirst();
-    var alice = harness.server.addPlayer(human.name().toUpperCase(Locale.ROOT));
+    var alice = harness.player(human.name().toUpperCase(Locale.ROOT));
     harness.match.fireJoin(new CombatantId.Human(alice.getUniqueId()), alice.getName());
     harness.match.fireMapChosen();
     var first = harness.roster().fill(FakeMatch.MATCH_ID, 1).getFirst();
@@ -300,7 +300,7 @@ final class RwfBotsFlowTest {
   @Test
   void liveBotsThinkMoveAndStartNewLivesWhenTheyDie() {
     var harness = start();
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 4);
     harness.match.actions();
 
@@ -344,7 +344,7 @@ final class RwfBotsFlowTest {
   @Test
   void aMatchThatEndsUnderOneBotsOrdersDrivesNoOtherBotThatTick() {
     var harness = start();
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 4);
     goLive(alice, bots);
     harness.ticks(30);
@@ -381,7 +381,7 @@ final class RwfBotsFlowTest {
   @Test
   void aBotKilledByAnEarlierOrderCannotActFromTheOldSnapshot() {
     var harness = start();
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 4);
     goLive(alice, bots);
     harness.ticks(30);
@@ -415,7 +415,7 @@ final class RwfBotsFlowTest {
   @Test
   void aFinishedMatchRatesThePersonalitiesWritesTracesAndAnswersTheDebugCommand() {
     var harness = start();
-    var alice = harness.server.addPlayer("Alice");
+    var alice = harness.player("Alice");
     var bots = lobby(alice, 2);
     goLive(alice, bots);
     harness.ticks(20);
@@ -427,7 +427,7 @@ final class RwfBotsFlowTest {
     assertThat(harness.paper().roster().bot(bots.getFirst().uuid()).orElseThrow().tally().plants())
         .isEqualTo(1);
 
-    var operator = harness.server.addPlayer("Op");
+    var operator = harness.player("Op");
     operator.setOp(true);
     operator.performCommand("rwfbots debug");
     var lines = new ArrayList<String>();

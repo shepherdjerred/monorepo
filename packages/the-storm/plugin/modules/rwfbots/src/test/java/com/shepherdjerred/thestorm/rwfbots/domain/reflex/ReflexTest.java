@@ -62,6 +62,75 @@ final class ReflexTest {
   }
 
   @Test
+  void teammatesOnAnotherFloorDoNotPushTheFighterSideways() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
+    var ally = combatant(3, RED, new Vec3(5.5, 5, 7.5));
+    var target = combatant(2, BLUE, new Vec3(8.3, 1, 5.5));
+    var decision = fight(self, target, 1);
+    var context = context(levers(1));
+    var without =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self, world(1, List.of(self, target), List.of()), decision, Optional.of(target), 0),
+            context,
+            new SplittableRandom(7));
+    var above =
+        Reflex.tick(
+            ReflexState.initial(self.facing()),
+            new ReflexInput(
+                self,
+                world(1, List.of(self, target, ally), List.of()),
+                decision,
+                Optional.of(target),
+                0),
+            context,
+            new SplittableRandom(7));
+    assertThat(above.commands()).isEqualTo(without.commands());
+  }
+
+  @Test
+  void aRetreatingBotReturnsContactHitsWithoutAbandoningItsEscapeRoute() {
+    var self = combatant(1, RED, new Vec3(5.5, 1, 5.5)).withFacing(new Facing(-90, 0));
+    var target = combatant(2, BLUE, new Vec3(8, 1, 5.5));
+    var destination = new Vec3(2.5, 1, 5.5);
+    var decision =
+        new Decision(
+            self.id(),
+            Option.RETREAT,
+            Optional.of(target.id()),
+            List.of(new Waypoint(destination, Hop.WALK)),
+            Stance.EVASIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "retreat",
+            1,
+            0);
+    var state = ReflexState.initial(self.facing());
+    var random = new SplittableRandom(7);
+    var attacks = 0;
+    for (var tick = 1; tick <= 12; tick++) {
+      var step =
+          Reflex.tick(
+              state,
+              new ReflexInput(
+                  self,
+                  world(tick, List.of(self, target), List.of()),
+                  decision,
+                  Optional.of(target),
+                  0),
+              context(levers(1)),
+              random);
+      assertThat(step.commands()).contains(new BodyCommand.MoveToward(destination, true));
+      attacks +=
+          (int) step.commands().stream().filter(BodyCommand.Attack.class::isInstance).count();
+      state = step.state();
+    }
+    assertThat(attacks).isGreaterThan(0);
+  }
+
+  @Test
   void aLongSmoothedFinalSegmentStillSeparatesButAReachedGoalDoesNotOrbit() {
     assertThat(walkNear(new Vec3(12.5, 1, 5.5)).waypoint().z()).isLessThan(5.5);
     assertThat(walkNear(new Vec3(6.5, 1, 5.5)).waypoint()).isEqualTo(new Vec3(6.5, 1, 5.5));

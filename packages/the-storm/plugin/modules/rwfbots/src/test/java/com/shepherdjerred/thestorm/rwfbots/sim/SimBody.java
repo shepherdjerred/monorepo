@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TeamId;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,13 +46,17 @@ final class SimBody {
   boolean alive = true;
   int heldSlot = 0;
   boolean sprinting;
+  boolean sneaking;
   boolean onGround = true;
+  Vec3 velocity = Vec3.ZERO;
+  double fallDistance;
+  TraversalState traversal = TraversalState.UNMODIFIED;
   boolean usingItem;
   long useStart = -1;
   boolean invisible;
   boolean disguised;
   long lastHurt = -1;
-  int gapples = 3;
+  int gapples;
   Optional<Vec3> moveTarget = Optional.empty();
   long jumpTick = -100;
 
@@ -86,6 +91,7 @@ final class SimBody {
     this.kit = spawn.kit();
     this.pos = spawn.pos();
     this.previousPos = spawn.pos();
+    this.gapples = spawn.kit().hasGapples() ? 3 : 0;
   }
 
   CombatantView view(long tick) {
@@ -99,7 +105,7 @@ final class SimBody {
         pos.minus(previousPos),
         look.yaw(),
         look.pitch(),
-        Math.clamp(health, 0, 20),
+        Math.clamp(health, 0, traversal.maxHealth()),
         absorption,
         armor,
         heldSlot,
@@ -107,7 +113,27 @@ final class SimBody {
         onGround,
         usingItem,
         invisible,
-        lastHurt);
+        lastHurt,
+        capabilities());
+  }
+
+  private TraversalState capabilities() {
+    return new TraversalState(
+        traversal.maySprint(),
+        traversal.safeFallDistance(),
+        traversal.fallDamageMultiplier(),
+        traversal.fallProtectionPoints(),
+        traversal.resistanceAmplifier(),
+        traversal.resistanceUntilTick(),
+        traversal.noFallUntilTick(),
+        traversal.slowFallingUntilTick(),
+        gapples,
+        traversal.regenerationAmplifier(),
+        traversal.regenerationUntilTick(),
+        traversal.jumpBoostAmplifier(),
+        traversal.jumpBoostUntilTick(),
+        traversal.maxHealth(),
+        fallDistance);
   }
 
   /** Applies {@code damage} through absorption, then health; returns whether it was fatal. */

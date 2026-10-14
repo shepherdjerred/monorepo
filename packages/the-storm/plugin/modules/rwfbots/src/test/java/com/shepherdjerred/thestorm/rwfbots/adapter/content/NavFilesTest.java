@@ -72,12 +72,13 @@ final class NavFilesTest {
             SYNTHETIC.cover(),
             SYNTHETIC.chokepoints(),
             SYNTHETIC.routes(),
-            SYNTHETIC.distanceFields());
+            SYNTHETIC.distanceFields(),
+            SYNTHETIC.bombScreens());
     Files.write(mapFolder("synthetic").resolve(NavFiles.FILE_NAME), NavCodec.encode(old));
     var loaded = NavFiles.load(directory);
     assertThat(loaded.artifacts()).isEmpty();
     assertThat(loaded.problems())
-        .containsEntry("synthetic", "nav.rwfnav uses an obsolete generator; rebake the map");
+        .containsEntry("synthetic", "nav.rwfnav does not decode: unsupported generator version 1");
   }
 
   @Test

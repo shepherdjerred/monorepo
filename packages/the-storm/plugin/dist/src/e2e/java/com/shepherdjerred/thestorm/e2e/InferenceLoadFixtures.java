@@ -345,7 +345,10 @@ final class InferenceLoadFixtures implements BasicCommand, CombatHarness.Control
     requests.add(request);
     observed++;
     var action = inference.orElseThrow().action(request);
-    if (!CombatCommands.eligible(frame.authored().commands(), frame.input())) {
+    if (!CombatCommands.eligible(frame.controls())
+        || action
+            .filter(ticket -> !CombatCommands.eligible(frame.controls(), ticket))
+            .isPresent()) {
       ineligible++;
       return frame.authored().commands();
     }
@@ -358,6 +361,6 @@ final class InferenceLoadFixtures implements BasicCommand, CombatHarness.Control
     if (age < 0 || age > 2) throw new IllegalStateException("late action reached native driver");
     ages[age]++;
     applied++;
-    return CombatCommands.replace(frame.authored().commands(), frame.input(), ticket);
+    return CombatCommands.replace(frame.controls(), ticket);
   }
 }

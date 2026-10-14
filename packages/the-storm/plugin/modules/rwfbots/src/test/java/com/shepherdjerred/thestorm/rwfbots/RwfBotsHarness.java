@@ -32,6 +32,7 @@ import com.shepherdjerred.thestorm.rwf.app.map.MapResources;
 import com.shepherdjerred.thestorm.rwfbots.adapter.content.NavFiles;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.FakeBodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
+import com.shepherdjerred.thestorm.rwfbots.adapter.paper.TraversalPlayerMock;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
@@ -60,6 +61,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
+import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.world.WorldMock;
 
 /**
@@ -288,6 +290,11 @@ public final class RwfBotsHarness implements AutoCloseable {
 
   public BotRoster roster() {
     return services.require(BotRoster.class);
+  }
+
+  /** A native-capability mock player, including vanilla fall attributes omitted by MockBukkit. */
+  public PlayerMock player(String name) {
+    return new TraversalPlayerMock(server, name);
   }
 
   /** One server tick. */

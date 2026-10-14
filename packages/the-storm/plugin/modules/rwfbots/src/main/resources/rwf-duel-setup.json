@@ -1,6 +1,7 @@
 {
-  "version": 2,
+  "version": 3,
   "kind": "rwf-native-duel-setup",
+  "authoredBaseline": "rwf-hard-seeded-v1",
   "world": "minecraft:rwf",
   "worldTimes": [0, 15000],
   "kit": "trooper",
@@ -10,6 +11,7 @@
   "fields": [
     "schema",
     "kind",
+    "authoredBaseline",
     "match",
     "seed",
     "side",

@@ -17,7 +17,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  * @param vel the velocity per tick
  * @param yaw the look yaw, Minecraft convention
  * @param pitch the look pitch, Minecraft convention
- * @param health hearts times two, 0..20
+ * @param health actual health points, 0..the captured maximum
  * @param absorption extra hearts from golden apples
  * @param armorValue the armor points worn, 0..20
  * @param heldSlot the selected hotbar slot, 0..8
@@ -26,6 +26,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  * @param usingItem whether drawing a bow, eating or otherwise holding right click
  * @param invisible whether the invisibility effect is active
  * @param lastHurtTick the tick of the last damage taken, or -1 if none
+ * @param traversal actual movement restrictions and survival modifiers at capture time
  */
 public record CombatantView(
     CombatantId id,
@@ -45,19 +46,23 @@ public record CombatantView(
     boolean onGround,
     boolean usingItem,
     boolean invisible,
-    long lastHurtTick) {
+    long lastHurtTick,
+    TraversalState traversal) {
 
   /** How far above the feet a standing player's eyes are. */
   public static final double EYE_HEIGHT = 1.62;
 
-  /** The most health a player has. */
+  /** Ordinary vanilla health, retained as the existing actor feature normalization scale. */
   public static final double MAX_HEALTH = 20;
 
   public CombatantView {
-    if (!(health >= 0 && health <= MAX_HEALTH)) {
-      throw new IllegalArgumentException("health must be 0..20: " + health);
+    java.util.Objects.requireNonNull(traversal);
+    if (!Double.isFinite(health) || !(health >= 0 && health <= traversal.maxHealth())) {
+      throw new IllegalArgumentException("health must be 0..captured maximum: " + health);
     }
-    if (!(absorption >= 0) || !(armorValue >= 0 && armorValue <= 20)) {
+    if (!Double.isFinite(absorption)
+        || !(absorption >= 0)
+        || !(armorValue >= 0 && armorValue <= 20)) {
       throw new IllegalArgumentException("absorption and armor must be in range");
     }
     if (heldSlot < 0 || heldSlot > 8) {
@@ -117,7 +122,31 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
+  }
+
+  public CombatantView withTraversal(TraversalState capabilities) {
+    return new CombatantView(
+        id,
+        team,
+        disguised,
+        kit,
+        alive,
+        pos,
+        vel,
+        yaw,
+        pitch,
+        health,
+        absorption,
+        armorValue,
+        heldSlot,
+        sprinting,
+        onGround,
+        usingItem,
+        invisible,
+        lastHurtTick,
+        capabilities);
   }
 
   public CombatantView withVel(Vec3 newVel) {
@@ -139,7 +168,8 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withFacing(Facing facing) {
@@ -161,7 +191,8 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withHealth(double newHealth, double newAbsorption) {
@@ -183,7 +214,8 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withAlive(boolean nowAlive) {
@@ -205,7 +237,8 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withInvisible(boolean nowInvisible, double newArmor) {
@@ -227,7 +260,8 @@ public record CombatantView(
         onGround,
         usingItem,
         nowInvisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withDisguised(boolean nowDisguised) {
@@ -249,7 +283,8 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withLastHurtTick(long tick) {
@@ -271,7 +306,8 @@ public record CombatantView(
         onGround,
         usingItem,
         invisible,
-        tick);
+        tick,
+        traversal);
   }
 
   public CombatantView withMotion(boolean nowSprinting, boolean nowOnGround) {
@@ -293,7 +329,8 @@ public record CombatantView(
         nowOnGround,
         usingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 
   public CombatantView withHands(int slot, boolean nowUsingItem) {
@@ -315,6 +352,7 @@ public record CombatantView(
         onGround,
         nowUsingItem,
         invisible,
-        lastHurtTick);
+        lastHurtTick,
+        traversal);
   }
 }

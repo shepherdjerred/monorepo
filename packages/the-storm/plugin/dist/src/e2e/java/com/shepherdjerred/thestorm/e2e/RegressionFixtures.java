@@ -532,13 +532,13 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
               observation.values());
       requests.add(request);
       var action = inference.orElseThrow().action(request);
-      if (!CombatCommands.eligible(chosen, frame.input())) decision = "ineligible";
+      if (!CombatCommands.eligible(frame.controls())
+          || action.filter(value -> !CombatCommands.eligible(frame.controls(), value)).isPresent())
+        decision = "ineligible";
       else if (action.isEmpty()) decision = "unavailable";
       else {
-        ticket = action.orElseThrow();
-        if (!ticket.applies(frame.matchId(), frame.body(), frame.life(), request.tick()))
-          throw new IllegalStateException("foreign or late regression action reached the driver");
-        chosen = CombatCommands.replace(chosen, frame.input(), ticket);
+        ticket = checkedTicket(frame, action.orElseThrow(), request.tick());
+        chosen = CombatCommands.replace(frame.controls(), ticket);
         decision = "applied";
       }
     }
@@ -568,5 +568,12 @@ final class RegressionFixtures implements BasicCommand, CombatHarness.Controller
             chosen.stream().map(Object::toString).toList(),
             ticket));
     return chosen;
+  }
+
+  private static ActionTicket checkedTicket(
+      CombatHarness.Frame frame, ActionTicket ticket, long tick) {
+    if (!ticket.applies(frame.matchId(), frame.body(), frame.life(), tick))
+      throw new IllegalStateException("foreign or late regression action reached the driver");
+    return ticket;
   }
 }

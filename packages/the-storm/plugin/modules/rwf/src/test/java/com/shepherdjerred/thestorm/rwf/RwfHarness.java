@@ -212,6 +212,33 @@ public final class RwfHarness implements AutoCloseable {
    * to the variables the module reads (the salt is always present).
    */
   public RwfHarness enable(Path directory, boolean withBots, Map<String, String> environment) {
+    enableModule(directory, withBots, environment);
+    try {
+      // Pasting the lobby and first map takes longer on a busy machine than a gameplay step.
+      until(() -> view().current().isPresent(), PREPARATION, "lobby admission");
+      // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
+      // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
+      if (((RwfWorldMock) rwf).chunkLoads.isDone()) {
+        until(
+            () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
+            PREPARATION,
+            "initial map teams");
+      }
+    } catch (AssertionError e) {
+      // A harness that never opened must not leave MockBukkit mocking for the next test.
+      close();
+      throw e;
+    }
+    return this;
+  }
+
+  /** Enables without advancing Paper's scheduler, before the lobby's preparation can finish. */
+  public RwfHarness enableBeforeLobby(Path directory) {
+    enableModule(directory, true, Map.of());
+    return this;
+  }
+
+  private void enableModule(Path directory, boolean withBots, Map<String, String> environment) {
     services.provide(
         com.shepherdjerred.thestorm.core.world.BlockChanges.class,
         new com.shepherdjerred.thestorm.core.world.AuditedBlockChanges(_ -> {}));
@@ -258,23 +285,6 @@ public final class RwfHarness implements AutoCloseable {
       close();
       throw e;
     }
-    try {
-      // Pasting the lobby and first map takes longer on a busy machine than a gameplay step.
-      until(() -> view().current().isPresent(), PREPARATION, "lobby admission");
-      // With one map to offer, the lobby chooses it at once and its terrain is ready before anyone
-      // joins, as it was before the vote: the snapshot has the map's teams once it is loaded.
-      if (((RwfWorldMock) rwf).chunkLoads.isDone()) {
-        until(
-            () -> view().current().filter(snapshot -> !snapshot.teams().isEmpty()).isPresent(),
-            PREPARATION,
-            "initial map teams");
-      }
-    } catch (AssertionError e) {
-      // A harness that never opened must not leave MockBukkit mocking for the next test.
-      close();
-      throw e;
-    }
-    return this;
   }
 
   public static RwfHarness start(Path directory) {

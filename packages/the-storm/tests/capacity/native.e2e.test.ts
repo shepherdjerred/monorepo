@@ -1,17 +1,15 @@
-import { mkdtemp, mkdir } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect } from "vitest";
 import { test } from "#e2e/fixtures.ts";
 import { capacityMap, capacityNativeTotal } from "#e2e/gameplay-fixtures.ts";
-import { packageRoot } from "#e2e/harness/paths.ts";
 import { eventually, settledMatch, status } from "#e2e/harness/rwf-match.ts";
 import { gzipLines, readRecording } from "#e2e/harness/rwfbots.ts";
 import { readTrails } from "#e2e/harness/rwf-trails.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
-import { startClient } from "#client/process.ts";
+import { startCapacityClient } from "./native-client.ts";
 import { request, StatusSchema, type Session } from "#client/protocol.ts";
 import { evidence } from "./probes.ts";
+import { CapacityCombatCapture, verifyNativeCombat } from "./native-combat.ts";
 
 async function state(session: Session) {
   const value = StatusSchema.parse(await request(session, "status"));
@@ -30,6 +28,7 @@ test(
   async ({ rcon, server }) => {
     const total = capacityNativeTotal();
     const inputs = await evidence(server);
+    const beganAt = Date.now();
     expect(inputs.personalityCount).toBe(512);
     await eventually(
       "the imported map to finish preparing",
@@ -39,25 +38,10 @@ test(
       },
       15 * 60_000,
     );
-    const privateDir = await mkdtemp(path.join(tmpdir(), "rwf-native-"));
-    const artifacts = path.join(
-      packageRoot,
-      ".cache/e2e/capacity-native",
-      path.basename(privateDir),
+    const { session, artifacts, client } = await startCapacityClient(
+      server,
+      "capacity-native",
     );
-    await mkdir(artifacts, { recursive: true });
-    const session: Session = {
-      socket: path.join(privateDir, "client.sock"),
-      control: path.join(privateDir, "unused-control.sock"),
-      artifacts,
-      server: `127.0.0.1:${server.gamePort.toString()}`,
-    };
-    const client = await startClient({
-      session,
-      privateDir,
-      packageRoot,
-      onExit: () => console.warn("Native capacity client exited"),
-    });
     try {
       const teams = capacityMap() === "apex-expanse" ? 2 : 4;
       expect(
@@ -71,6 +55,9 @@ test(
       );
       const live = await status(rcon);
       expect([live.humans, live.bots]).toEqual([1, total - 1]);
+      CapacityCombatCapture.parse(
+        JSON.parse(await rcon.command(`rwfcapacitycombat arm ${live.matchId}`)),
+      );
       await request(session, "capture", {
         name: `${total.toString()}-combatants-live`,
       });
@@ -126,6 +113,17 @@ test(
       );
       const recording = readRecording(lines);
       const trails = readTrails(lines);
+      const combat = CapacityCombatCapture.parse(
+        JSON.parse(await rcon.command("rwfcapacitycombat sample")),
+      );
+      await Bun.write(
+        path.join(artifacts, "combat-observer.json"),
+        JSON.stringify(combat, null, 2),
+      );
+      const combatAcceptance = verifyNativeCombat(lines, combat, {
+        match: live.matchId,
+        total,
+      });
       expect(recording.roster.size).toBe(total);
       const human = [...recording.roster].find(
         ([, member]) => !member.bot,
@@ -136,24 +134,13 @@ test(
           .filter(([, member]) => member.bot)
           .map(([id]) => id),
       );
-      const attacked = lines.some((line) => {
-        const row = line.split("\t");
-        return (
-          row[0] === "I" &&
-          row[3] === "attack" &&
-          bots.has(row[2] ?? "") &&
-          row[4] === human
-        );
-      });
-      const killed = recording.events.some(
-        ([kind, subject, detail]) =>
-          kind === "died" &&
-          subject === human &&
-          bots.has(detail?.split(" ")[0] ?? ""),
-      );
       expect(
-        killed,
-        "original recording attributes the human's combat death to a bot",
+        combatAcceptance.attacked,
+        "the same bot recorded its attack on the human",
+      ).toBe(true);
+      expect(
+        combatAcceptance.killed,
+        "original cause is direct bot combat with actual applied damage",
       ).toBe(true);
       expect(
         observations.some((entry) => entry.health < before.health),
@@ -183,12 +170,14 @@ test(
         JSON.stringify(
           {
             inputs,
+            beganAt,
+            completedAt: Date.now(),
             total,
             match: settled.match,
             movement: distance,
             botMovements: moved.length,
-            attacked,
-            killed,
+            ...combatAcceptance,
+            combatObserver: "combat-observer.json",
             observations,
           },
           null,

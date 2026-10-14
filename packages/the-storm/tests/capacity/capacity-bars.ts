@@ -23,6 +23,8 @@ export const MemorySchema = z.object({
 export type Memory = z.infer<typeof MemorySchema>;
 export const LifecycleSchema = z.object({
   elapsedMs: z.number().nonnegative(),
+  startedAt: z.number().int().nonnegative().optional(),
+  endedAt: z.number().int().nonnegative().optional(),
   windows: z.array(WindowSchema),
   memory: z.array(MemorySchema),
 });
@@ -34,6 +36,16 @@ export const CapacityPhaseSchema = z.object({
   windows: z.array(WindowSchema),
   telemetry: z.array(TelemetrySchema),
   memory: z.array(MemorySchema),
+  // Legacy diagnostic reports predate interval provenance; qualification requires it.
+  measurementWindows: z
+    .array(
+      z.object({
+        match: z.uuid().nullable(),
+        startedAt: z.number().int().nonnegative(),
+        endedAt: z.number().int().nonnegative(),
+      }),
+    )
+    .optional(),
   matches: z.array(
     z.object({
       id: z.uuid(),

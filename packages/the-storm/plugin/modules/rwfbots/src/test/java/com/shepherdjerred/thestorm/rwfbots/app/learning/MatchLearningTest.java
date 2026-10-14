@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 final class MatchLearningTest {
+  private static final com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact NAV =
+      com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap.bake();
   private static final UUID MATCH = new UUID(0, 1);
   private static final UUID NEXT = new UUID(0, 2);
   private static final UUID BODY = new UUID(1, 1);
@@ -127,7 +129,8 @@ final class MatchLearningTest {
             true,
             healing,
             false,
-            -1);
+            -1,
+            com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
     var target = combatant(2, BLUE, new Vec3(7, 1, 5));
     var snapshot =
         new WorldSnapshot(
@@ -155,7 +158,8 @@ final class MatchLearningTest {
         Optional.of(new UUID(9, 10)),
         authored,
         Optional.of(
-            new ObservationSource.Sample(ObservationContract.ID, Collections.nCopies(34, 0.0))));
+            new ObservationSource.Sample(ObservationContract.ID, Collections.nCopies(34, 0.0))),
+        NAV);
   }
 
   @Test
@@ -245,6 +249,64 @@ final class MatchLearningTest {
     learning.close();
     model.close();
     pool.run();
+  }
+
+  @Test
+  void unsafeOptionalActionsAreReportedIneligibleAndNeverCountedAsApplied() {
+    var pool = new Pool();
+    var model = model(pool);
+    var gate = new Gate();
+    gate.answers.add(
+        CompletableFuture.completedFuture(
+            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+    var learning = new MatchLearning(parts(gate, () -> CompletableFuture.completedFuture(model)));
+    learning.begin(context(MATCH));
+    learning.startTick(1);
+    var position = new Vec3(6.5, 1, 7.5);
+    var first = at(frame(1, 0, false, Kit.TROOPER), position);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.learning.CombatCommands.eligible(
+                first.controls()))
+        .isTrue();
+    learning.commands(first);
+    learning.finishTick(MATCH, 1);
+    pool.run();
+    learning.startTick(2);
+    var second = at(frame(2, 0, false, Kit.TROOPER), position);
+    assertThat(learning.commands(second)).isSameAs(second.authored().commands());
+    assertThat(learning.metrics().applied()).isZero();
+    assertThat(learning.metrics().ineligible()).isEqualTo(1);
+    learning.close();
+    model.close();
+    pool.run();
+  }
+
+  private static CombatHarness.Frame at(CombatHarness.Frame frame, Vec3 position) {
+    var original = frame.input();
+    var self = original.self().withPos(position);
+    var target = original.target().orElseThrow().withPos(position.plus(2, 0, 0));
+    var before = original.snapshot();
+    var snapshot =
+        new WorldSnapshot(
+            before.tick(),
+            before.matchPhase(),
+            List.of(self, target),
+            before.bombs(),
+            before.poison(),
+            before.mapId(),
+            before.stimuli());
+    var input =
+        new ReflexInput(
+            self, snapshot, original.decision(), Optional.of(target), original.gapplesLeft());
+    return new CombatHarness.Frame(
+        frame.matchId(),
+        frame.body(),
+        frame.life(),
+        input,
+        frame.targetBody(),
+        frame.authored(),
+        frame.observation(),
+        frame.nav());
   }
 
   @Test

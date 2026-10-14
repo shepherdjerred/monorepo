@@ -118,6 +118,30 @@ class TrainerTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "original match terrain"):
                 Dataset.load(out)
 
+    def test_loader_independently_rejects_aborted_or_inconsistent_duel_outcomes(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            out = export_fixture(Path(folder))
+            path = out / "train.jsonl"
+            original = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            manifest_path = out / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            for reason, won in (
+                ("STOPPED", False),
+                ("unknown", False),
+                ("DRAW", True),
+                ("LAST_TEAM_STANDING", "false"),
+            ):
+                rows = [dict(row) for row in original]
+                rows[0].update(reason=reason, won=won)
+                path.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+                manifest["files_sha256"][path.name] = digest(path)
+                manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+                with (
+                    self.subTest(reason=reason, won=won),
+                    self.assertRaisesRegex(ValueError, "whole duel|outcome differs"),
+                ):
+                    Dataset.load(out)
+
     def test_padding_contributes_no_gradient(self) -> None:
         obs, actions, mask = batch(
             [synthetic_sequence(2), synthetic_sequence(5)], torch.device("cpu")

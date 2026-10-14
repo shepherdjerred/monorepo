@@ -95,6 +95,9 @@ final class Roster {
     if (kit.isEmpty()) {
       return Optional.of(MatchError.UNKNOWN_KIT);
     }
+    if (!draft.settings.kitPool().allows(kitId)) {
+      return Optional.of(MatchError.KIT_LOCKED);
+    }
     if (access.isPresent() && !access.orElseThrow().allows(kit.orElseThrow())) {
       return Optional.of(MatchError.KIT_LOCKED);
     }

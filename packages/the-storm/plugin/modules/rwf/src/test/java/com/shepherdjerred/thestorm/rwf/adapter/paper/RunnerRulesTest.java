@@ -30,7 +30,8 @@ final class RunnerRulesTest {
           Duration.ofSeconds(20),
           Duration.ofSeconds(10),
           Duration.ofSeconds(5),
-          true);
+          true,
+          com.shepherdjerred.thestorm.rwf.domain.kit.KitPool.ALL);
 
   private static RwfMatch countingDownTo(java.time.Instant startsAt) {
     return new RwfMatch(
@@ -72,7 +73,8 @@ final class RunnerRulesTest {
             Duration.ZERO,
             Duration.ZERO,
             Duration.ZERO,
-            false);
+            false,
+            com.shepherdjerred.thestorm.rwf.domain.kit.KitPool.ALL);
     assertThat(
             RunnerRules.arrivalBudget(
                 RwfMatch.open(shortCountdown, Samples.MATCH, Samples.SEED), T0))

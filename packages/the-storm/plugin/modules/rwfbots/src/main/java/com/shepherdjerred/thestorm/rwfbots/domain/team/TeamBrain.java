@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.ApproachRoutes;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
@@ -34,16 +35,16 @@ public final class TeamBrain {
   /** The bonus for keeping the slot already held; a change must gain more than this. */
   public static final double STICKY = 0.3;
 
-  /** How much path distance to a slot costs, per {@link #DISTANCE_SCALE} blocks. */
+  /** How much travel time to a slot costs, per {@link #DISTANCE_SCALE} server ticks. */
   static final double DISTANCE_WEIGHT = 0.6;
 
-  static final double DISTANCE_SCALE = 64;
+  static final double DISTANCE_SCALE = TraversalCosts.walkingTicks(64);
 
   /** Distances past this count as this, so an unreachable slot is merely bad. */
-  static final double DISTANCE_CAP = 128;
+  static final double DISTANCE_CAP = TraversalCosts.walkingTicks(128);
 
   /** How much random preference an erratic (troll) bot adds to every slot. */
-  static final double ERRATIC = 0.5;
+  static final double ERRATIC = 0.12;
 
   /** An enemy seen this close to a teammate stops the team's push. */
   static final double CONTACT = 24;
@@ -120,7 +121,16 @@ public final class TeamBrain {
     result = result.dropNotes(id -> !living.contains(id));
     var due = snapshot.tick() - result.rolesAssignedTick() >= ROLE_PERIOD_TICKS;
     var rosterChanged = !result.plan().assignment().keySet().equals(living);
-    if ((due || rosterChanged) && !alive.isEmpty()) {
+    var urgent = RetakeFormation.urgent(snapshot, board.team()).map(BombView::id);
+    var previousUrgent =
+        result
+            .plan()
+            .objective()
+            .flatMap(snapshot::bomb)
+            .filter(bomb -> bomb.belongsTo(board.team()))
+            .map(BombView::id);
+    var defenseChanged = !urgent.equals(previousUrgent);
+    if ((due || rosterChanged || defenseChanged) && !alive.isEmpty()) {
       return new Prepared(result, Optional.of(deal(result, situation, alive)), snapshot.tick());
     }
     return new Prepared(result, Optional.empty(), snapshot.tick());
@@ -144,6 +154,12 @@ public final class TeamBrain {
 
     public float[] distances(int row, NavGraph.SearchWorkspace workspace) {
       return deal.orElseThrow().assignment().distances(row, workspace);
+    }
+
+    /** Reuses staged geometric ETAs to shortlist workers without another graph search. */
+    public List<CombatantId> workerCandidates(Slot worker, List<float[]> distances) {
+      return deal.map(value -> value.assignment().workerCandidates(worker, distances))
+          .orElseGet(List::of);
     }
 
     public Blackboard finish(List<float[]> distances, RandomGenerator random) {
@@ -174,8 +190,10 @@ public final class TeamBrain {
     var snapshot = situation.snapshot();
     var team = board.team();
     var home = home(nav, team, alive);
-    var objective = objective(board.strategy(), snapshot, team);
-    var lanes = lanes(board, nav, snapshot, home);
+    var defense = RetakeFormation.urgent(snapshot, team);
+    if (defense.isPresent()) return retakeDeal(board, situation, alive, defense.orElseThrow());
+    var objective = ObjectiveChoice.choose(board, situation, alive);
+    var lanes = lanes(board, situation, home, objective);
     if (lanes.isEmpty()) {
       objective = Optional.empty();
     }
@@ -232,6 +250,23 @@ public final class TeamBrain {
         assignment);
   }
 
+  private static Deal retakeDeal(
+      Blackboard board, TeamSituation situation, List<CombatantView> alive, BombView bomb) {
+    var slots = RetakeFormation.slots(situation.nav(), bomb, alive, board.plan());
+    var assignment = new RoleAssignment(new Dealing(board.plan(), situation, alive, false), slots);
+    return new Deal(
+        new TeamPlan(
+            Optional.of(board.strategy()),
+            board.plan().home(),
+            Optional.of(bomb.id()),
+            List.of(),
+            board.plan().push(),
+            slots,
+            Map.of(),
+            situation.snapshot().tick()),
+        assignment);
+  }
+
   /**
    * How far the team has pushed up its lanes: {@link Playbook#START_PUSH} at the first deal, then
    * {@link Playbook#ADVANCE} more each deal up to {@link Playbook#MAX_PUSH}, holding where it is
@@ -241,9 +276,29 @@ public final class TeamBrain {
     if (previous.dealtTick() < 0) {
       return Playbook.START_PUSH;
     }
-    return contact
+    return contact || !formedUp(previous, alive)
         ? previous.push()
         : Math.min(Playbook.MAX_PUSH, previous.push() + Playbook.ADVANCE);
+  }
+
+  /** Advance the line only once most mobile squad members actually reach its previous bound. */
+  private static boolean formedUp(TeamPlan previous, List<CombatantView> alive) {
+    var byKey = new java.util.HashMap<String, Slot>();
+    previous.slots().forEach(slot -> byKey.put(slot.key(), slot));
+    var mobile = 0;
+    var ready = 0;
+    for (var bot : alive) {
+      var key = previous.assignment().get(bot.id());
+      var slot = key == null ? null : byKey.get(key);
+      if (slot == null
+          || slot.kind() == SlotKind.ANCHOR
+          || slot.kind() == SlotKind.OVERWATCH
+          || slot.kind() == SlotKind.ESCORT) continue;
+      mobile++;
+      if (bot.pos().horizontalDistance(slot.pos()) <= 6
+          && Math.abs(bot.pos().y() - slot.pos().y()) <= 1.5) ready++;
+    }
+    return mobile == 0 || ready * 5 >= mobile * 3;
   }
 
   /** Whether a teammate saw an enemy lately within {@link #CONTACT} blocks of some teammate. */
@@ -255,35 +310,29 @@ public final class TeamBrain {
                 alive.stream().anyMatch(bot -> bot.pos().distance(sighting.pos()) <= CONTACT));
   }
 
-  /** The bomb the strategy plays for: the first it prefers that can still be armed. */
-  static Optional<BombView> objective(Strategy strategy, WorldSnapshot snapshot, TeamId team) {
-    var open =
-        snapshot.bombsArmableBy(team).stream().filter(bomb -> !bomb.state().isLit()).toList();
-    var enemyBomb =
-        open.stream().filter(bomb -> bomb.owner() instanceof BombOwner.Team).findFirst();
-    var nuke = open.stream().filter(bomb -> bomb.owner() instanceof BombOwner.Nuke).findFirst();
-    return switch (strategy) {
-      case RUSH, SPLIT -> enemyBomb.or(() -> nuke);
-      case TURTLE, HUNT -> nuke.or(() -> enemyBomb);
-    };
-  }
-
   /**
    * The team's lanes up the field: from home to the enemy's bomb, else to the enemy's home,
    * whatever the objective, so a team playing for the central nuke still spreads over the whole
    * yard. Built at the first deal and kept for the match.
    */
   private static List<Lane> lanes(
-      Blackboard board, NavArtifact nav, WorldSnapshot snapshot, Vec3 home) {
+      Blackboard board, TeamSituation situation, Vec3 home, Optional<BombView> objective) {
+    var nav = situation.nav();
+    var snapshot = situation.snapshot();
     var team = board.team();
     var previous = board.plan();
-    if (!previous.lanes().isEmpty()) {
+    if (!previous.lanes().isEmpty() && previous.objective().equals(objective.map(BombView::id))) {
       return previous.lanes();
     }
     var enemyBomb =
-        snapshot.bombs().stream()
-            .filter(bomb -> bomb.owner() instanceof BombOwner.Team && !bomb.belongsTo(team))
-            .findFirst();
+        objective
+            .filter(bomb -> bomb.owner() instanceof BombOwner.Team)
+            .or(
+                () ->
+                    snapshot.bombs().stream()
+                        .filter(
+                            bomb -> bomb.owner() instanceof BombOwner.Team && !bomb.belongsTo(team))
+                        .findFirst());
     var end = enemyBomb.map(BombView::pos).orElseGet(() -> enemyHome(nav, team, home));
     var site = nearestSite(nav.sites().bombs(), end);
     var spawn = nav.sites().spawns().stream().filter(s -> ownedBy(s, team)).findFirst();
@@ -372,7 +421,10 @@ public final class TeamBrain {
     var member = dealing.situation().memberOf(bot.id());
     var held = slot.key().equals(dealing.previous().assignment().get(bot.id()));
     return SlotFit.of(member, slot, dealing.nuke() && slot.kind() == SlotKind.PLANT)
-        - DISTANCE_WEIGHT * Math.min(distance, DISTANCE_CAP) / DISTANCE_SCALE
+        - DISTANCE_WEIGHT
+            * Math.min(distance, DISTANCE_CAP)
+            / DISTANCE_SCALE
+            * (slot.role() == Role.RETAKE ? 4 : 1)
         + (held ? STICKY : 0);
   }
 

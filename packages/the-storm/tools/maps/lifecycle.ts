@@ -30,6 +30,47 @@ export const Lifecycle = z.strictObject({
 });
 export type Lifecycle = z.infer<typeof Lifecycle>;
 
+type MatchState = {
+  ready: boolean;
+  phase: string;
+  matchId: string;
+  map: string;
+  bots: number;
+  humans: number;
+  arriving: number;
+};
+
+/** Binds a visited map to the admitted live showcase, rather than an unfinished ballot. */
+export function verifyLiveShowcase(
+  expectedMatchId: string,
+  live: MatchState,
+): void {
+  if (
+    !live.ready ||
+    live.phase !== "Live" ||
+    live.matchId !== expectedMatchId ||
+    live.map === "none" ||
+    live.bots !== 8 ||
+    live.humans !== 0 ||
+    live.arriving !== 0
+  )
+    throw new Error(
+      "Native lifecycle showcase has an unexpected selected map or roster",
+    );
+}
+
+/** A reset changes match identity; a permitted map repeat is still a real reset. */
+export function isSuccessorLobby(
+  previousMatchId: string,
+  current: MatchState,
+): boolean {
+  return (
+    current.ready &&
+    current.phase === "Lobby" &&
+    current.matchId !== previousMatchId
+  );
+}
+
 export function verifyBounds(snapshot: Lifecycle): void {
   const decoded = snapshot.maps.filter((map) => map.decoded);
   const preparing = snapshot.maps.filter((map) => map.busy || map.decoded);

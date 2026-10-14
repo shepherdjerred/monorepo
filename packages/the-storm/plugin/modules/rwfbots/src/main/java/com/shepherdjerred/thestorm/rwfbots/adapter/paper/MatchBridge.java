@@ -70,7 +70,8 @@ public final class MatchBridge implements Consumer<MatchNotification> {
       InstantSource time,
       ComponentLogger logger,
       LobbyTicker lobby,
-      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning) {}
+      com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning,
+      com.shepherdjerred.thestorm.rwf.app.MatchView view) {}
 
   public MatchBridge(Parts parts) {
     this.parts = parts;
@@ -282,9 +283,14 @@ public final class MatchBridge implements Consumer<MatchNotification> {
             .roster()
             .harness()
             .seed(after.matchId())
-            .orElseGet(() -> MatchSession.seedOf(after.matchId()));
+            .orElseGet(() -> parts.roster().experience(after.matchId()).seed());
     var ids = new IdMap();
-    var capture = new SnapshotCapture(ids, parts.roster()::anyEntity, parts.stimuli());
+    var capture =
+        new SnapshotCapture(
+            ids,
+            parts.roster()::anyEntity,
+            parts.stimuli(),
+            new SnapshotCapture.Capabilities(parts.view()::noFallUntil, parts.time()));
     parts
         .roster()
         .session(new MatchSession(after.matchId(), seed, nav.orElseThrow(), ids, capture));
@@ -324,7 +330,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
         IdMap.team(fighter.team().orElseThrow()),
         kit,
         bot.drafted().levers(),
-        bot.drafted().personality().style(),
+        bot.drafted().style(),
         bot.drafted().personality().roles(),
         bot.drafted().personality().archetype(),
         bot.drafted().personality().quirks());

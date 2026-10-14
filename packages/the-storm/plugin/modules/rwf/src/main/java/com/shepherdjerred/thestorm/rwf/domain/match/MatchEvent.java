@@ -83,6 +83,9 @@ public sealed interface MatchEvent {
    */
   record Vote(CombatantId id, String mapId) implements MatchEvent {}
 
+  /** An operator closes the current vote using its ordinary seeded choice. */
+  record CloseVote() implements MatchEvent {}
+
   /**
    * An operator settles the map, overriding the vote.
    *

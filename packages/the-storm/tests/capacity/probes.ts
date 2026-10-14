@@ -22,6 +22,7 @@ import {
   type Lifecycle,
 } from "./capacity-bars.ts";
 import { recordFlight } from "#e2e/harness/flight.ts";
+import { runtimeIdentity, stagedDigest } from "./runtime.ts";
 
 /** Optional post-measurement diagnostics, always separate from release acceptance. */
 export async function profileAfterMeasurement(
@@ -131,16 +132,7 @@ export async function evidence(server: ServerInfo) {
       path.join(packageRoot, relative),
     ).arrayBuffer();
     const local = new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
-    const copied = await docker([
-      "exec",
-      server.containerId,
-      "sha256sum",
-      staged,
-    ]);
-    const actual = z
-      .string()
-      .regex(/^[a-f0-9]{64}$/u)
-      .parse(copied.stdout.split(/\s+/u)[0]);
+    const actual = await stagedDigest(server.containerId, staged);
     if (actual !== local)
       throw new Error(`Staged capacity input differs from ${relative}`);
     return actual;
@@ -151,10 +143,28 @@ export async function evidence(server: ServerInfo) {
     .object({ personalities: z.array(z.unknown()) })
     .parse(await Bun.file(path.join(packageRoot, manifestFile)).json());
   return {
+    containerId: server.containerId,
+    ...(await runtimeIdentity(server.containerId)),
     computeWorkers: await computeWorkers(server),
     artifactSha256: await digest(
       "plugin/dist/build/libs/TheStorm.jar",
       "/data/plugins/TheStorm.jar",
+    ),
+    fixtureSha256: await digest(
+      "plugin/dist/build/libs/TheStormFixtures.jar",
+      "/data/plugins/TheStormFixtures.jar",
+    ),
+    botConfigSha256: await stagedDigest(
+      server.containerId,
+      "/data/plugins/TheStorm/rwfbots.yml",
+    ),
+    rwfConfigSha256: await stagedDigest(
+      server.containerId,
+      "/data/plugins/TheStorm/rwf.yml",
+    ),
+    pluginConfigSha256: await stagedDigest(
+      server.containerId,
+      "/data/plugins/TheStorm/config.yml",
     ),
     personalityManifestSha256: await digest(
       manifestFile,
@@ -190,7 +200,7 @@ async function computeWorkers(server: ServerInfo): Promise<number> {
     runtime?.groups === undefined ||
     Number(runtime.groups["workers"]) !== compute.maxThreads ||
     Number(runtime.groups["ceiling"]) !== compute.maxThreads ||
-    Number(runtime.groups["processors"]) <= compute.maxThreads
+    Number(runtime.groups["processors"]) !== capacityResources().cpus
   )
     throw new Error(
       "Runtime compute worker budget differs from the staged capacity configuration",
@@ -205,7 +215,12 @@ export async function lifecycle(
   timeoutMs: number,
 ): Promise<Lifecycle> {
   const began = Date.now();
-  const result: Lifecycle = { elapsedMs: 0, windows: [], memory: [] };
+  const result: Lifecycle = {
+    elapsedMs: 0,
+    startedAt: began,
+    windows: [],
+    memory: [],
+  };
   let nextWindow = began + 10_000;
   while (!(await ready())) {
     if (Date.now() - began > timeoutMs)
@@ -219,7 +234,8 @@ export async function lifecycle(
     await Bun.sleep(Math.max(0, 1000 - (Date.now() - tick)));
   }
   result.memory.push(await memory(server));
-  result.elapsedMs = Date.now() - began;
+  result.endedAt = Date.now();
+  result.elapsedMs = result.endedAt - began;
   return result;
 }
 

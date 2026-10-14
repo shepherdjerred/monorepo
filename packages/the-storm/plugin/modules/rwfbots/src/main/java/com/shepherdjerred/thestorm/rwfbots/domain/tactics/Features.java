@@ -87,7 +87,7 @@ public record Features(
                                 enemy -> enemy.pos().distance(bomb.pos()) <= BOMB_THREAT_RANGE)
                         || bomb.state() instanceof BombState.Arming);
     return new Features(
-        self.effectiveHealth() / CombatantView.MAX_HEALTH,
+        self.effectiveHealth() / self.traversal().maxHealth(),
         nearest == null ? Double.POSITIVE_INFINITY : nearest.pos().distance(self.pos()),
         nearest == null ? 0 : nearest.confidence(),
         (int) enemies.stream().filter(Situation.KnownEnemy::visible).count(),

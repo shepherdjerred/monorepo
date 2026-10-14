@@ -155,6 +155,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private final BotArrivals arrivals;
   private final Clock clock = new Clock();
   private final Results results = new Results();
+  private final Showcases showcases = new Showcases();
   private final MatchHooks hooks = new MatchHooks();
   private RwfMatch match;
   private RwfFeatures features = RwfFeatures.NONE;
@@ -173,6 +174,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable UUID keepingSnapshot;
   private int lastTitle;
   private final LobbySizes lobbySizes;
+  private final com.shepherdjerred.thestorm.rwf.app.MatchExperiences experiences;
   private final List<Consumer<MatchEffect.Death>> deathWatchers = new ArrayList<>();
   private @Nullable Spectating spectating;
   private Optional<Ballot> lastBallot = Optional.empty();
@@ -184,6 +186,8 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   MatchRunner(Parts parts) {
     this.parts = parts;
+    this.experiences =
+        new com.shepherdjerred.thestorm.rwf.app.MatchExperiences(parts.config().experience());
     this.powers =
         new KitPowers(
             this,
@@ -216,6 +220,15 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   LobbySizes lobbySizes() {
     return lobbySizes;
+  }
+
+  com.shepherdjerred.thestorm.rwf.app.MatchExperiences experiences() {
+    return experiences;
+  }
+
+  @Override
+  public Optional<com.shepherdjerred.thestorm.rwf.app.MatchExperiences.Frozen> experience(UUID id) {
+    return experiences.current(id);
   }
 
   boolean live() {
@@ -289,6 +302,11 @@ final class MatchRunner implements MatchView, MatchEvents {
     return (int) match.members().stream().filter(m -> !m.id().isBot()).count();
   }
 
+  @Override
+  public Optional<Instant> noFallUntil(UUID body) {
+    return powers().noFallUntil(body);
+  }
+
   /** Whether this match is a bots-only showcase. */
   boolean showcase() {
     return showcase.isPresent();
@@ -345,7 +363,16 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   @Override
   public java.util.Set<String> kitsOnOffer() {
-    return picker.onOffer();
+    var offered = picker.onOffer();
+    var allowed =
+        experience(match.matchId())
+            .map(value -> value.settings().kits())
+            .orElseGet(() -> experiences.pending().kits());
+    return allowed.isEmpty()
+        ? offered
+        : offered.stream()
+            .filter(allowed::contains)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
   }
 
   @Override
@@ -353,6 +380,11 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (!ready) {
       return Optional.empty();
     }
+    return Optional.of(snapshot());
+  }
+
+  /** Accepted transitions have a snapshot even before public admission opens. */
+  private MatchSnapshot snapshot() {
     var snapshot = cached;
     if (snapshot == null || cachedTick != ticks || !match.equals(cachedFor)) {
       snapshot = MatchSnapshot.of(match, now());
@@ -360,11 +392,15 @@ final class MatchRunner implements MatchView, MatchEvents {
       cachedFor = match;
       cachedTick = ticks;
     }
-    return Optional.of(snapshot);
+    return snapshot;
   }
 
   Optional<PublicGameDirectory.Game> publicGame() {
     return current().flatMap(RunnerRules::publicGame);
+  }
+
+  List<String> recordingStatus(Player player) {
+    return parts.recordings().status(player);
   }
 
   @Override
@@ -422,7 +458,9 @@ final class MatchRunner implements MatchView, MatchEvents {
             flow ? config.voteLead() : Duration.ZERO,
             flow ? config.previewLength() : Duration.ZERO,
             flow ? config.freezeLength() : Duration.ZERO,
-            features.carryOver());
+            features.carryOver())
+        .withKitPool(
+            new com.shepherdjerred.thestorm.rwf.domain.kit.KitPool(experiences.pending().kits()));
   }
 
   /** Opens the lobby's vote: three maps with the match flow on, one drawn at random without. */
@@ -463,6 +501,9 @@ final class MatchRunner implements MatchView, MatchEvents {
     match = step.match();
     applying = true;
     try {
+      if (event instanceof MatchEvent.Stop) {
+        showcases.cancel();
+      }
       if (event instanceof MatchEvent.MapReady ready && match.map().isPresent()) {
         play(ready.map().id());
       }
@@ -489,6 +530,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     }
     notifyListeners(event, step.effects());
     // After the listeners: rwfbots confirms the map's navigation as it hears MapReady.
+    showcases.afterMapReady(event);
     var draft = draftFor;
     draftFor = null;
     if (draft != null) {
@@ -512,7 +554,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (listeners.isEmpty()) {
       return;
     }
-    var notification = new MatchNotification(event, applied, current().orElseThrow());
+    var notification = new MatchNotification(event, applied, snapshot());
     for (var listener : List.copyOf(listeners)) {
       parts.context().guarded("notifying a match listener", () -> listener.accept(notification));
     }
@@ -572,6 +614,7 @@ final class MatchRunner implements MatchView, MatchEvents {
    * of the countdown.
    */
   private void fillWithBots(String chosenMap) {
+    experiences.freeze(match.matchId(), match.seed());
     var map = rotation.byId(chosenMap).orElseThrow();
     var draftedTarget = lobbySizes.draft(map.definition(), showcase);
     var drafted =
@@ -599,6 +642,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** Up to {@code count} bots join the lobby now. Returns how many did. */
   private int joinBots(int count) {
+    experiences.freeze(match.matchId(), match.seed());
     var joined = 0;
     for (var bot : parts.bots().fill(match.matchId(), count)) {
       if (joinBot(bot)) {
@@ -652,6 +696,16 @@ final class MatchRunner implements MatchView, MatchEvents {
     var map = currentMap().orElseThrow();
     parts.bombs().place(map.definition());
     parts.recordings().start(match, map.definition(), now());
+    var experience = experiences.freeze(match.matchId(), match.seed());
+    parts
+        .recordings()
+        .event(
+            now(),
+            "settings",
+            "match",
+            experience.settings().canonical(experience.seed())
+                + ";fingerprint="
+                + experience.settings().fingerprint(experience.seed()));
     lastBallot.ifPresent(
         ballot ->
             parts
@@ -694,6 +748,7 @@ final class MatchRunner implements MatchView, MatchEvents {
     frozen.clear();
     starts.clear();
     showcase = OptionalInt.empty();
+    showcases.cancel();
     parts.combat().clear();
     parts.boards().reset();
     parts.bombs().clear();
@@ -716,15 +771,15 @@ final class MatchRunner implements MatchView, MatchEvents {
    * it, or returns why not. It then runs as any match would, without the humans rule.
    */
   Optional<String> startShowcase(int count) {
-    var refusal = showcaseRefusal(count);
-    return refusal.isPresent() ? refusal : fillShowcase(count);
+    var refusal = showcases.refusal(count);
+    return refusal.isPresent() ? refusal : showcases.fill(count);
   }
 
   Optional<String> startSeededShowcase(UUID lobbyId, int count, long seed) {
     if (!match.matchId().equals(lobbyId)) {
       return Optional.of("The requested showcase lobby is no longer current.");
     }
-    var refusal = showcaseRefusal(count);
+    var refusal = showcases.refusal(count);
     if (refusal.isPresent()) {
       return refusal;
     }
@@ -735,35 +790,15 @@ final class MatchRunner implements MatchView, MatchEvents {
     var world = parts.context().mapWorld();
     var previousTime = world.getTime();
     match = match.reseedEmptyLobby(seed);
+    experiences.reseedEmptyLobby(match.matchId(), seed);
     world.setTime(match.startingWorldTime());
-    refusal = fillShowcase(count);
+    refusal = showcases.fill(count);
     if (refusal.isPresent()) {
       match = previous;
+      experiences.reseedEmptyLobby(previous.matchId(), previous.seed());
       world.setTime(previousTime);
     }
     return refusal;
-  }
-
-  private Optional<String> showcaseRefusal(int count) {
-    return new ShowcaseStart(
-            parts.config().match().maxCombatants(),
-            ready,
-            parts.bots().roster().isPresent(),
-            showcase.isPresent(),
-            humans(),
-            match.phase() instanceof Phase.Lobby)
-        .refusal(count);
-  }
-
-  private Optional<String> fillShowcase(int count) {
-    showcase = OptionalInt.of(count);
-    joinBots(count - match.members().size());
-    if (match.members().isEmpty()) {
-      showcase = OptionalInt.empty();
-      return Optional.of("No bot could be spawned for the showcase; see the log.");
-    }
-    parts.context().logger().info("rwf match {} is a showcase of {}", match.matchId(), count);
-    return Optional.empty();
   }
 
   Optional<String> stopShowcase(UUID matchId) {
@@ -771,6 +806,7 @@ final class MatchRunner implements MatchView, MatchEvents {
       return Optional.of("No bots-only showcase with that id is running.");
     }
     if (!(match.phase() instanceof Phase.Ended) && !(match.phase() instanceof Phase.Resetting)) {
+      showcases.cancel();
       var refusal = handle(new MatchEvent.Stop());
       return refusal.map(Object::toString);
     }
@@ -779,6 +815,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** The match is stopping for good (disable): restore everyone, despawn bots. */
   void stop() {
+    showcases.cancel();
     rotation.close();
     if (!(match.phase() instanceof Phase.Resetting)) {
       handle(new MatchEvent.Stop());
@@ -791,6 +828,61 @@ final class MatchRunner implements MatchView, MatchEvents {
     arrivals.release();
     parts.hud().hideAll();
     ready = false;
+  }
+
+  /** Requested showcases wait for the chosen map's consumers before bodies are drafted. */
+  private final class Showcases {
+    private boolean pending;
+
+    Optional<String> refusal(int count) {
+      return new ShowcaseStart(
+              parts.config().match().maxCombatants(),
+              ready,
+              parts.bots().roster().isPresent(),
+              showcase.isPresent(),
+              humans(),
+              match.phase() instanceof Phase.Lobby)
+          .refusal(count);
+    }
+
+    Optional<String> fill(int count) {
+      showcase = OptionalInt.of(count);
+      if (match.map().isPresent()) {
+        return draft();
+      }
+      pending = true;
+      var refused = handle(new MatchEvent.CloseVote());
+      if (refused.isPresent()) {
+        pending = false;
+        showcase = OptionalInt.empty();
+        return refused.map(Object::toString);
+      }
+      return Optional.empty();
+    }
+
+    void afterMapReady(MatchEvent event) {
+      if (event instanceof MatchEvent.MapReady && pending) {
+        draft().ifPresent(parts.context().logger()::error);
+      }
+    }
+
+    void cancel() {
+      pending = false;
+      arrivals.release();
+    }
+
+    /** The chosen map's listeners have confirmed navigation; the requested bodies may join. */
+    private Optional<String> draft() {
+      pending = false;
+      var count = showcase.orElseThrow();
+      joinBots(count - match.members().size());
+      if (match.members().isEmpty()) {
+        showcase = OptionalInt.empty();
+        return Optional.of("No bot could be spawned for the showcase; see the log.");
+      }
+      parts.context().logger().info("rwf match {} is a showcase of {}", match.matchId(), count);
+      return Optional.empty();
+    }
   }
 
   /** What a finished or stopped match leaves behind: its record, payouts and recording. */
@@ -2053,8 +2145,9 @@ final class MatchRunner implements MatchView, MatchEvents {
   /** A fresh vote over newly drawn candidates. */
   private MatchEvent ballotEvent() {
     var count = features.matchFlow() ? Ballot.SIZE : 1;
+    var experience = experiences.freeze(match.matchId(), match.seed());
     return new MatchEvent.BallotOpened(
-        rotation.candidates(count).stream()
+        rotation.candidates(count, experience.settings().maps()).stream()
             .map(
                 map ->
                     new Ballot.Candidate(

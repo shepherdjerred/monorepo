@@ -74,7 +74,19 @@ public final class MapRotation<T extends MapRotation.Entry> implements AutoClose
    * the one just played is left out.
    */
   public List<T> candidates(int count) {
-    var pool = new ArrayList<>(playable());
+    return candidates(count, Set.of());
+  }
+
+  /** Draws only from admitted playable entries; restrictions never load additional maps. */
+  public List<T> candidates(int count, Set<String> admitted) {
+    var pool =
+        new ArrayList<>(
+            playable().stream()
+                .filter(map -> admitted.isEmpty() || admitted.contains(map.id()))
+                .toList());
+    if (pool.isEmpty()) {
+      throw new IllegalStateException("configured rotation has no playable maps");
+    }
     if (pool.size() >= REPEAT_AFTER && active != null) {
       pool.remove(active);
     }
