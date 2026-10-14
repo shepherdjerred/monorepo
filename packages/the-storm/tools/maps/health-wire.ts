@@ -1,5 +1,6 @@
 import { z } from "zod";
 import wire from "#health-wire";
+import { TraversalCapabilities as HealthCapabilities } from "./traversal-capabilities.ts";
 import {
   HealthEnvironment as Environment,
   healthNutrition as nutrition,
@@ -9,23 +10,6 @@ import {
 const tick = z.number().int().nonnegative();
 const expiry = z.number().int().min(-1);
 const point = z.tuple([z.number(), z.number(), z.number()]);
-export const HealthCapabilities = z.strictObject({
-  maySprint: z.boolean(),
-  safeFallDistance: z.number().nonnegative(),
-  fallDamageMultiplier: z.number().nonnegative(),
-  fallProtectionPoints: z.number().int().min(0).max(20),
-  resistanceAmplifier: z.number().int().min(-1),
-  resistanceUntilTick: expiry,
-  noFallUntilTick: expiry,
-  slowFallingUntilTick: expiry,
-  healingConsumables: z.number().int().nonnegative(),
-  regenerationAmplifier: z.number().int().min(-1),
-  regenerationUntilTick: expiry,
-  jumpBoostAmplifier: z.number().int().min(-1),
-  jumpBoostUntilTick: expiry,
-  maxHealth: z.number().positive(),
-  fallDistance: z.number().nonnegative(),
-});
 export const HealthSample = z.strictObject({
   sequence: tick,
   serverTick: tick,

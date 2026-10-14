@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   HealthSample,
-  HealthCapabilities,
   HealthFall,
   HealthRegain,
   HealthPrediction,
@@ -10,6 +9,7 @@ import {
   inspectNativeRegains,
   summarizeHealth,
 } from "./health-wire.ts";
+import { TraversalCapabilities as HealthCapabilities } from "./traversal-capabilities.ts";
 
 const identity = {
   match: "00000000-0000-4000-8000-000000000001",
