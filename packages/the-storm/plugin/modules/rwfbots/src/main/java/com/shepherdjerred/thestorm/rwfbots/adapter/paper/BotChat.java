@@ -143,7 +143,13 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   @Override
   public boolean typing(UUID uuid) {
     var speech = speeches.get(uuid);
-    return speech != null && !parts.time().instant().isBefore(speech.starts());
+    if (speech == null) return false;
+    var now = parts.time().instant();
+    if (!casualOpportunity(speech, now)) {
+      cancel(uuid);
+      return false;
+    }
+    return !now.isBefore(speech.starts());
   }
 
   @Override
@@ -174,7 +180,10 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
   private void advance(UUID uuid, Optional<WorldSnapshot> snapshot, Instant now) {
     var speech = java.util.Objects.requireNonNull(speeches.get(uuid));
     var body = parts.roster().bodies().entity(uuid);
-    if (body.isEmpty() || body.orElseThrow().isDead() || stale(speech, snapshot)) {
+    if (body.isEmpty()
+        || body.orElseThrow().isDead()
+        || stale(speech, snapshot)
+        || !casualOpportunity(speech, now)) {
       cancel(uuid);
       return;
     }
@@ -188,6 +197,37 @@ public final class BotChat implements Consumer<MatchNotification>, BodyActivity 
       thinking.ifPresent(loop -> completed.report().ifPresent(loop::delivered));
     }
     cancel(uuid);
+  }
+
+  private boolean casualOpportunity(Speech speech, Instant now) {
+    if (!nonurgent(speech.line()) || previous == null || previous.phase() != MatchState.Phase.LIVE)
+      return true;
+    return parts
+        .roster()
+        .session()
+        .flatMap(session -> session.ids().known(speech.line().speaker()))
+        .flatMap(id -> thinking.flatMap(loop -> loop.board().of(id)))
+        .map(thought -> idleOpportunity(thought.decision()))
+        .orElseGet(() -> now.isBefore(speech.starts()));
+  }
+
+  private static boolean nonurgent(Utterance line) {
+    return !line.teamOnly()
+        && switch (line.moment()) {
+          case GREET, TAUNT, LOBBY -> true;
+          default -> false;
+        };
+  }
+
+  static boolean idleOpportunity(
+      com.shepherdjerred.thestorm.rwfbots.domain.world.Decision decision) {
+    return (decision.option() == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.HOLD_SLOT
+            || decision.option()
+                == com.shepherdjerred.thestorm.rwfbots.domain.world.Option.HOLD_ANGLE)
+        && decision.waypoints().isEmpty()
+        && decision.target().isEmpty()
+        && decision.ability().isEmpty()
+        && decision.routeFailure().isEmpty();
   }
 
   private Speech indicator(Speech speech, org.bukkit.entity.Player player) {

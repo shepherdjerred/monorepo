@@ -208,6 +208,67 @@ final class CombatHarnessTest {
     assertThat(harness.active(new UUID(1, 2))).isTrue();
   }
 
+  @Test
+  void recordedAuthoredCohortKeepsItsOrderKitsAndOrdinaryCompetenceForOnlyOneMatch() {
+    var first = new UUID(1, 2);
+    var successor = new UUID(3, 4);
+    var alpha = Fixtures.personality("alpha", "Alpha", .8);
+    var beta = Fixtures.personality("beta", "Beta", .2);
+    var settings = com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT;
+    var recorded =
+        new java.util.ArrayList<>(
+            List.of(
+                new Director.Drafted(
+                    beta,
+                    Kit.LONGBOW,
+                    MatchCompetence.levers(beta, settings, 42),
+                    com.shepherdjerred.thestorm.rwfbots.domain.director.Rating.DEFAULT,
+                    MatchCompetence.style(beta, settings)),
+                new Director.Drafted(
+                    alpha,
+                    Kit.REWIND,
+                    MatchCompetence.levers(alpha, settings, 42),
+                    com.shepherdjerred.thestorm.rwfbots.domain.director.Rating.DEFAULT,
+                    MatchCompetence.style(alpha, settings))));
+    var expected = List.copyOf(recorded);
+    var harness = new CombatHarness();
+    harness.attachAuthored(recorded, new Passthrough());
+    recorded.clear();
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> harness.draft(first, 2, new PersonalityCatalog(List.of(alpha))));
+    assertThat(harness.active(first)).isFalse();
+    var catalog = new PersonalityCatalog(List.of(alpha, beta));
+    assertThat(harness.draft(first, 2, catalog)).contains(expected);
+    assertThat(harness.controlled(first)).isFalse();
+    assertThat(harness.seed(first)).isEmpty();
+    assertThat(harness.baseline(first)).isEmpty();
+    assertThat(expected).allSatisfy(bot -> assertThat(bot.levers().technique()).isLessThan(1));
+    assertThat(harness.draft(successor, 2, catalog)).isEmpty();
+    assertThat(harness.active(successor)).isFalse();
+    harness.detach();
+    harness.attachAuthored(2, new Passthrough());
+    assertThat(harness.draft(successor, 2, catalog)).isEmpty();
+    assertThat(harness.active(successor)).isTrue();
+  }
+
+  @Test
+  void recordedAuthoredCohortRejectsDuplicateIdentitiesBeforeAttaching() {
+    var personality = Fixtures.personality("alpha", "Alpha", .8);
+    var draft =
+        new Director.Drafted(
+            personality,
+            Kit.TROOPER,
+            MatchCompetence.levers(
+                personality, com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT, 42),
+            com.shepherdjerred.thestorm.rwfbots.domain.director.Rating.DEFAULT);
+    var harness = new CombatHarness();
+    assertThatIllegalArgumentException()
+        .isThrownBy(() -> harness.attachAuthored(List.of(draft, draft), new Passthrough()));
+    harness.attachAuthored(List.of(draft), new Passthrough());
+    assertThat(harness.draft(new UUID(1, 2), 1, new PersonalityCatalog(List.of(personality))))
+        .contains(List.of(draft));
+  }
+
   private static final class Passthrough implements CombatHarness.Controller {
     private final java.util.ArrayList<Long> captured = new java.util.ArrayList<>();
     private final java.util.ArrayList<Long> finished = new java.util.ArrayList<>();

@@ -174,12 +174,14 @@ async function usingShowcase(
   rcon: RconClient,
   size: number,
   play: (live: Awaited<ReturnType<typeof status>>) => Promise<void>,
+  start: () => Promise<Awaited<ReturnType<typeof status>>> = () =>
+    startShowcase(rcon, size),
 ): Promise<void> {
   const owned = await status(rcon);
   expect(owned.ready).toBe(true);
   expect([owned.phase, owned.humans, owned.bots]).toEqual(["Lobby", 0, 0]);
   try {
-    const live = await startShowcase(rcon, size);
+    const live = await start();
     expect(live.matchId).toBe(owned.matchId);
     await play(live);
   } finally {
@@ -1293,6 +1295,95 @@ const MAX_WINDING = 2.5;
 /** The least share of a team past its own third by 10 s (anchors stay home). */
 const MIN_FORWARD = 1 / 4;
 
+const ReplayPointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+});
+const ReplaySchema = z.object({
+  originalMatch: z.literal("d3b07b36-0f40-47ff-880f-1e509bc41c17"),
+  match: z.uuid(),
+  seed: z.literal("3820972541116702293"),
+  settings: z.string().min(1),
+  phase: z.string().min(1),
+  chatSeedPinned: z.literal(false),
+  nativeAcceptance: z.literal("not-exposed"),
+  roster: z
+    .array(
+      z.object({
+        personality: z.string().min(1),
+        kit: z.enum(["TROOPER", "LONGBOW", "SHORTBOW", "REWIND"]),
+        team: z.enum(["blue", "red"]),
+      }),
+    )
+    .length(16),
+  ticks: z
+    .array(
+      z.object({
+        serverTick: z.number().int().nonnegative(),
+        authoredTick: z.number().int().nonnegative(),
+        liveTick: z.number().int().nonnegative(),
+        bodies: z
+          .array(
+            z.object({
+              identity: z.object({
+                slot: z.number().int().min(0).max(15),
+                personality: z.string().min(1),
+                body: z.uuid(),
+                team: z.enum(["blue", "red"]),
+                kit: z.enum(["trooper", "longbow", "shortbow", "rewind"]),
+              }),
+              pose: z.object({
+                at: ReplayPointSchema,
+                velocity: ReplayPointSchema,
+                health: z.number().nonnegative(),
+                fallDistance: z.number().nonnegative(),
+                sprint: z.boolean(),
+              }),
+              activity: z.object({
+                typingIndicator: z.boolean(),
+                activeItem: z.boolean(),
+                casting: z.boolean(),
+              }),
+              intent: z
+                .object({
+                  decisionTick: z.number().int(),
+                  plan: z.string(),
+                  option: z.string(),
+                  commands: z.array(z.string()),
+                  waypoints: z.array(z.string()),
+                })
+                .optional(),
+            }),
+          )
+          .max(16),
+      }),
+    )
+    .max(240),
+});
+
+async function originalReplay(rcon: RconClient, request: "start" | "status") {
+  return ReplaySchema.parse(
+    JSON.parse(
+      plain(
+        await rcon.command(`storm-fixture-map-lifecycle replay-${request}`),
+      ),
+    ),
+  );
+}
+
+async function startOriginalShowcase(rcon: RconClient) {
+  await originalReplay(rcon, "start");
+  await eventually(
+    "the original cohort to go live",
+    async () => liveStatus(rcon),
+    30_000,
+  );
+  const live = await status(rcon);
+  expect([live.humans, live.bots]).toEqual([0, 16]);
+  return live;
+}
+
 /**
  * How a showcase was played, from its recording: spacing and crowding before
  * first contact, width across the yard at 8 s and at contact, the share past
@@ -1341,40 +1432,52 @@ describe("Search and Destroy rwfbots team play", () => {
     async ({ rcon, server }) => {
       await waitForLobby(rcon);
       const size = 16;
-      await usingShowcase(rcon, size, async (live) => {
-        // What each bot was dealt, kept beside the recording for `rwf:trails`.
-        await Bun.sleep(4000);
-        const slots = plain(await rcon.command("rwfbots debug slots"));
-        expect(slots).toMatch(/objective/u);
-        await eventually(
-          "the showcase to end and its recording to close",
-          async () => {
-            const rows = await matchRows(server, live.matchId);
-            return (rows.match?.recording_file ?? null) !== null;
-          },
-          matchBudgetMs,
-        );
-        const settled = await matchRows(server, live.matchId);
-        expect(settled.match?.winner).toMatch(/^(?:RED|BLUE)$/u);
-        await Bun.write(path.join(settled.outDir, "slots.txt"), slots);
-        const traces = await gzipLines(
-          server,
-          `rwfbots-traces/${live.matchId}.gz`,
-          settled.outDir,
-        );
-        expect(traces.every((line) => line.startsWith("decision\t"))).toBe(
-          true,
-        );
-        const trails = readTrails(
-          await gzipLines(
+      await usingShowcase(
+        rcon,
+        size,
+        async (live) => {
+          // What each bot was dealt, kept beside the recording for `rwf:trails`.
+          await Bun.sleep(4000);
+          const slots = plain(await rcon.command("rwfbots debug slots"));
+          expect(slots).toMatch(/objective/u);
+          await eventually(
+            "the showcase to end and its recording to close",
+            async () => {
+              const rows = await matchRows(server, live.matchId);
+              return (rows.match?.recording_file ?? null) !== null;
+            },
+            matchBudgetMs,
+          );
+          const settled = await matchRows(server, live.matchId);
+          expect(settled.match?.winner).toMatch(/^(?:RED|BLUE)$/u);
+          const replay = await originalReplay(rcon, "status");
+          expect(replay.match).toBe(live.matchId);
+          expect(replay.ticks.length).toBeGreaterThanOrEqual(BY_TICKS);
+          await Bun.write(
+            path.join(settled.outDir, "opening-replay.json"),
+            JSON.stringify(replay, null, 2),
+          );
+          await Bun.write(path.join(settled.outDir, "slots.txt"), slots);
+          const traces = await gzipLines(
             server,
-            settled.match?.recording_file ?? "",
+            `rwfbots-traces/${live.matchId}.gz`,
             settled.outDir,
-          ),
-        );
-        expect(trails.mapId).toBe("training-yard");
-        expectTeamPlay(trails);
-      });
+          );
+          expect(traces.every((line) => line.startsWith("decision\t"))).toBe(
+            true,
+          );
+          const trails = readTrails(
+            await gzipLines(
+              server,
+              settled.match?.recording_file ?? "",
+              settled.outDir,
+            ),
+          );
+          expect(trails.mapId).toBe("training-yard");
+          expectTeamPlay(trails);
+        },
+        () => startOriginalShowcase(rcon),
+      );
     },
   );
 });
