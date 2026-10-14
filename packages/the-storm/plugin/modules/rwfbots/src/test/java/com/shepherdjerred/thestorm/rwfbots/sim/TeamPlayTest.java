@@ -124,8 +124,8 @@ final class TeamPlayTest {
    */
   // Duration-weighted route density avoids needless run-ups; uncovered bounds finish before
   // replanning, with predictive teammate spacing and supported native wall sliding.
-  // This pre-restack pin remains provisional until the composed behavior passes fresh floors.
-  private static final String PINNED_YARD_HASH = "8afce9466782740e";
+  // Composed with certified launch recovery, local squad bounds and committed fuse work.
+  private static final String PINNED_YARD_HASH = "b9bae78678e6a5f2";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

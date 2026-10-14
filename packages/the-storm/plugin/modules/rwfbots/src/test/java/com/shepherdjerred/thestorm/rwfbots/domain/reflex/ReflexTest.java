@@ -112,7 +112,7 @@ final class ReflexTest {
   void convergingCombatTeammatesLeaveRoomBeforeTheyEnterTheMovingSpacingBand() {
     var self = combatant(1, RED, new Vec3(5.5, 1, 5.5));
     var target = combatant(2, BLUE, new Vec3(8.7, 1, 5.5));
-    var ally = combatant(3, RED, new Vec3(5.5, 1, 9.5));
+    var ally = combatant(3, RED, self.pos().plus(0, 0, Reflex.WALK_SEPARATION + 0.5));
     var context = context(levers(0));
     var decision = fight(self, target, 1);
     var state = ReflexState.initial(self.facing()).withStrafe(1, 100);

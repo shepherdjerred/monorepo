@@ -3,6 +3,48 @@ import wire from "#authored-combat-wire";
 
 const tick = z.number().int().nonnegative();
 const difficulty = z.enum(["PEACEFUL", "EASY", "NORMAL", "HARD"]);
+const hostDifficulty = z.enum(["EASY", "NORMAL", "HARD"]);
+export const AuthoredCombatHost = z.strictObject({
+  match: z.uuid(),
+  enabled: z.boolean(),
+  host: z.uuid().nullable(),
+  locked: z.boolean(),
+  selectedDifficulty: hostDifficulty,
+  currentDifficulty: hostDifficulty,
+});
+const Levers = z.strictObject({
+  reactionMs: z.number().min(150).max(450),
+  aimErrorDeg: z.number().min(0.5).max(6),
+  turnRateDegPerTick: z.number().min(8).max(45),
+  cps: z.number().min(5).max(12),
+  predictionQuality: z.number().min(0).max(1),
+  decisionTemperature: z.number().min(0.05).max(1),
+  awarenessRadius: z.number().min(24).max(64),
+  coordination: z.number().min(0).max(1),
+  technique: z.number().min(0).max(1),
+  aggression: z.number().min(0).max(1),
+});
+const Style = z.strictObject({
+  aggression: z.number().min(0).max(1),
+  patience: z.number().min(0).max(1),
+  teamplay: z.number().min(0).max(1),
+  risk: z.number().min(0).max(1),
+});
+const Profile = z.strictObject({
+  body: z.uuid(),
+  personality: z.string().min(1),
+  levers: Levers,
+  style: Style,
+});
+export {
+  Levers as AuthoredCombatLevers,
+  Style as AuthoredCombatStyle,
+  Profile as AuthoredCombatProfile,
+};
+const Effective = z.strictObject({
+  host: AuthoredCombatHost,
+  profile: Profile,
+});
 const Actor = z.strictObject({
   body: z.uuid(),
   world: z.uuid(),
@@ -39,6 +81,7 @@ const Frame = z.strictObject({
   difficulty,
   human: Actor,
   bot: Actor,
+  effective: Effective,
 });
 const Hit = z.strictObject({
   sequence: tick,
@@ -59,7 +102,7 @@ export const AuthoredCombatProbe = z.strictObject({
   frame: Frame,
 });
 export const AuthoredCombatCapture = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   kind: z.literal("rwf-authored-npc-human-combat"),
   humanDemonstration: z.literal(false),
   authoredBotControl: z.literal(true),
@@ -74,6 +117,7 @@ export const AuthoredCombatCapture = z.strictObject({
     .regex(
       /^experience-v1;seed=-?\d+;difficulty=hard;style=varied;variety=high;maps=[a-z0-9,-]*;kits=trooper$/u,
     ),
+  effective: Effective,
   startedTick: tick,
   sampledTick: tick,
   dropped: tick,
@@ -84,7 +128,7 @@ export const AuthoredCombatCapture = z.strictObject({
 });
 export const authoredCombatContract = z
   .strictObject({
-    version: z.literal(1),
+    version: z.literal(2),
     kind: z.literal("rwf-authored-npc-human-combat"),
     humanDemonstration: z.literal(false),
     authoredBotControl: z.literal(true),
@@ -100,6 +144,11 @@ const records = {
   Environment,
   Probe: AuthoredCombatProbe,
   Capture: AuthoredCombatCapture,
+  Host: AuthoredCombatHost,
+  Profile,
+  Effective,
+  Levers,
+  Style,
 };
 for (const [name, schema] of Object.entries(records))
   if (
@@ -120,6 +169,7 @@ type Receipt = z.infer<typeof Hit>;
 /** Evidence for one ordinary authored NPC hurting the original joined SURVIVAL human. */
 export function summarizeAuthoredCombat(raw: unknown) {
   const capture = AuthoredCombatCapture.parse(raw);
+  validateEffective(capture);
   if (
     capture.state !== "closed" ||
     capture.message !== "" ||
@@ -167,6 +217,8 @@ export function summarizeAuthoredCombat(raw: unknown) {
     match: capture.match,
     human: capture.human,
     bot: capture.bot,
+    declaredExperience: capture.experience,
+    effective: capture.effective,
     nativeMeleeEvents: capture.hits.length,
     damagingMeleeEvents: damaging.length,
     retainedHealthLoss: Math.max(
@@ -186,6 +238,7 @@ function validateFrame(frame: Observation, capture: Capture) {
     frame.phase !== "LIVE" ||
     frame.world !== capture.world ||
     frame.difficulty !== "HARD" ||
+    JSON.stringify(frame.effective) !== JSON.stringify(capture.effective) ||
     frame.human.mode !== "SURVIVAL" ||
     frame.human.team === frame.bot.team ||
     !frame.human.online ||
@@ -194,6 +247,22 @@ function validateFrame(frame: Observation, capture: Capture) {
   )
     throw new Error(
       "Combat frame left the original opposing living Troopers and SURVIVAL human",
+    );
+}
+
+function validateEffective(capture: Capture) {
+  const { host, profile } = capture.effective;
+  if (
+    !host.enabled ||
+    host.match !== capture.match ||
+    host.host !== capture.human ||
+    !host.locked ||
+    host.selectedDifficulty !== "HARD" ||
+    host.currentDifficulty !== "HARD" ||
+    profile.body !== capture.bot
+  )
+    throw new Error(
+      "Combat requires the original host's frozen HARD and actual bot profile",
     );
 }
 

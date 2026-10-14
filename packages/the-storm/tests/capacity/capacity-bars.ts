@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WindowSchema } from "#load/load-bars.ts";
+import { CapacityBehaviorObservation } from "./behavior.ts";
 
 export const totals = [64, 100, 128, 192, 256] as const;
 export const TelemetrySchema = z.object({
@@ -54,6 +55,8 @@ export const CapacityPhaseSchema = z.object({
       arrivalMs: z.number(),
       arrival: LifecycleSchema,
       startup: TelemetrySchema,
+      // Older diagnostic reports lack this; fresh qualification requires actual installed profiles.
+      behavior: CapacityBehaviorObservation.optional(),
       resetMs: z.number().optional(),
       reset: LifecycleSchema.optional(),
       resetTelemetry: TelemetrySchema.optional(),

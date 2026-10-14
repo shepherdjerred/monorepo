@@ -12,7 +12,7 @@ import {
   verifyCapacityHeap,
   CapacityBootstrapSchema,
 } from "./runtime.ts";
-import { runtimeIdentityFixture as runtime } from "#e2e/harness/runtime-identity-fixture.ts";
+import { runtimeIdentityFixture as runtime } from "#capacity-fixtures/runtime-identity.ts";
 
 const hash = (digit: string) => digit.repeat(64);
 

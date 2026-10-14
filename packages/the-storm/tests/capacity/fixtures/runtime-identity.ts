@@ -1,5 +1,5 @@
 import { requiredRuntimeSettings } from "#capacity-runtime";
-import { thirdPartyPlugins } from "./pins.ts";
+import { thirdPartyPlugins } from "#e2e/harness/pins.ts";
 
 const hash = (digit: string) => digit.repeat(64);
 

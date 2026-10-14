@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "kind": "rwf-capacity-behavior",
+  "records": {
+    "Capture": [
+      "version",
+      "kind",
+      "serverTick",
+      "match",
+      "phase",
+      "map",
+      "experience",
+      "experienceFingerprint",
+      "host",
+      "humans",
+      "bots",
+      "profiles"
+    ],
+    "Host": [
+      "match",
+      "enabled",
+      "host",
+      "locked",
+      "selectedDifficulty",
+      "currentDifficulty"
+    ],
+    "Profile": ["body", "personality", "levers", "style"],
+    "Levers": [
+      "reactionMs",
+      "aimErrorDeg",
+      "turnRateDegPerTick",
+      "cps",
+      "predictionQuality",
+      "decisionTemperature",
+      "awarenessRadius",
+      "coordination",
+      "technique",
+      "aggression"
+    ],
+    "Style": ["aggression", "patience", "teamplay", "risk"]
+  }
+}

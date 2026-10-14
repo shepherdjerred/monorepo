@@ -5,7 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { overlayRwf } from "#e2e/harness/config-overlays.ts";
 import { rwfTestSettings } from "#e2e/harness/rwf-settings.ts";
-import { trooperCombatProfile } from "./profile.ts";
+import { authoredCombatMatch, trooperCombatProfile } from "./profile.ts";
 
 const experience: ReturnType<typeof trooperCombatProfile>["original"] = {
   difficulty: "hard",
@@ -71,6 +71,22 @@ test("serialized private profile remains compatible with actual ordinary server 
       })
       .parse(Bun.YAML.parse(await Bun.file(file).text()));
     expect(parsed.experience.kits).toEqual(["trooper"]);
+    await overlayRwf(file, { ...rwfTestSettings, ...authoredCombatMatch });
+    const observed = z
+      .looseObject({
+        match: z.looseObject({
+          countdown: z.literal("PT15S"),
+          endLinger: z.literal("PT30S"),
+          previewLength: z.string(),
+          freezeLength: z.string(),
+          targetCombatants: z.literal(2),
+          maxCombatants: z.literal(2),
+          automaticSizing: z.literal(false),
+        }),
+      })
+      .parse(Bun.YAML.parse(await Bun.file(file).text()));
+    expect(observed.match.previewLength).toBe(rwfTestSettings.previewLength);
+    expect(observed.match.freezeLength).toBe(rwfTestSettings.freezeLength);
     expect(trooperCombatProfile(Bun.YAML.parse(source)).original.kits).toEqual(
       [],
     );

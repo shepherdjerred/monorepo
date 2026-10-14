@@ -80,6 +80,11 @@ public record MatchSettings(
     return (int) Math.max(absoluteMinPlayers, minPlayers - relaxed);
   }
 
+  /** Candidate visits already granted the voting period; only the map-loading lead remains. */
+  public Duration countdownAfter(Ballot ballot) {
+    return ballot.visits().isPresent() ? voteLead : countdown;
+  }
+
   public MatchSettings withMaxPlayers(int newMax) {
     return new MatchSettings(
         minPlayers,

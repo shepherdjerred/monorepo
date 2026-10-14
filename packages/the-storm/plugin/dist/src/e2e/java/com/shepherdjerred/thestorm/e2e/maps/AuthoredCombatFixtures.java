@@ -34,13 +34,20 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
       tools.jackson.databind.json.JsonMapper.builder().build();
   private static final AuthoredCombatProtocol WIRE =
       AuthoredCombatProtocol.load(
-          Map.of(
-              "Actor", Actor.class,
-              "Frame", Frame.class,
-              "Hit", Hit.class,
-              "Environment", Environment.class,
-              "Probe", Probe.class,
-              "Capture", Capture.class));
+          Map.ofEntries(
+              Map.entry("Actor", Actor.class),
+              Map.entry("Frame", Frame.class),
+              Map.entry("Hit", Hit.class),
+              Map.entry("Environment", Environment.class),
+              Map.entry("Probe", Probe.class),
+              Map.entry("Capture", Capture.class),
+              Map.entry("Host", AuthoredCombatSettings.Host.class),
+              Map.entry("Profile", AuthoredCombatSettings.Profile.class),
+              Map.entry("Effective", AuthoredCombatSettings.Effective.class),
+              Map.entry(
+                  "Levers", com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers.class),
+              Map.entry(
+                  "Style", com.shepherdjerred.thestorm.rwfbots.domain.personality.Style.class)));
   private final JavaPlugin plugin;
   private final String mapsWorld;
   private final List<Frame> frames = new ArrayList<>();
@@ -60,7 +67,8 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
       World world,
       Difficulty originalDifficulty,
       int startedTick,
-      String experience) {}
+      String experience,
+      AuthoredCombatSettings.Effective effective) {}
 
   private record Actor(
       UUID body,
@@ -88,7 +96,8 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
       String phase,
       String difficulty,
       Actor human,
-      Actor bot) {}
+      Actor bot,
+      AuthoredCombatSettings.Effective effective) {}
 
   private record Hit(
       long sequence, String cause, boolean cancelled, Frame before, Frame monitor, Frame after) {}
@@ -110,6 +119,7 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
       UUID human,
       UUID bot,
       String experience,
+      AuthoredCombatSettings.Effective effective,
       int startedTick,
       int sampledTick,
       int dropped,
@@ -147,6 +157,8 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
     try {
       Object response;
       if (args.length == 1 && args[0].equals("contract")) response = WIRE;
+      else if (args.length == 1 && args[0].equals("settings"))
+        response = AuthoredCombatSettings.host(storm());
       else if (args.length == 3 && args[0].equals("probe"))
         response = probe(UUID.fromString(args[1]), UUID.fromString(args[2]));
       else {
@@ -184,11 +196,15 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
     }
   }
 
-  private MatchView matches() {
+  private TheStormPlugin storm() {
     var found = plugin.getServer().getPluginManager().getPlugin("TheStorm");
     if (!(found instanceof TheStormPlugin storm))
       throw new IllegalStateException("TheStorm missing");
-    return storm.service(MatchView.class);
+    return storm;
+  }
+
+  private MatchView matches() {
+    return storm().service(MatchView.class);
   }
 
   private MatchState current() {
@@ -227,6 +243,7 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
         || !settings.kits().equals(Set.of("trooper")))
       throw new IllegalStateException(
           "requires frozen hard/varied/high Trooper baseline: " + settings);
+    AuthoredCombatSettings.requireHard(ready.frame().effective(), human);
     binding =
         Optional.of(
             new Binding(
@@ -236,7 +253,8 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
                 player.getWorld(),
                 player.getWorld().getDifficulty(),
                 plugin.getServer().getCurrentTick(),
-                settings.canonical(experience.seed())));
+                settings.canonical(experience.seed()),
+                ready.frame().effective()));
     player.getWorld().setDifficulty(Difficulty.HARD);
     state = "observing";
     observe();
@@ -258,6 +276,8 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
     frames.add(raw);
     var reason = identityProblem(raw, active.match(), active.world().getUID());
     if (!reason.isEmpty()) throw new IllegalStateException(reason + ": " + raw);
+    if (!raw.effective().equals(active.effective()))
+      throw new IllegalStateException("effective host settings or bot profile changed: " + raw);
     if (current.combatants().size() != 2
         || fighter(current, active.human()).bot()
         || !fighter(current, active.bot()).bot()
@@ -304,7 +324,8 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
         match.phase().name(),
         player(human).getWorld().getDifficulty().name(),
         humanBody,
-        actor(fighter(match, bot)));
+        actor(fighter(match, bot)),
+        AuthoredCombatSettings.capture(storm(), bot));
   }
 
   private Actor actor(MatchState.Fighter fighter) {
@@ -351,6 +372,7 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
         active.human(),
         active.bot(),
         active.experience(),
+        active.effective(),
         active.startedTick(),
         plugin.getServer().getCurrentTick(),
         dropped,

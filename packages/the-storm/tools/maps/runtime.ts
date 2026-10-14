@@ -10,7 +10,7 @@ import { RconClient } from "#e2e/harness/rcon.ts";
 import { status } from "#e2e/harness/rwf-match.ts";
 import { freezeInputs } from "./inputs.ts";
 import { root, runtimeMapServerConfig, waitForMapState } from "./paper.ts";
-import { runtimeSequence, selectRuntimeMap } from "./selection.ts";
+import { runtimeSequence, selectRuntimeMap } from "./lifecycle/selection.ts";
 import {
   Lifecycle,
   verifyBounds,

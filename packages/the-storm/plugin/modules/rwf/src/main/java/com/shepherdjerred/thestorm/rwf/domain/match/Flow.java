@@ -122,10 +122,7 @@ final class Flow {
       Voting.close(draft);
     }
     if (lobby.ballot().opened() && enoughPlayers(draft, waitingSince, now)) {
-      var countdown =
-          lobby.ballot().visits().isPresent()
-              ? draft.settings.voteLead()
-              : draft.settings.countdown();
+      var countdown = draft.settings.countdownAfter(lobby.ballot());
       var seconds = countdown.toSeconds();
       draft.phase =
           new Phase.Countdown(

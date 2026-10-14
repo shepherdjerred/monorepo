@@ -1111,6 +1111,9 @@
             "tests/capacity/capacity-bars.test.ts",
             "tests/capacity/runtime.test.ts",
             "tests/capacity/native-combat.test.ts",
+            "tests/capacity/behavior.test.ts",
+            "tests/capacity/features.test.ts",
+            "tests/capacity/map-readiness.test.ts",
             "tools/capacity",
             "scripts/bots/mineskin.test.ts",
             "scripts/bots/expanded-kit-weights.test.ts"

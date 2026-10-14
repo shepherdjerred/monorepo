@@ -1369,6 +1369,9 @@ spectator records the encounter outside the two-fighter roster. The fixture
 journals and restores private Hard difficulty; failures retain partial event
 observations and actual body state. This extended diagnostic supplies neither
 human demonstrations nor evidence for a larger lobby cap.
+The runner selects Hard through the ordinary host menu before the match locks.
+Its receipt binds frozen host settings and the bot's actual combat parameters
+separately from the declared experience profile.
 
 `bun tools/maps/pursuit.ts --output .cache/rwf-pursuit/batch-a` checks the
 production planner, reflex and Citizens motor together in a small disposable
@@ -2785,6 +2788,9 @@ It uses a 90-second baseline, 20-second settling period and
 150 seconds of live measurement per size, rearming ordinary matches when
 needed. Run each map twice. This does not change shipped match limits or
 automatic presets.
+The empty lobby prepares and admits the selected map through the ordinary
+preparation path before the baseline; the frame-pacing check uses the same
+readiness gate before positioning its camera.
 
 Every size must keep each sampled ten-second tick p95 below 50ms and within
 8ms of baseline, board lag p95 at most three ticks, governor level zero,
@@ -2825,8 +2831,17 @@ inputs fail identity capture; reports with the previous credential-dependent
 properties inventory are rejected. JVM argument fingerprints retain argument
 boundaries and heap flags, normalizing only the explicit CPU-count flag for
 CPU comparisons; unsupported embedded newlines are rejected.
-The qualifier
-reports load qualification separately for each tier and the complete matrix,
+Each live match also retains its frozen host setting and actual installed bot
+combat parameters separately from the declared experience. The candidate names
+its host difficulty; mismatched bands, incomplete bot inventories and missing
+original behavior observations cannot qualify. A Normal-host run supplies no
+Hard-host capacity evidence.
+Before boot, the disposable capacity profile enables match flow, host settings
+and candidate visits in its private feature service and records all RWF flag
+readbacks. Other RWF flags remain disabled in this candidate. Reports also bind
+the actual authored settings, including style, variety and map and kit pools;
+only the per-match random seed may vary between repetitions.
+The qualifier reports load qualification separately for each tier and the complete matrix,
 then chooses the smallest CPU pair supporting the highest qualified 64, 128 or
 256 tier. Its result does not accept deployment: rendered combat, bounded map
 loading, survival coexistence, MacBook frame pacing, manual quality and live

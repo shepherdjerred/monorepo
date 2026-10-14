@@ -29,7 +29,8 @@ import {
   AuthoredCombatProbe,
   summarizeAuthoredCombat,
 } from "./wire.ts";
-import { trooperCombatProfile } from "./profile.ts";
+import { authoredCombatMatch, trooperCombatProfile } from "./profile.ts";
+import { configureHostFeatures, selectHardHost } from "./settings.ts";
 
 const output = await prepareOutputDirectory();
 const frozen = await freezeInputs(root, output);
@@ -76,6 +77,15 @@ let camera: Awaited<ReturnType<typeof startClient>> | undefined;
 let session: Session | undefined;
 const journal: { command: string; response: unknown }[] = [];
 try {
+  await save("feature-settings.json", await configureHostFeatures(brain.port));
+  await save("match-settings.json", {
+    source: "private-ordinary-match-overlay",
+    match: authoredCombatMatch,
+    reason:
+      "Retain the arena during the unchanged 540-frame recording after an ordinary match ends",
+    participantHealthOrProtectionChanged: false,
+    ownedConfigurationChanged: false,
+  });
   server = await startRuntimeMapServer({
     inputs: frozen,
     content: staged.content,
@@ -83,12 +93,7 @@ try {
       baseUrl: `http://host.docker.internal:${brain.port.toString()}`,
       token,
     },
-    match: {
-      countdown: "PT15S",
-      targetCombatants: 2,
-      maxCombatants: 2,
-      automaticSizing: false,
-    },
+    match: authoredCombatMatch,
     cacheDir: path.join(root, ".cache/e2e/authored-combat"),
     recordingsDir: path.join(output, "recordings"),
   });
@@ -120,9 +125,7 @@ try {
     "ordinary private Training Yard ready",
     async () => {
       const value = await status(rcon);
-      return (
-        value.ready && value.phase === "Lobby" && value.map === "training-yard"
-      );
+      return value.ready && value.phase === "Lobby";
     },
     600_000,
   );
@@ -154,18 +157,23 @@ try {
     messages.push(line);
   });
   human.chat("/rwf join");
+  await save(
+    "host-settings.json",
+    await selectHardHost(human, () => native("settings")),
+  );
   await eventually(
     "original ordinary two-participant LIVE match",
     async () => {
       const value = await status(rcon);
       return (
         value.phase === "Live" &&
+        value.map === "training-yard" &&
         value.humans === 1 &&
         value.bots === 1 &&
         value.arriving === 0
       );
     },
-    90_000,
+    180_000,
   );
   const live = await status(rcon);
   const match = z.uuid().parse(live.matchId);

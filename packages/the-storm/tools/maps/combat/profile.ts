@@ -9,6 +9,15 @@ const Experience = z.strictObject({
 });
 const Configuration = z.looseObject({ experience: Experience });
 
+/** Keeps the private camera in the arena through an ordinary early death and end screen. */
+export const authoredCombatMatch = {
+  countdown: "PT15S",
+  targetCombatants: 2,
+  maxCombatants: 2,
+  automaticSizing: false,
+  endLinger: "PT30S",
+} as const;
+
 /** The first startup ballot freezes settings; a next-draft command is already too late. */
 export function trooperCombatProfile(raw: unknown) {
   const source = Configuration.parse(raw);

@@ -27,7 +27,7 @@ record AuthoredCombatProtocol(
         AuthoredCombatProtocol.class.getResourceAsStream("/rwf-authored-combat.json")) {
       if (stream == null) throw new IllegalStateException("authored combat contract missing");
       var wire = json.readValue(stream, AuthoredCombatProtocol.class);
-      if (wire.version() != 1
+      if (wire.version() != 2
           || !wire.kind().equals("rwf-authored-npc-human-combat")
           || wire.humanDemonstration()
           || !wire.authoredBotControl()

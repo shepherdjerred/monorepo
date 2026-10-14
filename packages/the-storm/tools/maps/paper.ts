@@ -81,7 +81,10 @@ export async function startRuntimeMapServer(options: {
   brain: { baseUrl: string; token: string };
   match: Pick<RwfOverlay, "countdown"> &
     Partial<
-      Pick<RwfOverlay, "targetCombatants" | "maxCombatants" | "automaticSizing">
+      Pick<
+        RwfOverlay,
+        "targetCombatants" | "maxCombatants" | "automaticSizing" | "endLinger"
+      >
     >;
   cacheDir: string;
   recordingsDir: string;

@@ -65,7 +65,8 @@ final class ArcherFootworkSafetyTest {
             Optional.empty(),
             "engage:fight",
             1,
-            0);
+            0,
+            Optional.empty());
     return Reflex.tick(
             ReflexState.initial(self.facing()).withStrafe(1, 100),
             new ReflexInput(self, world, decision, Optional.of(target), 0),

@@ -8,10 +8,12 @@ import { test } from "#e2e/fixtures.ts";
 import { capacityMap, capacityResources } from "#e2e/gameplay-fixtures.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
 import { connectBot, disconnectBot } from "#e2e/harness/bot.ts";
-import { eventually, status, transcript } from "#e2e/harness/rwf-match.ts";
+import { status, transcript } from "#e2e/harness/rwf-match.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import { sampleWindow, MsptSchema } from "#load/samples.ts";
+import { prepareEmptyCapacityMap } from "./map-readiness.ts";
+import { captureCapacityBehavior, capacityHostDifficulty } from "./behavior.ts";
 import {
   capacityTierVerdicts,
   capacityVerdicts,
@@ -33,16 +35,7 @@ const measureMs = 150_000;
 const readyMs = 15 * 60_000;
 
 async function lobby(rcon: RconClient) {
-  await eventually(
-    "the imported map and lobby to finish preparing",
-    async () => {
-      const reply = await rcon.command("rwf admin status");
-      if (!reply.includes("Ready: true, phase: Lobby")) return false;
-      const now = await status(rcon);
-      return now.humans === 0;
-    },
-    readyMs,
-  );
+  await prepareEmptyCapacityMap(rcon, capacityMap(), readyMs);
   expect(await rcon.command("rwfbots debug")).toContain("no bots in the match");
 }
 
@@ -50,6 +43,7 @@ async function arm(
   server: ServerInfo,
   rcon: RconClient,
   total: number,
+  authoredExperience: string,
 ): Promise<{ human: Bot; match: CapacityPhase["matches"][number] }> {
   await lobby(rcon);
   await rcon.command("rwfbots debug reset");
@@ -80,6 +74,13 @@ async function arm(
         arrivalMs: Date.now() - began,
         arrival,
         startup: await telemetry(rcon),
+        behavior: await captureCapacityBehavior(rcon, {
+          match: now.matchId,
+          map: capacityMap(),
+          total,
+          hostDifficulty: capacityHostDifficulty,
+          authoredExperience,
+        }),
       },
     };
   } catch (error) {
@@ -182,10 +183,11 @@ async function measure(
   server: ServerInfo,
   rcon: RconClient,
   phase: CapacityPhase,
-  checkpoint: () => Promise<void>,
+  observation: { checkpoint: () => Promise<void>; authoredExperience: string },
 ) {
+  const { checkpoint, authoredExperience } = observation;
   while (phase.measuredMs < measureMs) {
-    const armed = await arm(server, rcon, phase.total);
+    const armed = await arm(server, rcon, phase.total, authoredExperience);
     phase.matches.push(armed.match);
     try {
       await Bun.sleep(settleMs);
@@ -221,7 +223,7 @@ test(
   async ({ bot, rcon, server }) => {
     expect(bot.username).not.toBe("");
     await lobby(rcon);
-    const inputs = await evidence(server);
+    const inputs = await evidence(server, rcon);
     const runId = randomUUID();
     const beganAt = Date.now();
     const timing: { completedAt?: number } = {};
@@ -290,7 +292,10 @@ test(
       console.warn(
         `[capacity] ${capacityMap()} ${total.toString()} total; checkpoint ${file}`,
       );
-      await measure(server, rcon, phase, checkpoint);
+      await measure(server, rcon, phase, {
+        checkpoint,
+        authoredExperience: inputs.authoredExperience,
+      });
     }
     timing.completedAt = Date.now();
     await checkpoint();

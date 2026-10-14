@@ -14,6 +14,8 @@ import { request, StatusSchema, waitFor } from "#client/protocol.ts";
 import { evidence } from "./probes.ts";
 import { startCapacityClient } from "./native-client.ts";
 import { stagedDigest } from "./runtime.ts";
+import { prepareEmptyCapacityMap } from "./map-readiness.ts";
+import { captureCapacityBehavior } from "./behavior.ts";
 
 const Viewpoint = z.object({
   id: z.string(),
@@ -36,20 +38,8 @@ test(
     ).toBe("darwin");
     const map = capacityMap();
     const total = capacityNativeTotal();
-    const inputs = await evidence(server);
-    await eventually(
-      "ready empty admitted-map lobby",
-      async () => {
-        const current = await status(rcon);
-        return (
-          current.ready &&
-          current.phase === "Lobby" &&
-          current.humans === 0 &&
-          current.map === map
-        );
-      },
-      15 * 60_000,
-    );
+    await prepareEmptyCapacityMap(rcon, map, 15 * 60_000);
+    const inputs = await evidence(server, rcon);
     const viewpointFile = path.join(
       packageRoot,
       `server/owned/plugins/TheStorm/rwf/maps/${map}/map.yml`,
@@ -121,6 +111,13 @@ test(
       );
       const live = await status(rcon);
       expect([live.humans, live.bots]).toEqual([1, total - 1]);
+      const behavior = await captureCapacityBehavior(rcon, {
+        match: live.matchId,
+        map,
+        total,
+        hostDifficulty: inputs.hostDifficulty,
+        authoredExperience: inputs.authoredExperience,
+      });
       await request(session, "command", { text: "rwf spectate" });
       await rcon.command(pose);
       await Bun.sleep(20_000);
@@ -155,6 +152,7 @@ test(
             map,
             total,
             inputs,
+            behavior,
             viewpoint,
             viewpointSha256,
             before,

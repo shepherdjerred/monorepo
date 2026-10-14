@@ -9,6 +9,35 @@ const match = "11111111-1111-4111-8111-111111111111";
 const world = "22222222-2222-4222-8222-222222222222";
 const human = "33333333-3333-4333-8333-333333333333";
 const bot = "44444444-4444-4444-8444-444444444444";
+function effective() {
+  return {
+    host: {
+      match,
+      enabled: true,
+      host: human,
+      locked: true,
+      selectedDifficulty: "HARD",
+      currentDifficulty: "HARD",
+    },
+    profile: {
+      body: bot,
+      personality: "test-roster-personality",
+      levers: {
+        reactionMs: 250,
+        aimErrorDeg: 2,
+        turnRateDegPerTick: 30,
+        cps: 9,
+        predictionQuality: 0.7,
+        decisionTemperature: 0.3,
+        awarenessRadius: 50,
+        coordination: 0.7,
+        technique: 0.7,
+        aggression: 0.7,
+      },
+      style: { aggression: 0.7, patience: 0.4, teamplay: 0.6, risk: 0.5 },
+    },
+  };
+}
 function frame(sequence: number, serverTick: number, health: number) {
   const actor = {
     world,
@@ -35,11 +64,12 @@ function frame(sequence: number, serverTick: number, health: number) {
     difficulty: "HARD",
     human: { ...actor, body: human, team: "red", health },
     bot: { ...actor, body: bot, team: "blue" },
+    effective: effective(),
   };
 }
 function capture() {
   return AuthoredCombatCapture.parse({
-    version: 1,
+    version: 2,
     kind: "rwf-authored-npc-human-combat",
     humanDemonstration: false,
     authoredBotControl: true,
@@ -51,6 +81,7 @@ function capture() {
     bot,
     experience:
       "experience-v1;seed=-42;difficulty=hard;style=varied;variety=high;maps=;kits=trooper",
+    effective: effective(),
     startedTick: 100,
     sampledTick: 103,
     dropped: 0,
@@ -205,6 +236,60 @@ describe("ordinary authored NPC to joined human health proof", () => {
     const leaked = capture();
     leaked.environment.currentDifficulty = "HARD";
     expect(() => summarizeAuthoredCombat(leaked)).toThrow();
+  });
+  test("declared hard experience cannot stand in for Normal or next-round host difficulty", () => {
+    for (const mutate of [
+      (value: ReturnType<typeof capture>) => {
+        value.effective.host.currentDifficulty = "NORMAL";
+      },
+      (value: ReturnType<typeof capture>) => {
+        value.effective.host.selectedDifficulty = "NORMAL";
+      },
+      (value: ReturnType<typeof capture>) => {
+        value.effective.host.locked = false;
+      },
+      (value: ReturnType<typeof capture>) => {
+        value.effective.host.enabled = false;
+      },
+      (value: ReturnType<typeof capture>) => {
+        value.effective.host.host = bot;
+      },
+      (value: ReturnType<typeof capture>) => {
+        value.effective.host.match = world;
+      },
+      (value: ReturnType<typeof capture>) => {
+        value.effective.profile.body = human;
+      },
+    ]) {
+      const value = capture();
+      mutate(value);
+      expect(() => summarizeAuthoredCombat(value)).toThrow();
+    }
+  });
+  test("all event stages retain the actual installed personality and complete effective levers", () => {
+    const summary = summarizeAuthoredCombat(capture());
+    expect(summary.effective.profile.levers).toEqual(
+      effective().profile.levers,
+    );
+    expect(summary.declaredExperience).toContain("difficulty=hard");
+    for (const point of ["before", "monitor", "after"] as const) {
+      const value = capture();
+      value.hits[0]![point].effective.profile.levers.cps = 8;
+      expect(() => summarizeAuthoredCombat(value)).toThrow();
+    }
+    const incomplete = capture();
+    expect(() =>
+      AuthoredCombatCapture.parse({
+        ...incomplete,
+        effective: {
+          ...incomplete.effective,
+          profile: { ...incomplete.effective.profile, levers: { cps: 9 } },
+        },
+      }),
+    ).toThrow();
+    const invalid = capture();
+    invalid.effective.profile.levers.reactionMs = 149;
+    expect(() => summarizeAuthoredCombat(invalid)).toThrow();
   });
   test("unknown fields and non-authored or genuine-human labels fail strictly", () => {
     expect(() =>

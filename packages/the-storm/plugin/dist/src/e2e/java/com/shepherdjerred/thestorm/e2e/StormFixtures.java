@@ -80,6 +80,7 @@ public final class StormFixtures extends JavaPlugin {
     new InferenceLoadFixtures(this).register();
     new RegressionFixtures(this).register();
     new CapacityCombatFixtures(this).register();
+    new com.shepherdjerred.thestorm.e2e.maps.CapacityBehaviorFixtures(this).register();
     new BotTransferFixtures(this).register();
     mapExporter = new com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures(this, world);
     mapExporter.register();

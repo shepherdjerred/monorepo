@@ -77,11 +77,13 @@ final class RunnerRules {
                   Math.round(
                       Duration.between(now, countdown.startsAt()).toMillis()
                           * BotArrivals.ARRIVAL_SHARE)));
-      case Phase.Lobby _ ->
+      case Phase.Lobby lobby ->
           Duration.ofMillis(
               Math.min(
                   at.settings().relaxEvery().toMillis(),
-                  Math.round(at.settings().countdown().toMillis() * BotArrivals.ARRIVAL_SHARE)));
+                  Math.round(
+                      at.settings().countdownAfter(lobby.ballot()).toMillis()
+                          * BotArrivals.ARRIVAL_SHARE)));
       default -> Duration.ZERO;
     };
   }

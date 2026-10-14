@@ -127,7 +127,8 @@ final class TacticsCommitmentTest {
       var plan = Plan.of(Option.TAKE_SLOT, 92, step);
       var thought =
           Tactics.think(
-              new TacticsState(Optional.of(plan), 92, 0, 0, RewindClock.UNSTARTED),
+              new TacticsState(
+                  Optional.of(plan), 92, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
               situation,
               context,
               new SplittableRandom(1));
@@ -153,7 +154,8 @@ final class TacticsCommitmentTest {
     var arrived = Plan.of(Option.TAKE_SLOT, 92, new PlanStep.Route(SELF, Stance.CAUTIOUS, true));
     var thought =
         Tactics.think(
-            new TacticsState(Optional.of(arrived), 92, 0, 0, RewindClock.UNSTARTED),
+            new TacticsState(
+                Optional.of(arrived), 92, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
             situation,
             context,
             new SplittableRandom(1));
@@ -557,7 +559,8 @@ final class TacticsCommitmentTest {
     assertThat(Planner.coverAvailable(occupied, context, node)).isFalse();
     var thought =
         Tactics.think(
-            new TacticsState(Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED),
+            new TacticsState(
+                Optional.of(plan), 95, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
             occupied,
             context,
             new SplittableRandom(1));
