@@ -123,7 +123,7 @@ describe("turbo.json mirror", () => {
     }
   });
 
-  test("root check hashes ignore object storage but retain staging and source changes", async () => {
+  test("root check hashes ignore object storage and CI scratch but retain staging and source changes", async () => {
     const repository = path.join(import.meta.dir, "..", "..");
     const fixture = await mkdtemp(path.join(tmpdir(), "root-check-inputs-"));
     const tasks = await turboTasks();
@@ -197,6 +197,14 @@ describe("turbo.json mirror", () => {
         "object storage changed\n",
       );
       const objectsChanged = hashes();
+      const scratchFiles = [
+        ".git/ci-cold-source-cache/probe/objects/pack/probe.pack",
+        ".git/ci-gradle-seed/modules-2/probe.jar",
+      ];
+      for (const file of scratchFiles) {
+        await Bun.write(path.join(fixture, file), "private cache changed\n");
+      }
+      const scratchChanged = hashes();
       await Bun.write(path.join(fixture, "new-source.ts"), "const value=1\n");
       const beforeStaging = hashes();
       git("add", "new-source.ts");
@@ -219,6 +227,13 @@ describe("turbo.json mirror", () => {
           ),
         ).not.toContain(".git/objects/info/input-probe");
         expect(hashFor(objectsChanged)).toBe(task.hash);
+        const scratchInputs = Object.keys(
+          scratchChanged.find((entry) => entry.task === task.task)?.inputs ??
+            {},
+        );
+        for (const file of scratchFiles)
+          expect(scratchInputs).not.toContain(file);
+        expect(hashFor(scratchChanged)).toBe(task.hash);
         expect(hashFor(afterStaging)).not.toBe(hashFor(beforeStaging));
         expect(hashFor(sourceChanged)).not.toBe(hashFor(afterStaging));
         expect(hashFor(hiddenSourceChanged)).not.toBe(hashFor(sourceChanged));
