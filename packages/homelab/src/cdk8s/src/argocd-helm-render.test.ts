@@ -466,6 +466,9 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
       expect(outcome, name).toBeDefined();
       if (outcome === undefined)
         throw new Error(`Missing private chart ${name}`);
+      // Match the suite's bounded, reported upstream-outage skips. A rendered
+      // chart must still contain private consumers and their reader references.
+      if (outcome.result.exitCode !== 0 && outcome.result.transient) continue;
       expect(outcome.result.exitCode, outcome.result.stderr).toBe(0);
       const specs = parseAllDocuments(outcome.result.stdout).flatMap(
         (document) => privatePodSpecs(document.toJSON()),
