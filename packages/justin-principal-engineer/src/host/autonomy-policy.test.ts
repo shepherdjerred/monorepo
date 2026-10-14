@@ -8,7 +8,7 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import { autonomyEnabled } from "#src/host/autonomy-policy.ts";
-import { ConfigSchema, LinearIssueSchema } from "#src/domain/schemas.ts";
+import { ConfigSchema, TrackerIssueSchema } from "#src/domain/schemas.ts";
 import { runtimePaths } from "#src/runtime/paths.ts";
 
 afterEach(shutdownFeatureFlags);
@@ -22,7 +22,7 @@ describe("autonomous delivery policy", () => {
         new URL("../../config.example.json", import.meta.url),
       ).json(),
     );
-    const issue = LinearIssueSchema.parse({
+    const issue = TrackerIssueSchema.parse({
       id: "fixture",
       identifier: "AI-104",
       title: "CLI help",

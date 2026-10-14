@@ -1,6 +1,6 @@
 # justin-principal-engineer
 
-Local macOS automation that turns a labeled Linear issue into a reviewed,
+Local macOS automation that turns a labeled Tracker issue into a reviewed,
 merged pull request. Curated DevEx issues can run through merge autonomously;
 other issues retain exact-head owner approval.
 
@@ -26,6 +26,15 @@ merges stay on the host.
 Runtime files live under
 `~/Library/Application Support/justin-principal-engineer`. The configuration
 contract is in `config.example.json`.
+
+Configure `tracker.team` as `AI` and `tracker.url` with the private Tracker
+endpoint. Queue reads and writes use `toolkit tracker`; no issue-service token
+is required. Mutations identify the runner as `justin:<issue identifier>` and
+record the configured model with the toolkit's host/git metadata. Autonomous
+authorization uses the Developer Experience project slug. Existing task-state
+snapshots still parse, and issue refreshes replace their service data by identifier.
+Replace the former `linear` configuration block before running this version,
+then reinstall the LaunchAgent to remove its obsolete Linear credential reference.
 
 New task checkouts live in `tasks.noindex` so macOS Spotlight excludes their
 source files and build output. Existing tasks retain their saved checkout paths
@@ -55,7 +64,7 @@ building container dependencies.
 Each scheduled or development reconcile checks GitHub access under the local
 lock before selecting or advancing a task, so revoked permissions stop new work.
 
-`dev` runs the real configured Linear queue in the foreground, using the same
+`dev` runs the real configured Tracker queue in the foreground, using the same
 durable task state as the LaunchAgent. It injects credentials through `op run`
 on every turn. It refuses to start while the LaunchAgent is loaded.
 
@@ -109,7 +118,7 @@ run the repository verification command. Failed checks block publication.
 
 The PR reports the exact host-run command and its successful exit status. Agent
 summary and verification text remain excluded from public metadata because the
-agent sees private Linear comments. Changed files are checked for private
+agent sees private Tracker comments. Changed files are checked for private
 comment content before and after verification. Local checks do not replace
 exact-head Woodpecker CI or the ticket's merge authorization.
 
@@ -148,12 +157,12 @@ The repository's existing automated review policy remains authoritative.
 Green exact-head CI queues a Git-Spice merge without owner approval for
 autonomous tasks. The host readiness hook rechecks the issue, flag, full branch
 scope, PR identity, branch, head, and CI. The merge API is bound to that head.
-Linear completes only after GitHub confirms the merge commit and the host
+Tracker completes only after GitHub confirms the merge commit and the host
 verifies it is an ancestor of the fetched base branch. This completion does
 not imply deployment or production acceptance.
 
 Autonomous failures use `agent:blocked`, with the reason and retry time shown
-in status and Linear. Temporary provider or CI failures retry after 5, 15,
+in status and Tracker. Temporary provider or CI failures retry after 5, 15,
 then 60 minutes, capped at hourly. CI pending for an hour also yields the
 active slot. Exhausted repair budgets and scope violations remain blocked
 without further coding turns. Other issues can run while a task is blocked.
@@ -172,5 +181,5 @@ remove `agent:needs-human` to resume. The CI extension names Justin's exact
 `justin-principal-engineer[bot]` identity; forks and untrusted senders remain
 rejected. Autonomous tasks use the blocked recovery described above.
 
-See [Run the Linear agent queue](../docs/wiki/src/content/docs/how-to/run-the-linear-agent-queue.md)
+See [Run the agent queue](../docs/wiki/src/content/docs/how-to/run-the-linear-agent-queue.md)
 for setup and operation.

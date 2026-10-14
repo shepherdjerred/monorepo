@@ -5,7 +5,7 @@ import {
 import type { Config, PrHealth, TaskState } from "#src/domain/schemas.ts";
 import { ciOperatorBlocker } from "#src/integrations/ci.ts";
 import type { GitHubClient, PullRequest } from "#src/integrations/github.ts";
-import type { LinearClient } from "#src/integrations/linear.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 import { AutonomousBlocker } from "#src/domain/autonomy.ts";
@@ -23,7 +23,7 @@ export async function pauseForCiOperatorBlocker(input: {
   pr: PullRequest;
   config: Config["woodpecker"];
   token: string;
-  linear: LinearClient;
+  tracker: TrackerClient;
   store: TaskStore;
 }): Promise<boolean> {
   const blocker = await ciOperatorBlocker({
@@ -38,7 +38,7 @@ export async function pauseForCiOperatorBlocker(input: {
   await pauseTask({
     state: { ...input.state, latestHeadSha: input.pr.headRefOid },
     reason: blocker,
-    linear: input.linear,
+    tracker: input.tracker,
     store: input.store,
   });
   return true;
@@ -106,7 +106,7 @@ export async function queueUnhealthy(input: {
 export async function completeNoChangeTurn(input: {
   state: TaskState;
   output: NonNullable<TaskState["lastAgentOutput"]>;
-  linear: LinearClient;
+  tracker: TrackerClient;
   save: Save;
   writeInfo: (message: string) => void;
 }): Promise<void> {
@@ -119,7 +119,7 @@ export async function completeNoChangeTurn(input: {
   });
   await completeTask({
     state: completing,
-    linear: input.linear,
+    tracker: input.tracker,
     save: input.save,
     writeInfo: input.writeInfo,
   });
@@ -128,7 +128,7 @@ export async function completeNoChangeTurn(input: {
 export async function mergeTask(input: {
   state: TaskState;
   withGitHub: WithGitHub;
-  linear: LinearClient;
+  tracker: TrackerClient;
   save: Save;
   writeInfo: (message: string) => void;
   ready?: () => Promise<boolean>;
@@ -205,7 +205,7 @@ export async function mergeTask(input: {
     });
     await completeTask({
       state: completing,
-      linear: input.linear,
+      tracker: input.tracker,
       save: input.save,
       writeInfo: input.writeInfo,
     });
@@ -214,7 +214,7 @@ export async function mergeTask(input: {
 
 export async function completeTask(input: {
   state: TaskState;
-  linear: LinearClient;
+  tracker: TrackerClient;
   save: Save;
   writeInfo: (message: string) => void;
 }): Promise<void> {
@@ -226,17 +226,17 @@ export async function completeTask(input: {
   )
     throw new Error("Autonomous completion requires a confirmed merge commit");
   // Only the merge path sets a PR URL; the agent no-change path completes
-  // without one. Either way the terminal Linear state lands inside the
+  // without one. Either way the terminal Tracker state lands inside the
   // cleanup call, after the labels.
   if (state.prUrl === null) {
-    await input.linear.completeNoChange(state.issue);
+    await input.tracker.completeNoChange(state.issue);
     await input.save(state, "done", { resumePhase: null });
     input.writeInfo(
       `${state.issue.identifier}: no change was needed; issue completed`,
     );
     return;
   }
-  await input.linear.complete(state.issue, state.prUrl);
+  await input.tracker.complete(state.issue, state.prUrl);
   await input.save(state, "done", { resumePhase: null });
   input.writeInfo(`${state.issue.identifier}: merged ${state.prUrl}`);
 }
@@ -281,7 +281,7 @@ export type TaskStore = {
 export async function pauseTask(input: {
   state: TaskState;
   reason: string;
-  linear: LinearClient;
+  tracker: TrackerClient;
   store: TaskStore;
 }): Promise<void> {
   // Mutate first, save after: if the label add fails, local state still
@@ -294,14 +294,14 @@ export async function pauseTask(input: {
     updatedAt: currentTimestamp(),
   } as const;
   try {
-    await input.linear.needsHuman(input.state.issue, input.reason);
+    await input.tracker.needsHuman(input.state.issue, input.reason);
     await input.store.save({ ...parked });
   } catch (error) {
     // The label may have landed without the save: roll it back so the
     // next run retries the turn instead of running parked work. Best
     // effort — the original error still throws so the failure is recorded.
     try {
-      await input.linear.requeue(input.state.issue);
+      await input.tracker.requeue(input.state.issue);
     } catch (rollbackError) {
       const detail =
         rollbackError instanceof Error
@@ -318,14 +318,14 @@ export async function pauseTask(input: {
 
 export async function pauseAfterNoChangeFeedback(input: {
   state: TaskState;
-  linear: LinearClient;
+  tracker: TrackerClient;
   store: StateStore;
 }): Promise<void> {
   await pauseTask({
     state: input.state,
     reason:
       "The agent reported no change after owner feedback; explicit confirmation is required before merging.",
-    linear: input.linear,
+    tracker: input.tracker,
     store: input.store,
   });
 }
@@ -333,7 +333,7 @@ export async function pauseAfterNoChangeFeedback(input: {
 export async function recordFailure(input: {
   state: TaskState;
   error: unknown;
-  linear: LinearClient;
+  tracker: TrackerClient;
   store: StateStore;
 }): Promise<void> {
   const message =
@@ -354,7 +354,7 @@ export async function recordFailure(input: {
     await pauseTask({
       state: failed,
       reason: `Stopped after ${String(failureCount)} consecutive failures in ${input.state.phase}: ${message}`,
-      linear: input.linear,
+      tracker: input.tracker,
       store: input.store,
     });
     return;

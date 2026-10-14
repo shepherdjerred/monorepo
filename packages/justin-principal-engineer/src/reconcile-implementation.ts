@@ -4,7 +4,7 @@ import { AutonomousBlocker } from "#src/domain/autonomy.ts";
 import type { TaskState, AgentOutput } from "#src/domain/schemas.ts";
 import type { DockerAgentRunner } from "#src/host/docker.ts";
 import type { GitWorkspace } from "#src/host/git-workspace.ts";
-import type { LinearClient } from "#src/integrations/linear.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 import {
@@ -31,7 +31,7 @@ async function completeUnchangedTurn(
     await reconcileMerge.completeNoChangeTurn({
       state,
       output: persistedOutput,
-      linear: input.linear,
+      tracker: input.tracker,
       save: input.save,
       writeInfo,
     });
@@ -46,7 +46,7 @@ async function completeUnchangedTurn(
       );
     await reconcileMerge.pauseAfterNoChangeFeedback({
       state,
-      linear: input.linear,
+      tracker: input.tracker,
       store: input.store,
     });
     return;
@@ -64,7 +64,7 @@ async function completeUnchangedTurn(
 
 export async function implementTask(input: {
   state: TaskState;
-  linear: LinearClient;
+  tracker: TrackerClient;
   git: GitWorkspace;
   agent: DockerAgentRunner;
   store: StateStore;
@@ -76,7 +76,9 @@ export async function implementTask(input: {
 }): Promise<void> {
   let { state } = input;
   assertRepairBudget(state);
-  const linearContext = await input.linear.agentContext(state.issue.identifier);
+  const trackerContext = await input.tracker.agentContext(
+    state.issue.identifier,
+  );
   const output = await input.agent.runTurn({
     checkout: state.checkoutPath,
     provider: state.provider,
@@ -87,7 +89,7 @@ export async function implementTask(input: {
     },
     prompt: buildAgentPrompt({
       state,
-      linearContext,
+      trackerContext,
       feedback: state.pendingFeedback,
       ...(state.pendingHealth === null ? {} : { health: state.pendingHealth }),
       ...(state.pendingDiagnostics === null
@@ -102,7 +104,7 @@ export async function implementTask(input: {
     await reconcileMerge.pauseTask({
       state,
       reason: persistedOutput.summary,
-      linear: input.linear,
+      tracker: input.tracker,
       store: input.store,
     });
     return;

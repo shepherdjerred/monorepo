@@ -40,3 +40,11 @@ export function issueStatePath(
 ): string {
   return path.join(paths.state, `${identifier.toLowerCase()}.json`);
 }
+
+export function runnerCli(stableCheckout: string, runnerSource?: string) {
+  return path.join(
+    runnerSource ??
+      path.join(stableCheckout, "packages/justin-principal-engineer"),
+    "src/cli.ts",
+  );
+}

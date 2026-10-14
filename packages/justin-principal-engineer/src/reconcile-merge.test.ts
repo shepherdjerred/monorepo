@@ -2,11 +2,14 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   TaskStateSchema,
-  type LinearIssue,
+  type TrackerIssue,
   type TaskState,
 } from "#src/domain/schemas.ts";
-import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
-import { LinearClient } from "#src/integrations/linear.ts";
+import {
+  fakeTrackerRunner,
+  recordedLabelMutations,
+} from "#src/integrations/fake-tracker.ts";
+import { TrackerClient } from "#src/integrations/tracker.ts";
 import {
   completeTask,
   pauseTask,
@@ -16,9 +19,9 @@ import { AutonomousBlocker } from "#src/domain/autonomy.ts";
 import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
 
 function state(): TaskState {
-  const issue: LinearIssue = {
+  const issue: TrackerIssue = {
     id: "node-1",
-    identifier: "XX-1",
+    identifier: "SJ-1",
     title: "XX-1",
     description: null,
     url: "https://linear.app/example/issue/XX-1",
@@ -57,11 +60,11 @@ function state(): TaskState {
 describe("pauseTask", () => {
   test("saves needs_human after the label lands", async () => {
     const saved: TaskState[] = [];
-    const linear = new LinearClient("SJ", fakeLinearRunner());
+    const tracker = new TrackerClient("SJ", fakeTrackerRunner());
     await pauseTask({
       state: state(),
       reason: "reason",
-      linear,
+      tracker,
       store: {
         save: (next: TaskState): Promise<void> => {
           saved.push(next);
@@ -76,15 +79,15 @@ describe("pauseTask", () => {
 
   test("leaves runnable state when the label mutation fails", async () => {
     const saved: TaskState[] = [];
-    const linear = new LinearClient(
+    const tracker = new TrackerClient(
       "SJ",
-      fakeLinearRunner([], { mutateSuccess: false }),
+      fakeTrackerRunner([], { mutateSuccess: false }),
     );
     await expect(
       pauseTask({
         state: state(),
         reason: "reason",
-        linear,
+        tracker,
         store: {
           save: (next: TaskState): Promise<void> => {
             saved.push(next);
@@ -98,33 +101,29 @@ describe("pauseTask", () => {
 
   test("rolls the label back when the save fails", async () => {
     const calls: string[][] = [];
-    const linear = new LinearClient("SJ", fakeLinearRunner(calls));
+    const tracker = new TrackerClient("SJ", fakeTrackerRunner(calls));
     await expect(
       pauseTask({
         state: state(),
         reason: "reason",
-        linear,
+        tracker,
         store: {
           save: (): Promise<void> => Promise.reject(new Error("disk is full")),
         },
       }),
     ).rejects.toThrow(/disk is full/);
-    const mutations = calls.filter(
-      (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
-    );
+    const mutations = recordedLabelMutations(calls);
     expect(mutations).toHaveLength(2);
-    const variables = mutations.map((call) =>
-      JSON.parse(call[call.indexOf("--variables-json") + 1] ?? "{}"),
-    );
+    const variables = mutations;
     expect(variables[0]).toEqual({
-      id: "node-1",
-      add: ["sj-needs-human-id"],
+      id: "SJ-1",
+      add: ["agent:needs-human"],
       remove: [],
     });
     expect(variables[1]).toEqual({
-      id: "node-1",
+      id: "SJ-1",
       add: [],
-      remove: ["sj-needs-human-id"],
+      remove: ["agent:needs-human"],
     });
   });
 });
@@ -187,7 +186,7 @@ describe("review provider outages", () => {
         approver: { login: "owner", id: 1 },
         expectedBotLogin: "app/justin-principal-engineer",
       },
-      fakeLinearRunner(),
+      fakeTrackerRunner(),
       {},
     );
     vi.spyOn(github, "failureDiagnostics").mockResolvedValue("CI logs");
@@ -239,7 +238,7 @@ describe("completeTask", () => {
   test("completes the merge path and saves done", async () => {
     const calls: string[][] = [];
     const saved: TaskState[] = [];
-    const linear = new LinearClient("SJ", fakeLinearRunner(calls));
+    const tracker = new TrackerClient("SJ", fakeTrackerRunner(calls));
     const messages: string[] = [];
     await completeTask({
       state: {
@@ -248,35 +247,32 @@ describe("completeTask", () => {
         prNumber: 7,
         prUrl: "https://example.com/pr/7",
       },
-      linear,
+      tracker,
       save: saveStub(saved),
       writeInfo: (message: string) => {
         messages.push(message);
       },
     });
-    const mutations = calls.filter(
-      (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
-    );
+    const mutations = recordedLabelMutations(calls);
     expect(mutations).toHaveLength(1);
-    const raw = mutations[0]?.[mutations[0]?.indexOf("--variables-json") + 1];
-    expect(JSON.parse(raw ?? "{}")).toEqual({
-      id: "node-1",
+    expect(mutations[0]).toEqual({
+      id: "SJ-1",
       add: [],
-      remove: ["sj-codex-id"],
+      remove: ["agent:codex"],
     });
     expect(saved.map(({ phase }) => phase)).toEqual(["done"]);
     expect(saved[0]?.resumePhase).toBeNull();
-    expect(messages).toEqual(["XX-1: merged https://example.com/pr/7"]);
+    expect(messages).toEqual(["SJ-1: merged https://example.com/pr/7"]);
   });
 
   test("completes the no-change path without a PR", async () => {
     const calls: string[][] = [];
     const saved: TaskState[] = [];
     const messages: string[] = [];
-    const linear = new LinearClient("SJ", fakeLinearRunner(calls));
+    const tracker = new TrackerClient("SJ", fakeTrackerRunner(calls));
     await completeTask({
       state: { ...state(), phase: "completing" },
-      linear,
+      tracker,
       save: saveStub(saved),
       writeInfo: infoCollector(messages),
     });
@@ -284,15 +280,15 @@ describe("completeTask", () => {
       "No change needed; the requested state was already present.",
     ]);
     expect(saved.map(({ phase }) => phase)).toEqual(["done"]);
-    expect(messages).toEqual(["XX-1: no change was needed; issue completed"]);
+    expect(messages).toEqual(["SJ-1: no change was needed; issue completed"]);
   });
 
   test("a failed cleanup never reaches done", async () => {
     const saved: TaskState[] = [];
     const messages: string[] = [];
-    const linear = new LinearClient(
+    const tracker = new TrackerClient(
       "SJ",
-      fakeLinearRunner([], { mutateSuccess: false }),
+      fakeTrackerRunner([], { mutateSuccess: false }),
     );
     await expect(
       completeTask({
@@ -302,7 +298,7 @@ describe("completeTask", () => {
           prNumber: 7,
           prUrl: "https://example.com/pr/7",
         },
-        linear,
+        tracker,
         save: saveStub(saved),
         writeInfo: infoCollector(messages),
       }),

@@ -2,12 +2,12 @@ import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { loadConfig } from "#src/runtime/config.ts";
-import type { LinearIssue } from "#src/domain/schemas.ts";
+import type { TrackerIssue } from "#src/domain/schemas.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 
 /** Host-only policy: the coding container never loads the flag client. */
 export async function autonomyEnabled(
-  issue: LinearIssue,
+  issue: TrackerIssue,
   paths: RuntimePaths,
 ): Promise<boolean> {
   const config = await loadConfig(paths);

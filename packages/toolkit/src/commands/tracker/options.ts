@@ -46,6 +46,8 @@ export function parseTrackerArgs(args: string[]) {
       output: string,
       input: string,
       previous: string,
+      "retain-removed": multiple,
+      "retention-source": string,
       "dry-run": boolean,
       only: string,
       resume: boolean,

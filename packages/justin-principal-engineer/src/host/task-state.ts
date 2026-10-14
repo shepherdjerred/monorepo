@@ -1,12 +1,12 @@
 import path from "node:path";
 
-import type { LinearIssue, Provider, TaskState } from "#src/domain/schemas.ts";
+import type { TrackerIssue, Provider, TaskState } from "#src/domain/schemas.ts";
 import { branchName } from "#src/host/branch-name.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 
 export function createTaskState(input: {
-  issue: LinearIssue;
+  issue: TrackerIssue;
   provider: Provider;
   deliveryMode?: TaskState["deliveryMode"];
   paths: RuntimePaths;

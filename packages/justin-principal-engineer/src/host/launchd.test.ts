@@ -9,7 +9,6 @@ describe("renderLaunchAgent", () => {
       cli: "/Users/test/repo/packages/justin-principal-engineer/src/cli.ts",
       checkout: "/Users/test/repo",
       path: "/opt/homebrew/bin:/usr/bin",
-      linearApiKeyReference: "op://Automation/Linear/credential",
       woodpeckerTokenReference: "op://Automation/Woodpecker/credential",
       woodpeckerBaseUrl: "https://woodpecker.sjer.red",
       woodpeckerRepoId: 1,
@@ -21,7 +20,7 @@ describe("renderLaunchAgent", () => {
     expect(plist).toContain("<key>StartInterval</key>");
     expect(plist).toContain("<integer>60</integer>");
     expect(plist).not.toContain("KeepAlive");
-    expect(plist).toContain("LINEAR_API_KEY=op://Automation/Linear/credential");
+    expect(plist).not.toContain("LINEAR_API_KEY");
     expect(plist).toContain("<string>op</string>");
     expect(plist).toContain(
       "WOODPECKER_TOKEN=op://Automation/Woodpecker/credential",

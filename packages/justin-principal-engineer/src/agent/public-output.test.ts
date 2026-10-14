@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 import { safeOutputForPublication } from "#src/agent/public-output.ts";
 import type { AgentOutput } from "#src/domain/schemas.ts";
 
-const privateText = "Private Linear context fixture";
+const privateText = "Private Tracker context fixture";
 const output: AgentOutput = {
   status: "changed",
   commitTitle: privateText,
@@ -15,7 +15,7 @@ const output: AgentOutput = {
   resolvedFindings: [],
   visualTargets: [],
 };
-const context = `Linear comments present for agent context:\n${JSON.stringify(privateText)}`;
+const context = `Tracker comments present for agent context:\n${JSON.stringify(privateText)}`;
 
 describe("host-authored public evidence", () => {
   test("publishes measured host checks while stripping every agent text field", async () => {
@@ -28,7 +28,7 @@ describe("host-authored public evidence", () => {
       const publicOutput = await safeOutputForPublication(output, {
         checkout: directory,
         paths: ["file.ts"],
-        linearContext: context,
+        trackerContext: context,
         hostVerification: ["PASSED: bun run test"],
       });
       expect(JSON.stringify(publicOutput)).not.toContain(privateText);
@@ -46,7 +46,7 @@ describe("host-authored public evidence", () => {
         safeOutputForPublication(output, {
           checkout: directory,
           paths: ["file.ts"],
-          linearContext: context,
+          trackerContext: context,
           hostVerification: ["PASSED: bun run test"],
         }),
       ).rejects.toThrow("refusing to publish");

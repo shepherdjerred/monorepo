@@ -4,14 +4,17 @@ import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import { TaskStateSchema } from "#src/domain/schemas.ts";
 import {
-  DEVEX_PROJECT_ID,
+  DEVEX_PROJECT_SLUG,
   autonomyIssueBlocker,
 } from "#src/domain/autonomy.ts";
 import { createTaskState } from "#src/host/task-state.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
 import { runtimePaths } from "#src/runtime/paths.ts";
-import { LinearClient } from "#src/integrations/linear.ts";
-import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
+import { TrackerClient } from "#src/integrations/tracker.ts";
+import {
+  fakeTrackerRunner,
+  recordedLabelMutations,
+} from "#src/integrations/fake-tracker.ts";
 import {
   assertRepairBudget,
   codingTurnStarted,
@@ -28,7 +31,11 @@ const issue = {
   url: "https://linear.app/example/issue/AI-104",
   priority: 1,
   team: { key: "AI" },
-  project: { id: DEVEX_PROJECT_ID, name: "Developer Experience" },
+  project: {
+    id: "project-developer-experience",
+    slug: DEVEX_PROJECT_SLUG,
+    name: "Developer Experience",
+  },
   createdAt: "2026-01-01T00:00:00Z",
   state: { name: "Todo", type: "unstarted" },
   labels: { nodes: [{ name: "agent:codex" }, { name: "agent:autonomous" }] },
@@ -105,7 +112,7 @@ describe("autonomous authorization and recovery", () => {
           state,
           reason: "Provider unavailable",
           retryable: true,
-          linear: new LinearClient("AI", fakeLinearRunner()),
+          tracker: new TrackerClient("AI", fakeTrackerRunner()),
           store,
         });
         const [saved] = await store.list();
@@ -126,7 +133,7 @@ describe("autonomous authorization and recovery", () => {
       await blockAutonomousTask({
         state,
         reason: "Budget exhausted",
-        linear: new LinearClient("AI", fakeLinearRunner()),
+        tracker: new TrackerClient("AI", fakeTrackerRunner()),
         store,
       });
       const final = await store.list();
@@ -141,7 +148,7 @@ describe("autonomous authorization and recovery", () => {
     const paths = runtimePaths(home);
     const store = new StateStore(paths);
     const calls: string[][] = [];
-    const linear = new LinearClient("AI", fakeLinearRunner(calls));
+    const tracker = new TrackerClient("AI", fakeTrackerRunner(calls));
     try {
       const state = createTaskState({
         paths,
@@ -153,7 +160,7 @@ describe("autonomous authorization and recovery", () => {
         state,
         reason: "Unavailable",
         retryable: true,
-        linear,
+        tracker,
         store,
       });
       const [saved] = await store.list();
@@ -164,12 +171,10 @@ describe("autonomous authorization and recovery", () => {
         state: saved,
         reason: "Unavailable",
         retryable: true,
-        linear,
+        tracker,
         store,
       });
-      expect(
-        calls.filter((args) => args[3]?.includes("issueUpdate")),
-      ).toHaveLength(2);
+      expect(recordedLabelMutations(calls)).toHaveLength(2);
       expect(
         calls.filter((args) => args[3] === "comment" && args[4] === "add"),
       ).toHaveLength(1);
@@ -209,7 +214,7 @@ describe("autonomous authorization and recovery", () => {
       latest,
       error: new Error("Coding turn timed out"),
       store: new StateStore(runtimePaths("/tmp/fixture")),
-      linear: new LinearClient("AI", fakeLinearRunner()),
+      tracker: new TrackerClient("AI", fakeTrackerRunner()),
       save,
     });
     expect(save).toHaveBeenCalledWith(

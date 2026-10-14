@@ -16,7 +16,7 @@ export const TaskPhaseSchema = z.enum([
   "blocked",
   "done",
 ]);
-export const LinearIssueSchema = z.object({
+export const TrackerIssueSchema = z.object({
   id: z.string().min(1),
   identifier: z.string().min(1),
   title: z.string().min(1),
@@ -25,7 +25,11 @@ export const LinearIssueSchema = z.object({
   priority: z.number().int(),
   team: z.object({ key: z.string().min(1) }).optional(),
   project: z
-    .object({ id: z.string().min(1), name: z.string().min(1) })
+    .object({
+      id: z.string().min(1),
+      name: z.string().min(1),
+      slug: z.string().min(1).optional(),
+    })
     .nullable()
     .optional(),
   createdAt: z.string().min(1),
@@ -37,7 +41,7 @@ export const LinearIssueSchema = z.object({
     nodes: z.array(z.object({ name: z.string().min(1) })),
   }),
 });
-export type LinearIssue = z.infer<typeof LinearIssueSchema>;
+export type TrackerIssue = z.infer<typeof TrackerIssueSchema>;
 
 export const FeedbackSchema = z.object({
   id: z.string().min(1),
@@ -118,9 +122,9 @@ export const ConfigSchema = z.object({
     slug: z.string().regex(/^[^/]+\/[^/]+$/),
     baseBranch: z.string().min(1).default("main"),
   }),
-  linear: z.object({
-    team: z.string().min(1).default("SJ"),
-    apiKey: OpReferenceSchema,
+  tracker: z.object({
+    team: z.string().min(1).default("AI"),
+    url: z.url(),
   }),
   woodpecker: z.object({
     apiToken: OpReferenceSchema,
@@ -167,7 +171,7 @@ export const PrHealthSchema = z.object({
 export type PrHealth = z.infer<typeof PrHealthSchema>;
 
 export const TaskStateSchema = z.object({
-  issue: LinearIssueSchema,
+  issue: TrackerIssueSchema,
   provider: ProviderSchema,
   deliveryMode: z
     .enum(["owner_approved", "autonomous"])

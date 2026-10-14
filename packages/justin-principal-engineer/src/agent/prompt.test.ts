@@ -1,23 +1,23 @@
 import { describe, expect, test } from "vitest";
 
-import { assertNoLinearContextLeak } from "./prompt.ts";
+import { assertNoTrackerContextLeak } from "./prompt.ts";
 
 const context =
-  "Linear comments present for agent context:\n" +
+  "Tracker comments present for agent context:\n" +
   JSON.stringify("Keep the API response backwards compatible.") +
   "\n" +
   JSON.stringify("Please update the empty state.");
 
-describe("assertNoLinearContextLeak", () => {
-  test("allows summaries without Linear-only comment text", () => {
+describe("assertNoTrackerContextLeak", () => {
+  test("allows summaries without Tracker-only comment text", () => {
     expect(() =>
-      assertNoLinearContextLeak("Updated the response handling.", context),
+      assertNoTrackerContextLeak("Updated the response handling.", context),
     ).not.toThrow();
   });
 
-  test("rejects a summary that repeats a Linear-only comment", () => {
+  test("rejects a summary that repeats a Tracker-only comment", () => {
     expect(() =>
-      assertNoLinearContextLeak(
+      assertNoTrackerContextLeak(
         "Updated the response handling: Keep the API response backwards compatible.",
         context,
       ),
@@ -25,6 +25,6 @@ describe("assertNoLinearContextLeak", () => {
   });
 
   test("does nothing when there are no comments", () => {
-    expect(() => assertNoLinearContextLeak("Any summary", null)).not.toThrow();
+    expect(() => assertNoTrackerContextLeak("Any summary", null)).not.toThrow();
   });
 });

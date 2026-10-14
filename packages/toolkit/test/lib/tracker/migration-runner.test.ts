@@ -8,6 +8,10 @@ import { hash } from "#lib/tracker/migration/files.ts";
 import { runImport } from "#lib/tracker/migration/runner.ts";
 import { planMigration } from "#lib/tracker/migration/normalize.ts";
 import {
+  importAdditions,
+  planCatchUp,
+} from "#lib/tracker/migration/catch-up.ts";
+import {
   migrationActor,
   migrationFixture,
   fileBytes,
@@ -150,4 +154,26 @@ test("an ambiguous response resumes through server idempotency and reruns withou
     unchanged: plan.records.length,
   });
   expect(target.writes()).toBe(first);
+});
+
+test("catch-up releases attachment payloads after committed and uncertain responses", async () => {
+  const directory = await exportDirectory();
+  const next = await planMigration(migrationFixture(), migrationActor);
+  const actor = next.records.find((record) => record.entityType === "actor");
+  if (actor === undefined) throw new Error("Missing fixture actor");
+  const files = next.records.filter(
+    (record) => record.entityType === "attachment",
+  );
+  const plan = planCatchUp([], [actor, ...files]);
+  const target = destination({ interrupt: true });
+  const options = { directory, client: target.client };
+  await expect(importAdditions(options, plan, next)).rejects.toThrow(
+    "Lost response after commit",
+  );
+  expect(files.map((file) => file.data.contentBase64)).toEqual(["", ""]);
+  expect(await importAdditions(options, plan, next)).toEqual({
+    imported: 0,
+    unchanged: 3,
+  });
+  expect(files.map((file) => file.data.contentBase64)).toEqual(["", ""]);
 });

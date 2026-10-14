@@ -2,8 +2,7 @@ import path from "node:path";
 
 import type { Config } from "#src/domain/schemas.ts";
 import { checkGitHubAccess } from "#src/integrations/github-access.ts";
-import { readOpReference } from "#src/integrations/secrets.ts";
-import { LinearClient } from "#src/integrations/linear.ts";
+import { createTrackerClient } from "#src/integrations/tracker.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 import { writeInfo } from "#src/runtime/output.ts";
@@ -78,21 +77,16 @@ export async function doctor(input: {
     ),
   );
 
-  const linearApiKey = await readOpReference(
-    input.config.linear.apiKey,
-    input.run,
-  );
-  const linear = new LinearClient(input.config.linear.team, input.run, {
-    LINEAR_API_KEY: linearApiKey,
-  });
-  const labels = await linear.labelNames();
+  const tracker = createTrackerClient(input.config, input.run);
+  await tracker.checkCatalog();
+  const labels = await tracker.labelNames();
   const missing = REQUIRED_LABELS.filter((label) => !labels.has(label));
   if (missing.length > 0) {
-    throw new Error(`Missing Linear labels: ${missing.join(", ")}`);
+    throw new Error(`Missing Tracker labels: ${missing.join(", ")}`);
   }
 
   await checkGitHubAccess(input);
   writeInfo(
-    "Doctor passed: macOS, tools, Docker, Linear, native OpenAI model access, Woodpecker repository access, and GitHub App are ready",
+    "Doctor passed: macOS, tools, Docker, Tracker, native OpenAI model access, Woodpecker repository access, and GitHub App are ready",
   );
 }

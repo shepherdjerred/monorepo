@@ -2,7 +2,7 @@ import type { TaskState } from "#src/domain/schemas.ts";
 import type { DeliveryAuthorization } from "#src/host/delivery-authorization.ts";
 import type { GitWorkspace } from "#src/host/git-workspace.ts";
 import type { DockerAgentRunner } from "#src/host/docker.ts";
-import type { LinearClient } from "#src/integrations/linear.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import type { CommandRunner } from "#src/runtime/process.ts";
 import type { WithGitHub } from "#src/reconcile-merge.ts";
@@ -13,7 +13,7 @@ export async function publishTask(input: {
   state: TaskState;
   authorization: DeliveryAuthorization;
   git: GitWorkspace;
-  linear: LinearClient;
+  tracker: TrackerClient;
   agent: DockerAgentRunner;
   paths: RuntimePaths;
   run: CommandRunner;
@@ -31,9 +31,15 @@ export async function publishTask(input: {
   }
   const output = state.lastAgentOutput;
   if (output === null) throw new Error("Publishing state has no agent output");
-  const linearContext = await input.linear.agentContext(state.issue.identifier);
+  const trackerContext = await input.tracker.agentContext(
+    state.issue.identifier,
+  );
   // Scan private-context leakage before executing or publishing task output.
-  await input.git.preparePublication(output, state.checkoutPath, linearContext);
+  await input.git.preparePublication(
+    output,
+    state.checkoutPath,
+    trackerContext,
+  );
   const verification = await input.agent.verifyWorkspace(
     state.checkoutPath,
     await input.git.publicationPaths(state.checkoutPath),
@@ -41,7 +47,7 @@ export async function publishTask(input: {
   const [safeOutput, changed] = await input.git.preparePublication(
     output,
     state.checkoutPath,
-    linearContext,
+    trackerContext,
     verification,
   );
   if (state.deliveryMode === "autonomous") {

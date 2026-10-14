@@ -5,7 +5,7 @@ import {
 } from "#src/domain/autonomy.ts";
 import type { TaskState } from "#src/domain/schemas.ts";
 import { autonomyEnabled } from "#src/host/autonomy-policy.ts";
-import type { LinearClient } from "#src/integrations/linear.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
@@ -16,7 +16,7 @@ export async function retryBlockedTask(input: {
   identifier: string;
   paths: RuntimePaths;
   store: StateStore;
-  linear: Pick<LinearClient, "refreshIssue">;
+  tracker: Pick<TrackerClient, "refreshIssue">;
   checkScope: (state: TaskState) => Promise<void>;
 }): Promise<void> {
   const queued = await input.store.withLock(async () => {
@@ -26,7 +26,7 @@ export async function retryBlockedTask(input: {
       throw new Error("Retry requires an existing blocked autonomous task");
     const phase = state.blockedFromPhase;
     if (phase === null) throw new Error("Blocked task has no continuation");
-    const issue = await input.linear.refreshIssue(state.issue.identifier);
+    const issue = await input.tracker.refreshIssue(state.issue.identifier);
     if (issue === null)
       throw new AutonomousBlocker("Autonomous issue disappeared");
     const blocker = autonomyIssueBlocker(issue);

@@ -20,12 +20,11 @@ function value(record: MigrationRecord) {
 function retainedCatalog(before: MigrationRecord, next: MigrationRecord) {
   if (before.entityType === "actor" && next.entityType === "actor")
     return (
-      JSON.stringify(before.data.envelope) ===
-      JSON.stringify(next.data.envelope)
+      before.data.envelope.key === next.data.envelope.key &&
+      before.data.envelope.kind === next.data.envelope.kind
     );
   if (before.entityType === "team" && next.entityType === "team")
     return (
-      next.data.issueCounter >= before.data.issueCounter &&
       value({
         ...next,
         data: { ...next.data, issueCounter: before.data.issueCounter },
@@ -62,17 +61,66 @@ function issueUpdate(previous: IssueRecord, next: IssueRecord) {
   return { previous, next };
 }
 
+function removalRetention(
+  previous: MigrationRecord[],
+  current: Set<string>,
+  retainRemoved: readonly string[],
+  retentionRecords: MigrationRecord[],
+) {
+  const retainedIssues = retentionRecords.filter(
+    (record) =>
+      record.entityType === "issue" &&
+      !current.has(identity(record)) &&
+      retainRemoved.includes(record.data.identifier) &&
+      record.data.archivedAt !== null,
+  );
+  const retainedIds = new Set(
+    retainedIssues.map((record) => record.externalId),
+  );
+  const retainedReferences = new Set(
+    retainedIssues.flatMap((record) =>
+      record.entityType === "issue" ? [record.data.identifier] : [],
+    ),
+  );
+  if (retainRemoved.some((identifier) => !retainedReferences.has(identifier)))
+    throw new Error(
+      "--retain-removed must identify a removed issue already archived in the previous snapshot",
+    );
+  if (
+    previous.some(
+      (record) =>
+        !current.has(identity(record)) &&
+        !(
+          record.entityType === "issue" && retainedIds.has(record.externalId)
+        ) &&
+        !(
+          record.entityType === "event" &&
+          record.data.action === "imported-from-linear" &&
+          retainedIds.has(record.data.entityExternalId)
+        ),
+    )
+  )
+    throw new Error(
+      "Linear removed a previously imported record; reconcile it before cutover",
+    );
+  return retainedReferences;
+}
+
 /** Refuse removals and unsupported edits before the first destination mutation. */
 export function planCatchUp(
   previous: MigrationRecord[],
   next: MigrationRecord[],
+  retainRemoved: readonly string[] = [],
+  retentionRecords: MigrationRecord[] = previous,
 ) {
   const old = new Map(previous.map((record) => [identity(record), record]));
   const current = new Set(next.map((record) => identity(record)));
-  if (previous.some((record) => !current.has(identity(record))))
-    throw new Error(
-      "Linear removed a previously imported record; reconcile it before cutover",
-    );
+  const retainedReferences = removalRetention(
+    previous,
+    current,
+    retainRemoved,
+    retentionRecords,
+  );
   const additions: MigrationRecord[] = [];
   const updates: Update[] = [];
   const changedIssues = new Set(
@@ -124,14 +172,24 @@ export function planCatchUp(
         "; reconcile it explicitly before cutover",
     );
   }
-  return { additions, updates, retained };
+  return {
+    additions,
+    updates,
+    retained,
+    retainedRemovals: [...retainedReferences],
+  };
 }
 
 async function preflight(
   client: TrackerClient,
   snapshot: Awaited<ReturnType<typeof loadExport>>,
-  previous: MigrationRecord[],
+  options: {
+    previous: MigrationRecord[];
+    retainRemoved: readonly string[];
+    retentionRecords: MigrationRecord[];
+  },
 ) {
+  const { previous, retainRemoved, retentionRecords } = options;
   const bootstrap = await client.meta.bootstrap.query();
   const capabilities = z
     .object({ importCapabilities: z.array(z.string()) })
@@ -154,6 +212,13 @@ async function preflight(
   const expected = new Map(
     snapshot.issues.map((issue) => [issue.identifier, "linear:" + issue.id]),
   );
+  for (const record of retentionRecords) {
+    if (
+      record.entityType === "issue" &&
+      retainRemoved.includes(record.data.identifier)
+    )
+      expected.set(record.data.identifier, "linear:" + record.externalId);
+  }
   for (const team of snapshot.teams) {
     const saved = await client.issues.list.query({
       teamKey: team.key,
@@ -165,14 +230,17 @@ async function preflight(
     });
     if (
       saved.items.some(
-        (issue) => issue.externalRef !== expected.get(issue.identifier),
+        (issue) =>
+          issue.externalRef !== expected.get(issue.identifier) ||
+          (retainRemoved.includes(issue.identifier) &&
+            (issue.archivedAt === null || issue.revision !== 1)),
       )
     )
       throw new Error("Destination contains a native or conflicting issue");
   }
 }
 
-async function importAdditions(
+export async function importAdditions(
   options: { client: TrackerClient; directory: string },
   plan: ReturnType<typeof planCatchUp>,
   next: Awaited<ReturnType<typeof planMigration>>,
@@ -187,9 +255,13 @@ async function importAdditions(
         await readExportFile(options.directory, file),
       ).toString("base64");
     }
-    const result = await options.client.import.record.mutate(record);
-    if (result.status === "imported") imported++;
-    else unchanged++;
+    try {
+      const result = await options.client.import.record.mutate(record);
+      if (result.status === "imported") imported++;
+      else unchanged++;
+    } finally {
+      if (record.entityType === "attachment") record.data.contentBase64 = "";
+    }
   }
   return { imported, unchanged };
 }
@@ -200,6 +272,8 @@ export async function catchUpLinear(options: {
   actor: ActorEnvelope;
   client: TrackerClient;
   dryRun: boolean;
+  retainRemoved?: readonly string[];
+  retentionSource?: string | undefined;
 }) {
   const before = await loadExport(options.previous);
   const after = await loadExport(options.directory);
@@ -210,14 +284,36 @@ export async function catchUpLinear(options: {
     throw new Error("Linear workspace or credential identity changed");
   const previous = await planMigration(before, options.actor);
   const next = await planMigration(after, options.actor);
-  const plan = planCatchUp(previous.records, next.records);
+  const retentionSnapshot =
+    options.retentionSource === undefined
+      ? before
+      : await loadExport(options.retentionSource);
+  if (
+    retentionSnapshot.workspace.id !== before.workspace.id ||
+    retentionSnapshot.sharedUserId !== before.sharedUserId
+  )
+    throw new Error(
+      "Retention source belongs to a different Linear workspace or credential identity",
+    );
+  const retention = await planMigration(retentionSnapshot, options.actor);
+  const plan = planCatchUp(
+    previous.records,
+    next.records,
+    options.retainRemoved,
+    retention.records,
+  );
   const summary = {
     additions: plan.additions.length,
     updates: plan.updates.length,
     retained: plan.retained,
+    retainedRemovals: plan.retainedRemovals,
   };
   if (options.dryRun) return { dryRun: true, ...summary };
-  await preflight(options.client, after, previous.records);
+  await preflight(options.client, after, {
+    previous: previous.records,
+    retainRemoved: plan.retainedRemovals,
+    retentionRecords: retention.records,
+  });
   const added = await importAdditions(options, plan, next);
   let reconciled = 0;
   let unchanged = added.unchanged;

@@ -1,17 +1,17 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
-import type { LinearIssue } from "#src/domain/schemas.ts";
+import type { TrackerIssue } from "#src/domain/schemas.ts";
 import {
   defaultTeams,
-  fakeLinearRunner,
-} from "#src/integrations/fake-linear.ts";
+  fakeTrackerRunner,
+} from "#src/integrations/fake-tracker.ts";
 import {
   isEligibleIssue,
-  LinearClient,
+  TrackerClient,
   providerForIssue,
   selectIssue,
-} from "#src/integrations/linear.ts";
+} from "#src/integrations/tracker.ts";
 
 function issue(input: {
   identifier: string;
@@ -20,7 +20,7 @@ function issue(input: {
   labels?: string[];
   stateType?: string;
   teamKey?: string | null;
-}): LinearIssue {
+}): TrackerIssue {
   return {
     id: input.identifier,
     identifier: input.identifier,
@@ -28,7 +28,14 @@ function issue(input: {
     description: null,
     url: `https://linear.app/example/issue/${input.identifier}`,
     priority: input.priority ?? 0,
-    ...(input.teamKey === null ? {} : { team: { key: input.teamKey ?? "SJ" } }),
+    ...(input.teamKey === null
+      ? {}
+      : {
+          team: {
+            key:
+              input.teamKey ?? z.string().parse(input.identifier.split("-")[0]),
+          },
+        }),
     createdAt: input.createdAt ?? "2026-01-01T00:00:00.000Z",
     state: { name: "Todo", type: input.stateType ?? "unstarted" },
     labels: {
@@ -39,12 +46,12 @@ function issue(input: {
   };
 }
 
-describe("Linear queue selection", () => {
+describe("Tracker queue selection", () => {
   test("reads Toolkit's array output and preserves durable issue snapshots", async () => {
     const selected = issue({ identifier: "AI-99", teamKey: "AI" });
-    const client = new LinearClient(
+    const client = new TrackerClient(
       "AI",
-      fakeLinearRunner([], { refreshNodes: [selected] }),
+      fakeTrackerRunner([], { refreshNodes: [selected] }),
     );
     expect(await client.nextIssue()).toEqual(selected);
     expect(await client.refreshIssue("AI-99")).toEqual(selected);
@@ -54,7 +61,7 @@ describe("Linear queue selection", () => {
   });
 
   test("includes flattened CLI comments as quoted agent context", async () => {
-    const client = new LinearClient("AI", async () => ({
+    const client = new TrackerClient("AI", async () => ({
       exitCode: 0,
       stderr: "",
       timedOut: false,
@@ -64,7 +71,7 @@ describe("Linear queue selection", () => {
       }),
     }));
     expect(await client.agentContext("AI-99")).toBe(
-      'Linear comments present for agent context:\n"A useful comment"',
+      'Tracker comments present for agent context:\n"A useful comment"',
     );
   });
 
@@ -129,36 +136,49 @@ function apiVariables(recorded: string[][]): {
   remove: string[];
 } {
   const call = recorded.find(
-    (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
+    (args) =>
+      args[2] === "issue" &&
+      args[3] === "update" &&
+      (args.includes("--add-label") || args.includes("--remove-label")),
   );
   expect(call).toBeDefined();
-  const raw = call?.[call.indexOf("--variables-json") + 1] ?? "{}";
-  return ApiVariablesSchema.parse(JSON.parse(raw));
+  if (call === undefined) throw new Error("Missing label mutation");
+  return ApiVariablesSchema.parse({
+    id: call[4],
+    add: call.flatMap((arg, index) =>
+      arg === "--add-label" ? [call[index + 1]] : [],
+    ),
+    remove: call.flatMap((arg, index) =>
+      arg === "--remove-label" ? [call[index + 1]] : [],
+    ),
+  });
 }
 
-describe("Linear label mutations", () => {
-  test("needsHuman adds the home-team label by ID", async () => {
+describe("Tracker label mutations", () => {
+  test("needsHuman adds the home-team label by name", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await client.needsHuman(
       issue({ identifier: "AI-3", labels: ["agent:codex"] }),
       "reason",
     );
-    expect(recorded.flat()).not.toContain("--add-label");
-    const call = recorded.find(
-      (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
-    );
-    expect(call?.[3]).toContain("issueUpdate(id: $id, input:");
+    expect(recorded.flat()).toContain("--add-label");
+    expect(
+      recorded.some(
+        (args) =>
+          args[1] === "tracker" && args[2] === "issue" && args[3] === "update",
+      ),
+    ).toBe(true);
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
-      add: ["sj-needs-human-id"],
+      add: ["agent:needs-human"],
       remove: [],
     });
   });
 
   test("needsHuman provisions the team label on first park", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await client.needsHuman(
       issue({
         identifier: "AI-3",
@@ -175,28 +195,28 @@ describe("Linear label mutations", () => {
     );
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
-      add: ["ai-needs-human-id"],
+      add: ["agent:needs-human"],
       remove: [],
     });
   });
 
-  test("claim removes legacy ready by ID and keeps the provider", async () => {
+  test("claim removes legacy ready by name and keeps the provider", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await client.claim(
       issue({ identifier: "AI-3", labels: ["agent:codex", "agent:ready"] }),
     );
-    expect(recorded.flat()).not.toContain("--remove-label");
+    expect(recorded.flat()).toContain("--remove-label");
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
       add: [],
-      remove: ["sj-ready-id"],
+      remove: ["agent:ready"],
     });
   });
 
-  test("complete strips the provider label by ID", async () => {
+  test("complete strips the provider label by name", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await client.complete(
       issue({ identifier: "AI-3", labels: ["agent:codex"] }),
       "https://example.com/pr/1",
@@ -204,15 +224,15 @@ describe("Linear label mutations", () => {
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
       add: [],
-      remove: ["sj-codex-id"],
+      remove: ["agent:codex"],
     });
   });
 
   test("complete keeps the issue non-terminal when cleanup fails", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient(
+    const client = new TrackerClient(
       "SJ",
-      fakeLinearRunner(recorded, { mutateSuccess: false }),
+      fakeTrackerRunner(recorded, { mutateSuccess: false }),
     );
     await expect(
       client.complete(
@@ -221,18 +241,20 @@ describe("Linear label mutations", () => {
       ),
     ).rejects.toThrow(/label mutation failed/);
     expect(
-      recorded.filter((args) => args[2] === "issue" && args[3] === "update"),
+      recorded.filter(
+        (args) => args.includes("--state") && args.includes("completed"),
+      ),
     ).toEqual([]);
   });
 
   test("claim resolves the preferred started state by type", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await client.claim(issue({ identifier: "SJ-9", labels: ["agent:codex"] }));
     const update = recorded.find(
       (args) => args[2] === "issue" && args[3] === "update",
     );
-    expect(update).toEqual(expect.arrayContaining(["--state", "In Progress"]));
+    expect(update).toEqual(expect.arrayContaining(["--state", "started"]));
   });
 
   test("claim falls back to positional started state", async () => {
@@ -240,9 +262,9 @@ describe("Linear label mutations", () => {
     const states = {
       XX: [{ name: "Doing", type: "started", position: 1 }],
     };
-    const client = new LinearClient(
+    const client = new TrackerClient(
       "SJ",
-      fakeLinearRunner(recorded, { teams: defaultTeams(), states }),
+      fakeTrackerRunner(recorded, { teams: defaultTeams(), states }),
     );
     await client.claim(
       issue({ identifier: "XX-1", teamKey: "XX", labels: ["agent:codex"] }),
@@ -250,14 +272,14 @@ describe("Linear label mutations", () => {
     const update = recorded.find(
       (args) => args[2] === "issue" && args[3] === "update",
     );
-    expect(update).toEqual(expect.arrayContaining(["--state", "Doing"]));
+    expect(update).toEqual(expect.arrayContaining(["--state", "started"]));
   });
 
   test("rejects unsuccessful label mutations", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient(
+    const client = new TrackerClient(
       "SJ",
-      fakeLinearRunner(recorded, { mutateSuccess: false }),
+      fakeTrackerRunner(recorded, { mutateSuccess: false }),
     );
     await expect(
       client.needsHuman(
@@ -269,7 +291,7 @@ describe("Linear label mutations", () => {
 
   test("mutations reject issues without a team", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await expect(
       client.claim(
         issue({ identifier: "XX-1", teamKey: null, labels: ["agent:codex"] }),
@@ -280,36 +302,36 @@ describe("Linear label mutations", () => {
   test("legacy snapshots refetch the team instead of wedging", async () => {
     const recorded: string[][] = [];
     const refreshed = issue({
-      identifier: "XX-1",
+      identifier: "AI-1",
       teamKey: "AI",
       labels: ["agent:codex", "agent:ready"],
     });
-    const client = new LinearClient(
+    const client = new TrackerClient(
       "SJ",
-      fakeLinearRunner(recorded, { refreshNodes: [refreshed] }),
+      fakeTrackerRunner(recorded, { refreshNodes: [refreshed] }),
     );
     await client.claim(
       issue({
-        identifier: "XX-1",
+        identifier: "AI-1",
         teamKey: null,
         labels: ["agent:codex", "agent:ready"],
       }),
     );
     const query = recorded.find(
-      (args) => args[2] === "api" && args[3]?.includes("issue(id:") === true,
+      (args) => args[2] === "issue" && args[3] === "view",
     );
     expect(query).toBeDefined();
-    expect(query?.at(-1)).toBe(JSON.stringify({ id: "XX-1" }));
+    expect(query?.[4]).toBe("AI-1");
     expect(apiVariables(recorded)).toEqual({
-      id: "XX-1",
+      id: "AI-1",
       add: [],
-      remove: ["ai-ready-id"],
+      remove: ["agent:ready"],
     });
   });
 
-  test("requeue removes the park label by ID", async () => {
+  test("requeue removes the park label by name", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
+    const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
     await client.requeue(
       issue({
         identifier: "SJ-1",
@@ -319,7 +341,7 @@ describe("Linear label mutations", () => {
     expect(apiVariables(recorded)).toEqual({
       id: "SJ-1",
       add: [],
-      remove: ["sj-needs-human-id"],
+      remove: ["agent:needs-human"],
     });
   });
 });

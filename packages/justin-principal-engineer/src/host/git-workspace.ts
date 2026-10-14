@@ -186,7 +186,7 @@ export class GitWorkspace {
   public async preparePublication(
     output: AgentOutput,
     checkout: string,
-    linearContext: string | null,
+    trackerContext: string | null,
     hostVerification: readonly string[] = [],
   ): Promise<readonly [AgentOutput, string[]]> {
     const paths = await this.changedPaths(checkout);
@@ -195,7 +195,7 @@ export class GitWorkspace {
       await safeOutputForPublication(output, {
         checkout,
         paths: publicationPaths,
-        linearContext,
+        trackerContext,
         hostVerification,
       }),
       paths,

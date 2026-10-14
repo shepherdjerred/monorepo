@@ -28,6 +28,8 @@ export async function migrationCommand(
     return catchUpLinear({
       directory: required(options.input, "--input"),
       previous: required(options.previous, "--previous"),
+      retainRemoved: options["retain-removed"] ?? [],
+      retentionSource: options["retention-source"],
       actor: options["dry-run"]
         ? ActorSchema.parse({
             key: "runner:migration-dry-run",

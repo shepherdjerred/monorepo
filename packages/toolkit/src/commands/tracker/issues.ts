@@ -153,24 +153,46 @@ export async function issueCommand(
 ): Promise<unknown> {
   const action = required(args[0], "Issue action");
   if (action === "list")
-    return context.client.issues.list.query(listInput(options));
+    return withIssueUrls(
+      context,
+      await context.client.issues.list.query(listInput(options)),
+    );
   if (action === "search") {
     const input = listInput(options, required(args[1], "Search text"));
     if (!options["all-states"] && input.states.length === 0)
       input.states = ["triage", "backlog", "unstarted", "started"];
-    return context.client.issues.list.query(input);
+    return withIssueUrls(
+      context,
+      await context.client.issues.list.query(input),
+    );
   }
   if (action === "create") return create(context, options);
   if (action === "comment") return comments(context, args.slice(1), options);
   const identifier = required(args[1], "Issue identifier").toUpperCase();
   if (action === "view")
-    return context.client.issues.byIdentifier.query({ identifier });
+    return {
+      ...(await context.client.issues.byIdentifier.query({ identifier })),
+      url: context.url + "/issues/" + identifier,
+    };
   if (action === "events")
     return context.client.issues.activity.query({ identifier, limit: 500 });
   if (action === "update") return update(context, identifier, options);
   return action === "attach"
     ? attachFiles(context, identifier, args.slice(2), await context.actor())
     : issueMutation(context, args, options);
+}
+
+function withIssueUrls(
+  context: TrackerCommandContext,
+  result: Awaited<ReturnType<TrackerClient["issues"]["list"]["query"]>>,
+) {
+  return {
+    ...result,
+    items: result.items.map((issue) => ({
+      ...issue,
+      url: context.url + "/issues/" + issue.identifier,
+    })),
+  };
 }
 
 async function issueMutation(

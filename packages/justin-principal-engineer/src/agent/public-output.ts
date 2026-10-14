@@ -3,22 +3,22 @@ import path from "node:path";
 import { z } from "zod";
 
 /**
- * Agent output is untrusted because the prompt includes private Linear
+ * Agent output is untrusted because the prompt includes private Tracker
  * comments. Only host-authored metadata may cross into public GitHub text.
  */
 export function publicAgentOutput(output: AgentOutput): AgentOutput {
   return {
     ...output,
-    commitTitle: "feat(justin-principal-engineer): implement Linear task",
-    summary: "Automated implementation for the claimed Linear task.",
+    commitTitle: "feat(justin-principal-engineer): implement Tracker task",
+    summary: "Automated implementation for the claimed Tracker task.",
     verification: [],
   };
 }
 
-export function linearCommentBodies(linearContext: string | null): string[] {
-  const marker = "Linear comments present for agent context:\n";
-  return linearContext?.startsWith(marker) === true
-    ? linearContext
+export function trackerCommentBodies(trackerContext: string | null): string[] {
+  const marker = "Tracker comments present for agent context:\n";
+  return trackerContext?.startsWith(marker) === true
+    ? trackerContext
         .slice(marker.length)
         .split("\n")
         .filter((line) => line !== "")
@@ -26,13 +26,13 @@ export function linearCommentBodies(linearContext: string | null): string[] {
     : [];
 }
 
-export async function assertNoLinearContextInChanges(
+export async function assertNoTrackerContextInChanges(
   checkout: string,
   paths: readonly string[],
-  linearContext: string | null,
+  trackerContext: string | null,
 ): Promise<void> {
-  if (linearContext === null) return;
-  const comments = linearCommentBodies(linearContext);
+  if (trackerContext === null) return;
+  const comments = trackerCommentBodies(trackerContext);
   for (const relativePath of paths) {
     const file = Bun.file(path.join(checkout, relativePath));
     if (!(await file.exists())) continue;
@@ -40,7 +40,7 @@ export async function assertNoLinearContextInChanges(
     const leaked = comments.find((comment) => content.includes(comment));
     if (leaked !== undefined) {
       throw new Error(
-        `Changed file ${relativePath} contains Linear-only comment content; refusing to publish`,
+        `Changed file ${relativePath} contains Tracker-only comment content; refusing to publish`,
       );
     }
   }
@@ -51,12 +51,12 @@ export async function safeOutputForPublication(
   input: {
     checkout: string;
     paths: readonly string[];
-    linearContext: string | null;
+    trackerContext: string | null;
     hostVerification?: readonly string[];
   },
 ): Promise<AgentOutput> {
-  const { checkout, paths, linearContext, hostVerification = [] } = input;
-  await assertNoLinearContextInChanges(checkout, paths, linearContext);
+  const { checkout, paths, trackerContext, hostVerification = [] } = input;
+  await assertNoTrackerContextInChanges(checkout, paths, trackerContext);
   return {
     ...publicAgentOutput(output),
     summary: `Updated ${String(paths.length)} files in the task branch. Host-run verification results are listed below.`,

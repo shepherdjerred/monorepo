@@ -9,8 +9,12 @@ import { retryBlockedTask } from "#src/host/task-retry.ts";
 import type { PullRequest } from "#src/integrations/github.ts";
 import { githubHost } from "#src/integrations/github-host.ts";
 import { checkGitHubAccess } from "#src/integrations/github-access.ts";
-import { LinearClient, providerForIssue } from "#src/integrations/linear.ts";
-import type { RuntimePaths } from "#src/runtime/paths.ts";
+import {
+  createTrackerClient,
+  providerForIssue,
+} from "#src/integrations/tracker.ts";
+import type { TrackerClient } from "#src/integrations/tracker.ts";
+import { runnerCli, type RuntimePaths } from "#src/runtime/paths.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 import type { CommandRunner } from "#src/runtime/process.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
@@ -32,7 +36,7 @@ import {
 } from "#src/reconcile-promotion.ts";
 export class Reconciler {
   private readonly store: StateStore;
-  private readonly linear: LinearClient;
+  private readonly tracker: TrackerClient;
   private readonly git: GitWorkspace;
   private readonly agent: DockerAgentRunner;
   private readonly withGitHub: ReturnType<typeof githubHost>;
@@ -45,7 +49,7 @@ export class Reconciler {
     runnerSource?: string,
   ) {
     this.store = new StateStore(paths);
-    this.linear = new LinearClient(config.linear.team, run);
+    this.tracker = createTrackerClient(config, run);
     this.git = new GitWorkspace(config, run);
     this.agent = new DockerAgentRunner(config, run, runnerSource);
     this.withGitHub = githubHost(config, paths, run);
@@ -53,18 +57,11 @@ export class Reconciler {
       config,
       paths,
       run,
-      linear: this.linear,
+      tracker: this.tracker,
       git: this.git,
       withGitHub: this.withGitHub,
     });
-    this.cliPath = path.join(
-      runnerSource ??
-        path.join(
-          config.repository.stableCheckout,
-          "packages/justin-principal-engineer",
-        ),
-      "src/cli.ts",
-    );
+    this.cliPath = runnerCli(config.repository.stableCheckout, runnerSource);
   }
   public async reconcile(): Promise<void> {
     await this.store.initialize();
@@ -98,7 +95,7 @@ export class Reconciler {
         Date.parse(state.nextAttemptAt) <= Date.now(),
     );
     if (due !== undefined) {
-      const issue = await this.linear.refreshIssue(due.issue.identifier);
+      const issue = await this.tracker.refreshIssue(due.issue.identifier);
       if (issue === null) throw new Error("Blocked task's issue disappeared");
       const resumed = {
         ...due,
@@ -112,7 +109,7 @@ export class Reconciler {
       await this.advanceSafely(resumed);
       return;
     }
-    const issue = await this.linear.nextIssue(async (candidate) => {
+    const issue = await this.tracker.nextIssue(async (candidate) => {
       const parked = states.some(
         (state) =>
           state.issue.identifier === candidate.identifier &&
@@ -126,7 +123,7 @@ export class Reconciler {
       );
     });
     if (issue === null) {
-      writeInfo("Queue is quiet: no eligible Linear issue");
+      writeInfo("Queue is quiet: no eligible Tracker issue");
       return;
     }
     const provider = providerForIssue(issue);
@@ -191,7 +188,7 @@ export class Reconciler {
           latest,
           error,
           store: this.store,
-          linear: this.linear,
+          tracker: this.tracker,
           save: this.save.bind(this),
         });
         return;
@@ -199,7 +196,7 @@ export class Reconciler {
       await reconcileMerge.recordFailure({
         state: latest,
         error,
-        linear: this.linear,
+        tracker: this.tracker,
         store: this.store,
       });
     }
@@ -235,7 +232,7 @@ export class Reconciler {
     }
     switch (state.phase) {
       case "claiming": {
-        await this.linear.claim(state.issue);
+        await this.tracker.claim(state.issue);
         const nextPhase = state.resumePhase ?? "claimed";
         await this.save(state, nextPhase, { resumePhase: null });
         writeInfo(`Claimed ${state.issue.identifier} for ${state.provider}`);
@@ -265,7 +262,7 @@ export class Reconciler {
         await reconcileMerge.mergeTask({
           state,
           withGitHub: this.withGitHub.bind(this),
-          linear: this.linear,
+          tracker: this.tracker,
           save: this.save.bind(this),
           writeInfo,
           ready: () => this.mergeReady(state),
@@ -301,7 +298,7 @@ export class Reconciler {
         }
         await reconcileMerge.completeTask({
           state,
-          linear: this.linear,
+          tracker: this.tracker,
           save: this.save.bind(this),
           writeInfo,
         });
@@ -316,7 +313,7 @@ export class Reconciler {
   private async implement(state: TaskState): Promise<void> {
     await implementTask({
       state,
-      linear: this.linear,
+      tracker: this.tracker,
       git: this.git,
       agent: this.agent,
       store: this.store,
@@ -328,7 +325,7 @@ export class Reconciler {
       state,
       authorization: this.authorization,
       git: this.git,
-      linear: this.linear,
+      tracker: this.tracker,
       agent: this.agent,
       paths: this.paths,
       run: this.run,
@@ -372,7 +369,7 @@ export class Reconciler {
           pr,
           config: this.config.woodpecker,
           token,
-          linear: this.linear,
+          tracker: this.tracker,
           store: this.store,
         })
       ) {
@@ -491,7 +488,7 @@ export class Reconciler {
       identifier,
       paths: this.paths,
       store: this.store,
-      linear: this.linear,
+      tracker: this.tracker,
       checkScope: this.authorization.checkAutonomousScope.bind(
         this.authorization,
       ),
