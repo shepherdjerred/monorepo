@@ -23,7 +23,7 @@ http://:8081 {
     respond "ok" 200
   }
   handle {
-    redir https://mariokart.sjer.red 308
+    redir https://mariokart.sjer.red 307
   }
 }
 `;

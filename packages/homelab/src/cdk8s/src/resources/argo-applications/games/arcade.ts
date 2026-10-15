@@ -3,7 +3,11 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 
 export function createArcadeApp(chart: Chart) {
   return new Application(chart, "arcade-app", {
-    metadata: { name: "arcade" },
+    metadata: {
+      name: "arcade",
+      // Reconcile the stopped legacy owners before starting the shared owner.
+      annotations: { "argocd.argoproj.io/sync-wave": "1" },
+    },
     spec: {
       revisionHistoryLimit: 5,
       project: "default",
