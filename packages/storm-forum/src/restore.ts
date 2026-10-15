@@ -48,7 +48,8 @@ export function validateSnapshot(
     snapshot.xenforoVersion !== forumManifest.xenforoVersion ||
     source.bundleSha256 !== snapshot.bundleSha256 ||
     source.xenforoVersion !== snapshot.xenforoVersion ||
-    source.runtimeImage !== release.runtimeImage
+    source.runtimeImage.replace(/^ghcr\.io\//, "docker.io/") !==
+      release.runtimeImage.replace(/^ghcr\.io\//, "docker.io/")
   ) {
     throw new Error("Snapshot does not match its key and installed release");
   }

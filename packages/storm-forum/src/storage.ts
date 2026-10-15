@@ -2,7 +2,9 @@ import { z } from "zod";
 
 export const RuntimeImageSchema = z
   .string()
-  .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/);
+  .regex(
+    /^(?:ghcr\.io|docker\.io)\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/,
+  );
 export const SnapshotSourceSchema = z
   .object({
     bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),

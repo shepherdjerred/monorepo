@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validateSnapshot } from "#src/restore.ts";
 import { validateBackupSource } from "#src/release.ts";
+import { RuntimeImageSchema } from "#src/storage.ts";
 const owner = "f8d36d3a-e74e-4b28-a661-b03ed85c7e55";
 const prefix = `snapshots/prod/${owner}`;
 const sha = "a".repeat(64);
@@ -20,6 +21,40 @@ const snapshot = {
   })),
 };
 describe("coordinated restore contract", () => {
+  it("records Docker Hub images and restores legacy records only at the same digest", () => {
+    const migrated = {
+      ...source,
+      runtimeImage: runtimeImage.replace("ghcr.io/", "docker.io/"),
+    };
+    expect(validateBackupSource(migrated, source.xenforoVersion)).toEqual(
+      migrated,
+    );
+    expect(
+      validateSnapshot(snapshot, `${prefix}/manifest.json`, migrated, migrated)
+        .owner,
+    ).toBe(owner);
+    expect(
+      validateSnapshot(snapshot, `${prefix}/manifest.json`, migrated, source)
+        .owner,
+    ).toBe(owner);
+    expect(() =>
+      validateSnapshot(
+        snapshot,
+        `${prefix}/manifest.json`,
+        {
+          ...migrated,
+          runtimeImage: migrated.runtimeImage.replace(sha, "b".repeat(64)),
+        },
+        source,
+      ),
+    ).toThrow(/installed release/);
+    for (const image of [
+      migrated.runtimeImage.replace("docker.io/", "example.com/"),
+      migrated.runtimeImage.replace("storm-forum@", "other-forum@"),
+      "docker.io/shepherdjerred/storm-forum:latest",
+    ])
+      expect(RuntimeImageSchema.safeParse(image).success).toBe(false);
+  });
   it("rejects stale source-version metadata before committing a snapshot", () => {
     expect(validateBackupSource(source, source.xenforoVersion)).toEqual(source);
     expect(() =>
