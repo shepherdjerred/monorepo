@@ -773,7 +773,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010008@sha256:29fd5bbc717c7dd274107d5b0918f385bc2b179d5b56dcc8ad5aae9966dec0d8",
+      "value": "2.0.0-1010011@sha256:2e7f48be50067d9e4355446b4f27df88f8456deab6d08d8096dd0b87b3e416a6",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
