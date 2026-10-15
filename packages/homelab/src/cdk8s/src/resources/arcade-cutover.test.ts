@@ -11,6 +11,7 @@ const Resource = z.object({
   metadata: z.object({ name: z.string(), namespace: z.string() }),
   spec: z.record(z.string(), z.unknown()).optional(),
   data: z.record(z.string(), z.string()).optional(),
+  subjects: z.array(z.object({ name: z.string() })).optional(),
 });
 
 function resources() {
@@ -80,5 +81,50 @@ describe("Arcade account handover", () => {
         },
       },
     });
+  });
+
+  test("keeps both Pokébot aliases on a redirect without legacy account credentials", () => {
+    const manifests = resources();
+    const redirect = manifests.find(
+      (resource) =>
+        resource.kind === "Deployment" &&
+        resource.metadata.name === "pokemon-web-redirect",
+    );
+    expect(redirect?.spec).toMatchObject({ replicas: 1 });
+    expect(JSON.stringify(redirect)).not.toContain("secretKeyRef");
+    const selector = z
+      .object({ matchLabels: z.record(z.string(), z.string()) })
+      .parse(redirect?.spec?.["selector"]);
+    const service = manifests.find(
+      (resource) =>
+        resource.kind === "Service" &&
+        resource.metadata.name === "pokemon-ui-service",
+    );
+    expect(service?.spec?.["selector"]).toEqual(selector.matchLabels);
+    expect(
+      manifests.find(
+        (resource) =>
+          resource.kind === "Ingress" &&
+          resource.metadata.namespace === "pokemon",
+      )?.spec,
+    ).toMatchObject({
+      defaultBackend: {
+        service: { name: service?.metadata.name, port: { number: 8081 } },
+      },
+    });
+    expect(
+      manifests.find(
+        (resource) =>
+          resource.kind === "TunnelBinding" &&
+          resource.metadata.namespace === "pokemon",
+      )?.subjects,
+    ).toEqual([expect.objectContaining({ name: service?.metadata.name })]);
+    expect(
+      manifests.find(
+        (resource) =>
+          resource.kind === "ConfigMap" &&
+          resource.metadata.name === "pokemon-web-redirect-config",
+      )?.data?.["Caddyfile"],
+    ).toContain("redir https://mariokart.sjer.red 308");
   });
 });

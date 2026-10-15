@@ -71,7 +71,8 @@ preparation script's checksum manifest. Saves live under
 The homelab chart runs one controller. The legacy MK64 and Emerald deployments
 stay at zero replicas with their original claims retained for rollback. The
 existing Mario Kart edge forwards public and tailnet requests to Arcade, keeping
-the registered Discord OAuth callback. Flipt controls session and game rollout.
+the registered Discord OAuth callback. The old Pokébot addresses redirect to that
+canonical origin. Flipt controls session and game rollout.
 Account handover and rollback use the wiki's Arcade migration guide. Source tests
 do not replace real-game controller, audio/video, latency, and concurrent-session acceptance.
 
