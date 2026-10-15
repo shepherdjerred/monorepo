@@ -208,6 +208,9 @@ the manifest; the v1 manifest remains readable by the previous runtime during ro
 Completed bootstrap
 Jobs remain unchanged until the next explicit release; an installed forum cannot
 upgrade without the source bundle and backup credentials.
+The ArgoCD application preserves `/spec/template` only for the inventory's exact
+versioned Job name. A new release ID creates a new Job with its full declared
+template; Job status and health remain part of reconciliation.
 
 Recovery requires `STORM_FORUM_STAGE=beta`, the backup reader credentials,
 `RESTORE_MANIFEST_KEY`, and the exact `BUNDLE_SHA256` and `RUNTIME_IMAGE` recorded in the snapshot.

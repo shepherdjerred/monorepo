@@ -53,9 +53,23 @@ export function createStormForumApplications(chart: Chart): void {
           server: "https://kubernetes.default.svc",
           namespace: name,
         },
+        // A release ID owns one immutable Job execution. Registry and chart
+        // updates must preserve it; an explicit new ID creates the next Job.
+        ignoreDifferences: [
+          {
+            group: "batch",
+            kind: "Job",
+            name: `storm-forum-${release.restore ? "restore" : "release"}-${release.releaseId}`,
+            namespace: name,
+            jsonPointers: ["/spec/template"],
+          },
+        ],
         syncPolicy: {
           automated: { enabled: false },
-          syncOptions: ["CreateNamespace=true"],
+          syncOptions: [
+            "CreateNamespace=true",
+            "RespectIgnoreDifferences=true",
+          ],
         },
       },
     });
