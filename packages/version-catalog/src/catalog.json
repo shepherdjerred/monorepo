@@ -869,7 +869,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
+      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
       "notes": [
         "Stable Scout beta Workflow Worker image - bootstrapped from the accepted beta backend image; later pins are promoted after a healthy 100% ramp",
         "not managed by renovate"
