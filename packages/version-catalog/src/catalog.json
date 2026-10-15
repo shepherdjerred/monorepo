@@ -7,9 +7,9 @@
       "category": "internal-image",
       "artifactType": "image",
       "management": { "managed": false },
-      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-1010005@sha256:edbd18720de92a39354b882a5932a84f7a79e5afe661781c6be0a8f70d7417bf",
       "notes": [
-        "Arcade is dormant until the first CI image release and verified account handover"
+        "Headless Arcade backends use private game assets on separate persistent storage"
       ]
     },
     {

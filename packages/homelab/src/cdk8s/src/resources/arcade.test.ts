@@ -48,7 +48,7 @@ const PreparationSchema = z.object({
   }),
 });
 
-test("prepares migration storage without starting an account owner or writing data", () => {
+test("prepares storage with a read-only hook beside the active controller", () => {
   const chart = new Chart(new App(), "test", {
     namespace: "arcade",
     disableResourceNameHashes: true,
@@ -59,7 +59,7 @@ test("prepares migration storage without starting an account owner or writing da
     resources.find((resource) => KindSchema.parse(resource).kind === kind);
   const deployment = DeploymentSchema.parse(find("Deployment"));
   const preparation = PreparationSchema.parse(find("Job"));
-  expect(deployment).toMatchObject({ spec: { replicas: 0 } });
+  expect(deployment).toMatchObject({ spec: { replicas: 1 } });
   expect(preparation).toMatchObject({
     metadata: {
       annotations: {

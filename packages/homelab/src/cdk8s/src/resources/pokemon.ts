@@ -49,7 +49,8 @@ export function createPokemonDeployment(chart: Chart) {
   const GID = 1000;
 
   const deployment = createBurstDeployment(chart, "pokemon", {
-    replicas: 1,
+    // Arcade owns these accounts; retain the legacy claim for rollback.
+    replicas: 0,
     strategy: DeploymentStrategy.recreate(),
     // SIGTERM stops the active session: the goal agent gets a bounded 2×15s
     // to exit, then the checkpoint (3 tries) and the durable flash flush run.

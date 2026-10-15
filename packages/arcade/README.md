@@ -68,9 +68,12 @@ Assets live under `runtimeAssets/{mk64,emerald,mkwii,melee,brawl}`. MK64 expects
 preparation script's checksum manifest. Saves live under
 `stateRoot/<game>/<guild>`. The database is separate from saves.
 
-The homelab chart starts with zero replicas and an inactive controller. Account
-handover and rollback use the wiki's Arcade migration guide. Source tests do not
-replace real-game controller, audio/video, latency, and concurrent-session acceptance.
+The homelab chart runs one controller. The legacy MK64 and Emerald deployments
+stay at zero replicas with their original claims retained for rollback. The
+existing Mario Kart edge forwards public and tailnet requests to Arcade, keeping
+the registered Discord OAuth callback. Flipt controls session and game rollout.
+Account handover and rollback use the wiki's Arcade migration guide. Source tests
+do not replace real-game controller, audio/video, latency, and concurrent-session acceptance.
 
 ROM-gated media acceptance can run without Discord accounts:
 

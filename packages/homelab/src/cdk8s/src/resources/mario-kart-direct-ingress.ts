@@ -24,9 +24,9 @@ export const MARIO_KART_HTTPS_NODE_PORT = 30_443;
 /** Prepare HTTPS while the current Cloudflare-backed hostname remains usable. */
 export function createMarioKartDirectIngress(
   chart: Chart,
-  upstream: Service,
+  upstream: string,
 ): Service {
-  const caddyfile = marioKartCaddyfile(`${upstream.name}:8081`);
+  const caddyfile = marioKartCaddyfile(upstream);
   const config = new ConfigMap(chart, "mario-kart-edge-config", {
     data: { Caddyfile: caddyfile },
   });

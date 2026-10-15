@@ -39,7 +39,8 @@ export function createMarioKartDeployment(chart: Chart) {
   const GID = 1000;
 
   const deployment = createBurstDeployment(chart, "mario-kart", {
-    replicas: 1,
+    // Arcade owns these accounts; retain the legacy claims for rollback.
+    replicas: 0,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
       fsGroup: GID,
@@ -249,7 +250,7 @@ export function createMarioKartDeployment(chart: Chart) {
     ),
   );
 
-  const uiService = new Service(chart, "ui-service", {
+  new Service(chart, "ui-service", {
     metadata: {
       labels: {
         app: "mario-kart",
@@ -268,12 +269,15 @@ export function createMarioKartDeployment(chart: Chart) {
     matchLabels: { app: "mario-kart" },
   });
 
+  const bootstrap = createMarioKartDirectIngress(
+    chart,
+    "arcade-arcade-ui.arcade.svc.cluster.local:8081",
+  );
   new TailscaleIngress(chart, "ui-tailscale-ingress", {
-    service: uiService,
+    service: bootstrap,
     host: "mariokart",
   });
 
-  const bootstrap = createMarioKartDirectIngress(chart, uiService);
   createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
     serviceName: bootstrap.name,
     subdomain: "mariokart",
