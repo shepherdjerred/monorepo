@@ -31,9 +31,9 @@ export const APP_ROOT = "/app/packages/arcade";
 const ARCADE_NODE_SELECTOR = { "kubernetes.io/hostname": "torvalds" };
 
 export function createArcadeDeployment(chart: Chart) {
-  // Preserve legacy owners until assets, copied saves, and beta acceptance pass.
+  // Arcade owns the command bot and both streaming accounts after migration.
   const deployment = createBurstDeployment(chart, "arcade", {
-    replicas: 0,
+    replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     // Emerald's goal worker and save retries use the same budget as its legacy pod.
     terminationGracePeriod: Duration.seconds(120),
@@ -54,7 +54,7 @@ export function createArcadeDeployment(chart: Chart) {
   const database = new ZfsNvmeVolume(chart, "arcade-database", {
     storage: Size.gibibytes(8),
   });
-  // Bind storage before asset/save migration while account ownership stays off.
+  // Bind storage before deployment startup or asset/save migration.
   // The Sync hook shares the claims' wave so WaitForFirstConsumer can schedule it.
   const storagePreparation = new Job(chart, "arcade-storage-prepare", {
     metadata: {
@@ -108,7 +108,7 @@ export function createArcadeDeployment(chart: Chart) {
   );
   const config = new ConfigMap(chart, "arcade-config", {
     data: {
-      "arcade.toml": `controllerActive = false\nenabled = false\nmkwiiEnabled = false\nmeleeEnabled = false\nbrawlEnabled = false\nstateRoot = "/data/saves"\ndatabasePath = "/data/db/arcade.db"\nwebAssets = "${APP_ROOT}/packages/frontend/dist"\n`,
+      "arcade.toml": `controllerActive = true\nenabled = false\nmkwiiEnabled = false\nmeleeEnabled = false\nbrawlEnabled = false\ngoalGuildIds = ["208425771172102144", "1337623164146155593"]\nstateRoot = "/data/saves"\ndatabasePath = "/data/db/arcade.db"\nwebAssets = "${APP_ROOT}/packages/frontend/dist"\n`,
     },
   });
   const mk64 = new OnePasswordItem(chart, "arcade-mk64", {
@@ -149,12 +149,15 @@ export function createArcadeDeployment(chart: Chart) {
         NODE_ENV: EnvValue.fromValue("production"),
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
         FLIPT_NAMESPACE: EnvValue.fromValue("arcade"),
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        // Exercise the real production workload behind existing beta targeting
+        // before promoting the verified games to the production flag environment.
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("beta"),
+        DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("beta"),
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("marioKart")),
-        // Cutover also changes OAuth origin and routing; standby cannot log in.
+        // Keep the existing public address and registered Discord OAuth callback.
         WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://mariokart.sjer.red"),
         DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
           secret: mkSecret,
@@ -281,5 +284,5 @@ export function createArcadeDeployment(chart: Chart) {
     path: "/metrics",
     matchLabels: { app: "arcade" },
   });
-  // Add ingress at activation, once the service has a healthy backend.
+  // The existing Mario Kart edge proxies this service across namespaces.
 }

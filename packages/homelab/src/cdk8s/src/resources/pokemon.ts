@@ -18,7 +18,7 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import { createPokemonWebRedirect } from "@shepherdjerred/homelab/cdk8s/src/resources/pokemon-web-redirect.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -49,7 +49,8 @@ export function createPokemonDeployment(chart: Chart) {
   const GID = 1000;
 
   const deployment = createBurstDeployment(chart, "pokemon", {
-    replicas: 1,
+    // Arcade owns these accounts; retain the legacy claim for rollback.
+    replicas: 0,
     strategy: DeploymentStrategy.recreate(),
     // SIGTERM stops the active session: the goal agent gets a bounded 2×15s
     // to exit, then the checkpoint (3 tries) and the durable flash flush run.
@@ -299,33 +300,27 @@ export function createPokemonDeployment(chart: Chart) {
     ),
   );
 
+  const redirect = createPokemonWebRedirect(chart);
   const uiService = new Service(chart, "ui-service", {
     metadata: {
       labels: {
-        app: "pokemon",
+        app: "pokemon-redirect",
       },
     },
-    selector: deployment,
+    selector: redirect,
     ports: [{ port: WEB_PORT, name: "ui" }],
-  });
-
-  // Scrape the frame-loop + process metrics exposed at /metrics on the web port.
-  createServiceMonitor(chart, {
-    name: "pokemon",
-    port: "ui",
-    path: "/metrics",
-    namespace: "pokemon",
-    matchLabels: { app: "pokemon" },
   });
 
   new TailscaleIngress(chart, "ui-tailscale-ingress", {
     service: uiService,
     host: "pokebot",
+    probePath: "/health",
   });
 
   createCloudflareTunnelBinding(chart, "pokebot-cf-tunnel", {
     serviceName: uiService.name,
     subdomain: "pokebot",
     port: WEB_PORT,
+    probePath: "/health",
   });
 }
