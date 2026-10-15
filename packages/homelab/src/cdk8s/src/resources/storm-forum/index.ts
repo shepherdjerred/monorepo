@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { Chart, type App } from "cdk8s";
 import { Pods, Service } from "cdk8s-plus-31";
-import { z } from "zod";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
@@ -26,56 +25,7 @@ import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
 import { applyForumSyncWaves } from "./sync-waves.ts";
 import { upgradeBackupEnvironment } from "./upgrade-environment.ts";
-
-export const ReleaseSchema = z
-  .object({
-    stage: z.enum(["beta", "prod"]),
-    image: z
-      .string()
-      .regex(/^docker\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/)
-      .refine(
-        (value) => !value.endsWith("0".repeat(64)),
-        "An active release requires a published image",
-      ),
-    secretItemId: z.string().regex(/^[a-z0-9]{26}$/),
-    bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
-    bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
-    releaseId: z.string().regex(/^[a-f0-9]{12}$/),
-    preUpgradeBackup: z
-      .object({
-        bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
-        xenforoVersion: z.string().min(1),
-        runtimeImage: z
-          .string()
-          .regex(/^ghcr\.io\/shepherdjerred\/storm-forum@sha256:[a-f0-9]{64}$/),
-      })
-      .strict()
-      .optional(),
-    storageSlot: z.enum(["primary", "recovery"]).optional(),
-    restore: z
-      .object({
-        manifestKey: z
-          .string()
-          .regex(/^snapshots\/(?:beta|prod)\/[a-f0-9-]{36}\/manifest\.json$/),
-      })
-      .strict()
-      .optional(),
-    trustedConnectorCidr: z
-      .cidrv4()
-      .refine(
-        (value) => value !== "0.0.0.0/0",
-        "Trust only the connector's network",
-      ),
-  })
-  .strict()
-  .refine(
-    (value) =>
-      (value.storageSlot !== "recovery" || value.stage === "beta") &&
-      (!value.restore ||
-        (value.stage === "beta" && value.storageSlot === "recovery")),
-    "Recovery uses only the dedicated private beta storage pair",
-  );
-export type ForumRelease = z.infer<typeof ReleaseSchema>;
+import { ReleaseSchema, type ForumRelease } from "./release-schema.ts";
 
 // The caller supplies verified published artifacts and provisioned secret IDs.
 // No placeholder image digest, empty secret item, or automatic install on restart.
@@ -323,7 +273,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                 ...(base.env ?? []),
                 {
                   name: "RUNTIME_IMAGE",
-                  value: release.image.replace("docker.io/", "ghcr.io/"),
+                  value: release.image,
                 },
                 ...credentials(["BACKUP_ACCESS_KEY", "BACKUP_SECRET_KEY"]),
                 {
@@ -411,7 +361,9 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
                   ? [
                       {
                         name: "RUNTIME_IMAGE",
-                        value: release.image.replace("docker.io/", "ghcr.io/"),
+                        // Original runtimes accept the snapshot's historical
+                        // identity; the validated Pod still pulls its exact mirror.
+                        value: release.restore?.runtimeImage ?? release.image,
                       },
                     ]
                   : []),

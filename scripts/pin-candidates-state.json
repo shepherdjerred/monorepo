@@ -37,11 +37,17 @@
       "buildNumber": 1006677
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-1009839",
-      "digest": "sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
-      "buildNumber": 1009839
+      "version": "2.0.0-1010005",
+      "digest": "sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
+      "buildNumber": 1010005
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      "version": "2.0.0-1010005",
+      "digest": "sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
+      "buildNumber": 1010005,
+      "gitSha": "d839b9435dda3c2efe032f1f43e5c495f9179a28"
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/retained-0ca0966f0a35": {
       "version": "2.0.0-1009839",
       "digest": "sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
       "buildNumber": 1009839,
@@ -88,9 +94,9 @@
       "buildNumber": 1009839
     },
     "shepherdjerred/storm-forum": {
-      "version": "2.0.0-1009844",
-      "digest": "sha256:60816967af13de2c020dacf4618b199f00ef7377fb331a6cf5b47d9441bcb09a",
-      "buildNumber": 1009844
+      "version": "2.0.0-1010008",
+      "digest": "sha256:29fd5bbc717c7dd274107d5b0918f385bc2b179d5b56dcc8ad5aae9966dec0d8",
+      "buildNumber": 1010008
     },
     "shepherdjerred/streambot": {
       "version": "2.0.0-1009839",
@@ -120,14 +126,14 @@
       "gitSha": "e6edbbe26ea421c829313bbee44b9988951dc2e3"
     },
     "shepherdjerred/the-storm-server": {
-      "version": "2.0.0-1009839",
-      "digest": "sha256:c2ffd59ab6f24b7eb2fb00faf91d90d407b4f056ee1f59648c5b29d755c584fc",
-      "buildNumber": 1009839
+      "version": "2.0.0-1010005",
+      "digest": "sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
+      "buildNumber": 1010005
     },
     "shepherdjerred/the-storm-server/prod": {
-      "version": "2.0.0-1009839",
-      "digest": "sha256:c2ffd59ab6f24b7eb2fb00faf91d90d407b4f056ee1f59648c5b29d755c584fc",
-      "buildNumber": 1009839
+      "version": "2.0.0-1010005",
+      "digest": "sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
+      "buildNumber": 1010005
     },
     "shepherdjerred/tracker": {
       "version": "2.0.0-1009839",

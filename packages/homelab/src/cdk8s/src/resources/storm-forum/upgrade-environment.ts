@@ -1,5 +1,5 @@
 import type { EnvVar } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import type { ForumRelease } from "./index.ts";
+import type { ForumRelease } from "./release-schema.ts";
 
 export function upgradeBackupEnvironment(
   source: NonNullable<ForumRelease["preUpgradeBackup"]>,

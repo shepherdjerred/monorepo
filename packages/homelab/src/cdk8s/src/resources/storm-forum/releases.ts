@@ -3,7 +3,8 @@ import { z } from "zod";
 import { KubeConfigMap } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import inventory from "./releases.json";
-import { createStormForumChart, ReleaseSchema } from "./index.ts";
+import { createStormForumChart } from "./index.ts";
+import { ReleaseSchema } from "./release-schema.ts";
 
 const InventorySchema = z
   .object({

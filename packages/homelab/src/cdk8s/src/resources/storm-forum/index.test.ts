@@ -2,6 +2,7 @@ import { App, Chart, Testing } from "cdk8s";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createStormForumChart } from "./index.ts";
+import { ReleaseSchema } from "./release-schema.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { createServiceProbesChart } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/service-probes-chart.ts";
 
@@ -25,7 +26,7 @@ describe("forum upgrade snapshot contract", () => {
         preUpgradeBackup: {
           bundleSha256: "d".repeat(64),
           xenforoVersion: "2.3.8",
-          runtimeImage: `ghcr.io/shepherdjerred/storm-forum@sha256:${"d".repeat(64)}`,
+          runtimeImage: `docker.io/shepherdjerred/storm-forum@sha256:${"d".repeat(64)}`,
         },
       }),
     );
@@ -44,15 +45,11 @@ describe("forum upgrade snapshot contract", () => {
     expect(json).toContain(
       JSON.stringify({
         name: "BACKUP_SOURCE_RUNTIME_IMAGE",
-        value: fixture.image
-          .replace("docker.io/", "ghcr.io/")
-          .replace("a".repeat(64), "d".repeat(64)),
+        value: fixture.image.replace("a".repeat(64), "d".repeat(64)),
       }),
     );
     expect(json).toContain(
-      '"name":"RUNTIME_IMAGE","value":"' +
-        fixture.image.replace("docker.io/", "ghcr.io/") +
-        '"',
+      '"name":"RUNTIME_IMAGE","value":"' + fixture.image + '"',
     );
   });
   it("preserves the completed bootstrap job until a new release explicitly requests a pre-upgrade backup", () => {
@@ -172,6 +169,7 @@ describe("forum isolation and release resources", () => {
         restore: {
           manifestKey:
             "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+          runtimeImage: fixture.image.replace("docker.io/", "ghcr.io/"),
         },
       }),
     );
@@ -182,6 +180,13 @@ describe("forum isolation and release resources", () => {
     expect(jobJson).toContain('"key":"RESTORE_SECRET_KEY"');
     expect(jobJson).not.toContain('"key":"BACKUP_SECRET_KEY"');
     expect(jobJson).not.toContain("ADMIN_PASSWORD");
+    expect(jobJson).toContain(
+      JSON.stringify({
+        name: "RUNTIME_IMAGE",
+        value: fixture.image.replace("docker.io/", "ghcr.io/"),
+      }),
+    );
+    expect(jobJson).toContain(`"image":"${fixture.image}"`);
     expect(jobJson).toContain('"claimName":"storm-forum-recovery-files"');
     expect(
       JSON.stringify(
@@ -208,7 +213,18 @@ describe("forum isolation and release resources", () => {
     const restore = {
       manifestKey:
         "snapshots/prod/f8d36d3a-e74e-4b28-a661-b03ed85c7e55/manifest.json",
+      runtimeImage: fixture.image,
     };
+    expect(
+      ReleaseSchema.safeParse({
+        ...fixture,
+        storageSlot: "recovery",
+        restore: {
+          ...restore,
+          runtimeImage: fixture.image.replace("a".repeat(64), "b".repeat(64)),
+        },
+      }).success,
+    ).toBe(false);
     expect(() =>
       createStormForumChart(new App(), { ...fixture, restore }),
     ).toThrow();

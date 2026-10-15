@@ -6,7 +6,7 @@ Reviewed public historical discussions retain original names and dates, with new
 
 ## Licensed inputs and image boundary
 
-The public runtime image contains PHP, Bun, the Storm add-on, community-owned
+The runtime image contains PHP, Bun, the Storm add-on, community-owned
 artwork, and the authored Flexile adaptation source. It contains no XenForo
 distribution, generated native style exports, or vendor add-on code.
 `config/forum.json` is the dependency and topology contract. A private release
@@ -205,6 +205,8 @@ alongside a new release ID. The release Job snapshots before migrations and reco
 that previous bundle, XenForo version, and runtime image so recovery uses matching
 application files and add-on code. The `source-release.json` record is uploaded before
 the manifest; the v1 manifest remains readable by the previous runtime during rollback.
+For a GHCR-era runtime mirrored to Docker Hub, retain its original GHCR identity
+in the pre-upgrade source record: that original runtime expects it during restore.
 Completed bootstrap
 Jobs remain unchanged until the next explicit release; an installed forum cannot
 upgrade without the source bundle and backup credentials.
@@ -223,9 +225,11 @@ clearing maintenance it reapplies the beta URL, closes registration, selects the
 normal season, and rebuilds jobs. Failed recovery leaves maintenance enabled.
 
 Declare a beta release with `storageSlot: "recovery"` and
-`restore: { "manifestKey": "snapshots/prod/<snapshot-uuid>/manifest.json" }` in
+`restore: { "manifestKey": "snapshots/prod/<snapshot-uuid>/manifest.json", "runtimeImage": "<exact image identity from source-release.json>" }` in
 the release inventory. Its wave-zero Job restores instead of installing a new
-forum, using dedicated read-only credentials. Beta declares both primary and
+forum, using dedicated read-only credentials. The restore Job receives the
+recorded identity so original GHCR-era runtimes remain usable; its Docker Hub
+Pod image must have the same repository and digest. Beta declares both primary and
 recovery PVC pairs so changing the selected pair cannot prune the original data.
 Subsequent releases retain `storageSlot: "recovery"` and omit `restore`.
 The recovery pair must be empty; repeated drills require reviewed storage
@@ -235,7 +239,7 @@ Production releases cannot select the recovery pair or request restore.
 ## Development
 
 Run the root workspace setup, then `bun run build`, `typecheck`, `test`, and `lint`
-from this package. Build the public runtime with:
+from this package. Build the runtime with:
 
 ```sh
 docker build --target image -t storm-forum:dev -f packages/storm-forum/Dockerfile .

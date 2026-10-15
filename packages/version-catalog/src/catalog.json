@@ -773,7 +773,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009844@sha256:60816967af13de2c020dacf4618b199f00ef7377fb331a6cf5b47d9441bcb09a",
+      "value": "2.0.0-1010008@sha256:29fd5bbc717c7dd274107d5b0918f385bc2b179d5b56dcc8ad5aae9966dec0d8",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
@@ -785,7 +785,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
+      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -817,10 +817,23 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
+      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-0ca0966f0a35",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
+      "notes": [
+        "Retained Scout beta Workflow build 0ca0966f0a35ce1e80e21edf8b1b906fc4f85779; keep until it is neither current nor ramping and its pinned executions have drained",
+        "not managed by renovate or image commit-back"
       ]
     },
     {
@@ -1707,7 +1720,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:c2ffd59ab6f24b7eb2fb00faf91d90d407b4f056ee1f59648c5b29d755c584fc",
+      "value": "2.0.0-1010005@sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
         "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
@@ -1720,7 +1733,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:c2ffd59ab6f24b7eb2fb00faf91d90d407b4f056ee1f59648c5b29d755c584fc",
+      "value": "2.0.0-1010005@sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
       "notes": [
         "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
         "This production pin is owned by operator publication; remove local publisher ownership when explicitly promoting a CI-published production pin.",
