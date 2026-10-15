@@ -87,6 +87,24 @@ describe("Arcade account handover", () => {
       (resource) => resource.metadata.name === "arcade-arcade-config",
     );
     expect(config?.data?.["arcade.toml"]).toContain("controllerActive = true");
+    const arcade = manifests.find(
+      (resource) =>
+        resource.kind === "Deployment" && resource.metadata.name === "arcade",
+    );
+    expect(arcade?.spec).toMatchObject({
+      template: {
+        spec: {
+          containers: expect.arrayContaining([
+            expect.objectContaining({
+              env: expect.arrayContaining([
+                { name: "FLIPT_ENVIRONMENT", value: "beta" },
+                { name: "DEPLOYMENT_ENVIRONMENT", value: "beta" },
+              ]),
+            }),
+          ]),
+        },
+      },
+    });
   });
 
   test("routes both public and tailnet traffic through the edge to Arcade", () => {
