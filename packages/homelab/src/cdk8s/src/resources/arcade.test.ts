@@ -48,18 +48,18 @@ const PreparationSchema = z.object({
   }),
 });
 
-test("prepares storage with a read-only hook beside the active controller", () => {
+test("prepares storage with a read-only hook while the controller is dormant", () => {
   const chart = new Chart(new App(), "test", {
     namespace: "arcade",
     disableResourceNameHashes: true,
   });
-  createArcadeDeployment(chart);
+  createArcadeDeployment(chart, { controllerActive: false });
   const resources = Testing.synth(chart);
   const find = (kind: string): unknown =>
     resources.find((resource) => KindSchema.parse(resource).kind === kind);
   const deployment = DeploymentSchema.parse(find("Deployment"));
   const preparation = PreparationSchema.parse(find("Job"));
-  expect(deployment).toMatchObject({ spec: { replicas: 1 } });
+  expect(deployment).toMatchObject({ spec: { replicas: 0 } });
   expect(preparation).toMatchObject({
     metadata: {
       annotations: {
@@ -112,4 +112,23 @@ test("prepares storage with a read-only hook beside the active controller", () =
       (resource) => KindSchema.parse(resource).kind === "PersistentVolumeClaim",
     ),
   ).toHaveLength(3);
+});
+
+test("the active controller mounts storage without a competing bootstrap job", () => {
+  const chart = new Chart(new App(), "test", {
+    namespace: "arcade",
+    disableResourceNameHashes: true,
+  });
+  createArcadeDeployment(chart);
+  const resources = Testing.synth(chart);
+  expect(
+    DeploymentSchema.parse(
+      resources.find(
+        (resource) => KindSchema.parse(resource).kind === "Deployment",
+      ),
+    ),
+  ).toMatchObject({ spec: { replicas: 1 } });
+  expect(
+    resources.some((resource) => KindSchema.parse(resource).kind === "Job"),
+  ).toBe(false);
 });

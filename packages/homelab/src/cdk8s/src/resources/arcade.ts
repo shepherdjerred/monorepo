@@ -30,10 +30,13 @@ import { emeraldGoalCredentials } from "@shepherdjerred/homelab/cdk8s/src/resour
 export const APP_ROOT = "/app/packages/arcade";
 const ARCADE_NODE_SELECTOR = { "kubernetes.io/hostname": "torvalds" };
 
-export function createArcadeDeployment(chart: Chart) {
+export function createArcadeDeployment(
+  chart: Chart,
+  { controllerActive = true }: { controllerActive?: boolean } = {},
+) {
   // Arcade owns the command bot and both streaming accounts after migration.
   const deployment = createBurstDeployment(chart, "arcade", {
-    replicas: 1,
+    replicas: controllerActive ? 1 : 0,
     strategy: DeploymentStrategy.recreate(),
     // Emerald's goal worker and save retries use the same budget as its legacy pod.
     terminationGracePeriod: Duration.seconds(120),
@@ -54,61 +57,65 @@ export function createArcadeDeployment(chart: Chart) {
   const database = new ZfsNvmeVolume(chart, "arcade-database", {
     storage: Size.gibibytes(8),
   });
-  // Bind storage before deployment startup or asset/save migration.
-  // The Sync hook shares the claims' wave so WaitForFirstConsumer can schedule it.
-  const storagePreparation = new Job(chart, "arcade-storage-prepare", {
-    metadata: {
-      name: "arcade-storage-prepare",
-      annotations: {
-        "argocd.argoproj.io/hook": "Sync",
-        "argocd.argoproj.io/hook-delete-policy":
-          "BeforeHookCreation,HookSucceeded",
+  // The running controller binds its own claims. A second read-only consumer
+  // cannot mount these ZFS datasets alongside its writable save/database mounts.
+  if (!controllerActive) {
+    // Bind storage before deployment startup or asset/save migration.
+    // The Sync hook shares the claims' wave so WaitForFirstConsumer can schedule it.
+    const storagePreparation = new Job(chart, "arcade-storage-prepare", {
+      metadata: {
+        name: "arcade-storage-prepare",
+        annotations: {
+          "argocd.argoproj.io/hook": "Sync",
+          "argocd.argoproj.io/hook-delete-policy":
+            "BeforeHookCreation,HookSucceeded",
+        },
       },
-    },
-    automountServiceAccountToken: false,
-    backoffLimit: 1,
-    activeDeadline: Duration.minutes(5),
-  });
-  storagePreparation.addContainer(
-    withCommonProps({
-      image: `busybox:${versions["library/busybox"]}`,
-      command: ["/bin/sh", "-ec"],
-      args: [
-        "test -d /storage/assets && test -d /storage/saves && test -d /storage/database",
-      ],
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-      },
-      resources: {
-        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
-        memory: { request: Size.mebibytes(16), limit: Size.mebibytes(64) },
-      },
-      volumeMounts: [
-        { path: "/storage/assets", claim: assets.claim },
-        { path: "/storage/saves", claim: saves.claim },
-        { path: "/storage/database", claim: database.claim },
-      ].map(({ path, claim }) => ({
-        path,
-        volume: Volume.fromPersistentVolumeClaim(
-          chart,
-          `${claim.name}-prepare-mount`,
-          claim,
-          { readOnly: true },
-        ),
-        readOnly: true,
-      })),
-    }),
-  );
-  ApiObject.of(storagePreparation).addJsonPatch(
-    JsonPatch.add("/spec/template/spec/nodeSelector", ARCADE_NODE_SELECTOR),
-  );
+      automountServiceAccountToken: false,
+      backoffLimit: 1,
+      activeDeadline: Duration.minutes(5),
+    });
+    storagePreparation.addContainer(
+      withCommonProps({
+        image: `busybox:${versions["library/busybox"]}`,
+        command: ["/bin/sh", "-ec"],
+        args: [
+          "test -d /storage/assets && test -d /storage/saves && test -d /storage/database",
+        ],
+        securityContext: {
+          user: 1000,
+          group: 1000,
+          ensureNonRoot: true,
+          readOnlyRootFilesystem: true,
+          allowPrivilegeEscalation: false,
+        },
+        resources: {
+          cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
+          memory: { request: Size.mebibytes(16), limit: Size.mebibytes(64) },
+        },
+        volumeMounts: [
+          { path: "/storage/assets", claim: assets.claim },
+          { path: "/storage/saves", claim: saves.claim },
+          { path: "/storage/database", claim: database.claim },
+        ].map(({ path, claim }) => ({
+          path,
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            `${claim.name}-prepare-mount`,
+            claim,
+            { readOnly: true },
+          ),
+          readOnly: true,
+        })),
+      }),
+    );
+    ApiObject.of(storagePreparation).addJsonPatch(
+      JsonPatch.add("/spec/template/spec/nodeSelector", ARCADE_NODE_SELECTOR),
+    );
+  }
   const config = new ConfigMap(chart, "arcade-config", {
     data: {
-      "arcade.toml": `controllerActive = true\nenabled = false\nmkwiiEnabled = false\nmeleeEnabled = false\nbrawlEnabled = false\ngoalGuildIds = ["208425771172102144", "1337623164146155593"]\nstateRoot = "/data/saves"\ndatabasePath = "/data/db/arcade.db"\nwebAssets = "${APP_ROOT}/packages/frontend/dist"\n`,
+      "arcade.toml": `controllerActive = ${controllerActive.toString()}\nenabled = false\nmkwiiEnabled = false\nmeleeEnabled = false\nbrawlEnabled = false\ngoalGuildIds = ["208425771172102144", "1337623164146155593"]\nstateRoot = "/data/saves"\ndatabasePath = "/data/db/arcade.db"\nwebAssets = "${APP_ROOT}/packages/frontend/dist"\n`,
     },
   });
   const mk64 = new OnePasswordItem(chart, "arcade-mk64", {
