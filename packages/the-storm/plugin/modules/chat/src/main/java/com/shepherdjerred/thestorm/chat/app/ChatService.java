@@ -246,6 +246,16 @@ public final class ChatService {
     return wasMuted;
   }
 
+  /** Lifts only the mute issued for this evidence, preserving any later staff action. */
+  public boolean unmute(UUID player, String issuer, UUID evidence) {
+    return activeMute(player)
+            .filter(
+                mute ->
+                    mute.issuer().equals(issuer) && mute.reason().endsWith(" evidence " + evidence))
+            .isPresent()
+        && unmute(player);
+  }
+
   /** {@code player}'s mute, if it has not ended. */
   public Optional<Mute> activeMute(UUID player) {
     return Optional.ofNullable(mutes.get(player)).filter(mute -> mute.activeAt(time.instant()));
@@ -272,6 +282,20 @@ public final class ChatService {
     return extensions
         .route(new ChannelRouter.Request(speaker, channel, rawText, command))
         .orElseGet(() -> new ChannelRouter.Routed(channel, rawText));
+  }
+
+  /** NPC replies share mutes, filters and repeat limits with ordinary Global messages. */
+  public String audience(UUID speaker, ChannelKey chosen, String text, boolean command) {
+    var routed = route(speaker, chosen, text, command);
+    var resolution =
+        resolve(new Speaker(speaker, "audience", false, false), routed.channel().key());
+    var members = resolution.members().stream().map(UUID::toString).sorted().toList();
+    return routed.channel().key().id()
+        + (members.isEmpty()
+            ? ""
+            : ":"
+                + UUID.nameUUIDFromBytes(
+                    String.join(":", members).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
   }
 
   /** NPC replies share mutes, filters and repeat limits with ordinary Global messages. */

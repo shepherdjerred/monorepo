@@ -1,6 +1,7 @@
 // Usage text for `toolkit mc`; `--help` on a subcommand prints its lines.
 import { FILES_USAGE } from "./mc-files.ts";
 import { LIVE_USAGE } from "./mc-live.ts";
+import { EVIDENCE_USAGE } from "./mc-evidence.ts";
 
 export const MC_USAGE = `
 toolkit mc — drive Minecraft sandboxes through the mc-harness daemon
@@ -56,6 +57,8 @@ mode, so never live; needs a desktop session and Java 25; the first start compil
 ${LIVE_USAGE}
 
 ${FILES_USAGE}
+
+${EVIDENCE_USAGE}
 
 Playtests (scenario files; sandbox-only):
   toolkit mc playtest run <file|dir…> [--target <id> | --profile paper|storm-dev] [--grep s] [--keep]

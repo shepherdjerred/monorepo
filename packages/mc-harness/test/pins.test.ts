@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   citizens,
   coreProtect,
+  grim,
   luckPerms,
   multiverseCore,
   paper,
@@ -41,6 +42,7 @@ describe("pins", () => {
       worldEdit,
       citizens,
       coreProtect,
+      grim,
       luckPerms,
       multiverseCore,
     ]) {

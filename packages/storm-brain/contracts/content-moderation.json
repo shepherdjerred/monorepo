@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "maxTextChars": 4000,
+  "maxContextChars": 8000,
+  "categories": ["none", "hate", "harassment", "threat", "advertising", "spam"],
+  "decisions": ["allow", "block", "review"],
+  "requestFields": [
+    "version",
+    "submissionId",
+    "authorId",
+    "authorName",
+    "surface",
+    "audience",
+    "text",
+    "context"
+  ],
+  "responseFields": [
+    "version",
+    "decision",
+    "category",
+    "confidence",
+    "reason",
+    "model",
+    "costMicros",
+    "scores"
+  ]
+}

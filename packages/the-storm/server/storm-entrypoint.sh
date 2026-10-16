@@ -107,9 +107,33 @@ install_livemap() {
   done < <(find "$source" -type f -print0)
 }
 
+install_world_protection() {
+  local definition target dimension
+  for definition in /bundle/world-protection/*.json; do
+    target=$(jq -er '.file' "$definition")
+    case "$target" in
+      /data/world/dimensions/minecraft/*/paper-world.yml) ;;
+      *) fail "unexpected world protection target: $target" ;;
+    esac
+    [[ $target != *..* ]] || fail "invalid world protection target"
+    dimension=$(dirname "$target")
+    # Paper 26.2 treats a pre-created dimension directory as an existing world and
+    # requires its native world_gen_settings.dat. Let Paper initialize new worlds.
+    if [[ ! -d $dimension ]]; then
+      echo "[storm-entrypoint] deferred protection profile for uninitialized ${dimension##*/}; restart after provisioning"
+      continue
+    fi
+    [[ -f $dimension/data/minecraft/world_gen_settings.dat ]] ||
+      fail "dimension ${dimension##*/} lacks native world-gen settings; finish provisioning before startup"
+    if [[ ! -e $target ]]; then printf '{}\n' >"$target"; fi
+    mc-image-helper patch "$definition"
+  done
+}
+
 require_progression_preparation
 install -m 0664 /opt/the-storm/server-icon.png /data/server-icon.png
 remove_stale_files
 mirror_owned_roots
+install_world_protection
 install_livemap /opt/the-storm/livemap /data/bluemap/web "$(stat -c '%u' /data)" "$(stat -c '%g' /data)"
 exec /image/scripts/start "$@"

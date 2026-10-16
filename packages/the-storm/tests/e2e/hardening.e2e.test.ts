@@ -1,6 +1,6 @@
 import { describe, expect } from "vitest";
 import { test } from "./fixtures.ts";
-import { waitForMessage } from "./harness/bot.ts";
+import { collectMessages, waitForMessage } from "./harness/bot.ts";
 import { triageRow, waitForDecision } from "./harness/decisions.ts";
 import { setBrainMode } from "./harness/fake-brain.ts";
 import { fileTicket } from "./harness/tickets.ts";
@@ -22,7 +22,7 @@ describe("hardening", () => {
 
     const row = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} other allow shadow`),
+      new RegExp(String.raw`#(\d+) ${bot.username} other allow .*safety-allow`),
     );
     expect(Number(row[1] ?? "0")).toBeGreaterThan(0);
   });
@@ -56,39 +56,34 @@ describe("hardening", () => {
     expect(Number(row[1] ?? "0")).toBeGreaterThan(0);
   });
 
-  test("staff work continues with the brain down", async ({
+  test("brain outages withhold new prose while staff can claim an existing report", async ({
     bot,
     rcon,
     brain,
     secondBot,
   }) => {
     await rcon.command(`op ${bot.username}`);
+    const ticketId = await fileTicket(bot, "someone broke my wall", "grief");
     await setBrainMode(brain.port, "down");
     try {
-      const ticketId = await fileTicket(
-        bot,
-        "someone broke my wall while the brain slept",
-        "grief",
-      );
       bot.chat(`/ticket claim ${ticketId}`);
       await waitForMessage(
         bot,
         new RegExp(String.raw`Ticket #${ticketId} claimed\.`),
       );
       bot.chat(`/ticket comment ${ticketId} still here, still helping`);
-      await waitForMessage(
-        bot,
-        new RegExp(String.raw`Noted on ticket #${ticketId}\.`),
+      await waitForMessage(bot, /Screening is temporarily unavailable/, 30_000);
+      const observed = collectMessages(secondBot, 1500);
+      bot.chat("unchecked text must remain unpublished");
+      await waitForMessage(bot, /Screening is temporarily unavailable/, 30_000);
+      const observations = await observed;
+      expect(observations.some((line) => line.includes("unchecked text"))).toBe(
+        false,
       );
-      bot.chat(`/ticket resolve ${ticketId} fixed the wall`);
-      await waitForMessage(
-        bot,
-        new RegExp(String.raw`Ticket #${ticketId} resolved\.`),
-      );
-      bot.chat("chat still works with the brain down");
-      await waitForMessage(secondBot, /chat still works with the brain down/);
     } finally {
       await setBrainMode(brain.port, "ok");
     }
+    bot.chat("screening has recovered");
+    await waitForMessage(secondBot, /screening has recovered/);
   });
 });

@@ -44,6 +44,39 @@ mise exec -- gradle --write-verification-metadata sha256 build
 
 The jar is `plugin/dist/build/libs/TheStorm.jar`.
 
+## Content admission and evidence
+
+The `safety` module runs before chat. Its shared `core.safety.ContentSafety`
+port holds publications asynchronously and records attempts, window verdicts,
+scores, final decisions and publication receipts in the permanent
+`safety_submission` and `safety_event` tables. The shared moderation contract
+comes from `../storm-brain/contracts/content-moderation.json`; the evidence
+query contract comes from `../mc-harness/src/protocol/evidence-contract.json`.
+Both Java and TypeScript validate their wire fields against these files.
+
+Native chat, message commands, proposed signs and books, anvil names, name tags,
+and Discord ingress pass admission before publication. Unknown command arguments
+are screened; commands containing only known identifiers are audited directly.
+Authentication commands and credential-shaped strings are redacted before storage.
+Allowed and rejected text, including DMs, stays in the private archive indefinitely.
+Loaded saved signs, containers and entity names are snapshots with unknown creators;
+their observers receive no offense attribution. Visual map art is not text screening.
+
+CoreProtect owns block and item history and rollback. Safety adds denied interactions,
+inventory metadata, text, and Grim findings with gameplay context. Safety requires the
+checksum-pinned Grim runtime; development profiles with Safety off can run without it.
+Its movement and packet corrections have an
+independent managed rollout gate; no automatic ban commands are configured.
+
+Chat filters accept up to 2,000 Unicode code points. Paper's command transport allows
+4,096 characters, including the command and recipient; vanilla chat UI remains 256.
+Length is a transport/filter limit and never a misconduct strike.
+
+Focused real-Paper acceptance includes `tests/e2e/safety.e2e.test.ts` outside CI.
+The evidence tests cover pagination, private exports, interruption recovery and a
+stopped-database restore. Operator review uses the existing agent queue plus private
+`toolkit mc evidence` queries; see the wiki's safety review procedure.
+
 ## Contributor verification
 
 Minecraft CI runs unit tests and one light Paper smoke lane. The smoke command

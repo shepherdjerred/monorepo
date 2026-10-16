@@ -381,19 +381,30 @@ Coordinates may be negative anywhere (`--pos1 -3,-60,-3`, `region read
 `changed N`, the blocks whose state really changed; WorldEdit's own "blocks
 affected" message counts attempted sets and can be higher.
 
-| Command                                                   | Purpose                                        |
-| --------------------------------------------------------- | ---------------------------------------------- |
-| `mc cmd <command…>`                                       | Console command with captured feedback         |
-| `mc we --world w [--pos1] [--pos2] [--at] "//cmd"`        | WorldEdit as the `agent:<session>` actor       |
-| `mc we-undo [--steps n]`                                  | Undo that session's WorldEdit history          |
-| `mc paste --world w --file f.schem --at x,y,z [--rotate]` | Paste a Sponge schematic through WorldEdit     |
-| `mc region read --world w <a> <b> [--out f.json]`         | Exact block states and palette counts          |
-| `mc snapshot create\|ls\|get\|restore`                    | Server-side `.schem` snapshots for undo        |
-| `mc info`, `mc players`, `mc events`, `mc logs`           | Versions, players, bridge events, console tail |
-| `mc registry --out f.json`                                | Block registry (input to mc-build's registry)  |
-| `mc actor spawn\|ls\|observe\|act\|quit`                  | Citizens test actors (paper, storm-dev)        |
-| `mc playtest run <file\|dir…> [--profile] [--target]`     | Run scenario files; reports under `runs/`      |
-| `mc playtest ls\|show <run-id>\|new <name>`               | Past runs, one report, scaffold a scenario     |
+| Command                                                                                    | Purpose                                                       |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `mc cmd <command…>`                                                                        | Console command with captured feedback                        |
+| `mc we --world w [--pos1] [--pos2] [--at] "//cmd"`                                         | WorldEdit as the `agent:<session>` actor                      |
+| `mc we-undo [--steps n]`                                                                   | Undo that session's WorldEdit history                         |
+| `mc paste --world w --file f.schem --at x,y,z [--rotate]`                                  | Paste a Sponge schematic through WorldEdit                    |
+| `mc region read --world w <a> <b> [--out f.json]`                                          | Exact block states and palette counts                         |
+| `mc snapshot create\|ls\|get\|restore`                                                     | Server-side `.schem` snapshots for undo                       |
+| `mc info`, `mc players`, `mc events`, `mc logs`                                            | Versions, players, bridge events, console tail                |
+| `mc registry --out f.json`                                                                 | Block registry (input to mc-build's registry)                 |
+| `mc actor spawn\|ls\|observe\|act\|quit`                                                   | Citizens test actors (paper, storm-dev)                       |
+| `mc playtest run <file\|dir…> [--profile] [--target]`                                      | Run scenario files; reports under `runs/`                     |
+| `mc playtest ls\|show <run-id>\|new <name>`                                                | Past runs, one report, scaffold a scenario                    |
+| `mc evidence search [--player] [--text] [--surface] [--since ISO] [--until ISO] [--limit]` | Search The Storm's private evidence archive                   |
+| `mc evidence show <submission-uuid>`                                                       | Complete submission and event trail                           |
+| `mc evidence export --output private.jsonl [same filters]`                                 | Paginated owner-only JSONL export; existing files are refused |
+
+Evidence commands accept `--target <sandbox-id|live>` and require a running The
+Storm safety service behind authenticated MCBridge. Search and show return private
+JSON; export prints only its file path and count. Every query is audited. Export
+fixes its upper timestamp before pagination, includes submission/event records, and
+begins with a manifest naming the target, time bounds and query digest. It
+creates files with mode `0600`. Private results never pass through Minecraft console
+or RCON output. A failed export leaves a partial file that must be kept private.
 
 Every command accepts `--json`. The daemon logs requests (never secrets) to
 `~/.toolkit/mc/logs/`. `cmd`, `we` and `paste` accept `--record <buildDir>` to

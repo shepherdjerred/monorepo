@@ -36,6 +36,10 @@ cannot record a reviewer. `/agent case` and `/agent faq` work from console.
 
 ## agent.yml
 
+Content admission is owned by Safety. The agent retains ticket triage, sampled
+review rows and human review commands. Its legacy chat prefilters and ladders are
+not subscribed to live Global chat.
+
 The owned file is `packages/the-storm/server/owned/plugins/TheStorm/agent.yml`.
 Every key is required; unknown keys stop the module.
 
@@ -64,6 +68,33 @@ on; the brain gates only conversation (`storm-brain-conversation-enabled`).
 
 A 503 completes the plugin flow silently and records nothing.
 
+## Content admission
+
+The source of truth is the [Storm server configuration](https://github.com/shepherdjerred/monorepo/tree/main/packages/the-storm/server).
+
+| Boundary                                      | Behavior                                                                                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Screening rollout                             | `the-storm-content-safety-enabled`, namespace `the-storm`; production default off, beta on                               |
+| Correction rollout                            | `the-storm-anticheat-corrections-enabled`; default off in both environments                                              |
+| New text                                      | Held until approved; outage rejects without a misconduct strike                                                          |
+| Private evidence                              | Allowed and blocked attempts, components, scores, decisions and receipts retained indefinitely                           |
+| Evidence access                               | `thestorm.safety.evidence`; `/safety search` in game, authenticated `toolkit mc evidence` for complete JSON and exports  |
+| Ordinary length                               | Filter accepts 2,000 code points; command transport 4,096 characters; vanilla chat UI 256                                |
+| Explicit slur or identical repeated-link spam | Block plus ten-minute mute; another clear offense within seven days gets one hour                                        |
+| Cold advertising                              | First confirmed offense blocked with explanation; repeat after a recorded warning within 24 hours may get the short mute |
+| Ambiguous or model-only offense               | Publication withheld for review; no automatic mute                                                                       |
+| Bans                                          | Human decision                                                                                                           |
+| Saved-content snapshots                       | Loaded signs, container metadata and entity names; creator unknown, no observer offense                                  |
+| Anticheat scope                               | Grim records Java findings and game context; Floodgate players are exempt                                                |
+| Xray                                          | Paper mode 3 with air and Overworld ore heights; Nether ancient debris; authored arenas excluded                         |
+| Visual content                                | Map art and builds use activity evidence and human review; no image classifier                                           |
+
+`safety.yml` supplies the brain bootstrap and bounded transport settings. CoreProtect
+owns block/item rollback, while Safety owns redacted player text. The current LiveMap
+can still expose underground areas.
+
+See [review safety evidence](/how-to/review-the-storm-safety-evidence/) for the private review and export workflow.
+
 ## Schedules
 
 | Schedule           | Cadence                                              | Source      |
@@ -80,6 +111,7 @@ points: re-derive the cost floor from measured spend after the shadow soak.
 | ---------------------------- | -------- | ------------------------------------------------------- |
 | `StormBrainCostSpike`        | warning  | Hourly cost tops 5× its 24h rate and $0.10/hour for 15m |
 | `StormBrainLatencyHigh`      | warning  | p95 request latency tops 30s for 15m                    |
+| `StormContentScreeningSlow`  | warning  | Content screening p95 exceeds 3s for 10m                |
 | `StormBrainRequestErrors`    | warning  | Any `error` or `upstream_error` outcome in 15m          |
 | `StormBrainRequestsRejected` | warning  | Any `invalid` or `unauthorized` outcome in 15m          |
 | `StormBrainTargetDown`       | critical | Metrics endpoint unscrapeable for 5m                    |

@@ -69,6 +69,20 @@ final class BridgeRoutes {
         .add("GET", "/v1/info", this::info)
         .add("GET", "/v1/registry", this::registry)
         .add("POST", "/v1/command", this::command)
+        .add(
+            "POST",
+            "/v1/evidence",
+            request -> {
+              request.json(
+                  Set.of(
+                      "action", "player", "text", "surface", "since", "until", "after", "limit",
+                      "id"));
+              return Response.json(
+                  com.google.gson.JsonParser.parseString(
+                          server.evidence(
+                              new String(request.body(), java.nio.charset.StandardCharsets.UTF_8)))
+                      .getAsJsonObject());
+            })
         .add("POST", "/v1/regions/read", this::readRegion)
         .add("POST", "/v1/snapshots", this::createSnapshot)
         .add("GET", "/v1/snapshots", request -> Response.json(snapshots.list()))

@@ -10,6 +10,76 @@
     },
     {
       "$put": {
+        "path": "$.anticheat.anti-xray",
+        "key": "engine-mode",
+        "value": 3
+      }
+    },
+    {
+      "$put": {
+        "path": "$.anticheat.anti-xray",
+        "key": "max-block-height",
+        "value": 320
+      }
+    },
+    {
+      "$put": {
+        "path": "$.anticheat.anti-xray",
+        "key": "hidden-blocks",
+        "value": [
+          "air",
+          "coal_ore",
+          "deepslate_coal_ore",
+          "copper_ore",
+          "deepslate_copper_ore",
+          "iron_ore",
+          "deepslate_iron_ore",
+          "gold_ore",
+          "deepslate_gold_ore",
+          "diamond_ore",
+          "deepslate_diamond_ore",
+          "emerald_ore",
+          "deepslate_emerald_ore",
+          "lapis_ore",
+          "deepslate_lapis_ore",
+          "redstone_ore",
+          "deepslate_redstone_ore",
+          "ancient_debris",
+          "nether_gold_ore",
+          "nether_quartz_ore"
+        ]
+      }
+    },
+    {
+      "$put": {
+        "path": "$.anticheat.anti-xray",
+        "key": "replacement-blocks",
+        "value": [
+          "stone",
+          "deepslate",
+          "andesite",
+          "diorite",
+          "granite",
+          "tuff",
+          "calcite",
+          "dirt",
+          "gravel",
+          "oak_planks",
+          "chest",
+          "ender_chest",
+          "amethyst_block",
+          "budding_amethyst",
+          "smooth_basalt",
+          "netherrack",
+          "basalt",
+          "blackstone",
+          "soul_sand",
+          "soul_soil"
+        ]
+      }
+    },
+    {
+      "$put": {
         "path": "$.fixes",
         "key": "disable-unloaded-chunk-enderpearl-exploit",
         "value": true

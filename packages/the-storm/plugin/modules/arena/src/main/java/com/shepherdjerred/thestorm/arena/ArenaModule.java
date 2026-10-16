@@ -105,6 +105,13 @@ public final class ArenaModule implements StormModule {
             hooks.apply(context));
     paper = started;
     context.services().provide(ArenaPresence.class, started.presence());
+    context
+        .services()
+        .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
+        .ifPresent(
+            safety ->
+                safety.evidenceContext(
+                    "arena", player -> started.presence().arenaOf(player).orElse("none")));
     context.services().provide(ArenaRecords.class, leaderboard);
     context.services().provide(ArenaEvents.class, started.events());
     discordPosts =

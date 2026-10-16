@@ -7,8 +7,9 @@ defaultChannel: global
 # The 2017 chat rules, for channels, /me and private messages alike. Players
 # with thestorm.chat.bypass skip the caps and repeat limits.
 filter:
-  # Longest message, in characters (Minecraft's own limit is 256).
-  maxLength: 256
+  # Commands can carry longer messages; native clients still enforce their transport limit.
+  # Length is a publication bound, never a spam strike.
+  maxLength: 2000
   # With more all-capital words than this (two or more letters, none
   # lowercase), those words are lowercased and the message is still sent.
   maxCapsWords: 4

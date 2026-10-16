@@ -1,7 +1,7 @@
 // MCBridge: an HTTP bridge that lets the mc-harness agent tooling drive a Paper
 // server (console commands, exact region reads, WorldEdit operations,
 // snapshots, events). A separate, unshaded MCBridge.jar: it shares the Storm
-// build conventions but depends on no Storm project. Contract:
+// build conventions; its optional evidence API compiles against Storm core. Contract:
 // packages/mc-harness/src/protocol/bridge.ts.
 plugins { id("storm.java-conventions") }
 
@@ -13,6 +13,8 @@ fun lib(alias: String) = libs.findLibrary(alias).get()
 // touches these classes and Citizens is optional at runtime. Same pinned,
 // checksum-verified Citizens jar as the Storm modules (libs.citizens).
 dependencies {
+  compileOnly(project(":core")) { isTransitive = false }
+  testImplementation(project(":core")) { isTransitive = false }
   compileOnly(lib("citizens")) { isTransitive = false }
   compileOnly(lib("paper-api"))
   compileOnly(lib("worldedit-core"))

@@ -5,11 +5,9 @@ import com.shepherdjerred.thestorm.agent.adapter.http.HttpBrainClient;
 import com.shepherdjerred.thestorm.agent.adapter.paper.AgentCommands;
 import com.shepherdjerred.thestorm.agent.adapter.paper.AgentJoinListener;
 import com.shepherdjerred.thestorm.agent.adapter.paper.AgentRuntime;
-import com.shepherdjerred.thestorm.agent.adapter.paper.PaperPlayerContact;
 import com.shepherdjerred.thestorm.agent.app.AgentConfig;
 import com.shepherdjerred.thestorm.agent.app.AgentServices;
 import com.shepherdjerred.thestorm.agent.app.CaseFlow;
-import com.shepherdjerred.thestorm.agent.app.ChatFlow;
 import com.shepherdjerred.thestorm.agent.app.DecisionLog;
 import com.shepherdjerred.thestorm.agent.app.EndorseFlow;
 import com.shepherdjerred.thestorm.agent.app.FaqFlow;
@@ -39,8 +37,8 @@ import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The AI staff member. Watches chat and new tickets, enforces the ladders, and records every
- * decision. Flow failures are logged, never thrown: a broken flow must not break chat or tickets.
+ * Ticket triage and human review. Safety owns publication and limited content penalties; Global
+ * chat supplies ticket context only. Every model and human review decision is retained.
  */
 public final class AgentModule implements StormModule {
 
@@ -83,13 +81,21 @@ public final class AgentModule implements StormModule {
             Duration.ofMillis(config.brain().timeoutMs()));
 
     var services = new AgentServices(brain, log, tickets, context.time(), config, context.random());
+    context
+        .services()
+        .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
+        .ifPresent(
+            safety ->
+                safety.reviews(
+                    (submission, review) ->
+                        java.util.concurrent.CompletableFuture.completedFuture(null)
+                            .thenComposeAsync(
+                                ignored ->
+                                    new com.shepherdjerred.thestorm.agent.app.SafetyReviews(
+                                            services)
+                                        .record(submission, review),
+                                context.scheduler().mainThread())));
     var recents = new RecentChat();
-    var chatFlow =
-        new ChatFlow(
-            recents,
-            chat,
-            new PaperPlayerContact(context.plugin().getServer(), context.scheduler()),
-            services);
     var triageFlow = new TriageFlow(recents, moderation, services);
     var faqFlow = new FaqFlow(new FaqMemory(), services);
     var sweep = new SweepFlow(triageFlow, services);
@@ -100,20 +106,8 @@ public final class AgentModule implements StormModule {
           listen(context, faqFlow.onEvent(event), "agent: answering a ticket failed");
         };
     tickets.addListener(ticketListener);
-    Subscription subscription =
-        lines.subscribe(
-            line -> {
-              var _ =
-                  chatFlow
-                      .onChatLine(line)
-                      .exceptionally(
-                          failure -> {
-                            context
-                                .logger()
-                                .error(Component.text("agent: watching chat failed"), failure);
-                            return null;
-                          });
-            });
+    // Publication and penalties belong to safety for every surface; Global is context only.
+    Subscription subscription = lines.subscribe(recents::record);
     Runnable sweepOnce =
         () -> {
           var _ =
@@ -153,7 +147,20 @@ public final class AgentModule implements StormModule {
             players,
             new AgentCommands.AgentFlows(
                 sweep,
-                new OverturnFlow(services, chat),
+                new OverturnFlow(
+                    services,
+                    chat,
+                    (decision, staff) ->
+                        context
+                            .services()
+                            .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
+                            .map(
+                                safety ->
+                                    com.shepherdjerred.thestorm.agent.app.SafetyReviews.overturn(
+                                        safety, decision, staff))
+                            .orElseGet(
+                                () -> java.util.concurrent.CompletableFuture.completedFuture(null)),
+                    context.scheduler().mainThread()),
                 new CaseFlow(services, moderation),
                 new EndorseFlow(services),
                 faqFlow),

@@ -5,6 +5,7 @@
 modules:
   economy: true
   messages: true
+  safety: true
   mail: true
   chat: true
   discord: true

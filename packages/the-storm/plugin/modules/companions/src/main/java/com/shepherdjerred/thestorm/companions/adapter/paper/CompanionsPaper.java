@@ -510,17 +510,14 @@ public final class CompanionsPaper implements Listener, AutoCloseable {
                   }
                   if (!active() || !actor.npc().isSpawned() || !human.isOnline() || reply.isEmpty())
                     return;
-                  if (!context
-                      .services()
-                      .require(com.shepherdjerred.thestorm.chat.app.ChatService.class)
-                      .permitsNpcGlobal(player.getUniqueId(), identity.name(), reply.get())) return;
-                  context
-                      .services()
-                      .require(GlobalChat.class)
-                      .broadcastExternal("NPC", identity.name(), reply.get());
-                  context
-                      .analytics()
-                      .interaction(human.getUniqueId(), ProductAnalytics.Action.COMPANION_REPLIED);
+                  new ConversationPublication(context)
+                      .publish(
+                          new ConversationPublication.Attempt(
+                              identity,
+                              player,
+                              human,
+                              reply.orElseThrow(),
+                              () -> active() && actor.npc().isSpawned()));
                 },
                 context.scheduler().mainThread());
   }

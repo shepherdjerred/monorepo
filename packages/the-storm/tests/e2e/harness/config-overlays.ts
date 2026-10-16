@@ -1,5 +1,19 @@
 import path from "node:path";
 
+export async function overlaySafetyBrain(
+  stormDir: string,
+  baseUrl: string,
+): Promise<void> {
+  const safetyPath = path.join(stormDir, "safety.yml");
+  const safetyConfig = await Bun.file(safetyPath).text();
+  if (!/^brainUrl: .+$/mu.test(safetyConfig))
+    throw new Error("Safety brainUrl is missing");
+  await Bun.write(
+    safetyPath,
+    safetyConfig.replace(/^brainUrl: .+$/mu, `brainUrl: ${baseUrl}`),
+  );
+}
+
 export type ModuleConfigOverrides = {
   /** Disposable rwfbots.yml contents; production-owned configuration stays untouched. */
   rwfbotsConfig?: string;

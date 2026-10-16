@@ -1,0 +1,12 @@
+{
+  "file": "/data/world/dimensions/minecraft/the_end/paper-world.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$",
+        "key": "anticheat",
+        "value": { "anti-xray": { "enabled": false } }
+      }
+    }
+  ]
+}

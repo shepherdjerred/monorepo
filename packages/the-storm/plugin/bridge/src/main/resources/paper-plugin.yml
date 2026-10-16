@@ -6,6 +6,10 @@ description: HTTP bridge for the mc-harness agent tooling
 authors: [ShepherdJerred]
 dependencies:
   server:
+    TheStorm:
+      load: BEFORE
+      required: false
+      join-classpath: true
     # Every /v1/we route and snapshots run through the WorldEdit API.
     WorldEdit:
       load: BEFORE

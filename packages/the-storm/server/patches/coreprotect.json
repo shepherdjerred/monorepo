@@ -1,6 +1,10 @@
 {
   "file": "/data/plugins/CoreProtect/config.yml",
   "ops": [
+    { "$put": { "path": "$", "key": "player-chat", "value": false } },
+    { "$put": { "path": "$", "key": "player-commands", "value": false } },
+    { "$put": { "path": "$", "key": "player-sessions", "value": true } },
+    { "$put": { "path": "$", "key": "username-changes", "value": true } },
     { "$put": { "path": "$", "key": "api-enabled", "value": true } },
     { "$put": { "path": "$", "key": "block-place", "value": true } },
     { "$put": { "path": "$", "key": "block-break", "value": true } },

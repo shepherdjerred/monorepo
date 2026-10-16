@@ -1,0 +1,40 @@
+{
+  "file": "/data/world/dimensions/minecraft/the_nether/paper-world.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$",
+        "key": "anticheat",
+        "value": {
+          "anti-xray": {
+            "enabled": true,
+            "engine-mode": 3,
+            "max-block-height": 128,
+            "hidden-blocks": [
+              "air",
+              "ancient_debris",
+              "nether_gold_ore",
+              "nether_quartz_ore",
+              "bone_block",
+              "glowstone",
+              "magma_block",
+              "nether_bricks",
+              "polished_blackstone_bricks"
+            ],
+            "replacement-blocks": [
+              "basalt",
+              "blackstone",
+              "gravel",
+              "netherrack",
+              "soul_sand",
+              "soul_soil"
+            ],
+            "lava-obscures": false,
+            "update-radius": 2,
+            "use-permission": false
+          }
+        }
+      }
+    }
+  ]
+}

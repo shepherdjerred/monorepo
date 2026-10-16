@@ -1,0 +1,7 @@
+# Every accepted and rejected text submission is retained indefinitely.
+# New screening and anticheat corrections have independent managed rollout gates.
+brainUrl: http://storm-brain-storm-brain-service.storm-brain.svc.cluster.local:3000
+tokenEnvironment: STORM_BRAIN_BEARER_TOKEN
+requestTimeoutMillis: 8000
+publicationTimeoutSeconds: 30
+maxPendingPerPlayer: 32

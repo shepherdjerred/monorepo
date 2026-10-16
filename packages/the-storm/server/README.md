@@ -1,7 +1,7 @@
 # The Storm server image
 
 `minecraft-tsmc` runs `docker.io/shepherdjerred/the-storm-server`: pinned,
-pre-patched Paper, TheStorm, the MCBridge agent bridge, eleven supporting
+pre-patched Paper, TheStorm, the MCBridge agent bridge, twelve supporting
 plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`; CI publication and
 the version catalog control its GitOps release.
 
@@ -18,7 +18,7 @@ remain supplied by the chart's `extraEnv` secret references.
 
 ## Plugin and configuration ownership
 
-`owned/plugins/TheStorm/config.yml` registers and enables all 25 Storm modules,
+`owned/plugins/TheStorm/config.yml` registers and enables all 26 Storm modules,
 including `rwf` and `rwfbots`, whose map world is provisioned on live. RWF creates
 or loads its explicitly declared owned void lobby before starting gameplay;
 it preserves the lobby's identity and saved terrain across restarts.
@@ -27,7 +27,7 @@ arena, moderation, Discord relay, sleep, graves, and native world borders.
 
 The supporting plugins are LuckPerms, WorldEdit, CoreProtect, BlueMap, Chunky,
 Geyser-Spigot, floodgate, Multiverse-Core, ViaVersion, ViaBackwards, and
-Citizens. `plugins.json` is the authority for their versions, artifact URLs,
+Citizens, and GrimAC. `plugins.json` is the authority for their versions, artifact URLs,
 and hashes. Multiverse loads resource worlds before TheStorm; the world module
 validates those worlds and does not generate them during startup.
 
@@ -68,6 +68,8 @@ Configuration belongs in these places:
 | `owned/plugins/Geyser-Spigot/config.yml`                   | Floodgate authentication and Bedrock ports from the first boot                |
 | `owned/plugins/BlueMap/core.conf`                          | Map bootstrap configuration                                                   |
 | `owned/plugins/Citizens/config.yml`                        | NPC tab-list and player-list defaults, overwritten on every boot              |
+| `owned/plugins/GrimAC/`                                    | Pinned upstream config and evidence-only punishment commands                  |
+| `world-protection/`                                        | Per-dimension anti-xray profiles applied before Paper boots                   |
 | `patches/`                                                 | Selected Bukkit, Paper, Spigot, and Chunky settings forced on every boot      |
 | Homelab chart                                              | Server identity, credentials, and service bootstrap                           |
 | Persistent volume                                          | Worlds, vanilla inventories, permissions, plugin databases, and runtime state |
@@ -98,6 +100,27 @@ The entrypoint then processes each `remove.list` file once and records it in
 Content-only roots are mirrored with checksum comparison and deletion of
 obsolete content. itzg synchronizes the baked jars and files, applies patches,
 and starts the pre-patched Paper without downloading it.
+
+Anti-xray defaults to mode 3 with air and all Overworld ore heights covered.
+The Nether profile includes ancient debris. Authored arena dimensions and the End
+disable obfuscation. Existing per-world settings outside the owned anticheat section
+are preserved. LiveMap configuration is unchanged and can expose underground areas.
+
+Profiles apply to native initialized dimensions. Paper 26.2 rejects config-only
+dimension directories, so the entrypoint never creates them. On a new volume,
+provision the worlds and restart before opening authored arenas; the first
+generation uses global defaults. Existing native dimensions receive their profile
+before Paper starts. An existing dimension without native world-gen settings fails closed.
+
+Grim findings are retained by Safety even while correction rollout is off. The
+supported 26.2 artifact is a pinned prerelease; acceptance must cover legitimate
+arena abilities and actual cheat cases before enabling corrections. Floodgate
+players are exempt in Grim, so its detection covers Java clients.
+
+CoreProtect and Spigot raw chat/command logging are disabled in favor of Safety's
+redacted text journal. CoreProtect block, sign, item, entity and session tracking
+remain enabled. The game SQLite database uses full synchronous WAL commits; safety
+evidence is retained by the restoration policy and has no automatic purge path.
 
 Required external credentials are supplied through the existing 1Password
 grants: Storm Discord token/channel, brain bearer token, and RCON credentials.

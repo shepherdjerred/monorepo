@@ -11,6 +11,12 @@ import {
 } from "@shepherdjerred/llm-runtime";
 import type { z } from "zod";
 import {
+  createModeration,
+  CONTENT_SYSTEM,
+  type Moderate,
+} from "./moderation.ts";
+import { ContentVerdictSchema } from "./moderation-schema.ts";
+import {
   CLASSIFY_SYSTEM,
   TRIAGE_SYSTEM,
   classifyPrompt,
@@ -53,6 +59,7 @@ export type BrainTriage = (
 ) => Promise<BrainDecision<TriageResponse>>;
 
 export type BrainDependencies = {
+  moderate: Moderate;
   classify: BrainClassify;
   triage: BrainTriage;
 };
@@ -137,7 +144,31 @@ export function createBrain(options: CreateBrainOptions): BrainDependencies {
     };
   };
 
-  return { classify, triage };
+  const openai = credentials.openai;
+  if (openai === undefined)
+    throw new Error("Content moderation requires OpenAI credentials");
+  const moderate = createModeration({
+    apiKey: openai.apiKey,
+    contextModel: options.model,
+    contextual: async (request) => {
+      const verdict = await validated(
+        runtime,
+        {
+          model: options.model,
+          schema: ContentVerdictSchema,
+          schemaName: "storm_content_verdict",
+          system: CONTENT_SYSTEM,
+          prompt: JSON.stringify(request),
+          workload: "storm-brain-moderate",
+          maxOutputTokens: 256,
+          reasoningEffort: "low",
+        },
+        Math.min(options.timeoutMs, 5000),
+      );
+      return { response: verdict.object, usage: verdict.usage };
+    },
+  });
+  return { classify, triage, moderate };
 }
 
 async function validated<SCHEMA extends z.ZodType>(

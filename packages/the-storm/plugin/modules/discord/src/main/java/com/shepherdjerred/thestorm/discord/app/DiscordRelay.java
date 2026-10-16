@@ -42,12 +42,18 @@ public final class DiscordRelay {
   private final List<Supplier<List<SeasonalEvent>>> seasonalEvents = new CopyOnWriteArrayList<>();
   private final Map<String, DiscordCommand> commands = new ConcurrentHashMap<>();
   private final Map<String, Instant> lastUse = new ConcurrentHashMap<>();
+  private final Map<String, UUID> pendingContent = new ConcurrentHashMap<>();
   private final Map<String, String> activities = new java.util.HashMap<>();
   private volatile Runnable commandsChanged = () -> {};
   private boolean presencePending;
   private @Nullable String lastPresence;
   private @Nullable Instant lastPresenceAt;
   private volatile boolean stopping;
+  private com.shepherdjerred.thestorm.core.safety.@Nullable ContentSafety safety;
+
+  public void contentSafety(com.shepherdjerred.thestorm.core.safety.ContentSafety value) {
+    safety = value;
+  }
 
   public DiscordRelay(
       DiscordConfig config, DiscordGateway gateway, Game game, LinkedAccounts accounts) {
@@ -95,20 +101,130 @@ public final class DiscordRelay {
     if (stopping) {
       return;
     }
+    var screening = safety;
+    if (screening != null && !message.automated()) {
+      var id =
+          UUID.nameUUIDFromBytes(
+              ("discord-message:"
+                      + message.channelId()
+                      + ":"
+                      + message.messageId()
+                      + ":"
+                      + message.revision())
+                  .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      var actor =
+          UUID.nameUUIDFromBytes(
+              ("discord-user:" + message.authorId())
+                  .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      pendingContent.put(discordKey(message), id);
+      var submission =
+          new com.shepherdjerred.thestorm.core.safety.ContentSubmission(
+              id,
+              actor,
+              message.author(),
+              "discord",
+              "global",
+              message.content(),
+              message.attachmentNames().toString(),
+              "discord:" + message.channelId() + ":" + message.messageId());
+      var _ =
+          screening
+              .check(submission)
+              .whenComplete(
+                  (review, failure) -> {
+                    if (failure != null || !review.allowed()) {
+                      pendingContent.remove(discordKey(message), id);
+                      finishEvidence(
+                          screening,
+                          id,
+                          failure != null ? "discord-unavailable" : "discord-" + review.decision());
+                      return;
+                    }
+                    relayApproved(message, screening, id);
+                  });
+      return;
+    }
+    relayApproved(message, screening, new UUID(0, 0));
+  }
+
+  private void relayApproved(
+      InboundMessage message,
+      com.shepherdjerred.thestorm.core.safety.@Nullable ContentSafety screening,
+      UUID id) {
     switch (InboundFilter.accept(message, config.maxInboundLength())) {
       case Result.Ok<InboundFilter.Relayed, InboundFilter.Skip>(var relayed) ->
-          game.scheduler()
-              .runOnMainThread(
-                  () -> {
-                    if (!stopping) {
-                      game.chat()
-                          .broadcastExternal(config.source(), relayed.author(), relayed.text());
-                    }
-                  });
+          game.scheduler().runOnMainThread(() -> deliverRevision(message, screening, id, relayed));
       case Result.Err<InboundFilter.Relayed, InboundFilter.Skip> _ -> {
+        pendingContent.remove(discordKey(message), id);
+        if (screening != null && !message.automated())
+          finishEvidence(screening, id, "discord-filtered");
         // Bots (including this bridge), empty and nameless messages stay in Discord.
       }
     }
+  }
+
+  private void deliverRevision(
+      InboundMessage message,
+      com.shepherdjerred.thestorm.core.safety.@Nullable ContentSafety screening,
+      UUID id,
+      InboundFilter.Relayed relayed) {
+    if (screening != null && !pendingContent.remove(discordKey(message), id)) {
+      finishEvidence(screening, id, "discord-stale-revision");
+      return;
+    }
+    if (!stopping) {
+      game.chat().broadcastExternal(config.source(), relayed.author(), relayed.text());
+      if (screening != null) finishEvidence(screening, id, "discord-delivered");
+    } else if (screening != null) finishEvidence(screening, id, "discord-stopped");
+  }
+
+  private static String discordKey(InboundMessage message) {
+    return message.channelId() + ":" + message.messageId();
+  }
+
+  /**
+   * Deletions invalidate an outstanding revision; already delivered chat is historical evidence.
+   */
+  public void onDiscordDelete(String channel, String message) {
+    var screening = safety;
+    pendingContent.remove(channel + ":" + message);
+    if (screening == null || stopping) return;
+    var id =
+        UUID.nameUUIDFromBytes(
+            ("discord-delete:" + channel + ":" + message)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    var submission =
+        new com.shepherdjerred.thestorm.core.safety.ContentSubmission(
+            id,
+            new UUID(0, 0),
+            "Discord",
+            "discord-delete",
+            "staff",
+            "Message deleted",
+            "",
+            "discord:" + channel + ":" + message);
+    var _ =
+        screening
+            .observe(submission, "discord-deleted")
+            .exceptionally(
+                failure -> {
+                  System.getLogger(DiscordRelay.class.getName())
+                      .log(System.Logger.Level.ERROR, "Discord deletion evidence failed", failure);
+                  return null;
+                });
+  }
+
+  private void finishEvidence(
+      com.shepherdjerred.thestorm.core.safety.ContentSafety screening, UUID id, String outcome) {
+    var _ =
+        screening
+            .finish(id, outcome)
+            .exceptionally(
+                failure -> {
+                  System.getLogger(DiscordRelay.class.getName())
+                      .log(System.Logger.Level.ERROR, "Discord evidence write failed", failure);
+                  return null;
+                });
   }
 
   /** Posts that {@code player} joined. Main thread. */
@@ -194,7 +310,7 @@ public final class DiscordRelay {
                     "priority", ticket.priority(),
                     "category", ticket.category(),
                     "reporter", DiscordText.forDiscord(ticket.reporter()),
-                    "summary", DiscordText.forDiscord(ticket.summary()))));
+                    "summary", "Private report; authorized staff can view the ticket.")));
   }
 
   /** Posts a claimed ticket. */
@@ -218,7 +334,7 @@ public final class DiscordRelay {
                     "id", Long.toString(ticket.id()),
                     "server", ticket.server(),
                     "priority", ticket.priority(),
-                    "summary", DiscordText.forDiscord(ticket.summary()))));
+                    "summary", "Private report; authorized staff can view the ticket.")));
   }
 
   /** Posts a reopened ticket. */
@@ -241,7 +357,7 @@ public final class DiscordRelay {
                     "id", Long.toString(ticket.id()),
                     "server", ticket.server(),
                     "priority", ticket.priority(),
-                    "evidence", DiscordText.forDiscord(ticket.evidence()))));
+                    "evidence", "Review the private ticket and linked evidence.")));
   }
 
   /** Posts that {@code player} opened an empty Search and Destroy lobby. Main thread. */
@@ -512,11 +628,61 @@ public final class DiscordRelay {
       }
       lastUse.put(key, now);
     }
-    command
-        .handler()
-        .answer(
-            new DiscordCommand.Request(options, discordUser, accounts.playerOf(discordUser)),
-            reply);
+    var request = new DiscordCommand.Request(options, discordUser, accounts.playerOf(discordUser));
+    var screening = safety;
+    if (screening == null) {
+      command.handler().answer(request, reply);
+      return;
+    }
+    var actor =
+        request
+            .player()
+            .orElseGet(
+                () ->
+                    UUID.nameUUIDFromBytes(
+                        ("discord-user:" + discordUser)
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+    var id =
+        UUID.nameUUIDFromBytes(
+            ("discord-command:"
+                    + discordUser
+                    + ":"
+                    + game.time().instant()
+                    + ":"
+                    + command.name()
+                    + ":"
+                    + new java.util.TreeMap<>(options))
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    var submission =
+        new com.shepherdjerred.thestorm.core.safety.ContentSubmission(
+            id,
+            actor,
+            "Discord:" + discordUser,
+            command.name().equals("ticket") ? "ticket" : "command",
+            "staff",
+            new java.util.TreeMap<>(options).toString(),
+            "",
+            "discord-command:" + command.name());
+    var _ =
+        screening
+            .check(submission)
+            .whenComplete(
+                (review, failure) -> {
+                  if (failure != null || !review.allowed()) {
+                    reply.accept("This was not submitted. Reference " + id);
+                    if (failure == null)
+                      finishEvidence(screening, id, "discord-command-" + review.decision());
+                    return;
+                  }
+                  command
+                      .handler()
+                      .answer(
+                          request,
+                          text -> {
+                            finishEvidence(screening, id, "discord-command-completed");
+                            reply.accept(text);
+                          });
+                });
   }
 
   /** Called by the bridge once connected, to register commands added later. */

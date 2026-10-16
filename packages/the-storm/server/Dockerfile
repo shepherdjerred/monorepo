@@ -25,6 +25,9 @@ COPY --from=managed-flags managed-flag-inventory.json /feature-flags/src/managed
 # to enable. `storm-brain-contracts` is a BuildKit named context.
 # hadolint ignore=DL3022
 COPY --from=storm-brain-contracts companion-chat.json /storm-brain/contracts/companion-chat.json
+COPY --from=storm-brain-contracts content-moderation.json /storm-brain/contracts/content-moderation.json
+# hadolint ignore=DL3022
+COPY --from=mc-harness-contracts evidence-contract.json /mc-harness/src/protocol/evidence-contract.json
 RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
   gradle -p plugin :dist:shadowJar :bridge:jar --no-daemon --console=plain
 
@@ -67,6 +70,7 @@ COPY --from=plugin --chmod=0644 /src/plugin/bridge/build/libs/MCBridge.jar /plug
 COPY server/owned/plugins/ /plugins/
 COPY server/owned.roots server/remove.list /bundle/
 COPY server/patches/ /bundle/patches/
+COPY server/world-protection/ /bundle/world-protection/
 COPY server/plugins.json /opt/the-storm/plugins.json
 COPY server/assets/server-icon.png /opt/the-storm/server-icon.png
 COPY server/archive-progression.py /opt/the-storm/archive-progression.py
@@ -81,6 +85,7 @@ ENV TYPE=PAPER \
   CFG_PROXY_PROTOCOL=false \
   PAPER_CUSTOM_JAR=/opt/paper/paper-26.2-129.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
+  JVM_OPTS=-Dpaper.maxChatCommandInputSize=4096 \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \
   PATCH_DEFINITIONS=/bundle/patches \
   SYNC_SKIP_NEWER_IN_DESTINATION=false \
@@ -110,6 +115,8 @@ RUN set -eu; \
   grep -qx "api-version: '26.2'" /tmp/paper-plugin.yml; \
   grep -qx 'main: com.shepherdjerred.thestorm.TheStormPlugin' /tmp/paper-plugin.yml; \
   unzip -l /plugins/TheStorm.jar contracts/companion-chat.json > /dev/null; \
+  unzip -l /plugins/TheStorm.jar contracts/content-moderation.json > /dev/null; \
+  unzip -l /plugins/TheStorm.jar contracts/evidence-contract.json > /dev/null; \
   unzip -p /plugins/MCBridge.jar paper-plugin.yml > /tmp/mcbridge-plugin.yml; \
   grep -qx 'name: MCBridge' /tmp/mcbridge-plugin.yml; \
   grep -qx 'api-version: "26.2"' /tmp/mcbridge-plugin.yml; \

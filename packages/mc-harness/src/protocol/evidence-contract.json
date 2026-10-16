@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "actions": ["search", "show", "export"],
+  "maxPageSize": 1000,
+  "requestFields": [
+    "action",
+    "player",
+    "text",
+    "surface",
+    "since",
+    "until",
+    "after",
+    "limit",
+    "id"
+  ],
+  "responseFields": ["version", "rows", "events", "next", "hasMore"]
+}

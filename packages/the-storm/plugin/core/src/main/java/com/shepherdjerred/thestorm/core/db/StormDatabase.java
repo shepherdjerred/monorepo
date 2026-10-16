@@ -46,7 +46,7 @@ public final class StormDatabase implements AutoCloseable {
     config.setJdbcUrl("jdbc:sqlite:" + file.toAbsolutePath());
     config.setMaximumPoolSize(4);
     config.addDataSourceProperty("journal_mode", "WAL");
-    config.addDataSourceProperty("synchronous", "NORMAL");
+    config.addDataSourceProperty("synchronous", "FULL");
     config.addDataSourceProperty("foreign_keys", "true");
     config.addDataSourceProperty("busy_timeout", "5000");
     return new StormDatabase(new HikariDataSource(config));

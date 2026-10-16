@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { EvidencePageSchema, type EvidenceQuery } from "#protocol/evidence.ts";
 import {
   type ActorAction,
   ActorActionRequestSchemas,
@@ -75,6 +76,10 @@ export class BridgeClient {
     return this.json(CommandResponseSchema, "POST", "/v1/command", {
       command,
     });
+  }
+
+  evidence(query: EvidenceQuery) {
+    return this.json(EvidencePageSchema, "POST", "/v1/evidence", query);
   }
 
   regionRead(box: Box) {

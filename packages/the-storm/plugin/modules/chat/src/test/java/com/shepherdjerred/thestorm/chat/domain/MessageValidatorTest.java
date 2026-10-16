@@ -130,7 +130,7 @@ final class MessageValidatorTest {
   void settingsValidateThemselves() {
     assertThatThrownBy(() -> new FilterSettings(0, 1, 1))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new FilterSettings(257, 1, 1))
+    assertThatThrownBy(() -> new FilterSettings(2001, 1, 1))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new FilterSettings(10, -1, 1))
         .isInstanceOf(IllegalArgumentException.class);

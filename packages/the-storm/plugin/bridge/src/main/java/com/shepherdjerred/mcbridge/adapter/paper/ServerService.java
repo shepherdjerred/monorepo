@@ -73,6 +73,28 @@ public final class ServerService {
     return facts;
   }
 
+  /** {@code /v1/evidence}: private results never pass through console capture. */
+  public String evidence(String query) {
+    if (server.getPluginManager().getPlugin("TheStorm") == null)
+      throw new BridgeException(ErrorCode.UNSUPPORTED, "The Storm evidence service is unavailable");
+    try {
+      return mainThread.callAsync(
+          () -> {
+            var access =
+                server
+                    .getServicesManager()
+                    .load(com.shepherdjerred.thestorm.core.safety.EvidenceAccess.class);
+            if (access == null)
+              throw new BridgeException(
+                  ErrorCode.UNSUPPORTED, "The Storm evidence service is unavailable");
+            return access.query(query, "mcbridge");
+          },
+          MainThread.DEFAULT_TIMEOUT);
+    } catch (IllegalArgumentException invalid) {
+      throw BridgeException.badRequest("Invalid evidence query");
+    }
+  }
+
   /** {@code /v1/players}. */
   public JsonObject players() {
     return mainThread.call(this::collectPlayers, MainThread.DEFAULT_TIMEOUT);

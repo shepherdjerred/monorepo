@@ -12,13 +12,14 @@ function alert(groups: PrometheusRuleSpecGroups[], name: string): string {
   return String(rules.find((rule) => rule?.alert === name)?.expr?.value);
 }
 
-test("keeps all five StormBrain alerts together", () => {
+test("keeps StormBrain alerts together", () => {
   const serialized = JSON.stringify(getStormBrainRuleGroups());
   expect(serialized).toContain("StormBrainCostSpike");
   expect(serialized).toContain("StormBrainLatencyHigh");
   expect(serialized).toContain("StormBrainRequestErrors");
   expect(serialized).toContain("StormBrainRequestsRejected");
   expect(serialized).toContain("StormBrainTargetDown");
+  expect(serialized).toContain("StormContentScreeningSlow");
 });
 
 test("cost spike compares hourly burn against its own baseline", () => {
@@ -33,6 +34,12 @@ test("latency watches p95 request duration", () => {
   const expr = alert(getStormBrainRuleGroups(), "StormBrainLatencyHigh");
   expect(expr).toContain("storm_brain_request_duration_seconds_bucket");
   expect(expr).toContain(STORM_BRAIN_LATENCY_P95_SECONDS.toString());
+});
+
+test("content latency is isolated from slower ticket work", () => {
+  const expr = alert(getStormBrainRuleGroups(), "StormContentScreeningSlow");
+  expect(expr).toContain('flow="moderate"');
+  expect(expr).toContain("> 3");
 });
 
 test("errors fire on failures but never on steady states", () => {

@@ -51,6 +51,7 @@ describe.skipIf(external)("active enforcement", () => {
         "tickets",
         "agent",
         "chat",
+        "safety",
       ]),
       ownedConfigDir,
       // The plugin's typed flag provider bootstraps even when only moderation runs.
@@ -92,24 +93,26 @@ describe.skipIf(external)("active enforcement", () => {
     if (brain !== undefined) await brain.stop();
   });
 
-  test("repeat bursts climb to rung 1", async () => {
-    for (let i = 1; i <= 6; i += 1) {
-      bot.chat(`rung burst ${i.toString()}`);
-    }
+  test("obvious repeated-link spam is muted and a repeat offense escalates", async () => {
+    const blocked = waitForMessage(bot, /not published \(spam\)/);
+    for (let i = 1; i <= 3; i += 1) bot.chat("https://example.com");
+    await blocked;
     const first = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} spam mute .*rung=0`),
+      new RegExp(
+        String.raw`#(\d+) ${bot.username} spam mute .*safety-block evidence`,
+      ),
     );
     expect(first[0]).not.toContain("shadow");
     expect(Number(first[1] ?? "0")).toBeGreaterThan(0);
 
-    // The mute is real: speech stops with the ladder's receipt.
+    // The mute is real even for an operator.
     bot.chat("can anyone hear this");
     const denial = await waitForMessage(
       bot,
-      /You are muted for .*prefilter\/rate/,
+      /You are muted or chat state is still loading/,
     );
-    expect(denial[0]).toContain("prefilter/rate");
+    expect(denial[0]).toContain("muted");
 
     // A staff unmute lifts the gag without touching the strike, so the next
     // burst climbs instead of restarting. The opped bot lifts its own mute;
@@ -117,12 +120,14 @@ describe.skipIf(external)("active enforcement", () => {
     bot.chat(`/unmute ${bot.username}`);
     await waitForMessage(bot, /You can chat again\./);
 
-    for (let i = 1; i <= 6; i += 1) {
-      bot.chat(`rung burst again ${i.toString()}`);
-    }
+    const blockedAgain = waitForMessage(bot, /not published \(spam\)/);
+    bot.chat("https://example.com");
+    await blockedAgain;
     const second = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} spam mute .*rung=1`),
+      new RegExp(
+        String.raw`#((?!${first[1] ?? "0"}\b)\d+) ${bot.username} spam mute .*safety-block evidence`,
+      ),
     );
     expect(second[0]).not.toContain("shadow");
     expect(Number(second[1] ?? "0")).toBeGreaterThan(Number(first[1] ?? "0"));

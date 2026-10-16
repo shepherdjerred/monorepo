@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { rwfTestSettings } from "./rwf-settings.ts";
 import { BeginnerFlags } from "./beginner-flags.ts";
+import { moderate } from "./moderation-fixture.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
@@ -310,6 +311,8 @@ function expansionEvaluation(
         "the-storm-letters-enabled",
         "the-storm-ip-enforcement-enabled",
         "the-storm-analytics-enabled",
+        "the-storm-content-safety-enabled",
+        "the-storm-anticheat-corrections-enabled",
       ]),
       entity_id: z.uuid(),
       context: z.strictObject({}),
@@ -318,7 +321,10 @@ function expansionEvaluation(
   return expansion.success &&
     request.headers.get("x-flipt-environment") === "prod"
     ? Response.json({
-        enabled: expansion.data.flag_key !== "the-storm-ip-enforcement-enabled",
+        enabled: ![
+          "the-storm-ip-enforcement-enabled",
+          "the-storm-anticheat-corrections-enabled",
+        ].includes(expansion.data.flag_key),
       })
     : undefined;
 }
@@ -496,6 +502,9 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
         return new Response("invalid request\n", { status: 400 });
       }
       switch (url.pathname) {
+        case "/v1/moderate": {
+          return moderate(body);
+        }
         case "/v1/classify": {
           return classify(body);
         }

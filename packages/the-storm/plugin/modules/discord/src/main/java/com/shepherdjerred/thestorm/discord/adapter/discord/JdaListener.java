@@ -10,8 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jspecify.annotations.Nullable;
@@ -49,15 +53,36 @@ final class JdaListener extends ListenerAdapter {
     if (event.getChannel().getIdLong() != channelId) {
       return;
     }
-    var message = event.getMessage();
-    var member = event.getMember();
-    var author = member != null ? member.getEffectiveName() : event.getAuthor().getEffectiveName();
+    receive(event.getMessage(), event.getMember());
+  }
+
+  @Override
+  public void onMessageUpdate(MessageUpdateEvent event) {
+    if (event.getChannel().getIdLong() == channelId) receive(event.getMessage(), event.getMember());
+  }
+
+  @Override
+  public void onMessageDelete(MessageDeleteEvent event) {
+    if (event.getChannel().getIdLong() == channelId)
+      relay.onDiscordDelete(event.getChannel().getId(), event.getMessageId());
+  }
+
+  private void receive(Message message, @Nullable Member member) {
+    var author =
+        member != null ? member.getEffectiveName() : message.getAuthor().getEffectiveName();
     relay.onDiscordMessage(
         new InboundMessage(
             author,
             message.getContentDisplay(),
-            event.getAuthor().isBot() || event.isWebhookMessage(),
-            message.getAttachments().size()));
+            message.getAuthor().isBot() || message.isWebhookMessage(),
+            message.getAttachments().size(),
+            message.getAuthor().getId(),
+            message.getId(),
+            message.getChannel().getId(),
+            message.getAttachments().stream()
+                .map(attachment -> attachment.getFileName() + " size=" + attachment.getSize())
+                .toList(),
+            message.getTimeEdited() == null ? "created" : message.getTimeEdited().toString()));
   }
 
   @Override

@@ -2,6 +2,9 @@
   "file": "/data/spigot.yml",
   "ops": [
     {
+      "$put": { "path": "$.commands", "key": "log", "value": false }
+    },
+    {
       "$put": {
         "path": "$.settings",
         "key": "restart-on-crash",

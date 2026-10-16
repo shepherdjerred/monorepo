@@ -1,5 +1,6 @@
 import {
   luckPerms,
+  grim,
   multiverseCore,
   PluginPinSchema,
   type PluginPin,
@@ -23,6 +24,7 @@ export const botProtocol = z
 export const thirdPartyPlugins: readonly PluginPin[] = z
   .array(PluginPinSchema)
   .parse([
+    grim,
     {
       name: "WorldEdit",
       version: "7.4.5",
