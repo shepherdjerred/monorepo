@@ -72,10 +72,10 @@
       "gitSha": "d839b9435dda3c2efe032f1f43e5c495f9179a28"
     },
     "shepherdjerred/scout-for-lol/prod/workflows/candidate": {
-      "version": "2.0.0-1009839",
-      "digest": "sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
-      "buildNumber": 1009839,
-      "gitSha": "0ca0966f0a35ce1e80e21edf8b1b906fc4f85779"
+      "version": "2.0.0-1010005",
+      "digest": "sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
+      "buildNumber": 1010005,
+      "gitSha": "d839b9435dda3c2efe032f1f43e5c495f9179a28"
     },
     "shepherdjerred/scout-for-lol/prod/workflows/retained-1d266e3903e2": {
       "version": "2.0.0-1008523",
