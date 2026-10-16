@@ -13,9 +13,9 @@ const json = (value: unknown) => Response.json(value);
 const page = (records: unknown[]) =>
   json({ records, totalRecords: records.length });
 
-function newModel(app: "sonarr" | "radarr") {
+function newModel(app: "sonarr" | "radarr", torrentHash: string) {
   const torrent: MediaTorrent = {
-    hash,
+    hash: torrentHash,
     category: app === "sonarr" ? "tv-sonarr" : "radarr",
     content_path: "/downloads/fake.mkv.exe",
     save_path: "/downloads/",
@@ -25,7 +25,7 @@ function newModel(app: "sonarr" | "radarr") {
     {
       id: 1,
       eventType: "grabbed",
-      downloadId: hash.toUpperCase(),
+      downloadId: torrentHash.toUpperCase(),
       sourceTitle: "Fixture",
       seriesId: 99,
       movieId: 99,
@@ -61,7 +61,7 @@ function fail(model: Model, url: URL) {
   model.history.push({
     id: 2,
     eventType: "downloadFailed",
-    downloadId: hash.toUpperCase(),
+    downloadId: model.torrent.hash.toUpperCase(),
     sourceTitle: "Fixture",
     seriesId: 99,
     movieId: 99,
@@ -126,7 +126,9 @@ function arrResponse(
       return page(model.wrongOwner ? [] : model.history);
     case "queue":
       return page(
-        model.failed ? [] : [{ id: 5, downloadId: hash.toUpperCase() }],
+        model.failed
+          ? []
+          : [{ id: 5, downloadId: model.torrent.hash.toUpperCase() }],
       );
     case "blocklist":
       return page(model.blocklist);
@@ -137,8 +139,11 @@ function arrResponse(
   }
 }
 
-export function fixture(app: "sonarr" | "radarr" = "sonarr") {
-  const model = newModel(app);
+export function fixture(
+  app: "sonarr" | "radarr" = "sonarr",
+  torrentHash = hash,
+) {
+  const model = newModel(app, torrentHash);
   const request: MediaRequest = (input, init) => {
     const url = new URL(input);
     const endpoint = url.pathname.replace(/^\/api\/v[23]\//u, "");
@@ -155,5 +160,74 @@ export function fixture(app: "sonarr" | "radarr" = "sonarr") {
         arrResponse(model, service, url, init?.method),
     );
   };
-  return { model, request, torrent: model.torrent };
+  return { app, model, request, torrent: model.torrent };
+}
+
+export function isolationFixture() {
+  const records = [
+    fixture("sonarr", "a".repeat(40)),
+    fixture("sonarr", "b".repeat(40)),
+    fixture("radarr", "c".repeat(40)),
+  ];
+  const find = (torrentHash: string | null) => {
+    const record = records.find(
+      ({ torrent }) => torrent.hash === torrentHash?.toLowerCase(),
+    );
+    if (!record) throw new Error("Unknown fixture torrent hash");
+    return record;
+  };
+  const request: MediaRequest = (input, init) => {
+    const url = new URL(input);
+    const endpoint = url.pathname.replace(/^\/api\/v[23]\//u, "");
+    const app = url.hostname.includes("sonarr") ? "sonarr" : "radarr";
+    const owners = records.filter((record) => record.app === app);
+    if (endpoint === "torrents/info") {
+      const hashes = url.searchParams.get("hashes");
+      return Promise.resolve(
+        json(
+          records
+            .flatMap(({ model }) => model.torrents)
+            .filter((torrent) => hashes === null || torrent.hash === hashes),
+        ),
+      );
+    }
+    if (endpoint === "torrents/files")
+      return find(url.searchParams.get("hash")).request(input, init);
+    if (endpoint === "torrents/stop" || endpoint === "torrents/delete") {
+      if (!(init?.body instanceof URLSearchParams))
+        throw new TypeError("Expected torrent form body");
+      return find(init.body.get("hashes")).request(input, init);
+    }
+    if (endpoint === "history")
+      return find(url.searchParams.get("downloadId")).request(input, init);
+    if (endpoint === "queue")
+      return Promise.resolve(
+        page(
+          records.flatMap((record, index) =>
+            record.app === app && !record.model.failed
+              ? [
+                  {
+                    id: 5 + index,
+                    downloadId: record.torrent.hash.toUpperCase(),
+                  },
+                ]
+              : [],
+          ),
+        ),
+      );
+    if (endpoint === "blocklist")
+      return Promise.resolve(
+        page(owners.flatMap(({ model }) => model.blocklist)),
+      );
+    if (endpoint.startsWith("queue/")) {
+      const record = records[Number(endpoint.slice("queue/".length)) - 5];
+      if (record?.app !== app) throw new Error("Unknown fixture queue owner");
+      url.pathname = "/api/v3/queue/5";
+      return record.request(url.toString(), init);
+    }
+    const owner = endpoint === "auth/login" ? records[0] : owners[0];
+    if (!owner) throw new Error("Unknown fixture application");
+    return owner.request(input, init);
+  };
+  return { records, request };
 }

@@ -1,5 +1,11 @@
 import { afterEach, expect, test } from "vitest";
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { excludedMediaFileNames } from "homelab/src/media-download-policy.ts";
@@ -21,6 +27,10 @@ async function migrate(live: string) {
   const livePath = path.join(dir, "live.conf");
   writeFileSync(seedPath, desired);
   writeFileSync(livePath, live);
+  return applyMigration(seedPath, livePath);
+}
+
+async function applyMigration(seedPath: string, livePath: string) {
   const proc = Bun.spawn(
     [
       "sh",
@@ -65,12 +75,98 @@ test.each(["", "ExcludedFileNamesEnabled=false\n"])(
   },
 );
 test("the migration is idempotent", async () => {
-  expect(await migrate(desired)).toMatchObject({ code: 0, content: desired });
+  const first = await migrate(desired);
+  expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+    code: 0,
+    content: desired,
+  });
+  for (const file of [first.livePath, `${first.livePath}.managed-exclusions`]) {
+    expect(statSync(file).mode & 0o777).toBe(0o600);
+  }
+});
+
+test("a previously managed enable setting cannot be silently disabled", async () => {
+  const first = await migrate(desired);
+  const edited = desired.replace(
+    "ExcludedFileNamesEnabled=true",
+    "ExcludedFileNamesEnabled=false",
+  );
+  writeFileSync(first.livePath, edited);
+  expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+    code: 3,
+    content: edited,
+  });
 });
 test("unexpected exclusion changes fail without replacing the live file", async () => {
   const live = desired.replace(excludedMediaFileNames, "*.mkv");
   expect(await migrate(live)).toMatchObject({ code: 3, content: live });
 });
+
+test("fresh protected configurations record the receipt needed by a later policy upgrade", async () => {
+  const first = await migrate(desired);
+  const upgraded = desired.replace(
+    excludedMediaFileNames,
+    `${excludedMediaFileNames}, *.future`,
+  );
+  writeFileSync(first.seedPath, upgraded);
+  expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+    code: 0,
+    content: upgraded,
+  });
+  expect(readFileSync(`${first.livePath}.managed-exclusions`, "utf8")).toBe(
+    `${excludedMediaFileNames}, *.future\n`,
+  );
+  writeFileSync(first.seedPath, desired);
+  expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+    code: 0,
+    content: desired,
+  });
+});
+
+test.each(["*.mkv", ""])(
+  "a managed policy edited to %j is not overwritten",
+  async (value) => {
+    const first = await migrate(desired);
+    const edited = desired.replace(excludedMediaFileNames, value);
+    writeFileSync(first.livePath, edited);
+    expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+      code: 3,
+      content: edited,
+    });
+  },
+);
+
+test("an interrupted receipt update is recovered without losing unrelated configuration", async () => {
+  const first = await migrate(desired);
+  const upgraded = desired.replace(
+    excludedMediaFileNames,
+    `${excludedMediaFileNames}, *.future`,
+  );
+  writeFileSync(first.seedPath, upgraded);
+  writeFileSync(
+    first.livePath,
+    `${upgraded}WebUI\\Password_PBKDF2=preserved\n`,
+  );
+  expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+    code: 0,
+    content: `${upgraded}WebUI\\Password_PBKDF2=preserved\n`,
+  });
+  expect(readFileSync(`${first.livePath}.managed-exclusions`, "utf8")).toBe(
+    `${excludedMediaFileNames}, *.future\n`,
+  );
+});
+
+test.each(["", "*.exe\n*.bat\n"])(
+  "corrupt receipts fail without changing the live configuration (%j)",
+  async (receipt) => {
+    const first = await migrate(desired);
+    writeFileSync(`${first.livePath}.managed-exclusions`, receipt);
+    expect(await applyMigration(first.seedPath, first.livePath)).toMatchObject({
+      code: 3,
+      content: desired,
+    });
+  },
+);
 
 test("the rendered client enables the shared policy and rolls when its configuration changes", async () => {
   const app = new App();

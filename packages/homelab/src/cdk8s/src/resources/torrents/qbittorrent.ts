@@ -91,6 +91,8 @@ export function createQBitTorrentDeployment(
   //   (see check-config-drift.sh). Any drift on a managed key fails the init
   //   container so the operator must reconcile by committing the change — config
   //   drift is never silently tolerated.
+  // The exclusion migration records its last managed list on the config PVC,
+  // allowing declared policy upgrades before checking all other managed keys.
   // Only keys we declare are enforced; keys qBittorrent writes on its own
   // (WebUI\Password_PBKDF2, Network\Cookies, ...) are ignored, so the guard never
   // false-positives on the app's runtime churn. A few engine-owned keys that DO
@@ -185,10 +187,9 @@ export function createQBitTorrentDeployment(
         "rm -f /config/qBittorrent/lockfile /config/qBittorrent/ipc-socket",
         "if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then",
         "  cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
-        "else",
-        "  sh /seed/migrate-download-safety.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
-        "  sh /seed/check-config-drift.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
         "fi",
+        "sh /seed/migrate-download-safety.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "sh /seed/check-config-drift.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
         "chown -R 1000:1000 /config/qBittorrent",
         "chmod 600 /config/qBittorrent/qBittorrent.conf",
       ].join("\n"),

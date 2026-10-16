@@ -5,6 +5,12 @@ export type MediaRequest = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+export function mediaFailure(context: string, error: unknown) {
+  return error instanceof Error
+    ? new Error(`${context}: ${error.message}`, { cause: error })
+    : new Error(`${context}: non-Error exception`);
+}
+
 /** Never include a response body, URL query, or credentials in an error. */
 export class MediaApi {
   constructor(
