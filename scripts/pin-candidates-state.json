@@ -42,10 +42,10 @@
       "buildNumber": 1010005
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      "version": "2.0.0-1010005",
-      "digest": "sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
-      "buildNumber": 1010005,
-      "gitSha": "d839b9435dda3c2efe032f1f43e5c495f9179a28"
+      "version": "2.0.0-1010085",
+      "digest": "sha256:b73cc0f6ab45ba896df4fcd3f513e9f7082972d3d5ca9fbaa1f53b2041003295",
+      "buildNumber": 1010085,
+      "gitSha": "696d4c2fadb553037b6f08d7edeeda809c8ca7c0"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/retained-0ca0966f0a35": {
       "version": "2.0.0-1009839",
@@ -64,6 +64,12 @@
       "digest": "sha256:a8d5f37f66df717d7c6cd5b763275a2387068623a14a49c7b20fce453ea53a4b",
       "buildNumber": 1009613,
       "gitSha": "869eb67f7730e2f144d3e49ea3b6631586a3b061"
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/retained-ced2f566dce4": {
+      "version": "2.0.0-1010053",
+      "digest": "sha256:661b60608f4f2469e8a141e36ea1743cd0e25b31c8ad740056f3d9af3f2b323b",
+      "buildNumber": 1010053,
+      "gitSha": "ced2f566dce430dbda24551512cbb1818482db3a"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/stable": {
       "version": "2.0.0-1010005",
