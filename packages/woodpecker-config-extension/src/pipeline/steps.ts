@@ -79,7 +79,12 @@ export function verifyCommands(options: {
     'elif [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
     '  export TASKNOTES_COVERAGE_BASE="origin/$CI_REPO_DEFAULT_BRANCH"',
     "else",
-    '  export TASKNOTES_COVERAGE_BASE="$(git rev-parse --verify HEAD^)"',
+    // A frozen manual canary can remain shallow even after fetching main:
+    // its head may have been squashed rather than merged into that branch.
+    '  git fetch --no-tags --depth=2 origin "$CI_COMMIT_SHA"',
+    // Keep assignment separate so export cannot mask a failed rev-parse.
+    '  TASKNOTES_COVERAGE_BASE="$(git rev-parse --verify HEAD^)"',
+    "  export TASKNOTES_COVERAGE_BASE",
     "fi",
     // CI is the cross-machine cache producer and consumer; developer shells
     // stay local-only to avoid large transfers over weak links. The local

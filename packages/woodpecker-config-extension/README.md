@@ -193,6 +193,11 @@ source, conflicting maintenance/platform/corpus parameters, or disabled
 candidate is rejected. A fixed canary branch allows repeated pairs while main
 continues advancing. `CI_IO_FIXED_CORPUS` is not used by this route.
 
+Verify fetches the frozen commit's immediate predecessor before selecting its
+coverage baseline when no verified changed base is available. Fetching main
+alone does not remove a canary checkout's shallow boundary after a squash merge.
+A missing predecessor stops verification before an empty baseline can be exported.
+
 `CI_CHECKOUT_DIAGNOSTIC`, `CI_BOOTSTRAP_DIAGNOSTIC`, and
 `CI_INSTALL_DIAGNOSTIC` separate source, toolchain, and install time. Retained
 Turbo summaries provide task/cache evidence; `toolkit ci timings --json` also
