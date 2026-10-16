@@ -60,6 +60,15 @@ afterAll(async () => {
 
 const RECORDED_AT = IsoInstantSchema.parse("2026-09-16T10:00:00.000Z");
 
+async function admitRiotListing(matchId: RiotMatchId): Promise<void> {
+  await admitMatchEvidence({
+    matchId,
+    completedAt: Date.parse(RECORDED_AT),
+    historical: false,
+    riotHistoryListed: true,
+  });
+}
+
 /** A stage receipt someone else wrote with evidence this core cannot produce. */
 async function seedForeignStageReceipt(matchId: RiotMatchId): Promise<void> {
   expect(
@@ -322,12 +331,7 @@ describe("advanceMatchCursor", () => {
   test("moves the Riot polling cursor for a Riot match", async () => {
     const matchId = RiotMatchIdSchema.parse("NA1_8301");
     await seedTrackedAccount(matchId);
-    await admitMatchEvidence({
-      matchId,
-      completedAt: Date.parse(RECORDED_AT),
-      historical: false,
-      riotHistoryListed: true,
-    });
+    await admitRiotListing(matchId);
 
     await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
       { advanced: 1, alreadyAdvanced: 0 },
@@ -361,12 +365,7 @@ describe("advanceMatchCursor", () => {
       { advanced: 0, alreadyAdvanced: 0 },
     );
     expect(await storedCursor()).toEqual({ lastProcessedMatchId: null });
-    await admitMatchEvidence({
-      matchId,
-      completedAt: Date.parse(RECORDED_AT),
-      historical: false,
-      riotHistoryListed: true,
-    });
+    await admitRiotListing(matchId);
 
     await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
       { advanced: 1, alreadyAdvanced: 0 },
