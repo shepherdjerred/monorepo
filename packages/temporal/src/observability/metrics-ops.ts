@@ -35,9 +35,9 @@ export const renovateUpdatesPending = new Gauge({
   registers: [register],
 });
 
-export const linearIssuesOpen = new Gauge({
-  name: "linear_issues_open",
-  help: "Open Linear issues by team key and workflow state type",
+export const trackerIssuesOpen = new Gauge({
+  name: "tracker_issues_open",
+  help: "Open Tracker issues by team key and workflow state type",
   labelNames: ["team", "state_type"] as const,
   registers: [register],
 });

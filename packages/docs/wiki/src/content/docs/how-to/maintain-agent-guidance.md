@@ -21,7 +21,7 @@ Choose one destination.
 | package API, layout, or contributor reference | the package README                        |
 | architecture rationale                        | an explanation page                       |
 | an operator procedure                         | a how-to page                             |
-| temporary work or a follow-up                 | Linear or the pull request                |
+| temporary work or a follow-up                 | Tracker or the pull request               |
 
 Do not repeat the content in a client-specific rules file.
 

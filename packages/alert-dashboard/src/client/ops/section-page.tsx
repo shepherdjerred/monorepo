@@ -91,7 +91,7 @@ const DELIVERY_PAGE: SectionPageDefinition = {
   title: "Delivery",
   eyebrow: "Flow",
   sections: ["delivery", "work"],
-  charts: ["prs-open", "prs-merged", "renovate-pending", "linear-open"],
+  charts: ["prs-open", "prs-merged", "renovate-pending", "tracker-open"],
 };
 
 const MAINTENANCE_PAGE: SectionPageDefinition = {

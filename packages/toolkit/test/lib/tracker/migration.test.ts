@@ -3,7 +3,8 @@ import { importId } from "@shepherdjerred/tracker/contract";
 import { planMigration } from "#lib/tracker/migration/normalize.ts";
 import { voteActor } from "#lib/tracker/migration/identity.ts";
 import { snapshotChanges } from "#lib/tracker/migration/verify.ts";
-import { connection, type LinearQuery } from "#lib/tracker/migration/source.ts";
+import { connection } from "#lib/tracker/migration/source.ts";
+import type { LinearQuery } from "#lib/tracker/migration/linear-source.ts";
 import { migrationFixture, migrationActor } from "./migration-fixture.ts";
 
 test("exports every page including archived data and rejects repeated cursors", async () => {

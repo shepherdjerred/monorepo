@@ -25,7 +25,6 @@ describe("passthrough registry", () => {
     ["gh", "gh", []],
     ["woodpecker", "woodpecker-cli", []],
     ["git-spice", "git-spice", []],
-    ["linear", "linear", ["--workspace", "sjerred"]],
     ["posthog", "posthog-cli", []],
     ["grafana", "gcx", ["--context", "homelab"]],
     ["prom", "gcx", ["--context", "homelab", "metrics"]],
@@ -50,9 +49,6 @@ describe("passthrough registry", () => {
   });
 
   test("explicit flags override argument defaults", () => {
-    expect(
-      invocation("linear", ["--workspace", "other", "issue"]).args,
-    ).toEqual(["--workspace", "other", "issue"]);
     expect(invocation("prom", ["--context=other", "query", "up"]).args).toEqual(
       ["metrics", "--context=other", "query", "up"],
     );
@@ -94,9 +90,6 @@ describe("passthrough registry", () => {
     const temporalEnv = buildPassthroughInvocation("temporal", ["workflow"], {
       TEMPORAL_ADDRESS: "temporal.example:7233",
     });
-    const linearEnv = buildPassthroughInvocation("linear", ["issue", "list"], {
-      LINEAR_API_KEY: "placeholder",
-    });
     const argocdEnv = buildPassthroughInvocation("argocd", [], {
       ARGOCD_SERVER: "other.example",
     });
@@ -111,7 +104,6 @@ describe("passthrough registry", () => {
     expect(argocdFlag?.env["ARGOCD_SERVER"]).toBeUndefined();
     expect(temporalEnv?.executable).toBe("temporal");
     expect(temporalEnv?.args).toEqual(["workflow"]);
-    expect(linearEnv?.args).toEqual(["issue", "list"]);
     expect(argocdEnv?.env["ARGOCD_SERVER"]).toBe("other.example");
   });
 
@@ -125,17 +117,10 @@ describe("passthrough registry", () => {
     expect(result?.args).toEqual(["operator", "cluster", "health"]);
   });
 
-  test("does not treat tokens after -- as default overrides", () => {
+  test("Linear writes are no longer registered", () => {
     expect(
-      invocation("linear", ["issue", "--", "--workspace", "literal"]).args,
-    ).toEqual([
-      "--workspace",
-      "sjerred",
-      "issue",
-      "--",
-      "--workspace",
-      "literal",
-    ]);
+      buildPassthroughInvocation("linear", ["issue", "create"], {}),
+    ).toBeNull();
   });
 
   test("forwards Temporal root help and version flags without a profile", () => {

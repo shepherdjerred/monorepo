@@ -110,7 +110,7 @@ export async function exportFiles(
     throw new Error("Download journal differs from the frozen source snapshot");
   for (const file of previous) await readExportFile(directory, file);
   if (urls.some((url) => new URL(url).hostname === "uploads.linear.app"))
-    await resolveCredentials(["LINEAR_API_KEY"]);
+    await resolveCredentials(["LINEAR_MIGRATION_API_KEY"]);
   const files: ExportFile[] = [];
   for (const url of urls) {
     const cached = previous.find((file) => file.url === url);
@@ -118,7 +118,10 @@ export async function exportFiles(
       files.push(cached);
       continue;
     }
-    const file = await downloadLinearFile(url, Bun.env["LINEAR_API_KEY"]);
+    const file = await downloadLinearFile(
+      url,
+      Bun.env["LINEAR_MIGRATION_API_KEY"],
+    );
     const sha256 = hash(file.bytes);
     const relativePath = "files/" + sha256;
     await Bun.write(path.join(directory, relativePath), file.bytes, {

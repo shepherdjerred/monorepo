@@ -1,5 +1,7 @@
 /* Published routes retained for existing bookmarks and pull-request links. */
 export const wikiRedirects = {
+  "/how-to/run-the-linear-agent-queue/": "/how-to/run-the-tracker-agent-queue/",
+  "/explanation/linear-agent-queue/": "/explanation/tracker-agent-queue/",
   "/birmel": "/explanation/birmel/",
   "/homelab/alerts": "/explanation/homelab/alerts/",
   // Two hops collapsed into one: the pre-Diátaxis route and the

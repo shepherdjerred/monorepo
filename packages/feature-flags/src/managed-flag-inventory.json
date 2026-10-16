@@ -1374,7 +1374,7 @@
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
-      "default": "⭐",
+      "default": "\u2b50",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3198,6 +3198,14 @@
     {
       "key": "prod",
       "overrides": [
+        {
+          "key": "tracker-writes-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "the-storm-analytics-enabled",
           "type": "boolean",

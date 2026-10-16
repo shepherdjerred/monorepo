@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { WoodpeckerPipeline } from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type { OpenPullRequest } from "@shepherdjerred/ops-clients/github.ts";
-import { summarizeLinear } from "@shepherdjerred/ops-clients/linear.ts";
+import { summarizeTracker } from "@shepherdjerred/ops-clients/tracker.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import { mapCi } from "./ci.ts";
 import {
@@ -11,7 +11,7 @@ import {
   pullRequestSeverity,
   serviceFromTitle,
 } from "./github.ts";
-import { mapLinear } from "./linear.ts";
+import { mapTracker } from "./tracker.ts";
 import { mapRenovate } from "./renovate.ts";
 
 const now = new Date("2026-09-24T12:00:00.000Z");
@@ -226,49 +226,36 @@ describe("renovate", () => {
   });
 });
 
-describe("linear", () => {
+const trackerIssue = (
+  identifier: string,
+  team: string,
+  stateType: "triage" | "started",
+) => ({
+  id: identifier,
+  identifier,
+  title: `Issue ${identifier}`,
+  url: `https://tracker.tailnet-1a49.ts.net/issues/${identifier}`,
+  createdAt: daysAgo(1),
+  team,
+  stateType,
+});
+
+describe("tracker", () => {
   test("SJ triage needs me; other triage is informational", () => {
-    const issue = (
-      identifier: string,
-      team: string,
-      stateType: "triage" | "started",
-    ) => ({
-      id: identifier,
-      identifier,
-      title: `Issue ${identifier}`,
-      url: `https://linear.app/sjerred/issue/${identifier}`,
-      createdAt: daysAgo(1),
-      team,
-      stateType,
-    });
-    const result = mapLinear(
-      summarizeLinear(
-        [
-          issue("SJ-1", "SJ", "triage"),
-          issue("AI-1", "AI", "triage"),
-          issue("AI-2", "AI", "started"),
-        ],
-        [
-          {
-            team: "AI",
-            teamName: "AI",
-            number: 3,
-            startsAt: daysAgo(3),
-            endsAt: daysAgo(-11),
-            progress: 0.25,
-          },
-        ],
-      ),
+    const result = mapTracker(
+      summarizeTracker([
+        trackerIssue("SJ-1", "SJ", "triage"),
+        trackerIssue("AI-1", "AI", "triage"),
+        trackerIssue("AI-2", "AI", "started"),
+      ]),
     );
     expect(result.signals.map((s) => [s.id, s.needsMe])).toEqual([
-      ["linear:issue:SJ-1", true],
-      ["linear:issue:AI-1", false],
-      ["linear:cycle:AI", false],
+      ["tracker:issue:SJ-1", true],
+      ["tracker:issue:AI-1", false],
     ]);
-    expect(result.signals[2]?.title).toBe("AI cycle 3: 25% done");
     expect(result.metrics.map((m) => [m.id, m.value])).toEqual([
-      ["linear.issues.open", 3],
-      ["linear.issues.triage", 2],
+      ["tracker.issues.open", 3],
+      ["tracker.issues.triage", 2],
     ]);
   });
 });

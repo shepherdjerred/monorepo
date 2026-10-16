@@ -16,7 +16,7 @@ export const SOURCE_IDS = [
   "ci",
   "github",
   "renovate",
-  "linear",
+  "tracker",
   "bugsink",
   "posthog",
   "probes",
@@ -27,8 +27,13 @@ export const SOURCE_IDS = [
   "ai",
 ] as const;
 
-export const SourceIdSchema = z.enum(SOURCE_IDS);
+// Stored snapshots and recorded Activity payloads retain Linear during retention.
+export const LEGACY_SOURCE_IDS = ["linear"] as const;
+export const SourceIdSchema = z
+  .enum([...SOURCE_IDS, ...LEGACY_SOURCE_IDS])
+  .transform((source) => (source === "linear" ? ("tracker" as const) : source));
 export type SourceId = z.infer<typeof SourceIdSchema>;
+export type SourceInputId = z.input<typeof SourceIdSchema>;
 
 /**
  * Snapshot sections, one per operational question. The order here is the
@@ -57,14 +62,16 @@ export const LINK_KINDS = [
   "metrics",
   "argocd",
   "github",
-  "linear",
+  "tracker",
   "bugsink",
   "posthog",
   "woodpecker",
 ] as const;
 
 export const LinkSchema = z.strictObject({
-  kind: z.enum(LINK_KINDS),
+  kind: z
+    .enum([...LINK_KINDS, "linear"])
+    .transform((kind) => (kind === "linear" ? ("tracker" as const) : kind)),
   label: z.string().min(1),
   url: z.url({ protocol: /^https?$/ }),
 });
@@ -110,7 +117,10 @@ export const METRIC_UNITS = [
 
 /** A headline number shown on tiles, TRMNL, and digests. */
 export const MetricSchema = z.strictObject({
-  id: z.string().min(1),
+  id: z
+    .string()
+    .min(1)
+    .transform((id) => id.replace(/^linear\.issues\./u, "tracker.issues.")),
   label: z.string().min(1),
   /** `null` means the source answered but has no value (not a failure). */
   value: z.number().nullable(),

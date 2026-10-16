@@ -95,4 +95,4 @@ part of this service.
 - Deployment definitions: `packages/homelab/src/cdk8s/src/resources/alert-dashboard/`.
 - Operator CLI: `packages/toolkit/src/handlers/alerts.ts`.
 - Postal SMTP fallback TLS: [Postal SMTP TLS](/explanation/homelab/postal-smtp-tls/).
-- Activation and retention work: Linear.
+- Activation and retention work: Tracker.

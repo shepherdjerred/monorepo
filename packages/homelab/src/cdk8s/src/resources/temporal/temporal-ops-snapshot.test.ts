@@ -15,11 +15,7 @@ const InfraDeploymentSpecSchema = z.object({
   }),
 });
 
-const OPS_SECRETS = [
-  "OPS_INGEST_TOKEN",
-  "LINEAR_API_KEY",
-  "POSTHOG_PERSONAL_API_KEY",
-] as const;
+const OPS_SECRETS = ["OPS_INGEST_TOKEN", "POSTHOG_PERSONAL_API_KEY"] as const;
 
 function resources(): TemporalResource[] {
   return synthesizeTemporalResources(".test-synth-temporal-ops-snapshot");
@@ -53,6 +49,11 @@ describe("Temporal ops snapshot collector", () => {
         valueFrom: { secretKeyRef: { key, name: item.metadata.name } },
       });
     }
+    expect(env).toContainEqual({
+      name: "TRACKER_URL",
+      value: "http://tracker.tracker.svc.cluster.local:7351",
+    });
+    expect(env.map((entry) => entry.name)).not.toContain("LINEAR_API_KEY");
     expect(env).toContainEqual({
       name: "OPS_DASHBOARD_URL",
       value:

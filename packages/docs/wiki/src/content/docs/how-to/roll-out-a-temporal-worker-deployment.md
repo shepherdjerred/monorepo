@@ -223,4 +223,4 @@ toolkit tempo --help
 ```
 
 Record the deployed digest, execution IDs, soak times, and live screenshots in
-the pull request or Linear. Do not create a repository rollout journal.
+the pull request or Tracker. Do not create a repository rollout journal.

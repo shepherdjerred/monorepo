@@ -1,41 +1,9 @@
+import {
+  queryLinearHistory as linearQuery,
+  type LinearQuery,
+} from "./linear-source.ts";
 import { z } from "zod";
 import { LinearExportSchema, type LinearExport } from "./schema.ts";
-
-export type LinearQuery = (
-  document: string,
-  variables: Record<string, unknown>,
-) => Promise<unknown>;
-
-const linearQuery: LinearQuery = async (document, variables) => {
-  for (let attempt = 0; ; attempt++) {
-    const child = Bun.spawn(
-      [
-        "toolkit",
-        "linear",
-        "api",
-        "--variables-json",
-        JSON.stringify(variables),
-      ],
-      { stdin: new Blob([document]), stdout: "pipe", stderr: "pipe" },
-    );
-    const [stdout, stderr, code] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
-    if (code === 0) return JSON.parse(stdout) as unknown;
-    if (attempt < 5 && /429|rate.?limit/iu.test(stderr)) {
-      await Bun.sleep(Math.min(60_000, 2 ** attempt * 2000));
-      continue;
-    }
-    throw new Error(
-      "Linear export query failed (" +
-        code.toString() +
-        "): " +
-        stderr.slice(-1000),
-    );
-  }
-};
 
 const PageSchema = z.object({
   nodes: z.array(z.record(z.string(), z.json())),

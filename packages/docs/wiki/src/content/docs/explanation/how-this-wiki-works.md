@@ -34,16 +34,16 @@ tutorials to fill the quadrant would be worse than leaving it nearly empty.
 ```mermaid
 flowchart LR
   accTitle: Wiki publishing flow
-  accDescr: Agents inspect repository state and Linear work, then maintain curated human pages. Only curated wiki pages are published.
+  accDescr: Agents inspect repository state and Tracker work, then maintain curated human pages. Only curated wiki pages are published.
 
   R[Repository state] --> A[AI author]
-  L[Linear work] --> A
+  L[Tracker work] --> A
   A --> H[Curated wiki pages]
   H --> S[Public wiki]
 ```
 
 Curated pages are the reading experience. Plans, reviews, and implementation
-tasks live in Linear; code and pull requests provide implementation history.
+tasks live in Tracker; code and pull requests provide implementation history.
 The wiki publishes neither tracker state nor a mirror of it.
 
 ## What does not belong here
@@ -52,7 +52,7 @@ No secrets, private host details, personal data, or sensitive incident
 material — this site is public.
 
 No workflow state either. Plan status, superseded designs, and open tasks belong
-in Linear. A reader here wants to know how the system is, not what an agent was
+in Tracker. A reader here wants to know how the system is, not what an agent was
 planning to do about it.
 
 ## Related

@@ -42,6 +42,14 @@ const issue = {
 };
 
 describe("autonomous authorization and recovery", () => {
+  test.each(["completed", "canceled", "duplicate"])(
+    "terminal %s revokes autonomous delivery",
+    (type) => {
+      expect(
+        autonomyIssueBlocker({ ...issue, state: { name: type, type } }),
+      ).toBe("The Tracker issue is already terminal");
+    },
+  );
   test("legacy snapshots keep owner approval and do not inherit autonomy from a label", () => {
     const state = createTaskState({
       paths: runtimePaths("/tmp/fixture"),

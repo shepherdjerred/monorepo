@@ -54,7 +54,7 @@
       "durationMs": 120
     },
     {
-      "source": "linear",
+      "source": "tracker",
       "ok": true,
       "observedAt": "2026-09-24T12:00:00.000Z",
       "lastSuccessAt": "2026-09-24T12:00:00.000Z",
@@ -206,7 +206,7 @@
       "title": "Work",
       "severity": "ok",
       "summary": "All clear",
-      "sources": ["linear"],
+      "sources": ["tracker"],
       "metrics": [],
       "signals": []
     },

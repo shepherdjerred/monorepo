@@ -16,7 +16,7 @@ export function autonomyIssueBlocker(issue: TrackerIssue): string | null {
   if (!labels.has(AUTONOMOUS_LABEL) || !labels.has("agent:codex"))
     return "Autonomous authorization was removed from the Tracker issue";
   if (labels.has("agent:needs-human")) return "The issue is explicitly parked";
-  return ["completed", "canceled"].includes(issue.state.type)
+  return ["completed", "canceled", "duplicate"].includes(issue.state.type)
     ? "The Tracker issue is already terminal"
     : null;
 }

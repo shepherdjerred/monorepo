@@ -49,7 +49,7 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
   "checks": [
     { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
   ],
-  "source": { "note": "Birmel post-deploy follow-up in Linear" },
+  "source": { "note": "Birmel post-deploy follow-up in Tracker" },
   "prompt": "Pull the metrics from the Post-deploy verification section. Email whether each check is green or still red, with links/evidence."
 }
 -->

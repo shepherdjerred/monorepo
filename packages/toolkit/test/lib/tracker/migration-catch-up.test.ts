@@ -6,6 +6,7 @@ import { migrationActor, migrationFixture } from "./migration-fixture.ts";
 test("catch-up plans new history and timestamp changes while preserving original events", async () => {
   const before = migrationFixture();
   const after = structuredClone(before);
+  after.teams[0]!.updatedAt = "2026-02-01T00:00:00.000Z";
   after.exportedAt = "2026-02-01T00:00:00.000Z";
   const issue = after.issues[0];
   if (issue === undefined) throw new Error("Missing fixture issue");

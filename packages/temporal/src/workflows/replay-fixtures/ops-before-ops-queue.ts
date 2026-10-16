@@ -11,7 +11,7 @@ import type {
   OpsCollectorOutcome,
   OpsPublishSummary,
 } from "#activities/ops/ops-publish.ts";
-import type { SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { SourceInputId as SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
 import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
 
 type CollectorName = {

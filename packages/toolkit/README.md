@@ -57,13 +57,15 @@ need a restart or their explicit native session environment.
 
 `tracker api <procedure> --input-json '<JSON>'` is the query escape hatch;
 `--mutation` adds the same validated actor. Additional catalog mutations use
-this API. `tracker --help` lists the complete command tree. Linear remains
-available for export until migration and consumer acceptance complete.
+this API. `tracker --help` lists the complete command tree. The former
+`toolkit linear` write passthrough is removed; all issue operations use Tracker.
 
 The operator migration commands preserve an immutable Linear snapshot and its
 file checksums. Export is read-only and paginates all archived records through
-the authenticated Linear CLI; private file downloads resolve only the registered
-Linear credential and never forward it to redirect destinations.
+the read-only GraphQL migration adapter. Its dedicated
+`LINEAR_MIGRATION_API_KEY` resolves through the registered password-manager
+reference only for export, source verification, and private file downloads.
+It is never forwarded to redirect destinations. No Linear CLI is required.
 
 ```bash
 toolkit tracker migration export-linear --output /private/tmp/linear-export
@@ -120,7 +122,6 @@ values override the monorepo defaults.
 | `gh`         | `gh`             | `GH_REPO=shepherdjerred/monorepo`                    |
 | `woodpecker` | `woodpecker-cli` | Woodpecker CI; server and token from the environment |
 | `git-spice`  | `git-spice`      | Current checkout                                     |
-| `linear`     | `linear`         | `--workspace sjerred`                                |
 | `posthog`    | `posthog-cli`    | Project `549883`                                     |
 | `grafana`    | `gcx`            | Context `homelab`                                    |
 | `prom`       | `gcx metrics`    | Context `homelab`                                    |
@@ -139,7 +140,7 @@ status or signal and returns 127 when the native executable is missing.
 ```bash
 toolkit gh pr view
 toolkit woodpecker pipeline ls shepherdjerred/monorepo
-toolkit linear issue view SJ-123
+toolkit tracker issue view SJ-123
 toolkit posthog api search read-data-schema
 toolkit prom query 'up == 0'
 toolkit loki query '{namespace="temporal"} |= "error"' --since 1h
@@ -581,10 +582,10 @@ the unsafe setting without printing its value, including for help commands.
 Option names are checked after ArgoCD-compatible quote and escape parsing;
 header values and root paths containing the same text are preserved.
 
-| Commands                                                                                                | Registered backend        |
-| ------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `woodpecker`, `pr`, `linear`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
-| `bugsink`, `discord`                                                                                    | macOS Keychain            |
+| Commands                                                                                      | Registered backend        |
+| --------------------------------------------------------------------------------------------- | ------------------------- |
+| `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account |
+| `bugsink`, `discord`                                                                          | macOS Keychain            |
 
 The registry in `src/lib/credentials.ts` owns the variable names and secret
 locators. Backend failures are errors; a missing Keychain secret does not

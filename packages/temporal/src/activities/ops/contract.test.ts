@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { summarizeLinear } from "@shepherdjerred/ops-clients/linear.ts";
+import { summarizeTracker } from "@shepherdjerred/ops-clients/tracker.ts";
 import type { PrometheusSample } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import {
@@ -15,7 +15,7 @@ import { mapBugsink } from "./bugsink.ts";
 import { mapCi } from "./ci.ts";
 import { mapGitHub } from "./github.ts";
 import { mapKubernetes } from "./kubernetes.ts";
-import { mapLinear } from "./linear.ts";
+import { mapTracker } from "./tracker.ts";
 import { mapLogs } from "./logs.ts";
 import { mapTraces } from "./traces.ts";
 import { mapMaintenance } from "./maintenance.ts";
@@ -190,30 +190,18 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
     );
     return collection;
   })(),
-  linear: mapLinear(
-    summarizeLinear(
-      [
-        {
-          id: "1",
-          identifier: "SJ-1",
-          title: "Triage me",
-          url: "https://linear.app/sjerred/issue/SJ-1",
-          createdAt: ago(10),
-          team: "SJ",
-          stateType: "triage",
-        },
-      ],
-      [
-        {
-          team: "AI",
-          teamName: "AI",
-          number: 2,
-          startsAt: ago(48),
-          endsAt: ago(-200),
-          progress: 0.5,
-        },
-      ],
-    ),
+  tracker: mapTracker(
+    summarizeTracker([
+      {
+        id: "1",
+        identifier: "SJ-1",
+        title: "Triage me",
+        url: "https://tracker.tailnet-1a49.ts.net/issues/SJ-1",
+        createdAt: ago(10),
+        team: "SJ",
+        stateType: "triage",
+      },
+    ]),
   ),
   bugsink: mapBugsink(
     [
@@ -382,13 +370,13 @@ describe("ops snapshot contract", () => {
   });
 
   test("a failed source is redacted and duplicate changes collapse before validation", () => {
-    const secret = "fixture-linear-secret";
+    const secret = "fixture-tracker-secret";
     const outcomes: OpsCollectorOutcome[] = SOURCE_IDS.map((source) => {
-      if (source === "linear") {
+      if (source === "tracker") {
         return {
           source,
           ok: false,
-          error: `linear: HTTP 401\n  key ${secret}`,
+          error: `tracker: HTTP 401\n  key ${secret}`,
         };
       }
       const collection = COLLECTIONS[source];
@@ -412,16 +400,16 @@ describe("ops snapshot contract", () => {
       buildOpsIngest({
         outcomes,
         now,
-        lastSuccess: new Map([["linear", ago(0.1)]]),
+        lastSuccess: new Map([["tracker", ago(0.1)]]),
         secrets: [secret],
       }),
     );
-    const linear = ingest.snapshot.sources.find(
-      (status) => status.source === "linear",
+    const tracker = ingest.snapshot.sources.find(
+      (status) => status.source === "tracker",
     );
-    expect(linear).toMatchObject({
+    expect(tracker).toMatchObject({
       ok: false,
-      error: "linear: HTTP 401 key ***",
+      error: "tracker: HTTP 401 key ***",
       lastSuccessAt: ago(0.1),
     });
     expect(JSON.stringify(ingest)).not.toContain(secret);
@@ -433,7 +421,7 @@ describe("ops snapshot contract", () => {
       SOURCE_IDS.reduce(
         (total, source) => total + COLLECTIONS[source].changes.length,
         0,
-      ) - COLLECTIONS.linear.changes.length,
+      ) - COLLECTIONS.tracker.changes.length,
     );
     expect(
       ingest.snapshot.sections.find((section) => section.id === "work")

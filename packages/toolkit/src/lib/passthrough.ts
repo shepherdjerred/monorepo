@@ -5,7 +5,6 @@ export const PASSTHROUGH_COMMANDS = [
   "gh",
   "woodpecker",
   "git-spice",
-  "linear",
   "posthog",
   "grafana",
   "prom",
@@ -84,19 +83,6 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
       },
     ],
     ["git-spice", { executable: "git-spice" }],
-    [
-      "linear",
-      {
-        executable: "linear",
-        defaultArgs: [
-          {
-            args: ["--workspace", "sjerred"],
-            overrideFlags: ["--workspace"],
-            overrideEnvironment: ["LINEAR_API_KEY"],
-          },
-        ],
-      },
-    ],
     [
       "posthog",
       {

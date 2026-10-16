@@ -16,7 +16,7 @@ loop — not to get an answer.
 
 ## 1. Open a scratch document
 
-Agent-task context normally lives in Linear. For this tutorial, create a local
+Agent-task context normally lives in Tracker. For this tutorial, create a local
 scratch file at `/tmp/agent-task-tutorial-scratch.md`.
 
 Start with a new, block-free file. Do not reuse an existing guide: the operator

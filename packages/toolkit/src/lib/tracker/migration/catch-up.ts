@@ -28,6 +28,10 @@ function retainedCatalog(before: MigrationRecord, next: MigrationRecord) {
       value({
         ...next,
         data: { ...next.data, issueCounter: before.data.issueCounter },
+        rawSourcePayload: {
+          ...next.rawSourcePayload,
+          updatedAt: z.string().parse(before.rawSourcePayload["updatedAt"]),
+        },
       }) === value(before)
     );
   return false;
@@ -84,7 +88,7 @@ function removalRetention(
   );
   if (retainRemoved.some((identifier) => !retainedReferences.has(identifier)))
     throw new Error(
-      "--retain-removed must identify a removed issue already archived in the previous snapshot",
+      "--retain-removed must identify a removed issue already archived in the retention snapshot",
     );
   if (
     previous.some(
@@ -180,7 +184,27 @@ export function planCatchUp(
   };
 }
 
-async function preflight(
+function checkRetainedManifest(
+  retentionRecords: MigrationRecord[],
+  retainRemoved: readonly string[],
+  imported: Set<string>,
+) {
+  const retainedIssues = retentionRecords
+    .filter((record) => record.entityType === "issue")
+    .filter((record) => retainRemoved.includes(record.data.identifier));
+  for (const record of retainedIssues) {
+    if (
+      !imported.has(identity(record)) ||
+      !imported.has("event:issue:" + record.externalId)
+    )
+      throw new Error(
+        "Retained issue or its import event is missing from the destination manifest",
+      );
+  }
+  return retainedIssues;
+}
+
+export async function preflightCatchUp(
   client: TrackerClient,
   snapshot: Awaited<ReturnType<typeof loadExport>>,
   options: {
@@ -209,15 +233,17 @@ async function preflight(
   );
   if (previous.some((record) => !imported.has(identity(record))))
     throw new Error("Complete the previous frozen import before catch-up");
+  const retainedIssues = checkRetainedManifest(
+    retentionRecords,
+    retainRemoved,
+    imported,
+  );
+  const foundRetained = new Set<string>();
   const expected = new Map(
     snapshot.issues.map((issue) => [issue.identifier, "linear:" + issue.id]),
   );
-  for (const record of retentionRecords) {
-    if (
-      record.entityType === "issue" &&
-      retainRemoved.includes(record.data.identifier)
-    )
-      expected.set(record.data.identifier, "linear:" + record.externalId);
+  for (const record of retainedIssues) {
+    expected.set(record.data.identifier, "linear:" + record.externalId);
   }
   for (const team of snapshot.teams) {
     const saved = await client.issues.list.query({
@@ -237,7 +263,13 @@ async function preflight(
       )
     )
       throw new Error("Destination contains a native or conflicting issue");
+    for (const issue of saved.items) {
+      if (retainRemoved.includes(issue.identifier))
+        foundRetained.add(issue.identifier);
+    }
   }
+  if (retainRemoved.some((identifier) => !foundRetained.has(identifier)))
+    throw new Error("Retained issue is missing from Tracker");
 }
 
 export async function importAdditions(
@@ -309,7 +341,7 @@ export async function catchUpLinear(options: {
     retainedRemovals: plan.retainedRemovals,
   };
   if (options.dryRun) return { dryRun: true, ...summary };
-  await preflight(options.client, after, {
+  await preflightCatchUp(options.client, after, {
     previous: previous.records,
     retainRemoved: plan.retainedRemovals,
     retentionRecords: retention.records,

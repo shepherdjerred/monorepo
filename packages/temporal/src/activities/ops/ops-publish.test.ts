@@ -50,19 +50,19 @@ describe("buildOpsIngest", () => {
   test("a failed source is unknown, redacted, and keeps its last success", () => {
     const ingest = buildOpsIngest({
       outcomes: outcomes({
-        linear: "linear: HTTP 401 for key lin_api_supersecret",
+        tracker: "tracker: HTTP 401 for key lin_api_supersecret",
       }),
       now,
-      lastSuccess: new Map([["linear", "2026-09-24T11:55:00.000Z"]]),
+      lastSuccess: new Map([["tracker", "2026-09-24T11:55:00.000Z"]]),
       secrets: ["lin_api_supersecret"],
     });
-    const status = ingest.snapshot.sources.find((s) => s.source === "linear");
+    const status = ingest.snapshot.sources.find((s) => s.source === "tracker");
     expect(status).toEqual({
-      source: "linear",
+      source: "tracker",
       ok: false,
       observedAt: now.toISOString(),
       durationMs: 0,
-      error: "linear: HTTP 401 for key ***",
+      error: "tracker: HTTP 401 for key ***",
       lastSuccessAt: "2026-09-24T11:55:00.000Z",
     });
     expect(findSection(ingest.snapshot, "work").severity).toBe("unknown");

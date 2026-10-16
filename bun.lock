@@ -1276,6 +1276,8 @@
       "version": "0.1.0",
       "dependencies": {
         "@shepherdjerred/ops-model": "workspace:*",
+        "@shepherdjerred/tracker": "workspace:*",
+        "@trpc/client": "^11.17.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {

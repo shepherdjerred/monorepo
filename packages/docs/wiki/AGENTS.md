@@ -79,7 +79,7 @@ flags or steps you are in the wrong kind. Diagrams live here.
 
 - **No workflow or plan residue.** No "superseded", no "the deep-dive plan
   remains in progress", no "this TODO stays open", no status. That is
-  agent-to-agent state and belongs in Linear.
+  agent-to-agent state and belongs in Tracker.
 - **No secrets or private data.** This site is public: no tokens, private host
   details, personal data, or sensitive incident material.
 - **No duplicated facts.** State something once; link to it everywhere else.

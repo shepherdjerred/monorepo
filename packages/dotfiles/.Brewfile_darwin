@@ -9,7 +9,6 @@ tap "lightpanda-io/browser"
 tap "mobile-dev-inc/tap"
 tap "pinchtab/tap"
 tap "rsteube/tap"
-tap "schpet/tap"
 tap "siderolabs/tap"
 tap "xcodesorg/made", trusted: { formulae: ["xcodes"] }
 # Static checker for GitHub Actions workflow files
@@ -188,8 +187,6 @@ brew "mobile-dev-inc/tap/maestro", trusted: true
 brew "pinchtab/tap/pinchtab", trusted: true
 # A multi-shell completion binary
 brew "rsteube/tap/carapace", trusted: true
-# Work with Linear issues, projects and teams from the command line
-brew "schpet/tap/linear", trusted: true
 # CLI for out-of-band management of Kubernetes nodes created by Talos
 brew "siderolabs/tap/talosctl", trusted: true
 # Password manager that keeps all passwords secure behind one password

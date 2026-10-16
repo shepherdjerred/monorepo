@@ -1,5 +1,5 @@
 ---
-title: Run the Linear agent queue
+title: Run the Tracker agent queue
 description: Configure the local Mac runner, enqueue a task for owner approval or autonomous DevEx delivery, and inspect recovery.
 sidebar:
   order: 2
@@ -28,23 +28,20 @@ Administration read access lets [PR health inspect branch protection](https://gi
 Store its App ID, installation ID, and generated private key in 1Password. Do
 not copy them into the repository or the runner configuration.
 
-## 2. Create the Linear labels
+## 2. Create the Tracker labels
 
 Create the provider and parking labels in the team you queue from:
 
 ```bash
-toolkit linear label create --team SJ --name agent:codex --color '#059669' \
-  --description 'Use the Codex SDK'
-toolkit linear label create --team SJ --name agent:needs-human --color '#DC2626' \
-  --description 'Parked until Jerred requeues it'
+toolkit tracker label create --team AI --name agent:codex --color '#059669'
+toolkit tracker label create --team AI --name agent:needs-human --color '#DC2626'
 ```
 
 Applying `agent:codex` is the entire enqueue action. The runner accepts
-issues in any team and any non-terminal state carrying exactly one provider
-label. It chooses the highest priority, then the oldest issue. Linear
-scopes labels to teams, so repeat the two creates above for every team
-you queue from; parking a task needs `agent:needs-human` in the issue's
-own team.
+issues in the configured `tracker.team`, defaulting to `AI`, in any
+non-terminal state. It chooses the highest priority, then the oldest issue.
+Tracker scopes labels to teams. Inspect existing labels before creating them;
+imported workspaces may already contain them. Agents create issues only in AI.
 
 ## 3. Write the local configuration
 
@@ -56,9 +53,10 @@ cp packages/justin-principal-engineer/config.example.json \
   "$HOME/Library/Application Support/justin-principal-engineer/config.json"
 ```
 
-Edit only the `op://` references and any local path that differs. The Linear
-and Woodpecker token references are consumed by `op run` each time launchd
-invokes the reconciler; the secrets are never written into the plist. Set
+Set `tracker.team` to `AI` and `tracker.url` to the private Tracker endpoint.
+Tracker needs no token. Edit the `op://` references and any local path that
+differs. The Woodpecker reference is consumed by `op run` each time launchd
+invokes the reconciler; secrets are never written into the plist. Set
 `pinchtab.configPath` to the local PinchTab config path so visual captures can
 reach the configured browser. The example pins
 Jerred's GitHub login and numeric user ID so a lookalike account cannot
@@ -70,13 +68,24 @@ under `~/Library/Application Support/justin-principal-engineer`.
 
 ## 4. Validate and choose a runner
 
+Build and install the matching toolkit before starting this runner:
+
+```bash
+bun run --cwd packages/toolkit build
+bun run --cwd packages/toolkit install:local
+toolkit tracker whoami --json
+```
+
+When upgrading, replace the former `linear` configuration block with `tracker`,
+then reinstall the LaunchAgent to remove its obsolete credential reference.
+
 ```bash
 bun packages/justin-principal-engineer/src/cli.ts doctor
 bun packages/justin-principal-engineer/src/cli.ts daemon install
 bun packages/justin-principal-engineer/src/cli.ts daemon status
 ```
 
-`doctor` checks the required CLIs, Docker daemon, Linear labels, 1Password
+`doctor` checks the required CLIs, Docker daemon, Tracker catalog and labels, 1Password
 references, pinned container image, and GitHub App repository access. Installing
 from a temporary Herdr worktree is rejected.
 
@@ -113,7 +122,7 @@ Justin reviews the current ticket, comments, and existing PR in a fresh coding
 turn before it publishes or merges. That turn uses the existing repair budget.
 No further human approval is needed for that delivery mode.
 
-The [Linear integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/linear.ts)
+The [Tracker integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/tracker.ts)
 and [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
 move it to `In Progress` and create a draft PR. Visual
 changes use [Docker capture](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/host/docker.ts)
@@ -128,7 +137,7 @@ Only feedback from Jerred's pinned GitHub identity starts a repair turn.
 
 Wait for the PR to become ready and all checks to pass. Approve the current
 head with GitHub's native review control. The next reconcile rechecks CI and
-that exact-head approval, then squash-merges and completes the Linear issue.
+that exact-head approval, then squash-merges and completes the Tracker issue.
 
 Any later push requires a new approval.
 
@@ -140,13 +149,13 @@ separate acceptance step.
 
 ## 7. Recover a parked task
 
-Inspect the reason in Linear or local status:
+Inspect the reason in Tracker or local status:
 
 ```bash
 bun packages/justin-principal-engineer/src/cli.ts daemon status
 ```
 
-Resolve the external problem or add the missing decision. In Linear, remove
+Resolve the external problem or add the missing decision. In Tracker, remove
 `agent:needs-human`. The provider label is still on the issue, so the next
 reconcile requeues it directly.
 
@@ -168,5 +177,5 @@ requires a new, explicitly scoped task. Do not edit runtime state to reset it.
 
 ## Related
 
-- [The local Linear agent queue](/explanation/linear-agent-queue/)
+- [The local Tracker agent queue](/explanation/tracker-agent-queue/)
 - [Run the PR fleet](/how-to/run-the-pr-fleet/)

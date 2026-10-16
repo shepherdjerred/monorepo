@@ -39,7 +39,7 @@ export const SECTION_DEFINITIONS: readonly SectionDefinition[] = [
     title: "Delivery",
     sources: ["ci", "github", "renovate"],
   },
-  { id: "work", title: "Work", sources: ["linear"] },
+  { id: "work", title: "Work", sources: ["tracker"] },
   { id: "errors", title: "Errors", sources: ["bugsink"] },
   { id: "product", title: "Sites & product", sources: ["probes", "posthog"] },
   { id: "ai", title: "AI usage & spend", sources: ["ai"] },

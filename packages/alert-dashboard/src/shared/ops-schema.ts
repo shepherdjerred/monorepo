@@ -67,7 +67,7 @@ export const SERIES_PRESET_IDS = [
   "prs-merged",
   "renovate-pending",
   "bugsink-unresolved",
-  "linear-open",
+  "tracker-open",
   "alerts-firing",
   "node-cpu",
   "node-memory",

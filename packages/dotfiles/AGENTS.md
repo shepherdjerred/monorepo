@@ -41,7 +41,7 @@ project `AGENTS.md` or skill.
   PinchTab directly when visual verification, interactive login, UI-only
   capabilities, or the task itself makes the browser a better fit.
 - If the appropriate API path fails, continue through PinchTab within the
-  task's authorization and report the broken path in Linear's `AI` team's
+  task's authorization and report the broken path in Tracker's `AI` team's
   `Developer Experience` project. Search first, upvote a matching issue, or
   file one with sanitized evidence. Choosing the UI or finding no API is not
   an API failure. Read back an uncertain write before repeating it in the UI.
@@ -61,7 +61,7 @@ project `AGENTS.md` or skill.
 
 - Follow the repository's branch and PR workflow. Do not create or merge a PR
   unless the task authorizes it.
-- In the `sjerred` Linear workspace, create agent-generated issues only in the
+- In Tracker, create agent-generated issues only in the
   `AI` team. `SJ` is reserved for human-created issues; an agent may update an
   existing `SJ` issue only when the task explicitly identifies it.
 - Visual and interactive changes ship with the smallest artifact that proves the
