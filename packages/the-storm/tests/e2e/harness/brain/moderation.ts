@@ -6,7 +6,7 @@ const contract = z
     JSON.parse(
       await Bun.file(
         new URL(
-          "../../../../storm-brain/contracts/content-moderation.json",
+          "../../../../../storm-brain/contracts/content-moderation.json",
           import.meta.url,
         ),
       ).text(),

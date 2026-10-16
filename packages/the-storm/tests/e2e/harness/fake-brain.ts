@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { rwfTestSettings } from "./rwf-settings.ts";
 import { BeginnerFlags } from "./beginner-flags.ts";
-import { moderate } from "./moderation-fixture.ts";
+import { moderate } from "./brain/moderation.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
