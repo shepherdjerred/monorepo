@@ -7,6 +7,19 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
     name: "temporal-platform-health",
     rules: [
       {
+        alert: "MediaDownloadSafetyStalled",
+        annotations: {
+          summary: "Media download safety scans have stopped succeeding",
+          description:
+            "The one-minute Sonarr/Radarr metadata guard has no successful scan within ten minutes. Check the media-download-safety Temporal schedule, home worker, credentials, and media API connectivity. qBittorrent filename exclusions remain active.",
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "(time() - max(media_download_safety_last_success_timestamp_seconds) > 600) or absent(media_download_safety_last_success_timestamp_seconds)",
+        ),
+        for: "10m",
+        labels: { severity: "warning" },
+      },
+      {
         alert: "TemporalScheduleActionDelayed",
         annotations: {
           summary: "Temporal schedule actions are starting late",

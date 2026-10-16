@@ -92,6 +92,20 @@ export async function createMediaChart(app: App) {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: { matchLabels: { component: "home-worker" } },
+            },
+          ],
+          ports: [8080, 8989, 7878].map((port) => ({
+            port: IntOrString.fromNumber(port),
+            protocol: "TCP",
+          })),
+        },
         // Allow from Tailscale (private access)
         {
           from: [

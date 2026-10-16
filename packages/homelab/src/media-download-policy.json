@@ -1,0 +1,27 @@
+{
+  "dangerousExtensions": [
+    ".exe",
+    ".bat",
+    ".cmd",
+    ".sh",
+    ".scr",
+    ".lnk",
+    ".ps1",
+    ".vbs",
+    ".arj",
+    ".lzh",
+    ".zipx"
+  ],
+  "downloadRoot": "/downloads",
+  "applications": {
+    "sonarr": {
+      "category": "tv-sonarr",
+      "url": "http://media-sonarr-service.media.svc.cluster.local:8989"
+    },
+    "radarr": {
+      "category": "radarr",
+      "url": "http://media-radarr-service.media.svc.cluster.local:7878"
+    }
+  },
+  "qbittorrentUrl": "http://media-qbittorrent-service.media.svc.cluster.local:8080"
+}

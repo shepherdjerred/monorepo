@@ -132,6 +132,28 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
 }
 
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-home-media-safety-netpol", {
+    metadata: { name: "temporal-home-media-safety-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "home-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+            },
+          ],
+          ports: [8080, 8989, 7878].map((port) => ({
+            port: IntOrString.fromNumber(port),
+            protocol: "TCP",
+          })),
+        },
+      ],
+    },
+  });
   createTemporalWorkersFliptEgressPolicy(chart);
   createTemporalWorkersSeaweedfsEgressPolicy(chart);
 

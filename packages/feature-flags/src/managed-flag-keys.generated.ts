@@ -281,6 +281,7 @@ export const TRMNL_DASHBOARD_FLAG_KEYS = [
 export type TrmnlDashboardFlagKey = (typeof TRMNL_DASHBOARD_FLAG_KEYS)[number];
 
 export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
+  "media-download-safety-enabled",
   "ci-maintenance-dispatch-enabled",
   "ci-workspace-seed-refresh-enabled",
   "temporal-daily-report-notifications-enabled",

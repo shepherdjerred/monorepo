@@ -24,6 +24,9 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { excludedMediaFileNames } from "homelab/src/media-download-policy.ts";
+import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
@@ -105,8 +108,44 @@ export function createQBitTorrentDeployment(
   // addDirectory reads the committed dir synchronously at synth time and adds
   // each file as a ConfigMap key: "qBittorrent.conf" (the seed) and
   // "check-config-drift.sh" (the fail-on-drift guard). Both are mounted at /seed.
-  qbittorrentConfig.addDirectory(
-    path.join(CURRENT_DIRNAME, "..", "configs", "qbittorrent"),
+  const configurationDirectory = path.join(
+    CURRENT_DIRNAME,
+    "..",
+    "configs",
+    "qbittorrent",
+  );
+  for (const filename of readdirSync(configurationDirectory)) {
+    if (filename !== "qBittorrent.conf")
+      qbittorrentConfig.addFile(
+        path.join(configurationDirectory, filename),
+        filename,
+      );
+  }
+  const seedConfig = readFileSync(
+    path.join(
+      CURRENT_DIRNAME,
+      "..",
+      "configs",
+      "qbittorrent",
+      "qBittorrent.conf",
+    ),
+    "utf8",
+  );
+  const protectedConfig = seedConfig.replace(
+    String.raw`Session\ExcludedFileNames=`,
+    `ExcludedFileNamesEnabled=true\nSession\\ExcludedFileNames=${excludedMediaFileNames}`,
+  );
+  qbittorrentConfig.addData("qBittorrent.conf", protectedConfig);
+  deployment.podMetadata.addAnnotation(
+    "sjer.red/qbittorrent-config-sha256",
+    createHash("sha256")
+      .update(protectedConfig)
+      .update(
+        readFileSync(
+          path.join(configurationDirectory, "migrate-download-safety.sh"),
+        ),
+      )
+      .digest("hex"),
   );
   const seedVolume = Volume.fromConfigMap(
     chart,
@@ -147,6 +186,7 @@ export function createQBitTorrentDeployment(
         "if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then",
         "  cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
         "else",
+        "  sh /seed/migrate-download-safety.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
         "  sh /seed/check-config-drift.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
         "fi",
         "chown -R 1000:1000 /config/qBittorrent",

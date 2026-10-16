@@ -64,8 +64,10 @@ import { waitForPhotonCommand } from "./agent/photon/wait.ts";
 import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retention.ts";
 import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
+import { mediaSafetyActivities } from "./home/media-safety.ts";
 
 export const homeActivities = {
+  ...mediaSafetyActivities,
   ...haActivities,
   ...weatherActivities,
   ...outcomeActivities,

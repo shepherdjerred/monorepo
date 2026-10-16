@@ -54,6 +54,8 @@ COPY --parents \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
+  packages/homelab/src/media-download-policy.ts \
+  packages/homelab/src/media-download-policy.json \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
@@ -433,6 +435,8 @@ COPY --parents \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
   packages/homelab/src/domain-registry.json \
+  packages/homelab/src/media-download-policy.ts \
+  packages/homelab/src/media-download-policy.json \
   packages/temporal-observability \
   packages/config \
   packages/sentry-config \

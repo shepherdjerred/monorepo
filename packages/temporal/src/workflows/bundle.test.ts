@@ -22,6 +22,7 @@ describe("workflow bundle", () => {
     for (const name of [
       "maintainStormForumWorkflow",
       "runTrackerAttachmentCleanup",
+      "runMediaDownloadSafety",
       "backupStormForumWorkflow",
       "runSeaweedFsBackupWorkflow",
       "runSeaweedFsBackupRetentionAndGcWorkflow",

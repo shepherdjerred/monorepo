@@ -324,6 +324,33 @@
       "thresholdRollouts": []
     },
     {
+      "key": "media-download-safety-enabled",
+      "owner": "platform",
+      "namespace": "temporal",
+      "source": "media-download-safety",
+      "purpose": "Reject dangerous Sonarr/Radarr torrents after an observed metadata canary; false keeps scans read-only.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-download-safety-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "environment",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "ci-maintenance-dispatch-enabled",
       "owner": "platform",
       "namespace": "temporal",

@@ -115,6 +115,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runCiIoTelemetry: "infra",
   runCiWorkspaceReaperWorkflow: "infra",
   runTrackerAttachmentCleanup: "infra",
+  runMediaDownloadSafety: "home",
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
   runMiningWorldResetWorkflow: "infra",

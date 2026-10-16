@@ -12,6 +12,7 @@
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "test:bazarr": "bun run scripts/test-bazarr-providers.ts",
     "test:bazarr:live": "bun run scripts/test-bazarr-providers.ts --live",
+    "test:media-safety": "bun run scripts/media/test-download-safety.ts",
     "clear": "rm -rf dist/",
     "build-app": "bun run src/app.ts",
     "patch": "bun run scripts/patch.ts",

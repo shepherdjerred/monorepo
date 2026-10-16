@@ -1,6 +1,8 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Cpu, EnvValue, type ISecret, Pods } from "cdk8s-plus-31";
+import { Cpu, EnvValue, type ISecret, Pods, Secret } from "cdk8s-plus-31";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { sleepWebhookEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/http-services.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
@@ -96,6 +98,24 @@ export function createTemporalIngressWorkers(
     }),
   );
 
+  const mediaCredentialsItem = new OnePasswordItem(
+    chart,
+    "temporal-media-safety-credentials",
+    {
+      spec: { itemPath: vaultItemPath("vkzv5jm2euzb7727x6uxdpwu5y") },
+    },
+  );
+  const mediaCredentials = Secret.fromSecretName(
+    chart,
+    "temporal-media-safety-secret",
+    mediaCredentialsItem.name,
+  );
+  const mediaCredentialEnvironment = Object.fromEntries(
+    ["SONARR_API_KEY", "RADARR_API_KEY", "QBITTORRENT_PASSWORD"].map((key) => [
+      key,
+      EnvValue.fromSecretValue({ secret: mediaCredentials, key }),
+    ]),
+  );
   const homeDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-home-worker",
     component: "home-worker",
@@ -113,6 +133,8 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "HA_TOKEN",
       }),
+      ...mediaCredentialEnvironment,
+      QBITTORRENT_USERNAME: EnvValue.fromValue("jerred"),
     },
   });
 

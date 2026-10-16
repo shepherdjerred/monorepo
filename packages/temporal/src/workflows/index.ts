@@ -200,7 +200,6 @@ export function workerDeploymentCanaryWorkflow(
   workerDeploymentCanaryWorkflowImplementation(input);
   return Promise.resolve();
 }
-
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
 }
@@ -213,6 +212,7 @@ export const runCiIoTelemetry = maintenanceWorkflows.runCiIoTelemetry;
 export const runCiWorkspaceReaperWorkflow =
   maintenanceWorkflows.runCiWorkspaceReaperWorkflow;
 export const runTrackerAttachmentCleanup = maintenanceWorkflows.trackerCleanup;
+export const runMediaDownloadSafety = maintenanceWorkflows.mediaDownloadSafety;
 export const runLinkRotScanWorkflow = linkRotScan.runLinkRotScanWorkflow;
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();

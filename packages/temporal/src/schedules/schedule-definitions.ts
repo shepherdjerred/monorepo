@@ -16,6 +16,7 @@ import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 import { CI_SCHEDULES } from "./ci-schedule-definitions.ts";
 import { TRACKER_ATTACHMENT_SCHEDULE } from "./tracker-attachments.ts";
 import { TEMPORAL_FAILURE_WATCH_SCHEDULE } from "./temporal-failure-watch.ts";
+import { MEDIA_SAFETY_SCHEDULE } from "./media-safety.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -63,6 +64,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...CI_SCHEDULES,
   TRACKER_ATTACHMENT_SCHEDULE,
   TEMPORAL_FAILURE_WATCH_SCHEDULE,
+  MEDIA_SAFETY_SCHEDULE,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",
