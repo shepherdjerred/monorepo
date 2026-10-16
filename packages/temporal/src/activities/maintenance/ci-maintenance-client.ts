@@ -3,9 +3,10 @@ import { z } from "zod";
 import { Octokit } from "octokit";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { ciWorkspaceSeedRefreshEnabled } from "#config/ci-maintenance.ts";
-import type {
-  MaintenanceCandidate,
-  MaintenanceRequest,
+import {
+  isActiveMaintenanceStatus,
+  type MaintenanceCandidate,
+  type MaintenanceRequest,
 } from "#shared/ci-maintenance.ts";
 
 const StatusSchema = z.enum([
@@ -75,7 +76,10 @@ export async function maintenanceApi(
       "Content-Type": "application/json",
     },
     redirect: "error",
-    signal: AbortSignal.timeout(15_000),
+    signal:
+      init.signal === undefined || init.signal === null
+        ? AbortSignal.timeout(15_000)
+        : AbortSignal.any([init.signal, AbortSignal.timeout(15_000)]),
   });
   if (!response.ok)
     throw new Error(
@@ -100,6 +104,49 @@ export async function recentMaintenancePipelines(event: string) {
     if (batch.length < 50) break;
   }
   return [...new Map(rows.map((row) => [row.number, row])).values()];
+}
+
+export async function maintenanceAdmissionBusy(): Promise<boolean> {
+  // Bound all four indexed active-status reads to one budget, below both
+  // Activity deadlines. Historical receipt reconciliation stays separate.
+  const signal = AbortSignal.timeout(10_000);
+  const results = await Promise.all(
+    ["created", "pending", "running", "blocked"].map(async (status) => {
+      const query = new URLSearchParams({
+        event: "manual",
+        status,
+        perPage: "50",
+        page: "1",
+      });
+      const pipelines = z
+        .array(MaintenancePipelineSchema)
+        .parse(await maintenanceApi(`?${query.toString()}`, { signal }));
+      if (
+        pipelines.some(
+          (pipeline) =>
+            pipeline.event !== "manual" || pipeline.status !== status,
+        )
+      )
+        throw new Error("CI maintenance active-status filter was not applied");
+      // A saturated page is busy, never evidence that a hidden canary is absent.
+      return (
+        pipelines.length >= 50 ||
+        pipelines.some((pipeline) => isActiveMaintenanceOrCanary(pipeline))
+      );
+    }),
+  );
+  return results.includes(true);
+}
+
+/** Active manual canaries defer new automatic maintenance submissions. */
+export function isActiveMaintenanceOrCanary(pipeline: MaintenancePipeline) {
+  return (
+    pipeline.event === "manual" &&
+    isActiveMaintenanceStatus(pipeline.status) &&
+    ((pipeline.branch === "main" &&
+      pipeline.message.includes("ci-maintenance/")) ||
+      pipeline.branch.startsWith("ci-canary/"))
+  );
 }
 export async function maintenancePipeline(number: number) {
   return MaintenancePipelineSchema.parse(

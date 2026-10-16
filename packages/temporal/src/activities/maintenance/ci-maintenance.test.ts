@@ -10,6 +10,7 @@ import {
   isCompleteMain,
   maintenanceResult,
   MaintenancePipelineSchema,
+  isActiveMaintenanceOrCanary,
 } from "#activities/maintenance/ci-maintenance-client.ts";
 
 const candidate: MaintenanceCandidate = {
@@ -19,6 +20,59 @@ const candidate: MaintenanceCandidate = {
   frozen: false,
 };
 const pending = () => ({ ...candidate, requestId: "request-1", pipeline: 12 });
+const manualCanary = MaintenancePipelineSchema.parse({
+  number: 20,
+  commit: candidate.source,
+  status: "running",
+  event: "manual",
+  branch: "ci-canary/ssd-ram",
+  ref: "refs/heads/ci-canary/ssd-ram",
+  message: "MANUAL PIPELINE @ ci-canary/ssd-ram",
+});
+
+test.each(["created", "pending", "running", "blocked"])(
+  "a %s manual canary blocks automatic maintenance",
+  (status) => {
+    expect(
+      isActiveMaintenanceOrCanary(
+        MaintenancePipelineSchema.parse({ ...manualCanary, status }),
+      ),
+    ).toBe(true);
+  },
+);
+
+test.each([
+  "success",
+  "failure",
+  "error",
+  "killed",
+  "canceled",
+  "declined",
+  "skipped",
+])("a %s canary releases maintenance admission", (status) => {
+  expect(
+    isActiveMaintenanceOrCanary(
+      MaintenancePipelineSchema.parse({ ...manualCanary, status }),
+    ),
+  ).toBe(false);
+});
+
+test("canary ref pushes and ordinary manual runs do not hold maintenance", () => {
+  expect(isActiveMaintenanceOrCanary({ ...manualCanary, event: "push" })).toBe(
+    false,
+  );
+  expect(isActiveMaintenanceOrCanary({ ...manualCanary, branch: "main" })).toBe(
+    false,
+  );
+  expect(
+    isActiveMaintenanceOrCanary({
+      ...manualCanary,
+      branch: "main",
+      message: "ci-maintenance/request-1",
+    }),
+  ).toBe(true);
+});
+
 test("unchanged inputs, ready PRs, and blocked streams do no work", () => {
   const state = initialMaintenanceState();
   expect(nextMaintenanceCandidate(state, [candidate])).toEqual(candidate);
