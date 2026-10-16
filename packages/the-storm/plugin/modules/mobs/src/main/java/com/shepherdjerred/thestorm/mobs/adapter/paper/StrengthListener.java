@@ -85,8 +85,9 @@ final class StrengthListener implements Listener {
         KillLedger.playerDamage(mob), KillLedger.otherDamage(mob), killer.isPresent())) {
       return;
     }
-    event.setDroppedExp(Rewards.xp(event.getDroppedExp(), levels.bonus(mob, Stat.XP), random));
-    var rolls = Rewards.extraRolls(levels.bonus(mob, Stat.ITEM_DROPS), random);
+    event.setDroppedExp(
+        Rewards.xp(event.getDroppedExp(), levels.rewardBonus(mob, Stat.XP), random));
+    var rolls = Rewards.extraRolls(levels.rewardBonus(mob, Stat.ITEM_DROPS), random);
     for (var roll = 0; roll < rolls; roll++) {
       event.getDrops().addAll(loot.roll(mob, killer.orElseThrow()));
     }
@@ -114,6 +115,7 @@ final class StrengthListener implements Listener {
         levels.clear(mob, inherited);
         if (keepLevel && mob instanceof Enemy) {
           levels.apply(mob, level.getAsInt());
+          levels.copyDifficulty(original, mob);
         }
       }
     }

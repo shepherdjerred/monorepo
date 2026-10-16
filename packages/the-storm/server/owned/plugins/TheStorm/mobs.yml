@@ -10,6 +10,19 @@
 # distance bands are new: the 2023 start distance of 5000 blocks suits a big
 # server, so levels here start near spawn and climb slowly for 2-3 players.
 
+# Everyone starts a fresh active-play allowance when the flag first enables.
+# AFK and offline time pause it; active minigame time still counts.
+# Mobs stay aggressive. Shared levels are reduced near beginners, including
+# existing mobs. Levels and personal incoming damage ramp to normal at 12 hours.
+# Bosses, PvP, environmental hazards and sealed minigames keep their rules.
+# Enabled through the managed the-storm-beginners-luck-enabled flag.
+beginnerLuck:
+  calmFor: PT6H
+  normalAfter: PT12H
+  initialDamageMultiplier: 0.1
+  startingLevel: 1
+  radius: 64.0
+
 levels:
   cap: 50
   # Rings around the world spawn, by horizontal distance in blocks.

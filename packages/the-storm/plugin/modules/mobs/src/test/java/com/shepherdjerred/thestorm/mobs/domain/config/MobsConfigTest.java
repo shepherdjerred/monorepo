@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.mobs.domain.spawn.AdminPolicy;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -67,11 +68,20 @@ final class MobsConfigTest {
     }
     assertThat(config.adminRegions().policy()).isEqualTo(AdminPolicy.BLOCK_NATURAL);
     assertThat(config.nameplate().enabled()).isTrue();
+    assertThat(config.beginnerLuck().calmFor()).isEqualTo(Duration.ofHours(6));
+    assertThat(config.beginnerLuck().normalAfter()).isEqualTo(Duration.ofHours(12));
+    assertThat(config.beginnerLuck().initialDamageMultiplier()).isEqualTo(0.1);
   }
 
   @Test
   void unknownKeysAndBadValuesAreRejected() throws IOException {
     assertThat(problems(shipped() + "\nextra: true\n")).isNotEmpty();
+    assertThat(problems(shipped().replace("  calmFor: PT6H\n", ""))).isNotEmpty();
+    assertThat(problems(shipped().replace("normalAfter: PT12H", "normalAfter: PT3H"))).isNotEmpty();
+    assertThat(
+            problems(
+                shipped().replace("initialDamageMultiplier: 0.1", "initialDamageMultiplier: 0")))
+        .isEmpty();
     assertThat(problems(shipped().replace("cap: 50", "cap: 1")))
         .anySatisfy(problem -> assertThat(problem.toString()).contains("cap"));
     assertThat(problems(shipped().replace("    MAX_HEALTH: 1.1\n", "")))

@@ -12,6 +12,9 @@ final class MobKeys {
   /** A levelled mob's level (integer). */
   static final NamespacedKey LEVEL = new NamespacedKey(NAMESPACE, "mob_level");
 
+  static final NamespacedKey NATURAL_LEVEL = new NamespacedKey(NAMESPACE, "mob_natural_level");
+  static final NamespacedKey REWARD_LEVEL = new NamespacedKey(NAMESPACE, "mob_reward_level");
+
   /** Damage players dealt a levelled mob with their own hits and projectiles (double). */
   static final NamespacedKey PLAYER_DAMAGE = new NamespacedKey(NAMESPACE, "mob_player_damage");
 

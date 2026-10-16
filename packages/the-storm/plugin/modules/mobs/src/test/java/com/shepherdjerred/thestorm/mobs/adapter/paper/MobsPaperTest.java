@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.within;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.protection.Decision;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -131,9 +133,20 @@ final class MobsPaperTest {
     world.setTime(6000);
     Files.writeString(directory.resolve("mobs.yml"), Files.readString(SHIPPED));
     database = StormDatabase.open(directory.resolve("t.db"));
+    database.migrate("mobs", MobsModule.class.getClassLoader());
     var services = new Services();
     services.provide(Protection.class, new SpawnRegion());
     services.provide(SealedWorlds.class, sealed);
+    var afk =
+        new com.shepherdjerred.thestorm.essentials.app.AfkTracker(
+            InstantSource.system(),
+            java.time.Duration.ofMinutes(5),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
+    services.provide(com.shepherdjerred.thestorm.essentials.app.AfkStatus.class, afk);
+    services.provide(com.shepherdjerred.thestorm.essentials.app.ActivityFeed.class, afk);
+    services.provide(
+        ManagedGameplay.class,
+        new ManagedGameplay((key, actor) -> CompletableFuture.completedFuture(false), () -> {}));
     enabling =
         plugin -> {
           var context =

@@ -185,6 +185,7 @@ class DatabaseRestoreTest(unittest.TestCase):
             )
         self.assertIn("mail_letters", policy["retainTables"])
         self.assertIn("essentials_staff_audit", policy["retainTables"])
+        self.assertIn("mobs_beginner_time", policy["retainTables"])
         self.assertIn("essentials_teleport_state", policy["resetTables"])
         self.assertIn("essentials_teleport_uses", policy["resetTables"])
         self.assertNotIn("essentials_teleport_usage", policy["resetTables"])
@@ -212,6 +213,7 @@ class DatabaseRestoreTest(unittest.TestCase):
         player = "00000000-0000-0000-0000-000000000001"
         with closing(sqlite3.connect(original)) as connection:
             connection.execute("INSERT INTO core_player VALUES (?, 'Alice', 123)", (player,))
+            connection.execute("INSERT INTO mobs_beginner_time VALUES (?, 60000)", (player,))
             connection.execute("INSERT INTO core_analytics_player VALUES (?, 'prod', 123)", (player,))
             connection.execute(
                 "INSERT INTO core_analytics_session VALUES ('session', 'prod', ?, 'Alice', 123, 124, 1, 1, 1)",
@@ -237,6 +239,7 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertEqual(before, hashlib.sha256(original.read_bytes()).hexdigest())
         with closing(sqlite3.connect(candidate)) as connection:
             self.assertEqual(connection.execute("SELECT * FROM core_player").fetchall(), [(player, "Alice", 123)])
+            self.assertEqual(connection.execute("SELECT * FROM mobs_beginner_time").fetchall(), [(player, 60000)])
             self.assertEqual(
                 connection.execute("SELECT * FROM core_analytics_player").fetchall(),
                 [(player, "prod", 123)],

@@ -6,6 +6,7 @@ dependencies {
   implementation(project(":essentials"))
   implementation(project(":economy"))
   implementation(project(":world"))
+  implementation(project(":mobs"))
 }
 
 // QolConfigTest parses the qol.yml the server ships.

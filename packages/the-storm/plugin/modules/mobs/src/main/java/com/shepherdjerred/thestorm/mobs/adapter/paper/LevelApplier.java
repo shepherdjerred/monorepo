@@ -54,6 +54,46 @@ final class LevelApplier implements MobLevels {
 
   /** Makes {@code mob} a level-{@code level} mob at full health. */
   void apply(LivingEntity mob, int level) {
+    setLevel(mob, level, true);
+  }
+
+  /** Adjust shared difficulty without healing, or overwriting a player's custom name. */
+  void adjust(LivingEntity mob, int level) {
+    if (levelOf(mob).orElseThrow() != level) setLevel(mob, level, false);
+  }
+
+  int naturalLevel(LivingEntity mob) {
+    var saved =
+        mob.getPersistentDataContainer().get(MobKeys.NATURAL_LEVEL, PersistentDataType.INTEGER);
+    return saved == null ? levelOf(mob).orElseThrow() : saved;
+  }
+
+  void copyDifficulty(LivingEntity original, LivingEntity converted) {
+    var data = converted.getPersistentDataContainer();
+    data.set(MobKeys.NATURAL_LEVEL, PersistentDataType.INTEGER, naturalLevel(original));
+    data.set(MobKeys.REWARD_LEVEL, PersistentDataType.INTEGER, rewardLevel(original));
+  }
+
+  private int rewardLevel(LivingEntity mob) {
+    var saved =
+        mob.getPersistentDataContainer().get(MobKeys.REWARD_LEVEL, PersistentDataType.INTEGER);
+    return saved == null ? levelOf(mob).orElseThrow() : saved;
+  }
+
+  double rewardBonus(LivingEntity mob, Stat stat) {
+    return scaling.bonus(stat, typeKey(mob), rewardLevel(mob), cap);
+  }
+
+  private void setLevel(LivingEntity mob, int level, boolean fresh) {
+    var old = levelOf(mob);
+    var rename =
+        fresh || (old.isPresent() && nameplate(mob, old.getAsInt()).equals(mob.customName()));
+    var data = mob.getPersistentDataContainer();
+    if (!data.has(MobKeys.NATURAL_LEVEL)) {
+      data.set(MobKeys.NATURAL_LEVEL, PersistentDataType.INTEGER, old.orElse(level));
+    }
+    var lowest = old.isPresent() ? Math.min(rewardLevel(mob), level) : level;
+    data.set(MobKeys.REWARD_LEVEL, PersistentDataType.INTEGER, lowest);
     var type = typeKey(mob);
     ATTRIBUTES.forEach(
         (stat, attribute) -> {
@@ -70,11 +110,11 @@ final class LevelApplier implements MobLevels {
           }
         });
     var maxHealth = mob.getAttribute(Attribute.MAX_HEALTH);
-    if (maxHealth != null) {
+    if (maxHealth != null && (fresh || mob.getHealth() > maxHealth.getValue())) {
       mob.setHealth(maxHealth.getValue());
     }
     mob.getPersistentDataContainer().set(MobKeys.LEVEL, PersistentDataType.INTEGER, level);
-    if (nameplate.enabled()) {
+    if (nameplate.enabled() && rename) {
       namedMobPersistence.accept(
           mob,
           () -> {
@@ -125,6 +165,8 @@ final class LevelApplier implements MobLevels {
     }
     var data = mob.getPersistentDataContainer();
     data.remove(MobKeys.LEVEL);
+    data.remove(MobKeys.NATURAL_LEVEL);
+    data.remove(MobKeys.REWARD_LEVEL);
     data.remove(MobKeys.PLAYER_DAMAGE);
     data.remove(MobKeys.OTHER_DAMAGE);
     // Only our own nameplate is removed; a name a player gave the mob since stays.
