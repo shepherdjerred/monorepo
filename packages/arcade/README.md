@@ -81,8 +81,8 @@ Assets live under `runtimeAssets/{mk64,emerald,mkwii,melee,brawl}`. MK64 expects
 preparation script's checksum manifest. Saves live under
 `stateRoot/<game>/<guild>`. The database is separate from saves.
 
-The homelab chart runs one controller. The legacy MK64 and Emerald deployments
-stay at zero replicas with their original claims retained for rollback. The
+The homelab chart runs one controller. The retired MK64 and Emerald controllers
+are absent; their original storage claims remain for recovery. The
 existing Mario Kart edge forwards public and tailnet requests to Arcade, keeping
 the registered Discord OAuth callback. The old Pokébot addresses redirect to that
 canonical origin. Flipt controls session and game rollout.

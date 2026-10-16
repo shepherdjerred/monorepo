@@ -1,6 +1,6 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { createMarioKartDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/mario-kart.ts";
+import { createMarioKartResources } from "@shepherdjerred/homelab/cdk8s/src/resources/mario-kart.ts";
 
 export function createMarioKartChart(app: App) {
   const chart = new Chart(app, "mario-kart", {
@@ -8,5 +8,5 @@ export function createMarioKartChart(app: App) {
     disableResourceNameHashes: true,
   });
 
-  createMarioKartDeployment(chart);
+  createMarioKartResources(chart);
 }

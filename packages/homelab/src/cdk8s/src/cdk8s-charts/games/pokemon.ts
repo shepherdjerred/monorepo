@@ -1,6 +1,6 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { createPokemonDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/pokemon.ts";
+import { createPokemonResources } from "@shepherdjerred/homelab/cdk8s/src/resources/pokemon.ts";
 
 export function createPokemonChart(app: App) {
   const chart = new Chart(app, "pokemon", {
@@ -8,5 +8,5 @@ export function createPokemonChart(app: App) {
     disableResourceNameHashes: true,
   });
 
-  createPokemonDeployment(chart);
+  createPokemonResources(chart);
 }

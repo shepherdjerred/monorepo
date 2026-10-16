@@ -1,12 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { APP_ROOT as POKEMON_APP_ROOT } from "./resources/pokemon.ts";
-import { APP_ROOT as MARIO_KART_APP_ROOT } from "./resources/mario-kart.ts";
+import { APP_ROOT } from "./resources/arcade.ts";
 
 // The manifests mount config/saves/etc. into the image's working directory, so
-// each APP_ROOT constant must equal the final WORKDIR of the image it deploys.
-// This drifted silently in #1517 (images moved /workspace → /app while the
-// manifests kept /workspace) and took pokemon + mario-kart down; this test
-// turns that drift into a CI failure.
+// APP_ROOT must equal the final WORKDIR of the deployed game image. The legacy
+// game controllers are retired; their runtimes now live inside the Arcade image.
 
 // Repo root: this file lives at packages/homelab/src/cdk8s/src/.
 const repoRoot = new URL("../../../../../", import.meta.url).pathname;
@@ -26,15 +23,7 @@ async function finalWorkdir(dockerfileRepoPath: string): Promise<string> {
 }
 
 describe("APP_ROOT matches the image's final WORKDIR", () => {
-  test("discord-plays-pokemon", async () => {
-    expect(POKEMON_APP_ROOT).toBe(
-      await finalWorkdir("packages/discord-plays-pokemon/Dockerfile"),
-    );
-  });
-
-  test("discord-plays-mario-kart", async () => {
-    expect(MARIO_KART_APP_ROOT).toBe(
-      await finalWorkdir("packages/discord-plays-mario-kart/Dockerfile"),
-    );
+  test("Arcade", async () => {
+    expect(APP_ROOT).toBe(await finalWorkdir("packages/arcade/Dockerfile"));
   });
 });

@@ -333,10 +333,10 @@ describe("Container resource requests backstop", () => {
         { requests: { cpu: "10m", memory: "32Mi" } },
       ],
       [
-        "mario-kart/main",
+        "arcade/main",
         {
-          requests: { cpu: "1000m", memory: "1792Mi" },
-          limits: { cpu: "8000m", memory: "4096Mi" },
+          requests: { cpu: "2", memory: "6144Mi" },
+          limits: { cpu: "12", memory: "16384Mi" },
         },
       ],
       [
@@ -477,8 +477,7 @@ describe("Burst-memory sharing policy", () => {
     expect(batch?.preemptionPolicy).toBe("Never");
     const expected = new Map([
       ["media-plex", BURST_SERVICE_PRIORITY],
-      ["mario-kart", BURST_SERVICE_PRIORITY],
-      ["pokemon", BURST_SERVICE_PRIORITY],
+      ["arcade", BURST_SERVICE_PRIORITY],
       ["temporal-temporal-glitter-corpus-worker", BATCH_PRIORITY],
       ["temporal-temporal-glitter-context-worker", BATCH_PRIORITY],
     ]);
