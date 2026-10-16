@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
 import {
   initialMaintenanceState,
   nextMaintenanceCandidate,
@@ -11,7 +11,6 @@ import {
   maintenanceResult,
   MaintenancePipelineSchema,
   isActiveMaintenanceOrCanary,
-  recentMaintenancePipelines,
 } from "#activities/maintenance/ci-maintenance-client.ts";
 
 const candidate: MaintenanceCandidate = {
@@ -74,75 +73,6 @@ test("canary ref pushes and ordinary manual runs do not hold maintenance", () =>
   ).toBe(true);
 });
 
-describe("native maintenance pipeline query scope", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-    vi.unstubAllEnvs();
-  });
-
-  test.each([false, true])(
-    "allBranches=%s preserves its historical or complete pagination contract",
-    async (allBranches) => {
-      vi.stubEnv("WOODPECKER_URL", "https://woodpecker.sjer.red");
-      vi.stubEnv("WOODPECKER_REPO_ID", "1");
-      vi.stubEnv("WOODPECKER_TOKEN", "unit-test-token");
-      const fetch = vi.spyOn(globalThis, "fetch");
-      for (let page = 0; page < 4; page++) {
-        fetch.mockResolvedValueOnce(
-          Response.json(
-            Array.from({ length: 50 }, (_, index) => ({
-              ...manualCanary,
-              number: 100 + page * 50 + index,
-              branch: "main",
-              status: "success",
-            })),
-          ),
-        );
-      }
-      fetch.mockResolvedValueOnce(Response.json([manualCanary]));
-      const records = await recentMaintenancePipelines("manual", {
-        allBranches,
-      });
-      expect(fetch).toHaveBeenCalledTimes(allBranches ? 5 : 4);
-      expect(records).toHaveLength(allBranches ? 201 : 200);
-      expect(
-        records.some((record) => isActiveMaintenanceOrCanary(record)),
-      ).toBe(allBranches);
-    },
-  );
-
-  test.each([false, true])(
-    "allBranches=%s uses the intended native branch filter",
-    async (allBranches) => {
-      vi.stubEnv("WOODPECKER_URL", "https://woodpecker.sjer.red");
-      vi.stubEnv("WOODPECKER_REPO_ID", "1");
-      vi.stubEnv("WOODPECKER_TOKEN", "unit-test-token");
-      const main = {
-        ...manualCanary,
-        number: 12,
-        branch: "main",
-        ref: "refs/heads/main",
-        message: "ci-maintenance/request-1",
-      };
-      const records = allBranches ? [main, manualCanary] : [main];
-      const fetch = vi
-        .spyOn(globalThis, "fetch")
-        .mockResolvedValue(Response.json(records));
-      const result = allBranches
-        ? await recentMaintenancePipelines("manual", { allBranches: true })
-        : await recentMaintenancePipelines("manual");
-      expect(result).toEqual(
-        records.map((record) => MaintenancePipelineSchema.parse(record)),
-      );
-      expect(fetch).toHaveBeenCalledTimes(1);
-      const url = fetch.mock.calls[0]?.[0];
-      if (!(url instanceof URL)) throw new TypeError("Expected native API URL");
-      expect(url.pathname).toBe("/api/repos/1/pipelines");
-      expect(url.searchParams.get("event")).toBe("manual");
-      expect(url.searchParams.get("branch")).toBe(allBranches ? null : "main");
-    },
-  );
-});
 test("unchanged inputs, ready PRs, and blocked streams do no work", () => {
   const state = initialMaintenanceState();
   expect(nextMaintenanceCandidate(state, [candidate])).toEqual(candidate);

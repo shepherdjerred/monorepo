@@ -36,8 +36,11 @@ CI image fingerprints cover
 the tool manifest, lockfile, and Dockerfiles. Ready generated PRs freeze their stream.
 
 Active manual runs on the owner's `ci-canary/` branches defer automatic maintenance so their
-measurements do not compete with its I/O. Admission reads manual pipelines
-across branches and checks again immediately before submission. Terminal canaries
+measurements do not compete with its I/O. Admission queries active manual statuses
+across branches within a shared ten-second deadline and checks again immediately
+before submission. A full active-status page defers maintenance conservatively;
+completed history cannot hide an active canary. Receipt reconciliation keeps its
+separate bounded main history query. Terminal canaries
 release this hold naturally; the schedule remains unpaused. Other CI can still
 arrive after admission, so benchmark collectors must verify isolation throughout.
 

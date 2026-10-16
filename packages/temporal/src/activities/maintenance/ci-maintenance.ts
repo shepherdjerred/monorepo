@@ -12,7 +12,7 @@ import {
   currentMaintenanceSource,
   verifiedMaintenanceSource,
   recentMaintenancePipelines,
-  isActiveMaintenanceOrCanary,
+  maintenanceAdmissionBusy,
   findMaintenanceReceipt,
   maintenanceCandidates,
   MaintenancePipelineSchema,
@@ -36,14 +36,12 @@ export const ciMaintenanceActivities = {
     const enabled = await ciMaintenanceEnabled();
     if (!enabled && pending === null)
       return { enabled, candidates: [], pending: null, busy: false };
-    const manual = await recentMaintenancePipelines("manual", {
-      allBranches: true,
-    });
+    const [manual, busy] = await Promise.all([
+      pending === null ? [] : recentMaintenancePipelines("manual"),
+      maintenanceAdmissionBusy(),
+    ]);
     const receipt =
       pending === null ? null : await findMaintenanceReceipt(pending, manual);
-    const busy = manual.some((pipeline) =>
-      isActiveMaintenanceOrCanary(pipeline),
-    );
     if (!enabled || busy || pending !== null)
       return { enabled, candidates: [], pending: receipt, busy };
     const github = await maintenanceGithub();
@@ -66,11 +64,7 @@ export const ciMaintenanceActivities = {
       return null;
     // A canary can arrive after candidate inspection. Recheck immediately
     // before the single external write; a deferral leaves no pipeline receipt.
-    const manual = await recentMaintenancePipelines("manual", {
-      allBranches: true,
-    });
-    if (manual.some((pipeline) => isActiveMaintenanceOrCanary(pipeline)))
-      return null;
+    if (await maintenanceAdmissionBusy()) return null;
     const response = await maintenanceApi("", {
       method: "POST",
       body: JSON.stringify({

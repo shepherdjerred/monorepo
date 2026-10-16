@@ -14,6 +14,7 @@ import type {
 const mocks = vi.hoisted(() => ({
   enabled: vi.fn<() => Promise<boolean>>(),
   pipelines: vi.fn<typeof MaintenanceClient.recentMaintenancePipelines>(),
+  admission: vi.fn<typeof MaintenanceClient.maintenanceAdmissionBusy>(),
   github: vi.fn<typeof MaintenanceClient.maintenanceGithub>(),
   source: vi.fn<typeof MaintenanceClient.currentMaintenanceSource>(),
   verified: vi.fn<typeof MaintenanceClient.verifiedMaintenanceSource>(),
@@ -28,6 +29,7 @@ vi.mock("#config/ci-maintenance.ts", () => ({
 vi.mock("./ci-maintenance-client.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof MaintenanceClient>()),
   recentMaintenancePipelines: mocks.pipelines,
+  maintenanceAdmissionBusy: mocks.admission,
   maintenanceGithub: mocks.github,
   currentMaintenanceSource: mocks.source,
   verifiedMaintenanceSource: mocks.verified,
@@ -62,6 +64,7 @@ beforeEach(() => {
   for (const mock of Object.values(mocks)) mock.mockReset();
   mocks.enabled.mockResolvedValue(true);
   mocks.pipelines.mockResolvedValue([]);
+  mocks.admission.mockResolvedValue(false);
   mocks.github.mockResolvedValue(new Octokit());
   mocks.source.mockResolvedValue(source);
   mocks.verified.mockResolvedValue(true);
@@ -69,9 +72,7 @@ beforeEach(() => {
 });
 
 test("inspection defers an active canary, then resumes naturally on its terminal receipt", async () => {
-  mocks.pipelines
-    .mockResolvedValueOnce([canary])
-    .mockResolvedValueOnce([{ ...canary, status: "success" }]);
+  mocks.admission.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
   expect(await ciMaintenanceActivities.inspectCiMaintenance(null)).toEqual({
     enabled: true,
     candidates: [],
@@ -85,11 +86,19 @@ test("inspection defers an active canary, then resumes naturally on its terminal
     pending: null,
     busy: false,
   });
-  expect(mocks.pipelines).toHaveBeenCalledWith("manual", { allBranches: true });
+  expect(mocks.pipelines).not.toHaveBeenCalled();
+  expect(mocks.admission).toHaveBeenCalledTimes(2);
 });
 
 test("a canary does not prevent reconciliation of an existing maintenance request", async () => {
-  mocks.pipelines.mockResolvedValue([canary]);
+  const maintenance = {
+    ...canary,
+    branch: "main",
+    ref: "refs/heads/main",
+    message: "ci-maintenance/request-1",
+  };
+  mocks.pipelines.mockResolvedValue([maintenance]);
+  mocks.admission.mockResolvedValue(true);
   const receipt = {
     number: 12,
     source,
@@ -105,17 +114,18 @@ test("a canary does not prevent reconciliation of an existing maintenance reques
     pending: receipt,
     busy: true,
   });
-  expect(mocks.receipt).toHaveBeenCalledWith(request, [canary]);
+  expect(mocks.pipelines).toHaveBeenCalledWith("manual");
+  expect(mocks.receipt).toHaveBeenCalledWith(request, [maintenance]);
   expect(mocks.api).not.toHaveBeenCalled();
 });
 
 test("submission rechecks a canary that arrived after candidate inspection without a POST", async () => {
-  mocks.pipelines.mockResolvedValueOnce([]).mockResolvedValueOnce([canary]);
+  mocks.admission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   const observed = await ciMaintenanceActivities.inspectCiMaintenance(null);
   expect(observed.candidates).toEqual([candidate]);
   expect(await ciMaintenanceActivities.submitCiMaintenance(request)).toBeNull();
   expect(mocks.api).not.toHaveBeenCalled();
-  expect(mocks.pipelines).toHaveBeenCalledTimes(2);
+  expect(mocks.admission).toHaveBeenCalledTimes(2);
 });
 
 test("clear admission retains the single request-bound submission", async () => {
@@ -144,7 +154,7 @@ test("clear admission retains the single request-bound submission", async () => 
 });
 
 test("admission read failures reject without an external submission", async () => {
-  mocks.pipelines.mockRejectedValue(new Error("Native CI read failed"));
+  mocks.admission.mockRejectedValue(new Error("Native CI read failed"));
   await expect(
     ciMaintenanceActivities.submitCiMaintenance(request),
   ).rejects.toThrow("Native CI read failed");

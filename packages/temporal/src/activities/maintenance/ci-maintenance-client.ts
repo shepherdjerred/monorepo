@@ -76,7 +76,10 @@ export async function maintenanceApi(
       "Content-Type": "application/json",
     },
     redirect: "error",
-    signal: AbortSignal.timeout(15_000),
+    signal:
+      init.signal === undefined || init.signal === null
+        ? AbortSignal.timeout(15_000)
+        : AbortSignal.any([init.signal, AbortSignal.timeout(15_000)]),
   });
   if (!response.ok)
     throw new Error(
@@ -85,17 +88,12 @@ export async function maintenanceApi(
   return response.json();
 }
 
-export async function recentMaintenancePipelines(
-  event: string,
-  { allBranches = false }: { allBranches?: boolean } = {},
-) {
+export async function recentMaintenancePipelines(event: string) {
   const rows: MaintenancePipeline[] = [];
-  // Admission must see every manual run: an older blocked canary can still
-  // be active after newer completed runs fill the historical page budget.
-  for (let page = 1; allBranches || page <= 4; page++) {
+  for (let page = 1; page <= 4; page++) {
     const query = new URLSearchParams({
       event,
-      ...(allBranches ? {} : { branch: "main" }),
+      branch: "main",
       perPage: "50",
       page: page.toString(),
     });
@@ -106,6 +104,38 @@ export async function recentMaintenancePipelines(
     if (batch.length < 50) break;
   }
   return [...new Map(rows.map((row) => [row.number, row])).values()];
+}
+
+export async function maintenanceAdmissionBusy(): Promise<boolean> {
+  // Bound all four indexed active-status reads to one budget, below both
+  // Activity deadlines. Historical receipt reconciliation stays separate.
+  const signal = AbortSignal.timeout(10_000);
+  const results = await Promise.all(
+    ["created", "pending", "running", "blocked"].map(async (status) => {
+      const query = new URLSearchParams({
+        event: "manual",
+        status,
+        perPage: "50",
+        page: "1",
+      });
+      const pipelines = z
+        .array(MaintenancePipelineSchema)
+        .parse(await maintenanceApi(`?${query.toString()}`, { signal }));
+      if (
+        pipelines.some(
+          (pipeline) =>
+            pipeline.event !== "manual" || pipeline.status !== status,
+        )
+      )
+        throw new Error("CI maintenance active-status filter was not applied");
+      // A saturated page is busy, never evidence that a hidden canary is absent.
+      return (
+        pipelines.length >= 50 ||
+        pipelines.some((pipeline) => isActiveMaintenanceOrCanary(pipeline))
+      );
+    }),
+  );
+  return results.includes(true);
 }
 
 /** Active manual canaries defer new automatic maintenance submissions. */
