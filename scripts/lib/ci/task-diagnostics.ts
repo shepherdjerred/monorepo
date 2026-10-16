@@ -92,6 +92,42 @@ const BrowserSelectionSchema = z.object({
   targets: z.array(z.object({ package: Name, cache: Name })),
 });
 
+const ResourceBytes = z.number().int().nonnegative();
+export const BenchmarkResourcesSchema = z.object({
+  version: z.literal(1),
+  variant: z.enum(["baseline", "candidate"]),
+  intervalMs: z.literal(10_000),
+  collectionFailed: z.boolean(),
+  samples: z
+    .array(
+      z.object({
+        at: Timestamp,
+        memory: z.object({
+          currentBytes: ResourceBytes,
+          peakBytes: ResourceBytes,
+          limitBytes: ResourceBytes,
+          limitHits: ResourceBytes,
+          oomEvents: ResourceBytes,
+          oomKills: ResourceBytes,
+        }),
+        filesystems: z
+          .array(
+            z.object({
+              path: z.enum(["/woodpecker/tmp", "/woodpecker/gradle"]),
+              filesystem: z.enum(["tmpfs", "shared"]),
+              capacityBytes: ResourceBytes,
+              usedBytes: ResourceBytes,
+              availableBytes: ResourceBytes,
+            }),
+          )
+          .length(2),
+      }),
+    )
+    .min(1)
+    .max(721),
+});
+export type BenchmarkResources = z.infer<typeof BenchmarkResourcesSchema>;
+
 export const TaskDiagnosticsSchema = z.object({
   version: z.literal(1),
   pipeline: z.string().regex(/^\d+$/u),
@@ -101,6 +137,7 @@ export const TaskDiagnosticsSchema = z.object({
   finishedAt: Timestamp,
   exitCode: z.number().int(),
   collectionFailed: z.boolean(),
+  benchmarkResources: BenchmarkResourcesSchema.optional(),
   turbo: z.array(TurboDiagnosticSchema),
   browserSelection: BrowserSelectionSchema.optional(),
 });

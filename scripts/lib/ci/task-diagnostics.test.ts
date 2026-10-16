@@ -429,6 +429,10 @@ test.each([0, 42])(
       entrypoint,
     );
     await cp(
+      new URL("../../ci/benchmark-resources.ts", import.meta.url),
+      path.join(root, "scripts/ci/benchmark-resources.ts"),
+    );
+    await cp(
       new URL("task-diagnostics.ts", import.meta.url),
       path.join(library, "task-diagnostics.ts"),
     );
