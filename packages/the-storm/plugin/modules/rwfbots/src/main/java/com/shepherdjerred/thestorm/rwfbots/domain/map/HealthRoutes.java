@@ -211,8 +211,12 @@ public final class HealthRoutes {
       this.previous = prefix.previous();
     }
 
-    boolean dominates(Label other) {
-      return damage <= other.damage && cost <= other.cost && ticks <= other.ticks;
+    boolean dominates(Label other, boolean arrivalMatters) {
+      // A static query without a deadline has no future use for a dearer, faster prefix.
+      // Keep the existing time preference when prefix costs tie.
+      return damage <= other.damage
+          && cost <= other.cost
+          && ((!arrivalMatters && cost < other.cost) || ticks <= other.ticks);
     }
   }
 
@@ -222,6 +226,7 @@ public final class HealthRoutes {
     private final NavGraph graph;
     private final Request request;
     private final EdgePolicy edges;
+    private final boolean arrivalMatters;
     private final Map<Integer, List<Label>> frontier = new HashMap<>();
     private final PriorityQueue<Label> open =
         new PriorityQueue<>(
@@ -233,6 +238,7 @@ public final class HealthRoutes {
       this.graph = graph;
       this.request = request;
       this.edges = edges;
+      arrivalMatters = edges.timed() || request.risk().deadlineTicks().isPresent();
     }
 
     Optional<Route> find() {
@@ -275,8 +281,8 @@ public final class HealthRoutes {
 
     private void offer(Label candidate) {
       var labels = frontier.computeIfAbsent(candidate.node, node -> new ArrayList<>());
-      if (labels.stream().anyMatch(label -> label.dominates(candidate))) return;
-      labels.removeIf(candidate::dominates);
+      if (labels.stream().anyMatch(label -> label.dominates(candidate, arrivalMatters))) return;
+      labels.removeIf(label -> candidate.dominates(label, arrivalMatters));
       labels.add(candidate);
       open.add(candidate);
     }
