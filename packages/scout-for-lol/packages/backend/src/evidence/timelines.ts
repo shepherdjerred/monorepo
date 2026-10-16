@@ -124,10 +124,8 @@ async function acquireTimeline(
             ),
           remainingMs,
         ),
-    optionalSourceRead(
-      "SCOUT_CLIENT",
-      () => readClientTimelineCandidates(matchId, input.match),
-      remainingMs,
+    optionalSourceRead("SCOUT_CLIENT", () =>
+      readClientTimelineCandidates(matchId, input.match),
     ),
   ]);
   if (riot !== undefined) {

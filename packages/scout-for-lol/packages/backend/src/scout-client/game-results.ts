@@ -12,7 +12,10 @@ import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts
 import { prisma } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { projectResultEvidence } from "#src/evidence/result-projection.ts";
-import { parseLocalGameResult } from "./canonical/local-result.ts";
+import {
+  localResultCompletionTime,
+  parseLocalGameResult,
+} from "./canonical/local-result.ts";
 import { postGameDeliveryMode } from "./dispatch-policy.ts";
 import { resolveResultEvidence } from "#src/evidence/results.ts";
 
@@ -41,7 +44,8 @@ export async function projectClientGameResult(
     observation.observationId,
   );
   if (result === null) return;
-  const completedAt = result.gameCreation + result.durationSeconds * 1000;
+  const completedAt = localResultCompletionTime(observation.payload, result);
+  if (completedAt === null) return;
   const discoveredAt = new Date();
   const deliveryMode = postGameDeliveryMode(
     observation,

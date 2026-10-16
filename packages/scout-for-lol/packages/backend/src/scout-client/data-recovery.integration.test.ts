@@ -28,6 +28,9 @@ vi.doMock("#src/scout-client/ingress.ts", async (original) => ({
   startAcceptedClientMatches: dispatch,
 }));
 const { reconcileAcceptedClientEvidence } = await import("./reconciliation.ts");
+const { lcuUuidsIn, translatePayloadIdentities } =
+  await import("./identity-alias.ts");
+const { convertLcuMatchBundle } = await import("./canonical/lcu-match.ts");
 const { readClientGameResults, projectClientGameResult } =
   await import("./game-results.ts");
 const { admitMatchEvidence, matchEffectsAllowed } =
@@ -212,6 +215,84 @@ test.each([
     expect(await matchEffectsAllowed(matchId)).toBe(policy === "FULL");
   },
 );
+
+test.each([
+  { age: 899_000, creationOffset: -30_000, policy: "FULL" },
+  { age: 901_000, creationOffset: 30_000, policy: "HISTORY_ONLY" },
+])(
+  "witnessed completion determines $policy near the discovery cutoff",
+  async ({ age, creationOffset, policy }) => {
+    const raw: unknown = await Bun.file(
+      new URL(
+        "../../../../testdata/lcu/lcu-postgame-ranked.json",
+        import.meta.url,
+      ),
+    ).json();
+    const identities = new Map(
+      [...lcuUuidsIn(raw)].map((uuid, index) => [
+        uuid,
+        index === 0 ? PLAYER : `${uuid}-${"p".repeat(41)}`,
+      ]),
+    );
+    const bundle = z
+      .object({
+        matchHistory: z.object({ gameDuration: z.number() }).loose(),
+        endOfGame: z.json(),
+        timeline: z.json(),
+      })
+      .parse(translatePayloadIdentities(raw, identities));
+    const end = Date.now() - age;
+    const start = end - bundle.matchHistory.gameDuration * 1000;
+    const data = {
+      ...bundle,
+      matchHistory: {
+        ...bundle.matchHistory,
+        gameId: 7101,
+        platformId: "NA1",
+        gameCreation: start + creationOffset,
+      },
+      timing: { gameStartTimestamp: start, gameEndTimestamp: end },
+    };
+    const matchId = RiotMatchIdSchema.parse("NA1_7101");
+    expect(convertLcuMatchBundle(matchId, data)?.info.gameEndTimestamp).toBe(
+      end,
+    );
+    const observation = await observe(
+      "post_game",
+      { resource: "post_game", data },
+      { platformId: "NA1" },
+    );
+    await projectClientGameResult(observation);
+    expect(
+      await prisma.matchEvidenceAdmission.findUnique({
+        where: { riotMatchId: matchId },
+      }),
+    ).toMatchObject({ policy, completedAt: new Date(end) });
+    expect(await matchEffectsAllowed(matchId)).toBe(policy === "FULL");
+  },
+);
+
+test("malformed witnessed timing cannot fall back to estimated live completion", async () => {
+  const now = Date.now();
+  const observation = await observe(
+    "post_game",
+    {
+      resource: "post_game",
+      data: {
+        matchHistory: historyGame(now - 1_800_000),
+        endOfGame: {},
+        timing: {
+          gameStartTimestamp: now - 1_800_000,
+          gameEndTimestamp: now + 3_600_000,
+        },
+      },
+    },
+    { platformId: "NA1" },
+  );
+  await projectClientGameResult(observation);
+  expect(await prisma.matchEvidenceAdmission.count()).toBe(0);
+  expect(await prisma.scoutClientObservation.count()).toBe(1);
+});
 
 test("reprojects an accepted full history without EOG, timing, timeline or opponent aliases", async () => {
   const history = historyGame();

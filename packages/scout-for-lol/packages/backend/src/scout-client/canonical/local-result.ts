@@ -6,6 +6,7 @@ import {
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
+import { localMatchEndTimestamp } from "./lcu-match.ts";
 
 const IdSchema = z
   .union([z.number().int().positive(), z.string().regex(/^\d+$/u)])
@@ -51,6 +52,19 @@ const HistorySchema = z.looseObject({
 });
 const PayloadSchema = z.object({ resource: z.string(), data: z.unknown() });
 const BundleSchema = z.object({ matchHistory: z.unknown() });
+const TimingPresenceSchema = z.object({ timing: z.json() });
+
+/** Share canonical timing validation; malformed witnessed clocks cannot become estimates. */
+export function localResultCompletionTime(
+  payload: unknown,
+  result: GameResult,
+): number | null {
+  const { data } = PayloadSchema.parse(payload);
+  const witnessed = localMatchEndTimestamp(data);
+  return witnessed === null && TimingPresenceSchema.safeParse(data).success
+    ? null
+    : (witnessed ?? result.gameCreation + result.durationSeconds * 1000);
+}
 
 /** Full terminal history can describe a result without EOG, pings or aliases for every opponent. */
 export function parseLocalGameResult(

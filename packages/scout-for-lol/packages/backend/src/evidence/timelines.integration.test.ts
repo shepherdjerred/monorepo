@@ -144,6 +144,37 @@ test("the two-minute deadline survives retries and freezes missing coverage", as
   expect(recovered.timelineMissing).toBe(true);
 });
 
+test("the final deadline poll reads durable client evidence before pinning absence", async () => {
+  expect(await resolveMatchTimeline(request)).toMatchObject({
+    kind: "pending",
+  });
+  io.riot.mockClear();
+  io.clients.mockClear();
+  const client = timeline("local-1");
+  io.clients.mockResolvedValue([
+    { observationId: "arrived-before-deadline", timeline: client },
+  ]);
+  await prisma.matchEvidenceAdmission.update({
+    where: { riotMatchId: match.metadata.matchId },
+    data: { timelineDeadlineAt: new Date(Date.now() - 1) },
+  });
+  expect(await resolveMatchTimeline(request)).toMatchObject({
+    kind: "available",
+    value: client,
+  });
+  expect(io.clients).toHaveBeenCalledOnce();
+  expect(io.riot).not.toHaveBeenCalled();
+  expect(io.persist).toHaveBeenCalledOnce();
+  expect(
+    await prisma.matchEvidenceAdmission.findUniqueOrThrow({
+      where: { riotMatchId: match.metadata.matchId },
+    }),
+  ).toMatchObject({
+    timelineMissing: false,
+    timelineFinalizedAt: expect.any(Date),
+  });
+});
+
 test("storage failure retries instead of becoming missing coverage", async () => {
   io.riot.mockResolvedValue(timeline("2"));
   io.persist.mockResolvedValue(false);
