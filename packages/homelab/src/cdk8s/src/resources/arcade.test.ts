@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import { createArcadeDeployment } from "./arcade.ts";
+import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
 
 const KindSchema = z.object({ kind: z.string() });
 const NodeSelectorSchema = z.record(z.string(), z.string());
@@ -159,19 +160,7 @@ test("Arcade owns one credential item and keeps limits and goal grants outside i
           spec: z.object({
             containers: z.array(
               z.object({
-                env: z.array(
-                  z.object({
-                    name: z.string(),
-                    valueFrom: z
-                      .object({
-                        secretKeyRef: z.object({
-                          name: z.string(),
-                          key: z.string(),
-                        }),
-                      })
-                      .optional(),
-                  }),
-                ),
+                env: ContainerEnvSchema,
               }),
             ),
             volumes: z.array(z.object({ secret: z.unknown().optional() })),

@@ -1,4 +1,5 @@
 import { ConfigSchema, type Config } from "#src/config/schema.ts";
+import { gameCommandDefaults } from "#src/config/game-command-defaults.ts";
 
 /** A complete, valid config for tests: no Discord, no web server, no goal. */
 export function testConfig(goalEnabled = false): Config {
@@ -21,25 +22,7 @@ export function testConfig(goalEnabled = false): Config {
     game: {
       enabled: true,
       wasm_path: "pokeemerald.wasm",
-      commands: {
-        enabled: true,
-        max_actions_per_command: 20,
-        max_quantity_per_action: 10,
-        key_press_duration_in_milliseconds: 15,
-        delay_between_actions_in_milliseconds: 5,
-        burst: {
-          duration_in_milliseconds: 15,
-          delay_in_milliseconds: 5,
-          quantity: 3,
-        },
-        chord: {
-          duration_in_milliseconds: 15,
-          max_commands: 10,
-          max_total: 10,
-          delay: 5,
-        },
-        hold: { duration_in_milliseconds: 150 },
-      },
+      commands: gameCommandDefaults,
       goal: { enabled: goalEnabled },
     },
     web: {

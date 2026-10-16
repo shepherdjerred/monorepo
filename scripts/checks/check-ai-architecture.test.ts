@@ -326,6 +326,11 @@ describe("AI architecture compatibility exceptions", () => {
           path: "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
           contents: 'const key = "CODEX_ACCESS_TOKEN";',
         },
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
+          contents:
+            'CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({\nkey: "CODEX_ACCESS_TOKEN",',
+        },
       ]),
     ).toEqual([]);
 
@@ -335,8 +340,16 @@ describe("AI architecture compatibility exceptions", () => {
           path: "packages/discord-plays-pokemon/packages/backend/src/goal/new-agent.ts",
           contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
         },
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
+          contents: 'OPENAI_API_KEY: EnvValue.fromValue("unexpected"),',
+        },
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
+          contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
+        },
       ]).map(({ rule }) => rule),
-    ).toEqual(["provider-api-key"]);
+    ).toEqual(["provider-api-key", "provider-api-key", "provider-api-key"]);
   });
 });
 

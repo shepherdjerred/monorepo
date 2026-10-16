@@ -284,6 +284,21 @@ function isPath(expected: string): Exemption {
   return (filePath) => filePath === expected;
 }
 
+// Arcade now deploys the existing Emerald goal worker. Allow only its Codex
+// secret reference; other provider credentials remain forbidden in this file.
+function isArcadeGoalCredentialWiring(
+  filePath: string,
+  source: string,
+): boolean {
+  return (
+    filePath === "packages/homelab/src/cdk8s/src/resources/arcade.ts" &&
+    [
+      "CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({",
+      'key: "CODEX_ACCESS_TOKEN",',
+    ].includes(source.trim())
+  );
+}
+
 function isRetiredOpenRouterCredentialDenylist(
   filePath: string,
   source: string,
@@ -338,6 +353,7 @@ const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
     isPath(PR_FLEET_CREDENTIAL_REDACTION_PATH),
     inSet(CREDENTIAL_SANITIZER_PATHS),
     inSet(POKEMON_CODEX_SUBSCRIPTION_PATHS),
+    isArcadeGoalCredentialWiring,
     inSet(DURABLE_AGENT_CREDENTIAL_PATHS),
     inSet(HOMELAB_PLATFORM_METADATA_PATHS),
     isPath(WHISPER_TRANSCRIPTION_ADAPTER),
