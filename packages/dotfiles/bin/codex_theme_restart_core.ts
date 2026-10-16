@@ -1,10 +1,16 @@
-import { createHash } from "node:crypto";
 import {
   bypassFlags,
+  launchReplacement,
   resumeArguments,
+  validateLaunchArguments,
   uuid,
 } from "./codex_theme_restart_launch.ts";
 import type { Appearance } from "./codex_theme_restart_options.ts";
+import {
+  backgroundRunningTask,
+  preservePausedGoal,
+  probeNativeConversation,
+} from "./codex_theme_restart_status.ts";
 
 export function object(value: unknown): Map<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value))
@@ -66,8 +72,7 @@ export function parseAgent(value: unknown): Agent | undefined {
     status,
     thread,
     sessionSource,
-    name:
-      agent.get("name") == null ? undefined : string(agent.get("name")),
+    name: agent.get("name") == null ? undefined : string(agent.get("name")),
   };
 }
 
@@ -103,17 +108,21 @@ export type Target = {
   shell: number;
   args: string[];
   bypass: string[];
+  nativeStatus: boolean;
+  mode: Appearance;
 };
 export type Outcome = {
   session: string;
   pane: string;
-  status: "restarted" | "skipped" | "failed" | "would-restart";
+  status: "restarted" | "skipped" | "failed" | "would-restart" | "identified";
   message: string;
 };
 export type Runtime = {
   call: (session: string, args: readonly string[]) => Promise<unknown>;
   now: () => number;
   sleep: (milliseconds: number) => Promise<void>;
+  conversationSaved: (thread: string) => boolean;
+  appearanceConfigured: (mode: Appearance) => boolean | Promise<boolean>;
 };
 
 async function agentAt(
@@ -137,21 +146,41 @@ async function processesAt(
   );
 }
 
+async function probeConversation(
+  runtime: Runtime,
+  session: string,
+  agent: Agent,
+  info: ProcessInfo,
+): Promise<Agent> {
+  const verified = await probeNativeConversation(runtime, session, {
+    agent,
+    info,
+    inspect: async () => ({
+      agent: await agentAt(runtime, session, agent.pane),
+      info: await processesAt(runtime, session, agent.pane),
+    }),
+  });
+  if (!runtime.conversationSaved(string(verified.thread)))
+    throw new Error("Conversation has no saved history; client left running");
+  return verified;
+}
+
 export async function discover(
   runtime: Runtime,
   session: string,
   mode: Appearance,
-  pane?: string,
+  selection: { pane?: string; probe?: boolean } = {},
 ): Promise<{ targets: Target[]; outcomes: Outcome[] }> {
+  const { pane, probe = false } = selection;
   const result = object(await runtime.call(session, ["agent", "list"]));
   const targets: Target[] = [];
   const outcomes: Outcome[] = [];
   for (const entry of array(result.get("agents"))) {
-    const agent = parseAgent(entry);
+    let agent = parseAgent(entry);
     if (agent === undefined || (pane !== undefined && agent.pane !== pane))
       continue;
     try {
-      if (agent.thread === undefined)
+      if (!probe && agent.thread === undefined)
         throw new Error("No authoritative conversation ID; pane left running");
       const info = await processesAt(runtime, session, agent.pane);
       const process = info.processes.find(
@@ -161,13 +190,18 @@ export async function discover(
         throw new Error(
           "No unique foreground Codex process; pane left running",
         );
+      // Validate launch options before touching the native composer.
+      validateLaunchArguments(process.argv);
+      if (probe) agent = await probeConversation(runtime, session, agent, info);
       targets.push({
         session,
         agent,
         pid: process.pid,
         shell: info.shell,
-        args: resumeArguments(process.argv, agent.thread, mode),
+        args: resumeArguments(process.argv, string(agent.thread)),
         bypass: process.argv.filter((argument) => bypassFlags.has(argument)),
+        nativeStatus: probe,
+        mode,
       });
     } catch (error) {
       outcomes.push({
@@ -235,6 +269,7 @@ async function exitCodex(runtime: Runtime, target: Target): Promise<void> {
       "ctrl+c",
     ]);
     await runtime.sleep(350);
+    await backgroundRunningTask(runtime, target.session, target.agent.pane);
   }
   const deadline = runtime.now() + 5000;
   while (runtime.now() < deadline) {
@@ -247,6 +282,8 @@ async function exitCodex(runtime: Runtime, target: Target): Promise<void> {
 }
 
 async function verifyLaunch(runtime: Runtime, target: Target): Promise<Agent> {
+  if (!(await runtime.appearanceConfigured(target.mode)))
+    throw new Error("Codex appearance settings changed during restart");
   const info = await processesAt(runtime, target.session, target.agent.pane);
   const process = info.processes.find(
     (candidate) => candidate.pid === info.foreground,
@@ -269,6 +306,23 @@ async function verifyLaunch(runtime: Runtime, target: Target): Promise<Agent> {
     throw new Error(
       "Wrapper did not preserve observed bypass flags; no continuation sent",
     );
+  }
+  if (target.nativeStatus) {
+    await preservePausedGoal(runtime, target.session, target.agent.pane);
+    const agent = await agentAt(runtime, target.session, target.agent.pane);
+    if (agent?.terminal !== target.agent.terminal)
+      throw new Error("Pane terminal changed during restart");
+    const resumed = await probeConversation(
+      runtime,
+      target.session,
+      agent,
+      info,
+    );
+    if (!matches(resumed, target))
+      throw new Error(
+        "Native /status reported a different resumed conversation",
+      );
+    return resumed;
   }
   let resumed = await agentAt(runtime, target.session, target.agent.pane);
   if (resumed?.terminal !== target.agent.terminal)
@@ -300,6 +354,7 @@ async function continuePane(
   runtime: Runtime,
   target: Target,
   wasWorking: boolean,
+  continued: Set<string>,
 ): Promise<string> {
   const resumed = await verifyLaunch(runtime, target);
   // Herdr requires a name to launch; restore an originally unnamed pane only
@@ -312,13 +367,19 @@ async function continuePane(
       "--clear",
     ]);
   if (!wasWorking) return "Same conversation restored";
-  if (resumed.status === "working")
+  const thread = string(target.agent.thread);
+  if (continued.has(thread))
+    return "Same conversation restored; continuation already handled";
+  if (resumed.status === "working") {
+    continued.add(thread);
     return "Existing turn is already working; no duplicate prompt sent";
+  }
   if (resumed.status !== "idle" && resumed.status !== "done") {
     throw new Error(
       "Conversation restored but not ready for continuation; inspect pane",
     );
   }
+  continued.add(thread);
   await runtime.call(target.session, [
     "agent",
     "prompt",
@@ -364,6 +425,7 @@ async function restoreName(runtime: Runtime, target: Target): Promise<void> {
 export async function restart(
   runtime: Runtime,
   target: Target,
+  continued = new Set<string>(),
 ): Promise<Outcome> {
   const { session, agent } = target;
   const outcome = (status: Outcome["status"], message: string): Outcome => ({
@@ -373,39 +435,37 @@ export async function restart(
     message,
   });
   try {
-    const current = await agentAt(runtime, session, agent.pane);
+    let current = await agentAt(runtime, session, agent.pane);
+    if (current !== undefined && target.nativeStatus) {
+      const info = await processesAt(runtime, session, agent.pane);
+      if (info.shell !== target.shell || info.foreground !== target.pid)
+        return outcome("skipped", "Pane process changed before restart");
+      current = await probeConversation(runtime, session, current, info);
+    }
     if (!matches(current, target))
       return outcome("skipped", "Pane conversation changed before restart");
     // Use the last observed working state, not a potentially old discovery snapshot.
     const wasWorking = current?.status === "working";
-    // Clear the live name explicitly: Herdr can reserve it briefly after the
-    // process exits even when pane inspection already shows an empty shell.
-    if (agent.name !== undefined)
-      await runtime.call(session, ["agent", "rename", agent.pane, "--clear"]);
+    // Herdr can retain a persisted name reservation even when agent.list omits it.
+    await runtime.call(session, ["agent", "rename", agent.pane, "--clear"]);
     await exitCodex(runtime, target);
     await waitForUnregistered(runtime, target);
-    const name =
-      agent.name ??
-      `theme-${createHash("sha256").update(`${session}/${agent.terminal}`).digest("hex").slice(0, 12)}`;
-    // Herdr submits `codex ...` to the existing interactive shell, so shell functions
-    // and their subscription/permission policy remain in effect. It also verifies
-    // shell-prompt readiness before sending any command.
-    await runtime.call(session, [
-      "agent",
-      "start",
-      name,
-      "--kind",
-      "codex",
-      "--pane",
-      agent.pane,
-      "--timeout",
-      "30000",
-      "--",
-      ...target.args,
-    ]);
+    const startError = await launchReplacement(runtime, target);
+    const message = await continuePane(
+      runtime,
+      target,
+      wasWorking,
+      continued,
+    ).catch((error: unknown) => {
+      if (startError !== undefined)
+        throw new Error(`${startError}; ${errorMessage(error)}`);
+      throw error;
+    });
     return outcome(
       "restarted",
-      await continuePane(runtime, target, wasWorking),
+      startError === undefined
+        ? message
+        : `${message}; Herdr launch acknowledgement failed but pane verified (${startError})`,
     );
   } catch (error) {
     try {

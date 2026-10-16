@@ -1,17 +1,20 @@
 import { afterEach, expect, test } from "vitest";
 import {
   chmod,
+  mkdir,
   mkdtemp,
   readFile,
   rm,
   stat,
   writeFile,
 } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import path from "node:path";
+import { object } from "../bin/codex_theme_restart_core.ts";
 
 const directories: string[] = [];
+const stopServers: (() => Promise<void>)[] = [];
 afterEach(async () => {
+  await Promise.all(stopServers.splice(0).map((stop) => stop()));
   await Promise.all(
     directories
       .splice(0)
@@ -40,8 +43,9 @@ const mockAppearance = `#!/usr/bin/env bun
 console.log(await Bun.file(process.env.HOME + '/mode').text());
 `;
 
-async function fixture() {
-  const directory = await mkdtemp(path.join(tmpdir(), "codex-theme-smoke-"));
+async function fixture(configStatus = "ok") {
+  // Unix socket paths must remain shorter than macOS's sockaddr_un limit.
+  const directory = await mkdtemp("/tmp/codex-theme-smoke-");
   directories.push(directory);
   const helper = path.join(directory, "restart.ts");
   // Exercise the real launcher, SQLite lock, state, and detached worker on every
@@ -66,6 +70,8 @@ async function fixture() {
     "codex_theme_restart_launch.ts",
     "codex_theme_restart_core.ts",
     "codex_theme_restart_options.ts",
+    "codex_theme_restart_status.ts",
+    "codex_theme_restart_config.ts",
   ]) {
     await writeFile(
       path.join(directory, name),
@@ -77,6 +83,34 @@ async function fixture() {
   await writeFile(path.join(directory, "dark-notify"), mockAppearance);
   await chmod(path.join(directory, "herdr"), 0o700);
   await chmod(path.join(directory, "dark-notify"), 0o700);
+  const control = path.join(directory, ".codex/app-server-control");
+  await mkdir(control, { recursive: true });
+  const server = Bun.serve({
+    unix: path.join(control, "app-server-control.sock"),
+    fetch(request, instance) {
+      if (instance.upgrade(request)) return;
+      return new Response("WebSocket required", { status: 400 });
+    },
+    websocket: {
+      async message(socket, data) {
+        const request = object(JSON.parse(String(data)));
+        if (request.get("id") === 1)
+          socket.send(JSON.stringify({ id: 1, result: {} }));
+        if (request.get("id") === 2) {
+          await writeFile(
+            path.join(directory, "config-edits.json"),
+            JSON.stringify(object(request.get("params")).get("edits")),
+          );
+          socket.send(
+            JSON.stringify({ id: 2, result: { status: configStatus } }),
+          );
+        }
+      },
+    },
+  });
+  stopServers.push(async () => {
+    await server.stop(true);
+  });
   const stateDirectory = path.join(
     directory,
     ".local/state/codex-theme-restart",
@@ -153,6 +187,18 @@ test("initializes without restart, deduplicates events, and traverses only runni
   expect(JSON.parse(await readFile(context.state, "utf8"))).toEqual({
     appearance: "dark",
   });
+  expect(
+    JSON.parse(
+      await readFile(path.join(context.directory, "config-edits.json"), "utf8"),
+    ),
+  ).toEqual([
+    {
+      keyPath: "tui.theme",
+      value: "catppuccin-mocha",
+      mergeStrategy: "replace",
+    },
+    { keyPath: "tui.resume_cwd", value: "session", mergeStrategy: "replace" },
+  ]);
   expect(await context.run(["--worker", "--on-change"])).toMatchObject({
     code: 0,
     stdout: expect.stringContaining("Appearance remains dark"),
@@ -166,11 +212,26 @@ test("dry-run creates no state directory and sends only discovery commands", asy
   await expect(stat(context.stateDirectory)).rejects.toMatchObject({
     code: "ENOENT",
   });
+  expect(
+    await Bun.file(path.join(context.directory, "config-edits.json")).exists(),
+  ).toBe(false);
   expect(await context.calls()).toEqual([
     ["session", "list", "--json"],
     ["--session", "default", "agent", "list"],
     ["--session", "other", "agent", "list"],
   ]);
+});
+
+test("requires native settings confirmation before operating on any pane", async () => {
+  const context = await fixture("overridden");
+  expect(await context.run(["--worker", "--session", "default"])).toMatchObject(
+    {
+      code: 1,
+      stderr: expect.stringContaining("no clients stopped"),
+    },
+  );
+  expect(await context.calls()).toEqual([]);
+  expect(await Bun.file(context.state).exists()).toBe(false);
 });
 
 test("serializes concurrent appearance events with a real SQLite lock", async () => {
