@@ -606,9 +606,13 @@ prod's embedded poller, the central worker that owns the Schedules — so the
 rename landed in steps: register both names, issue the new ones, then drop
 the old ones once nothing running used them.
 
-Registration removal requires both the live drain and expiration of retained
-old-type and pre-patch histories. Passing source tests alone does not satisfy
-those deployment gates.
+Registration removal requires zero running old-type executions, no open
+execution requiring pre-rename commands, and no unaccepted old-type start
+requests in either stage. Closed old-type runs are outside the new bundle's
+query and replay support after the one-day compatibility window; their
+histories remain stored under the namespace's normal retention policy. Shared
+namespace retention expiry is not a live cutover prerequisite. Passing source
+tests alone does not prove the live drain or the compatibility window.
 
 Only the renamed types are registered now. The Workflow bundle exports no
 `*V2Workflow` alias, the Activity workers register each Activity once
