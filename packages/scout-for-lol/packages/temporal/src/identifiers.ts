@@ -496,6 +496,8 @@ export const SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES = {
   readNotificationIntent: "realtime",
   readRecoveryBatch: "background",
   archiveMatchArtifacts: "realtime",
+  prepareMatchEvidence: "realtime",
+  queueHistoryMatch: "realtime",
   commitMatchObservation: "realtime",
   settleMatchMarkets: "realtime",
   applyMatchProgression: "realtime",

@@ -52,12 +52,22 @@ const { buildMatchReceipt } =
   await import("#src/durable/match/receipt-evidence.ts");
 const { observeMatch } =
   await import("#src/database/durable/observation-repository.ts");
+const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
 
 afterAll(async () => {
   await prisma.$disconnect();
 });
 
 const RECORDED_AT = IsoInstantSchema.parse("2026-09-16T10:00:00.000Z");
+
+async function admitRiotListing(matchId: RiotMatchId): Promise<void> {
+  await admitMatchEvidence({
+    matchId,
+    completedAt: Date.parse(RECORDED_AT),
+    historical: false,
+    riotHistoryListed: true,
+  });
+}
 
 /** A stage receipt someone else wrote with evidence this core cannot produce. */
 async function seedForeignStageReceipt(matchId: RiotMatchId): Promise<void> {
@@ -321,6 +331,7 @@ describe("advanceMatchCursor", () => {
   test("moves the Riot polling cursor for a Riot match", async () => {
     const matchId = RiotMatchIdSchema.parse("NA1_8301");
     await seedTrackedAccount(matchId);
+    await admitRiotListing(matchId);
 
     await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
       { advanced: 1, alreadyAdvanced: 0 },
@@ -343,12 +354,18 @@ describe("advanceMatchCursor", () => {
     expect(association?.cursorAdvancedAt).toEqual(expect.any(String));
   });
 
-  test("still moves the cursor for a client payload Riot will publish", async () => {
+  test("moves a client result's cursor only after Riot actually lists it", async () => {
     // A matchmade game selected from the client only because Riot was slow
     // past the two-minute window: Riot will list it, so it anchors the poll.
     const matchId = RiotMatchIdSchema.parse("NA1_8303");
     await seedTrackedAccount(matchId);
     await selectClientPayload(matchId, "MATCHED_GAME");
+
+    await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
+      { advanced: 0, alreadyAdvanced: 0 },
+    );
+    expect(await storedCursor()).toEqual({ lastProcessedMatchId: null });
+    await admitRiotListing(matchId);
 
     await expect(advanceMatchCursor({ riotMatchId: matchId })).resolves.toEqual(
       { advanced: 1, alreadyAdvanced: 0 },

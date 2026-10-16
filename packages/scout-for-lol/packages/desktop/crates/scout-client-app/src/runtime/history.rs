@@ -7,9 +7,7 @@ use scout_client_core::protocol::{ObservationKind, without_credentials};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
-use super::{
-    ObservationSlot, enqueue_if_changed, enqueue_resource_if_changed, record_post_game_read,
-};
+use super::{ObservationSlot, enqueue_resource_if_changed, record_post_game_read};
 
 pub(super) async fn collect_recent_matches(
     client: &LcuClient,
@@ -25,7 +23,15 @@ pub(super) async fn collect_recent_matches(
     resolve_game_hints(client, outbox, observer, diagnostics, now).await?;
     match client.get(LcuEndpoint::MatchHistoryRecent).await {
         Ok(Some(history)) => {
-            discover_page(outbox, payloads, observer, &history, diagnostics)?;
+            if history_games(&history).is_none() {
+                record_post_game_read(
+                    diagnostics,
+                    DiagnosticOutcome::Deferred,
+                    "malformed history head; pending artifacts still recover",
+                );
+            } else {
+                discover_page(outbox, payloads, observer, &history, diagnostics)?;
+            }
         }
         Ok(None) => {}
         Err(_) => record_post_game_read(
@@ -43,10 +49,18 @@ pub(super) async fn collect_recent_matches(
             .await
         {
             Ok(Some(history)) => {
-                let count = discover_page(outbox, payloads, observer, &history, diagnostics)?;
-                outbox
-                    .checkpoint_history(observer, index, count < 20, now)
-                    .map_err(|error| error.to_string())?;
+                if history_games(&history).is_none() {
+                    record_post_game_read(
+                        diagnostics,
+                        DiagnosticOutcome::Deferred,
+                        "malformed history page; scan checkpoint retained",
+                    );
+                } else {
+                    let count = discover_page(outbox, payloads, observer, &history, diagnostics)?;
+                    outbox
+                        .checkpoint_history(observer, index, count < 20, now)
+                        .map_err(|error| error.to_string())?;
+                }
             }
             Ok(None) => {}
             Err(_) => record_post_game_read(
@@ -182,6 +196,13 @@ async fn resolve_game_hints(
     Ok(())
 }
 
+fn history_games(history: &Value) -> Option<&Vec<Value>> {
+    history
+        .get("games")
+        .and_then(|games| games.get("games"))
+        .and_then(Value::as_array)
+}
+
 fn discover_page(
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
@@ -189,10 +210,7 @@ fn discover_page(
     history: &Value,
     diagnostics: &Diagnostics,
 ) -> Result<usize, String> {
-    let games = history
-        .get("games")
-        .and_then(|games| games.get("games"))
-        .and_then(Value::as_array)
+    let games = history_games(history)
         .ok_or_else(|| "League match history has no games array".to_owned())?;
     for game in games {
         let Some(game_id) = game
@@ -220,17 +238,56 @@ fn discover_page(
         outbox
             .discover_game(observer, &platform.to_uppercase(), &game_id, live)
             .map_err(|error| error.to_string())?;
-        enqueue_if_changed(
+        let pending = RecoveryGame {
+            platform: platform.to_uppercase(),
+            game_id: game_id.clone(),
+            live,
+            result_queued: false,
+            timeline_queued: false,
+            full_game: None,
+        };
+        // The first row can already describe a result. Give it the same
+        // witnessed-completion context as the full game before it is uploaded;
+        // server admission is permanent and cannot be upgraded by a later row.
+        let bundle = result_bundle(outbox, &pending, observer, game)?;
+        enqueue_result(
             outbox,
             payloads,
-            &format!("match_history_game:{game_id}"),
-            ObservationKind::PostGame,
-            game,
-            Some(observer),
+            &pending,
+            observer,
+            &bundle,
             diagnostics,
+            "history_row",
         )?;
     }
     Ok(games.len())
+}
+
+async fn read_recovery_game(
+    client: &LcuClient,
+    pending: &RecoveryGame,
+    diagnostics: &Diagnostics,
+) -> Result<Option<Value>, String> {
+    if let Some(body) = &pending.full_game {
+        return serde_json::from_slice(body)
+            .map(Some)
+            .map_err(|error| error.to_string());
+    }
+    let game_id = GameId::parse(&pending.game_id)
+        .ok_or_else(|| "Recovery game has an invalid identity".to_owned())?;
+    if let Ok(game) = client
+        .get_resource(LcuResource::MatchHistoryGame(game_id))
+        .await
+    {
+        Ok(game)
+    } else {
+        record_post_game_read(
+            diagnostics,
+            DiagnosticOutcome::Deferred,
+            "full game read failed; recovery remains pending",
+        );
+        Ok(None)
+    }
 }
 
 async fn collect_game(
@@ -244,23 +301,7 @@ async fn collect_game(
 ) -> Result<(), String> {
     let game_id = GameId::parse(&pending.game_id)
         .ok_or_else(|| "Recovery game has an invalid identity".to_owned())?;
-    let game = if pending.result_queued
-        && let Some(body) = &pending.full_game
-    {
-        Some(serde_json::from_slice(body).map_err(|error| error.to_string())?)
-    } else if let Ok(game) = client
-        .get_resource(LcuResource::MatchHistoryGame(game_id))
-        .await
-    {
-        game
-    } else {
-        record_post_game_read(
-            diagnostics,
-            DiagnosticOutcome::Deferred,
-            "full game read failed; recovery remains pending",
-        );
-        None
-    };
+    let game = read_recovery_game(client, pending, diagnostics).await?;
     let Some(game) = game else {
         outbox
             .checkpoint_game(observer, pending, None, false, false, now)
@@ -272,6 +313,9 @@ async fn collect_game(
     }
     let game = without_credentials(game);
     let body = serde_json::to_vec(&game).map_err(|error| error.to_string())?;
+    outbox
+        .cache_recovery_game(observer, pending, &body)
+        .map_err(|error| error.to_string())?;
     if !pending.result_queued {
         let bundle = result_bundle(outbox, pending, observer, &game)?;
         enqueue_result(
@@ -445,10 +489,81 @@ fn contains_observer(value: &Value, observer: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        ObservationOutbox, PendingGameTiming, RecoveryGame, context_agrees,
-        remember_game_references,
+        ObservationOutbox, PendingGameTiming, RecoveryGame, context_agrees, discover_page,
+        history_games, remember_game_references,
     };
+    use scout_client_core::diagnostics::Diagnostics;
+    use scout_client_core::protocol::ObservationEnvelope;
     use serde_json::json;
+    use std::collections::HashMap;
+
+    #[test]
+    fn malformed_history_is_distinct_from_a_valid_empty_page() {
+        assert!(history_games(&json!({"games": {"games": []}})).is_some());
+        for payload in [
+            json!({}),
+            json!({"games": []}),
+            json!({"games": {"games": null}}),
+        ] {
+            assert!(history_games(&payload).is_none());
+        }
+    }
+
+    #[test]
+    fn first_history_snapshot_preserves_valid_witnessed_completion()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!(
+            "scout-history-live-{}.sqlite",
+            uuid::Uuid::new_v4()
+        ));
+        let outbox = ObservationOutbox::open(&path)?;
+        let creation = 1_800_000_000_000_i64;
+        for (id, start) in [("123", creation), ("456", creation - 3_600_000)] {
+            outbox.remember_game_start("owner", id, start)?;
+            outbox.remember_game_end("owner", id, start + 1_800_000)?;
+            outbox.remember_end_of_game(
+                "owner",
+                id,
+                &serde_json::to_vec(&json!({"gameId": id, "platformId": "NA1", "puuid": "owner"}))?,
+            )?;
+        }
+        let rows = json!({"games": {"games": [
+            {"gameId": 123, "platformId": "NA1", "gameCreation": creation},
+            {"gameId": 456, "platformId": "NA1", "gameCreation": creation},
+            {"gameId": 789, "platformId": "NA1", "gameCreation": creation}
+        ]}});
+        discover_page(
+            &outbox,
+            &mut HashMap::new(),
+            "owner",
+            &rows,
+            &Diagnostics::in_memory(),
+        )?;
+        drop(outbox);
+        let reopened = ObservationOutbox::open(&path)?;
+        let snapshots = reopened
+            .pending(100)?
+            .into_iter()
+            .map(|row| serde_json::from_slice::<ObservationEnvelope>(&row.body))
+            .collect::<Result<Vec<_>, _>>()?;
+        assert_eq!(snapshots.len(), 3);
+        assert_eq!(snapshots[0].payload["resource"], "post_game");
+        assert_eq!(
+            snapshots[0].payload["data"]["matchHistory"],
+            rows["games"]["games"][0]
+        );
+        assert_eq!(snapshots[0].payload["data"]["endOfGame"]["puuid"], "owner");
+        assert_eq!(
+            snapshots[0].payload["data"]["timing"]["gameStartTimestamp"],
+            creation
+        );
+        assert_eq!(snapshots[1].payload["resource"], "match_history_game:456");
+        assert!(snapshots[1].payload["data"].get("endOfGame").is_none());
+        assert_eq!(snapshots[2].payload["resource"], "match_history_game:789");
+        drop(reopened);
+        std::fs::remove_file(path)?;
+        Ok(())
+    }
 
     #[test]
     fn equal_numeric_ids_do_not_join_fragments_from_another_platform_or_time() {

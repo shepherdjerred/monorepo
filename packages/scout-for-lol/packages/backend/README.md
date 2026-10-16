@@ -649,6 +649,31 @@ across a mid-run swap and across Continue-As-New, replay.
 
 ## Scout Client player identity
 
+### Evidence service contracts
+
+`src/evidence/` owns prematch, complete-match, result, timeline and Clash
+resolution. Riot and client adapters publish independent evidence. Consumers
+request resolved artifacts and coverage; they do not choose a source. The
+domain `ArtifactResolution<T>` distinguishes available, pending, unavailable
+and conflicting evidence. Architecture rules prohibit source adapter imports
+from the processing consumers and effect imports from the evidence service.
+
+`MatchEvidenceAdmission` commits eligibility before source delays. Explicit
+history scans and first discoveries more than 15 minutes after game completion
+receive permanent `HISTORY_ONLY` policy, from either source. Previously accepted
+live work retains `FULL` eligibility across retries. Legacy silent FULL rows
+retain their old policy/promotion in the admission audit and stop new effects;
+existing receipts, balances and progression are preserved.
+
+History recovery runs in bounded pages through Temporal reconciliation. It
+archives complete games, commits observations and renders missing historical
+reports without rewards, progression, settlement, notifications or operational
+custom/duel finalization. Raw-archive receipts feed the existing lake projection
+reconciler. Historical work does not enter the ordered live dispatcher or move
+Riot's polling cursor. Effect readers filter history before limits and
+aggregation; analytical history remains queryable. `HISTORY_ONLY` has no
+promotion path.
+
 Scout Client is beta-only. Production hard-disables `scout_client_ingestion`
 and `scout_client_result_recovery` before local overrides or Flipt evaluation.
 The managed production declarations also have false defaults and no rollouts;
@@ -687,6 +712,18 @@ and do not prevent evidence recovery or ordinary Riot downtime reconciliation.
 Postgres retains payload copies for current readers and projections. The raw
 observation archive is evidence, separate from canonical match/timeline/prematch
 objects and their derived report-lake relations.
+
+The application Riot SDK also commits every successful JSON response to
+`RiotPayloadCapture` before endpoint validation, including unknown or invalid
+payload shapes. Its injected capture hook leaves the SDK independent of Scout
+persistence. Credential-scrubbed, versioned documents retain endpoint metadata
+and raw JSON; request headers and API keys are excluded. Non-success responses
+and responses that cannot parse as JSON are not captured by this hook.
+The durable archive worker uses the same immutable-object primitive as client
+archival, under `riot/observations/YYYY/MM/DD/<capture>/<sha256>.json`.
+Valid match captures publish normalized result and Clash evidence independently
+of canonical selection. Both capture and draining remain hard-disabled in
+production.
 
 The League client names every player by a 36-character UUID — in the
 current-summoner profile, lobbies, match history, end-of-game blocks, and
@@ -744,9 +781,13 @@ is refused.
 Timeline selection is independent of result selection. Riot supplies its
 timeline when available; accepted client timeline observations can fill a
 missing timeline even for a Riot result. Participant IDs must identify the
-same players in both artifacts. A required missing timeline retries while
-desktop recovery continues; optional reports may render without it. Once a
-timeline has been archived, processing retries use those pinned bytes.
+same players in both artifacts. In beta, live processing persists a two-minute
+timeline deadline and waits with Temporal timers. Expiry pins explicit missing
+coverage and lets processing continue. Storage failures retry instead of
+becoming missing data. Late timelines enrich historical coverage but cannot
+change completed effect calculations. Once a timeline has been archived,
+processing retries use those pinned bytes. Production retains its existing
+required-timeline retry contract.
 
 ### Partial local results
 
@@ -756,7 +797,9 @@ every opponent. Riot PUUIDs, local UUIDs, bots and unresolved identities remain
 distinct. Missing statistics are null; explicit zeroes remain zeroes. A list
 row, inconsistent game identity or conflicting team outcome is not a result.
 
-`game-results.ts` projects accepted evidence into `ScoutClientGameResult`,
+`game-results.ts` keeps the owner index in `ScoutClientGameResult`; both adapters
+publish normalized results into `MatchResultEvidence` with foreign keys to the
+original observation or raw capture. The shared result resolver
 exposes owner-scoped scoreboards through `scoutClient.results`, and supplies
 tracked-player Clash sightings without dispatching financial or progression
 effects. The query pages games and loads all their evidence, returning resolved
@@ -812,16 +855,14 @@ Riot gets two minutes of first refusal: ingress dispatches a client post-game
 with `readyAt` two minutes out, and `resolveLocalCanonicalMatch` selects only
 observations that old. A game Riot withholds — any custom, live Clash among
 them, or a queue `queue-post-match.ts` marks `never` — skips the wait
-(`riotWithholdsMatchResult`); Riot is still asked first and still wins when it
+(`riotWithholdsMatchResult`); both sources are read independently and Riot wins when it
 does publish. A payload must field at least two sides, so an old client's
 one-player history row is never published as the match.
 
-A client-sourced match of a game Riot withholds finishes its cursor step
-without moving the account's Riot polling cursor (`advanceMatchCursor`): the
-cursor anchors the next poll in Riot's own match list, where that id will never
-appear and would read as a gap every time. A client payload for any other queue
-only means Riot was slow past the window; Riot will list it, so its cursor
-advances as usual.
+In beta, `advanceMatchCursor` requires live eligibility and actual listing by
+Riot, independently of the selected result source or queue. A client result
+alone cannot establish a polling anchor. A subsequent Riot discovery records
+that listing and can advance the anchor even after client processing completed.
 
 A gameflow session that names the game's teams is checked for its observer like
 a lobby, since it binds customs and duels just as surely. A bare phase and a
@@ -859,7 +900,7 @@ unrecognised payload projects to nothing rather than failing.
 
 ### Prematch coverage
 
-`scout-client/prematch.ts` reads Riot Spectator and fresh accepted gameflow
+`evidence/prematch.ts` reads Riot Spectator and fresh accepted gameflow
 evidence independently. Riot owns its reported game facts. A unique matching
 team/champion/spell slot can gain a hidden identity from the client, and a
 complete started client roster can supply a game Spectator did not return.

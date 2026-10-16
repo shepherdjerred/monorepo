@@ -1,4 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { matchEffectsAllowed } from "#src/evidence/admission.ts";
 import {
   SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
   SCOUT_MATCH_RECEIPT_KINDS,
@@ -54,6 +55,7 @@ export async function reconcileProcessedClientBinding(
 ): Promise<boolean> {
   const state = await readMatchPipelineState({ riotMatchId });
   if (state.kind !== "present") return false;
+  if (!(await matchEffectsAllowed(riotMatchId))) return true;
   if (
     state.state.receiptKinds.includes(SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND)
   ) {

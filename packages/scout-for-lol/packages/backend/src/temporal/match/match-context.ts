@@ -11,14 +11,8 @@ import {
 import { getObservation } from "#src/database/durable/observation-repository.ts";
 import { listTrackedAccounts } from "#src/database/durable/tracked-account-repository.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
-import { platformRouteOf } from "#src/durable/match/match-identity.ts";
-import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
-import { readArchivedMatchPayload } from "#src/report-lake/receipted-archive.ts";
-import {
-  readSelectedLocalCanonicalMatch,
-  resolveLocalCanonicalMatch,
-} from "#src/scout-client/canonical-match.ts";
+import { resolveCompleteMatch } from "#src/evidence/matches.ts";
+import { matchDataSourceOf } from "@scout-for-lol/data";
 
 function requireAuthoritativeMatchData(
   matchId: RiotMatchId,
@@ -69,19 +63,6 @@ export type ScoutMatchContext = {
   readonly trackedPlayers: PlayerConfigEntry[];
 };
 
-async function readArchivedCanonicalMatch(
-  riotMatchId: RiotMatchId,
-): Promise<RawMatch | null> {
-  const descriptor = await storedRawArchiveDescriptor(
-    prisma,
-    riotMatchId,
-    "match",
-  );
-  return descriptor === null
-    ? null
-    : await readArchivedMatchPayload(descriptor, riotMatchId);
-}
-
 /**
  * The same payload, over the roster the observation recorded for this match.
  *
@@ -121,30 +102,14 @@ async function canonicalMatchData(riotMatchId: RiotMatchId): Promise<{
   readonly matchData: RawMatch;
   readonly matchDataSource: MatchDataSource;
 }> {
-  const archived = await readArchivedCanonicalMatch(riotMatchId);
-  const selectedLocal = await readSelectedLocalCanonicalMatch(riotMatchId);
-  const riotMatch =
-    archived === null && selectedLocal === null
-      ? await fetchMatchData(
-          riotMatchId,
-          platformRouteOf(riotMatchId),
-          "return_undefined_on_404",
-        )
-      : undefined;
-  const resolvedLocal =
-    archived === null && selectedLocal === null && riotMatch === undefined
-      ? await resolveLocalCanonicalMatch(riotMatchId)
-      : null;
+  const resolution = await resolveCompleteMatch(riotMatchId);
+  const matchData = requireAuthoritativeMatchData(
+    riotMatchId,
+    resolution.kind === "available" ? resolution.value : undefined,
+  );
   return {
-    matchData:
-      archived ??
-      selectedLocal ??
-      riotMatch ??
-      requireAuthoritativeMatchData(riotMatchId, resolvedLocal ?? undefined),
-    matchDataSource:
-      selectedLocal !== null || resolvedLocal !== null
-        ? "SCOUT_CLIENT"
-        : "RIOT",
+    matchData,
+    matchDataSource: matchDataSourceOf(matchData.metadata),
   };
 }
 

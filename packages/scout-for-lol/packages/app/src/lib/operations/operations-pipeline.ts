@@ -30,7 +30,7 @@ export type MatchPipelineData = {
   readonly processing: {
     readonly matchId: RiotMatchId;
     readonly owner: { readonly kind: PipelineOwnerKind };
-    readonly policy: "ARCHIVE_ONLY" | "FULL";
+    readonly policy: "ARCHIVE_ONLY" | "HISTORY_ONLY" | "FULL";
     readonly promotion: { readonly promotedAt: string } | null;
     readonly receipts: readonly {
       readonly kind: string;

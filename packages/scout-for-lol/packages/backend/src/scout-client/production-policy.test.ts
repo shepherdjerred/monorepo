@@ -35,8 +35,9 @@ const {
   resolveLocalCanonicalMatch,
   readTimelineSelection,
 } = await import("./canonical-match.ts");
-const { readClientPrematch, getActiveGameWithClientEvidence } =
-  await import("./prematch.ts");
+const { readClientPrematch } = await import("./prematch-evidence.ts");
+const { resolvePrematch: getActiveGameWithClientEvidence } =
+  await import("#src/evidence/prematch.ts");
 const { readClientGameResults, projectClientGameResult } =
   await import("./game-results.ts");
 const { projectClashEntity } = await import("./clash-entities.ts");

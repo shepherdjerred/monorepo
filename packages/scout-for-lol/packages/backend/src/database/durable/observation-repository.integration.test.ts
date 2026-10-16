@@ -296,6 +296,29 @@ describe("what an observation asserts, and what it merely records", () => {
 });
 
 describe("promoteObservation", () => {
+  test("archive-only can resolve to permanent history without gaining effect eligibility", async () => {
+    const record = observation(119);
+    await observeMatch(prisma, record);
+    const historical: MatchObservationRecord = {
+      ...record,
+      policy: "HISTORY_ONLY",
+    };
+    expect(
+      await promoteObservation(prisma, {
+        observation: historical,
+        promotedAt: PROMOTED_AT,
+      }),
+    ).toEqual({ outcome: "applied" });
+    expect(
+      await getObservation(prisma, { matchId: record.matchId }),
+    ).toMatchObject({ policy: "HISTORY_ONLY", promotion: null });
+    expect(
+      await promoteObservation(prisma, {
+        observation: { ...record, policy: "FULL" },
+        promotedAt: PROMOTED_AT,
+      }),
+    ).toEqual({ outcome: "conflict", reason: "history-only-is-permanent" });
+  });
   test("promotes at most once and conflicts on a born-FULL match", async () => {
     const record = observation(110);
     await observeMatch(prisma, record);

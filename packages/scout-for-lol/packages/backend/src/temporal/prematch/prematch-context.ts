@@ -1,7 +1,5 @@
-import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import { ApplicationFailure } from "@temporalio/common";
 import {
-  isArenaQueueOrMode,
   type PlayerConfigEntry,
   type RawCurrentGameInfo,
 } from "@scout-for-lol/data";
@@ -10,9 +8,8 @@ import type { ScoutPrematchGameRef } from "@scout-for-lol/temporal/pipeline-cont
 import { scoutPrematchGameMatchId } from "@scout-for-lol/temporal/identifiers";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
-import { getActiveGameWithClientEvidence as getActiveGame } from "#src/scout-client/prematch.ts";
-import { clientRosterCompletion } from "#src/league/tasks/prematch/client-bot-roster.ts";
-import { isStartedCustomRosterFinal } from "#src/league/tasks/prematch/spectator-roster.ts";
+import { resolvePrematch as getActiveGame } from "#src/evidence/prematch.ts";
+import { prematchRosterCompletion } from "#src/evidence/prematch-roster.ts";
 import { prematchRosterCompletionsTotal } from "#src/metrics/index.ts";
 
 /**
@@ -32,79 +29,6 @@ export type ScoutPrematchContext = {
   /** Every tracked account playing in this game. */
   readonly trackedPlayers: PlayerConfigEntry[];
 };
-
-const STANDARD_PARTICIPANT_COUNT = 10;
-
-/**
- * Whether the spectator payload describes a game whose roster has finished
- * filling.
- *
- * Riot surfaces a game during its pre-game countdown, when it reports fewer
- * than ten participants because not everyone has loaded in; Arena is exempt
- * because its rosters are 16 or 18 and its own schema validates them. This
- * restates v1's `isLikelyPreStartLobby` (in `active-game-detection.ts`, where
- * it is private) because V2's two prematch Activities both need it and must
- * agree: discovery refuses to surface a partial lobby, and capture refuses to
- * archive one.
- *
- * Refusing matters more than it looks. The per-game Workflow ID is claimed by
- * the first run that takes the game, so a run that archived a half-filled
- * roster would own that ID with a snapshot missing tracked players, and every
- * later poll would be deduplicated against it.
- *
- * A started custom is the exception both pipelines share: a 1v1 or 2v2 is
- * short by design, and once play begins its roster is final
- * (`isStartedCustomRosterFinal`).
- */
-export function isPrematchRosterComplete(
-  gameInfo: RawCurrentGameInfo,
-): boolean {
-  return (
-    isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
-    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT ||
-    isStartedCustomRosterFinal(gameInfo)
-  );
-}
-
-/** Why a game's roster counts as final, or `null` while it is still filling. */
-export type PrematchRosterCompletion =
-  "listed" | "custom_roster_final" | "client_bots";
-
-/**
- * Why a game is ready to capture, if it is: complete as Riot lists it, a
- * started custom whose short roster is its whole roster, or completed by the
- * bots a tracked player's local client saw in its lobby.
- *
- * Riot omits bots from the spectator roster, so a game against them looks like
- * a lobby still loading in for as long as it lasts — {@link
- * isPrematchRosterComplete} alone would retry it until the Activity gave up.
- */
-export async function prematchRosterCompletion(
-  gameInfo: RawCurrentGameInfo,
-  puuid: LeaguePuuid,
-): Promise<PrematchRosterCompletion | null> {
-  if (
-    isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
-    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT
-  ) {
-    return "listed";
-  }
-  if (isStartedCustomRosterFinal(gameInfo)) return "custom_roster_final";
-  const bots = await clientRosterCompletion(gameInfo, new Set([puuid]));
-  return bots === null ? null : "client_bots";
-}
-
-/**
- * Whether a game is ready to capture. Discovery and capture must agree for the
- * reason given on {@link isPrematchRosterComplete}, so both ask this, scoped to
- * the account the game was surfaced by.
- */
-export async function isPrematchRosterReady(
-  gameInfo: RawCurrentGameInfo,
-  puuid: LeaguePuuid,
-): Promise<boolean> {
-  return (await prematchRosterCompletion(gameInfo, puuid)) !== null;
-}
 
 /**
  * Re-fetch one discovered game, or report that it is no longer live.

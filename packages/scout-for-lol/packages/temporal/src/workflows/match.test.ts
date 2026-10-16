@@ -293,6 +293,19 @@ describe("the V2 per-match core", () => {
     expect(store.calls).not.toContain("applyMatchProgression");
     expect(store.applied).toEqual(["cursor"]);
   }, 60_000);
+
+  test("history-only processing never enters monetary, progression or operational finalization stages", async () => {
+    const store = createScoutMatchStore({
+      policy: "HISTORY_ONLY",
+      deliveryMode: "silent-backfill",
+    });
+    await harness.startWorkers(scoutMatchActivityStubs(store));
+    await processMatch("match-core-history-only");
+    expect(store.calls).not.toContain("settleMatchMarkets");
+    expect(store.calls).not.toContain("applyMatchProgression");
+    expect(store.calls).not.toContain("finalizeTournamentResult");
+    expect(store.applied).toEqual(["cursor"]);
+  }, 60_000);
 });
 
 describe("the delivery mode a run operates under", () => {

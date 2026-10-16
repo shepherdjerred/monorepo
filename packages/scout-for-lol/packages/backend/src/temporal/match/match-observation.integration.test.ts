@@ -45,7 +45,12 @@ vi.mock("#src/temporal/match/match-context.ts", () => ({
   resolveScoutMatchContext: (riotMatchId: RiotMatchId) =>
     Promise.resolve({
       riotMatchId,
-      matchData: { info: { gameCreation: riot.gameCreation } },
+      matchData: {
+        info: {
+          gameCreation: riot.gameCreation,
+          gameEndTimestamp: riot.gameCreation + 1_800_000,
+        },
+      },
       matchDataSource: riot.matchDataSource,
       trackedPlayers: riot.trackedPuuids.map((puuid) => ({
         alias: puuid.slice(0, 4),
@@ -66,6 +71,27 @@ afterAll(async () => {
 });
 
 describe("the source precondition on the V2 observation commit", () => {
+  test("later history evidence completes a previously admitted live job", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8130");
+    const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
+    const completedAt = riot.gameCreation + 1_800_000;
+    await admitMatchEvidence({
+      matchId,
+      completedAt,
+      discoveredAt: new Date(completedAt),
+      historical: false,
+    });
+    const completed = await commitMatchObservation({
+      riotMatchId: matchId,
+      sourcePuuid: SOURCE,
+      deliveryMode: "silent-backfill",
+    });
+    expect(completed).toMatchObject({ policy: "FULL", deliveryMode: "live" });
+    expect(await getObservation(prisma, { matchId })).toMatchObject({
+      policy: "FULL",
+      deliveryMode: "live",
+    });
+  });
   test("commits when the discovering account is still tracked in the match", async () => {
     const matchId = RiotMatchIdSchema.parse("NA1_8101");
 
@@ -162,28 +188,21 @@ describe("the delivery mode the V2 observation commits", () => {
     expect(stored?.deliveryMode).toBe("silent-backfill");
   });
 
-  test("observes as live a child started before the mode existed", async () => {
-    // The only run that reaches here: a per-match child started from a
-    // pre-change discovery, whose input was serialized without the field and
-    // which had not yet committed its observation when this deployed. Its
-    // starter stamped `live` unconditionally, so `live` is what that
-    // execution already did, not a choice taken now on its behalf. Refusing
-    // would kill the child after it had archived and fail its parent
-    // discovery — the loss this preserves against.
+  test("a late child without a standing admission is historical in beta", async () => {
+    // An absent legacy mode cannot establish earlier live admission. Preserve
+    // capture while excluding effects for this first discovery of an old game.
     const matchId = RiotMatchIdSchema.parse("NA1_8112");
 
     const result = await commitMatchObservation({ riotMatchId: matchId });
 
-    expect(result.deliveryMode).toBe("live");
+    expect(result.deliveryMode).toBe("silent-backfill");
+    expect(result.policy).toBe("HISTORY_ONLY");
     expect(result.commit).toEqual({ outcome: "applied" });
     const stored = await getObservation(prisma, { matchId });
-    expect(stored?.deliveryMode).toBe("live");
+    expect(stored?.deliveryMode).toBe("silent-backfill");
   });
 
-  test("refuses a live claim over a standing silent-backfill", async () => {
-    // The mode is part of the observation claim, so two producers disagreeing
-    // about it is drift, never a quiet overwrite. This is what stops a later
-    // live discovery from turning a committed backfill into an announcement.
+  test("a later live discovery cannot change historical admission", async () => {
     const matchId = RiotMatchIdSchema.parse("NA1_8113");
     await commitMatchObservation({
       riotMatchId: matchId,
@@ -195,12 +214,13 @@ describe("the delivery mode the V2 observation commits", () => {
       riotMatchId: matchId,
       sourcePuuid: SOURCE,
       deliveryMode: "live",
-    }).then(
-      () => null,
-      (error: unknown) => error,
-    );
+    });
 
-    expect(settled).toBeInstanceOf(ApplicationFailure);
+    expect(settled).toMatchObject({
+      policy: "HISTORY_ONLY",
+      deliveryMode: "silent-backfill",
+      commit: { outcome: "already-applied" },
+    });
     const stored = await getObservation(prisma, { matchId });
     expect(stored?.deliveryMode).toBe("silent-backfill");
   });

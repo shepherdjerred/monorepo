@@ -2,7 +2,10 @@ import {
   revalidateClientObservation,
   type RecoveryObservationRow,
 } from "./revalidation.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import {
+  isPolicyEnabled,
+  isFeatureHardDisabled,
+} from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { projectClientGameResult } from "./game-results.ts";
 import { projectClashEntity } from "./clash-entities.ts";
@@ -10,13 +13,13 @@ import { startAcceptedClientMatches } from "./ingress.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 
-const RECOVERY_VERSION = 1;
+const RECOVERY_VERSION = 2;
 
 /** One bounded page, driven by the existing Temporal reconciliation activity. */
 export async function reconcileAcceptedClientEvidence(
   now = new Date(),
 ): Promise<number> {
-  if (!(await isPolicyEnabled("scout_client_result_recovery", {}))) return 0;
+  if (isFeatureHardDisabled("scout_client_result_recovery")) return 0;
   const rows = await prisma.scoutClientObservation.findMany({
     where: {
       disposition: { in: ["ACCEPTED", "QUARANTINED"] },

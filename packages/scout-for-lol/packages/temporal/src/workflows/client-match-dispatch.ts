@@ -1,6 +1,5 @@
 import {
   condition,
-  getExternalWorkflowHandle,
   isCancellation,
   patched,
   setHandler,
@@ -19,11 +18,9 @@ import {
 import {
   dispatchScoutClientMatchesSignal,
   requestClientMatchDispatchRolloverSignal,
-  scoutClientMatchDispatchCompletedSignal,
 } from "#src/signals.ts";
 import {
   ScoutClientMatchDispatchBatchSchema,
-  ScoutClientMatchDispatchResultSchema,
   scoutClientMatchDispatchInputCodec,
   type ScoutClientMatchDispatchItem,
   type ScoutClientMatchDispatchOrderKey,
@@ -34,6 +31,12 @@ import { realtimePipelineActivities } from "./activity-options.ts";
 import { processMatchAsChild } from "./match.ts";
 import { continueAsNewAsRenamed } from "./generation-rename.ts";
 import { SCOUT_WORKFLOW_NAMES } from "#src/identifiers.ts";
+import {
+  clientDispatchHasOrderingAssurance,
+  acknowledgeClientDispatch,
+  queueNextHistoricalMatch,
+  advanceDiscoveredHistoryAnchor,
+} from "./evidence/dispatch.ts";
 
 function compareClientDispatchItems(
   left: ScoutClientMatchDispatchItem,
@@ -94,20 +97,6 @@ export const SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH =
   "scout-v2-dispatch-riot-bypasses-watermark";
 
 /**
- * Whether Riot discovery vouches for this item.
- *
- * A discovery run always names itself as a completion target because it waits
- * for the acknowledgement; native ingress never does, because its HTTP outbox
- * retries instead. A merged item carrying any target was therefore discovered
- * by Riot too.
- */
-function clientDispatchIsRiotDiscovery(
-  match: ScoutClientMatchDispatchItem,
-): boolean {
-  return match.completionTargets.length > 0;
-}
-
-/**
  * Whether an item must go to late-arrival review instead of being processed.
  *
  * The watermark is a native-client guard: an offline-history sighting that
@@ -132,7 +121,7 @@ function clientDispatchNeedsLateReview(
   // Evaluated only on the decision it gates, so a history that never met a
   // late Riot item records no marker.
   return !(
-    clientDispatchIsRiotDiscovery(match) &&
+    clientDispatchHasOrderingAssurance(match) &&
     patched(SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH)
   );
 }
@@ -174,6 +163,15 @@ function mergeClientDispatchItem(
         ? existing.readyAt
         : incoming.readyAt,
     completionTargets: [...completionTargets.values()],
+    ...(incoming.orderingAssured === undefined &&
+    existing.orderingAssured === undefined
+      ? {}
+      : {
+          orderingAssured:
+            (incoming.orderingAssured ??
+              incoming.completionTargets.length > 0) ||
+            (existing.orderingAssured ?? existing.completionTargets.length > 0),
+        }),
   });
 }
 
@@ -191,33 +189,9 @@ function nonRetryableFailureOf(error: unknown): ApplicationFailure | undefined {
   return undefined;
 }
 
-async function acknowledgeClientDispatch(
-  match: ScoutClientMatchDispatchItem,
-  result: {
-    readonly outcome: "processed" | "already-complete" | "terminal-failure";
-    readonly failureType?: string;
-  },
-): Promise<void> {
-  const signal = ScoutClientMatchDispatchResultSchema.parse({
-    riotMatchId: match.riotMatchId,
-    ...result,
-  });
-  for (const target of match.completionTargets) {
-    try {
-      await getExternalWorkflowHandle(target.workflowId, target.runId).signal(
-        scoutClientMatchDispatchCompletedSignal,
-        signal,
-      );
-    } catch (error) {
-      if (isCancellation(error)) throw error;
-      // The exact requesting run may have been terminated after it signalled.
-      // Its absence must not strand every later environment-wide match.
-    }
-  }
-}
-
 function clientMatchCoreIsComplete(
   result: ScoutMatchPipelineStateResult,
+  stage: ScoutStage,
 ): boolean {
   if (result.kind !== "present") return false;
   const { state } = result;
@@ -226,7 +200,6 @@ function clientMatchCoreIsComplete(
   const required = [
     SCOUT_MATCH_RECEIPT_KINDS.archive,
     SCOUT_MATCH_RECEIPT_KINDS.observation,
-    SCOUT_MATCH_RECEIPT_KINDS.tournament,
     ...(state.policy === "FULL"
       ? [
           SCOUT_MATCH_RECEIPT_KINDS.settlement,
@@ -234,6 +207,12 @@ function clientMatchCoreIsComplete(
         ]
       : []),
   ];
+  if (
+    stage !== "beta" ||
+    state.policy === "FULL" ||
+    !patched("scout-archive-only-no-effects")
+  )
+    required.push(SCOUT_MATCH_RECEIPT_KINDS.tournament);
   return (
     required.every((kind) => receipts.has(kind)) &&
     state.trackedAccounts.cursorAdvanced === state.trackedAccounts.total
@@ -272,7 +251,10 @@ async function processClientMatchInOrder(
         "ClientMatchTerminalReview",
       );
     }
-    if (clientMatchCoreIsComplete(state)) return "already-complete";
+    if (clientMatchCoreIsComplete(state, stage)) {
+      await advanceDiscoveredHistoryAnchor(stage, match);
+      return "already-complete";
+    }
     if (state.kind === "present" && state.state.owner.kind === "legacy-v1") {
       const completion = await activities.readLegacyMatchCompletionV2({
         stage,
@@ -407,7 +389,7 @@ async function settleFirstLateArrival(
   const late = firstClientDispatchItem(lateArrivals);
   if (late === undefined) return false;
   if (
-    clientDispatchIsRiotDiscovery(late) &&
+    clientDispatchHasOrderingAssurance(late) &&
     patched(SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH)
   ) {
     lateArrivals.delete(late.riotMatchId);
@@ -542,6 +524,9 @@ export async function scoutClientMatchDispatchWorkflow(
         }),
       );
     }
+
+    if (await queueNextHistoricalMatch(input.stage, pending, lateArrivals))
+      continue;
 
     if (await settleFirstLateArrival(input.stage, pending, lateArrivals)) {
       continue;

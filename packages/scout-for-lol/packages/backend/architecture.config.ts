@@ -62,6 +62,7 @@ export const layers = [
   "database",
   "discord",
   "durable",
+  "evidence",
   "explore",
   "explore-match",
   "http",
@@ -104,6 +105,40 @@ function everythingExcept(...allowed: string[]): string[] {
 
 export default defineArchitecture({
   boundaries: [
+    ...[
+      "temporal/match/match-context",
+      "league/tasks/postmatch/match-report-standard",
+      "progression/postmatch",
+      "betting/dares/evaluation/dare-postmatch-timeline",
+      "temporal/prematch/prematch-context",
+      "temporal/prematch/prematch-reads",
+    ].map((from) => ({
+      name: `resolved-evidence-${from.replaceAll("/", "-")}`,
+      comment:
+        "Processing consumes resolved evidence; source acquisition and selection stay behind the evidence boundary.",
+      from,
+      to: [
+        "scout-client",
+        "league/api",
+        "league/tasks/postmatch/match-data-fetcher",
+        "league/tasks/prematch/client-bot-roster",
+      ],
+    })),
+    {
+      name: "evidence-does-not-apply-effects",
+      comment:
+        "Evidence resolves inputs; effect and transport consumers may depend on it, never the reverse.",
+      from: "evidence",
+      to: [
+        "betting",
+        "progression",
+        "customs",
+        "discord",
+        "trpc",
+        "temporal",
+        "runtime",
+      ],
+    },
     {
       name: "client-normalizers-are-pure",
       comment:

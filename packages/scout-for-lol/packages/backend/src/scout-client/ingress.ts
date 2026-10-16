@@ -50,6 +50,10 @@ import {
   acceptedClientBindingMatchIds,
 } from "./accepted-observations.ts";
 import { postGameDeliveryMode } from "./dispatch-policy.ts";
+import {
+  admitMatchEvidence,
+  admittedDeliveryMode,
+} from "#src/evidence/admission.ts";
 import { receivedObservationEnvelope } from "./archive/envelope.ts";
 import {
   bindObservedLobby,
@@ -435,6 +439,7 @@ export function acceptedClientMatchDispatches(
         ? immediatelyReadyAt
         : riotFirstReadyAt,
       completionTargets: [],
+      orderingAssured: false,
     };
     const existing = starts.get(parsed.data);
     if (existing === undefined || deliveryMode === "live") {
@@ -470,12 +475,28 @@ export async function startAcceptedClientMatches(
     }),
   };
   // Ingest has already learned every alias this batch can teach.
-  const starts = acceptedClientMatchDispatches(
+  const dispatches = acceptedClientMatchDispatches(
     contextualBatch,
     receipts,
     new Date(),
     await readIdentityAliases(observationUuids(batch.observations)),
   );
+  const admitted = await Promise.all(
+    dispatches.map(async (item) => {
+      const policy = await admitMatchEvidence({
+        matchId: item.riotMatchId,
+        completedAt: item.gameEndTimestamp,
+        historical: item.deliveryMode === "silent-backfill",
+      });
+      return {
+        ...item,
+        deliveryMode: admittedDeliveryMode(policy, item.deliveryMode),
+      };
+    }),
+  );
+  // Admission is the durable background job. Historical capture/report work
+  // never enters or holds the ordered live-effects serializer.
+  const starts = admitted.filter((item) => item.deliveryMode === "live");
   if (starts.length > 0) {
     const supervisor = currentScoutTemporalSupervisor();
     if (supervisor === undefined) {

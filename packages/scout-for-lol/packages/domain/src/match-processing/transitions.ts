@@ -17,6 +17,7 @@ export type MatchProcessingConflictReason = z.infer<
 export const MatchProcessingConflictReasonSchema = z.enum([
   "ownership-held-by-another-owner",
   "promotion-target-born-full",
+  "history-only-is-permanent",
   "receipt-evidence-mismatch",
 ]);
 
@@ -67,6 +68,8 @@ export function promoteArchiveOnlyToFull(args: {
 }): TransitionResult<MatchProcessingState> {
   const { state, promotedAt } = args;
   switch (state.policy) {
+    case "HISTORY_ONLY":
+      return { outcome: "conflict", reason: "history-only-is-permanent" };
     case "ARCHIVE_ONLY":
       return {
         outcome: "applied",

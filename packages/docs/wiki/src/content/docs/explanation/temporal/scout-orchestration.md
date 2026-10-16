@@ -85,7 +85,7 @@ legacy scheduler, because two schedulers would make duplicate effects possible.
 Every match flows through one durable pipeline. The `prematch-poll` and
 `postmatch-discovery` Schedules start discovery Workflows. Prematch discovery
 starts one Workflow per live game, keyed by the game, and never waits for it.
-Post-match discovery hands each completed match to an environment-wide
+Post-match discovery hands live completed matches to an environment-wide
 dispatcher, which runs one match-processing Workflow at a time in completion
 order, so a later match cannot settle before an earlier one. The
 match-processing Workflow archives, observes, settles, applies progression,
@@ -96,6 +96,35 @@ reconciliation Schedule restarts whatever a durable row says is unfinished.
 Matches observed by the retired v1 pipeline keep their `LEGACY_V1` owner.
 They stay readable and are never re-driven, because rewriting their owner
 would sweep years of historical matches into processing and redeliver them.
+
+## Evidence and permission are separate decisions
+
+Scout's beta ingestion resolves Riot and desktop evidence before consumers process a match.
+Riot has priority where both sources state a fact. Compatible client evidence
+can fill missing facts, including a timeline for a Riot result.
+The [processing context](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/match/match-context.ts)
+consumes the resolved artifact rather than implementing source selection.
+
+Raw evidence remains useful even when another source wins. Client observations
+and successful Riot JSON responses enter durable archive queues before
+normalization. S3 retains the scrubbed input; normalized records support
+history and Clash projections independently of canonical selection.
+The [Riot composition root](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/api/api.ts)
+injects capture into the SDK without making the SDK depend on Scout storage.
+
+Historical recovery cannot turn old games into new rewards or announcements.
+Admission fixes that permission before processing waits for evidence.
+Already accepted live work keeps its eligibility when retried; historical work
+has no promotion path. Historical reports and analytical projections run in
+the background, outside the ordered live dispatcher.
+The [observation commit](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/match/match-archive.ts)
+copies admission into the durable processing policy.
+
+Live processing waits for missing timelines only until a durable deadline.
+It then pins missing coverage rather than guessing facts or blocking forever.
+Later evidence improves history without changing completed effects or frozen
+reports. The [match Workflow](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/temporal/src/workflows/match.ts)
+waits with Temporal timers and passes references between Activities.
 
 ## Replay compatibility follows the deployment topology
 

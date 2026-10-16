@@ -82,6 +82,11 @@ function routedMatchActivities(
     }),
     archiveMatchArtifacts: (input: { riotMatchId: string }) =>
       activitiesFor(input.riotMatchId).archiveMatchArtifacts(),
+    prepareMatchEvidence: (input: { riotMatchId: string }) =>
+      activitiesFor(input.riotMatchId).prepareMatchEvidence(),
+    queueHistoryMatch: async () => {
+      return;
+    },
     commitMatchObservation: async (input: ScoutMatchObservationInput) => {
       await hooks.beforeCommit?.(input);
       return activitiesFor(input.riotMatchId).commitMatchObservation(input);

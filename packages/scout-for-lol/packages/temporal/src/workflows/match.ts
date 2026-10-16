@@ -39,6 +39,10 @@ import {
 } from "./activity-options.ts";
 import { ScoutDiscoveredMatchSchema } from "#src/activity-contracts.ts";
 import {
+  waitForMatchEvidence,
+  shouldFinalizeTournament,
+} from "./evidence/match.ts";
+import {
   IMPLEMENTED_FAN_OUT_WORKFLOWS,
   planMatchFanOutChildren,
   type ScoutMatchFanOutChild,
@@ -674,6 +678,7 @@ export async function scoutMatchProcessingWorkflow(
   // ARCHIVE_ONLY means exactly this: the raw payloads are captured and no
   // downstream effect runs. Settlement and progression are those effects.
   if (policy === "FULL") {
+    await waitForMatchEvidence(input.stage, input.riotMatchId);
     if (!attested.has(SCOUT_MATCH_RECEIPT_KINDS.settlement)) {
       setWorkflowPhase("**Phase:** settling this match's markets");
       await activities.settleMatchMarkets(ref);
@@ -692,7 +697,7 @@ export async function scoutMatchProcessingWorkflow(
   // result unfinalized and the snapshot unpublished — with the cursor moved
   // past the match, so nothing would ever rediscover it. The stage answers
   // The legacy `not-a-tournament-match` result cheaply covers an ordinary match.
-  if (!attested.has(SCOUT_MATCH_RECEIPT_KINDS.tournament)) {
+  if (shouldFinalizeTournament(input.stage, policy, attested)) {
     setWorkflowPhase("**Phase:** finalizing any managed custom result");
     await activities.finalizeTournamentResult(ref);
     receiptKinds.push(SCOUT_MATCH_RECEIPT_KINDS.tournament);

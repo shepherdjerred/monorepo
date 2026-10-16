@@ -3,12 +3,15 @@ import {
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  createTestDatabase,
+  testDatabaseModule,
+} from "#src/testing/test-database.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { TimelineCoverageLakeRow } from "@scout-for-lol/data";
-import { fetchProgressionMatches } from "#src/progression/progression-lake-reads.ts";
 import { timelineStagingFilePath } from "#src/report-lake/staging.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -17,6 +20,10 @@ const lakeDir = await mkdtemp(path.join(tmpdir(), "scout-progression-lake-"));
 const puuid = testPuuid("progression-coverage");
 const matchWithCoverage = "NA1_9400000000";
 const matchWithoutCoverage = "NA1_9400000010";
+const { prisma } = createTestDatabase("progression-admitted-matches");
+vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
+const { fetchProgressionMatches } =
+  await import("#src/progression/progression-lake-reads.ts");
 
 function matchFact(matchId: RiotMatchId, gameCreationAt: Date) {
   return {
@@ -61,9 +68,20 @@ async function fetchMatch(matchId: RiotMatchId) {
 
 beforeEach(async () => {
   await resetTestLake(lakeDir);
+  await prisma.matchEvidenceAdmission.deleteMany();
+  await prisma.matchEvidenceAdmission.createMany({
+    data: [matchWithCoverage, matchWithoutCoverage].map((riotMatchId) => ({
+      riotMatchId: RiotMatchIdSchema.parse(riotMatchId),
+      policy: "FULL",
+      reason: "legacy-live",
+      firstDiscoveredAt: new Date("2026-08-20T12:00:00Z"),
+      completedAt: new Date("2026-08-20T12:00:00Z"),
+    })),
+  });
 });
 
 afterAll(async () => {
+  await prisma.$disconnect();
   await rm(lakeDir, { recursive: true, force: true });
 });
 

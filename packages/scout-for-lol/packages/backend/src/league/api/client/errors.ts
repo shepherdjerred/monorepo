@@ -68,6 +68,14 @@ export class RiotTransportError extends Error {
   }
 }
 
+/** An application capture hook failed after a successful upstream response. */
+export class RiotPayloadCaptureError extends Error {
+  constructor(cause: unknown) {
+    super("Riot response capture failed", { cause });
+    this.name = "RiotPayloadCaptureError";
+  }
+}
+
 /**
  * Extract an HTTP status only from the error type owned by the Riot client.
  * This keeps similarly shaped errors from Discord and other APIs out of Riot's

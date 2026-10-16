@@ -11,13 +11,8 @@ import {
   isFeatureHardDisabled,
 } from "#src/configuration/flags.ts";
 import {
-  getActiveGame,
-  type SpectatorResult,
-} from "#src/league/api/spectator.ts";
-import {
   parseLocalPrematch,
   parseLocalPrematchIdentities,
-  enrichPrematch,
 } from "./canonical/local-prematch.ts";
 import { withRiotIdentities } from "./identity-alias.ts";
 import { z } from "zod";
@@ -41,7 +36,7 @@ function clientSessionEnded(payload: unknown): boolean {
 }
 
 /** Fresh, accepted evidence from the observer's device; ended sessions invalidate earlier ones. */
-async function readClientPrematchEvidence(
+export async function readClientPrematchEvidence(
   puuid: LeaguePuuid,
   region: Region,
   now = new Date(),
@@ -120,21 +115,4 @@ export async function readClientPrematch(
 ): Promise<RawCurrentGameInfo | null> {
   const evidence = await readClientPrematchEvidence(puuid, region, now);
   return evidence?.game ?? null;
-}
-
-/** Both sources are consulted; Riot owns its facts and client evidence fills its gaps. */
-export async function getActiveGameWithClientEvidence(
-  puuid: LeaguePuuid,
-  region: Region,
-): Promise<SpectatorResult> {
-  const [riot, client] = await Promise.all([
-    getActiveGame(puuid, region),
-    readClientPrematchEvidence(puuid, region),
-  ]);
-  if (riot.kind === "in-game")
-    return {
-      kind: "in-game",
-      game: enrichPrematch(riot.game, client?.identities ?? null),
-    };
-  return client?.game == null ? riot : { kind: "in-game", game: client.game };
 }

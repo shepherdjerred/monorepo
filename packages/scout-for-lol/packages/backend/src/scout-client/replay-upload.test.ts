@@ -229,6 +229,7 @@ test("atomically reclaims a replay upload whose lease expired", async () => {
     digest,
     bytes: BigInt(body.byteLength),
     updatedAt: staleAt,
+    objectKey: "legacy/replays/123.rofl",
   };
   mocks.findUnique.mockResolvedValueOnce(stale).mockResolvedValueOnce(stale);
   const request = replayRequest(body);
@@ -240,6 +241,11 @@ test("atomically reclaims a replay upload whose lease expired", async () => {
   });
 
   expect(mocks.updateMany).toHaveBeenCalledTimes(2);
+  expect(mocks.send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      input: expect.objectContaining({ Key: "legacy/replays/123.rofl" }),
+    }),
+  );
   expect(mocks.updateMany).toHaveBeenNthCalledWith(
     1,
     expect.objectContaining({

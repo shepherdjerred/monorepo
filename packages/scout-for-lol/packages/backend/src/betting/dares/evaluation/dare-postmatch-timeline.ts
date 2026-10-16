@@ -54,10 +54,9 @@ export async function settleBucksWithDareTimeline(
   );
   // Dare SQL reads the timeline from the report lake, so a contract that needs
   // one has it fetched (and staged) before its evidence is evaluated. The
-  // fetch reads a client-sourced match's timeline from the client, never from
-  // Riot, where waiting would pin the shared client-match dispatcher on a
-  // resource that cannot appear. A client that sent none stages nothing, and
-  // the contract's evidence records missing timeline coverage.
+  // shared resolver acquires timelines independently of result provenance.
+  // Beta preparation waits until the persisted deadline, then pins missing
+  // coverage; this read cannot silently reopen that processing decision.
   const timeline = timelineRequired
     ? await dependencies.fetchTimeline(
         input.matchData,

@@ -75,6 +75,7 @@ function candidate(
     localPuuid,
     payload,
     bodyDigest: "a".repeat(64),
+    receivedAt: new Date(0),
   };
 }
 

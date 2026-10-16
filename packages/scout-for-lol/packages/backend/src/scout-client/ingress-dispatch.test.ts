@@ -63,6 +63,7 @@ describe("native match dispatch selection", () => {
           now.getTime() + LOCAL_CANONICAL_DELAY_MS,
         ).toISOString(),
         completionTargets: [],
+        orderingAssured: false,
       },
     ]);
   });

@@ -96,6 +96,7 @@ export const ScoutClientMatchDispatchItemSchema = z.strictObject({
   deliveryMode: MatchDeliveryModeSchema,
   gameEndTimestamp: z.int().nonnegative(),
   readyAt: IsoInstantSchema,
+  orderingAssured: z.boolean().optional(),
   completionTargets: z
     .array(
       z.strictObject({
@@ -170,7 +171,12 @@ export const ScoutClientMatchDispatchInputSchema = z
 /** Completion acknowledgement sent to the exact discovery run that waited. */
 export const ScoutClientMatchDispatchResultSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
-  outcome: z.enum(["processed", "already-complete", "terminal-failure"]),
+  outcome: z.enum([
+    "processed",
+    "history-queued",
+    "already-complete",
+    "terminal-failure",
+  ]),
   failureType: z.string().min(1).max(160).optional(),
 });
 export type ScoutClientMatchDispatchResult = z.infer<

@@ -1,4 +1,5 @@
 import { ApplicationFailure } from "@temporalio/common";
+import { matchEffectsAllowed } from "#src/evidence/admission.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   ScoutGuardedEffectResult,
@@ -319,6 +320,11 @@ function settledRecordsAcrossAttempts(
 export async function settleMatchMarkets(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutGuardedEffectResult> {
+  if (!(await matchEffectsAllowed(input.riotMatchId)))
+    throw ApplicationFailure.nonRetryable(
+      `Historical match ${input.riotMatchId} cannot settle markets`,
+      "HistoryOnlyEffectDenied",
+    );
   return await runGuardedEffect({
     key: `v2-match-settlement:${input.riotMatchId}`,
     kind: "v2-match-settlement",
@@ -473,6 +479,11 @@ export async function settleMatchMarkets(input: {
 export async function applyMatchProgression(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutGuardedEffectResult> {
+  if (!(await matchEffectsAllowed(input.riotMatchId)))
+    throw ApplicationFailure.nonRetryable(
+      `Historical match ${input.riotMatchId} cannot apply progression`,
+      "HistoryOnlyEffectDenied",
+    );
   return await runGuardedEffect({
     key: `v2-match-progression:${input.riotMatchId}`,
     kind: "v2-match-progression",

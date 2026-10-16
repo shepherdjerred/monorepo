@@ -25,9 +25,11 @@ export async function revalidateClientObservation(
   if (row.localPuuid === null) return null;
   const aliases = await readIdentityAliases(new Set([row.localPuuid]));
   const observer = aliases.get(row.localPuuid) ?? row.localPuuid;
+  const riotObserver = LeaguePuuidSchema.safeParse(observer);
+  if (!riotObserver.success) return null;
   const accounts = await prisma.account.findMany({
     where: {
-      puuid: LeaguePuuidSchema.parse(observer),
+      puuid: riotObserver.data,
       player: { discordId: row.device.ownerId },
     },
     select: { puuid: true, region: true },

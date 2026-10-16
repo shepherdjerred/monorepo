@@ -347,15 +347,9 @@ test("names a Dare an earlier attempt resolved after that attempt died", async (
   expect(evidence.resolvedDareIds).toEqual([dare.id]);
 });
 
-test("a backfilled match still records what its settlement produced", async () => {
-  // Announcement eligibility and recovery evidence are different questions,
-  // and the sink used to fuse them: a silent match recorded nothing, so a
-  // death after a pool committed left the retry with state-gated nothing and
-  // no standing instruction, and the receipt then attested a settlement with
-  // no ledger identities although the money had moved.
-  //
-  // The money is not silent. Only the announcing is, and the mint reads the
-  // same committed mode to decide that.
+test("a backfilled match cannot settle or produce announcement checkpoints", async () => {
+  // Historical admission rejects the Activity before any fenced settlement
+  // or announcement checkpoint. Silence alone is not an eligibility guard.
   settlement.drive = async (sink) => {
     await sink.recordAnnouncementItem(prisma, {
       family: "settlement",
@@ -368,12 +362,15 @@ test("a backfilled match still records what its settlement produced", async () =
     });
   };
 
-  await settleMatchMarkets({ riotMatchId: BACKFILLED });
+  await expect(settleMatchMarkets({ riotMatchId: BACKFILLED })).rejects.toThrow(
+    "cannot settle markets",
+  );
 
   const stored = await prisma.matchSettlementAnnouncement.findMany({
     where: { riotMatchId: BACKFILLED },
   });
-  expect(stored).toHaveLength(1);
+  expect(stored).toHaveLength(0);
+  expect(await standingSettlementReceipt(BACKFILLED)).toBeNull();
 });
 
 describe("a settlement whose checkpoint cannot be written", () => {

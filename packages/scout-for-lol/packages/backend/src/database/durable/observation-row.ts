@@ -57,10 +57,10 @@ export const MatchObservationRecordSchema = z
     }),
   })
   .superRefine((record, ctx) => {
-    if (record.policy === "ARCHIVE_ONLY" && record.promotion !== null) {
+    if (record.policy !== "FULL" && record.promotion !== null) {
       ctx.addIssue({
         code: "custom",
-        message: "an ARCHIVE_ONLY observation cannot carry a promotion record",
+        message: "only a FULL observation can carry a promotion record",
         path: ["promotion"],
       });
     }

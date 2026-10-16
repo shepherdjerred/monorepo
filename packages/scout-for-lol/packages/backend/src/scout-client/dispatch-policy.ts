@@ -15,7 +15,11 @@ export function postGameDeliveryMode(
   const resource = payload["resource"];
   if (typeof resource !== "string") return null;
   if (gameEndTimestamp > now.getTime() + FUTURE_TOLERANCE_MS) return null;
-  if (/^match_history_game:\d{1,32}$/u.test(resource)) return "silent-backfill";
+  if (
+    resource === "post_game_timeline" ||
+    /^match_history_game:\d{1,32}$/u.test(resource)
+  )
+    return "silent-backfill";
   if (resource !== "post_game") return null;
   return Math.min(gameEndTimestamp, Date.parse(observation.capturedAt)) <
     now.getTime() - LIVE_COMPLETION_WINDOW_MS

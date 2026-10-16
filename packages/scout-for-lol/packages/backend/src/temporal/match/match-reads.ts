@@ -1,5 +1,9 @@
 import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
+  admitMatchEvidence,
+  admittedDeliveryMode,
+} from "#src/evidence/admission.ts";
+import {
   MatchDeliveryModeSchema,
   type ReceiptKind,
 } from "@scout-for-lol/domain/match-processing/states.ts";
@@ -98,24 +102,32 @@ export async function discoverPostMatchIds(options?: {
   if (discovery.outcome === "skipped") {
     return ScoutPostMatchScanResultSchema.parse({ outcome: "skipped" });
   }
-  const matches = discovery.matches
-    .map((intent) => {
+  const matches = await Promise.all(
+    discovery.matches.slice(0, SCOUT_PAGE_MAX).map(async (intent) => {
       if (intent.gameEndTimestamp === undefined) {
         throw new Error(
           `Current V2 discovery omitted the completion timestamp for ${intent.matchId}`,
         );
       }
+      const policy = await admitMatchEvidence({
+        matchId: intent.matchId,
+        completedAt: intent.gameEndTimestamp,
+        historical: intent.delivery === "silent-backfill",
+        riotHistoryListed: true,
+      });
       return {
         riotMatchId: intent.matchId,
         sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
         // The discovery pass's own per-match call, carried rather than
         // re-derived: a match it surfaced while filling a gap announces
         // nothing, and only this pass knows which kind of pass found it.
-        deliveryMode: MatchDeliveryModeSchema.parse(intent.delivery),
+        deliveryMode: MatchDeliveryModeSchema.parse(
+          admittedDeliveryMode(policy, intent.delivery),
+        ),
         gameEndTimestamp: intent.gameEndTimestamp,
       };
-    })
-    .slice(0, SCOUT_PAGE_MAX);
+    }),
+  );
   return ScoutPostMatchScanResultSchema.parse({
     outcome: "scanned",
     riotMatchIds: matches.map((match) => match.riotMatchId),

@@ -8,6 +8,7 @@ import { convertParticipant } from "./lcu-participant.ts";
 import { firstObjectiveTeam } from "./lcu-team.ts";
 import {
   LocalMatchBundleSchema,
+  LocalMatchCompletionSchema,
   SourcePlayerSchema,
   type LocalMatchBundle,
   type Replay,
@@ -16,6 +17,19 @@ import {
 } from "./lcu-schema.ts";
 
 export const LOCAL_MATCH_TIMING_DRIFT_MS = 30_000;
+
+/** Completion uses the witnessed playable interval, independently of lobby creation. */
+export function localMatchEndTimestamp(payload: unknown): number | null {
+  const parsed = LocalMatchCompletionSchema.safeParse(payload);
+  if (!parsed.success) return null;
+  const { matchHistory, timing } = parsed.data;
+  const duration = timing.gameEndTimestamp - timing.gameStartTimestamp;
+  return duration > 0 &&
+    Math.abs(duration - matchHistory.gameDuration * 1000) <=
+      LOCAL_MATCH_TIMING_DRIFT_MS
+    ? timing.gameEndTimestamp
+    : null;
+}
 
 /**
  * A finished game has players on at least two sides — a 1v1 custom has
@@ -77,15 +91,8 @@ export function convertLcuMatchBundle(
   // payload is the locally observed transition that proves this game ended.
   if (bundle.endOfGame === undefined) return null;
   const game = bundle.matchHistory;
-  const observedDuration =
-    bundle.timing.gameEndTimestamp - bundle.timing.gameStartTimestamp;
-  if (
-    observedDuration <= 0 ||
-    Math.abs(observedDuration - game.gameDuration * 1000) >
-      LOCAL_MATCH_TIMING_DRIFT_MS
-  ) {
-    return null;
-  }
+  const completedAt = localMatchEndTimestamp(bundle);
+  if (completedAt === null) return null;
   const players = sourcePlayers(bundle);
   const identities = new Map(
     game.participantIdentities.map((identity) => [
@@ -125,7 +132,7 @@ export function convertLcuMatchBundle(
       endOfGameResult: "GameComplete",
       gameCreation: game.gameCreation,
       gameDuration: game.gameDuration,
-      gameEndTimestamp: bundle.timing.gameEndTimestamp,
+      gameEndTimestamp: completedAt,
       gameId: game.gameId,
       gameMode: game.gameMode,
       ...(game.gameName === undefined ? {} : { gameName: game.gameName }),

@@ -108,6 +108,12 @@ const LocalTimingSchema = z
     gameEndTimestamp: z.number().int().positive(),
   })
   .strict();
+export const LocalMatchCompletionSchema = z.object({
+  matchHistory: LegacyMatchSchema.pick({ gameDuration: true }),
+  endOfGame: EndOfGameSchema,
+  timing: LocalTimingSchema,
+});
+
 export const LocalMatchBundleSchema = z
   .object({
     matchHistory: LegacyMatchSchema,
