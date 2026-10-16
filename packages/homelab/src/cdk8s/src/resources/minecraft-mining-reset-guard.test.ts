@@ -23,7 +23,7 @@ describe("The Storm mining reset guard", () => {
     const manifests = parseAllDocuments(app.synthYaml()).map((document) =>
       ManifestSchema.parse(document.toJS()),
     );
-    expect(manifests).toHaveLength(2);
+    expect(manifests).toHaveLength(4);
     const policy = manifests.find(
       (manifest) => manifest.kind === "ValidatingAdmissionPolicy",
     );
@@ -47,6 +47,40 @@ describe("The Storm mining reset guard", () => {
       (manifest) => manifest.kind === "ValidatingAdmissionPolicyBinding",
     );
     expect(binding?.spec).toMatchObject({ validationActions: ["Deny"] });
+    const scalePolicy = manifests.find(
+      (manifest) =>
+        manifest.kind === "ValidatingAdmissionPolicy" &&
+        manifest.metadata.name.includes("-scale."),
+    );
+    expect(scalePolicy?.spec).toMatchObject({
+      failurePolicy: "Fail",
+      paramKind: { apiVersion: "apps/v1", kind: "StatefulSet" },
+      matchConstraints: {
+        resourceRules: [
+          { resources: ["statefulsets/scale"], operations: ["UPDATE"] },
+        ],
+      },
+      validations: [
+        {
+          expression: `!has(params.metadata.annotations) || !('${MINING_RESET_LOCK_ANNOTATION}' in params.metadata.annotations) || object.spec.replicas == 0`,
+          reason: "Forbidden",
+        },
+      ],
+    });
+    const scaleBinding = manifests.find(
+      (manifest) =>
+        manifest.kind === "ValidatingAdmissionPolicyBinding" &&
+        manifest.metadata.name.includes("-scale."),
+    );
+    expect(scaleBinding?.spec).toMatchObject({
+      policyName: scalePolicy?.metadata.name,
+      validationActions: ["Deny"],
+      paramRef: {
+        name: "minecraft-tsmc",
+        namespace: "minecraft-tsmc",
+        parameterNotFoundAction: "Deny",
+      },
+    });
   });
 
   test("lets ArgoCD preserve both maintenance annotations", () => {
@@ -71,6 +105,10 @@ describe("The Storm mining reset guard", () => {
       spec.ignoreDifferences.find((entry) => entry.kind === "StatefulSet")
         ?.jsonPointers,
     ).toContain("/metadata/annotations/sjer.red~1mining-reset-lock");
+    expect(
+      spec.ignoreDifferences.find((entry) => entry.kind === "StatefulSet")
+        ?.jsonPointers,
+    ).not.toContain("/spec/replicas");
     expect(
       spec.ignoreDifferences.find((entry) => entry.kind === "StatefulSet")
         ?.jsonPointers,

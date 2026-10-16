@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
+import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore;
 import com.shepherdjerred.thestorm.essentials.domain.config.KitSettings;
@@ -9,11 +10,12 @@ import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.inventory.Book;
 import org.bukkit.entity.Player;
 
-/** {@code /rules} and {@code /afk}; starter supplies are delivered by the join listener. */
+/** Player reference books and AFK; starter supplies are delivered by the join listener. */
 final class PlayerCommands {
 
   private final PaperRuntime runtime;
   private final Book rules;
+  private final Book guide;
   private final AfkTracker afk;
 
   /**
@@ -25,13 +27,30 @@ final class PlayerCommands {
    */
   record Kits(KitSettings settings, KitClaimStore claims, KitDeliveries deliveries) {}
 
-  PlayerCommands(PaperRuntime runtime, Book rules, AfkTracker afk) {
+  PlayerCommands(PaperRuntime runtime, Book rules, Book guide, AfkTracker afk) {
     this.runtime = runtime;
     this.rules = rules;
+    this.guide = guide;
     this.afk = afk;
   }
 
   void register(Commands commands) {
+    commands.register(
+        literal("guide")
+            .requires(Cmd.permission(EssentialsPermissions.GUIDE))
+            .executes(
+                context ->
+                    Cmd.asPlayer(
+                        context,
+                        player -> {
+                          player.openBook(guide);
+                          runtime
+                              .analytics()
+                              .interaction(
+                                  player.getUniqueId(), ProductAnalytics.Action.GUIDE_OPENED);
+                        }))
+            .build(),
+        "Read the first-session guide");
     commands.register(
         literal("rules")
             .requires(Cmd.permission(EssentialsPermissions.RULES))

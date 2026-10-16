@@ -1,0 +1,52 @@
+---
+title: Your first session
+description: Find land, protect your first base, and meet The Storm's townsfolk.
+---
+
+In this short walkthrough, you will find a place to build, protect it, and save a home you can return to.
+
+Start by [joining the server](/join/). You arrive beside the windmill in Spawn Town. Your starter tools, bread, and welcome book arrive automatically, once. You also start with 500 crystals.
+
+Open the welcome book again at any time with `/guide`. The walkthrough is optional.
+
+## 1. Check your safety settings
+
+Run `/rules`. Spawn is PvP-free, but PvP is enabled outside it. Run `/pvp off` if you want to opt out. You can change that setting once a week.
+
+No griefing is allowed. Unlocked containers are fair game where you have access; locked containers are protected. Read [the rules](/norms/) before leaving spawn.
+
+## 2. Meet Anna
+
+Anna stands beside the windmill near where you arrived. Right-click her and choose her daily reward. You will receive crystals, and `/bal` shows your new balance.
+
+Open `/quests` to see your quest journal. NPCs around town offer more quests when you speak to them.
+
+## 3. Find somewhere to build
+
+Run `/rtp` to travel to a safe wilderness spot. Random teleporting is free for your first seven days, although travel cooldowns still apply.
+
+Gather wood and find an unoccupied place for a small shelter. Build on your own land or with permission. Use `/claim info` to check the chunk you stand in.
+
+## 4. Claim your land
+
+Run `/town create <name>`, replacing `<name>` with your town's name. Then run `/claim` while standing where you want to build. The server confirms the chunk is claimed.
+
+Your first town can be just you. You can invite friends later. `/town list` shows other towns, and `/help town` explains the available commands.
+
+## 5. Save your home and protect your supplies
+
+Run `/sethome` at your shelter. `/home` returns you there later; it costs crystals and follows the travel cooldown. `/tpinfo` shows your current travel prices.
+
+Craft and place a chest. Newly placed containers lock automatically. Look at the chest and run `/lock info` to check its lock. Keep valuable supplies in locked containers.
+
+You now have a claimed place to build, a saved home, and somewhere to store your supplies.
+
+## Keep exploring
+
+Return to the windmill with `/spawn` when you want to meet more NPCs. `/shop` opens the shop catalog; quests and trading earn crystals. Storm Shards can upgrade equipment at the windmill's emerald block while it rains.
+
+For a break from building, `/arena` lists cooperative games and `/rwf join` enters [Search and Destroy](/search-and-destroy/).
+
+If you die, `/graves` lists your graves. Their protection expires, so recover your belongings promptly. Ask in chat if you get stuck, use `/help` for commands, or contact staff with `/ticket <what happened>`.
+
+Join [Discord](/discord/) to meet other players and keep in touch between sessions.

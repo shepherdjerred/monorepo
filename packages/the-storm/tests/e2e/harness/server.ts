@@ -32,6 +32,7 @@ import { thirdPartyPlugins } from "./pins.ts";
 import { stageRwf } from "./rwf-staging.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stageWorld } from "./world-copy.ts";
+import { serverIcon } from "./paths.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -459,6 +460,7 @@ export async function startServer(
       await stageWorld(options.worldDir, stagingDir, id);
     }
     await docker(["cp", bukkitYml, `${id}:/data/bukkit.yml`]);
+    await docker(["cp", serverIcon, `${id}:/data/server-icon.png`]);
     if (options.warmCache) {
       await docker(["cp", paperJar, `${id}:/data/${path.basename(paperJar)}`]);
     }

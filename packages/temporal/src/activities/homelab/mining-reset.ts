@@ -1,5 +1,10 @@
 import { Context } from "@temporalio/activity";
 import {
+  readServer,
+  readService,
+  patchJson,
+  annotationPath,
+  closeAdmission,
   commandFailure,
   kubectl,
   readOptional,
@@ -24,63 +29,8 @@ import {
   PvcListSchema,
   ROUTER_WAKE_ANNOTATION,
   resetJobFailed,
-  ServiceSchema,
-  StatefulSetSchema,
 } from "./mining-reset-contract.ts";
 import { resetJobManifest } from "./mining-reset-job.ts";
-
-async function readServer(command: Command) {
-  return StatefulSetSchema.parse(
-    JSON.parse(
-      await run(command, [
-        "-n",
-        MINING_NAMESPACE,
-        "get",
-        "statefulset",
-        MINING_SERVER,
-        "-o",
-        "json",
-      ]),
-    ),
-  );
-}
-
-async function readService(command: Command) {
-  return ServiceSchema.parse(
-    JSON.parse(
-      await run(command, [
-        "-n",
-        MINING_NAMESPACE,
-        "get",
-        "service",
-        MINING_SERVER,
-        "-o",
-        "json",
-      ]),
-    ),
-  );
-}
-
-async function patchJson(
-  command: Command,
-  kind: "statefulset" | "service",
-  patch: readonly object[],
-): Promise<void> {
-  await run(command, [
-    "-n",
-    MINING_NAMESPACE,
-    "patch",
-    kind,
-    MINING_SERVER,
-    "--type=json",
-    "-p",
-    JSON.stringify(patch),
-  ]);
-}
-
-function annotationPath(key: string): string {
-  return `/metadata/annotations/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`;
-}
 
 function resetImage(server: Awaited<ReturnType<typeof readServer>>): string {
   if (server.spec.template.spec.containers.length !== 1) {
@@ -150,10 +100,9 @@ async function acquireLock(
     return undefined;
   }
   const heldBy = miningLockOwner(server, period);
-  if (server.spec.replicas !== 0 || (server.status?.replicas ?? 0) !== 0) {
-    if (heldBy === undefined) {
-      return undefined;
-    }
+  const running =
+    server.spec.replicas !== 0 || (server.status?.replicas ?? 0) !== 0;
+  if (heldBy !== undefined && server.spec.replicas !== 0) {
     throw new Error(
       "The Storm server is running while a mining reset lock is held",
     );
@@ -170,6 +119,12 @@ async function acquireLock(
   }
   const service = await readService(command);
   assertWakePrecondition(service, heldBy);
+  if (
+    heldBy === undefined &&
+    running &&
+    !(await closeAdmission(command, period))
+  )
+    return undefined;
   if (heldBy === undefined) {
     const annotations = server.metadata.annotations;
     await patchJson(command, "statefulset", [
@@ -178,7 +133,7 @@ async function acquireLock(
         path: "/metadata/resourceVersion",
         value: server.metadata.resourceVersion,
       },
-      { op: "test", path: "/spec/replicas", value: 0 },
+      { op: "test", path: "/spec/replicas", value: server.spec.replicas },
       ...(annotations === undefined
         ? [
             {
@@ -202,6 +157,8 @@ async function acquireLock(
               value: image,
             },
           ]),
+      // Admission is closed before the atomic lock + stop. No new player can race it.
+      { op: "replace", path: "/spec/replicas", value: 0 },
     ]);
   }
 
@@ -209,6 +166,16 @@ async function acquireLock(
   // annotation also stops mc-router from attempting a wake after its watch
   // observes the update. Preserve a pre-existing opt-out by refusing it.
   await disableRouterWake(command, service);
+  if (running) {
+    await run(command, [
+      "-n",
+      MINING_NAMESPACE,
+      "wait",
+      "--for=delete",
+      `pod/${MINING_SERVER}-0`,
+      "--timeout=180s",
+    ]);
+  }
   return image;
 }
 
@@ -380,6 +347,9 @@ async function releaseLock(command: Command, period: string): Promise<void> {
   if (service.metadata.annotations?.[ROUTER_WAKE_ANNOTATION] !== "false") {
     throw new Error("mc-router maintenance annotation changed before release");
   }
+  // Clear the Service opt-out while the admission guard still enforces zero
+  // replicas. If the final atomic unlock + start fails, acquireLock can safely
+  // restore the opt-out and resume from the completed backup and reset Job.
   await patchJson(command, "service", [
     {
       op: "test",
@@ -397,6 +367,8 @@ async function releaseLock(command: Command, period: string): Promise<void> {
     },
     { op: "remove", path: annotationPath(MINING_IMAGE_ANNOTATION) },
     { op: "remove", path: annotationPath(MINING_LOCK_ANNOTATION) },
+    { op: "test", path: "/spec/replicas", value: 0 },
+    { op: "replace", path: "/spec/replicas", value: 1 },
   ]);
 }
 

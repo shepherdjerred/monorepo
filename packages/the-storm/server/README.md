@@ -82,6 +82,12 @@ in-memory registry.
 
 ## Startup contract
 
+The multiplayer-list icon is `assets/server-icon.png`, rendered at 64×64 from
+the existing TS mark in `assets/server-icon.svg`. Run `bun run icon:render`
+from the package after editing the source, then `bun run icon:check`.
+The image installs it as `/data/server-icon.png` on every boot, replacing any
+stale volume copy. `boot-check.sh` verifies its bytes on each boot.
+
 Before copying or deleting any content, `storm-entrypoint` requires
 `/data/.the-storm-progression-v1.json` with status `complete` on an existing
 world. An unprepared existing volume fails closed. A genuinely new volume

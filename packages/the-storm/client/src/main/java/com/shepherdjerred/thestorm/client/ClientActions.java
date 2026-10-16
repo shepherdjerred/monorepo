@@ -35,6 +35,21 @@ final class ClientActions {
 
   CompletableFuture<Object> submit(Minecraft client, UUID peer, Protocol.Request request) {
     var args = request.arguments();
+    if (Set.of("status", "shutdown", "release", "server-list").contains(request.action())) {
+      return control(client, request);
+    }
+    if (request.action().startsWith("frame-pacing-")) return framePacing(client, request);
+    if (request.action().startsWith("video-")) return video(client, request);
+    if (request.action().startsWith("duel-")) return duel(client, request);
+    if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
+    if (request.action().equals("capture")) return captures.capture(client, args);
+    requireWorld(client);
+    if (request.action().equals("input")) return input(client, peer, args);
+    return CompletableFuture.completedFuture(ordinary(client, request));
+  }
+
+  private CompletableFuture<Object> control(Minecraft client, Protocol.Request request) {
+    var args = request.arguments();
     if (request.action().equals("status")) {
       Protocol.keys(args, Set.of());
       var state = Protocol.JSON.valueToTree(ClientSnapshot.read(client));
@@ -54,14 +69,26 @@ final class ClientActions {
       release(client);
       return CompletableFuture.completedFuture("Inputs released");
     }
-    if (request.action().startsWith("frame-pacing-")) return framePacing(client, request);
-    if (request.action().startsWith("video-")) return video(client, request);
-    if (request.action().startsWith("duel-")) return duel(client, request);
-    requireWorld(client);
-    if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
-    if (request.action().equals("capture")) return captures.capture(client, args);
-    if (request.action().equals("input")) return input(client, peer, args);
-    return CompletableFuture.completedFuture(ordinary(client, request));
+    if (request.action().equals("server-list")) {
+      Protocol.keys(args, Set.of());
+      if (videos.active()) throw new IllegalStateException("Rendered capture owns the camera");
+      release(client);
+      var servers = new net.minecraft.client.multiplayer.ServerList(client);
+      servers.load();
+      servers.add(
+          new net.minecraft.client.multiplayer.ServerData(
+              "The Storm",
+              session.server(),
+              net.minecraft.client.multiplayer.ServerData.Type.OTHER),
+          false);
+      servers.save();
+      client.disconnectWithSavingScreen();
+      client.setScreenAndShow(
+          new net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen(
+              new net.minecraft.client.gui.screens.TitleScreen()));
+      return CompletableFuture.completedFuture("Multiplayer server list opened");
+    }
+    throw new IllegalArgumentException("Unknown control action: " + request.action());
   }
 
   private Object ordinary(Minecraft client, Protocol.Request request) {

@@ -54,6 +54,11 @@ components, the targeted block or entity, and the current screen and container.
 Commands omit the leading slash and run as the preview player on its local
 server.
 
+`bun run client server-list --session <session.json>` disconnects the owned
+preview client and opens its multiplayer list with The Storm's local address.
+Use `capture` there to verify the server icon and MOTD; screenshots also work
+outside a world. This changes only the disposable client's server list.
+
 Input buttons are `forward`, `back`, `left`, `right`, `jump`, `sneak`, `sprint`,
 `attack`, and `use`. A request holds them for 1–100 client ticks, then releases
 them. Closing its controller connection, opening a screen, dying, or issuing

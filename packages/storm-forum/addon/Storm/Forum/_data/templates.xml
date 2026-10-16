@@ -51,16 +51,25 @@
   </div></div></div>
 </xf:if>
   ]]></template>
-  <template type="public" title="storm_portal" version_id="4010470" version_string="4.1.4"><![CDATA[
+  <template type="public" title="storm_portal" version_id="4010570" version_string="4.1.5"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
-<section class="stormWelcome">
+<section class="stormWelcome stormJoin">
   <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="270" height="83" />
-  <div><h1>Welcome to The Storm</h1><p>A place to build, explore, and catch up.</p><p>Minecraft Java + Bedrock · Java server IP: <strong>{$status.connections.java.address}</strong><br />Bedrock: <strong>{$status.connections.bedrock.host}:{$status.connections.bedrock.port}</strong></p>
-    <a class="button button--primary" href="{{ link('forums') }}">Visit the forums</a>
-    <a class="button" href="https://docs.ts-mc.net">Getting started</a>
+  <div><h1>Build a town. Brave The Storm.</h1><p>Survival with towns, quests, a player economy, and Storm Shard upgrades. Java + Bedrock.</p><p>Java: <strong>{$status.connections.java.address}</strong><br />Bedrock: <strong>{$status.connections.bedrock.host}</strong> · Port <strong>{$status.connections.bedrock.port}</strong></p>
+    <button type="button" class="button button--primary" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address">Copy Java address</button>
+    <a class="button" href="https://docs.ts-mc.net/join/">How to join · Java &amp; Bedrock</a>
+    <a class="button" href="https://docs.ts-mc.net/getting-started/">Your first session</a>
+    <a class="button" href="https://docs.ts-mc.net/discord/">Discord</a>
+    <p class="u-muted">No forum account needed to play. Start at your own pace with /guide.</p>
+    <span data-storm-copy-status role="status" aria-live="polite"></span>
   </div>
+</section>
+<section class="stormFeatures" aria-label="Explore The Storm">
+  <a href="https://docs.ts-mc.net/getting-started/"><img src="{{ base_url('styles/storm/gameplay/survival.jpg') }}" alt="The windmill above the wheat fields at spawn" width="640" height="360" loading="lazy" /><h2>Make a home</h2><p>Find land, claim it with a town, and build something worth returning to.</p></a>
+  <a href="https://docs.ts-mc.net/survival/"><img src="{{ base_url('styles/storm/gameplay/quests.jpg') }}" alt="The entrance to the windmill at spawn" width="640" height="360" loading="lazy" /><h2>Follow the storm</h2><p>Meet the townsfolk, earn crystals, and strengthen equipment with Storm Shards.</p></a>
+  <a href="https://docs.ts-mc.net/search-and-destroy/"><img src="{{ base_url('styles/storm/gameplay/games.jpg') }}" alt="Search and Destroy's team lobby" width="640" height="360" loading="lazy" /><h2>Play together</h2><p>Take a break with cooperative arenas or a round of Search and Destroy.</p></a>
 </section>
 <xf:foreach loop="$news" value="$thread">
   <article class="block stormArticle"><div class="block-container">
@@ -83,7 +92,7 @@
   <xf:widget key="storm_recent_threads" />
 </xf:sidebar>
   ]]></template>
-  <template type="public" title="storm_minecraft_status" version_id="4010470" version_string="4.1.4"><![CDATA[
+  <template type="public" title="storm_minecraft_status" version_id="4010570" version_string="4.1.5"><![CDATA[
 <div class="stormJoinServers">
   <div class="stormJoinServer"><strong>Java</strong><span data-minecraft-java-version><xf:if is="$status.java.version">{$status.java.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" aria-label="Copy Java address">{$status.connections.java.address}</button></div>
   <div class="stormJoinServer"><strong>Bedrock</strong><span data-minecraft-bedrock-version><xf:if is="$status.bedrock.version">{$status.bedrock.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" aria-label="Copy Bedrock address">{$status.connections.bedrock.host}</button><span>:</span><button type="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" aria-label="Copy Bedrock port">{$status.connections.bedrock.port}</button></div>
@@ -92,10 +101,17 @@
 <div class="stormJoinPlayers" data-minecraft-players aria-label="Online players"><xf:if is="$status.players !== null"><xf:foreach loop="$status.players.identities" value="$player"><span class="stormJoinPlayer" title="{$player.name}"><img src="https://mc-heads.net/avatar/{$player.uuid}/24" alt="{$player.name}" width="24" height="24" loading="lazy" /><span class="stormJoinPlayerName">{$player.name}</span></span></xf:foreach></xf:if></div>
 <div class="stormJoinGames" data-minecraft-games><xf:if is="$status.games !== null"><xf:foreach loop="$status.games" value="$game"><div class="stormJoinGame"><strong><xf:if is="$game.kind == 'ARENA'">Arena<xf:else />RWF</xf:if></strong><span>{$game.name}</span><span><xf:if is="$game.phase == 'WAITING'">Waiting<xf:elseif is="$game.phase == 'STARTING'" />Starting<xf:else />Live</xf:if></span><xf:if is="$game.progress"><span>{$game.progress}</span></xf:if><span>{$game.players} playing</span></div></xf:foreach></xf:if></div>
   ]]></template>
-  <template type="public" title="storm_forum.less" version_id="4010470" version_string="4.1.4"><![CDATA[
+  <template type="public" title="storm_forum.less" version_id="4010570" version_string="4.1.5"><![CDATA[
 .stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
 .stormWelcome h1 {margin:0 0 .5rem;font-size:2rem;}
 .stormWelcome .button {margin:.5rem .5rem 0 0;}
+.stormFeatures {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-bottom:2rem;}
+.stormFeatures > a {display:block;border:1px solid @xf-borderColor;border-radius:6px;overflow:hidden;background:@xf-contentAltBg;color:@xf-textColor;}
+.stormFeatures > a:hover,.stormFeatures > a:focus-visible {border-color:@xf-linkColor;text-decoration:none;}
+.stormFeatures img {display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;}
+.stormFeatures h2 {font-size:1.15rem;margin:1rem 1rem .5rem;}
+.stormFeatures p {margin:0 1rem 1rem;}
+@media(max-width:650px) {.stormFeatures {grid-template-columns:1fr;}}
 .stormArticle {margin-left:20px;}
 .stormArticle .block-header {font-size:15px;font-weight:normal;padding:8px 12px 8px 36px;}
 .stormArticleContent {position:relative;}

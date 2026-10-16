@@ -12,6 +12,7 @@ public interface ProductAnalytics {
   }
 
   enum Action {
+    GUIDE_OPENED("onboarding", "guide_opened"),
     HOME_SET("survival", "home_set"),
     HOME_USED("survival", "home_used"),
     WARP_USED("survival", "warp_used"),

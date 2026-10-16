@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.paper;
 
 import static com.shepherdjerred.thestorm.essentials.testing.PaperHarness.messages;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,16 +15,23 @@ import com.shepherdjerred.thestorm.essentials.domain.moderation.AuditEntry;
 import com.shepherdjerred.thestorm.essentials.domain.moderation.ModerationAction;
 import com.shepherdjerred.thestorm.essentials.testing.FakeWallets;
 import com.shepherdjerred.thestorm.essentials.testing.PaperHarness;
+import io.papermc.paper.connection.PlayerConnection;
+import io.papermc.paper.event.connection.PlayerConnectionValidateLoginEvent;
+import java.io.IOException;
+import java.lang.reflect.Proxy;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The Paper adapters on MockBukkit: commands reach essentials through Brigadier, as they would on a
@@ -43,6 +51,54 @@ final class EssentialsPaperTest {
 
   List<AuditEntry> log(UUID player) {
     return new JooqModerationLogStore(harness.database).history(player, 10).join();
+  }
+
+  private static PlayerConnection connection() {
+    return PlayerConnection.class.cast(
+        Proxy.newProxyInstance(
+            PlayerConnection.class.getClassLoader(),
+            new Class<?>[] {PlayerConnection.class},
+            (proxy, method, arguments) -> {
+              throw new UnsupportedOperationException(
+                  "The admission fixture does not use " + method.getName());
+            }));
+  }
+
+  @Test
+  void maintenanceAdmissionIsOwnerScopedAndDoesNotEvictAnOnlineHuman() throws IOException {
+    harness = PaperHarness.start(directory, new FakeWallets());
+    var player = harness.server.addPlayer("Builder");
+    var console = harness.server.getConsoleSender();
+    harness.server.dispatchCommand(console, "storm-maintenance begin 2026q4");
+    assertThat(console.nextMessage()).contains("\"state\":\"occupied\"", "\"players\":1");
+    assertThat(player.isOnline()).isTrue();
+    var before = new PlayerConnectionValidateLoginEvent(connection(), null);
+    harness.server.getPluginManager().callEvent(before);
+    assertThat(before.isAllowed()).isTrue();
+    player.disconnect();
+    harness.server.dispatchCommand(console, "storm-maintenance begin 2026q4");
+    var response = new JsonMapper().readTree(console.nextMessage());
+    var contract =
+        new JsonMapper().readTree(Files.readString(Path.of("../../../maintenance-status.json")));
+    assertThat(response.get("schemaVersion").intValue())
+        .isEqualTo(contract.get("schemaVersion").intValue());
+    assertThat(response.get("state").stringValue()).isEqualTo("ready");
+    assertThat(response.get("owner").stringValue())
+        .matches(contract.get("ownerPattern").stringValue());
+    var blocked = new PlayerConnectionValidateLoginEvent(connection(), null);
+    harness.server.getPluginManager().callEvent(blocked);
+    assertThat(blocked.isAllowed()).isFalse();
+    assertThat(
+            PlainTextComponentSerializer.plainText()
+                .serialize(requireNonNull(blocked.getKickMessage())))
+        .contains("maintenance");
+    harness.server.dispatchCommand(console, "storm-maintenance end another-owner");
+    assertThat(console.nextMessage()).contains("\"state\":\"conflict\"");
+    harness.server.dispatchCommand(console, "storm-maintenance end 2026q4");
+    assertThat(console.nextMessage()).contains("\"state\":\"open\"");
+    var after = new PlayerConnectionValidateLoginEvent(connection(), null);
+    harness.server.getPluginManager().callEvent(after);
+    assertThat(after.isAllowed()).isTrue();
   }
 
   @Test

@@ -86,6 +86,7 @@ public final class EssentialsPaper {
     var runtime =
         new PaperRuntime(
             server, context.scheduler(), context.time(), context.logger(), context.analytics());
+    var maintenance = new MaintenanceCommands(runtime);
     var spawnPreparation = SpawnPreparation.start(context, config);
     var kitItems = KitItems.build(config.kits());
     context
@@ -147,7 +148,12 @@ public final class EssentialsPaper {
                     .services()
                     .require(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class)));
     var teleportInfo = new TeleportInfoCommands(runtime, flow);
-    var playerCommands = new PlayerCommands(runtime, KitItems.readable(config.rules()), app.afk());
+    var playerCommands =
+        new PlayerCommands(
+            runtime,
+            KitItems.readable(config.rules()),
+            KitItems.readable(config.kits().guide()),
+            app.afk());
     var moderationCommands = new ModerationCommands(runtime, app.moderation(), app.players());
     context
         .lifecycle()
@@ -159,6 +165,7 @@ public final class EssentialsPaper {
               tpaCommands.register(commands);
               teleportInfo.register(commands);
               playerCommands.register(commands);
+              maintenance.register(commands);
               moderationCommands.register(commands);
               staff.register(commands);
             });
@@ -167,6 +174,7 @@ public final class EssentialsPaper {
     List<Listener> listeners =
         List.of(
             spawnPreparation,
+            maintenance,
             new TeleportListener(
                 runtime,
                 flow,

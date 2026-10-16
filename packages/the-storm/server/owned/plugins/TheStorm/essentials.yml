@@ -98,25 +98,81 @@ kits:
           author: The Storm
           pages:
             - |-
-              <dark_aqua><b>Welcome to The Storm</b></dark_aqua>
+              <dark_aqua><b>The Storm</b></dark_aqua>
 
-              A survival economy server, running since 2014.
+              Build, trade, and explore.
+              You start with tools, food and 500 crystals.
 
-              The money here is <dark_aqua>crystals</dark_aqua> (CR). Earn them from quests, the Mob Arena and trading with other players.
+              /bal shows your money.
+              /guide reopens this book.
             - |-
-              <dark_aqua><b>Getting around</b></dark_aqua>
+              <dark_aqua><b>Stay safe</b></dark_aqua>
 
-              /spawn returns you to the windmill.
-              /sethome and /home save a place to come back to.
+              Read /rules. No griefing.
+              Spawn is PvP-free. Outside it, PvP is on.
+
+              /pvp off opts out, once a week.
+            - |-
+              <dark_aqua><b>Find your own land</b></dark_aqua>
+
+              /rtp finds a safe spot. Free for seven days; cooldowns apply.
+
+              Gather wood. Pick a home, then /sethome to save it.
+            - |-
+              <dark_aqua><b>Protect your base</b></dark_aqua>
+
+              /town create <name> starts a town.
+              /claim protects the chunk you stand in.
+
+              Build on your land or with permission.
+            - |-
+              <dark_aqua><b>Lock what you love</b></dark_aqua>
+
+              Placed chests lock automatically. Look at one: /lock info checks it.
+
+              Unlocked chests are fair game where access permits.
+            - |-
+              <dark_aqua><b>Your first reward</b></dark_aqua>
+
+              Right-click Anna by the windmill for a daily reward.
+
+              /quests opens your journal.
+              /shop shows the shops.
+            - |-
+              <dark_aqua><b>Travel</b></dark_aqua>
+
+              /spawn goes to the windmill.
+              /home goes to your home.
               /tpa asks to visit a friend.
 
-              /tpinfo explains prices and your shared cooldown. Occasional trips are affordable; frequent trips cost more and take longer. Elytra and happy ghasts are free.
+              Trips cost crystals. /tpinfo shows prices and cooldowns.
             - |-
-              <dark_aqua><b>Before you build</b></dark_aqua>
+              <dark_aqua><b>Recover your things</b></dark_aqua>
 
-              Read /rules. Build on your own land, and lock the chests you want to keep.
+              /graves lists your graves.
 
-              Need help? Ask in chat or on our Discord.
+              Recover items within two hours. After that, others may take them.
+            - |-
+              <dark_aqua><b>Brave The Storm</b></dark_aqua>
+
+              Mobs and ores drop Storm Shards.
+
+              Use one on the windmill's emerald block in rain to upgrade equipment.
+            - |-
+              <dark_aqua><b>Play together</b></dark_aqua>
+
+              /arena lists co-op games.
+              /rwf join enters Search and Destroy.
+
+              Ask in chat or Discord to find players.
+            - |-
+              <dark_aqua><b>Find your people</b></dark_aqua>
+
+              /help lists commands.
+              /ticket <message> asks staff for help.
+
+              Discord and the full player guide:
+              docs.ts-mc.net
 
 # The book /rules opens. MiniMessage; at most 100 pages. The server's official
 # rules, as given by the owner.

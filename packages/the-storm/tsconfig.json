@@ -5,6 +5,7 @@
     "noEmit": true
   },
   "include": [
+    "server/**/*.ts",
     "scripts/**/*.ts",
     "tools/**/*.ts",
     "tests/**/*.ts",

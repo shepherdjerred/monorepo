@@ -92,9 +92,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
     port: 8100,
     hosts: ["minecraft-tsmc-bluemap"],
     proxyClass: "medium",
-    // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
-    // so a synthetic probe only measures sleep: 60s failures around the clock.
-    disableProbe: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-bluemap-cf-tunnel", {
@@ -103,9 +100,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
     namespace: "minecraft-tsmc",
     disableDnsUpdates: true,
     port: 8100,
-    // Hibernates at 0 replicas (see above); the public probe additionally made
-    // cloudflared log an unreachable-origin error every minute.
-    disableProbe: true,
   });
 
   createCloudflareTunnelBinding(chart, "minecraft-tsmc-livemap-cf-tunnel", {
@@ -114,14 +108,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
     namespace: "minecraft-tsmc",
     disableDnsUpdates: true,
     port: 8100,
-    // Hibernates at 0 replicas (see above); the public probe additionally made
-    // cloudflared log an unreachable-origin error every minute.
+    // Both hostnames share one backend; its public probe uses bluemap.ts-mc.net.
     disableProbe: true,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
-    replicaCount: 0,
-    // Deploy as StatefulSet for mc-router auto-scaling support
+    replicaCount: 1,
+    // Maintenance owns deliberate stop/start; normal operation stays available.
     workloadAsStatefulSet: true,
     extraPodSpec: { priorityClassName: BURST_SERVICE_PRIORITY },
     strategyType: "RollingUpdate",
@@ -129,6 +122,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // Include mc.ts-mc.net because SRV record redirects there and some clients send that hostname
     serviceAnnotations: {
       "mc-router.itzg.me/externalServerName": "ts-mc.net,mc.ts-mc.net",
+      "mc-router.itzg.me/autoScaleDown": "false",
     },
     // The chart sets no command or args, so the image's storm-entrypoint runs.
     image: {
@@ -181,8 +175,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
       extraPorts: [
         getMinecraftBlueMapPort(),
         {
-          // mc-router handles Java TCP only. Bedrock UDP reaches Geyser while
-          // the server is awake; a Bedrock packet cannot wake this StatefulSet.
+          // Bedrock UDP reaches Geyser directly; continuous availability means
+          // Bedrock players do not depend on a Java connection waking the server.
           service: {
             enabled: true,
             type: "NodePort",
@@ -310,14 +304,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "minecraft-tsmc",
       },
-      // Allow mc-router to manage replicas for hibernation
+      // ArgoCD enforces one replica. Admission guards reject reconciliation
+      // while an exclusive maintenance lock requires zero replicas.
       // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
       ignoreDifferences: [
         {
           group: "apps",
           kind: "StatefulSet",
           jsonPointers: [
-            "/spec/replicas",
             `/metadata/annotations/${MINING_RESET_LOCK_ANNOTATION.replaceAll("/", "~1")}`,
             `/metadata/annotations/${MINING_RESET_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
             `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,

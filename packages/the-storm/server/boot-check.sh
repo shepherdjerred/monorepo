@@ -98,6 +98,7 @@ boot() { # label [docker run args...]
   docker stop -t 90 "$name" >/dev/null
   docker logs -t "$name" >"$logs/$label.log" 2>&1
   docker rm "$name" >/dev/null
+  on_volume cmp /opt/the-storm/server-icon.png /data/server-icon.png || fail "$label: server icon differs from the image"
   local log=$logs/$label.log
   grep -qE 'Done \([0-9.]+s\)!' "$log" || fail "$label: server never reached Done (see $log)"
   echo "[$label] Done after ${ready}s ($(grep -oE 'Done \([0-9.]+s\)' "$log"))"
@@ -173,7 +174,7 @@ db.execute("CREATE TABLE boot_check (marker TEXT)")
 db.execute("INSERT INTO boot_check VALUES (?)", ("survives",))
 db.commit()
 '
-on_volume bash -c 'echo runtime >/data/plugins/TheStorm/runtime-state.txt && echo stray >/data/plugins/Stray-1.0.jar'
+on_volume bash -c 'echo runtime >/data/plugins/TheStorm/runtime-state.txt && echo stray >/data/plugins/Stray-1.0.jar && echo stale >/data/server-icon.png'
 
 boot fresh-offline --network none
 

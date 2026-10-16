@@ -1,12 +1,13 @@
 ---
-title: Welcome
-description: Documentation for The Storm Minecraft server.
+title: Welcome to The Storm
+description: Build a town, trade, and explore The Storm on Minecraft Java and Bedrock.
 ---
 
-Welcome to The Storm's documentation!
+Build a town, trade with your neighbors, and brave The Storm. Our survival server has quests, a player economy, and Storm Shard equipment upgrades, with cooperative arenas and Search and Destroy when you want a different challenge.
 
-These pages cover the player-facing side of the server: the rules, the
-survival worlds, and how to find your way around.
+**Java:** `ts-mc.net` · **Bedrock:** `mc.ts-mc.net`, port `30004`.
+
+Start with [how to join](/join/), then follow [your first session](/getting-started/) to claim land and save a home. In game, `/guide` opens the welcome book you receive on arrival. No tutorial or forum registration is required to play.
 
 - [Survival](./survival/): information about our survival server.
 - [Search and Destroy](./search-and-destroy/): the Red Warfare team
@@ -15,4 +16,4 @@ survival worlds, and how to find your way around.
 - [World Downloads](./world_downloads/): periodic copies of the world for
   players to download.
 
-Found a mistake? Every page has an edit link — contributions are welcome.
+Need a hand? Ask in game or meet the community in [Discord](/discord/).

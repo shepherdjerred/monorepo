@@ -23,3 +23,11 @@ export const ownedConfigDir = path.join(
 );
 
 export const ownedConfig = path.join(ownedConfigDir, "config.yml");
+
+/** The deterministic multiplayer-list icon copied into disposable servers. */
+export const serverIcon = path.join(
+  packageRoot,
+  "server",
+  "assets",
+  "server-icon.png",
+);

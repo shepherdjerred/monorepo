@@ -3,10 +3,11 @@
 locals {
   storm_events = <<-SQL
     SELECT DISTINCT properties.event_id AS event_id, distinct_id, timestamp, event,
+      properties.session_id AS session_id,
       properties.mode AS mode, properties.feature AS feature, properties.action AS action,
       toFloat(properties.connected_ms) AS connected_ms,
       toFloat(properties.active_ms) AS active_ms,
-      properties.first_seen_at AS first_seen_at
+      toDateTime(toString(properties.first_seen_at)) AS first_seen_at
     FROM events
     WHERE event IN ('storm_session_started', 'storm_playtime_recorded', 'storm_feature_interacted', 'storm_session_ended')
       AND properties.source = 'minecraft' AND properties.site_key = 'ts-mc'
@@ -25,7 +26,7 @@ locals {
       name        = "Daily new and returning players"
       description = "New means first seen by this collector; historical server visits are not backfilled. Pacific calendar days."
       display     = "ActionsLineGraph"
-      query       = "SELECT toDate(toTimeZone(timestamp, 'America/Los_Angeles')) AS day, uniqIf(distinct_id, toDate(toTimeZone(parseDateTimeBestEffort(first_seen_at), 'America/Los_Angeles')) = day) AS new_players, uniqIf(distinct_id, toDate(toTimeZone(parseDateTimeBestEffort(first_seen_at), 'America/Los_Angeles')) < day) AS returning_players FROM (${local.storm_events}) GROUP BY day ORDER BY day"
+      query       = "SELECT toDate(toTimeZone(timestamp, 'America/Los_Angeles')) AS day, uniqIf(distinct_id, toDate(toTimeZone(first_seen_at, 'America/Los_Angeles')) = day) AS new_players, uniqIf(distinct_id, toDate(toTimeZone(first_seen_at, 'America/Los_Angeles')) < day) AS returning_players FROM (${local.storm_events}) GROUP BY day ORDER BY day"
     }
     playtime = {
       name        = "Daily connected and active hours"
@@ -45,6 +46,26 @@ locals {
       display     = "ActionsTable"
       query       = "SELECT count() AS sessions, avg(connected_ms) / 60000 AS mean_connected_minutes, avg(active_ms) / 60000 AS mean_active_minutes FROM (${local.storm_events}) WHERE event = 'storm_session_ended'"
     }
+    first_sessions = {
+      name        = "New players: first-session engagement"
+      description = "Completed first sessions observed by this collector, excluding historical visits. Active minutes exclude AFK. Ten active minutes is an engagement signal, not a tutorial requirement."
+      display     = "ActionsTable"
+      query       = <<-SQL
+        WITH measured AS (${local.storm_events}), first_sessions AS (
+          SELECT distinct_id, argMin(session_id, timestamp) AS first_session_id
+          FROM measured
+          WHERE event = 'storm_session_started'
+            AND toDate(toTimeZone(timestamp, 'America/Los_Angeles')) = toDate(toTimeZone(first_seen_at, 'America/Los_Angeles'))
+          GROUP BY distinct_id
+        )
+        SELECT count() AS completed_first_sessions,
+          avg(active_ms) / 60000 AS mean_active_minutes,
+          countIf(active_ms >= 600000) AS reached_ten_active_minutes
+        FROM measured INNER JOIN first_sessions ON measured.distinct_id = first_sessions.distinct_id
+          AND measured.session_id = first_sessions.first_session_id
+        WHERE event = 'storm_session_ended'
+      SQL
+    }
     features = {
       name        = "Features: interactions and unique players"
       description = "Successful feature interactions by bounded action. Arena/match completion includes forced stops. No command arguments or chat content."
@@ -58,10 +79,10 @@ locals {
       query       = <<-SQL
         WITH measured AS (${local.storm_events}),
         cohorts AS (
-          SELECT distinct_id, min(toStartOfWeek(toTimeZone(parseDateTimeBestEffort(first_seen_at), 'America/Los_Angeles'), 1)) AS cohort
+          SELECT distinct_id, min(toStartOfWeek(toTimeZone(first_seen_at, 'America/Los_Angeles'), 1)) AS cohort
           FROM measured
           WHERE event = 'storm_session_started'
-            AND toDate(toTimeZone(timestamp, 'America/Los_Angeles')) = toDate(toTimeZone(parseDateTimeBestEffort(first_seen_at), 'America/Los_Angeles'))
+            AND toDate(toTimeZone(timestamp, 'America/Los_Angeles')) = toDate(toTimeZone(first_seen_at, 'America/Los_Angeles'))
           GROUP BY distinct_id
         ), weeks AS (
           SELECT DISTINCT distinct_id, toStartOfWeek(toTimeZone(timestamp, 'America/Los_Angeles'), 1) AS week FROM measured

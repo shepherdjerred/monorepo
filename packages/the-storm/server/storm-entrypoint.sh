@@ -108,6 +108,7 @@ install_livemap() {
 }
 
 require_progression_preparation
+install -m 0664 /opt/the-storm/server-icon.png /data/server-icon.png
 remove_stale_files
 mirror_owned_roots
 install_livemap /opt/the-storm/livemap /data/bluemap/web "$(stat -c '%u' /data)" "$(stat -c '%g' /data)"

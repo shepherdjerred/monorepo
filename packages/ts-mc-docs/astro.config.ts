@@ -62,6 +62,8 @@ export default defineConfig({
       pagefind: true,
       sidebar: [
         { label: "Welcome", link: "/" },
+        { label: "How to join", link: "/join/" },
+        { label: "Your first session", link: "/getting-started/" },
         { label: "Norms", link: "/norms/" },
         { label: "World Downloads", link: "/world_downloads/" },
         {

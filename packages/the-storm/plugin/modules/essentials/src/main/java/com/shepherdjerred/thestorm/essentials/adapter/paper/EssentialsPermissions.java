@@ -21,6 +21,7 @@ public final class EssentialsPermissions {
   static final String SET_WARP = PREFIX + "setwarp";
   static final String DEL_WARP = PREFIX + "delwarp";
   static final String RULES = PREFIX + "rules";
+  static final String GUIDE = PREFIX + "guide";
   static final String AFK = PREFIX + "afk";
   static final String KICK = PREFIX + "kick";
   static final String BAN = PREFIX + "ban";
@@ -45,6 +46,7 @@ public final class EssentialsPermissions {
     add(BACK, "Use /back", PermissionDefault.TRUE);
     add(WARP, "Use /warp", PermissionDefault.TRUE);
     add(RULES, "Use /rules", PermissionDefault.TRUE);
+    add(GUIDE, "Use /guide", PermissionDefault.TRUE);
     add(AFK, "Use /afk", PermissionDefault.TRUE);
     add(SET_WARP, "Use /setwarp", PermissionDefault.OP);
     add(DEL_WARP, "Use /delwarp", PermissionDefault.OP);
