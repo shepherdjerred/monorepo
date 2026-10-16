@@ -99,12 +99,12 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
         // ZFS `quotaType: quota`, which counts snapshots against the same quota
         // as live data. Preserve Velero retention (12 6hourly + 7 daily +
         // 4 weekly + 3 monthly) while allowing for WAL-heavy snapshot divergence.
-        // A ~20Gi live dataset and ~79Gi retained snapshots leave little room
-        // inside 128Gi; 256Gi preserves those recovery points and recovery WAL.
+        // 384Gi leaves headroom for live data, WAL, and snapshot-retained blocks
+        // without changing the existing claim, dataset, or retention policy.
         // quotaType is immutable per-volume and StorageClass parameters are
         // immutable, so sizing around snapshot overhead is the available fix
         // without recreating the volume on a refquota class.
-        size: "256Gi",
+        size: "384Gi",
         storageClass: "zfs-ssd",
       },
       users: {

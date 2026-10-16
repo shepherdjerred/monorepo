@@ -93,6 +93,26 @@ function verifyRwfEnabledEnvironments(key: string): void {
 }
 
 describe("ManagedFlagInventorySchema", () => {
+  test("preserves the enabled beta durable rollout and production's disabled contract", () => {
+    expect(
+      scoutPolicyFlag("beta", "scout_durable_orchestration_enabled"),
+    ).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(
+      scoutPolicyFlag("prod", "scout_durable_orchestration_enabled"),
+    ).toMatchObject({
+      default: false,
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(
+      scoutPolicyFlag("prod", "scout_durable_orchestration_enabled").rollouts,
+    ).toHaveLength(1);
+  });
   test("Scout report support action is enabled in beta only", () => {
     const flag = managedFlagInventory.flags.find(
       ({ key }) => key === "scout_support_report_action_enabled",

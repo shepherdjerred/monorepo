@@ -41,6 +41,14 @@ function parseDuration(value: string): number {
   return Number(amount) * multiplier;
 }
 
+test("schedule activity failures do not claim consecutive failed daily runs", () => {
+  const rule = getTemporalRuleGroups()
+    .flatMap((group) => group.rules ?? [])
+    .find((entry) => entry.alert === "TemporalScheduledWorkflowFailingDaily");
+  expect(rule?.annotations?.["description"]).toContain("including retries");
+  expect(rule?.annotations?.["description"]).not.toContain("twice in a row");
+  expect(rule?.annotations?.["description"]).not.toContain("A daily schedule");
+});
 describe("Temporal workflow outcome rules", () => {
   test("alerts on schedule delay, Workflow Task failures, nondeterminism, and exhausted Activity retries", () => {
     const healthGroup = getTemporalRuleGroups().find(
