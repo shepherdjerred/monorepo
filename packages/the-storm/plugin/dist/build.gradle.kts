@@ -38,11 +38,14 @@ tasks.assemble { dependsOn(tasks.shadowJar) }
 // Disposable world fixtures for the full-module real-Paper suite. This jar is
 // separate from TheStorm.jar and is never copied into the production image.
 val e2e = sourceSets.create("e2e") {
+  java.srcDir("src/e2eSupport/java")
   // One pure-JDK codec is compiled into both local tools. It never enters TheStorm.jar.
   java.srcDir(rootProject.file("../client/src/main/java/com/shepherdjerred/thestorm/client/wire"))
   compileClasspath += configurations.compileClasspath.get() + sourceSets.main.get().output
   runtimeClasspath += output + compileClasspath
 }
+// Pure fixture lifecycle support is tested without adding it to the production plugin.
+sourceSets.test { java.srcDir("src/e2eSupport/java") }
 configurations[e2e.compileOnlyConfigurationName].extendsFrom(configurations.compileOnly.get())
 val fixturesJar = tasks.register<Jar>("fixturesJar") {
   archiveFileName = "TheStormFixtures.jar"

@@ -11,6 +11,9 @@ import org.bukkit.WorldType;
 import org.bukkit.block.data.Bisected;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -18,7 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * staged config.yml switches on. The full suite enables everything; the e2e suite enables a few
  * modules and needs only their fixtures (and must not move the main world's spawn into the air).
  */
-public final class StormFixtures extends JavaPlugin {
+public final class StormFixtures extends JavaPlugin implements Listener {
 
   /** A flat world with no terrain at all: the rwf maps bring their own. */
   private static final String VOID_PRESET =
@@ -34,6 +37,7 @@ public final class StormFixtures extends JavaPlugin {
   private com.shepherdjerred.thestorm.e2e.maps.AuthoredCombatFixtures authoredCombat;
   private com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures closeStarts;
   private com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures detailsExporter;
+  private final FixtureShutdown shutdown = new FixtureShutdown(this::closeFixtures);
 
   @Override
   public void onEnable() {
@@ -99,10 +103,21 @@ public final class StormFixtures extends JavaPlugin {
     detailsExporter = new com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures(this, world);
     detailsExporter.register();
     new com.shepherdjerred.thestorm.e2e.maps.MapLifecycleFixtures(this).register();
+    getServer().getPluginManager().registerEvents(this, this);
+  }
+
+  /** The fixtures start first, so release shared plugin resources before TheStorm unloads. */
+  @EventHandler
+  public void onPluginDisable(PluginDisableEvent event) {
+    shutdown.pluginDisabling(event.getPlugin().getName());
   }
 
   @Override
   public void onDisable() {
+    shutdown.close();
+  }
+
+  private void closeFixtures() {
     if (mapExporter != null) mapExporter.close();
     if (navigation != null) navigation.close();
     if (pursuit != null) pursuit.close();
@@ -111,6 +126,7 @@ public final class StormFixtures extends JavaPlugin {
     if (authoredCombat != null) authoredCombat.close();
     if (closeStarts != null) closeStarts.close();
     if (detailsExporter != null) detailsExporter.close();
+    getLogger().info("Released synthetic fixture resources");
   }
 
   /** Whether {@code module} is switched on; a config that omits it is a staging bug. */
