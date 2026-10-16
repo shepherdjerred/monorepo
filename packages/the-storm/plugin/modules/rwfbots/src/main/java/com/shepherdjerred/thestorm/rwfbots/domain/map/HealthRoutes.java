@@ -4,7 +4,6 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,9 +229,12 @@ public final class HealthRoutes {
     private final Map<Integer, List<Label>> frontier = new HashMap<>();
     private final PriorityQueue<Label> open =
         new PriorityQueue<>(
-            Comparator.comparingDouble((Label label) -> label.cost)
-                .thenComparingInt(label -> label.damage)
-                .thenComparingInt(label -> label.node));
+            (left, right) -> {
+              var cost = Double.compare(left.cost, right.cost);
+              if (cost != 0) return cost;
+              var damage = Integer.compare(left.damage, right.damage);
+              return damage != 0 ? damage : Integer.compare(left.node, right.node);
+            });
 
     Search(NavGraph graph, Request request, EdgePolicy edges) {
       this.graph = graph;
@@ -281,7 +283,7 @@ public final class HealthRoutes {
 
     private void offer(Label candidate) {
       var labels = frontier.computeIfAbsent(candidate.node, node -> new ArrayList<>());
-      if (labels.stream().anyMatch(label -> label.dominates(candidate, arrivalMatters))) return;
+      for (var label : labels) if (label.dominates(candidate, arrivalMatters)) return;
       labels.removeIf(label -> candidate.dominates(label, arrivalMatters));
       labels.add(candidate);
       open.add(candidate);
