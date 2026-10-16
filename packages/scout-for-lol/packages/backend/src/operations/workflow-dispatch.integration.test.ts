@@ -146,11 +146,11 @@ const OBSERVED = IsoInstantSchema.parse("2026-09-16T10:00:00.000Z");
 async function otherDriverRequests(): Promise<WorkflowStartRequestId> {
   const other = await requestWorkflowStart(base, {
     requestedWorkflowId: RECONCILE_ID,
-    workflowType: "scoutPipelineReconciliationV2Workflow",
+    workflowType: "scoutPipelineReconciliationWorkflow",
     requestedBy: OPERATOR,
     requestSource: "operations:reconcile-pipeline",
     inputPayload: {
-      kind: "scoutPipelineReconciliationV2Workflow",
+      kind: "scoutPipelineReconciliationWorkflow",
       version: 1,
       data: RECONCILE_INPUT,
     },

@@ -12,7 +12,6 @@ import { SCOUT_PAGE_MAX } from "@scout-for-lol/temporal/pipeline-contracts";
 import {
   SCOUT_PIPELINE_WORKFLOW_NAMES,
   SCOUT_WORKFLOW_NAMES,
-  scoutWorkflowTypesOf,
   type ScoutPipelineWorkflowName,
 } from "@scout-for-lol/temporal/identifiers";
 import {
@@ -163,13 +162,9 @@ const PIPELINE_START_FOLDS = {
   },
 } satisfies Record<ScoutPipelineWorkflowName, StartFold | null>;
 
-// Keyed by both names a pipeline type carries during the rename release, so a
-// start row written before it still folds into its family.
 const FOLD_BY_WORKFLOW_TYPE: ReadonlyMap<string, StartFold | null> = new Map(
-  SCOUT_PIPELINE_WORKFLOW_NAMES.flatMap((name) =>
-    scoutWorkflowTypesOf(name).map(
-      (workflowType) => [workflowType, PIPELINE_START_FOLDS[name]] as const,
-    ),
+  SCOUT_PIPELINE_WORKFLOW_NAMES.map(
+    (name) => [name, PIPELINE_START_FOLDS[name]] as const,
   ),
 );
 

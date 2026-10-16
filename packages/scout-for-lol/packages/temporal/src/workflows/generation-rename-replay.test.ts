@@ -13,7 +13,7 @@ import {
   SCOUT_WORKFLOW_NAMES,
   scoutMatchProcessingWorkflowId,
   scoutPipelineReconciliationWorkflowId,
-  withPreRenameActivityNames,
+  scoutPreRenameActivityType,
 } from "#src/identifiers.ts";
 import {
   scoutMatchProcessingInputCodec,
@@ -33,6 +33,7 @@ import {
   MATCH_ID,
   scoutMatchActivityStubs,
 } from "./match.test-fixtures.ts";
+import { recordedUnderRenamedType } from "./recorded-history.test-fixtures.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 import recordedDispatcher from "./fixtures/client-match-dispatch.mid-run.json" with { type: "json" };
 import recordedMatchMidRun from "./fixtures/match-processing.mid-run.json" with { type: "json" };
@@ -40,21 +41,27 @@ import recordedMatchFanOut from "./fixtures/match-processing.fan-out-children.js
 
 /**
  * The generation rename, from both sides of the `scout-generation-rename`
- * patch.
+ * patch, against a bundle that no longer registers the pre-rename types.
  *
- * Replay checks every recorded command by type, so the executions the switch
- * to the renamed types could wedge are the ones recorded before it under the
- * pre-rename types: the client-match dispatcher singleton, which never
- * closes, caught after it started a match child; that child caught with an
- * Activity in flight; and a completed match run whose fan-out started its
- * notification and lake children. Each fixture was recorded by running the
- * pre-rename source against the same Activity stubs these tests use.
+ * The fixtures were recorded by running the pre-rename source against the
+ * same Activity stubs these tests use: the client-match dispatcher singleton
+ * caught after it started a match child, that child caught with an Activity in
+ * flight, and a completed match run whose fan-out started its notification and
+ * lake children. Under the type they were recorded with they no longer replay:
+ * this bundle has no Workflow of that name, which is why the release that
+ * dropped the aliases waited for every execution of those types to close.
+ *
+ * The bundle before the patch also ran executions under the renamed types
+ * (Schedules and clients issued them first) while still scheduling the
+ * pre-rename Activity and child types. Those commands still replay, because
+ * the unpatched branch of the gate is unchanged; a fixture under its renamed
+ * type stands in for such a history.
  *
  * The rest record histories now. A Workflow worker whose
  * `patchActivationCallback` withholds the patch issues exactly the commands
- * the previous bundle did — pre-rename types and no marker — so it stands in
- * for that bundle, and swapping it for an ordinary worker mid-run is the
- * deploy itself.
+ * the previous bundle did — pre-rename Activity and child types and no marker
+ * — so it stands in for that bundle, and swapping it for an ordinary worker
+ * mid-run is the deploy that introduced the patch.
  */
 
 const workflowsPath = new URL("index.ts", import.meta.url).pathname;
@@ -100,16 +107,34 @@ async function startWorkflowWorker(
   );
 }
 
-/** Activity workers registering both names, as the production ones do. */
+/**
+ * Every Activity under its pre-rename name as well, as the Activity workers of
+ * the release before this one registered them. Only a run recorded with the
+ * patch withheld schedules those names.
+ */
+function withPreviousReleaseActivityNames(
+  activities: object,
+): Record<string, unknown> {
+  const registered: Record<string, unknown> = { ...activities };
+  for (const [name, implementation] of Object.entries(activities)) {
+    registered[scoutPreRenameActivityType(name)] = implementation;
+  }
+  return registered;
+}
+
 async function startActivityWorkers(
   queues: Readonly<Partial<Record<"realtime" | "background" | "lake", object>>>,
+  generation: "renamed" | "previous-release" = "renamed",
 ): Promise<void> {
   for (const [queue, activities] of Object.entries(queues)) {
     await activityWorkers.start(
       await Worker.create({
         connection: environment.nativeConnection,
         taskQueue: `scout-dev-${queue}`,
-        activities: withPreRenameActivityNames(activities),
+        activities:
+          generation === "previous-release"
+            ? withPreviousReleaseActivityNames(activities)
+            : activities,
         maxConcurrentActivityTaskExecutions: 4,
       }),
     );
@@ -189,13 +214,33 @@ function preRenameNames(names: readonly string[]): string[] {
 
 // ─── Histories recorded before the patch ───────────────────────────────────
 
-test("a dispatcher caught mid-run under the pre-rename types replays", async () => {
+test("a history under a pre-rename type no longer replays", async () => {
   const recorded = fixtureHistory(recordedDispatcher);
 
-  // The singleton as it runs in both namespaces today: the old type, with a
-  // match child started under the old type and still running.
+  // The singleton as it ran before the rename: the old type, with a match
+  // child started under the old type and still running. An execution like
+  // this one is what the alias removal had to wait out.
   expect(namesIn(recorded)).toMatchObject({
     workflowType: "scoutClientMatchDispatchV2Workflow",
+    activities: ["readMatchPipelineStateV2"],
+    children: ["scoutMatchProcessingV2Workflow"],
+    renamePatchMarkers: 0,
+  });
+  await expect(
+    Worker.runReplayHistory({ workflowsPath }, recorded),
+  ).rejects.toThrow(
+    /scoutClientMatchDispatchV2Workflow.*no such function is exported/u,
+  );
+}, 120_000);
+
+test("a dispatcher's pre-patch commands under the renamed type replay", async () => {
+  const recorded = recordedUnderRenamedType(
+    recordedDispatcher,
+    SCOUT_WORKFLOW_NAMES.clientMatchDispatch,
+  );
+
+  expect(namesIn(recorded)).toMatchObject({
+    workflowType: "scoutClientMatchDispatchWorkflow",
     activities: ["readMatchPipelineStateV2"],
     children: ["scoutMatchProcessingV2Workflow"],
     renamePatchMarkers: 0,
@@ -203,11 +248,14 @@ test("a dispatcher caught mid-run under the pre-rename types replays", async () 
   await Worker.runReplayHistory({ workflowsPath }, recorded);
 }, 120_000);
 
-test("a match run caught with a pre-rename Activity in flight replays", async () => {
-  const recorded = fixtureHistory(recordedMatchMidRun);
+test("a match run's pre-patch Activity in flight under the renamed type replays", async () => {
+  const recorded = recordedUnderRenamedType(
+    recordedMatchMidRun,
+    SCOUT_WORKFLOW_NAMES.matchProcessing,
+  );
 
   expect(namesIn(recorded)).toMatchObject({
-    workflowType: "scoutMatchProcessingV2Workflow",
+    workflowType: "scoutMatchProcessingWorkflow",
     activities: [
       "readMatchPipelineStateV2",
       "archiveMatchArtifactsV2",
@@ -216,12 +264,14 @@ test("a match run caught with a pre-rename Activity in flight replays", async ()
     children: [],
     renamePatchMarkers: 0,
   });
-
   await Worker.runReplayHistory({ workflowsPath }, recorded);
 }, 120_000);
 
-test("a match run whose fan-out started pre-rename children replays", async () => {
-  const recorded = fixtureHistory(recordedMatchFanOut);
+test("a match run's pre-patch fan-out children under the renamed type replay", async () => {
+  const recorded = recordedUnderRenamedType(
+    recordedMatchFanOut,
+    SCOUT_WORKFLOW_NAMES.matchProcessing,
+  );
 
   expect(namesIn(recorded).children).toEqual([
     "scoutNotificationV2Workflow",
@@ -230,19 +280,20 @@ test("a match run whose fan-out started pre-rename children replays", async () =
   await Worker.runReplayHistory({ workflowsPath }, recorded);
 }, 120_000);
 
-test("the dispatcher fixture fails replay once its child names the new type", async () => {
+test("a pre-patch history fails replay once its child names the new type", async () => {
   // The negative control: a bundle that issued the renamed child type where
   // the history recorded the old one, with no patch to tell them apart,
   // would wedge this execution.
   const preRename =
     SCOUT_PRE_RENAME_WORKFLOW_TYPES[SCOUT_WORKFLOW_NAMES.matchProcessing];
-  const tampered = historyFromJSON(
+  const tampered = recordedUnderRenamedType(
     JSON.parse(
       JSON.stringify(recordedDispatcher).replace(
         `"name":"${preRename}"`,
         `"name":"${SCOUT_WORKFLOW_NAMES.matchProcessing}"`,
       ),
     ),
+    SCOUT_WORKFLOW_NAMES.clientMatchDispatch,
   );
   expect(namesIn(tampered).children).toEqual([
     SCOUT_WORKFLOW_NAMES.matchProcessing,
@@ -262,22 +313,28 @@ const matchInput = scoutMatchProcessingInputCodec.serialize({
   deliveryMode: "live",
 });
 
-async function recordMatchRun(workflowType: string): Promise<History> {
-  await startActivityWorkers({
-    realtime: scoutMatchActivityStubs(createScoutMatchStore()),
-  });
-  const handle = await environment.client.workflow.start(workflowType, {
-    taskQueue: "scout-dev",
-    workflowId: scoutMatchProcessingWorkflowId(stage, MATCH_ID),
-    args: [matchInput],
-  });
+async function recordMatchRun(
+  generation: "renamed" | "previous-release",
+): Promise<History> {
+  await startActivityWorkers(
+    { realtime: scoutMatchActivityStubs(createScoutMatchStore()) },
+    generation,
+  );
+  const handle = await environment.client.workflow.start(
+    SCOUT_WORKFLOW_NAMES.matchProcessing,
+    {
+      taskQueue: "scout-dev",
+      workflowId: scoutMatchProcessingWorkflowId(stage, MATCH_ID),
+      args: [matchInput],
+    },
+  );
   await handle.result();
   return await handle.fetchHistory();
 }
 
 test("a match run recorded now issues the renamed types behind the patch", async () => {
   await startWorkflowWorker("renamed");
-  const recorded = await recordMatchRun(SCOUT_WORKFLOW_NAMES.matchProcessing);
+  const recorded = await recordMatchRun("renamed");
   const names = namesIn(recorded);
 
   expect(names.workflowType).toBe("scoutMatchProcessingWorkflow");
@@ -292,33 +349,16 @@ test("a match run recorded now issues the renamed types behind the patch", async
   await Worker.runReplayHistory({ workflowsPath }, recorded);
 }, 120_000);
 
-test("a run the Schedule started under the pre-rename type issues the renamed types too", async () => {
-  // Schedules and clients switch with this release, but a start already in
-  // flight under the old type still lands on this bundle.
-  await startWorkflowWorker("renamed");
-  const recorded = await recordMatchRun(
-    SCOUT_PRE_RENAME_WORKFLOW_TYPES[SCOUT_WORKFLOW_NAMES.matchProcessing],
-  );
-  const names = namesIn(recorded);
-
-  expect(names.workflowType).toBe("scoutMatchProcessingV2Workflow");
-  expect(preRenameNames(names.activities)).toEqual([]);
-  expect(names.children).toEqual([
-    "scoutNotificationWorkflow",
-    "scoutLakeProjectionWorkflow",
-  ]);
-  await Worker.runReplayHistory({ workflowsPath }, recorded);
-}, 120_000);
-
-test("with the patch withheld a run issues the pre-rename types and replays as renamed", async () => {
-  // What the previous bundle recorded for the same run, and the proof that
-  // such a history replays on this one.
+test("with the patch withheld a run issues the pre-rename types and replays", async () => {
+  // What the bundle before the patch recorded for a run the Schedules
+  // started under the renamed type, and the proof that such a history
+  // replays on this one. Its children name types this bundle does not run,
+  // which is why no such execution may still be open when it deploys.
   await startWorkflowWorker("pre-patch");
-  const recorded = await recordMatchRun(
-    SCOUT_PRE_RENAME_WORKFLOW_TYPES[SCOUT_WORKFLOW_NAMES.matchProcessing],
-  );
+  const recorded = await recordMatchRun("previous-release");
   const names = namesIn(recorded);
 
+  expect(names.workflowType).toBe("scoutMatchProcessingWorkflow");
   expect(names.renamePatchMarkers).toBe(0);
   expect(names.activities.length).toBeGreaterThan(0);
   expect(preRenameNames(names.activities)).toEqual(names.activities);
@@ -338,11 +378,11 @@ function lakePage(
   return { ...emptyPending(), lakeProjections: [riotMatchId] };
 }
 
-test("an open run deployed onto mid-flight switches to the renamed types from there on", async () => {
-  // A reconciliation sweep, started under the old type and caught with its
-  // second scan in flight when the bundle changes underneath it. Everything
-  // it issued before the deploy keeps the old names on replay; everything
-  // after carries the renamed ones, behind one marker.
+test("a run the patch reached mid-flight replays across the switch", async () => {
+  // A reconciliation sweep caught with its second scan in flight when the
+  // bundle that introduced the patch replaced the one before it. Everything
+  // it issued before keeps the old names on replay; everything after carries
+  // the renamed ones, behind one marker.
   const store = createReconciliationStore({
     pages: [
       lakePage(LAKE_MATCH_ID),
@@ -353,24 +393,25 @@ test("an open run deployed onto mid-flight switches to the renamed types from th
   const stubs = scoutReconciliationStubs(store);
   const secondScanStarted = Promise.withResolvers<true>();
   const releaseSecondScan = Promise.withResolvers<true>();
-  await startActivityWorkers({
-    background: {
-      scanPipelineReconciliationPage: async (input: { trigger: string }) => {
-        if (store.scanned === 1) {
-          secondScanStarted.resolve(true);
-          await releaseSecondScan.promise;
-        }
-        return stubs.scanPipelineReconciliationPage(input);
+  await startActivityWorkers(
+    {
+      background: {
+        scanPipelineReconciliationPage: async (input: { trigger: string }) => {
+          if (store.scanned === 1) {
+            secondScanStarted.resolve(true);
+            await releaseSecondScan.promise;
+          }
+          return stubs.scanPipelineReconciliationPage(input);
+        },
       },
+      lake: scoutLakeStubs(createLakeStore()),
     },
-    lake: scoutLakeStubs(createLakeStore()),
-  });
+    "previous-release",
+  );
   await startWorkflowWorker("pre-patch");
 
   const handle = await environment.client.workflow.start(
-    SCOUT_PRE_RENAME_WORKFLOW_TYPES[
-      SCOUT_WORKFLOW_NAMES.pipelineReconciliation
-    ],
+    SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
     {
       taskQueue: "scout-dev",
       workflowId: scoutPipelineReconciliationWorkflowId(stage, "operator"),
@@ -390,7 +431,7 @@ test("an open run deployed onto mid-flight switches to the renamed types from th
   const recorded = await handle.fetchHistory();
 
   expect(namesIn(recorded)).toMatchObject({
-    workflowType: "scoutPipelineReconciliationV2Workflow",
+    workflowType: "scoutPipelineReconciliationWorkflow",
     activities: [
       "scanPipelineReconciliationPageV2",
       "scanPipelineReconciliationPageV2",
@@ -407,10 +448,11 @@ function pagesPastOneRun(): ScoutReconciliationScanResult["pending"][] {
   return Array.from({ length: 30 }, () => emptyPending());
 }
 
-async function sweepUnderPreRenameType(): Promise<{
-  firstRun: History;
-  latestType: string;
-}> {
+test("a sweep continues as new under the renamed type behind the patch", async () => {
+  // How the long-lived Workflows stay on the renamed type: the client-match
+  // dispatcher singleton and recovery batches take the same path when they
+  // continue as new.
+  await startWorkflowWorker("renamed");
   await startActivityWorkers({
     background: scoutReconciliationStubs(
       createReconciliationStore({ pages: pagesPastOneRun() }),
@@ -418,9 +460,7 @@ async function sweepUnderPreRenameType(): Promise<{
   });
   const workflowId = scoutPipelineReconciliationWorkflowId(stage, "schedule");
   const handle = await environment.client.workflow.start(
-    SCOUT_PRE_RENAME_WORKFLOW_TYPES[
-      SCOUT_WORKFLOW_NAMES.pipelineReconciliation
-    ],
+    SCOUT_WORKFLOW_NAMES.pipelineReconciliation,
     {
       taskQueue: "scout-dev",
       workflowId,
@@ -439,32 +479,12 @@ async function sweepUnderPreRenameType(): Promise<{
   const latest = await environment.client.workflow
     .getHandle(workflowId)
     .describe();
-  return { firstRun, latestType: latest.type };
-}
-
-test("a run under the pre-rename type continues as new under the renamed type", async () => {
-  // How the long-lived Workflows leave the old type: the client-match
-  // dispatcher singleton and recovery batches take the same path when they
-  // continue as new.
-  await startWorkflowWorker("renamed");
-  const { firstRun, latestType } = await sweepUnderPreRenameType();
 
   expect(namesIn(firstRun)).toMatchObject({
-    workflowType: "scoutPipelineReconciliationV2Workflow",
+    workflowType: "scoutPipelineReconciliationWorkflow",
     continuedAs: ["scoutPipelineReconciliationWorkflow"],
     renamePatchMarkers: 1,
   });
-  expect(latestType).toBe("scoutPipelineReconciliationWorkflow");
+  expect(latest.type).toBe("scoutPipelineReconciliationWorkflow");
   await Worker.runReplayHistory({ workflowsPath }, firstRun);
-}, 120_000);
-
-test("with the patch withheld a run continues as new under the type it ran as", async () => {
-  await startWorkflowWorker("pre-patch");
-  const { firstRun, latestType } = await sweepUnderPreRenameType();
-
-  expect(namesIn(firstRun)).toMatchObject({
-    continuedAs: ["scoutPipelineReconciliationV2Workflow"],
-    renamePatchMarkers: 0,
-  });
-  expect(latestType).toBe("scoutPipelineReconciliationV2Workflow");
 }, 120_000);
