@@ -59,6 +59,7 @@ function reader(status: ScheduleExecutionObservation["status"]): {
     listCompletedActions: () =>
       Promise.resolve([
         {
+          scheduleId: "backup",
           scheduledAt: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
           workflowId: "older-completed",
         },
@@ -66,6 +67,58 @@ function reader(status: ScheduleExecutionObservation["status"]): {
   };
   return { client, reads };
 }
+
+describe("Temporal Schedule SDK read budget", () => {
+  test("direct audit callers bound schedule and nested execution reads to eight", async () => {
+    const { client } = reader("COMPLETED");
+    let active = 0;
+    let maximum = 0;
+    const observeRead = async () => {
+      active += 1;
+      maximum = Math.max(maximum, active);
+      await Promise.resolve();
+      active -= 1;
+    };
+    client.list = async function* () {
+      for (let index = 0; index < 32; index += 1) {
+        yield { scheduleId: `schedule-${String(index)}` };
+      }
+    };
+    const describeSchedule = client.describeSchedule;
+    client.describeSchedule = async (scheduleId) => {
+      await observeRead();
+      const description = await describeSchedule(scheduleId);
+      return {
+        ...description,
+        info: {
+          ...description.info,
+          runningActions: [],
+          recentActions: Array.from({ length: 12 }, (_, index) => ({
+            scheduledAt: now,
+            takenAt: now,
+            action: {
+              ...recent,
+              workflow: {
+                workflowId: `${scheduleId}-${String(index)}`,
+                firstExecutionRunId: `first-${scheduleId}-${String(index)}`,
+              },
+            },
+          })),
+        },
+      };
+    };
+    client.describeExecution = async () => {
+      await observeRead();
+      return { status: "COMPLETED" };
+    };
+    const observations = await inspectScheduleHealth(client, "prod", now);
+    expect(observations).toHaveLength(32);
+    expect(observations.every((entry) => entry.actions.length === 12)).toBe(
+      true,
+    );
+    expect(maximum).toBe(8);
+  });
+});
 
 describe("Temporal Schedule SDK boundary", () => {
   test("describes executions and rejects stale cached running state", async () => {
@@ -107,6 +160,18 @@ describe("Temporal Schedule SDK boundary", () => {
       "permission denied",
     );
   });
+  test("schedule query failures identify the namespace and schedule and retain the cause", async () => {
+    const { client } = reader("COMPLETED");
+    const error = new Error("no poller seen for task queue recently");
+    client.describeSchedule = () => Promise.reject(error);
+    await expect(
+      inspectScheduleHealth(client, "beta", now),
+    ).rejects.toMatchObject({
+      message:
+        "Temporal schedule beta/backup: no poller seen for task queue recently",
+      cause: error,
+    });
+  });
   test("lists successful schedule executions by durable schedule and scheduled time", async () => {
     const scheduledAt = new Date(now.getTime() - 60 * 60 * 1000);
     const list = vi.fn(() =>
@@ -115,6 +180,10 @@ describe("Temporal Schedule SDK boundary", () => {
           workflowId: "backup-older-action",
           closeTime: scheduledAt,
           typedSearchAttributes: new TypedSearchAttributes([
+            {
+              key: defineSearchAttributeKey("TemporalScheduledById", "KEYWORD"),
+              value: "backup",
+            },
             {
               key: defineSearchAttributeKey(
                 "TemporalScheduledStartTime",
@@ -128,20 +197,82 @@ describe("Temporal Schedule SDK boundary", () => {
     );
     const result = await listCompletedScheduleActions(
       list,
-      "backup",
       new Date(now.getTime() - 24 * 60 * 60 * 1000),
     );
     expect(list).toHaveBeenCalledWith({
       pageSize: 100,
       query:
-        'TemporalScheduledById = "backup" AND TemporalScheduledStartTime > "2026-09-30T12:00:00.000Z" AND ExecutionStatus = "Completed"',
+        'TemporalScheduledById IS NOT NULL AND TemporalScheduledStartTime > "2026-09-30T12:00:00.000Z" AND ExecutionStatus = "Completed"',
     });
     expect(result).toEqual([
       {
+        scheduleId: "backup",
         scheduledAt: scheduledAt.toISOString(),
         workflowId: "backup-older-action",
         closedAt: scheduledAt.toISOString(),
       },
     ]);
+  });
+  test("one namespace scan groups completions and deduplicates execution reads", async () => {
+    const { client, reads } = reader("COMPLETED");
+    client.list = async function* () {
+      yield { scheduleId: "backup" };
+      yield { scheduleId: "other" };
+    };
+    const scan = vi.fn(client.listCompletedActions);
+    client.listCompletedActions = scan;
+    const result = await inspectScheduleHealth(client, "prod", now);
+    expect(scan).toHaveBeenCalledExactlyOnceWith(
+      new Date("2026-09-30T12:00:00Z"),
+    );
+    expect(
+      result.map((entry) => [entry.scheduleId, entry.completedActions.length]),
+    ).toEqual([
+      ["backup", 1],
+      ["other", 0],
+    ]);
+    expect(reads).toEqual(["recent:first-recent", "older:first-older"]);
+  });
+  test("namespace scans consume every page and reject missing schedule attributes", async () => {
+    const list = vi.fn(() =>
+      (async function* () {
+        for (let page = 0; page < 2; page += 1) {
+          await Promise.resolve();
+          yield {
+            workflowId: `workflow-${String(page)}`,
+            closeTime: now,
+            typedSearchAttributes: new TypedSearchAttributes([
+              {
+                key: defineSearchAttributeKey(
+                  "TemporalScheduledById",
+                  "KEYWORD",
+                ),
+                value: `schedule-${String(page)}`,
+              },
+              {
+                key: defineSearchAttributeKey(
+                  "TemporalScheduledStartTime",
+                  "DATETIME",
+                ),
+                value: now,
+              },
+            ]),
+          };
+        }
+      })(),
+    );
+    expect(await listCompletedScheduleActions(list, now)).toHaveLength(2);
+    await expect(
+      listCompletedScheduleActions(
+        () =>
+          (async function* () {
+            yield {
+              workflowId: "malformed",
+              typedSearchAttributes: new TypedSearchAttributes(),
+            };
+          })(),
+        now,
+      ),
+    ).rejects.toThrow("missing schedule identity or scheduled time");
   });
 });

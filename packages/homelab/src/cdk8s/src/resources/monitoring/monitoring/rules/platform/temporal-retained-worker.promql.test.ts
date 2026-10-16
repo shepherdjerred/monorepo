@@ -1,8 +1,6 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { expect, test } from "vitest";
 import { getTemporalRuleGroups } from "./temporal.ts";
+import { runPromtoolFixture } from "./promtool-fixture.ts";
 import { buildScoutRetainedWorkflowWorkerHealthRules } from "./temporal-worker-health.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -106,58 +104,38 @@ test("healthy mutable tracks cannot mask a retained Workflow build outage", asyn
       missingMutable: track,
     })),
   ];
-  const temporary = await mkdtemp(
-    path.join(tmpdir(), "scout-retained-promql-"),
-  );
-  const filename = path.join(temporary, "cases.json");
-  try {
-    await Bun.write(
-      filename,
-      JSON.stringify({
-        evaluation_interval: "1m",
-        tests: cases.map(
-          ({ name, ready, up, pollers, fires, missingMutable }) => ({
-            name,
-            input_series: [
-              ...healthyOtherTracks.filter(
-                (entry) =>
-                  missingMutable === undefined ||
-                  !entry.series.startsWith("temporal_worker_num_pollers{") ||
-                  !entry.series.includes(
-                    `service="scout-workflow-worker-${missingMutable}-metrics-service"`,
-                  ),
-              ),
-              ...(ready === undefined ? [] : [series(deployment, ready)]),
-              ...(up === undefined ? [] : [series(`up{${owner}}`, up)]),
-              ...(pollers === undefined ? [] : [series(poller, pollers)]),
-            ],
-            promql_expr_test: [
-              {
-                expr: rule.expr.value,
-                eval_time: "0m",
-                exp_samples: fires ? [{ labels: "{}", value: 0 }] : [],
-              },
-              {
-                expr: mutableRule.expr.value,
-                eval_time: "0m",
-                exp_samples:
-                  missingMutable === undefined
-                    ? []
-                    : [{ labels: "{}", value: 1 }],
-              },
-            ],
-          }),
+  await runPromtoolFixture({
+    evaluation_interval: "1m",
+    tests: cases.map(({ name, ready, up, pollers, fires, missingMutable }) => ({
+      name,
+      input_series: [
+        ...healthyOtherTracks.filter(
+          (entry) =>
+            missingMutable === undefined ||
+            !entry.series.startsWith("temporal_worker_num_pollers{") ||
+            !entry.series.includes(
+              `service="scout-workflow-worker-${missingMutable}-metrics-service"`,
+            ),
         ),
-      }),
-    );
-    const result = Bun.spawnSync(["promtool", "test", "rules", filename]);
-    expect(
-      result.exitCode,
-      result.stdout.toString() + result.stderr.toString(),
-    ).toBe(0);
-  } finally {
-    await rm(temporary, { recursive: true, force: true });
-  }
+        ...(ready === undefined ? [] : [series(deployment, ready)]),
+        ...(up === undefined ? [] : [series(`up{${owner}}`, up)]),
+        ...(pollers === undefined ? [] : [series(poller, pollers)]),
+      ],
+      promql_expr_test: [
+        {
+          expr: rule.expr.value,
+          eval_time: "0m",
+          exp_samples: fires ? [{ labels: "{}", value: 0 }] : [],
+        },
+        {
+          expr: mutableRule.expr.value,
+          eval_time: "0m",
+          exp_samples:
+            missingMutable === undefined ? [] : [{ labels: "{}", value: 1 }],
+        },
+      ],
+    })),
+  });
 });
 
 test("renders health alerts for every retained pin currently declared", () => {

@@ -185,7 +185,9 @@
     "packages/homelab/src/cdk8s": {
       "entry": ["src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
-      "ignoreDependencies": ["cdk8s-cli"]
+      "ignoreDependencies": ["cdk8s-cli"],
+      // Prometheus's rule evaluator is pinned in the root mise toolchain.
+      "ignoreBinaries": ["promtool"]
     },
     "packages/homelab/src/helm-types": {
       "entry": [

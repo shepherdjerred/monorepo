@@ -2,6 +2,7 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { getTemporalPlatformHealthRuleGroup } from "./temporal-platform-health.ts";
+import { temporalQueueTimeoutRules } from "./temporal-timeouts.ts";
 import {
   buildScoutRetainedWorkflowWorkerHealthRules,
   buildTemporalDomainWorkerHealthRules,
@@ -390,7 +391,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "Scheduled workflow {{ $labels.workflowType }} failing repeatedly",
             ),
             description: escapePrometheusTemplate(
-              "{{ $labels.workflowType }} has had {{ $value }} activity failures across the last 48h. A daily schedule that fails twice in a row is broken — check the Temporal UI and worker logs.",
+              "{{ $labels.workflowType }} activity {{ $labels.activityType }} has had {{ $value }} failures across the last 48h. These are activity failures, including retries, rather than consecutive failed scheduled runs. Inspect the current schedule outcome and Activity history.",
             ),
           },
           // Workflows excluded: HA-presence + iOS-action workflows are
@@ -446,29 +447,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "warning",
           },
         },
-        {
-          // The other way a registered Workflow silently does nothing: its
-          // Activities are scheduled onto a task queue no worker polls, so they
-          // sit until ScheduleToStart expires. Seen in prod on
-          // `scout-prod-background`, which had zero pollers while five Workflow
-          // families kept scheduling against it.
-          alert: "TemporalActivitiesNeverStarting",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "Temporal activities timing out before starting in {{ $labels.exported_namespace }}",
-            ),
-            description: escapePrometheusTemplate(
-              "Activities hit ScheduleToStart {{ $value }} time(s) in the last hour, meaning they were queued and never picked up. Confirm the task queue has pollers with temporal task-queue describe.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(schedule_to_start_timeout{exported_namespace=~"prod|beta"}[1h]) > 0',
-          ),
-          for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
+        ...temporalQueueTimeoutRules(),
         ...buildTemporalDomainWorkerHealthRules(),
         ...buildScoutRetainedWorkflowWorkerHealthRules(),
         {

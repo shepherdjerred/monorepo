@@ -7,6 +7,7 @@ import type {
 } from "./temporal-schedules-client.ts";
 import { collectTemporalSchedules } from "./temporal-schedules-collector.ts";
 import { register } from "#observability/metrics.ts";
+import { withScheduleReads } from "./temporal-schedule-reads.ts";
 
 const now = new Date("2026-10-01T12:00:00Z");
 const context = { now, services: new ServiceIndex() };
@@ -138,5 +139,27 @@ describe("Temporal current schedule health", () => {
     expect(metrics).toContain(
       'temporal_schedule_last_terminal_failed{temporal_namespace="beta",schedule_id="nightly",workflow_type="runBackup",component="temporal-worker"} 0',
     );
+  });
+  test("a timed-out inventory cannot advance a previously complete observation", async () => {
+    await collectTemporalSchedules("prod", context, () =>
+      Promise.resolve([observation([action(1, "COMPLETED")])]),
+    );
+    const before = scheduleMetricLines(await register.metrics());
+    await expect(
+      collectTemporalSchedules(
+        "prod",
+        context,
+        async () =>
+          await withScheduleReads(
+            async ({ read }) =>
+              await read(
+                () =>
+                  Promise.withResolvers<ScheduleHealthObservation[]>().promise,
+              ),
+            { timeoutMs: 10 },
+          ),
+      ),
+    ).rejects.toHaveProperty("name", "TimeoutError");
+    expect(scheduleMetricLines(await register.metrics())).toEqual(before);
   });
 });
