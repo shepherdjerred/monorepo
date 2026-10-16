@@ -13,16 +13,23 @@ export class MediaApi {
     readonly request: MediaRequest = fetch,
   ) {}
 
-  async send(endpoint: string, init: RequestInit = {}) {
+  async send(endpoint: string, init: RequestInit = {}, timeoutMs = 15_000) {
     const headers = new Headers(this.headers);
     for (const [name, value] of new Headers(init.headers))
       headers.set(name, value);
-    const response = await this.request(`${this.base}/${endpoint}`, {
-      ...init,
-      headers,
-      signal: AbortSignal.timeout(15_000),
-      redirect: "error",
-    });
+    let response: Response;
+    try {
+      response = await this.request(`${this.base}/${endpoint}`, {
+        ...init,
+        headers,
+        signal: AbortSignal.timeout(timeoutMs),
+        redirect: "error",
+      });
+    } catch {
+      throw new Error(
+        `Media API ${init.method ?? "GET"} ${endpoint.replace(/\?.*$/u, "")} request failed or timed out`,
+      );
+    }
     if (!response.ok) {
       throw new Error(
         `Media API ${init.method ?? "GET"} failed: HTTP ${String(response.status)}`,

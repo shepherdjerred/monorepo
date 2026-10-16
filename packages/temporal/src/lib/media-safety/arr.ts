@@ -21,16 +21,22 @@ export async function reconcileIndexerSafety(api: MediaApi, enforce: boolean) {
     changed++;
     if (!enforce) continue;
     const value = [...new Set([...configured, 0, 1])];
-    await api.send(`indexer/${String(indexer.id)}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...indexer,
-        fields: indexer.fields.map((entry) =>
-          entry.name === "failDownloads" ? { ...entry, value } : entry,
-        ),
-      }),
-    });
+    // Normal saves test remote indexer availability. Allow the test to finish;
+    // do not bypass it with forceSave.
+    await api.send(
+      `indexer/${String(indexer.id)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...indexer,
+          fields: indexer.fields.map((entry) =>
+            entry.name === "failDownloads" ? { ...entry, value } : entry,
+          ),
+        }),
+      },
+      60_000,
+    );
     const confirmed = IndexerSchema.parse(
       await api.json(`indexer/${String(indexer.id)}`),
     );

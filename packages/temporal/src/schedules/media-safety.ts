@@ -12,5 +12,7 @@ export const MEDIA_SAFETY_SCHEDULE: ScheduleDefinition = {
   overlap: ScheduleOverlapPolicy.SKIP,
   catchupWindow: "1 minute",
   workflowExecutionTimeout: "3 minutes",
+  initialPauseNote:
+    "Awaiting 100% candidate traffic for runMediaDownloadSafety and a successful deployed observation canary",
   memo: "Inspect media torrent metadata, reconcile indexer protections, and reject dangerous downloads",
 };

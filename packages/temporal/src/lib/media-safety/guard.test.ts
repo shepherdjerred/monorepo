@@ -70,7 +70,7 @@ describe("media download safety", () => {
     const { model, request } = fixture();
     model.failAfterWrite = true;
     await expect(runMediaSafety(credentials, true, request)).rejects.toThrow(
-      "Response lost",
+      "queue/5 request failed or timed out",
     );
     expect(model.torrents).toHaveLength(1);
     await runMediaSafety(credentials, true, request);
@@ -93,6 +93,21 @@ describe("media download safety", () => {
     expect(
       model.writes.filter((entry) => entry.endsWith("queue/5")),
     ).toHaveLength(1);
+  });
+
+  test("slow indexer validation cannot prevent content cleanup", async () => {
+    const { model, request } = fixture();
+    model.indexers.sonarr = [];
+    const unavailable: MediaRequest = async (url, init) => {
+      if (init?.method === "PUT")
+        throw new Error("Tracker validation timed out");
+      return request(url, init);
+    };
+    await expect(
+      runMediaSafety(credentials, true, unavailable),
+    ).rejects.toThrow("indexer/1 request failed or timed out");
+    expect(model.torrents).toHaveLength(0);
+    expect(model.failed).toBe(true);
   });
 
   test("reconciles newly synced indexers and preserves unrelated fields", async () => {

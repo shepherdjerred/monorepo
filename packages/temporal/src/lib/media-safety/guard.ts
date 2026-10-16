@@ -73,7 +73,6 @@ export async function runMediaSafety(
     .parse(await qbt.json("torrents/info"));
   const candidates: { app: AppName; hash: string; files: string[] }[] = [];
   const removed: Record<AppName, number> = { sonarr: 0, radarr: 0 };
-  let indexersChanged = 0;
   for (const app of ["sonarr", "radarr"] as const) {
     const settings = mediaDownloadPolicy.applications[app];
     const api = new MediaApi(
@@ -81,7 +80,6 @@ export async function runMediaSafety(
       { "X-Api-Key": credentials[app] },
       request,
     );
-    indexersChanged += await reconcileIndexerSafety(api, enforce);
     for (const torrent of torrents.filter(
       ({ category }) => category === settings.category,
     )) {
@@ -101,5 +99,28 @@ export async function runMediaSafety(
       removed[app]++;
     }
   }
+  // Inspect every application's content before availability-dependent saves.
+  const indexersChanged = await reconcileApplications(
+    credentials,
+    enforce,
+    request,
+  );
   return { enforce, candidates, removed, indexersChanged };
+}
+
+async function reconcileApplications(
+  credentials: MediaSafetyCredentials,
+  enforce: boolean,
+  request: MediaRequest,
+) {
+  let changed = 0;
+  for (const app of ["sonarr", "radarr"] as const) {
+    const api = new MediaApi(
+      `${mediaDownloadPolicy.applications[app].url}/api/v3`,
+      { "X-Api-Key": credentials[app] },
+      request,
+    );
+    changed += await reconcileIndexerSafety(api, enforce);
+  }
+  return changed;
 }
