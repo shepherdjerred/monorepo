@@ -67,20 +67,11 @@ const PageSchema = z.object({
 /** Credentialless, read-only tRPC client. Errors never expose issue content. */
 export class TrackerClient {
   readonly #url: string;
+  readonly #publicUrl: string;
   readonly #client;
-  constructor(options: { baseUrl: string; fetch?: Fetch }) {
-    const url = new URL(options.baseUrl);
-    if (
-      !["http:", "https:"].includes(url.protocol) ||
-      url.username ||
-      url.password ||
-      url.search ||
-      url.hash
-    )
-      throw new Error(
-        "Tracker requires an HTTP(S) base URL without credentials, query or fragment",
-      );
-    this.#url = url.toString().replace(/\/$/u, "");
+  constructor(options: { baseUrl: string; publicUrl: string; fetch?: Fetch }) {
+    this.#url = trackerUrl(options.baseUrl);
+    this.#publicUrl = trackerUrl(options.publicUrl);
     this.#client = createTRPCClient<AppRouter>({
       links: [
         httpLink({
@@ -138,7 +129,7 @@ export class TrackerClient {
           createdAt: issue.createdAt,
           team: issue.team.key,
           stateType: issue.state.type,
-          url: this.#url + "/issues/" + issue.identifier,
+          url: this.#publicUrl + "/issues/" + issue.identifier,
         })),
       );
       const next = parsed.data.nextCursor;
@@ -152,4 +143,19 @@ export class TrackerClient {
   async overview(): Promise<TrackerOverview> {
     return summarizeTracker(await this.openIssues());
   }
+}
+
+function trackerUrl(value: string): string {
+  const url = new URL(value);
+  if (
+    !["http:", "https:"].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  )
+    throw new Error(
+      "Tracker requires an HTTP(S) base URL without credentials, query or fragment",
+    );
+  return url.toString().replace(/\/$/u, "");
 }

@@ -203,7 +203,10 @@ export const opsActivities = {
   async collectOpsTracker(): Promise<OpsSourceResult> {
     return await timed("tracker", () =>
       collectTracker(
-        new TrackerClient({ baseUrl: requiredEnvironment("TRACKER_URL") }),
+        new TrackerClient({
+          baseUrl: requiredEnvironment("TRACKER_URL"),
+          publicUrl: requiredEnvironment("TRACKER_PUBLIC_URL"),
+        }),
       ),
     );
   },

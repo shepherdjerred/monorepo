@@ -138,7 +138,8 @@ the infra registry keeps the old Ops Activities available to drain them. The
 same worker credentials, pod limits, and metrics endpoint serve both queues.
 
 The work collector reads Tracker through the credentialless `TRACKER_URL`
-bootstrap endpoint. New Workflow histories use the `ops-tracker-source` patch
+bootstrap endpoint and builds issue links from `TRACKER_PUBLIC_URL`, which the
+browser can reach. New Workflow histories use the `ops-tracker-source` patch
 and `collectOpsTracker`; the registered `collectOpsLinear` alias also reads
 Tracker while old histories drain. Publication normalizes recorded legacy
 source values before building a snapshot. The collector emits

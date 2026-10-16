@@ -20,13 +20,17 @@ test("Tracker paginates all open issues without credentials or cycles", async ()
     page([issue("AI-1", "AI", "started")], null),
   );
   const overview = await new TrackerClient({
-    baseUrl: "https://tracker.example",
+    baseUrl: "http://tracker.tracker.svc.cluster.local:7351",
+    publicUrl: "https://tracker.example",
     fetch,
   }).overview();
   expect(overview.counts).toEqual({ SJ: { triage: 1 }, AI: { started: 1 } });
   expect(overview.triage.map((item) => item.identifier)).toEqual(["SJ-1"]);
   expect(overview.open[0]?.url).toBe("https://tracker.example/issues/SJ-1");
   expect(requests).toHaveLength(2);
+  expect(new URL(requests[0]!.url).origin).toBe(
+    "http://tracker.tracker.svc.cluster.local:7351",
+  );
   expect(
     requests.every((request) => request.headers.get("authorization") === null),
   ).toBe(true);
@@ -41,14 +45,16 @@ test("Tracker rejects unknown states and repeated cursors", async () => {
   const invalid = sequence(page([issue("AI-1", "AI", "someday")], null));
   await expect(
     new TrackerClient({
-      baseUrl: "https://tracker.example",
+      baseUrl: "http://tracker.tracker.svc.cluster.local:7351",
+      publicUrl: "https://tracker.example",
       fetch: invalid.fetch,
     }).overview(),
   ).rejects.toThrow("schema");
   const repeated = sequence(page([], "next"), page([], "next"));
   await expect(
     new TrackerClient({
-      baseUrl: "https://tracker.example",
+      baseUrl: "http://tracker.tracker.svc.cluster.local:7351",
+      publicUrl: "https://tracker.example",
       fetch: repeated.fetch,
     }).overview(),
   ).rejects.toThrow("repeated issue cursor");

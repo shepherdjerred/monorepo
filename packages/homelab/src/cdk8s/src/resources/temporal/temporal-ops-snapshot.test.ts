@@ -55,6 +55,10 @@ describe("Temporal ops snapshot collector", () => {
     });
     expect(env.map((entry) => entry.name)).not.toContain("LINEAR_API_KEY");
     expect(env).toContainEqual({
+      name: "TRACKER_PUBLIC_URL",
+      value: "https://tracker.tailnet-1a49.ts.net",
+    });
+    expect(env).toContainEqual({
       name: "OPS_DASHBOARD_URL",
       value:
         "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",

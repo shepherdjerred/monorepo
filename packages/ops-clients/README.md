@@ -26,6 +26,9 @@ without leaking payloads.
 Unknown enum values from an upstream (a new Argo health, a Woodpecker status,
 a Tracker state type) fail schema validation instead of being guessed.
 
+Tracker takes separate `baseUrl` and `publicUrl` bootstrap addresses. Requests
+use the private API transport; issue links use the browser-facing origin.
+
 ArgoCD root operations retain their raw identity through validation. Only an
 exact matching owner-published release receipt sets `verifiedReleaseTermination`;
 the collector continues to evaluate current health and sync independently.
