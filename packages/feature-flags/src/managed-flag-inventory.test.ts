@@ -112,6 +112,43 @@ describe("ManagedFlagInventorySchema", () => {
     verifySportsGuildRollout,
   );
 
+  test("enables Arcade in production while retaining beta targeting and safe defaults", () => {
+    const production = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "arcade",
+    );
+    const beta = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "arcade",
+    );
+    expect(production).toHaveLength(4);
+    for (const flag of production) {
+      expect(flag).toMatchObject({
+        type: "boolean",
+        default: true,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(
+        managedFlagInventory.flags.find(({ key }) => key === flag.key)?.default,
+      ).toBe(false);
+      expect(beta.find(({ key }) => key === flag.key)).toMatchObject({
+        default: false,
+        rollouts: [
+          {
+            result: true,
+            constraints: [
+              { property: "environment", operator: "eq", value: "beta" },
+            ],
+          },
+        ],
+      });
+    }
+  });
+
   test("uses Luna in both managed environments", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
     expect(exploreModel("prod")).toBe("gpt-5.6-luna");

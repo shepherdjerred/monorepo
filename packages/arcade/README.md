@@ -85,7 +85,7 @@ The homelab chart runs one controller. The retired MK64 and Emerald controllers
 are absent; their original storage claims remain for recovery. The
 existing Mario Kart edge forwards public and tailnet requests to Arcade, keeping
 the registered Discord OAuth callback. The old Pokébot addresses redirect to that
-canonical origin. Flipt controls session and game rollout.
+canonical origin. The `prod` Flipt environment controls session and game rollout.
 Account handover and rollback use the wiki's Arcade migration guide. Source tests
 do not replace real-game controller, audio/video, latency, and concurrent-session acceptance.
 
@@ -97,4 +97,4 @@ bun packages/arcade/packages/backend/src/runtime/probe.ts --game melee --assets 
 
 The probe writes a screenshot and bounded observations. It exercises the raw
 runtime bridge; full broadcast, statistics, and controller acceptance require
-the active Arcade application in the beta environment.
+the active Arcade application and its configured Flipt environment.
