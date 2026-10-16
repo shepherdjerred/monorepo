@@ -1,7 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
-import java.util.HashMap;
-import java.util.Map;
+import static java.util.Objects.checkIndex;
+
+import java.util.BitSet;
 import java.util.function.IntToDoubleFunction;
 
 /** Integrates discretionary density over physical time without changing arrival time or HP. */
@@ -26,26 +27,42 @@ public final class TraversalDensity {
             density.applyAsDouble(source), density.applyAsDouble(graph.edgeTarget(edge)), duration);
   }
 
-  /** Query-local bounded reuse; a full cache changes computation frequency, never route costs. */
-  public static IntToDoubleFunction memoized(IntToDoubleFunction density) {
-    return density instanceof Cached ? density : new Cached(density);
+  /** Query-local reuse bounded by the graph; pages allocate only for visited node ids. */
+  public static IntToDoubleFunction memoized(int nodeCount, IntToDoubleFunction density) {
+    if (nodeCount < 0) throw new IllegalArgumentException("node count must be non-negative");
+    if (density instanceof Cached cached) {
+      if (cached.nodeCount != nodeCount)
+        throw new IllegalArgumentException("density cache belongs to a different graph size");
+      return cached;
+    }
+    return new Cached(nodeCount, density);
   }
 
   private static final class Cached implements IntToDoubleFunction {
-    private static final int LIMIT = 4096;
+    private static final int PAGE_SHIFT = 8;
+    private static final int PAGE_SIZE = 1 << PAGE_SHIFT;
+    private final int nodeCount;
     private final IntToDoubleFunction density;
-    private final Map<Integer, Double> values = new HashMap<>();
+    private final double[][] pages;
+    private final BitSet computed = new BitSet();
 
-    Cached(IntToDoubleFunction density) {
+    Cached(int nodeCount, IntToDoubleFunction density) {
+      this.nodeCount = nodeCount;
       this.density = density;
+      pages = new double[Math.ceilDiv(nodeCount, PAGE_SIZE)][];
     }
 
     @Override
     public double applyAsDouble(int node) {
-      var known = values.get(node);
-      if (known != null) return known;
+      checkIndex(node, nodeCount);
+      var page = node >>> PAGE_SHIFT;
+      var offset = node & (PAGE_SIZE - 1);
+      if (computed.get(node)) return pages[page][offset];
       var value = density.applyAsDouble(node);
-      if (values.size() < LIMIT) values.put(node, value);
+      if (pages[page] == null)
+        pages[page] = new double[Math.min(PAGE_SIZE, nodeCount - (page << PAGE_SHIFT))];
+      pages[page][offset] = value;
+      computed.set(node);
       return value;
     }
   }
