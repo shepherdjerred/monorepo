@@ -342,8 +342,9 @@ export async function assertS3ObjectsMatchSource(opts: {
  * `.release-version` marker, which is written separately after a successful
  * sync).
  *
- * `forceMutableUpload` is for deployments materialized from an S3 archive.
- * The archive download preserves object timestamps, so `aws s3 sync` can
+ * `forceMutableUpload` repairs deployments affected by inconsistent S3 listings
+ * and deployments materialized from an S3 archive.
+ * An archive download preserves object timestamps, so `aws s3 sync` can
  * incorrectly retain a changed mutable entrypoint when its size and timestamp
  * compare equal to the destination. When enabled, a recursive `aws s3 cp`
  * uploads every release object after the deleting sync and before the

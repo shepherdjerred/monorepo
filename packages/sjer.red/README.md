@@ -17,6 +17,10 @@ bun run deploy       # bun ../../scripts/release/deploy-site.ts sjer-red
 
 Deploys are a static sync to the object-storage host via the shared [`scripts/release/deploy-site.ts`](../../scripts/release/deploy-site.ts); credentials come from the environment (wrap with [`scripts/onepassword/with-service-account.sh`](../../scripts/onepassword/with-service-account.sh) `op run`, which needs no 1Password desktop approval).
 
+The deploy finishes its deleting sync before copying every build file to storage.
+This restores pages that SeaweedFS's listing can cause the sync to upload and
+then delete. Prior fingerprinted assets remain available for open browser tabs.
+
 ## Content
 
 Content collections are defined in `src/content.config.ts`, with Zod schemas in `src/content/schemas/`:

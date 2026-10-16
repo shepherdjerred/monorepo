@@ -434,6 +434,9 @@ async function main(): Promise<void> {
     bucket: site.bucket,
     endpoint,
     immutablePrefixes: site.immutablePrefixes,
+    // SeaweedFS listings can make one sync upload a page and then delete it.
+    // Finish pruning before the authoritative copy restores every build file.
+    forceMutableUpload: true,
     ...(site.extraExcludes === undefined
       ? {}
       : { extraExcludes: site.extraExcludes }),
