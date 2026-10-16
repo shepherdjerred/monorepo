@@ -37,6 +37,10 @@ import {
 import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
 import { webSearchTool as innerWebSearchTool } from "./web-search.ts";
 import {
+  createTextModeration as innerCreateTextModeration,
+  TextModerationError as InnerTextModerationError,
+} from "./text-moderation.ts";
+import {
   mergeProviderOptions as innerMergeProviderOptions,
   reasoningProviderOptions as innerReasoningProviderOptions,
   toolLoopProviderOptions as innerToolLoopProviderOptions,
@@ -54,6 +58,8 @@ type IdentityUnion<T> = T extends unknown
   ? { [KEY in keyof T]: T[KEY] }
   : never;
 const passthrough = <T>(value: T): T => value;
+
+export const TextModerationError = passthrough(InnerTextModerationError);
 
 export const REQUIRED_MODEL_CAPABILITIES = passthrough(
   INNER_REQUIRED_MODEL_CAPABILITIES,
@@ -179,6 +185,12 @@ export function webSearchTool(
   ...args: Parameters<typeof innerWebSearchTool>
 ): ReturnType<typeof innerWebSearchTool> {
   return innerWebSearchTool(...args);
+}
+
+export function createTextModeration(
+  ...args: Parameters<typeof innerCreateTextModeration>
+): ReturnType<typeof innerCreateTextModeration> {
+  return innerCreateTextModeration(...args);
 }
 
 export function providerCredentialsFromEnv(

@@ -133,7 +133,10 @@ describe("purpose-built screening", () => {
       fetcher: async () => new Response("unavailable", { status: 503 }),
       contextual: clean,
     });
-    await expect(failed(request)).rejects.toThrow("503");
+    await expect(failed(request)).rejects.toMatchObject({
+      name: "BrainUpstreamError",
+      message: "Moderation returned HTTP 503",
+    });
     const malformed = createModeration({
       apiKey: "fixture-key",
       contextModel: "fixture",

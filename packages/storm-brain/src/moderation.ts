@@ -1,5 +1,8 @@
-import { z } from "zod";
-import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
+import {
+  createTextModeration,
+  TextModerationError,
+  type AggregateLlmUsage,
+} from "@shepherdjerred/llm-runtime";
 import { BrainUpstreamError, type BrainDecision } from "./brain.ts";
 import type {
   ContentVerdict,
@@ -7,11 +10,6 @@ import type {
   ModerationResponse,
 } from "./moderation-schema.ts";
 
-const ScoresSchema = z.record(z.string(), z.number().min(0).max(1));
-const ProviderResponseSchema = z.object({
-  model: z.string().min(1),
-  results: z.array(z.object({ category_scores: ScoresSchema })).length(1),
-});
 const LINK =
   /https?:\/\/|www\.|discord\s*\.\s*(?:gg|com\/invite)\/|\b(?:\d{1,3}\.){3}\d{1,3}\b|\b[a-z0-9-]+\.(?:com|net|org|gg|io|me|xyz)\b/iu;
 const PROMOTION =
@@ -53,59 +51,20 @@ export function createModeration(options: {
   contextModel: string;
   fetcher?: (url: string, init: RequestInit) => Promise<Response>;
 }): Moderate {
-  if (options.apiKey.trim() === "")
-    throw new Error("Moderation requires OpenAI credentials");
-  const fetcher = options.fetcher ?? fetch;
+  const classify = createTextModeration({
+    credentials: { openai: { apiKey: options.apiKey } },
+    ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
+  });
   return async (request) => {
-    let response: Response;
-    try {
-      response = await fetcher("https://api.openai.com/v1/moderations", {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${options.apiKey}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "omni-moderation-latest",
-          input: request.text,
-        }),
-        signal: AbortSignal.timeout(2500),
-      });
-    } catch {
-      throw new BrainUpstreamError("Moderation transport failed", undefined);
-    }
-    if (!response.ok)
+    const parsed = await classify(request.text).catch((error: unknown) => {
       throw new BrainUpstreamError(
-        `Moderation returned HTTP ${String(response.status)}`,
+        error instanceof TextModerationError
+          ? error.message
+          : "Moderation failed",
         undefined,
       );
-    let raw: unknown;
-    try {
-      raw = await response.json();
-    } catch {
-      throw new BrainUpstreamError(
-        "Moderation returned invalid JSON",
-        undefined,
-      );
-    }
-    const result = ProviderResponseSchema.safeParse(raw);
-    if (!result.success)
-      throw new BrainUpstreamError(
-        "Moderation returned invalid scores",
-        undefined,
-      );
-    const parsed = result.data;
-    const scores = parsed.results[0]?.category_scores;
-    if (scores === undefined) throw new Error("Moderation result missing");
-    const required = [
-      "hate",
-      "hate/threatening",
-      "harassment",
-      "harassment/threatening",
-    ];
-    for (const key of required)
-      if (scores[key] === undefined)
-        throw new Error("Moderation category missing");
+    });
+    const { scores } = parsed;
     const hate = Math.max(scores["hate"] ?? 0, scores["hate/threatening"] ?? 0);
     const threat = Math.max(
       scores["hate/threatening"] ?? 0,

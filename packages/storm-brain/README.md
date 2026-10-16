@@ -2,8 +2,10 @@
 
 The content-screening and ticket service for The Storm. The Paper plugin
 holds player publications while `POST /v1/moderate` checks them with OpenAI's
-dedicated Moderation API. A contextual model handles advertising and ambiguous
-signals. The agent calls `POST /v1/triage` for tickets; `/v1/classify` remains a
+dedicated Moderation API through `@shepherdjerred/llm-runtime`. The shared runtime
+owns the authenticated transport, bounded timeout and score validation; this
+service owns the content policy and contextual advertising/ambiguity checks.
+The agent calls `POST /v1/triage` for tickets; `/v1/classify` remains a
 legacy contract and does not own live chat enforcement.
 The companions module also calls `POST /v1/conversation` for open-ended chat.
 Companion gameplay runs entirely in the Paper plugin.
