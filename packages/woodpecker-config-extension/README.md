@@ -173,13 +173,13 @@ variables below. The route is exclusive: it emits one verify/browser workflow
 and diagnostic handoffs, with no application artifact publication or releases.
 Other work continues to use normal selection.
 
-| Variable               | Values                                                        |
-| ---------------------- | ------------------------------------------------------------- |
-| `CI_BENCHMARK_PROFILE` | `verify`, `browser`                                           |
-| `CI_BENCHMARK_SOURCE`  | Exact 40-character pipeline commit SHA                        |
-| `CI_BENCHMARK_VARIANT` | `baseline`, `candidate`                                       |
-| `CI_BENCHMARK_CACHE`   | `cold`, `warm`                                                |
-| `CI_BENCHMARK_FEATURE` | `incremental`, `prepared`, `formatting`, `gradle`, `copyfile` |
+| Variable               | Values                                                                   |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `CI_BENCHMARK_PROFILE` | `verify`, `browser`                                                      |
+| `CI_BENCHMARK_SOURCE`  | Exact 40-character pipeline commit SHA                                   |
+| `CI_BENCHMARK_VARIANT` | `baseline`, `candidate`                                                  |
+| `CI_BENCHMARK_CACHE`   | `cold`, `warm`                                                           |
+| `CI_BENCHMARK_FEATURE` | `incremental`, `prepared`, `formatting`, `gradle`, `copyfile`, `scratch` |
 
 Candidate requests enable only the named optimization and require its beta
 flag to resolve true. Cold runs use a private source-cache destination and
@@ -205,6 +205,21 @@ keeps native queue/startup phases distinct from process timings. Device-write
 and memory measurements must come from node telemetry, including a settling
 window after completion and the amortized image/seed refresh cost. A task's
 logical object-byte count is not a physical NVMe-write measurement.
+
+Scratch verification benchmarks additionally retain resource samples inside
+`diagnostics-verify.json`, starting before installation and finishing after the
+command exits. The dependency-free wrapper reads cgroup v2 memory current/peak,
+limit and event counters plus both scratch filesystems every ten seconds and at
+completion. Candidates require two distinct tmpfs mounts. Samples report each
+tmpfs's capacity, usage and available bytes; a disk baseline reports shared
+filesystem capacity, which does not measure that directory's size. Usage peaks
+between samples can be missed, while the cgroup peak/events are cumulative.
+Missing counters, changed limits, resets, or a truncated collection cannot pass
+the resource diagnostic gate; an existing command failure keeps its exit code.
+The fresh-process diagnostic transfer uses a bounded stdin pipe, independent of
+both candidate tmpfs and baseline workspace space, with no sample data in argv.
+Ordinary workflows do not start this sampler. Physical SSD writes and foreign
+workload isolation still require node telemetry and native CI evidence.
 
 Nothing a step writes should land on the container's writable layer, which is
 the CI node's OS disk. Shared Bun installs extract into `bun-cache/tmp`, beside

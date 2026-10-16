@@ -2,6 +2,7 @@
 import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type { TaskDiagnostics } from "../lib/ci/task-diagnostics.ts";
+import { startBenchmarkResources } from "./benchmark-resources.ts";
 
 type Identity = Omit<
   TaskDiagnostics,
@@ -81,32 +82,87 @@ export async function retainDiagnostics(
     );
     return identity.exitCode === 0 ? 1 : identity.exitCode;
   }
-  return identity.exitCode === 0 && report.collectionFailed
+  return identity.exitCode === 0 &&
+    (report.collectionFailed ||
+      report.benchmarkResources?.collectionFailed === true)
     ? 1
     : identity.exitCode;
 }
 
-async function main(args: string[]): Promise<number> {
-  if (args[0] === "--retain") {
-    try {
-      const { z } = await import("zod");
-      const { TaskDiagnosticsSchema } =
-        await import("../lib/ci/task-diagnostics.ts");
-      const identity: unknown = JSON.parse(args[1] ?? "null");
-      const previous = z.array(z.string()).parse(JSON.parse(args[2] ?? "null"));
-      const parsed = TaskDiagnosticsSchema.omit({
-        turbo: true,
-        browserSelection: true,
-        collectionFailed: true,
-      }).parse(identity);
-      return await retainDiagnostics(parsed, new Set(previous), process.cwd());
-    } catch {
-      // Bootstrap or schema errors may include rejected values. Keep them out
-      // of CI logs, just like collection and upload errors above.
-      console.error("CI task diagnostic process failed");
-      return 1;
+/** Bound the fresh-process transfer without writing either measured filesystem. */
+export async function readDiagnosticInput(
+  stream: ReadableStream<Uint8Array>,
+): Promise<string> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > 1024 * 1024) {
+        await reader.cancel();
+        throw new Error("Diagnostic payload too large");
+      }
+      chunks.push(value);
     }
+    return Buffer.concat(chunks).toString("utf8");
+  } finally {
+    reader.releaseLock();
   }
+}
+
+async function retainFromArgs(args: string[]): Promise<number> {
+  try {
+    const { z } = await import("zod");
+    const { TaskDiagnosticsSchema } =
+      await import("../lib/ci/task-diagnostics.ts");
+    let identity: unknown;
+    let previous: string[];
+    if (args[0] === "--retain-stdin") {
+      const payload = z
+        .object({ identity: z.unknown(), previous: z.array(z.string()) })
+        .parse(JSON.parse(await readDiagnosticInput(Bun.stdin.stream())));
+      identity = payload.identity;
+      previous = payload.previous;
+    } else {
+      identity = JSON.parse(args[1] ?? "null");
+      previous = z.array(z.string()).parse(JSON.parse(args[2] ?? "null"));
+    }
+    const parsed = TaskDiagnosticsSchema.omit({
+      turbo: true,
+      browserSelection: true,
+      collectionFailed: true,
+    }).parse(identity);
+    return await retainDiagnostics(parsed, new Set(previous), process.cwd());
+  } catch {
+    // Bootstrap or schema errors may include rejected values. Keep them out
+    // of CI logs, just like collection and upload errors above.
+    console.error("CI task diagnostic process failed");
+    return 1;
+  }
+}
+
+async function scratchResources(workflow: string, commit: string) {
+  if (Bun.env["CI_BENCHMARK_FEATURE"] !== "scratch") return;
+  const variant = Bun.env["CI_BENCHMARK_VARIANT"];
+  if (
+    workflow !== "verify" ||
+    Bun.env["CI_BENCHMARK_SOURCE"] !== commit ||
+    Bun.env["CI_BENCHMARK_PROFILE"] !== "verify" ||
+    (variant !== "baseline" && variant !== "candidate")
+  )
+    throw new Error("Invalid scratch benchmark resource request");
+  return startBenchmarkResources(variant);
+}
+
+function invocation(args: string[]): {
+  workflow: Identity["workflow"];
+  pipeline: string;
+  commit: string;
+  command: string[];
+} {
   const [workflow, separator, ...command] = args;
   if (
     separator !== "--" ||
@@ -124,15 +180,29 @@ async function main(args: string[]): Promise<number> {
       "CI task diagnostics require a pipeline number and full commit SHA",
     );
   }
+  return { workflow, pipeline, commit, command };
+}
+
+async function main(args: string[]): Promise<number> {
+  if (args[0] === "--retain" || args[0] === "--retain-stdin")
+    return retainFromArgs(args);
+  const { workflow, pipeline, commit, command } = invocation(args);
   const root = process.cwd();
   const before = await prepareDiagnostics(workflow, root);
+  const resources = await scratchResources(workflow, commit);
   const startedAt = Date.now();
-  let child = Bun.spawn(command, {
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-    env: { ...Bun.env },
-  });
+  let child: Bun.Subprocess<"inherit" | Blob, "inherit", "inherit">;
+  try {
+    child = Bun.spawn(command, {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: { ...Bun.env },
+    });
+  } catch (error) {
+    await resources?.finish();
+    throw error;
+  }
   const interrupt = () => {
     child.kill("SIGINT");
   };
@@ -141,29 +211,35 @@ async function main(args: string[]): Promise<number> {
   };
   process.on("SIGINT", interrupt);
   process.on("SIGTERM", terminate);
+  let commandExitCode: number | undefined;
   try {
     const exitCode = await child.exited;
-    // Bun caches missing package resolution before the child installs the
-    // workspace. A fresh process can resolve those newly installed packages.
-    child = Bun.spawn(
-      [
-        process.execPath,
-        "--no-install",
-        import.meta.path,
-        "--retain",
-        JSON.stringify({
+    commandExitCode = exitCode;
+    const finishedAt = Date.now();
+    const benchmarkResources = await resources?.finish();
+    // A pipe avoids argv limits and retains ENOSPC evidence even when the
+    // baseline workspace or candidate tmpfs cannot allocate transfer files.
+    const payload = new Blob([
+      JSON.stringify({
+        identity: {
           version: 1,
           workflow,
           pipeline,
           commit,
           startedAt,
-          finishedAt: Date.now(),
+          finishedAt,
           exitCode,
-        } satisfies Identity),
-        JSON.stringify([...before]),
-      ],
+          ...(benchmarkResources === undefined ? {} : { benchmarkResources }),
+        } satisfies Identity,
+        previous: [...before],
+      }),
+    ]);
+    // Bun caches missing package resolution before the child installs the
+    // workspace. A fresh process can resolve those newly installed packages.
+    child = Bun.spawn(
+      [process.execPath, "--no-install", import.meta.path, "--retain-stdin"],
       {
-        stdin: "inherit",
+        stdin: payload,
         stdout: "inherit",
         stderr: "inherit",
         env: { ...Bun.env },
@@ -171,9 +247,15 @@ async function main(args: string[]): Promise<number> {
     );
     const diagnosticExit = await child.exited;
     return exitCode === 0 ? diagnosticExit : exitCode;
+  } catch {
+    console.error("CI diagnostic process failed; task exit status preserved");
+    return commandExitCode === undefined || commandExitCode === 0
+      ? 1
+      : commandExitCode;
   } finally {
     process.removeListener("SIGINT", interrupt);
     process.removeListener("SIGTERM", terminate);
+    await resources?.finish();
   }
 }
 
