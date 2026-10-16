@@ -33,7 +33,12 @@ Brawl's live clock and score are unavailable rather than inferred from KOs.
 input, save, screenshot, and telemetry behavior. `GameClientModule` in
 `packages/frontend/src/games/module.ts` defines the game's browser panels.
 The common package owns catalog, input, telemetry, statistics, and wire schemas.
-Add a game to the server registry and client registry together.
+Add a game to the server registry and client registry together. A client module
+owns its complete `Room` component and scoped game styles. Shared room state and
+actions live in `useGameRoom`; video, controls, account access and records are
+portable components a game arranges in its own layout. MK64 and Emerald retain
+their racing and pixel adventure designs; Wii, Melee and Brawl use separate
+console-era presentations. Sharing transport does not require sharing a page.
 
 Native producers send bounded RGBA, stereo PCM, and validated telemetry over
 the private ARCD bridge. `runtimes/wire.json` generates the TypeScript and C++

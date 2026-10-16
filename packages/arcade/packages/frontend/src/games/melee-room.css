@@ -1,0 +1,307 @@
+.game-room--melee {
+  --bg: #0c0c1b;
+  --panel: #181a31;
+  --line: #3a4269;
+  --muted: #a7b1d2;
+  --room-ink: #eff3ff;
+  --accent: #a9baff;
+  --accent-ink: #151b36;
+  --glow: #5763c33b;
+  font-family: "DM Sans", sans-serif;
+  background-image:
+    linear-gradient(125deg, #22255488, transparent 60%),
+    repeating-linear-gradient(0deg, #6777b309 0 1px, transparent 1px 4px);
+}
+.melee-topbar {
+  display: flex;
+  align-items: center;
+  gap: 35px;
+  background: #080a16;
+  padding: 16px 35px;
+  border-bottom: 1px solid #3a4269;
+}
+.melee-topbar > a {
+  font-size: 12px;
+  letter-spacing: 3px;
+  font-weight: 700;
+  color: #b9c8ff;
+}
+.melee-arena {
+  max-width: 1440px;
+  margin: auto;
+  padding: 34px 34px 50px;
+}
+.melee-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding: 0 8px 23px;
+  border-bottom: 1px solid #6572a7;
+  position: relative;
+}
+.melee-title::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  height: 5px;
+  width: 130px;
+  background: #c6465b;
+  transform: skewX(-30deg);
+}
+.melee-title p {
+  letter-spacing: 7px;
+  font-size: 11px;
+  margin-bottom: 4px;
+  color: #c4cbea;
+}
+.melee-title h1 {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: clamp(54px, 7vw, 94px);
+  letter-spacing: -6px;
+  line-height: 1;
+  color: #e1e4f2;
+  text-shadow:
+    1px 2px #6e78ab,
+    3px 5px #000;
+}
+.melee-mode {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.melee-mode > span {
+  font-size: 60px;
+  font-weight: 800;
+  font-style: italic;
+  color: #c6465b;
+  text-shadow: 1px 2px #661f46;
+}
+.melee-mode small {
+  font-size: 9px;
+  line-height: 2;
+  letter-spacing: 2px;
+  color: #a7b1d2;
+}
+.melee-match-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(330px, 1fr);
+  gap: 25px;
+}
+.melee-match,
+.melee-match-data {
+  min-width: 0;
+}
+.melee-section-label {
+  border-left: 5px solid #8d9fdb;
+  padding: 6px 12px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #a7b1d2;
+  margin-bottom: 17px;
+}
+.game-room--melee button {
+  border-radius: 2px;
+  border-color: #626d9d;
+  background: linear-gradient(#353d62, #222a4a);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.game-room--melee .play-stage {
+  border-radius: 0;
+  border: 1px solid #7185b6;
+  box-shadow: 5px 5px #030611;
+}
+.game-room--melee .video-stage {
+  min-height: 370px;
+  background: radial-gradient(ellipse, #2d3161, #0b0c1e);
+}
+.melee-emblem {
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  border: 2px solid #8f9dd9;
+  margin: 0 auto 30px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #6573a4, #242c58);
+  box-shadow: 0 0 45px #6d71d536;
+}
+.melee-emblem::before,
+.melee-emblem::after {
+  content: "";
+  position: absolute;
+  background: #0b0c1e;
+}
+.melee-emblem::before {
+  left: 34%;
+  width: 11px;
+  top: 0;
+  bottom: 0;
+}
+.melee-emblem::after {
+  top: 60%;
+  height: 10px;
+  left: 0;
+  right: 0;
+}
+.game-room--melee .stage-idle h2 {
+  font-size: 20px;
+  font-style: italic;
+  text-transform: uppercase;
+}
+.game-room--melee .primary {
+  background: #b83854;
+  color: #fff;
+  border-color: #ed8e9d;
+  transform: skew(-7deg);
+}
+.game-room--melee .panel {
+  border-radius: 2px;
+  background: linear-gradient(145deg, #202441, #14182b);
+  border-color: #424c73;
+  padding: 20px 17px;
+}
+.game-room--melee .panel-heading {
+  border-bottom: 1px solid #424c73;
+  padding-bottom: 15px;
+}
+.game-room--melee .panel-heading h2 {
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 13px;
+}
+.game-room--melee .melee-layout {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+  gap: 15px;
+}
+.game-room--melee .fighter-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.game-room--melee .fighter-card {
+  border: 1px solid #424c73;
+  border-top: 3px solid var(--player);
+  border-radius: 0;
+  position: relative;
+  background: linear-gradient(135deg, #2c3258, #13192e);
+  padding: 16px 8px;
+}
+.game-room--melee .fighter-number {
+  font-size: 20px;
+  text-align: left;
+  margin-left: 5px;
+  font-style: italic;
+  opacity: 1;
+}
+.game-room--melee .damage {
+  font-size: 43px;
+  font-style: italic;
+  margin: 10px 0;
+}
+.game-room--melee .fighter-card h3 {
+  font-size: 15px;
+}
+.game-room--melee .fighter-card p {
+  letter-spacing: 1px;
+}
+.game-room--melee .arena-summary {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.game-room--melee .arena-summary > strong {
+  font-size: 25px;
+}
+.game-room--melee .arena-summary > span {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.game-room--melee .seat {
+  background: #14182b;
+  border-radius: 0;
+  border-left: 4px solid var(--player);
+}
+.game-room--melee .controller {
+  border-radius: 0;
+  background: #14182b;
+}
+.game-room--melee .control-button {
+  border-radius: 50%;
+}
+.game-room--melee .control-a {
+  background: #29896e;
+}
+.game-room--melee .control-b {
+  background: #ad395b;
+}
+.game-room--melee .analog-well i {
+  background: #97a5c9;
+}
+.melee-records {
+  margin-top: 30px;
+}
+.melee-footer {
+  padding: 20px 35px;
+  border-top: 1px solid #6572a7;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #a7b1d2;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+@media (max-width: 950px) {
+  .melee-match-layout {
+    grid-template-columns: 1fr;
+  }
+  .game-room--melee .melee-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .melee-topbar > .connection-status {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .melee-topbar {
+    padding: 16px;
+    gap: 12px;
+  }
+  .melee-topbar > a {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  .melee-arena {
+    padding: 28px 16px;
+  }
+  .melee-title h1 {
+    letter-spacing: -3px;
+  }
+  .melee-title p {
+    letter-spacing: 3px;
+    font-size: 9px;
+  }
+  .melee-mode {
+    gap: 0;
+  }
+  .melee-mode > span {
+    font-size: 42px;
+  }
+  .melee-mode small {
+    display: none;
+  }
+  .game-room--melee .melee-layout {
+    display: flex;
+  }
+  .melee-footer {
+    padding: 20px 16px;
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+}

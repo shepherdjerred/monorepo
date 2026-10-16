@@ -1,0 +1,133 @@
+.game-room {
+  min-height: 100dvh;
+  color: var(--room-ink);
+  background: var(--bg);
+  --border: var(--line);
+  --room-control: var(--panel);
+}
+.game-room button {
+  background: var(--room-control);
+  min-height: 40px;
+}
+.game-room input {
+  background: var(--bg);
+}
+.game-room h1,
+.game-room h2,
+.game-room h3 {
+  font-family: inherit;
+}
+.game-room .account {
+  margin-left: auto;
+}
+.game-room .account button {
+  font-size: 12px;
+}
+.game-room .connection-status {
+  font-size: 10px;
+  line-height: 1.5;
+}
+.game-room .primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.game-room .session-bar {
+  background: var(--panel);
+  color: var(--muted);
+}
+.game-room .game-panels {
+  margin-top: 20px;
+}
+.game-room .game-panels > .panel {
+  grid-column: auto;
+}
+.game-room .game-panels > .panel:first-child {
+  grid-column: 1 / -1;
+}
+.game-room .statistics {
+  margin-top: 0;
+}
+.game-room .panel-heading {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.game-room .panel-heading h2 {
+  font-size: 17px;
+}
+.game-room .tabs {
+  gap: 3px;
+}
+.game-room .tabs button {
+  padding: 8px 10px;
+}
+.game-room .tabs button[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.game-room .round-results {
+  color: var(--muted);
+}
+.game-room .goal-text {
+  color: var(--room-ink);
+}
+.game-room .stage-idle {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  width: 100%;
+}
+.game-room .stage-art {
+  pointer-events: none;
+}
+.game-room .video-stage {
+  position: relative;
+  overflow: hidden;
+}
+.game-room .stage-idle > h2,
+.game-room .stage-idle > p,
+.game-room .stage-idle > button {
+  position: relative;
+}
+.game-room .stage-idle > p {
+  color: inherit;
+  opacity: 0.85;
+}
+.game-room .control-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.game-room .control-a {
+  background: #287d58;
+  color: white;
+}
+.game-room .control-b {
+  background: #bc4546;
+  color: white;
+}
+.game-room .notice a {
+  text-decoration: underline;
+}
+.game-room footer a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (max-width: 700px) {
+  .game-room .account > span {
+    display: none;
+  }
+  .game-room .account {
+    gap: 0;
+  }
+  .game-room .controller-body {
+    gap: 18px;
+  }
+  .game-room .seat-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .game-room .metrics {
+    flex-wrap: wrap;
+  }
+  .game-room .metric strong {
+    font-size: 23px;
+  }
+}

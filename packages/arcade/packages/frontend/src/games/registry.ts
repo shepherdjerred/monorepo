@@ -1,38 +1,40 @@
 import { games, type GameId } from "@arcade/common/catalog.ts";
 import type { GameClientModule } from "./module.ts";
-import { Mk64Page, WiiPage } from "./racing.tsx";
-import { MeleePage, BrawlPage } from "./fighting.tsx";
-import { EmeraldPage } from "./emerald.tsx";
+import { Mk64Room } from "./mk64-room.tsx";
+import { EmeraldRoom } from "./emerald-room.tsx";
+import { WiiRoom } from "./wii-room.tsx";
+import { MeleeRoom } from "./melee-room.tsx";
+import { BrawlRoom } from "./brawl-room.tsx";
 
 export const clientModules = {
   mk64: {
     definition: games.mk64,
     subtitle: "Four friends. One starting line.",
     mark: "64",
-    Page: Mk64Page,
+    Room: Mk64Room,
   },
   emerald: {
     definition: games.emerald,
     subtitle: "One adventure. Everyone plays.",
     mark: "E",
-    Page: EmeraldPage,
+    Room: EmeraldRoom,
   },
   mkwii: {
     definition: games.mkwii,
     subtitle: "A little friendly competition.",
     mark: "Wii",
-    Page: WiiPage,
+    Room: WiiRoom,
   },
   melee: {
     definition: games.melee,
     subtitle: "Ready for the next challenger?",
     mark: "M",
-    Page: MeleePage,
+    Room: MeleeRoom,
   },
   brawl: {
     definition: games.brawl,
     subtitle: "Bring the whole crew.",
     mark: "B",
-    Page: BrawlPage,
+    Room: BrawlRoom,
   },
 } as const satisfies Record<GameId, GameClientModule>;

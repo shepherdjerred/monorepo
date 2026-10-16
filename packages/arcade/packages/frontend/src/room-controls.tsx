@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { type GameId, type SessionView } from "@arcade/common/catalog.ts";
 import type { Access, RoomSnapshot } from "@arcade/common/protocol.ts";
 import { useDriverFeed } from "@shepherdjerred/discord-plays-web/feed/use-driver-feed.ts";
 import { useFeedSound } from "@shepherdjerred/discord-plays-web/feed/use-feed-sound.ts";
 import { DRIVER_FEED_PATH } from "@shepherdjerred/discord-plays-core/driver-feed/protocol.ts";
 import { Controller, SharedController } from "./controller.tsx";
-import { clientModules } from "./games/registry.ts";
 import { mutate, type RoomConnection } from "./session.ts";
 export function PlayStage({
   gameId,
@@ -16,6 +15,7 @@ export function PlayStage({
   signedIn,
   busy,
   action,
+  art,
 }: {
   readonly gameId: GameId;
   readonly guildId: string;
@@ -25,8 +25,8 @@ export function PlayStage({
   readonly signedIn: boolean;
   readonly busy: boolean;
   readonly action: (work: () => Promise<void>) => Promise<void>;
+  readonly art: ReactNode;
 }) {
-  const module = clientModules[gameId];
   return (
     <section className="play-stage">
       <div className="video-stage">
@@ -37,7 +37,9 @@ export function PlayStage({
           />
         ) : (
           <div className="stage-idle">
-            <div className="stage-mark">{module.mark}</div>
+            <div className="stage-art" aria-hidden="true">
+              {art}
+            </div>
             <h2>
               {session
                 ? "Grab a controller. Join the game."
@@ -47,7 +49,7 @@ export function PlayStage({
               {session
                 ? gameId === "emerald"
                   ? "Join the voice channel to watch and play here."
-                  : "Claim a seat below for your live player view. Spectators can watch in Discord."
+                  : "Claim a seat for your live player view. Spectators can watch in Discord."
                 : "Join a Discord voice channel, then start a session."}
             </p>
             {!session && (
@@ -69,7 +71,9 @@ export function PlayStage({
       <div className="session-bar">
         <span>
           {session
-            ? "One shared screen. Your own controls."
+            ? gameId === "emerald"
+              ? "One shared adventure. Everyone plays."
+              : "One shared screen. Your own controls."
             : "Your server’s saves and records are waiting."}
         </span>
         {session && access?.canStop === true && (
@@ -89,15 +93,65 @@ export function PlayStage({
   );
 }
 
-export function RoomControls({
-  connection,
-  room,
-  access,
-}: {
+type ControlsProps = {
   readonly connection: RoomConnection;
   readonly room: RoomSnapshot;
   readonly access: Access | null;
-}) {
+};
+
+export function RoomSeats({ connection, room, access }: ControlsProps) {
+  const session = room.session;
+  return (
+    <div className="seat-strip">
+      {room.seats.map((player, seat) => (
+        <div
+          className={`seat player-${String(seat)} ${access?.seat === seat ? "yours" : ""}`}
+          key={seat}
+        >
+          <span className="seat-number">P{seat + 1}</span>
+          <div>
+            <strong>{player?.name ?? "Open seat"}</strong>
+            <span>
+              {access?.seat === seat
+                ? "YOUR CONTROLLER"
+                : player
+                  ? "PLAYING"
+                  : "READY FOR YOU"}
+            </span>
+          </div>
+          {access?.seat === seat ? (
+            <button
+              onClick={() => {
+                if (session)
+                  connection.send({ kind: "release", sessionId: session.id });
+              }}
+            >
+              Leave seat
+            </button>
+          ) : (
+            player === null && (
+              <button
+                disabled={access?.canPlay !== true || !session}
+                onClick={() => {
+                  if (session)
+                    connection.send({
+                      kind: "claim",
+                      sessionId: session.id,
+                      seat,
+                    });
+                }}
+              >
+                Join
+              </button>
+            )
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function RoomController({ connection, room, access }: ControlsProps) {
   const session = room.session;
   const sendCommand = (command: string) => {
     if (session !== null)
@@ -105,55 +159,6 @@ export function RoomControls({
   };
   return (
     <>
-      <div className="seat-strip">
-        {room.seats.map((player, seat) => (
-          <div
-            className={`seat player-${String(seat)} ${access?.seat === seat ? "yours" : ""}`}
-            key={seat}
-          >
-            <span className="seat-number">P{seat + 1}</span>
-            <div>
-              <strong>{player?.name ?? "Open seat"}</strong>
-              <span>
-                {access?.seat === seat
-                  ? "YOUR CONTROLLER"
-                  : player
-                    ? "PLAYING"
-                    : "READY FOR YOU"}
-              </span>
-            </div>
-            {access?.seat === seat ? (
-              <button
-                onClick={() => {
-                  if (session)
-                    connection.send({
-                      kind: "release",
-                      sessionId: session.id,
-                    });
-                }}
-              >
-                Leave seat
-              </button>
-            ) : (
-              player === null && (
-                <button
-                  disabled={access?.canPlay !== true || !session}
-                  onClick={() => {
-                    if (session)
-                      connection.send({
-                        kind: "claim",
-                        sessionId: session.id,
-                        seat,
-                      });
-                  }}
-                >
-                  Join
-                </button>
-              )
-            )}
-          </div>
-        ))}
-      </div>
       {session &&
         (room.gameId === "emerald" ? (
           <SharedController
@@ -181,6 +186,15 @@ export function RoomControls({
           {access.reason}
         </p>
       )}
+    </>
+  );
+}
+
+export function RoomControls(props: ControlsProps) {
+  return (
+    <>
+      <RoomSeats {...props} />
+      <RoomController {...props} />
     </>
   );
 }
