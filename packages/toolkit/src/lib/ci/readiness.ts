@@ -170,7 +170,7 @@ function structuralVerdict(
     return {
       outcome: "main_red",
       reasons: [
-        "Main is red; report the failure and await instructions. Do not repair main.",
+        "Main is red; keep working. Do not try to fix main unless explicitly told.",
       ],
       commands: ["toolkit ci main", "toolkit ci explain --main"],
     };

@@ -24,9 +24,9 @@ through `toolkit git-spice`. Start a new wait explicitly after the head changes.
 Follow `monorepo-delivery` for conflicts and branch updates; being behind main
 alone does not mean there is a conflict or that a rebase is required.
 
-Respect the user's requested wait boundary. A timeout is not a CI failure;
-red main requires reporting and awaiting instructions. Report human
-intervention when required by effective merge rules or requested changes;
+Respect the user's requested wait boundary. A timeout is not a CI failure.
+Keep working if main is red; do not try to fix main unless explicitly told.
+Report human intervention when required by effective merge rules or requested changes;
 do not invent an approval requirement. Monitoring does not authorize creating
 or merging a PR. Never promise to resume after the turn ends.
 

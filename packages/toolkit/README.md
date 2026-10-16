@@ -249,8 +249,8 @@ Main is checked automatically. Push runs and full manual main runs contribute
 to its verdict. A manual run must include verification, release admission,
 image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
-run keeps main red while its recovery build is pending. When main is red, report its evidence and
-await instructions; do not independently fix it. `ci explain --main` is an
+run keeps main red while its recovery build is pending. Keep working if main is
+red; do not try to fix main unless explicitly told. `ci explain --main` is an
 alias for `ci main`.
 
 | Wait exit | Meaning                                                       |
@@ -260,7 +260,7 @@ alias for `ci main`.
 | 2         | Usage, authentication, API, or contract error                 |
 | 3         | Human intervention (review, draft, pipeline approval)         |
 | 4         | PR head changed; explicitly start a new wait for the new head |
-| 5         | Main red; report and await instructions                       |
+| 5         | Main red; keep working; fix main only when explicitly told    |
 | 6         | Requested timeout; this does not mean CI failed               |
 | 7         | PR closed or already merged                                   |
 

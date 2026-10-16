@@ -197,7 +197,7 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
     diagnostics,
     guidance:
       main.state === "red"
-        ? "Report main's failure and await instructions. Do not repair main."
+        ? "Keep working if main is red; do not try to fix main unless explicitly told."
         : "Pending builds are expected; main's current build is shown separately from its last verdict.",
   };
   const text = [

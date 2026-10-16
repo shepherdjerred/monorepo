@@ -41,7 +41,7 @@ test("PR health shares readiness when only optional work is still running", () =
   expect(report.nextSteps).toEqual([]);
 });
 
-test("PR health retains pending publication and gives main-red stop guidance", () => {
+test("PR health retains pending publication and keeps work moving when main is red", () => {
   const input = evidence();
   if (input.snapshot === undefined) throw new Error("Missing snapshot fixture");
   input.snapshot.checks = [];
@@ -49,6 +49,9 @@ test("PR health retains pending publication and gives main-red stop guidance", (
   input.snapshot.main.state = "red";
   const report = buildPrHealthReport(input);
   expect(report.overallStatus).toBe("UNHEALTHY");
-  expect(report.nextSteps.join(" ")).toContain("Do not repair main");
+  expect(report.nextSteps.join(" ")).toContain("keep working");
+  expect(report.nextSteps.join(" ")).toContain(
+    "Do not try to fix main unless explicitly told",
+  );
   expect(report.nextSteps.join(" ")).not.toContain("fix hard failures");
 });
