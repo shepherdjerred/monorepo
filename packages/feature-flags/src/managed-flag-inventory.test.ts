@@ -322,7 +322,14 @@ describe("Managed flag inventory validation", () => {
 describe("The Storm companion pilot rollout", () => {
   test("activates production gameplay and brain features with safe global defaults", () => {
     for (const [namespace, keys] of [
-      ["the-storm", ["the-storm-crier-enabled", "the-storm-merchant-enabled"]],
+      [
+        "the-storm",
+        [
+          "the-storm-crier-enabled",
+          "the-storm-merchant-enabled",
+          "the-storm-beginners-luck-enabled",
+        ],
+      ],
     ] as const) {
       const flags = materializeManagedNamespaceEnvironment(
         managedFlagInventory,
@@ -341,7 +348,6 @@ describe("The Storm companion pilot rollout", () => {
   });
 
   test.each([
-    ["the-storm-beginners-luck-enabled", "the-storm"],
     ["the-storm-companions-enabled", "the-storm"],
     ["the-storm-staff-tools-enabled", "the-storm"],
     ["the-storm-identity-enabled", "the-storm"],

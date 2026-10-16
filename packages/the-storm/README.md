@@ -946,7 +946,8 @@ until the player frees inventory space.
 ## Beginner's luck
 
 The mobs module offers personal wilderness protection through the managed
-`the-storm-beginners-luck-enabled` flag. It defaults off and is enabled in beta.
+`the-storm-beginners-luck-enabled` flag. Its fallback defaults off; beta and
+production explicitly enable it.
 `mobs.yml` defines six hours of near-peaceful combat followed by a gradual ramp
 to ordinary difficulty at twelve hours. Every account, including returning
 players, starts a fresh allowance on its first enabled session. The mobs-owned
