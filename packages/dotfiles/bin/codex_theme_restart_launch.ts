@@ -1,4 +1,5 @@
-import type { Appearance } from "./codex_theme_restart_options.ts";
+import { createHash } from "node:crypto";
+import type { Runtime, Target } from "./codex_theme_restart_core.ts";
 
 export const uuid =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
@@ -74,8 +75,7 @@ function nativeOption(
   }
   if (!inline && (booleanFlags.has(flag) || bypassFlags.has(flag)))
     return { retained: [flag], consumed: 1 };
-  if (!inline && discardedFlags.has(flag))
-    return { retained: [], consumed: 1 };
+  if (!inline && discardedFlags.has(flag)) return { retained: [], consumed: 1 };
   throw new Error("Unsupported Codex launch option; pane left running");
 }
 
@@ -121,13 +121,7 @@ function validatePositionals(positionals: readonly string[]): void {
     throw new Error("Unsupported Codex launch command");
 }
 
-/** Keep launch policy, never replay a prompt, fork, image attachment, or worktree creation. */
-export function resumeArguments(
-  argv: readonly string[],
-  thread: string,
-  mode: Appearance,
-): string[] {
-  if (!uuid.test(thread)) throw new Error("Invalid Codex conversation UUID");
+function launchOptions(argv: readonly string[]): string[] {
   const executable = argv[0]?.split("/").at(-1);
   if (executable !== "codex")
     throw new Error("Foreground process is not Codex");
@@ -152,14 +146,54 @@ export function resumeArguments(
   // Only the interactive entrypoint and `resume` are supported. Other native commands
   // must not accidentally be turned into a continuation of an unrelated thread.
   validatePositionals(positionals);
-  const theme = mode === "dark" ? "catppuccin-mocha" : "catppuccin-latte";
-  return [
-    "resume",
-    thread,
-    ...retained,
-    "-c",
-    'tui.resume_cwd="session"',
-    "-c",
-    `tui.theme="${theme}"`,
-  ];
+  return retained;
+}
+
+export function validateLaunchArguments(argv: readonly string[]): void {
+  launchOptions(argv);
+}
+
+/** Keep launch policy, never replay a prompt, fork, image attachment, or worktree creation. */
+export function resumeArguments(
+  argv: readonly string[],
+  thread: string,
+): string[] {
+  if (!uuid.test(thread)) throw new Error("Invalid Codex conversation UUID");
+  const retained = launchOptions(argv);
+  // Even UI-only -c overrides select an embedded server in current Codex.
+  // The worker writes appearance settings through the daemon before restarting.
+  return ["resume", thread, ...retained];
+}
+/** Herdr may lose its temporary name while acknowledging a successful launch.
+ * Never retry this write: the caller must verify the exact pane and native UUID.
+ */
+export async function launchReplacement(
+  runtime: Runtime,
+  target: Target,
+): Promise<string | undefined> {
+  const { session, agent } = target;
+  const name =
+    agent.name ??
+    `theme-${createHash("sha256").update(`${session}/${agent.terminal}`).digest("hex").slice(0, 12)}`;
+  try {
+    // Launch through the existing interactive shell to retain its wrapper policy.
+    await runtime.call(session, [
+      "agent",
+      "start",
+      name,
+      "--kind",
+      "codex",
+      "--pane",
+      agent.pane,
+      "--timeout",
+      "30000",
+      "--",
+      ...target.args,
+    ]);
+    return undefined;
+  } catch (error) {
+    return error instanceof Error
+      ? error.message
+      : "Unknown Herdr launch error";
+  }
 }

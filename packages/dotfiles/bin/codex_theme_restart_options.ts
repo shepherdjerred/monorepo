@@ -4,6 +4,7 @@ export type Options = {
   dryRun: boolean;
   onChange: boolean;
   worker: boolean;
+  probeIdentities: boolean;
   session?: string;
   pane?: string;
 };
@@ -16,7 +17,12 @@ function optionValue(flag: string, value: string | undefined): string {
 }
 
 export function parseOptions(args: readonly string[]): Options {
-  const options: Options = { dryRun: false, onChange: false, worker: false };
+  const options: Options = {
+    dryRun: false,
+    onChange: false,
+    worker: false,
+    probeIdentities: false,
+  };
   for (let index = 0; index < args.length; index++) {
     const flag = args[index];
     if (flag === undefined) throw new Error("Missing option");
@@ -29,6 +35,9 @@ export function parseOptions(args: readonly string[]): Options {
         break;
       case "--worker":
         options.worker = true;
+        break;
+      case "--probe-identities":
+        options.probeIdentities = true;
         break;
       case "--session":
       case "--pane": {
@@ -43,6 +52,10 @@ export function parseOptions(args: readonly string[]): Options {
   }
   if (options.pane !== undefined && options.session === undefined)
     throw new Error("--pane requires --session");
+  if (options.probeIdentities && (options.dryRun || options.onChange))
+    throw new Error(
+      "--probe-identities cannot be combined with --dry-run or --on-change",
+    );
   if (
     options.onChange &&
     (options.session !== undefined || options.pane !== undefined)

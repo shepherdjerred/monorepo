@@ -18,6 +18,10 @@ import {
   type Options,
   type Appearance,
 } from "./codex_theme_restart_options.ts";
+import {
+  syncCodexAppearance,
+  themeForAppearance,
+} from "./codex_theme_restart_config.ts";
 
 const stateDirectory = path.join(homedir(), ".local/state/codex-theme-restart");
 const logPath = path.join(stateDirectory, "restart.log");
@@ -85,6 +89,33 @@ async function command(args: string[], timeout = 15_000): Promise<string> {
 }
 
 const runtime: Runtime = {
+  async appearanceConfigured(mode) {
+    const config = object(
+      Bun.TOML.parse(
+        await Bun.file(path.join(homedir(), ".codex/config.toml")).text(),
+      ),
+    );
+    const tui = object(config.get("tui"));
+    return (
+      tui.get("theme") === themeForAppearance(mode) &&
+      tui.get("resume_cwd") === "session"
+    );
+  },
+  conversationSaved(thread) {
+    const catalog = new Database(
+      path.join(homedir(), ".codex/state_5.sqlite"),
+      { readonly: true },
+    );
+    try {
+      return (
+        catalog
+          .query("SELECT 1 FROM threads WHERE id = ? AND archived = 0")
+          .get(thread) !== null
+      );
+    } finally {
+      catalog.close();
+    }
+  },
   async call(session, args) {
     const output = await command(
       ["herdr", "--session", session, ...args],
@@ -92,7 +123,12 @@ const runtime: Runtime = {
     );
     // Hook reporting commands deliberately produce no response body. Their
     // effects are verified by the following structured pane read.
-    if (args[0] === "pane" && args[1] === "report-agent-session") return {};
+    if (
+      args[0] === "pane" &&
+      (args[1] === "report-agent-session" || args[1] === "send-text")
+    )
+      return {};
+    if (args[0] === "pane" && args[1] === "read") return output;
     const response = jsonResponse(output);
     return object(response).get("result");
   },
@@ -173,20 +209,31 @@ async function processSession(
   options: Options,
   session: string,
   mode: Appearance,
+  continued: Set<string>,
 ): Promise<Outcome[]> {
   try {
-    const discovered = await discover(runtime, session, mode, options.pane);
+    const discovered = await discover(runtime, session, mode, {
+      ...(options.pane === undefined ? {} : { pane: options.pane }),
+      probe: !options.dryRun,
+    });
     const outcomes = [...discovered.outcomes];
     for (const outcome of discovered.outcomes) report(outcome);
     for (const target of discovered.targets) {
-      const outcome: Outcome = options.dryRun
+      const outcome: Outcome = options.probeIdentities
         ? {
             session,
             pane: target.agent.pane,
-            status: "would-restart",
-            message: `${mode} appearance; ${target.agent.status}; exact conversation identified`,
+            status: "identified",
+            message: `Native /status verified conversation ${String(target.agent.thread)}; client left running`,
           }
-        : await restart(runtime, target);
+        : options.dryRun
+          ? {
+              session,
+              pane: target.agent.pane,
+              status: "would-restart",
+              message: `${mode} appearance; ${target.agent.status}; exact conversation identified`,
+            }
+          : await restart(runtime, target, continued);
       outcomes.push(outcome);
       report(outcome);
     }
@@ -222,17 +269,24 @@ async function run(options: Options): Promise<number> {
         )
       : [options.session];
   const outcomes: Outcome[] = [];
+  if (!options.dryRun && !options.probeIdentities)
+    await syncCodexAppearance(mode, path.join(homedir(), ".codex"));
   // Record an event before side effects. A duplicate must not repeat a prompt
   // after a crash or uncertain CLI acknowledgement; explicit manual runs can retry.
-  if (!options.dryRun && options.session === undefined)
+  if (
+    !options.dryRun &&
+    !options.probeIdentities &&
+    options.session === undefined
+  )
     await recordAppearance(mode);
+  const continued = new Set<string>();
   for (const session of sessions) {
-    outcomes.push(...(await processSession(options, session, mode)));
+    outcomes.push(...(await processSession(options, session, mode, continued)));
   }
   const count = (status: Outcome["status"]) =>
     outcomes.filter((outcome) => outcome.status === status).length;
   console.log(
-    `Appearance ${mode}: ${String(count("restarted"))} restarted, ${String(count("would-restart"))} eligible, ${String(count("skipped"))} skipped, ${String(count("failed"))} failed`,
+    `Appearance ${mode}: ${String(count("restarted"))} restarted, ${String(count("would-restart"))} eligible, ${String(count("identified"))} identified, ${String(count("skipped"))} skipped, ${String(count("failed"))} failed`,
   );
   return count("failed") > 0 || count("skipped") > 0 ? 1 : 0;
 }
@@ -240,7 +294,7 @@ async function run(options: Options): Promise<number> {
 async function main(): Promise<number> {
   if (process.argv.includes("--help")) {
     console.log(
-      "Usage: restart-codex-panes [--dry-run] [--on-change] [--session NAME [--pane ID]]\nManual runs restart immediately; --on-change deduplicates appearance events.\nWorkers run independently and append results to " +
+      "Usage: restart-codex-panes [--dry-run | --probe-identities | --on-change] [--session NAME [--pane ID]]\nManual runs restart immediately; --on-change deduplicates appearance events.\n--dry-run is read-only; --probe-identities queries native /status without restarting.\nWorkers run independently and append results to " +
         logPath,
     );
     return 0;
