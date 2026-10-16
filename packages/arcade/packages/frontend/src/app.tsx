@@ -1,22 +1,13 @@
-import type { SessionView } from "@arcade/common/catalog.ts";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   DiscordIdSchema,
   GameIdSchema,
-  games,
   type GameId,
 } from "@arcade/common/catalog.ts";
 import { ServersSchema } from "@arcade/common/protocol.ts";
-import {
-  useMe,
-  signIn,
-  useSignOut,
-} from "@shepherdjerred/discord-plays-web/session/me.ts";
+import { useMe, signIn } from "@shepherdjerred/discord-plays-web/session/me.ts";
 import { clientModules } from "./games/registry.ts";
-import { useRoom, useStats, SessionConflict } from "./session.ts";
-import { PlayStage, RoomControls, GoalForm } from "./room-controls.tsx";
-import { Statistics } from "./stats.tsx";
+import { useGameRoom } from "./room.tsx";
 
 export function App() {
   const segments = globalThis.location.pathname.split("/").filter(Boolean);
@@ -157,158 +148,7 @@ function GameRoom({
   readonly guildId: string;
   readonly gameId: GameId;
 }) {
-  const connection = useRoom(guildId, gameId);
-  const { me } = useMe();
-  const signOut = useSignOut(connection.socket);
-  const stats = useStats(guildId, gameId);
-  const { action, busy, actionError, occupiedRoom } = useRoomAction();
+  const model = useGameRoom(guildId, gameId);
   const module = clientModules[gameId];
-  const room = connection.snapshot;
-  const session = room?.session ?? null;
-  const access =
-    connection.access?.sessionId === session?.id ? connection.access : null;
-  const notice = actionError ?? connection.error ?? room?.error ?? null;
-  return (
-    <div className={`arcade theme-${gameId}`}>
-      <header className="arcade-header">
-        <a className="brand" href="/">
-          ARCADE
-          <span className="brand-dot" />
-        </a>
-        <a className="back-link" href="/">
-          ← All games
-        </a>
-        <div className="account">
-          {me.signedIn ? (
-            <>
-              <span>{me.user.name}</span>
-              <button
-                onClick={() => {
-                  void action(signOut);
-                }}
-              >
-                Sign out
-              </button>
-            </>
-          ) : (
-            <button onClick={signIn}>Sign in with Discord</button>
-          )}
-        </div>
-      </header>
-      <main className="room-page">
-        <GameHeading
-          gameId={gameId}
-          session={session}
-          connected={connection.connected}
-        />
-        {notice !== null && (
-          <p role="alert" className="notice">
-            {notice}
-            {occupiedRoom !== null && (
-              <>
-                {" "}
-                <a href={occupiedRoom}>Open the active game →</a>
-              </>
-            )}
-          </p>
-        )}
-        <PlayStage
-          gameId={gameId}
-          guildId={guildId}
-          connection={connection}
-          session={session}
-          access={access}
-          signedIn={me.signedIn}
-          busy={busy}
-          action={action}
-        />
-        {room && (
-          <>
-            <RoomControls connection={connection} room={room} access={access} />
-            <module.Page room={room} stats={stats.data} />
-            {gameId === "emerald" && (
-              <AdventureGoal
-                session={session}
-                viewerId={me.signedIn ? me.user.discordId : null}
-                busy={busy}
-                action={action}
-              />
-            )}
-          </>
-        )}
-        <Statistics
-          guildId={guildId}
-          gameId={gameId}
-          viewerId={me.signedIn ? me.user.discordId : undefined}
-        />
-      </main>
-    </div>
-  );
-}
-
-function useRoomAction() {
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [occupiedRoom, setOccupiedRoom] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const action = async (work: () => Promise<void>) => {
-    setBusy(true);
-    setActionError(null);
-    setOccupiedRoom(null);
-    try {
-      await work();
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Request failed");
-      if (error instanceof SessionConflict)
-        setOccupiedRoom(
-          `/servers/${error.session.guildId}/games/${error.session.gameId}`,
-        );
-    } finally {
-      setBusy(false);
-    }
-  };
-  return { action, busy, actionError, occupiedRoom };
-}
-
-function AdventureGoal({
-  session,
-  viewerId,
-  busy,
-  action,
-}: {
-  readonly session: SessionView | null;
-  readonly viewerId: string | null;
-  readonly busy: boolean;
-  readonly action: (work: () => Promise<void>) => Promise<void>;
-}) {
-  return session !== null && session.startedByUserId === viewerId ? (
-    <GoalForm sessionId={session.id} busy={busy} action={action} />
-  ) : null;
-}
-
-function GameHeading({
-  gameId,
-  session,
-  connected,
-}: {
-  readonly gameId: GameId;
-  readonly session: SessionView | null;
-  readonly connected: boolean;
-}) {
-  const module = clientModules[gameId];
-  return (
-    <div className="game-heading">
-      <div>
-        <span className="eyebrow">{module.subtitle}</span>
-        <h1>{games[gameId].title}</h1>
-      </div>
-      <span className={`connection-status ${connected ? "connected" : ""}`}>
-        <i />
-        {connected
-          ? session?.phase === "running"
-            ? "GAME IN PROGRESS"
-            : (session?.phase.toUpperCase() ?? "READY TO PLAY")
-          : "RECONNECTING"}
-      </span>
-    </div>
-  );
+  return <module.Room model={model} />;
 }

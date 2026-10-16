@@ -1,0 +1,300 @@
+.game-room--mkwii {
+  --bg: #f3f6f8;
+  --panel: #fff;
+  --line: #c6d7df;
+  --muted: #617680;
+  --room-ink: #3b505c;
+  --accent: #087eaf;
+  --accent-ink: #fff;
+  --glow: #c8eaf4;
+  color-scheme: light;
+  font-family: "DM Sans", sans-serif;
+  background-image: repeating-linear-gradient(
+    0deg,
+    #c9dce918 0 1px,
+    transparent 1px 5px
+  );
+}
+.wii-topbar {
+  display: flex;
+  align-items: center;
+  padding: 16px 40px;
+  border-bottom: 2px solid #b9d4e0;
+  background: #fff;
+  gap: 20px;
+}
+.wii-topbar > a {
+  font-size: 13px;
+  color: #527a8e;
+}
+.wii-channel {
+  max-width: 1320px;
+  margin: auto;
+  padding: 35px 36px 50px;
+}
+.wii-title {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 28px;
+}
+.wii-logotype {
+  font-size: 67px;
+  font-weight: 500;
+  letter-spacing: -7px;
+  line-height: 1;
+  color: #899ca7;
+  padding-right: 22px;
+  border-right: 1px solid #c6d7df;
+}
+.wii-title p {
+  color: #118cba;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  margin-bottom: 8px;
+}
+.wii-title h1 {
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+.wii-title .connection-status {
+  margin-left: auto;
+}
+.wii-navigation {
+  display: flex;
+  justify-content: center;
+  border: 2px solid #8dc6dd;
+  border-radius: 30px;
+  background: #fff;
+  margin: 0 auto 30px;
+  max-width: 560px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px #5b9db918;
+}
+.wii-navigation a {
+  flex: 1;
+  text-align: center;
+  padding: 12px 20px;
+  border-right: 1px solid #cce1e9;
+  font-size: 14px;
+}
+.wii-navigation a:first-child {
+  background: #e2f3fb;
+  color: #067dae;
+}
+.wii-navigation a:last-child {
+  border: none;
+}
+.wii-race-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.wii-screen,
+.wii-race-data {
+  min-width: 0;
+}
+.game-room--mkwii button {
+  background: linear-gradient(#fff, #e8f2f7);
+  border: 2px solid #a7cede;
+  border-radius: 24px;
+  color: #3c606f;
+  box-shadow: 0 2px 4px #325d6e13;
+}
+.game-room--mkwii button:hover:not(:disabled) {
+  border-color: #209ed0;
+  box-shadow: 0 0 0 3px #5ac4ee26;
+}
+.game-room--mkwii .play-stage {
+  border: 3px solid #a5d0e1;
+  border-radius: 24px;
+  box-shadow: 0 7px 20px #517e991a;
+}
+.game-room--mkwii .video-stage {
+  background: radial-gradient(ellipse at center, #fff, #e1eff5);
+  min-height: 420px;
+}
+.game-room--mkwii .stage-idle h2 {
+  font-size: 24px;
+  font-weight: 400;
+}
+.game-room--mkwii .stage-idle p {
+  font-size: 13px;
+}
+.wii-wheel {
+  width: 160px;
+  height: 160px;
+  border: 14px solid #f7fcff;
+  outline: 2px solid #b8ceda;
+  border-radius: 50%;
+  margin: 0 auto 30px;
+  display: grid;
+  place-items: center;
+  color: #6e8999;
+  box-shadow:
+    0 8px 0 #b3cbd7,
+    inset 0 4px 0 #bbd1dc,
+    0 12px 20px #7192aa26;
+  transform: rotate(-12deg);
+}
+.wii-wheel span {
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1;
+}
+.wii-wheel b {
+  font-size: 34px;
+  color: #078cbe;
+}
+.game-room--mkwii .primary {
+  background: linear-gradient(#3db6e4, #158bb8);
+  color: #fff;
+  border-color: #fff;
+  outline: 2px solid #8cc7df;
+}
+.game-room--mkwii .session-bar {
+  background: #fff;
+  border-top: 1px solid #d1e3eb;
+}
+.game-room--mkwii .panel {
+  border: 1px solid #bdd9e4;
+  border-radius: 18px;
+  padding: 22px 18px;
+  box-shadow: 0 4px 12px #4f8ca212;
+}
+.game-room--mkwii .wii-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 0;
+}
+.game-room--mkwii .racer-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.game-room--mkwii .racer-card {
+  background: #f1f7fb;
+  border: 1px solid #d0e1ea;
+  border-left: 3px solid var(--player);
+  border-radius: 12px;
+  padding: 12px 7px;
+}
+.game-room--mkwii .placement {
+  font-weight: 400;
+  font-size: 35px;
+  margin: 10px 0;
+  color: #4d6e80;
+}
+.game-room--mkwii .race-summary {
+  margin-bottom: 10px;
+}
+.game-room--mkwii .metric strong {
+  font-size: 24px;
+  font-weight: 400;
+}
+.wii-controllers {
+  margin: 34px 0;
+  scroll-margin-top: 20px;
+}
+.wii-controllers > h2 {
+  font-size: 25px;
+  font-weight: 400;
+  margin-bottom: 7px;
+}
+.wii-controllers > p {
+  font-size: 13px;
+  color: #617680;
+}
+.game-room--mkwii .seat {
+  border: 2px solid #aacbdc;
+  border-radius: 20px;
+  background: #fff;
+}
+.game-room--mkwii .seat.yours {
+  border-color: #1a9ed0;
+  box-shadow: 0 0 0 4px #9ee2ff3b;
+}
+.game-room--mkwii .player-0 {
+  --player: #b93030;
+}
+.game-room--mkwii .player-1 {
+  --player: #176caa;
+}
+.game-room--mkwii .player-2 {
+  --player: #946000;
+}
+.game-room--mkwii .player-3 {
+  --player: #26764a;
+}
+.game-room--mkwii .controller {
+  border-radius: 25px;
+  background: #fff;
+}
+.game-room--mkwii .analog-well {
+  background: #e6eef2;
+  box-shadow: inset 0 4px 7px #57768425;
+}
+.game-room--mkwii .analog-well i {
+  background: #abc1cf;
+  border: 2px solid #718c9d;
+}
+.wii-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 36px;
+  background: #fff;
+  border-top: 2px solid #a7cede;
+  gap: 20px;
+  color: #718c9d;
+  font-size: 13px;
+}
+@media (max-width: 950px) {
+  .wii-race-layout {
+    grid-template-columns: 1fr;
+  }
+  .game-room--mkwii .wii-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .wii-title .connection-status {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .wii-topbar {
+    padding: 16px;
+  }
+  .wii-channel {
+    padding: 25px 16px 35px;
+  }
+  .wii-title {
+    gap: 16px;
+  }
+  .wii-logotype {
+    font-size: 49px;
+    padding-right: 16px;
+  }
+  .wii-title h1 {
+    font-size: 26px;
+  }
+  .wii-title p {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+  .wii-navigation a {
+    padding: 12px 15px;
+    font-size: 12px;
+  }
+  .game-room--mkwii .video-stage {
+    min-height: 390px;
+  }
+  .game-room--mkwii .wii-layout {
+    display: flex;
+  }
+  .wii-footer {
+    padding: 20px 16px;
+  }
+}

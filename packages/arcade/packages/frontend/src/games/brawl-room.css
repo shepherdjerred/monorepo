@@ -1,0 +1,328 @@
+.game-room--brawl {
+  --bg: #ede4d4;
+  --panel: #f8f2e7;
+  --line: #bbad95;
+  --muted: #75644f;
+  --room-ink: #3b302a;
+  --accent: #9e4c23;
+  --accent-ink: #fff8e9;
+  --glow: #b79b7444;
+  color-scheme: light;
+  font-family: Georgia, "Times New Roman", serif;
+  background-image:
+    radial-gradient(ellipse at top, #fff9ec, transparent 70%),
+    repeating-linear-gradient(100deg, #8c70480b 0 1px, transparent 1px 5px);
+}
+.brawl-topbar {
+  max-width: 1300px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 34px;
+  border-bottom: 1px solid #c2b39c;
+}
+.brawl-topbar > a {
+  font-size: 14px;
+  font-style: italic;
+}
+.brawl-hall {
+  max-width: 1330px;
+  margin: auto;
+  padding: 30px 34px 50px;
+}
+.brawl-title {
+  position: relative;
+  text-align: center;
+  margin-bottom: 35px;
+  padding-bottom: 22px;
+  border-bottom: 3px double #b7a487;
+}
+.brawl-title p {
+  font-size: 13px;
+  letter-spacing: 5px;
+  font-weight: 700;
+}
+.brawl-title h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(64px, 8vw, 100px);
+  line-height: 1.15;
+  letter-spacing: -6px;
+  font-style: italic;
+  color: #64412b;
+  text-shadow:
+    0 2px #fff,
+    1px 3px #ac8d69;
+}
+.brawl-title > span {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #75644f;
+}
+.brawl-title .connection-status {
+  justify-content: center;
+  margin-top: 17px;
+}
+.brawl-battle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(350px, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+.brawl-battle,
+.brawl-fighters {
+  min-width: 0;
+}
+.brawl-ribbon {
+  background: #5b3829;
+  color: #f6e4c1;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 4px;
+  padding: 12px;
+  border-top: 3px solid #b28c55;
+}
+.game-room--brawl button {
+  background: linear-gradient(#fffaf0, #e5d6bb);
+  border: 1px solid #ae956f;
+  border-radius: 3px;
+  color: #5b3829;
+  box-shadow: 0 2px #d2bf9f;
+}
+.game-room--brawl .play-stage {
+  border-radius: 0;
+  border: 4px solid #6c5741;
+  box-shadow:
+    0 0 0 1px #c7b694,
+    4px 6px 15px #573b2922;
+}
+.game-room--brawl .video-stage {
+  min-height: 400px;
+  background: radial-gradient(ellipse at top, #5f4837, #251d1b);
+  color: #fff5df;
+}
+.game-room--brawl .stage-idle {
+  padding: 35px 22px;
+}
+.game-room--brawl .stage-idle h2 {
+  font-size: 23px;
+  font-style: italic;
+}
+.game-room--brawl .stage-idle p {
+  font-size: 14px;
+}
+.brawl-crest {
+  display: grid;
+  justify-items: center;
+  margin: 0 auto 25px;
+}
+.brawl-crest > span {
+  font-size: 20px;
+  letter-spacing: 6px;
+  color: #d4b98d;
+  font-weight: 700;
+}
+.brawl-crest b {
+  font-size: 65px;
+  line-height: 1.2;
+  font-weight: normal;
+  color: #e1c68f;
+  text-shadow: 0 0 35px #db8e5c;
+}
+.brawl-crest small {
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: #d4b98d;
+  border-top: 1px solid #a68b68;
+  padding-top: 10px;
+}
+.game-room--brawl .primary {
+  background: linear-gradient(#bd6f3d, #98461e);
+  color: #fff8e9;
+  border-color: #e4b881;
+  box-shadow: 0 3px #5b3829;
+}
+.game-room--brawl .panel {
+  background: #f8f2e7;
+  border: 1px solid #bda98b;
+  border-radius: 0;
+  padding: 20px 18px;
+  box-shadow: 2px 3px 0 #c7b99d4a;
+}
+.game-room--brawl .panel-heading {
+  border-bottom: 3px double #c2b39c;
+  padding-bottom: 14px;
+}
+.game-room--brawl .panel-heading h2 {
+  font-size: 21px;
+  font-style: italic;
+}
+.game-room--brawl .brawl-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 0;
+}
+.game-room--brawl .fighter-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.game-room--brawl .fighter-card {
+  transform: none;
+  border: 1px solid #bda98b;
+  border-left: 5px solid var(--player);
+  border-radius: 0;
+  background: linear-gradient(100deg, #e6d9c4, #f4ecde);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  text-align: left;
+}
+.game-room--brawl .fighter-number {
+  font-size: 24px;
+  grid-row: 1 / 4;
+  opacity: 1;
+  color: #725940;
+}
+.game-room--brawl .fighter-card h3 {
+  font-size: 17px;
+  margin: 0 0 4px;
+}
+.game-room--brawl .fighter-card > p {
+  font-size: 11px;
+  margin: 0 0 4px;
+  letter-spacing: 0;
+  color: #75644f;
+  grid-column: 2;
+}
+.game-room--brawl .damage {
+  grid-column: 3;
+  grid-row: 1 / 4;
+  font:
+    bold 34px Georgia,
+    serif;
+  margin: 0;
+  color: #9e4c23;
+}
+.game-room--brawl .damage small {
+  font-size: 15px;
+}
+.game-room--brawl .fighter-card .eyebrow {
+  grid-column: 2 / -1;
+  margin-top: 5px;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.game-room--brawl .fighter-card .tag {
+  grid-column: 2;
+  margin-top: 8px;
+}
+.game-room--brawl .arena-summary {
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.game-room--brawl .arena-summary > span {
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.game-room--brawl .arena-summary > strong {
+  font-size: 24px;
+}
+.game-room--brawl .metric strong {
+  font-family: Georgia, serif;
+}
+.game-room--brawl .seat {
+  background: #f8f2e7;
+  border-radius: 0;
+  border-bottom: 3px solid var(--player);
+}
+.game-room--brawl .seat-number {
+  color: #71583c;
+}
+.game-room--brawl .controller {
+  border-radius: 3px;
+  background: #e1d4be;
+}
+.game-room--brawl .control-button {
+  border-radius: 50%;
+}
+.game-room--brawl .analog-well {
+  background: #c2b499;
+}
+.game-room--brawl .analog-well i {
+  background: #7c6c56;
+}
+.brawl-chronicles {
+  margin-top: 35px;
+}
+.brawl-chapter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+  border-top: 3px double #b7a487;
+  padding: 24px 0;
+  color: #765130;
+}
+.brawl-chapter h2 {
+  font-style: italic;
+  font-size: 30px;
+}
+.brawl-chapter > span {
+  font-size: 20px;
+}
+.brawl-footer {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1262px;
+  margin: auto;
+  gap: 20px;
+  padding: 25px 0;
+  border-top: 3px double #b7a487;
+  color: #75644f;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+@media (max-width: 1000px) {
+  .brawl-battle-layout {
+    grid-template-columns: 1fr;
+  }
+  .game-room--brawl .brawl-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .brawl-topbar {
+    padding: 18px 16px;
+  }
+  .brawl-hall {
+    padding: 25px 16px;
+  }
+  .brawl-title h1 {
+    letter-spacing: -4px;
+  }
+  .brawl-title > span {
+    letter-spacing: 2px;
+    font-size: 8px;
+  }
+  .brawl-title p {
+    font-size: 10px;
+    letter-spacing: 4px;
+  }
+  .game-room--brawl .brawl-layout {
+    display: flex;
+  }
+  .brawl-footer {
+    margin: 0 16px;
+    font-size: 9px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .game-room--brawl .video-stage {
+    min-height: 360px;
+  }
+}

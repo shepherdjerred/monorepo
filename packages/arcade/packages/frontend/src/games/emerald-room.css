@@ -1,0 +1,438 @@
+.game-room--emerald {
+  --bg: #e8edd9;
+  --panel: #fffef0;
+  --line: #93b3a0;
+  --muted: #4f7161;
+  --room-ink: #224a47;
+  --accent: #34775d;
+  --accent-ink: #fffef0;
+  --glow: #b8d7b2;
+  color-scheme: light;
+  font-family: "Pixelify Sans", monospace;
+  font-size: 18px;
+  background-image: radial-gradient(#b1c5a766 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.hoenn-page {
+  max-width: 1320px;
+  margin: auto;
+  padding: 0 38px;
+}
+.hoenn-topbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 25px 0;
+  border-bottom: 2px solid #9db69c;
+}
+.hoenn-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hoenn-brand small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.hoenn-brand strong {
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+}
+.hoenn-brand em {
+  display: block;
+  font-style: normal;
+  font-size: 14px;
+  letter-spacing: 4px;
+  margin-top: 5px;
+  color: #5d8c58;
+}
+.hoenn-pokeball {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 36px;
+  border: 3px solid #28524c;
+  border-radius: 50%;
+  background: linear-gradient(#d28265 0 44%, #28524c 44% 56%, #fffef0 56%);
+}
+.hoenn-pokeball::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  top: 9px;
+  left: 9px;
+  border: 3px solid #28524c;
+  background: #fffef0;
+  border-radius: 50%;
+}
+.hoenn-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 25px;
+  padding: 30px 0;
+}
+.hoenn-intro a {
+  font-size: 13px;
+}
+.hoenn-intro .eyebrow {
+  margin: 18px 0 10px;
+  color: #537e5b;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.hoenn-intro h1 {
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.12;
+}
+.hoenn-intro h1 span {
+  color: #51805a;
+}
+.hoenn-intro > div:last-child > p {
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 12px;
+  color: #4f7161;
+}
+.hoenn-adventure {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  gap: 24px;
+}
+.hoenn-main,
+.hoenn-journal {
+  min-width: 0;
+}
+.game-room--emerald button {
+  border: 2px solid #397e7e;
+  border-radius: 4px;
+  background: #34775d;
+  color: #fffef0;
+  box-shadow: 0 3px #224a47;
+}
+.game-room--emerald button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px #224a47;
+}
+.game-room--emerald .account button {
+  font-size: 15px;
+  background: transparent;
+  color: #28524c;
+  box-shadow: none;
+  border-color: #99b5a2;
+}
+.game-room--emerald .panel,
+.game-room--emerald .controller,
+.game-room--emerald .play-stage {
+  border: 3px double #397e7e;
+  border-radius: 7px;
+  background: #fffef0;
+  box-shadow: 3px 4px #93ad9340;
+}
+.game-room--emerald .panel {
+  padding: 20px 17px;
+}
+.game-room--emerald .panel-heading {
+  border-bottom: 2px solid #dce1c8;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+.game-room--emerald .panel-heading h2 {
+  font-size: 22px;
+}
+.game-room--emerald .metric strong {
+  font:
+    28px "Pixelify Sans",
+    monospace;
+}
+.game-room--emerald .video-stage {
+  background: #18413a;
+  color: #fffef0;
+  min-height: 340px;
+}
+.game-room--emerald .stage-idle {
+  padding: 40px 22px;
+}
+.game-room--emerald .stage-idle h2 {
+  font-size: 27px;
+}
+.game-room--emerald .stage-idle p {
+  font-size: 17px;
+}
+.game-room--emerald .session-bar {
+  font-size: 15px;
+  border-top: 2px solid #397e7e;
+}
+.hoenn-landscape {
+  height: 85px;
+  position: relative;
+  margin: 0 auto 25px;
+  width: 210px;
+  border-bottom: 8px solid #98be6c;
+}
+.hoenn-landscape i {
+  position: absolute;
+  bottom: 0;
+  height: 63px;
+  width: 48px;
+  background: #4f8c66;
+  clip-path: polygon(
+    50% 0,
+    85% 35%,
+    75% 35%,
+    100% 70%,
+    65% 70%,
+    65% 100%,
+    35% 100%,
+    35% 70%,
+    0 70%,
+    25% 35%,
+    15% 35%
+  );
+}
+.hoenn-landscape i:nth-child(1) {
+  left: 0;
+}
+.hoenn-landscape i:nth-child(2) {
+  right: 0;
+  height: 75px;
+  background: #6fa970;
+}
+.hoenn-landscape i:nth-child(3) {
+  right: 35px;
+  height: 45px;
+  background: #84b77c;
+}
+.hoenn-landscape span {
+  position: absolute;
+  top: 20px;
+  left: 48px;
+  color: #c7dfaa;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.game-room--emerald .emerald-layout {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+  gap: 18px;
+}
+.game-room--emerald .party {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.game-room--emerald .party-member {
+  border: 2px solid #c0d2b2;
+  background: #eff2df;
+  border-radius: 5px;
+  padding: 13px;
+}
+.game-room--emerald .party-member h3 {
+  font-size: 19px;
+}
+.game-room--emerald .party-member p {
+  font-size: 15px;
+}
+.game-room--emerald .party-member .mono {
+  font-size: 12px;
+}
+.game-room--emerald .party-symbol {
+  color: #5d8c58;
+}
+.game-room--emerald .badge-case {
+  gap: 9px;
+}
+.game-room--emerald .badge-emblem {
+  width: 28px;
+  height: 32px;
+  background: #e4e7d5;
+  color: #769681;
+}
+.game-room--emerald .badge-emblem.earned {
+  background: #c4ab59;
+  color: #3d492b;
+}
+.game-room--emerald .goal-text,
+.game-room--emerald .empty,
+.game-room--emerald .activity p,
+.game-room--emerald .journal p {
+  font-size: 16px;
+}
+.game-room--emerald .activity strong,
+.game-room--emerald .journal strong {
+  font-size: 18px;
+}
+.game-room--emerald .shared-controller > p,
+.game-room--emerald label {
+  font-size: 16px;
+}
+.game-room--emerald .shared-buttons {
+  justify-content: center;
+}
+.gba-console {
+  margin: 20px 0;
+  padding: 18px;
+  background: #d7dfc8;
+  border: 2px solid #a6b99e;
+  border-radius: 12px 12px 40px 40px;
+}
+.gba-shoulders {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.gba-shoulders button {
+  width: 85px;
+  background: #92aa8c;
+  color: #224a47;
+}
+.gba-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+.gba-dpad {
+  display: grid;
+  grid-template: repeat(3, 44px) / repeat(3, 44px);
+  gap: 2px;
+}
+.gba-dpad button {
+  padding: 0;
+  background: #3c5d50;
+  font-size: 22px;
+}
+.gba-up {
+  grid-column: 2;
+}
+.gba-left {
+  grid-row: 2;
+  grid-column: 1;
+}
+.gba-right {
+  grid-row: 2;
+  grid-column: 3;
+}
+.gba-down {
+  grid-row: 3;
+  grid-column: 2;
+}
+.gba-system {
+  display: flex;
+  align-self: end;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+.gba-system button {
+  font-size: 11px;
+  padding: 5px 9px;
+  background: #5e7c67;
+}
+.gba-actions {
+  display: flex;
+  gap: 10px;
+  transform: rotate(-15deg);
+}
+.gba-actions button {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  font-size: 25px;
+  background: #873e64;
+  border-color: #5e304a;
+  box-shadow: 0 4px #5e304a;
+}
+.game-room--emerald .shared-controller .key-help {
+  margin-bottom: 20px;
+  color: #4f7161;
+  font-size: 14px;
+}
+.game-room--emerald .tag {
+  font-size: 10px !important;
+}
+.game-room--emerald input {
+  background: #f3f3e4;
+  font-size: 17px;
+  border-radius: 4px;
+}
+.hoenn-footer {
+  padding: 28px 0;
+  margin-top: 30px;
+  border-top: 2px solid #9db69c;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 14px;
+  color: #537e5b;
+}
+@media (max-width: 900px) {
+  .hoenn-adventure {
+    grid-template-columns: 1fr;
+  }
+  .hoenn-intro {
+    align-items: start;
+    flex-direction: column;
+  }
+  .game-room--emerald .emerald-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .game-room--emerald .emerald-layout > .panel:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 600px) {
+  .hoenn-page {
+    padding: 0 16px;
+  }
+  .hoenn-topbar {
+    gap: 8px;
+  }
+  .hoenn-brand strong {
+    font-size: 20px;
+  }
+  .hoenn-brand small {
+    font-size: 9px;
+  }
+  .hoenn-pokeball {
+    display: none;
+  }
+  .hoenn-intro {
+    gap: 16px;
+    padding-top: 22px;
+  }
+  .game-room--emerald .emerald-layout {
+    display: flex;
+  }
+  .hoenn-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .game-room--emerald .video-stage {
+    min-height: 320px;
+  }
+}
+@media (max-width: 600px) {
+  .gba-console {
+    padding: 12px;
+  }
+  .gba-body {
+    flex-wrap: wrap;
+  }
+  .gba-system {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .gba-actions {
+    gap: 8px;
+  }
+  .gba-actions button {
+    width: 48px;
+    height: 48px;
+  }
+}

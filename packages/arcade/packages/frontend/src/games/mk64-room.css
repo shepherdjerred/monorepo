@@ -1,0 +1,412 @@
+.game-room--mk64 {
+  --bg: #080c1f;
+  --panel: #10173a;
+  --line: #33438a;
+  --muted: #b4bddf;
+  --room-ink: #f4f6ff;
+  --accent: #ffd21f;
+  --accent-ink: #121b36;
+  --glow: #17366b88;
+  font-family: Inter, "DM Sans", sans-serif;
+  background-image: radial-gradient(
+    ellipse at 50% 0,
+    #1a2860 0,
+    transparent 65%
+  );
+}
+.kart-topbar {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 19px max(24px, calc((100vw - 1360px) / 2));
+  border-bottom: 5px solid #e4142c;
+  background: #0b1130;
+}
+.kart-logo {
+  display: grid;
+  gap: 3px;
+  white-space: nowrap;
+}
+.kart-logo > span {
+  font:
+    italic 29px "Lilita One",
+    sans-serif;
+  -webkit-text-stroke: 1px #080c1f;
+  paint-order: stroke fill;
+  text-shadow: 2px 3px #000;
+}
+.kart-logo b {
+  color: #ffd21f;
+}
+.kart-logo small {
+  color: #a3b7e8;
+  font-size: 9px;
+  letter-spacing: 3.4px;
+}
+.kart-paddock {
+  max-width: 1408px;
+  padding: 30px 24px 50px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+  gap: 24px;
+}
+.kart-racing-column,
+.kart-records {
+  min-width: 0;
+}
+.kart-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.kart-welcome a {
+  font-size: 11px;
+  color: #a3b7e8;
+}
+.kart-welcome h1 {
+  font:
+    italic 36px "Lilita One",
+    sans-serif;
+  margin-top: 12px;
+}
+.kart-cup {
+  font-size: 45px;
+  color: #ffd21f;
+  transform: rotate(-12deg);
+  text-shadow: 0 3px #c57215;
+}
+.kart-records-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: linear-gradient(120deg, #781b31, #a7182d);
+  border-radius: 14px 14px 0 0;
+  border-bottom: 5px solid #ffd21f;
+}
+.kart-records-title > span {
+  font-size: 36px;
+  color: #ffd21f;
+}
+.kart-records-title small {
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.kart-records-title h2 {
+  font:
+    italic 27px "Lilita One",
+    sans-serif;
+}
+.game-room--mk64 .statistics {
+  border-radius: 0 0 14px 14px;
+  padding: 18px 12px;
+}
+.game-room--mk64 .statistics > .panel-heading {
+  display: none;
+}
+.game-room--mk64 .seat {
+  border-radius: 9px;
+  box-shadow:
+    inset 0 1px #ffffff0c,
+    0 4px #040719;
+  border-top: 3px solid var(--player);
+}
+.game-room--mk64 .play-stage {
+  border: 3px solid #293b7d;
+  border-top: 6px solid #e4142c;
+  box-shadow: 0 12px 40px #0005;
+}
+.game-room--mk64 .video-stage {
+  min-height: 350px;
+  background: #0b1130;
+}
+.game-room--mk64 .stage-idle {
+  padding: 90px 20px 45px;
+}
+.game-room--mk64 .stage-idle h2 {
+  font:
+    italic 28px "Lilita One",
+    sans-serif;
+  text-shadow: 0 2px #080c1f;
+}
+.game-room--mk64 .stage-idle p {
+  max-width: 390px;
+  padding: 10px;
+  background: #080c1fc9;
+  border-radius: 8px;
+}
+.kart-track {
+  position: absolute;
+  inset: -70px 0 -50px;
+  z-index: -1;
+  overflow: hidden;
+  background: linear-gradient(#2365c3 0%, #8fcdf1 52%, #3e9c3a 52%);
+}
+.kart-track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent, #080c1f88);
+}
+.kart-cloud {
+  position: absolute;
+  width: 20%;
+  height: 8%;
+  background: #fff8;
+  border-radius: 100%;
+  top: 20%;
+}
+.cloud-one {
+  left: 10%;
+}
+.cloud-two {
+  right: 13%;
+  top: 12%;
+}
+.kart-hill {
+  position: absolute;
+  width: 65%;
+  height: 45%;
+  top: 31%;
+  border-radius: 50%;
+  background: #28712e;
+}
+.hill-one {
+  left: -20%;
+}
+.hill-two {
+  right: -15%;
+  top: 37%;
+  background: #338c35;
+}
+.kart-road {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 49%;
+  background: #414651;
+  clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%);
+}
+.kart-road-line {
+  position: absolute;
+  bottom: 0;
+  left: 49.5%;
+  width: 1%;
+  height: 49%;
+  background: repeating-linear-gradient(#fff 0 12px, transparent 12px 26px);
+}
+.kart-finish {
+  position: absolute;
+  bottom: 13%;
+  left: 15%;
+  right: 15%;
+  height: 7%;
+  background: conic-gradient(#101525 25%, white 0 50%, #101525 0 75%, white 0) 0
+    0/16px 16px;
+  transform: perspective(100px) rotateX(30deg);
+}
+.game-room--mk64 .primary {
+  color: #fff;
+  background: #e4142c;
+  border: 2px solid #ff737d;
+  box-shadow: 0 4px #760b18;
+}
+.game-room--mk64 .control-a {
+  background: #246fe0;
+}
+.game-room--mk64 .control-b {
+  background: #1c9d55;
+}
+.game-room--mk64 .control-start {
+  background: #e4142c;
+}
+.game-room--mk64 .cstick .control-button {
+  color: #121b36;
+  background: #ffd21f;
+}
+.game-room--mk64 .controller {
+  background: linear-gradient(135deg, #1a2350, #10173a);
+  border-bottom: 4px solid #040719;
+}
+.game-room--mk64 .game-panels {
+  grid-template-columns: 1fr 1fr;
+}
+.game-room--mk64 .racer-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.game-room--mk64 .racer-card {
+  background: #0b1130;
+}
+.game-room--mk64 .placement {
+  font-family: "Lilita One", sans-serif;
+  font-style: italic;
+}
+.kart-footer {
+  padding: 20px 30px;
+  border-top: 6px solid #e4142c;
+  background: #0b1130;
+  color: #a3b7e8;
+  font-size: 10px;
+  letter-spacing: 2px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+@media (max-width: 1050px) {
+  .kart-paddock {
+    grid-template-columns: 1fr;
+  }
+  .kart-topbar > .connection-status {
+    display: none;
+  }
+  .kart-records {
+    max-width: none;
+  }
+}
+@media (max-width: 650px) {
+  .kart-topbar {
+    gap: 12px;
+    padding: 16px;
+  }
+  .kart-logo > span {
+    font-size: 22px;
+  }
+  .kart-logo small {
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+  .kart-paddock {
+    padding: 24px 14px;
+  }
+  .kart-welcome h1 {
+    font-size: 30px;
+  }
+  .kart-footer {
+    letter-spacing: 1px;
+  }
+  .game-room--mk64 .game-panels {
+    grid-template-columns: 1fr;
+  }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  .game-room--mk64:has(.controller) .kart-topbar,
+  .game-room--mk64:has(.controller) .kart-welcome,
+  .game-room--mk64:has(.controller) .kart-records,
+  .game-room--mk64:has(.controller) .game-panels,
+  .game-room--mk64:has(.controller) .kart-footer,
+  .game-room--mk64:has(.controller) .play-reason {
+    display: none;
+  }
+  .game-room--mk64:has(.controller) .play-stage {
+    position: fixed;
+    left: 24%;
+    right: 24%;
+    top: 65px;
+    bottom: 10px;
+    z-index: 51;
+    border: 1px solid #33438a;
+    display: flex;
+    flex-direction: column;
+  }
+  .game-room--mk64:has(.controller) .video-stage {
+    flex: 1;
+    min-height: 0;
+  }
+  .game-room--mk64:has(.controller) .live-feed {
+    height: 100%;
+  }
+  .game-room--mk64:has(.controller) .live-feed canvas {
+    max-height: 100%;
+    height: 100%;
+  }
+  .game-room--mk64:has(.controller) .session-bar {
+    display: none;
+  }
+  .game-room--mk64 .controller {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: radial-gradient(ellipse at top, #1a2350, #080c1f);
+  }
+  .game-room--mk64 .controller .shoulder-controls {
+    position: absolute;
+    left: 25px;
+    right: 25px;
+    top: 10px;
+    z-index: 52;
+  }
+  .game-room--mk64 .controller-body {
+    display: contents;
+  }
+  .game-room--mk64 .controller .analog-control {
+    position: absolute;
+    left: 5%;
+    top: 24%;
+  }
+  .game-room--mk64 .controller .dpad:not(.cstick) {
+    position: absolute;
+    left: 3%;
+    bottom: 12px;
+    transform: scale(0.8);
+    transform-origin: left bottom;
+  }
+  .game-room--mk64 .controller .cstick {
+    position: absolute;
+    right: 2%;
+    top: 24%;
+    transform: scale(0.8);
+    transform-origin: right top;
+  }
+  .game-room--mk64 .controller .action-buttons {
+    position: absolute;
+    right: 3%;
+    bottom: 10%;
+    max-width: 150px;
+  }
+  .game-room--mk64 .controller .action-buttons .control-a {
+    height: 65px;
+    width: 65px;
+  }
+  .game-room--mk64 .controller .key-help {
+    display: none;
+  }
+  .game-room--mk64:has(.controller) .seat-strip {
+    position: fixed;
+    z-index: 53;
+    top: 7px;
+    left: 25%;
+    margin: 0;
+    display: block;
+  }
+  .game-room--mk64:has(.controller) .seat {
+    display: none;
+  }
+  .game-room--mk64:has(.controller) .seat.yours {
+    display: flex;
+    padding: 4px 8px;
+    border: 0;
+    box-shadow: none;
+  }
+  .game-room--mk64:has(.controller) .seat.yours > div {
+    display: none;
+  }
+  .game-room--mk64:has(.controller) .stage-idle {
+    padding: 15px;
+  }
+  .game-room--mk64:has(.controller) .stage-idle h2 {
+    font-size: 18px;
+  }
+  .game-room--mk64:has(.controller) .stage-idle p {
+    font-size: 10px;
+  }
+  .game-room--mk64:has(.controller) .kart-track {
+    inset: -30px 0;
+  }
+}

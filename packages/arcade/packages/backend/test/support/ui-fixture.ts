@@ -2,7 +2,8 @@
 // Run from this package: bun test/support/ui-fixture.ts
 import express from "express";
 import { createServer } from "node:http";
-import { Server } from "socket.io";
+import { Server, type Socket } from "socket.io";
+import { z } from "zod";
 import { games, GameIdSchema, type GameId } from "@arcade/common/catalog.ts";
 import {
   RoomRequestSchema,
@@ -147,13 +148,36 @@ function stats(gameId: GameId) {
   });
 }
 const app = express();
-const controls = process.argv.includes("--controls");
+const Scenario = z.strictObject({
+  phase: z.enum(["playing", "idle", "results", "error"]),
+  signedIn: z.boolean(),
+  controls: z.boolean(),
+});
+let scenario: z.infer<typeof Scenario> = {
+  phase: "playing",
+  signedIn: true,
+  controls: process.argv.includes("--controls"),
+};
+let seatClaimed = true;
+const subscriptions = new Map<Socket, GameId>();
 const requests: RoomRequest[] = [];
+app.use(express.json());
+app.post("/fixture/scenario", (request, response) => {
+  scenario = Scenario.parse(request.body);
+  seatClaimed = true;
+  requests.length = 0;
+  for (const [socket, gameId] of subscriptions) publish(socket, gameId);
+  response.json(scenario);
+});
 app.get("/fixture/inputs", (_request, response) => {
   response.json(requests);
 });
 app.get("/api/me", (_request, response) => {
-  response.json({ signedIn: true, user: { ...players[0], username: "alex" } });
+  response.json(
+    scenario.signedIn
+      ? { signedIn: true, user: { ...players[0], username: "alex" } }
+      : { signedIn: false },
+  );
 });
 app.get("/api/servers", (_request, response) => {
   response.json([
@@ -165,46 +189,117 @@ app.get("/api/stats", (request, response) => {
 });
 const server = createServer(app);
 const io = new Server(server);
+app.post("/api/sessions", (request, response) => {
+  z.strictObject({ guildId: z.literal("123"), gameId: GameIdSchema }).parse(
+    request.body,
+  );
+  scenario = { ...scenario, phase: "playing" };
+  for (const [socket, gameId] of subscriptions) publish(socket, gameId);
+  response.status(201).json({});
+});
+app.delete("/api/sessions/:id", (_request, response) => {
+  scenario = { ...scenario, phase: "idle" };
+  for (const [socket, gameId] of subscriptions) publish(socket, gameId);
+  response.json({});
+});
+app.post("/api/sessions/:id/goal", (request, response) => {
+  z.strictObject({ objective: z.string().min(1).max(1000) }).parse(
+    request.body,
+  );
+  response.json({});
+});
 io.on("connection", (socket) => {
+  socket.on("disconnect", () => {
+    subscriptions.delete(socket);
+  });
   socket.on("request", (message: unknown) => {
     const request = RoomRequestSchema.parse(message);
-    if (controls && request.kind !== "subscribe") {
+    if (scenario.controls && request.kind !== "subscribe") {
       requests.push(request);
       if (requests.length > 20) requests.shift();
+      if (request.kind === "release" || request.kind === "claim") {
+        seatClaimed = request.kind === "claim";
+        const gameId = subscriptions.get(socket);
+        if (gameId !== undefined) publish(socket, gameId);
+      }
     }
     if (request.kind !== "subscribe") return;
     const gameId = request.gameId;
-    socket.emit(
-      "room",
-      RoomSnapshotSchema.parse({
-        guildId: "123",
-        gameId,
-        session: {
-          id: "f5231377-25ea-4a82-91f2-17a379ef5655",
-          guildId: "123",
-          gameId,
-          voiceChannelId: "456",
-          startedByUserId: "10",
-          startedAt: at,
-          phase: "running",
-        },
-        state: gameState(gameId),
-        seats: gameId === "emerald" ? [] : players,
-        participants: players,
-        events: [event],
-        error: null,
-      }),
-    );
-    socket.emit("access", {
-      sessionId: "f5231377-25ea-4a82-91f2-17a379ef5655",
-      seat: controls && gameId !== "emerald" ? 0 : null,
-      canPlay: controls,
-      canWatch: false,
-      canStop: false,
-      reason: "UI fixture — controls and game feeds are disconnected.",
-    });
+    subscriptions.set(socket, gameId);
+    publish(socket, gameId);
   });
 });
+
+function publish(socket: Socket, gameId: GameId) {
+  const state = gameState(gameId);
+  const result =
+    scenario.phase !== "results" || state.family === "pokemon"
+      ? state
+      : state.family === "racing"
+        ? {
+            ...state,
+            phase: "finished",
+            racers: state.racers.map((racer) => ({ ...racer, finished: true })),
+          }
+        : {
+            ...state,
+            phase: "results",
+            remainingMs: 0,
+            fighters: state.fighters.map((fighter, index) => ({
+              ...fighter,
+              placement: index + 1,
+              winner: index === 0,
+            })),
+          };
+  socket.emit(
+    "room",
+    RoomSnapshotSchema.parse({
+      guildId: "123",
+      gameId,
+      session:
+        scenario.phase === "idle"
+          ? null
+          : {
+              id: "f5231377-25ea-4a82-91f2-17a379ef5655",
+              guildId: "123",
+              gameId,
+              voiceChannelId: "456",
+              startedByUserId: "10",
+              startedAt: at,
+              phase: scenario.phase === "error" ? "failed" : "running",
+            },
+      state: scenario.phase === "idle" ? null : result,
+      seats:
+        gameId === "emerald"
+          ? []
+          : players.map((player, index) =>
+              index === 0 && !seatClaimed && scenario.controls ? null : player,
+            ),
+      participants: players,
+      events: [event],
+      error:
+        scenario.phase === "error"
+          ? "The game stopped after a runtime error. Your previous save is safe."
+          : null,
+    }),
+  );
+  socket.emit("access", {
+    sessionId: "f5231377-25ea-4a82-91f2-17a379ef5655",
+    seat:
+      gameId !== "emerald" &&
+      seatClaimed &&
+      scenario.phase !== "idle" &&
+      scenario.controls &&
+      scenario.signedIn
+        ? 0
+        : null,
+    canPlay:
+      scenario.controls && scenario.signedIn && scenario.phase === "playing",
+    canWatch: false,
+    canStop: scenario.controls && scenario.signedIn,
+    reason: "UI fixture — controls and game feeds are disconnected.",
+  });
+}
 server.listen(8081, "127.0.0.1", () => {
   process.stdout.write(
     `Arcade UI fixtures: ${Object.keys(games).join(", ")}\n`,

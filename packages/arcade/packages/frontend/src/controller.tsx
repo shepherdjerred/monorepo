@@ -7,30 +7,9 @@ import { PressButton } from "@shepherdjerred/discord-plays-web/controller/press-
 import { mergeControls } from "./input/merge.ts";
 import { AnalogStick } from "./input/analog-stick.tsx";
 import { mapGamepad } from "./input/gamepad.ts";
+import { readKeyboard, resolveControlCode } from "./input/keyboard.ts";
 
 type Button = ControllerState["buttons"][number];
-const keymap: Readonly<Record<string, Button>> = {
-  ArrowUp: "up",
-  KeyW: "up",
-  ArrowDown: "down",
-  KeyS: "down",
-  ArrowLeft: "left",
-  KeyA: "left",
-  ArrowRight: "right",
-  KeyD: "right",
-  Space: "a",
-  ShiftLeft: "b",
-  KeyX: "x",
-  KeyY: "y",
-  KeyZ: "z",
-  KeyQ: "l",
-  KeyE: "r",
-  Enter: "start",
-  KeyI: "c-up",
-  KeyK: "c-down",
-  KeyJ: "c-left",
-  KeyL: "c-right",
-};
 
 export function Controller({
   enabled,
@@ -49,18 +28,14 @@ export function Controller({
   const pad = useRef<ControllerState>(neutralController);
   const [pressed, setPressed] = useState<ReadonlySet<Button>>(new Set());
   const publish = () => {
-    const keys = new Set(
-      [...keyboard.current].flatMap((code) =>
-        keymap[code] === undefined ? [] : [keymap[code]],
-      ),
-    );
+    const keys = readKeyboard(keyboard.current, n64);
     const state = mergeControls(
       pad.current,
       { ...touch.current, buttons: [...held.current] },
       keys,
     );
     latestSend.current(state);
-    setPressed(new Set([...state.buttons, ...keys]));
+    setPressed(new Set(state.buttons));
   };
   const publishRef = useRef(publish);
   publishRef.current = publish;
@@ -112,16 +87,16 @@ export function Controller({
     }
     const keydown = (event: KeyboardEvent) => {
       if (isTypingTarget(event.target)) return;
-      const button = keymap[event.code];
-      if (button === undefined) return;
+      const code = resolveControlCode(event, n64);
+      if (code === undefined) return;
       event.preventDefault();
-      keyboard.current.add(event.code);
+      keyboard.current.add(code);
       publishRef.current();
     };
     const keyup = (event: KeyboardEvent) => {
-      const button = keymap[event.code];
-      if (button !== undefined) {
-        keyboard.current.delete(event.code);
+      const code = resolveControlCode(event, n64);
+      if (code !== undefined) {
+        keyboard.current.delete(code);
         publishRef.current();
       }
     };
@@ -258,16 +233,37 @@ export function Controller({
         </div>
       )}
       <p className="key-help">
-        WASD / arrows · A: Space · B: Shift · L / R: Q / E · C-stick: IJKL ·
-        Gamepads supported
+        {n64
+          ? "Accelerate: W / Space · Brake: S · Steer: A / D · Hop: Shift · Item: E / Z · D-pad: arrows"
+          : "WASD / arrows · A: Space · B: Shift · L / R: Q / E · C-stick: IJKL"}{" "}
+        · Gamepads supported
       </p>
     </div>
   );
 }
 
 function buttonCode(code: string): Button | undefined {
-  return [...new Set(Object.values(keymap))].find((button) => button === code);
+  return buttons.find((button) => button === code);
 }
+
+const buttons: readonly Button[] = [
+  "a",
+  "b",
+  "x",
+  "y",
+  "z",
+  "l",
+  "r",
+  "start",
+  "up",
+  "down",
+  "left",
+  "right",
+  "c-up",
+  "c-down",
+  "c-left",
+  "c-right",
+];
 
 export function SharedController({
   enabled,
@@ -277,6 +273,17 @@ export function SharedController({
   readonly send: (command: string) => void;
 }) {
   const [command, setCommand] = useState("");
+  const tap = (code: string, label: string, className: string) => (
+    <button
+      className={className}
+      disabled={!enabled}
+      onClick={() => {
+        send(code);
+      }}
+    >
+      {label}
+    </button>
+  );
   const callback = useRef(send);
   callback.current = send;
   useEffect(() => {
@@ -312,30 +319,32 @@ export function SharedController({
   return (
     <div className="controller shared-controller">
       <p>Everyone in voice shares this adventure. Each press is a tap.</p>
-      <div className="shared-buttons">
-        {[
-          "up",
-          "left",
-          "down",
-          "right",
-          "a",
-          "b",
-          "lb",
-          "rb",
-          "start",
-          "select",
-        ].map((button) => (
-          <button
-            disabled={!enabled}
-            key={button}
-            onClick={() => {
-              send(button);
-            }}
-          >
-            {button.toUpperCase()}
-          </button>
-        ))}
+      <div className="gba-console">
+        <div className="gba-shoulders">
+          {tap("lb", "L", "gba-shoulder")}
+          {tap("rb", "R", "gba-shoulder")}
+        </div>
+        <div className="gba-body">
+          <div className="gba-dpad" role="group" aria-label="Directional pad">
+            {tap("up", "↑", "gba-up")}
+            {tap("left", "←", "gba-left")}
+            {tap("right", "→", "gba-right")}
+            {tap("down", "↓", "gba-down")}
+          </div>
+          <div className="gba-system">
+            {tap("select", "SELECT", "gba-system-button")}
+            {tap("start", "START", "gba-system-button")}
+          </div>
+          <div className="gba-actions">
+            {tap("b", "B", "gba-b")}
+            {tap("a", "A", "gba-a")}
+          </div>
+        </div>
       </div>
+      <p className="key-help">
+        Arrows / WASD · A: Z · B: X · L / R: Q / E · Start: Enter · Select:
+        Shift
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
