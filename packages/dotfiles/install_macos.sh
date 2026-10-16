@@ -123,7 +123,6 @@ if command -v brew &>/dev/null; then
         "lightpanda-io/browser/lightpanda"
         "pinchtab/tap/pinchtab"
         "rsteube/tap/carapace"
-        "schpet/tap/linear"
         "siderolabs/tap/talosctl"
     )
     for formula in "${third_party_formulae[@]}"; do

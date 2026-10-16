@@ -283,7 +283,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
   });
 
   // Kubernetes API, Prometheus, and the alert/ops dashboard for the audit
-  // collectors; Alertmanager and Loki for the ops-snapshot collector. Linear,
+  // collectors; Alertmanager, Tracker and Loki for the ops-snapshot collector.
   // PostHog, GitHub, Woodpecker, and Bugsink ride the shared 443 rule.
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },

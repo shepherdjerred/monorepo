@@ -128,7 +128,7 @@ decisions as part of routine setup.
   `promtool query instant "$PROMETHEUS_URL" 'count(up)'` all return live data.
 - `temporal --profile homelab operator cluster health` reports `SERVING`, and
   `temporal config get --profile default` still points at `localhost:7233`.
-- `linear auth whoami` resolves the workspace from `LINEAR_API_KEY`.
+- `toolkit tracker whoami --json` reports the native actor without credentials.
 - `posthog-cli --version` succeeds, and
   `posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'`
   returns the configured project's event schema through

@@ -23,7 +23,6 @@ Platform commands (native CLI passthroughs):
   gh          GitHub CLI (GH_REPO=shepherdjerred/monorepo)
   woodpecker  Woodpecker CI CLI
   git-spice   Stacked branch and PR workflow
-  linear      Linear CLI (--workspace sjerred)
   posthog     PostHog CLI (project 549883)
   grafana     GCX (--context homelab)
   prom        GCX metrics (--context homelab)

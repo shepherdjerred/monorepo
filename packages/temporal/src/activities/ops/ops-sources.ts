@@ -6,7 +6,7 @@ import type {
   OpenPullRequest,
 } from "@shepherdjerred/ops-clients/github.ts";
 import type { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
-import type { LinearClient } from "@shepherdjerred/ops-clients/linear.ts";
+import type { TrackerClient } from "@shepherdjerred/ops-clients/tracker.ts";
 import type { LokiClient } from "@shepherdjerred/ops-clients/loki.ts";
 import type { PostHogClient } from "@shepherdjerred/ops-clients/posthog.ts";
 import {
@@ -22,7 +22,7 @@ import {
   githubPullRequestOldestOpenAgeSeconds,
   githubPullRequestsMerged7d,
   githubPullRequestsOpen,
-  linearIssuesOpen,
+  trackerIssuesOpen,
   renovateUpdatesPending,
   talosNodeReady,
   talosServiceHealthy,
@@ -39,7 +39,7 @@ import {
   VERSION_CATALOG_PATH,
 } from "./github.ts";
 import { mapKubernetes } from "./kubernetes.ts";
-import { mapLinear } from "./linear.ts";
+import { mapTracker } from "./tracker.ts";
 import { LOG_WINDOW, mapLogs } from "./logs.ts";
 import {
   MAINTENANCE_QUERIES,
@@ -196,17 +196,17 @@ export async function collectRenovate(
   return collection;
 }
 
-export async function collectLinear(
-  linear: LinearClient,
+export async function collectTracker(
+  tracker: TrackerClient,
 ): Promise<OpsCollection> {
-  const overview = await linear.overview();
-  linearIssuesOpen.reset();
+  const overview = await tracker.overview();
+  trackerIssuesOpen.reset();
   for (const [team, states] of Object.entries(overview.counts)) {
     for (const [stateType, count] of Object.entries(states)) {
-      linearIssuesOpen.set({ team, state_type: stateType }, count);
+      trackerIssuesOpen.set({ team, state_type: stateType }, count);
     }
   }
-  return mapLinear(overview);
+  return mapTracker(overview);
 }
 
 export async function collectBugsink(

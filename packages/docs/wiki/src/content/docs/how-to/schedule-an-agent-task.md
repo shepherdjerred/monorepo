@@ -6,7 +6,7 @@ sidebar:
 ---
 
 An agent task is a scheduled Codex run that inspects current state and
-emails you a report. Use one when Linear work needs checking later and you do
+emails you a report. Use one when Tracker work needs checking later and you do
 not want to remember to check it.
 
 Anything that must _change_ the repo is a deterministic workflow instead, not an
@@ -14,7 +14,7 @@ agent task.
 
 ## 1. Write the task block
 
-Put the block in a temporary Markdown file and identify the motivating Linear
+Put the block in a temporary Markdown file and identify the motivating Tracker
 work in `source.note`.
 
 ```md
@@ -29,7 +29,7 @@ work in `source.note`.
   "checks": [
     { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
   ],
-  "source": { "note": "Birmel post-deploy follow-up in Linear" },
+  "source": { "note": "Birmel post-deploy follow-up in Tracker" },
   "prompt": "Pull the metrics from the Post-deploy verification section. Email whether each check is green or still red, with links/evidence."
 }
 -->

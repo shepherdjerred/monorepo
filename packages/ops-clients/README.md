@@ -17,14 +17,17 @@ without leaking payloads.
 | `bugsink.ts`      | Projects and unresolved issues, following every cursor page on the configured origin only.                                |
 | `github.ts`       | GraphQL: open PRs with checks, merged PRs by update time, path history, branch head, and one issue by title.              |
 | `renovate.ts`     | A pure parser for the Dependency Dashboard's approval and pending-check markers.                                          |
-| `linear.ts`       | GraphQL with a personal key: open issues by team and state type, triage, and active cycles.                               |
+| `tracker.ts`      | Credentialless tRPC: all open issues by team and state type, and triage.                                                  |
 | `posthog.ts`      | HogQL: 24-hour pageviews by `site_key` and host, and the top pages.                                                       |
 | `loki.ts`         | Instant LogQL queries; error-line counts use detected severity metadata and do not count words in informational messages. |
 | `tempo.ts`        | TraceQL search for error and slow traces; flags a full result page as truncated.                                          |
 | `woodpecker.ts`   | The newest push pipeline and the newest verdict of a branch.                                                              |
 
 Unknown enum values from an upstream (a new Argo health, a Woodpecker status,
-a Linear state type) fail schema validation instead of being guessed.
+a Tracker state type) fail schema validation instead of being guessed.
+
+Tracker takes separate `baseUrl` and `publicUrl` bootstrap addresses. Requests
+use the private API transport; issue links use the browser-facing origin.
 
 ArgoCD root operations retain their raw identity through validation. Only an
 exact matching owner-published release receipt sets `verifiedReleaseTermination`;

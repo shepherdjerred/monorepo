@@ -13,7 +13,7 @@ Choose the durable owner before writing:
 - Repeatable agent procedure: `.agents/skills/<id>/SKILL.md`.
 - Human architecture, rationale, or operator workflow:
   `packages/docs/wiki/src/content/docs/`.
-- Plans, follow-ups, status, and review queues: Linear or the PR.
+- Plans, follow-ups, status, and review queues: Tracker or the PR.
 
 For wiki work, read `packages/docs/wiki/AGENTS.md` and use Diátaxis. Every page
 is exactly one kind:

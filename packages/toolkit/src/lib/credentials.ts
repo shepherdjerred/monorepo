@@ -31,8 +31,8 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password",
     },
   },
-  LINEAR_API_KEY: {
-    description: "Linear API key",
+  LINEAR_MIGRATION_API_KEY: {
+    description: "Read-only Linear history migration credential",
     source: {
       kind: "op",
       // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
@@ -422,8 +422,6 @@ export function requiredCredentialsFor(
       return ["WOODPECKER_TOKEN"];
     case "temporal":
       return temporalCredentialsFor(environment, args);
-    case "linear":
-      return ["LINEAR_API_KEY"];
     case "posthog":
       return ["POSTHOG_CLI_API_KEY"];
     case "argocd":

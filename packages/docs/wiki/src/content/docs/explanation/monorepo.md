@@ -76,7 +76,7 @@ therefore in the path of merging, which is a real coupling and an accepted one.
 ## One command boundary for the stack
 
 The repository spans more control planes than its package graph suggests:
-GitHub, Woodpecker, Linear, PostHog, Grafana, Temporal, ArgoCD, Cloudflare,
+GitHub, Woodpecker, Tracker, PostHog, Grafana, Temporal, ArgoCD, Cloudflare,
 and
 Tailscale all participate in ordinary work. `toolkit` is the stable entrypoint
 across that stack.

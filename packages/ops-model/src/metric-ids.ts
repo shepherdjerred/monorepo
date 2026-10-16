@@ -22,8 +22,8 @@ export const METRIC_IDS = {
   renovatePending: "renovate.pending",
   renovateAwaitingApproval: "renovate.awaiting_approval",
 
-  linearOpen: "linear.issues.open",
-  linearTriage: "linear.issues.triage",
+  trackerOpen: "tracker.issues.open",
+  trackerTriage: "tracker.issues.triage",
 
   bugsinkUnresolved: "bugsink.issues.unresolved",
 

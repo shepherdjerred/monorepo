@@ -116,12 +116,12 @@ export const SERIES_PRESETS: Record<SeriesPresetId, SeriesPreset> = {
     unit: "count",
     queries: [{ promql: "sum(bugsink_issues_unresolved)", name: "unresolved" }],
   },
-  "linear-open": {
-    title: "Open Linear issues",
+  "tracker-open": {
+    title: "Open Tracker issues",
     unit: "count",
     queries: [
       {
-        promql: "sum by (state_type) (linear_issues_open)",
+        promql: "sum by (state_type) (tracker_issues_open)",
         legendLabel: "state_type",
         name: "open",
       },

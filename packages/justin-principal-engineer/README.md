@@ -34,7 +34,10 @@ record the configured model with the toolkit's host/git metadata. Autonomous
 authorization uses the Developer Experience project slug. Existing task-state
 snapshots still parse, and issue refreshes replace their service data by identifier.
 Replace the former `linear` configuration block before running this version,
-then reinstall the LaunchAgent to remove its obsolete Linear credential reference.
+then build and install the matching toolkit with
+`bun run --cwd packages/toolkit build` and
+`bun run --cwd packages/toolkit install:local` before restarting the runner.
+Reinstall the LaunchAgent to remove its obsolete Linear credential reference.
 
 New task checkouts live in `tasks.noindex` so macOS Spotlight excludes their
 source files and build output. Existing tasks retain their saved checkout paths
@@ -185,5 +188,5 @@ remove `agent:needs-human` to resume. The CI extension names Justin's exact
 `justin-principal-engineer[bot]` identity; forks and untrusted senders remain
 rejected. Autonomous tasks use the blocked recovery described above.
 
-See [Run the agent queue](../docs/wiki/src/content/docs/how-to/run-the-linear-agent-queue.md)
+See [Run the agent queue](../docs/wiki/src/content/docs/how-to/run-the-tracker-agent-queue.md)
 for setup and operation.

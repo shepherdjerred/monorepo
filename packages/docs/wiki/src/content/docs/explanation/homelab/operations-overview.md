@@ -32,7 +32,7 @@ flowchart LR
   accTitle: Operations overview data flow
   accDescr: A Temporal schedule collects every upstream into one snapshot and posts it to the ops dashboard, which stores it in SQLite. The web UI, TRMNL, the email digest, and the toolkit CLI read that snapshot. The Mac pushes AI usage metrics to Prometheus through the Alloy gateway, and the collector reads them back from Prometheus.
 
-  SRC[Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Linear, Bugsink,\nPostHog, Loki, Tempo, Prometheus]
+  SRC[Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Tracker, Bugsink,\nPostHog, Loki, Tempo, Prometheus]
   TEMPORAL[Temporal ops-snapshot\nevery 5 minutes]
   PROM[(Prometheus)]
   DASH[Ops dashboard\nalert-dashboard service]
@@ -78,10 +78,10 @@ choice has three consequences.
 
 - Every surface agrees, because they all read the same document.
 - History comes for free. The collector sets Prometheus gauges for PR counts,
-  the Renovate backlog, Linear, Bugsink, and Talos. The dashboard keeps hourly
+  the Renovate backlog, Tracker, Bugsink, and Talos. The dashboard keeps hourly
   snapshots for trends.
-- The dashboard needs no upstream credentials. Linear, PostHog, and GitHub
-  access lives only in the Temporal infra worker, which already held the
+- The dashboard needs no upstream credentials. Tracker uses private,
+  credentialless reads. PostHog and GitHub access lives only in the Temporal infra worker, which already held the
   Talos, GitHub App, and Bugsink credentials.
 
 The cost is up to five minutes of lag. Alerts are the exception, because

@@ -4,7 +4,7 @@ import { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
 import { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import type { Fetch } from "@shepherdjerred/ops-clients/http.ts";
 import { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
-import { LinearClient } from "@shepherdjerred/ops-clients/linear.ts";
+import { TrackerClient } from "@shepherdjerred/ops-clients/tracker.ts";
 import { LokiClient } from "@shepherdjerred/ops-clients/loki.ts";
 import { TempoClient } from "@shepherdjerred/ops-clients/tempo.ts";
 import { PostHogClient } from "@shepherdjerred/ops-clients/posthog.ts";
@@ -33,7 +33,7 @@ import {
   collectCi,
   collectGitHub,
   collectKubernetes,
-  collectLinear,
+  collectTracker,
   collectLogs,
   collectTraces,
   collectMaintenance,
@@ -69,7 +69,6 @@ function requiredRepoId(): number {
 /** Credentials whose values must never appear in a stored failure reason. */
 const SECRET_ENVIRONMENT = [
   "OPS_INGEST_TOKEN",
-  "LINEAR_API_KEY",
   "POSTHOG_PERSONAL_API_KEY",
   "BUGSINK_TOKEN",
   "WOODPECKER_TOKEN",
@@ -201,12 +200,19 @@ export const opsActivities = {
   async collectOpsRenovate(): Promise<OpsSourceResult> {
     return await timed("renovate", () => collectRenovate(monorepo()));
   },
-  async collectOpsLinear(): Promise<OpsSourceResult> {
-    return await timed("linear", () =>
-      collectLinear(
-        new LinearClient({ apiKey: requiredEnvironment("LINEAR_API_KEY") }),
+  async collectOpsTracker(): Promise<OpsSourceResult> {
+    return await timed("tracker", () =>
+      collectTracker(
+        new TrackerClient({
+          baseUrl: requiredEnvironment("TRACKER_URL"),
+          publicUrl: requiredEnvironment("TRACKER_PUBLIC_URL"),
+        }),
       ),
     );
+  },
+  /** Retained command name for histories recorded before ops-tracker-source. */
+  async collectOpsLinear(): Promise<OpsSourceResult> {
+    return await opsActivities.collectOpsTracker();
   },
   async collectOpsBugsink(): Promise<OpsSourceResult> {
     return await timed("bugsink", (context) =>

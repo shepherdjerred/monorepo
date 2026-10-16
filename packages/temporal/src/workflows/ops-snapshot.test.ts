@@ -20,7 +20,7 @@ const summary: OpsPublishSummary = {
   generatedAt: "2026-09-24T12:00:00.000Z",
   severity: "unknown",
   summary: "1 area needs attention",
-  failedSources: ["linear"],
+  failedSources: ["tracker"],
   signals: 0,
   changes: 0,
 };
@@ -31,8 +31,8 @@ function collectorActivities(attempts: Map<string, number>) {
       name,
       () => {
         attempts.set(source, (attempts.get(source) ?? 0) + 1);
-        if (source === "linear") {
-          throw new Error("linear: HTTP 401");
+        if (source === "tracker") {
+          throw new Error("tracker: HTTP 401");
         }
         return Promise.resolve({
           status: {
@@ -49,6 +49,59 @@ function collectorActivities(attempts: Map<string, number>) {
     ]),
   );
 }
+
+test("replays the pre-Tracker collector command and payload unchanged", async () => {
+  const environment = await TestWorkflowEnvironment.createTimeSkipping();
+  const workflowId = `ops-before-tracker-${crypto.randomUUID()}`;
+  const attempts = new Map<string, number>();
+  let legacyCalls = 0;
+  try {
+    await runWorkflowWithActivityWorker(environment, {
+      activityTaskQueue: TASK_QUEUES.OPS,
+      workflowPath: new URL(
+        "replay-fixtures/ops-before-tracker.ts",
+        import.meta.url,
+      ).pathname,
+      activities: {
+        ...collectorActivities(attempts),
+        collectOpsLinear: () => {
+          legacyCalls++;
+          return {
+            status: {
+              source: "linear",
+              ok: true,
+              observedAt: summary.generatedAt,
+              durationMs: 1,
+            },
+            signals: [],
+            metrics: [],
+            changes: [],
+          };
+        },
+        assembleAndPublishOpsSnapshot: () => Promise.resolve(summary),
+      },
+      execute: () =>
+        environment.client.workflow.execute("runOpsSnapshot", {
+          taskQueue: TASK_QUEUES.WORKFLOWS,
+          workflowId,
+        }),
+    });
+    expect(legacyCalls).toBe(1);
+    expect(attempts.has("tracker")).toBe(false);
+    const history = await environment.client.workflow
+      .getHandle(workflowId)
+      .fetchHistory();
+    const names = history.events?.flatMap(
+      (event) =>
+        event.activityTaskScheduledEventAttributes?.activityType?.name ?? [],
+    );
+    expect(names).toContain("collectOpsLinear");
+    expect(names).not.toContain("collectOpsTracker");
+    await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
+  } finally {
+    await environment.teardown();
+  }
+}, 60_000);
 
 describe("ops snapshot workflow", () => {
   test("replays histories created before the Temporal source without scheduling it", async () => {
@@ -67,7 +120,7 @@ describe("ops snapshot workflow", () => {
           collectOpsLinear: () =>
             Promise.resolve({
               status: {
-                source: "linear",
+                source: "tracker",
                 ok: true,
                 observedAt: summary.generatedAt,
                 durationMs: 1,
@@ -116,7 +169,7 @@ describe("ops snapshot workflow", () => {
             collectOpsLinear: () =>
               Promise.resolve({
                 status: {
-                  source: "linear",
+                  source: "tracker",
                   ok: true,
                   observedAt: summary.generatedAt,
                   durationMs: 1,
@@ -180,9 +233,9 @@ describe("ops snapshot workflow", () => {
       const outcomes = published[0] ?? [];
       expect(outcomes).toHaveLength(SOURCE_IDS.length);
       expect(outcomes.filter((outcome) => !outcome.ok)).toEqual([
-        { source: "linear", ok: false, error: "linear: HTTP 401" },
+        { source: "tracker", ok: false, error: "tracker: HTTP 401" },
       ]);
-      expect(attempts.get("linear")).toBe(2);
+      expect(attempts.get("tracker")).toBe(2);
       expect(attempts.get("alerts")).toBe(1);
       // New runs take the patched branch and collect traces.
       expect(attempts.get("traces")).toBe(1);

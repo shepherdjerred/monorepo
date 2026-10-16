@@ -6,6 +6,13 @@ import {
 } from "@shepherdjerred/ops-model/digest.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
+  SourceIdSchema,
+  SourceStatusSchema,
+  SignalSchema,
+  MetricSchema,
+  SectionIdSchema,
+  ChangeEventSchema,
+  type SourceInputId,
   OpsIngestSchema,
   SOURCE_IDS,
   type ChangeEventInput,
@@ -27,8 +34,8 @@ import {
 
 /** How one source's collection ended, as the workflow observed it. */
 export type OpsCollectorOutcome =
-  | { source: SourceId; ok: true; result: OpsSourceResult }
-  | { source: SourceId; ok: false; error: string };
+  | { source: SourceInputId; ok: true; result: OpsSourceResult }
+  | { source: SourceInputId; ok: false; error: string };
 
 export type OpsPublishSummary = {
   generatedAt: string;
@@ -134,7 +141,27 @@ export function buildOpsIngest(input: {
   lastSuccess: ReadonlyMap<SourceId, string>;
   secrets: readonly (string | undefined)[];
 }): OpsIngest {
-  const reported = input.outcomes.map((outcome) => outcome.source);
+  const normalized = input.outcomes.map((outcome) => {
+    const source = SourceIdSchema.parse(outcome.source);
+    if (!outcome.ok) return { ...outcome, source };
+    return {
+      ...outcome,
+      source,
+      result: {
+        status: SourceStatusSchema.parse(outcome.result.status),
+        signals: outcome.result.signals.map((signal) =>
+          SignalSchema.parse(signal),
+        ),
+        metrics: outcome.result.metrics.map((metric) =>
+          MetricSchema.extend({ section: SectionIdSchema }).parse(metric),
+        ),
+        changes: outcome.result.changes.map((change) =>
+          ChangeEventSchema.parse(change),
+        ),
+      },
+    };
+  });
+  const reported = normalized.map((outcome) => outcome.source);
   const duplicated = reported.filter(
     (source, index) => reported.indexOf(source) !== index,
   );
@@ -143,7 +170,7 @@ export function buildOpsIngest(input: {
       `Ops snapshot outcomes must report each source once; duplicated ${[...new Set(duplicated)].join(", ")}`,
     );
   }
-  const outcomes = [...input.outcomes, ...uncollectedSources(input.outcomes)];
+  const outcomes = [...normalized, ...uncollectedSources(normalized)];
   const observedAt = input.now.toISOString();
   const statuses: SourceStatus[] = [];
   const signals: SignalInput[] = [];
@@ -160,9 +187,10 @@ export function buildOpsIngest(input: {
       changes.push(...outcome.result.changes);
       continue;
     }
-    const lastSuccessAt = input.lastSuccess.get(outcome.source);
+    const source = SourceIdSchema.parse(outcome.source);
+    const lastSuccessAt = input.lastSuccess.get(source);
     statuses.push({
-      source: outcome.source,
+      source,
       ok: false,
       observedAt,
       durationMs: 0,
@@ -189,9 +217,10 @@ export function recordSourceSuccesses(
       continue;
     }
     const observedAt = outcome.result.status.observedAt;
-    lastSuccess.set(outcome.source, observedAt);
+    const source = SourceIdSchema.parse(outcome.source);
+    lastSuccess.set(source, observedAt);
     opsSnapshotSourceLastSuccessTimestampSeconds.set(
-      { source: outcome.source },
+      { source },
       Math.floor(Date.parse(observedAt) / 1000),
     );
   }

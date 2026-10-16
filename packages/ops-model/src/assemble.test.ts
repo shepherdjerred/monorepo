@@ -48,13 +48,13 @@ describe("assembleSnapshot", () => {
   test("a failed source makes its section unknown, never green", () => {
     const snapshot = assembleSnapshot({
       generatedAt,
-      sources: sources(["linear"]),
+      sources: sources(["tracker"]),
       signals: [],
       metrics: [],
     });
     const work = findSection(snapshot, "work");
     expect(work.severity).toBe("unknown");
-    expect(work.summary).toContain("no data from linear");
+    expect(work.summary).toContain("no data from tracker");
     expect(snapshot.severity).toBe("unknown");
   });
 

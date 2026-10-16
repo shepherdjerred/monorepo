@@ -16,10 +16,10 @@ Use `lightpanda-browser` for curl-like scraping and extraction.
 ## When the appropriate API fails
 
 Continue through PinchTab within the existing task authorization, then report
-the broken API path in Linear's `AI` team's `Developer Experience` project.
-Use the repository's `linear-work-management` skill when available: search
-issues and comments across all states first, add a session-attributed `+1 hit
-again` comment to a match, or create one `AI` issue with sanitized reproduction
+the broken API path in Tracker's `AI` team's `Developer Experience` project.
+Use the repository's `tracker-work-management` skill when available: search
+issues across all states and inspect candidate comments first, cast a native
+session-attributed vote on a match, or create one `AI` issue with sanitized reproduction
 evidence when no match exists. Include the failing command, observed error,
 failing layer, impact, and suspected owning path. Do not log credentials or
 private page content. Report the issue link with the outcome.

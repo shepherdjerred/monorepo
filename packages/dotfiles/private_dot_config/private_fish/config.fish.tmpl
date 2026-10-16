@@ -54,7 +54,7 @@ set -gx TESSDATA_PREFIX /opt/homebrew/share/tessdata
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 
 # CLI tool credentials (via 1Password) - only set if op CLI is available.
-# Brokered secrets (Grafana/Linear/PostHog/ArgoCD/Discord/Bugsink/Cloudflare
+# Brokered secrets (Grafana/PostHog/ArgoCD/Discord/Bugsink/Cloudflare
 # tokens) resolve via `toolkit` at call time and are scrubbed from agent
 # shells (see __agent_exec); nothing is exported for them here.
 {{ if lookPath "op" -}}
@@ -130,6 +130,7 @@ if status is-interactive
           -u BUGSINK_TOKEN \
           -u GRAFANA_API_KEY \
           -u LINEAR_API_KEY \
+          -u LINEAR_MIGRATION_API_KEY \
           -u DISCORD_USER_TOKEN \
           -u DISCORD_BOT_TOKEN \
           -u POSTHOG_CLI_API_KEY \

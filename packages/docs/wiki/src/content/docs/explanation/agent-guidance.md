@@ -17,14 +17,14 @@ source and from the system they described.
 
 The new design chooses an owner by how and when information is used.
 
-| Information                            | Owner                      | Why                                                 |
-| -------------------------------------- | -------------------------- | --------------------------------------------------- |
-| Personal behavior across repositories  | global `AGENTS.md`         | always relevant to Jerred's sessions                |
-| Repository or package invariant        | nearest `AGENTS.md`        | applies automatically in that source scope          |
-| Repeatable task procedure              | `.agents/skills`           | loaded only when the task matches                   |
-| Package API and contributor reference  | package README             | durable and useful to humans and tools              |
-| Architecture and operational rationale | this wiki                  | human-first explanation and how-to guidance         |
-| Plans and unfinished work              | Linear or the pull request | state changes independently of source documentation |
+| Information                            | Owner                       | Why                                                 |
+| -------------------------------------- | --------------------------- | --------------------------------------------------- |
+| Personal behavior across repositories  | global `AGENTS.md`          | always relevant to Jerred's sessions                |
+| Repository or package invariant        | nearest `AGENTS.md`         | applies automatically in that source scope          |
+| Repeatable task procedure              | `.agents/skills`            | loaded only when the task matches                   |
+| Package API and contributor reference  | package README              | durable and useful to humans and tools              |
+| Architecture and operational rationale | this wiki                   | human-first explanation and how-to guidance         |
+| Plans and unfinished work              | Tracker or the pull request | state changes independently of source documentation |
 
 This keeps the [root agent guidance](https://github.com/shepherdjerred/monorepo/blob/main/AGENTS.md)
 focused on decisions that would otherwise be easy to miss.
@@ -109,7 +109,7 @@ Visual checks, interactive authentication, and UI-only capabilities make a
 browser the appropriate first choice. Agents can choose that route directly.
 
 When an appropriate API fails, browser access lets the authorized task
-continue. A Linear report preserves the failure as actionable work.
+continue. A Tracker report preserves the failure as actionable work.
 An intentional UI choice or an absent API does not imply broken tooling.
 An uncertain write requires read-back before another attempt, regardless of
 which interface performs it.

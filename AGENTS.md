@@ -21,20 +21,20 @@ deployment targets.
   Do not copy a static workspace tree into agent guidance.
 
 Do not turn plans, work logs, or historical rollout details into repository
-documents. Track unfinished work in the Linear `AI` team or the PR. Never
+documents. Track unfinished work in the Tracker `AI` team or the PR. Never
 create an issue in `SJ`, which is reserved for human-created work; update an
 existing `SJ` issue only when the task explicitly identifies it.
 
 When the development environment itself blocks you — a tool that reliably
 fails, a documented command that does not work, missing access or fixtures
 needed to verify the change, a manual sequence you have now repeated — search
-the `AI` team's `Developer Experience` project, upvote a match with a `+1`
-comment, and file a new issue only when there is no match. File systemic
+the `AI` team's `Developer Experience` project, cast a native vote on a match,
+and file a new issue only when there is no match. File systemic
 problems the next agent will hit again, not one-off mistakes, unverified
 guesses, or causes you can fix inside the current scope. Filing never blocks or
 widens the task: fix small in-scope causes inline, file the rest after
 delivering, and name any issue you filed or upvoted in the final report. Load
-the `linear-work-management` skill for the search-first procedure, vote shape,
+the `tracker-work-management` skill for the search-first procedure, vote shape,
 and issue shape.
 
 ## Workspace and runtime
@@ -172,6 +172,6 @@ review gate observes both the code and thread state.
 
 Use the matching repository skill in `.agents/skills/` for repeatable delivery,
 homelab, Scout, Temporal, TaskNotes, Minecraft harness and building, docs,
-Linear, PostHog, Discord, or report rendering work. Package-local runtime
+Tracker, PostHog, Discord, or report rendering work. Package-local runtime
 skills remain application assets and do not replace repository workflow
 guidance.

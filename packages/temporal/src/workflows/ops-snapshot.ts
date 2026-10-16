@@ -30,7 +30,7 @@ export const OPS_COLLECTORS: readonly (readonly [SourceId, CollectorName])[] = [
   ["ci", "collectOpsCi"],
   ["github", "collectOpsGithub"],
   ["renovate", "collectOpsRenovate"],
-  ["linear", "collectOpsLinear"],
+  ["tracker", "collectOpsTracker"],
   ["bugsink", "collectOpsBugsink"],
   ["posthog", "collectOpsPosthog"],
   ["probes", "collectOpsProbes"],
@@ -102,14 +102,22 @@ function failureReason(error: unknown): string {
  */
 export const OPS_TRACES_PATCH = "ops-traces-collector";
 export const OPS_TEMPORAL_PATCH = "ops-temporal-schedules-collector";
+export const OPS_TRACKER_PATCH = "ops-tracker-source";
 
 export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
   const { collectors, assembleAndPublishOpsSnapshot } = activitiesForRun();
   const collectTraces = patched(OPS_TRACES_PATCH);
   const collectTemporal = patched(OPS_TEMPORAL_PATCH);
+  const collectTracker = patched(OPS_TRACKER_PATCH);
   const outcomes = await Promise.all(
     OPS_COLLECTORS.map(
       async ([source, collector]): Promise<OpsCollectorOutcome> => {
+        const recordedSource =
+          source === "tracker" && !collectTracker ? "linear" : source;
+        const recordedCollector =
+          source === "tracker" && !collectTracker
+            ? "collectOpsLinear"
+            : collector;
         if (
           (source === "traces" && !collectTraces) ||
           (source === "temporal" && !collectTemporal)
@@ -121,13 +129,17 @@ export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
           };
         }
         try {
-          const result = await collectors[collector]();
-          return { source, ok: true, result };
+          const result = await collectors[recordedCollector]();
+          return { source: recordedSource, ok: true, result };
         } catch (error: unknown) {
           if (isCancellation(error)) {
             throw error;
           }
-          return { source, ok: false, error: failureReason(error) };
+          return {
+            source: recordedSource,
+            ok: false,
+            error: failureReason(error),
+          };
         }
       },
     ),

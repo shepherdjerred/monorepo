@@ -113,7 +113,7 @@ Then verify all of the following:
   the server logs nor in Loki.
 
 Record the deployed server digest, both schema-hook results, canary execution
-IDs, alert state, and the acceptance window on the pull request or its Linear
+IDs, alert state, and the acceptance window on the pull request or its Tracker
 issue. Do not create a repository-local rollout journal.
 
 ## Roll back the server binary

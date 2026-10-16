@@ -1,19 +1,19 @@
 ---
-title: The local Linear agent queue
+title: The local Tracker agent queue
 description: Why curated autonomous DevEx work and owner-approved work share a host-controlled delivery boundary.
 sidebar:
   order: 5
 ---
 
-The local Linear agent queue separates coding from delivery authority, with autonomous merge available for explicitly curated DevEx work.
+The local Tracker agent queue separates coding from delivery authority, with autonomous merge available for explicitly curated DevEx work.
 
-Linear is only the intake queue. The MacBook owns durable task state, Docker
+Tracker is only the intake queue. The MacBook owns durable task state, Docker
 owns each bounded coding turn, and GitHub owns review and merge evidence.
 
 ```mermaid
 stateDiagram-v2
-  accTitle: Linear agent implementation lifecycle
-  accDescr: An eligible Linear issue is claimed, implemented in a container, and published by the host. A failing delivery check starts a bounded repair turn.
+  accTitle: Tracker agent implementation lifecycle
+  accDescr: An eligible Tracker issue is claimed, implemented in a container, and published by the host. A failing delivery check starts a bounded repair turn.
   direction TB
 
   [*] --> Claimed: eligible issue
@@ -46,7 +46,8 @@ supplies one provider credential. The coding agent has shell and network access
 because useful repository work needs both.
 
 The container does not receive the host home directory, Docker socket, GitHub
-App identity, Linear identity, or CI credential. It cannot publish its
+App identity or CI credential. The host handles Tracker queue reads and writes.
+The coding turn receives issue context and cannot publish its
 own changes.
 
 The host computes changed paths, verifies the affected workspaces, stages them explicitly, and uses Git-Spice in
@@ -72,12 +73,12 @@ owner approval requirement when autonomous delivery becomes available.
 
 The coding container cannot authorize its own merge. Git-Spice runs the host
 readiness check, and the merge request names the validated head. GitHub merge
-readback and base-branch ancestry are required before Linear completion.
+readback and base-branch ancestry are required before Tracker completion.
 The finish line is confirmed merge; deployment requires separate evidence.
 
 ```mermaid
 stateDiagram-v2
-  accTitle: Linear agent merge authorization
+  accTitle: Tracker agent merge authorization
   accDescr: Green CI allows curated autonomous work to merge directly. Other work waits for owner approval. Both paths complete only after a confirmed merge.
   direction TB
 
@@ -116,11 +117,11 @@ agent turn resolves them and the host explicitly continues the interrupted
 rebase before it republishes the branch.
 
 Parked state does not hold the single active slot. A later eligible issue can
-run. Requeuing the parked Linear issue restores its recorded phase and reuses
+run. Requeuing the parked Tracker issue restores its recorded phase and reuses
 the existing checkout.
 
 ## Related
 
-- [Run the Linear agent queue](/how-to/run-the-linear-agent-queue/)
+- [Run the Tracker agent queue](/how-to/run-the-tracker-agent-queue/)
 - [The agent task security boundary](/explanation/temporal/agent-task-boundary/)
 - [Run the PR fleet](/how-to/run-the-pr-fleet/)
