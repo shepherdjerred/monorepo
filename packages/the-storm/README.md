@@ -5,6 +5,10 @@ Minecraft server (originally 2014–2017, revived on the homelab's
 `minecraft-tsmc`). All gameplay code lives in one plugin, `TheStorm.jar`, built
 from `plugin/`.
 
+The [promotion manifest](promotion/manifest.md) tracks existing advertising
+placements, account references, reusable copy and images, and the manual
+daily/weekly maintenance cadence.
+
 ## Layout
 
 | Path                               | What it is                                                                                                             |
