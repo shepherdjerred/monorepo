@@ -379,7 +379,7 @@
       ]
     },
     "//#prettier-root": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_CHANGED_BASE", "CI_ROOT_CHECK_INPUTS_SHA256"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -392,10 +392,9 @@
         "scripts/lib/run.ts",
         "**/*",
         "!packages/**",
-        // Keep the index/file-set signal; object packs and CI scratch are not source.
-        "!.git/objects/**",
-        "!.git/ci-cold-source-cache/**",
-        "!.git/ci-gradle-seed/**",
+        // verify.ts fingerprints checked index semantics before Turbo hashes tasks.
+        "!.git",
+        "!.git/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/dist/**",
@@ -585,7 +584,7 @@
       ]
     },
     "//#line-endings-root": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_CHANGED_BASE", "CI_ROOT_CHECK_INPUTS_SHA256"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -594,9 +593,8 @@
         "scripts/lib/run.ts",
         "**/*",
         "!packages/**",
-        "!.git/objects/**",
-        "!.git/ci-cold-source-cache/**",
-        "!.git/ci-gradle-seed/**",
+        "!.git",
+        "!.git/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/dist/**",
@@ -685,7 +683,7 @@
       ]
     },
     "//#large-files-root": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_CHANGED_BASE", "CI_ROOT_CHECK_INPUTS_SHA256"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -694,9 +692,8 @@
         "scripts/lib/run.ts",
         "**/*",
         "!packages/**",
-        "!.git/objects/**",
-        "!.git/ci-cold-source-cache/**",
-        "!.git/ci-gradle-seed/**",
+        "!.git",
+        "!.git/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/dist/**",

@@ -1,4 +1,5 @@
 import { onlyInternalImagePinsChanged } from "@shepherdjerred/version-catalog/internal-image-pins";
+import { rootCheckEnvironment } from "./ci/root-check-inputs.ts";
 
 const turboTasks = [
   "build",
@@ -261,7 +262,7 @@ export async function main(
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",
-      env: environment,
+      env: await rootCheckEnvironment(environment),
     },
   );
   const turboExitCode = await turbo.exited;

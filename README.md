@@ -44,6 +44,15 @@ bun run verify                  # exhaustive whole-repo gate — what CI runs
 locally only to reproduce a CI failure or when changing the verification
 machinery itself.
 
+The three root shard checks (`prettier-root`, `line-endings-root`, and
+`large-files-root`) get a semantic Git-input fingerprint from `verify.ts` before
+Turbo calculates their cache keys. This preserves staged content, tracked file
+membership, effective line-ending attributes and changed-file selection without
+hashing checkout timestamps, refs or logs. Use `bun run verify` for cached
+verification; for an uncached individual check, use `bun run <task>` directly. Direct Turbo
+execution without the generated fingerprint fails. Do not set or reuse
+`CI_ROOT_CHECK_INPUTS_SHA256` manually.
+
 Root dependency overrides include temporary security fixes for upstream exact
 pins: Prisma 7's `deepmerge-ts` (CVE-2026-40345) and `mysql2`
 (GHSA-3f6p-5ww8-9rcr), and Mermaid's Chevrotain dependency on `lodash-es`
