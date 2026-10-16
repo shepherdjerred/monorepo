@@ -52,7 +52,7 @@ branch, not the latest commit.
   elapsed time alone is not a failure. Use `toolkit ci load` for capacity.
 - Wait exits distinguish CI failure (1), errors (2), human intervention (3),
   head changes (4), red main (5), timeout (6), and closed/merged PRs (7).
-  On red main, report the failure and await instructions; do not repair main.
+  Keep working if main is red; do not try to fix main unless explicitly told.
   A timeout is not CI failure. A changed head requires an explicit new wait.
   Use `--until settled` when collecting all blocking results is useful.
   Full command and credential details live in `packages/toolkit/README.md`.
