@@ -35,6 +35,12 @@ each tick; Workflow history records in-flight writes before that snapshot.
 CI image fingerprints cover
 the tool manifest, lockfile, and Dockerfiles. Ready generated PRs freeze their stream.
 
+Active manual runs on the owner's `ci-canary/` branches defer automatic maintenance so their
+measurements do not compete with its I/O. Admission reads manual pipelines
+across branches and checks again immediately before submission. Terminal canaries
+release this hold naturally; the schedule remains unpaused. Other CI can still
+arrive after admission, so benchmark collectors must verify isolation throughout.
+
 The optional `workspace-seeds` stream uses the verified main SHA as its
 fingerprint and is gated separately by `ci-workspace-seed-refresh-enabled`
 (production default off). It uses the existing coordinator and schedule,

@@ -2,7 +2,6 @@ import { createTemporalClient } from "#client";
 import { ciMaintenanceEnabled } from "#config/ci-maintenance.ts";
 import {
   CI_MAINTENANCE_ID,
-  isActiveMaintenanceStatus,
   type MaintenanceObservation,
   type MaintenanceRequest,
 } from "#shared/ci-maintenance.ts";
@@ -13,6 +12,7 @@ import {
   currentMaintenanceSource,
   verifiedMaintenanceSource,
   recentMaintenancePipelines,
+  isActiveMaintenanceOrCanary,
   findMaintenanceReceipt,
   maintenanceCandidates,
   MaintenancePipelineSchema,
@@ -36,13 +36,13 @@ export const ciMaintenanceActivities = {
     const enabled = await ciMaintenanceEnabled();
     if (!enabled && pending === null)
       return { enabled, candidates: [], pending: null, busy: false };
-    const manual = await recentMaintenancePipelines("manual");
+    const manual = await recentMaintenancePipelines("manual", {
+      allBranches: true,
+    });
     const receipt =
       pending === null ? null : await findMaintenanceReceipt(pending, manual);
-    const busy = manual.some(
-      (pipeline) =>
-        pipeline.message.includes("ci-maintenance/") &&
-        isActiveMaintenanceStatus(pipeline.status),
+    const busy = manual.some((pipeline) =>
+      isActiveMaintenanceOrCanary(pipeline),
     );
     if (!enabled || busy || pending !== null)
       return { enabled, candidates: [], pending: receipt, busy };
@@ -63,6 +63,13 @@ export const ciMaintenanceActivities = {
     if (!(await ciMaintenanceEnabled())) return null;
     const github = await maintenanceGithub();
     if ((await currentMaintenanceSource(github)) !== request.source)
+      return null;
+    // A canary can arrive after candidate inspection. Recheck immediately
+    // before the single external write; a deferral leaves no pipeline receipt.
+    const manual = await recentMaintenancePipelines("manual", {
+      allBranches: true,
+    });
+    if (manual.some((pipeline) => isActiveMaintenanceOrCanary(pipeline)))
       return null;
     const response = await maintenanceApi("", {
       method: "POST",

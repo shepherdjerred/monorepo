@@ -3,9 +3,10 @@ import { z } from "zod";
 import { Octokit } from "octokit";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { ciWorkspaceSeedRefreshEnabled } from "#config/ci-maintenance.ts";
-import type {
-  MaintenanceCandidate,
-  MaintenanceRequest,
+import {
+  isActiveMaintenanceStatus,
+  type MaintenanceCandidate,
+  type MaintenanceRequest,
 } from "#shared/ci-maintenance.ts";
 
 const StatusSchema = z.enum([
@@ -84,12 +85,15 @@ export async function maintenanceApi(
   return response.json();
 }
 
-export async function recentMaintenancePipelines(event: string) {
+export async function recentMaintenancePipelines(
+  event: string,
+  { allBranches = false }: { allBranches?: boolean } = {},
+) {
   const rows: MaintenancePipeline[] = [];
   for (let page = 1; page <= 4; page++) {
     const query = new URLSearchParams({
       event,
-      branch: "main",
+      ...(allBranches ? {} : { branch: "main" }),
       perPage: "50",
       page: page.toString(),
     });
@@ -100,6 +104,17 @@ export async function recentMaintenancePipelines(event: string) {
     if (batch.length < 50) break;
   }
   return [...new Map(rows.map((row) => [row.number, row])).values()];
+}
+
+/** Active manual canaries defer new automatic maintenance submissions. */
+export function isActiveMaintenanceOrCanary(pipeline: MaintenancePipeline) {
+  return (
+    pipeline.event === "manual" &&
+    isActiveMaintenanceStatus(pipeline.status) &&
+    ((pipeline.branch === "main" &&
+      pipeline.message.includes("ci-maintenance/")) ||
+      pipeline.branch.startsWith("ci-canary/"))
+  );
 }
 export async function maintenancePipeline(number: number) {
   return MaintenancePipelineSchema.parse(
