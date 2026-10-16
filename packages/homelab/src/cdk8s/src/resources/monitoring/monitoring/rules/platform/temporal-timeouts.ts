@@ -5,6 +5,8 @@ import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/reso
 export function temporalQueueTimeoutRules(): NonNullable<
   PrometheusRuleSpecGroups["rules"]
 > {
+  // Workflow ScheduleToStart timeouts include routine sticky-queue fallback.
+  // TemporalWorkflowPlaneStalled uses backlog age to detect actual starvation.
   return [
     {
       alert: "TemporalActivitiesNeverStarting",
@@ -18,22 +20,6 @@ export function temporalQueueTimeoutRules(): NonNullable<
       },
       expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
         'increase(schedule_to_start_timeout{exported_namespace=~"prod|beta",operation="TimerActiveTaskActivityTimeout"}[1h]) > 0',
-      ),
-      for: "10m",
-      labels: { severity: "warning" },
-    },
-    {
-      alert: "TemporalWorkflowTasksNeverStarting",
-      annotations: {
-        summary: escapePrometheusTemplate(
-          "Temporal workflow tasks timing out before starting in {{ $labels.exported_namespace }}",
-        ),
-        description: escapePrometheusTemplate(
-          "Workflow tasks hit ScheduleToStart {{ $value }} time(s) in the last hour. Inspect the Workflow task queue and its routed Worker Deployment version's pollers; these are not Activity timeouts.",
-        ),
-      },
-      expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-        'increase(schedule_to_start_timeout{exported_namespace=~"prod|beta",operation="TimerActiveTaskWorkflowTaskTimeout"}[1h]) > 0',
       ),
       for: "10m",
       labels: { severity: "warning" },
