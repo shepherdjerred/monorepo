@@ -1,10 +1,7 @@
 import type { Client } from "discord.js";
 import { games } from "@arcade/common/catalog.ts";
 import { UserError } from "#src/errors.ts";
-import {
-  PokemonStateSchema,
-  type PokemonState,
-} from "@arcade/common/telemetry.ts";
+import type { PokemonState } from "@arcade/common/telemetry.ts";
 import {
   PokemonGameDriver,
   POKEMON_SAVE_HISTORY_ENTRIES,
@@ -33,6 +30,7 @@ import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecy
 import type { GameServerModule } from "#src/games/module.ts";
 import type { MediaFeeds } from "#src/media/feeds.ts";
 import type { StatsStore } from "#src/stats/store.ts";
+import { toArcadePokemonState } from "./emerald-state.ts";
 
 export function emeraldModule(options: {
   bot: Client;
@@ -136,14 +134,12 @@ export function emeraldModule(options: {
         if (runtime === null) return;
         const publish = () => {
           const goal = runtime.goalManager?.getStatus();
-          const state = PokemonStateSchema.parse({
-            ...readGameStateView(runtime.emulator),
-            family: "pokemon",
-            goal:
-              goal === undefined
-                ? null
-                : { goal: goal.goal, status: goal.status },
-          });
+          const state = toArcadePokemonState(
+            readGameStateView(runtime.emulator),
+            goal === undefined
+              ? null
+              : { goal: goal.goal, status: goal.status },
+          );
           if (state.phase !== "unavailable") latestState = state;
           context.publishState(state);
         };

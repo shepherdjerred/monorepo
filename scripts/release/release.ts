@@ -30,7 +30,10 @@ import {
 } from "../lib/npm-release-eligibility.ts";
 import { runReleaseRefiner } from "../lib/release-refiner.ts";
 import { runMain } from "../lib/transient.ts";
-import { runReleasePlease } from "@shepherdjerred/release-tools/runner";
+import {
+  runReleasePlease,
+  type ReleasePleaseTarget,
+} from "@shepherdjerred/release-tools/runner";
 import { readMaintenancePr } from "../lib/maintenance-pr.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
@@ -56,31 +59,19 @@ function repoRoot(): string {
   return new URL("../..", import.meta.url).pathname;
 }
 
-type ReleaseTarget = {
-  readonly targetBranchSha: string;
-  readonly excludedPaths: readonly string[];
-};
-
 /**
  * Resolve the exact main revision this release-please phase will read, and
  * classify npm eligibility at that same revision.
  *
- * Both belong to the phase, not to the lane. `runReleasePlease` clones and
- * pins per invocation and `assertTargetBranchSha` fails closed if main moves
- * around the operation, so a phase is already atomic on its own. Resolving
- * once for the whole lane instead made the pin span the CHANGELOG refinement —
- * a multi-minute agent run — so any unrelated merge in that window aborted the
- * `github-release` phase with "Release target main moved ...; retry the release
- * lane". That is what reddened builds 10946, 10958, 10993, 11001 and 11072,
- * each time with both phases otherwise healthy.
- *
- * Resolving per phase narrows the guarded window to the phase itself, which is
- * what the guard was for; it does not relax any check.
+ * The runner calls this after its clone completes for each phase. Neither
+ * cloning nor CHANGELOG refinement belongs inside the guarded revision window.
+ * Eligibility, manifest reads, and mutations still share one exact revision;
+ * any subsequent main movement continues to fail closed.
  */
 async function resolveReleaseTarget(
   root: string,
   env: Record<string, string>,
-): Promise<ReleaseTarget> {
+): Promise<ReleasePleaseTarget> {
   const targetBranchSha = await fetchReleaseTarget(root, env);
   const releaseDecisions = await classifyAllPackageReleases(
     root,
@@ -145,8 +136,6 @@ async function main(): Promise<void> {
       );
     }
     if (phase !== "github-release" && releasePr?.isDraft !== false) {
-      const releasePrTarget = await resolveReleaseTarget(root, env);
-
       // Validate the inference credential before release-please mutates the PR.
       const openAiApiKey = requireEnv("OPENAI_API_KEY");
       // Codex runs tool calls through a login shell. Verify that exact boundary,
@@ -161,8 +150,7 @@ async function main(): Promise<void> {
         token: auth.token,
         repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
         targetBranch: "main",
-        targetBranchSha: releasePrTarget.targetBranchSha,
-        excludedPaths: releasePrTarget.excludedPaths,
+        resolveTarget: () => resolveReleaseTarget(root, env),
         canUpdateDraft: async () => {
           const current = await readMaintenancePr(
             "release-please--branches--main",
@@ -196,17 +184,14 @@ async function main(): Promise<void> {
       maintenanceDeferred = provider === "deferred";
     }
 
-    // Re-resolve after refinement: the pin above is now minutes old, and this
-    // phase clones and reads main again anyway.
+    // Resolve independently after this phase's clone, beyond refinement.
     if (phase !== "release-notes") {
-      const githubReleaseTarget = await resolveReleaseTarget(root, env);
       await runReleasePlease({
         phase: "github-release",
         token: auth.token,
         repoUrl: `https://github.com/${MONOREPO_REPO}.git`,
         targetBranch: "main",
-        targetBranchSha: githubReleaseTarget.targetBranchSha,
-        excludedPaths: githubReleaseTarget.excludedPaths,
+        resolveTarget: () => resolveReleaseTarget(root, env),
       });
     }
     console.log("--- release-please complete");

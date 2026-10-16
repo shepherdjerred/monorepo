@@ -33,9 +33,19 @@ test("component exclusions cover descendant files in release-please", () => {
 
   const filtered = commitExclude.excludeCommits({
     "packages/webring": [
-      { files: ["packages/webring/typedoc.json"] },
-      { files: ["packages/webring/src/index.ts"] },
       {
+        sha: "a".repeat(40),
+        message: "docs: update API reference",
+        files: ["packages/webring/typedoc.json"],
+      },
+      {
+        sha: "b".repeat(40),
+        message: "fix: render component",
+        files: ["packages/webring/src/index.ts"],
+      },
+      {
+        sha: "c".repeat(40),
+        message: "chore: update release runner",
         files: [
           "packages/webring/typedoc.json",
           "packages/release-tools/runner.ts",

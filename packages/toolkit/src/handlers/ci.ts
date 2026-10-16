@@ -74,7 +74,8 @@ Options:
 Wait exits: 0 ready, 1 check failure/conflict, 2 upstream/usage error,
 3 human intervention, 4 head changed, 5 main red, 6 timeout, 7 PR closed/merged.
 Long queues/builds are expected. Keep awaiting the same process, rather than
-starting another status poll. Red main: report and await instructions.
+starting another status poll. Keep working if main is red; do not try to fix
+main unless explicitly told.
 `);
       return;
     }

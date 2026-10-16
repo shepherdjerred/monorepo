@@ -6,8 +6,10 @@
       "name": "shepherdjerred/arcade",
       "category": "internal-image",
       "artifactType": "image",
-      "management": { "managed": false },
-      "value": "2.0.0-1010005@sha256:edbd18720de92a39354b882a5932a84f7a79e5afe661781c6be0a8f70d7417bf",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1010232@sha256:e7fd7f066973983f08e63694259a3906c5325755a7458cd2d95fc588027dbbe3",
       "notes": [
         "Headless Arcade backends use private game assets on separate persistent storage"
       ]
@@ -19,7 +21,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:a48d6213b6671fce03517df6795f92c859d695c12b39aaf891f23f3e4efaf2da",
+      "value": "2.0.0-1010232@sha256:88a658bbdfb0a5fbc77e61c230e970821fe9f4aaed0cd684e5ba2c58c2cbf7ac",
       "notes": [
         "Tracker application image - updated by CI pipeline",
         "not managed by renovate"
@@ -223,7 +225,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:c0a1b22c4a54dab4c7e6901cf8c20c875279da858e682a3416f898e9edca5212",
+      "value": "2.0.0-1010232@sha256:0810b5159b063b1ec4fda6c0f6fef744deeb18e246d14e277465ea814affddca",
       "notes": [
         "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
       ]
@@ -773,7 +775,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010011@sha256:2e7f48be50067d9e4355446b4f27df88f8456deab6d08d8096dd0b87b3e416a6",
+      "value": "2.0.0-1010232@sha256:a22f3a7da9341392115d0b49e295a80b98e9b6f5f394c54fe4314f1615cac82a",
       "notes": [
         "CI-published Storm forum image; publication alone does not activate public production."
       ]
@@ -785,7 +787,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
+      "value": "2.0.0-1010232@sha256:ed32cf6e749e656d43189de6d3551bdbd2ba5d9309a992d015ab91083aa40b92",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -947,7 +949,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:94b1a0bf00dae59f2223675790dd86d4924e7337849c5efb79ff00f001c37786",
+      "value": "2.0.0-1010232@sha256:fcfcd12f52157f477b273a70e9d45b3dfe8053cb8ec5fff65c619802330f76f0",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -970,7 +972,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:a2d9001aa83b733ad89b4bd5c2b69d20057b060d58c56501d6279b194a8c9e2b",
+      "value": "2.0.0-1010232@sha256:1d99f162ce3a4ccc80eb6c38f5d2fc581f4af7e9bd1c1fe0a03df99a6dd0fb82",
       "notes": ["not managed by renovate"]
     },
     {
@@ -980,7 +982,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:82c17f84d21e8ab1174c853665283a4df39a75d7dd655d4aadc156b666a9642c",
+      "value": "2.0.0-1010232@sha256:3817012e46b51f86eecea7fdbf72acc63070e5d9b2a83584852530b5926183cb",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -994,7 +996,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:55e9e3711d1014705591818adbdca370ec81505517674adac2739cf1a10b8481",
+      "value": "2.0.0-1010232@sha256:59762ca0176d4740c9bc3bc377b2225040bb98b552ae2fba0d9c25c0df422db2",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -1007,7 +1009,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:1e0970ecd60aa9a23278551df00b9da86956d97cf3285925f0e3f7fa283ea5c1",
+      "value": "2.0.0-1010232@sha256:89fd5f864d54ee0512658c366b2605c448c40baa99649860ab7f45e363882123",
       "notes": [
         "not managed by renovate — main image releases update this pin through version commit-back."
       ]
@@ -1746,7 +1748,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010005@sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
+      "value": "2.0.0-1010232@sha256:93d34d5a9174fe89598df4f1ae1c68a5512914bc5431212268c0ae792290fef4",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
         "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
@@ -1759,7 +1761,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010005@sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
+      "value": "2.0.0-1010232@sha256:93d34d5a9174fe89598df4f1ae1c68a5512914bc5431212268c0ae792290fef4",
       "notes": [
         "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
         "This production pin is owned by operator publication; remove local publisher ownership when explicitly promoting a CI-published production pin.",
@@ -1835,7 +1837,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:746039e400236d2de182ea3d2bd83afaf24741a3fc462a2149dab334a82a9008",
+      "value": "2.0.0-1010232@sha256:87e57c483faf659e3220accc514bb568a5216663e7129ce15fccffee3db4c372",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1874,7 +1876,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009839@sha256:76dfa1ce26707254643965879af302400ae80a52a9c4c55bcdeecdc48436b38e",
+      "value": "2.0.0-1010232@sha256:ab7948447fead71fd7206fc39cea20908b58b1c43678a89fbb4814968a28d9c0",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

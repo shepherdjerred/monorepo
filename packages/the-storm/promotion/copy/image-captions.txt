@@ -1,0 +1,13 @@
+windmill.png
+Caption: The windmill in Spawn Town.
+Alt text: A wooden windmill with white sails above a wheat field on The Storm Minecraft server.
+
+games.png
+Caption: The games area on The Storm.
+Alt text: A Minecraft games courtyard with stone buildings, red flags, and colored play areas.
+
+cover-1200x630.png
+Alt text: The Storm. Build a town. Brave The Storm. Survival, towns, and quests. Java and Bedrock. ts-mc.net, beside a real screenshot of the spawn windmill.
+
+directory-banner-468x60.png
+Alt text: The Storm Minecraft server. Survival, towns, and quests. Java and Bedrock. ts-mc.net.
