@@ -1759,7 +1759,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010005@sha256:1f48c3d6087b98a1222026dd7ec862f4930b96ca8d1379261730bd1d946e6af1",
+      "value": "2.0.0-1010232@sha256:93d34d5a9174fe89598df4f1ae1c68a5512914bc5431212268c0ae792290fef4",
       "notes": [
         "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
         "This production pin is owned by operator publication; remove local publisher ownership when explicitly promoting a CI-published production pin.",
