@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
@@ -10,6 +11,84 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 final class TraversalDensityTest {
+  @Test
+  void memoizationRetainsEveryVisitedNodeBeyondTheFormerPrefixLimit() {
+    var count = 5003;
+    var calls = new int[count];
+    var density =
+        TraversalDensity.memoized(
+            count,
+            node -> {
+              calls[node]++;
+              return Math.scalb(node + 1.0, -40);
+            });
+    for (var node = count - 1; node >= 0; node--)
+      assertThat(density.applyAsDouble(node)).isEqualTo(Math.scalb(node + 1.0, -40));
+    for (var node = 0; node < count; node++)
+      assertThat(density.applyAsDouble(node)).isEqualTo(Math.scalb(node + 1.0, -40));
+    assertThat(calls).containsOnly(1);
+    assertThat(TraversalDensity.memoized(count, density)).isSameAs(density);
+  }
+
+  @Test
+  void memoizationPreservesExactFiniteValueBitsIncludingSignedZero() {
+    var values = new double[] {0.0, -0.0, Double.MIN_VALUE, Math.nextUp(1.0), Double.MAX_VALUE};
+    var density = TraversalDensity.memoized(values.length, node -> values[node]);
+    for (var node = 0; node < values.length; node++) {
+      var expected = Double.doubleToRawLongBits(values[node]);
+      assertThat(Double.doubleToRawLongBits(density.applyAsDouble(node))).isEqualTo(expected);
+      assertThat(Double.doubleToRawLongBits(density.applyAsDouble(node))).isEqualTo(expected);
+    }
+  }
+
+  @Test
+  void separateQueriesDoNotShareCachedValues() {
+    var snapshot = new AtomicInteger(3);
+    var first = TraversalDensity.memoized(1, node -> snapshot.get());
+    assertThat(first.applyAsDouble(0)).isEqualTo(3);
+    snapshot.set(7);
+    var second = TraversalDensity.memoized(1, node -> snapshot.get());
+    assertThat(first.applyAsDouble(0)).isEqualTo(3);
+    assertThat(second.applyAsDouble(0)).isEqualTo(7);
+  }
+
+  @Test
+  void failedDensityEvaluationNeverInstallsACachedZero() {
+    var calls = new AtomicInteger();
+    var density =
+        TraversalDensity.memoized(
+            1,
+            node -> {
+              if (calls.incrementAndGet() == 1)
+                throw new IllegalStateException("expected density failure");
+              return 7;
+            });
+    assertThatThrownBy(() -> density.applyAsDouble(0))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("expected density failure");
+    assertThat(density.applyAsDouble(0)).isEqualTo(7);
+    assertThat(density.applyAsDouble(0)).isEqualTo(7);
+    assertThat(calls.get()).isEqualTo(2);
+  }
+
+  @Test
+  void invalidGraphBoundsFailBeforeCallingTheDensity() {
+    var calls = new AtomicInteger();
+    var density = TraversalDensity.memoized(257, node -> calls.incrementAndGet());
+    assertThatThrownBy(() -> density.applyAsDouble(-1))
+        .isInstanceOf(IndexOutOfBoundsException.class);
+    assertThatThrownBy(() -> density.applyAsDouble(257))
+        .isInstanceOf(IndexOutOfBoundsException.class);
+    assertThat(calls.get()).isZero();
+    assertThatThrownBy(() -> TraversalDensity.memoized(256, density))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> TraversalDensity.memoized(-1, density))
+        .isInstanceOf(IllegalArgumentException.class);
+    var empty = TraversalDensity.memoized(0, node -> calls.incrementAndGet());
+    assertThatThrownBy(() -> empty.applyAsDouble(0)).isInstanceOf(IndexOutOfBoundsException.class);
+    assertThat(calls.get()).isZero();
+  }
+
   private static NavGraph course(float jumpTime) {
     var bounds = new GridBounds(new BlockPos(0, 0, 0), 4, 2, 1);
     return new NavGraph(

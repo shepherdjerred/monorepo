@@ -22,11 +22,7 @@ final class RouteNavigator {
 
   record Endpoints(int from, int to, Vec3 source, Vec3 goal) {}
 
-  record Tolls(TraversalRisk.Query risk, IntToDoubleFunction penalty) {
-    Tolls {
-      penalty = TraversalDensity.memoized(penalty);
-    }
-  }
+  record Tolls(TraversalRisk.Query risk, IntToDoubleFunction penalty) {}
 
   record Candidate(List<Waypoint> points, double ticks, double cost) {
     Candidate {
@@ -34,7 +30,11 @@ final class RouteNavigator {
     }
   }
 
-  static List<Waypoint> find(TacticsContext context, Endpoints endpoints, Tolls tolls) {
+  static List<Waypoint> find(TacticsContext context, Endpoints endpoints, Tolls query) {
+    var tolls =
+        new Tolls(
+            query.risk(),
+            TraversalDensity.memoized(context.nav().graph().nodeCount(), query.penalty()));
     if (tolls.risk().source().self().traversal().fallDistance() > 0) {
       if (InitialLanding.cancelsFall(context.nav().graph(), endpoints.source()))
         return find(
