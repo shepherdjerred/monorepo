@@ -58,21 +58,20 @@ describe("Arcade account handover", () => {
   });
   test("runs exactly one command owner while retaining the original save claims", () => {
     const manifests = resources();
-    for (const [name, replicas] of [
-      ["arcade", 1],
-      ["mario-kart", 0],
-      ["pokemon", 0],
-    ] as const) {
-      expect(
-        manifests.find(
-          (resource) =>
-            resource.kind === "Deployment" && resource.metadata.name === name,
-        )?.spec,
-      ).toMatchObject({ replicas });
-    }
+    const deployments = manifests.filter(
+      (resource) => resource.kind === "Deployment",
+    );
+    expect(
+      deployments.map((resource) => resource.metadata.name).toSorted(),
+    ).toEqual(["arcade", "mario-kart-mario-kart-edge", "pokemon-web-redirect"]);
+    expect(
+      deployments.find((resource) => resource.metadata.name === "arcade")?.spec,
+    ).toMatchObject({ replicas: 1 });
     for (const name of [
       "mario-kart-volume",
       "mario-kart-data-volume",
+      "mario-kart-rom-volume",
+      "mario-kart-edge-data",
       "pokemon-volume",
     ]) {
       expect(
@@ -87,6 +86,17 @@ describe("Arcade account handover", () => {
       (resource) => resource.metadata.name === "arcade-arcade-config",
     );
     expect(config?.data?.["arcade.toml"]).toContain("controllerActive = true");
+    expect(
+      manifests.some((resource) =>
+        [
+          "mario-kart-mario-kart-config",
+          "pokemon-pokemon-config",
+          "pokemon-seaweedfs-s3-credentials",
+          "mario-kart-ui-service",
+          "mario-kart-service-monitor",
+        ].includes(resource.metadata.name),
+      ),
+    ).toBe(false);
     const arcade = manifests.find(
       (resource) =>
         resource.kind === "Deployment" && resource.metadata.name === "arcade",
