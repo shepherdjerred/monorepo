@@ -6,13 +6,17 @@ import path from "node:path";
 
 export type ReleasePleasePhase = "release-pr" | "github-release";
 
+export type ReleasePleaseTarget = {
+  readonly targetBranchSha: string;
+  readonly excludedPaths: readonly string[];
+};
+
 export type ReleasePleaseRunnerOptions = {
   readonly phase: ReleasePleasePhase;
   readonly token: string;
   readonly repoUrl: string;
   readonly targetBranch: string;
-  readonly targetBranchSha: string;
-  readonly excludedPaths: readonly string[];
+  readonly resolveTarget: () => Promise<ReleasePleaseTarget>;
   readonly canUpdateDraft?: () => Promise<boolean>;
 };
 
@@ -27,6 +31,7 @@ type ReleaseConfig = {
 
 type CreatedManifest = {
   readonly manifest: ManifestType;
+  readonly target: ReleasePleaseTarget;
   readonly cleanup: () => Promise<void>;
 };
 
@@ -164,19 +169,28 @@ async function createManifest(
       defaultBranch: options.targetBranch,
       localRepoPath: localRepositoryPath,
     });
+    // Cloning may take minutes. Only bind eligibility and the revision after
+    // it finishes, then fetch that exact commit if main advanced during cloning.
+    const target = await options.resolveTarget();
+    await runGit(localRepositoryPath, [
+      "fetch",
+      "--no-tags",
+      "origin",
+      target.targetBranchSha,
+    ]);
     await pinLocalRepository(
       localRepositoryPath,
       options.targetBranch,
-      options.targetBranchSha,
+      target.targetBranchSha,
     );
     const beforeManifestSha = await branchSha(
       repository,
       options.token,
       options.targetBranch,
     );
-    if (beforeManifestSha !== options.targetBranchSha) {
+    if (beforeManifestSha !== target.targetBranchSha) {
       throw new Error(
-        `Release target ${options.targetBranch} moved from ${options.targetBranchSha} ` +
+        `Release target ${options.targetBranch} moved from ${target.targetBranchSha} ` +
           `to ${beforeManifestSha} before release-please loaded its manifest; retry the release lane`,
       );
     }
@@ -198,9 +212,10 @@ async function createManifest(
           `(${beforeManifestSha} -> ${afterManifestSha}); retry the release lane`,
       );
     }
-    applyExcludedPaths(manifest, options.excludedPaths);
+    applyExcludedPaths(manifest, target.excludedPaths);
     return {
       manifest,
+      target,
       cleanup: () => rm(localRepositoryPath, { force: true, recursive: true }),
     };
   } catch (error) {
@@ -211,6 +226,7 @@ async function createManifest(
 
 async function assertTargetBranchSha(
   options: ReleasePleaseRunnerOptions,
+  targetBranchSha: string,
 ): Promise<void> {
   const repository = repositoryParts(options.repoUrl);
   const currentSha = await branchSha(
@@ -218,9 +234,9 @@ async function assertTargetBranchSha(
     options.token,
     options.targetBranch,
   );
-  if (currentSha !== options.targetBranchSha) {
+  if (currentSha !== targetBranchSha) {
     throw new Error(
-      `Release target ${options.targetBranch} moved from ${options.targetBranchSha} ` +
+      `Release target ${options.targetBranch} moved from ${targetBranchSha} ` +
         `to ${currentSha} during release-please; retry the release lane`,
     );
   }
@@ -269,24 +285,24 @@ export async function runReleasePlease(
   const created = await createManifest(options);
   try {
     if (options.phase === "release-pr") {
-      await assertTargetBranchSha(options);
+      await assertTargetBranchSha(options, created.target.targetBranchSha);
       const pullRequests = await createPinnedPullRequests(
         created.manifest,
         options.canUpdateDraft,
       );
-      await assertTargetBranchSha(options);
+      await assertTargetBranchSha(options, created.target.targetBranchSha);
       return {
         phase: options.phase,
         count: pullRequests.filter(Boolean).length,
       };
     }
 
-    await assertTargetBranchSha(options);
+    await assertTargetBranchSha(options, created.target.targetBranchSha);
     const releases = await createValidatedReleases(
       created.manifest,
-      options.excludedPaths,
+      created.target.excludedPaths,
     );
-    await assertTargetBranchSha(options);
+    await assertTargetBranchSha(options, created.target.targetBranchSha);
     return { phase: options.phase, count: releases.filter(Boolean).length };
   } finally {
     await created.cleanup();
