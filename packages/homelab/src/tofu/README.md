@@ -133,6 +133,12 @@ Woodpecker drives the CI stacks via `packages/homelab/scripts/tofu/tofu-stack.ts
 
 ### Cloudflare
 
+`cloudflare/jerred-archives.tf` owns the private R2 archive bucket. Its bucket
+declaration prevents destruction; its lifecycle rule removes only abandoned
+multipart uploads after seven days and never expires completed archives. Retain
+these declarations while the archives exist so ordinary stack applies preserve
+their storage and access policy.
+
 Each domain's `.tf` file owns its existing zone and application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
 DKIM, SPF, DMARC, TLS reporting, CAA, HTTPS/TLS/HSTS settings, and certificate
