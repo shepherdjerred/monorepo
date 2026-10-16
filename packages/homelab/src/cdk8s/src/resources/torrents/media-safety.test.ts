@@ -3,8 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { excludedMediaFileNames } from "homelab/src/media-download-policy.ts";
-import { App } from "cdk8s";
-import { parse } from "yaml";
+import { ApiObject, App } from "cdk8s";
 import { z } from "zod";
 import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/media.ts";
 
@@ -76,46 +75,39 @@ test("unexpected exclusion changes fail without replacing the live file", async 
 test("the rendered client enables the shared policy and rolls when its configuration changes", async () => {
   const app = new App();
   await createMediaChart(app);
-  const resources: unknown[] = app
-    .synthYaml()
-    .split(/^---$/mu)
-    .filter((part) => part.trim() !== "")
-    .map((part) => parse(part));
-  const maps = resources.flatMap((resource) => {
-    const result = z
-      .object({
-        kind: z.literal("ConfigMap"),
-        metadata: z.object({ name: z.string() }),
-        data: z.record(z.string(), z.string()),
-      })
-      .safeParse(resource);
-    return result.success ? [result.data] : [];
-  });
-  const config = maps.find(
-    (entry) => entry.metadata.name === "qbittorrent-config",
-  )?.data["qBittorrent.conf"];
+  const resources = app.node
+    .findAll()
+    .filter((node) => ApiObject.isApiObject(node));
+  function rendered(kind: string, name: string): unknown {
+    const resource = resources.find(
+      (entry) => entry.kind === kind && entry.name === name,
+    );
+    if (resource === undefined) throw new Error(`Missing ${kind} ${name}`);
+    return resource.toJson();
+  }
+  const config = z
+    .object({ data: z.record(z.string(), z.string()) })
+    .parse(rendered("ConfigMap", "qbittorrent-config")).data[
+    "qBittorrent.conf"
+  ];
   expect(config).toContain("ExcludedFileNamesEnabled=true");
   expect(config).toContain(
     `${String.raw`Session\ExcludedFileNames`}=${excludedMediaFileNames}`,
   );
-  const deployments = resources.flatMap((resource) => {
-    const result = z
-      .object({
-        kind: z.literal("Deployment"),
-        metadata: z.object({ name: z.string() }),
-        spec: z.object({
-          template: z.object({
-            metadata: z.object({
-              annotations: z.record(z.string(), z.string()).optional(),
-            }),
+  const deployment = z
+    .object({
+      spec: z.object({
+        template: z.object({
+          metadata: z.object({
+            annotations: z.record(z.string(), z.string()),
           }),
         }),
-      })
-      .safeParse(resource);
-    return result.success ? [result.data] : [];
-  });
-  const hash = deployments.find(
-    (entry) => entry.metadata.name === "media-qbittorrent",
-  )?.spec.template.metadata.annotations?.["sjer.red/qbittorrent-config-sha256"];
+      }),
+    })
+    .parse(rendered("Deployment", "media-qbittorrent"));
+  const hash =
+    deployment.spec.template.metadata.annotations[
+      "sjer.red/qbittorrent-config-sha256"
+    ];
   expect(hash).toMatch(/^[a-f\d]{64}$/u);
 });

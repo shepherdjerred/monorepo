@@ -424,10 +424,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/media.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,
       "tokens": 75

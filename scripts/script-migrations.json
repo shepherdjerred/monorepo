@@ -383,6 +383,11 @@
       "reason": "Embedded minimal init-container script"
     },
     {
+      "source": "packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/migrate-download-safety.sh",
+      "disposition": "retain",
+      "reason": "ConfigMap-mounted atomic configuration migration runs in the pinned qBittorrent init image, which provides POSIX shell and awk but no Bun runtime"
+    },
+    {
       "source": "packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/hitandrun-share-limit.sh",
       "disposition": "retain",
       "reason": "qBittorrent hook contract explicitly invokes Bash"
