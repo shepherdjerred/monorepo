@@ -13,13 +13,10 @@ import { prisma } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { projectResultEvidence } from "#src/evidence/result-projection.ts";
 import { parseLocalGameResult } from "./canonical/local-result.ts";
+import { postGameDeliveryMode } from "./dispatch-policy.ts";
 import { resolveResultEvidence } from "#src/evidence/results.ts";
-import { z } from "zod";
 
 const NORMALIZER_VERSION = 1;
-const HistoryResourceSchema = z.object({
-  resource: z.string().startsWith("match_history_game:"),
-});
 
 /** Projection only: never dispatch settlement, progression or notifications here. */
 export async function projectClientGameResult(
@@ -44,10 +41,19 @@ export async function projectClientGameResult(
     observation.observationId,
   );
   if (result === null) return;
+  const completedAt = result.gameCreation + result.durationSeconds * 1000;
+  const discoveredAt = new Date();
+  const deliveryMode = postGameDeliveryMode(
+    observation,
+    completedAt,
+    discoveredAt,
+  );
+  if (deliveryMode === null) return;
   await admitMatchEvidence({
     matchId: matchId.data,
-    completedAt: result.gameCreation + result.durationSeconds * 1000,
-    historical: HistoryResourceSchema.safeParse(observation.payload).success,
+    completedAt,
+    discoveredAt,
+    historical: deliveryMode === "silent-backfill",
   });
   await prisma.scoutClientGameResult.upsert({
     where: { observationId: observation.observationId },

@@ -4,6 +4,7 @@ import {
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   ScoutClientObservationSchema,
+  RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
@@ -27,7 +28,10 @@ vi.doMock("#src/scout-client/ingress.ts", async (original) => ({
   startAcceptedClientMatches: dispatch,
 }));
 const { reconcileAcceptedClientEvidence } = await import("./reconciliation.ts");
-const { readClientGameResults } = await import("./game-results.ts");
+const { readClientGameResults, projectClientGameResult } =
+  await import("./game-results.ts");
+const { admitMatchEvidence, matchEffectsAllowed } =
+  await import("#src/evidence/admission.ts");
 const { upsertClashGameSighting } =
   await import("#src/league/clash/sighting.ts");
 const { readClashHistoryForGuild } =
@@ -130,11 +134,11 @@ async function observe(
   return observation;
 }
 
-test("reprojects an accepted full history without EOG, timing, timeline or opponent aliases", async () => {
-  const history = {
+function historyGame(gameCreation = Date.now() - 1_800_000) {
+  return {
     gameId: 7101,
     platformId: "NA1",
-    gameCreation: Date.now() - 1_800_000,
+    gameCreation,
     gameDuration: 1800,
     queueId: 700,
     gameMode: "CLASSIC",
@@ -156,6 +160,61 @@ test("reprojects an accepted full history without EOG, timing, timeline or oppon
       },
     ],
   };
+}
+
+test.each(["post_game", "match_history_game:7101", "post_game_timeline"])(
+  "future completion in %s cannot seed permanent live admission",
+  async (resource) => {
+    const observation = await observe(
+      "post_game",
+      { resource, data: { matchHistory: historyGame(Date.now() + 3_600_000) } },
+      { platformId: "NA1" },
+    );
+    await projectClientGameResult(observation);
+    expect(await prisma.matchEvidenceAdmission.count()).toBe(0);
+    expect(await prisma.scoutClientGameResult.count()).toBe(0);
+    expect(await prisma.matchResultEvidence.count()).toBe(0);
+    expect(await prisma.scoutClientObservation.count()).toBe(1);
+    const matchId = RiotMatchIdSchema.parse("NA1_7101");
+    expect(
+      await admitMatchEvidence({
+        matchId,
+        completedAt: Date.now() - 1_800_000,
+        historical: true,
+        riotHistoryListed: true,
+      }),
+    ).toBe("HISTORY_ONLY");
+    expect(await matchEffectsAllowed(matchId)).toBe(false);
+  },
+);
+
+test.each([
+  { resource: "post_game_timeline", capturedAgo: 0, policy: "HISTORY_ONLY" },
+  { resource: "post_game", capturedAgo: 901_000, policy: "HISTORY_ONLY" },
+  { resource: "post_game", capturedAgo: 0, policy: "FULL" },
+])(
+  "$resource captured $capturedAgo ms ago follows dispatch eligibility",
+  async ({ resource, capturedAgo, policy }) => {
+    const now = Date.now();
+    const observation = await observe(
+      "post_game",
+      { resource, data: { matchHistory: historyGame(now - 1_800_000) } },
+      { platformId: "NA1", capturedAt: new Date(now - capturedAgo) },
+    );
+    await projectClientGameResult(observation);
+    const matchId = RiotMatchIdSchema.parse("NA1_7101");
+    expect(
+      await prisma.matchEvidenceAdmission.findUnique({
+        where: { riotMatchId: matchId },
+      }),
+    ).toMatchObject({ policy });
+    expect(await prisma.scoutClientGameResult.count()).toBe(1);
+    expect(await matchEffectsAllowed(matchId)).toBe(policy === "FULL");
+  },
+);
+
+test("reprojects an accepted full history without EOG, timing, timeline or opponent aliases", async () => {
+  const history = historyGame();
   const observation = await observe("post_game", {
     resource: "match_history_game:7101",
     data: { matchHistory: history },
