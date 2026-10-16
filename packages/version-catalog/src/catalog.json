@@ -1835,7 +1835,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1009749@sha256:e7a5a23cda6d993f489b05aab708ec0c365c39cb1dbdfec4c62aba2dbfc3bd66",
+      "value": "2.0.0-1009510@sha256:5f7768a553c8adc12e8180945a4d687b36ca249f6442fc99e9417f84b927ccf8",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"

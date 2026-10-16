@@ -3226,6 +3226,14 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "media-download-safety-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "tracker-writes-enabled",
           "type": "boolean",
           "default": true,

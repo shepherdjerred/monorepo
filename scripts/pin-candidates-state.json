@@ -119,12 +119,6 @@
       "digest": "sha256:746039e400236d2de182ea3d2bd83afaf24741a3fc462a2149dab334a82a9008",
       "buildNumber": 1009839
     },
-    "shepherdjerred/temporal-worker/workflows/candidate": {
-      "version": "2.0.0-1009749",
-      "digest": "sha256:e7a5a23cda6d993f489b05aab708ec0c365c39cb1dbdfec4c62aba2dbfc3bd66",
-      "buildNumber": 1009749,
-      "gitSha": "1b21abfcf4e6aaea53f33e227e6ab97dbf143330"
-    },
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-1009510",
       "digest": "sha256:5f7768a553c8adc12e8180945a4d687b36ca249f6442fc99e9417f84b927ccf8",
@@ -163,6 +157,6 @@
     }
   },
   "withdrawnCandidates": {
-    "shepherdjerred/temporal-worker/workflows/candidate": 1006485
+    "shepherdjerred/temporal-worker/workflows/candidate": 1009749
   }
 }
