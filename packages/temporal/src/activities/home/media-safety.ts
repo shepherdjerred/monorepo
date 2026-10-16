@@ -35,9 +35,10 @@ export async function inspectMediaDownloadSafety() {
           ...(init?.signal ? [init.signal] : []),
         ]),
       }),
+    (application) => {
+      mediaSafetyRejected.inc({ application });
+    },
   );
-  for (const app of ["sonarr", "radarr"] as const)
-    mediaSafetyRejected.inc({ application: app }, result.removed[app]);
   mediaSafetyLastSuccess.set(Date.now() / 1000);
   log.info("Media download safety scan", result);
   return result;

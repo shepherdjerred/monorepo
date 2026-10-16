@@ -10,16 +10,20 @@ describe("media download safety", () => {
     "fails, blocklists, then removes a confirmed %s fake",
     async (app) => {
       const { model, request } = fixture(app);
-      const result = await runMediaSafety(credentials, true, request);
+      const reported: string[] = [];
+      const report = (application: string) => reported.push(application);
+      const result = await runMediaSafety(credentials, true, request, report);
       expect(result.removed[app]).toBe(1);
+      expect(reported).toEqual([app]);
       expect(model.writes.map((entry) => entry.split(":").at(-1))).toEqual([
         "torrents/stop",
         "queue/5",
         "torrents/delete",
       ]);
-      const repeated = await runMediaSafety(credentials, true, request);
+      const repeated = await runMediaSafety(credentials, true, request, report);
       expect(repeated.candidates).toEqual([]);
       expect(model.writes).toHaveLength(3);
+      expect(reported).toEqual([app]);
     },
   );
 
@@ -95,19 +99,46 @@ describe("media download safety", () => {
     ).toHaveLength(1);
   });
 
-  test("slow indexer validation cannot prevent content cleanup", async () => {
+  test.each(["sonarr", "radarr"] as const)(
+    "records %s cleanup before slow indexer validation fails",
+    async (app) => {
+      const { model, request } = fixture(app);
+      model.indexers.sonarr = [];
+      const reported: string[] = [];
+      const report = (application: string) => {
+        expect(model.torrents).toHaveLength(0);
+        reported.push(application);
+      };
+      const unavailable: MediaRequest = async (url, init) => {
+        if (init?.method === "PUT")
+          throw new Error("Tracker validation timed out");
+        return request(url, init);
+      };
+      await expect(
+        runMediaSafety(credentials, true, unavailable, report),
+      ).rejects.toThrow("indexer/1 request failed or timed out");
+      expect(model.torrents).toHaveLength(0);
+      expect(model.failed).toBe(true);
+      expect(reported).toEqual([app]);
+      await expect(
+        runMediaSafety(credentials, true, unavailable, report),
+      ).rejects.toThrow("indexer/1 request failed or timed out");
+      expect(reported).toEqual([app]);
+    },
+  );
+
+  test("does not report removal when disappearance cannot be confirmed", async () => {
     const { model, request } = fixture();
-    model.indexers.sonarr = [];
-    const unavailable: MediaRequest = async (url, init) => {
-      if (init?.method === "PUT")
-        throw new Error("Tracker validation timed out");
-      return request(url, init);
-    };
+    const reported: string[] = [];
+    const retained: MediaRequest = (url, init) =>
+      url.endsWith("torrents/delete")
+        ? Promise.resolve(Response.json({}))
+        : request(url, init);
     await expect(
-      runMediaSafety(credentials, true, unavailable),
-    ).rejects.toThrow("indexer/1 request failed or timed out");
-    expect(model.torrents).toHaveLength(0);
-    expect(model.failed).toBe(true);
+      runMediaSafety(credentials, true, retained, (app) => reported.push(app)),
+    ).rejects.toThrow("removal was not observed");
+    expect(model.torrents).toHaveLength(1);
+    expect(reported).toEqual([]);
   });
 
   test("reconciles newly synced indexers and preserves unrelated fields", async () => {

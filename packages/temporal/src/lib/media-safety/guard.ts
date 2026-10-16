@@ -31,6 +31,7 @@ async function removeRejectedTorrent(
   qbt: MediaApi,
   hash: string,
   category: string,
+  onRemoved: () => void,
 ) {
   const remaining = z
     .array(TorrentSchema)
@@ -55,12 +56,14 @@ async function removeRejectedTorrent(
     .parse(await qbt.json(`torrents/info?hashes=${hash}`));
   if (after.length > 0)
     throw new Error("Rejected media torrent removal was not observed");
+  onRemoved();
 }
 
 export async function runMediaSafety(
   credentials: MediaSafetyCredentials,
   enforce: boolean,
   request: MediaRequest = fetch,
+  onRemoval?: (application: AppName) => void,
 ) {
   const qbt = await loginQbittorrent(
     mediaDownloadPolicy.qbittorrentUrl,
@@ -95,8 +98,10 @@ export async function runMediaSafety(
       if (!enforce) continue;
       await qbt.form("torrents/stop", { hashes: hash });
       await failOwnedTorrent(api, hash, history);
-      await removeRejectedTorrent(qbt, hash, settings.category);
-      removed[app]++;
+      await removeRejectedTorrent(qbt, hash, settings.category, () => {
+        removed[app]++;
+        onRemoval?.(app);
+      });
     }
   }
   // Inspect every application's content before availability-dependent saves.
