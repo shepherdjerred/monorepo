@@ -129,6 +129,21 @@ function emptyComposer(screen: string): boolean {
   );
 }
 
+async function selectSecondChoice(
+  runtime: Runtime,
+  session: string,
+  pane: string,
+  { screen, selected }: { screen: string; selected: RegExp },
+): Promise<void> {
+  if (!selected.test(screen)) {
+    await runtime.call(session, ["agent", "send-keys", pane, "down"]);
+    await waitForScreen(runtime, session, pane, (value) =>
+      selected.test(value),
+    );
+  }
+  await runtime.call(session, ["agent", "send-keys", pane, "enter"]);
+}
+
 /** A resumed paused goal must stay paused; never accept the default resume action. */
 export async function preservePausedGoal(
   runtime: Runtime,
@@ -144,13 +159,7 @@ export async function preservePausedGoal(
     (!/›\s*1\. Resume goal/.test(screen) && !selected.test(screen))
   )
     throw new Error("Unrecognized paused-goal dialog; left untouched");
-  if (!selected.test(screen)) {
-    await runtime.call(session, ["agent", "send-keys", pane, "down"]);
-    await waitForScreen(runtime, session, pane, (value) =>
-      selected.test(value),
-    );
-  }
-  await runtime.call(session, ["agent", "send-keys", pane, "enter"]);
+  await selectSecondChoice(runtime, session, pane, { screen, selected });
   await waitForScreen(
     runtime,
     session,
@@ -174,13 +183,7 @@ export async function backgroundRunningTask(
     (!/›\s*1\. Cancel task/.test(screen) && !selected.test(screen))
   )
     throw new Error("Unrecognized running-task exit dialog; left untouched");
-  if (!selected.test(screen)) {
-    await runtime.call(session, ["agent", "send-keys", pane, "down"]);
-    await waitForScreen(runtime, session, pane, (value) =>
-      selected.test(value),
-    );
-  }
-  await runtime.call(session, ["agent", "send-keys", pane, "enter"]);
+  await selectSecondChoice(runtime, session, pane, { screen, selected });
 }
 
 export function requireEmptyComposer(screen: string): void {

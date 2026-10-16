@@ -62,9 +62,8 @@ test("rejects dialogs overlaid on an apparently empty composer", () => {
   );
 });
 
-test("exits an active client through Run in background without cancelling its task", async () => {
-  let screen =
-    "Task is still running\n› 1. Cancel task\n  2. Run in background  Exit Codex and leave the task running\n  3. Exit  Stop the current task and exit Codex\nenter select · esc back";
+function dialogFixture(initial: string, choice: string, completed: string) {
+  let screen = initial;
   const keys: string[] = [];
   const runtime: Runtime = {
     now: Date.now,
@@ -77,15 +76,24 @@ test("exits an active client through Run in background without cancelling its ta
       if (args[3] === "down")
         screen = screen.replace("› 1.", "  1.").replace("  2.", "› 2.");
       if (args[3] === "enter") {
-        expect(screen).toContain("› 2. Run in background");
-        screen = "shell";
+        expect(screen).toContain(`› 2. ${choice}`);
+        screen = completed;
       }
       return {};
     },
   };
-  await backgroundRunningTask(runtime, "default", "w1:p1");
-  expect(keys).toEqual(["down", "enter"]);
-  expect(screen).toBe("shell");
+  return { runtime, keys, screen: () => screen };
+}
+
+test("exits an active client through Run in background without cancelling its task", async () => {
+  const fixture = dialogFixture(
+    "Task is still running\n› 1. Cancel task\n  2. Run in background  Exit Codex and leave the task running\n  3. Exit  Stop the current task and exit Codex\nenter select · esc back",
+    "Run in background",
+    "shell",
+  );
+  await backgroundRunningTask(fixture.runtime, "default", "w1:p1");
+  expect(fixture.keys).toEqual(["down", "enter"]);
+  expect(fixture.screen()).toBe("shell");
 });
 
 test.each(["paused", "stalled"])(
@@ -95,24 +103,13 @@ test.each(["paused", "stalled"])(
       "Goal paused",
       `Goal ${state}`,
     );
-    let screen = pausedDialog + inactiveComposer;
-    const keys: string[] = [];
-    const runtime: Runtime = {
-      now: Date.now,
-      sleep: (milliseconds) => Bun.sleep(milliseconds),
-      conversationSaved: () => true,
-      appearanceConfigured: () => true,
-      async call(_session, args) {
-        if (args[0] === "pane") return screen;
-        keys.push(String(args[3]));
-        if (args[3] === "down")
-          screen = screen.replace("› 1.", "  1.").replace("  2.", "› 2.");
-        if (args[3] === "enter") screen = inactiveComposer;
-        return {};
-      },
-    };
-    await preservePausedGoal(runtime, "default", "w1:p1");
-    expect(keys).toEqual(["down", "enter"]);
-    expect(screen).toBe(inactiveComposer);
+    const fixture = dialogFixture(
+      pausedDialog + inactiveComposer,
+      "Leave paused",
+      inactiveComposer,
+    );
+    await preservePausedGoal(fixture.runtime, "default", "w1:p1");
+    expect(fixture.keys).toEqual(["down", "enter"]);
+    expect(fixture.screen()).toBe(inactiveComposer);
   },
 );
