@@ -54,6 +54,12 @@ void Observe(const Core::CPUThreadGuard& guard) {
   const uint32_t result = global ? Pointer(guard, global + 0x18) : 0;
   const std::string scene = mode && result ? Scene(guard) : "";
   const bool playing = scene == "scMelee";
+  const uint32_t scene_manager = playing ? Pointer(guard, 0x805a0060) : 0;
+  const uint32_t current_scene = scene_manager ? Pointer(guard, scene_manager + 4) : 0;
+  // scMelee::m_operatorRuleGameMode for the pinned retail REL. Its countdown
+  // stops with the game, including pause, instead of following wall-clock time.
+  const uint32_t rule = current_scene ? Pointer(guard, current_scene + 0x54) : 0;
+  const bool timed = mode && Read<uint32_t>(guard, mode + 0x20) > 0;
   const bool relevant = playing || scene == "scVsResult";
   std::ostringstream json;
   json << "{\"scene\":\"" << scene << "\",\"modeRule\":" << (mode ? Read<uint32_t>(guard, mode + 8) : 0)
@@ -61,7 +67,10 @@ void Observe(const Core::CPUThreadGuard& guard) {
        << ",\"teams\":" << (mode ? Read<uint32_t>(guard, mode + 0x10) : 0)
        << ",\"decision\":" << (result ? Read<uint32_t>(guard, result + 0x1378) : 0)
        << ",\"elapsedFrames\":" << (result ? Read<uint32_t>(guard, result + 0x1384) : 0)
-       << ",\"remainingFrames\":null,\"players\":[";
+       << ",\"selfDestructScore\":" << (mode ? static_cast<int>(Read<int8_t>(guard, mode + 0x17)) : 0)
+       << ",\"remainingFrames\":";
+  if (rule && timed) json << Read<uint32_t>(guard, rule + 0xe0); else json << "null";
+  json << ",\"players\":[";
   for (uint32_t player = 0; player < 4; player++) {
     const uint32_t initial = mode + 0x98 + player * 0x5c;
     const uint32_t final = result + 0x24 + player * 0x2ac;

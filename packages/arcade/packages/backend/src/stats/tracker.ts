@@ -35,11 +35,13 @@ export class ResultTracker {
   update(state: GameState): void {
     if (state.family === "pokemon")
       throw new Error("result tracker received Pokémon state");
-    if (
-      state.phase === "menu" ||
-      state.phase === "staging" ||
-      state.phase === "loading"
-    ) {
+    // Some runtimes load a result scene after play. Keep the same round's
+    // frozen attribution across that transition; a different round invalidates it.
+    if (state.phase === "loading") {
+      if (state.round !== this.round?.number) this.round = undefined;
+      return;
+    }
+    if (state.phase === "menu" || state.phase === "staging") {
       this.round = undefined;
       return;
     }
