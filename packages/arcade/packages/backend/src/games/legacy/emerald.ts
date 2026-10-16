@@ -9,7 +9,7 @@ import {
   PokemonGameDriver,
   POKEMON_SAVE_HISTORY_ENTRIES,
 } from "@discord-plays-pokemon/backend/lifecycle/pokemon-driver.ts";
-import type { Config } from "@discord-plays-pokemon/backend/config/schema.ts";
+import type { RuntimeConfig as Config } from "@discord-plays-pokemon/backend/config/schema.ts";
 import { readGameStateView } from "@discord-plays-pokemon/backend/game/state-view.ts";
 import { describeGameEvent } from "@discord-plays-pokemon/backend/game/events/describe.ts";
 import {

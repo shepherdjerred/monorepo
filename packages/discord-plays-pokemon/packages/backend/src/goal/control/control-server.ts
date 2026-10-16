@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
 import {
   framesFromMs,

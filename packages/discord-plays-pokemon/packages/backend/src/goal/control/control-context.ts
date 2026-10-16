@@ -1,4 +1,4 @@
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import type { Emulator } from "#src/emulator/emulator.ts";
 import type { CommandTiming } from "#src/emulator/command-sink.ts";
 import type { GoalManager } from "#src/goal/goal-manager.ts";

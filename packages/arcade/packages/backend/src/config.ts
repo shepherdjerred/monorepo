@@ -5,6 +5,7 @@ import { createFileSource } from "@shepherdjerred/config/sources/file.ts";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import type { GameId } from "@arcade/common/catalog.ts";
 import type { ResolverHooks } from "@shepherdjerred/config/resolver.ts";
+import { RuntimeSettingsSchema, runtimeDefaults } from "./runtime-config.ts";
 
 const behavior = ["file", "default"] as const;
 const rollout = ["flag", "file", "default"] as const;
@@ -70,17 +71,50 @@ export const configDefinition = {
     sources: behavior,
     default: path.resolve(import.meta.dirname, "../../frontend/dist"),
   },
-  mk64Config: {
-    schema: z.string().min(1),
+  streamVideo: {
+    schema: RuntimeSettingsSchema.shape.streamVideo,
     sources: behavior,
-    sensitive: true,
-    default: "/config/mk64.toml",
+    default: runtimeDefaults.streamVideo,
   },
-  emeraldConfig: {
-    schema: z.string().min(1),
+  emeraldStreamVideo: {
+    schema: RuntimeSettingsSchema.shape.emeraldStreamVideo,
     sources: behavior,
-    sensitive: true,
-    default: "/config/emerald.toml",
+    default: runtimeDefaults.emeraldStreamVideo,
+  },
+  driverFeed: {
+    schema: RuntimeSettingsSchema.shape.driverFeed,
+    sources: behavior,
+    default: runtimeDefaults.driverFeed,
+  },
+  mk64OutputFps: {
+    schema: RuntimeSettingsSchema.shape.mk64OutputFps,
+    sources: behavior,
+    default: runtimeDefaults.mk64OutputFps,
+  },
+  mk64OverlayEnabled: {
+    schema: RuntimeSettingsSchema.shape.mk64OverlayEnabled,
+    sources: behavior,
+    default: runtimeDefaults.mk64OverlayEnabled,
+  },
+  mk64PollEveryNFrames: {
+    schema: RuntimeSettingsSchema.shape.mk64PollEveryNFrames,
+    sources: behavior,
+    default: runtimeDefaults.mk64PollEveryNFrames,
+  },
+  emeraldNotifications: {
+    schema: RuntimeSettingsSchema.shape.emeraldNotifications,
+    sources: behavior,
+    default: runtimeDefaults.emeraldNotifications,
+  },
+  emeraldCommands: {
+    schema: RuntimeSettingsSchema.shape.emeraldCommands,
+    sources: behavior,
+    default: runtimeDefaults.emeraldCommands,
+  },
+  emeraldGoal: {
+    schema: RuntimeSettingsSchema.shape.emeraldGoal,
+    sources: behavior,
+    default: runtimeDefaults.emeraldGoal,
   },
   runtimeAssets: {
     schema: z.string().min(1),
@@ -124,7 +158,7 @@ export async function loadConfig(
     definition: configDefinition,
     hooks,
     sources: {
-      // Arcade's TOML is flat and uses the typed key names from its example.
+      // Top-level names are typed keys; TOML tables hold structured settings.
       file: {
         ...file,
         get: (names) => file.get({ ...names, file: names.key }),
@@ -141,6 +175,29 @@ export async function loadConfig(
       }),
     },
   });
+}
+
+export async function readRuntimeSettings(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+) {
+  const keys = [
+    "streamVideo",
+    "emeraldStreamVideo",
+    "driverFeed",
+    "mk64OutputFps",
+    "mk64OverlayEnabled",
+    "mk64PollEveryNFrames",
+    "emeraldNotifications",
+    "emeraldCommands",
+    "emeraldGoal",
+  ] as const;
+  return RuntimeSettingsSchema.parse(
+    Object.fromEntries(
+      await Promise.all(
+        keys.map(async (key) => [key, await config.value(key)]),
+      ),
+    ),
+  );
 }
 
 export async function gameEnabled(

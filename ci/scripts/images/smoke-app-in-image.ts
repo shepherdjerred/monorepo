@@ -464,18 +464,6 @@ if (target === "discord-plays-pokemon") {
     pokemonSmokeConfig,
   );
 }
-if (target === "arcade") {
-  await Bun.write("/tmp/arcade-smoke-mk64.toml", marioSmokeConfig);
-  await Bun.write(
-    "/tmp/arcade-smoke-emerald.toml",
-    pokemonSmokeConfig
-      .replaceAll("000000000000000000", "111111111111111111")
-      .replaceAll(
-        "smoke-test-dummy-selfbot-token",
-        "other-smoke-test-dummy-selfbot-token",
-      ),
-  );
-}
 if (target === "discord-plays-mario-kart") {
   await Bun.write(
     "/app/packages/discord-plays-mario-kart/config.toml",

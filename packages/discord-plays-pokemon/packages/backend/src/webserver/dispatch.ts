@@ -6,7 +6,7 @@ import type {
   Request,
 } from "@discord-plays-pokemon/common";
 import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import { enqueueCommand } from "#src/emulator/command-sink.ts";
 import { parseChord, type Chord } from "#src/game/command/chord.ts";
 import {

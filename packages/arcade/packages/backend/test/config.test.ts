@@ -26,14 +26,14 @@ describe("Arcade configuration", () => {
     try {
       await Bun.write(
         file,
-        'controllerActive = true\nmk64Config = "/fixtures/mk64.toml"\nstateRoot = "/fixtures/saves"\nport = 18081\n',
+        'controllerActive = true\nmk64OutputFps = 60\nstateRoot = "/fixtures/saves"\nport = 18081\n',
       );
       const config = await loadConfig(file, "beta");
       expect(await config.get("controllerActive")).toEqual({
         value: true,
         source: "file",
       });
-      expect(await config.value("mk64Config")).toBe("/fixtures/mk64.toml");
+      expect(await config.value("mk64OutputFps")).toBe(60);
       expect(await config.value("stateRoot")).toBe("/fixtures/saves");
       expect(await config.value("port")).toBe(18_081);
     } finally {
@@ -130,15 +130,14 @@ describe("Arcade configuration", () => {
     );
     const description = await config.describe();
     expect(
-      description.find((entry) => entry.key === "mk64Config"),
+      description.find((entry) => entry.key === "mk64OutputFps"),
     ).toMatchObject({
-      sensitive: true,
       source: "default",
-      digest: expect.any(String),
+      value: 30,
     });
-    expect(
-      description.find((entry) => entry.key === "mk64Config"),
-    ).not.toHaveProperty("value");
+    expect(description.some((entry) => entry.key.includes("Token"))).toBe(
+      false,
+    );
   });
 
   it("evaluates rollouts for the requesting server", async () => {

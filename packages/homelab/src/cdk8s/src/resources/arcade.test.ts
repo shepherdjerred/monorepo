@@ -132,3 +132,91 @@ test("the active controller mounts storage without a competing bootstrap job", (
     resources.some((resource) => KindSchema.parse(resource).kind === "Job"),
   ).toBe(false);
 });
+
+test("Arcade owns one credential item and keeps limits and goal grants outside its account pool", () => {
+  const chart = new Chart(new App(), "test", {
+    namespace: "arcade",
+    disableResourceNameHashes: true,
+  });
+  createArcadeDeployment(chart);
+  const resources = Testing.synth(chart);
+  const credentials = z
+    .object({
+      metadata: z.object({ name: z.string() }),
+      spec: z.object({ itemPath: z.string() }),
+    })
+    .parse(
+      resources.find(
+        (resource) =>
+          KindSchema.parse(resource).kind === "OnePasswordItem" &&
+          JSON.stringify(resource).includes("w4756fcswk2o5znfn4lzfqxgtm"),
+      ),
+    );
+  const deployment = z
+    .object({
+      spec: z.object({
+        template: z.object({
+          spec: z.object({
+            containers: z.array(
+              z.object({
+                env: z.array(
+                  z.object({
+                    name: z.string(),
+                    valueFrom: z
+                      .object({
+                        secretKeyRef: z.object({
+                          name: z.string(),
+                          key: z.string(),
+                        }),
+                      })
+                      .optional(),
+                  }),
+                ),
+              }),
+            ),
+            volumes: z.array(z.object({ secret: z.unknown().optional() })),
+          }),
+        }),
+      }),
+    })
+    .parse(
+      resources.find(
+        (resource) => KindSchema.parse(resource).kind === "Deployment",
+      ),
+    );
+  const container = deployment.spec.template.spec.containers[0];
+  if (container === undefined) throw new Error("Missing Arcade container");
+  for (const key of [
+    "DISCORD_BOT_TOKEN",
+    "DISCORD_APPLICATION_ID",
+    "DISCORD_STREAMING_TOKENS",
+    "DISCORD_CLIENT_SECRET",
+    "CODEX_ACCESS_TOKEN",
+  ]) {
+    expect(
+      container.env.find((entry) => entry.name === key)?.valueFrom
+        ?.secretKeyRef,
+    ).toEqual({ name: credentials.metadata.name, key });
+  }
+  expect(
+    deployment.spec.template.spec.volumes.every(
+      (volume) => volume.secret === undefined,
+    ),
+  ).toBe(true);
+  const config = z
+    .object({ data: z.object({ "arcade.toml": z.string() }) })
+    .parse(
+      resources.find(
+        (resource) => KindSchema.parse(resource).kind === "ConfigMap",
+      ),
+    );
+  expect(Bun.TOML.parse(config.data["arcade.toml"])).toMatchObject({
+    maxSessions: 2,
+    maxHeavySessions: 1,
+    goalGuildIds: ["208425771172102144", "1337623164146155593"],
+    driverFeed: { enabled: true, max_clients: 4 },
+    streamVideo: { hardware_acceleration: true, bitrate_kbps: 5000 },
+    emeraldStreamVideo: { hardware_acceleration: true, bitrate_kbps: 1500 },
+    emeraldGoal: { enabled: true, model: "gpt-5.6-sol" },
+  });
+});

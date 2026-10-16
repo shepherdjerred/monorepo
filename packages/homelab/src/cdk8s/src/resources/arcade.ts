@@ -25,7 +25,6 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
-import { emeraldGoalCredentials } from "@shepherdjerred/homelab/cdk8s/src/resources/pokemon.ts";
 
 export const APP_ROOT = "/app/packages/arcade";
 const ARCADE_NODE_SELECTOR = { "kubernetes.io/hostname": "torvalds" };
@@ -115,25 +114,51 @@ export function createArcadeDeployment(
   }
   const config = new ConfigMap(chart, "arcade-config", {
     data: {
-      "arcade.toml": `controllerActive = ${controllerActive.toString()}\nenabled = false\nmkwiiEnabled = false\nmeleeEnabled = false\nbrawlEnabled = false\ngoalGuildIds = ["208425771172102144", "1337623164146155593"]\nstateRoot = "/data/saves"\ndatabasePath = "/data/db/arcade.db"\nwebAssets = "${APP_ROOT}/packages/frontend/dist"\n`,
+      "arcade.toml": `controllerActive = ${controllerActive.toString()}
+enabled = false
+mkwiiEnabled = false
+meleeEnabled = false
+brawlEnabled = false
+maxSessions = 2
+maxHeavySessions = 1
+goalGuildIds = ["208425771172102144", "1337623164146155593"]
+stateRoot = "/data/saves"
+databasePath = "/data/db/arcade.db"
+webAssets = "${APP_ROOT}/packages/frontend/dist"
+
+[streamVideo]
+frame_rate = 30
+bitrate_kbps = 5000
+bitrate_max_kbps = 8000
+hardware_acceleration = true
+vaapi_device = "/dev/dri/renderD128"
+
+[emeraldStreamVideo]
+frame_rate = 30
+bitrate_kbps = 1500
+bitrate_max_kbps = 4000
+hardware_acceleration = true
+vaapi_device = "/dev/dri/renderD128"
+
+[driverFeed]
+enabled = true
+max_clients = 4
+
+[emeraldGoal]
+enabled = true
+model = "gpt-5.6-sol"
+`,
     },
   });
-  const mk64 = new OnePasswordItem(chart, "arcade-mk64", {
+  const credentials = new OnePasswordItem(chart, "arcade-credentials", {
     spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fcugoc3kohpmfwzfvko4hgysyq",
+      itemPath: vaultItemPath("w4756fcswk2o5znfn4lzfqxgtm"),
     },
   });
-  const emerald = new OnePasswordItem(chart, "arcade-emerald", {
-    spec: {
-      itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/hwyhh64dyu3s7w37q7oj7r4qn4",
-    },
-  });
-  const mkSecret = Secret.fromSecretName(
+  const credentialSecret = Secret.fromSecretName(
     chart,
-    "arcade-mk64-secret",
-    mk64.name,
+    "arcade-credential-secret",
+    credentials.name,
   );
   const archiveItem = new OnePasswordItem(chart, "arcade-archive", {
     spec: { itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium") },
@@ -142,11 +167,6 @@ export function createArcadeDeployment(
     chart,
     "arcade-archive-secret",
     archiveItem.name,
-  );
-  const emeraldSecret = Secret.fromSecretName(
-    chart,
-    "arcade-emerald-secret",
-    emerald.name,
   );
   deployment.addContainer(
     withCommonProps({
@@ -166,16 +186,27 @@ export function createArcadeDeployment(
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("marioKart")),
         // Keep the existing public address and registered Discord OAuth callback.
         WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://mariokart.sjer.red"),
+        DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
+          secret: credentialSecret,
+          key: "DISCORD_BOT_TOKEN",
+        }),
+        DISCORD_APPLICATION_ID: EnvValue.fromSecretValue({
+          secret: credentialSecret,
+          key: "DISCORD_APPLICATION_ID",
+        }),
+        DISCORD_STREAMING_TOKENS: EnvValue.fromSecretValue({
+          secret: credentialSecret,
+          key: "DISCORD_STREAMING_TOKENS",
+        }),
         DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
-          secret: mkSecret,
+          secret: credentialSecret,
           key: "DISCORD_CLIENT_SECRET",
         }),
-        ...emeraldGoalCredentials(emeraldSecret),
-        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
-        VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
+        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
+          secret: credentialSecret,
+          key: "CODEX_ACCESS_TOKEN",
+        }),
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
-        DRIVER_FEED_ENABLED: EnvValue.fromValue("true"),
-        DRIVER_FEED_MAX_CLIENTS: EnvValue.fromValue("4"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("arcade"),
         OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
@@ -253,20 +284,6 @@ export function createArcadeDeployment(
           path: "/config/arcade.toml",
           subPath: "arcade.toml",
           volume: Volume.fromConfigMap(chart, "arcade-config-volume", config),
-        },
-        {
-          path: "/config/mk64.toml",
-          subPath: "config.toml",
-          volume: Volume.fromSecret(chart, "arcade-mk64-config", mkSecret),
-        },
-        {
-          path: "/config/emerald.toml",
-          subPath: "config.toml",
-          volume: Volume.fromSecret(
-            chart,
-            "arcade-emerald-config",
-            emeraldSecret,
-          ),
         },
       ],
     }),

@@ -60,9 +60,15 @@ bunx turbo run build typecheck test lint --filter='@arcade/*' --filter=@shepherd
 docker buildx bake arcade --set '*.platform=linux/amd64'
 ```
 
-`config.example.toml` describes non-secret configuration. `ARCADE_CONFIG_PATH`
-selects that file; Discord OAuth credentials and existing game credentials use
-the established secret bootstrap. Rollout and account ownership default off.
+`config.example.toml` describes non-secret typed configuration; `ARCADE_CONFIG_PATH`
+selects that file. Dedicated Arcade bootstrap credentials are `DISCORD_BOT_TOKEN`,
+`DISCORD_APPLICATION_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_STREAMING_TOKENS`
+(a nonempty JSON array of distinct streaming-account tokens). IDs and guild
+membership are discovered at login, and duplicate account identities fail startup.
+The command bot must match the configured OAuth application. No legacy bot
+credential files are read. Streambot owns its separate account pool. Runtime
+settings, session limits, and goal grants remain independent of pool size.
+Rollout and account ownership default off.
 
 Private WASM builds use `runtimes/prepare-assets.py --help`. The script accepts
 a dedicated clean checkout of the pinned upstream, an Emscripten SDK, and an

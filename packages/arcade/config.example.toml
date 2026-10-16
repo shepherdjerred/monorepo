@@ -1,4 +1,6 @@
-# Non-secret typed configuration. Credentials remain in the two legacy TOMLs.
+# Non-secret typed configuration. Credentials use DISCORD_BOT_TOKEN,
+# DISCORD_APPLICATION_ID, DISCORD_CLIENT_SECRET, and DISCORD_STREAMING_TOKENS
+# (a JSON array of dedicated game streaming tokens).
 controllerActive = false
 enabled = false
 mkwiiEnabled = false
@@ -10,11 +12,20 @@ port = 8081
 stateRoot = "/data/saves"
 databasePath = "/data/db/arcade.db"
 runtimeAssets = "/data/assets"
-mk64Config = "/config/mk64.toml"
-emeraldConfig = "/config/emerald.toml"
 webAssets = "/app/packages/arcade/packages/frontend/dist"
 chromium = "/usr/bin/chromium"
 dolphin = "/opt/dolphin/bin/dolphin-emu-nogui"
 runtimePort = 9082
 runtimeStartupTimeoutMs = 180000
 goalGuildIds = []
+
+# Other runtime settings use typed defaults: streamVideo, emeraldStreamVideo,
+# driverFeed, mk64OutputFps, mk64OverlayEnabled, mk64PollEveryNFrames,
+# emeraldNotifications, emeraldCommands, and emeraldGoal.
+[driverFeed]
+enabled = false
+max_clients = 4
+
+[emeraldGoal]
+enabled = false
+model = "gpt-5.6-sol"
