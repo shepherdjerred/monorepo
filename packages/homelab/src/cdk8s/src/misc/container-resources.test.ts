@@ -519,7 +519,8 @@ describe("Burst-memory sharing policy", () => {
       expect(values?.["extraPodSpec"], name).toEqual({
         priorityClassName: BURST_SERVICE_PRIORITY,
       });
-      expect(values?.["replicaCount"], name).toBe(0);
+      const replicas = name === "minecraft-tsmc" ? 1 : 0;
+      expect(values?.["replicaCount"], name).toBe(replicas);
       expect(values?.["workloadAsStatefulSet"], name).toBe(true);
       expect(values?.["resources"], name).toEqual({
         requests: { cpu, memory: request },

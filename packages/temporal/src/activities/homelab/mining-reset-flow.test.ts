@@ -176,6 +176,18 @@ class FakeCluster {
     }
     throw new Error(`Unexpected command: ${joined}`);
   }
+
+  dependencies() {
+    return {
+      command: this.command.bind(this),
+      heartbeat: (phase: string) => {
+        this.events.push(`heartbeat-${phase}`);
+      },
+      sleep: async () => {
+        this.events.push("sleep");
+      },
+    };
+  }
 }
 
 describe("mining reset orchestration", () => {
@@ -322,15 +334,7 @@ describe("mining reset orchestration", () => {
   test("pins the Job image across Activity retries and a server rollout", async () => {
     const cluster = new FakeCluster();
     cluster.failReleaseKind = "service";
-    const dependencies = {
-      command: cluster.command.bind(cluster),
-      heartbeat: (phase: string) => {
-        cluster.events.push(`heartbeat-${phase}`);
-      },
-      sleep: async () => {
-        cluster.events.push("sleep");
-      },
-    };
+    const dependencies = cluster.dependencies();
 
     await expect(
       resetMiningWorldWithDependencies("2026q4", dependencies),
@@ -349,15 +353,7 @@ describe("mining reset orchestration", () => {
   test("resumes when the Service release succeeds but the atomic unlock fails", async () => {
     const cluster = new FakeCluster();
     cluster.failReleaseKind = "statefulset";
-    const dependencies = {
-      command: cluster.command.bind(cluster),
-      heartbeat: (phase: string) => {
-        cluster.events.push(`heartbeat-${phase}`);
-      },
-      sleep: async () => {
-        cluster.events.push("sleep");
-      },
-    };
+    const dependencies = cluster.dependencies();
 
     await expect(
       resetMiningWorldWithDependencies("2026q4", dependencies),
