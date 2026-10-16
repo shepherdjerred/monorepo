@@ -82,6 +82,7 @@ async function repository(): Promise<string> {
   const directory = await mkdtemp(path.join(tmpdir(), "ci-diagnostic-test-"));
   directories.push(directory);
   await mkdir(path.join(directory, ".turbo/runs"), { recursive: true });
+  await mkdir(path.join(directory, ".git"));
   return directory;
 }
 
@@ -454,11 +455,21 @@ test.each([0, 42])(
       await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
       process.exit(${String(exitCode)});
     `;
-    const { stdout, stderr, exit } = await runWrapper(root, entrypoint, [
-      process.execPath,
-      "-e",
-      install,
-    ]);
+    // A full or unavailable scratch mount must not prevent retaining the
+    // command result. The transfer belongs on the workspace's Git metadata.
+    const { stdout, stderr, exit } = await runWrapper(
+      root,
+      entrypoint,
+      [process.execPath, "-e", install],
+      {
+        mode: ["verify", "--"],
+        env: {
+          CI_PIPELINE_NUMBER: "123",
+          CI_COMMIT_SHA: "a".repeat(40),
+          TMPDIR: path.join(root, "unavailable-scratch"),
+        },
+      },
+    );
     expect(stderr).toBe("");
     expect(stdout).toContain("CI task diagnostics:");
     expect(exit).toBe(exitCode);

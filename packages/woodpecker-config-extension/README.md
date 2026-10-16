@@ -216,6 +216,8 @@ filesystem capacity, which does not measure that directory's size. Usage peaks
 between samples can be missed, while the cgroup peak/events are cumulative.
 Missing counters, changed limits, resets, or a truncated collection cannot pass
 the resource diagnostic gate; an existing command failure keeps its exit code.
+The diagnostic transfer uses private Git metadata on the workspace volume, so
+an exhausted scratch mount cannot prevent the collector from retaining evidence.
 Ordinary workflows do not start this sampler. Physical SSD writes and foreign
 workload isolation still require node telemetry and native CI evidence.
 

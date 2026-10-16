@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import { mkdtemp, readdir, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import type { TaskDiagnostics } from "../lib/ci/task-diagnostics.ts";
 import { startBenchmarkResources } from "./benchmark-resources.ts";
@@ -200,8 +199,10 @@ async function main(args: string[]): Promise<number> {
     const benchmarkResources = await resources?.finish();
     // A long run's samples can exceed Linux's per-argument size limit. A private
     // file also keeps the complete observations out of process arguments.
+    // Keep it outside TMPDIR: that is the scratch mount being measured, and
+    // even an ENOSPC failure must leave room to transfer its diagnostics.
     payloadDirectory = await mkdtemp(
-      path.join(tmpdir(), "ci-diagnostic-payload-"),
+      path.join(root, ".git", "ci-diagnostic-payload-"),
     );
     const payloadFile = path.join(payloadDirectory, "payload.json");
     await Bun.write(
