@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
+import type { RuntimeConfig as Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
 import type { Logger } from "@shepherdjerred/discord-plays-core/logger.ts";
 import type { MediaFeeds } from "#src/media/feeds.ts";
 import type { StatsStore } from "#src/stats/store.ts";

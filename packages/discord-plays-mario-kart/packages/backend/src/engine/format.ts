@@ -1,6 +1,6 @@
 // The media the engine produces. The Go-Live stream, the driver feed, and the
 // overlays size themselves from this rather than from constants of their own.
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import { AUDIO_SAMPLE_RATE, HEIGHT, WIDTH } from "#src/emulator/constants.ts";
 
 export type FrameFormat = {

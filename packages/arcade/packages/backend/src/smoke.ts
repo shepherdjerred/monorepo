@@ -10,7 +10,7 @@ const config = path.join(root, "arcade.toml");
 const origin = "http://127.0.0.1:18081";
 await Bun.write(
   config,
-  `controllerActive = false\nport = 18081\nmk64Config = "/tmp/arcade-smoke-mk64.toml"\nemeraldConfig = "/tmp/arcade-smoke-emerald.toml"\ndatabasePath = "${root}/arcade.db"\nstateRoot = "${root}/saves"\n`,
+  `controllerActive = false\nport = 18081\ndatabasePath = "${root}/arcade.db"\nstateRoot = "${root}/saves"\n`,
 );
 const child = Bun.spawn(
   [process.execPath, path.join(import.meta.dirname, "index.ts")],
@@ -21,6 +21,9 @@ const child = Bun.spawn(
       ARCADE_CONFIG_PATH: config,
       WEB_PUBLIC_ORIGIN: origin,
       DISCORD_CLIENT_SECRET: "synthetic-smoke-credential",
+      DISCORD_BOT_TOKEN: "synthetic-smoke-bot-token",
+      DISCORD_APPLICATION_ID: "123",
+      DISCORD_STREAMING_TOKENS: '["synthetic-smoke-stream-token"]',
     },
     stdout: "inherit",
     stderr: "inherit",

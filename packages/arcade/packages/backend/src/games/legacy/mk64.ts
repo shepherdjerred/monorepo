@@ -6,7 +6,7 @@ import type { GameServerModule } from "#src/games/module.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { MarioKartGameDriver } from "@discord-plays-mario-kart/backend/lifecycle/mario-kart-driver.ts";
 import { MK64_SAVE_HISTORY_ENTRIES } from "@discord-plays-mario-kart/backend/engine/index.ts";
-import type { Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
+import type { RuntimeConfig as Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
 import type { SpaghettiBuild } from "@discord-plays-mario-kart/backend/engine/spaghetti/install.ts";
 import type { LeaderboardStoreFactory } from "@discord-plays-mario-kart/backend/leaderboard/store.ts";
 import { engineFormat } from "@discord-plays-mario-kart/backend/engine/format.ts";

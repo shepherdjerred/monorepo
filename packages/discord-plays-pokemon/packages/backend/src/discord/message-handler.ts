@@ -9,7 +9,7 @@ import { isValid } from "#src/game/command/chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 
 export function handleMessages(
   client: Client,

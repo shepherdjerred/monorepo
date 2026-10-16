@@ -3,7 +3,7 @@
 import { mkdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { writeFileAtomic } from "@shepherdjerred/discord-stream-lifecycle/persistence/atomic-write";
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import type { GameEngine } from "./game-engine.ts";
 import { SpaghettiEngine } from "./spaghetti/engine.ts";
 import {

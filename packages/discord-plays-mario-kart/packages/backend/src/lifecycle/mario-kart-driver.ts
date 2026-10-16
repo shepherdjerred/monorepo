@@ -27,7 +27,7 @@ import { RaceTracker } from "#src/leaderboard/race-tracker.ts";
 import { NameOverlay } from "#src/overlay/name-overlay.ts";
 import { createLabelRenderer } from "#src/overlay/label-renderer.ts";
 import type { DriverFeedService } from "@shepherdjerred/discord-plays-core/driver-feed/service.ts";
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
 
 export type ActiveSessionRuntime = {

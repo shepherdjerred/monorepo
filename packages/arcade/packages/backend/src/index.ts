@@ -1,4 +1,3 @@
-import path from "node:path";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { Client, GatewayIntentBits } from "discord.js";
 import {
@@ -18,7 +17,6 @@ import {
 import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
-import { getConfig as getMk64Config } from "@discord-plays-mario-kart/backend/config/index.ts";
 import { prepareEngine } from "@discord-plays-mario-kart/backend/engine/index.ts";
 import {
   createPrisma,
@@ -28,11 +26,12 @@ import {
 import { createPlayerDirectory } from "@discord-plays-mario-kart/backend/auth/player-directory.ts";
 import { createWebSessionStore } from "@discord-plays-mario-kart/backend/auth/session-store.ts";
 import { createPrismaLeaderboardStore } from "@discord-plays-mario-kart/backend/leaderboard/store.ts";
-import { getConfig as getEmeraldConfig } from "@discord-plays-pokemon/backend/config/index.ts";
 import type { GameId } from "@arcade/common/catalog.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import type { GameServerModule } from "./games/module.ts";
-import { loadConfig, gameEnabled } from "./config.ts";
+import { loadConfig, gameEnabled, readRuntimeSettings } from "./config.ts";
+import { readCredentials, startArcadePool } from "./credentials.ts";
+import { createRuntimeConfigs } from "./runtime-config.ts";
 import { StatsStore } from "./stats/store.ts";
 import { createApplication } from "./web/application.ts";
 import { BotAccess } from "./discord/access.ts";
@@ -69,8 +68,7 @@ const config = await loadConfig(
   },
 );
 const [
-  mk64Config,
-  emeraldConfig,
+  settings,
   stateRoot,
   assets,
   databasePath,
@@ -84,8 +82,7 @@ const [
   runtimePort,
   runtimeStartupTimeoutMs,
 ] = await Promise.all([
-  config.value("mk64Config").then(getMk64Config),
-  config.value("emeraldConfig").then(getEmeraldConfig),
+  readRuntimeSettings(config),
   config.value("stateRoot"),
   config.value("runtimeAssets"),
   config.value("databasePath"),
@@ -99,47 +96,19 @@ const [
   config.value("runtimePort"),
   config.value("runtimeStartupTimeoutMs"),
 ]);
-if (
-  mk64Config.stream.userbot.id === emeraldConfig.stream.userbot.id ||
-  mk64Config.stream.userbot.token === emeraldConfig.stream.userbot.token
-)
-  throw new Error("Arcade requires distinct streaming accounts");
+const credentials = readCredentials(Bun.env);
 await initializeDatabase(databasePath);
 const prisma = createPrisma(databaseUrl(databasePath));
 const players = createPlayerDirectory(prisma);
 const stats = new StatsStore(prisma);
 const legacyStats = createPrismaLeaderboardStore(prisma, players);
-const preparedMk64Config = {
-  ...mk64Config,
-  state_root_dir: path.join(stateRoot, "mk64"),
-  spaghettikart: {
-    ...mk64Config.spaghettikart,
-    install_dir: path.resolve(
-      import.meta.dirname,
-      "../../../../discord-plays-mario-kart",
-      mk64Config.spaghettikart.install_dir,
-    ),
-  },
-  emulator: {
-    ...mk64Config.emulator,
-    rom_path: path.join(assets, "mk64", "rom.z64"),
-  },
-};
-const preparedEmeraldConfig = {
-  ...emeraldConfig,
-  game: {
-    ...emeraldConfig.game,
-    wasm_path: path.join(assets, "emerald", "pokeemerald.wasm"),
-    goal: {
-      ...emeraldConfig.game.goal,
-      runtime_directory: path.resolve(
-        import.meta.dirname,
-        "../../../../discord-plays-pokemon",
-      ),
-      helper_dir: path.join(stateRoot, "emerald", ".goal-bin"),
-    },
-  },
-};
+const { mk64: preparedMk64Config, emerald: preparedEmeraldConfig } =
+  createRuntimeConfigs({
+    settings,
+    stateRoot,
+    assets,
+    databasePath,
+  });
 const controllerActive = await config.value("controllerActive");
 const build = controllerActive
   ? await prepareEngine(preparedMk64Config)
@@ -153,21 +122,17 @@ const bot = new Client({
   ],
 });
 const pool = new UserbotPool({
-  tokens: [mk64Config.stream.userbot.token, emeraldConfig.stream.userbot.token],
+  tokens: credentials.streamingTokens,
   factory: createSelfbotPooledUserbotFactory(),
   logger,
 });
-const excludedIds = new Set([
-  mk64Config.stream.userbot.id,
-  emeraldConfig.stream.userbot.id,
-  ...readPeerUserbotIds(),
-]);
+const excludedIds = new Set(readPeerUserbotIds());
 const access = new BotAccess(bot, excludedIds);
 const bootstrap = authBootstrapFromEnv(Bun.env);
 const auth = new DiscordAuth({
   config: {
     ...bootstrap,
-    clientId: mk64Config.bot.application_id,
+    clientId: credentials.applicationId,
     cookiePrefix: "arcade",
   },
   sessions: createWebSessionStore(prisma, players),
@@ -272,8 +237,12 @@ function shutdown(): Promise<void> {
 }
 try {
   if (controllerActive) {
-    await bot.login(mk64Config.bot.discord_token);
-    await pool.start();
+    await bot.login(credentials.botToken);
+    if (bot.application?.id !== credentials.applicationId)
+      throw new Error(
+        "Arcade bot and OAuth application identities do not match",
+      );
+    await startArcadePool(pool, excludedIds);
     await registerCommands({
       bot,
       application,

@@ -113,3 +113,12 @@ export const ConfigSchema = z.strictObject({
   // the pod until someone edits the vault.
   driver_feed: DriverFeedConfigSchema,
 });
+
+/** Game-session settings when the command bot and stream account are owned elsewhere. */
+export const RuntimeConfigSchema = ConfigSchema.omit({
+  bot: true,
+  web: true,
+}).extend({
+  stream: ConfigSchema.shape.stream.omit({ userbot: true }),
+});
+export type RuntimeConfig = z.infer<typeof RuntimeConfigSchema>;

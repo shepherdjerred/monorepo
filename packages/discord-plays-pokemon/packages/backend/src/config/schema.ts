@@ -168,3 +168,10 @@ export const ConfigSchema = z.strictObject({
     }),
   }),
 });
+
+/** Game-session settings when the command bot and stream account are owned elsewhere. */
+export const RuntimeConfigSchema = ConfigSchema.omit({ web: true }).extend({
+  bot: ConfigSchema.shape.bot.pick({ notifications: true }),
+  stream: ConfigSchema.shape.stream.omit({ userbot: true }),
+});
+export type RuntimeConfig = z.infer<typeof RuntimeConfigSchema>;

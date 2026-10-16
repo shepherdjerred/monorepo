@@ -2,7 +2,7 @@ import { games, type GameId } from "@arcade/common/catalog.ts";
 import type { GameState } from "@arcade/common/telemetry.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { GameStreamer } from "@discord-plays-mario-kart/backend/stream/game-streamer.ts";
-import type { Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
+import type { RuntimeConfig as Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
 import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
 import type { MediaFeeds } from "#src/media/feeds.ts";
 import type { StatsStore } from "#src/stats/store.ts";

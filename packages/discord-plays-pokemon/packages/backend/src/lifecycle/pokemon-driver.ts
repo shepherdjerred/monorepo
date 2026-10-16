@@ -35,7 +35,7 @@ import {
   createEventNotifier,
   type EventToggles,
 } from "#src/discord/event-notifier.ts";
-import type { Config } from "#src/config/schema.ts";
+import type { RuntimeConfig as Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
 
 export const POKEMON_SAVE_FILE = "pokeemerald.flash";
