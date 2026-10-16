@@ -43,7 +43,18 @@ test("does not leak response bodies or credentials in API errors", async () => {
     { "X-Api-Key": "private fixture" },
     async () => new Response("private response body", { status: 500 }),
   );
-  await expect(api.json("indexer")).rejects.toThrow(
-    "Media API GET failed: HTTP 500",
+  await expect(api.json("indexer")).rejects.toMatchObject({
+    message: "Media API GET failed: HTTP 500",
+  });
+});
+
+test("malformed successful responses cannot expose their body or query in errors", async () => {
+  const api = new MediaApi(
+    "http://fixture",
+    {},
+    async () => new Response("fictional_sensitive_response"),
   );
+  await expect(api.json("indexer?token=private-query")).rejects.toMatchObject({
+    message: "Media API GET indexer returned invalid JSON",
+  });
 });

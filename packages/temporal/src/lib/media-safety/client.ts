@@ -40,8 +40,14 @@ export class MediaApi {
 
   async json(endpoint: string) {
     const response = await this.send(endpoint);
-    const body: unknown = await response.json();
-    return body;
+    try {
+      const body: unknown = await response.json();
+      return body;
+    } catch {
+      throw new Error(
+        `Media API GET ${endpoint.replace(/\?.*$/u, "")} returned invalid JSON`,
+      );
+    }
   }
 
   async pages<T>(endpoint: string, schema: z.ZodType<T>) {
