@@ -68,6 +68,58 @@ function reader(status: ScheduleExecutionObservation["status"]): {
   return { client, reads };
 }
 
+describe("Temporal Schedule SDK read budget", () => {
+  test("direct audit callers bound schedule and nested execution reads to eight", async () => {
+    const { client } = reader("COMPLETED");
+    let active = 0;
+    let maximum = 0;
+    const observeRead = async () => {
+      active += 1;
+      maximum = Math.max(maximum, active);
+      await Promise.resolve();
+      active -= 1;
+    };
+    client.list = async function* () {
+      for (let index = 0; index < 32; index += 1) {
+        yield { scheduleId: `schedule-${String(index)}` };
+      }
+    };
+    const describeSchedule = client.describeSchedule;
+    client.describeSchedule = async (scheduleId) => {
+      await observeRead();
+      const description = await describeSchedule(scheduleId);
+      return {
+        ...description,
+        info: {
+          ...description.info,
+          runningActions: [],
+          recentActions: Array.from({ length: 12 }, (_, index) => ({
+            scheduledAt: now,
+            takenAt: now,
+            action: {
+              ...recent,
+              workflow: {
+                workflowId: `${scheduleId}-${String(index)}`,
+                firstExecutionRunId: `first-${scheduleId}-${String(index)}`,
+              },
+            },
+          })),
+        },
+      };
+    };
+    client.describeExecution = async () => {
+      await observeRead();
+      return { status: "COMPLETED" };
+    };
+    const observations = await inspectScheduleHealth(client, "prod", now);
+    expect(observations).toHaveLength(32);
+    expect(observations.every((entry) => entry.actions.length === 12)).toBe(
+      true,
+    );
+    expect(maximum).toBe(8);
+  });
+});
+
 describe("Temporal Schedule SDK boundary", () => {
   test("describes executions and rejects stale cached running state", async () => {
     const { client, reads } = reader("COMPLETED");

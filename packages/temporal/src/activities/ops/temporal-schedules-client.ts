@@ -160,8 +160,13 @@ export async function inspectScheduleHealth(
   reader: ScheduleHealthReader,
   namespace: TemporalNamespace,
   now: Date,
-  read: ScheduleRead = (operation) => operation(),
+  read?: ScheduleRead,
 ): Promise<ScheduleHealthObservation[]> {
+  if (read === undefined) {
+    return withScheduleReads(({ read: boundedRead }) =>
+      inspectScheduleHealth(reader, namespace, now, boundedRead),
+    );
+  }
   const ids = await read(async () => {
     const entries: string[] = [];
     for await (const entry of reader.list()) entries.push(entry.scheduleId);
