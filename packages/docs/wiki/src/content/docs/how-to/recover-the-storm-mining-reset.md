@@ -24,7 +24,7 @@ The [quarterly schedule](https://github.com/shepherdjerred/monorepo/blob/main/pa
 
 6. If admission is closed but no Kubernetes lock was acquired, inspect the Activity failure before reopening it. The console-only `storm-maintenance end YYYYqN` releases only that quarter's in-memory gate. Do not reopen admission while the reset owns a lock. A normal server restart clears the gate.
 
-7. After successful completion, confirm the lock, pinned image, and router maintenance annotations are gone. Verify desired replicas and ready replicas are both one. The [Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/mining-reset.ts) closes empty-server admission before stopping it, waits for Pod deletion, and restores one replica when releasing the lock.
+7. After successful completion, confirm the lock, pinned image, and router maintenance annotations are gone. Verify desired replicas and ready replicas are both one. The [Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/homelab/mining-reset.ts) closes empty-server admission before stopping it, waits for Pod deletion, and restores one replica when releasing the lock. ArgoCD also enforces one replica; the admission guard rejects its scale-up attempts during maintenance, so a temporary sync failure while the lock is held is expected. Reconciliation can succeed after the Activity releases the lock.
 
 ## Related
 

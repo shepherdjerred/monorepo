@@ -304,14 +304,14 @@ export function createMinecraftTsmcApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "minecraft-tsmc",
       },
-      // Maintenance workflows own stop/start. Java wake-up remains recovery only.
+      // ArgoCD enforces one replica. Admission guards reject reconciliation
+      // while an exclusive maintenance lock requires zero replicas.
       // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
       ignoreDifferences: [
         {
           group: "apps",
           kind: "StatefulSet",
           jsonPointers: [
-            "/spec/replicas",
             `/metadata/annotations/${MINING_RESET_LOCK_ANNOTATION.replaceAll("/", "~1")}`,
             `/metadata/annotations/${MINING_RESET_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
             `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,

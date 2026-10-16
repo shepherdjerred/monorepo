@@ -5,7 +5,6 @@ import {
   collectMessages,
   connectBot,
   disconnectBot,
-  waitForMessage,
   waitUntil,
 } from "./harness/bot.ts";
 
@@ -120,9 +119,12 @@ describe("onboarding", () => {
         firstArrival.push(line);
       },
     });
-    // Essentials' welcome is immediate; the delayed agent tips can be observed
-    // after connectBot resolves, independently of the spawn packet timing.
-    await waitForMessage(first, /starting supplies arrive automatically/);
+    // Capture starts before connecting, so an early tip cannot be missed.
+    await waitUntil("starter supplies tip", () =>
+      firstArrival.some((line) =>
+        line.includes("starting supplies arrive automatically"),
+      ),
+    );
     expect(
       firstArrival.some((line) => line.includes("Welcome to The Storm")),
     ).toBe(true);

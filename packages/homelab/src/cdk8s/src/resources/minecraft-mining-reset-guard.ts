@@ -41,4 +41,45 @@ export function createMinecraftMiningResetGuard(chart: Chart): void {
     },
     spec: { policyName, validationActions: ["Deny"] },
   });
+
+  // mc-router falls back to the scale subresource after a forbidden patch.
+  // Scale objects omit parent annotations, so read the StatefulSet parameter.
+  const scalePolicyName = "minecraft-tsmc-mining-reset-scale.sjer.red";
+  new ApiObject(chart, "minecraft-tsmc-mining-reset-scale-policy", {
+    apiVersion: "admissionregistration.k8s.io/v1",
+    kind: "ValidatingAdmissionPolicy",
+    metadata: {
+      name: scalePolicyName,
+      annotations: { "argocd.argoproj.io/sync-wave": "-30" },
+    },
+    spec: {
+      ...minecraftMaintenanceMatch("statefulsets/scale"),
+      paramKind: { apiVersion: "apps/v1", kind: "StatefulSet" },
+      validations: [
+        {
+          expression: `!has(params.metadata.annotations) || !('${MINING_RESET_LOCK_ANNOTATION}' in params.metadata.annotations) || object.spec.replicas == 0`,
+          message:
+            "The Storm mining-world reset blocks scale requests while its maintenance lock is held",
+          reason: "Forbidden",
+        },
+      ],
+    },
+  });
+  new ApiObject(chart, "minecraft-tsmc-mining-reset-scale-binding", {
+    apiVersion: "admissionregistration.k8s.io/v1",
+    kind: "ValidatingAdmissionPolicyBinding",
+    metadata: {
+      name: scalePolicyName,
+      annotations: { "argocd.argoproj.io/sync-wave": "-29" },
+    },
+    spec: {
+      policyName: scalePolicyName,
+      validationActions: ["Deny"],
+      paramRef: {
+        name: "minecraft-tsmc",
+        namespace: "minecraft-tsmc",
+        parameterNotFoundAction: "Deny",
+      },
+    },
+  });
 }

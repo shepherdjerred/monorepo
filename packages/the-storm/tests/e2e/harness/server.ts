@@ -32,6 +32,7 @@ import { thirdPartyPlugins } from "./pins.ts";
 import { stageRwf } from "./rwf-staging.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stageWorld } from "./world-copy.ts";
+import { serverIcon } from "./paths.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -220,12 +221,6 @@ export async function stagePlugins(
       Pick<StartServerOptions, "ownedConfigDir" | "brain" | "sweep" | "agent">
     >,
 ): Promise<string> {
-  await Bun.write(
-    path.join(stagingDir, "server-icon.png"),
-    Bun.file(
-      new URL("../../../server/assets/server-icon.png", import.meta.url),
-    ),
-  );
   const pluginsDir = path.join(stagingDir, "plugins");
   await stagePinnedPlugins(
     path.join(cacheDir, "plugins"),
@@ -465,11 +460,7 @@ export async function startServer(
       await stageWorld(options.worldDir, stagingDir, id);
     }
     await docker(["cp", bukkitYml, `${id}:/data/bukkit.yml`]);
-    await docker([
-      "cp",
-      path.join(stagingDir, "server-icon.png"),
-      `${id}:/data/server-icon.png`,
-    ]);
+    await docker(["cp", serverIcon, `${id}:/data/server-icon.png`]);
     if (options.warmCache) {
       await docker(["cp", paperJar, `${id}:/data/${path.basename(paperJar)}`]);
     }

@@ -15,7 +15,7 @@ class FakeCluster {
   onlinePlayers = 0;
   admissionClosed = false;
   failNextJob = false;
-  failReleaseOnce = false;
+  failReleaseKind: "service" | "statefulset" | undefined;
 
   private ok(value: unknown): FakeResult {
     return { stdout: JSON.stringify(value), stderr: "", exitCode: 0 };
@@ -77,11 +77,11 @@ class FakeCluster {
 
   private patch(joined: string, payload: string): FakeResult {
     if (
-      this.failReleaseOnce &&
-      joined.includes("service") &&
+      this.failReleaseKind !== undefined &&
+      joined.includes(this.failReleaseKind) &&
       payload.includes('"op":"remove"')
     ) {
-      this.failReleaseOnce = false;
+      this.failReleaseKind = undefined;
       throw new Error("simulated release failure");
     }
     const operations = z
@@ -321,7 +321,7 @@ describe("mining reset orchestration", () => {
 
   test("pins the Job image across Activity retries and a server rollout", async () => {
     const cluster = new FakeCluster();
-    cluster.failReleaseOnce = true;
+    cluster.failReleaseKind = "service";
     const dependencies = {
       command: cluster.command.bind(cluster),
       heartbeat: (phase: string) => {
@@ -344,5 +344,46 @@ describe("mining reset orchestration", () => {
     expect(cluster.serverAnnotations["sjer.red/mining-reset-image"]).toBe(
       undefined,
     );
+  });
+
+  test("resumes when the Service release succeeds but the atomic unlock fails", async () => {
+    const cluster = new FakeCluster();
+    cluster.failReleaseKind = "statefulset";
+    const dependencies = {
+      command: cluster.command.bind(cluster),
+      heartbeat: (phase: string) => {
+        cluster.events.push(`heartbeat-${phase}`);
+      },
+      sleep: async () => {
+        cluster.events.push("sleep");
+      },
+    };
+
+    await expect(
+      resetMiningWorldWithDependencies("2026q4", dependencies),
+    ).rejects.toThrow("simulated release failure");
+    expect(cluster.serverReplicas).toBe(0);
+    expect(cluster.serverAnnotations["sjer.red/mining-reset-lock"]).toBe(
+      "2026q4",
+    );
+    expect(
+      cluster.serviceAnnotations["mc-router.itzg.me/autoScaleUp"],
+    ).toBeUndefined();
+
+    const result = await resetMiningWorldWithDependencies(
+      "2026q4",
+      dependencies,
+    );
+    expect(result.kind).toBe("completed");
+    expect(cluster.serverReplicas).toBe(1);
+    expect(
+      cluster.serverAnnotations["sjer.red/mining-reset-lock"],
+    ).toBeUndefined();
+    expect(
+      cluster.events.filter((event) => event === "backup-created"),
+    ).toHaveLength(1);
+    expect(
+      cluster.events.filter((event) => event === "job-created"),
+    ).toHaveLength(1);
   });
 });

@@ -347,6 +347,9 @@ async function releaseLock(command: Command, period: string): Promise<void> {
   if (service.metadata.annotations?.[ROUTER_WAKE_ANNOTATION] !== "false") {
     throw new Error("mc-router maintenance annotation changed before release");
   }
+  // Clear the Service opt-out while the admission guard still enforces zero
+  // replicas. If the final atomic unlock + start fails, acquireLock can safely
+  // restore the opt-out and resume from the completed backup and reset Job.
   await patchJson(command, "service", [
     {
       op: "test",
