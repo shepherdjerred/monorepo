@@ -1,0 +1,24 @@
+**Build a town. Brave The Storm.**
+
+The Storm is returning, and we're looking for players to help rebuild its survival community. We're starting quietly, with room for your first base, your own town, and the people you bring with you.
+
+**Make a place of your own**
+
+Head into the wilderness, create a town, and claim land for your builds. Follow quests around Spawn Town, trade using crystals, and use Storm Shards to improve your equipment.
+
+For a change of pace, try our arenas.
+
+**What to expect**
+
+Survival with custom towns and land claims, spawn quests, a crystal economy, equipment upgrades, and games alongside the survival world. Java and Bedrock players can join.
+
+We're rebuilding from a quiet starting point and looking for our first regular players. If you like getting involved early, we'd love to see what you build.
+
+**Connect**
+
+- Java: `ts-mc.net`
+- Bedrock address: `mc.ts-mc.net:30004`
+
+Check the website for supported versions and current status.
+
+[Website](https://ts-mc.net/) | [Player guide](https://docs.ts-mc.net/) | [Rules](https://docs.ts-mc.net/norms/) | [Discord](https://discord.gg/TvTCcWnYUT)
