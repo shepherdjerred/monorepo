@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type { TaskDiagnostics } from "../lib/ci/task-diagnostics.ts";
 import { startBenchmarkResources } from "./benchmark-resources.ts";
@@ -89,6 +89,30 @@ export async function retainDiagnostics(
     : identity.exitCode;
 }
 
+/** Bound the fresh-process transfer without writing either measured filesystem. */
+export async function readDiagnosticInput(
+  stream: ReadableStream<Uint8Array>,
+): Promise<string> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > 1024 * 1024) {
+        await reader.cancel();
+        throw new Error("Diagnostic payload too large");
+      }
+      chunks.push(value);
+    }
+    return Buffer.concat(chunks).toString("utf8");
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function retainFromArgs(args: string[]): Promise<number> {
   try {
     const { z } = await import("zod");
@@ -96,13 +120,10 @@ async function retainFromArgs(args: string[]): Promise<number> {
       await import("../lib/ci/task-diagnostics.ts");
     let identity: unknown;
     let previous: string[];
-    if (args[0] === "--retain-file") {
-      const file = Bun.file(args[1] ?? "");
-      if (file.size > 1024 * 1024)
-        throw new Error("Diagnostic payload too large");
+    if (args[0] === "--retain-stdin") {
       const payload = z
         .object({ identity: z.unknown(), previous: z.array(z.string()) })
-        .parse(await file.json());
+        .parse(JSON.parse(await readDiagnosticInput(Bun.stdin.stream())));
       identity = payload.identity;
       previous = payload.previous;
     } else {
@@ -163,14 +184,14 @@ function invocation(args: string[]): {
 }
 
 async function main(args: string[]): Promise<number> {
-  if (args[0] === "--retain" || args[0] === "--retain-file")
+  if (args[0] === "--retain" || args[0] === "--retain-stdin")
     return retainFromArgs(args);
   const { workflow, pipeline, commit, command } = invocation(args);
   const root = process.cwd();
   const before = await prepareDiagnostics(workflow, root);
   const resources = await scratchResources(workflow, commit);
   const startedAt = Date.now();
-  let child: Bun.Subprocess<"inherit", "inherit", "inherit">;
+  let child: Bun.Subprocess<"inherit" | Blob, "inherit", "inherit">;
   try {
     child = Bun.spawn(command, {
       stdin: "inherit",
@@ -182,7 +203,6 @@ async function main(args: string[]): Promise<number> {
     await resources?.finish();
     throw error;
   }
-  let payloadDirectory: string | undefined;
   const interrupt = () => {
     child.kill("SIGINT");
   };
@@ -197,16 +217,9 @@ async function main(args: string[]): Promise<number> {
     commandExitCode = exitCode;
     const finishedAt = Date.now();
     const benchmarkResources = await resources?.finish();
-    // A long run's samples can exceed Linux's per-argument size limit. A private
-    // file also keeps the complete observations out of process arguments.
-    // Keep it outside TMPDIR: that is the scratch mount being measured, and
-    // even an ENOSPC failure must leave room to transfer its diagnostics.
-    payloadDirectory = await mkdtemp(
-      path.join(root, ".git", "ci-diagnostic-payload-"),
-    );
-    const payloadFile = path.join(payloadDirectory, "payload.json");
-    await Bun.write(
-      payloadFile,
+    // A pipe avoids argv limits and retains ENOSPC evidence even when the
+    // baseline workspace or candidate tmpfs cannot allocate transfer files.
+    const payload = new Blob([
       JSON.stringify({
         identity: {
           version: 1,
@@ -220,19 +233,13 @@ async function main(args: string[]): Promise<number> {
         } satisfies Identity,
         previous: [...before],
       }),
-    );
+    ]);
     // Bun caches missing package resolution before the child installs the
     // workspace. A fresh process can resolve those newly installed packages.
     child = Bun.spawn(
-      [
-        process.execPath,
-        "--no-install",
-        import.meta.path,
-        "--retain-file",
-        payloadFile,
-      ],
+      [process.execPath, "--no-install", import.meta.path, "--retain-stdin"],
       {
-        stdin: "inherit",
+        stdin: payload,
         stdout: "inherit",
         stderr: "inherit",
         env: { ...Bun.env },
@@ -249,8 +256,6 @@ async function main(args: string[]): Promise<number> {
     process.removeListener("SIGINT", interrupt);
     process.removeListener("SIGTERM", terminate);
     await resources?.finish();
-    if (payloadDirectory !== undefined)
-      await rm(payloadDirectory, { recursive: true, force: true });
   }
 }
 

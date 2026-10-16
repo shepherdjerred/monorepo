@@ -1,14 +1,24 @@
-import { cp, mkdtemp, mkdir, rm, truncate, utimes } from "node:fs/promises";
+import {
+  cp,
+  mkdtemp,
+  mkdir,
+  rm,
+  symlink,
+  truncate,
+  utimes,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
 import {
   collectTaskDiagnostics,
+  TaskDiagnosticsSchema,
   TurboDiagnosticSchema,
   sanitizeTurboInputs,
 } from "./task-diagnostics.ts";
 import {
   prepareDiagnostics,
+  readDiagnosticInput,
   retainDiagnostics,
 } from "../../ci/run-with-diagnostics.ts";
 
@@ -352,7 +362,7 @@ async function runWrapper(
   root: string,
   entrypoint: string,
   command: string[],
-  options?: { mode: string[]; env: Record<string, string> },
+  options?: { mode: string[]; env: Record<string, string>; input?: string },
 ) {
   const child = Bun.spawn(
     [
@@ -364,6 +374,8 @@ async function runWrapper(
     ],
     {
       cwd: root,
+      stdin:
+        options?.input === undefined ? "ignore" : new Blob([options.input]),
       stdout: "pipe",
       stderr: "pipe",
       env: options?.env ?? {
@@ -417,36 +429,41 @@ test("wrapper forwards command output and preserves its exit without upload cred
   expect(exit).toBe(42);
 });
 
+async function wrapperFixture(root: string) {
+  const entrypoint = path.join(root, "scripts/ci/run-with-diagnostics.ts");
+  const library = path.join(root, "scripts/lib/ci");
+  await mkdir(path.dirname(entrypoint), { recursive: true });
+  await mkdir(library, { recursive: true });
+  await cp(
+    new URL("../../ci/run-with-diagnostics.ts", import.meta.url),
+    entrypoint,
+  );
+  await cp(
+    new URL("../../ci/benchmark-resources.ts", import.meta.url),
+    path.join(root, "scripts/ci/benchmark-resources.ts"),
+  );
+  await cp(
+    new URL("task-diagnostics.ts", import.meta.url),
+    path.join(library, "task-diagnostics.ts"),
+  );
+  // Fake only the object-store boundary; the wrapper and collector run as
+  // real subprocesses from a checkout with no installed dependencies.
+  await Bun.write(
+    path.join(library, "ci-handoff.ts"),
+    'export async function writeJsonHandoff(key, report) { await Bun.write("published.json", JSON.stringify(report)); }',
+  );
+  await Bun.write(
+    path.join(library, "ci-object-store-retry.ts"),
+    "export class CiObjectStoreHttpError extends Error {}\nexport async function withCiObjectStoreRetry(operation) { return operation(); }",
+  );
+  return entrypoint;
+}
+
 test.each([0, 42])(
   "collects in a fresh process after the child installs dependencies and exits %i",
   async (exitCode) => {
     const root = await repository();
-    const entrypoint = path.join(root, "scripts/ci/run-with-diagnostics.ts");
-    const library = path.join(root, "scripts/lib/ci");
-    await mkdir(path.dirname(entrypoint), { recursive: true });
-    await mkdir(library, { recursive: true });
-    await cp(
-      new URL("../../ci/run-with-diagnostics.ts", import.meta.url),
-      entrypoint,
-    );
-    await cp(
-      new URL("../../ci/benchmark-resources.ts", import.meta.url),
-      path.join(root, "scripts/ci/benchmark-resources.ts"),
-    );
-    await cp(
-      new URL("task-diagnostics.ts", import.meta.url),
-      path.join(library, "task-diagnostics.ts"),
-    );
-    // Fake only the object-store boundary; the wrapper and collector run as
-    // real subprocesses from a checkout with no installed dependencies.
-    await Bun.write(
-      path.join(library, "ci-handoff.ts"),
-      'export async function writeJsonHandoff(key, report) { await Bun.write("published.json", JSON.stringify(report)); }',
-    );
-    await Bun.write(
-      path.join(library, "ci-object-store-retry.ts"),
-      "export class CiObjectStoreHttpError extends Error {}\nexport async function withCiObjectStoreRetry(operation) { return operation(); }",
-    );
+    const entrypoint = await wrapperFixture(root);
     const dependencies = new URL("../../node_modules", import.meta.url)
       .pathname;
     const install = `
@@ -455,8 +472,10 @@ test.each([0, 42])(
       await Bun.write(".turbo/runs/child.json", ${JSON.stringify(JSON.stringify(summary()))});
       process.exit(${String(exitCode)});
     `;
-    // A full or unavailable scratch mount must not prevent retaining the
-    // command result. The transfer belongs on the workspace's Git metadata.
+    // Neither scratch nor Git metadata can provide a transfer directory. A
+    // metadata file also exercises a normal Git worktree checkout shape.
+    await rm(path.join(root, ".git"), { recursive: true });
+    await Bun.write(path.join(root, ".git"), "gitdir: ../external-git\n");
     const { stdout, stderr, exit } = await runWrapper(
       root,
       entrypoint,
@@ -485,3 +504,61 @@ test.each([0, 42])(
     expect(JSON.stringify(report)).not.toContain("sentinel");
   },
 );
+
+test("stdin transfer retains a resource history larger than Linux's argv limit", async () => {
+  const root = await repository();
+  const entrypoint = await wrapperFixture(root);
+  await symlink(
+    new URL("../../node_modules", import.meta.url).pathname,
+    path.join(root, "scripts/node_modules"),
+  );
+  const samples = Array.from({ length: 500 }, (_, index) => ({
+    at: 100 + index * 10_000,
+    memory: {
+      currentBytes: 100,
+      peakBytes: 200,
+      limitBytes: 1000,
+      limitHits: 0,
+      oomEvents: 0,
+      oomKills: 0,
+    },
+    filesystems: ["/woodpecker/tmp", "/woodpecker/gradle"].map((directory) => ({
+      path: directory,
+      filesystem: "tmpfs",
+      capacityBytes: 1024,
+      usedBytes: 512,
+      availableBytes: 512,
+    })),
+  }));
+  const input = JSON.stringify({
+    identity: {
+      ...identity,
+      benchmarkResources: {
+        version: 1,
+        variant: "candidate",
+        intervalMs: 10_000,
+        collectionFailed: false,
+        samples,
+      },
+    },
+    previous: [],
+  });
+  expect(Buffer.byteLength(input)).toBeGreaterThan(128 * 1024);
+  const { exit, stderr } = await runWrapper(root, entrypoint, [], {
+    mode: ["--retain-stdin"],
+    env: {},
+    input,
+  });
+  expect(exit).toBe(0);
+  expect(stderr).toBe("");
+  const report = TaskDiagnosticsSchema.parse(
+    await Bun.file(path.join(root, "published.json")).json(),
+  );
+  expect(report.benchmarkResources?.samples).toEqual(samples);
+});
+
+test("stdin transfer rejects oversized evidence before parsing", async () => {
+  await expect(
+    readDiagnosticInput(new Blob(["x".repeat(1024 * 1024 + 1)]).stream()),
+  ).rejects.toThrow("Diagnostic payload too large");
+});
