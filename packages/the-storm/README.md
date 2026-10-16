@@ -59,6 +59,9 @@ worlds. It releases shared plugin resources on TheStorm's disable event, before
 the product classloader closes; later fixture shutdown does not repeat cleanup.
 Real-Paper fixture verification must inspect the final server log after shutdown,
 including unused fixture handlers whose product classes resolve lazily.
+Require exactly one `Released synthetic fixture resources` marker during server
+shutdown, before TheStorm's database pool starts closing and before the later
+fixture disable. The final log must contain no fixture-shutdown or linkage errors.
 
 World-scoped RCON fixtures use namespaced vanilla commands such as
 `minecraft:tp`. The unqualified `tp` command shares the plugin's administrative
