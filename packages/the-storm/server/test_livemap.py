@@ -176,6 +176,10 @@ class LiveMapTests(unittest.TestCase):
         result = self.build()
         self.assertEqual(result.returncode, 0, result.stderr)
         target = self.root / "web"
+        # The installer receives the data volume's identity. A setgid temporary
+        # directory can inherit a shared group distinct from the process group.
+        volume = self.root.stat()
+        ownership = (volume.st_uid, volume.st_gid)
         retained = {"settings.json": b"live settings", "maps/world/tile": b"terrain", "assets/old.js": b"cached"}
         for path, data in retained.items():
             file = target / path
@@ -186,8 +190,8 @@ class LiveMapTests(unittest.TestCase):
             result = self.install(target)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((target / "index.html").read_bytes(), (self.output / "index.html").read_bytes())
-            self.assertEqual((target / "index.html").stat().st_uid, os.getuid())
-            self.assertEqual((target / "index.html").stat().st_gid, os.getgid())
+            installed = (target / "index.html").stat()
+            self.assertEqual((installed.st_uid, installed.st_gid), ownership)
             for path, data in retained.items():
                 self.assertEqual((target / path).read_bytes(), data)
 
