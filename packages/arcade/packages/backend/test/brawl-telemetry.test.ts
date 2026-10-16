@@ -3,6 +3,7 @@ import {
   BrawlMemorySchema,
   BrawlTelemetry,
 } from "#src/games/brawl/telemetry.ts";
+import { brawlPlaying, brawlResults } from "./support/brawl-observations.ts";
 
 // Scalar observations from a four-human RSBE01 rev 2 match on torvalds.
 // The result screen showed Mario, Diddy, Link, Fox in that order.
@@ -14,6 +15,7 @@ const playing = BrawlMemorySchema.parse({
   decision: 150_994_944,
   elapsedFrames: 4868,
   remainingFrames: null,
+  selfDestructScore: -1,
   players: [
     {
       initial: 0,
@@ -72,6 +74,45 @@ const results = BrawlMemorySchema.parse({
 });
 
 describe("Brawl guest telemetry", () => {
+  it("keeps a real round through scene loading and reports the game's paused countdown", () => {
+    const decoder = new BrawlTelemetry();
+    const live = decoder.update(brawlPlaying);
+    expect(live.remainingMs).toBe(14_433);
+    expect(decoder.update(brawlPlaying).remainingMs).toBe(live.remainingMs);
+    expect(live.fighters.map((fighter) => fighter.score)).toEqual([-6, 1]);
+    expect(
+      decoder.update({ ...brawlResults, scene: "scMemoryChange" }).phase,
+    ).toBe("loading");
+    expect(
+      decoder.update({ ...brawlResults, scene: "", modeRule: 0 }).phase,
+    ).toBe("loading");
+    const final = decoder.update(brawlResults);
+    expect(final.round).toBe(live.round);
+    expect(final.phase).toBe("results");
+    expect(final.stageId).toBe(8);
+    expect(final.fighters.map((fighter) => fighter.placement)).toEqual([2, 1]);
+    expect(final.fighters.map((fighter) => fighter.score)).toEqual([-7, 0]);
+    decoder.update({ ...brawlResults, scene: "scSelctCharacter" });
+    expect(decoder.update(brawlResults).phase).toBe("menu");
+    expect(decoder.update(brawlPlaying).round).toBe(live.round + 1);
+  });
+
+  it("uses the round's configured self-destruct score after result globals change", () => {
+    const decoder = new BrawlTelemetry();
+    const live = decoder.update({ ...brawlPlaying, selfDestructScore: -2 });
+    expect(live.fighters[0]?.score).toBe(-10);
+    const final = decoder.update(brawlResults);
+    expect(final.fighters[0]?.score).toBe(-12);
+    expect(
+      new BrawlTelemetry().update({ ...brawlPlaying, modeRule: 2_215_813_132 })
+        .phase,
+    ).toBe("menu");
+    expect(
+      new BrawlTelemetry().update({ ...brawlPlaying, remainingFrames: null })
+        .remainingMs,
+    ).toBeNull();
+  });
+
   it("ignores plausible placeholder scores in menus and results without a played round", () => {
     const decoder = new BrawlTelemetry();
     const menu = decoder.update({ ...results, scene: "scRoot" });

@@ -21,6 +21,7 @@ export const BrawlMemorySchema = z.strictObject({
   decision: Word,
   elapsedFrames: Word,
   remainingFrames: Word.nullable(),
+  selfDestructScore: z.number().int().min(-128).max(127),
   players: z.array(PlayerMemory).length(4),
   owners: z
     .array(
@@ -34,6 +35,7 @@ export const BrawlMemorySchema = z.strictObject({
 });
 export type BrawlMemory = z.infer<typeof BrawlMemorySchema>;
 type Match = Pick<FightState, "round" | "mode" | "teams" | "stageId"> & {
+  selfDestructScore: number;
   players: {
     index: number;
     seat: number;
@@ -50,6 +52,10 @@ export class BrawlTelemetry {
   update(memory: BrawlMemory): FightState {
     if (memory.scene === "scVsResult" && this.match !== undefined)
       return this.result(memory, this.match);
+    // Scene loading also occurs between a played round and its results. The
+    // globals can briefly be unavailable while the next scene is installed.
+    if (memory.scene === "scMemoryChange" || memory.scene === "")
+      return this.empty("loading");
     if (memory.scene !== "scMelee" || memory.modeRule >>> 26 !== 0) {
       this.match = undefined;
       return this.empty("menu");
@@ -76,7 +82,9 @@ export class BrawlTelemetry {
         memory.remainingFrames === null
           ? null
           : Math.round((memory.remainingFrames * 1000) / 60),
-      fighters: match.players.map((player) => this.liveFighter(memory, player)),
+      fighters: match.players.map((player) =>
+        this.liveFighter(memory, match, player),
+      ),
     });
   }
 
@@ -87,6 +95,7 @@ export class BrawlTelemetry {
       mode: rule === 0 ? "time" : rule === 1 ? "stock" : "other",
       teams: (memory.teams & 0xff) !== 0,
       stageId: memory.stage & 0xff_ff,
+      selfDestructScore: memory.selfDestructScore,
       players: memory.players.flatMap((player, index) => {
         const characterId = player.initial >>> 24;
         const state = (player.initial >>> 16) & 0xff;
@@ -104,6 +113,7 @@ export class BrawlTelemetry {
 
   private liveFighter(
     memory: BrawlMemory,
+    match: Match,
     player: Match["players"][number],
   ): FightState["fighters"][number] {
     const result = memory.players[player.index];
@@ -113,6 +123,7 @@ export class BrawlTelemetry {
     );
     const kos = result.kos;
     const falls = result.falls;
+    const selfDestructs = result.selfDestructs >>> 16;
     return {
       seat: player.seat,
       human: player.human,
@@ -122,12 +133,17 @@ export class BrawlTelemetry {
         owner === undefined || owner.stocks === 0xff_ff_ff_ff
           ? null
           : owner.stocks,
-      // The rule's self-destruct penalty can alter the game's score.
-      // Keep it unavailable until the native probe reads the authoritative score.
-      score: null,
+      // The game's death count includes self-destructs. Apply the configured
+      // signed penalty instead of assuming every death costs one point.
+      score:
+        match.mode === "time"
+          ? kos -
+            (falls - selfDestructs) +
+            selfDestructs * match.selfDestructScore
+          : null,
       kos,
       falls,
-      selfDestructs: result.selfDestructs >>> 16,
+      selfDestructs,
       placement: null,
       winner: null,
     };
@@ -146,7 +162,7 @@ export class BrawlTelemetry {
         throw new Error("Brawl player result is missing");
       const placement = ((result.rank >>> 8) & 0xff) + 1;
       return {
-        ...this.liveFighter(memory, player),
+        ...this.liveFighter(memory, match, player),
         damage: null,
         stocks: null,
         placement,

@@ -25,7 +25,9 @@ Only the starter or a server moderator can stop a session.
 Results freeze Discord attribution at the start of a race or match. Completed
 results are deduplicated by round ID; CPU players, aborted rounds, team fights,
 and kart battles do not enter detailed standings. Unobserved values are nullable.
-Brawl's live clock and score are unavailable rather than inferred from KOs.
+Brawl reads the game's countdown and signed self-destruct penalty. Timed scores
+combine KOs, deaths, and that penalty; untimed clocks and other-rule scores remain
+unavailable. Scene-loading transitions preserve a round until its result screen.
 
 ## Package APIs
 

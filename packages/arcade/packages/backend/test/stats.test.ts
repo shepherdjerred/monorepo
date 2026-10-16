@@ -6,6 +6,8 @@ import { createPlayerDirectory } from "@discord-plays-mario-kart/backend/auth/pl
 import { createPrismaLeaderboardStore } from "@discord-plays-mario-kart/backend/leaderboard/store.ts";
 import { StatsStore } from "#src/stats/store.ts";
 import { ResultTracker } from "#src/stats/tracker.ts";
+import { BrawlTelemetry } from "#src/games/brawl/telemetry.ts";
+import { brawlPlaying, brawlResults } from "./support/brawl-observations.ts";
 
 let db: Awaited<ReturnType<typeof openTestDatabase>>;
 let store: StatsStore;
@@ -70,6 +72,51 @@ function fight(): FightState {
     ],
   };
 }
+
+describe("Brawl result scene persistence", () => {
+  it("persists a real Brawl result once across result-scene loading, with frozen human attribution", async () => {
+    let players: readonly (Player | null)[] = [alice];
+    const errors: Error[] = [];
+    let recorded = 0;
+    const tracker = new ResultTracker({
+      gameId: "brawl",
+      guildId: "1",
+      sessionId: "brawl-scene-transition",
+      players: () => players,
+      store,
+      recorded: () => {
+        recorded++;
+      },
+      failed: (error) => {
+        errors.push(error);
+      },
+    });
+    const decoder = new BrawlTelemetry();
+    tracker.update(decoder.update(brawlPlaying));
+    players = [bob];
+    tracker.update(
+      decoder.update({ ...brawlResults, scene: "scMemoryChange" }),
+    );
+    tracker.update(decoder.update({ ...brawlResults, scene: "", modeRule: 0 }));
+    tracker.update(decoder.update(brawlResults));
+    tracker.update(decoder.update(brawlResults));
+    await tracker.flush();
+    expect(errors).toEqual([]);
+    expect(recorded).toBe(1);
+    expect(await db.smashMatch.count()).toBe(1);
+    const stats = await new StatsStore(db).read("1", "brawl");
+    expect(stats.leaderboard).toHaveLength(1);
+    expect(stats.leaderboard[0]).toMatchObject({
+      player: { discordId: alice.discordId },
+      played: 1,
+      wins: 0,
+      kos: 0,
+      falls: 7,
+      selfDestructs: 5,
+    });
+    expect(stats.recent).toHaveLength(1);
+  });
+});
 
 describe("persistent game statistics", () => {
   it("deduplicates results and isolates Wii, MK64, and other servers", async () => {
