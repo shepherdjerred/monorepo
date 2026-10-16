@@ -341,8 +341,9 @@ Ops schedule-health collection scans completed scheduled executions once per
 namespace over the previous 24 hours, groups them by schedule, and deduplicates
 execution descriptions within that namespace. Production and beta share eight
 concurrent read slots and a 45-second deadline inside the collector's 60-second
-Activity budget. Cancellation reaches the Temporal RPCs and queued reads. An
-incomplete collection fails the source and preserves the last complete metric
+Activity budget. Direct audit callers use the same bounded SDK scope.
+Cancellation reaches the Temporal RPCs and queued reads. An incomplete
+collection fails the source and preserves the last complete metric
 observation; it cannot publish a fresh healthy inventory.
 
 Ops digest Activity results retain the dashboard's `periodKey`, `status`

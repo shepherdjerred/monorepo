@@ -26,6 +26,7 @@ function reader(status: ScheduleExecutionObservation["status"]): {
 } {
   const reads: string[] = [];
   const client: ScheduleHealthReader = {
+    withReadScope: (_scope, operation) => operation(),
     list: () =>
       (async function* () {
         yield { scheduleId: "backup" };
