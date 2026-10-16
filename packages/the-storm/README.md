@@ -54,6 +54,15 @@ outside CI. Run the suites relevant to the change locally and record the
 commands and results in the PR's verification evidence. This policy is a
 Minecraft-only exception; other packages retain their normal CI gates.
 
+The disposable fixture plugin enables before TheStorm to prepare its synthetic
+worlds. It releases shared plugin resources on TheStorm's disable event, before
+the product classloader closes; later fixture shutdown does not repeat cleanup.
+Real-Paper fixture verification must inspect the final server log after shutdown,
+including unused fixture handlers whose product classes resolve lazily.
+Require exactly one `Released synthetic fixture resources` marker during server
+shutdown, before TheStorm's database pool starts closing and before the later
+fixture disable. The final log must contain no fixture-shutdown or linkage errors.
+
 World-scoped RCON fixtures use namespaced vanilla commands such as
 `minecraft:tp`. The unqualified `tp` command shares the plugin's administrative
 command surface and can lose the selected dimension through console dispatch.
