@@ -86,8 +86,7 @@ final class ArrivalDialog {
                   if (!player.isOnline()) return;
                   if (failure != null) {
                     context.logger().error("Could not load first-arrival protection", failure);
-                    player.sendMessage(
-                        "Your welcome is still loading. You can explore spawn and use /beginnersluck to check your protection.");
+                    player.showDialog(render.apply(""));
                     return;
                   }
                   var explanation =
