@@ -10,19 +10,20 @@ Migrate by copying progress first, stopping legacy account owners, and enabling 
 3. Stop both legacy bot deployments through GitOps. Verify their sessions and streaming accounts have disconnected. Retain both original save claims and the original leaderboard database.
 4. Download the stopped legacy save roots and database into a private working directory. Retain this raw snapshot. MK64's per-server engine archive links point into the old container: resolve those known links in a separate private copy using the matching legacy image and ROM-derived archive. The native host replaces these engine links when a session starts. Run `packages/arcade/runtimes/prepare-migration.py` with explicit MK64 save, Emerald save, database, and new output paths. The tool verifies every copied save and SQLite integrity. Keep its manifest with the backup.
 5. Copy the verified save and database outputs into the corresponding Arcade claims. Preserve their directory structure. Initialize the additive database schema with the Arcade image; startup refuses destructive schema changes.
-6. Preserve the existing command application's ID and OAuth callback when rebranding it as Arcade. Enable its Message Content intent for Emerald chat input. Create the dedicated Arcade vault item with `DISCORD_BOT_TOKEN`, `DISCORD_APPLICATION_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_STREAMING_TOKENS` (a JSON array), and `CODEX_ACCESS_TOKEN`. Include the former MK64 and Pokémon streaming users in this game-only pool; Streambot keeps its own credentials. Refresh the vault snapshot and wire the new item through GitOps. Arcade no longer reads either legacy bot's configuration file. Enable one Arcade replica with controller ownership active, and apply its new image and credential wiring together. Declare ingress through the owning homelab source once the backend is healthy; the dormant chart publishes no route. Select beta for both the Flipt environment and Arcade's deployment environment. Set allowed goal guilds through typed configuration. Keep public rollout off and enable only the beta target.
+6. Preserve the command application's ID and OAuth callback when rebranding it as Arcade. Enable Message Content for Emerald chat input. Create the dedicated vault item with the [declared Arcade credential fields](https://github.com/shepherdjerred/monorepo/blob/4de0ddbb63214dab85d775128dd41def4f22dd7e/packages/homelab/src/cdk8s/src/resources/arcade.ts). Include both game streaming users; keep the [Streambot pool](https://github.com/shepherdjerred/monorepo/blob/4de0ddbb63214dab85d775128dd41def4f22dd7e/packages/homelab/src/cdk8s/src/resources/streambot/streambot.ts) separate. Refresh the vault snapshot. Enable controller ownership using the matching image and [Arcade bootstrap](https://github.com/shepherdjerred/monorepo/blob/4de0ddbb63214dab85d775128dd41def4f22dd7e/packages/arcade/packages/backend/src/index.ts). Use the chart's declared ingress, goal grants, and beta selectors. Keep public rollout off during acceptance.
 7. Verify four controller ports, menus, match completion, rematches, save persistence, browser playback, and Discord playback for each multiplayer game. Verify Emerald shared commands and goals. Observe one heavy game alongside MK64 or Emerald before expanding rollout.
 8. Publish the configured beta only after checking game speed, input latency, audio/video alignment, and sustained operation. Keep source checks, CI, artifact publication, ArgoCD reconciliation, and observed behavior as separate evidence.
 
 To roll back, stop Arcade through GitOps and verify both streaming accounts are free. Make a new backup of its current saves and database. Copy the latest MK64 and Emerald progress into their legacy save roots before restarting legacy owners. Retain Arcade's database and newer-game saves for the next cutover. Never restore an old snapshot over progress made after migration.
 
-To change the game streaming pool, update the dedicated vault item's token array,
-wait for its Kubernetes secret to reconcile, and restart the controller through
-GitOps after active sessions have ended. Account IDs and guild membership are
-discovered at login. Duplicate identities fail startup. Check each account belongs
-to the intended guilds; adding tokens does not raise the two-session or one-heavy-game
-limits. Keep the old Pokémon command application until Arcade acceptance and guild
-installation are complete; its streaming user remains part of the Arcade pool.
+To change the game streaming pool, update the dedicated vault item's token array.
+Wait for its Kubernetes secret to reconcile, then restart the controller through
+GitOps after active sessions end. The [pool discovers account IDs and guild membership](https://github.com/shepherdjerred/monorepo/blob/4de0ddbb63214dab85d775128dd41def4f22dd7e/packages/discord-stream-lifecycle/src/pool/userbot-pool.ts)
+at login; [Arcade rejects duplicate identities](https://github.com/shepherdjerred/monorepo/blob/4de0ddbb63214dab85d775128dd41def4f22dd7e/packages/arcade/packages/backend/src/credentials.ts)
+before admission. Check each account belongs to the intended guilds.
+Adding tokens does not raise the [configured session limits](https://github.com/shepherdjerred/monorepo/blob/4de0ddbb63214dab85d775128dd41def4f22dd7e/packages/arcade/packages/backend/src/config.ts).
+Keep the old Pokémon command application until Arcade acceptance and guild
+installation finish. Retain its streaming user in the Arcade pool.
 
 ## Related
 

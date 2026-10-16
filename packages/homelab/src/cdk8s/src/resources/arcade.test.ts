@@ -217,5 +217,6 @@ test("Arcade owns one credential item and keeps limits and goal grants outside i
     driverFeed: { enabled: true, max_clients: 4 },
     streamVideo: { hardware_acceleration: true, bitrate_kbps: 5000 },
     emeraldStreamVideo: { hardware_acceleration: true, bitrate_kbps: 1500 },
+    emeraldGoal: { enabled: true, model: "gpt-5.6-sol" },
   });
 });
