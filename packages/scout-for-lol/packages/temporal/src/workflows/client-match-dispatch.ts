@@ -36,7 +36,7 @@ import {
   acknowledgeClientDispatch,
   queueNextHistoricalMatch,
   advanceDiscoveredHistoryAnchor,
-} from "./dispatch-evidence.ts";
+} from "./evidence/dispatch.ts";
 
 function compareClientDispatchItems(
   left: ScoutClientMatchDispatchItem,

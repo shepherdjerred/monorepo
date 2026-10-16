@@ -10,7 +10,7 @@ import {
   type ScoutClientMatchDispatchItem,
 } from "#src/workflow-contracts.ts";
 import { scoutClientMatchDispatchCompletedSignal } from "#src/signals.ts";
-import { realtimePipelineActivities } from "./activity-options.ts";
+import { realtimePipelineActivities } from "#src/workflows/activity-options.ts";
 
 /** Only old signal histories infer this fact from their acknowledgement targets. */
 export function clientDispatchHasOrderingAssurance(

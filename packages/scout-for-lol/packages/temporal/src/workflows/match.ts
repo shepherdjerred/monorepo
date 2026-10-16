@@ -41,7 +41,7 @@ import { ScoutDiscoveredMatchSchema } from "#src/activity-contracts.ts";
 import {
   waitForMatchEvidence,
   shouldFinalizeTournament,
-} from "./match-evidence.ts";
+} from "./evidence/match.ts";
 import {
   IMPLEMENTED_FAN_OUT_WORKFLOWS,
   planMatchFanOutChildren,

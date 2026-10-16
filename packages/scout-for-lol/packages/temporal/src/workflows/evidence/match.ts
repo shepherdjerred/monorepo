@@ -6,7 +6,7 @@ import type {
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import { SCOUT_MATCH_RECEIPT_KINDS } from "#src/match-receipts.ts";
-import { realtimePipelineActivities } from "./activity-options.ts";
+import { realtimePipelineActivities } from "#src/workflows/activity-options.ts";
 
 /** New timers are beta-only and replay-gated; the Activity owns the persisted deadline. */
 export async function waitForMatchEvidence(
