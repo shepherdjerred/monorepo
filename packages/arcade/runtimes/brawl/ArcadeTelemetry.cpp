@@ -59,7 +59,7 @@ void Observe(const Core::CPUThreadGuard& guard) {
   // scMelee::m_operatorRuleGameMode for the pinned retail REL. Its countdown
   // stops with the game, including pause, instead of following wall-clock time.
   const uint32_t rule = current_scene ? Pointer(guard, current_scene + 0x54) : 0;
-  const bool timed = mode && Read<uint32_t>(guard, mode + 0x20) > 0;
+  const bool timed = mode && Read<int32_t>(guard, mode + 0x20) > 0;
   const bool relevant = playing || scene == "scVsResult";
   std::ostringstream json;
   json << "{\"scene\":\"" << scene << "\",\"modeRule\":" << (mode ? Read<uint32_t>(guard, mode + 8) : 0)
