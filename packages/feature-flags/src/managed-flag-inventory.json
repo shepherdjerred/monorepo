@@ -3219,6 +3219,14 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "the-storm-beginners-luck-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "tracker-writes-enabled",
           "type": "boolean",
           "default": true,
