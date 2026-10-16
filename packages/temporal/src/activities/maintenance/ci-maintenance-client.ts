@@ -90,7 +90,9 @@ export async function recentMaintenancePipelines(
   { allBranches = false }: { allBranches?: boolean } = {},
 ) {
   const rows: MaintenancePipeline[] = [];
-  for (let page = 1; page <= 4; page++) {
+  // Admission must see every manual run: an older blocked canary can still
+  // be active after newer completed runs fill the historical page budget.
+  for (let page = 1; allBranches || page <= 4; page++) {
     const query = new URLSearchParams({
       event,
       ...(allBranches ? {} : { branch: "main" }),

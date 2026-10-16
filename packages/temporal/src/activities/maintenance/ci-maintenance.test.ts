@@ -81,6 +81,37 @@ describe("native maintenance pipeline query scope", () => {
   });
 
   test.each([false, true])(
+    "allBranches=%s preserves its historical or complete pagination contract",
+    async (allBranches) => {
+      vi.stubEnv("WOODPECKER_URL", "https://woodpecker.sjer.red");
+      vi.stubEnv("WOODPECKER_REPO_ID", "1");
+      vi.stubEnv("WOODPECKER_TOKEN", "unit-test-token");
+      const fetch = vi.spyOn(globalThis, "fetch");
+      for (let page = 0; page < 4; page++) {
+        fetch.mockResolvedValueOnce(
+          Response.json(
+            Array.from({ length: 50 }, (_, index) => ({
+              ...manualCanary,
+              number: 100 + page * 50 + index,
+              branch: "main",
+              status: "success",
+            })),
+          ),
+        );
+      }
+      fetch.mockResolvedValueOnce(Response.json([manualCanary]));
+      const records = await recentMaintenancePipelines("manual", {
+        allBranches,
+      });
+      expect(fetch).toHaveBeenCalledTimes(allBranches ? 5 : 4);
+      expect(records).toHaveLength(allBranches ? 201 : 200);
+      expect(
+        records.some((record) => isActiveMaintenanceOrCanary(record)),
+      ).toBe(allBranches);
+    },
+  );
+
+  test.each([false, true])(
     "allBranches=%s uses the intended native branch filter",
     async (allBranches) => {
       vi.stubEnv("WOODPECKER_URL", "https://woodpecker.sjer.red");
