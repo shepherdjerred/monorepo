@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
+import com.shepherdjerred.thestorm.mobs.app.BeginnerStatus;
 import com.shepherdjerred.thestorm.qol.domain.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import com.shepherdjerred.thestorm.world.app.WildWorlds;
@@ -21,11 +23,20 @@ import org.bukkit.entity.Player;
 /** Biome buttons shown the first time qol sees a player. */
 final class ArrivalDialog {
 
-  private final Dialog dialog;
+  private final ModuleContext context;
+  private final java.util.function.Function<String, Dialog> render;
   private final String world;
 
-  ArrivalDialog(QolConfig config, WildWorlds worlds, RtpFlow flow, TeleportTravel.Policy rules) {
+  ArrivalDialog(ModuleContext context, QolConfig config, RtpFlow flow) {
+    this.context = context;
+    var worlds = context.services().require(WildWorlds.class);
+    var rules = context.services().require(TeleportTravel.class).policy();
     this.world = worlds.defaultWorld().name();
+    this.render = explanation -> create(config, flow, rules, explanation);
+  }
+
+  private Dialog create(
+      QolConfig config, RtpFlow flow, TeleportTravel.Policy rules, String explanation) {
     var options =
         ClickCallback.Options.builder()
             .uses(ClickCallback.UNLIMITED_USES)
@@ -35,32 +46,60 @@ final class ArrivalDialog {
     for (var biome : config.biomes()) {
       buttons.add(button(biome, options, flow));
     }
-    this.dialog =
-        Dialog.create(
-            factory ->
-                factory
-                    .empty()
-                    .base(
-                        DialogBase.builder(Component.text("Pick a place to start"))
-                            .canCloseWithEscape(true)
-                            .pause(false)
-                            .body(
-                                java.util.List.of(
-                                    DialogBody.plainMessage(
-                                        Component.text(
-                                            "RTP is free for your first "
-                                                + DurationText.of(rules.rtpFreeFor())
-                                                + ". Travel commands share "
-                                                + rules.allowance()
-                                                + " usage points per "
-                                                + DurationText.of(rules.window())
-                                                + " and a cooldown; frequent trips take longer. Use /tpinfo for current prices and rules."))))
-                            .build())
-                    .type(DialogType.multiAction(buttons).columns(2).build()));
+    var body = new ArrayList<DialogBody>();
+    body.add(
+        DialogBody.plainMessage(
+            Component.text(
+                "Welcome to The Storm! Your starter tools and food are ready. Pick a biome, gather resources, and build your first shelter. Use /sethome there so you can return with /home. You can also close this and explore spawn.")));
+    if (!explanation.isEmpty()) body.add(DialogBody.plainMessage(Component.text(explanation)));
+    body.add(
+        DialogBody.plainMessage(
+            Component.text(
+                "Random teleport is free for your first "
+                    + DurationText.of(rules.rtpFreeFor())
+                    + ". Other travel and death recovery use normal prices and cooldowns. /tpinfo explains travel; /graves lists your graves.")));
+    return Dialog.create(
+        factory ->
+            factory
+                .empty()
+                .base(
+                    DialogBase.builder(Component.text("Pick a place to start"))
+                        .canCloseWithEscape(true)
+                        .pause(false)
+                        .body(body)
+                        .build())
+                .type(DialogType.multiAction(buttons).columns(2).build()));
   }
 
   void show(Player player) {
-    player.showDialog(dialog);
+    var beginner = context.services().find(BeginnerStatus.class);
+    if (beginner.isEmpty()) {
+      player.showDialog(render.apply(""));
+      return;
+    }
+    var _ =
+        beginner
+            .orElseThrow()
+            .status(player.getUniqueId())
+            .whenCompleteAsync(
+                (status, failure) -> {
+                  if (!player.isOnline()) return;
+                  if (failure != null) {
+                    context.logger().error("Could not load first-arrival protection", failure);
+                    player.showDialog(render.apply(""));
+                    return;
+                  }
+                  var explanation =
+                      status.enabled()
+                          ? "Beginner's luck makes nearby mobs much weaker for your first "
+                              + DurationText.of(status.calmFor())
+                              + " of active play, then gradually raises difficulty to normal by "
+                              + DurationText.of(status.normalAfter())
+                              + ". Mobs still attack, and death still leaves a grave. Offline and AFK time pause the clock. Check /beginnersluck anytime."
+                          : "";
+                  player.showDialog(render.apply(explanation));
+                },
+                context.scheduler().mainThread());
   }
 
   private ActionButton button(String biome, ClickCallback.Options options, RtpFlow flow) {

@@ -1,5 +1,7 @@
 plugins { id("storm.module-conventions") }
 
+dependencies { implementation(project(":essentials")) }
+
 // MobsConfigTest parses the mobs.yml the server ships.
 tasks.test {
   inputs

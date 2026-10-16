@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { rwfTestSettings } from "./rwf-settings.ts";
+import { BeginnerFlags } from "./beginner-flags.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
@@ -432,6 +433,11 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
     rwfKillstreaks: new Set(),
     analytics: [],
   };
+  const beginners = new BeginnerFlags();
+  const testControls: typeof controls = {
+    ...controls,
+    "/v1/__control/beginners": (request: Request) => beginners.control(request),
+  };
   const server = Bun.serve({
     hostname: "0.0.0.0",
     port,
@@ -457,9 +463,12 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
         url.pathname === "/evaluate/v1/boolean" &&
         request.method === "POST"
       ) {
-        return evaluateFlag(request, state);
+        return (
+          (await beginners.evaluate(request.clone())) ??
+          evaluateFlag(request, state)
+        );
       }
-      const controlHook = controls[url.pathname];
+      const controlHook = testControls[url.pathname];
       if (controlHook !== undefined) {
         return controlHook(request, state);
       }

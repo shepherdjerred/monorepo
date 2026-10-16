@@ -918,6 +918,33 @@ until the player frees inventory space.
 
 ## Conventions
 
+## Beginner's luck
+
+The mobs module offers personal wilderness protection through the managed
+`the-storm-beginners-luck-enabled` flag. It defaults off and is enabled in beta.
+`mobs.yml` defines six hours of near-peaceful combat followed by a gradual ramp
+to ordinary difficulty at twelve hours. Every account, including returning
+players, starts a fresh allowance on its first enabled session. The mobs-owned
+SQLite clock checkpoints active time through Essentials' activity/AFK feed;
+it excludes offline and AFK time, includes active minigame time, and survives
+reconnects, restarts and flag disable/re-enable. It never imports historical
+playtime or depends on analytics. `/beginnersluck` shows personal progress.
+
+Mobs remain aggressive. For six active hours, mobs within 64 blocks of a
+protected player, and existing mobs engaging them, become actual level one;
+incoming hostile melee, projectile and explosion damage is reduced by 90%.
+From hours six to twelve, levels and incoming damage rise to normal. Overlapping
+beginners use the gentlest applicable level. Nearby veterans see and fight the
+same weaker mob, without receiving the beginner's personal damage reduction.
+Natural levels persist separately and return when protection stops applying.
+Level changes never refill health, player-given names are preserved, and bonus
+XP/loot use the lowest applied level so restored mobs cannot pay inflated rewards.
+PvP, bosses, environmental hazards and sealed minigame worlds retain their
+ordinary rules. Flag evaluation runs asynchronously; unavailable or false
+evaluations pause the allowance and restore normal combat. The first-arrival
+biome picker explains supplies, shelter, `/sethome`, protection and ordinary
+grave recovery. Travel pricing, cooldowns and death consequences are unchanged.
+
 ## Command travel
 
 `/spawn`, `/home`, `/back`, `/warp`, `/tpa`, `/tpahere`, and `/rtp` share

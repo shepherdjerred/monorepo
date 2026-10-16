@@ -3,10 +3,13 @@ package com.shepherdjerred.thestorm.mobs.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
+import com.shepherdjerred.thestorm.mobs.adapter.db.JooqBeginnerTimeStore;
+import com.shepherdjerred.thestorm.mobs.app.BeginnerStatus;
 import com.shepherdjerred.thestorm.mobs.app.MobLevels;
 import com.shepherdjerred.thestorm.mobs.domain.config.MobsConfig;
 import com.shepherdjerred.thestorm.mobs.domain.level.LevelCalculator;
 import com.shepherdjerred.thestorm.mobs.domain.spawn.SpawnPolicy;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -27,10 +30,18 @@ public final class MobsPaper {
 
   private final List<Listener> listeners;
   private final LevelApplier levels;
+  private final BeginnerProtection beginner;
+  private final BeginnerLuckListener beginnerListener;
 
-  private MobsPaper(List<Listener> listeners, LevelApplier levels) {
+  private MobsPaper(
+      List<Listener> listeners,
+      LevelApplier levels,
+      BeginnerProtection beginner,
+      BeginnerLuckListener beginnerListener) {
     this.listeners = List.copyOf(listeners);
     this.levels = levels;
+    this.beginner = beginner;
+    this.beginnerListener = beginnerListener;
   }
 
   /**
@@ -72,13 +83,30 @@ public final class MobsPaper {
             new SpawnPolicy(config.exclusions(), config.adminRegions().policy()),
             new LevelCalculator(config.levels()),
             sealed);
+    var beginner =
+        new BeginnerProtection(
+            context, config.beginnerLuck(), new JooqBeginnerTimeStore(context.database()));
+    var beginnerListener = new BeginnerLuckListener(context, config, levels, beginner);
+    beginner.observeChanges(
+        id -> {
+          var player = server.getPlayer(id);
+          if (player != null) beginnerListener.nearby(player.getLocation());
+        });
     List<Listener> listeners =
         List.of(
             new SpawnListener(rules, levels, regions, context.random()),
-            new StrengthListener(levels, hooks.loot(), context.random(), sealed));
+            new StrengthListener(levels, hooks.loot(), context.random(), sealed),
+            beginnerListener);
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
-    return new MobsPaper(listeners, levels);
+    context
+        .lifecycle()
+        .registerEventHandler(
+            LifecycleEvents.COMMANDS,
+            event -> BeginnerCommands.register(context, beginner, event.registrar()));
+    beginnerListener.refreshLoaded();
+    beginner.start();
+    return new MobsPaper(listeners, levels, beginner, beginnerListener);
   }
 
   /** The port other modules use. */
@@ -87,7 +115,13 @@ public final class MobsPaper {
   }
 
   public void stop() {
+    beginner.stop();
+    beginnerListener.refreshLoaded();
     listeners.forEach(HandlerList::unregisterAll);
+  }
+
+  public BeginnerStatus beginnerStatus() {
+    return beginner;
   }
 
   private static void requireKnownNames(MobsConfig config) {

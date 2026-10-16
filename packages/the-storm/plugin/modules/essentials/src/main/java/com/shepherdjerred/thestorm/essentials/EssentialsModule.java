@@ -59,6 +59,7 @@ public final class EssentialsModule implements StormModule {
     var afk = new AfkTracker(context.time(), config.afkTimeout(), context.analytics());
     context.services().provide(TeleportGuards.class, guards);
     context.services().provide(AfkStatus.class, afk);
+    context.services().provide(com.shepherdjerred.thestorm.essentials.app.ActivityFeed.class, afk);
 
     var moderation = ModerationService.load(new JooqModerationLogStore(database), context.time());
     context.services().provide(ModerationService.class, moderation);

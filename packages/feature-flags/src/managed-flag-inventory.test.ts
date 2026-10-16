@@ -341,6 +341,7 @@ describe("The Storm companion pilot rollout", () => {
   });
 
   test.each([
+    ["the-storm-beginners-luck-enabled", "the-storm"],
     ["the-storm-companions-enabled", "the-storm"],
     ["the-storm-staff-tools-enabled", "the-storm"],
     ["the-storm-identity-enabled", "the-storm"],

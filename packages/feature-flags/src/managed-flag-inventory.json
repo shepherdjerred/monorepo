@@ -2344,6 +2344,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-beginners-luck-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-mobs",
+      "purpose": "Give new players near-peaceful wilderness combat for six played hours, ramping to normal by twelve.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-analytics-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -2743,6 +2755,14 @@
     {
       "key": "beta",
       "overrides": [
+        {
+          "key": "the-storm-beginners-luck-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "scout_durable_orchestration_enabled",
           "type": "boolean",

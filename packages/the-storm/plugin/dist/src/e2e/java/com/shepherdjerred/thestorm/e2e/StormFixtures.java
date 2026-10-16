@@ -44,6 +44,7 @@ public final class StormFixtures extends JavaPlugin {
     com.shepherdjerred.thestorm.arena.adapter.paper.ArenaFixtures.install(this, content.toPath());
     RepeaterFixtures.install(this);
     HeritageFixtures.install(this);
+    new BeginnerFixtures(this).register();
     world = Objects.requireNonNull(getServer().getWorld("world"));
     var modules = section(yaml("config.yml"), "modules");
     var prepared = new ArrayList<String>();

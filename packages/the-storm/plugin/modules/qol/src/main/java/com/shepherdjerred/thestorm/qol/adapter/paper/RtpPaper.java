@@ -45,9 +45,7 @@ public final class RtpPaper {
             context,
             config,
             new LandingMemory(config.landingMemoryDuration()));
-    var dialog =
-        new ArrivalDialog(
-            config, worlds, flow, context.services().require(TeleportTravel.class).policy());
+    var dialog = new ArrivalDialog(context, config, flow);
     var commands = new RtpCommands(flow, worlds, config);
     var plugin = context.plugin();
     List<Listener> listeners = List.of(new JoinListener(store, dialog, context));

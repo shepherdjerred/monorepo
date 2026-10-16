@@ -248,6 +248,27 @@ final class AppServicesTest {
   }
 
   @Test
+  void activityObserversReceiveCheckpointsAndCanUnsubscribe() {
+    var afk =
+        new AfkTracker(
+            clock,
+            Duration.ofMinutes(5),
+            com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
+    var observed = new ArrayList<Boolean>();
+    var unsubscribe = afk.observe((id, active) -> observed.add(active));
+    afk.joined(ALICE);
+    clock.advance(Duration.ofMinutes(5));
+    afk.sweep();
+    afk.active(ALICE);
+    afk.toggle(ALICE);
+    afk.left(ALICE);
+    assertThat(observed).containsExactly(true, false, true, false, false);
+    unsubscribe.run();
+    afk.joined(ALICE);
+    assertThat(observed).hasSize(5);
+  }
+
+  @Test
   void guardsRefuseWithTheFirstReasonAndSeeTheDestination() {
     var guards = new GuardRegistry();
     var arena = new Location(null, 100, 64, 100);
