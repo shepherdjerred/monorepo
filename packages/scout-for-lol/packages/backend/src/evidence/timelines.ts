@@ -18,7 +18,10 @@ import {
 import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import { evidenceRecoveryEnabled } from "./admission.ts";
-import { optionalSourceRead } from "./source-read.ts";
+import {
+  isExpectedSourceReadError,
+  optionalSourceRead,
+} from "./source-read.ts";
 import * as Sentry from "@sentry/bun";
 
 export type TimelinePersistence =
@@ -109,7 +112,7 @@ async function acquireTimeline(
   const skipRiot =
     isArenaQueueOrMode(input.match.info.queueId, input.match.info.gameMode) ||
     (!evidenceRecoveryEnabled() && input.players.length === 0);
-  const [riot, clients] = await Promise.all([
+  const [riotRead, clientRead] = await Promise.allSettled([
     skipRiot
       ? undefined
       : optionalSourceRead(
@@ -124,10 +127,15 @@ async function acquireTimeline(
             ),
           remainingMs,
         ),
-    optionalSourceRead("SCOUT_CLIENT", () =>
-      readClientTimelineCandidates(matchId, input.match),
-    ),
+    readClientTimelineCandidates(matchId, input.match),
   ]);
+  if (riotRead.status === "rejected") throw riotRead.reason;
+  if (
+    clientRead.status === "rejected" &&
+    !isExpectedSourceReadError(clientRead.reason)
+  )
+    throw clientRead.reason;
+  const riot = riotRead.value;
   if (riot !== undefined) {
     if (!timelineMatchesResult(riot, input.match))
       throw new Error(
@@ -135,7 +143,9 @@ async function acquireTimeline(
       );
     return { kind: "candidate", value: { timeline: riot, sourceId: matchId } };
   }
-  const local = clients ?? [];
+  // A successful Riot read can stand alone; absence requires a successful durable read.
+  if (clientRead.status === "rejected") throw clientRead.reason;
+  const local = clientRead.value;
   const chosen = local[0];
   if (chosen === undefined) return { kind: "missing" };
   if (

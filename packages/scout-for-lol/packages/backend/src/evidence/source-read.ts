@@ -19,6 +19,15 @@ const OperationalErrorSchema = z.object({
   ]),
 });
 
+export function isExpectedSourceReadError(error: unknown): boolean {
+  return (
+    error instanceof RiotTransportError ||
+    isExpectedUpstreamError(extractHttpStatus(error)) ||
+    extractHttpStatus(error) === 429 ||
+    OperationalErrorSchema.safeParse(error).success
+  );
+}
+
 /** Only expected operational failures are optional; corrupt contracts still throw. */
 export async function optionalSourceRead<T>(
   source: MatchDataSource,
@@ -35,14 +44,7 @@ export async function optionalSourceRead<T>(
       timeoutMs !== undefined &&
       error instanceof Error &&
       error.message === `API request timed out after ${timeoutMs.toString()}ms`;
-    if (
-      !deadlineExpired &&
-      !(error instanceof RiotTransportError) &&
-      !isExpectedUpstreamError(extractHttpStatus(error)) &&
-      extractHttpStatus(error) !== 429 &&
-      !OperationalErrorSchema.safeParse(error).success
-    )
-      throw error;
+    if (!deadlineExpired && !isExpectedSourceReadError(error)) throw error;
     Sentry.captureException(error, {
       tags: { source: "evidence-acquisition", evidenceSource: source },
     });

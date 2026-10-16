@@ -175,6 +175,62 @@ test("the final deadline poll reads durable client evidence before pinning absen
   });
 });
 
+test.each(["P2024", "ECONNRESET"])(
+  "a final-poll %s read failure retries before pinning absence",
+  async (code) => {
+    const deadline = new Date(Date.now() - 1);
+    await prisma.matchEvidenceAdmission.update({
+      where: { riotMatchId: match.metadata.matchId },
+      data: { timelineDeadlineAt: deadline },
+    });
+    const failure = Object.assign(
+      new Error("Persisted timeline temporarily unreadable"),
+      { code },
+    );
+    io.clients.mockRejectedValueOnce(failure);
+    await expect(resolveMatchTimeline(request)).rejects.toBe(failure);
+    expect(
+      await prisma.matchEvidenceAdmission.findUniqueOrThrow({
+        where: { riotMatchId: match.metadata.matchId },
+      }),
+    ).toMatchObject({
+      timelineMissing: false,
+      timelineFinalizedAt: null,
+      timelineDeadlineAt: deadline,
+    });
+    expect(io.persist).not.toHaveBeenCalled();
+    io.clients.mockResolvedValue([
+      {
+        observationId: "persisted-before-deadline",
+        timeline: timeline("local-1"),
+      },
+    ]);
+    expect(await resolveMatchTimeline(request)).toMatchObject({
+      kind: "available",
+    });
+    expect(io.riot).not.toHaveBeenCalled();
+  },
+);
+
+test("a healthy Riot timeline survives an expected client read outage", async () => {
+  io.riot.mockResolvedValue(timeline("2"));
+  io.clients.mockRejectedValue(
+    Object.assign(new Error("Client pool busy"), { code: "P2024" }),
+  );
+  expect(await resolveMatchTimeline(request)).toMatchObject({
+    kind: "available",
+    value: timeline("2"),
+  });
+});
+
+test("a broken durable contract is not hidden by a healthy Riot source", async () => {
+  io.riot.mockResolvedValue(timeline("2"));
+  const failure = new Error("Corrupt persisted timeline contract");
+  io.clients.mockRejectedValue(failure);
+  await expect(resolveMatchTimeline(request)).rejects.toBe(failure);
+  expect(io.persist).not.toHaveBeenCalled();
+});
+
 test("storage failure retries instead of becoming missing coverage", async () => {
   io.riot.mockResolvedValue(timeline("2"));
   io.persist.mockResolvedValue(false);
