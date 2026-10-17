@@ -6,10 +6,10 @@ import { prepareGoalAuth } from "#src/goal-auth.ts";
 
 const homes: string[] = [];
 const syntheticId = `${Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url")}.${Buffer.from("{}").toString("base64url")}.c3ludGhldGlj`;
-async function database() {
+async function authDirectory() {
   const parent = await mkdtemp(path.join(tmpdir(), "arcade-goal-auth-test-"));
   homes.push(parent);
-  return path.join(parent, "arcade.db");
+  return path.join(parent, ".codex-auth");
 }
 function authentication(access = "synthetic-access") {
   return JSON.stringify({
@@ -31,11 +31,19 @@ afterEach(async () => {
 });
 
 describe("Emerald subscription authentication", () => {
+  it.each([undefined, "relative/auth"])(
+    "requires an explicit absolute credential home: %s",
+    async (home) => {
+      await expect(
+        prepareGoalAuth(encoded(authentication()), home),
+      ).rejects.toThrow("Emerald goals require an absolute CODEX_HOME");
+    },
+  );
   it("makes the complete refreshable cache available in an isolated private home", async () => {
     const contents = authentication();
     const home = await prepareGoalAuth(
       { ...encoded(contents), DISCORD_BOT_TOKEN: "unrelated-discord-secret" },
-      await database(),
+      await authDirectory(),
     );
     expect(await readFile(path.join(home, "auth.json"), "utf8")).toBe(contents);
     const directory = await stat(home);
@@ -45,7 +53,7 @@ describe("Emerald subscription authentication", () => {
   });
 
   it("preserves CLI refresh across restarts and replaces credentials when the vault seed changes", async () => {
-    const db = await database();
+    const db = await authDirectory();
     const seed = encoded(authentication());
     const home = await prepareGoalAuth(seed, db);
     const refreshed = authentication("synthetic-refreshed-access");
@@ -64,7 +72,7 @@ describe("Emerald subscription authentication", () => {
   });
 
   it("rejects missing, malformed, and incomplete credentials without exposing them", async () => {
-    const db = await database();
+    const db = await authDirectory();
     await expect(prepareGoalAuth({}, db)).rejects.toThrow(
       "Emerald goals require CODEX_AUTH_JSON_B64",
     );
@@ -107,7 +115,7 @@ describe("Emerald subscription authentication", () => {
   ])(
     "rejects a CLI-incompatible vault seed and persisted cache: %j",
     async (invalid) => {
-      const db = await database();
+      const db = await authDirectory();
       const contents = JSON.stringify(invalid);
       await expect(prepareGoalAuth(encoded(contents), db)).rejects.toThrow(
         /^Invalid Emerald subscription authentication$/u,

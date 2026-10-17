@@ -72,10 +72,11 @@ Rollout and account ownership default off.
 
 Emerald goals use `CODEX_AUTH_JSON_B64`, the complete ChatGPT subscription auth
 cache from the dedicated vault item. Startup validates it and seeds a private
-`CODEX_HOME` beside the database. Refreshed credentials survive pod restarts;
+`CODEX_HOME` on a dedicated backup-excluded credential volume. Refreshed credentials survive pod restarts;
 changing the vault seed replaces that cache. Credentials stay outside game saves
 and archives. A bare OAuth access token does not replace the CLI's subscription
 authentication cache.
+Local goal-enabled processes must set `CODEX_HOME` to an absolute private directory.
 
 Private WASM builds use `runtimes/prepare-assets.py --help`. The script accepts
 a dedicated clean checkout of the pinned upstream, an Emscripten SDK, and an

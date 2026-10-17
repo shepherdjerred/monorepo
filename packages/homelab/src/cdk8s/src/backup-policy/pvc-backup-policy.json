@@ -18,6 +18,12 @@
     "reason": "Discord player attribution and durable per-game statistics"
   },
   {
+    "namespace": "arcade",
+    "name": "arcade-goal-auth",
+    "backup": "disabled",
+    "reason": "Refreshable Codex credentials are seeded from 1Password and must stay outside backup archives"
+  },
+  {
     "namespace": "ops-restore-rehearsal-incremental",
     "name": "pgdata-temporal-postgresql-0",
     "backup": "disabled",

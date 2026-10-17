@@ -25,17 +25,16 @@ const SubscriptionAuthSchema = z.object({
 /** Codex SDK uses the CLI's auth cache for ChatGPT subscription credentials. */
 export async function prepareGoalAuth(
   environment: Readonly<Record<string, string | undefined>>,
-  databasePath: string,
+  authDirectory: string | undefined,
 ): Promise<string> {
   const encoded = z.base64().safeParse(environment["CODEX_AUTH_JSON_B64"]);
   if (!encoded.success)
     throw new Error("Emerald goals require CODEX_AUTH_JSON_B64");
   const contents = Buffer.from(encoded.data, "base64").toString("utf8");
   const configured = parseAuth(contents);
-  const home = path.join(
-    path.dirname(path.resolve(databasePath)),
-    ".codex-auth",
-  );
+  if (authDirectory === undefined || !path.isAbsolute(authDirectory))
+    throw new Error("Emerald goals require an absolute CODEX_HOME");
+  const home = authDirectory;
   await mkdir(home, { recursive: true, mode: 0o700 });
   const directory = await lstat(home);
   if (!directory.isDirectory() || directory.isSymbolicLink())
