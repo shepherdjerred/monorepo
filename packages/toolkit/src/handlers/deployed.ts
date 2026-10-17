@@ -19,6 +19,7 @@ Options:
   --json                 Output as JSON
   --no-cluster           Skip ArgoCD + kubectl (git/gh only)
   --no-github            Skip gh PR lookups
+  --delivery             Include PostgreSQL release evidence for managed targets
 
 Examples:
   toolkit deployed                       # is HEAD deployed?
@@ -44,6 +45,7 @@ export async function handleDeployedCommand(
       json: { type: "boolean", default: false },
       "no-cluster": { type: "boolean", default: false },
       "no-github": { type: "boolean", default: false },
+      delivery: { type: "boolean", default: false },
     },
     allowPositionals: true,
   });
@@ -56,5 +58,6 @@ export async function handleDeployedCommand(
     json: values.json,
     noCluster: values["no-cluster"],
     noGithub: values["no-github"],
+    delivery: values.delivery,
   });
 }

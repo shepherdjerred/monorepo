@@ -3,6 +3,22 @@
  * homelab deployment pipeline (git → version bump → version catalog → ArgoCD → pod).
  */
 
+export type DeliveryEvidence = {
+  environmentId: string;
+  desired: string | null;
+  observed: string | null;
+  accepted: string | null;
+  observedAt: string | null;
+  activeDeploymentId: string | null;
+  artifacts: {
+    component: string;
+    digest: string;
+    runtimeDigests: string[];
+    sourceRevision: string;
+    containsCommit: boolean;
+  }[];
+};
+
 /** A single deployable variant of a service (e.g. scout beta vs prod). */
 export type Variant = {
   /** Variant label: "default" for single-variant services, else "beta"/"prod". */
@@ -44,6 +60,7 @@ export type Pin = {
  * - UNKNOWN    no pin for this versionKey, or the git layer failed
  */
 export type Verdict =
+  | "SELECTED"
   | "NOT_MERGED"
   | "NO_IMAGE"
   | "PENDING"
@@ -65,6 +82,7 @@ export type GitTrace = {
 
 /** ArgoCD application status for a variant's app. */
 export type ArgoStatus = {
+  deliveryEnvironmentId?: string;
   app: string;
   syncStatus: string;
   healthStatus: string;
@@ -89,6 +107,8 @@ export type RunningPod = {
 
 /** Full per-variant report. */
 export type VariantReport = {
+  /** PostgreSQL selection/observation/acceptance, when explicitly requested. */
+  delivery?: DeliveryEvidence | null;
   service: string;
   variant: string;
   versionKey: string;

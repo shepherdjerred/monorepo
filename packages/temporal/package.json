@@ -49,6 +49,8 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/delivery": "workspace:*",
+    "@shepherdjerred/root-scripts": "workspace:*",
     "@trpc/client": "^11.18.0",
     "@shepherdjerred/tracker": "workspace:*",
     "@shepherdjerred/sentry-config": "workspace:*",
@@ -109,7 +111,6 @@
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@shepherdjerred/root-scripts": "workspace:*",
     "@shepherdjerred/toolkit": "workspace:*",
     "@temporalio/testing": "1.24.0",
     "@tsconfig/node-lts": "^24.0.0",

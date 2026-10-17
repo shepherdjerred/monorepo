@@ -320,6 +320,10 @@ export function createArgoCdApp(chart: Chart) {
         "statusbadge.enabled": true,
         "accounts.woodpecker": "apiKey",
         "accounts.woodpecker.enabled": true,
+        "accounts.delivery": "apiKey",
+        "accounts.delivery.enabled": true,
+        "accounts.delivery-observer": "apiKey",
+        "accounts.delivery-observer.enabled": true,
         // ArgoCD removed built-in Application CR health in 1.8. Restore the
         // documented app-of-apps check so the root app inherits child app and
         // workload health without widening the Woodpecker account's RBAC.
@@ -393,7 +397,7 @@ return hs`,
         // the root app-of-apps Application. Receipt publication updates only
         // that root Application after independent release verification.
         "policy.csv":
-          "p, woodpecker, applications, sync, default/*, allow\np, woodpecker, applications, get, default/*, allow\np, woodpecker, applications, override, default/apps, allow\np, woodpecker, applications, update, default/apps, allow",
+          "p, woodpecker, applications, sync, default/*, allow\np, woodpecker, applications, get, default/*, allow\np, woodpecker, applications, override, default/apps, allow\np, woodpecker, applications, update, default/apps, allow\np, delivery, applications, get, default/apps, allow\np, delivery, applications, get, default/arcade, allow\np, delivery, applications, update, default/arcade, allow\np, delivery, applications, sync, default/arcade, allow\np, delivery-observer, applications, get, default/apps, allow\np, delivery-observer, applications, get, default/arcade, allow",
       },
     },
   };

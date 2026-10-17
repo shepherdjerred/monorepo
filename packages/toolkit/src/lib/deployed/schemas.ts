@@ -6,6 +6,9 @@
 import { z } from "zod";
 
 export const ArgoAppSchema = z.object({
+  metadata: z
+    .object({ annotations: z.record(z.string(), z.string()).optional() })
+    .optional(),
   status: z
     .object({
       sync: z

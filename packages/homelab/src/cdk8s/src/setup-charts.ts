@@ -41,6 +41,8 @@ import { createStormForumCharts } from "./resources/storm-forum/releases.ts";
 import versions from "./versions.ts";
 import { trackerImageReference } from "./resources/tracker/image.ts";
 import { createTrackerChart } from "./cdk8s-charts/platform/tracker.ts";
+import { createDeliveryChart } from "./cdk8s-charts/platform/delivery.ts";
+import { deliveryActivation } from "./resources/delivery/activation.ts";
 import {
   attachDockerHubPullSecrets,
   prepareDockerHubPullSecrets,
@@ -60,6 +62,10 @@ export async function setupCharts(app: App): Promise<void> {
     versions["shepherdjerred/tracker"],
   );
   createTrackerChart(app, trackerImage);
+  createDeliveryChart(
+    app,
+    deliveryActivation(versions["shepherdjerred/delivery"]),
+  );
   createScoutChart(app, "beta");
   createScoutChart(app, "prod");
   createStarlightKarmaBotChart(app, "beta");

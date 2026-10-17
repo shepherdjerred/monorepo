@@ -64,6 +64,30 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  delivery: {
+    command: [
+      "set -eu",
+      "cd /app/packages/delivery",
+      "bun src/server/index.ts >/tmp/delivery-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; wait $pid || test $? -eq 143; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      String.raw`  if bun -e 'const health = await fetch("http://127.0.0.1:17353/healthz"); const page = await fetch("http://127.0.0.1:17353/"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);'; then exit 0; fi`,
+      "  if ! kill -0 $pid; then cat /tmp/delivery-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/delivery-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    env: {
+      DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/delivery",
+      HOST: "127.0.0.1",
+      PORT: "17353",
+      ENVIRONMENT: "test",
+      FEATURE_FLAGS_MODE: "disabled",
+      PUBLIC_ORIGIN: "http://127.0.0.1:17353",
+    },
+  },
   "storm-forum": {
     command:
       "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --nodaemonize --force-stderr --fpm-config /usr/local/etc/php-fpm.conf",

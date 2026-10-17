@@ -47,11 +47,16 @@ export async function getArgoApp(app: string): Promise<ArgoResult> {
   }
 
   const status = parsed.data.status;
+  const deliveryEnvironmentId =
+    parsed.data.metadata?.annotations?.[
+      "delivery.shepherdjerred.com/environment"
+    ];
   const revision = status?.sync?.revision ?? "";
   const buildMatch = REVISION_BUILD_RE.exec(revision);
   return {
     ok: true,
     status: {
+      ...(deliveryEnvironmentId === undefined ? {} : { deliveryEnvironmentId }),
       app,
       syncStatus: status?.sync?.status ?? "Unknown",
       healthStatus: status?.health?.status ?? "Unknown",

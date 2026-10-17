@@ -223,6 +223,7 @@ export function createTemporalChart(app: App) {
                     operator: "In",
                     values: [
                       "gateway",
+                      "delivery-worker",
                       "home-worker",
                       "reports-worker",
                       "infra-worker",

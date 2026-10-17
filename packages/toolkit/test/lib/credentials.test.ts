@@ -286,6 +286,18 @@ describe("credential resolver backends", () => {
     });
   });
 
+  test("delivery resolves its provisioned admin credential through the broker", () => {
+    expect(CREDENTIAL_REGISTRY["DELIVERY_API_TOKEN"]).toEqual({
+      description:
+        "Delivery machine API token (cannot approve production releases)",
+      source: {
+        kind: "op",
+        // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
+        ref: "op://v64ocnykdqju4ui6j6pua56xw4/ahbp4izt7fibvwdjwd4ffhiime/DELIVERY_ADMIN_TOKEN",
+      },
+    });
+  });
+
   test("woodpecker resolves from the service account, not the keychain", () => {
     // The API token lives as WOODPECKER_API_TOKEN on the Woodpecker Server
     // item, which the homelab service account can read (probed 2026-10-04).

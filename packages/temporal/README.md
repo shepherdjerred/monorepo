@@ -1,5 +1,53 @@
 # @shepherdjerred/temporal
 
+### Delivery execution
+
+Delivery stores release selections, immutable version sets, and audit evidence
+in PostgreSQL. `deliveryDeploymentWorkflow` executes on `monorepo-workflows`;
+its effectful Activities use the isolated `delivery` queue and worker role.
+The API and executor share the Delivery contract. Workflow IDs use the shared
+`deliveryWorkflowId` helper so an acknowledged outbox row always identifies the
+execution actually submitted.
+
+The `delivery-dispatch` Schedule qualifies published builds against their exact
+terminal CI execution, reconciles automatic environment selections, and submits
+unacknowledged outbox rows. It starts paused until the service, executor
+credentials, and compatible Workflow workers are available. A lost start
+response is inspected by stable Workflow identity before acknowledging the row.
+Paused or occupied environments remain in a durable Workflow admission wait.
+Dispatch repair also inspects submitted requests and records a failed request
+when its Workflow closed before settlement; ambiguous external stages retain
+their target lock.
+
+The Argo adapter verifies published chart bytes, selects exact source fields
+with optimistic concurrency, and invokes the existing guarded `sync-managed`
+command. Acceptance requires the owned operation receipt, exact deployment
+history, ready running image digests, and configured runtime checks. Release
+mutations have one Activity attempt. An ambiguous failure retains the
+environment lock until an operator inspects the recorded external operation and
+explicitly releases it with evidence through Delivery.
+
+The production image bundles the guarded Argo command. A missing bundle fails
+instead of selecting another implementation. Development runs the source
+command. PostgreSQL, Temporal and ArgoCD recovery remain available through their
+existing operator tools without requiring a healthy Delivery executor.
+
+The prepared bounded Job runner targets a separate `delivery-jobs` namespace
+and CI compute admission on Liskov. A source-owned recipe controls the command,
+credential keys, resources, and checkout. The executor records the exact Job
+UID and canonical request fingerprint before waiting, and inspects an existing
+Job before creating one. Stage Pods have no Kubernetes or vault token. Worker
+rollout registration remains blocked until PostgreSQL owns the retained worker
+pool needed by pinned Workflow histories; existing worker ownership stays in
+place. Job namespace credentials, Kubernetes grants, and queue admission are
+not activated by the application executor. Root and OpenTofu recipes likewise
+retain their existing owners pending an explicit platform ownership migration.
+
+The initial application pilot still qualifies against the terminal result of
+the existing main CI pipeline, including its legacy root release. Delegation
+must also remove that application's pending pin-update candidates before
+activation; an empty source delegation registry leaves the legacy path intact.
+
 Temporal workflow worker for the monorepo. It consolidates what used to be K8s
 CronJobs, in-process cron, and custom job queues into one durable, observable
 scheduler: declarative schedules (home automation, reports, maintenance),

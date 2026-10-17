@@ -20,10 +20,12 @@ import {
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
 import type { WorkerRole } from "./shared/infra/worker-role.ts";
+import { deliveryActivities } from "./activities/delivery/index.ts";
 
 export type QueueWorkerRole =
   | "agent"
   | "control"
+  | "delivery"
   | "backup"
   | "billing"
   | "glitter-context"
@@ -55,6 +57,13 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "delivery",
+    taskQueue: TASK_QUEUES.DELIVERY,
+    activities: deliveryActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
   {
     kind: "activity",
     role: "control",

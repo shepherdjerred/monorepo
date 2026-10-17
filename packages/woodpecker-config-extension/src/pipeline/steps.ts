@@ -22,6 +22,7 @@ import {
 import type { PlatformOperation } from "#src/pipeline/lanes/tofu-apply.ts";
 import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
+import { deliveryPublicationSteps } from "#src/pipeline/lanes/delivery.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
@@ -111,6 +112,7 @@ export function verifyCommands(options: {
 }
 
 export type PipelineInputs = {
+  readonly deliveryPublication?: boolean;
   readonly images: CiImages;
   /** Image of the deployed policy service, supplied by trusted bootstrap. */
   readonly trustedGateImage?: string | undefined;
@@ -133,6 +135,7 @@ export type PipelineInputs = {
 };
 
 export function buildPipelineSteps({
+  deliveryPublication = false,
   images,
   trustedGateImage,
   changedBase = "",
@@ -184,9 +187,10 @@ export function buildPipelineSteps({
     releaseAdmissionStep(images),
     ...tofuApplySteps(images, platformOperation),
     ...releaseChainSteps(images, sharedEnvironment),
+    ...deliveryPublicationSteps(images, deliveryPublication),
     ...ciImageSteps(images),
-    ...scoutSteps(images),
-    ...siteSteps(images),
+    ...scoutSteps(images, deliveryPublication),
+    ...siteSteps(images, deliveryPublication),
     // Native lanes are paused until the Mac agent runs in the GUI audit
     // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),

@@ -309,6 +309,66 @@ stop and inspect that resource. The automated `release-root` path runs its
 read-only preflight before submitting child operations, but a manual ArgoCD UI
 sync does not run that client-side check.
 
+## Recover a Delivery operation
+
+Use this procedure for a failed or canceled delegated application deployment
+whose Delivery details show `recoveryRequired`. It also covers a stopped worker
+that recorded intent before selecting the chart or submitting an Argo operation.
+Specialized worker, forum, and static-site recovery retain their separate owners.
+
+1. Pause Delivery mutations. Confirm the old Workflow is closed and its mutation
+   executor is stopped through the repository-owned worker deployment path.
+   A closed Workflow alone does not prove an Activity process has stopped.
+2. Inspect the retained target and recorded reconciliation request:
+
+   ```bash
+   toolkit deploy status DEPLOYMENT_ID --machine --json
+   ```
+
+3. Export the frozen artifact and configuration selection for review:
+
+   ```bash
+   bun packages/temporal/scripts/recovery/delivery.ts export DEPLOYMENT_ID --file /tmp/delivery-recovery.json
+   ```
+
+   The helper requires the failed or canceled deployment to retain its original
+   environment lock. It verifies the recorded stage request and rejects credential
+   parameter keys. Inspect the application, chart digest, image digests, request
+   ID, and non-secret configuration in this file.
+
+4. Settle that exact selection while Delivery retains ownership:
+
+   ```bash
+   bun packages/temporal/scripts/recovery/delivery.ts settle DEPLOYMENT_ID --file /tmp/delivery-recovery.json
+   ```
+
+   The helper rereads Delivery before using the credential broker. It invokes
+   `sync-managed` with an explicit `--delivery-selection` file, exact revision,
+   and recorded request ID. The command verifies the chart digest, root field
+   preservation, delegation, inactive operations, and resource-version tests
+   before selecting the source. Existing apply-safety and operation-ownership
+   checks still govern the bounded sync. There is no pruning or acceptance write.
+
+5. Read the finished operation UUID from the application named in the export:
+
+   ```bash
+   toolkit argocd app get APPLICATION -o json | jq -er '.status.operationState.operation.info[] | select(.name == "ci.sjer.red/operation-id") | .value'
+   ```
+
+6. Release ownership through independent observation:
+
+   ```bash
+   toolkit deploy recover DEPLOYMENT_ID --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
+   ```
+
+   This remains available while writes are paused and Temporal is unavailable.
+   The API requires the matching finished request, operation UUID, environment
+   delegation, and settled Jobs. Recovery clears ownership; it does not mark the
+   failed deployment accepted. Request a new deployment to perform acceptance.
+
+If any check fails, retain the lock and inspect that exact external operation.
+Do not delete database locks or replace a foreign active operation.
+
 ## Where it lives
 
 The workflow is defined by the

@@ -2,7 +2,19 @@
   "$schema": "./services.schema.json",
   "services": [
     {
+      "id": "delivery",
+      "title": "Delivery",
+      "kind": "platform",
+      "package": "delivery",
+      "images": ["delivery"],
+      "charts": ["delivery"],
+      "namespaces": ["delivery"],
+      "argoApps": [],
+      "deploy": []
+    },
+    {
       "id": "arcade",
+      "images": ["arcade"],
       "title": "Arcade",
       "kind": "product",
       "package": "arcade",
@@ -18,6 +30,7 @@
     },
     {
       "id": "scout-for-lol",
+      "images": ["scout-for-lol"],
       "title": "Scout for LoL",
       "kind": "product",
       "package": "scout-for-lol",
@@ -42,6 +55,7 @@
     },
     {
       "id": "birmel",
+      "images": ["birmel"],
       "title": "Birmel",
       "kind": "product",
       "package": "birmel",
@@ -58,6 +72,7 @@
     },
     {
       "id": "tasknotes-server",
+      "images": ["tasknotes-server"],
       "title": "TaskNotes",
       "kind": "product",
       "package": "tasknotes-server",
@@ -76,6 +91,7 @@
     },
     {
       "id": "discord-plays-pokemon",
+      "images": ["discord-plays-pokemon"],
       "title": "Discord Plays Pokémon",
       "kind": "product",
       "package": "discord-plays-pokemon",
@@ -95,6 +111,7 @@
     },
     {
       "id": "discord-plays-mario-kart",
+      "images": ["discord-plays-mario-kart"],
       "title": "Discord Plays Mario Kart",
       "kind": "product",
       "package": "discord-plays-mario-kart",
@@ -114,6 +131,7 @@
     },
     {
       "id": "starlight-karma-bot",
+      "images": ["starlight-karma-bot"],
       "title": "Starlight Karma Bot",
       "kind": "product",
       "package": "starlight-karma-bot",
@@ -136,6 +154,7 @@
     },
     {
       "id": "streambot",
+      "images": ["streambot"],
       "title": "Streambot & media",
       "kind": "product",
       "package": "streambot",
@@ -153,6 +172,7 @@
     },
     {
       "id": "static-sites",
+      "images": ["caddy-s3proxy"],
       "title": "Static sites",
       "kind": "product",
       "package": "homelab",
@@ -181,6 +201,7 @@
     },
     {
       "id": "minecraft",
+      "images": ["the-storm-server"],
       "title": "Minecraft",
       "kind": "product",
       "namespaces": [
@@ -201,6 +222,7 @@
     },
     {
       "id": "tracker",
+      "images": ["tracker"],
       "title": "Tracker",
       "kind": "product",
       "package": "tracker",
@@ -216,6 +238,8 @@
     },
     {
       "id": "storm-forum",
+      "images": ["storm-forum"],
+      "charts": ["storm-forum-beta"],
       "title": "The Storm forum",
       "kind": "product",
       "package": "storm-forum",
@@ -225,6 +249,8 @@
     },
     {
       "id": "glitter-boys-launcher",
+      "images": ["glitter-boys-launcher"],
+      "charts": ["glitter-boys-launcher"],
       "title": "Glitter Boys launcher",
       "kind": "product",
       "package": "glitter-boys-launcher",
@@ -234,6 +260,7 @@
     },
     {
       "id": "temporal",
+      "images": ["temporal-worker"],
       "title": "Temporal",
       "kind": "workload",
       "package": "temporal",
@@ -252,6 +279,7 @@
     },
     {
       "id": "trmnl-dashboard",
+      "images": ["trmnl-dashboard"],
       "title": "TRMNL dashboard",
       "kind": "workload",
       "package": "trmnl-dashboard",
@@ -269,6 +297,7 @@
     },
     {
       "id": "ops-dashboard",
+      "images": ["alert-dashboard"],
       "title": "Ops dashboard",
       "kind": "workload",
       "package": "alert-dashboard",
@@ -279,6 +308,7 @@
     },
     {
       "id": "storm-brain",
+      "images": ["storm-brain"],
       "title": "Storm brain",
       "kind": "workload",
       "package": "storm-brain",
@@ -295,6 +325,7 @@
     },
     {
       "id": "self-hosted-apps",
+      "images": ["redlib"],
       "title": "Self-hosted apps",
       "kind": "workload",
       "namespaces": [
@@ -318,6 +349,7 @@
     },
     {
       "id": "obsidian-headless",
+      "images": ["obsidian-headless"],
       "title": "Obsidian headless",
       "kind": "workload",
       "package": "homelab",
@@ -376,6 +408,14 @@
     },
     {
       "id": "ci",
+      "images": [
+        "ci-base",
+        "ci-playwright",
+        "macos-cross-compiler",
+        "windows-cross-compiler",
+        "windows-cross-compiler-winui",
+        "woodpecker-config-extension"
+      ],
       "title": "CI (Woodpecker)",
       "kind": "platform",
       "namespaces": [
@@ -390,6 +430,7 @@
     },
     {
       "id": "storage",
+      "images": ["velero-plugin"],
       "title": "Storage & backups",
       "kind": "platform",
       "namespaces": [

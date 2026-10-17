@@ -10,6 +10,7 @@
     { "name": "caddy-s3proxy", "visibility": "private" },
     { "name": "ci-base", "visibility": "private" },
     { "name": "ci-playwright", "visibility": "private" },
+    { "name": "delivery", "visibility": "private" },
     { "name": "discord-plays-mario-kart", "visibility": "private" },
     { "name": "discord-plays-pokemon", "visibility": "private" },
     { "name": "glitter-boys-launcher", "visibility": "private" },

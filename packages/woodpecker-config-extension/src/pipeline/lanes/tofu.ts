@@ -178,6 +178,7 @@ const PLATFORM_STACKS = [
   "anthropic",
   "discord",
   "cloudflare-tokens",
+  "tailscale-delivery",
 ] as const;
 
 const TOFU_CHANGED = {

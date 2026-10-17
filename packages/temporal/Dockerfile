@@ -22,6 +22,7 @@
 # Arch: the production cluster is amd64; local builds are arm64. Every download
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
 # binaries — no QEMU fallback needed.
+FROM public.ecr.aws/aws-cli/aws-cli:2.37.12@sha256:ce44b800602264c12298bbf3399055a4cefdb9ed4a098abe564afe26e7071bce AS aws-cli
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
@@ -39,6 +40,7 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile \
   --filter '@shepherdjerred/temporal' \
+  --filter '@homelab/cdk8s' \
   --filter '@shepherdjerred/toolkit'
 
 # ── build: gitignored artifacts (shared dist + compiled toolkit) ────────────
@@ -51,6 +53,9 @@ COPY --parents \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
   packages/the-storm/maintenance-status.json \
+  packages/delivery/src/shared \
+  packages/homelab \
+  scripts/lib \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
@@ -88,6 +93,7 @@ RUN cd packages/llm-models && bun run build
 # Glitter context also exports gitignored dist files. Its build validates and
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build
+RUN bun build packages/homelab/scripts/argocd/argocd.ts --target=bun --outfile=packages/temporal/dist/delivery-argocd.js
 # Compile the in-tree toolkit CLI into a single static binary. The
 # homelab-audit runbook + preflight shell out through toolkit workflows and
 # native CLI passthroughs (`alerts`, `bugsink`, `prom`, `loki`, `grafana`);
@@ -111,6 +117,8 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/tempora
 
 # ── runtime: operator CLIs + COPY-only app layers ───────────────────────────
 FROM base AS runtime
+COPY --from=aws-cli /usr/local/aws-cli /usr/local/aws-cli
+RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws && aws --version
 
 # Fail-fast shell for every RUN in this stage: the CLI installs pipe curl into
 # tar and cat into sha256sum, and a failed producer must fail the build rather
@@ -431,6 +439,12 @@ COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/the-storm/maintenance-status.json \
+  packages/delivery/src/shared \
+  scripts/lib \
+  packages/homelab/scripts/argocd/argocd-delivery.ts \
+  packages/homelab/src/delivery-ownership.ts \
+  packages/homelab/src/static-site-delivery-ownership.ts \
+  packages/homelab/scripts/canonical-json.ts \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
   packages/homelab/src/domain-registry.ts \
@@ -458,6 +472,7 @@ COPY --parents \
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
+COPY --from=build /app/packages/temporal/dist/delivery-argocd.js packages/temporal/dist/delivery-argocd.js
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker

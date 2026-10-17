@@ -9,6 +9,10 @@ import {
 
 const workspaces = new Map<string, WorkspacePackage>([
   [
+    "@shepherdjerred/delivery",
+    { dir: "packages/delivery/", workspaceDependencies: [] },
+  ],
+  [
     "@shepherdjerred/tracker",
     { dir: "packages/tracker/", workspaceDependencies: [] },
   ],
@@ -74,6 +78,17 @@ function packages(
 }
 
 describe("Playwright target selection", () => {
+  test("selects Delivery browser acceptance for its service or UI changes", async () => {
+    expect(
+      packages(
+        await selectPlaywrightTargets(
+          ["packages/delivery/src/client/app.tsx"],
+          ".",
+          workspaces,
+        ),
+      ),
+    ).toEqual(["@shepherdjerred/delivery"]);
+  });
   test("selects only reverse-dependent browser targets", async () => {
     expect(
       packages(

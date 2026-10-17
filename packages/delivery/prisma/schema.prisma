@@ -1,0 +1,223 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Build {
+  id                     String     @id
+  requestId              String     @unique
+  serviceId              String
+  sourceRevision         String
+  ciUrl                  String
+  verifiedAt             DateTime
+  status                 String     @default("pending")
+  qualificationReason    String?
+  qualificationCheckedAt DateTime?
+  repositoryId           Int
+  pipelineNumber         Int
+  createdAt              DateTime   @default(now())
+  artifacts              Artifact[]
+
+  @@index([serviceId, createdAt])
+}
+
+model Artifact {
+  id             String            @id
+  buildId        String
+  build          Build             @relation(fields: [buildId], references: [id])
+  component      String
+  kind           String
+  uri            String
+  digest         String
+  runtimeDigests String[]          @default([])
+  requires       Json              @default("{}")
+  version        String
+  createdAt      DateTime          @default(now())
+  entries        VersionSetEntry[]
+
+  @@unique([buildId, component])
+}
+
+model VersionSet {
+  id               String            @id
+  qualifiedBuildId String?           @unique
+  serviceId        String
+  revision         Int
+  baseRevisionId   String?
+  createdAt        DateTime          @default(now())
+  entries          VersionSetEntry[]
+
+  @@unique([serviceId, revision])
+}
+
+model VersionSetEntry {
+  revisionId String
+  revision   VersionSet @relation(fields: [revisionId], references: [id])
+  component  String
+  artifactId String
+  artifact   Artifact   @relation(fields: [artifactId], references: [id])
+
+  @@id([revisionId, component])
+}
+
+model Pipeline {
+  id           String        @id
+  definition   Json
+  createdAt    DateTime      @default(now())
+  environments Environment[]
+}
+
+model Environment {
+  id                                 String       @id
+  serviceId                          String
+  name                               String
+  application                        String?      @unique
+  pipelineRevisionId                 String
+  pipeline                           Pipeline     @relation(fields: [pipelineRevisionId], references: [id])
+  configurationRevision              String
+  configuration                      Json
+  automatic                          Boolean      @default(false)
+  automaticSuppressedThroughRevision Int          @default(0)
+  promotionSourceEnvironmentId       String?
+  generation                         Int          @default(0)
+  desiredVersionSetRevisionId        String?
+  observedVersionSetRevisionId       String?
+  acceptedVersionSetRevisionId       String?
+  observedAt                         DateTime?
+  activeDeploymentId                 String?
+  createdAt                          DateTime     @default(now())
+  deployments                        Deployment[]
+
+  @@index([serviceId])
+}
+
+model Deployment {
+  id                                   String           @id
+  requestId                            String           @unique
+  environmentId                        String
+  environment                          Environment      @relation(fields: [environmentId], references: [id])
+  serviceId                            String
+  versionSetRevisionId                 String
+  sourceEnvironmentId                  String?
+  previousAcceptedVersionSetRevisionId String?
+  previousAcceptedConfiguration        Json?
+  pipelineRevisionId                   String
+  configurationRevision                String
+  configuration                        Json
+  expectedGeneration                   Int
+  kind                                 String
+  automatic                            Boolean          @default(false)
+  status                               String
+  requestedBy                          String
+  message                              String?
+  cancelRequested                      Boolean          @default(false)
+  createdAt                            DateTime         @default(now())
+  startedAt                            DateTime?
+  finishedAt                           DateTime?
+  recoveryRequired                     Boolean          @default(false)
+  resultFingerprint                    String?
+  evidence                             Evidence[]
+  approvals                            Approval[]
+  stages                               Stage[]
+  outbox                               Outbox?
+  lock                                 ApplicationLock?
+
+  @@index([environmentId, createdAt])
+  @@index([status, createdAt])
+}
+
+model Evidence {
+  id           String     @id
+  deploymentId String
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  kind         String
+  summary      String
+  url          String?
+  operationId  String?
+  createdAt    DateTime   @default(now())
+
+  @@unique([deploymentId, id])
+}
+
+model Approval {
+  id           String     @id
+  deploymentId String
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  decision     String
+  reason       String
+  actor        String
+  createdAt    DateTime   @default(now())
+
+  @@unique([deploymentId])
+}
+
+model Stage {
+  id           String     @id
+  deploymentId String
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  key          String
+  status       String
+  operationId  String
+  message      String
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([deploymentId, key])
+}
+
+model Outbox {
+  deploymentId String     @id
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  workflowId   String     @unique
+  submittedAt  DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([submittedAt, createdAt])
+}
+
+model ApplicationLock {
+  application  String     @id
+  deploymentId String     @unique
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  acquiredAt   DateTime   @default(now())
+}
+
+model Request {
+  id          String   @id
+  fingerprint String
+  resultType  String
+  resultId    String
+  actor       String
+  createdAt   DateTime @default(now())
+}
+
+model Audit {
+  id         String   @id
+  actor      String
+  action     String
+  entityId   String
+  requestId  String
+  metadata   Json
+  occurredAt DateTime @default(now())
+
+  @@index([entityId, occurredAt])
+}
+
+model ImportedSnapshot {
+  id            String   @id
+  requestId     String   @unique
+  serviceId     String
+  environmentId String?
+  capturedAt    DateTime
+  source        String
+  components    Json
+  evidence      String
+  createdAt     DateTime @default(now())
+
+  @@index([serviceId, createdAt])
+}

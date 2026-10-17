@@ -179,6 +179,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "scripts/checks/check-built-internal-links.ts",
     "packages/alert-dashboard",
     "packages/tracker",
+    "packages/delivery",
     "packages/birmel",
     "packages/sjer.red",
     "packages/astro-opengraph-images",

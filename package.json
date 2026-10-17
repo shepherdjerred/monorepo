@@ -102,6 +102,7 @@
     "packages/cooklang-for-obsidian",
     "packages/cooklang-rich-preview",
     "packages/cross-compilers-site",
+    "packages/delivery",
     "packages/discord-plays-core",
     "packages/discord-plays-mario-kart",
     "packages/discord-plays-mario-kart/packages/backend",

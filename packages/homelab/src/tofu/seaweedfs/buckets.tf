@@ -501,6 +501,18 @@ resource "aws_s3_bucket" "ci_handoff" {
   bucket = "ci-handoff"
 }
 
+# Immutable deployment artifacts outlive the producing CI pipeline. No age-based
+# lifecycle: active environment pins and retained rollback revisions own retention.
+# Provision this bucket before enabling archive publication; never rely on S3's
+# implicit bucket creation from the first PutObject.
+resource "aws_s3_bucket" "delivery_artifacts" {
+  bucket = "delivery-artifacts"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # OpenTofu state backend for all modules
 resource "aws_s3_bucket" "homelab_tofu_state" {
   bucket = "homelab-tofu-state"

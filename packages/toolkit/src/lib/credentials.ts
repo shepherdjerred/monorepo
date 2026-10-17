@@ -24,6 +24,15 @@ export type CredentialSpec = {
 const PRIVATE_VAULT_REF = "op://63lcesgoblzbpkdr4koye66rei";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
+  DELIVERY_API_TOKEN: {
+    description:
+      "Delivery machine API token (cannot approve production releases)",
+    source: {
+      kind: "op",
+      // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
+      ref: "op://v64ocnykdqju4ui6j6pua56xw4/ahbp4izt7fibvwdjwd4ffhiime/DELIVERY_ADMIN_TOKEN",
+    },
+  },
   GRAFANA_API_KEY: {
     description: "Grafana API key",
     source: {

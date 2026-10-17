@@ -3,6 +3,24 @@
   "version": 2,
   "workspaces": [
     {
+      "package": "@shepherdjerred/delivery",
+      "directory": "packages/delivery",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "generate",
+          "command": ["bun", "run", "generate"]
+        },
+        { "runner": "vitest", "args": ["src"] }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/arcade",
       "directory": "packages/arcade",
       "steps": [{ "runner": "vitest", "args": ["runtimes"] }]
@@ -335,6 +353,7 @@
         {
           "runner": "vitest",
           "args": [
+            "scripts/argocd/argocd-delivery.test.ts",
             "scripts/argocd/argocd-manifest-overrides.test.ts",
             "scripts/argocd/argocd-ignored-differences.test.ts",
             "scripts/scripts-typecheck.test.ts",

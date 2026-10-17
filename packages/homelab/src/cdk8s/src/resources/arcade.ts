@@ -174,7 +174,7 @@ model = "gpt-5.6-sol"
   );
   deployment.addContainer(
     withCommonProps({
-      image: `docker.io/shepherdjerred/arcade:${versions["shepherdjerred/arcade"]}`,
+      image: `{{ .Values.delivery.image | default "docker.io/shepherdjerred/arcade:${versions["shepherdjerred/arcade"]}" }}`,
       envVariables: {
         ARCADE_CONFIG_PATH: EnvValue.fromValue("/config/arcade.toml"),
         NODE_ENV: EnvValue.fromValue("production"),

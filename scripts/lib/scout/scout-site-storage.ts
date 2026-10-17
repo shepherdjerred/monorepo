@@ -270,6 +270,16 @@ export async function assertScoutArchiveBytes(
   }
 }
 
+/** Restore an exact existing flavor for Delivery publication, without rebuilding. */
+export async function materializeScoutArchive(
+  state: ScoutReleaseState,
+  flavor: "prod" | "beta",
+  destination: string,
+): Promise<void> {
+  await assertScoutArchived(state, flavor);
+  await downloadAndVerifyArchiveBytes(state, flavor, destination);
+}
+
 async function archiveFlavor(
   flavor: "prod" | "beta",
   state: ScoutReleaseState,

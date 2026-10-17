@@ -125,7 +125,7 @@ async function evaluateApplicationHealth(
 }
 
 describe("ArgoCD application", () => {
-  it("grants the Woodpecker release step only its required application access", () => {
+  it("keeps release, Delivery execution and recovery observation grants scoped to their owners", () => {
     const application = synthArgoCdApplication();
 
     expect(
@@ -137,6 +137,12 @@ describe("ArgoCD application", () => {
       "p, woodpecker, applications, get, default/*, allow",
       "p, woodpecker, applications, override, default/apps, allow",
       "p, woodpecker, applications, update, default/apps, allow",
+      "p, delivery, applications, get, default/apps, allow",
+      "p, delivery, applications, get, default/arcade, allow",
+      "p, delivery, applications, update, default/arcade, allow",
+      "p, delivery, applications, sync, default/arcade, allow",
+      "p, delivery-observer, applications, get, default/apps, allow",
+      "p, delivery-observer, applications, get, default/arcade, allow",
     ]);
   });
 

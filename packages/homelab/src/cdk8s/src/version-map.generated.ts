@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const VersionMapSchema = z
   .object({
+    "shepherdjerred/delivery": z.string(),
     "shepherdjerred/arcade": z.string(),
     "shepherdjerred/tracker": z.string(),
     "bluemap/archive-cli": z.string(),
@@ -37,6 +38,7 @@ export const VersionMapSchema = z
     "linuxserver/sonarr": z.string(),
     "timothyjmiller/cloudflare-ddns": z.string(),
     "cloudflare/cloudflared": z.string(),
+    "tailscale/tailscale": z.string(),
     "tailscale/golink": z.string(),
     "home-assistant/home-assistant": z.string(),
     "bropat/eufy-security-ws": z.string(),

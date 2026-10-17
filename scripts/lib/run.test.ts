@@ -19,6 +19,25 @@ function stderrEmitter(payload: string, code: number): string[] {
 const testEnvironmentName = "CODEX_RUN_HELPER_TEST_VALUE";
 
 describe("run stderr capture", () => {
+  test("an expired Activity stops its subprocess instead of leaving a writer running", async () => {
+    await expect(
+      runAllowExit([process.execPath, "-e", "await Bun.sleep(60000)"], {
+        signal: AbortSignal.timeout(100),
+        capture: true,
+        echoCapturedStdout: false,
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("an already canceled operation never starts its external command", async () => {
+    const controller = new AbortController();
+    controller.abort(new Error("Activity canceled"));
+    await expect(
+      runAllowExit(["does-not-exist-static-site-command"], {
+        signal: controller.signal,
+      }),
+    ).rejects.toThrow("Activity canceled");
+  });
   const originalWrite = process.stderr.write.bind(process.stderr);
   afterEach(() => {
     process.stderr.write = originalWrite;

@@ -25,6 +25,71 @@ const allSteps = () => buildPipelineSteps({ images: IMAGES, changedBase: "x" });
 
 const step = (key: string) => allSteps().find((s) => s.key === key);
 
+test("Delivery publication remains disabled until its independent rollout is enabled", () => {
+  expect(step("delivery-publish")).toBeUndefined();
+});
+
+test("static artifact registration waits for ordinary and Scout archives without transferring writer ownership", () => {
+  const steps = buildPipelineSteps({
+    images: IMAGES,
+    changedBase: "x",
+    deliveryPublication: true,
+  });
+  const sites = steps.find((entry) => entry.key === "sites");
+  const scout = steps.find((entry) => entry.key === "scout-beta-release");
+  const publication = steps.find((entry) => entry.key === "delivery-publish");
+  expect(sites?.dependsOn).toContain("scout-beta-release");
+  expect(publication?.dependsOn).toEqual(
+    expect.arrayContaining(["sites", "scout-beta-release"]),
+  );
+  expect(sites?.commands.join("\n")).toContain(
+    "deploy-site.ts sjer.red --prebuilt --archive",
+  );
+  expect(sites?.commands.join("\n")).toContain(
+    "scripts/ci/write-site-archive-handoff.ts",
+  );
+  expect(scout?.commands.join("\n")).toContain("scout-site-artifacts");
+  expect(scout?.commands.join("\n")).toContain(
+    "publish-scout-site-archives.ts .scout-release/state.json",
+  );
+  expect(scout?.commands.join("\n")).toContain(
+    "static-site-writer.ts scout-frontend-beta",
+  );
+  expect(sites?.commands[0]).not.toContain("ci-changed.ts sites");
+});
+
+test("Delivery publisher cannot run on PRs or make verification wait for deployment acceptance", () => {
+  const steps = buildPipelineSteps({
+    images: IMAGES,
+    changedBase: "x",
+    deliveryPublication: true,
+  });
+  const publication = steps.find(
+    (candidate) => candidate.key === "delivery-publish",
+  );
+  expect(publication).toBeDefined();
+  expect(publication?.dependsOn).toEqual(
+    expect.arrayContaining(["verify", "images", "helm-push"]),
+  );
+  expect(dependsTransitivelyOn(steps, "verify", "delivery-publish")).toBe(
+    false,
+  );
+  expect(
+    selectSteps(steps, {
+      event: "pull_request",
+      branch: "feature",
+      defaultBranch: "main",
+      changedFiles: ["package.json"],
+    }).some((candidate) => candidate.key === "delivery-publish"),
+  ).toBe(false);
+  expect(publication?.secrets?.map((entry) => entry.env)).toContain(
+    "DELIVERY_API_TOKEN",
+  );
+  expect(publication?.secrets?.map((entry) => entry.env)).not.toContain(
+    "DELIVERY_EXECUTOR_TOKEN",
+  );
+});
+
 const secretEnvs = (key: string) =>
   (allSteps().find((s) => s.key === key)?.secrets ?? []).map((g) => g.env);
 
