@@ -2,6 +2,7 @@ import { parseArgs } from "node:util";
 import { z } from "zod";
 import { ciCommand } from "#commands/ci.ts";
 import { parseTimeout } from "#lib/ci/arguments.ts";
+import { ciBenchmarkCommand } from "#commands/ci-benchmark.ts";
 import {
   requiredCredentialsFor,
   resolveCredentials,
@@ -45,6 +46,10 @@ export async function handleCiCommand(
   subcommand: string | undefined,
   args: string[],
 ): Promise<void> {
+  if (subcommand === "benchmark") {
+    await ciBenchmarkCommand(args);
+    return;
+  }
   const json = args.includes("--json");
   try {
     if (
@@ -62,6 +67,7 @@ export async function handleCiCommand(
   load            Show Woodpecker/Kueue queues and CPU, memory, disk, I/O pressure
   timings         Report recent latency by actual workflow class and attempt
   maintenance     Show recent maintenance runs and coordinator inspection details
+  benchmark       Inspect and archive retained canary resource evidence
 
 Options:
   --json                       One final JSON report on stdout

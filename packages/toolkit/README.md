@@ -177,6 +177,28 @@ CI commands resolve `WOODPECKER_TOKEN` through the registered credential broker,
 as the native Woodpecker command does. An explicit token retains precedence;
 custom server URLs or repository IDs require an explicit token.
 
+`toolkit ci benchmark evidence <PIPELINE> --head <full SHA> --variant baseline|candidate`
+recovers a terminal manual verify canary's retained resource evidence without
+submitting another job. It asserts the source, pipeline, workflow and variant,
+checks sample coverage, cumulative counters and scratch filesystem capacities,
+and reports command, native wrapper and collection outcomes separately. It reads
+`ci-handoff` using the standard AWS configuration with profile `seaweedfs`;
+`--profile` selects another configured profile. Reads are bounded to 128 MiB.
+Use `--archive` to retain a sanitized resource report under its own SHA256,
+including the source artifact's SHA256, and verify the written bytes by readback.
+Task inputs, commands, logs and environment values are omitted. Source hashes and
+archive readback compare original bytes; malformed source UTF-8 fails strictly.
+Exit 0 means complete collection, healthy observed resources and successful
+command/native wrapper outcomes; 1 means a recorded failure; 2
+means invalid arguments, identity mismatch or an upstream failure.
+
+This command reports a component of qualification. Filesystem observations can
+miss transient peaks; disk baselines describe a shared filesystem rather than
+directory usage. Pod identity and restarts, quiet windows, physical device
+writes, setup/publication/settling and paired runtime comparisons require
+separate evidence. Its physical and production qualification fields remain
+false. A failed workload can still retain complete resource evidence.
+
 `wait` pins the initial PR head (or asserts `--head <full SHA>`), subscribes to
 Woodpecker events before reading status, and refreshes GitHub metadata every
 30 seconds. Repeated REST reads send the previous `ETag`; GitHub does not
