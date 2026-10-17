@@ -43,6 +43,8 @@ import { createNativeRecoveryObserver } from "#migration/native-network/producer
 import { createNativeQuarantineObserver } from "#migration/native-network/quarantine.ts";
 import { createNativeQuarantineFileActivities } from "#automation/native-quarantine/activities.ts";
 import type { FileContext } from "./files/types.ts";
+import { createCapacityFileProducer } from "./capacity/files.ts";
+import { createCapacityNetworkProducer } from "./capacity/network.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -264,7 +266,22 @@ export async function createMediaFileRuntime(
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
     }),
   };
-  return { activities, close: () => db.$disconnect() };
+  const behavior = mediaBehaviorConfig(config.ENVIRONMENT, true);
+  return {
+    activities,
+    capacity: {
+      sampleMediaCapacity: createCapacityFileProducer({
+        db,
+        enabled: async () => {
+          const flag = await behavior.get("capacityObservationEnabled");
+          return flag.value;
+        },
+        roots: { movies: roots.movies.library, tv: roots.tv.library },
+        workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+      }),
+    },
+    close: () => db.$disconnect(),
+  };
 }
 
 const DeliveryBootstrapSchema = z
@@ -365,6 +382,17 @@ export async function createMediaNetworkRuntime(
     })(planId);
   };
   return {
+    capacity: {
+      observeMediaCapacityMounts: createCapacityNetworkProducer({
+        db: context.db,
+        enabled: async () => {
+          const flag = await behavior.get("capacityObservationEnabled");
+          return flag.value;
+        },
+        observeMounts: (signal) =>
+          createLegacyObserver(environment).observeCanonicalMounts(signal),
+      }),
+    },
     activities: {
       ...createMediaNetworkActivities(context, lifecycle),
       ...createSubtitleReplacementNetworkActivities(context.db),

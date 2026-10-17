@@ -72,6 +72,12 @@ export function mediaBehaviorConfig(
         default: false,
         names: { flag: "media-acquisition-enabled" },
       },
+      capacityObservationEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: false,
+        names: { flag: "media-capacity-observation-enabled" },
+      },
       sourceCleanupEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
@@ -136,6 +142,7 @@ export function mediaBehaviorConfig(
           sharedDiscordChannelId: "string",
           requestsEnabled: "boolean",
           acquisitionEnabled: "boolean",
+          capacityObservationEnabled: "boolean",
           sourceCleanupEnabled: "boolean",
           quarantineEnabled: "boolean",
           purgeEnabled: "boolean",

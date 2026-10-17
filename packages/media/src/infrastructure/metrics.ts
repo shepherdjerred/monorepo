@@ -1,8 +1,13 @@
 import { z } from "zod";
 import type { Database } from "./database.ts";
 import { visibilityMetrics } from "./visibility/metrics.ts";
+import { readCapacityView } from "./capacity/read.ts";
+import { renderCapacityMetrics } from "./capacity/metrics.ts";
 
-export async function renderMediaMetrics(database: Database): Promise<string> {
+export async function renderMediaMetrics(
+  database: Database,
+  samplingEnabled = false,
+): Promise<string> {
   const pending = await database.outboxCommand.count({
     where: { dispatchedAt: null },
   });
@@ -62,6 +67,8 @@ export async function renderMediaMetrics(database: Database): Promise<string> {
       .map(
         ([name, value]) => `# TYPE ${name} gauge\n${name} ${String(value)}\n`,
       )
-      .join("") + (await visibilityMetrics(database))
+      .join("") +
+    (await visibilityMetrics(database)) +
+    renderCapacityMetrics(await readCapacityView(database, { samplingEnabled }))
   );
 }
