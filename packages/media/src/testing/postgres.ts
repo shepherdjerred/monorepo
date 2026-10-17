@@ -37,7 +37,8 @@ function postgresCommand(args: string[]): string[] {
 /** Private short-lived PostgreSQL cluster; no developer or production database access. */
 export async function startMediaTestPostgres(
   options: {
-    migrationCeiling?: "20261017001600_visibility";
+    migrationCeiling?:
+      "20261017001600_visibility" | "20261017001700_default_edition_scope";
   } = {},
 ) {
   const directory = await mkdtemp(path.join(tmpdir(), "media-pg-"));

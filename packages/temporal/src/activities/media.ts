@@ -31,17 +31,17 @@ type FileActivities = MediaFileActivities &
   SubtitleReplacementFileActivities &
   NativeRecoveryFileActivities &
   NativeQuarantineFileActivities;
-async function network(): Promise<NetworkActivities> {
+export async function getMediaNetworkRuntime() {
   networkRuntime ??= createMediaNetworkRuntime(Bun.env);
   try {
     const runtime = await networkRuntime;
-    return runtime.activities;
+    return runtime;
   } catch (error) {
     networkRuntime = undefined;
     throw error;
   }
 }
-async function files(): Promise<FileActivities> {
+export async function getMediaFileRuntime() {
   fileRuntime ??= createMediaFileRuntime(Bun.env, (phase) => {
     assertNotCancelled();
     heartbeat({ phase });
@@ -49,11 +49,21 @@ async function files(): Promise<FileActivities> {
   });
   try {
     const runtime = await fileRuntime;
-    return runtime.activities;
+    return runtime;
   } catch (error) {
     fileRuntime = undefined;
     throw error;
   }
+}
+
+async function network(): Promise<NetworkActivities> {
+  const runtime = await getMediaNetworkRuntime();
+  return runtime.activities;
+}
+
+async function files(): Promise<FileActivities> {
+  const runtime = await getMediaFileRuntime();
+  return runtime.activities;
 }
 
 /** Do not serialize Prisma queries, provider URLs, or credentials into Workflow history. */

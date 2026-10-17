@@ -131,7 +131,6 @@ import {
 } from "./worker-deployment-canary.ts";
 
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
-import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
@@ -406,13 +405,10 @@ export async function runGlitterCorpusChannelOverlap(
   return _runGlitterCorpusChannelOverlap(input);
 }
 
-export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
-  return _runGlitterCorpusDaily();
-}
+export const runGlitterCorpusDaily = () => _runGlitterCorpusDaily();
 
-export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
-  return _runLlmBilledCostReconciliation();
-}
+export const runLlmBilledCostReconciliation = () =>
+  _runLlmBilledCostReconciliation();
 
 export const runOpsSnapshot = () => _runOpsSnapshot();
 
@@ -479,3 +475,6 @@ export const prepareSubtitleReplacementWorkflow = replacement.prepare;
 export const applySubtitleReplacementWorkflow = replacement.apply;
 export const reconcileSubtitleReplacementWorkflow = replacement.reconcile;
 export const cleanupSubtitleReplacementWorkflow = replacement.cleanup;
+import * as capacity from "./media/capacity.ts";
+export const observeMediaCapacityWorkflow =
+  capacity.observeMediaCapacityWorkflow;

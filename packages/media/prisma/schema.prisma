@@ -1027,6 +1027,38 @@ model MediaStorageAuthority {
   version Int @default(0)
 }
 
+model MediaCapacityObservation {
+  role                   String   @id
+  cycleRevision          BigInt   @default(0)
+  cycleEpoch             Int
+  cycleStartedAt         DateTime
+  mountResultRevision    BigInt?
+  mountOutcome           String?
+  mountReason            String?
+  mountEpoch             Int?
+  mountCompletedAt       DateTime?
+  mountObservedAt        DateTime?
+  mountExpiresAt         DateTime?
+  mountBinding           Json?
+  mountBindingDigest     String?
+  mountEvidence          Json?
+  sampleAttempt          BigInt   @default(0)
+  sampleAttemptCycle     BigInt?
+  sampleAttemptStartedAt DateTime?
+  sampleResultAttempt    BigInt?
+  sampleOutcome          String?
+  sampleReason           String?
+  sampleEpoch            Int?
+  sampleStartedAt        DateTime?
+  sampleObservedAt       DateTime?
+  sampleCompletedAt      DateTime?
+  sampleBinding          Json?
+  sampleBindingDigest    String?
+  sampleIdentity         Json?
+  totalBytes             BigInt?
+  availableBytes         BigInt?
+}
+
 model LegacyWriterLease {
   id String @id
   recoveryEpoch Int

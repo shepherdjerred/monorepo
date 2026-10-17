@@ -43,6 +43,8 @@ import {
 import { z } from "zod";
 import type { MediaActor, MediaAuth } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
+import { registerCapacityRoutes } from "./capacity-routes.ts";
+import type { CapacityAdministration } from "#infrastructure/capacity/service.ts";
 import type {
   CatalogApplication,
   MediaApplication,
@@ -65,6 +67,7 @@ export type MediaAppDependencies = {
   catalog: CatalogApplication;
   notifications: NotificationApplication;
   admin: AdminApplication;
+  capacityAdmin: CapacityAdministration;
   plexAdmin: PlexAdministration;
   numberingAdmin: NumberingAdministration;
   migrationAdmin: MigrationAdministration;
@@ -239,6 +242,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   });
   app.get("/api/v1/me", (c) => c.json(c.get("actor")));
   registerRecoveryRoutes(app, dependencies.recoveryAdmin);
+  registerCapacityRoutes(app, dependencies.capacityAdmin);
   registerLegacyRequesterBindingRoutes(
     app,
     dependencies.legacyRequesterBindings,

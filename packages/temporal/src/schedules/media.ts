@@ -14,6 +14,20 @@ const cadences: { kind: string; every: Duration }[] = [
 export const MEDIA_SCHEDULES: ScheduleDefinition[] = [
   {
     namespace: "prod",
+    id: "media-capacity",
+    workflowType: "observeMediaCapacityWorkflow",
+    args: [],
+    timing: { kind: "interval", every: "1 minute" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "1 minute",
+    workflowExecutionTimeout: "3 minutes",
+    initialPauseNote:
+      "Awaiting capacity observation acceptance and compatible workers",
+    memo: "Observe canonical media library capacity without granting file authority",
+  },
+  {
+    namespace: "prod",
     id: "media-outbox",
     workflowType: "dispatchMediaOutboxWorkflow",
     args: [],

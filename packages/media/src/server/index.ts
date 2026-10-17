@@ -32,6 +32,7 @@ import { DiscordOAuth } from "#infrastructure/discord-auth.ts";
 import { createMediaWorkflowStarter } from "#automation/temporal-client.ts";
 import { createOutboxActivities } from "#automation/store.ts";
 import { renderMediaMetrics } from "#infrastructure/metrics.ts";
+import { PrismaCapacityAdministration } from "#infrastructure/capacity/service.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags();
@@ -132,6 +133,7 @@ const app = createMediaApp({
     },
   }),
   admin: new PrismaAdminApplication(database, cipher),
+  capacityAdmin: new PrismaCapacityAdministration(database, capacityEnabled),
   numberingAdmin: new PrismaNumberingAdministration(database, tmdbClient),
   handoffAdmin: new PrismaMediaHandoff(database),
   nativeRecoveryAdmin: new PrismaNativeRecovery(database),
@@ -193,8 +195,14 @@ app.get("/readyz", async (c) => {
 });
 app.get("/metrics", async (c) => {
   c.header("Content-Type", "text/plain; version=0.0.4");
-  return c.body(await renderMediaMetrics(database));
+  return c.body(await renderMediaMetrics(database, await capacityEnabled()));
 });
+async function capacityEnabled() {
+  const result = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
+    "capacityObservationEnabled",
+  );
+  return result.value;
+}
 app.get("*", async (c, next) => {
   return c.req.path === "/api" ||
     c.req.path.startsWith("/api/") ||

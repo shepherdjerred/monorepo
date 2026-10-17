@@ -111,8 +111,40 @@ library access. Members receive scoped progress and their own household evidence
 owner diagnostics are omitted. Raw observations, private URLs, torrent hashes,
 filesystem paths and unrelated shared-pack claims do not enter this response.
 Aggregate metrics at `/metrics` remain read-only and contain no media/user/torrent
-identifiers. Plex event hints and persisted filesystem-capacity sampling are
-separate unfinished capabilities tracked in AI-300.
+identifiers. Plex event hints remain an unfinished capability tracked in AI-300.
+
+## Storage capacity observations
+
+`GET /api/v1/admin/capacity` returns Movies and TV observations to the current
+unrestricted owner. The recovery page displays the same safe projection: sample
+time, current total/available bytes, and explicit missing, failed, stale, future,
+old-epoch or changed-root states. Capacity values in the API and `/metrics` come
+only from PostgreSQL; reads neither inspect mounts nor create authority. Byte values are decimal
+strings, including valid zero available space. The two roles may share one
+filesystem, so their capacities must not be added together.
+
+The dedicated `media-capacity` Temporal Schedule is initially paused. Its new
+Workflow observes canonical mounts on `media-network`, then samples the exact
+roots on `media-files`. The typed `capacityObservationEnabled` flag defaults off;
+both Activities resolve it before allocating observation revisions or doing I/O.
+The response reports collection status separately: turning collection off does
+not falsify a still-current saved sample. Deployment, enabling collection and
+observed live capacity are separate acceptance steps.
+
+The observational `MediaCapacityObservation` rows support observe mode without
+writer leases, storage authority or handoff receipts. Each phase allocates its
+own ordering token before external I/O. Late success or failure cannot overwrite
+a newer invocation. Samples bind exact root/PVC/volume/worker/epoch facts;
+benign proof renewal preserves the sample time, while changed identity or an
+expired current mount proof suppresses byte values. Samples age out after five
+minutes. No unknown measurement becomes zero free space.
+
+`media_storage_capacity_state` exposes fixed role/state labels, and current-only
+total/available byte gauges use decimal exposition. Prometheus stores floating
+point values, so downstream arithmetic is not byte-exact. These measurements
+neither reserve space nor grant ownership, cleanup or write permission. Existing
+immediate copy-time capacity checks remain authoritative; collection never
+changes acknowledgement of an existing file operation.
 
 ## Ownership handoff API contract
 

@@ -18,6 +18,7 @@ import {
 } from "#client/components.tsx";
 import { RecoveryResponseForm, RecoveryReleaseForm } from "./review.tsx";
 import { LegacyRequesterBindings } from "./legacy-bindings.tsx";
+import { CapacityPanel } from "#client/capacity/panel.tsx";
 
 export function RecoveryPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
@@ -84,6 +85,7 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
           </p>
         </section>
       )}
+      <CapacityPanel user={user} />
       {user.role === "owner" && (
         <section className="panel">
           <p>
