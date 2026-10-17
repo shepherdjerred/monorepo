@@ -56,6 +56,7 @@ export const STORM_DEV_MODULES = [
  */
 const STORM_IMAGE_ENABLED_MODULES = [
   ...STORM_DEV_MODULES,
+  "safety",
   "companions",
 ] as const;
 

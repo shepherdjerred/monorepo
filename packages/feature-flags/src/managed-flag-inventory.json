@@ -3259,6 +3259,14 @@
       "key": "prod",
       "overrides": [
         {
+          "key": "the-storm-content-safety-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "the-storm-beginners-luck-enabled",
           "type": "boolean",
           "default": true,

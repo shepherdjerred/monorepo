@@ -1735,10 +1735,10 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010387@sha256:ce3fae8f5c1ee695e014b2d9235196120f7bd7034c556d83ef6f6d51a14c3790",
+      "value": "2.0.0-1010653@sha256:bfdd2f32ac6093b792956ddfdd21366a072abeb9af8ba27a9829be223857f08c",
       "notes": [
         "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
-        "This production pin is owned by operator publication; remove local publisher ownership when explicitly promoting a CI-published production pin.",
+        "This production pin advances only through explicit promotion of a verified published candidate.",
         "CI publishes and updates shepherdjerred/the-storm-server separately; candidate publication never activates production."
       ]
     },
