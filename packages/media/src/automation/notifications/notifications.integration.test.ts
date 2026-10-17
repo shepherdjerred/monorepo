@@ -309,65 +309,80 @@ test("unknown sends never retry; exact receipt reconciliation cannot cross a res
   expect(preserved.recoveryEpoch).toBe(0);
 });
 
-test("cancelled requests and obsolete subtitle versions are suppressed before sending", async () => {
-  const data = await setup();
-  const delivery = await queue(data);
-  await database().mediaRequest.updateMany({
-    where: { userId: data.user.id },
-    data: { active: false },
-  });
-  const activity = createNotificationActivities({
-    ...context(),
-    notify: async () => {
-      throw new Error("Must not send");
-    },
-  });
-  expect(
-    await activity.deliverMediaNotification({
-      operationId: data.input.operationId,
-      notificationId: delivery.id,
-    }),
-  ).toMatchObject({ status: "failed" });
-  await database().mediaRequest.updateMany({
-    where: { userId: data.user.id },
-    data: { active: true },
-  });
-  await database().mediaRequest.updateMany({
-    where: { mediaId: data.media.id },
-    data: { subtitleLanguages: ["en"] },
-  });
-  const installed = await database().subtitleAsset.create({
-    data: {
-      assetId: data.asset.id,
-      language: "en",
-      providerId: "fixture",
-      state: "installed",
-      provenance: {},
-      matchingEvidence: {},
-    },
-  });
-  await database().$transaction((tx) =>
-    queueLifecycleNotifications(tx, {
-      key: `subtitle:${installed.id}`,
-      kind: "subtitles_ready",
-      epoch: 0,
-      items: [{ ...data.item, subtitleId: installed.id, language: "en" }],
-    }),
-  );
-  const subtitle = await database().notificationDelivery.findFirstOrThrow({
-    where: { userId: data.user.id, event: { kind: "subtitles_ready" } },
-  });
-  await database().libraryAsset.update({
-    where: { id: data.asset.id },
-    data: { version: { increment: 1 } },
-  });
-  expect(
-    await activity.deliverMediaNotification({
-      operationId: data.input.operationId,
-      notificationId: subtitle.id,
-    }),
-  ).toMatchObject({ status: "failed" });
-});
+test.each(["obsolete_version", "unverified_quality"])(
+  "cancelled requests and %s subtitles are suppressed before sending",
+  async (reason) => {
+    const data = await setup();
+    const delivery = await queue(data);
+    await database().mediaRequest.updateMany({
+      where: { userId: data.user.id },
+      data: { active: false },
+    });
+    const activity = createNotificationActivities({
+      ...context(),
+      notify: async () => {
+        throw new Error("Must not send");
+      },
+    });
+    expect(
+      await activity.deliverMediaNotification({
+        operationId: data.input.operationId,
+        notificationId: delivery.id,
+      }),
+    ).toMatchObject({ status: "failed" });
+    await database().mediaRequest.updateMany({
+      where: { userId: data.user.id },
+      data: { active: true },
+    });
+    await database().mediaRequest.updateMany({
+      where: { mediaId: data.media.id },
+      data: { subtitleLanguages: ["en"] },
+    });
+    const installed = await database().subtitleAsset.create({
+      data: {
+        assetId: data.asset.id,
+        language: "en",
+        providerId: "fixture",
+        state: "installed",
+        qualityStatus: "accepted",
+        storageKind: "sidecar",
+        ownershipEpoch: 0,
+        videoChecksum: data.asset.checksum,
+        videoVersion: data.asset.version,
+        checksum: "c".repeat(64),
+        provenance: {},
+        matchingEvidence: {},
+      },
+    });
+    await database().$transaction((tx) =>
+      queueLifecycleNotifications(tx, {
+        key: `subtitle:${installed.id}`,
+        kind: "subtitles_ready",
+        epoch: 0,
+        items: [{ ...data.item, subtitleId: installed.id, language: "en" }],
+      }),
+    );
+    const subtitle = await database().notificationDelivery.findFirstOrThrow({
+      where: { userId: data.user.id, event: { kind: "subtitles_ready" } },
+    });
+    if (reason === "unverified_quality")
+      await database().subtitleAsset.update({
+        where: { id: installed.id },
+        data: { qualityStatus: "unverified" },
+      });
+    else
+      await database().libraryAsset.update({
+        where: { id: data.asset.id },
+        data: { version: { increment: 1 } },
+      });
+    expect(
+      await activity.deliverMediaNotification({
+        operationId: data.input.operationId,
+        notificationId: subtitle.id,
+      }),
+    ).toMatchObject({ status: "failed" });
+  },
+);
 
 test("shared announcements never use personal content or preferences", async () => {
   const data = await setup();

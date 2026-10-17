@@ -1,8 +1,37 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
-import { MediaError } from "#application/errors.ts";
+import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
+import { authorizeRequester } from "./requester-authorization.ts";
+
+/** Caller locks media/claims and runtime first; retain current identity through commit. */
+export async function authorizeRenewal(
+  db: Prisma.TransactionClient,
+  actor: MediaActor,
+  input: {
+    mediaId: string;
+    action: "retry" | "select_release";
+    serverMachineId?: string;
+  },
+): Promise<MediaActor> {
+  const media = await db.mediaItem.findUnique({ where: { id: input.mediaId } });
+  if (media === null)
+    throw new MediaError("media_not_found", "Media item does not exist", 404);
+  const { plexSectionId } = z
+    .object({ plexSectionId: z.string().min(1).optional() })
+    .parse(media.externalIds);
+  const current = await authorizeRequester(db, actor, actor.id, {
+    kind: media.kind,
+    ...(plexSectionId === undefined ? {} : { sectionId: plexSectionId }),
+    ...(input.serverMachineId === undefined
+      ? {}
+      : { serverMachineId: input.serverMachineId }),
+  });
+  if (input.action === "select_release") requireOwner(current);
+  return current;
+}
 
 export async function validateAction(
   db: Prisma.TransactionClient,

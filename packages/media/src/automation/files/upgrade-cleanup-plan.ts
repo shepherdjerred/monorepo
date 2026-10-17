@@ -4,6 +4,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { fileOperations } from "./file-operations.ts";
+import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 
 export const UpgradeCleanupPlanSchema = z.object({
   libraryKind: z.enum(["movies", "tv"]),
@@ -77,7 +78,7 @@ export async function prepareUpgradeCleanupPlan(
       subtitleId: null,
     },
   ];
-  files.push(...sidecarFiles(roots.control, asset.subtitles));
+  files.push(...sidecarFiles(roots.control, ownedSubtitleSidecars(asset)));
   const plan = UpgradeCleanupPlanSchema.parse({
     libraryKind,
     assetVersion: asset.version,

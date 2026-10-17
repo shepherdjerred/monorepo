@@ -15,6 +15,7 @@ import { snapshotHash } from "./profile-import.ts";
 import { normalizeCapture } from "./normalize.ts";
 import { canonicalOrder } from "./canonical-order.ts";
 import { bundleAssociations } from "./bundle-associations.ts";
+import { associateSubtitleRecords } from "./subtitles/associations.ts";
 
 type Captured = { id: string; snapshot: MigrationSnapshot };
 type Context = {
@@ -134,6 +135,7 @@ export function buildMigrationBundle(captures: Captured[], context: Context) {
     })),
   );
   protectEntries(entries, stable);
+  associateSubtitleRecords(entries, manifest);
   entries.sort((a, b) => canonicalOrder(a.provenanceKey, b.provenanceKey));
   const report = {
     schemaVersion: 1,

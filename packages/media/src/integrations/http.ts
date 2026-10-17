@@ -10,6 +10,7 @@ export type IntegrationFailure =
   | "invalid-response"
   | "outcome-unknown"
   | "interaction-required"
+  | "unsupported-target"
   | "conflict";
 
 /** Deliberately excludes response bodies, credential-bearing URLs, and causes. */

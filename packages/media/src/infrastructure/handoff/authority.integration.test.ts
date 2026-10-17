@@ -1,6 +1,9 @@
 import { beforeAll, afterAll, test, expect } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { grantTestLease } from "#testing/authority.ts";
+import {
+  grantTestLease,
+  grantTestRequesterAccess,
+} from "#testing/authority.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { runtimeAuthority, recordsAuthorized } from "./authority.ts";
 import { refreshWriterLease } from "./lease.ts";
@@ -175,6 +178,7 @@ test("Keep and pin preserve stale intent authority and system recovery hold; exp
     expect(protectedIntent.automationEpoch).toBe(5);
     expect(hold.releasedAt).toBeNull();
   }
+  await grantTestRequesterAccess(db, user.id, "fixture-server");
   await commands.act(user, crypto.randomUUID(), media.id, {
     action: "retry",
     expectedVersion: 3,

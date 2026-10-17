@@ -9,6 +9,7 @@ import { QualityRulesSchema } from "#shared/api.ts";
 import { createPublicationActivities } from "./publication.ts";
 import { createOutboxActivities } from "./store.ts";
 import { rm } from "node:fs/promises";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 const { database, context, fixture, cipher } = automationTestHarness();
 
 test("Retry after committed promotion adopts the coordinator and verifies Plex without republishing", async () => {
@@ -49,8 +50,10 @@ test("Retry after committed promotion adopts the coordinator and verifies Plex w
     const item = await database().mediaItem.findUniqueOrThrow({
       where: { id: f.media.id },
     });
+    await grantTestRequesterAccess(database(), f.user.id, "fixture-server");
     const retry = await new PrismaMediaCommands(database(), {
       keepDays: 30,
+      serverMachineId: "fixture-server",
     }).act(f.user, crypto.randomUUID(), f.media.id, {
       action: "retry",
       expectedVersion: item.version,

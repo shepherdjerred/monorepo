@@ -20,6 +20,7 @@ export const BazarrSubtitleWire = z.object({
   embedded_track_id: z.number().int().nonnegative().nullable(),
 });
 export const BazarrMovieWire = z.object({
+  path: z.string().nullable().optional(),
   radarrId: z.number().int().positive(),
   profileId: z.number().int().positive().nullable(),
   subtitles: z.array(BazarrSubtitleWire).max(1000),
@@ -29,6 +30,7 @@ export const BazarrSeriesWire = z.object({
   profileId: z.number().int().positive().nullable(),
 });
 export const BazarrEpisodeWire = z.object({
+  path: z.string().nullable().optional(),
   sonarrSeriesId: z.number().int().positive(),
   sonarrEpisodeId: z.number().int().positive(),
   subtitles: z.array(BazarrSubtitleWire).max(1000),

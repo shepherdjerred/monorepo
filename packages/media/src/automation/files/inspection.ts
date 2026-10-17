@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 import { lstat, realpath } from "node:fs/promises";
 import { z } from "zod";
 import { inspectMedia, type MediaProbe } from "#filesystem/media-tools.ts";
@@ -305,7 +306,9 @@ async function inspectEntry(input: {
           file.name,
         )
       : nodePath.relative(context.roots[kind].library, previous.path);
-  const previousSidecars = (previous?.subtitles ?? []).map((subtitle) => {
+  const previousSidecars = (
+    previous === null ? [] : ownedSubtitleSidecars(previous)
+  ).map((subtitle) => {
     if (subtitle.path === null)
       throw new FileGuardError("subtitle_path_missing");
     const evidence = z

@@ -16,6 +16,7 @@ import {
 import { MediaPage } from "./media.tsx";
 import { NotificationCallback } from "./preferences.tsx";
 import { MigrationPage } from "./migration.tsx";
+import { RecoveryPage } from "./recovery/page.tsx";
 
 export function App() {
   const session = useQuery({
@@ -81,6 +82,9 @@ function Shell({ user }: { user: MediaUser }) {
           <NavLink to="/notifications">
             <span aria-hidden="true">◉</span> Notifications
           </NavLink>
+          <NavLink to="/recovery">
+            <span aria-hidden="true">◇</span> Recovery review
+          </NavLink>
           {user.role === "owner" && (
             <NavLink to="/admin" end>
               <span aria-hidden="true">⚙</span> Administration
@@ -130,6 +134,8 @@ function Shell({ user }: { user: MediaUser }) {
         )}
         {signOut.error !== null && <ErrorNotice error={signOut.error} />}
         <Routes>
+          <Route path="/recovery" element={<RecoveryPage user={user} />} />
+          <Route path="/recovery/:id" element={<RecoveryPage user={user} />} />
           <Route
             path="/admin/migration"
             element={

@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { readFile, rm, access, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
+import { createHash } from "node:crypto";
+import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
@@ -253,6 +255,14 @@ test("failed Plex upgrade verification restores the previous file and coverage",
       language: "en",
       providerId: "fixture",
       state: "validated",
+      ownershipEpoch: 0,
+      qualityStatus: "accepted",
+      storageKind: "sidecar",
+      videoChecksum: original.entry.checksum,
+      videoVersion: 0,
+      checksum: createHash("sha256")
+        .update("1\n00:00:01,000 --> 00:00:02,000\nHello there.\n")
+        .digest("hex"),
       content: Buffer.from("1\n00:00:01,000 --> 00:00:02,000\nHello there.\n"),
       provenance: {
         filename: "fixture.srt",
@@ -269,10 +279,16 @@ test("failed Plex upgrade verification restores the previous file and coverage",
       },
     },
   });
+  const subtitleOperation = await cluster.database.operation.create({
+    data: {
+      kind: "install_subtitle",
+      payload: { subtitleId: subtitle.id, recoveryEpoch: 0 },
+    },
+  });
   expect(
     await activities.installMediaSubtitles({
       subtitleId: subtitle.id,
-      operationId: crypto.randomUUID(),
+      operationId: subtitleOperation.id,
     }),
   ).toEqual({ status: "installed" });
   const installed = await cluster.database.subtitleAsset.findUniqueOrThrow({
@@ -307,6 +323,17 @@ test("failed Plex upgrade verification restores the previous file and coverage",
   expect(await readFile(installed.path ?? "", "utf8")).toContain(
     "Hello there.",
   );
+  expect(
+    subtitleAccepted({
+      subtitle: await cluster.database.subtitleAsset.findUniqueOrThrow({
+        where: { id: subtitle.id },
+      }),
+      asset: await cluster.database.libraryAsset.findUniqueOrThrow({
+        where: { id: original.entry.assetId },
+      }),
+      epoch: 0,
+    }),
+  ).toBe(true);
   expect(
     await cluster.database.assetCoverage.findUniqueOrThrow({
       where: {

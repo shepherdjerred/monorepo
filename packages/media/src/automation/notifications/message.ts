@@ -4,6 +4,15 @@ import type { CredentialCipher } from "#application/security.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
+import {
+  OwnerHealthSchema,
+  ownerHealthDescriptions,
+} from "#shared/notification-authority.ts";
+import { subtitleAccepted } from "#domain/subtitle-quality.ts";
+import {
+  currentSubtitleWork,
+  subtitleTargetsReady,
+} from "#automation/subtitles/authority.ts";
 
 export const ItemSchema = z.object({
   mediaId: z.string(),
@@ -64,6 +73,14 @@ export async function composeMessage(
     return verification(tx, context, delivery);
   const target = personalTarget(delivery);
   if (target === null) return null;
+  if (delivery.event.kind === "owner_health") {
+    const proof = OwnerHealthSchema.parse(delivery.event.payload);
+    return {
+      ...target,
+      subject: "Media automation needs owner attention",
+      text: `${ownerHealthDescriptions[proof.reason]}\nReview recovery protections before resuming automation; opening this page does not restore writer or storage authority.\n${new URL("/recovery", context.publicOrigin).toString()}`,
+    };
+  }
   return delivery.event.kind === "retention_warning"
     ? warning(tx, context, delivery, target)
     : batchMessage(tx, context, delivery, target);
@@ -153,6 +170,7 @@ async function eligibleTitles(
       if (
         claim === null ||
         (item.language !== undefined &&
+          delivery.event.kind !== "subtitles_ready" &&
           !claim.subtitleLanguages.includes(item.language))
       )
         continue;
@@ -284,13 +302,20 @@ async function publishedItemCurrent(
   )
     return false;
   if (kind === "subtitles_ready") {
+    const work = await currentSubtitleWork(tx, coverage.asset.id, epoch);
+    if (!subtitleTargetsReady(work, epoch)) return false;
     const subtitle = await tx.subtitleAsset.findUnique({
       where: { id: item.subtitleId ?? "" },
     });
     return (
-      subtitle?.state === "installed" &&
-      subtitle.assetId === item.assetId &&
-      subtitle.language === item.language
+      subtitle !== null &&
+      item.language !== undefined &&
+      subtitleAccepted({
+        subtitle,
+        asset: coverage.asset,
+        epoch,
+        target: { language: item.language },
+      })
     );
   }
   return true;

@@ -12,6 +12,11 @@ import { assertRuntime, lockMedia } from "./guards.ts";
 import { libraryLocation } from "./removal-plan.ts";
 import { fileOperations } from "./file-operations.ts";
 import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
+import { subtitleAccepted } from "#domain/subtitle-quality.ts";
+import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
+import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
+import { assertSubtitleTarget } from "#automation/subtitles/install-authority.ts";
+import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
 
 export async function installSubtitle(
   context: FileContext,
@@ -25,6 +30,21 @@ export async function installSubtitle(
     where: { id: subtitleId },
     include: { asset: { include: { coverage: { where: { current: true } } } } },
   });
+  if (subtitle.storageKind === "embedded" || subtitle.state === "installed") {
+    await context.db.$transaction(async (tx) => {
+      const ids = subtitle.asset.coverage.map((item) => item.mediaId);
+      await lockMedia(tx, ids);
+      await lockEffectiveRequests(tx, ids);
+      await assertRuntime(tx, subtitle.ownershipEpoch);
+      await lockSubtitlePolicies(tx);
+      await assertSubtitleTarget(tx, {
+        operationId,
+        subtitleId,
+        epoch: subtitle.ownershipEpoch,
+      });
+    });
+    return;
+  }
   const evidence = z
     .object({
       assetVersion: z.number().int(),
@@ -35,6 +55,15 @@ export async function installSubtitle(
       generations: GenerationsSchema,
     })
     .parse(subtitle.matchingEvidence);
+  if (
+    !subtitleAccepted({
+      subtitle,
+      asset: subtitle.asset,
+      epoch: evidence.recoveryEpoch,
+      allowStaged: true,
+    })
+  )
+    throw new FileGuardError("subtitle_quality_unaccepted");
   const provenance = z
     .object({
       filename: z.string(),
@@ -84,7 +113,8 @@ export async function installSubtitle(
     .string()
     .regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/u)
     .parse(subtitle.language);
-  const libraryPath = `${location.libraryPath.slice(0, -nodePath.extname(location.libraryPath).length)}.${language}.${validated.format}`;
+  const suffix = `${subtitle.forced === true ? ".forced" : ""}${subtitle.hearingImpaired === true ? ".sdh" : ""}`;
+  const libraryPath = `${location.libraryPath.slice(0, -nodePath.extname(location.libraryPath).length)}.${language}${suffix}.${validated.format}`;
   const descriptor = {
     operationId,
     downloadPath: relativeSource,
@@ -98,15 +128,36 @@ export async function installSubtitle(
         (coverage) => coverage.mediaId,
       );
       await lockMedia(tx, mediaIds);
+      await lockEffectiveRequests(tx, mediaIds);
+      await assertRuntime(tx, evidence.recoveryEpoch);
+      await lockSubtitlePolicies(tx);
       const authorize = async () => {
         await context.checkpoint("subtitle-authorization");
         if (!(await context.enabled.acquisition()))
           throw new FileGuardError("acquisition_disabled");
         await assertRuntime(tx, evidence.recoveryEpoch);
+        await assertSubtitleTarget(tx, {
+          operationId,
+          subtitleId,
+          epoch: evidence.recoveryEpoch,
+        });
         const asset = await tx.libraryAsset.findUniqueOrThrow({
           where: { id: subtitle.assetId },
           include: { coverage: { where: { current: true } } },
         });
+        const currentSubtitle = await tx.subtitleAsset.findUniqueOrThrow({
+          where: { id: subtitleId },
+        });
+        if (
+          currentSubtitle.version !== subtitle.version ||
+          !subtitleAccepted({
+            subtitle: currentSubtitle,
+            asset,
+            epoch: evidence.recoveryEpoch,
+            allowStaged: true,
+          })
+        )
+          throw new FileGuardError("subtitle_quality_changed");
         if (
           !asset.owned ||
           asset.ownershipEpoch !== evidence.recoveryEpoch ||
@@ -142,22 +193,33 @@ export async function installSubtitle(
           state: "installed",
           path: nodePath.join(roots.library, libraryPath),
           provenance: { ...provenance, checksum },
+          checksum,
+          version: { increment: 1 },
         },
       });
-      await queueLifecycleNotifications(tx, {
-        key: `subtitle-installed:${subtitleId}:${String(evidence.assetVersion)}`,
-        kind: "subtitles_ready",
+      const work = await assertSubtitleTarget(tx, {
+        operationId,
+        subtitleId,
         epoch: evidence.recoveryEpoch,
-        items: mediaIds.map((mediaId) => ({
-          mediaId,
-          generation: z.number().int().parse(evidence.generations[mediaId]),
-          assetId: subtitle.assetId,
-          assetVersion: evidence.assetVersion,
-          assetChecksum: evidence.assetChecksum,
-          subtitleId,
-          language: subtitle.language,
-        })),
       });
+      if (
+        work.targets.length > 0 &&
+        subtitleTargetsReady(work, evidence.recoveryEpoch)
+      )
+        await queueLifecycleNotifications(tx, {
+          key: `subtitle-installed:${subtitleId}:${String(evidence.assetVersion)}`,
+          kind: "subtitles_ready",
+          epoch: evidence.recoveryEpoch,
+          items: mediaIds.map((mediaId) => ({
+            mediaId,
+            generation: z.number().int().parse(evidence.generations[mediaId]),
+            assetId: subtitle.assetId,
+            assetVersion: evidence.assetVersion,
+            assetChecksum: evidence.assetChecksum,
+            subtitleId,
+            language: subtitle.language,
+          })),
+        });
     },
     { timeout: 60_000 },
   );

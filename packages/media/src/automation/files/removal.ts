@@ -8,6 +8,7 @@ import {
 import { assertRetention, assertRuntime, lockMedia } from "./guards.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { removalPlan, assertOwnedAsset } from "./removal-plan.ts";
+import { advanceSubtitleBindings } from "./subtitle-lifecycle/ownership.ts";
 import { fileOperations } from "./file-operations.ts";
 import { z } from "zod";
 import { prepareRemovalProof } from "./content-proof.ts";
@@ -54,13 +55,14 @@ export async function removeFiles(
     purge,
   });
   const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
+  const completeState = purge ? "purged" : "quarantined";
+  const previousSubtitleState = purge ? "quarantined" : "installed";
   await context.db.$transaction(
     async (tx) => {
       await lockMedia(tx, mediaIds);
       const decision = await tx.retentionDecision.findUniqueOrThrow({
         where: { id: decisionId },
       });
-      const completeState = purge ? "purged" : "quarantined";
       if (decision.state === completeState) return;
       for (const entry of plan) {
         const authorize = async () => {
@@ -94,12 +96,15 @@ export async function removeFiles(
           where: { id: entry.assetId },
           data: { state: completeState, version: { increment: 1 } },
         });
-        await tx.subtitleAsset.updateMany({
-          where: {
-            assetId: entry.assetId,
-            state: purge ? "quarantined" : "installed",
-          },
-          data: { state: completeState },
+        await advanceSubtitleBindings(tx, {
+          assetId: entry.assetId,
+          checksum: entry.checksum,
+          epoch: snapshot.epoch,
+          fromVersion: entry.assetVersion + (purge ? 1 : 0),
+          toVersion: entry.assetVersion + (purge ? 2 : 1),
+          fromState: previousSubtitleState,
+          sidecarIds: entry.sidecars.map((item) => item.subtitleId),
+          state: completeState,
         });
         if (purge)
           await tx.assetCoverage.updateMany({
@@ -260,14 +265,24 @@ export async function restoreFiles(
           );
         };
         await authorize();
+        const previousAsset = await tx.libraryAsset.findUniqueOrThrow({
+          where: { id: entry.assetId },
+        });
         await restoreEntry(context, entry, operationId, authorize);
-        await tx.libraryAsset.update({
+        const restoredAsset = await tx.libraryAsset.update({
           where: { id: entry.assetId },
           data: { state: "published", version: { increment: 1 } },
         });
-        await tx.subtitleAsset.updateMany({
-          where: { assetId: entry.assetId, state: "quarantined" },
-          data: { state: "installed" },
+        await advanceSubtitleBindings(tx, {
+          assetId: entry.assetId,
+          checksum: entry.checksum,
+          epoch,
+          fromVersion: previousAsset.version,
+          toVersion: restoredAsset.version,
+          fromState:
+            previousAsset.state === "quarantined" ? "quarantined" : "installed",
+          sidecarIds: entry.sidecars.map((item) => item.subtitleId),
+          state: "installed",
         });
       }
       const proof = z

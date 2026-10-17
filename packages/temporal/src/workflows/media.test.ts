@@ -11,6 +11,93 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const workflowsPath = new URL("media.ts", import.meta.url).pathname;
 
+test.each([
+  { language: "en" },
+  {
+    language: "en",
+    forced: false,
+    hearingImpaired: "any" as const,
+    targetAuthority: "a".repeat(64),
+  },
+  {
+    language: "en",
+    forced: true,
+    hearingImpaired: "excluded" as const,
+    targetAuthority: "b".repeat(64),
+  },
+])(
+  "subtitle target $language/$forced survives a no-match timer and replay",
+  async (target) => {
+    const args = {
+      operationId: "subtitle-target-operation",
+      assetId: "asset",
+      ...target,
+    };
+    let searches = 0;
+    const result = await runScenario({
+      workflow: "acquireMediaSubtitlesWorkflow",
+      args,
+      network: {
+        findMediaSubtitles: async (input) => {
+          expect(input).toEqual(args);
+          searches++;
+          return searches === 1
+            ? {
+                status: "waiting",
+                subtitleId: null,
+                reason: "matching_subtitles_not_found",
+              }
+            : { status: "found", subtitleId: "subtitle", reason: null };
+        },
+        finishMediaOperation: async (input) => {
+          expect(input.status).toBe("completed");
+        },
+      },
+      files: {
+        installMediaSubtitles: async (input) => {
+          expect(input).toEqual({
+            operationId: args.operationId,
+            subtitleId: "subtitle",
+          });
+          return { status: "installed" };
+        },
+      },
+    });
+    expect(searches).toBe(2);
+    expect(result).toEqual({ status: "completed" });
+  },
+  60_000,
+);
+
+test.each(["owner_health_superseded", "email_verification_superseded"])(
+  "%s ends notification delivery without scheduling another send or receipt read",
+  async (reason) => {
+    let calls = 0;
+    const checkpoints: string[] = [];
+    const result = await runScenario({
+      workflow: "deliverMediaNotificationWorkflow",
+      args: {
+        operationId: "protected-notification",
+        notificationId: "protected-delivery",
+      },
+      files: {},
+      network: {
+        deliverMediaNotification: async () => {
+          calls++;
+          return { status: "failed", reason };
+        },
+        finishMediaOperation: async (input) => {
+          checkpoints.push(input.status);
+        },
+      },
+    });
+    expect(calls).toBe(1);
+    expect(checkpoints).toEqual(["reconciling"]);
+    expect(result).toEqual({ status: "blocked", reason });
+  },
+  60_000,
+);
+
 test.each(["accepted", "unknown", "failed"] as const)(
   "notification %s schedules only bounded receipt observations",
   async (status) => {

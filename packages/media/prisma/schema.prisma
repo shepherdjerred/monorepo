@@ -69,6 +69,11 @@ model MediaUser {
   handoffPlans MediaHandoffPlan[]
   handoffReceipts MediaHandoffReceipt[]
   releasedRecoveryHolds RecoveryHold[]
+  subtitlePolicyVersions MediaSubtitlePolicyVersion[]
+  recoveryReviews RecoveryReview[]
+  recoveryResponses RecoveryResponse[] @relation("RecoveryRespondent")
+  recoveryDeclarations RecoveryResponse[] @relation("RecoveryDeclarant")
+  recoveryReceipts RecoveryReleaseReceipt[]
 }
 
 model MigrationCapture {
@@ -273,6 +278,7 @@ model Credential {
 }
 
 model MediaItem {
+  subtitlePolicies MediaSubtitlePolicyVersion[]
   recoveryHold RecoveryHold?
   id            String              @id @default(uuid())
   kind          MediaKind
@@ -562,7 +568,34 @@ model SubtitleAsset {
   content          Bytes?
   path             String?
   state            String
+  ownershipEpoch   Int          @default(-1)
+  qualityStatus    String       @default("unverified")
+  storageKind      String       @default("unknown")
+  checksum         String?
+  videoChecksum    String?
+  videoVersion     Int?
+  forced           Boolean?
+  hearingImpaired  Boolean?
+  streamIndex      Int?
+  codec            String?
+  version          Int          @default(0)
   createdAt        DateTime     @default(now())
+
+  @@index([assetId, ownershipEpoch, state])
+}
+
+model MediaSubtitlePolicyVersion {
+  id String @id @default(uuid())
+  mediaId String
+  media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  version Int
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  source Json
+  rules Json
+  createdAt DateTime @default(now())
+  @@unique([mediaId, version])
 }
 
 model WatchState {
@@ -649,6 +682,7 @@ model IdempotencyRecord {
 }
 
 model RecoveryHold {
+  version Int @default(0)
   mediaId String @id
   media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
   recoveryEpoch Int
@@ -658,6 +692,48 @@ model RecoveryHold {
   releasedById String?
   releasedBy MediaUser? @relation(fields: [releasedById], references: [id], onDelete: Restrict)
   releaseEvidence Json?
+}
+
+model RecoveryReview {
+  id String @id @default(uuid())
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  scope Json
+  scopeHash String
+  state String @default("awaiting_responses")
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  responses RecoveryResponse[]
+  receipt RecoveryReleaseReceipt?
+}
+
+model RecoveryResponse {
+  id String @id @default(uuid())
+  reviewId String
+  review RecoveryReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  userId String
+  user MediaUser @relation("RecoveryRespondent", fields: [userId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation("RecoveryDeclarant", fields: [actorId], references: [id], onDelete: Restrict)
+  response Json
+  createdAt DateTime @default(now())
+  @@unique([reviewId, userId])
+}
+
+model RecoveryReleaseReceipt {
+  id String @id @default(uuid())
+  reviewId String @unique
+  review RecoveryReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  scopeHash String
+  responseHash String
+  releasedHoldIds String[]
+  createdAt DateTime @default(now())
 }
 
 model MediaHandoffPlan {

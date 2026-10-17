@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { readFile, rm } from "node:fs/promises";
 import { automationTestHarness } from "#testing/automation.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
@@ -102,12 +103,14 @@ test("two actual Retries after initial rollback search and reserve new attempts 
       const media = await db.mediaItem.findUniqueOrThrow({
         where: { id: f.media.id },
       });
-      const retry = await new PrismaMediaCommands(db, { keepDays: 30 }).act(
-        f.user,
-        crypto.randomUUID(),
-        f.media.id,
-        { action: "retry", expectedVersion: media.version },
-      );
+      await grantTestRequesterAccess(db, f.user.id, "fixture-server");
+      const retry = await new PrismaMediaCommands(db, {
+        keepDays: 30,
+        serverMachineId: "fixture-server",
+      }).act(f.user, crypto.randomUUID(), f.media.id, {
+        action: "retry",
+        expectedVersion: media.version,
+      });
       if (retry.operationId === undefined)
         throw new Error("Retry operation missing");
       const intent = await db.mediaIntent.findUniqueOrThrow({

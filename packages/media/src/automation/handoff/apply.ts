@@ -18,6 +18,7 @@ import { verifyJournalProof } from "./journals.ts";
 import { adoptHandoffRecords } from "./adopt.ts";
 import { assertApplyActor, assertLatestLease } from "./final-guards.ts";
 import { unmanagedSidecars } from "./sidecars.ts";
+import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 
 /** The hash work is complete; this transaction only checks exact identities and grants selected records. */
 export async function applyPreparedHandoff(
@@ -57,7 +58,7 @@ export async function applyPreparedHandoff(
       const finished = FinishedHandoffSchema.parse(plan.plan);
       if (
         snapshotHash(finished) !== plan.planHash ||
-        finished.scopeHash !== snapshotHash(prepared.scope) ||
+        finished.scopeHash !== snapshotHash(z.json().parse(prepared.scope)) ||
         snapshotHash(finished.files) !==
           snapshotHash(z.json().parse(stableFiles(prepared.evidence)))
       )
@@ -128,6 +129,8 @@ export async function applyPreparedHandoff(
             version: { increment: 1 },
           },
         });
+        for (const selected of prepared.scope.media)
+          await queueMediaSubtitleTargets(tx, selected.mediaId);
         const receipt = await tx.mediaHandoffReceipt.create({
           data: {
             planId,
@@ -264,7 +267,28 @@ async function withFileIdentities<T>(
   index: number,
   action: () => Promise<T>,
 ): Promise<T> {
-  const entry = prepared.scope.files[index];
+  const entries = prepared.scope.files
+    .flatMap((file) => [
+      { ...file },
+      ...prepared.scope.subtitles
+        .filter(
+          (subtitle) =>
+            subtitle.assetId === file.assetId &&
+            subtitle.canonicalPath !== null,
+        )
+        .map((subtitle) => ({
+          libraryKind: file.libraryKind,
+          canonicalPath: z.string().parse(subtitle.canonicalPath),
+        })),
+    ])
+    .sort((a, b) =>
+      a.canonicalPath < b.canonicalPath
+        ? -1
+        : a.canonicalPath > b.canonicalPath
+          ? 1
+          : 0,
+    );
+  const entry = entries[index];
   if (entry === undefined) return action();
   const roots = context.files.roots[entry.libraryKind];
   const proof = await prepared.content.verifiedFile(entry.canonicalPath);

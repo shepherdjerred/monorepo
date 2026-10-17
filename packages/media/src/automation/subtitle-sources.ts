@@ -9,15 +9,19 @@ import {
 import { IntegrationError } from "#integrations/http.ts";
 import { extractSubtitleArchive } from "#filesystem/subtitle-archive.ts";
 import type { MediaAutomationContext } from "./context.ts";
+import type { FetchTransport } from "#integrations/http.ts";
+import type { SubtitleTarget } from "#domain/subtitle-quality.ts";
 
 export type SubtitleSource = {
   filename: string;
   description: string;
   bytes: Uint8Array<ArrayBuffer>;
   actualLanguage: string;
+  forced: boolean | null;
+  hearingImpaired: boolean | null;
   declaredEncoding?: "utf8" | "utf-16le" | "utf-16be" | "gb18030";
 };
-export type SubtitleSearch = {
+export type SubtitleSearch = SubtitleTarget & {
   operationId: string;
   sourceFilename: string;
   query: string;
@@ -29,7 +33,10 @@ const normalize = (name: string) =>
   nodePath
     .basename(name)
     .replace(/\.(?:mkv|mp4|avi|m4v|srt|ass|ssa|vtt)$/iu, "")
-    .replace(/[. _-](?:zh[._-]?(?:cn|hans)|chs|eng|en|简体|简中)$/iu, "")
+    .replace(
+      /[. _-](?:zh[._-]?(?:cn|hans)|chs|eng|en|简体|简中)(?:[. _-](?:forced|sdh|hi))*$/iu,
+      "",
+    )
     .toLowerCase()
     .replaceAll(/[ ._-]+/gu, ".");
 
@@ -68,6 +75,8 @@ export async function subtitleArchive(
     description,
     bytes: content,
     actualLanguage: input.language,
+    forced: null,
+    hearingImpaired: null,
   };
 }
 
@@ -125,6 +134,7 @@ export async function claimSubtitleDownload(
 export async function fromOpenSubtitles(
   context: MediaAutomationContext,
   input: SubtitleSearch,
+  transport?: FetchTransport,
 ): Promise<SubtitleSource | null> {
   const credential = z
     .object({
@@ -134,7 +144,7 @@ export async function fromOpenSubtitles(
       password: z.string(),
     })
     .parse(await subtitleCredential(context, "opensubtitles"));
-  const provider = new OpenSubtitlesProvider(credential);
+  const provider = new OpenSubtitlesProvider(credential, transport);
   await provider.login(credential.username, credential.password);
   const language = ["zh-Hans", "zh-CN"].includes(input.language)
     ? "zh-cn"
@@ -142,11 +152,22 @@ export async function fromOpenSubtitles(
   const result = await provider.search({
     query: input.query,
     language,
+    ...(input.forced === undefined ? {} : { forced: input.forced }),
+    ...(input.hearingImpaired === undefined
+      ? {}
+      : { hearingImpaired: input.hearingImpaired }),
     ...(input.season === undefined ? {} : { season: input.season }),
     ...(input.episode === undefined ? {} : { episode: input.episode }),
   });
   for (const candidate of result.candidates.slice(0, 10)) {
     if (candidate.attributes.language !== language) continue;
+    if (
+      !subtitleMetadataMatches(input, {
+        forced: candidate.attributes.foreign_parts_only ?? null,
+        hearingImpaired: candidate.attributes.hearing_impaired ?? null,
+      })
+    )
+      continue;
     const files = candidate.attributes.files.filter((file) =>
       subtitleVersionMatches(file.file_name, input.sourceFilename),
     );
@@ -164,6 +185,8 @@ export async function fromOpenSubtitles(
       ...downloaded,
       description: candidate.attributes.release,
       actualLanguage: input.language,
+      forced: candidate.attributes.foreign_parts_only ?? null,
+      hearingImpaired: candidate.attributes.hearing_impaired ?? null,
     };
   }
   return null;
@@ -172,12 +195,14 @@ export async function fromOpenSubtitles(
 export async function fromAssrt(
   context: MediaAutomationContext,
   input: SubtitleSearch,
+  transport?: FetchTransport,
 ): Promise<SubtitleSource | null> {
   if (!["zh-Hans", "zh-CN"].includes(input.language)) return null;
+  requireUntargetedProvider(input, "assrt");
   const credential = z
     .object({ token: z.string() })
     .parse(await subtitleCredential(context, "assrt"));
-  const provider = new AssrtProvider(credential.token);
+  const provider = new AssrtProvider(credential.token, transport);
   const candidates = await provider.search(input.query);
   for (const candidate of candidates.slice(0, 5)) {
     if (!("id" in candidate)) continue;
@@ -199,7 +224,32 @@ export async function fromAssrt(
       description: `${detail.videoname ?? ""} ${detail.producer?.source ?? ""}`,
       bytes,
       actualLanguage: input.language,
+      forced: null,
+      hearingImpaired: null,
     };
   }
   return null;
+}
+
+export function subtitleMetadataMatches(
+  target: SubtitleTarget,
+  source: { forced: boolean | null; hearingImpaired: boolean | null },
+): boolean {
+  return (
+    (target.forced === undefined || source.forced === target.forced) &&
+    (target.hearingImpaired !== "required" ||
+      source.hearingImpaired === true) &&
+    (target.hearingImpaired !== "excluded" || source.hearingImpaired === false)
+  );
+}
+
+export function requireUntargetedProvider(
+  target: SubtitleTarget,
+  providerId: string,
+): void {
+  if (
+    target.forced !== undefined ||
+    (target.hearingImpaired !== undefined && target.hearingImpaired !== "any")
+  )
+    throw new IntegrationError(providerId, "unsupported-target");
 }

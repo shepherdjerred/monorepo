@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
 import {
   FileGuardError,
@@ -81,7 +82,7 @@ export async function removalPlan(
     const sidecars = planSidecars(
       context,
       location.libraryKind,
-      asset.subtitles,
+      ownedSubtitleSidecars(asset),
     );
     assets.push({
       assetId: asset.id,
@@ -138,7 +139,10 @@ export async function assertOwnedAsset(
 ): Promise<void> {
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: entry.assetId },
-    include: { coverage: { where: { current: true } } },
+    include: {
+      coverage: { where: { current: true } },
+      subtitles: { where: { state: { in: ["installed", "quarantined"] } } },
+    },
   });
   const version = entry.assetVersion + (state === "quarantined" ? 1 : 0);
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -154,4 +158,17 @@ export async function assertOwnedAsset(
     asset.coverage.some((item) => !entry.mediaIds.includes(item.mediaId))
   )
     throw new FileGuardError("asset_version_changed");
+  const subtitles = ownedSubtitleSidecars(asset);
+  if (
+    subtitles.length !== entry.sidecars.length ||
+    entry.sidecars.some(
+      (sidecar) =>
+        !subtitles.some(
+          (subtitle) =>
+            subtitle.id === sidecar.subtitleId &&
+            subtitle.checksum === sidecar.checksum,
+        ),
+    )
+  )
+    throw new FileGuardError("subtitle_manifest_changed");
 }

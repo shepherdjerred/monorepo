@@ -8,6 +8,7 @@ import {
   type MountBindingRequest,
 } from "#shared/legacy-observer.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
 
 /** Refresh may move to a new executing Pod, but never to a new storage identity. */
 export async function refreshStorageAuthorities(
@@ -126,7 +127,7 @@ export async function refreshStorageAuthorities(
         where: { recoveryEpoch: runtime.recoveryEpoch },
         data: { revokedAt: new Date(), version: { increment: 1 } },
       });
-      await tx.mediaRuntimeState.update({
+      const revoked = await tx.mediaRuntimeState.update({
         where: { id: "singleton" },
         data: {
           mode: "observe",
@@ -134,14 +135,12 @@ export async function refreshStorageAuthorities(
           version: { increment: 1 },
         },
       });
-      await tx.applicationEvent.create({
-        data: {
-          kind: "media_storage_authority_revoked",
-          payload: {
-            recoveryEpoch: runtime.recoveryEpoch,
-            reason: "mount_evidence_changed_or_unavailable",
-          },
-        },
+      await queueOwnerHealth(tx, {
+        schemaVersion: 1,
+        reason: "media_storage_authority_revoked",
+        recoveryEpoch: revoked.recoveryEpoch,
+        runtimeVersion: revoked.version,
+        evidenceDigest: snapshotHash(serialized),
       });
       return;
     }

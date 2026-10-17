@@ -5,6 +5,7 @@ import {
 } from "#shared/legacy-observer.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
+import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
 
 /** Only the injected trusted observer produces evidence; no HTTP endpoint accepts it. */
 export async function refreshWriterLease(
@@ -71,7 +72,7 @@ export async function refreshWriterLease(
       update: { ...data, version: { increment: 1 } },
     });
     if (!clear && runtime.mode === "active") {
-      await tx.mediaRuntimeState.update({
+      const revoked = await tx.mediaRuntimeState.update({
         where: { id: "singleton" },
         data: {
           mode: "observe",
@@ -79,15 +80,12 @@ export async function refreshWriterLease(
           version: { increment: 1 },
         },
       });
-      await tx.applicationEvent.create({
-        data: {
-          kind: "legacy_writer_authority_revoked",
-          payload: {
-            recoveryEpoch: runtime.recoveryEpoch,
-            inventoryDigest: evidence.inventoryDigest,
-            reasons: evidence.blockers.map((blocker) => blocker.code),
-          },
-        },
+      await queueOwnerHealth(tx, {
+        schemaVersion: 1,
+        reason: "legacy_writer_authority_revoked",
+        recoveryEpoch: revoked.recoveryEpoch,
+        runtimeVersion: revoked.version,
+        evidenceDigest: evidence.inventoryDigest,
       });
     }
   });

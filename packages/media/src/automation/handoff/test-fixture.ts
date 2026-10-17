@@ -27,7 +27,17 @@ import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts"
 import { prepareHandoffFiles } from "./files.ts";
 import { finishHandoffPreparation } from "./plan.ts";
 
-export async function handoffFixture(db: Database) {
+export async function handoffFixture(
+  db: Database,
+  options: {
+    subtitlePolicyResolution?: "unresolved" | "require_simplified";
+    extendReport?: (input: {
+      report: z.infer<typeof BundleReportSchema>;
+      manifest: z.infer<typeof MigrationBundleSchema>;
+      target: string;
+    }) => Promise<void>;
+  } = {},
+) {
   const file = await fileFixture(db);
   const network = await networkFixture(
     db,
@@ -128,6 +138,7 @@ export async function handoffFixture(db: Database) {
     observationHash: snapshotHash(requestRecord),
   };
   report.entries.push(requestEntry);
+  await options.extendReport?.({ report, manifest, target });
   report.bundleHash = manifest.bundleHash;
   report.reportHash = snapshotHash({
     source: report.reportHash,
@@ -164,7 +175,25 @@ export async function handoffFixture(db: Database) {
     runtimeVersion: 0,
     purpose: "recovery",
     activation: "activate",
+    subtitlePolicies: report.entries
+      .filter((entry) => entry.kind === "subtitle_preference")
+      .map((entry) => ({
+        provenanceKey: entry.provenanceKey,
+        expectedPolicyVersion: -1,
+        chinese: options.subtitlePolicyResolution ?? "unresolved",
+      })),
     selected: [
+      ...report.entries
+        .filter(
+          (entry) =>
+            entry.kind === "subtitle" ||
+            entry.kind === "torrent" ||
+            entry.kind === "subtitle_preference",
+        )
+        .map((entry) => ({
+          provenanceKey: entry.provenanceKey,
+          evidenceHash: entry.observationHash,
+        })),
       {
         provenanceKey: fileEntry.provenanceKey,
         evidenceHash: fileEntry.observationHash,

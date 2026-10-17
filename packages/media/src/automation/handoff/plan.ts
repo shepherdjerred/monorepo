@@ -129,7 +129,7 @@ export async function finishHandoffPreparation(
       const files = stableFiles(prepared.evidence);
       const complete = FinishedHandoffSchema.parse({
         schemaVersion: 1,
-        scopeHash: snapshotHash(prepared.scope),
+        scopeHash: snapshotHash(z.json().parse(prepared.scope)),
         network: stableNetwork(network.evidence),
         files,
       });

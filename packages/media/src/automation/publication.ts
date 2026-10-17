@@ -10,7 +10,7 @@ import {
   lockRuntimeAuthority,
   recordsAuthorized,
 } from "#infrastructure/handoff/authority.ts";
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { queueCurrentSubtitleTargets } from "./subtitles/queue.ts";
 import { recordVerifiedPublication } from "./reconciliation/upgrade-cleanup.ts";
 import { publishRollback } from "./reconciliation/rollback-publication.ts";
 import { queuePublicationNotifications } from "./notifications/events.ts";
@@ -437,22 +437,10 @@ async function finalize(
     const coverages = await tx.assetCoverage.findMany({
       where: { mediaId: { in: attempt.mediaIds }, current: true },
     });
-    const requests = await tx.mediaRequest.findMany({
-      where: { mediaId: { in: attempt.mediaIds }, ...effectiveRequestWhere },
-    });
-    for (const coverage of coverages) {
-      const languages = new Set(
-        requests
-          .filter((request) => request.mediaId === coverage.mediaId)
-          .flatMap((request) => request.subtitleLanguages),
-      );
-      for (const language of languages)
-        await queueOperation(tx, {
-          key: `subtitle:${coverage.assetId}:${language}`,
-          kind: "acquire_subtitles",
-          targetId: coverage.assetId,
-          payload: { assetId: coverage.assetId, language },
-        });
-    }
+    for (const assetId of new Set(coverages.map((item) => item.assetId)))
+      await queueCurrentSubtitleTargets(tx, {
+        assetId,
+        epoch: attempt.recoveryEpoch,
+      });
   });
 }

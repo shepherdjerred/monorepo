@@ -120,6 +120,34 @@ export function MediaPage({ user }: { user: MediaUser }) {
                 <p className="muted">
                   {humanize(edition)} · Added {dateLabel(asset.createdAt)}
                 </p>
+                {asset.subtitleStatus !== null && (
+                  <div className="retention-summary">
+                    <strong>
+                      {asset.subtitleStatus.satisfied
+                        ? "Subtitle requirements met"
+                        : "Subtitle requirements pending"}
+                    </strong>
+                    {asset.subtitleStatus.missing.map((target) => (
+                      <p className="helper" key={target.sourceItemId}>
+                        {target.language} ·{" "}
+                        {target.forced
+                          ? "Forced dialogue"
+                          : "Regular subtitles"}{" "}
+                        ·{" "}
+                        {target.hearingImpaired === "any"
+                          ? "HI captions optional"
+                          : target.hearingImpaired === "required"
+                            ? "HI captions required"
+                            : "Without HI captions"}
+                      </p>
+                    ))}
+                    {asset.subtitleStatus.protectedReasons.map((reason) => (
+                      <p className="helper" key={reason}>
+                        {humanize(reason)}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {asset.subtitles.length === 0 ? (
                   <p className="helper">No matched subtitles yet.</p>
                 ) : (
@@ -128,6 +156,13 @@ export function MediaPage({ user }: { user: MediaUser }) {
                       <li key={subtitle.id}>
                         <span>
                           {subtitle.language} · {subtitle.providerId}
+                          {subtitle.forced === true ? " · Forced" : ""}
+                          <br />
+                          <small className="helper">
+                            {subtitle.accepted
+                              ? "Quality verified for this video"
+                              : "Quality unverified for this video"}
+                          </small>
                         </span>
                         <Status value={subtitle.state} />
                       </li>

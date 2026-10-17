@@ -15,6 +15,9 @@ import {
 } from "#shared/api.ts";
 import { ReleaseListSchema } from "#shared/api.ts";
 import { removalConfirmation } from "./removal-confirmation.ts";
+import { subtitleAccepted } from "#domain/subtitle-quality.ts";
+import { currentSubtitlePolicies, policyStatus } from "./subtitle-policy.ts";
+import { OwnerHealthSchema } from "#shared/notification-authority.ts";
 
 export class PrismaMediaApplication
   extends PrismaMediaCommands
@@ -81,17 +84,14 @@ export class PrismaMediaApplication
             asset: {
               select: {
                 id: true,
+                checksum: true,
+                version: true,
+                owned: true,
+                ownershipEpoch: true,
                 properties: true,
                 state: true,
                 createdAt: true,
-                subtitles: {
-                  select: {
-                    id: true,
-                    language: true,
-                    providerId: true,
-                    state: true,
-                  },
-                },
+                subtitles: true,
               },
             },
           },
@@ -111,8 +111,32 @@ export class PrismaMediaApplication
       take: 100,
       select: { id: true, kind: true, createdAt: true },
     });
+    const runtime = await this.db.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    const policies = await currentSubtitlePolicies(this.db, [mediaId]);
     return MediaDetailSchema.parse({
       ...item,
+      subtitlePolicies: policies,
+      assets: item.assets.map((coverage) => ({
+        ...coverage,
+        asset: {
+          ...coverage.asset,
+          subtitleStatus: policyStatus({
+            policy: policies[0],
+            asset: coverage.asset,
+            epoch: runtime.recoveryEpoch,
+          }),
+          subtitles: coverage.asset.subtitles.map((subtitle) => ({
+            ...subtitle,
+            accepted: subtitleAccepted({
+              subtitle,
+              asset: coverage.asset,
+              epoch: runtime.recoveryEpoch,
+            }),
+          })),
+        },
+      })),
       events,
       ...(actor.role === "owner"
         ? { removalConfirmation: await removalConfirmation(this.db, mediaId) }
@@ -197,23 +221,53 @@ export class PrismaMediaApplication
   }
 
   async notifications(actor: MediaActor) {
+    const runtime = await this.db.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    const deliveries = await this.db.notificationDelivery.findMany({
+      where: { userId: actor.id },
+      select: {
+        id: true,
+        channel: true,
+        state: true,
+        version: true,
+        failureReason: true,
+        providerStatus: true,
+        attempts: true,
+        acceptedAt: true,
+        createdAt: true,
+        event: { select: { mediaId: true, kind: true, payload: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
     return NotificationListSchema.parse(
-      await this.db.notificationDelivery.findMany({
-        where: { userId: actor.id },
-        select: {
-          id: true,
-          channel: true,
-          state: true,
-          version: true,
-          failureReason: true,
-          providerStatus: true,
-          attempts: true,
-          acceptedAt: true,
-          createdAt: true,
-          event: { select: { mediaId: true, kind: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 100,
+      deliveries.map(({ event, ...delivery }) => {
+        const proof =
+          event.kind === "owner_health"
+            ? OwnerHealthSchema.safeParse(event.payload)
+            : null;
+        return {
+          ...delivery,
+          event: {
+            mediaId: event.mediaId,
+            kind: event.kind,
+            ...(proof === null
+              ? {}
+              : proof.success
+                ? {
+                    healthReason: proof.data.reason,
+                    healthState:
+                      runtime.recoveryEpoch === proof.data.recoveryEpoch &&
+                      runtime.version === proof.data.runtimeVersion &&
+                      runtime.mode === "observe" &&
+                      !runtime.ownershipConfirmed
+                        ? "current"
+                        : "superseded",
+                  }
+                : { healthState: "invalid" }),
+          },
+        };
       }),
     );
   }

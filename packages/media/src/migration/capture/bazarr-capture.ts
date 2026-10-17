@@ -20,7 +20,15 @@ import {
   sourceProfile,
 } from "./bazarr-wire.ts";
 
-type Source = { sourceInstanceId: string; baseUrl: string; apiKey: string };
+type Source = {
+  sourceInstanceId: string;
+  baseUrl: string;
+  apiKey: string;
+  managerInstances?: {
+    radarr?: string | undefined;
+    sonarr?: string | undefined;
+  };
+};
 type Profile = z.infer<typeof BazarrProfileWire>;
 function add(records: MigrationRecord[], value: unknown) {
   if (records.length >= MAX_MIGRATION_RECORDS)
@@ -58,10 +66,18 @@ function appendMedia(input: {
   sourceMediaId: string;
   profile: Profile | null;
   subtitles: z.infer<typeof BazarrSubtitleWire>[];
+  videoPath?: string | null | undefined;
+  managerInstances: Source["managerInstances"];
 }) {
   const { records, profile, kind, sourceMediaId } = input;
   const mediaSourceId = `${kind}:${sourceMediaId}`;
-  const managerReference = { kind, sourceMediaId, sourceInstanceId: null };
+  const instance = input.managerInstances?.[kind];
+  const managerReference = {
+    kind,
+    sourceMediaId,
+    sourceInstanceId: instance ?? null,
+    ...(instance === undefined ? {} : { binding: "owner_declared" }),
+  };
   add(records, {
     kind: "subtitle_preference",
     sourceId: mediaSourceId,
@@ -78,6 +94,7 @@ function appendMedia(input: {
       sourceId: `${kind}:${String(subtitle.id)}`,
       mediaSourceId,
       path: subtitle.path,
+      videoPath: input.videoPath ?? null,
       language: subtitle.code2 ?? subtitle.code3 ?? "und",
       checksum: null,
       provenance: subtitle.embedded_track_id === null ? "unknown" : "embedded",
@@ -93,7 +110,11 @@ function profileFor(profiles: Map<number, Profile>, id: number | null) {
   if (profile === undefined) throw new CaptureReadError("read_failed");
   return profile;
 }
-async function inventory(reader: CaptureReader, records: MigrationRecord[]) {
+async function inventory(
+  reader: CaptureReader,
+  records: MigrationRecord[],
+  source: Source,
+) {
   const profileRows = await reader.read(
     "api/system/languages/profiles",
     z.array(BazarrProfileWire).max(1000),
@@ -110,6 +131,8 @@ async function inventory(reader: CaptureReader, records: MigrationRecord[]) {
       sourceMediaId: String(movie.radarrId),
       profile: profileFor(profiles, movie.profileId),
       subtitles: movie.subtitles,
+      videoPath: movie.path,
+      managerInstances: source.managerInstances,
     });
     return Promise.resolve();
   });
@@ -121,6 +144,7 @@ async function inventory(reader: CaptureReader, records: MigrationRecord[]) {
       sourceMediaId: `series:${String(series.sonarrSeriesId)}`,
       profile,
       subtitles: [],
+      managerInstances: source.managerInstances,
     });
     const episodes = await reader.read(
       `api/episodes?seriesid[]=${String(series.sonarrSeriesId)}`,
@@ -135,6 +159,8 @@ async function inventory(reader: CaptureReader, records: MigrationRecord[]) {
         sourceMediaId: `episode:${String(episode.sonarrEpisodeId)}`,
         profile,
         subtitles: episode.subtitles,
+        videoPath: episode.path,
+        managerInstances: source.managerInstances,
       });
     }
   });
@@ -156,7 +182,7 @@ async function pass(
       }),
     );
     version = status.data.bazarr_version;
-    await inventory(reader, records);
+    await inventory(reader, records, source);
     return { records, version, pages: reader.pages, reason: "complete" };
   } catch (error) {
     return {

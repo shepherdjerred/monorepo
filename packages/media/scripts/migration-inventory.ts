@@ -22,6 +22,10 @@ async function capture(input: {
   reference: string | undefined;
   usernameReference: string | undefined;
   passwordReference: string | undefined;
+  managerInstances: {
+    radarr?: string | undefined;
+    sonarr?: string | undefined;
+  };
 }) {
   if (input.kind === "qbittorrent") {
     const client = new QbittorrentClient({
@@ -49,7 +53,11 @@ async function capture(input: {
     baseUrl: z.url().parse(input.baseUrl),
     apiKey: await credential(z.string().parse(input.reference)),
   };
-  if (source === "bazarr") return await captureBazarr(connection);
+  if (source === "bazarr")
+    return await captureBazarr({
+      ...connection,
+      managerInstances: input.managerInstances,
+    });
   return source === "radarr" || source === "sonarr"
     ? await captureManager({ ...connection, source })
     : await captureSeerr({ ...connection, source });
@@ -92,6 +100,8 @@ async function main() {
       "username-reference": { type: "string" },
       "password-reference": { type: "string" },
       "instance-id": { type: "string" },
+      "radarr-instance-id": { type: "string" },
+      "sonarr-instance-id": { type: "string" },
     },
   });
   if ((values.snapshot === undefined) === (values.capture === undefined))
@@ -105,6 +115,14 @@ async function main() {
           reference: values["api-key-reference"],
           usernameReference: values["username-reference"],
           passwordReference: values["password-reference"],
+          managerInstances: {
+            radarr: EvidenceHashSchema.optional().parse(
+              values["radarr-instance-id"],
+            ),
+            sonarr: EvidenceHashSchema.optional().parse(
+              values["sonarr-instance-id"],
+            ),
+          },
         })
       : validateCapture(await jsonFile(values.snapshot)).snapshot;
   const targets =

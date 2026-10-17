@@ -8,6 +8,7 @@ import type {
 import { queueOperation } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { BundleReportSchema } from "#shared/migration-handoff.ts";
+import { adoptSubtitles } from "./subtitles.ts";
 
 type Network = z.infer<typeof HandoffNetworkEvidenceSchema>;
 type Files = z.infer<typeof HandoffFileEvidenceSchema>;
@@ -24,6 +25,15 @@ export async function adoptHandoffRecords(
 ) {
   await adoptMedia(tx, input);
   await adoptFiles(tx, input.scope, input.files);
+  const plan = await tx.mediaHandoffPlan.findUniqueOrThrow({
+    where: { id: input.planId },
+  });
+  await adoptSubtitles(tx, {
+    scope: input.scope,
+    planId: input.planId,
+    actorId: plan.actorId,
+    evidence: input.files.files.flatMap((file) => file.subtitles),
+  });
   await adoptClaims(tx, input.scope, input.planId);
   await recordProtectedTorrents(tx, input.scope, input.report);
 }
@@ -91,6 +101,7 @@ async function adoptMedia(
         },
         update: {
           recoveryEpoch: epoch,
+          version: { increment: 1 },
           releasedAt: null,
           releasedById: null,
           releaseEvidence: Prisma.DbNull,
@@ -127,14 +138,25 @@ async function adoptFiles(
       throw new Error("Handoff overlaps another current asset");
     await assertExistingCoverage(tx, file);
     const data = {
+      sourcePath: file.sourcePath,
       owned: true,
       ownershipEpoch: epoch,
       checksum: evidence.checksum,
       sizeBytes: BigInt(evidence.sizeBytes),
       properties: {
         ...z.record(z.string(), z.json()).parse(evidence.properties),
-        handoffSidecarsUnresolved: evidence.unmanagedSidecars.length > 0,
-        unmanagedSidecars: evidence.unmanagedSidecars,
+        handoffSidecarsUnresolved: evidence.unmanagedSidecars.some(
+          (item) =>
+            !evidence.subtitles.some(
+              (subtitle) => subtitle.canonicalPath === item.canonicalPath,
+            ),
+        ),
+        unmanagedSidecars: evidence.unmanagedSidecars.filter(
+          (item) =>
+            !evidence.subtitles.some(
+              (subtitle) => subtitle.canonicalPath === item.canonicalPath,
+            ),
+        ),
       },
       state: "published",
       plexPublishedAt: new Date(),

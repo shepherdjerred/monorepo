@@ -17,6 +17,7 @@ import { inspectHandoffJournals, type JournalProof } from "./journals.ts";
 import { ResolvedEvidenceSchema } from "#domain/resolved-evidence.ts";
 import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
 import { unmanagedSidecars } from "./sidecars.ts";
+import { captureHandoffSubtitles, subtitleFileEvidence } from "./subtitles.ts";
 
 export type HandoffFileContext = { files: FileContext; workerPodUid: string };
 export type PreparedHandoffFiles = {
@@ -82,9 +83,17 @@ export async function prepareHandoffFiles(
       await content.capture(target, () =>
         context.files.checkpoint("handoff-file-hashing"),
       );
+      const measurement = await measuredProperties(context.files, scope, file);
       measured.push({
         file,
-        properties: await measuredProperties(context.files, scope, file),
+        properties: measurement.properties,
+        codecs: await captureHandoffSubtitles({
+          context: context.files,
+          scope,
+          file,
+          content,
+          probe: measurement.probe,
+        }),
         journalDigest: journal.digest,
       });
     }
@@ -108,6 +117,13 @@ export async function prepareHandoffFiles(
       properties: item.properties,
       journalDigest: item.journalDigest,
       unmanagedSidecars: await unmanagedSidecars(item.file.canonicalPath),
+      subtitles: await subtitleFileEvidence({
+        scope,
+        file: item.file,
+        content,
+        videoChecksum: proof.sha256,
+        codecs: item.codecs,
+      }),
     });
   }
   const evidence = HandoffFileEvidenceSchema.parse({
@@ -191,16 +207,19 @@ async function measuredProperties(
   });
   const resolvedEvidence = await collectResolvedEvidence(resolved, evidence);
   return {
-    id: `handoff:${file.assetId}`,
-    providerId: "migration",
-    title: path.basename(file.canonicalPath),
-    mediaIds: file.mediaIds,
-    identityConfidence: "exact" as const,
-    quality: measured.quality,
-    codec: measured.codec,
-    audioLanguages: measured.audioLanguages,
-    sizeBytes: Number(file.sizeBytes),
-    scoreTags: [],
-    resolvedEvidence,
+    probe,
+    properties: {
+      id: `handoff:${file.assetId}`,
+      providerId: "migration",
+      title: path.basename(file.canonicalPath),
+      mediaIds: file.mediaIds,
+      identityConfidence: "exact" as const,
+      quality: measured.quality,
+      codec: measured.codec,
+      audioLanguages: measured.audioLanguages,
+      sizeBytes: Number(file.sizeBytes),
+      scoreTags: [],
+      resolvedEvidence,
+    },
   };
 }

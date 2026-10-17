@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  SubtitlePolicySchema,
+  SubtitlePolicySatisfactionSchema,
+} from "./subtitle-policy.ts";
+import { OwnerHealthReasonSchema } from "./notification-authority.ts";
 import { ResolvedProfileSchema } from "#domain/resolved-contract.ts";
 import { ResolvedEvidenceSchema } from "#domain/resolved-evidence.ts";
 import {
@@ -19,6 +24,8 @@ export const CommandResultSchema = z.object({
   userId: z.string().optional(),
   runId: z.uuid().optional(),
   handoffId: z.uuid().optional(),
+  recoveryReviewId: z.uuid().optional(),
+  recoveryReceiptId: z.uuid().optional(),
   status: z.enum(["queued", "completed"]).optional(),
   version: z.number().int().optional(),
   restricted: z.boolean().optional(),
@@ -62,7 +69,12 @@ export const NotificationListSchema = z.array(
     attempts: z.number().int(),
     acceptedAt: DateTimeSchema.nullable(),
     createdAt: DateTimeSchema,
-    event: z.object({ mediaId: z.string().nullable(), kind: z.string() }),
+    event: z.object({
+      mediaId: z.string().nullable(),
+      kind: z.string(),
+      healthReason: OwnerHealthReasonSchema.optional(),
+      healthState: z.enum(["current", "superseded", "invalid"]).optional(),
+    }),
   }),
 );
 export const ProfileListSchema = z.array(
@@ -75,6 +87,16 @@ export const ProfileListSchema = z.array(
 );
 export const UserListSchema = z.array(UserSchema);
 export const MediaDetailSchema = MediaItemSchema.extend({
+  subtitlePolicies: z
+    .array(
+      z.object({
+        id: z.string(),
+        version: z.int(),
+        recoveryEpoch: z.int(),
+        rules: SubtitlePolicySchema,
+      }),
+    )
+    .default([]),
   removalConfirmation: RemovalConfirmationSchema.optional(),
   children: z.array(MediaItemSchema),
   intent: z
@@ -129,12 +151,19 @@ export const MediaDetailSchema = MediaItemSchema.extend({
         properties: z.json(),
         state: z.string(),
         createdAt: DateTimeSchema,
+        subtitleStatus:
+          SubtitlePolicySatisfactionSchema.nullable().default(null),
         subtitles: z.array(
           z.object({
             id: z.string(),
             language: z.string(),
             providerId: z.string(),
             state: z.string(),
+            qualityStatus: z.string(),
+            storageKind: z.string(),
+            accepted: z.boolean(),
+            forced: z.boolean().nullable(),
+            hearingImpaired: z.boolean().nullable(),
           }),
         ),
       }),

@@ -6,6 +6,7 @@ import { sweepDownloads } from "./reconciliation/downloads.ts";
 import { sweepFeeds } from "./reconciliation/feeds.ts";
 import { sweepInventory } from "./reconciliation/inventory.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { queueMediaSubtitleTargets } from "./subtitles/queue.ts";
 
 /** Each page is bounded and cursor order is stable under concurrent inserts. */
 export function createSweepActivities(
@@ -70,7 +71,11 @@ async function queueDue(
   item: Prisma.MediaItemGetPayload<{ include: { intent: true } }>,
 ) {
   if (item.intent === null) throw new Error("Sweep item lost desired state");
-  if (!item.intent.monitoring || !item.intent.desiredPresence) return;
+  if (!item.intent.desiredPresence) return;
+  await serializable(context.db, (tx) =>
+    queueMediaSubtitleTargets(tx, item.id),
+  );
+  if (!item.intent.monitoring) return;
   if (item.airDate !== null && item.airDate.getTime() > Date.now()) return;
   await serializable(context.db, async (tx) => {
     await queueOperation(tx, {
