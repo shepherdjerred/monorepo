@@ -74,6 +74,8 @@ export const VersionMapSchema = z
       z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/retained-2a5f0ef50956":
       z.string(),
+    "shepherdjerred/scout-for-lol/beta/workflows/retained-696d4c2fadb5":
+      z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/retained-869eb67f7730":
       z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/retained-ced2f566dce4":
