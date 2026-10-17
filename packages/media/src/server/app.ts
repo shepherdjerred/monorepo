@@ -8,6 +8,10 @@ import {
   registerHandoffRoutes,
   type HandoffAdministration,
 } from "./handoff-routes.ts";
+import {
+  registerNativeRecoveryRoutes,
+  type NativeRecoveryAdministration,
+} from "./native-recovery-routes.ts";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
@@ -55,6 +59,7 @@ export type MediaAppDependencies = {
   numberingAdmin: NumberingAdministration;
   migrationAdmin: MigrationAdministration;
   handoffAdmin: HandoffAdministration;
+  nativeRecoveryAdmin: NativeRecoveryAdministration;
   recoveryAdmin: RecoveryAdministration;
   plexExclusionAdmin: PlexExclusionAdministration;
   publicOrigin: string;
@@ -468,6 +473,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   registerNumberingRoutes(app, dependencies.numberingAdmin);
   registerMigrationRoutes(app, dependencies.migrationAdmin);
   registerHandoffRoutes(app, dependencies.handoffAdmin);
+  registerNativeRecoveryRoutes(app, dependencies.nativeRecoveryAdmin);
   registerPlexExclusionRoutes(app, dependencies.plexExclusionAdmin);
   app.notFound((c) =>
     c.json(

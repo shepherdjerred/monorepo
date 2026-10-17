@@ -17,6 +17,7 @@ import { MediaPage } from "./media.tsx";
 import { NotificationCallback } from "./preferences.tsx";
 import { MigrationPage } from "./migration.tsx";
 import { RecoveryPage } from "./recovery/page.tsx";
+import { NativeRecoveryPage } from "./native-recovery/page.tsx";
 
 export function App() {
   const session = useQuery({
@@ -134,6 +135,26 @@ function Shell({ user }: { user: MediaUser }) {
         )}
         {signOut.error !== null && <ErrorNotice error={signOut.error} />}
         <Routes>
+          <Route
+            path="/recovery/native"
+            element={
+              user.role === "owner" ? (
+                <NativeRecoveryPage user={user} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/recovery/native/:id"
+            element={
+              user.role === "owner" ? (
+                <NativeRecoveryPage user={user} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
           <Route path="/recovery" element={<RecoveryPage user={user} />} />
           <Route path="/recovery/:id" element={<RecoveryPage user={user} />} />
           <Route

@@ -41,6 +41,7 @@ export function recoveryView(
     coverage: [],
     personalHolds: [],
     handoffReceipts: [],
+    nativeReceipts: [],
     blockers:
       media.length === scope.media.length
         ? []

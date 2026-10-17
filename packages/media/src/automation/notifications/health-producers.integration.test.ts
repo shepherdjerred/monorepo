@@ -50,6 +50,10 @@ test.each(["writer", "storage"] as const)(
       await refreshStorageAuthorities(db, {
         observe: async () => writerObservation(true),
         observeMountBindings: async () => drift,
+        observeCanonicalMounts: () =>
+          Promise.reject(
+            new Error("Legacy fixture has no native storage observation"),
+          ),
       });
     }
     const delivery = await health.delivery(f.user.id);

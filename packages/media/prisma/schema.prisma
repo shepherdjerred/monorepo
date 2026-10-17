@@ -74,6 +74,8 @@ model MediaUser {
   recoveryResponses RecoveryResponse[] @relation("RecoveryRespondent")
   recoveryDeclarations RecoveryResponse[] @relation("RecoveryDeclarant")
   recoveryReceipts RecoveryReleaseReceipt[]
+  nativeRecoveryPlans NativeRecoveryPlan[]
+  nativeRecoveryReceipts NativeRecoveryReceipt[]
 }
 
 model MigrationCapture {
@@ -643,6 +645,7 @@ model RetentionDecision {
 }
 
 model Operation {
+  nativeRecoveryPlans NativeRecoveryPlan[]
   id             String          @id @default(uuid())
   idempotencyKey String?         @unique
   userId         String?
@@ -733,6 +736,54 @@ model RecoveryReleaseReceipt {
   scopeHash String
   responseHash String
   releasedHoldIds String[]
+  createdAt DateTime @default(now())
+}
+
+model NativeRecoveryPlan {
+  id String @id @default(uuid())
+  restoreOperationId String
+  restoreOperation Operation @relation(fields: [restoreOperationId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  requestHash String
+  scope Json
+  plan Json?
+  planHash String?
+  state String @default("preparing")
+  version Int @default(0)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  observations NativeRecoveryObservation[]
+  receipt NativeRecoveryReceipt?
+}
+
+model NativeRecoveryObservation {
+  id String @id @default(uuid())
+  planId String
+  plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  kind String
+  evidenceHash String
+  evidence Json
+  observedAt DateTime
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([planId, kind, createdAt])
+}
+
+model NativeRecoveryReceipt {
+  id String @id @default(uuid())
+  planId String @unique
+  plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planHash String
+  recoveryEpoch Int
+  previousRuntimeVersion Int
+  runtimeVersion Int
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  selection Json
   createdAt DateTime @default(now())
 }
 

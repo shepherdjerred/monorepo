@@ -1,11 +1,28 @@
 import { z } from "zod";
 import type { PlexItem } from "#integrations/plex.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import type { LoadedHandoffPlan } from "./plan.ts";
 import { protectedEvidence, type HandoffNetworkContext } from "./context.ts";
 
-type Media = LoadedHandoffPlan["media"][number];
-type File = LoadedHandoffPlan["scope"]["files"][number];
+type Media = {
+  id: string;
+  kind: string;
+  tmdbId: number | null;
+  externalIds: unknown;
+  seasonNumber: number | null;
+  episodeNumber: number | null;
+  parent?: { parent?: { tmdbId: number | null } | null } | null;
+};
+type File = {
+  canonicalPath: string;
+  sizeBytes: string;
+  mediaIds: string[];
+  libraryKind: "movies" | "tv";
+};
+export type PlexCoverageInput = { media: Media[]; scope: { files: File[] } };
+type Context = Pick<
+  HandoffNetworkContext,
+  "plex" | "expectedServerMachineId" | "permittedSections"
+>;
 const ExternalIds = z.object({
   imdb: z.string().nullable().optional(),
   seriesTmdb: z.number().int().positive().optional(),
@@ -46,7 +63,7 @@ export function exactPlexIdentity(
 }
 
 async function scanSection(
-  context: HandoffNetworkContext,
+  context: Context,
   sectionId: string,
   kind: "movie" | "episode",
   signal: AbortSignal,
@@ -78,8 +95,8 @@ async function scanSection(
 }
 
 export async function observePlex(
-  context: HandoffNetworkContext,
-  input: LoadedHandoffPlan,
+  context: Context,
+  input: PlexCoverageInput,
   signal: AbortSignal,
 ) {
   const server = await context.plex.machineIdentifier(signal);
@@ -131,8 +148,8 @@ async function matchFile({
   items,
   file,
 }: {
-  context: HandoffNetworkContext;
-  input: LoadedHandoffPlan;
+  context: Context;
+  input: PlexCoverageInput;
   signal: AbortSignal;
   server: string;
   sectionId: string;
