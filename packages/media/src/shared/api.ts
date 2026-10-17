@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MediaVisibilitySchema } from "./visibility/detail.ts";
 import {
   SubtitlePolicySchema,
   SubtitlePolicySatisfactionSchema,
@@ -90,6 +91,7 @@ export const ProfileListSchema = z.array(
 );
 export const UserListSchema = z.array(UserSchema);
 export const MediaDetailSchema = MediaItemSchema.extend({
+  visibility: MediaVisibilitySchema,
   subtitlePolicies: z
     .array(
       z.object({

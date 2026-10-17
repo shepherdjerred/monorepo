@@ -117,6 +117,10 @@ const app = createMediaApp({
   media: new PrismaMediaApplication(database, {
     keepDays: keepDays.value,
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    visibilitySections: {
+      movie: permittedMovieSectionId.value,
+      series: permittedTvSectionId.value,
+    },
   }),
   notifications: new PrismaNotificationApplication(database, cipher, discord, {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,

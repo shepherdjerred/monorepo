@@ -508,6 +508,7 @@ model Torrent {
   owned         Boolean              @default(false)
   seedingPolicy Json
   observation   Json?
+  cleanupEvaluation Json?
   observedAt    DateTime?
   state         String
   createdAt     DateTime             @default(now())
