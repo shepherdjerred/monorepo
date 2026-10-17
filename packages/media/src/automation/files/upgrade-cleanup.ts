@@ -1,6 +1,10 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
 import { z } from "zod";
+import {
+  ownedSubtitleSidecars,
+  advanceSubtitleBindings,
+} from "./subtitle-lifecycle/ownership.ts";
 import { prepareContentProof } from "./content-proof.ts";
 import {
   prepareUpgradeCleanupPlan,
@@ -146,19 +150,23 @@ export async function cleanupUpgrade(
           sha256: file.checksum,
           location: file.location,
         });
-      await tx.libraryAsset.update({
+      const purgedAsset = await tx.libraryAsset.update({
         where: { id: current.assetId },
         data: { state: "purged", version: { increment: 1 } },
       });
-      await tx.subtitleAsset.updateMany({
-        where: {
-          id: {
-            in: plan.files.flatMap((file) =>
-              file.subtitleId === null ? [] : [file.subtitleId],
-            ),
-          },
-        },
-        data: { state: "purged" },
+      if (purgedAsset.checksum === null)
+        throw new Error("Cleanup video checksum missing");
+      await advanceSubtitleBindings(tx, {
+        assetId: purgedAsset.id,
+        checksum: purgedAsset.checksum,
+        epoch: snapshot.recoveryEpoch,
+        fromVersion: plan.assetVersion,
+        toVersion: purgedAsset.version,
+        fromState: "superseded",
+        sidecarIds: plan.files.flatMap((file) =>
+          file.subtitleId === null ? [] : [file.subtitleId],
+        ),
+        state: "purged",
       });
       await tx.upgradeCleanup.update({
         where: { id: cleanupId },
@@ -224,6 +232,7 @@ async function assertCleanupAssets(input: {
   )
     throw new FileGuardError("cleanup_coverage_changed");
   await assertSidecars(tx, asset, plan);
+  ownedSubtitleSidecars(asset);
 }
 
 async function assertSidecars(

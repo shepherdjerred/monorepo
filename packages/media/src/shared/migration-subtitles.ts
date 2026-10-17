@@ -27,4 +27,5 @@ export const SubtitleManagerReferenceSchema = z.strictObject({
     .string()
     .regex(/^[a-f0-9]{64}$/u)
     .nullable(),
+  binding: z.literal("owner_declared").optional(),
 });

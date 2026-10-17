@@ -5,6 +5,7 @@ import { MediaError } from "#application/errors.ts";
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
+import { verifyRevokedRetryHttp } from "./retry-http.test-support.ts";
 
 const actor: MediaActor = {
   id: "member",
@@ -66,6 +67,21 @@ const numberingFixture = {
   },
   async save() {
     return { status: "completed" as const };
+  },
+};
+const recoveryFixture = {
+  list: async () => ({ authority: null, holds: [], reviews: [] }),
+  detail: async () => {
+    throw new Error("Unexpected recovery detail");
+  },
+  prepare: async () => {
+    throw new Error("Unexpected recovery prepare");
+  },
+  respond: async () => {
+    throw new Error("Unexpected recovery response");
+  },
+  release: async () => {
+    throw new Error("Unexpected recovery release");
   },
 };
 
@@ -224,6 +240,7 @@ function fixture() {
     numberingAdmin: numberingFixture,
     migrationAdmin: migrationFixture,
     handoffAdmin: handoffFixture,
+    recoveryAdmin: recoveryFixture,
     plexExclusionAdmin: {
       async list() {
         return {
@@ -271,6 +288,44 @@ const headers = {
 };
 
 describe("media HTTP security and errors", () => {
+  test("Retry reauthorizes current DB access after authentication while Keep remains protective", async () => {
+    await verifyRevokedRetryHttp(fixture().dependencies, headers);
+  }, 60_000);
+  test("recovery declarations use current authenticated identity and enforce CSRF before service calls", async () => {
+    const { dependencies } = fixture();
+    const respond = vi.fn<MediaAppDependencies["recoveryAdmin"]["respond"]>(
+      async () => ({ status: "completed" }),
+    );
+    dependencies.recoveryAdmin = { ...dependencies.recoveryAdmin, respond };
+    const app = createMediaApp(dependencies);
+    const id = crypto.randomUUID();
+    const input = {
+      scopeHash: "a".repeat(64),
+      acknowledgePending: true,
+      declarations: [{ mediaId: crypto.randomUUID(), intent: "request" }],
+    };
+    const rejected = await app.request(
+      `/api/v1/recovery/reviews/${id}/responses`,
+      {
+        method: "POST",
+        headers: { ...headers, "X-CSRF-Token": "wrong" },
+        body: JSON.stringify(input),
+      },
+    );
+    expect(rejected.status).toBe(403);
+    expect(respond).not.toHaveBeenCalled();
+    const accepted = await app.request(
+      `/api/v1/recovery/reviews/${id}/responses`,
+      { method: "POST", headers, body: JSON.stringify(input) },
+    );
+    expect(accepted.status).toBe(200);
+    expect(respond).toHaveBeenCalledWith(
+      actor,
+      headers["Idempotency-Key"],
+      id,
+      input,
+    );
+  });
   test("handoff apply forwards the authenticated actor and exact reviewed hash; malformed scope is rejected", async () => {
     const { dependencies } = fixture();
     const apply = vi.fn<MediaAppDependencies["handoffAdmin"]["apply"]>(

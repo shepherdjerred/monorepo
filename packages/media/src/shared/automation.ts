@@ -78,6 +78,9 @@ export type MediaNetworkActivities = {
     operationId: string;
     assetId: string;
     language: string;
+    forced?: boolean;
+    hearingImpaired?: "required" | "excluded" | "any";
+    targetAuthority?: string;
   }) => Promise<{
     status: "found" | "waiting" | "obsolete" | "blocked";
     subtitleId: string | null;
@@ -155,5 +158,8 @@ export type MediaFileActivities = {
   installMediaSubtitles: (input: {
     subtitleId: string;
     operationId: string;
-  }) => Promise<{ status: "installed" | "obsolete" }>;
+  }) => Promise<{
+    status: "installed" | "obsolete" | "blocked";
+    reason?: string;
+  }>;
 };

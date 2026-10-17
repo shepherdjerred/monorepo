@@ -15,6 +15,7 @@ import {
   claimSubtitleDownload,
   subtitleArchive,
   subtitleVersionMatches,
+  requireUntargetedProvider,
   type SubtitleSearch,
   type SubtitleSource,
 } from "./subtitle-sources.ts";
@@ -47,6 +48,7 @@ export async function fromSubhd(
   },
 ): Promise<SubtitleLookup> {
   if (!["zh-Hans", "zh-CN"].includes(input.language)) return null;
+  requireUntargetedProvider(input, "subhd");
   const provider = ports?.provider ?? new SubhdProvider();
   const browser = ports?.browser ?? (await subtitleBrowser(context));
   let state = await readBrowserState(context, input.operationId);
@@ -129,6 +131,7 @@ export async function fromZimuku(
   input: SubtitleSearch,
 ): Promise<SubtitleLookup> {
   if (!["zh-Hans", "zh-CN"].includes(input.language)) return null;
+  requireUntargetedProvider(input, "zimuku");
   const provider = new ZimukuProvider();
   const pages = await provider.search(input.query);
   for (const page of pages.slice(0, 3)) {

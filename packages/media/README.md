@@ -88,17 +88,66 @@ replacement files Pod on the same verified storage requires a fresh binding.
 
 Whole-media requests with exact current Plex account access can be adopted;
 whole-series requests retain future episode monitoring through bounded coverage
-expansion. Managed Home profiles, ambiguous or partial requests, nuanced
-subtitle preferences, and existing subtitle files remain protected. Legacy
+expansion. Managed Home profiles and ambiguous or partial requests remain
+protected. Explicitly selected legacy sidecars and embedded tracks can be adopted
+with exact source, video, shared-episode coverage, and fresh filesystem evidence;
+ownership does not accept their subtitle quality. Unsupported policy semantics,
+unbound manager instances, and unselected neighboring files remain protected. Legacy
 torrents are recorded as unowned obligations; this API does not change their
 paths, tags, cleanup authority, or assert that legacy hooks have drained.
 
 Every adopted physical item retains a separate household recovery hold.
 Checksums cannot reconstruct lost post-backup requesters, Keep actions, or pins.
-Ordinary Keep/unpin commands cannot release that hold. Scoped household
-reconciliation and release, subtitle adoption, and reviewed permanent retirement
-of deleted legacy controllers require separate supported contracts; absent
-legacy controllers currently protect rather than prove quiescence.
+Ordinary Keep/unpin commands cannot release that hold. The explicit recovery
+review below reconstructs present household intent; it does not prove that a
+backup contained every past request. Reviewed permanent retirement of deleted
+legacy controllers remains a separate contract; absent controllers currently
+protect rather than prove quiescence.
+
+## Recovery reconciliation API
+
+The `/recovery` interface shows owners protected titles and household reviews.
+Owners select media to prepare a review; shared physical files expand the scope
+to all covered episodes. Each relevant household member signs in and declares
+retain/request, Keep for a stated period, or no longer request for every title.
+Declarations are immutable and **pending** until the owner applies the exact
+review. An immediate ordinary Keep/pin remains available and invalidates a stale
+review instead of releasing the system hold.
+
+`shared/recovery.ts` defines the request and response schemas:
+
+| Route                                         | Contract                                                                                                                                              |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v1/recovery`                        | Accessible reviews; owners also receive active recovery holds.                                                                                        |
+| `POST /api/v1/recovery/reviews`               | Owner prepares up to 100 media items with `PrepareRecoverySchema`.                                                                                    |
+| `GET /api/v1/recovery/reviews/:id`            | Owner sees exact scope, outstanding respondents, pins, blockers and responses. Members see only currently permitted titles and their own declaration. |
+| `POST /api/v1/recovery/reviews/:id/responses` | Authenticated self declaration with `RespondRecoverySchema`; caller-supplied proxy identities are rejected.                                           |
+| `POST /api/v1/recovery/reviews/:id/release`   | Current owner confirms household completeness, existing pins and the limits of lost history using `ReleaseRecoverySchema`.                            |
+
+Writes require the authenticated session, CSRF and an idempotency key. Release
+compares the reviewed scope and response hashes under sorted media, effective
+root-request, runtime, hold, identity and review locks. Versions, root coverage,
+exclusions, physical coverage/checksums, personal holds and authority must still
+match. Only the listed holds are released, with an immutable receipt. The same
+transaction applies the declarations, invalidates old retention authorization,
+preserves restoration manifests and clears cached watch evidence. Existing
+personal pins remain intact. Asset ownership and old acquisition/delivery birth
+epochs are never renewed by this flow.
+
+An unrelated household identity with freshly proven denial of every affected
+library and no relevant current or historical request/personal hold is listed
+separately and does not require a response. Unknown access never counts as
+denial; a relevant old claim keeps the person in scope even after access revocation.
+
+Silence, relevant managed/unmapped household identities, incomplete or partial root
+claims, unresolved migration claims affecting these titles, and stale Plex access
+keep protection in place. Each respondent's scoped access must have been
+verified within five minutes of release. Unrelated protected legacy torrent or
+subtitle records do not block household review; their own ownership guards
+remain independent. Reviews expire after seven days; changes require a new
+review and fresh declarations. Quarantined Plex 404 responses remain unknown
+watch state and cannot be overridden here. Normal cleanup still requires fresh
+watch evidence, personal notification receipts and the normal grace period.
 
 ## Plex exclusion API contract
 
@@ -203,6 +252,34 @@ flag, and the worker's bot credential. Shared announcements have separate defaul
 enable/upgrade flags and a typed channel ID (`disabled` means unconfigured). No
 transport credential or verification token is returned in delivery history.
 
+Trusted writer or storage revocation commits a dedicated `owner_health` event,
+personal owner deliveries, and their outbox commands in the same transaction as
+the transition to observe mode. Its strict evidence binds the source revocation,
+resulting runtime version, and immutable recovery epoch. Only that exact current
+observe/unowned transition may send; generic intervention and media notifications
+retain their normal active-authority requirements. Activation, restore, or another
+runtime version supersedes the alert without rewriting its delivery history.
+Recipients must still be unrestricted owners with an enabled verified personal
+channel. Missing eligible channels produce an explicit unavailable audit event.
+
+An authenticated email-verification request has a separate bootstrap authority:
+the current unexpired one-time record, intended address, unrestricted requester,
+and current recovery epoch. It can send while observing before an address is
+verified. Superseding a request or restoring another epoch fences both delivery
+and token consumption. Final sends and receipt reconciliation recheck current
+authority under runtime and recipient locks; unknown sends are never retried.
+
+These commands use the ordinary durable outbox. With the default paused schedules,
+requesting verification alone does not send an email. After reviewing the exact
+Temporal namespace and worker build, run `dispatchMediaOutboxWorkflow` once on
+`monorepo-workflows`, or enable only the managed `media-outbox` schedule. The
+workflow executor and `media-network` worker must be available. Keep runtime in
+observe mode, acquisition/files effect gates disabled, and the other schedules
+paused during bootstrap. Dispatch also encounters other queued commands, whose
+ordinary authority guards remain protected. A queued command is not delivery
+acceptance; verify its attempt and provider receipt. The owner recovery page
+reviews protections and does not itself restore writer or storage authority.
+
 The deployment currently omits Discord credentials. Before configuring Discord,
 provision `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_BOT_TOKEN`
 in the Media bootstrap item through the repository's password-manager workflow.
@@ -236,6 +313,17 @@ ownership transfer. Keep acquisition, cleanup, quarantine, and purge gates close
 through that review.
 
 ## Bounded reconciliation
+
+Retry and manual release selection reauthorize the current database user and Plex
+scope before renewing acquisition intent. A historical request does not grant
+access to a revoked library; an existing mapped title requires its exact Plex
+section for both renewal and a new request. Manual selection also requires the
+current owner role. Self requests from Plex-restricted accounts are denied;
+explicit owner requests for managed profiles retain their separately verified
+library scope. Proxy requests recheck the owner's current role and restriction,
+and hold the owner and target identity locks through commit. Media's own
+requester restriction applies to both. Keep, pin and
+cancellation remain protective actions and do not renew a stale intent epoch.
 
 Whole-series requests commit a parent claim and outbox entry; Temporal projects
 episode coverage in pages of 25. Parent cancellation immediately removes inherited
@@ -438,7 +526,83 @@ to inventory all requests and preserves source requester IDs; it never equates a
 display name or source `plexId` with a global Plex account. Bazarr capture retains
 per-language forced, hearing-impaired and audio inclusion/exclusion settings,
 cutoffs, embedded track provenance, and hashed text constraints. Its numeric
-manager IDs remain unbound until an exact source-instance association is proved.
+manager IDs remain unbound until an exact source-instance association is reviewed.
+For Bazarr, `--radarr-instance-id` and `--sonarr-instance-id` declare the opaque
+manager instance IDs used by the corresponding captures. These declarations are
+recorded as owner supplied, not discovered authority. Association requires the
+same manager kind, instance, numeric media ID, and captured video path in a
+complete, stable combined bundle. Fresh handoff evidence additionally checks the
+actual worker/PVC roots and video bytes; matching path suffixes never suffice.
+
+### Legacy subtitle adoption and policy
+
+Include each subtitle or preference provenance key in the existing handoff
+preparation request's `selected` array. Every episode covered by a shared video
+must have its exact subtitle association selected. Supported sidecars are SRT,
+ASS, SSA, and WebVTT; embedded records require a matching stream index, codec,
+language and known forced/HI flags from inspection of that exact video. Bitmap
+tracks can be owned but remain quality-unverified. Unknown neighboring files
+retain their deletion protection.
+An existing nonpurged SubtitleAsset at the selected path or embedded stream
+currently requires separate reconciliation and protects handoff. Recovery never
+silently reassigns its prior ownership epoch or overwrites its quality history.
+
+For each selected preference, add
+`subtitlePolicies: [{provenanceKey, expectedPolicyVersion, chinese}]` to the
+preparation request. Use `expectedPolicyVersion: -1` for a first assignment and
+`chinese: "unresolved"` or the explicit desired-language choice
+`"require_simplified"`. The latter changes the desired policy; it does not label
+generic Chinese files as Simplified Chinese or establish human provenance.
+Policies retain immutable source evidence and versioned rules. Cutoffs, text
+constraints, original-format requirements and unsupported language combinations
+remain explicitly protected.
+
+Policy translation follows the pinned [Bazarr v1.6.2 movie indexer](https://raw.githubusercontent.com/morpheus65535/bazarr/v1.6.2/bazarr/subtitles/indexer/movies.py),
+particularly lines 238–247 and 317–348: regular `HI=False` accepts either regular
+or hearing-impaired captions, while forced subtitles remain a separate target.
+`HI=True` requires hearing-impaired captions; regular `HI=Excluded` excludes
+them. Audio exclusion/inclusion is evaluated only with known audio evidence.
+Forced `HI=Excluded` is protected because its source behavior is not equivalent
+to a simple independent flag filter.
+
+Subtitle lifecycle, quality acceptance and ownership are separate fields.
+Imported files start `unverified`; historical rows default to an unassigned
+ownership epoch. Only accepted subtitles bound to the current owned video's
+checksum and version satisfy a requested target. Trusted quarantine/restore and
+upgrade rollback receipts preserve quality while rebinding unchanged bytes;
+an old-video subtitle never satisfies its replacement. The media page displays
+quality and policy readiness separately from physical installation. Manual
+uploads can declare forced and hearing-impaired metadata and must still pass
+the existing content/provenance validators.
+
+Automatic acquisition merges effective requester languages with the current
+immutable policy, applying its audio rules. Publication, reviewed adoption and
+new requests enqueue missing targets; the bounded six-hour due sweep also
+reconciles existing assets and later policy versions, including assets with
+upgrade monitoring disabled. Each target has a separate operation identity bound
+to the video, epoch and current request/policy authority. Regular and forced
+tracks use separate `.en.srt` and `.en.forced.srt` paths; known hearing-impaired
+tracks add `.sdh`. Staged candidates from superseded authority are not reused;
+installed quality can still satisfy the same current video and target. Readiness
+and personal subtitle-ready notifications require every applicable target.
+
+OpenSubtitles uses `foreign_parts_only` and `hearing_impaired` filters
+(`include`, `exclude`, `only`) from its pinned
+[official client request contract](https://raw.githubusercontent.com/opensubtitles-dev/service.subtitles.opensubtitles-com/7acfa8f2932a0155ba921212882baa0fade05890/resources/lib/osclient/model/request/subtitles.py).
+Returned boolean metadata must prove each explicit target before a download
+quota claim; missing metadata is unknown. Plain requested languages and legacy
+language-only workflow inputs leave forced/HI unspecified. ASSRT, SubHD and
+Zimuku remain usable for those requests, but cannot prove explicit forced/HI
+requirements and report an unsupported target. They do not infer those flags
+from a filename. Exact release matching, human
+provenance, timing and Simplified Chinese checks still apply. Unresolved imported
+policy semantics remain protected even when a provider supports the individual
+flags.
+
+An existing owned but quality-unverified sidecar does not satisfy readiness and
+is never silently overwritten by a newly accepted candidate. A canonical-path
+collision ends the install with `subtitle_path_requires_owner_review`; replacement
+of that owned legacy sidecar remains an explicit operator-review boundary.
 
 Owners can upload and review captures at `/admin/migration`. The API saves
 immutable capture records and report evidence. Approval binds capture/report

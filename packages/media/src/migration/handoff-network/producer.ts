@@ -61,7 +61,8 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
       await tx.$queryRaw`SELECT id FROM "MediaHandoffPlan" WHERE id = ${planId} FOR SHARE`;
       const current = await readHandoffPlan(tx, planId);
       if (
-        snapshotHash(current.scope) !== snapshotHash(input.scope) ||
+        snapshotHash(z.json().parse(current.scope)) !==
+          snapshotHash(z.json().parse(input.scope)) ||
         expiresAt.getTime() <= Date.now()
       )
         throw protectedEvidence("handoff_observation_expired_or_changed");

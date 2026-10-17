@@ -13,6 +13,7 @@ import {
   type CommandResult,
 } from "#shared/api.ts";
 import { NotificationDeliveryCommands } from "./notifications/commands.ts";
+import { VerificationAuthoritySchema } from "#shared/notification-authority.ts";
 import type { Database } from "./database.ts";
 
 export class PrismaNotificationApplication
@@ -117,7 +118,20 @@ export class PrismaNotificationApplication
       key,
       { kind: "verify_email", input: { email } },
       async (db) => {
+        await db.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
         await db.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actor.id} FOR UPDATE`;
+        const user = await db.mediaUser.findUniqueOrThrow({
+          where: { id: actor.id },
+        });
+        if (user.restricted)
+          throw new MediaError(
+            "forbidden",
+            "Restricted accounts cannot verify a notification address",
+            403,
+          );
+        const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
         const recent = await db.emailVerification.findFirst({
           where: {
             userId: actor.id,
@@ -147,11 +161,13 @@ export class PrismaNotificationApplication
           data: {
             actorId: actor.id,
             kind: "email_verification",
-            payload: { verificationId: id },
+            payload: {
+              schemaVersion: 1,
+              verificationId: id,
+              requesterId: actor.id,
+              recoveryEpoch: runtime.recoveryEpoch,
+            },
           },
-        });
-        const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
-          where: { id: "singleton" },
         });
         const delivery = await db.notificationDelivery.create({
           data: {
@@ -184,6 +200,14 @@ export class PrismaNotificationApplication
 
   async verifyEmail(actor: MediaActor, token: string): Promise<CommandResult> {
     return this.db.$transaction(async (db) => {
+      await db.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+      await db.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actor.id} FOR UPDATE`;
+      const user = await db.mediaUser.findUniqueOrThrow({
+        where: { id: actor.id },
+      });
+      const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
       const pending = await db.emailVerification.findUnique({
         where: { tokenHash: tokenHash(token) },
       });
@@ -191,6 +215,25 @@ export class PrismaNotificationApplication
         throw new MediaError(
           "verification_invalid",
           "Email verification is expired or belongs to another user",
+          422,
+        );
+      const authority = await db.applicationEvent.findFirst({
+        where: {
+          kind: "email_verification",
+          actorId: actor.id,
+          payload: { path: ["verificationId"], equals: pending.id },
+        },
+      });
+      const proof = VerificationAuthoritySchema.safeParse(authority?.payload);
+      if (
+        user.restricted ||
+        !proof.success ||
+        proof.data.requesterId !== actor.id ||
+        proof.data.recoveryEpoch !== runtime.recoveryEpoch
+      )
+        throw new MediaError(
+          "verification_invalid",
+          "Email verification is no longer authorized; request a new email",
           422,
         );
       const consumed = await db.emailVerification.deleteMany({

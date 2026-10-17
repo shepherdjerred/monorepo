@@ -263,6 +263,10 @@ async function uploadInput(
     description: text(form, "description"),
     contentBase64: await fileBase64(file),
     confirmedMatchingVideo: form.get("confirmed") === "on",
+    forced: form.get("forced") === "on",
+    ...(text(form, "hearingImpaired") === "unknown"
+      ? {}
+      : { hearingImpaired: text(form, "hearingImpaired") === "yes" }),
     ...(declaredEncoding === "bom" ? {} : { declaredEncoding }),
   });
 }
@@ -336,6 +340,19 @@ function SubtitleUploader({
         </select>
       </label>
       <label>
+        <input type="checkbox" name="forced" /> Forced dialogue only
+      </label>
+      <label>
+        Hearing-impaired captions
+        <select name="hearingImpaired">
+          <option value="unknown">
+            Unknown — cannot satisfy an exact requirement
+          </option>
+          <option value="no">Confirmed absent</option>
+          <option value="yes">Confirmed included</option>
+        </select>
+      </label>
+      <label>
         Subtitle file
         <input
           name="subtitle"
@@ -369,7 +386,7 @@ function SubtitleUploader({
       </label>
       <p>
         SRT, ASS, SSA, or WebVTT, up to 8 MiB. Existing subtitles in the same
-        language require replacement review.
+        language and forced/HI variant require replacement review.
       </p>
       {error !== null && <ErrorNotice error={error} />}
       {upload.error !== null && <ErrorNotice error={upload.error} />}

@@ -1,4 +1,8 @@
 import nodePath from "node:path";
+import {
+  advanceSubtitleBindings,
+  ownedSubtitleSidecars,
+} from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
 import {
   FileGuardError,
@@ -78,7 +82,21 @@ export async function rollbackPromotion(
           });
           const previous = await tx.libraryAsset.findUniqueOrThrow({
             where: { id: previousAssetId },
+            include: { subtitles: { where: { state: "superseded" } } },
           });
+          const sidecars = ownedSubtitleSidecars(previous);
+          if (
+            sidecars.length !== entry.previousSidecars.length ||
+            entry.previousSidecars.some(
+              (item) =>
+                !sidecars.some(
+                  (subtitle) =>
+                    subtitle.id === item.subtitleId &&
+                    subtitle.checksum === item.checksum,
+                ),
+            )
+          )
+            throw new FileGuardError("subtitle_manifest_changed");
           if (
             !asset.owned ||
             asset.ownershipEpoch !== epoch ||
@@ -113,7 +131,6 @@ export async function rollbackPromotion(
           await tx.subtitleAsset.update({
             where: { id: sidecar.subtitleId },
             data: {
-              state: "installed",
               path: nodePath.join(roots.library, sidecar.libraryPath),
             },
           });
@@ -147,6 +164,16 @@ export async function rollbackPromotion(
             state: "pending",
           },
           data: { state: "cancelled", version: { increment: 1 } },
+        });
+        await advanceSubtitleBindings(tx, {
+          assetId: previousAssetId,
+          checksum: previousChecksum,
+          epoch: current.recoveryEpoch,
+          fromVersion: entry.previousVersion + 1,
+          toVersion: entry.previousVersion + 2,
+          fromState: "superseded",
+          sidecarIds: entry.previousSidecars.map((item) => item.subtitleId),
+          state: "installed",
         });
         await tx.assetCoverage.updateMany({
           where: { assetId: previousAssetId, mediaId: { in: entry.mediaIds } },

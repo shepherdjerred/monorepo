@@ -546,12 +546,20 @@ test("owner confirmation authorizes recoverable removal and rejects subsequent a
 
 test("subtitle acquisition persists exact version evidence and replays without another download", async () => {
   const item = await fixture();
+  await cluster.database.mediaRequest.updateMany({
+    where: { mediaId: item.media.id },
+    data: { subtitleLanguages: ["en", "zh-Hans"] },
+  });
   await cluster.database.libraryAsset.update({
     where: { id: item.asset.id },
     data: { sourcePath: "/downloads/Fixture.2020.1080p.WEB-GROUP.mkv" },
   });
   await cluster.database.operation.create({
-    data: { id: item.input.operationId, kind: "find_subtitles", payload: {} },
+    data: {
+      id: item.input.operationId,
+      kind: "find_subtitles",
+      payload: { recoveryEpoch: 0 },
+    },
   });
   await cluster.database.mediaProvider.upsert({
     where: { id: "opensubtitles" },
@@ -566,6 +574,8 @@ test("subtitle acquisition persists exact version evidence and replays without a
         filename: "Fixture.2020.1080p.WEB-GROUP.en.srt",
         description: "human subtitles",
         actualLanguage: "en",
+        forced: false,
+        hearingImpaired: false,
         bytes: new TextEncoder().encode(
           "1\n00:00:01,000 --> 00:00:03,000\nHello\n",
         ),

@@ -15,6 +15,10 @@ import {
   type ManualSubtitle,
 } from "#shared/admin.ts";
 import { validateSubtitle } from "#integrations/subtitle-validation.ts";
+import { subtitleAccepted } from "#domain/subtitle-quality.ts";
+import { currentSubtitleWork } from "#automation/subtitles/authority.ts";
+import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
+import { createHash } from "node:crypto";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { PrismaMediaCommands } from "./commands.ts";
 import type { Database } from "./database.ts";
@@ -285,7 +289,16 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
       checksum: z.string().parse(asset.checksum),
       filename: nodePath.basename(asset.sourcePath ?? asset.path),
       titles: asset.coverage.map((coverage) => coverage.media.title),
-      installedLanguages: asset.subtitles.map((subtitle) => subtitle.language),
+      installedLanguages: asset.subtitles
+        .filter((subtitle) =>
+          subtitleAccepted({
+            subtitle,
+            asset,
+            epoch: asset.ownershipEpoch,
+            allowStaged: true,
+          }),
+        )
+        .map((subtitle) => subtitle.language),
     }));
   }
 
@@ -305,6 +318,8 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
       { kind: "upload_subtitle", input },
       async (tx) => {
         const asset = await lockSubtitleAsset(tx, input);
+        await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`;
+        await lockSubtitlePolicies(tx);
         const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
           where: { id: "singleton" },
         });
@@ -322,17 +337,24 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
             "The video is no longer requested for the library",
             409,
           );
+        const work = await currentSubtitleWork(
+          tx,
+          asset.id,
+          runtime.recoveryEpoch,
+        );
         const existing = await tx.subtitleAsset.findFirst({
           where: {
             assetId: asset.id,
             language: input.language,
             state: { in: ["validated", "installed"] },
+            forced: input.forced ?? false,
+            hearingImpaired: input.hearingImpaired ?? null,
           },
         });
         if (existing !== null)
           throw new MediaError(
             "subtitle_exists",
-            "This video already has a subtitle in that language; replacement requires review",
+            "This video already has that language and forced/HI variant; replacement requires review",
             409,
           );
         const subtitle = await tx.subtitleAsset.create({
@@ -341,6 +363,14 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
             language: input.language,
             providerId: "manual",
             state: "validated",
+            qualityStatus: "accepted",
+            storageKind: "sidecar",
+            ownershipEpoch: runtime.recoveryEpoch,
+            checksum: createHash("sha256").update(validated.text).digest("hex"),
+            videoChecksum: asset.checksum,
+            videoVersion: asset.version,
+            forced: input.forced ?? false,
+            hearingImpaired: input.hearingImpaired ?? null,
             content: new TextEncoder().encode(validated.text),
             provenance: {
               filename: input.filename,
@@ -356,6 +386,7 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
               exactMediaMatch: true,
               videoVersionMatch: true,
               ownerConfirmed: true,
+              targetAuthority: work.authority,
               recoveryEpoch: runtime.recoveryEpoch,
               generations: Object.fromEntries(
                 intents.map((intent) => [intent.mediaId, intent.generation]),

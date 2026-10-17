@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router";
+import { ownerHealthDescriptions } from "#shared/notification-authority.ts";
 import {
   CommandResultSchema,
   NotificationListSchema,
@@ -248,6 +249,23 @@ export function NotificationsPage({ user }: { user: MediaUser }) {
             </div>
             <div className="item-main">
               <h2>{humanize(notification.event.kind)}</h2>
+              {notification.event.healthReason !== undefined && (
+                <p>
+                  {ownerHealthDescriptions[notification.event.healthReason]}
+                </p>
+              )}
+              {notification.event.healthState === "superseded" && (
+                <p>
+                  This alert describes an earlier authority state. Its delivery
+                  history is preserved; it cannot be sent again.
+                </p>
+              )}
+              {notification.event.kind === "owner_health" &&
+                user.role === "owner" && (
+                  <Link className="text-link" to="/recovery">
+                    Review recovery protections →
+                  </Link>
+                )}
               <p>
                 {humanize(notification.channel)} ·{" "}
                 {dateLabel(notification.createdAt)}
@@ -262,7 +280,13 @@ export function NotificationsPage({ user }: { user: MediaUser }) {
               )}
               <DeliveryActions user={user} delivery={notification} />
             </div>
-            <Status value={notification.providerStatus ?? notification.state} />
+            <Status
+              value={
+                notification.event.healthState === "superseded"
+                  ? "superseded"
+                  : (notification.providerStatus ?? notification.state)
+              }
+            />
           </article>
         ))}
       </div>

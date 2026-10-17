@@ -1,4 +1,8 @@
 import { Hono } from "hono";
+import {
+  registerRecoveryRoutes,
+  type RecoveryAdministration,
+} from "./recovery-routes.ts";
 import { registerNotificationActions } from "./notification-actions.ts";
 import {
   registerHandoffRoutes,
@@ -51,6 +55,7 @@ export type MediaAppDependencies = {
   numberingAdmin: NumberingAdministration;
   migrationAdmin: MigrationAdministration;
   handoffAdmin: HandoffAdministration;
+  recoveryAdmin: RecoveryAdministration;
   plexExclusionAdmin: PlexExclusionAdministration;
   publicOrigin: string;
   requestsEnabled: () => Promise<boolean>;
@@ -216,6 +221,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     await next();
   });
   app.get("/api/v1/me", (c) => c.json(c.get("actor")));
+  registerRecoveryRoutes(app, dependencies.recoveryAdmin);
   app.post("/api/v1/auth/logout", async (c) => {
     await dependencies.auth.logout(readCookie(c.req.raw, sessionName) ?? "");
     deleteCookie(c, sessionName, cookie);

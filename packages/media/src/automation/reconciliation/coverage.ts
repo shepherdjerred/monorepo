@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
@@ -223,6 +224,7 @@ async function projectEpisode(
     data: { version: { increment: 1 } },
   });
   await invalidateRetention(tx, mediaId);
+  await queueMediaSubtitleTargets(tx, mediaId);
   await queueOperation(tx, {
     key: `coverage:${root.id}:${String(root.version)}:${mediaId}`,
     kind:

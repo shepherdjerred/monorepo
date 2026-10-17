@@ -9,4 +9,7 @@ export type NotificationContext = Pick<
   | "sharedAnnouncements"
   | "reconcileNotification"
   | "personalDiscordAvailable"
->;
+> & {
+  /** Activity cancellation/heartbeat boundary after the durable claim, with no authority locks held. */
+  checkpoint?: (phase: "notification-claimed") => Promise<void>;
+};

@@ -13,6 +13,7 @@ import {
 } from "#shared/handoff.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
 import { selectedHandoffEntries } from "./selection.ts";
+import { projectHandoffSubtitles } from "./subtitles.ts";
 
 type Input = z.infer<typeof PrepareHandoffSchema>;
 type Entry = z.infer<typeof BundleReportSchema>["entries"][number];
@@ -123,7 +124,11 @@ async function projectScope(
           reason: "request_mapping_requires_review",
         });
       else claims.push(claim);
-    } else if (entry.kind !== "media")
+    } else if (
+      entry.kind !== "media" &&
+      entry.kind !== "subtitle" &&
+      entry.kind !== "subtitle_preference"
+    )
       protectedRecords.push({
         provenanceKey: entry.provenanceKey,
         reason:
@@ -138,6 +143,13 @@ async function projectScope(
     files,
     claims,
     protected: protectedRecords,
+    ...(await projectHandoffSubtitles({
+      tx,
+      request: input,
+      manifest,
+      selected,
+      files,
+    })),
   });
 }
 
@@ -251,7 +263,7 @@ async function projectFile(
     mediaIds: entry.mediaIds,
     sourcePath: source.path,
     canonicalPath,
-    libraryKind: kinds.has("movie") ? "movies" : "tv",
+    libraryKind: kinds.has("movie") ? ("movies" as const) : ("tv" as const),
     sizeBytes: String(source.sizeBytes),
     capturedChecksum: source.checksum,
     qualitySourceId: source.qualitySourceId,

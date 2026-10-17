@@ -251,6 +251,9 @@ export async function acquireMediaSubtitlesWorkflow(input: {
   operationId: string;
   assetId: string;
   language: string;
+  forced?: boolean;
+  hearingImpaired?: "required" | "excluded" | "any";
+  targetAuthority?: string;
 }): Promise<MediaWorkflowResult> {
   return withRecoveryCheckpoint(input.operationId, () =>
     acquireSubtitles(input),
@@ -261,6 +264,9 @@ async function acquireSubtitles(input: {
   operationId: string;
   assetId: string;
   language: string;
+  forced?: boolean;
+  hearingImpaired?: "required" | "excluded" | "any";
+  targetAuthority?: string;
 }): Promise<MediaWorkflowResult> {
   for (let poll = 0; poll < 28; poll++) {
     const result = await network.findMediaSubtitles(input);
@@ -271,9 +277,7 @@ async function acquireSubtitles(input: {
         operationId: input.operationId,
         subtitleId: result.subtitleId,
       });
-      return finish(input.operationId, {
-        status: installed.status === "installed" ? "completed" : "obsolete",
-      });
+      return finish(input.operationId, subtitleInstallResult(installed));
     }
     if (result.status === "blocked" || result.status === "obsolete")
       return finish(input.operationId, {
@@ -289,14 +293,22 @@ async function acquireSubtitles(input: {
 
 export const cleanupMediaUpgradeWorkflow = cleanup.cleanupMediaUpgradeWorkflow;
 
+function subtitleInstallResult(result: {
+  status: "installed" | "obsolete" | "blocked";
+  reason?: string;
+}): MediaWorkflowResult {
+  return {
+    status: result.status === "installed" ? "completed" : result.status,
+    ...(result.reason === undefined ? {} : { reason: result.reason }),
+  };
+}
+
 export async function installMediaSubtitleWorkflow(input: {
   operationId: string;
   subtitleId: string;
 }): Promise<MediaWorkflowResult> {
   const result = await files.installMediaSubtitles(input);
-  return finish(input.operationId, {
-    status: result.status === "installed" ? "completed" : "obsolete",
-  });
+  return finish(input.operationId, subtitleInstallResult(result));
 }
 
 export async function maintainMediaTorrentWorkflow(input: {
