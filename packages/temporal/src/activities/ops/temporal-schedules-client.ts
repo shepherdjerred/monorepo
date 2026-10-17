@@ -11,6 +11,7 @@ import { createTemporalReadClient } from "#client";
 import {
   withScheduleReads,
   type ScheduleRead,
+  type ScheduleReadScope,
 } from "./temporal-schedule-reads.ts";
 import {
   temporalNamespacesForMonitoring,
@@ -56,6 +57,10 @@ export type ScheduleHealthObservation = {
 
 /** An injectable read-only adapter keeps SDK/protobuf data out of the mapper. */
 export type ScheduleHealthReader = {
+  withReadScope: <T>(
+    scope: Pick<ScheduleReadScope, "signal" | "deadline">,
+    operation: () => Promise<T>,
+  ) => Promise<T>;
   list: () => AsyncIterable<{ scheduleId: string }>;
   describeSchedule: (
     scheduleId: string,
@@ -118,6 +123,10 @@ export async function listCompletedScheduleActions(
 
 export function scheduleHealthReader(client: Client): ScheduleHealthReader {
   return {
+    withReadScope: ({ signal, deadline }, operation) =>
+      client.connection.withAbortSignal(signal, () =>
+        client.connection.withDeadline(deadline, operation),
+      ),
     list: () => client.schedule.list(),
     describeSchedule: (id) => client.schedule.getHandle(id).describe(),
     async describeExecution(workflowId, firstExecutionRunId) {
@@ -160,13 +169,23 @@ export async function inspectScheduleHealth(
   reader: ScheduleHealthReader,
   namespace: TemporalNamespace,
   now: Date,
-  read?: ScheduleRead,
+  scope?: ScheduleReadScope,
 ): Promise<ScheduleHealthObservation[]> {
-  if (read === undefined) {
-    return withScheduleReads(({ read: boundedRead }) =>
-      inspectScheduleHealth(reader, namespace, now, boundedRead),
-    );
-  }
+  return scope === undefined
+    ? withScheduleReads((boundedScope) =>
+        inspectScheduleHealth(reader, namespace, now, boundedScope),
+      )
+    : reader.withReadScope(scope, () =>
+        inspectScheduleHealthInScope(reader, namespace, now, scope.read),
+      );
+}
+
+async function inspectScheduleHealthInScope(
+  reader: ScheduleHealthReader,
+  namespace: TemporalNamespace,
+  now: Date,
+  read: ScheduleRead,
+): Promise<ScheduleHealthObservation[]> {
   const ids = await read(async () => {
     const entries: string[] = [];
     for await (const entry of reader.list()) entries.push(entry.scheduleId);
@@ -285,22 +304,18 @@ export async function readTemporalScheduleHealth(
   now: Date,
 ): Promise<ScheduleHealthObservation[]> {
   return await withScheduleReads(
-    async ({ read, signal, deadline }) => {
+    async (scope) => {
       const groups = await Promise.all(
         temporalNamespacesForMonitoring(activeNamespace).map(
           async (namespace) => {
-            const client = await read(() =>
+            const client = await scope.read(() =>
               createTemporalReadClient(namespace),
             );
-            return await client.connection.withAbortSignal(signal, () =>
-              client.connection.withDeadline(deadline, () =>
-                inspectScheduleHealth(
-                  scheduleHealthReader(client),
-                  namespace,
-                  now,
-                  read,
-                ),
-              ),
+            return await inspectScheduleHealth(
+              scheduleHealthReader(client),
+              namespace,
+              now,
+              scope,
             );
           },
         ),

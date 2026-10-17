@@ -1,14 +1,15 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
 export type ScheduleRead = <T>(operation: () => Promise<T>) => Promise<T>;
+export type ScheduleReadScope = {
+  read: ScheduleRead;
+  signal: AbortSignal;
+  deadline: number;
+};
 
 /** One budget and eight read slots across every monitored namespace. */
 export async function withScheduleReads<T>(
-  operation: (scope: {
-    read: ScheduleRead;
-    signal: AbortSignal;
-    deadline: number;
-  }) => Promise<T>,
+  operation: (scope: ScheduleReadScope) => Promise<T>,
   options: { signal?: AbortSignal; timeoutMs?: number } = {},
 ): Promise<T> {
   const timeoutMs = options.timeoutMs ?? 45_000;
