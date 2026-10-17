@@ -22,7 +22,7 @@ final class ContentAdmission {
 
   ContentSubmission submission(Player player, Draft draft) {
     return new ContentSubmission(
-        new UUID(context.random().nextLong(), context.random().nextLong()),
+        ContentSubmission.newId(context.random()),
         player.getUniqueId(),
         player.getName(),
         draft.surface(),

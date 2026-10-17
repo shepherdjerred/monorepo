@@ -56,7 +56,7 @@ public final class EvidenceQueries implements EvidenceAccess {
   @Override
   public CompletableFuture<String> query(String raw, String accessor) {
     var query = parse(raw);
-    var id = new UUID(random.nextLong(), random.nextLong());
+    var id = ContentSubmission.newId(random);
     var audit =
         new ContentSubmission(
             id,

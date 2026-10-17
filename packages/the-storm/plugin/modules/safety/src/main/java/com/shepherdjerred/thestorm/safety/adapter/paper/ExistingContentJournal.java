@@ -79,7 +79,7 @@ public final class ExistingContentJournal implements Listener {
     if (content.isEmpty()) return;
     var submission =
         new ContentSubmission(
-            new UUID(context.random().nextLong(), context.random().nextLong()),
+            ContentSubmission.newId(context.random()),
             new UUID(0, 0),
             "ExistingContent",
             "existing-content",

@@ -117,7 +117,7 @@ public final class NameGate implements Listener {
           }
           if (approved.isCancelled()) return "denied-by-entity-protection";
           if (!usable(player, entity, original, event.getHand())) return "stale-edit";
-          entity.customName(name);
+          applyName(entity, name);
           if (player.getGameMode() != GameMode.CREATIVE) {
             var remainder = original.clone();
             remainder.setAmount(remainder.getAmount() - 1);
@@ -126,6 +126,11 @@ public final class NameGate implements Listener {
           player.sendMessage(Component.text("Name approved."));
           return "entity-renamed";
         });
+  }
+
+  private static void applyName(org.bukkit.entity.Entity entity, Component name) {
+    entity.customName(name);
+    if (entity instanceof org.bukkit.entity.Mob mob) mob.setRemoveWhenFarAway(false);
   }
 
   private static boolean usable(

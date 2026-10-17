@@ -155,7 +155,7 @@ test("creative item metadata is withheld and requires a native retry after appro
   ).toContain("A friendly item");
 });
 
-test("name tags cannot publish a rejected entity name", async ({
+test("name tags reject unsafe names and preserve native mob persistence", async ({
   bot,
   rcon,
 }) => {
@@ -177,6 +177,11 @@ test("name tags cannot publish a rejected entity name", async ({
     'summon cow 622 -60 620 {NoAI:1b,Tags:["safety_name_tag"]}',
   );
   try {
+    expect(
+      await rcon.command(
+        "data get entity @e[tag=safety_name_tag,limit=1] PersistenceRequired",
+      ),
+    ).toContain("0b");
     await waitUntil("cow loaded", () =>
       Object.values(bot.entities).some(
         (entity) =>
@@ -206,6 +211,12 @@ test("name tags cannot publish a rejected entity name", async ({
         "data get entity @e[tag=safety_name_tag,limit=1] CustomName",
       ),
     ).not.toContain("fixture-threat");
+    expect(bot.inventory.slots[36]?.name).toBe("name_tag");
+    expect(
+      await rcon.command(
+        "data get entity @e[tag=safety_name_tag,limit=1] PersistenceRequired",
+      ),
+    ).toContain("0b");
     await rcon.command(
       `item replace entity ${bot.username} hotbar.0 with name_tag[custom_name='"Friendly cow"']`,
     );
@@ -220,6 +231,11 @@ test("name tags cannot publish a rejected entity name", async ({
         "data get entity @e[tag=safety_name_tag,limit=1] CustomName",
       ),
     ).toContain("Friendly cow");
+    expect(
+      await rcon.command(
+        "data get entity @e[tag=safety_name_tag,limit=1] PersistenceRequired",
+      ),
+    ).toContain("1b");
     expect(
       await rcon.command(`data get entity ${bot.username} SelectedItem`),
     ).not.toContain("name_tag");

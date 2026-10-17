@@ -85,7 +85,7 @@ public final class GrimHooks implements Listener, AutoCloseable {
                 + safety.evidenceContext(id);
     var submission =
         new ContentSubmission(
-            new UUID(context.random().nextLong(), context.random().nextLong()),
+            ContentSubmission.newId(context.random()),
             id,
             name,
             "anticheat",

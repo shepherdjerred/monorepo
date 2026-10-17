@@ -21,7 +21,12 @@ export function moderate(body: unknown): Response {
       [...contract.requestFields].sort().join(",")
   )
     return new Response("invalid content request", { status: 400 });
-  const input = z.object({ text: z.string() }).parse(body);
+  const parsed = z
+    .object({ submissionId: z.uuid(), text: z.string() })
+    .safeParse(body);
+  if (!parsed.success)
+    return new Response("invalid moderation submission", { status: 400 });
+  const input = parsed.data;
   const blocked = input.text.includes("[fixture-threat]");
   const advert = input.text.includes("[fixture-cold-ad]");
   return Response.json({

@@ -7,7 +7,6 @@ import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.safety.ContentSafety;
 import com.shepherdjerred.thestorm.core.safety.ContentSubmission;
-import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import org.bukkit.entity.Player;
 
@@ -33,7 +32,7 @@ final class ConversationPublication {
       return;
     }
     var screening = safety.orElseThrow();
-    var id = new UUID(context.random().nextLong(), context.random().nextLong());
+    var id = ContentSubmission.newId(context.random());
     var submission =
         new ContentSubmission(
             id,

@@ -50,7 +50,7 @@ public final class EvidenceCommands {
 
   private int search(CommandSender sender, String player, String text) {
     var actor = sender instanceof Player human ? human.getUniqueId() : new UUID(0, 0);
-    var id = new UUID(context.random().nextLong(), context.random().nextLong());
+    var id = ContentSubmission.newId(context.random());
     var query =
         new ContentSubmission(
             id,
