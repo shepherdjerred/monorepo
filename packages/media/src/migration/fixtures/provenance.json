@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "profileCapture": "2026-10-17T01:04:27.608Z",
+  "profileEndpoints": [
+    "GET /api/v3/system/status",
+    "GET /api/v3/qualityprofile",
+    "GET /api/v3/customformat",
+    "GET /api/v3/qualitydefinition",
+    "GET /api/v3/config/mediamanagement"
+  ],
+  "parseEndpoint": "GET /api/v3/parse?title=<synthetic-title>",
+  "syntheticTitlesOnly": true,
+  "sources": [
+    {
+      "source": "radarr",
+      "version": "6.4.4.10685",
+      "commit": "a96bf7c3ecb23cb76993770727285dc17a613fbc",
+      "snapshotHash": "7c17b25ffc996ba1eddadc51120343da9f19fbf597bda8b05db89923465c7c4b"
+    },
+    {
+      "source": "sonarr",
+      "version": "4.0.20.3014",
+      "commit": "cab419ade8ac7fcab5bf80394ee492abd35d5f5a",
+      "snapshotHash": "7735ee9c8b18d5321939299a0e6971ffebd82a32343e5410df90f22393d75dd4"
+    }
+  ],
+  "algorithmPaths": [
+    "src/NzbDrone.Core/CustomFormats/SpecificationMatchesGroup.cs",
+    "src/NzbDrone.Core/CustomFormats/Specifications/ReleaseTitleSpecification.cs",
+    "src/NzbDrone.Core/DecisionEngine/Specifications/UpgradableSpecification.cs",
+    "src/NzbDrone.Core/DecisionEngine/Specifications/AcceptableSizeSpecification.cs",
+    "src/NzbDrone.Core/Qualities/Revision.cs"
+  ],
+  "regexFixtureCommand": "bun scripts/migration-fixtures.ts",
+  "regexRuntime": ".NET 10.0.11, en-US, RegexOptions.IgnoreCase, 25ms per match",
+  "limits": [
+    "Regex observations apply only to exact pattern/input pairs; other inputs protect without a runtime matcher.",
+    "Unknown size/runtime and original audio evidence protect instead of applying legacy median-runtime assumptions.",
+    "Parsed release title and quality must come from validated source-compatible parsing; display titles are not substitutes.",
+    "No ownership transfer, source mutations or destination database writes were performed."
+  ]
+}

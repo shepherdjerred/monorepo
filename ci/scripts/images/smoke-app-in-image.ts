@@ -64,6 +64,11 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  media: {
+    command:
+      'export PATH="$(pg_config --bindir):$PATH"\ncd /app/packages/media\nbun scripts/image-smoke.ts',
+    env: {},
+  },
   "storm-forum": {
     command:
       "cd /opt/storm-forum && bun scripts/runtime-smoke.ts && php-fpm --test --nodaemonize --force-stderr --fpm-config /usr/local/etc/php-fpm.conf",

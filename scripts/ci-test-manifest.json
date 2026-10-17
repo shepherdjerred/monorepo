@@ -1202,6 +1202,16 @@
           "reason": "Playwright acceptance runs in the browser E2E lane."
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/media",
+      "directory": "packages/media",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
     }
   ],
   "testlessWorkspaces": [

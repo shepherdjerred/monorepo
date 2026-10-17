@@ -3,16 +3,12 @@ import * as canary from "./notification-canary.ts";
 export const runDailyNotificationCanary = canary.runDailyNotificationCanary;
 import * as stormForum from "./homelab/storm-forum.ts";
 import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
-import type { ForumStage } from "@shepherdjerred/storm-forum/contracts";
-export const maintainStormForumWorkflow = (stage: ForumStage) =>
-  stormForum.maintainStormForumWorkflow(stage);
-export const backupStormForumWorkflow = (stage: ForumStage) =>
-  stormForum.backupStormForumWorkflow(stage);
-export const runSeaweedFsBackupWorkflow = (
-  input: Parameters<typeof seaweedBackup.runSeaweedFsBackupWorkflow>[0],
-) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
-export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
-  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
+export const maintainStormForumWorkflow = stormForum.maintainStormForumWorkflow;
+export const backupStormForumWorkflow = stormForum.backupStormForumWorkflow;
+export const runSeaweedFsBackupWorkflow =
+  seaweedBackup.runSeaweedFsBackupWorkflow;
+export const runSeaweedFsBackupRetentionAndGcWorkflow =
+  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow;
 import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
 import * as ciMaintenance from "./ci/maintenance.ts";
 export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;
@@ -144,29 +140,16 @@ import {
 } from "./worker-deployment-canary.ts";
 
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
-import type { LlmBillingSnapshot } from "#shared/llm-billing.ts";
 import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
-import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
-import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
-import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
-import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
-import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
-import { discordAgentChatWorkflow as _discordAgentChatWorkflow } from "./discord-agent-chat.ts";
-import { httpAgentChatWorkflow as _httpAgentChatWorkflow } from "./http-agent-chat.ts";
-import type {
-  AgentChatCatalogState,
-  AgentChatTurnResult,
-  AgentChatWorkflowInput,
-  ScheduledAgentChatTurnInput,
-} from "#shared/agent/agent-chat.ts";
-import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
-import type {
-  HttpAgentChatCommand,
-  HttpAgentChatStartOptions,
-} from "#shared/agent/agent-chat-http.ts";
+import * as agentChat from "./agent-chat.ts";
+import * as agentChatReceipt from "./agent-chat-turn-receipt.ts";
+import * as agentChatCatalog from "./agent-chat-catalog.ts";
+import * as scheduledAgentChat from "./scheduled-agent-chat-turn.ts";
+import * as discordAgentChat from "./discord-agent-chat.ts";
+import * as httpAgentChat from "./http-agent-chat.ts";
 import type {
   BlueBubblesCursor,
   ImessageCommand,
@@ -174,11 +157,10 @@ import type {
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
 import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
-import { photonConversationWorkflow as _photonConversationWorkflow } from "./photon/conversation.ts";
+import * as photonConversation from "./photon/conversation.ts";
 
-export const photonConversationWorkflow = (
-  ...args: Parameters<typeof _photonConversationWorkflow>
-) => _photonConversationWorkflow(...args);
+export const photonConversationWorkflow =
+  photonConversation.photonConversationWorkflow;
 export const photonAgentChatWorkflow = (
   ...args: Parameters<typeof _photonAgentChatWorkflow>
 ) => _photonAgentChatWorkflow(...args);
@@ -201,9 +183,8 @@ export function workerDeploymentCanaryWorkflow(
   return Promise.resolve();
 }
 
-export async function fetchSkillCappedManifest(): Promise<void> {
-  return _fetchSkillCappedManifest();
-}
+export const fetchSkillCappedManifest = (): Promise<void> =>
+  _fetchSkillCappedManifest();
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
@@ -447,55 +428,73 @@ export async function runGlitterCorpusChannelOverlap(
   return _runGlitterCorpusChannelOverlap(input);
 }
 
-export async function runGlitterCorpusDaily(): Promise<GlitterCorpusSnapshotResult> {
-  return _runGlitterCorpusDaily();
-}
+export const runGlitterCorpusDaily = () => _runGlitterCorpusDaily();
 
-export async function runLlmBilledCostReconciliation(): Promise<LlmBillingSnapshot> {
-  return _runLlmBilledCostReconciliation();
-}
-
+export const runLlmBilledCostReconciliation = () =>
+  _runLlmBilledCostReconciliation();
 export const runOpsSnapshot = () => _runOpsSnapshot();
-
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
 ): ReturnType<typeof _runOpsDigest> {
   return _runOpsDigest(input);
 }
-
-export async function agentChatWorkflow(
-  input: AgentChatWorkflowInput,
-): Promise<never> {
-  return _agentChatWorkflow(input);
-}
-
-export async function agentChatTurnReceiptWorkflow(
-  input: AgentChatReceiptInput,
-): Promise<AgentChatTurnResult> {
-  return _agentChatTurnReceiptWorkflow(input);
-}
-
-export async function agentChatCatalogWorkflow(
-  state?: AgentChatCatalogState,
-): Promise<never> {
-  return _agentChatCatalogWorkflow(state);
-}
-
-export async function scheduledAgentChatTurnWorkflow(
-  input: ScheduledAgentChatTurnInput,
-): Promise<AgentChatTurnResult> {
-  return _scheduledAgentChatTurnWorkflow(input);
-}
-
-export async function discordAgentChatWorkflow(
-  input: DiscordAgentChatCommand,
-): Promise<void> {
-  return _discordAgentChatWorkflow(input);
-}
-
-export async function httpAgentChatWorkflow(
-  input: HttpAgentChatCommand,
-  options?: HttpAgentChatStartOptions,
-): Promise<AgentChatTurnResult> {
-  return _httpAgentChatWorkflow(input, options);
-}
+export const agentChatWorkflow = agentChat.agentChatWorkflow;
+export const agentChatTurnReceiptWorkflow =
+  agentChatReceipt.agentChatTurnReceiptWorkflow;
+export const agentChatCatalogWorkflow =
+  agentChatCatalog.agentChatCatalogWorkflow;
+export const scheduledAgentChatTurnWorkflow =
+  scheduledAgentChat.scheduledAgentChatTurnWorkflow;
+export const discordAgentChatWorkflow =
+  discordAgentChat.discordAgentChatWorkflow;
+export const httpAgentChatWorkflow = httpAgentChat.httpAgentChatWorkflow;
+import * as m from "./media.ts";
+import * as h from "./media/handoff.ts";
+export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
+export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
+import * as n from "./media/native-recovery.ts";
+import * as quarantine from "./media/native-quarantine.ts";
+import * as archive from "./media/native-archive.ts";
+export const prepareNativeArchiveWorkflow = archive.prepare;
+export const applyNativeArchiveWorkflow = archive.apply;
+export const cleanupNativeArchiveWorkflow = archive.cleanup;
+export const prepareNativeQuarantineWorkflow = quarantine.prepare;
+export const applyNativeQuarantineWorkflow = quarantine.apply;
+export const restoreNativeQuarantineWorkflow = quarantine.restore;
+export const prepareNativeRecoveryWorkflow = n.prepareNativeRecoveryWorkflow;
+export const applyNativeRecoveryWorkflow = n.applyNativeRecoveryWorkflow;
+import * as p from "./media/maintenance.ts";
+export const preparePlexExclusionWorkflow = p.preparePlexExclusionWorkflow;
+export const executePlexExclusionWorkflow = p.executePlexExclusionWorkflow;
+export const recoverPlexExclusionWorkflow = p.recoverPlexExclusionWorkflow;
+export const reconcileMediaWorkflow = m.reconcileMediaWorkflow;
+export const acquireMediaReleaseWorkflow = m.acquireMediaReleaseWorkflow;
+export const acquireMediaSubtitlesWorkflow = m.acquireMediaSubtitlesWorkflow;
+export const installMediaSubtitleWorkflow = m.installMediaSubtitleWorkflow;
+export const cleanupMediaUpgradeWorkflow = m.cleanupMediaUpgradeWorkflow;
+export const maintainMediaTorrentWorkflow = m.maintainMediaTorrentWorkflow;
+export const retainMediaWorkflow = m.retainMediaWorkflow;
+export const restoreMediaWorkflow = m.restoreMediaWorkflow;
+export const deliverMediaNotificationWorkflow =
+  m.deliverMediaNotificationWorkflow;
+export const dispatchMediaOutboxWorkflow = m.dispatchMediaOutboxWorkflow;
+export const sweepMediaWorkflow = m.sweepMediaWorkflow;
+export const expandMediaRequestWorkflow = m.expandMediaRequestWorkflow;
+export const refreshMediaCatalogWorkflow = m.refreshMediaCatalogWorkflow;
+export const expandCatalogRequestsWorkflow = m.expandCatalogRequestsWorkflow;
+import * as replacement from "./media/subtitle-replacement.ts";
+export const prepareSubtitleReplacementWorkflow = replacement.prepare;
+export const applySubtitleReplacementWorkflow = replacement.apply;
+export const reconcileSubtitleReplacementWorkflow = replacement.reconcile;
+export const cleanupSubtitleReplacementWorkflow = replacement.cleanup;
+import * as capacity from "./media/capacity.ts";
+export const observeMediaCapacityWorkflow =
+  capacity.observeMediaCapacityWorkflow;
+import * as plexEvents from "./media/plex-events.ts";
+export const observePlexEventHintWorkflow =
+  plexEvents.observePlexEventHintWorkflow;
+import * as compensation from "./media/native-compensation.ts";
+export const prepareNativeCompensationWorkflow = compensation.prepare;
+export const applyNativeCompensationWorkflow = compensation.apply;
+export const compensateNativePublicationWorkflow = compensation.compensate;
+export const publishCompensatedMediaWorkflow = compensation.publish;

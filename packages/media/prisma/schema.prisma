@@ -1,0 +1,1206 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MediaKind {
+  movie
+  series
+  season
+  episode
+}
+
+enum Availability {
+  wanted
+  searching
+  downloading
+  validating
+  importing
+  available
+  quarantined
+  removed
+}
+
+enum UserRole {
+  owner
+  member
+}
+
+enum OperationStatus {
+  queued
+  running
+  completed
+  failed
+  reconciling
+}
+
+model MediaUser {
+  id                 String                 @id @default(uuid())
+  plexAccountId      String                 @unique
+  displayName        String
+  role               UserRole               @default(member)
+  restricted         Boolean                @default(false)
+  version            Int                    @default(0)
+  email              String?
+  emailVerifiedAt    DateTime?
+  discordId          String?                @unique
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  sessions           MediaSession[]
+  credentials        Credential[]
+  requests           MediaRequest[]
+  holds              RetentionHold[]
+  watchStates        WatchState[]
+  idempotencyRecords IdempotencyRecord[]
+  notifications      NotificationDelivery[]
+  notificationPreference NotificationPreference?
+  emailVerifications EmailVerification[]
+  discordLinks DiscordLink[]
+  plexIdentity PlexIdentityMapping?
+  migrationProposals AdoptionProposal[]
+  migrationBundleReviews MigrationBundleReview[]
+  plexExclusionRuns PlexExclusionRun[]
+  handoffPlans MediaHandoffPlan[]
+  handoffReceipts MediaHandoffReceipt[]
+  releasedRecoveryHolds RecoveryHold[]
+  subtitlePolicyVersions MediaSubtitlePolicyVersion[]
+  recoveryReviews RecoveryReview[]
+  recoveryResponses RecoveryResponse[] @relation("RecoveryRespondent")
+  recoveryDeclarations RecoveryResponse[] @relation("RecoveryDeclarant")
+  recoveryReceipts RecoveryReleaseReceipt[]
+  nativeRecoveryPlans NativeRecoveryPlan[]
+  nativeRecoveryReceipts NativeRecoveryReceipt[]
+  subtitleReplacements SubtitleReplacement[]
+  subtitleReplacementApprovals SubtitleReplacementReview[]
+  legacyRequesterBindings LegacyRequesterBinding[] @relation("LegacyRequesterSubject")
+  legacyRequesterDeclarations LegacyRequesterBinding[] @relation("LegacyRequesterActor")
+}
+
+model MigrationCapture {
+  id String @id @default(uuid())
+  schemaVersion Int
+  sourceInstanceId String
+  sourceKind String
+  sourceVersion String
+  startedAt DateTime
+  completedAt DateTime
+  complete Boolean
+  stable Boolean
+  manifestHash String @unique
+  manifest Json
+  records MigrationRecord[]
+  proposals AdoptionProposal[]
+  bundles MigrationBundleCapture[]
+  requesterBindings LegacyRequesterBinding[]
+  createdAt DateTime @default(now())
+  @@index([sourceInstanceId, completedAt])
+}
+
+model MigrationRecord {
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  provenanceKey String
+  kind String
+  sourceId String
+  observationHash String
+  payload Json
+  @@id([captureId, provenanceKey])
+}
+
+model AdoptionProposal {
+  id String @id @default(uuid())
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  reportHash String
+  recoveryEpoch Int
+  runtimeVersion Int
+  status String
+  report Json
+  actorId String?
+  actor MediaUser? @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  approvedAt DateTime?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([captureId, reportHash, recoveryEpoch, runtimeVersion])
+}
+
+model MigrationBundle {
+  id String @id @default(uuid())
+  bundleHash String @unique
+  manifest Json
+  captures MigrationBundleCapture[]
+  reviews MigrationBundleReview[]
+  createdAt DateTime @default(now())
+}
+
+model MigrationBundleCapture {
+  bundleId String
+  bundle MigrationBundle @relation(fields: [bundleId], references: [id], onDelete: Restrict)
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  @@id([bundleId, captureId])
+}
+
+model MigrationBundleReview {
+  handoffPlans MediaHandoffPlan[]
+  id String @id @default(uuid())
+  bundleId String
+  bundle MigrationBundle @relation(fields: [bundleId], references: [id], onDelete: Restrict)
+  reportHash String
+  report Json
+  selection Json
+  recoveryEpoch Int
+  runtimeVersion Int
+  status String
+  actorId String?
+  actor MediaUser? @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  approvedAt DateTime?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([bundleId, reportHash, recoveryEpoch, runtimeVersion])
+}
+
+model PlexExclusionRun {
+  id String @id @default(uuid())
+  ownerId String
+  owner MediaUser @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  state String
+  recoveryEpoch Int
+  runtimeVersion Int
+  planDigest String
+  plan Json
+  journal Json
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  proof PlexExclusionProof?
+}
+
+model PlexExclusionProof {
+  id String @id @default(uuid())
+  runId String @unique
+  run PlexExclusionRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  serverMachineId String
+  serverVersion String
+  sectionId String
+  sectionUuid String
+  libraryRoot String
+  controlRoot String
+  rootMarkerSha256 String
+  controlMarkerSha256 String
+  configurationDigest String
+  recoveryEpoch Int
+  evidence Json
+  verifiedAt DateTime
+  revokedAt DateTime?
+  @@index([serverMachineId, sectionId, libraryRoot, recoveryEpoch])
+}
+
+model PlexIdentityMapping {
+  userId String @id
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverMachineId String
+  serverAccountId String?
+  homeUserId String?
+  kind String
+  permittedSectionIds String[] @default([])
+  permittedMediaKinds String[] @default([])
+  plexRestricted Boolean @default(false)
+  verifiedAt DateTime?
+  version Int @default(0)
+  @@unique([serverMachineId, serverAccountId])
+  @@unique([serverMachineId, homeUserId])
+}
+
+model NotificationPreference {
+  userId String @id
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled Boolean @default(false)
+  discordEnabled Boolean @default(false)
+  upgrades Boolean @default(false)
+  removalCompleted Boolean @default(false)
+  version Int @default(0)
+}
+
+model EmailVerification {
+  id String @id @default(uuid())
+  userId String
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email String
+  tokenHash String @unique
+  encryptedToken String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+}
+
+model DiscordLink {
+  id String @id @default(uuid())
+  userId String
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stateHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model MediaSession {
+  id        String    @id
+  userId    String
+  user      MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  csrfHash  String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([expiresAt])
+}
+
+model PlexLogin {
+  id              String   @id @default(uuid())
+  pinId           String
+  pinCode         String
+  browserHash     String
+  encryptedDevice String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+}
+
+model Credential {
+  id         String     @id @default(uuid())
+  userId     String?
+  user       MediaUser? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String
+  ciphertext String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@unique([userId, kind])
+}
+
+model MediaItem {
+  subtitlePolicies MediaSubtitlePolicyVersion[]
+  recoveryHolds RecoveryHold[]
+  editionDefinitions MediaEditionDefinition[]
+  id            String              @id @default(uuid())
+  kind          MediaKind
+  title         String
+  year          Int?
+  runtimeMinutes Int?
+  originalLanguage String?
+  airDate DateTime?
+  catalogState String @default("ready")
+  parentId      String?
+  parent        MediaItem?          @relation("MediaHierarchy", fields: [parentId], references: [id])
+  children      MediaItem[]         @relation("MediaHierarchy")
+  seasonNumber  Int?
+  episodeNumber Int?
+  tmdbId        Int?
+  externalIds   Json                @default("{}")
+  availability  Availability        @default(wanted)
+  version       Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  requests      MediaRequest[]
+  intents       MediaIntent[]
+  assets        AssetCoverage[]
+  watchStates   WatchState[]
+  holds         RetentionHold[]
+  retention     RetentionDecision[]
+  acquisitionReservations AcquisitionReservation[]
+
+  @@unique([kind, tmdbId])
+  @@index([parentId, seasonNumber, episodeNumber])
+}
+
+model MediaRequest {
+  id                    String    @id @default(uuid())
+  userId                String
+  user                  MediaUser @relation(fields: [userId], references: [id])
+  mediaId               String
+  media                 MediaItem @relation(fields: [mediaId], references: [id])
+  edition               String @default("default")
+  target                MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  active                Boolean   @default(true)
+  direct                Boolean   @default(true)
+  excluded              Boolean   @default(false)
+  coverageCompletedAt   DateTime?
+  subtitleLanguages     String[]  @default([])
+  includeFutureEpisodes Boolean   @default(false)
+  includeSpecials       Boolean   @default(false)
+  sponsorRequestId      String?
+  version               Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  coverageSources RequestCoverage[] @relation("CoveredRequest")
+  expandedCoverage RequestCoverage[] @relation("RootRequest")
+
+  @@unique([userId, mediaId, edition])
+  @@unique([id, edition])
+  @@unique([id, mediaId, edition])
+  @@index([mediaId, active])
+}
+
+model RequestCoverage {
+  rootRequestId String
+  rootRequest MediaRequest @relation("RootRequest", fields: [rootRequestId, edition], references: [id, edition], onDelete: Cascade)
+  requestId String
+  request MediaRequest @relation("CoveredRequest", fields: [requestId, mediaId, edition], references: [id, mediaId, edition], onDelete: Cascade)
+  mediaId String
+  edition String @default("default")
+  active Boolean @default(true)
+  sourceVersion Int
+  createdAt DateTime @default(now())
+  @@id([rootRequestId, mediaId])
+  @@index([requestId, active])
+}
+
+model QualityProfile {
+  id        String                  @id @default(uuid())
+  name      String
+  version   Int                     @default(0)
+  rules     Json
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  intents   MediaIntent[]
+  versions  QualityProfileVersion[]
+  defaults QualityProfileDefault[]
+}
+
+model QualityProfileDefault {
+  kind String @id
+  profileId String
+  profile QualityProfile @relation(fields: [profileId], references: [id])
+  version Int @default(0)
+}
+
+model QualityProfileVersion {
+  profileId String
+  profile   QualityProfile @relation(fields: [profileId], references: [id])
+  version   Int
+  rules     Json
+  createdAt DateTime       @default(now())
+
+  @@id([profileId, version])
+}
+
+model MediaEditionDefinition {
+  rootMediaId String
+  root MediaItem @relation(fields: [rootMediaId], references: [id], onDelete: Restrict)
+  key String
+  policy String
+  pathLabel String
+  plexLabel String
+  definitionVersion Int @default(0)
+  displayLabel String
+  displayVersion Int @default(0)
+  targets MediaIntent[]
+  assets LibraryAsset[]
+  @@id([rootMediaId, key])
+}
+
+model MediaIntent {
+  watchObservationFence WatchObservationFence?
+  automationEpoch Int @default(-1)
+  mediaId                String
+  media                  MediaItem       @relation(fields: [mediaId], references: [id])
+  edition                String @default("default")
+  editionRootId          String?
+  definition             MediaEditionDefinition? @relation(fields: [editionRootId, edition], references: [rootMediaId, key], onDelete: Restrict)
+  availability           Availability @default(wanted)
+  generation             Int             @default(0)
+  desiredPresence        Boolean         @default(true)
+  monitoring             Boolean         @default(true)
+  profileId              String?
+  profile                QualityProfile? @relation(fields: [profileId], references: [id])
+  version                Int             @default(0)
+  intentionallyRemovedAt DateTime?
+  updatedAt              DateTime        @updatedAt
+  requests MediaRequest[]
+  reservations AcquisitionReservation[]
+  coverage AssetCoverage[]
+  watchStates WatchState[]
+  holds RetentionHold[]
+  retention RetentionDecision[]
+  recoveryHolds RecoveryHold[]
+  subtitlePolicies MediaSubtitlePolicyVersion[]
+  @@id([mediaId, edition])
+}
+
+model ReleaseCandidate {
+  id                String               @id @default(uuid())
+  providerId        String
+  providerReleaseId String
+  title             String
+  attributes        Json
+  evaluation        Json
+  encryptedSource   String?
+  mediaIds          String[]
+  searchedForMediaIds String[] @default([])
+  sourceEvidence Json?
+  createdAt         DateTime             @default(now())
+  attempts          AcquisitionAttempt[]
+
+  @@unique([providerId, providerReleaseId])
+}
+
+model MediaProvider {
+  id String @id
+  enabled Boolean @default(false)
+  configuration Json @default("{}")
+  seedingPolicy Json @default("{\"kind\":\"unknown\"}")
+  credentialId String?
+  lastError String?
+  lastFeedAt DateTime?
+  feedState String @default("unconfigured")
+  updatedAt DateTime @updatedAt
+}
+
+model PlexInventoryObservation {
+  sectionId String
+  ratingKey String
+  path String
+  kind String
+  guids Json
+  seasonNumber Int?
+  episodeNumber Int?
+  scanId String
+  observedAt DateTime @default(now())
+  @@id([sectionId, ratingKey, path])
+  @@index([path])
+  @@index([scanId])
+}
+
+model ReconciliationScan {
+  id String @id
+  kind String
+  state String @default("running")
+  progress Json @default("{}")
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+}
+
+model ProviderLease {
+  providerId String @id
+  ownerId String?
+  leaseUntil DateTime?
+  nextAllowedAt DateTime @default(now())
+}
+
+model MediaRuntimeState {
+  id String @id
+  mode String @default("observe")
+  recoveryEpoch Int @default(0)
+  ownershipConfirmed Boolean @default(false)
+  version Int @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model AcquisitionAttempt {
+  publicationTransition MediaPublicationTransition?
+  edition          String @default("default")
+  id               String                   @id @default(uuid())
+  releaseId        String
+  release          ReleaseCandidate         @relation(fields: [releaseId], references: [id])
+  sponsorRequestId String
+  mediaIds         String[]
+  generations      Json
+  state            String
+  torrentId        String?
+  torrent          Torrent?                 @relation(fields: [torrentId], references: [id])
+  operationId      String                   @unique
+  coordinatorOperationId String?
+  failure          Json?
+  filePlan         Json?
+  identityEvidence Json?
+  recoveryEpoch    Int                      @default(0)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  reservations     AcquisitionReservation[]
+  @@unique([id, edition])
+}
+
+model AcquisitionReservation {
+  mediaId    String
+  media      MediaItem          @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  edition    String @default("default")
+  target     MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  attemptId  String
+  attempt    AcquisitionAttempt @relation(fields: [attemptId, edition], references: [id, edition])
+  generation Int
+  createdAt  DateTime           @default(now())
+
+  @@index([attemptId])
+  @@id([mediaId, edition])
+}
+
+model Torrent {
+  ownershipEpoch Int @default(-1)
+  qbittorrentId String?
+  id            String               @id @default(uuid())
+  infoHash      String               @unique
+  providerId    String
+  owned         Boolean              @default(false)
+  seedingPolicy Json
+  observation   Json?
+  cleanupEvaluation Json?
+  observedAt    DateTime?
+  state         String
+  createdAt     DateTime             @default(now())
+  attempts      AcquisitionAttempt[]
+  assets        LibraryAsset[]
+}
+
+model LibraryAsset {
+  edition String @default("default")
+  editionRootId String?
+  definition MediaEditionDefinition? @relation(fields: [editionRootId, edition], references: [rootMediaId, key], onDelete: Restrict)
+  subtitleReplacements SubtitleReplacement[]
+  ownershipEpoch Int @default(-1)
+  plexPublishedAt DateTime?
+  supersededByAssetId String?
+  rollbackExpiresAt DateTime?
+  upgradeCleanups UpgradeCleanup[]
+  id         String          @id @default(uuid())
+  path       String          @unique
+  sourcePath String?
+  torrentId  String?
+  torrent    Torrent?        @relation(fields: [torrentId], references: [id])
+  sizeBytes  BigInt
+  checksum   String?
+  properties Json
+  owned      Boolean         @default(false)
+  version    Int             @default(0)
+  state      String
+  createdAt  DateTime        @default(now())
+  coverage   AssetCoverage[]
+  subtitles  SubtitleAsset[]
+  @@index([supersededByAssetId])
+  @@unique([id, edition])
+}
+
+model UpgradeCleanup {
+  nativeArchiveContinuations NativeArchiveCleanupContinuation[]
+  id String @id @default(uuid())
+  assetId String
+  asset LibraryAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  successorAssetId String
+  recoveryEpoch Int
+  expiresAt DateTime
+  state String @default("pending")
+  manifest Json?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([state, expiresAt])
+  @@unique([assetId, successorAssetId])
+  @@index([assetId])
+}
+
+model AssetCoverage {
+  assetId String
+  asset   LibraryAsset @relation(fields: [assetId, edition], references: [id, edition])
+  mediaId String
+  media   MediaItem    @relation(fields: [mediaId], references: [id])
+  edition String       @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  current Boolean      @default(false)
+
+  @@id([assetId, mediaId])
+  @@index([mediaId, current])
+}
+
+model SubtitleAsset {
+  oldReplacementArchives SubtitleReplacement[] @relation("ReplacementOldSubtitle")
+  replacementCandidates SubtitleReplacement[] @relation("ReplacementCandidateSubtitle")
+  id               String       @id @default(uuid())
+  assetId          String
+  asset            LibraryAsset @relation(fields: [assetId], references: [id])
+  language         String
+  providerId       String
+  provenance       Json
+  matchingEvidence Json
+  content          Bytes?
+  path             String?
+  state            String
+  ownershipEpoch   Int          @default(-1)
+  qualityStatus    String       @default("unverified")
+  storageKind      String       @default("unknown")
+  checksum         String?
+  videoChecksum    String?
+  videoVersion     Int?
+  forced           Boolean?
+  hearingImpaired  Boolean?
+  streamIndex      Int?
+  codec            String?
+  version          Int          @default(0)
+  createdAt        DateTime     @default(now())
+
+  @@index([assetId, ownershipEpoch, state])
+}
+
+model SubtitleReplacement {
+  id String @id @default(uuid())
+  ownerId String
+  owner MediaUser @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  assetId String
+  asset LibraryAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  oldSubtitleId String
+  oldSubtitle SubtitleAsset @relation("ReplacementOldSubtitle", fields: [oldSubtitleId], references: [id], onDelete: Restrict)
+  candidateSubtitleId String
+  candidateSubtitle SubtitleAsset @relation("ReplacementCandidateSubtitle", fields: [candidateSubtitleId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
+  snapshot Json
+  snapshotHash String
+  importOperationId String @unique
+  rollbackOperationId String @unique
+  state String @default("preparing")
+  version Int @default(0)
+  reason String?
+  reservationActive Boolean @default(true)
+  appliedAt DateTime?
+  archiveExpiresAt DateTime?
+  cleanupState String @default("pending")
+  cleanupReason String?
+  cleanupManifest Json?
+  executionEvidence Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  review SubtitleReplacementReview?
+  receipt SubtitleReplacementReceipt?
+  @@index([state, updatedAt])
+  @@index([cleanupState, archiveExpiresAt])
+}
+
+model SubtitleReplacementReview {
+  id String @id @default(uuid())
+  replacementId String @unique
+  replacement SubtitleReplacement @relation(fields: [replacementId], references: [id], onDelete: Restrict)
+  observation Json
+  observationHash String
+  expiresAt DateTime
+  approvedById String?
+  approvedBy MediaUser? @relation(fields: [approvedById], references: [id], onDelete: Restrict)
+  approvedAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model SubtitleReplacementReceipt {
+  id String @id @default(uuid())
+  replacementId String @unique
+  replacement SubtitleReplacement @relation(fields: [replacementId], references: [id], onDelete: Restrict)
+  outcome String
+  evidence Json
+  createdAt DateTime @default(now())
+}
+
+model MediaSubtitlePolicyVersion {
+  id String @id @default(uuid())
+  mediaId String
+  media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  version Int
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  source Json
+  rules Json
+  createdAt DateTime @default(now())
+  @@unique([mediaId, edition, version])
+}
+
+model WatchObservationFence {
+  mediaId String
+  edition String @default("default")
+  issuedRevision BigInt @default(0)
+  settledRevision BigInt @default(0)
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  @@id([mediaId, edition])
+}
+
+model WatchState {
+  userId     String
+  user       MediaUser @relation(fields: [userId], references: [id])
+  mediaId    String
+  media      MediaItem @relation(fields: [mediaId], references: [id])
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  watched    Boolean
+  observedAt DateTime
+  source     String
+
+  @@id([userId, mediaId, edition])
+}
+
+model RetentionHold {
+  id        String    @id @default(uuid())
+  userId    String
+  user      MediaUser @relation(fields: [userId], references: [id])
+  mediaId   String
+  media     MediaItem @relation(fields: [mediaId], references: [id])
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  until     DateTime?
+  isPin     Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, mediaId, edition])
+}
+
+model RetentionDecision {
+  id                String    @id @default(uuid())
+  mediaId           String
+  media             MediaItem @relation(fields: [mediaId], references: [id])
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  generation        Int
+  state             String
+  evidence          Json
+  warningAcceptedAt DateTime?
+  graceUntil        DateTime?
+  quarantinedAt     DateTime?
+  purgeAfter        DateTime?
+  manifest          Json?
+  version           Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([mediaId, edition, state])
+}
+
+model Operation {
+  compensationExecutionCoordinators NativePublicationCompensationContinuation[] @relation("CompensationExecution")
+  compensationPublicationCoordinators NativePublicationCompensationContinuation[] @relation("CompensationPublication")
+  nativeArchiveCoordinators NativeArchiveCleanupContinuation[]
+  nativeQuarantineCoordinators NativeQuarantineContinuation[]
+  subtitleReplacementCoordinators SubtitleReplacement[]
+  nativeRecoveryPlans NativeRecoveryPlan[]
+  id             String          @id @default(uuid())
+  idempotencyKey String?         @unique
+  userId         String?
+  kind           String
+  targetId       String?
+  payload        Json
+  status         OperationStatus @default(queued)
+  result         Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  outbox         OutboxCommand?
+}
+
+model OutboxCommand {
+  id           String    @id @default(uuid())
+  operationId  String    @unique
+  operation    Operation @relation(fields: [operationId], references: [id])
+  kind         String
+  payload      Json
+  dispatchedAt DateTime?
+  attempts     Int       @default(0)
+  availableAt  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+
+  @@index([dispatchedAt, availableAt])
+}
+
+model IdempotencyRecord {
+  userId      String
+  user        MediaUser @relation(fields: [userId], references: [id])
+  key         String
+  requestHash String
+  response    Json
+  createdAt   DateTime  @default(now())
+
+  @@id([userId, key])
+}
+
+model RecoveryHold {
+  version Int @default(0)
+  mediaId String
+  media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  recoveryEpoch Int
+  reason String
+  createdAt DateTime @default(now())
+  releasedAt DateTime?
+  releasedById String?
+  releasedBy MediaUser? @relation(fields: [releasedById], references: [id], onDelete: Restrict)
+  releaseEvidence Json?
+  @@id([mediaId, edition])
+}
+
+model RecoveryReview {
+  id String @id @default(uuid())
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  scope Json
+  scopeHash String
+  state String @default("awaiting_responses")
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  responses RecoveryResponse[]
+  receipt RecoveryReleaseReceipt?
+}
+
+model RecoveryResponse {
+  id String @id @default(uuid())
+  reviewId String
+  review RecoveryReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  userId String
+  user MediaUser @relation("RecoveryRespondent", fields: [userId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation("RecoveryDeclarant", fields: [actorId], references: [id], onDelete: Restrict)
+  response Json
+  createdAt DateTime @default(now())
+  @@unique([reviewId, userId])
+}
+
+model RecoveryReleaseReceipt {
+  id String @id @default(uuid())
+  reviewId String @unique
+  review RecoveryReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  scopeHash String
+  responseHash String
+  releasedHoldIds String[]
+  claimAccounting Json?
+  createdAt DateTime @default(now())
+}
+
+model LegacyClaimKnowledge {
+  id String @id
+  version Int @default(0)
+}
+
+model LegacyRequesterBinding {
+  id String @id @default(uuid())
+  sourceKind String
+  sourceInstanceId String
+  requesterSourceId String
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  captureHash String
+  requesterEvidenceHash String
+  userId String
+  user MediaUser @relation("LegacyRequesterSubject", fields: [userId], references: [id], onDelete: Restrict)
+  identitySnapshot Json
+  actorId String
+  actor MediaUser @relation("LegacyRequesterActor", fields: [actorId], references: [id], onDelete: Restrict)
+  revision Int
+  previousId String? @unique
+  previous LegacyRequesterBinding? @relation("LegacyRequesterRevision", fields: [previousId], references: [id], onDelete: Restrict)
+  next LegacyRequesterBinding? @relation("LegacyRequesterRevision")
+  createdAt DateTime @default(now())
+  @@unique([sourceKind, sourceInstanceId, requesterSourceId, revision])
+  @@index([captureId])
+  @@index([userId])
+}
+
+model NativeRecoveryPlan {
+  id String @id @default(uuid())
+  restoreOperationId String
+  restoreOperation Operation @relation(fields: [restoreOperationId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  requestHash String
+  scope Json
+  plan Json?
+  planHash String?
+  state String @default("preparing")
+  version Int @default(0)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  observations NativeRecoveryObservation[]
+  receipt NativeRecoveryReceipt?
+}
+
+model NativeRecoveryObservation {
+  id String @id @default(uuid())
+  planId String
+  plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  kind String
+  evidenceHash String
+  evidence Json
+  observedAt DateTime
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([planId, kind, createdAt])
+}
+
+model NativeRecoveryReceipt {
+  compensationContinuation NativePublicationCompensationContinuation?
+  archiveContinuations NativeArchiveCleanupContinuation[]
+  quarantineContinuations NativeQuarantineContinuation[]
+  id String @id @default(uuid())
+  planId String @unique
+  plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planHash String
+  recoveryEpoch Int
+  previousRuntimeVersion Int
+  runtimeVersion Int
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  selection Json
+  createdAt DateTime @default(now())
+}
+
+model NativeArchiveCleanupContinuation {
+  id String @id @default(uuid())
+  receiptId String
+  receipt NativeRecoveryReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  originalCleanupId String
+  originalCleanup UpgradeCleanup @relation(fields: [originalCleanupId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  descriptor Json
+  descriptorHash String
+  state String @default("pending")
+  version Int @default(0)
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
+  executionEvidence Json?
+  completion Json?
+  supersession Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([receiptId, originalCleanupId], map: "native_archive_receipt_cleanup_key")
+  @@index([state, recoveryEpoch])
+}
+
+model MediaPublicationTransition {
+  id String @id(map: "media_pub_transition_pk") @default(uuid())
+  attemptId String @unique(map: "media_pub_transition_attempt_key")
+  attempt AcquisitionAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict, map: "media_pub_transition_attempt_fk")
+  birthEpoch Int
+  filePlanHash String
+  intent Json
+  intentHash String
+  outcome Json?
+  outcomeHash String?
+  createdAt DateTime @default(now())
+  compensations NativePublicationCompensationContinuation[]
+}
+
+model NativePublicationCompensationContinuation {
+  id String @id(map: "native_pub_comp_pk") @default(uuid())
+  receiptId String @unique(map: "native_pub_comp_receipt_key")
+  receipt NativeRecoveryReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict, map: "native_pub_comp_receipt_fk")
+  transitionId String
+  transition MediaPublicationTransition @relation(fields: [transitionId], references: [id], onDelete: Restrict, map: "native_pub_comp_transition_fk")
+  recoveryEpoch Int
+  mediaIds String[]
+  assetIds String[]
+  descriptor Json
+  descriptorHash String
+  state String @default("pending")
+  version Int @default(0)
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation("CompensationExecution", fields: [coordinatorOperationId], references: [id], onDelete: Restrict, map: "native_pub_comp_execution_op_fk")
+  executionEvidence Json?
+  completion Json?
+  publicationCoordinatorOperationId String?
+  publicationCoordinatorOperation Operation? @relation("CompensationPublication", fields: [publicationCoordinatorOperationId], references: [id], onDelete: Restrict, map: "native_pub_comp_publication_op_fk")
+  verifiedPublication Json?
+  fenceRelease Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([transitionId, recoveryEpoch], map: "native_comp_transition_epoch_key")
+  @@index([state, recoveryEpoch], map: "native_pub_comp_state_epoch_idx")
+  @@index([mediaIds], type: Gin, map: "native_pub_comp_media_idx")
+  @@index([assetIds], type: Gin, map: "native_pub_comp_asset_idx")
+}
+
+model NativeQuarantineContinuation {
+  id String @id @default(uuid())
+  receiptId String
+  receipt NativeRecoveryReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  groupHash String
+  recoveryEpoch Int
+  descriptor Json
+  state String @default("pending")
+  version Int @default(0)
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
+  executionEvidence Json?
+  restoration Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([receiptId, groupHash])
+  @@index([state, recoveryEpoch])
+}
+
+model MediaHandoffPlan {
+  id String @id @default(uuid())
+  bundleReviewId String
+  bundleReview MigrationBundleReview @relation(fields: [bundleReviewId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  bundleReviewVersion Int
+  requestHash String
+  scope Json
+  plan Json?
+  planHash String?
+  state String @default("preparing")
+  version Int @default(0)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  observations MediaHandoffObservation[]
+  receipt MediaHandoffReceipt?
+}
+
+model MediaHandoffObservation {
+  id String @id @default(uuid())
+  planId String
+  plan MediaHandoffPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  kind String
+  evidenceHash String
+  evidence Json
+  observedAt DateTime
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([planId, kind, createdAt])
+}
+
+model MediaHandoffReceipt {
+  id String @id @default(uuid())
+  planId String @unique
+  plan MediaHandoffPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planHash String
+  recoveryEpoch Int
+  previousRuntimeVersion Int
+  runtimeVersion Int
+  selection Json
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+}
+
+model MediaStorageAuthority {
+  rootPath String @id
+  recoveryEpoch Int
+  pvcUid String
+  volumeName String
+  volumePath String
+  workerPodUid String
+  evidence Json
+  observedAt DateTime
+  expiresAt DateTime
+  revokedAt DateTime?
+  version Int @default(0)
+}
+
+model MediaCapacityObservation {
+  role                   String   @id
+  cycleRevision          BigInt   @default(0)
+  cycleEpoch             Int
+  cycleStartedAt         DateTime
+  mountResultRevision    BigInt?
+  mountOutcome           String?
+  mountReason            String?
+  mountEpoch             Int?
+  mountCompletedAt       DateTime?
+  mountObservedAt        DateTime?
+  mountExpiresAt         DateTime?
+  mountBinding           Json?
+  mountBindingDigest     String?
+  mountEvidence          Json?
+  sampleAttempt          BigInt   @default(0)
+  sampleAttemptCycle     BigInt?
+  sampleAttemptStartedAt DateTime?
+  sampleResultAttempt    BigInt?
+  sampleOutcome          String?
+  sampleReason           String?
+  sampleEpoch            Int?
+  sampleStartedAt        DateTime?
+  sampleObservedAt       DateTime?
+  sampleCompletedAt      DateTime?
+  sampleBinding          Json?
+  sampleBindingDigest    String?
+  sampleIdentity         Json?
+  totalBytes             BigInt?
+  availableBytes         BigInt?
+}
+
+model LegacyWriterLease {
+  id String @id
+  recoveryEpoch Int
+  targetsDigest String
+  configurationDigest String
+  observation Json
+  observedAt DateTime
+  expiresAt DateTime
+  revokedAt DateTime?
+  version Int @default(0)
+}
+
+model ApplicationEvent {
+  dedupeKey String? @unique
+  id            String                 @id @default(uuid())
+  mediaId       String?
+  actorId       String?
+  kind          String
+  payload       Json
+  createdAt     DateTime               @default(now())
+  notifications NotificationDelivery[]
+
+  @@index([mediaId, createdAt])
+}
+
+model NotificationDelivery {
+  version Int @default(0)
+  failureReason String?
+  recipientFingerprint String?
+  reconciledAt DateTime?
+  providerStatus String?
+  deliveryAttempts NotificationDeliveryAttempt[]
+  id              String           @id @default(uuid())
+  eventId         String
+  event           ApplicationEvent @relation(fields: [eventId], references: [id])
+  userId          String
+  user            MediaUser        @relation(fields: [userId], references: [id])
+  channel         String
+  state           String
+  recoveryEpoch   Int              @default(0)
+  providerReceipt String?
+  attempts        Int              @default(0)
+  acceptedAt      DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([eventId, userId, channel])
+}
+
+model NotificationDeliveryAttempt {
+  id String @id @default(uuid())
+  deliveryId String
+  delivery NotificationDelivery @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  attemptNumber Int
+  recoveryEpoch Int
+  state String
+  providerReceipt String?
+  recipientFingerprint String
+  startedAt DateTime
+  finishedAt DateTime?
+  rejectionReason String?
+  @@unique([deliveryId, attemptNumber])
+}
