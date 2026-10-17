@@ -52,6 +52,40 @@ handoff and quiescing/draining in-flight legacy hook processes before labeling.
 An unknown add outcome is reconciled without blindly submitting again, including
 after the requesting claim is cancelled.
 
+## Media detail and diagnostics
+
+`GET /api/v1/media/:id` includes a bounded `visibility` projection defined in
+`shared/visibility/detail.ts`: playback state, up to twenty acquisition attempts,
+up to twenty distinct related torrents, and an explicit history-truncation flag.
+Download completion, filesystem publication and verified Plex availability are
+separate facts. A playable previous version can remain available while an upgrade
+downloads. Reads use persisted observations and never contact qBittorrent or
+grant effect authority. Collection summaries count visible and playable leaves;
+they do not invent one current file version for a series or season.
+
+Freshness is computed by the server. Missing, future, stale and old-epoch
+observations are distinct from a current observation; displaying a newer cleanup
+evaluation does not refresh the underlying download evidence. Ratios retain the
+finite/infinite tagged representation, and duration is actual observed seeding
+time. Speeds and ETA are not inferred.
+
+Current owners receive controlled diagnostics for the recorded torrent policy,
+its obligations and the most recent seeding/cleanup outcome. Provider settings
+are defaults for new torrents, not replacements for an existing torrent's
+policy. Meeting a ratio/time obligation does not establish cleanup permission:
+ownership, current runtime authority, dependencies, source isolation and final
+qBittorrent observations remain independent checks. `Torrent.cleanupEvaluation`
+is informational, bound to its policy, observation and epochs; no effect guard
+consumes it as authority.
+
+The detail projection rechecks current identity and exact configured-server
+library access. Members receive scoped progress and their own household evidence;
+owner diagnostics are omitted. Raw observations, private URLs, torrent hashes,
+filesystem paths and unrelated shared-pack claims do not enter this response.
+Aggregate metrics at `/metrics` remain read-only and contain no media/user/torrent
+identifiers. Plex event hints and persisted filesystem-capacity sampling are
+separate unfinished capabilities tracked in AI-300.
+
 ## Ownership handoff API contract
 
 The owner-only handoff API accepts stored immutable migration bundle reviews.

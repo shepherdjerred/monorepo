@@ -19,6 +19,7 @@ import { MediaActionButton } from "./media-actions.tsx";
 import { ReleaseCandidates } from "./releases.tsx";
 import { AssignProfile } from "./profile-controls.tsx";
 import { RequestTitle } from "./request-controls.tsx";
+import { MediaProgress } from "./media-progress/panel.tsx";
 
 export function MediaPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
@@ -63,6 +64,7 @@ export function MediaPage({ user }: { user: MediaUser }) {
           matching episodes will be included as the catalog finishes updating.
         </Notice>
       )}
+      <MediaProgress visibility={media.visibility} />
       <div className="detail-columns">
         <section className="panel">
           <h2>In your library</h2>
@@ -107,8 +109,8 @@ export function MediaPage({ user }: { user: MediaUser }) {
           <h2>Files & subtitles</h2>
           {media.assets.length === 0 ? (
             <p className="muted">
-              No files have been published yet. Acquisition progress appears in
-              Activity.
+              No files have been published yet. Download and import progress is
+              shown above.
             </p>
           ) : (
             media.assets.map(({ asset, current, edition }) => (

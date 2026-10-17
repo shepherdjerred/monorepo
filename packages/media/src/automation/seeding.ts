@@ -8,6 +8,14 @@ import { lockMedia } from "#infrastructure/locks.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
+import {
+  recordCleanupEvaluation,
+  type CleanupSnapshot,
+} from "#infrastructure/visibility/seeding.ts";
+import {
+  CleanupReasonSchema,
+  type CleanupEvaluation,
+} from "#shared/visibility/seeding.ts";
 
 const PolicySchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("public") }),
@@ -37,6 +45,25 @@ type SeedingActivities = Pick<
   MediaNetworkActivities,
   "evaluateMediaSeeding" | "removeMediaTorrent"
 >;
+type Outcome = Awaited<ReturnType<SeedingActivities["evaluateMediaSeeding"]>>;
+
+async function recordOutcome(
+  db: Pick<Prisma.TransactionClient, "torrent" | "$queryRaw">,
+  snapshot: CleanupSnapshot,
+  input: {
+    recoveryEpoch: number;
+    evaluatedAt: Date;
+    phase: CleanupEvaluation["phase"];
+  },
+  outcome: Outcome,
+): Promise<Outcome> {
+  await recordCleanupEvaluation(db, snapshot, {
+    ...input,
+    status: outcome.status,
+    reason: CleanupReasonSchema.nullable().parse(outcome.reason),
+  });
+  return outcome;
+}
 
 function pathsOverlap(first: string, second: string): boolean {
   const left = path.resolve(first);
@@ -66,43 +93,68 @@ async function sourceDirectoryExclusive(
 
 async function releaseRemovalClaim(
   tx: Prisma.TransactionClient,
-  id: string,
-  previousState: string,
-  reason: string,
+  snapshot: CleanupSnapshot,
+  input: { previousState: string; reason: string; recoveryEpoch: number },
 ): ReturnType<SeedingActivities["removeMediaTorrent"]> {
   await tx.torrent.updateMany({
-    where: { id, state: "removing" },
-    data: { state: previousState },
+    where: { id: snapshot.id, state: "removing" },
+    data: { state: input.previousState },
   });
-  return { status: "protected", reason };
+  await recordOutcome(
+    tx,
+    snapshot,
+    {
+      recoveryEpoch: input.recoveryEpoch,
+      evaluatedAt: new Date(),
+      phase: "removal",
+    },
+    { status: "protected", reason: input.reason },
+  );
+  return { status: "protected", reason: input.reason };
 }
 
 async function evaluate(
   context: MediaAutomationContext,
   torrentId: string,
 ): ReturnType<SeedingActivities["evaluateMediaSeeding"]> {
+  const evaluatedAt = new Date();
   const torrent = await context.db.torrent.findUniqueOrThrow({
     where: { id: torrentId },
     include: { attempts: true, assets: true },
   });
-  if (torrent.state === "removed") return { status: "removed", reason: null };
   const runtime = await requireActiveRuntime(context.db);
+  const evaluationInput = {
+    evaluatedAt,
+    recoveryEpoch: runtime.epoch,
+    phase: "evaluation" as const,
+  };
+  if (torrent.state === "removed")
+    return await recordOutcome(context.db, torrent, evaluationInput, {
+      status: "removed",
+      reason: null,
+    });
   if (
     !runtime.active ||
     torrent.ownershipEpoch !== runtime.epoch ||
     !(await context.gates.sourceCleanup()) ||
     torrent.attempts.some((attempt) => attempt.recoveryEpoch !== runtime.epoch)
   )
-    return { status: "protected", reason: "source_cleanup_disabled" };
+    return await recordOutcome(context.db, torrent, evaluationInput, {
+      status: "protected",
+      reason: "source_cleanup_disabled",
+    });
   await context.qbittorrent.login();
   const observed = await context.qbittorrent.observe(torrent.infoHash);
   if (observed === null)
-    return { status: "protected", reason: "torrent_missing" };
+    return await recordOutcome(context.db, torrent, evaluationInput, {
+      status: "protected",
+      reason: "torrent_missing",
+    });
   const files =
     observed.progress === 1
       ? await context.qbittorrent.files(observed.hash)
       : [];
-  await context.db.torrent.update({
+  const stored = await context.db.torrent.update({
     where: { id: torrent.id },
     data: {
       qbittorrentId: observed.hash,
@@ -110,8 +162,18 @@ async function evaluate(
       observedAt: new Date(),
     },
   });
+  // Bind diagnostics to the observation actually persisted, but retain the
+  // original policy/epoch that this evaluation used. A concurrent change fails CAS.
+  const snapshot = {
+    ...torrent,
+    observation: stored.observation,
+    observedAt: stored.observedAt,
+  };
   if (!hasApplicationSeedingPolicy(observed))
-    return { status: "protected", reason: "torrent_policy_drift" };
+    return await recordOutcome(context.db, snapshot, evaluationInput, {
+      status: "protected",
+      reason: "torrent_policy_drift",
+    });
   const dependenciesRemaining =
     torrent.attempts.some(
       (attempt) =>
@@ -138,14 +200,14 @@ async function evaluate(
       dependenciesRemaining,
     },
   );
-  return {
+  return await recordOutcome(context.db, snapshot, evaluationInput, {
     status: evaluation.eligible
       ? "removable"
       : evaluation.reason === "seeding_required"
         ? "seeding"
         : "protected",
     reason: evaluation.reason,
-  };
+  });
 }
 
 export function createSeedingActivities(
@@ -163,15 +225,34 @@ export function createSeedingActivities(
         where: { id: input.torrentId },
         include: { attempts: { orderBy: { createdAt: "asc" } } },
       });
+      const runtimeSnapshot =
+        await context.db.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
+      const removalInput = {
+        evaluatedAt: new Date(),
+        recoveryEpoch: runtimeSnapshot.recoveryEpoch,
+        phase: "removal" as const,
+      };
       const submitted = torrent.attempts[0];
-      if (submitted === undefined)
+      if (submitted === undefined) {
+        await recordOutcome(context.db, torrent, removalInput, {
+          status: "protected",
+          reason: "submission_ownership_unknown",
+        });
         return { status: "protected", reason: "submission_ownership_unknown" };
+      }
       const claim = await context.db.torrent.updateMany({
         where: { id: torrent.id, state: { notIn: ["removing", "removed"] } },
         data: { state: "removing" },
       });
-      if (claim.count !== 1)
+      if (claim.count !== 1) {
+        await recordOutcome(context.db, torrent, removalInput, {
+          status: "protected",
+          reason: "removal_outcome_unknown",
+        });
         return { status: "protected", reason: "removal_outcome_unknown" };
+      }
       const mutation = { started: false };
       try {
         return await context.db.$transaction(
@@ -205,12 +286,11 @@ export function createSeedingActivities(
                     attempt.state !== "cancelled"),
               )
             )
-              return releaseRemovalClaim(
-                tx,
-                torrent.id,
-                torrent.state,
-                "source_dependencies_changed",
-              );
+              return releaseRemovalClaim(tx, current, {
+                previousState: torrent.state,
+                reason: "source_dependencies_changed",
+                recoveryEpoch: runtime.recoveryEpoch,
+              });
             const observed = await context.qbittorrent.observe(
               torrent.infoHash,
             );
@@ -224,24 +304,22 @@ export function createSeedingActivities(
               path.resolve(observed.save_path) !== isolated ||
               !observed.content_path.startsWith(`${isolated}/`)
             )
-              return releaseRemovalClaim(
-                tx,
-                torrent.id,
-                torrent.state,
-                "source_ownership_unproven",
-              );
+              return releaseRemovalClaim(tx, current, {
+                previousState: torrent.state,
+                reason: "source_ownership_unproven",
+                recoveryEpoch: runtime.recoveryEpoch,
+              });
             context.qbittorrent.validateOwnership(observed, {
               operationId: submitted.operationId,
               attemptId: submitted.id,
               savePath: isolated,
             });
             if (!hasApplicationSeedingPolicy(observed))
-              return releaseRemovalClaim(
-                tx,
-                torrent.id,
-                torrent.state,
-                "torrent_policy_drift",
-              );
+              return releaseRemovalClaim(tx, current, {
+                previousState: torrent.state,
+                reason: "torrent_policy_drift",
+                recoveryEpoch: runtime.recoveryEpoch,
+              });
             if (
               !(await sourceDirectoryExclusive(
                 context,
@@ -249,12 +327,11 @@ export function createSeedingActivities(
                 isolated,
               ))
             )
-              return releaseRemovalClaim(
-                tx,
-                torrent.id,
-                torrent.state,
-                "source_directory_shared",
-              );
+              return releaseRemovalClaim(tx, current, {
+                previousState: torrent.state,
+                reason: "source_directory_shared",
+                recoveryEpoch: runtime.recoveryEpoch,
+              });
             const evaluated = evaluateSeeding(
               PolicySchema.parse(current.seedingPolicy),
               {
@@ -270,12 +347,11 @@ export function createSeedingActivities(
               },
             );
             if (!evaluated.eligible)
-              return releaseRemovalClaim(
-                tx,
-                torrent.id,
-                torrent.state,
-                evaluated.reason,
-              );
+              return releaseRemovalClaim(tx, current, {
+                previousState: torrent.state,
+                reason: evaluated.reason,
+                recoveryEpoch: runtime.recoveryEpoch,
+              });
             mutation.started = true;
             await context.qbittorrent.remove({
               hash: torrent.infoHash,
@@ -288,6 +364,16 @@ export function createSeedingActivities(
               where: { id: torrent.id },
               data: { state: "removed" },
             });
+            await recordOutcome(
+              tx,
+              current,
+              {
+                evaluatedAt: new Date(),
+                recoveryEpoch: runtime.recoveryEpoch,
+                phase: "removal",
+              },
+              { status: "removed", reason: null },
+            );
             return { status: "removed", reason: null };
           },
           { timeout: 60_000 },
@@ -298,6 +384,23 @@ export function createSeedingActivities(
             where: { id: torrent.id, state: "removing" },
             data: { state: torrent.state },
           });
+        if (mutation.started) {
+          // Do not reset the unresolved removal claim or retry its external
+          // mutation because recording an informational diagnostic failed.
+          try {
+            await recordOutcome(
+              context.db,
+              torrent,
+              { ...removalInput, evaluatedAt: new Date() },
+              {
+                status: "protected",
+                reason: "removal_outcome_unknown",
+              },
+            );
+          } catch {
+            // The original uncertain-effect failure must remain observable.
+          }
+        }
         throw error;
       }
     },

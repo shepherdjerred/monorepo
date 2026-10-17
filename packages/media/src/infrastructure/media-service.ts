@@ -14,7 +14,15 @@ import {
   MediaDetailSchema,
 } from "#shared/api.ts";
 import { ReleaseListSchema } from "#shared/api.ts";
-import { removalConfirmation } from "./removal-confirmation.ts";
+import {
+  visibilityReader,
+  publicAssetProperties,
+  scopedRemovalConfirmation,
+  visibilityAncestry,
+  type VisibilitySections,
+} from "./visibility/access.ts";
+import { mediaVisibility } from "./visibility/detail.ts";
+import { effectiveRequestWhere } from "./request-claims.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { currentSubtitlePolicies, policyStatus } from "./subtitle-policy.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
@@ -25,10 +33,14 @@ export class PrismaMediaApplication
 {
   constructor(
     private readonly db: Database,
-    settings: MediaCommandSettings,
+    settings: MediaCommandSettings & {
+      visibilitySections?: VisibilitySections;
+    },
   ) {
     super(db, settings);
+    this.visibilitySections = settings.visibilitySections;
   }
+  private readonly visibilitySections: VisibilitySections | undefined;
 
   async listRequests(actor: MediaActor) {
     return RequestListSchema.parse(
@@ -42,105 +54,138 @@ export class PrismaMediaApplication
   }
 
   async getMedia(actor: MediaActor, mediaId: string) {
-    const item = await this.db.mediaItem.findUnique({
-      where: { id: mediaId },
-      include: {
-        children: {
-          orderBy: [{ seasonNumber: "asc" }, { episodeNumber: "asc" }],
-          take: 1000,
-        },
-        intent: true,
-        requests: {
-          where: { active: true },
-          select: {
-            id: true,
-            userId: true,
-            subtitleLanguages: true,
-            version: true,
-            user: { select: { displayName: true } },
+    return this.db.$transaction(async (tx) => {
+      const reader = await visibilityReader(tx, actor, {
+        serverMachineId: this.settings.serverMachineId,
+        sections: this.visibilitySections,
+      });
+      const item = await tx.mediaItem.findUnique({
+        where: { id: mediaId },
+        include: {
+          ...visibilityAncestry,
+          children: {
+            include: visibilityAncestry,
+            orderBy: [{ seasonNumber: "asc" }, { episodeNumber: "asc" }],
+            take: 1000,
           },
-        },
-        holds: { select: { id: true, userId: true, until: true, isPin: true } },
-        retention: {
-          where: { state: { notIn: ["cancelled", "purged"] } },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          select: {
-            id: true,
-            state: true,
-            graceUntil: true,
-            purgeAfter: true,
-            version: true,
+          intent: true,
+          requests: {
+            where: {
+              ...effectiveRequestWhere,
+              ...(reader.owner ? {} : { userId: actor.id }),
+            },
+            select: {
+              id: true,
+              userId: true,
+              subtitleLanguages: true,
+              version: true,
+              user: { select: { displayName: true } },
+            },
           },
-        },
-        watchStates: {
-          where: actor.role === "owner" ? {} : { userId: actor.id },
-          select: { userId: true, watched: true, observedAt: true },
-        },
-        assets: {
-          select: {
-            current: true,
-            edition: true,
-            asset: {
-              select: {
-                id: true,
-                checksum: true,
-                version: true,
-                owned: true,
-                ownershipEpoch: true,
-                properties: true,
-                state: true,
-                createdAt: true,
-                subtitles: true,
+          holds: {
+            where: reader.owner ? {} : { userId: actor.id },
+            select: { id: true, userId: true, until: true, isPin: true },
+          },
+          retention: {
+            where: { state: { notIn: ["cancelled", "purged"] } },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              id: true,
+              state: true,
+              graceUntil: true,
+              purgeAfter: true,
+              version: true,
+            },
+          },
+          watchStates: {
+            where: reader.owner ? {} : { userId: actor.id },
+            select: { userId: true, watched: true, observedAt: true },
+          },
+          assets: {
+            select: {
+              current: true,
+              edition: true,
+              asset: {
+                select: {
+                  id: true,
+                  checksum: true,
+                  version: true,
+                  owned: true,
+                  ownershipEpoch: true,
+                  properties: true,
+                  state: true,
+                  createdAt: true,
+                  subtitles: true,
+                },
               },
             },
           },
         },
-      },
-    });
-    if (!item)
-      throw new MediaError("media_not_found", "Media item does not exist", 404);
-    const events = await this.db.applicationEvent.findMany({
-      where: {
-        mediaId,
-        ...(actor.role === "owner"
-          ? {}
-          : { OR: [{ actorId: actor.id }, { actorId: null }] }),
-      },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      select: { id: true, kind: true, createdAt: true },
-    });
-    const runtime = await this.db.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    const policies = await currentSubtitlePolicies(this.db, [mediaId]);
-    return MediaDetailSchema.parse({
-      ...item,
-      subtitlePolicies: policies,
-      assets: item.assets.map((coverage) => ({
-        ...coverage,
-        asset: {
-          ...coverage.asset,
-          subtitleStatus: policyStatus({
-            policy: policies[0],
-            asset: coverage.asset,
-            epoch: runtime.recoveryEpoch,
-          }),
-          subtitles: coverage.asset.subtitles.map((subtitle) => ({
-            ...subtitle,
-            accepted: subtitleAccepted({
-              subtitle,
+      });
+      if (!item)
+        throw new MediaError(
+          "media_not_found",
+          "Media item does not exist",
+          404,
+        );
+      if (!reader.visible(item))
+        throw new MediaError(
+          "plex_library_access_required",
+          "This title is outside your current library access",
+          403,
+        );
+      const events = await tx.applicationEvent.findMany({
+        where: {
+          mediaId,
+          ...(reader.owner
+            ? {}
+            : { OR: [{ actorId: actor.id }, { actorId: null }] }),
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: { id: true, kind: true, createdAt: true },
+      });
+      const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
+      const policies = await currentSubtitlePolicies(tx, [mediaId]);
+      return MediaDetailSchema.parse({
+        ...item,
+        children: item.children.filter((child) => reader.visible(child)),
+        visibility: await mediaVisibility(tx, {
+          media: item,
+          userId: actor.id,
+          owner: reader.owner,
+          epoch: runtime.recoveryEpoch,
+          visible: reader.visible,
+        }),
+        subtitlePolicies: policies,
+        assets: item.assets.map((coverage) => ({
+          ...coverage,
+          asset: {
+            ...coverage.asset,
+            properties: publicAssetProperties(coverage.asset.properties),
+            subtitleStatus: policyStatus({
+              policy: policies[0],
               asset: coverage.asset,
               epoch: runtime.recoveryEpoch,
             }),
-          })),
-        },
-      })),
-      events,
-      ...(actor.role === "owner"
-        ? { removalConfirmation: await removalConfirmation(this.db, mediaId) }
-        : {}),
+            subtitles: coverage.asset.subtitles.map((subtitle) => ({
+              ...subtitle,
+              accepted: subtitleAccepted({
+                subtitle,
+                asset: coverage.asset,
+                epoch: runtime.recoveryEpoch,
+              }),
+            })),
+          },
+        })),
+        events,
+        ...(reader.owner
+          ? await scopedRemovalConfirmation(tx, mediaId, reader.visible)
+          : {}),
+      });
     });
   }
 
