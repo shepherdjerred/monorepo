@@ -3,6 +3,7 @@ import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { MediaCommandBase } from "#infrastructure/command-base.ts";
+import { isRetryableTransaction } from "#infrastructure/locks.ts";
 import {
   MigrationProposalSchema,
   MigrationProposalListSchema,
@@ -16,6 +17,7 @@ import {
 } from "#migration/capture/capture-validation.ts";
 import { normalizeCapture } from "./normalize.ts";
 import { snapshotHash } from "./profile-import.ts";
+import { lockLegacyRequesterBindings } from "#infrastructure/recovery/legacy-claims/bindings.ts";
 import { migrationTargets } from "./catalog-targets.ts";
 import { PrismaMigrationBundles } from "./bundle-persistence.ts";
 import type { MigrationCatalogDiscovery } from "./catalog-discovery.ts";
@@ -141,84 +143,95 @@ export class PrismaMigrationAdministration extends MediaCommandBase {
     const capture = validateCapture(
       UploadMigrationSchema.parse(value).snapshot,
     );
-    return await this.db.$transaction(
-      async (tx) => {
-        await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
-        const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-          where: { id: "singleton" },
-        });
-        const requesters = await tx.mediaUser.findMany({
-          select: { id: true, plexAccountId: true },
-          take: MAX_MIGRATION_RECORDS,
-        });
-        const report = normalizeCapture(capture.snapshot, {
-          targets: await migrationTargets(tx),
-          requesters: requesters.map((user) => ({
-            userId: user.id,
-            plexAccountId: user.plexAccountId,
-          })),
-        });
-        const stored = await tx.migrationCapture.upsert({
-          where: { manifestHash: capture.captureHash },
-          update: {},
-          create: {
-            schemaVersion: 1,
-            sourceInstanceId: capture.snapshot.sourceInstanceId,
-            sourceKind: capture.snapshot.sourceKind,
-            sourceVersion: capture.snapshot.sourceVersion,
-            startedAt: new Date(capture.snapshot.startedAt),
-            completedAt: new Date(capture.snapshot.completedAt),
-            complete: capture.complete,
-            stable: capture.stable,
-            manifestHash: capture.captureHash,
-            manifest: capture.snapshot,
-            records: {
-              create: capture.snapshot.records.map((record) => ({
-                provenanceKey: recordKey(capture.snapshot, record),
-                kind: record.kind,
-                sourceId: record.sourceId,
-                observationHash: snapshotHash(z.json().parse(record)),
-                payload: record,
-              })),
-            },
-          },
-        });
-        const row = await tx.adoptionProposal.upsert({
-          where: {
-            captureId_reportHash_recoveryEpoch_runtimeVersion: {
-              captureId: stored.id,
-              reportHash: report.reportHash,
-              recoveryEpoch: runtime.recoveryEpoch,
-              runtimeVersion: runtime.version,
-            },
-          },
-          update: {},
-          create: {
-            captureId: stored.id,
-            reportHash: report.reportHash,
-            report,
-            recoveryEpoch: runtime.recoveryEpoch,
-            runtimeVersion: runtime.version,
-            status:
-              capture.complete && capture.stable
-                ? "awaiting_review"
-                : "protected",
-          },
-          include: {
-            capture: {
-              select: {
-                manifestHash: true,
-                sourceKind: true,
-                sourceInstanceId: true,
-                sourceVersion: true,
+    const upload = () =>
+      this.db.$transaction(
+        async (tx) => {
+          await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+          const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+            where: { id: "singleton" },
+          });
+          const requesters = await tx.mediaUser.findMany({
+            select: { id: true, plexAccountId: true },
+            take: MAX_MIGRATION_RECORDS,
+          });
+          const report = normalizeCapture(capture.snapshot, {
+            targets: await migrationTargets(tx),
+            requesters: requesters.map((user) => ({
+              userId: user.id,
+              plexAccountId: user.plexAccountId,
+            })),
+          });
+          await lockLegacyRequesterBindings(tx);
+          const stored = await tx.migrationCapture.upsert({
+            where: { manifestHash: capture.captureHash },
+            update: {},
+            create: {
+              schemaVersion: 1,
+              sourceInstanceId: capture.snapshot.sourceInstanceId,
+              sourceKind: capture.snapshot.sourceKind,
+              sourceVersion: capture.snapshot.sourceVersion,
+              startedAt: new Date(capture.snapshot.startedAt),
+              completedAt: new Date(capture.snapshot.completedAt),
+              complete: capture.complete,
+              stable: capture.stable,
+              manifestHash: capture.captureHash,
+              manifest: capture.snapshot,
+              records: {
+                create: capture.snapshot.records.map((record) => ({
+                  provenanceKey: recordKey(capture.snapshot, record),
+                  kind: record.kind,
+                  sourceId: record.sourceId,
+                  observationHash: snapshotHash(z.json().parse(record)),
+                  payload: record,
+                })),
               },
             },
-          },
-        });
-        return proposal(row);
-      },
-      { isolationLevel: "RepeatableRead", timeout: 30_000 },
-    );
+          });
+          const row = await tx.adoptionProposal.upsert({
+            where: {
+              captureId_reportHash_recoveryEpoch_runtimeVersion: {
+                captureId: stored.id,
+                reportHash: report.reportHash,
+                recoveryEpoch: runtime.recoveryEpoch,
+                runtimeVersion: runtime.version,
+              },
+            },
+            update: {},
+            create: {
+              captureId: stored.id,
+              reportHash: report.reportHash,
+              report,
+              recoveryEpoch: runtime.recoveryEpoch,
+              runtimeVersion: runtime.version,
+              status:
+                capture.complete && capture.stable
+                  ? "awaiting_review"
+                  : "protected",
+            },
+            include: {
+              capture: {
+                select: {
+                  manifestHash: true,
+                  sourceKind: true,
+                  sourceInstanceId: true,
+                  sourceVersion: true,
+                },
+              },
+            },
+          });
+          return proposal(row);
+        },
+        { isolationLevel: "RepeatableRead", timeout: 30_000 },
+      );
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        return await upload();
+      } catch (error) {
+        if (isRetryableTransaction(error) && attempt < 3) continue;
+        throw error;
+      }
+    }
+    throw new Error("Capture transaction retry limit was not enforced");
   }
   async review(
     actor: MediaActor,

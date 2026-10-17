@@ -1,7 +1,10 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { RecoveryScope } from "#shared/recovery.ts";
-import { RespondRecoverySchema } from "#shared/recovery.ts";
+import {
+  RecoveryStoredResponseSchema,
+  respondentMediaIds,
+} from "#shared/recovery.ts";
 import {
   applyHold,
   invalidateRetention,
@@ -71,7 +74,17 @@ async function applyRespondent(
   scope: RecoveryScope,
   row: { userId: string; response: unknown },
 ) {
-  const response = RespondRecoverySchema.parse(row.response);
+  const response = RecoveryStoredResponseSchema.parse(row.response);
+  const permitted = respondentMediaIds(scope, row.userId);
+  const declared = response.declarations.map((item) => item.mediaId);
+  if (
+    new Set(declared).size !== declared.length ||
+    declared.length !== permitted.length ||
+    declared.some((id) => !permitted.includes(id))
+  )
+    throw recoveryConflict(
+      "Response must declare exactly the subject's reviewed leaves",
+    );
   const user = await db.mediaUser.findUniqueOrThrow({
     where: { id: row.userId },
   });
@@ -118,7 +131,7 @@ export function responseProjection(
   return rows.map((row) => ({
     userId: row.userId,
     actorId: row.actorId,
-    response: RespondRecoverySchema.parse(row.response),
+    response: RecoveryStoredResponseSchema.parse(row.response),
     createdAt: row.createdAt.toISOString(),
   }));
 }

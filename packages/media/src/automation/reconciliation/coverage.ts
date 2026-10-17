@@ -6,6 +6,7 @@ import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { lockMedia, needsRestore } from "#infrastructure/locks.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
+import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
 
 /** Each transaction projects at most 25 episodes; its source version is durable. */
 export function createCoverageActivities(
@@ -85,6 +86,20 @@ export function createCoverageActivities(
         const rootIntent = await tx.mediaIntent.findUniqueOrThrow({
           where: { mediaId: root.mediaId },
         });
+        const epoch = await commandAutomationEpoch(tx);
+        const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
+        // Catalog activity is not a fresh household declaration after restore.
+        // Negative projection remains safe, but a live old root cannot renew leaves.
+        if (
+          unapprovedRoot(
+            current,
+            rootIntent.automationEpoch,
+            runtime.recoveryEpoch,
+          )
+        )
+          return { processed: 0, nextCursor: null };
         for (const episode of episodes) {
           const inSnapshot =
             current.includeFutureEpisodes ||
@@ -101,7 +116,7 @@ export function createCoverageActivities(
             mediaId: episode.id,
             active: allowed,
             profileId: rootIntent.profileId,
-            automationEpoch: rootIntent.automationEpoch,
+            automationEpoch: projectionEpoch(rootIntent.automationEpoch, epoch),
           });
         }
         if (
@@ -121,6 +136,24 @@ export function createCoverageActivities(
       });
     },
   };
+}
+
+function projectionEpoch(rootEpoch: number, authorizedEpoch: number) {
+  return rootEpoch === authorizedEpoch ? authorizedEpoch : -1;
+}
+
+function unapprovedRoot(
+  root: { active: boolean; excluded: boolean; direct: boolean },
+  rootEpoch: number,
+  runtimeEpoch: number,
+) {
+  return (
+    root.active &&
+    !root.excluded &&
+    root.direct &&
+    rootEpoch >= 0 &&
+    rootEpoch !== runtimeEpoch
+  );
 }
 
 function catalogReady(media: {
@@ -206,12 +239,14 @@ async function projectEpisode(
       mediaId,
       profileId: input.profileId,
       generation: 1,
-      automationEpoch: input.automationEpoch,
+      automationEpoch: wants ? input.automationEpoch : -1,
       desiredPresence: wants,
       monitoring: count > 0,
     },
     update: {
-      automationEpoch: input.automationEpoch,
+      ...(wants && input.automationEpoch >= 0
+        ? { automationEpoch: input.automationEpoch }
+        : {}),
       profileId: prior?.profileId ?? input.profileId,
       generation: { increment: 1 },
       version: { increment: 1 },
