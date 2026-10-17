@@ -29,6 +29,8 @@ import {
 } from "./admin.tsx";
 import { NotificationCallback, NotificationSettings } from "./preferences.tsx";
 import { ProfileEditor } from "./profile-controls.tsx";
+import { PlexProfileAdministration } from "./plex-admin.tsx";
+import { NumberingAdministration } from "./numbering-admin.tsx";
 
 export function RequestsPage({ user }: { user: MediaUser }) {
   const requests = useQuery({
@@ -80,6 +82,12 @@ export function RequestsPage({ user }: { user: MediaUser }) {
                   ? ` · ${request.subtitleLanguages.join(", ")} subtitles`
                   : ""}
               </p>
+              {request.media.catalogState === "pending" && (
+                <p className="helper">
+                  Episode details are loading; request coverage will update as
+                  they arrive.
+                </p>
+              )}
             </div>
             <Status
               value={request.active ? request.media.availability : "cancelled"}
@@ -347,6 +355,8 @@ export function AdminPage({ user }: { user: MediaUser }) {
         <ProfileEditor user={user} profile={null} />
       </section>
       <ManualSubtitleAdministration user={user} />
+      <PlexProfileAdministration user={user} />
+      <NumberingAdministration user={user} />
       <ProviderAdministration user={user} />
     </>
   );

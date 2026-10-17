@@ -3,6 +3,7 @@ import type { MediaAutomationContext } from "./context.ts";
 import { queueOperation, serializable } from "./store.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
 async function invalidateWatch(
   context: MediaAutomationContext,
@@ -30,7 +31,9 @@ export async function observeRequesterWatch(
 ): Promise<{ complete: boolean; reason: string | null }> {
   const media = await context.db.mediaItem.findUniqueOrThrow({
     where: { id: mediaId },
-    include: { requests: { where: { active: true }, include: { user: true } } },
+    include: {
+      requests: { where: effectiveRequestWhere, include: { user: true } },
+    },
   });
   const identity = PlexIdentitySchema.parse(media.externalIds);
   if (identity.plexRatingKey === undefined) {

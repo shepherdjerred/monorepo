@@ -476,3 +476,7 @@ export const deliverMediaNotificationWorkflow =
   media.deliverMediaNotificationWorkflow;
 export const dispatchMediaOutboxWorkflow = media.dispatchMediaOutboxWorkflow;
 export const sweepMediaWorkflow = media.sweepMediaWorkflow;
+export const expandMediaRequestWorkflow = media.expandMediaRequestWorkflow;
+export const refreshMediaCatalogWorkflow = media.refreshMediaCatalogWorkflow;
+export const expandCatalogRequestsWorkflow =
+  media.expandCatalogRequestsWorkflow;

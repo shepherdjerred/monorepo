@@ -6,6 +6,7 @@ import {
   CancellationScope,
   ContinueAsNew,
   isCancellation,
+  workflowInfo,
 } from "@temporalio/workflow";
 import type {
   MediaAttemptOperation,
@@ -208,6 +209,16 @@ export async function acquireMediaSubtitlesWorkflow(input: {
   assetId: string;
   language: string;
 }): Promise<MediaWorkflowResult> {
+  return withRecoveryCheckpoint(input.operationId, () =>
+    acquireSubtitles(input),
+  );
+}
+
+async function acquireSubtitles(input: {
+  operationId: string;
+  assetId: string;
+  language: string;
+}): Promise<MediaWorkflowResult> {
   for (let poll = 0; poll < 28; poll++) {
     const result = await network.findMediaSubtitles(input);
     if (result.status === "found") {
@@ -351,14 +362,94 @@ export async function dispatchMediaOutboxWorkflow(): Promise<{
 export async function sweepMediaWorkflow(input: {
   kind: "downloads" | "watch" | "feeds" | "due" | "inventory";
   cursor?: string | null;
+  sweepId?: string;
 }): Promise<{ processed: number }> {
   let cursor = input.cursor ?? null;
+  const sweepId = input.sweepId ?? workflowInfo().runId;
   let processed = 0;
   for (let page = 0; page < 20; page++) {
-    const result = await network.sweepMediaWork({ kind: input.kind, cursor });
+    const result = await network.sweepMediaWork({
+      kind: input.kind,
+      cursor,
+      sweepId,
+    });
     processed += result.processed;
     cursor = result.nextCursor;
     if (cursor === null) return { processed };
   }
-  return continueAsNew<typeof sweepMediaWorkflow>({ kind: input.kind, cursor });
+  return continueAsNew<typeof sweepMediaWorkflow>({
+    kind: input.kind,
+    cursor,
+    sweepId,
+  });
+}
+
+export async function expandMediaRequestWorkflow(input: {
+  operationId: string;
+  requestId: string;
+  requestVersion: number;
+  cursor: string | null;
+}): Promise<void> {
+  let cursor = input.cursor;
+  for (let page = 0; page < 20; page++) {
+    const result = await network.expandMediaRequest({ ...input, cursor });
+    cursor = result.nextCursor;
+    if (cursor === null) {
+      await network.finishMediaOperation({
+        operationId: input.operationId,
+        status: "completed",
+        reason: null,
+      });
+      return;
+    }
+  }
+  return continueAsNew<typeof expandMediaRequestWorkflow>({ ...input, cursor });
+}
+
+export async function refreshMediaCatalogWorkflow(input: {
+  operationId: string;
+  mediaId: string;
+  cursor: string | null;
+}): Promise<void> {
+  let cursor = input.cursor;
+  for (let page = 0; page < 20; page++) {
+    const result = await network.refreshMediaCatalog({ ...input, cursor });
+    cursor = result.nextCursor;
+    if (cursor === null) {
+      await network.finishMediaOperation({
+        operationId: input.operationId,
+        status: "completed",
+        reason: null,
+      });
+      return;
+    }
+  }
+  return continueAsNew<typeof refreshMediaCatalogWorkflow>({
+    ...input,
+    cursor,
+  });
+}
+
+export async function expandCatalogRequestsWorkflow(input: {
+  operationId: string;
+  mediaId: string;
+  cursor: string | null;
+}): Promise<void> {
+  let cursor = input.cursor;
+  for (let page = 0; page < 20; page++) {
+    const result = await network.expandCatalogRequests({ ...input, cursor });
+    cursor = result.nextCursor;
+    if (cursor === null) {
+      await network.finishMediaOperation({
+        operationId: input.operationId,
+        status: "completed",
+        reason: null,
+      });
+      return;
+    }
+  }
+  return continueAsNew<typeof expandCatalogRequestsWorkflow>({
+    ...input,
+    cursor,
+  });
 }

@@ -62,6 +62,10 @@ export function createMediaActivityWorkers(
         secret: props.bootstrap,
         key: "MEDIA_CREDENTIAL_KEY",
       }),
+      TMDB_API_KEY: EnvValue.fromSecretValue({
+        secret: props.bootstrap,
+        key: "TMDB_API_KEY",
+      }),
       POSTAL_API_KEY: EnvValue.fromSecretValue({
         secret: props.postal,
         key: "POSTAL_API_KEY",

@@ -41,6 +41,9 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  expand_request: "expandMediaRequestWorkflow",
+  refresh_catalog: "refreshMediaCatalogWorkflow",
+  expand_catalog_requests: "expandCatalogRequestsWorkflow",
   reconcile_media: "reconcileMediaWorkflow",
   acquire_release: "reconcileMediaWorkflow",
   restore_media: "restoreMediaWorkflow",

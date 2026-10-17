@@ -59,7 +59,7 @@ export async function reserveCandidate(
     });
     if (existing !== null) return null;
     const sponsor = await tx.mediaRequest.findFirst({
-      where: { mediaId: input.mediaId, active: true },
+      where: { mediaId: input.mediaId, ...effectiveRequestWhere },
       orderBy: { createdAt: "asc" },
     });
     if (sponsor === null) return null;
@@ -201,3 +201,4 @@ export async function adoptReservation(
     };
   });
 }
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";

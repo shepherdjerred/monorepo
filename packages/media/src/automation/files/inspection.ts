@@ -19,6 +19,7 @@ import { stageEmbedded } from "./embedded.ts";
 import { assertMeasuredUpgrade } from "./quality-guard.ts";
 import { newLibraryPath, type NamingItem } from "./library-path.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
+import { measureResolvedEvidence } from "./resolved-measurement.ts";
 
 const ObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -283,6 +284,11 @@ async function inspectEntry(input: {
     mediaIds,
     sizeBytes: file.size,
   };
+  await measureResolvedEvidence({
+    context,
+    measured,
+    filename: nodePath.basename(file.name),
+  });
   const profileVersions = await assertMeasuredUpgrade(
     context.db,
     measured,
@@ -335,13 +341,13 @@ async function inspectEntry(input: {
     checksum,
     sizeBytes: String(file.size),
     operationId: crypto.randomUUID(),
-    properties: {
+    properties: z.json().parse({
       ...measured,
       sourceQuality: attributes.quality,
       releaseId: attempt.releaseId,
       profileVersions,
       embeddedRejectedStreams: embeddedSubtitles.rejectedStreams,
-    },
+    }),
     previousAssetId: previous?.id ?? null,
     previousChecksum: previous?.checksum ?? null,
     previousVersion: previous?.version ?? null,

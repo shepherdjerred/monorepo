@@ -56,6 +56,37 @@ export class PlexClient {
     endpoint(config.baseUrl, "/");
   }
 
+  async machineIdentifier(signal?: AbortSignal): Promise<string> {
+    return z
+      .object({
+        MediaContainer: z.object({ machineIdentifier: z.string().min(1) }),
+      })
+      .parse(await this.get("identity", {}, signal)).MediaContainer
+      .machineIdentifier;
+  }
+
+  async accounts(signal?: AbortSignal) {
+    const container = z
+      .object({
+        MediaContainer: z.object({
+          size: z.number().int().nonnegative(),
+          Account: z
+            .array(
+              z.object({
+                id: z.number().int().positive(),
+                name: z.string(),
+                key: z.string(),
+              }),
+            )
+            .optional(),
+        }),
+      })
+      .parse(await this.get("accounts", {}, signal)).MediaContainer;
+    if (container.size !== (container.Account?.length ?? 0))
+      throw new IntegrationError("plex", "invalid-response");
+    return container.Account ?? [];
+  }
+
   async sections(signal?: AbortSignal) {
     const result = z
       .object({

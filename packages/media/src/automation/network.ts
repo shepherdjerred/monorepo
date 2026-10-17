@@ -10,6 +10,9 @@ import { createAcquisitionActivities } from "./acquisition.ts";
 import { createPublicationActivities } from "./publication.ts";
 import { createSeedingActivities } from "./seeding.ts";
 import { createSweepActivities } from "./sweeps.ts";
+import { createCoverageActivities } from "./reconciliation/coverage.ts";
+import { createCatalogActivities } from "./reconciliation/catalog.ts";
+import { TmdbClient } from "#integrations/tmdb.ts";
 import { createOutboxActivities } from "./store.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { createMediaFileActivities } from "./files/activities.ts";
@@ -18,6 +21,8 @@ import { createNotificationActivities } from "./notifications.ts";
 import { createNotificationTransport } from "#integrations/notification-transport.ts";
 import { createMediaWorkflowStarter } from "./temporal-client.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
+import { cleanupSubtitleBrowser } from "./subtitle-browser-lifecycle.ts";
+import { IntegrationError } from "#integrations/http.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -27,12 +32,37 @@ export function createMediaNetworkActivities(
   context: MediaAutomationContext,
   lifecycle: LifecycleActivities,
 ): MediaNetworkActivities {
+  const outbox = createOutboxActivities(context.db, context.startWorkflow);
   return {
     ...createAcquisitionActivities(context),
     ...createPublicationActivities(context),
     ...createSeedingActivities(context),
     ...createSweepActivities(context),
-    ...createOutboxActivities(context.db, context.startWorkflow),
+    ...createCoverageActivities(context),
+    ...createCatalogActivities(context),
+    ...outbox,
+    async finishMediaOperation(input) {
+      try {
+        await cleanupSubtitleBrowser(
+          context,
+          input.operationId,
+          input.reason ?? input.status,
+        );
+      } catch (error) {
+        if (
+          !(error instanceof IntegrationError) ||
+          error.kind !== "outcome-unknown"
+        )
+          throw error;
+        await outbox.finishMediaOperation({
+          ...input,
+          status: "reconciling",
+          reason: "subtitle_browser_cleanup_requires_review",
+        });
+        return;
+      }
+      await outbox.finishMediaOperation(input);
+    },
     ...lifecycle,
   };
 }
@@ -52,7 +82,13 @@ const NetworkBootstrapSchema = CommonBootstrapSchema.extend({
   QBITTORRENT_CATEGORY: z.string().min(1),
   QBITTORRENT_DOWNLOAD_ROOT: z.string().min(1),
   PUBLIC_ORIGIN: z.url(),
-});
+  TMDB_API_KEY: z.string().min(1).optional(),
+  TMDB_TOKEN: z.string().min(1).optional(),
+}).refine(
+  (value) =>
+    (value.TMDB_API_KEY === undefined) !== (value.TMDB_TOKEN === undefined),
+  "Exactly one TMDB credential is required",
+);
 const FilesBootstrapSchema = CommonBootstrapSchema.extend({
   MEDIA_MOVIES_DOWNLOAD_ROOT: z.string().min(1),
   MEDIA_MOVIES_LIBRARY_ROOT: z.string().min(1),
@@ -84,12 +120,16 @@ function createGates(stage: string) {
 
 export async function createMediaNetworkContext(
   environment: Record<string, string | undefined>,
-  ports: Pick<MediaAutomationContext, "startWorkflow" | "notify">,
+  ports: Pick<
+    MediaAutomationContext,
+    "startWorkflow" | "describeWorkflow" | "notify"
+  >,
 ): Promise<MediaAutomationContext> {
   const config = NetworkBootstrapSchema.parse(environment);
   const db = createDatabase(config.DATABASE_URL);
   await db.$connect();
   const cipher = new CredentialCipher(config.MEDIA_CREDENTIAL_KEY);
+  const behavior = mediaBehaviorConfig(config.ENVIRONMENT, true);
   const plexConfig = {
     baseUrl: config.PLEX_SERVER_URL,
     token: config.PLEX_SERVER_TOKEN,
@@ -97,6 +137,18 @@ export async function createMediaNetworkContext(
   };
   return {
     db,
+    async permittedSections() {
+      const [movie, series] = await Promise.all([
+        behavior.get("permittedMovieSectionId"),
+        behavior.get("permittedTvSectionId"),
+      ]);
+      return { movie: movie.value, series: series.value };
+    },
+    tmdb: new TmdbClient(
+      config.TMDB_API_KEY === undefined
+        ? { kind: "bearer", token: z.string().min(1).parse(config.TMDB_TOKEN) }
+        : { kind: "api-key", apiKey: config.TMDB_API_KEY },
+    ),
     cipher,
     providers: new DatabaseProviderRegistry(db, cipher),
     plex: new PlexClient(plexConfig),
@@ -222,6 +274,7 @@ export async function createMediaNetworkRuntime(
   };
   const context = await createMediaNetworkContext(environment, {
     startWorkflow: temporal.start,
+    describeWorkflow: temporal.describe,
     notify,
   });
   const lifecycle = {

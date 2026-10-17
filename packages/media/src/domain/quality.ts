@@ -1,11 +1,10 @@
 import type { QualityProfile, ReleaseAttributes } from "#shared/contract.ts";
+import {
+  evaluateResolvedPolicy,
+  chooseResolvedPolicy,
+} from "./resolved-policy.ts";
 
-export type ReleaseEvaluation = {
-  accepted: boolean;
-  reasons: string[];
-  qualityRank: number;
-  score: number;
-};
+import type { ReleaseEvaluation } from "./release-evaluation.ts";
 
 /** Qualities are ordered from least to most desirable. Unknown qualities reject. */
 export function evaluateRelease(
@@ -13,6 +12,8 @@ export function evaluateRelease(
   profile: QualityProfile,
   requiredMediaIds: readonly string[],
 ): ReleaseEvaluation {
+  if (profile.resolved !== undefined)
+    return evaluateResolvedPolicy(release, profile, requiredMediaIds);
   validateProfile(profile);
   const reasons: string[] = [];
   const qualityRank = profile.qualities.indexOf(release.quality);
@@ -74,6 +75,7 @@ export function chooseUpgrade(input: {
   profile: QualityProfile;
   mediaIds: readonly string[];
 }): { upgrade: boolean; reason: string; evaluation: ReleaseEvaluation } {
+  if (input.profile.resolved !== undefined) return chooseResolvedPolicy(input);
   const evaluation = evaluateRelease(
     input.candidate,
     input.profile,

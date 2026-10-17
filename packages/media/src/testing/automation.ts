@@ -3,6 +3,7 @@ import { afterAll, beforeAll } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { CredentialCipher } from "#application/security.ts";
 import { PlexClient } from "#integrations/plex.ts";
+import { TmdbClient } from "#integrations/tmdb.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { type FetchTransport } from "#integrations/http.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
@@ -29,6 +30,7 @@ export function automationTestHarness() {
     };
     return {
       db: cluster.database,
+      tmdb: new TmdbClient({ kind: "api-key", apiKey: "fixture" }, transport),
       cipher,
       providers: {
         withProvider: () =>
@@ -55,6 +57,9 @@ export function automationTestHarness() {
       downloadRoot: "/downloads",
       startWorkflow: () =>
         Promise.reject(new Error("Unexpected workflow start")),
+      describeWorkflow: () =>
+        Promise.reject(new Error("Unexpected workflow description")),
+      permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
       notify: () => Promise.reject(new Error("Unexpected notification")),
     };
   }
@@ -152,6 +157,7 @@ export function automationTestHarness() {
     );
     return {
       user,
+      profile,
       media,
       release,
       source,

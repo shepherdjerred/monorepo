@@ -48,6 +48,12 @@ function fixture() {
     async profiles() {
       return [];
     },
+    async profileDefaults() {
+      return [];
+    },
+    async setProfileDefault() {
+      return { status: "completed" };
+    },
     async listUsers() {
       return [];
     },
@@ -141,6 +147,28 @@ function fixture() {
       },
       async uploadSubtitle() {
         return { status: "queued" };
+      },
+    },
+    plexAdmin: {
+      async profiles() {
+        return { homeUsers: [], serverAccounts: [], mappings: [] };
+      },
+      async saveProfile() {
+        return { status: "completed" };
+      },
+      async refreshProfileAccess() {
+        /* Fixture explicitly authorizes the profile. */
+      },
+    },
+    numberingAdmin: {
+      async series() {
+        return [];
+      },
+      async episodes() {
+        return [];
+      },
+      async save() {
+        return { status: "completed" };
       },
     },
     catalog: {

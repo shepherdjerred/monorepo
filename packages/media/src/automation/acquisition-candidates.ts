@@ -10,6 +10,12 @@ import { chooseUpgrade } from "#domain/quality.ts";
 import { ProviderIdSchema } from "./providers.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
+import { EpisodeNumberingSchema } from "#shared/numbering.ts";
+import { persistCandidateSnapshot } from "./candidate-evidence.ts";
+import {
+  prepareResolvedEvidence,
+  collectResolvedEvidence,
+} from "#migration/runtime-evidence.ts";
 
 export async function loadProfile(
   db: MediaAutomationContext["db"],
@@ -44,6 +50,12 @@ export async function currentRelease(
     include: { asset: true },
   });
   if (coverage === null) return null;
+  const measured = PublicReleaseAttributesSchema.extend({
+    id: z.string(),
+    providerId: z.string(),
+    title: z.string(),
+  }).safeParse(coverage.asset.properties);
+  if (measured.success) return measured.data;
   const properties = z
     .object({ releaseId: z.string().optional() })
     .parse(coverage.asset.properties);
@@ -80,17 +92,21 @@ async function searchTarget(context: MediaAutomationContext, mediaId: string) {
             OR: [{ parentId: series.id }, { parent: { parentId: series.id } }],
           },
         });
-  const knownEpisodes = episodes.flatMap((episode) =>
-    episode.seasonNumber === null || episode.episodeNumber === null
+  const knownEpisodes = episodes.flatMap((episode) => {
+    const absoluteNumber = EpisodeNumberingSchema.parse(
+      episode.externalIds,
+    ).absoluteNumber;
+    return episode.seasonNumber === null || episode.episodeNumber === null
       ? []
       : [
           {
             mediaId: episode.id,
             season: episode.seasonNumber,
             episode: episode.episodeNumber,
+            ...(absoluteNumber === undefined ? {} : { absoluteNumber }),
           },
-        ],
-  );
+        ];
+  });
   const identity: Parameters<typeof matchRelease>[0]["media"] = {
     id: media.id,
     kind: media.kind,
@@ -106,6 +122,9 @@ async function searchTarget(context: MediaAutomationContext, mediaId: string) {
     identity.episodeNumber = media.episodeNumber;
   return {
     identity,
+    runtimeMinutes: media.runtimeMinutes,
+    originalLanguage:
+      media.originalLanguage ?? series?.originalLanguage ?? null,
     knownEpisodes,
     query: series?.title ?? media.title,
     kind: media.kind === "movie" ? ("movie" as const) : ("tv" as const),
@@ -127,49 +146,48 @@ async function storeCandidate(
     media: target.identity,
     knownEpisodes: target.knownEpisodes,
   });
+  const attributes = parsed.attributes;
+  if (policy.profile.resolved !== undefined) {
+    attributes.resolvedEvidence = await collectResolvedEvidence(
+      policy.profile.resolved,
+      prepareResolvedEvidence(policy.profile.resolved, {
+        id,
+        title: candidate.title,
+        identityConfirmed: attributes.identityConfidence === "exact",
+        sizeBytes: candidate.sizeBytes,
+        // Pack runtime is the sum of known episodes, never the requested leaf's duration.
+        runtimeMinutes:
+          attributes.mediaIds.length === 1 ? target.runtimeMinutes : null,
+        originalLanguage: target.originalLanguage,
+        audioLanguages:
+          attributes.audioLanguages.length > 0
+            ? [...attributes.audioLanguages]
+            : null,
+        specialEpisode: target.identity.seasonNumber === 0,
+      }),
+    );
+  }
   const evaluation = chooseUpgrade({
-    candidate: parsed.attributes,
+    candidate: attributes,
     ...policy,
     mediaIds: [target.identity.id],
   });
-  const stored = await context.db.releaseCandidate.upsert({
-    where: {
-      providerId_providerReleaseId: {
-        providerId: candidate.providerId,
-        providerReleaseId: candidate.providerReleaseId,
-      },
-    },
-    create: {
-      id,
-      providerId: candidate.providerId,
-      providerReleaseId: candidate.providerReleaseId,
-      title: candidate.title,
-      attributes: {
-        ...parsed.attributes,
-        mediaIds: [...parsed.attributes.mediaIds],
-        audioLanguages: [...parsed.attributes.audioLanguages],
-        scoreTags: [...parsed.attributes.scoreTags],
-      },
-      evaluation: evaluation.evaluation,
-      mediaIds: [...parsed.attributes.mediaIds],
-      encryptedSource: context.cipher.encrypt(
-        JSON.stringify(candidate),
-        `release:${candidate.providerId}:${candidate.providerReleaseId}`,
-      ),
-    },
-    update: {
-      evaluation: evaluation.evaluation,
-      encryptedSource: context.cipher.encrypt(
-        JSON.stringify(candidate),
-        `release:${candidate.providerId}:${candidate.providerReleaseId}`,
-      ),
-    },
+  const stored = await persistCandidateSnapshot(context, {
+    source: candidate,
+    attributes,
+    evaluation: evaluation.evaluation,
   });
-  return evaluation.upgrade
+  if (stored === null) return null;
+  const authoritative = chooseUpgrade({
+    candidate: stored,
+    ...policy,
+    mediaIds: [target.identity.id],
+  });
+  return authoritative.upgrade
     ? {
         id: stored.id,
-        rank: evaluation.evaluation.qualityRank,
-        score: evaluation.evaluation.score,
+        rank: authoritative.evaluation.qualityRank,
+        score: authoritative.evaluation.score,
       }
     : null;
 }

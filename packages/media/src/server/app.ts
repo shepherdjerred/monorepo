@@ -3,6 +3,11 @@ import { deleteCookie, setCookie } from "hono/cookie";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
 import { registerAdminRoutes, type AdminApplication } from "./admin-routes.ts";
+import { registerPlexRoutes, type PlexAdministration } from "./plex-routes.ts";
+import {
+  registerNumberingRoutes,
+  type NumberingAdministration,
+} from "./numbering-routes.ts";
 import { z } from "zod";
 import type { MediaActor, MediaAuth } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
@@ -28,6 +33,8 @@ export type MediaAppDependencies = {
   catalog: CatalogApplication;
   notifications: NotificationApplication;
   admin: AdminApplication;
+  plexAdmin: PlexAdministration;
+  numberingAdmin: NumberingAdministration;
   publicOrigin: string;
   requestsEnabled: () => Promise<boolean>;
   onError: (error: Error, requestId: string) => void;
@@ -235,11 +242,20 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   );
   app.post("/api/v1/requests", async (c) => {
     await requireRequestsEnabled();
+    const input = parseInput(CreateRequestSchema, await readJson(c.req.raw));
+    if (
+      input.requesterUserId !== undefined &&
+      input.requesterUserId !== c.get("actor").id
+    )
+      await dependencies.plexAdmin.refreshProfileAccess(
+        c.get("actor"),
+        input.requesterUserId,
+      );
     return c.json(
       await dependencies.media.createRequest(
         c.get("actor"),
         parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
-        parseInput(CreateRequestSchema, await readJson(c.req.raw)),
+        input,
       ),
       202,
     );
@@ -297,6 +313,27 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   );
   app.get("/api/v1/profiles", async (c) =>
     c.json(await dependencies.media.profiles(c.get("actor"))),
+  );
+  app.get("/api/v1/profile-defaults", async (c) =>
+    c.json(await dependencies.media.profileDefaults(c.get("actor"))),
+  );
+  app.put("/api/v1/admin/profile-defaults/:kind", async (c) =>
+    c.json(
+      await dependencies.media.setProfileDefault(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        parseInput(z.enum(["movie", "series"]), c.req.param("kind")),
+        parseInput(
+          z
+            .object({
+              expectedVersion: z.number().int().nonnegative(),
+              profileId: z.string().min(1),
+            })
+            .strict(),
+          await readJson(c.req.raw),
+        ),
+      ),
+    ),
   );
   app.get("/api/v1/admin/users", async (c) =>
     c.json(await dependencies.media.listUsers(c.get("actor"))),
@@ -398,6 +435,8 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     c.json(await dependencies.notifications.unlinkDiscord(c.get("actor"))),
   );
   registerAdminRoutes(app, dependencies.admin);
+  registerPlexRoutes(app, dependencies.plexAdmin);
+  registerNumberingRoutes(app, dependencies.numberingAdmin);
   app.notFound((c) =>
     c.json(
       { error: { code: "not_found", message: "Endpoint does not exist" } },

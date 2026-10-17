@@ -8,6 +8,10 @@ import {
   now,
 } from "./types.ts";
 import { assertOwnerRemoval } from "./owner-removal.ts";
+import {
+  effectiveRequestWhere,
+  lockEffectiveRequests,
+} from "#infrastructure/request-claims.ts";
 
 export async function lockMedia(
   tx: Transaction,
@@ -51,6 +55,7 @@ export async function assertAcquisition(
     .parse(attempt).recoveryEpoch;
   await assertRuntime(tx, epoch);
   const generations = GenerationsSchema.parse(attempt.generations);
+  await lockEffectiveRequests(tx, attempt.mediaIds);
   const intents = await tx.mediaIntent.findMany({
     where: { mediaId: { in: attempt.mediaIds } },
   });
@@ -63,6 +68,16 @@ export async function assertAcquisition(
     )
   )
     throw new FileGuardError("intent_obsolete");
+  const claimed = await tx.mediaRequest.findMany({
+    where: { ...effectiveRequestWhere, mediaId: { in: attempt.mediaIds } },
+    select: { mediaId: true },
+  });
+  if (
+    attempt.mediaIds.some(
+      (mediaId) => !claimed.some((request) => request.mediaId === mediaId),
+    )
+  )
+    throw new FileGuardError("request_obsolete");
   if (
     attempt.reservations.length !== attempt.mediaIds.length ||
     attempt.reservations.some(
@@ -84,6 +99,7 @@ export async function assertRetention(input: {
   purge: boolean;
 }): Promise<void> {
   const { tx, context } = input;
+  await lockEffectiveRequests(tx, input.mediaIds);
   const decision = await tx.retentionDecision.findUniqueOrThrow({
     where: { id: input.decisionId },
   });
@@ -202,7 +218,7 @@ async function assertRetentionItem(input: {
     include: {
       intent: true,
       holds: true,
-      requests: { where: { active: true }, include: { user: true } },
+      requests: { where: effectiveRequestWhere, include: { user: true } },
       watchStates: true,
     },
   });
