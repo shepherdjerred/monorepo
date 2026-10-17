@@ -50,6 +50,8 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_native_recovery: "prepareNativeRecoveryWorkflow",
+  apply_native_recovery: "applyNativeRecoveryWorkflow",
   prepare_handoff: "prepareMediaHandoffWorkflow",
   apply_handoff: "applyMediaHandoffWorkflow",
   plex_exclusion_prepare: "preparePlexExclusionWorkflow",

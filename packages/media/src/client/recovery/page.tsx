@@ -81,6 +81,11 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
       )}
       {user.role === "owner" && (
         <section className="panel">
+          <p>
+            <Link to="/recovery/native">
+              Reprove Media-published files after a database restore
+            </Link>
+          </p>
           <h2>Prepare a household review</h2>
           <p>
             Select protected titles. Shared physical files automatically include

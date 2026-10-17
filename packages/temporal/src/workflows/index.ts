@@ -469,6 +469,11 @@ import * as mediaHandoff from "./media/handoff.ts";
 export const prepareMediaHandoffWorkflow =
   mediaHandoff.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = mediaHandoff.applyMediaHandoffWorkflow;
+import * as nativeRecovery from "./media/native-recovery.ts";
+export const prepareNativeRecoveryWorkflow =
+  nativeRecovery.prepareNativeRecoveryWorkflow;
+export const applyNativeRecoveryWorkflow =
+  nativeRecovery.applyNativeRecoveryWorkflow;
 import * as mediaMaintenance from "./media/maintenance.ts";
 export const preparePlexExclusionWorkflow =
   mediaMaintenance.preparePlexExclusionWorkflow;

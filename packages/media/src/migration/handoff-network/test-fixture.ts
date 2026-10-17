@@ -248,6 +248,10 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
       listAll: () => Promise.reject(new Error("No selected torrent")),
     },
     observer: {
+      observeCanonicalMounts: () =>
+        Promise.reject(
+          new Error("Legacy fixture has no native storage observation"),
+        ),
       observe: () => Promise.resolve(quiescence),
       observeMountBindings: (requests) =>
         Promise.resolve(
