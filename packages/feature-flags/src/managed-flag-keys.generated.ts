@@ -27,6 +27,7 @@ export const MEDIA_BOOLEAN_FLAG_KEYS = [
   "media-shared-announcements-upgrades",
   "media-requests-enabled",
   "media-acquisition-enabled",
+  "media-capacity-observation-enabled",
   "media-source-cleanup-enabled",
   "media-quarantine-enabled",
   "media-purge-enabled",

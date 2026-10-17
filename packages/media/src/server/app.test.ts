@@ -236,6 +236,32 @@ function fixture() {
     },
   };
   const dependencies: MediaAppDependencies = {
+    capacityAdmin: {
+      capacity: () =>
+        Promise.resolve({
+          schemaVersion: 1,
+          samplingEnabled: false,
+          asOf: new Date().toISOString(),
+          roles: [
+            {
+              role: "movies",
+              state: "missing",
+              reason: "mount_missing",
+              sampledAt: null,
+              totalBytes: null,
+              availableBytes: null,
+            },
+            {
+              role: "tv",
+              state: "missing",
+              reason: "mount_missing",
+              sampledAt: null,
+              totalBytes: null,
+              availableBytes: null,
+            },
+          ],
+        }),
+    },
     auth: {
       async start() {
         return {
@@ -359,6 +385,19 @@ test("v2 commands use current scoped CAS and preserve revoked-access request con
 
 test("v2 HTTP replay precedes mutable gate/proxy refresh but fresh commands remain authorized", async () => {
   await verifyDefaultReplayHttp(fixture().dependencies, headers);
+});
+
+test("capacity route is registered behind normal session authentication", async () => {
+  const { dependencies } = fixture();
+  const app = createMediaApp(dependencies);
+  const denied = await app.request("/api/v1/admin/capacity");
+  expect(denied.status).toBe(401);
+  const response = await app.request("/api/v1/admin/capacity", { headers });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({
+    schemaVersion: 1,
+    samplingEnabled: false,
+  });
 });
 
 describe("media HTTP security and errors", () => {

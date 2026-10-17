@@ -150,6 +150,25 @@ The application image publication gate controls whether the Media workloads are
 synthesized. Media schedules are declared initially paused; their existence does
 not establish that application workers or recovery procedures are ready.
 
+The initially paused `media-capacity` schedule runs each minute with SKIP overlap.
+Its new Workflow first observes canonical mounts on `media-network`, then samples
+them on `media-files`; the API never mounts libraries. Each Activity checks the
+typed `capacityObservationEnabled` flag once before allocating its durable
+ordering token or performing IO. Collection works in observe mode and creates
+no ownership, writer, storage or deletion authority. Existing file operations
+retain their independent capacity checks. Role-bound cycle and sample-attempt
+counters reject late results, including retries of the same token. Missing,
+expired or changed mount proof prevents sampling.
+
+Capacity Activities use finite queue and execution budgets. Each invocation
+derives a conservative wall and monotonic deadline from Temporal's scheduled
+timestamps and explicit timeouts before lazy runtime initialization. The current
+attempt's scheduled timestamp includes queue delay, deliberately shortening the
+allowed work; it is not treated as an actual start timestamp. Cancellation and
+deadline checks surround IO and transactional writes, so a late unabortable
+filesystem call cannot publish a fresh reading. No existing Workflow history is
+changed by this separate schedule and Workflow.
+
 The infra process polls `ops` separately so every-five-minute snapshot fan-out
 can overlap four bounded reads while heavyweight infra automation stays serial.
 Ops queue routing is recorded with the `ops-isolated-activity-queue` Workflow

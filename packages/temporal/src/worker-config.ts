@@ -28,6 +28,10 @@ import {
   plexExclusionNetworkWorkerActivities,
   plexExclusionFileWorkerActivities,
 } from "./activities/media-maintenance.ts";
+import {
+  capacityNetworkActivities,
+  capacityFileActivities,
+} from "./activities/media/capacity.ts";
 
 export type QueueWorkerRole =
   | "agent"
@@ -71,6 +75,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: {
       ...mediaNetworkWorkerActivities,
+      ...capacityNetworkActivities,
       ...plexExclusionNetworkWorkerActivities,
     },
     maxConcurrentActivityTaskExecutions: 4,
@@ -81,6 +86,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.MEDIA_FILES,
     activities: {
       ...mediaFileWorkerActivities,
+      ...capacityFileActivities,
       ...plexExclusionFileWorkerActivities,
     },
     maxConcurrentActivityTaskExecutions: 1,
