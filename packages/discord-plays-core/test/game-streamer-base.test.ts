@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { PcmSink } from "#src/stream/pcm-sink.ts";
-import { Client } from "discord.js-selfbot-v13";
+import { Client, ClientUser } from "discord.js-selfbot-v13";
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "#src/stream/game-streamer-base.ts";
 import { streamActive } from "#src/observability/metrics.ts";
@@ -49,6 +49,17 @@ function makeStreamer(): TestStreamer {
   });
 }
 
+class LoggedInTestUser extends ClientUser {
+  constructor(client: Client) {
+    super(client, {
+      id: "300",
+      username: "stream",
+      discriminator: "0",
+      avatar: null,
+    });
+  }
+}
+
 // Read a single-series gauge's current value out of the shared registry.
 async function gaugeValue(name: string): Promise<number | undefined> {
   const { registry } = await import("#src/observability/metrics.ts");
@@ -58,6 +69,25 @@ async function gaugeValue(name: string): Promise<number | undefined> {
 }
 
 describe("GameStreamerBase", () => {
+  test("shutdown cancels a pending voice handshake and releases its listeners", async () => {
+    const client = new Client();
+    client.user = new LoggedInTestUser(client);
+    const baseline = client.listenerCount("raw");
+    const streamer = new TestStreamer({
+      selfbotClient: client,
+      guildId: "100",
+      channelId: "200",
+      logger: silentLogger,
+    });
+    try {
+      await streamer.start();
+      await streamer.shutdown();
+      expect(client.listenerCount("raw")).toBe(baseline);
+      expect(client.user.id).toBe("300");
+    } finally {
+      streamer.destroy();
+    }
+  });
   test("constructing and destroying an idle streamer preserves another live stream", async () => {
     const active = contributeGauge(streamActive, "sum");
     active.set(1);

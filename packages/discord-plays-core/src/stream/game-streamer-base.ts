@@ -52,7 +52,7 @@ export abstract class GameStreamerBase {
   // Loopback PCM transport — sink fed by `pushAudio`, piped to ffmpeg. Created
   // in the subclass's buildEncoder() and torn down when the broadcast stops.
   protected audioTransport: AudioTransport | null = null;
-  private pendingJoin: ReturnType<Streamer["joinVoice"]> | undefined;
+  private pendingJoin: Promise<void> | undefined;
   private readonly activeMetric = contributeGauge(streamActive, "sum");
   protected readonly bufferMetric = contributeGauge(sinkBufferBytes, "sum");
 
@@ -210,19 +210,22 @@ export abstract class GameStreamerBase {
     return {
       joinVoice: ({ target }, signal) =>
         withSpan("stream.joinVoice", async () => {
-          const joining = this.streamer.joinVoice(
-            target.guildId,
-            target.channelId,
-          );
+          const joining = (async () => {
+            try {
+              await this.streamer.joinVoice(target.guildId, target.channelId, {
+                signal,
+              });
+            } catch (error) {
+              if (!signal.aborted) throw error;
+            }
+          })();
           this.pendingJoin = joining;
           try {
             await joining;
           } finally {
             if (this.pendingJoin === joining) this.pendingJoin = undefined;
           }
-          // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
-          // while we were connecting, the actor was aborted and leaveVoice already ran;
-          // tear down the connection we just established so it isn't orphaned.
+          // A cancelled join has settled before its account returns to the pool.
           if (signal.aborted) {
             this.streamer.leaveVoice();
           }

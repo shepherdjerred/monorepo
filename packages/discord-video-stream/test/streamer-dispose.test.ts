@@ -2,6 +2,21 @@ import { expect, test } from "vitest";
 import { Client } from "discord.js-selfbot-v13";
 import { Streamer } from "../src/client/Streamer.ts";
 
+test("cancelling a pending voice handshake settles before pooled reuse", async () => {
+  const client = new Client();
+  client.user = { id: "300" };
+  const streamer = new Streamer(client);
+  const controller = new AbortController();
+  const joining = streamer.joinVoice("100", "200", { signal: controller.signal });
+  try {
+    controller.abort();
+    await expect(joining).rejects.toMatchObject({ name: "AbortError" });
+    expect(streamer.voiceConnection).toBeUndefined();
+  } finally {
+    streamer.dispose();
+  }
+});
+
 test("leaving clears Go-Live listeners before a pooled client's next session", async () => {
   const client = new Client();
   // These tests drive the ready callbacks without a Discord login or socket.

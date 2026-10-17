@@ -15,6 +15,8 @@ import type { VoiceReceiveObserver } from "./voice/VoiceReceiveObserver.js";
 
 export type VoiceJoinOptions = {
   receiveAudio?: boolean;
+  /** Cancel a pending voice handshake without logging out the gateway client. */
+  signal?: AbortSignal;
 
   /**
    * Install the outbound audio RTP packetizer, so this connection can SEND audio without opting
@@ -107,17 +109,26 @@ export class Streamer {
     options: VoiceJoinOptions = {},
   ): Promise<WebRtcConnWrapper> {
     return new Promise<WebRtcConnWrapper>((resolve, reject) => {
+      if (options.signal?.aborted) {
+        reject(options.signal.reason);
+        return;
+      }
       if (!this.client.user) {
         reject("Client not logged in");
         return;
       }
       const user_id = this.client.user.id;
+      const abortJoin = () => {
+        reject(options.signal?.reason);
+        if (this._voiceConnection === voiceConn) this.leaveVoice();
+      };
       const voiceConn = new VoiceConnection(
         this,
         guild_id,
         user_id,
         channel_id,
         (conn) => {
+          options.signal?.removeEventListener("abort", abortJoin);
           if ((options.receiveAudio ?? false) || (options.sendAudio ?? false)) {
             try {
               conn.setAudioPacketizer();
@@ -137,6 +148,7 @@ export class Streamer {
         options,
       );
       this._voiceConnection = voiceConn;
+      options.signal?.addEventListener("abort", abortJoin, { once: true });
       this._gatewayEmitter.on("VOICE_STATE_UPDATE", (d) => {
         if (user_id !== d.user_id) return;
         voiceConn.setSession(d.session_id);
