@@ -100,9 +100,12 @@ preparation script's checksum manifest. Saves live under
 
 The homelab chart runs one controller. The retired MK64 and Emerald controllers
 are absent; their original storage claims remain for recovery. The
-existing Mario Kart edge forwards public and tailnet requests to Arcade, keeping
-the registered Discord OAuth callback. The old Pokébot addresses redirect to that
-canonical origin. The `prod` Flipt environment controls session and game rollout.
+existing edge serves `https://arcade.sjer.red` as the canonical origin for Discord
+links, sign-in, and browser controllers. Mario Kart aliases redirect there while
+preserving paths and queries; old Pokébot addresses redirect to its root.
+The preserved Discord application uses the Arcade OAuth callback and keeps the
+old callbacks for rollback. Users sign in again after changing origins.
+The `prod` Flipt environment controls session and game rollout.
 Account handover and rollback use the wiki's Arcade migration guide. Source tests
 do not replace real-game controller, audio/video, latency, and concurrent-session acceptance.
 

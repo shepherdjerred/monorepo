@@ -4,7 +4,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { createMarioKartDirectIngress } from "@shepherdjerred/homelab/cdk8s/src/resources/mario-kart-direct-ingress.ts";
 
-/** Retain the original game storage and canonical edge after Arcade takes ownership. */
+/** Retain the original game storage and shared edge after Arcade takes ownership. */
 export function createMarioKartResources(chart: Chart) {
   new ZfsNvmeVolume(chart, "mario-kart-volume", { storage: Size.gibibytes(8) });
   new ZfsNvmeVolume(chart, "mario-kart-rom-volume", {
@@ -21,10 +21,22 @@ export function createMarioKartResources(chart: Chart) {
   new TailscaleIngress(chart, "ui-tailscale-ingress", {
     service: bootstrap,
     host: "mariokart",
+    probePath: "/healthz",
   });
   createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
     serviceName: bootstrap.name,
     subdomain: "mariokart",
     port: 8082,
+    // The Arcade binding below probes this shared backend and canonical origin.
+    // This legacy hostname only redirects; do not duplicate the service's probe.
+    disableProbe: true,
+  });
+  // OpenTofu owns the direct public DNS record; retain a tunnel recovery route.
+  createCloudflareTunnelBinding(chart, "arcade-cf-tunnel", {
+    serviceName: bootstrap.name,
+    subdomain: "arcade",
+    port: 8082,
+    probePath: "/healthz",
+    publicProbePath: "/health",
   });
 }

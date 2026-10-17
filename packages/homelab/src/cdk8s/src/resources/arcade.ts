@@ -186,8 +186,8 @@ model = "gpt-5.6-sol"
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("marioKart")),
-        // Keep the existing public address and registered Discord OAuth callback.
-        WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://mariokart.sjer.red"),
+        // Shared origin for Discord links, OAuth, and browser controller traffic.
+        WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://arcade.sjer.red"),
         DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
           secret: credentialSecret,
           key: "DISCORD_BOT_TOKEN",

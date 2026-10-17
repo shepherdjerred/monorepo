@@ -23,7 +23,8 @@ http://:8081 {
     respond "ok" 200
   }
   handle {
-    redir https://mariokart.sjer.red 307
+    header Cache-Control "no-store"
+    redir https://arcade.sjer.red 307
   }
 }
 `;
@@ -38,6 +39,10 @@ export function createPokemonWebRedirect(chart: Chart) {
     securityContext: { fsGroup: 1000 },
   });
   setRevisionHistoryLimit(deployment);
+  deployment.podMetadata.addAnnotation(
+    "caddyfile-hash",
+    new Bun.CryptoHasher("sha256").update(CADDYFILE).digest("hex"),
+  );
   deployment.addContainer(
     withCommonProps({
       image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
