@@ -57,10 +57,6 @@
     "./lib/ci/admission-budget.ts": "./lib/ci/admission-budget.ts",
     "./lib/transient.ts": "./lib/transient.ts",
     "./lib/transient-error.ts": "./lib/transient-error.ts",
-    "./lib/test-git.ts": "./lib/test-git.ts",
-    "./lib/scout/scout-customs-artifact.ts": {
-      "types": "./lib/scout/scout-customs-artifact.ts",
-      "default": "./lib/scout/scout-customs-artifact.ts"
-    }
+    "./lib/test-git.ts": "./lib/test-git.ts"
   }
 }

@@ -141,7 +141,7 @@ for the mechanism.
   `league/` and `data-dragon/` must not import `review/`. `model/legacy` is
   deliberately not a layer because it is being deleted.
 - `report`: `html/shared` must not import a layout, and `assets` is a leaf.
-- Type-only edge: `app` and `activity` may `import type` from
+- Type-only edge: `app` may `import type` from
   `@scout-for-lol/backend` (the tRPC router type) but not import values.
   dependency-cruiser cannot see type-only edges here, so
   `@typescript-eslint/no-restricted-imports` with `allowTypeImports` enforces

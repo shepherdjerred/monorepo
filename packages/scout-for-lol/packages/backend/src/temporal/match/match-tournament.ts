@@ -4,8 +4,10 @@ import { matchEffectsAllowed } from "#src/evidence/admission.ts";
 import type { RawMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutTournamentResultResult } from "@scout-for-lol/temporal/activity-contracts";
-import { finalizeAndPublishManagedCustomResult } from "#src/customs/riot-result-publication.ts";
-import { findObservedCustomGame } from "#src/customs/riot-results.ts";
+import {
+  finalizeManagedCustomResult,
+  findObservedCustomGame,
+} from "#src/customs/riot-results.ts";
 import { prisma } from "#src/database/index.ts";
 import { resolveScoutMatchContext } from "#src/temporal/match/match-context.ts";
 
@@ -14,9 +16,8 @@ import { resolveScoutMatchContext } from "#src/temporal/match/match-context.ts";
  *
  * v1 runs this between progression and the cursor write and is the only caller
  * repo-wide, so the V2 core has to run it too: once V2 owns such a match, a
- * missing finalization leaves the custom result unreported and the Custom
- * Night snapshot unpublished, while the advanced cursor guarantees nothing
- * rediscovers the match to fix it.
+ * missing finalization leaves the custom result unreported, while the
+ * advanced cursor guarantees nothing rediscovers the match to fix it.
  *
  * The Activity and outcome names retain "tournament" for replay compatibility
  * with existing Temporal histories. Managed games are identified only by the
@@ -24,8 +25,7 @@ import { resolveScoutMatchContext } from "#src/temporal/match/match-context.ts";
  *
  * Re-running is safe, which is what makes a crash between this stage and the
  * cursor recoverable: the result projector refuses to re-report a verified
- * game, and the snapshot publish is a broadcast of current state rather than
- * an event, so a resumed run cannot double-finalize.
+ * game, so a resumed run cannot double-finalize.
  */
 export async function finalizeTournamentResult(input: {
   riotMatchId: RiotMatchId;
@@ -61,18 +61,11 @@ export async function finalizeTournamentMatch(
   }
 
   const alreadyReported = observedGame.state === "VERIFIED";
-  await finalizeAndPublishManagedCustomResult(
-    prisma,
-    matchData,
-    matchDataSource,
-  );
+  await finalizeManagedCustomResult(prisma, matchData, matchDataSource);
 
-  // Reported separately from the outcome because they are different claims:
-  // whether THIS run finalized the result, and whether a Custom Night snapshot
-  // went out at all. An observed game always republishes its night's
-  // snapshot, which is safe precisely because the snapshot is current state
-  // rather than an event.
+  // The retired Discord Activity was the only Custom Night snapshot audience,
+  // so no snapshot is broadcast. The frozen result schema keeps the field.
   return alreadyReported
-    ? { outcome: "already-finalized", publishedNight: true }
-    : { outcome: "finalized", publishedNight: true };
+    ? { outcome: "already-finalized", publishedNight: false }
+    : { outcome: "finalized", publishedNight: false };
 }

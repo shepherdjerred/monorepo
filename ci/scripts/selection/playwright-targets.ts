@@ -25,10 +25,6 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
     reportDirectory: "shepherdjerred__alert-dashboard",
   },
   {
-    package: "@scout-for-lol/activity",
-    reportDirectory: "scout-for-lol__activity",
-  },
-  {
     package: "@scout-for-lol/app",
     reportDirectory: "scout-for-lol__app",
   },
@@ -83,7 +79,6 @@ const SJER_RED_INPUTS = [
 ] as const;
 
 const SCOUT_TARGETS = new Set([
-  "@scout-for-lol/activity",
   "@scout-for-lol/app",
   "@scout-for-lol/design-system",
 ]);
@@ -98,7 +93,6 @@ const SITE_ARTIFACT_TARGETS = new Set([
 const SYNTHETIC_WORKSPACE_DEPENDENCIES: Readonly<
   Record<string, readonly string[]>
 > = {
-  "@scout-for-lol/activity": ["@shepherdjerred/birmel"],
   "@scout-for-lol/app": ["@shepherdjerred/birmel"],
 };
 

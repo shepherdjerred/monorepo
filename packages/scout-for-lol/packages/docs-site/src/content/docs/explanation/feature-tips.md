@@ -6,10 +6,9 @@ sidebar:
 ---
 
 Scout has more features than any one server uses. Competitions, scheduled
-reports, queue filters, the Hall of Fame, duels, dares, custom nights,
-tournament lobbies — most servers find two or three and never learn the rest
-exist. Tips are how Scout mentions the others without turning into an
-advertisement.
+reports, queue filters, the Hall of Fame, duels, dares — most servers find
+two or three and never learn the rest exist. Tips are how Scout mentions the
+others without turning into an advertisement.
 
 ## What a tip looks like
 

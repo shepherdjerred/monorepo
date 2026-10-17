@@ -45,7 +45,7 @@ export function ExploreSuggestionChips(props: {
       competitionsEnabled: (guildsQuery.data?.length ?? 0) > 0,
       reportsEnabled: (guildsQuery.data?.length ?? 0) > 0,
       customsEnabled:
-        guildsQuery.data?.some((g) => g.customNightsEnabled) ?? false,
+        guildsQuery.data?.some((g) => g.customsHistoryAvailable) ?? false,
       hallOfFameEnabled:
         guildsQuery.data?.some((g) => g.hallOfFameEnabled) ?? false,
     }),

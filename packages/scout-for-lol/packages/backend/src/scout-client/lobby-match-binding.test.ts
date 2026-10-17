@@ -33,10 +33,6 @@ vi.mock("#src/database/index.ts", () => ({
   },
 }));
 
-vi.mock("#src/customs/socket.ts", () => ({
-  publishCustomNightSnapshot: vi.fn(),
-}));
-
 const { bindObservedLobby, bindObservedMatch, projectObservedGameState } =
   await import("./lobby-binding.ts");
 const participantPuuids = Array.from(

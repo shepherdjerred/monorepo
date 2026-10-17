@@ -244,7 +244,6 @@ function user(discordId: DiscordAccountId): User {
 function caller(discordId: DiscordAccountId = ACTOR): TrpcCaller {
   return appRouter.createCaller({
     user: user(discordId),
-    activitySession: null,
     webSession: {
       discordId,
       csrfToken: "csrf",

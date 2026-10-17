@@ -119,7 +119,6 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "bucks_transfers_enabled",
   "challenge_runs_enabled",
   "clash_surface",
-  "custom_nights_enabled",
   "dare_notifications_enabled",
   "debug",
   "duels_enabled",

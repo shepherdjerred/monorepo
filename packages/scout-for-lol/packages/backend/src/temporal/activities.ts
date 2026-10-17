@@ -69,16 +69,6 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
 
 function createInteractiveActivities(): ScoutTemporalActivityGroups["interactive"] {
   return {
-    publishCustomNight: async (input) => {
-      await heartbeatWhile(
-        { nightId: input.nightId, phase: "publishing-customs" },
-        async () => {
-          const { publishDurableCustomNight } =
-            await import("#src/customs/operations/publication.ts");
-          await publishDurableCustomNight(input);
-        },
-      );
-    },
     probeQueue,
     runInteractive: async (input) => {
       const { runScoutInteractiveActivity } =
@@ -164,9 +154,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await import("#src/reports/discord-dispatcher.ts");
           await reconcileReportDeliveries();
           const { prisma } = await import("#src/database/index.ts");
-          const { findPendingCustomWork } =
-            await import("#src/customs/operations/reconciliation.ts");
-          const customWork = await findPendingCustomWork(prisma);
           const { findQueuedScoutTemporalWork } =
             await import("#src/temporal/work-store.ts");
           const jobs = await prisma.initialMatchHistoryImport.findMany({
@@ -212,7 +199,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             return { kind, databaseRunId: run.id };
           });
           return {
-            ...customWork,
             initialHistoryPuuids: jobs.map((job) => job.puuid),
             detachedWorks: parsedDetachedWorks,
             interactiveRuns: parsedInteractiveRuns,
@@ -237,7 +223,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           "competition-scheduled-updates",
           "weekly-bucks-leaderboard",
           "outreach",
-          "custom-nights-expiry",
         ].includes(input.kind)
           ? withOrchestrationProducer(async () => {
               await runBackgroundJobByKind(nonSupportInput);
@@ -391,18 +376,7 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
 }
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {
   return {
-    gateway: {
-      probeQueue,
-      executeCustomOperation: async (input) =>
-        await heartbeatWhile(
-          { operationId: input.operationId, phase: "executing-customs" },
-          async () => {
-            const { executeDurableCustomOperation } =
-              await import("#src/customs/operations/execution.ts");
-            return await executeDurableCustomOperation(input);
-          },
-        ),
-    },
+    gateway: { probeQueue },
     realtime: createRealtimeActivities(),
     interactive: createInteractiveActivities(),
     background: createBackgroundActivities(),

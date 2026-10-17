@@ -22,10 +22,9 @@ Application state (subscriptions, competitions, guilds) is PostgreSQL 18
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
 
-Product announcements and Customs operations commit their intent and recoverable
-Workflow start in PostgreSQL. Announcements freeze their content and chart
-artifacts in S3 before delivery; Customs checkpoints voice effects through the
-gateway worker. Ambiguous external effects require operator reconciliation.
+Product announcements commit their intent and recoverable Workflow start in
+PostgreSQL. Announcements freeze their content and chart artifacts in S3 before
+delivery. Ambiguous external effects require operator reconciliation.
 
 ## Support messages
 
@@ -1588,22 +1587,24 @@ intent of the match, so a minted hall intent is driven by the same run with no
 extra wiring. An intent the fan-out misses stays `pending` until a
 `scoutPipelineReconciliationWorkflow` run drives it.
 
-## Beta Customs operations
+## Beta Customs history
 
-Scout Customs reuses this process's Discord gateway client, OAuth client
-secret, JWT signing secret, Match-V5 cursor, Scout Client ingress, and S3
-ingest boundary. It has no second bot or manual winner endpoint.
+Customs no longer has a live surface. The Discord Activity, its
+`/api/customs` auth and socket routes, night lifecycle, recruitment, voice
+operations, the `custom_nights_enabled` flag, and the `custom-nights-expiry`
+schedule are retired. No code path creates a night or moves voice members.
 
-Before enabling `custom_nights_enabled`, configure the existing beta Discord
-Activity at `/customs/`, grant the beta install Manage Channels and Move
-Members, and enable `scout_client_ingestion` for participating users. A player
-creates the normal custom lobby in League. A paired client then binds the exact
-observed roster to the pending Customs game. Production hard-disables the
-Customs flag and its site archive rejects any `/customs/index.html` artifact.
+The retained `CustomNight`, `CustomGame`, and `CustomAuditEvent` rows stay
+readable. `trpc/router/customs-history.router.ts` serves the read-only
+`/app/g/<guild-id>/customs` page, and the server navigation shows it only for
+guilds that have retained nights. Match finalization and Scout Client lobby
+binding still project a result onto a custom game that was already bound, but
+no snapshot is broadcast anywhere.
 
-The beta `custom-nights-expiry` Temporal schedule closes unfinished nights
-after their 12-hour database deadline, writes an audit event, and releases the
-active-night pointer. It does not verify a game or synthesize a Riot result.
+The `scoutCustomOperationWorkflow` and `scoutCustomPublicationWorkflow` types
+stay registered because the ingestion-reconciliation Workflow still references
+them. The backend no longer produces either child or registers their
+Activities, so neither can start.
 
 The scoped privacy command refuses an active night or pending voice work:
 
@@ -1679,8 +1680,7 @@ Discord): `bun scripts/smoke/voice-probe.ts --list-devices`, then
 
 ## How web requests read Discord
 
-No HTTP, tRPC, or Discord Activity request reads the gateway client's guild
-cache. That cache cannot answer honestly on a request path — an unconnected or
+No HTTP or tRPC request reads the gateway client's guild cache. That cache cannot answer honestly on a request path — an unconnected or
 still-backfilling client looks exactly like "Scout is not installed there" —
 so web-serving code goes through two application ports instead, and a pod that
 never connects a gateway serves the same answers as one that did:
@@ -1699,10 +1699,9 @@ never connects a gateway serves the same answers as one that did:
   rather than read from a cached `GuildMember`.
 
 Three outcomes stay distinct on every path: Discord unreachable
-(`SERVICE_UNAVAILABLE`, or 503 on the Activity surface), Scout not installed
-(`NOT_FOUND` / 403), and the caller not authorized (`FORBIDDEN`). Failing to
-reach Discord must never be reported as either of the other two;
-`trpc/discord-upstream.ts` and `customs/activity-auth.ts` enforce that.
+(`SERVICE_UNAVAILABLE`), Scout not installed (`NOT_FOUND` / 403), and the
+caller not authorized (`FORBIDDEN`). Failing to reach Discord must never be
+reported as either of the other two; `trpc/discord-upstream.ts` enforces that.
 
 Parallel web procedures share one in-flight guild membership read per user
 before its five-minute success cache is populated. Failures remain errors and
@@ -1754,10 +1753,9 @@ directly. Two rules come with it:
 
 `tips/tip-catalog.ts` separates active `FeatureTipKey` values from
 `PersistedFeatureTipKey`, which also recognizes explicitly retired keys.
-Impression reads use `parsePersistedTipKey`: a retired `tournament-lobbies`
-impression keeps its original key, audience, and timestamp, still contributes
-to cooldown, and is not relabeled as the distinct `custom-nights` feature.
-Retired keys are never selection candidates. New presentations and claims
+Impression reads use `parsePersistedTipKey`: a retired `tournament-lobbies` or
+`custom-nights` impression keeps its original key, audience, and timestamp and
+still contributes to cooldown. Retired keys are never selection candidates. New presentations and claims
 remain active-only; unknown persisted keys still fail loudly.
 
 When removing a tip from the active catalog, retain its key in the explicit
@@ -1834,9 +1832,9 @@ Notes that are easy to get wrong:
   acknowledged a heartbeat once the five-minute startup grace period ends — so
   skipping the login without saying so is a crash loop, not a missing feature.
 - **`gateway` owns the gateway Activity queue.** Its Temporal client connects
-  before Discord; the worker starts after shard readiness so Customs uses
-  authoritative voice state. Adding that worker wakes and rebuilds the initial
-  client-only runtime. Commands start Workflows on their existing queues.
+  before Discord; the worker starts after shard readiness and answers queue
+  probes. Adding that worker wakes and rebuilds the initial client-only
+  runtime. Commands start Workflows on their existing queues.
 - **Recovered Explore activities register with the application run manager.**
   A voice or Discord turn starts on the gateway but executes on the
   `interactive` worker; rehydrating it there holds the same per-conversation

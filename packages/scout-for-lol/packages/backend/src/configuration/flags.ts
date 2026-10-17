@@ -158,7 +158,6 @@ export type FlagName =
   | "betting_settlement_dm_enabled"
   | "challenge_runs_enabled"
   | "clash_surface"
-  | "custom_nights_enabled"
   | "debug"
   | "duels_enabled"
   | "explore_creation_enabled"
@@ -192,7 +191,7 @@ export type PolicyFlagName = AssertFlagNameSubset<FlagName>;
  *
  * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
  * (wallets, betting, parlays, transfers, and the Dares funded from them),
- * custom games and duels, the voice assistant, which captures audio, and
+ * duels, the voice assistant, which captures audio, and
  * Scout Client capture and enrichment while its rollout remains beta-only.
  * Everything else is governed by its
  * ordinary flag, so a surface that is merely beta today stays a Flipt
@@ -206,7 +205,6 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "bucks_transfers_enabled",
     "bucks_dares_enabled",
     "dare_notifications_enabled",
-    "custom_nights_enabled",
     "duels_enabled",
     "voice_assistant_enabled",
     "scout_client_ingestion",
@@ -263,12 +261,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     ],
   },
   duels_enabled: {
-    default: false,
-    overrides: [
-      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
-    ],
-  },
-  custom_nights_enabled: {
     default: false,
     overrides: [
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },

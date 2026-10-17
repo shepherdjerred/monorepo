@@ -12,14 +12,14 @@ import type { ScoutPipelineActivities } from "@scout-for-lol/temporal/activities
  * `await import(...)` calls are type edges even though they are not runtime
  * edges: the report renderer, the Discord client, the Riot client, Prisma and
  * the betting and progression slices behind them all entered
- * `@scout-for-lol/app`'s and `@scout-for-lol/activity`'s type programs.
+ * `@scout-for-lol/app`'s type program.
  *
  * That is not merely wasteful. Backend sources are typechecked under the
  * backend's own tsconfig, whose `src/reset.d.ts` loads
  * `@total-typescript/ts-reset`; a browser app's tsconfig includes only its own
  * `src/**`, so the reset is absent and backend code relying on it stops
  * compiling — which is precisely how a `.filter(Boolean)` narrowing in the Dare
- * lifecycle broke `@scout-for-lol/activity` when these three types were first
+ * lifecycle broke a browser app's typecheck when these three types were first
  * declared beside their factories. Keeping the types here keeps each factory
  * reachable only from `activities.ts` and `realtime-activities.ts`, which no
  * other package's program includes.

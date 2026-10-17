@@ -10,7 +10,6 @@ import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
-import type { ScoutCustomActivities } from "@scout-for-lol/temporal";
 import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
 import type {
   ScoutBackgroundActivities,
@@ -158,8 +157,7 @@ type RealtimeActivities = Pick<
 type InteractiveActivities = Pick<
   ScoutTemporalActivities,
   "runInteractive" | "persistInteractiveOutcome" | "probeQueue"
-> &
-  Pick<ScoutCustomActivities, "publishCustomNight">;
+>;
 type BackgroundActivities = Pick<
   ScoutTemporalActivities,
   | "fetchInitialHistoryPage"
@@ -192,8 +190,7 @@ type LakeActivities = Pick<
   ScoutLakeActivities;
 
 export type ScoutTemporalActivityGroups = {
-  readonly gateway: Pick<ScoutCustomActivities, "executeCustomOperation"> &
-    Pick<ScoutTemporalActivities, "probeQueue">;
+  readonly gateway: Pick<ScoutTemporalActivities, "probeQueue">;
   readonly realtime: RealtimeActivities;
   readonly interactive: InteractiveActivities;
   readonly background: BackgroundActivities;

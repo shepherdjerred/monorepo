@@ -23,7 +23,7 @@ import {
   confirmTipClaim,
   releaseTipClaim,
 } from "#src/tips/tip-state.ts";
-import { parseTipKey } from "#src/tips/tip-catalog.ts";
+import { parsePersistedTipKey } from "#src/tips/tip-catalog.ts";
 import { withFeatureTip } from "#src/tips/tip-render.ts";
 import { withSupportAction } from "#src/support/discord.ts";
 import { getSubjectIntent } from "#src/database/durable/intent-repository.ts";
@@ -300,7 +300,7 @@ export async function settleNotificationTip(
   if (presentation?.tipKey == null) return;
   const audience = {
     serverId: DiscordGuildIdSchema.parse(presentation.serverId),
-    tipKey: parseTipKey(presentation.tipKey),
+    tipKey: parsePersistedTipKey(presentation.tipKey),
   };
   const cleared = await database.notificationPresentation.updateMany({
     where: { intentKey: intent.key, tipKey: presentation.tipKey },

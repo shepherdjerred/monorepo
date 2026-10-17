@@ -13,17 +13,16 @@ describe("persisted tip catalog", () => {
     }
   });
 
-  test("recognizes retired history without enabling new presentations", () => {
-    expect(parsePersistedTipKey("tournament-lobbies")).toBe(
-      "tournament-lobbies",
-    );
-    expect(() => parseTipKey("tournament-lobbies")).toThrow(
-      "Unknown persisted feature tip key",
-    );
-    expect(FEATURE_TIPS.map(({ key }) => key)).not.toContain(
-      "tournament-lobbies",
-    );
-  });
+  test.each(["tournament-lobbies", "custom-nights"])(
+    "recognizes retired %s history without enabling new presentations",
+    (key) => {
+      expect(parsePersistedTipKey(key)).toBe(key);
+      expect(() => parseTipKey(key)).toThrow(
+        "Unknown persisted feature tip key",
+      );
+      expect(FEATURE_TIPS.map((tip) => tip.key)).not.toContain(key);
+    },
+  );
 
   test.each([
     "not-a-real-tip",

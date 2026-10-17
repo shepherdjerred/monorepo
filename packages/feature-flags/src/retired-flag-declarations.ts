@@ -171,4 +171,9 @@ export const retiredFlagDeclarations = [
     namespace: "alert-dashboard",
     key: "ops-digest-email-enabled",
   },
+  // Scout Customs live nights were retired with the Discord Activity; the
+  // read-only history page is gated by retained data, not this flag. It was a
+  // base inventory flag with a production override, so it exists in both.
+  { environment: "beta", namespace: "scout", key: "custom_nights_enabled" },
+  { environment: "prod", namespace: "scout", key: "custom_nights_enabled" },
 ] as const;

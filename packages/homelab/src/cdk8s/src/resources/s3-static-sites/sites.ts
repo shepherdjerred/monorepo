@@ -68,17 +68,6 @@ const storybookCsp = [
   "form-action 'none'",
 ].join("; ");
 
-const scoutActivityCsp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https://cdn.discordapp.com data:",
-  "connect-src 'self'",
-  "frame-ancestors https://discord.com https://*.discord.com https://*.discordsays.com",
-  "base-uri 'self'",
-  "form-action 'none'",
-].join("; ");
-
 /**
  * Starlight's Pagefind search loads a same-origin WASM module in a web worker.
  * Mermaid diagrams are initialized by Astro's generated inline module script.
@@ -218,22 +207,11 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     probes: [
       { endpoint: "app", path: "/app/", module: "http_2xx" },
-      { endpoint: "customs", path: "/customs/", module: "http_2xx" },
       { endpoint: "docs", path: "/docs/", module: "http_2xx" },
       ...scoutDocsProbes,
       { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
     ],
-    spaFallbacks: [
-      { pathPrefix: "/app/*", fallbackPath: "/app/index.html" },
-      {
-        pathPrefix: "/customs/*",
-        fallbackPath: "/customs/index.html",
-        responseHeaders: {
-          "Content-Security-Policy": scoutActivityCsp,
-          "X-Frame-Options": null,
-        },
-      },
-    ],
+    spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
   },
   {

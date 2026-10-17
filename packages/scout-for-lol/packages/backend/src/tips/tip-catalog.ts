@@ -69,11 +69,6 @@ export const FEATURE_TIPS: readonly FeatureTip[] = [
     flags: ["betting_enabled", "bucks_transfers_enabled"],
     text: "Tip: `/bb transfer` sends Bryan Bucks to someone else in your server.",
   },
-  {
-    key: "custom-nights",
-    flags: ["custom_nights_enabled"],
-    text: "Tip: custom nights organise an in-house lobby with balanced teams.",
-  },
 ];
 
 /**
@@ -93,7 +88,10 @@ export function parseTipKey(value: string): FeatureTipKey {
 }
 
 /** Removed features retain their original impression history, not eligibility. */
-const RETIRED_FEATURE_TIP_KEYS = ["tournament-lobbies"] as const;
+const RETIRED_FEATURE_TIP_KEYS = [
+  "tournament-lobbies",
+  "custom-nights",
+] as const;
 
 export type PersistedFeatureTipKey =
   FeatureTipKey | (typeof RETIRED_FEATURE_TIP_KEYS)[number];

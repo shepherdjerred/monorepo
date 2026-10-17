@@ -26,7 +26,6 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   bucks_transfers_enabled: false,
   challenge_runs_enabled: false,
   clash_surface: false,
-  custom_nights_enabled: false,
   dare_notifications_enabled: false,
   debug: false,
   duels_enabled: false,

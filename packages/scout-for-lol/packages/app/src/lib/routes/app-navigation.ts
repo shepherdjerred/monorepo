@@ -140,7 +140,7 @@ export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
 
 export function visibleGuildNavigationItems(
   canRead: (permission: Permission) => boolean,
-  customNightsEnabled = false,
+  customsHistoryAvailable = false,
   hallOfFameEnabled = false,
 ): readonly GuildNavigationItem[] {
   return GUILD_NAVIGATION_ITEMS.filter(
@@ -148,7 +148,7 @@ export function visibleGuildNavigationItems(
       canRead(item.permission) &&
       (item.additionalPermissions?.every((permission) => canRead(permission)) ??
         true) &&
-      (item.feature !== "customs" || customNightsEnabled) &&
+      (item.feature !== "customs" || customsHistoryAvailable) &&
       (item.feature !== "hall_of_fame" || hallOfFameEnabled),
   );
 }
@@ -156,12 +156,12 @@ export function visibleGuildNavigationItems(
 /** The section used when a server workspace opens at its index route. */
 export function resolveGuildWorkspaceLanding(
   canRead: (permission: Permission) => boolean,
-  customNightsEnabled = false,
+  customsHistoryAvailable = false,
   hallOfFameEnabled = false,
 ): string | undefined {
   return visibleGuildNavigationItems(
     canRead,
-    customNightsEnabled,
+    customsHistoryAvailable,
     hallOfFameEnabled,
   )[0]?.to;
 }

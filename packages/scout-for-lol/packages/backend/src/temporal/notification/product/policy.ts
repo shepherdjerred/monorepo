@@ -9,31 +9,6 @@ import {
 } from "#src/temporal/notification/product/announcement.ts";
 type Suppression = NotificationPolicySuppressionReason | undefined;
 
-async function recruitmentSuppression(
-  record: ProductNotificationIntentRecord,
-  effect: Extract<ProductAnnouncementEffect, { kind: "customs-recruitment" }>,
-  guildId: DiscordGuildId,
-): Promise<Suppression> {
-  if (!(await isPolicyEnabled("custom_nights_enabled", { server: guildId })))
-    return "feature-disabled";
-  const night = await prisma.customNight.findUnique({
-    where: { id: effect.nightId },
-  });
-  if (night === null || night.state === "ENDED") return "recipient-preference";
-  if (
-    night.recruitmentGeneration !== effect.generation ||
-    night.recruitmentMessageId !== null
-  )
-    return "recipient-preference";
-  if (
-    night.guildId !== guildId ||
-    record.intent.target.kind !== "channel" ||
-    night.launchChannelId !== record.intent.target.channelId
-  )
-    throw new Error("Recruitment announcement disagrees with its night");
-  return undefined;
-}
-
 async function competitionSuppression(
   record: ProductNotificationIntentRecord,
   effect: Extract<ProductAnnouncementEffect, { kind: "competition" }>,
@@ -76,7 +51,9 @@ export async function productAnnouncementSuppression(
         ? undefined
         : "feature-disabled";
     case "customs-recruitment":
-      return await recruitmentSuppression(record, effect, guildId);
+      // Customs live nights were retired with the Discord Activity. Retained
+      // recruitment intents still parse, but none may announce a night.
+      return "feature-disabled";
     case "competition":
       return await competitionSuppression(record, effect, guildId);
     case "outreach":

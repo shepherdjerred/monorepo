@@ -2,7 +2,6 @@ import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account
 import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import { RegionSchema } from "#src/model/riot/league-account.ts";
-import { AccountIdSchema } from "#src/model/competitions/competition.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -206,85 +205,6 @@ export const CustomNightSnapshotSchema = z.strictObject({
 });
 export type CustomNightSnapshot = z.infer<typeof CustomNightSnapshotSchema>;
 
-export const CustomResolveVoiceOperationInputSchema = z.strictObject({
-  nightId: z.uuid(),
-  expectedRevision: z.int().nonnegative(),
-  operationId: z.string().min(1),
-  evidence: z.string().trim().min(20).max(1000),
-  answer: z.discriminatedUnion("kind", [
-    z.strictObject({
-      kind: z.literal("channel-created"),
-      channelId: DiscordChannelIdSchema,
-    }),
-    z.strictObject({ kind: z.literal("confirmed-unsent") }),
-  ]),
-});
-export type CustomResolveVoiceOperationInput = z.infer<
-  typeof CustomResolveVoiceOperationInputSchema
->;
-
-export const CustomSnapshotEnvelopeSchema = z.strictObject({
-  kind: z.literal("snapshot"),
-  sequence: z.number().int().nonnegative(),
-  snapshot: CustomNightSnapshotSchema.nullable(),
-});
-export const CustomRevisionInputSchema = z.strictObject({
-  nightId: z.uuid(),
-  expectedRevision: z.number().int().nonnegative(),
-});
-export const CUSTOMS_DISCLOSURE_VERSION = "2026-08-29";
-export const CustomGuildInputSchema = z.strictObject({
-  guildId: DiscordGuildIdSchema,
-});
-export const CustomCreateNightInputSchema = z.strictObject({});
-export const CustomJoinNightInputSchema = CustomRevisionInputSchema;
-export const CustomSetAvailabilityInputSchema =
-  CustomRevisionInputSchema.extend({ availability: CustomAvailabilitySchema });
-export const CustomSetAwayInputSchema = CustomRevisionInputSchema.extend({
-  awayUntil: z.iso.datetime().nullable(),
-});
-export const CustomTargetParticipantInputSchema =
-  CustomRevisionInputSchema.extend({ discordId: DiscordAccountIdSchema });
-export const CustomAddParticipantInputSchema =
-  CustomTargetParticipantInputSchema;
-export const CustomSetHeldInputSchema =
-  CustomTargetParticipantInputSchema.extend({ held: z.boolean() });
-export const CustomSelectAccountInputSchema = CustomRevisionInputSchema.extend({
-  accountId: AccountIdSchema,
-  targetDiscordId: DiscordAccountIdSchema.optional(),
-});
-export const CustomPrepareGameInputSchema = CustomRevisionInputSchema.extend({
-  rosterMode: CustomRosterModeSchema,
-  selectedDiscordIds: z.array(DiscordAccountIdSchema).max(10),
-  map: CustomMapSchema,
-  pickMode: CustomPickModeSchema,
-});
-export const CustomSelectCaptainsInputSchema = z.union([
-  CustomRevisionInputSchema,
-  CustomRevisionInputSchema.extend({
-    captainADiscordId: DiscordAccountIdSchema,
-    captainBDiscordId: DiscordAccountIdSchema,
-  }),
-]);
-export const CustomPickPlayerInputSchema = CustomTargetParticipantInputSchema;
-export const CustomSubstituteInputSchema = CustomRevisionInputSchema.extend({
-  outgoingDiscordId: DiscordAccountIdSchema,
-  incomingDiscordId: DiscordAccountIdSchema,
-});
-export const CustomAssignTeamInputSchema =
-  CustomTargetParticipantInputSchema.extend({ team: CustomTeamSchema });
-export const CustomSetCohostInputSchema =
-  CustomTargetParticipantInputSchema.extend({ cohost: z.boolean() });
-export const CustomVoiceOverrideInputSchema = CustomRevisionInputSchema.extend({
-  enabled: z.boolean(),
-});
-export const CustomIntermissionInputSchema = CustomRevisionInputSchema.extend({
-  choice: CustomIntermissionChoiceSchema,
-});
-export const CustomVoidGameInputSchema = CustomRevisionInputSchema.extend({
-  reason: z.string().trim().min(1).max(500),
-});
-
 export const CustomAuditEventSchema = z.strictObject({
   id: z.uuid(),
   nightId: z.uuid(),
@@ -310,32 +230,3 @@ export const CustomHistorySchema = z.strictObject({
 });
 export type CustomHistory = z.infer<typeof CustomHistorySchema>;
 export const CustomHistoryListSchema = z.array(CustomNightSnapshotSchema);
-
-export const CustomActivityClaimsSchema = z.strictObject({
-  sub: z.string().min(1),
-  guildId: DiscordGuildIdSchema,
-  channelId: DiscordChannelIdSchema,
-  instanceId: z.string().min(1),
-  applicationId: z.string().min(1),
-  type: z.literal("customs_activity"),
-});
-export type CustomActivityClaims = z.infer<typeof CustomActivityClaimsSchema>;
-export const CustomAuthExchangeInputSchema = z.strictObject({
-  code: z.string().min(1),
-  guildId: DiscordGuildIdSchema,
-  channelId: DiscordChannelIdSchema,
-  instanceId: z.string().min(1),
-});
-export const CustomAuthRefreshInputSchema = z.strictObject({
-  activityToken: z.string().min(1),
-  discordRefreshToken: z.string().min(1),
-});
-export const CustomAuthResponseSchema = z.strictObject({
-  discordAccessToken: z.string().min(1),
-  discordRefreshToken: z.string().min(1),
-  activityToken: z.string().min(1),
-  expiresAt: z.iso.datetime(),
-  refreshUntil: z.iso.datetime(),
-  contractHash: z.string().min(1),
-});
-export type CustomAuthResponse = z.infer<typeof CustomAuthResponseSchema>;

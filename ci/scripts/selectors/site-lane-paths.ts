@@ -117,7 +117,7 @@ export const sitePaths = {
     "scripts/release/scout-site-release.ts",
     "scripts/lib/pin-candidates.ts",
     "scripts/lib/run.ts",
-    "scripts/lib/scout/scout-customs-artifact.ts",
+    "scripts/lib/scout/scout-release-entrypoints.ts",
     "scripts/lib/s3-static-site.ts",
     "scripts/lib/scout/scout-release-state.ts",
     "scripts/lib/scout/scout-site-stage-bucket.ts",

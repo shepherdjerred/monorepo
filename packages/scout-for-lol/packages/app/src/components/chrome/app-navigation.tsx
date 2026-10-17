@@ -386,7 +386,7 @@ export function AppNavigation() {
 
   const guildItems = visibleGuildNavigationItems(
     (permission) => perms.can(permission.resource, permission.action),
-    selectedGuild?.customNightsEnabled ?? false,
+    selectedGuild?.customsHistoryAvailable ?? false,
     selectedGuild?.hallOfFameEnabled ?? false,
   );
 

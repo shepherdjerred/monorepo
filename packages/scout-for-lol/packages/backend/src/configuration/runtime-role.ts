@@ -27,7 +27,7 @@
  *   the Hey Scout voice assistant. Voice is gateway-coupled by design (it reads
  *   an active voice connection's audio), which makes this role explicitly
  *   stateful and unsplittable from the shard. Its `gateway` Activity worker
- *   performs checkpointed Customs voice operations after `clientReady`.
+ *   starts after `clientReady`.
  *   Discord authoring reserves a persisted Explore run and
  *   waits for the interactive Activity's result. Beta declares no lake access;
  *   development and production keep their compatibility capability.
@@ -92,18 +92,6 @@ export type ScoutRuntimeCapabilities = {
   readonly championAssets: boolean;
   /** Verify the pinned voice models and load the Realtime credential. */
   readonly voiceAssistant: boolean;
-  /**
-   * Can read members' live voice state — which voice channel someone is in.
-   *
-   * Gateway-only, and not for a reason REST can route around: voice state
-   * exists only as VOICE_STATE_UPDATE events on a shard. A REST guild-member
-   * payload carries roles and a nickname and no voice channel at all, so on a
-   * gatewayless process `member.voice.channelId` is null for everyone. Code
-   * that moves people between voice channels reads that field to decide whom
-   * to move, so without this capability it does not fail — it moves nobody and
-   * reports success. Anything depending on it must refuse loudly instead.
-   */
-  readonly voiceStateAccess: boolean;
   /**
    * Needs the DuckDB report-lake directory mounted and holding a published
    * build.
@@ -191,7 +179,6 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   combined: {
     championAssets: true,
     voiceAssistant: true,
-    voiceStateAccess: true,
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
@@ -206,7 +193,6 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   application: {
     championAssets: true,
     voiceAssistant: false,
-    voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
@@ -221,7 +207,6 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   gateway: {
     championAssets: true,
     voiceAssistant: true,
-    voiceStateAccess: true,
     // The dev/prod compatibility topology retains lake access. Beta overrides
     // it below: Discord Explore and Dare authoring hand off to interactive
     // Activities, just as web and voice do, and gateway owns no lake reader.
@@ -239,7 +224,6 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   "activity-worker": {
     championAssets: true,
     voiceAssistant: false,
-    voiceStateAccess: false,
     // Reads the lake (report runs, parlay generation, summoner-index
     // backfill) and writes its staging directories (match,
     // prematch and timeline ingest). It does NOT publish builds — see the

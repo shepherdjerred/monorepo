@@ -8,7 +8,7 @@ import {
 import type { ScoutMatchPipelineStateResult } from "@scout-for-lol/temporal/activity-contracts";
 import { awardBucksForMatch } from "#src/betting/accounts/earnings.ts";
 import configuration from "#src/configuration.ts";
-import { finalizeAndPublishManagedCustomResult } from "#src/customs/riot-result-publication.ts";
+import { finalizeManagedCustomResult } from "#src/customs/riot-results.ts";
 import { prisma } from "#src/database/index.ts";
 import { readLegacyMatchCompletion } from "#src/temporal/match/legacy-completion.ts";
 import { fetchTimelineForDuelProgression } from "#src/league/tasks/postmatch/match-report-standard.ts";
@@ -81,7 +81,7 @@ export async function reconcileProcessedClientBinding(
   }
 
   const context = await resolveScoutMatchContext(riotMatchId);
-  await finalizeAndPublishManagedCustomResult(
+  await finalizeManagedCustomResult(
     prisma,
     context.matchData,
     context.matchDataSource,

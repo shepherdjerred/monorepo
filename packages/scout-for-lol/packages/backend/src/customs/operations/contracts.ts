@@ -38,13 +38,3 @@ export const CustomOperationProgressSchema = z.strictObject({
 export type CustomOperationProgress = z.infer<
   typeof CustomOperationProgressSchema
 >;
-export function initialCustomOperationProgress(): CustomOperationProgress {
-  return {
-    version: 1,
-    step: "Queued",
-    channels: {},
-    creating: null,
-    moved: [],
-    deleted: [],
-  };
-}

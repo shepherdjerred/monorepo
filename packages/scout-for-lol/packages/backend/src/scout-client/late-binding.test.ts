@@ -29,8 +29,8 @@ vi.mock("#src/database/index.ts", () => ({ prisma: mocks.prisma }));
 vi.mock("#src/evidence/admission.ts", () => ({
   matchEffectsAllowed: mocks.effectsAllowed,
 }));
-vi.mock("#src/customs/riot-result-publication.ts", () => ({
-  finalizeAndPublishManagedCustomResult: mocks.finalizeCustom,
+vi.mock("#src/customs/riot-results.ts", () => ({
+  finalizeManagedCustomResult: mocks.finalizeCustom,
 }));
 vi.mock("#src/betting/accounts/earnings.ts", () => ({
   awardBucksForMatch: mocks.awardBucks,

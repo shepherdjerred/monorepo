@@ -192,7 +192,7 @@ describe("tip claims", () => {
 });
 
 describe("persisted tip keys", () => {
-  test("preserves retired history separately from active custom nights", async () => {
+  test("preserves retired history without making it eligible again", async () => {
     const audience = { serverId: SERVER_ID };
     const shownAt = new Date("2030-01-09T23:00:00Z");
     const retired = await db.featureTipImpression.create({
@@ -204,29 +204,22 @@ describe("persisted tip keys", () => {
         claimedAt: null,
       },
     });
-    addFlagOverride("custom_nights_enabled", true, { server: SERVER_ID });
-    try {
-      const shown = await shownTipKeys(audience, db);
-      expect(shown).toEqual(new Set(["tournament-lobbies"]));
-      expect(await lastTipShownAt(audience, db)).toEqual(shownAt);
-      const available = await eligibleTips({
-        serverId: SERVER_ID,
-        alreadyShown: shown,
-        db,
-      });
-      expect(available.map(({ key }) => key)).toContain("custom-nights");
-      expect(available.map(({ key }) => key)).not.toContain(
-        "tournament-lobbies",
-      );
-      expect(
-        await db.featureTipImpression.findUnique({ where: { id: retired.id } }),
-      ).toEqual(retired);
-    } finally {
-      resetFlagOverrides("custom_nights_enabled");
-    }
+    const shown = await shownTipKeys(audience, db);
+    expect(shown).toEqual(new Set(["tournament-lobbies"]));
+    expect(await lastTipShownAt(audience, db)).toEqual(shownAt);
+    const available = await eligibleTips({
+      serverId: SERVER_ID,
+      alreadyShown: shown,
+      db,
+    });
+    expect(available.map(({ key }) => key)).not.toContain("tournament-lobbies");
+    expect(available.map(({ key }) => key)).not.toContain("custom-nights");
+    expect(
+      await db.featureTipImpression.findUnique({ where: { id: retired.id } }),
+    ).toEqual(retired);
   });
 
-  test("both retired and active impressions contribute to the latest timestamp", async () => {
+  test("every retired impression contributes to the latest timestamp", async () => {
     const audience = { serverId: SERVER_ID };
     await db.featureTipImpression.createMany({
       data: [

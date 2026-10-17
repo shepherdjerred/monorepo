@@ -72,19 +72,31 @@ export const guildRouter = router({
       list.push(permission);
       grantsByGuild.set(row.serverId, list);
     }
+    // Customs live nights are retired; a guild keeps its read-only history
+    // only when it actually has retained nights. One query for every guild.
+    const customsHistoryNights = await prisma.customNight.findMany({
+      where: { guildId: { in: present.map((g) => g.id) } },
+      distinct: ["guildId"],
+      select: { guildId: true },
+    });
+    const customsHistoryGuildIds = new Set(
+      customsHistoryNights.map((night) => night.guildId),
+    );
     const featureAvailabilityByGuild = new Map(
       await Promise.all(
         present.map(async (guild) => {
           const guildId = DiscordGuildIdSchema.parse(guild.id);
-          const [customNightsEnabled, hallOfFameEnabled, mvpVotesEnabled] =
-            await Promise.all([
-              isPolicyEnabled("custom_nights_enabled", { server: guildId }),
-              isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
-              isPolicyEnabled("mvp_votes_enabled", { server: guildId }),
-            ]);
+          const [hallOfFameEnabled, mvpVotesEnabled] = await Promise.all([
+            isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
+            isPolicyEnabled("mvp_votes_enabled", { server: guildId }),
+          ]);
           return [
             guildId,
-            { customNightsEnabled, hallOfFameEnabled, mvpVotesEnabled },
+            {
+              customsHistoryAvailable: customsHistoryGuildIds.has(guildId),
+              hallOfFameEnabled,
+              mvpVotesEnabled,
+            },
           ] as const;
         }),
       ),

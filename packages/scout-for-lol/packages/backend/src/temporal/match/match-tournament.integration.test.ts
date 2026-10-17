@@ -20,19 +20,10 @@ vi.mock("#src/database/index.ts", async () => {
   return { ...actual, prisma };
 });
 
-const published = vi.hoisted((): { nightIds: string[] } => ({ nightIds: [] }));
-vi.mock("#src/customs/socket.ts", () => ({
-  publishCustomNightSnapshot: (nightId: string) => {
-    published.nightIds.push(nightId);
-    return Promise.resolve();
-  },
-}));
-
 const { finalizeTournamentMatch } =
   await import("#src/temporal/match/match-tournament.ts");
 
 beforeEach(async () => {
-  published.nightIds = [];
   await clearCustomsTestData(prisma);
 });
 
@@ -91,7 +82,6 @@ describe("the V2 tournament finalization stage", () => {
     expect(
       await finalizeTournamentMatch(matchWithCode(fixture, undefined)),
     ).toEqual({ outcome: "not-a-tournament-match" });
-    expect(published.nightIds).toEqual([]);
   });
 
   test("reports a game this pipeline already verified as already-finalized", async () => {
@@ -100,17 +90,16 @@ describe("the V2 tournament finalization stage", () => {
     // verified game, so the second pass changes nothing — which is what makes
     // resuming safe rather than a double-finalization.
     const fixture = await loadRawMatchFixture();
-    const nightId = await seedVerifiedObservedGame(fixture.metadata.matchId);
+    await seedVerifiedObservedGame(fixture.metadata.matchId);
 
     const first = await finalizeTournamentMatch(fixture);
     const second = await finalizeTournamentMatch(fixture);
 
     expect(first).toEqual({
       outcome: "already-finalized",
-      publishedNight: true,
+      publishedNight: false,
     });
     expect(second).toEqual(first);
-    expect(published.nightIds).toEqual([nightId, nightId]);
   });
 
   test("ignores a Riot tournament code without an observed game", async () => {

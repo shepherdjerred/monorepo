@@ -22,8 +22,6 @@ describe("Scout Temporal alert rules", () => {
         "ScoutTemporalTaskScheduleToStartHigh",
         "ScoutTemporalDurabilityMetricsUnknown",
         "ScoutTemporalReportOutboxStale",
-        "ScoutCustomOperationHeld",
-        "ScoutCustomOperationStale",
         "ScoutProductAnnouncementFollowUpStale",
         "ScoutProductDurabilityMetricsUnknown",
         "ScoutTemporalReportScheduleDrift",

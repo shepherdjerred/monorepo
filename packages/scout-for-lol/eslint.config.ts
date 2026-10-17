@@ -110,19 +110,14 @@ const config = [
       ],
     },
   },
-  // `app` and `activity` consume the backend's tRPC router *type* only. A value
+  // `app` consumes the backend's tRPC router *type* only. A value
   // import would pull the server into a browser bundle. dependency-cruiser cannot
   // see type-only edges here, so ESLint owns this one. The options object
   // replaces the base rule's wholesale, so the node/twisted patterns are
   // restated and the base rule is turned off for these files to avoid double
   // reports.
   {
-    files: [
-      "packages/app/**/*.ts",
-      "packages/app/**/*.tsx",
-      "packages/activity/**/*.ts",
-      "packages/activity/**/*.tsx",
-    ],
+    files: ["packages/app/**/*.ts", "packages/app/**/*.tsx"],
     rules: {
       "no-restricted-imports": "off",
       "@typescript-eslint/no-restricted-imports": [

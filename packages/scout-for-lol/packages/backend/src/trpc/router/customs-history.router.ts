@@ -5,10 +5,8 @@ import {
   CustomHistorySchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
   buildCustomNightHistory,
   buildCustomNightSnapshot,
@@ -23,22 +21,14 @@ import { router } from "#src/trpc/trpc.ts";
 const GuildInputSchema = z.object({ guildId: DiscordGuildIdSchema });
 const DetailInputSchema = GuildInputSchema.extend({ nightId: z.uuid() });
 
-async function assertCustomsHistoryEnabled(
-  guildId: DiscordGuildId,
-): Promise<void> {
-  if (!(await isPolicyEnabled("custom_nights_enabled", { server: guildId }))) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Customs is unavailable",
-    });
-  }
-}
-
+/**
+ * Read-only access to retained Customs nights. Live nights were retired with
+ * the Discord Activity, so a guild's history is exactly its persisted rows.
+ */
 export const customsHistoryRouter = router({
   list: guildProcedure("customs", "read")
     .input(GuildInputSchema)
     .query(async ({ ctx, input }) => {
-      await assertCustomsHistoryEnabled(input.guildId);
       const nights = await prisma.customNight.findMany({
         where: { guildId: input.guildId },
         orderBy: { createdAt: "desc" },
@@ -57,7 +47,6 @@ export const customsHistoryRouter = router({
   detail: guildProcedure("customs", "read")
     .input(DetailInputSchema)
     .query(async ({ ctx, input }) => {
-      await assertCustomsHistoryEnabled(input.guildId);
       const belongs = await prisma.customNight.count({
         where: { id: input.nightId, guildId: input.guildId },
       });
@@ -83,7 +72,6 @@ export const customsHistoryRouter = router({
   anonymize: guildMutationProcedure("customs", "manage")
     .input(GuildInputSchema.extend({ discordId: DiscordAccountIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      await assertCustomsHistoryEnabled(input.guildId);
       return anonymizeCustomParticipant(prisma, {
         guildId: input.guildId,
         discordId: input.discordId,

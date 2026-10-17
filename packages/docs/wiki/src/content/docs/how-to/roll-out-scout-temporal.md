@@ -77,7 +77,7 @@ Activity Worker is not polling its declared queue; stop the rollout.
    worker owns `realtime`, `background`, and competition Activities.
    Production retains its embedded Workflow poller. Beta Workflow tasks
    follow the current Worker Deployment build and any nonzero ramp.
-   Confirm the gateway's Customs queue starts only after Discord is ready.
+   Confirm the gateway's Activity queue starts only after Discord is ready.
 3. Run the queue canary and inspect representative persisted effects.
    `ScoutTemporalWorkerMissing` requires fresh evidence from each declared
    owner. `ScoutTemporalWorkflowRoutingUnknown` means the beta routing lookup
@@ -98,9 +98,9 @@ define these roles and monitoring requirements.
    credential pause applies. The
    [pause reference](/reference/temporal-schedules/#pause-behaviour) identifies
    the two retired migration notes reconciliation clears.
-2. Confirm `clash-snapshot` and `custom-nights-expiry` complete through their
-   background Activity owner. An empty upstream snapshot or no eligible nights
-   is a valid result; inspect the result and Activity history.
+2. Confirm `clash-snapshot` completes through its background Activity owner.
+   An empty upstream snapshot is a valid result; inspect the result and
+   Activity history.
 3. Inspect report Schedule ownership, outbox drain, and drift. Keep production's
    legacy progression delivery Schedule while its producers remain active.
    Reconciliation never backfills every missed occurrence.
@@ -267,26 +267,26 @@ TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
 
 ## Activate durable product producers
 
-1. Release compatible Workflow registrations, Activity workers, the database
-   migration, and Customs readers before changing the producer flag. Keep
+1. Release compatible Workflow registrations, Activity workers, and the
+   database migration before changing the producer flag. Keep
    `scout_durable_orchestration_enabled` false during this release.
 2. Verify the five-queue canary above against the deployed bundle. Check the
-   new Customs operation gauges and announcement follow-up gauge. A missing
-   gauge or a negative value fails this check.
+   announcement follow-up gauge. A missing gauge or a negative value fails
+   this check.
 3. Record the pause state and note for competition refresh, competition
-   scheduled updates, weekly Bucks, outreach, and Customs expiry Schedules.
+   scheduled updates, weekly Bucks, and outreach Schedules.
    Pause active affected Schedules and wait for their old Activities to finish.
    Preserve Schedules already paused by an operator.
 4. Enable the producer flag for beta through the existing Flipt management
    path. Activation waits for requests already using the legacy path. Resume
    only Schedules paused by this procedure, restoring their recorded state.
-5. Exercise nonempty competition, weekly, outreach, recruitment, voice,
-   intermission, void, end, and expiry cases in the existing beta guild.
+5. Exercise nonempty competition, weekly, and outreach cases in the existing
+   beta guild.
    Interrupt an Activity after a persisted checkpoint and verify resumption.
    Confirm frozen content, stable IDs, S3 attachments, and delivery bookkeeping.
 6. Observe beta for a day, then repeat the checks and cutover in production.
    Preserve production's existing feature availability. A migration flag does
-   not enable Customs, betting, Dares, or other beta features in production.
+   not enable betting, Dares, or other beta features in production.
 7. Retire compatibility code only after old-name starts have stopped, affected
    open executions have drained, and the one-day window has elapsed. Roll an
    idle dispatcher with its rollover Signal; let its active child finish.
