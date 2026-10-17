@@ -293,8 +293,8 @@ function isArcadeGoalCredentialWiring(
   return (
     filePath === "packages/homelab/src/cdk8s/src/resources/arcade.ts" &&
     [
-      "CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({",
-      'key: "CODEX_ACCESS_TOKEN",',
+      "CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({",
+      'key: "CODEX_AUTH_JSON_B64",',
     ].includes(source.trim())
   );
 }

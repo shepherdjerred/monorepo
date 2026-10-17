@@ -80,7 +80,7 @@ test("prepares storage with a read-only hook while the controller is dormant", (
             expect.objectContaining({
               command: ["/bin/sh", "-ec"],
               args: [
-                "test -d /storage/assets && test -d /storage/saves && test -d /storage/database",
+                "test -d /storage/assets && test -d /storage/saves && test -d /storage/database && test -d /storage/goal-auth",
               ],
               securityContext: expect.objectContaining({
                 runAsNonRoot: true,
@@ -100,19 +100,24 @@ test("prepares storage with a read-only hook while the controller is dormant", (
   expect(pod.containers).toHaveLength(1);
   expect(container.image).toMatch(/^busybox:.*@sha256:[a-f0-9]{64}$/u);
   expect(pod.volumes.map((volume) => volume.persistentVolumeClaim)).toEqual(
-    ["arcade-assets", "arcade-saves", "arcade-database"].map((claimName) => ({
+    [
+      "arcade-assets",
+      "arcade-saves",
+      "arcade-database",
+      "arcade-goal-auth",
+    ].map((claimName) => ({
       claimName,
       readOnly: true,
     })),
   );
-  expect(container.volumeMounts).toHaveLength(3);
+  expect(container.volumeMounts).toHaveLength(4);
   expect(container.volumeMounts.every((mount) => mount.readOnly)).toBe(true);
   expect(JSON.stringify(find("Job"))).not.toContain('"secretKeyRef"');
   expect(
     resources.filter(
       (resource) => KindSchema.parse(resource).kind === "PersistentVolumeClaim",
     ),
-  ).toHaveLength(3);
+  ).toHaveLength(4);
 });
 
 test("the active controller mounts storage without a competing bootstrap job", () => {
@@ -180,7 +185,7 @@ test("Arcade owns one credential item and keeps limits and goal grants outside i
     "DISCORD_APPLICATION_ID",
     "DISCORD_STREAMING_TOKENS",
     "DISCORD_CLIENT_SECRET",
-    "CODEX_ACCESS_TOKEN",
+    "CODEX_AUTH_JSON_B64",
   ]) {
     expect(
       container.env.find((entry) => entry.name === key)?.valueFrom

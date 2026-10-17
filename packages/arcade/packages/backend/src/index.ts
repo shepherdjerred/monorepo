@@ -41,6 +41,7 @@ import { mk64Module } from "./games/legacy/mk64.ts";
 import { emeraldModule } from "./games/legacy/emerald.ts";
 import { newerModules } from "./games/registry.ts";
 import { initializeDatabase } from "./database.ts";
+import { prepareGoalAuth } from "@discord-plays-pokemon/backend/goal/codex/codex-auth.ts";
 
 const logger = createGameLogger();
 initializeGameObservability({
@@ -110,6 +111,8 @@ const { mk64: preparedMk64Config, emerald: preparedEmeraldConfig } =
     databasePath,
   });
 const controllerActive = await config.value("controllerActive");
+if (controllerActive && settings.emeraldGoal.enabled)
+  Bun.env["CODEX_HOME"] = await prepareGoalAuth(Bun.env, Bun.env["CODEX_HOME"]);
 const build = controllerActive
   ? await prepareEngine(preparedMk64Config)
   : undefined;

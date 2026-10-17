@@ -56,6 +56,9 @@ export function createArcadeDeployment(
   const database = new ZfsNvmeVolume(chart, "arcade-database", {
     storage: Size.gibibytes(8),
   });
+  const goalAuth = new ZfsNvmeVolume(chart, "arcade-goal-auth", {
+    storage: Size.gibibytes(1),
+  });
   // The running controller binds its own claims. A second read-only consumer
   // cannot mount these ZFS datasets alongside its writable save/database mounts.
   if (!controllerActive) {
@@ -79,7 +82,7 @@ export function createArcadeDeployment(
         image: `busybox:${versions["library/busybox"]}`,
         command: ["/bin/sh", "-ec"],
         args: [
-          "test -d /storage/assets && test -d /storage/saves && test -d /storage/database",
+          "test -d /storage/assets && test -d /storage/saves && test -d /storage/database && test -d /storage/goal-auth",
         ],
         securityContext: {
           user: 1000,
@@ -96,6 +99,7 @@ export function createArcadeDeployment(
           { path: "/storage/assets", claim: assets.claim },
           { path: "/storage/saves", claim: saves.claim },
           { path: "/storage/database", claim: database.claim },
+          { path: "/storage/goal-auth", claim: goalAuth.claim },
         ].map(({ path, claim }) => ({
           path,
           volume: Volume.fromPersistentVolumeClaim(
@@ -202,10 +206,11 @@ model = "gpt-5.6-sol"
           secret: credentialSecret,
           key: "DISCORD_CLIENT_SECRET",
         }),
-        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
+        CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({
           secret: credentialSecret,
-          key: "CODEX_ACCESS_TOKEN",
+          key: "CODEX_AUTH_JSON_B64",
         }),
+        CODEX_HOME: EnvValue.fromValue("/data/goal-auth/codex"),
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("arcade"),
@@ -248,6 +253,14 @@ model = "gpt-5.6-sol"
       readiness: Probe.fromHttpGet("/health", { port: 8081 }),
       liveness: Probe.fromHttpGet("/health", { port: 8081 }),
       volumeMounts: [
+        {
+          path: "/data/goal-auth",
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "arcade-goal-auth-mount",
+            goalAuth.claim,
+          ),
+        },
         {
           path: "/data/assets",
           volume: Volume.fromPersistentVolumeClaim(

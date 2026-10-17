@@ -323,13 +323,17 @@ describe("AI architecture compatibility exceptions", () => {
           contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
         },
         {
+          path: "packages/discord-plays-pokemon/packages/backend/src/goal/codex/codex-auth.ts",
+          contents: "const seed = environment.CODEX_AUTH_JSON_B64;",
+        },
+        {
           path: "packages/homelab/src/cdk8s/src/resources/pokemon.ts",
           contents: 'const key = "CODEX_ACCESS_TOKEN";',
         },
         {
           path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
           contents:
-            'CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({\nkey: "CODEX_ACCESS_TOKEN",',
+            'CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({\nkey: "CODEX_AUTH_JSON_B64",',
         },
       ]),
     ).toEqual([]);
@@ -348,8 +352,22 @@ describe("AI architecture compatibility exceptions", () => {
           path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
           contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
         },
+        {
+          path: "packages/arcade/packages/backend/src/goal-auth.ts",
+          contents: "const token = Bun.env.CODEX_AUTH_JSON_B64;",
+        },
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/arcade.ts",
+          contents: "CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({",
+        },
       ]).map(({ rule }) => rule),
-    ).toEqual(["provider-api-key", "provider-api-key", "provider-api-key"]);
+    ).toEqual([
+      "provider-api-key",
+      "provider-api-key",
+      "provider-api-key",
+      "provider-api-key",
+      "provider-api-key",
+    ]);
   });
 });
 

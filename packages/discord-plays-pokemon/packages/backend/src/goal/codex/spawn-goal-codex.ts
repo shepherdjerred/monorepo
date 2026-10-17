@@ -20,6 +20,7 @@ import {
   type PromptContext,
 } from "./codex-command.ts";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
+import { goalToolPolicy } from "./goal-tool-policy.ts";
 import type { GoalProcess, GoalProcessSpawner } from "#src/goal/goal-types.ts";
 
 export const CODEX_JSONL_SCHEMA_VERSION = 2;
@@ -161,21 +162,15 @@ export async function spawnGoalCodex(
         const codex = new Codex({
           env: environment,
           config: {
+            ...goalToolPolicy(environment, screenshotDirectory),
             developer_instructions: buildDeveloperInstructions(),
             project_doc_max_bytes: 0,
-            features: {
-              apps: false,
-              plugins: false,
-              multi_agent: false,
-            },
           },
         });
         const thread = codex.startThread({
           approvalPolicy: "never",
           model: input.config.model,
           modelReasoningEffort: input.config.reasoning_effort,
-          networkAccessEnabled: true,
-          sandboxMode: "danger-full-access",
           skipGitRepoCheck: true,
           webSearchMode: "disabled",
           workingDirectory: runtimeDirectory,

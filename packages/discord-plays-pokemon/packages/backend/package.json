@@ -30,6 +30,7 @@
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@discord-plays-pokemon/common": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/sdk-node": "^0.223.0",
