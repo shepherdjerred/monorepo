@@ -89,6 +89,26 @@ async function deliverChunks(
  * uncertain chunk as delivered also completes the run without an event, as it
  * always has.
  */
+/**
+ * Whether the previous build already recorded this run's analytics event.
+ *
+ * That build completed a `report-analytics:<runId>` effect claim right after
+ * recording the event and before moving the run to DELIVERED, so a run it lost
+ * between those two writes is still PENDING here and would record the event a
+ * second time. The claim table is retained for exactly this rollout; this
+ * bridge goes with the table.
+ */
+async function legacyAnalyticsRecorded(
+  dispatch: ScheduledReportDispatch,
+  database: ExtendedPrismaClient,
+): Promise<boolean> {
+  const claim = await database.scoutEffectClaim.findUnique({
+    where: { key: `report-analytics:${dispatch.result.runId.toString()}` },
+    select: { state: true },
+  });
+  return claim?.state === "COMPLETED";
+}
+
 async function markRunDelivered(
   dispatch: ScheduledReportDispatch,
   outputKind: "report_manual" | "report_scheduled",
@@ -105,7 +125,10 @@ async function markRunDelivered(
       deliveredAt: new Date(),
     },
   });
-  if (delivered.count === 1) {
+  if (
+    delivered.count === 1 &&
+    !(await legacyAnalyticsRecorded(dispatch, database))
+  ) {
     await recordCoreOutputDelivered(
       DiscordGuildIdSchema.parse(dispatch.report.serverId),
       outputKind,

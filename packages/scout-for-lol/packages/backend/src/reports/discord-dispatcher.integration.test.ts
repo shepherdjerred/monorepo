@@ -31,6 +31,7 @@ beforeEach(async () => {
   mocks.send.mockResolvedValue({ id: "100000000000000001" });
   mocks.recordCoreOutputDelivered.mockResolvedValue(undefined);
   await prisma.report.deleteMany();
+  await prisma.scoutEffectClaim.deleteMany();
 });
 afterAll(async () => {
   await prisma.$disconnect();
@@ -105,6 +106,32 @@ describe("report delivery analytics", () => {
     expect(
       await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
     ).toMatchObject({ deliveryState: "DELIVERED", deliveryError: null });
+  });
+
+  test("does not repeat an event the previous build already recorded", async () => {
+    // The previous build completed this claim right after recording the event
+    // and lost the run before marking it DELIVERED.
+    const { dispatch, run } = await pendingRun();
+    await prisma.scoutEffectClaim.create({
+      data: {
+        key: `report-analytics:${run.id.toString()}`,
+        kind: "report-analytics",
+        state: "COMPLETED",
+        completedAt: new Date(),
+      },
+    });
+
+    expect(
+      await deliverReportDispatch(dispatch, "report_scheduled", "propagate", {
+        isInstalled: installed,
+        database: prisma,
+      }),
+    ).toBe(true);
+
+    expect(mocks.recordCoreOutputDelivered).not.toHaveBeenCalled();
+    expect(
+      await prisma.reportRun.findUniqueOrThrow({ where: { id: run.id } }),
+    ).toMatchObject({ deliveryState: "DELIVERED" });
   });
 
   test("the reconciliation path records the same single event", async () => {
