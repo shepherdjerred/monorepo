@@ -165,6 +165,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private @Nullable MapWorld preparing;
   private boolean applying;
   private boolean ready;
+  private boolean stopping;
   private boolean moving;
   private long ticks;
   private @Nullable Instant humansGoneSince;
@@ -456,12 +457,14 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** Reads the flags for the next match; on failure the features already in force stay. */
   private void refreshFeatures(Runnable then) {
+    if (stopping) return;
     var _ =
         parts
             .features()
             .evaluate()
             .whenCompleteAsync(
                 (read, failure) -> {
+                  if (stopping) return;
                   if (failure != null) {
                     parts
                         .context()
@@ -833,6 +836,7 @@ final class MatchRunner implements MatchView, MatchEvents {
 
   /** The match is stopping for good (disable): restore everyone, despawn bots. */
   void stop() {
+    stopping = true;
     showcases.cancel();
     visits.selecting();
     rotation.close();
@@ -1998,11 +2002,13 @@ final class MatchRunner implements MatchView, MatchEvents {
     private void revert() {
       parts.bombs().clear();
       var map = current;
+      if (map != null) map.revertCraters();
+      // Disable releases the map next; only an ordinary reset prepares another match.
+      if (stopping) return;
       if (map == null) {
         resetDone();
         return;
       }
-      map.revertCraters();
       if (rotation.playable().size() > 1) {
         map.markPlayed();
         resetDone();
