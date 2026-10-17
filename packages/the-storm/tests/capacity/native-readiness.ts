@@ -5,6 +5,7 @@ import { packageRoot } from "#e2e/harness/paths.ts";
 import { eventually } from "#e2e/harness/rwf-match.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import { request, StatusSchema, type Session } from "#client/protocol.ts";
+import { CapacityCombatCapture } from "./native-combat.ts";
 
 /** The fixture replies with a JSON boolean, never a truthy string or status object. */
 export function candidateReady(reply: string): boolean {
@@ -56,6 +57,38 @@ export async function awaitNativeCandidate(
     JSON.stringify(preparation, null, 2),
   );
   return { preparation, observed };
+}
+
+/** Passive failure evidence only: a journal is bound to the successfully armed match. */
+export async function retainNativeCombatFailure(
+  rcon: Pick<RconClient, "command">,
+  artifacts: string,
+  match: string,
+) {
+  const diagnostics: Record<string, unknown> = {
+    requestedAt: Date.now(),
+    command: "rwfcapacitycombat sample",
+    match,
+  };
+  try {
+    const reply = await rcon.command("rwfcapacitycombat sample");
+    diagnostics["receivedAt"] = Date.now();
+    diagnostics["reply"] = reply;
+    const capture = CapacityCombatCapture.parse(JSON.parse(reply));
+    if (capture.match !== match)
+      throw new Error("Failure combat observer belongs to another armed match");
+    diagnostics["capture"] = capture;
+  } catch (error) {
+    diagnostics["captureFailure"] = String(error);
+  }
+  try {
+    await Bun.write(
+      path.join(artifacts, "combat-failure.json"),
+      JSON.stringify(diagnostics, null, 2),
+    );
+  } catch (error) {
+    console.warn(`Failed to retain native combat evidence: ${String(error)}`);
+  }
 }
 
 /** Secondary evidence failures must not replace the original acceptance failure. */

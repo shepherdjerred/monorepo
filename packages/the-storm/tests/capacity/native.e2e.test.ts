@@ -13,6 +13,7 @@ import { CapacityCombatCapture, verifyNativeCombat } from "./native-combat.ts";
 import { captureCapacityBehavior } from "./behavior.ts";
 import {
   awaitNativeCandidate,
+  retainNativeCombatFailure,
   retainNativeFailure,
 } from "./native-readiness.ts";
 
@@ -48,6 +49,7 @@ test(
       "capacity-native",
     );
     let failure: { error: unknown } | undefined;
+    let armedMatch: string | undefined;
     try {
       const teams = capacityMap() === "apex-expanse" ? 2 : 4;
       expect(
@@ -68,9 +70,11 @@ test(
         hostDifficulty: inputs.hostDifficulty,
         authoredExperience: inputs.authoredExperience,
       });
-      CapacityCombatCapture.parse(
+      const armed = CapacityCombatCapture.parse(
         JSON.parse(await rcon.command(`rwfcapacitycombat arm ${live.matchId}`)),
       );
+      expect(armed.match).toBe(live.matchId);
+      armedMatch = armed.match;
       await request(session, "capture", {
         name: `${total.toString()}-combatants-live`,
       });
@@ -90,7 +94,7 @@ test(
       const observations = [before, after];
       const began = Date.now();
       let capturedHurt = false;
-      // Walk into play, then let combat and the match rules end the round.
+      // The initial movement proof is complete; observe ordinary combat in place.
       // No teleport, damage or finish commands.
       while ((await isLive(observed)) && Date.now() - began < 16 * 60_000) {
         const current = await state(session);
@@ -99,18 +103,7 @@ test(
           await request(session, "capture", { name: "native-hurt" });
           capturedHurt = true;
         }
-        if (
-          !capturedHurt &&
-          current.health > 0 &&
-          Date.now() - began < 30_000
-        ) {
-          await request(session, "input", {
-            buttons: ["forward", "sprint"],
-            ticks: 20,
-          });
-        } else {
-          await Bun.sleep(1000);
-        }
+        await Bun.sleep(1000);
       }
       expect(await isLive(observed)).toBe(false);
       const settled = await settledMatch(server, live.matchId);
@@ -217,6 +210,8 @@ test(
       console.warn(`Native capacity evidence: ${artifacts}`);
     } catch (error) {
       failure = { error };
+      if (armedMatch !== undefined)
+        await retainNativeCombatFailure(rcon, artifacts, armedMatch);
       await retainNativeFailure(session, error);
     } finally {
       try {
