@@ -19,9 +19,12 @@ import {
 test("release pruning is limited to charts with intentional resource removal", () => {
   expect(
     [
+      "arcade",
       "birmel",
       "freshrss",
+      "mario-kart",
       "media",
+      "pokemon",
       "s3-static-sites",
       "scout-beta",
       "scout-prod",
@@ -33,9 +36,12 @@ test("release pruning is limited to charts with intentional resource removal", (
       "woodpecker",
     ].filter(releasePrunesChart),
   ).toEqual([
+    "arcade",
     "birmel",
     "freshrss",
+    "mario-kart",
     "media",
+    "pokemon",
     "s3-static-sites",
     "scout-beta",
     "scout-prod",

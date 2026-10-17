@@ -53,10 +53,17 @@ const REPOSITORY_CHART_URLS = new Set([
 // storm-forum replaces its completed, uniquely named release Job on upgrades.
 // Its database and attachment PVCs remain declared. Without pruning, obsolete
 // completed Jobs keep the healthy forum OutOfSync and fail the release gate.
+// Arcade's dedicated credentials replace its two legacy game mirrors. The
+// mario-kart and pokemon charts retire their stopped game Deployments and
+// unused services, monitors, and credential mirrors. Their original storage,
+// Mario Kart edge, and Pokemon redirects remain declared.
 const PRUNED_RELEASE_CHARTS = new Set([
+  "arcade",
   "birmel",
   "freshrss",
+  "mario-kart",
   "media",
+  "pokemon",
   "s3-static-sites",
   "scout-beta",
   "scout-prod",
