@@ -77,7 +77,7 @@ function mountPodSpec(deployment: Resource, inventory: Resource[]) {
         };
   return { template, identity };
 }
-async function inspectMount(
+export async function inspectMount(
   request: ObserverRequest,
   input: {
     deployment: string;

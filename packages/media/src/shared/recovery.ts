@@ -120,6 +120,15 @@ export const RecoveryScopeSchema = z
     handoffReceipts: z.array(
       z.object({ id: z.uuid(), planHash: Hash }).strict(),
     ),
+    nativeReceipts: z
+      .array(
+        z.strictObject({
+          id: z.uuid(),
+          planHash: Hash,
+          assetIds: z.array(z.uuid()),
+        }),
+      )
+      .default([]),
     blockers: z.array(z.string()),
   })
   .strict();

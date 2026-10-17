@@ -71,7 +71,7 @@ async function requireAcceptedAdd(
   )
     throw new IntegrationError("qbittorrent", "outcome-unknown");
 }
-const TorrentSchema = TorrentPolicySchema.extend({
+export const TorrentObservationSchema = TorrentPolicySchema.extend({
   hash: z.string().regex(/^[a-f0-9]{40}$/u),
   infohash_v1: z.union([z.literal(""), z.string().regex(/^[a-f0-9]{40}$/u)]),
   infohash_v2: z.union([z.literal(""), z.string().regex(/^[a-f0-9]{64}$/u)]),
@@ -86,6 +86,16 @@ const TorrentSchema = TorrentPolicySchema.extend({
   save_path: z.string(),
   content_path: z.string(),
 });
+/** Persisted observations already contain the normalized ratio, unlike the qBit wire payload. */
+export const StoredTorrentObservationSchema = TorrentObservationSchema.extend({
+  ratio: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("finite"),
+      value: z.number().nonnegative(),
+    }),
+    z.strictObject({ kind: z.literal("infinite") }),
+  ]),
+});
 const FileSchema = z.object({
   index: z.number().int().nonnegative(),
   name: z.string(),
@@ -94,7 +104,7 @@ const FileSchema = z.object({
   priority: z.number().int(),
 });
 
-export type TorrentObservation = z.infer<typeof TorrentSchema>;
+export type TorrentObservation = z.infer<typeof TorrentObservationSchema>;
 export type TorrentFile = z.infer<typeof FileSchema>;
 
 /** qBittorrent Web API v2. Mutations never automatically retry. */
@@ -164,13 +174,15 @@ export class QbittorrentClient {
       { category: this.config.category },
       signal,
     );
-    return z.array(TorrentSchema).parse(await json(response, "qbittorrent"));
+    return z
+      .array(TorrentObservationSchema)
+      .parse(await json(response, "qbittorrent"));
   }
 
   /** Inventory every category before proving that source paths are not shared. */
   async listAll(signal?: AbortSignal): Promise<TorrentObservation[]> {
     return z
-      .array(TorrentSchema)
+      .array(TorrentObservationSchema)
       .max(50_000)
       .parse(
         await json(

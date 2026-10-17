@@ -697,3 +697,58 @@ lease; a fresh lease cannot approve a replacement legacy controller. Changed,
 ambiguous, unavailable, or expired evidence
 revokes storage authority and returns an active runtime to observation mode.
 It never adopts a replacement PVC or automatically clears revoked authority.
+
+Native restore uses the [canonical observer](src/integrations/legacy-observer/canonical-mounts.ts)
+and [native network producer](src/migration/native-network/producer.ts). Both
+`/data/movies` and `/data/tv` must match a previous applied, hash-verified owner
+receipt and its persisted storage identity. Two bounded observations bind the
+actual ready files Pod, controller lineage, PVC UID, PV name, and volume-relative
+path. Native authority refresh preserves that approved identity while allowing a
+new Pod on the same storage; it does not invent legacy manager mount mappings.
+Legacy handoff authority continues to enforce its original source-controller
+binding. Both branches require the independent fresh legacy-writer lease;
+missing retired controller definitions remain protected.
+
+Native network observations append immutable evidence without changing asset,
+request, or torrent ownership. Fresh Plex identity and Part paths must match the
+selected physical coverage. Retained torrents bind full cryptographic identity
+and effective policy while excluding changing seed counters from review hashes.
+A previously removed source is accepted only with its owned, terminal attempt
+history at the recorded epoch and fresh qBittorrent absence. Unknown removal or
+unexpected presence protects recovery; this observation grants no source cleanup
+authority.
+
+### Rebaseline Media-published files after restoring a backup
+
+Run the documented `restore_observe` procedure before reconnecting workers. An
+owner can then open **Recovery review → Reprove Media-published files**. The
+inventory is paginated; each explicit review selects at most 25 published files
+and 100 covered titles. Preparation requires the exact completed restore
+operation, both libraries' current-epoch Plex exclusion proofs, and durable
+prior approval of the canonical storage. Missing prerequisites remain visible.
+
+Preparation reads videos, installed sidecars and embedded subtitle identities,
+and checks relevant filesystem journals. It does not grant ownership. The owner
+reviews affected titles, subtitle quality, exact selected subtitle policies and
+physical proof before applying. Apply obtains new process-local content proof,
+compares the owner-reviewed inode and ancestor identities, and rechecks current
+owner, runtime, storage, writers and Plex evidence. Network observations refresh
+during long hashing; expired authority rolls back the complete grant. Repeated
+delivery of an acknowledged or lost-ack apply resolves to one immutable receipt.
+
+Native apply renews only exact selected physical versions. It preserves subtitle
+quality and historical provenance, and appends selected-title subtitle policies
+without renewing policies on unselected siblings. It does not rewrite old
+acquisition or notification birth epochs or revive restored request authority.
+System recovery holds remain until a separate household review confirms current
+intent. A positive declaration backed by the exact native physical receipt, or a
+fresh authorized ordinary request, may authorize a new intent. Negative-only
+household declarations do not. Personal Keep choices and pins remain independent.
+
+This operator path supports published assets. Quarantined or superseded assets,
+uncertain filesystem journals, unproved storage replacements and unresolved
+subtitle neighbors remain protected and require their separate restore, rollback
+or ownership reconciliation paths. It does not override missing Plex watch
+evidence or authorize legacy torrent source deletion. Further bounded batches
+can extend the current epoch; a later database restore must reprove the files
+again against its new epoch and the prior native or legacy storage receipt.

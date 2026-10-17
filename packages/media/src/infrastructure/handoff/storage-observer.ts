@@ -9,6 +9,7 @@ import {
 } from "#shared/legacy-observer.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { queueOwnerHealth } from "#infrastructure/notifications/owner-health.ts";
+import { refreshNativeStorageAuthorities } from "#infrastructure/native-recovery/storage-refresh.ts";
 
 /** Refresh may move to a new executing Pod, but never to a new storage identity. */
 export async function refreshStorageAuthorities(
@@ -23,6 +24,16 @@ export async function refreshStorageAuthorities(
     where: { recoveryEpoch: before.recoveryEpoch },
     orderBy: { rootPath: "asc" },
   });
+  if (
+    rows.some(
+      (row) =>
+        z.object({ kind: z.literal("native_restore") }).safeParse(row.evidence)
+          .success,
+    )
+  ) {
+    await refreshNativeStorageAuthorities({ db, observer, before, rows });
+    return;
+  }
   let observation: ReturnType<typeof MountEvidenceSchema.parse> | null = null;
   try {
     const bindings: MountBindingRequest[] = rows.map((row) => {

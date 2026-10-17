@@ -9,6 +9,7 @@ import { evaluateInventory } from "./evaluate.ts";
 import { readInventory } from "./inventory.ts";
 import { LegacyObservationError, type ObserverRequest } from "./wire.ts";
 import { observeMounts } from "./mounts.ts";
+import { observeCanonicalMounts } from "./canonical-mounts.ts";
 
 const signalFor = (signal?: AbortSignal) =>
   AbortSignal.any([
@@ -20,6 +21,13 @@ export function legacyObserver(
   now: () => number = Date.now,
 ) {
   return {
+    observeCanonicalMounts(signal?: AbortSignal) {
+      return observeCanonicalMounts({
+        request,
+        signal: signalFor(signal),
+        now,
+      });
+    },
     async observe(signal?: AbortSignal) {
       const capturedAt = now();
       const bounded = signalFor(signal);

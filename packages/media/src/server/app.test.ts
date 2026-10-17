@@ -85,6 +85,30 @@ const recoveryFixture = {
   },
 };
 
+function nativeRecoveryFixture() {
+  return {
+    async inventory() {
+      return {
+        runtime: { mode: "observe", recoveryEpoch: 0, version: 0 },
+        restoreOperationId: null,
+        assets: [],
+        plans: [],
+        nextCursor: null,
+        prerequisites: [],
+      };
+    },
+    async prepare(): Promise<never> {
+      throw new MediaError("conflict", "No fixture native recovery", 409);
+    },
+    async detail(): Promise<never> {
+      throw new MediaError("conflict", "No fixture native recovery", 409);
+    },
+    async apply(): Promise<never> {
+      throw new MediaError("conflict", "No fixture native recovery", 409);
+    },
+  };
+}
+
 function fixture() {
   const act = vi.fn<MediaApplication["act"]>(async () => ({
     status: "queued",
@@ -240,6 +264,7 @@ function fixture() {
     numberingAdmin: numberingFixture,
     migrationAdmin: migrationFixture,
     handoffAdmin: handoffFixture,
+    nativeRecoveryAdmin: nativeRecoveryFixture(),
     recoveryAdmin: recoveryFixture,
     plexExclusionAdmin: {
       async list() {

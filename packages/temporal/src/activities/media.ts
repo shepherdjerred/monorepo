@@ -5,6 +5,8 @@ import type {
   MediaFileActivities,
   MediaHandoffNetworkActivities,
   MediaHandoffFileActivities,
+  NativeRecoveryNetworkActivities,
+  NativeRecoveryFileActivities,
 } from "@shepherdjerred/media/automation";
 import {
   createMediaNetworkRuntime,
@@ -13,9 +15,13 @@ import {
 
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
-async function network(): Promise<
-  MediaNetworkActivities & MediaHandoffNetworkActivities
-> {
+type NetworkActivities = MediaNetworkActivities &
+  MediaHandoffNetworkActivities &
+  NativeRecoveryNetworkActivities;
+type FileActivities = MediaFileActivities &
+  MediaHandoffFileActivities &
+  NativeRecoveryFileActivities;
+async function network(): Promise<NetworkActivities> {
   networkRuntime ??= createMediaNetworkRuntime(Bun.env);
   try {
     const runtime = await networkRuntime;
@@ -25,9 +31,7 @@ async function network(): Promise<
     throw error;
   }
 }
-async function files(): Promise<
-  MediaFileActivities & MediaHandoffFileActivities
-> {
+async function files(): Promise<FileActivities> {
   fileRuntime ??= createMediaFileRuntime(Bun.env, (phase) => {
     assertNotCancelled();
     heartbeat({ phase });
@@ -44,9 +48,7 @@ async function files(): Promise<
 
 /** Do not serialize Prisma queries, provider URLs, or credentials into Workflow history. */
 async function withNetwork<T>(
-  work: (
-    activities: MediaNetworkActivities & MediaHandoffNetworkActivities,
-  ) => Promise<T>,
+  work: (activities: NetworkActivities) => Promise<T>,
 ): Promise<T> {
   try {
     assertNotCancelled();
@@ -62,9 +64,7 @@ async function withNetwork<T>(
   }
 }
 async function withFiles<T>(
-  work: (
-    activities: MediaFileActivities & MediaHandoffFileActivities,
-  ) => Promise<T>,
+  work: (activities: FileActivities) => Promise<T>,
 ): Promise<T> {
   try {
     assertNotCancelled();
@@ -85,8 +85,11 @@ function assertNotCancelled(): void {
     throw new CancelledFailure("Media Activity cancelled");
 }
 
-export const mediaNetworkWorkerActivities: MediaNetworkActivities &
-  MediaHandoffNetworkActivities = {
+export const mediaNetworkWorkerActivities: NetworkActivities = {
+  observeNativeRecovery: (input) =>
+    withNetwork((activities) => activities.observeNativeRecovery(input)),
+  nativeRecoveryState: (input) =>
+    withNetwork((activities) => activities.nativeRecoveryState(input)),
   observeMediaHandoff: (input) =>
     withNetwork((activities) => activities.observeMediaHandoff(input)),
   mediaHandoffState: (input) =>
@@ -128,8 +131,11 @@ export const mediaNetworkWorkerActivities: MediaNetworkActivities &
   finishMediaOperation: (input) =>
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
-export const mediaFileWorkerActivities: MediaFileActivities &
-  MediaHandoffFileActivities = {
+export const mediaFileWorkerActivities: FileActivities = {
+  prepareNativeRecoveryFiles: (input) =>
+    withFiles((activities) => activities.prepareNativeRecoveryFiles(input)),
+  applyNativeRecoveryFiles: (input) =>
+    withFiles((activities) => activities.applyNativeRecoveryFiles(input)),
   prepareMediaHandoffFiles: (input) =>
     withFiles((activities) => activities.prepareMediaHandoffFiles(input)),
   applyMediaHandoffFiles: (input) =>

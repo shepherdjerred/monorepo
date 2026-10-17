@@ -28,13 +28,25 @@ export async function applyRecoveryDeclarations(
       where: { id: media.id },
       data: { version: { increment: 1 } },
     });
-    // Current declarations never renew automationEpoch or any old effect's birth epoch.
+    // An exact native physical receipt plus fresh positive household declarations
+    // authorizes a new intent; historical attempts/deliveries keep their birth epoch.
+    const covered = input.scope.assets.filter((asset) =>
+      asset.mediaIds.includes(media.id),
+    );
+    const nativeIds = new Set(
+      input.scope.nativeReceipts.flatMap((receipt) => receipt.assetIds),
+    );
+    const renew =
+      restoring.has(media.id) &&
+      covered.length > 0 &&
+      covered.every((asset) => nativeIds.has(asset.id));
     const intent = await db.mediaIntent.update({
       where: { mediaId: media.id },
       data: {
         generation: { increment: 1 },
         version: { increment: 1 },
         monitoring: restoring.has(media.id),
+        ...(renew ? { automationEpoch: input.scope.recoveryEpoch } : {}),
         ...(restoring.has(media.id)
           ? { desiredPresence: true, intentionallyRemovedAt: null }
           : {}),

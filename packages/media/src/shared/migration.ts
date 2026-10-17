@@ -98,7 +98,7 @@ const Subtitle = Base.extend({
   checksum: EvidenceHashSchema.nullable(),
   provenance: z.enum(["embedded", "provider", "unknown"]),
 });
-const Torrent = Base.extend({
+export const MigrationTorrentSchema = Base.extend({
   kind: z.literal("torrent"),
   infoHash: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u),
   wireId: z.string().regex(/^[a-f0-9]{40}$/u),
@@ -153,7 +153,7 @@ export const MigrationRecordSchema = z.discriminatedUnion("kind", [
   Request,
   Preference,
   Subtitle,
-  Torrent,
+  MigrationTorrentSchema,
 ]);
 export type MigrationRecord = z.infer<typeof MigrationRecordSchema>;
 export const MigrationEndpointSchema = z.strictObject({

@@ -6,6 +6,7 @@ import { lockMedia } from "#infrastructure/locks.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { unresolvedRecoveryClaims } from "./provenance.ts";
 import { hasProvenNoRecoveryAccess } from "./household.ts";
+import { currentNativeReceipts } from "./native-receipts.ts";
 
 export function recoveryConflict(message: string) {
   return new MediaError("recovery_review_changed", message, 409);
@@ -171,6 +172,13 @@ export async function snapshotRecoveryScope(
     orderBy: { id: "asc" },
   });
   const blockers = [];
+  const nativeReceipts = await currentNativeReceipts(db, {
+    assets,
+    epoch: runtime.recoveryEpoch,
+  });
+  const nativeAssetIds = new Set(
+    nativeReceipts.flatMap((receipt) => receipt.assetIds),
+  );
   if (adoptions.length === 1000)
     blockers.push("handoff_history_requires_bounded_reconciliation");
   if (await unresolvedRecoveryClaims(db, { planIds, mediaIds: ids }))
@@ -181,7 +189,16 @@ export async function snapshotRecoveryScope(
   if (media.some((item) => item.kind === "series" || item.kind === "season"))
     blockers.push("select_physical_episode_coverage");
   if (
-    media.some((item) => item.intent?.automationEpoch !== runtime.recoveryEpoch)
+    media.some((item) => {
+      if (item.intent?.automationEpoch === runtime.recoveryEpoch) return false;
+      const covered = assets.filter((asset) =>
+        asset.coverage.some((row) => row.mediaId === item.id),
+      );
+      return (
+        covered.length === 0 ||
+        covered.some((asset) => !nativeAssetIds.has(asset.id))
+      );
+    })
   )
     blockers.push("selected_intent_not_rebaselined");
   if (
@@ -276,6 +293,7 @@ export async function snapshotRecoveryScope(
     coverage: coverage.map((row) => json(row)),
     personalHolds: personalHolds.map((row) => json(row)),
     handoffReceipts: receipts,
+    nativeReceipts,
     blockers,
   });
 }

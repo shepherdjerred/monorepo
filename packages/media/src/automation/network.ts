@@ -36,6 +36,8 @@ import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
 import { createHandoffNetworkProducer } from "#migration/handoff-network/producer.ts";
 import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
 import { createHandoffFileActivities } from "./handoff/activities.ts";
+import { createNativeFileActivities } from "./native-recovery/activities.ts";
+import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
 import type { FileContext } from "./files/types.ts";
 
 type LifecycleActivities = Pick<
@@ -245,6 +247,10 @@ export async function createMediaFileRuntime(
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
     }),
+    ...createNativeFileActivities({
+      files: fileContext,
+      workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+    }),
   };
   return { activities, close: () => db.$disconnect() };
 }
@@ -349,6 +355,21 @@ export async function createMediaNetworkRuntime(
   return {
     activities: {
       ...createMediaNetworkActivities(context, lifecycle),
+      observeNativeRecovery: async (input: { planId: string }) => {
+        await context.qbittorrent.login();
+        await createNativeRecoveryObserver({
+          ...context,
+          observer: createLegacyObserver(environment),
+          expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        })(input.planId);
+      },
+      nativeRecoveryState: async (input: { planId: string }) => {
+        const plan = await context.db.nativeRecoveryPlan.findUniqueOrThrow({
+          where: { id: input.planId },
+          include: { receipt: true },
+        });
+        return { state: plan.state, applied: plan.receipt !== null };
+      },
       observeMediaHandoff: async (input: { planId: string }) =>
         handoff(input.planId),
       mediaHandoffState: async (input: { planId: string }) => {

@@ -5,6 +5,17 @@ export type MediaOperation = {
 };
 export type MediaAttemptOperation = { operationId: string; attemptId: string };
 export type MediaHandoffOperation = { operationId: string; planId: string };
+export type NativeRecoveryOperation = { operationId: string; planId: string };
+export type NativeRecoveryNetworkActivities = {
+  observeNativeRecovery: (input: NativeRecoveryOperation) => Promise<void>;
+  nativeRecoveryState: (
+    input: NativeRecoveryOperation,
+  ) => Promise<{ state: string; applied: boolean }>;
+};
+export type NativeRecoveryFileActivities = {
+  prepareNativeRecoveryFiles: (input: NativeRecoveryOperation) => Promise<void>;
+  applyNativeRecoveryFiles: (input: NativeRecoveryOperation) => Promise<void>;
+};
 export type MediaHandoffNetworkActivities = {
   observeMediaHandoff: (input: MediaHandoffOperation) => Promise<void>;
   mediaHandoffState: (
