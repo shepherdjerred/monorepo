@@ -407,6 +407,7 @@ describe("CI reporting manifest", () => {
       {
         runner: "vitest",
         args: [
+          "scripts/argocd/argocd-delivery.test.ts",
           "scripts/argocd/argocd-manifest-overrides.test.ts",
           "scripts/argocd/argocd-ignored-differences.test.ts",
           "scripts/scripts-typecheck.test.ts",

@@ -1,44 +1,54 @@
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { Worker, type WorkerOptions } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { ApplicationFailure } from "@temporalio/common";
+
+async function createDeliveryWorkers(
+  environment: TestWorkflowEnvironment,
+  definitions: NonNullable<WorkerOptions["activities"]>,
+) {
+  const connection = {
+    connection: environment.nativeConnection,
+    namespace: "default",
+  };
+  const workflows = await Worker.create({
+    ...connection,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    workflowsPath: new URL("delivery.ts", import.meta.url).pathname,
+  });
+  const activities = await Worker.create({
+    ...connection,
+    taskQueue: TASK_QUEUES.DELIVERY,
+    activities: definitions,
+  });
+  return { workflows, activities };
+}
 
 async function execute(failApply: boolean, waits = 0) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
   const calls: string[] = [];
   const receipts: unknown[] = [];
-  const workflows = await Worker.create({
-    connection: environment.nativeConnection,
-    namespace: "default",
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    workflowsPath: new URL("delivery.ts", import.meta.url).pathname,
-  });
-  const activities = await Worker.create({
-    connection: environment.nativeConnection,
-    namespace: "default",
-    taskQueue: TASK_QUEUES.DELIVERY,
-    activities: {
-      prepareDelivery: () => {
-        calls.push("prepare");
-        if (waits > 0) {
-          waits -= 1;
-          return { status: "waiting" };
-        }
-        return { status: "ready", workerRollout: false };
-      },
-      applyDelivery: () => {
-        calls.push("apply");
-        if (failApply) throw new Error("lost external receipt");
-      },
-      verifyDelivery: () => {
-        calls.push("verify");
-        return [];
-      },
-      finishDelivery: (_id: string, result: unknown) => {
-        calls.push("finish");
-        receipts.push(result);
-      },
+  const { workflows, activities } = await createDeliveryWorkers(environment, {
+    prepareDelivery: () => {
+      calls.push("prepare");
+      if (waits > 0) {
+        waits -= 1;
+        return { status: "waiting" };
+      }
+      return { status: "ready", workerRollout: false };
+    },
+    applyDelivery: () => {
+      calls.push("apply");
+      if (failApply) throw new Error("lost external receipt");
+    },
+    verifyDelivery: () => {
+      calls.push("verify");
+      return [];
+    },
+    finishDelivery: (_id: string, result: unknown) => {
+      calls.push("finish");
+      receipts.push(result);
     },
   });
   try {
@@ -63,27 +73,16 @@ describe("Delivery Workflow", () => {
   it("dispatches qualified requests even when CI qualification is unavailable", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     let dispatched = false;
-    const workflows = await Worker.create({
-      connection: environment.nativeConnection,
-      namespace: "default",
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      workflowsPath: new URL("delivery.ts", import.meta.url).pathname,
-    });
-    const activities = await Worker.create({
-      connection: environment.nativeConnection,
-      namespace: "default",
-      taskQueue: TASK_QUEUES.DELIVERY,
-      activities: {
-        qualifyDeliveryBuilds: () => {
-          throw ApplicationFailure.nonRetryable(
-            "CI unavailable",
-            "DeliveryApi:PAUSED",
-          );
-        },
-        dispatchPendingDeliveries: () => {
-          dispatched = true;
-          return { submitted: 1 };
-        },
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      qualifyDeliveryBuilds: () => {
+        throw ApplicationFailure.nonRetryable(
+          "CI unavailable",
+          "DeliveryApi:PAUSED",
+        );
+      },
+      dispatchPendingDeliveries: () => {
+        dispatched = true;
+        return { submitted: 1 };
       },
     });
     try {

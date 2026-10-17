@@ -31,6 +31,19 @@ const Resources = z.array(
     .loose(),
 );
 
+it("root applies preserve delegated fields and the pilot image has an explicit Helm binding", () => {
+  const root = createAppsApp(new Chart(new App(), "apps"));
+  expect(() =>
+    assertDeliveryRootPreservesSelection(root.toJson()),
+  ).not.toThrow();
+  const app = new App();
+  createArcadeChart(app);
+  const chart = app.node.findChild("arcade");
+  if (!(chart instanceof Chart)) throw new TypeError("Arcade chart is missing");
+  const resources = JSON.stringify(chart.toJson());
+  expect(resources).toContain(".Values.delivery.image");
+});
+
 describe("Delivery infrastructure", () => {
   it("confines Delivery API egress to publication and the gated Scout archive producer", () => {
     const chart = new Chart(new App(), "ci-network");
@@ -113,27 +126,31 @@ describe("Delivery infrastructure", () => {
       metadata: { namespace: "delivery-jobs" },
       automountServiceAccountToken: false,
     });
-    expect(resources.find((item) => item.kind === "Role")).toMatchObject({
-      metadata: { namespace: "delivery-jobs" },
-      rules: [
-        { apiGroups: ["batch"], resources: ["jobs"], verbs: ["create", "get"] },
-        { apiGroups: [""], resources: ["pods"], verbs: ["get", "list"] },
-        { apiGroups: [""], resources: ["pods/log"], verbs: ["get"] },
-      ],
+    const role = resources.find((item) => item.kind === "Role");
+    expect(role?.metadata.namespace).toBe("delivery-jobs");
+    const rules = z
+      .array(
+        z.object({
+          apiGroups: z.array(z.string()),
+          resources: z.array(z.string()),
+          verbs: z.array(z.string()),
+        }),
+      )
+      .parse(role?.rules);
+    expect(
+      rules.map(
+        (rule) => `${rule.apiGroups.join(",")}:${rule.resources.join(",")}`,
+      ),
+    ).toEqual(["batch:jobs", ":pods", ":pods/log"]);
+    expect(
+      Object.fromEntries(
+        rules.map((rule) => [rule.resources.join(","), [...rule.verbs].sort()]),
+      ),
+    ).toEqual({
+      jobs: ["create", "get"],
+      pods: ["get", "list"],
+      "pods/log": ["get"],
     });
-  });
-  it("root applies preserve delegated fields and the pilot image has an explicit Helm binding", () => {
-    const root = createAppsApp(new Chart(new App(), "apps"));
-    expect(() =>
-      assertDeliveryRootPreservesSelection(root.toJson()),
-    ).not.toThrow();
-    const app = new App();
-    createArcadeChart(app);
-    const chart = app.node.findChild("arcade");
-    if (!(chart instanceof Chart))
-      throw new TypeError("Arcade chart is missing");
-    const resources = JSON.stringify(chart.toJson());
-    expect(resources).toContain(".Values.delivery.image");
   });
   it("keeps unpublished and credential-incomplete services inactive", () => {
     expect(

@@ -155,10 +155,11 @@ async function fixture() {
       dependencies: {
         "@shepherdjerred/version-catalog": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
+        "@shepherdjerred/delivery": "workspace:*",
       },
     }),
   );
-  for (const name of ["version-catalog", "s3-signed-request"])
+  for (const name of ["version-catalog", "s3-signed-request", "delivery"])
     await Bun.write(
       path.join(root, `packages/${name}/package.json`),
       JSON.stringify({
@@ -190,6 +191,7 @@ async function fixture() {
     "scripts/pin-candidates-state.json",
     "packages/version-catalog/src/catalog.json",
     "packages/s3-signed-request/src/index.ts",
+    "packages/delivery/src/shared/contract.ts",
   ])
     await Bun.write(
       path.join(root, file),
@@ -252,7 +254,7 @@ test.each([
   },
 );
 
-test("exported helper and signer changes still invalidate the consumer", async () => {
+test("exported helper, signer and Delivery contract changes still invalidate the consumer", async () => {
   const root = await fixture();
   try {
     let before = hashes(root);
@@ -261,6 +263,7 @@ test("exported helper and signer changes still invalidate the consumer", async (
       "scripts/run-temporal-node.ts",
       "scripts/temporal-replay.ts",
       "packages/s3-signed-request/src/index.ts",
+      "packages/delivery/src/shared/contract.ts",
     ]) {
       await Bun.write(path.join(root, file), "export const version = 2;\n");
       const after = hashes(root);

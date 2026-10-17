@@ -22,6 +22,8 @@ export type CredentialSpec = {
 };
 
 const PRIVATE_VAULT_REF = "op://63lcesgoblzbpkdr4koye66rei";
+const HOMELAB_VAULT_REF = "op://v64ocnykdqju4ui6j6pua56xw4";
+const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
   DELIVERY_API_TOKEN: {
@@ -29,8 +31,7 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       "Delivery machine API token (cannot approve production releases)",
     source: {
       kind: "op",
-      // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/ahbp4izt7fibvwdjwd4ffhiime/DELIVERY_ADMIN_TOKEN",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_ADMIN_TOKEN`,
     },
   },
   GRAFANA_API_KEY: {

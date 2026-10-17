@@ -1,38 +1,15 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
-import { createTestDatabase } from "#testing/postgres.ts";
-import {
-  seedDelivery,
-  testExecutor,
-  testOperator,
-  testPublisher,
-} from "#testing/seed.ts";
+import { describe, expect, test } from "vitest";
+import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { createApp } from "#server/app.ts";
 import { DeliveryError } from "#domain/error.ts";
-import { Delivery } from "./delivery.ts";
 
-let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let delivery: Delivery;
-let fixture: Awaited<ReturnType<typeof seedDelivery>>;
-beforeAll(async () => {
-  cluster = await createTestDatabase();
-  delivery = new Delivery(cluster.database);
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
-
+const context = useDeliveryFixture();
 describe("exact rollback and promotion retries", () => {
   test("rollback restores the accepted pipeline and configuration despite newer environment settings", async () => {
-    const baseline = await select(fixture.versionSet.id);
-    await accept(baseline.id, fixture.versionSet.id);
-    await delivery.registerPipeline(
+    const baseline = await select(context.fixture.versionSet.id);
+    await accept(baseline.id, context.fixture.versionSet.id);
+    await context.delivery.registerPipeline(
       "arcade/2",
       {
         kind: "argocd",
@@ -46,9 +23,9 @@ describe("exact rollback and promotion retries", () => {
       },
       testOperator,
     );
-    const updated = await delivery.registerEnvironment(
+    const updated = await context.delivery.registerEnvironment(
       {
-        id: fixture.environment.id,
+        id: context.fixture.environment.id,
         serviceId: "arcade",
         name: "prod",
         application: "arcade",
@@ -59,11 +36,11 @@ describe("exact rollback and promotion retries", () => {
       },
       testOperator,
     );
-    const rollback = await delivery.createDeployment(
+    const rollback = await context.delivery.createDeployment(
       {
         requestId: "restore-accepted-snapshot",
         environmentId: updated.id,
-        versionSetRevisionId: fixture.versionSet.id,
+        versionSetRevisionId: context.fixture.versionSet.id,
         expectedGeneration: updated.generation,
         kind: "rollback",
       },
@@ -75,19 +52,19 @@ describe("exact rollback and promotion retries", () => {
       configuration: {},
       expectedGeneration: updated.generation,
     });
-    const claimed = await delivery.claim(rollback.id, testExecutor);
+    const claimed = await context.delivery.claim(rollback.id, testExecutor);
     expect(claimed.pipeline.id).toBe("arcade/1");
     expect(claimed.environment).toMatchObject({
       pipelineRevisionId: "arcade/1",
       configurationRevision: "config/1",
       configuration: {},
     });
-    await accept(rollback.id, fixture.versionSet.id);
+    await accept(rollback.id, context.fixture.versionSet.id);
   });
   test("HTTP retry retains a failed promotion's exact source environment", async () => {
-    const baseline = await select(fixture.versionSet.id);
-    await accept(baseline.id, fixture.versionSet.id);
-    await delivery.registerPipeline(
+    const baseline = await select(context.fixture.versionSet.id);
+    await accept(baseline.id, context.fixture.versionSet.id);
+    await context.delivery.registerPipeline(
       "arcade/promoted-site",
       {
         kind: "static-site",
@@ -100,7 +77,7 @@ describe("exact rollback and promotion retries", () => {
       },
       testOperator,
     );
-    const target = await delivery.registerEnvironment(
+    const target = await context.delivery.registerEnvironment(
       {
         id: "arcade/promotion",
         serviceId: "arcade",
@@ -109,23 +86,23 @@ describe("exact rollback and promotion retries", () => {
         configurationRevision: "config/1",
         configuration: {},
         automatic: false,
-        promotionSourceEnvironmentId: fixture.environment.id,
+        promotionSourceEnvironmentId: context.fixture.environment.id,
       },
       testOperator,
     );
-    const promoted = await delivery.createDeployment(
+    const promoted = await context.delivery.createDeployment(
       {
         requestId: "failed-promotion",
         environmentId: target.id,
-        versionSetRevisionId: fixture.versionSet.id,
+        versionSetRevisionId: context.fixture.versionSet.id,
         expectedGeneration: target.generation,
         kind: "promote",
-        sourceEnvironmentId: fixture.environment.id,
+        sourceEnvironmentId: context.fixture.environment.id,
       },
       testOperator,
     );
-    await delivery.claim(promoted.id, testExecutor);
-    await delivery.finish(
+    await context.delivery.claim(promoted.id, testExecutor);
+    await context.delivery.finish(
       promoted.id,
       {
         status: "failed",
@@ -136,7 +113,7 @@ describe("exact rollback and promotion retries", () => {
       testExecutor,
     );
     const app = createApp({
-      delivery,
+      delivery: context.delivery,
       ciOrigin: "https://woodpecker.sjer.red",
       ciRepositoryId: 1,
       qualifyBuild: async () => "verified",
@@ -166,25 +143,19 @@ describe("exact rollback and promotion retries", () => {
       },
     );
     expect(response.status).toBe(201);
-    const retry = await cluster.database.deployment.findUniqueOrThrow({
+    const retry = await context.cluster.database.deployment.findUniqueOrThrow({
       where: { requestId: "promotion-retry" },
     });
     expect(retry).toMatchObject({
       kind: "promote",
-      sourceEnvironmentId: fixture.environment.id,
-      versionSetRevisionId: fixture.versionSet.id,
+      sourceEnvironmentId: context.fixture.environment.id,
+      versionSetRevisionId: context.fixture.versionSet.id,
       status: "queued",
     });
   });
 });
-beforeEach(async () => {
-  await cluster.database.$executeRawUnsafe(
-    'TRUNCATE "ApplicationLock", "Outbox", "Evidence", "Approval", "Stage", "Deployment", "Environment", "Pipeline", "VersionSetEntry", "VersionSet", "Artifact", "Build", "Request", "Audit", "ImportedSnapshot" CASCADE',
-  );
-  fixture = await seedDelivery(delivery);
-});
 async function publish(number: number) {
-  return delivery.publish(
+  return context.delivery.publish(
     {
       requestId: `publish/${String(number)}`,
       serviceId: "arcade",
@@ -210,10 +181,10 @@ async function select(
   revision: string,
   kind: "deploy" | "rollback" = "deploy",
 ) {
-  const env = await cluster.database.environment.findUniqueOrThrow({
-    where: { id: fixture.environment.id },
+  const env = await context.cluster.database.environment.findUniqueOrThrow({
+    where: { id: context.fixture.environment.id },
   });
-  const selected = await delivery.createDeployment(
+  const selected = await context.delivery.createDeployment(
     {
       requestId: crypto.randomUUID(),
       environmentId: env.id,
@@ -223,11 +194,11 @@ async function select(
     },
     testOperator,
   );
-  await delivery.claim(selected.id, testExecutor);
+  await context.delivery.claim(selected.id, testExecutor);
   return selected;
 }
 async function accept(deploymentId: string, revision: string) {
-  await delivery.finish(
+  await context.delivery.finish(
     deploymentId,
     {
       status: "succeeded",
@@ -245,14 +216,14 @@ async function accept(deploymentId: string, revision: string) {
 
 describe("selection recovery and qualification fairness", () => {
   test("rollback holds the bad qualified revision until a new build qualifies", async () => {
-    const baseline = await select(fixture.versionSet.id);
-    await accept(baseline.id, fixture.versionSet.id);
+    const baseline = await select(context.fixture.versionSet.id);
+    await accept(baseline.id, context.fixture.versionSet.id);
     const bad = await publish(2);
-    await delivery.qualify(bad.buildId, "verified", testExecutor);
-    const [latest] = await delivery.versions("arcade");
+    await context.delivery.qualify(bad.buildId, "verified", testExecutor);
+    const [latest] = await context.delivery.versions("arcade");
     if (latest === undefined) throw new Error("Missing qualified version");
     const failed = await select(latest.id);
-    await delivery.finish(
+    await context.delivery.finish(
       failed.id,
       {
         status: "failed",
@@ -262,15 +233,18 @@ describe("selection recovery and qualification fairness", () => {
       },
       testExecutor,
     );
-    const rollback = await select(fixture.versionSet.id, "rollback");
-    await accept(rollback.id, fixture.versionSet.id);
+    const rollback = await select(context.fixture.versionSet.id, "rollback");
+    await accept(rollback.id, context.fixture.versionSet.id);
     expect(
-      await delivery.reconcile([fixture.environment.id], testExecutor),
+      await context.delivery.reconcile(
+        [context.fixture.environment.id],
+        testExecutor,
+      ),
     ).toEqual({ deployments: [] });
     const fresh = await publish(3);
-    await delivery.qualify(fresh.buildId, "verified", testExecutor);
-    const reconciled = await delivery.reconcile(
-      [fixture.environment.id],
+    await context.delivery.qualify(fresh.buildId, "verified", testExecutor);
+    const reconciled = await context.delivery.reconcile(
+      [context.fixture.environment.id],
       testExecutor,
     );
     expect(reconciled.deployments).toHaveLength(1);
@@ -278,10 +252,10 @@ describe("selection recovery and qualification fairness", () => {
   test("pending builds rotate after checks instead of starving newer finished builds", async () => {
     const first = await publish(2);
     const second = await publish(3);
-    const initial = await delivery.pendingQualification();
+    const initial = await context.delivery.pendingQualification();
     expect(initial.builds[0]?.id).toBe(first.buildId);
-    await delivery.markQualificationAttempt(first.buildId);
-    const next = await delivery.pendingQualification();
+    await context.delivery.markQualificationAttempt(first.buildId);
+    const next = await context.delivery.pendingQualification();
     expect(next.builds[0]?.id).toBe(second.buildId);
   });
   test("permanent CI identity rejection is recorded while subsequent valid builds qualify", async () => {
@@ -289,7 +263,7 @@ describe("selection recovery and qualification fairness", () => {
     const valid = await publish(3);
     const token = "executor-test-credential-32-characters";
     const app = createApp({
-      delivery,
+      delivery: context.delivery,
       ciOrigin: "https://woodpecker.sjer.red",
       ciRepositoryId: 1,
       peerAddress: () => "127.0.0.1",
@@ -305,7 +279,7 @@ describe("selection recovery and qualification fairness", () => {
         publicOrigin: "http://delivery.test",
         machineCredentials: [{ token, principal: testExecutor }],
         writesEnabled: async () => true,
-        enabledEnvironments: async () => [fixture.environment.id],
+        enabledEnvironments: async () => [context.fixture.environment.id],
         operatorLogins: async () => [],
         trustedProxyAddresses: async () => [],
       },
@@ -317,16 +291,16 @@ describe("selection recovery and qualification fairness", () => {
       );
       expect(response.status).toBe(200);
     }
-    expect(await delivery.build(invalid.buildId)).toMatchObject({
+    expect(await context.delivery.build(invalid.buildId)).toMatchObject({
       status: "failed",
       qualificationReason: "CI pipeline was not an exact main push",
     });
-    expect(await delivery.build(valid.buildId)).toMatchObject({
+    expect(await context.delivery.build(valid.buildId)).toMatchObject({
       status: "verified",
     });
   });
   test("cancel prevents a new mutation stage but preserves a running operation receipt", async () => {
-    const selected = await select(fixture.versionSet.id);
+    const selected = await select(context.fixture.versionSet.id);
     const stage = {
       key: "reconcile",
       operationId: "operation/1",
@@ -334,15 +308,15 @@ describe("selection recovery and qualification fairness", () => {
       message: "Starting external operation",
       evidence: [],
     };
-    await delivery.stage(selected.id, stage, testExecutor);
-    await delivery.cancel(selected.id, testOperator);
-    await delivery.stage(
+    await context.delivery.stage(selected.id, stage, testExecutor);
+    await context.delivery.cancel(selected.id, testOperator);
+    await context.delivery.stage(
       selected.id,
       { ...stage, message: "Recorded existing Job UID" },
       testExecutor,
     );
     await expect(
-      delivery.stage(
+      context.delivery.stage(
         selected.id,
         { ...stage, key: "next", operationId: "operation/2" },
         testExecutor,
@@ -350,7 +324,7 @@ describe("selection recovery and qualification fairness", () => {
     ).rejects.toMatchObject({ code: "CONFLICT" });
   });
   test("Scout production approval follows its canonical bucket rather than display name", async () => {
-    await delivery.registerPipeline(
+    await context.delivery.registerPipeline(
       "scout-site/prod",
       {
         kind: "static-site",
@@ -363,7 +337,7 @@ describe("selection recovery and qualification fairness", () => {
       },
       testOperator,
     );
-    const env = await delivery.registerEnvironment(
+    const env = await context.delivery.registerEnvironment(
       {
         id: "scout/site",
         serviceId: "scout-for-lol",
@@ -376,12 +350,12 @@ describe("selection recovery and qualification fairness", () => {
       testOperator,
     );
     expect(env.approvalRequired).toBe(true);
-    const overview = await delivery.overview();
+    const overview = await context.delivery.overview();
     expect(
       overview.environments.find((entry) => entry.id === env.id)
         ?.approvalRequired,
     ).toBe(true);
-    await delivery.registerPipeline(
+    await context.delivery.registerPipeline(
       "scout-site/unknown",
       {
         kind: "static-site",
@@ -395,7 +369,7 @@ describe("selection recovery and qualification fairness", () => {
       testOperator,
     );
     await expect(
-      delivery.registerEnvironment(
+      context.delivery.registerEnvironment(
         {
           id: "scout/unknown",
           serviceId: "scout-for-lol",
