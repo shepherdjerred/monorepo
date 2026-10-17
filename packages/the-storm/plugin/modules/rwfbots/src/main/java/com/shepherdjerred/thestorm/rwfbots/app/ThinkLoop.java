@@ -971,7 +971,7 @@ public final class ThinkLoop {
               mind.percept,
               route.board(),
               Role.RETAKE);
-      var measurement = ThinkFlight.section(flight(cycle, "retake-route"), 1);
+      var measurement = ThinkFlight.bot(flight(cycle, "retake-route"), route.id().value());
       try {
         return Planner.canReachWorker(
             situation, mind.tacticsContext.withWorkspace(workspace), route.worker());
@@ -1020,13 +1020,18 @@ public final class ThinkLoop {
       var percept = java.util.Objects.requireNonNull(mind.percept);
       var situation =
           new Situation(cycle.snapshot().require(id), cycle.snapshot(), percept, board, role);
-      var thought =
-          Tactics.think(
-              mind.tacticsState,
-              situation,
-              mind.tacticsContext.withWorkspace(workspace),
-              randomFor(cycle.current(), id, cycle.tick() + 2));
-      return new Proposal(mind, thought);
+      var measurement = ThinkFlight.bot(flight(cycle, "tactics-bot"), id.value());
+      try {
+        var thought =
+            Tactics.think(
+                mind.tacticsState,
+                situation,
+                mind.tacticsContext.withWorkspace(workspace),
+                randomFor(cycle.current(), id, cycle.tick() + 2));
+        return new Proposal(mind, thought);
+      } finally {
+        measurement.close();
+      }
     }
 
     private boolean conflicting(Cycle cycle, Proposal proposal, Blackboard board) {
