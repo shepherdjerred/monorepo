@@ -242,6 +242,7 @@ public final class SafetyService implements ContentSafety {
                 : List.of(),
             java.util.Set.of("ticket", "command", "command-content")
                 .contains(submission.surface()));
+    if (obvious.isEmpty()) obvious = ContentRules.obvious(submission.name(), List.of(), false);
     if (obvious.isPresent() && submission.surface().equals("companion-reply"))
       return CompletableFuture.completedFuture(
           verdict(
@@ -424,5 +425,18 @@ public final class SafetyService implements ContentSafety {
     return store
         .attempt(sanitized(submission), time.instant())
         .thenCompose(done -> finish(submission.id(), outcome));
+  }
+
+  /** Activity batches retain each snapshot and receipt in one shared-writer transaction. */
+  public CompletableFuture<Void> observeBatch(List<EvidenceStore.Observation> observations) {
+    return store.observations(
+        observations.stream()
+            .map(
+                observation ->
+                    new EvidenceStore.Observation(
+                        sanitized(observation.submission()),
+                        observation.outcome(),
+                        observation.at()))
+            .toList());
   }
 }

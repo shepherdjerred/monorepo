@@ -40,6 +40,48 @@ final class EvidenceQueriesTest {
         "recipient");
   }
 
+  @Test
+  void activityBatchPersistsEverySnapshotAndReceiptAtomically() {
+    try (var database = open(directory.resolve("batch.db"))) {
+      var store = new JooqEvidenceStore(database);
+      var batch =
+          java.util.stream.IntStream.rangeClosed(1, 3)
+              .mapToObj(
+                  index ->
+                      new com.shepherdjerred.thestorm.safety.app.EvidenceStore.Observation(
+                          submission(index),
+                          index == 2 ? "denied" : "observed",
+                          NOW.plusMillis(index)))
+              .toList();
+      store.observations(batch).join();
+      assertThat(
+              database
+                  .read(dsl -> dsl.fetchCount(org.jooq.impl.DSL.table("safety_submission")))
+                  .join())
+          .isEqualTo(3);
+      assertThat(
+              database.read(dsl -> dsl.fetchCount(org.jooq.impl.DSL.table("safety_event"))).join())
+          .isEqualTo(3);
+      assertThat(store.strikes(PLAYER, "observed", NOW).join()).isEqualTo(2);
+      assertThat(store.strikes(PLAYER, "denied", NOW).join()).isEqualTo(1);
+      var rollback =
+          java.util.List.of(
+              new com.shepherdjerred.thestorm.safety.app.EvidenceStore.Observation(
+                  submission(4), "observed", NOW),
+              batch.getFirst());
+      assertThatThrownBy(() -> store.observations(rollback).join())
+          .isInstanceOf(java.util.concurrent.CompletionException.class);
+      assertThat(
+              database
+                  .read(dsl -> dsl.fetchCount(org.jooq.impl.DSL.table("safety_submission")))
+                  .join())
+          .isEqualTo(3);
+      assertThat(
+              database.read(dsl -> dsl.fetchCount(org.jooq.impl.DSL.table("safety_event"))).join())
+          .isEqualTo(3);
+    }
+  }
+
   private static String request(String action, long after, String until) {
     return JSON.writeValueAsString(
         new EvidenceQuery(

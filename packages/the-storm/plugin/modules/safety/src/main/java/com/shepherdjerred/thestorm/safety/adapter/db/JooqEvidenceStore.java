@@ -13,6 +13,8 @@ import java.util.concurrent.CompletableFuture;
 
 /** All values are bound parameters; evidence stays in the backed-up game volume. */
 public final class JooqEvidenceStore implements EvidenceStore {
+  private record Event(UUID submission, String outcome, String details, Instant at) {}
+
   private static final java.time.format.DateTimeFormatter TIME =
       new java.time.format.DateTimeFormatterBuilder().appendInstant(9).toFormatter();
 
@@ -66,31 +68,36 @@ public final class JooqEvidenceStore implements EvidenceStore {
     return database
         .write(
             dsl -> {
-              dsl.insertInto(table("safety_submission"))
-                  .columns(
-                      field("id"),
-                      field("player"),
-                      field("name"),
-                      field("surface"),
-                      field("audience"),
-                      field("object_ref"),
-                      field("original_text"),
-                      field("components"),
-                      field("created_at"))
-                  .values(
-                      submission.id().toString(),
-                      submission.player().toString(),
-                      submission.name(),
-                      submission.surface(),
-                      submission.audience(),
-                      submission.object(),
-                      submission.text(),
-                      submission.components(),
-                      stamp(at))
-                  .execute();
+              insertSubmission(dsl, submission, at);
               return true;
             })
         .thenAccept(done -> {});
+  }
+
+  private static void insertSubmission(
+      org.jooq.DSLContext dsl, ContentSubmission submission, Instant at) {
+    dsl.insertInto(table("safety_submission"))
+        .columns(
+            field("id"),
+            field("player"),
+            field("name"),
+            field("surface"),
+            field("audience"),
+            field("object_ref"),
+            field("original_text"),
+            field("components"),
+            field("created_at"))
+        .values(
+            submission.id().toString(),
+            submission.player().toString(),
+            submission.name(),
+            submission.surface(),
+            submission.audience(),
+            submission.object(),
+            submission.text(),
+            submission.components(),
+            stamp(at))
+        .execute();
   }
 
   @Override
@@ -99,14 +106,35 @@ public final class JooqEvidenceStore implements EvidenceStore {
     return database
         .write(
             dsl -> {
-              dsl.insertInto(table("safety_event"))
-                  .columns(
-                      field("submission_id"),
-                      field("outcome"),
-                      field("details"),
-                      field("created_at"))
-                  .values(submission.toString(), outcome, details, stamp(at))
-                  .execute();
+              insertEvent(dsl, new Event(submission, outcome, details, at));
+              return true;
+            })
+        .thenAccept(done -> {});
+  }
+
+  private static void insertEvent(org.jooq.DSLContext dsl, Event event) {
+    dsl.insertInto(table("safety_event"))
+        .columns(field("submission_id"), field("outcome"), field("details"), field("created_at"))
+        .values(event.submission().toString(), event.outcome(), event.details(), stamp(event.at()))
+        .execute();
+  }
+
+  @Override
+  public CompletableFuture<Void> observations(List<Observation> observations) {
+    var batch = List.copyOf(observations);
+    return database
+        .write(
+            dsl -> {
+              for (var observation : batch) {
+                insertSubmission(dsl, observation.submission(), observation.at());
+                insertEvent(
+                    dsl,
+                    new Event(
+                        observation.submission().id(),
+                        observation.outcome(),
+                        "",
+                        observation.at()));
+              }
               return true;
             })
         .thenAccept(done -> {});

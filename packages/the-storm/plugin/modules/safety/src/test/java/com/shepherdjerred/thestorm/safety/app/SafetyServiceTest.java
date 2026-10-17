@@ -39,6 +39,64 @@ final class SafetyServiceTest {
   }
 
   @Test
+  void abusiveDiscordDisplayNamesCannotPublishABenignBody() {
+    try (var db = database()) {
+      var calls = new AtomicInteger();
+      var service =
+          new SafetyService(
+              new JooqEvidenceStore(db),
+              (submission, text, context) -> {
+                calls.incrementAndGet();
+                return CompletableFuture.completedFuture(allow());
+              },
+              new SafetyService.Policy(
+                  InstantSource.fixed(NOW),
+                  CONFIG,
+                  player -> CompletableFuture.completedFuture(true)));
+      service.penalties(request -> CompletableFuture.completedFuture(null));
+      var request =
+          new ContentSubmission(
+              UUID.randomUUID(), ALICE, "n" + "igger", "discord", "global", "hello", "", "message");
+      var review = service.check(request).join();
+      assertThat(review.allowed()).isFalse();
+      assertThat(review.category()).isEqualTo("hate");
+      assertThat(calls.get()).isZero();
+    }
+  }
+
+  @Test
+  void batchedActivityUsesTheSameCredentialRedactionAsAdmission() {
+    try (var db = database()) {
+      var store = new JooqEvidenceStore(db);
+      var service =
+          new SafetyService(
+              store,
+              (submission, text, context) -> CompletableFuture.completedFuture(allow()),
+              new SafetyService.Policy(
+                  InstantSource.fixed(NOW),
+                  CONFIG,
+                  player -> CompletableFuture.completedFuture(true)));
+      var credential = "sk-proj-" + "a".repeat(24);
+      var activity =
+          new ContentSubmission(
+              UUID.randomUUID(),
+              ALICE,
+              "Alice",
+              "activity",
+              "staff",
+              credential,
+              credential,
+              credential);
+      service
+          .observeBatch(java.util.List.of(new EvidenceStore.Observation(activity, "observed", NOW)))
+          .join();
+      assertThat(store.search("Alice", "", 100).join())
+          .contains("credential redacted")
+          .doesNotContain(credential);
+    }
+  }
+
+  @Test
   void credentialShapesInDisplayNamesAndMetadataNeverReachEvidenceOrTheProvider() {
     try (var db = database()) {
       var store = new JooqEvidenceStore(db);

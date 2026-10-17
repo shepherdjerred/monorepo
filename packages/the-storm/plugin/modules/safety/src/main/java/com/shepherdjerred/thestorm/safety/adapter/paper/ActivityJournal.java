@@ -1,7 +1,9 @@
 package com.shepherdjerred.thestorm.safety.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
-import com.shepherdjerred.thestorm.core.safety.ContentSafety;
+import com.shepherdjerred.thestorm.safety.app.ActivityWrites;
+import com.shepherdjerred.thestorm.safety.app.EvidenceStore;
+import com.shepherdjerred.thestorm.safety.app.SafetyService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,12 +27,12 @@ import org.bukkit.inventory.ItemStack;
 /** Complements CoreProtect with attempted/denied interactions and full item text snapshots. */
 public final class ActivityJournal implements Listener {
   private final ModuleContext context;
-  private final ContentSafety safety;
+  private final ActivityWrites writes;
   private final ContentAdmission admission;
 
-  public ActivityJournal(ModuleContext context, ContentSafety safety) {
+  public ActivityJournal(ModuleContext context, SafetyService safety, ActivityWrites writes) {
     this.context = context;
-    this.safety = safety;
+    this.writes = writes;
     admission = new ContentAdmission(context, safety);
   }
 
@@ -38,16 +40,9 @@ public final class ActivityJournal implements Listener {
     var submission =
         admission.submission(
             player, new ContentAdmission.Draft("activity", "staff", details, "", object));
-    var _ =
-        safety
-            .observe(submission, denied ? "denied" : "observed")
-            .exceptionally(
-                failure -> {
-                  context
-                      .logger()
-                      .error("Activity evidence write failed: {}", submission.id(), failure);
-                  return null;
-                });
+    writes.record(
+        new EvidenceStore.Observation(
+            submission, denied ? "denied" : "observed", context.time().instant()));
   }
 
   private static String item(ItemStack item) {

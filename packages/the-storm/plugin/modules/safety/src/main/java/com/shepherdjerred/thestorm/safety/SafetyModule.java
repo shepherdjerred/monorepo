@@ -21,6 +21,7 @@ import org.jspecify.annotations.Nullable;
 public final class SafetyModule implements StormModule {
   private @Nullable HttpContentClassifier classifier;
   private @Nullable GrimHooks grim;
+  private com.shepherdjerred.thestorm.safety.app.@Nullable ActivityWrites activity;
 
   @Override
   public String id() {
@@ -95,7 +96,15 @@ public final class SafetyModule implements StormModule {
     manager.registerEvents(
         new com.shepherdjerred.thestorm.safety.adapter.paper.CreativeContentGate(context, service),
         context.plugin());
-    manager.registerEvents(new ActivityJournal(context, service), context.plugin());
+    var writes =
+        new com.shepherdjerred.thestorm.safety.app.ActivityWrites(
+            batch ->
+                java.util.concurrent.CompletableFuture.completedFuture(batch)
+                    .thenComposeAsync(service::observeBatch, context.compute().executor()),
+            context.scheduler(),
+            failure -> context.logger().error("Activity evidence batch failed", failure));
+    activity = writes;
+    manager.registerEvents(new ActivityJournal(context, service, writes), context.plugin());
     var existing =
         new com.shepherdjerred.thestorm.safety.adapter.paper.ExistingContentJournal(
             context, service);
@@ -110,6 +119,8 @@ public final class SafetyModule implements StormModule {
 
   @Override
   public void disable() {
+    var writes = activity;
+    if (writes != null) writes.close();
     var hooks = grim;
     if (hooks != null) hooks.close();
     var client = classifier;

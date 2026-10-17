@@ -10,6 +10,10 @@ import java.util.concurrent.CompletableFuture;
 public interface EvidenceStore {
   record Entry(ContentSubmission submission, Instant at) {}
 
+  record Observation(ContentSubmission submission, String outcome, Instant at) {}
+
+  CompletableFuture<Void> observations(List<Observation> observations);
+
   CompletableFuture<Void> attempt(ContentSubmission submission, Instant at);
 
   CompletableFuture<Void> event(UUID submission, String outcome, String details, Instant at);

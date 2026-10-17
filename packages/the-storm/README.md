@@ -63,7 +63,10 @@ Loaded saved signs, containers and entity names are snapshots with unknown creat
 their observers receive no offense attribution. Visual map art is not text screening.
 
 CoreProtect owns block and item history and rollback. Safety adds denied interactions,
-inventory metadata, text, and Grim findings with gameplay context. Safety requires the
+inventory metadata, text, and Grim findings with gameplay context. Activity snapshots
+retain their original payloads and timestamps in batches of up to 128, with one
+activity database job in flight so bursts do not fill the shared writer queue.
+Shutdown queues any remaining snapshots before the database closes. Safety requires the
 checksum-pinned Grim runtime; development profiles with Safety off can run without it.
 Its movement and packet corrections have an
 independent managed rollout gate; no automatic ban commands are configured.

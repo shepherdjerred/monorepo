@@ -21,7 +21,9 @@ unknown keys fail with 400 so plugin/brain version skew surfaces loudly.
 confidence, label, reasoning, model, costMicros }`
 - `POST /v1/moderate` — the versioned
   [content contract](contracts/content-moderation.json). Every text window is
-  screened, including ordinary messages without caps or links. Responses include
+  screened with its visible author name, including ordinary messages without caps
+  or links. A promotional display name also receives contextual review. Author
+  screening preserves the complete allowed message body. Responses include
   the publication decision, category scores, model identifiers and actual contextual
   cost. Provider errors never become approvals. Native gameplay violence is judged
   in context, and a link alone is not advertising. Raw prompts are not logged.

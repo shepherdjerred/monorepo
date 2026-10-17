@@ -50,6 +50,49 @@ function provider(scores: Record<string, number> = {}) {
 }
 
 describe("purpose-built screening", () => {
+  test("screens the visible author without truncating the allowed body", async () => {
+    const fetcher = vi.fn(async (_url: string, _init: RequestInit) =>
+      provider(),
+    );
+    const moderate = createModeration({
+      apiKey: "fixture-key",
+      contextModel: "fixture",
+      fetcher,
+      contextual: clean,
+    });
+    const text = "x".repeat(2000);
+    await moderate({
+      ...request,
+      surface: "discord",
+      authorName: "Visible name",
+      text,
+    });
+    expect(fetcher.mock.calls[0]?.[1].body).toBe(
+      JSON.stringify({
+        model: "omni-moderation-latest",
+        input: `Visible name: ${text}`,
+      }),
+    );
+  });
+
+  test("promotion in a Discord nickname receives contextual review", async () => {
+    const contextual = vi.fn(clean);
+    const moderate = createModeration({
+      apiKey: "fixture-key",
+      contextModel: "fixture",
+      fetcher: async () => provider(),
+      contextual,
+    });
+    const submission = {
+      ...request,
+      surface: "discord",
+      authorName: "Join discord.gg/cold",
+      text: "hello",
+    };
+    await moderate(submission);
+    expect(contextual).toHaveBeenCalledExactlyOnceWith(submission);
+  });
+
   test("screens ordinary text without a generation call", async () => {
     const contextual = vi.fn(clean);
     const fetcher = vi.fn(async () => provider());
