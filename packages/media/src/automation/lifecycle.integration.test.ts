@@ -81,7 +81,7 @@ describe("durable media Activity invariants in PostgreSQL", () => {
   });
 
   test("missing requester credentials invalidate formerly fresh watched evidence", async () => {
-    const data = await fixture();
+    const data = await fixture("124");
     await database().watchState.create({
       data: {
         userId: data.user.id,

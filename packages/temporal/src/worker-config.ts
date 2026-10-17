@@ -34,6 +34,7 @@ import {
   capacityNetworkActivities,
   capacityFileActivities,
 } from "./activities/media/capacity.ts";
+import { plexEventNetworkActivities } from "./activities/media/plex-events.ts";
 
 export type QueueWorkerRole =
   | "streambot"
@@ -102,6 +103,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     activities: {
       ...mediaNetworkWorkerActivities,
       ...capacityNetworkActivities,
+      ...plexEventNetworkActivities,
       ...plexExclusionNetworkWorkerActivities,
     },
     maxConcurrentActivityTaskExecutions: 4,

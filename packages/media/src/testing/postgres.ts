@@ -38,7 +38,9 @@ function postgresCommand(args: string[]): string[] {
 export async function startMediaTestPostgres(
   options: {
     migrationCeiling?:
-      "20261017001600_visibility" | "20261017001700_default_edition_scope";
+      | "20261017001600_visibility"
+      | "20261017001700_default_edition_scope"
+      | "20261017001800_capacity_observation";
   } = {},
 ) {
   const directory = await mkdtemp(path.join(tmpdir(), "media-pg-"));

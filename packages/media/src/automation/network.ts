@@ -45,6 +45,7 @@ import { createNativeQuarantineFileActivities } from "#automation/native-quarant
 import type { FileContext } from "./files/types.ts";
 import { createCapacityFileProducer } from "./capacity/files.ts";
 import { createCapacityNetworkProducer } from "./capacity/network.ts";
+import { createPlexEventActivities } from "./plex-events/activities.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -151,6 +152,7 @@ export async function createMediaNetworkContext(
     | "reconcileNotification"
     | "sharedAnnouncements"
     | "personalDiscordAvailable"
+    | "watchExecution"
   >,
 ): Promise<MediaAutomationContext> {
   const config = NetworkBootstrapSchema.parse(environment);
@@ -302,6 +304,7 @@ const DeliveryBootstrapSchema = z
 
 export async function createMediaNetworkRuntime(
   environment: Record<string, string | undefined>,
+  watchExecution: MediaAutomationContext["watchExecution"],
 ) {
   const config = DeliveryBootstrapSchema.parse(environment);
   const temporal = createMediaWorkflowStarter({
@@ -334,6 +337,7 @@ export async function createMediaNetworkRuntime(
     };
   };
   const context = await createMediaNetworkContext(environment, {
+    watchExecution,
     startWorkflow: temporal.start,
     describeWorkflow: temporal.describe,
     personalDiscordAvailable: async () => {
@@ -395,6 +399,10 @@ export async function createMediaNetworkRuntime(
     },
     activities: {
       ...createMediaNetworkActivities(context, lifecycle),
+      ...createPlexEventActivities(context, async () => {
+        const flag = await behavior.get("plexEventHintsEnabled");
+        return flag.value;
+      }),
       ...createSubtitleReplacementNetworkActivities(context.db),
       observeNativeRecovery: async (input: { planId: string }) => {
         await context.qbittorrent.login();

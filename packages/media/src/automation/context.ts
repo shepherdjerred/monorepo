@@ -5,6 +5,7 @@ import type { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import type { ProviderRegistry } from "./providers.ts";
 import type { WorkflowStarter } from "./store.ts";
 import type { TmdbClient } from "#integrations/tmdb.ts";
+import type { WatchExecution } from "./plex-events/execution.ts";
 import type {
   ReceiptQuery,
   ReceiptObservation,
@@ -12,6 +13,7 @@ import type {
 
 export type MediaAutomationContext = {
   db: Database;
+  watchExecution: () => WatchExecution;
   serverMachineId?: string;
   tmdb: TmdbClient;
   cipher: CredentialCipher;

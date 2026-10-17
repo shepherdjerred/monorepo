@@ -13,6 +13,7 @@ import type { Database } from "#infrastructure/database.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
+import { testWatchExecution } from "./watch-execution.ts";
 
 export async function ensureTestProvider(db: Database) {
   await db.mediaProvider.createMany({
@@ -42,6 +43,7 @@ export function automationTestHarness() {
     };
     return {
       db: cluster.database,
+      watchExecution: testWatchExecution,
       serverMachineId: "fixture-server",
       tmdb: new TmdbClient({ kind: "api-key", apiKey: "fixture" }, transport),
       cipher,
@@ -79,7 +81,7 @@ export function automationTestHarness() {
     };
   }
 
-  async function fixture() {
+  async function fixture(ratingKey = "123") {
     const db = cluster.database;
     await grantTestLease(db);
     await db.mediaRuntimeState.update({
@@ -105,7 +107,7 @@ export function automationTestHarness() {
         kind: "movie",
         title: "Example",
         year: 2020,
-        externalIds: { plexRatingKey: "123" },
+        externalIds: { plexRatingKey: ratingKey, plexSectionId: "1" },
       },
     });
     const rules = {

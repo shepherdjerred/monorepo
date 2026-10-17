@@ -44,6 +44,10 @@ import { z } from "zod";
 import type { MediaActor, MediaAuth } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import { registerCapacityRoutes } from "./capacity-routes.ts";
+import {
+  registerPlexEventRoutes,
+  type PlexEventRouteDependencies,
+} from "./plex-events/routes.ts";
 import type { CapacityAdministration } from "#infrastructure/capacity/service.ts";
 import type {
   CatalogApplication,
@@ -68,6 +72,7 @@ export type MediaAppDependencies = {
   notifications: NotificationApplication;
   admin: AdminApplication;
   capacityAdmin: CapacityAdministration;
+  plexEvents: PlexEventRouteDependencies;
   plexAdmin: PlexAdministration;
   numberingAdmin: NumberingAdministration;
   migrationAdmin: MigrationAdministration;
@@ -122,6 +127,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   } satisfies Parameters<typeof setCookie>[3];
   app.use(secureHeaders());
   app.use(async (c, next) => {
+    if (c.req.method === "POST" && c.req.path === "/events/plex") return next();
     const upload =
       c.req.method === "POST" && c.req.path === "/api/v1/admin/subtitles";
     return bodyLimit({
@@ -176,6 +182,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     );
   });
   app.get("/health", (c) => c.json({ status: "ok" }));
+  registerPlexEventRoutes(app, dependencies.plexEvents, dependencies.onError);
 
   app.use("/api/*", async (c, next) => {
     if (

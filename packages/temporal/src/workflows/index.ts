@@ -478,3 +478,6 @@ export const cleanupSubtitleReplacementWorkflow = replacement.cleanup;
 import * as capacity from "./media/capacity.ts";
 export const observeMediaCapacityWorkflow =
   capacity.observeMediaCapacityWorkflow;
+import * as plexEvents from "./media/plex-events.ts";
+export const observePlexEventHintWorkflow =
+  plexEvents.observePlexEventHintWorkflow;

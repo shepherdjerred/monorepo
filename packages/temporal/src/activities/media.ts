@@ -1,5 +1,6 @@
 import { ApplicationFailure, heartbeat, Context } from "@temporalio/activity";
 import { CancelledFailure } from "@temporalio/common";
+import { watchExecution } from "./media/watch-execution.ts";
 import type {
   SubtitleReplacementFileActivities,
   SubtitleReplacementNetworkActivities,
@@ -32,7 +33,7 @@ type FileActivities = MediaFileActivities &
   NativeRecoveryFileActivities &
   NativeQuarantineFileActivities;
 export async function getMediaNetworkRuntime() {
-  networkRuntime ??= createMediaNetworkRuntime(Bun.env);
+  networkRuntime ??= createMediaNetworkRuntime(Bun.env, watchExecution);
   try {
     const runtime = await networkRuntime;
     return runtime;
