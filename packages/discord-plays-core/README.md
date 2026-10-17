@@ -27,6 +27,8 @@ fix lands once.
   Go-Live streamer (XState desired-stream machine wiring, stream-active sync,
   audio teardown, start/stop/login); games implement `pushFrame` and
   `buildEncoder` and may override lifecycle hooks.
+  Session teardown disposes its media streamer and gateway listeners while
+  leaving the pool-owned Discord client logged in for its next game.
 - `src/stream/latest-frame-sink.ts` — `LatestFrameSink`, the bounded rawvideo
   source that evicts the oldest frame rather than queueing stale video.
 - `src/webserver/server.ts`, `express.ts` — the shared Express app and web

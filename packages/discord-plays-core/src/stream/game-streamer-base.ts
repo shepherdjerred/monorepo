@@ -151,7 +151,7 @@ export abstract class GameStreamerBase {
       this.actor.stop();
       this.teardownAudio();
       // The pool owns the gateway client. Only detach this session's voice call.
-      this.streamer.leaveVoice();
+      this.streamer.dispose();
     } finally {
       this.activeMetric.close();
       this.bufferMetric.close();

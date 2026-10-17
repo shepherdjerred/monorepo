@@ -47,15 +47,16 @@ export class Streamer {
   private _voiceConnection: VoiceConnection | undefined;
   private _client: Client;
   private _gatewayEmitter = new EventEmitter<GatewayEventMap>();
+  private readonly onGatewayEvent = (packet: GatewayEvent): void => {
+    // @ts-expect-error I don't know how to make this work with TypeScript, so whatever
+    this._gatewayEmitter.emit(packet.t, packet.d);
+  };
 
   constructor(client: Client) {
     this._client = client;
 
     //listen for messages
-    this.client.on("raw", (packet: GatewayEvent) => {
-      // @ts-expect-error I don't know how to make this work with TypeScript, so whatever
-      this._gatewayEmitter.emit(packet.t, packet.d);
-    });
+    this.client.on("raw", this.onGatewayEvent);
   }
 
   public get client(): Client {
@@ -222,26 +223,31 @@ export class Streamer {
 
   public stopStream(): void {
     const stream = this.voiceConnection?.streamConnection;
-
-    if (!stream) return;
-
-    stream.stop();
-
-    this.signalStopStream();
-
-    this.voiceConnection.streamConnection = undefined;
+    if (stream) {
+      stream.stop();
+      this.signalStopStream();
+      if (this.voiceConnection) this.voiceConnection.streamConnection = undefined;
+    }
     this._gatewayEmitter.removeAllListeners("STREAM_CREATE");
     this._gatewayEmitter.removeAllListeners("STREAM_SERVER_UPDATE");
   }
 
   public leaveVoice(): void {
-    this.voiceConnection?.stop();
+    const voice = this.voiceConnection;
+    this.stopStream();
+    voice?.stop();
 
-    this.signalLeaveVoice();
+    if (voice) this.signalLeaveVoice();
 
     this._voiceConnection = undefined;
     this._gatewayEmitter.removeAllListeners("VOICE_STATE_UPDATE");
     this._gatewayEmitter.removeAllListeners("VOICE_SERVER_UPDATE");
+  }
+
+  /** Release session listeners while the caller keeps its pooled gateway client. */
+  public dispose(): void {
+    this.leaveVoice();
+    this.client.off("raw", this.onGatewayEvent);
   }
 
   public signalVideo(video_enabled: boolean): void {

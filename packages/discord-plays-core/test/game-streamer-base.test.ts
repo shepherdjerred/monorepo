@@ -128,13 +128,17 @@ describe("GameStreamerBase", () => {
         destroys++;
       }
     }
+    const client = new ThrowingClient();
+    const rawListeners = client.listenerCount("raw");
     const streamer = new TestStreamer({
-      selfbotClient: new ThrowingClient(),
+      selfbotClient: client,
       guildId: "guild-1",
       channelId: "channel-1",
       logger: silentLogger,
     });
+    expect(client.listenerCount("raw")).toBe(rawListeners + 1);
     await streamer.shutdown();
     expect(destroys).toBe(0);
+    expect(client.listenerCount("raw")).toBe(rawListeners);
   });
 });
