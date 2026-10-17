@@ -8,12 +8,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import jdk.jfr.FlightRecorder;
 import jdk.jfr.FlightRecorderListener;
 import jdk.jfr.Recording;
 import jdk.jfr.RecordingState;
 
-/** One disposable diagnostic attempt. No Bukkit, product classes or caller callbacks run here. */
+/**
+ * One disposable diagnostic attempt with JDK-only collaborators and no Bukkit or product classes.
+ */
 final class DiagnosticJfr implements AutoCloseable {
   enum State {
     UNUSED,
@@ -69,6 +72,7 @@ final class DiagnosticJfr implements AutoCloseable {
   private final Path root;
   private final SettingsSource settingsSource;
   private final Limits limits;
+  private final Consumer<FlightRecorderListener> listenerRemoval;
   private final Object terminalTransition = new Object();
   private final LinkedBlockingQueue<Request> requests = new LinkedBlockingQueue<>(4);
   private final AtomicReference<String> invalid = new AtomicReference<>("");
@@ -86,9 +90,18 @@ final class DiagnosticJfr implements AutoCloseable {
   }
 
   DiagnosticJfr(Path root, SettingsSource settingsSource, Limits limits) {
+    this(root, settingsSource, limits, FlightRecorder::removeListener);
+  }
+
+  DiagnosticJfr(
+      Path root,
+      SettingsSource settingsSource,
+      Limits limits,
+      Consumer<FlightRecorderListener> listenerRemoval) {
     this.root = root;
     this.settingsSource = settingsSource;
     this.limits = limits;
+    this.listenerRemoval = listenerRemoval;
   }
 
   void start(Binding requested) {
@@ -183,15 +196,17 @@ final class DiagnosticJfr implements AutoCloseable {
   }
 
   private void run() {
+    var completed = false;
     try {
       record();
-    } catch (Exception | LinkageError failure) {
+      completed = true;
+    } catch (Exception | Error failure) {
       invalid.compareAndSet("", failure.getClass().getSimpleName() + ": " + failure.getMessage());
     } finally {
       if (foreign.get()) invalid.compareAndSet("", "foreign JFR recording overlapped capture");
       synchronized (terminalTransition) {
         state.set(
-            invalid.get().isEmpty() && detail != null && detail.export() != null
+            completed && invalid.get().isEmpty() && detail != null && detail.export() != null
                 ? State.EXPORTED
                 : State.FAILED);
       }
@@ -201,38 +216,48 @@ final class DiagnosticJfr implements AutoCloseable {
   private void record() throws Exception {
     var settings = settingsSource.load();
     var destination = DiagnosticJfrFiles.prepare(root, binding.attempt(), settings);
-    try (var recording = new Recording(settings.values())) {
-      var listener = observer(recording);
-      FlightRecorder.addListener(listener);
-      try {
-        prepareRecording(recording, destination);
-        if (!recording.getSettings().equals(settings.values()))
-          throw new IllegalStateException("applied JFR settings differ from audited settings");
-        rejectForeign(recording);
-        state.set(State.PREPARED);
-        if (requests.poll(limits.activationWait().toMillis(), TimeUnit.MILLISECONDS)
-                != Request.ACTIVATE
-            || !invalid.get().isEmpty())
-          throw new IllegalStateException("Live activation was not permitted");
-        rejectForeign(recording);
-        recording.start();
-        detail = describe(recording, settings, null);
-        state.set(State.VALIDATING);
-        awaitStop(recording);
-        state.set(State.STOPPING);
-        scanForeign(recording);
-        if (foreign.get()) invalid.compareAndSet("", "foreign JFR recording overlapped capture");
-        if (recording.getState() == RecordingState.RUNNING) recording.stop();
-        state.set(State.EXPORTING);
-        if (recording.getState() != RecordingState.CLOSED)
-          throw new IllegalStateException("destination recording did not close on stop");
-        detail = describe(recording, settings, DiagnosticJfrFiles.inspect(destination));
-        scanForeign(recording);
-        if (!validated || !explicitStop)
-          invalid.compareAndSet("", "recording ended without validated explicit stop");
-      } finally {
-        FlightRecorder.removeListener(listener);
-      }
+    try (var recording = new Recording(settings.values());
+        var _ = register(recording)) {
+      prepareRecording(recording, destination);
+      if (!recording.getSettings().equals(settings.values()))
+        throw new IllegalStateException("applied JFR settings differ from audited settings");
+      rejectForeign(recording);
+      state.set(State.PREPARED);
+      if (requests.poll(limits.activationWait().toMillis(), TimeUnit.MILLISECONDS)
+              != Request.ACTIVATE
+          || !invalid.get().isEmpty())
+        throw new IllegalStateException("Live activation was not permitted");
+      rejectForeign(recording);
+      recording.start();
+      detail = describe(recording, settings, null);
+      state.set(State.VALIDATING);
+      awaitStop(recording);
+      state.set(State.STOPPING);
+      scanForeign(recording);
+      if (foreign.get()) invalid.compareAndSet("", "foreign JFR recording overlapped capture");
+      if (recording.getState() == RecordingState.RUNNING) recording.stop();
+      state.set(State.EXPORTING);
+      if (recording.getState() != RecordingState.CLOSED)
+        throw new IllegalStateException("destination recording did not close on stop");
+      detail = describe(recording, settings, DiagnosticJfrFiles.inspect(destination));
+      scanForeign(recording);
+      if (!validated || !explicitStop)
+        invalid.compareAndSet("", "recording ended without validated explicit stop");
+    }
+  }
+
+  private RegisteredListener register(Recording recording) {
+    var listener = observer(recording);
+    FlightRecorder.addListener(listener);
+    return new RegisteredListener(listener, listenerRemoval);
+  }
+
+  private record RegisteredListener(
+      FlightRecorderListener listener, Consumer<FlightRecorderListener> removal)
+      implements AutoCloseable {
+    @Override
+    public void close() {
+      removal.accept(listener);
     }
   }
 

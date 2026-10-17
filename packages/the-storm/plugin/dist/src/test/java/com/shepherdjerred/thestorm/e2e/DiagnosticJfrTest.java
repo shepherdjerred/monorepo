@@ -305,6 +305,27 @@ final class DiagnosticJfrTest {
     }
   }
 
+  @Test
+  void errorDuringPostExportCleanupCannotBecomeComplete() throws Exception {
+    try (var controller =
+        new DiagnosticJfr(
+            root(),
+            DiagnosticJfrTest::settings,
+            limits(),
+            listener -> {
+              FlightRecorder.removeListener(listener);
+              throw new AssertionError("synthetic post-export cleanup failure");
+            })) {
+      activate(controller);
+      controller.stop(binding);
+      var failed = terminal(controller);
+      assertEquals(DiagnosticJfr.State.FAILED, failed.state());
+      assertTrue(failed.failure().contains("synthetic post-export cleanup failure"));
+      assertNotNull(failed.detail().export());
+      assertOwnedRecordingClosed(failed);
+    }
+  }
+
   private DiagnosticJfr controller() {
     return new DiagnosticJfr(root(), DiagnosticJfrTest::settings, limits());
   }
