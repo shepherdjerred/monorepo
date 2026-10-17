@@ -2915,7 +2915,13 @@ host JDK's `jfr` tool; the server image needs no JDK diagnostic executables.
 The `storm.BotThink` events identify match generation, snapshot tick, cycle,
 preparation, each parallel stage and ordered commit. Batch spans separate queue,
 worker wall and thread CPU times; cycle CPU is unavailable because a cycle
-crosses threads. Built-in GC and execution samples share the same timeline.
+crosses threads. Nested `tactics-bot` spans identify each individual proposal,
+including recovery planning and ordered-commit conflict retries. Their `botId`
+is the match-local combatant number; combine it with generation and snapshot
+tick to correlate recorded inputs and decisions. Single-bot `retake-route`
+spans also carry that ID; aggregate spans use `-1`. Per-bot wall and CPU times
+are included in their enclosing batch or commit, so do not add nested spans to
+aggregate durations. Built-in GC and execution samples share the same timeline.
 The diagnostic also saves container CPU counters before and after profiling.
 Disabled recordings allocate no stage markers or read the timing clock.
 Raw JFR files can include JVM environment metadata and stay private; upload only
