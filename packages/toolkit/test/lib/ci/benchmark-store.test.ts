@@ -79,6 +79,20 @@ let archiveBody = "";
 function body(text: string) {
   return { Body: { transformToWebStream: () => new Blob([text]).stream() } };
 }
+
+function rawBody(bytes: Uint8Array) {
+  return {
+    Body: {
+      transformToWebStream: () =>
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(bytes);
+            controller.close();
+          },
+        }),
+    },
+  };
+}
 beforeEach(() => {
   vi.resetAllMocks();
   archiveBody = "";
@@ -148,6 +162,51 @@ test("archive readback corruption fails rather than claiming retention", async (
     inspectBenchmark(123, { ...options, archive: true }, config),
   ).rejects.toThrow("readback differs");
   expect(mocks.destroy).toHaveBeenCalledOnce();
+});
+
+test("malformed source UTF-8 fails even when replacement would leave parseable JSON", async () => {
+  const bytes = Buffer.from(raw);
+  const at = bytes.indexOf("private-value");
+  expect(at).toBeGreaterThan(0);
+  bytes[at] = 0xff;
+  mocks.send.mockResolvedValueOnce(rawBody(bytes));
+  await expect(inspectBenchmark(123, options, config)).rejects.toThrow();
+});
+
+test("archive readback compares original bytes rather than UTF-8 replacement text", async () => {
+  mocks.pipeline.mockResolvedValue({
+    ...pipeline(),
+    branch: "ci-canary/\u{FFFD}",
+  });
+  mocks.send
+    .mockResolvedValueOnce(body(raw))
+    .mockImplementationOnce((command: unknown) => {
+      if (
+        !(command instanceof PutObjectCommand) ||
+        typeof command.input.Body !== "string"
+      )
+        throw new TypeError("Expected archive body");
+      archiveBody = command.input.Body;
+      return Promise.resolve({});
+    })
+    .mockImplementationOnce(() => {
+      const bytes = Buffer.from(archiveBody),
+        marker = Buffer.from("\u{FFFD}");
+      const at = bytes.indexOf(marker);
+      expect(at).toBeGreaterThan(0);
+      return Promise.resolve(
+        rawBody(
+          Buffer.concat([
+            bytes.subarray(0, at),
+            Buffer.from([0xff]),
+            bytes.subarray(at + marker.length),
+          ]),
+        ),
+      );
+    });
+  await expect(
+    inspectBenchmark(123, { ...options, archive: true }, config),
+  ).rejects.toThrow("readback differs");
 });
 
 test("oversized declared bodies are canceled before consumption", async () => {

@@ -37,6 +37,7 @@ beforeEach(() => {
     collectionComplete: true,
     resourceHealthy: true,
     taskSuccess: true,
+    nativeSuccess: true,
   });
 });
 afterEach(() => {
@@ -60,26 +61,34 @@ test("forwards all evidence assertions and reports success as one JSON result", 
   expect(process.exitCode).toBe(0);
   expect(console.log).toHaveBeenCalledExactlyOnceWith(
     JSON.stringify(
-      { collectionComplete: true, resourceHealthy: true, taskSuccess: true },
+      {
+        collectionComplete: true,
+        resourceHealthy: true,
+        taskSuccess: true,
+        nativeSuccess: true,
+      },
       null,
       2,
     ),
   );
 });
 
-test.each(["collectionComplete", "resourceHealthy", "taskSuccess"])(
-  "a recorded %s failure exits 1",
-  async (field) => {
-    mocks.inspect.mockResolvedValue({
-      collectionComplete: true,
-      resourceHealthy: true,
-      taskSuccess: true,
-      [field]: false,
-    });
-    await ciBenchmarkCommand(args);
-    expect(process.exitCode).toBe(1);
-  },
-);
+test.each([
+  "collectionComplete",
+  "resourceHealthy",
+  "taskSuccess",
+  "nativeSuccess",
+])("a recorded %s failure exits 1", async (field) => {
+  mocks.inspect.mockResolvedValue({
+    collectionComplete: true,
+    resourceHealthy: true,
+    taskSuccess: true,
+    nativeSuccess: true,
+    [field]: false,
+  });
+  await ciBenchmarkCommand(args);
+  expect(process.exitCode).toBe(1);
+});
 
 test("upstream errors exit 2 with redacted structured evidence", async () => {
   vi.stubEnv("WOODPECKER_TOKEN", "private-token");

@@ -1,10 +1,22 @@
 import { expect, test } from "vitest";
-import { benchmarkEvidence } from "#lib/ci/benchmark-evidence.ts";
+import { benchmarkEvidence as parseBenchmarkBytes } from "#lib/ci/benchmark-evidence.ts";
+import { createHash } from "node:crypto";
 import { boundedBenchmarkBody } from "#lib/ci/benchmark-store.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 
 const head = "a".repeat(40);
 const expected = { head, variant: "candidate" as const };
+function benchmarkEvidence(
+  text: string,
+  pipeline: WoodpeckerPipeline,
+  assertions: Parameters<typeof parseBenchmarkBytes>[2],
+) {
+  return parseBenchmarkBytes(
+    new TextEncoder().encode(text),
+    pipeline,
+    assertions,
+  );
+}
 function native(): WoodpeckerPipeline {
   return {
     number: 123,
@@ -104,6 +116,18 @@ test("a failed workload retains complete resource evidence and its nonzero exit"
     cached: 388,
     attempted: 410,
   });
+});
+
+test("a successful command stays successful when collection makes its wrapper fail", () => {
+  const report = fixture();
+  report.collectionFailed = true;
+  const pipeline = native();
+  pipeline.status = "failure";
+  pipeline.workflows[0]!.state = "failure";
+  const result = benchmarkEvidence(JSON.stringify(report), pipeline, expected);
+  expect(result.taskSuccess).toBe(true);
+  expect(result.collectionComplete).toBe(false);
+  expect(result.nativeSuccess).toBe(false);
 });
 
 test.each([
@@ -285,7 +309,19 @@ test("artifact streams enforce the size bound and cancel on overflow", async () 
   await expect(boundedBenchmarkBody(stream, 16)).rejects.toThrow("size bound");
   expect(canceled).toBe(true);
   const text = "{" + '"λ":1' + "}";
-  expect(await boundedBenchmarkBody(new Blob([text]).stream())).toBe(text);
+  expect(
+    Buffer.from(await boundedBenchmarkBody(new Blob([text]).stream())),
+  ).toEqual(Buffer.from(text));
+});
+
+test("source digest hashes the original valid UTF-8 bytes", () => {
+  const bytes = new TextEncoder().encode(
+    JSON.stringify({ ...fixture(), ignored: "λ" }),
+  );
+  const report = parseBenchmarkBytes(bytes, native(), expected);
+  expect(report.artifactSha256).toBe(
+    createHash("sha256").update(bytes).digest("hex"),
+  );
 });
 
 test("an interrupted artifact stream cannot become a successful partial report", async () => {

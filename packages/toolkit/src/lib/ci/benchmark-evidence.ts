@@ -232,11 +232,16 @@ function summarizeResources(report: ReportValue) {
 
 /** A narrow consumer contract: strip task inputs, environment, commands and logs. */
 export function benchmarkEvidence(
-  raw: string,
+  raw: Uint8Array,
   pipeline: WoodpeckerPipeline,
   expected: Expected,
 ) {
-  const report = Report.parse(JSON.parse(raw));
+  const artifactSha256 = createHash("sha256").update(raw).digest("hex");
+  const text = new TextDecoder("utf-8", {
+    fatal: true,
+    ignoreBOM: true,
+  }).decode(raw);
+  const report = Report.parse(JSON.parse(text));
   const workflow = assertIdentity(report, pipeline, expected);
   assertLifetime(report, workflow);
   const { issues, volumes, peakBytes, last, coverage } =
@@ -260,11 +265,7 @@ export function benchmarkEvidence(
     last.memory.oomKills === 0 &&
     [...volumes.values()].every((fs) => fs.minObservedAvailableBytes > 0);
   const taskSuccess =
-    pipeline.status === "success" &&
-    workflow.state === "success" &&
-    report.exitCode === 0 &&
-    totals.failed === 0 &&
-    totals.attempted > 0;
+    report.exitCode === 0 && totals.failed === 0 && totals.attempted > 0;
   return {
     version: 1,
     pipeline: pipeline.number,
@@ -272,7 +273,7 @@ export function benchmarkEvidence(
     branch: pipeline.branch,
     variant: report.benchmarkResources.variant,
     artifact: `s3://ci-handoff/${report.pipeline}/diagnostics-verify.json`,
-    artifactSha256: createHash("sha256").update(raw).digest("hex"),
+    artifactSha256,
     command: {
       startedAt: report.startedAt,
       finishedAt: report.finishedAt,
@@ -283,6 +284,9 @@ export function benchmarkEvidence(
     collectionComplete,
     resourceHealthy,
     taskSuccess,
+    nativeSuccess:
+      pipeline.status === "success" && workflow.state === "success",
+    native: { pipeline: pipeline.status, workflow: workflow.state },
     physicalQualification: false,
     productionQualified: false,
     issues: [...new Set(issues)],

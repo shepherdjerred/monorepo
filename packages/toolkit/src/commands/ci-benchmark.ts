@@ -13,8 +13,8 @@ Inspect a terminal manual verify canary's retained resource report. Source and
 variant are mandatory assertions. Uses the standard AWS profile (default:
 seaweedfs) for ci-handoff; credentials never enter the evidence. --archive writes
 the sanitized result under its SHA256 and verifies its readback.
-Exit 0: collection complete, resources healthy and workload passed; 1: recorded
-collection/resource/workload failure; 2: usage, identity, or upstream error.
+Exit 0: collection complete, resources healthy, command and native wrapper passed;
+1: recorded collection/resource/command/native failure; 2: usage or upstream error.
 This component report does not qualify physical savings or production rollout.
 `);
       return;
@@ -46,7 +46,10 @@ This component report does not qualify physical savings or production rollout.
     );
     console.log(sanitizeText(JSON.stringify(report, null, 2)));
     process.exitCode =
-      report.collectionComplete && report.resourceHealthy && report.taskSuccess
+      report.collectionComplete &&
+      report.resourceHealthy &&
+      report.taskSuccess &&
+      report.nativeSuccess
         ? 0
         : 1;
   } catch (error) {

@@ -19,7 +19,7 @@ export async function boundedBenchmarkBody(
   stream: ReadableStream<unknown>,
   maxBytes = MAX_REPORT_BYTES,
   signal?: AbortSignal,
-): Promise<string> {
+): Promise<Uint8Array> {
   const reader = stream.getReader();
   const cancel = async () => {
     try {
@@ -54,10 +54,10 @@ export async function boundedBenchmarkBody(
     await reader.cancel();
     reader.releaseLock();
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 }
 
-async function read(client: S3Client, key: string): Promise<string> {
+async function read(client: S3Client, key: string): Promise<Uint8Array> {
   const signal = AbortSignal.timeout(60_000);
   const response = await client.send(
     new GetObjectCommand({ Bucket: BUCKET, Key: key }),
