@@ -16,6 +16,7 @@ const OTHER_GUILD = testGuildId("8411");
 const CHANNEL = testChannelId("8412");
 const OTHER_CHANNEL = testChannelId("8413");
 const OUTAGE = new Date("2026-10-01T00:00:00.000Z");
+const durable = () => Promise.resolve("durable" as const);
 
 async function subscribe(
   serverId: DiscordGuildId,
@@ -63,7 +64,7 @@ describe("the offline recovery notice", () => {
     await subscribe(GUILD, CHANNEL, "second", "8402");
     await subscribe(OTHER_GUILD, OTHER_CHANNEL, "third", "8403");
 
-    await sendOfflineNotification(OUTAGE, db);
+    await sendOfflineNotification(OUTAGE, db, durable);
 
     const rows = await db.matchNotificationIntent.findMany({
       orderBy: { targetId: "asc" },
@@ -101,8 +102,8 @@ describe("the offline recovery notice", () => {
   test("a repeat recovery pass for the same outage posts nothing new", async () => {
     await subscribe(GUILD, CHANNEL, "first", "8401");
 
-    await sendOfflineNotification(OUTAGE, db);
-    await sendOfflineNotification(OUTAGE, db);
+    await sendOfflineNotification(OUTAGE, db, durable);
+    await sendOfflineNotification(OUTAGE, db, durable);
 
     expect(await db.matchNotificationIntent.count()).toBe(1);
     expect(await db.scoutWorkflowStart.count()).toBe(1);
@@ -111,12 +112,27 @@ describe("the offline recovery notice", () => {
   test("a later outage is its own notice", async () => {
     await subscribe(GUILD, CHANNEL, "first", "8401");
 
-    await sendOfflineNotification(OUTAGE, db);
+    await sendOfflineNotification(OUTAGE, db, durable);
     await sendOfflineNotification(
       new Date(OUTAGE.getTime() + 7 * 86_400_000),
       db,
+      durable,
     );
 
     expect(await db.matchNotificationIntent.count()).toBe(2);
+  });
+
+  test("produces nothing unless orchestration is durable", async () => {
+    await subscribe(GUILD, CHANNEL, "first", "8401");
+
+    await sendOfflineNotification(OUTAGE, db, () =>
+      Promise.resolve("paused" as const),
+    );
+    await sendOfflineNotification(OUTAGE, db, () =>
+      Promise.resolve("legacy" as const),
+    );
+
+    expect(await db.matchNotificationIntent.count()).toBe(0);
+    expect(await db.scoutWorkflowStart.count()).toBe(0);
   });
 });

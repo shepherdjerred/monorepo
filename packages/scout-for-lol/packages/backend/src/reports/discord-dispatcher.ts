@@ -305,17 +305,8 @@ async function deliverPendingReportRun(input: {
       "propagate",
       { isInstalled: input.isInstalled, database: input.database },
     );
-    await input.database.reportRun.updateMany({
-      where: {
-        id: input.run.id,
-        deliveryState: { in: ["PENDING", "UNKNOWN"] },
-      },
-      data: {
-        deliveryState: "DELIVERED",
-        deliveryError: null,
-        deliveredAt: new Date(),
-      },
-    });
+    // A propagated success has already moved the run to DELIVERED through
+    // markRunDelivered, the one transition that fences the analytics event.
   } catch (error) {
     await input.database.reportRun.updateMany({
       where: { id: input.run.id, deliveryState: "PENDING" },

@@ -90,7 +90,7 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
             "Scout could not query report outbox, report delivery, or interactive projection state. Restore the Scout database metric query before relying on the age, drift, and delivery alerts.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          '(scout_temporal_report_outbox_oldest_timestamp_seconds < 0) or (scout_temporal_stale_product_projections < 0) or (scout_report_delivery_unknown_chunks < 0) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="beta"}) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="prod"}) or absent(scout_temporal_stale_product_projections{environment="beta"}) or absent(scout_temporal_stale_product_projections{environment="prod"})',
+          '(scout_temporal_report_outbox_oldest_timestamp_seconds < 0) or (scout_temporal_stale_product_projections < 0) or (scout_report_delivery_unknown_chunks < 0) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="beta"}) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="prod"}) or absent(scout_temporal_stale_product_projections{environment="beta"}) or absent(scout_temporal_stale_product_projections{environment="prod"}) or absent(scout_report_delivery_unknown_chunks{environment="beta"}) or absent(scout_report_delivery_unknown_chunks{environment="prod"})',
         ),
         for: "5m",
         labels: { severity: "warning" },

@@ -7,6 +7,10 @@ import {
 import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import * as Sentry from "@sentry/bun";
 import { mintProductAnnouncement } from "#src/temporal/notification/product/announcement.ts";
+import {
+  orchestrationMode,
+  type OrchestrationMode,
+} from "#src/temporal/orchestration-cutover.ts";
 
 const logger = createLogger("offline-notification");
 
@@ -30,7 +34,18 @@ const OFFLINE_NOTICE_FRESHNESS_MS = 60 * 60 * 1000;
 export async function sendOfflineNotification(
   outageStartedAt: Date = new Date(0),
   database: ExtendedPrismaClient = prisma,
+  mode: () => Promise<OrchestrationMode> = () => orchestrationMode(database),
 ): Promise<void> {
+  // The notice is a durable product announcement only. A paused cutover must
+  // not produce, and the legacy direct-send path that preceded it is retired.
+  const current = await mode();
+  if (current !== "durable") {
+    logger.info(
+      `Skipping offline recovery notification: orchestration is ${current}`,
+    );
+    return;
+  }
+
   logger.info("Queueing offline recovery notification to subscribed channels");
 
   const subscriptions = await database.subscription.findMany({
