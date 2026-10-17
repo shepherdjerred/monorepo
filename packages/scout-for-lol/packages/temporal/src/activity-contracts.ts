@@ -232,12 +232,12 @@ export type ScoutMatchObservationResult = z.infer<
  * A guarded at-most-once effect: settlement, progression, anything whose
  * second application would be visible.
  *
- * `guard` and `fact` are separate fields, not one outcome, because
- * `ScoutEffectClaim` takes the top-level Prisma client and so cannot enlist in
- * the transaction that writes the fact. A run that claimed the guard and
- * crashed before the fact leaves `guard: already-applied` with
- * `fact: applied` on the next attempt — the reconcile — and that has to be
- * reportable rather than indistinguishable from a double application.
+ * `guard` and `fact` are separate fields, not one outcome. `guard` says
+ * whether this run applied the effect or found it already applied; `fact` is
+ * the durable receipt's answer. A run that finds an earlier attempt's receipt
+ * standing reports `guard: already-applied` with that standing fact, and that
+ * has to be reportable rather than indistinguishable from a double
+ * application.
  */
 export const ScoutGuardedEffectResultSchema = z.strictObject({
   guard: ScoutDurableCommitSchema,

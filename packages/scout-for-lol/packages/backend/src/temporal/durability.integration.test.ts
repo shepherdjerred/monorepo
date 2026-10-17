@@ -51,12 +51,6 @@ vi.mock("#src/explore/agent.ts", () => ({
 }));
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
-  claimScoutEffect,
-  completeScoutEffect,
-  completeScoutEffectWithResult,
-  requireCompletedScoutEffectResult,
-} from "#src/temporal/effect-claims.ts";
-import {
   durableExploreQuotaRejection,
   reserveDurableExploreRun,
   reserveDurableReportAiRun,
@@ -83,7 +77,6 @@ beforeEach(async () => {
   reportAiProvider.calls = 0;
   exploreProvider.calls = 0;
   exploreProvider.gate = null;
-  await prisma.scoutEffectClaim.deleteMany();
   await prisma.scoutInteractiveRun.deleteMany();
   await prisma.exploreMessage.deleteMany();
   await prisma.exploreConversation.deleteMany();
@@ -91,7 +84,6 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await prisma.scoutEffectClaim.deleteMany();
   await prisma.scoutInteractiveRun.deleteMany();
   await prisma.exploreMessage.deleteMany();
   await prisma.exploreConversation.deleteMany();
@@ -525,48 +517,4 @@ describe("durable stop handling", () => {
       }),
     ).toEqual({ providerAttemptAt: null });
   });
-});
-
-test("effect claims survive an ambiguous retry and become terminal", async () => {
-  expect(
-    await claimScoutEffect(
-      { key: "report:42:chunk:0", kind: "report-discord" },
-      prisma,
-    ),
-  ).toBe("execute");
-  expect(
-    await claimScoutEffect(
-      { key: "report:42:chunk:0", kind: "report-discord" },
-      prisma,
-    ),
-  ).toBe("execute");
-  await completeScoutEffect("report:42:chunk:0", prisma);
-  expect(
-    await claimScoutEffect(
-      { key: "report:42:chunk:0", kind: "report-discord" },
-      prisma,
-    ),
-  ).toBe("completed");
-});
-
-test("effect claims retain a provider result for retry projection", async () => {
-  await claimScoutEffect(
-    { key: "postmatch:42:channel:7", kind: "discord-channel-message" },
-    prisma,
-  );
-  await completeScoutEffectWithResult(
-    "postmatch:42:channel:7",
-    "discord-message-99",
-    prisma,
-  );
-  const completed = await requireCompletedScoutEffectResult(
-    "postmatch:42:channel:7",
-    prisma,
-  );
-  expect(completed.resultId).toBe("discord-message-99");
-  // The claim also brackets the effect it proves, which is what a later pass
-  // recovering that effect records instead of its own clock.
-  expect(completed.claimedAt.getTime()).toBeLessThanOrEqual(
-    completed.completedAt.getTime(),
-  );
 });

@@ -304,10 +304,10 @@ describe("withholding a Dare notification", () => {
     ).toEqual({ dareState: "active", calloutRefreshPending: false });
   });
 
-  test("writes no outbox row for a match owed no public delivery", async () => {
-    // Withholding the DRAIN was never suppression: a row left behind is sent
-    // minutes later by a caller that was never told to keep it quiet. The
-    // only durable suppression is the row never being written.
+  test("mints no Dare intent for a match owed no public delivery", async () => {
+    // A minted intent is durable work the notification lane drives whoever is
+    // running, so withholding a send was never suppression. The only durable
+    // suppression is the intent never being written.
     const dareId = await activeDare("withheld-notification");
     // Funding and acceptance enqueue their own lifecycle rows, and those are
     // a user's actions rather than this match's announcement. What is under

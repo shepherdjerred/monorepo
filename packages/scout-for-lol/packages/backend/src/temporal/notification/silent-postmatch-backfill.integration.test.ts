@@ -28,12 +28,12 @@ import {
 import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
 
 /**
- * The silent post-match backfill against real receipts, intents, claims and
- * rank history, with the world it renders from and the store it commits to
+ * The silent post-match backfill against real receipts, intents and rank
+ * history, with the world it renders from and the store it commits to
  * stubbed — and every Discord send point wired to fail the test if touched.
  *
  * Pinned: a backfilled match gets the report object and the render receipt a
- * normal run commits, and NO intent, NO Discord effect claim, NO send, and no
+ * normal run commits, and NO intent, NO send, and no
  * rewrite of the rank history its settlement captured. A rerun commits
  * nothing twice. Each refusal leaves the store and the receipts untouched.
  *
@@ -310,9 +310,6 @@ async function durableSideEffects(matchId: RiotMatchId) {
     intents: await prisma.matchNotificationIntent.count({
       where: { riotMatchId: matchId },
     }),
-    discordClaims: await prisma.scoutEffectClaim.count({
-      where: { kind: "discord-channel-message" },
-    }),
     renderReceipts: await prisma.matchProcessingReceipt.count({
       where: { riotMatchId: matchId, kind: "v2-notification-render-postmatch" },
     }),
@@ -363,7 +360,6 @@ describe("a match the mint-less core finished", () => {
     // message could be voted from.
     expect(await durableSideEffects(matchId)).toEqual({
       intents: 0,
-      discordClaims: 0,
       renderReceipts: 1,
       mvpContests: 0,
     });
@@ -456,7 +452,6 @@ describe("what the backfill refuses, before any effect", () => {
       expect(world.puts).toEqual([]);
       expect(await durableSideEffects(matchId)).toEqual({
         intents: 0,
-        discordClaims: 0,
         renderReceipts: 0,
         mvpContests: 0,
       });

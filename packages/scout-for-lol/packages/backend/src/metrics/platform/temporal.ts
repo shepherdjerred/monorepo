@@ -63,13 +63,6 @@ export const scoutTemporalInterruptedProviderAttempts = new Counter({
   registers: [registry],
 });
 
-export const scoutTemporalDuplicateEffectClaims = new Counter({
-  name: "scout_temporal_duplicate_effect_claims_total",
-  help: "Repeated durable external-effect claims by outcome",
-  labelNames: ["kind", "outcome"] as const,
-  registers: [registry],
-});
-
 export const scoutCustomOperations = new Gauge({
   name: "scout_custom_operations",
   help: "Customs operations awaiting execution or manager resolution",

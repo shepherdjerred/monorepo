@@ -54,9 +54,9 @@ const logger = createLogger("scout-v2-prematch-markets");
  *
  * Those two constraints are what make the effect once-only ACROSS pipelines.
  * The fence and receipt below are what make it once-only within V2 and
- * reportable: a completed claim skips the effect outright, and the receipt
- * says which market the match got so a takeover can finish a dead attempt
- * from the fact rather than by re-running it.
+ * reportable: a standing receipt skips the effect outright, and it says which
+ * market the match got so a retry reports the earlier attempt's fact rather
+ * than re-running it.
  *
  * ## Why this runs before the notification children start
  *
@@ -247,17 +247,15 @@ async function applyPrematchMarkets(
 /**
  * Open this game's markets, or grant its Classic reward, at most once.
  *
- * The claim key is V2's own, as every V2 guarded effect's is: sharing one
- * with v1 would let one pipeline's completion silently suppress the other's
- * work. Cross-pipeline once-only lives in the row constraints the module doc
- * names, which both pipelines write through.
+ * The lock key is V2's own, as every V2 guarded effect's is. Cross-pipeline
+ * once-only lives in the row constraints the module doc names, which both
+ * pipelines write through.
  */
 export async function openPrematchMarkets(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutGuardedEffectResult> {
   return await runGuardedEffect({
     key: `v2-prematch-markets:${input.riotMatchId}`,
-    kind: "v2-prematch-markets",
     alreadyApplied: async () => {
       const standing = await readMatchReceiptEvidence(
         input.riotMatchId,

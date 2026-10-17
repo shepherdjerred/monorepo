@@ -21,7 +21,7 @@ import {
   readableRelationalDareContract,
 } from "#src/betting/dares/dare-common.ts";
 import { voidDareWithFullRefund } from "#src/betting/dares/settlement/dare-void.ts";
-import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 

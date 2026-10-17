@@ -28,6 +28,16 @@ import {
 
 const DARE_STATUS_FRESHNESS_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * Whether a settling transaction may mint its Dare notification intents.
+ *
+ * Threaded rather than decided at the producer, because only the caller knows
+ * whether the MATCH it is settling is owed a public delivery. Spelled as two
+ * words rather than a boolean so the call sites read as a decision and a
+ * `false` cannot be mistaken for "not yet".
+ */
+export type DareNotificationDisposition = "enqueue" | "withhold";
+
 /** Length-delimited so one event key cannot prefix another event's recipients. */
 function eventPrefix(deduplicationKey: string): string {
   return `dare-status:${deduplicationKey.length.toString()}:${deduplicationKey}:recipient:`;

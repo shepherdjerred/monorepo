@@ -368,9 +368,11 @@ boundary in `durable-facts.ts`: the `ScoutWorkflowStart` request rows and the
 receipted lake staging. A recorder outage
 can never throw into the effect it describes. Writes the pipeline decides from
 are strict instead; see [The per-match core](#the-per-match-core).
-`ScoutEffectClaim` is the at-most-once guard for an effect, and a notification
-intent is keyed by the same string as its send's claim, so the two describe
-the same send.
+An effect's at-most-once guard is its own durable record: a guarded match
+effect's evidence-bearing receipt, a send's notification intent, a report
+chunk's delivery row. There is no separate claim table beside them; see
+[The per-match core](#the-per-match-core) for how the effect fence reads the
+receipt under an advisory lock.
 
 Receipt evidence names things by durable identity — Discord message ids, ledger
 row ids, object key plus content digest — never by a count or a local path, so
@@ -587,13 +589,28 @@ tampered-command negative control. Retiring the patch is a separate
 compatibility release using `deprecatePatch` after no retained history needs
 the old branch.
 
-`ScoutEffectClaim` keeps taking the top-level Prisma client, and
-`src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
-insert that expects to fail and then READS the existing row back, and in
-Postgres a constraint violation aborts the surrounding transaction, so the
-read-back could not run inside one. The guard and the fact are therefore two
-commits by construction, which is why every guarded-effect result reports
-them as separate outcomes and names the reconcile.
+### The effect fence
+
+Settlement, progression, prematch markets and the notification render run
+behind `runGuardedEffect` (`src/temporal/effect-fence.ts`). Under a Postgres
+advisory transaction lock keyed by the effect, it first reads the effect's own
+evidence-bearing receipt through a caller-supplied probe: a standing receipt
+means an earlier attempt applied the effect, and the run reports
+`guard: already-applied` with that fact instead of re-running a state-gated
+effect into a receipt conflict. No receipt means the effect is owed; the lock
+keeps a start-to-close retry out while the original attempt still runs, and
+`fence.assertHeld()` refuses the receipt write once the lock may have lapsed.
+A conflicting receipt fails the Activity non-retryably and increments
+`scout_durable_receipts_recorded_total{outcome="conflict"}`, which raises
+`ScoutDurableReceiptConflicts`. The retired `ScoutEffectClaim` row once
+recorded the same thing as the receipt, and nothing reads or writes it now;
+lock keys keep its strings, so a rolling deploy still serializes old and new
+attempts on one lock.
+
+Two analytics events are fenced by a durable transition rather than a claim,
+and both are at-most-once: a post-match report's per-guild core output by the
+guild-scoped `postmatch-core-output` receipt, and a scheduled or manual
+report's by the run's single `PENDING | UNKNOWN → DELIVERED` update.
 
 ### Renamed pipeline types
 
@@ -1292,9 +1309,20 @@ which is how a resumed settlement receipt still names a Dare an earlier attempt
 resolved. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
-tables continue draining pre-cutover rows; a standing legacy event owns its
-deduplication key and prevents the notification lane from announcing the same
-event again.
+outbox and its post-match drain are retired; settlement sinks only decide
+whether the intents may be minted. Until its tables are dropped, a standing
+legacy event still owns its deduplication key and prevents the notification
+lane from announcing the same event again.
+
+The offline recovery notice is a `product-announcement` intent with the
+`offline-recovery` effect, one per subscribed channel and outage, minted with
+its Workflow start request by ingestion reconciliation. It expires an hour
+after the outage is detected.
+
+A report delivery chunk whose send outcome is unknown stays `UNKNOWN` for the
+operations console, like an intent in `unknown-delivery`.
+`scout_report_delivery_unknown_chunks` counts them and
+`ScoutReportDeliveryUnknown` warns while any wait.
 
 ### An intent says what it announces and where it came from
 

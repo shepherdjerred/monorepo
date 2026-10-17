@@ -14,55 +14,51 @@ import {
   NotificationIntentStateSchema,
   type NotificationIntentState,
 } from "@scout-for-lol/domain/notifications/intent.ts";
+import { receiptScopeKey } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
 
 /**
- * An in-memory `ScoutEffectClaim` table with the one property the claim
- * protocol rests on: a second insert of a key fails as Prisma's unique
- * violation does.
+ * An in-memory receipt table with the property the follow-up rests on: one
+ * identity `(match, kind, version, scope)` is recorded once, a repeat with the
+ * same evidence answers `already-applied`, and different evidence `conflict`.
  */
-const claims = vi.hoisted(() => {
-  const rows = new Map<string, { key: string; kind: string; state: string }>();
+const receipts = vi.hoisted(() => {
+  const rows = new Map<string, string | null>();
   return {
     rows,
-    create: vi.fn((args: { data: { key: string; kind: string } }) => {
-      if (rows.has(args.data.key)) {
-        return Promise.reject(
-          Object.assign(new Error("Unique constraint failed"), {
-            code: "P2002",
-          }),
-        );
-      }
-      rows.set(args.data.key, { ...args.data, state: "CLAIMED" });
-      return Promise.resolve(undefined);
-    }),
-    findUniqueOrThrow: vi.fn((args: { where: { key: string } }) => {
-      const row = rows.get(args.where.key);
-      return row === undefined
-        ? Promise.reject(new Error(`No claim ${args.where.key}`))
-        : Promise.resolve(row);
-    }),
-    update: vi.fn(
-      (args: { where: { key: string }; data: { state: string } }) => {
-        const row = rows.get(args.where.key);
-        if (row !== undefined) row.state = args.data.state;
-        return Promise.resolve(undefined);
-      },
-    ),
+    record: vi.fn<(db: unknown, record: unknown) => void>(),
   };
 });
+
+function identity(record: MatchProcessingReceiptRecord): string {
+  return [
+    record.matchId,
+    record.receipt.kind,
+    String(record.receipt.version),
+    receiptScopeKey(record.receipt.scope),
+  ].join("|");
+}
 
 const stubs = vi.hoisted(() => ({
   prematchGuildOfChannel: vi.fn(),
   recordCoreOutputsDelivered: vi.fn(),
 }));
-vi.mock("#src/database/index.ts", () => ({
-  prisma: {
-    scoutEffectClaim: {
-      create: claims.create,
-      findUniqueOrThrow: claims.findUniqueOrThrow,
-      update: claims.update,
-    },
+vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
+vi.mock("#src/database/durable/receipt-repository.ts", () => ({
+  recordReceipt: async (db: unknown, record: MatchProcessingReceiptRecord) => {
+    receipts.record(db, record);
+    // Yield first so two concurrent writers really do interleave.
+    await Promise.resolve();
+    const key = identity(record);
+    const standing = receipts.rows.get(key);
+    if (standing === undefined) {
+      receipts.rows.set(key, record.evidence);
+      return { outcome: "applied" };
+    }
+    return standing === record.evidence
+      ? { outcome: "already-applied" }
+      : { outcome: "conflict", reason: "receipt-evidence-mismatch" };
   },
 }));
 vi.mock("#src/temporal/prematch/prematch-markets.ts", () => ({
@@ -72,14 +68,14 @@ vi.mock("#src/analytics/guild-lifecycle.ts", () => ({
   recordCoreOutputsDelivered: stubs.recordCoreOutputsDelivered,
 }));
 
-const { afterPostmatchDelivered } =
+const { afterPostmatchDelivered, POSTMATCH_CORE_OUTPUT_RECEIPT_KIND } =
   await import("#src/temporal/notification/postmatch-follow-up.ts");
 
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_9301");
 const CHANNEL_ID = DiscordChannelIdSchema.parse("300000000000000001");
 const SIBLING_CHANNEL_ID = DiscordChannelIdSchema.parse("300000000000000002");
 const GUILD_ID = DiscordGuildIdSchema.parse("100000000000000001");
-const CLAIM_KEY = `core-output:postmatch:${MATCH_ID}:${GUILD_ID}`;
+const OTHER_GUILD_ID = DiscordGuildIdSchema.parse("100000000000000002");
 
 const DELIVERED = NotificationIntentStateSchema.parse({
   kind: "delivered",
@@ -110,13 +106,13 @@ function postmatchRecord(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  claims.rows.clear();
+  receipts.rows.clear();
   stubs.prematchGuildOfChannel.mockResolvedValue(GUILD_ID);
   stubs.recordCoreOutputsDelivered.mockResolvedValue(undefined);
 });
 
 describe("the post-match follow-up", () => {
-  test("counts the delivered report against its channel's guild, under a claim", async () => {
+  test("counts the delivered report against its channel's guild, under a guild-scoped receipt", async () => {
     await afterPostmatchDelivered(postmatchRecord(DELIVERED));
 
     expect(stubs.prematchGuildOfChannel).toHaveBeenCalledWith(CHANNEL_ID);
@@ -124,10 +120,13 @@ describe("the post-match follow-up", () => {
       [GUILD_ID],
       "postmatch",
     );
-    expect(claims.rows.get(CLAIM_KEY)).toEqual({
-      key: CLAIM_KEY,
-      kind: "core-output-postmatch",
-      state: "COMPLETED",
+    expect(receipts.record).toHaveBeenCalledTimes(1);
+    expect(receipts.record.mock.calls[0]?.[1]).toMatchObject({
+      matchId: MATCH_ID,
+      receipt: {
+        kind: POSTMATCH_CORE_OUTPUT_RECEIPT_KIND,
+        scope: { kind: "guild", guildId: GUILD_ID },
+      },
     });
   });
 
@@ -142,7 +141,22 @@ describe("the post-match follow-up", () => {
     await afterPostmatchDelivered(postmatchRecord(DELIVERED, CHANNEL_ID));
 
     expect(stubs.recordCoreOutputsDelivered).toHaveBeenCalledTimes(1);
-    expect(claims.create).toHaveBeenCalledTimes(3);
+    expect(receipts.record).toHaveBeenCalledTimes(3);
+    expect(receipts.rows.size).toBe(1);
+  });
+
+  test("counts each guild a report reached separately", async () => {
+    stubs.prematchGuildOfChannel.mockImplementation((channelId) =>
+      Promise.resolve(channelId === CHANNEL_ID ? GUILD_ID : OTHER_GUILD_ID),
+    );
+
+    await afterPostmatchDelivered(postmatchRecord(DELIVERED, CHANNEL_ID));
+    await afterPostmatchDelivered(
+      postmatchRecord(DELIVERED, SIBLING_CHANNEL_ID),
+    );
+
+    expect(stubs.recordCoreOutputsDelivered).toHaveBeenCalledTimes(2);
+    expect(receipts.rows.size).toBe(2);
   });
 
   test("counts nothing for a channel no subscription names any more", async () => {
@@ -150,7 +164,7 @@ describe("the post-match follow-up", () => {
 
     await afterPostmatchDelivered(postmatchRecord(DELIVERED));
 
-    expect(claims.create).not.toHaveBeenCalled();
+    expect(receipts.record).not.toHaveBeenCalled();
     expect(stubs.recordCoreOutputsDelivered).not.toHaveBeenCalled();
   });
 

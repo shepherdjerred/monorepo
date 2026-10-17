@@ -32,7 +32,7 @@ import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-messa
 import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
 /**
- * The render Activity against real receipts and claims, with the world it
+ * The render Activity against real receipts and locks, with the world it
  * renders from and the store it commits to stubbed.
  *
  * Two properties are pinned. Receipts are keyed by KIND: a prematch receipt
@@ -187,7 +187,6 @@ function nextMatch(): string {
 
 beforeEach(async () => {
   await prisma.matchProcessingReceipt.deleteMany();
-  await prisma.scoutEffectClaim.deleteMany();
   await prisma.notificationPresentation.deleteMany();
   world.objects.clear();
   world.puts.length = 0;
@@ -391,8 +390,8 @@ describe("render receipts are keyed by kind", () => {
 describe("concurrent renders for one match and kind", () => {
   test("one render, one PUT, one receipt attesting the bytes in the store", async () => {
     // Two per-channel children arrive together and both read "no receipt".
-    // The fence makes the second wait; when it acquires, the claim is
-    // completed and it reuses without rendering. Without the fence both
+    // The fence makes the second wait; when it acquires, the receipt is
+    // standing and it reuses without rendering. Without the fence both
     // render, both PUT the same key, and the receipt describes the loser's
     // overwritten bytes.
     const matchId = nextMatch();

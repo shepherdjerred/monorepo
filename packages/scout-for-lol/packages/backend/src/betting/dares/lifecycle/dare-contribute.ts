@@ -10,7 +10,7 @@ import {
 import { pendingDareCalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state.ts";
 import { stakeDareContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 
 const OPEN_DARE_STATES: ReadonlySet<BucksDareState> = new Set(
   OPEN_BUCKS_DARE_STATES,
@@ -104,7 +104,7 @@ export async function contributeToDareInTransaction(
     discordId: input.actorDiscordId,
     amount: input.amount,
   });
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: dare.id,
     revision: input.revision,
     category: "lifecycle",

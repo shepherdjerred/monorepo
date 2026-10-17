@@ -53,23 +53,18 @@ const logger = createLogger("scout-v2-match-effects");
  * The two at-most-once effects of the per-match core.
  *
  * Both run behind the fence in `effect-fence.ts`, which is what makes them
- * at-most-once under Temporal: the claim row alone lets a retry enter while
- * the original attempt is still running, and an advisory lock held across the
- * effect is what stops two live attempts.
+ * at-most-once under Temporal: each effect's evidence-bearing receipt says
+ * whether it already happened, and an advisory lock held across the effect is
+ * what stops a retry entering while the original attempt is still running.
  *
- * Both report the guard and the durable fact as SEPARATE outcomes, because
- * they are separate commits: the claim cannot enlist in the transaction that
- * writes the fact (see `effect-claims.ts` for why that is a property of the
- * claim's protocol rather than of its type). A run that claimed and died
- * before the fact comes back to `guard: already-applied` with
- * `fact: applied`, and that reconcile has to be reportable rather than
+ * Both report the guard and the durable fact as SEPARATE outcomes. A run that
+ * finds the receipt already standing reports `guard: already-applied` with the
+ * standing fact, so a retry of a finished settlement is reportable rather than
  * indistinguishable from a double application.
  *
- * The claim keys are V2's own. Sharing v1's would be wrong in both directions:
- * v1 does not claim settlement or progression at all, and a shared key would
- * make one pipeline's completion silently suppress the other's work. Ownership
- * — not the claim — is what keeps the two pipelines off the same match, and
- * `commitMatchObservation` is where that is decided.
+ * The lock keys are V2's own. Ownership — not the lock — is what keeps the
+ * retired v1 pipeline and V2 off the same match, and `commitMatchObservation`
+ * is where that is decided.
  *
  * ## The write boundaries each effect owns
  *
@@ -327,11 +322,10 @@ export async function settleMatchMarkets(input: {
     );
   return await runGuardedEffect({
     key: `v2-match-settlement:${input.riotMatchId}`,
-    kind: "v2-match-settlement",
     // The settlement receipt IS this effect's durable fact, and its evidence
-    // names every ledger row the commit moved — so a takeover can report what
-    // the dead attempt did instead of re-settling a match whose bets are all
-    // already resolved.
+    // names every ledger row the commit moved — so a retry can report what
+    // the earlier attempt did instead of re-settling a match whose bets are
+    // all already resolved.
     alreadyApplied: async () => {
       const standing = await readMatchReceiptEvidence(
         input.riotMatchId,
@@ -344,7 +338,7 @@ export async function settleMatchMarkets(input: {
       };
     },
     apply: async (fence) => {
-      // Resolved inside the guard so a replay whose claim is already complete
+      // Resolved inside the guard so a replay whose receipt already stands
       // costs no Riot read at all. The OBSERVED roster, because settlement runs
       // after the observation commits: a live rebuild would settle only for the
       // accounts whose guild this worker's gateway cache happens to hold.
@@ -486,7 +480,6 @@ export async function applyMatchProgression(input: {
     );
   return await runGuardedEffect({
     key: `v2-match-progression:${input.riotMatchId}`,
-    kind: "v2-match-progression",
     alreadyApplied: async () => {
       const standing = await readMatchReceiptEvidence(
         input.riotMatchId,

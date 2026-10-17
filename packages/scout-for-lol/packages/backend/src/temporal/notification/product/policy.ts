@@ -83,5 +83,9 @@ export async function productAnnouncementSuppression(
       return install?.installedAt.toISOString() === effect.installedAt
         ? undefined
         : "recipient-preference";
+    case "offline-recovery":
+      // Owed to every subscribed channel, as v1's notice was; the install
+      // check above already withholds it from a guild Scout has left.
+      return undefined;
   }
 }

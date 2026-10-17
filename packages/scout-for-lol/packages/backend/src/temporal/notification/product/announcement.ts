@@ -62,6 +62,11 @@ export const ProductAnnouncementEffectSchema = z.discriminatedUnion("kind", [
     installedAt: IsoInstantSchema,
     ladderStage: z.int().min(1).max(3),
   }),
+  z.strictObject({
+    kind: z.literal("offline-recovery"),
+    /** The last successful poll before the outage; names the outage. */
+    outageStartedAt: IsoInstantSchema,
+  }),
 ]);
 export type ProductAnnouncementEffect = z.infer<
   typeof ProductAnnouncementEffectSchema

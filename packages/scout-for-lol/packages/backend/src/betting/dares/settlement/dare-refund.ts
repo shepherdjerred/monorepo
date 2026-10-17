@@ -6,7 +6,7 @@ import {
 } from "#src/betting/dares/settlement/dare-ledger.ts";
 import { currentDareState } from "#src/betting/dares/dare-common.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 
 async function freshFacts(tx: Db, dareId: number) {
   const dare = await tx.bucksDare.findUniqueOrThrow({
@@ -83,7 +83,7 @@ export async function declineDareInTransaction(
     resolution: "declined",
     withCut: false,
   });
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: input.dareId,
     revision: input.revision,
     category: "lifecycle",
@@ -130,7 +130,7 @@ export async function cancelDareInTransaction(
     resolution: "cancelled",
     withCut: false,
   });
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: input.dareId,
     revision: input.revision,
     category: "lifecycle",

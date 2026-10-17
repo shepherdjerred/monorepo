@@ -6,7 +6,7 @@ import {
   type RefundableDareRow,
 } from "#src/betting/dares/settlement/dare-void.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 
 export async function settleDareOrVoidOnStorageOverflow(
   input: {

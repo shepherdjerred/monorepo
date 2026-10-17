@@ -19,10 +19,6 @@ import {
 } from "@scout-for-lol/data";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 import type { ScheduledReportDispatch } from "#src/reports/schedule/scheduler.ts";
-import {
-  claimScoutEffect,
-  completeScoutEffect,
-} from "#src/temporal/effect-claims.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { loadReportRunImage } from "#src/storage/s3-report-run.ts";
 import {
@@ -34,9 +30,8 @@ import {
 
 const logger = createLogger("report-discord-dispatcher");
 
-async function deliverChunksAndAnalytics(
+async function deliverChunks(
   dispatch: ScheduledReportDispatch,
-  outputKind: "report_manual" | "report_scheduled",
   database: ExtendedPrismaClient,
 ): Promise<void> {
   const chunks = await freezeReportDelivery(dispatch, database);
@@ -78,20 +73,44 @@ async function deliverChunksAndAnalytics(
       database,
     );
   }
-  const analyticsEffectKey = `report-analytics:${dispatch.result.runId.toString()}`;
-  const analyticsClaim = await claimScoutEffect(
-    {
-      key: analyticsEffectKey,
-      kind: "report-analytics",
+}
+
+/**
+ * Mark the run delivered, and count it as its guild's core output exactly when
+ * this call is the one that did.
+ *
+ * The run's `PENDING | UNKNOWN → DELIVERED` transition happens once: nothing
+ * reopens a delivered run, and the guarded update lets one caller win however
+ * many race. That transition is the analytics fence, so a retried Activity or
+ * a reconciliation pass that finds the run already delivered records nothing.
+ * It is at-most-once — a worker that dies between the update and the event
+ * costs one missed event — which is the trade every core-output event makes:
+ * a duplicate is the failure to avoid. An operator resolving the last
+ * uncertain chunk as delivered also completes the run without an event, as it
+ * always has.
+ */
+async function markRunDelivered(
+  dispatch: ScheduledReportDispatch,
+  outputKind: "report_manual" | "report_scheduled",
+  database: ExtendedPrismaClient,
+): Promise<void> {
+  const delivered = await database.reportRun.updateMany({
+    where: {
+      id: ReportRunIdSchema.parse(dispatch.result.runId),
+      deliveryState: { in: ["PENDING", "UNKNOWN"] },
     },
-    database,
-  );
-  if (analyticsClaim === "execute") {
+    data: {
+      deliveryState: "DELIVERED",
+      deliveryError: null,
+      deliveredAt: new Date(),
+    },
+  });
+  if (delivered.count === 1) {
     await recordCoreOutputDelivered(
       DiscordGuildIdSchema.parse(dispatch.report.serverId),
       outputKind,
+      { db: database },
     );
-    await completeScoutEffect(analyticsEffectKey, database);
   }
 }
 
@@ -151,18 +170,8 @@ export async function deliverReportDispatch(
   // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
   // warning here; anything unexpected is reported and we move on.
   try {
-    await deliverChunksAndAnalytics(dispatch, outputKind, database);
-    await database.reportRun.updateMany({
-      where: {
-        id: ReportRunIdSchema.parse(dispatch.result.runId),
-        deliveryState: { in: ["PENDING", "UNKNOWN"] },
-      },
-      data: {
-        deliveryState: "DELIVERED",
-        deliveryError: null,
-        deliveredAt: new Date(),
-      },
-    });
+    await deliverChunks(dispatch, database);
+    await markRunDelivered(dispatch, outputKind, database);
   } catch (error) {
     if (error instanceof ReportDeliveryUnknownError) {
       await database.reportRun.updateMany({

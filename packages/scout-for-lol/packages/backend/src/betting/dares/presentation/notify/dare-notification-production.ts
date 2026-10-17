@@ -1,7 +1,7 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { DareContract, DarePotTotal } from "@scout-for-lol/data";
 import type { DareFinality } from "#src/betting/dares/settlement/dare-settle-types.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import { deriveDareProgress } from "#src/betting/dares/presentation/dare-progress.ts";
 import type { Db } from "#src/database/index.ts";
 
@@ -43,7 +43,7 @@ export async function enqueueTerminalDareNotification(
     now: Date;
   },
 ): Promise<void> {
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: input.dareId,
     revision: input.revision,
     category: "lifecycle",
@@ -66,7 +66,7 @@ async function enqueueProgressNotification(
     now: Date;
   },
 ): Promise<void> {
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: input.dareId,
     revision: input.revision,
     category: "progress",

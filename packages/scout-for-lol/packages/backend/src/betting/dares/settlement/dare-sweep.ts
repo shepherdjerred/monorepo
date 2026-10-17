@@ -15,7 +15,7 @@ import { voidDareWithFullRefund } from "#src/betting/dares/settlement/dare-void.
 import { readableRelationalDareContract } from "#src/betting/dares/dare-common.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 
 const logger = createLogger("betting-dare-sweep-v2");
 
@@ -65,7 +65,7 @@ async function expireOne(
       resolution: "expired",
       withCut: false,
     });
-    await enqueueDareNotificationInTransaction(tx, {
+    await mintDareStatusIntents(tx, {
       dareId: dare.id,
       revision: dare.fundedRevision ?? dare.currentRevision,
       category: "lifecycle",

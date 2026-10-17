@@ -87,10 +87,10 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout Temporal durability metrics are unavailable",
           message:
-            "Scout could not query report outbox or interactive projection state. Restore the Scout database metric query before relying on the age and drift alerts.",
+            "Scout could not query report outbox, report delivery, or interactive projection state. Restore the Scout database metric query before relying on the age, drift, and delivery alerts.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          '(scout_temporal_report_outbox_oldest_timestamp_seconds < 0) or (scout_temporal_stale_product_projections < 0) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="beta"}) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="prod"}) or absent(scout_temporal_stale_product_projections{environment="beta"}) or absent(scout_temporal_stale_product_projections{environment="prod"})',
+          '(scout_temporal_report_outbox_oldest_timestamp_seconds < 0) or (scout_temporal_stale_product_projections < 0) or (scout_report_delivery_unknown_chunks < 0) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="beta"}) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="prod"}) or absent(scout_temporal_stale_product_projections{environment="beta"}) or absent(scout_temporal_stale_product_projections{environment="prod"})',
         ),
         for: "5m",
         labels: { severity: "warning" },
@@ -202,17 +202,21 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         labels: { severity: "warning" },
       },
       {
-        alert: "ScoutTemporalDuplicateEffectClaim",
+        // The report path's counterpart of an intent held in
+        // `unknown-delivery` (scout-durable-rules.ts): a send whose answer
+        // never arrived, which nothing re-sends because a blind retry is how a
+        // report posts twice.
+        alert: "ScoutReportDeliveryUnknown",
         annotations: {
-          summary: "Scout retried an ambiguous or mismatched external effect",
+          summary: "Scout report delivery is waiting on an uncertain send",
           message: escapePrometheusTemplate(
-            "Scout observed {{ $value }} duplicate {{ $labels.kind }} effect claim(s) with outcome {{ $labels.outcome }}. Verify the stable Discord nonce or storage key prevented a duplicate effect.",
+            "Scout {{ $labels.environment }} holds {{ $value }} report delivery chunk(s) in UNKNOWN: the Discord send left and its answer never arrived. Nothing re-sends these, by design. Confirm whether each message landed, then resolve it through the operations console.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'sum by (kind, outcome) (increase(scout_temporal_duplicate_effect_claims_total{outcome=~"ambiguous_retry|kind_mismatch"}[30m])) > 0',
+          "max by (environment) (scout_report_delivery_unknown_chunks) > 0",
         ),
-        for: "1m",
+        for: "5m",
         labels: { severity: "warning" },
       },
     ],

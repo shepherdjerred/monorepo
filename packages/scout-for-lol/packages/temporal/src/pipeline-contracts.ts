@@ -176,10 +176,10 @@ export const ScoutDurableCommitConflictReasonSchema = z.enum([
  * domain answer would be structurally unable to report the drift.
  *
  * A V2 Activity that performs an at-most-once effect reports the GUARD and
- * the FACT as separate fields, never as one outcome. `ScoutEffectClaim` takes
- * the top-level Prisma client rather than a transaction-scoped handle, so a
- * claim and the durable fact it guards cannot commit atomically; every
- * contract here therefore tolerates two commits and names the reconcile.
+ * the FACT as separate fields, never as one outcome: the guard says whether
+ * THIS run applied the effect, the fact what its durable receipt answered, and
+ * a retry that finds an earlier attempt's receipt standing reports the two
+ * apart rather than looking like a second application.
  */
 export const ScoutDurableCommitSchema = z.discriminatedUnion("outcome", [
   z.strictObject({ outcome: z.literal("applied") }),

@@ -13,7 +13,7 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { buildDareContract } from "#src/betting/dares/evaluation/dare-contract-build.ts";
 import { improvementBaselineSnapshot } from "#src/betting/dares/lifecycle/dare-activation-evaluation.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import { pendingDareCalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state.ts";
 import { executeDareSql } from "#src/betting/dares/sql/dare-sql.ts";
 import { parseDareTargets } from "#src/betting/dares/dare-common.ts";
@@ -296,7 +296,7 @@ async function activateOne(
             completedAt: activationAt,
           },
         });
-        await enqueueDareNotificationInTransaction(tx, {
+        await mintDareStatusIntents(tx, {
           dareId: row.id,
           revision: revision.revision,
           category: "lifecycle",

@@ -5,10 +5,10 @@ import {
   dareResultAnnouncementOf,
 } from "#src/betting/dares/settlement/dare-announcement.ts";
 import {
-  enqueueDareNotificationInTransaction,
-  enqueueDareResultPostInTransaction,
+  mintDareResultIntent,
+  mintDareStatusIntents,
   type DareNotificationDisposition,
-} from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+} from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import { pendingDareCalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state.ts";
 import {
   dareMoneyFactsInTransaction,
@@ -84,7 +84,7 @@ export async function voidDareWithFullRefund(
       // A void that refunded nothing moved no money, so the callout's own
       // final state already says everything there is to say.
       if (refunds.length > 0) {
-        await enqueueDareResultPostInTransaction(tx, {
+        await mintDareResultIntent(tx, {
           dareId: dare.id,
           revision: revisionNumber,
           result: dareResultAnnouncementOf({
@@ -101,7 +101,7 @@ export async function voidDareWithFullRefund(
           occurredAt: now,
         });
       }
-      await enqueueDareNotificationInTransaction(tx, {
+      await mintDareStatusIntents(tx, {
         dareId: dare.id,
         revision: revisionNumber,
         category: "lifecycle",

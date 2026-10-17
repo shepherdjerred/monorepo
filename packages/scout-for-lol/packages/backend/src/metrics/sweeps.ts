@@ -2,6 +2,7 @@ import { updateBettingMetrics } from "#src/metrics/betting/betting-sweep.ts";
 import { updateDurablePipelineMetrics } from "#src/metrics/durable-pipeline.ts";
 import { updateLimitMetrics } from "#src/metrics/limits.ts";
 import { updateScoutTemporalDurabilityMetrics } from "#src/metrics/platform/temporal.ts";
+import { updateReportDeliveryMetrics } from "#src/metrics/reports/report-delivery.ts";
 import { runRegisteredDatabaseMetricSweeps } from "#src/metrics/sweep-registry.ts";
 import { updateUsageMetrics } from "#src/metrics/usage.ts";
 import { createLogger } from "#src/logger.ts";
@@ -114,6 +115,7 @@ export async function runDatabaseMetricSweeps(): Promise<void> {
   await updateLimitMetrics();
   await updateBettingMetrics();
   await updateScoutTemporalDurabilityMetrics();
+  await updateReportDeliveryMetrics();
   await updateDurablePipelineMetrics();
   // Sweeps owned by layers `metrics/` may not import, which therefore register
   // themselves rather than being called by name here.

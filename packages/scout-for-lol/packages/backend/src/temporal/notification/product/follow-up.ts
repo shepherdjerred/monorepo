@@ -120,6 +120,9 @@ export async function afterProductAnnouncementDelivered(
           data: { deliveryStatus: "sent" },
         });
         break;
+      case "offline-recovery":
+        // The notice has no domain row to stamp; delivery is the whole effect.
+        break;
     }
     await db.matchNotificationIntent.update({
       where: { intentKey: record.intent.key },

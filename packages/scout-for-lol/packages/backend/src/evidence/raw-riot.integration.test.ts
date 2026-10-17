@@ -189,5 +189,4 @@ test("unselected Riot captures resolve conflicting client scoreboards without in
     value: { source: "RIOT", participants: base.participants },
   });
   expect(await prisma.matchObservation.count()).toBe(0);
-  expect(await prisma.scoutEffectClaim.count()).toBe(0);
 });

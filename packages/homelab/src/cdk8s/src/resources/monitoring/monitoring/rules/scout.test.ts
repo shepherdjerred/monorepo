@@ -29,9 +29,21 @@ describe("Scout Temporal alert rules", () => {
         "ScoutTemporalReportScheduleDrift",
         "ScoutTemporalProductProjectionStale",
         "ScoutTemporalProviderAttemptInterrupted",
-        "ScoutTemporalDuplicateEffectClaim",
+        "ScoutReportDeliveryUnknown",
       ]),
     );
+  });
+
+  test("alerts on an uncertain report send per environment, not as a rate", () => {
+    const rule = temporal?.rules?.find(
+      (candidate) => candidate.alert === "ScoutReportDeliveryUnknown",
+    );
+    if (rule === undefined)
+      throw new Error("Missing ScoutReportDeliveryUnknown");
+    const expression = JSON.stringify(rule.expr);
+    expect(expression).toContain("scout_report_delivery_unknown_chunks");
+    expect(expression).toContain("max by (environment)");
+    expect(expression).not.toContain("increase(");
   });
 
   test("alerts when Scout Temporal metrics are absent in either stage", () => {

@@ -1,6 +1,5 @@
-import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type { SettlementAnnouncementFamily } from "#src/database/durable/settlement-announcement-repository.ts";
-import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 
 /**
  * A settlement could not record the durable instruction to announce what it
@@ -90,10 +89,11 @@ export function checkpointFailureIn(
  * regardless.
  *
  * The sink is that seam. The settlement code no longer knows whether anything
- * will be announced; it asks the sink, and the caller supplies one. v1 passes
- * {@link announcingSettlementSink}, which is exactly what it did before this
- * existed. The V2 core passes one built from the match's COMMITTED delivery
- * mode, so a backfilled match gets a sink that announces nothing.
+ * will be announced; it asks the sink, and the caller supplies one. Callers
+ * with no delivery mode of their own default to
+ * {@link announcingSettlementSink}. The V2 core passes one built from the
+ * match's COMMITTED delivery mode, so a backfilled match gets a sink that
+ * announces nothing.
  *
  * ## The rule a sink implements
  *
@@ -126,25 +126,14 @@ export function checkpointFailureIn(
  */
 export type SettlementAnnouncementSink = {
   /**
-   * Drain the Dare notification outbox.
+   * Whether this settlement may mint its Dare notification intents at all.
    *
-   * This sends DMs to the challenger, the targets and every contributor, from
-   * rows enqueued inside the settling transaction moments earlier. It is a new
-   * public delivery, not a refresh, and it is the most private of them.
-   */
-  readonly drainDareNotifications: (
-    prismaClient: ExtendedPrismaClient,
-  ) => Promise<void>;
-
-  /**
-   * Whether this settlement may ENQUEUE a Dare notification at all.
-   *
-   * Not "may it be drained now" — whether the row may exist. The outbox is
-   * durable work, and `drainDareNotifications` returning early suppresses
-   * only THIS run's drain: the v1 post-match poller drains the same table
-   * with no sink and no knowledge of delivery modes, so a row withheld from
-   * one drain is sent by the next. The only durable suppression is the row
-   * never being written.
+   * The `dare-status` intents — DMs to the challenger, the targets and every
+   * contributor, and the Dare's channel result post — are minted inside the
+   * settling transaction together with their Workflow start requests, and the
+   * notification lane delivers them from there. A minted intent is durable
+   * work that reconciliation will drive whoever is running, so the only
+   * durable suppression is the intent never being written.
    *
    * Asked inside the settling transaction, so the decision and the settlement
    * commit together.
@@ -185,15 +174,14 @@ export type SettlementAnnouncementSink = {
 };
 
 /**
- * What v1 does, and has always done: announce everything, immediately.
+ * Announce everything: post what settles now, and mint every Dare
+ * notification as a durable `dare-status` intent for the notification lane.
  *
  * The default everywhere, so a caller that knows nothing about delivery modes
- * behaves exactly as it did before the sink existed.
+ * announces what it settles. Nothing here sends a Dare DM itself; the intents
+ * minted in the settling transaction are the whole hand-off.
  */
 export const announcingSettlementSink: SettlementAnnouncementSink = {
-  drainDareNotifications: async (prismaClient) => {
-    await deliverPendingDareNotifications(prismaClient);
-  },
   mayEnqueueDareNotification: () => true,
   mayPostDareCallout: () => true,
   // This sink announces from its own call stack; there is nothing to recover.
@@ -208,7 +196,6 @@ export const announcingSettlementSink: SettlementAnnouncementSink = {
  * commits and returns exactly as it would for a live match.
  */
 export const silentSettlementSink: SettlementAnnouncementSink = {
-  drainDareNotifications: () => Promise.resolve(),
   mayEnqueueDareNotification: () => false,
   mayPostDareCallout: () => false,
   // Nothing may be announced, so nothing is recorded to announce later.
