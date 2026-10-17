@@ -52,6 +52,10 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  */
 const CI_CREDENTIAL_ITEMS = [
   {
+    secretName: "ci-delivery-credentials",
+    itemId: "ahbp4izt7fibvwdjwd4ffhiime",
+  },
+  {
     secretName: "dockerhub-pull-woodpecker-ci",
     itemId: "ngzmppq52zm7sii6ato2mv3sbi",
     type: "kubernetes.io/dockerconfigjson",

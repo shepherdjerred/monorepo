@@ -5,6 +5,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import inventory from "./releases.json";
 import { createStormForumChart } from "./index.ts";
 import { ReleaseSchema } from "./release-schema.ts";
+import { parameterizeForumDelivery } from "./delivery-inputs.ts";
 
 const InventorySchema = z
   .object({
@@ -26,7 +27,7 @@ export function createStormForumCharts(app: App): void {
       (candidate) => candidate.stage === stage,
     );
     if (release) {
-      createStormForumChart(app, release);
+      parameterizeForumDelivery(createStormForumChart(app, release), release);
     } else {
       // Publish a valid inactive chart without provisioning a forum or inventing pins.
       const chart = new Chart(app, name, {

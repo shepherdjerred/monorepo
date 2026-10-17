@@ -42,6 +42,7 @@ Monorepo workflows:
   pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
+  deploy <COMMAND>            Select, promote, approve, and inspect releases
   screenshot <PKG> [ROUTE]     Start a site and capture a browser screenshot
   screenshot-server <PKG>      Start a site without browser credentials
   alerts <list|show>           Query the durable alert ledger
@@ -88,6 +89,10 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   ],
   ["ci", () => import("./handlers/ci.ts").then((m) => m.handleCiCommand)],
   [
+    "deploy",
+    () => import("./handlers/deploy.ts").then((m) => m.handleDeployCommand),
+  ],
+  [
     "alerts",
     () => import("./handlers/alerts.ts").then((m) => m.handleAlertsCommand),
   ],
@@ -123,7 +128,7 @@ async function resolveCommandCredentials(
 ): Promise<void> {
   const subcommand = args[1];
   // CI validates help and arguments before resolving its operational credentials.
-  if (command === "ci") {
+  if (command === "ci" || command === "deploy") {
     return;
   }
   if (

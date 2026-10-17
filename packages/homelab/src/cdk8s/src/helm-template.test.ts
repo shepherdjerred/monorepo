@@ -152,13 +152,30 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
     // - {{ "{{" }} / {{ "}}" }} — standard escape used by escapeHelmGoTemplate
     // - {{ print "{{" }} / {{ print "}}" }} — alternative used by Grafana dashboards
     // - {{ `{{` }} / {{ `}}` }} — backtick-based escape for JSON-rendered templates
-    const stripped = line
+    let stripped = line
       .replaceAll('{{ "{{" }}', "")
       .replaceAll('{{ "}}" }}', "")
       .replaceAll('{{ print "{{" }}', "")
       .replaceAll('{{ print "}}" }}', "")
       .replaceAll("{{ `{{` }}", "")
       .replaceAll("{{ `}}` }}", "");
+
+    // First-party release inputs are intentional Helm, scoped to their chart
+    // and exact reviewed expression grammar. Consumer templates still escape.
+    if (fileName === "arcade.k8s.yaml") {
+      stripped = stripped.replaceAll(
+        /\{\{ \.Values\.delivery\.image \| default "docker\.io\/shepherdjerred\/arcade:[\w.@:-]+" \}\}/gu,
+        "",
+      );
+    }
+    if (
+      ["storm-forum.k8s.yaml", "storm-forum-beta.k8s.yaml"].includes(fileName)
+    ) {
+      stripped = stripped.replaceAll(
+        /\{\{ if \.Values\.delivery\.enabled \}\}\{\{ required `Delivery requires (image|bundleKey|bundleSha256|previousBundleSha256|previousXenforoVersion|previousRuntimeImage|releaseId)` \.Values\.delivery\.\1 \}\}\{\{ else \}\}[^{}]*\{\{ end \}\}/gu,
+        "",
+      );
+    }
 
     // Only {{ triggers Helm template parsing. Standalone }} is safe.
     if (stripped.includes("{{")) {
@@ -212,6 +229,10 @@ async function helmTemplateChart(chartName: string): Promise<{
       path.join(templatesDir, `${chartName}.k8s.yaml`),
       manifestFile,
     );
+    const valuesFile = Bun.file(path.join(HELM_DIR, chartName, "values.yaml"));
+    if (await valuesFile.exists()) {
+      await Bun.write(path.join(tempDir, "values.yaml"), valuesFile);
+    }
 
     const proc = Bun.spawn(["helm", "template", "test-release", tempDir], {
       stdout: "pipe",
@@ -229,7 +250,23 @@ async function helmTemplateChart(chartName: string): Promise<{
 }
 
 describe("Helm Escaping - Denylist Check (dist/)", () => {
-  it("should not contain unescaped {{ in any dist file", async () => {
+  it("rejects unknown release expressions and consumer templates", () => {
+    for (const [content, source] of [
+      ["{{ .Values.delivery.unreviewed }}", "arcade.k8s.yaml"],
+      ["{{ .Values.delivery.image }}", "arcade.k8s.yaml"],
+      [
+        '{{ .Values.delivery.image | default "docker.io/shepherdjerred/arcade:1" }}',
+        "apps.k8s.yaml",
+      ],
+      ["{{ unescaped_consumer_template }}", "storm-forum.k8s.yaml"],
+    ] as const) {
+      expect(() => checkForUnescapedBraces(content, source)).toThrow(
+        "unescaped {{",
+      );
+    }
+  });
+
+  it("escapes consumer templates and permits only reviewed release expressions", async () => {
     const glob = new Glob("*.k8s.yaml");
     for await (const entry of glob.scan(DIST_DIR)) {
       const content = await Bun.file(path.join(DIST_DIR, entry)).text();

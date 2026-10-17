@@ -103,15 +103,15 @@ it("includes Tracker's operator-managed database in backups before activation", 
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 57 included and 50 excluded PVCs without duplicates", () => {
+  it("classifies 58 included and 50 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(107);
-    expect(new Set(keys).size).toBe(107);
+    expect(keys).toHaveLength(108);
+    expect(new Set(keys).size).toBe(108);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(57);
+    ).toHaveLength(58);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
     ).toHaveLength(50);

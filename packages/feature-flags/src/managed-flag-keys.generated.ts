@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 export const MANAGED_NAMESPACES = [
+  "delivery",
   "arcade",
   "tracker",
   "woodpecker",
@@ -19,6 +20,27 @@ export const MANAGED_NAMESPACES = [
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
+
+export const DELIVERY_BOOLEAN_FLAG_KEYS = ["delivery-writes-enabled"] as const;
+
+export type DeliveryBooleanFlagKey =
+  (typeof DELIVERY_BOOLEAN_FLAG_KEYS)[number];
+
+export const DELIVERY_VARIANT_FLAG_KEYS = [
+  "delivery-enabled-environments",
+  "delivery-operator-logins",
+  "delivery-trusted-proxy-addresses",
+] as const;
+
+export type DeliveryVariantFlagKey =
+  (typeof DELIVERY_VARIANT_FLAG_KEYS)[number];
+
+export const DELIVERY_FLAG_KEYS = [
+  ...DELIVERY_BOOLEAN_FLAG_KEYS,
+  ...DELIVERY_VARIANT_FLAG_KEYS,
+] as const;
+
+export type DeliveryFlagKey = (typeof DELIVERY_FLAG_KEYS)[number];
 
 export const ARCADE_BOOLEAN_FLAG_KEYS = [
   "arcade_enabled",
@@ -62,6 +84,7 @@ export const TRACKER_FLAG_KEYS = [
 export type TrackerFlagKey = (typeof TRACKER_FLAG_KEYS)[number];
 
 export const WOODPECKER_BOOLEAN_FLAG_KEYS = [
+  "woodpecker-delivery-publication-enabled",
   "woodpecker-maintenance-lanes-enabled",
   "woodpecker-source-incremental-enabled",
   "woodpecker-prepared-workspace-enabled",
@@ -405,6 +428,7 @@ export const STORM_FLAG_KEYS = [
 export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
+  ...DELIVERY_FLAG_KEYS,
   ...ARCADE_FLAG_KEYS,
   ...TRACKER_FLAG_KEYS,
   ...WOODPECKER_FLAG_KEYS,
@@ -423,6 +447,7 @@ export const MANAGED_FLAG_KEYS = [
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
 
 export const MANAGED_BOOLEAN_FLAG_KEYS = [
+  ...DELIVERY_BOOLEAN_FLAG_KEYS,
   ...ARCADE_BOOLEAN_FLAG_KEYS,
   ...TRACKER_BOOLEAN_FLAG_KEYS,
   ...WOODPECKER_BOOLEAN_FLAG_KEYS,
@@ -441,6 +466,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
 
 export const MANAGED_VARIANT_FLAG_KEYS = [
+  ...DELIVERY_VARIANT_FLAG_KEYS,
   ...ARCADE_VARIANT_FLAG_KEYS,
   ...TRACKER_VARIANT_FLAG_KEYS,
   ...WOODPECKER_VARIANT_FLAG_KEYS,

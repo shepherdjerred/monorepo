@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import {
   parseCatalog,
   SERVICE_CATALOG,
@@ -30,6 +31,80 @@ async function analyticsSiteKeys(): Promise<Set<string>> {
 describe("service catalog", () => {
   test("parses the committed catalog", () => {
     expect(SERVICE_CATALOG.services.length).toBeGreaterThan(10);
+  });
+
+  test("every registered first-party image has exactly one service owner", async () => {
+    const registry = z
+      .object({ images: z.array(z.object({ name: z.string() })) })
+      .parse(
+        await Bun.file(
+          new URL(
+            "../../version-catalog/src/image-registry.json",
+            import.meta.url,
+          ),
+        ).json(),
+      );
+    const index = new ServiceIndex();
+    const registered = registry.images.map((image) => image.name).sort();
+    expect(
+      SERVICE_CATALOG.services.flatMap((service) => service.images).sort(),
+    ).toEqual(registered);
+    for (const image of registered) expect(index.byImage(image)).toBeDefined();
+    expect(index.byImage("unknown-image")).toBeUndefined();
+  });
+
+  test("rejects competing image publishers", () => {
+    expect(() =>
+      parseCatalog({
+        services: ["a", "b"].map((id) => ({
+          id,
+          title: id,
+          kind: "platform",
+          namespaces: [],
+          argoApps: [],
+          images: ["shared-image"],
+        })),
+      }),
+    ).toThrow(/image shared-image belongs to both/);
+  });
+
+  test("every packaged chart has an owner without claiming dormant Applications are active", async () => {
+    const index = new ServiceIndex();
+    const cwd = new URL("../../homelab/src/cdk8s/helm/", import.meta.url)
+      .pathname;
+    for await (const file of new Bun.Glob("*/Chart.yaml").scan({ cwd })) {
+      const chart = file.split("/")[0];
+      if (chart === undefined)
+        throw new Error("Chart fixture path has no name");
+      expect(index.byChart(chart), chart).toBeDefined();
+    }
+    expect(index.byChart("delivery")?.id).toBe("delivery");
+    expect(index.byArgoApp("delivery")).toBeUndefined();
+    expect(index.byChart("unknown-chart")).toBeUndefined();
+  });
+
+  test("rejects chart ownership that conflicts with an existing Application owner", () => {
+    expect(() =>
+      parseCatalog({
+        services: [
+          {
+            id: "a",
+            title: "A",
+            kind: "platform",
+            namespaces: [],
+            argoApps: ["shared-chart"],
+          },
+          {
+            id: "b",
+            title: "B",
+            kind: "platform",
+            namespaces: [],
+            argoApps: [],
+            charts: ["shared-chart"],
+          },
+        ],
+      }),
+    ).toThrow(/chart shared-chart belongs to both/);
   });
 
   test("every analytics site belongs to exactly one service", async () => {

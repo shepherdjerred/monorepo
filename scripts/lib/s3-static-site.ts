@@ -4,8 +4,12 @@
  * lockstep deploy scripts share the exact same sync semantics).
  */
 
-import { createSignedS3Request } from "@shepherdjerred/s3-signed-request";
-import { requireEnv, run } from "./run.ts";
+import { run } from "./run.ts";
+import {
+  directS3ObjectMatchesSource,
+  filesHaveSameBytes,
+} from "./s3-static-site-readback.ts";
+import type { S3ReadbackOptions } from "./s3-static-site-readback.ts";
 
 const DIRECT_READBACK_THRESHOLD = 64;
 const DIRECT_READBACK_CONCURRENCY = 8;
@@ -46,21 +50,6 @@ export async function staticSiteFilePaths(
     paths.push(path);
   }
   return paths.sort();
-}
-
-/** Compare local files as bytes so binary static assets are certified exactly. */
-export async function filesHaveSameBytes(
-  expectedPath: string,
-  actualPath: string,
-): Promise<boolean> {
-  const [expected, actual] = await Promise.all([
-    Bun.file(expectedPath).bytes(),
-    Bun.file(actualPath).bytes(),
-  ]);
-  return (
-    expected.length === actual.length &&
-    !expected.some((byte, index) => byte !== actual[index])
-  );
 }
 
 /** AWS CLI's stable missing-key diagnostics for `s3 cp` object reads. */
@@ -195,56 +184,6 @@ export function s3StaticSiteDownloadCommand(opts: {
   ];
 }
 
-async function sha256Stream(
-  stream: ReadableStream<Uint8Array>,
-): Promise<string> {
-  const hasher = new Bun.CryptoHasher("sha256");
-  for await (const chunk of stream) {
-    hasher.update(chunk);
-  }
-  return hasher.digest("hex");
-}
-
-async function directS3ObjectMatchesSource(
-  opts: Parameters<typeof firstS3ObjectMismatch>[0],
-  path: string,
-): Promise<boolean> {
-  const region = opts.env["AWS_DEFAULT_REGION"];
-  if (region === undefined || region === "") {
-    throw new Error(
-      "S3 readback requires AWS_DEFAULT_REGION in its environment",
-    );
-  }
-  const request = createSignedS3Request(
-    {
-      accessKeyId: requireEnv("AWS_ACCESS_KEY_ID"),
-      secretAccessKey: requireEnv("AWS_SECRET_ACCESS_KEY"),
-      sessionToken: Bun.env["AWS_SESSION_TOKEN"],
-      endpoint: opts.endpoint,
-      bucket: opts.bucket,
-      region,
-      forcePathStyle: true,
-    },
-    { method: "GET", key: path, signal: AbortSignal.timeout(120_000) },
-  );
-  const response = await fetch(request);
-  if (response.status === 404) {
-    await response.body?.cancel();
-    return false;
-  }
-  if (!response.ok || response.body === null) {
-    await response.body?.cancel();
-    throw new Error(
-      `S3 readback failed for s3://${opts.bucket}/${path} (HTTP ${response.status.toString()})`,
-    );
-  }
-  const [expected, served] = await Promise.all([
-    sha256Stream(Bun.file(`${opts.sourceDir}/${path}`).stream()),
-    sha256Stream(response.body),
-  ]);
-  return expected === served;
-}
-
 /**
  * Require every source-release object to have the same SHA-256 digest as its
  * served counterpart. Deployment markers must not advance when S3's
@@ -252,14 +191,9 @@ async function directS3ObjectMatchesSource(
  * selected-object sync; large sites use bounded direct reads to avoid the AWS
  * CLI's quadratic include-filter cost and an extra copy on disk.
  */
-export async function firstS3ObjectMismatch(opts: {
-  sourceDir: string;
-  bucket: string;
-  paths: readonly string[];
-  scratchDir: string;
-  endpoint: string;
-  env: Record<string, string>;
-}): Promise<string | undefined> {
+export async function firstS3ObjectMismatch(
+  opts: S3ReadbackOptions,
+): Promise<string | undefined> {
   // AWS CLI checks every include rule against every listed object. Large Scout
   // releases contain thousands of files, so read their exact keys directly
   // with bounded concurrency instead of building a quadratic sync filter.
@@ -294,7 +228,10 @@ export async function firstS3ObjectMismatch(opts: {
       endpoint: opts.endpoint,
       paths: opts.paths,
     }),
-    { env: opts.env },
+    {
+      env: opts.env,
+      ...(opts.signal === undefined ? {} : { signal: opts.signal }),
+    },
   );
   for (const path of opts.paths) {
     const expectedPath = `${opts.sourceDir}/${path}`;
@@ -352,6 +289,7 @@ export async function assertS3ObjectsMatchSource(opts: {
  * repair without an eventually consistent listing deleting them again.
  */
 export async function s3SyncStaticSite(opts: {
+  signal?: AbortSignal;
   source: string;
   bucket: string;
   endpoint: string;
@@ -373,6 +311,11 @@ export async function s3SyncStaticSite(opts: {
     forceMutableUpload = false,
   } = opts;
   const extraExcludes = opts.extraExcludes ?? [];
+  const runtime = {
+    cwd,
+    env,
+    ...(opts.signal === undefined ? {} : { signal: opts.signal }),
+  };
   const dest = `s3://${bucket}/`;
   const deletePassExcludes = [
     ...immutablePrefixes.map((p) => `${p}*`),
@@ -408,7 +351,7 @@ export async function s3SyncStaticSite(opts: {
           }),
           "--dryrun",
         ],
-        { cwd, env },
+        runtime,
       );
       await run(
         forceMutableUploadCommand({
@@ -418,7 +361,7 @@ export async function s3SyncStaticSite(opts: {
           excludes: deletePassExcludes,
           dryRun: true,
         }),
-        { cwd, env },
+        runtime,
       );
     }
     if (immutablePrefixes.length > 0) {
@@ -433,7 +376,7 @@ export async function s3SyncStaticSite(opts: {
             cacheControl: "public, max-age=31536000, immutable",
             dryRun: true,
           }),
-          { cwd, env },
+          runtime,
         );
       }
       await run(
@@ -452,7 +395,7 @@ export async function s3SyncStaticSite(opts: {
           "public, max-age=31536000, immutable",
           "--dryrun",
         ],
-        { cwd, env },
+        runtime,
       );
     }
     if (!forceMutableUpload) {
@@ -466,7 +409,7 @@ export async function s3SyncStaticSite(opts: {
           }),
           "--dryrun",
         ],
-        { cwd, env },
+        runtime,
       );
     }
     return;
@@ -484,7 +427,7 @@ export async function s3SyncStaticSite(opts: {
         endpoint,
         excludes: deletePassExcludes,
       }),
-      { cwd, env },
+      runtime,
     );
     await run(
       forceMutableUploadCommand({
@@ -494,7 +437,7 @@ export async function s3SyncStaticSite(opts: {
         excludes: deletePassExcludes,
         dryRun: false,
       }),
-      { cwd, env },
+      runtime,
     );
   }
 
@@ -511,7 +454,7 @@ export async function s3SyncStaticSite(opts: {
           cacheControl: "public, max-age=31536000, immutable",
           dryRun: false,
         }),
-        { cwd, env },
+        runtime,
       );
     }
     await run(
@@ -529,7 +472,7 @@ export async function s3SyncStaticSite(opts: {
         "--cache-control",
         "public, max-age=31536000, immutable",
       ],
-      { cwd, env },
+      runtime,
     );
   }
 
@@ -545,7 +488,7 @@ export async function s3SyncStaticSite(opts: {
         endpoint,
         excludes: deletePassExcludes,
       }),
-      { cwd, env },
+      runtime,
     );
   }
 }

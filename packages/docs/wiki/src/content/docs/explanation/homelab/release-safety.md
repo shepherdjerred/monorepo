@@ -28,6 +28,51 @@ sequenceDiagram
   BK->>Child: require Synced and Healthy
 ```
 
+## Why application releases delegate selection
+
+Delivery-owned applications keep their exact desired versions and deployment
+history in PostgreSQL. Git retains infrastructure, application registration,
+deployment templates, and reviewed pipeline definitions. This separates a
+successful build from a selected release and from an accepted running release.
+
+The [application release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
+marks explicitly delegated applications. The root owns their registration and
+lifecycle; Delivery owns the selected chart revision and complete release
+parameter list. Static chart values remain under infrastructure ownership.
+Root synchronization preserves those delegated fields during application, as
+well as ignoring them during comparison. A comparison ignore alone would allow
+the next root sync to overwrite PostgreSQL's selection.
+
+The [root release command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
+leaves delegated children out of its release reconciliation and acceptance
+checks. It also avoids local manifest overrides for those children, which could
+reintroduce an older selection. Each application therefore has one release
+owner, while root pruning and infrastructure changes retain their existing
+safety checks.
+
+Delivery's executor records external intent before changing ArgoCD. An
+interrupted or ambiguous operation keeps its environment locked for recovery.
+Application acceptance includes exact operation identity, deployment history,
+running image digests, and runtime checks. A green comparison alone cannot
+accept a release.
+
+Static sites publish standard tar archives with SHA-256 digests. Scout's beta
+and production frontend flavors are built separately in the same version set,
+each bound to its exact backend image. Selecting a flavor activates those
+published bytes without rebuilding them. Bucket delegation is explicit; an
+unregistered or mismatched owner blocks the adapter. Publication alone leaves
+the legacy release owner in control. Acceptance reads back every selected S3
+object, compares public entrypoint bytes with the selected archive, and checks
+an identity-bound release marker before recording success. A successful HTTP
+status or cache purge acknowledgement alone cannot accept stale frontend HTML.
+
+Browser identity terminates at Tailscale Serve inside the Delivery Pod. Serve
+forwards to the API over loopback, which is the only peer trusted to supply
+Tailscale user headers. The cluster-visible API requires machine credentials.
+This authentication boundary does not rely on NetworkPolicy enforcement by the
+cluster's CNI. The state volume preserves the sidecar's tailnet identity across
+restarts; its OAuth credential can register only the dedicated Delivery tag.
+
 ## Why `release-root` stages and restores the root
 
 The second suspended root apply is the part people delete when simplifying, and

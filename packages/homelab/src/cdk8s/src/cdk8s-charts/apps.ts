@@ -81,6 +81,8 @@ import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tracker.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { trackerImageReference } from "@shepherdjerred/homelab/cdk8s/src/resources/tracker/image.ts";
+import { createDeliveryApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/delivery.ts";
+import { deliveryActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -89,6 +91,8 @@ export async function createAppsChart(app: App) {
   });
 
   createStorageClasses(chart);
+  if (deliveryActivation(versions["shepherdjerred/delivery"]) !== undefined)
+    createDeliveryApp(chart);
   if (trackerImageReference(versions["shepherdjerred/tracker"]) !== undefined)
     createTrackerApp(chart);
   createPriorityClasses(chart);

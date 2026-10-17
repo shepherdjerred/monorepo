@@ -267,7 +267,7 @@ describe("Flipt chart", () => {
       'git -C "$staging" init --initial-branch=main',
     );
     expect(initializationScript).toContain(
-      'git -C "$staging" add -- "arcade/features.yaml" "tracker/features.yaml" "woodpecker/features.yaml" "justin/features.yaml" "scout/features.yaml"',
+      'git -C "$staging" add -- "delivery/features.yaml" "arcade/features.yaml" "tracker/features.yaml" "woodpecker/features.yaml" "justin/features.yaml" "scout/features.yaml"',
     );
     expect(initializationScript).toContain('if [ -e "$repo" ]');
     expect(initializationScript).not.toContain("data-beta");
@@ -288,6 +288,7 @@ describe("Flipt chart", () => {
       ["beta", "prod"]
         .flatMap((environment) =>
           [
+            "delivery",
             "arcade",
             "woodpecker",
             "justin",

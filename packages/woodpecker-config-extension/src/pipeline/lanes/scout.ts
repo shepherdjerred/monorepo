@@ -50,13 +50,22 @@ const SCOUT_WORKSPACE_FILTERS = [
   "--filter '@shepherdjerred/glitter-context'",
 ].join(" ");
 
-export function scoutSteps(images: CiImages): CiStep[] {
+export function scoutSteps(
+  images: CiImages,
+  archivePublication = false,
+): CiStep[] {
   return [
     {
       key: "scout-beta-release",
       label: "scout beta release",
       image: images.base,
       commands: [
+        ...(archivePublication
+          ? [
+              "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+              "printf '[]' | bun --no-install scripts/ci/write-ci-handoff.ts scout-site-artifacts",
+            ]
+          : []),
         // Release when this build pushed a Scout backend image, or when the
         // site sources changed on their own.
         ...admissionGate(
@@ -83,10 +92,15 @@ export function scoutSteps(images: CiImages): CiStep[] {
         'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output .scout-release/state.json',
         'scout_state="$(cat .scout-release/state.json)"',
         'bun --no-install scripts/release/scout-site-release.ts archive --state "$scout_state"',
+        ...(archivePublication
+          ? [
+              "bun --no-install scripts/release/publish-scout-site-archives.ts .scout-release/state.json",
+            ]
+          : []),
         // Published before the beta deploy so a failed deploy still leaves the
         // tag and reconcile lanes able to see what was archived.
         "bun --no-install scripts/ci/write-ci-handoff.ts scout-release-state < .scout-release/state.json",
-        'bun --no-install scripts/release/scout-site-release.ts deploy-beta --state "$scout_state"',
+        'if [ "$(bun --no-install scripts/release/static-site-writer.ts scout-frontend-beta)" = "legacy" ]; then bun --no-install scripts/release/scout-site-release.ts deploy-beta --state "$scout_state"; fi',
       ],
       dependsOn: ["images", "argocd-sync"],
       timeoutMinutes: 30,
@@ -140,7 +154,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         ...AWS_ALIASES,
         DOCKERHUB_READ_LOGIN,
         'prod_pin="$(bun --no-install scripts/release/scout-site-release.ts resolve-prod-pin)"',
-        'bun --no-install scripts/release/scout-site-release.ts reconcile-prod-pin --prod-pin "$prod_pin"',
+        'if [ "$(bun --no-install scripts/release/static-site-writer.ts scout-frontend)" = "legacy" ]; then bun --no-install scripts/release/scout-site-release.ts reconcile-prod-pin --prod-pin "$prod_pin"; fi',
       ],
       dependsOn: ["argocd-sync", "scout-beta-release"],
       timeoutMinutes: 30,

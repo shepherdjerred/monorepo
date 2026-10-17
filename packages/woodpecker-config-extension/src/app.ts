@@ -39,6 +39,7 @@ import {
 } from "#src/performance-config.ts";
 
 export type AppOptions = {
+  readonly deliveryPublicationEnabled?: (branch: string) => Promise<boolean>;
   readonly maintenanceEnabled?: (manual: boolean) => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly performanceOptions?: (branch: string) => Promise<PerformanceOptions>;
@@ -331,6 +332,8 @@ export function createApp(options: AppOptions): Hono {
   const app = new Hono();
   const maintenanceEnabled =
     options.maintenanceEnabled ?? (() => Promise.resolve(false));
+  const publishDelivery =
+    options.deliveryPublicationEnabled ?? (() => Promise.resolve(false));
   app.get("/healthz", (context) => context.text("ok"));
   app.post("/ciconfig", async (context) => {
     const request = await authenticatedRequest(context, options);
@@ -450,6 +453,7 @@ export function createApp(options: AppOptions): Hono {
     const steps = buildPipelineSteps({
       images,
       trustedGateImage: options.trustedGateImage,
+      deliveryPublication: await publishDelivery(pipeline.branch),
       changedBase,
       verifyBase,
       imageReleaseBase: imageReleaseBase?.commit,

@@ -10,6 +10,8 @@
     "test:ci": "bun ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/ops-model": "workspace:*",
+    "@shepherdjerred/delivery": "workspace:*",
     "@openai/codex-sdk": "0.162.1",
     "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
@@ -39,6 +41,10 @@
     "@vitest/coverage-istanbul": "5.0.3"
   },
   "exports": {
+    "./lib/static-site-archive.ts": "./lib/static-site-archive.ts",
+    "./lib/static-site-publication.ts": "./lib/static-site-publication.ts",
+    "./lib/s3-static-site.ts": "./lib/s3-static-site.ts",
+    "./lib/seaweedfs.ts": "./lib/seaweedfs.ts",
     "./run-temporal-node.ts": {
       "types": "./run-temporal-node.ts",
       "default": "./run-temporal-node.ts"

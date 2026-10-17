@@ -22,6 +22,11 @@ import type { Environment } from "@shepherdjerred/config/sources/env.ts";
 const BooleanSettingSchema = z.union([z.boolean(), z.stringbool()]);
 
 export const TOOLKIT_CONFIG_DEFINITION = {
+  deliveryUrl: {
+    schema: z.url({ protocol: /^https?$/ }),
+    sources: ["env", "file", "default"],
+    default: "https://delivery.tailnet-1a49.ts.net",
+  },
   trackerUrl: {
     schema: z.url({ protocol: /^https?$/ }),
     sources: ["env", "file", "default"],

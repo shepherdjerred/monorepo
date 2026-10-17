@@ -11,6 +11,7 @@ export const legacyTofuPaths = [
 ] as const;
 
 export const platformTofuPaths = [
+  "packages/homelab/src/tofu/tailscale-delivery",
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/anthropic",
   "packages/homelab/src/tofu/anthropic-federation",

@@ -34,6 +34,15 @@
             "uniqueItems": true,
             "items": { "type": "string", "minLength": 1 }
           },
+          "images": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "charts": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
           "bugsinkProjects": {
             "type": "array",
             "uniqueItems": true,

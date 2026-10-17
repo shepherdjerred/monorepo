@@ -1,0 +1,228 @@
+import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
+import { DeliveryError } from "#domain/error.ts";
+import {
+  ArtifactVersionSchema,
+  EnvironmentSchema,
+  PipelineRevisionSchema,
+  VersionSetRevisionSchema,
+} from "#shared/contract.ts";
+import type {
+  CreateDeployment,
+  EvidenceInput,
+  PipelineDefinition,
+  ArtifactVersion,
+  Environment,
+  VersionSetRevision,
+} from "#shared/contract.ts";
+import type { Database } from "./database.ts";
+import { fingerprint, wire, required } from "./delivery-records.ts";
+
+export type Transaction = Prisma.TransactionClient;
+export const index = new ServiceIndex();
+export const terminal = new Set(["succeeded", "failed", "canceled"]);
+export const id = () => crypto.randomUUID();
+export function ensureService(serviceId: string) {
+  if (index.byId(serviceId)?.id !== serviceId)
+    throw new DeliveryError(
+      "INVALID",
+      "A canonical service catalog identity is required",
+    );
+}
+export function approvalRequired(
+  serviceId: string,
+  target: {
+    application: string | null;
+    name: string;
+    pipeline: PipelineDefinition;
+  },
+) {
+  const { application, name, pipeline } = target;
+  if (serviceId === "scout-for-lol" && pipeline.kind === "static-site")
+    return pipeline.bucket === "scout-frontend";
+  const production =
+    application?.endsWith("-prod") === true ||
+    ["prod", "production"].includes(name.toLowerCase());
+  return (
+    ["scout-for-lol", "starlight-karma-bot"].includes(serviceId) && production
+  );
+}
+export async function artifact(tx: Transaction | Database, artifactId: string) {
+  const row = required(
+    await tx.artifact.findUnique({
+      where: { id: artifactId },
+      include: { build: true },
+    }),
+    "Artifact",
+  );
+  if (row.build.status !== "verified")
+    throw new DeliveryError(
+      "CONFLICT",
+      "Artifact build has not passed CI qualification",
+    );
+  const { build, ...fields } = row;
+  return ArtifactVersionSchema.parse(
+    wire({
+      ...fields,
+      serviceId: build.serviceId,
+      sourceRevision: build.sourceRevision,
+    }),
+  );
+}
+export async function version(tx: Transaction | Database, revisionId: string) {
+  const row = required(
+    await tx.versionSet.findUnique({
+      where: { id: revisionId },
+      include: { entries: true },
+    }),
+    "Version set revision",
+  );
+  const components: Record<string, ArtifactVersion> = {};
+  for (const entry of row.entries)
+    components[entry.component] = await artifact(tx, entry.artifactId);
+  return VersionSetRevisionSchema.parse(wire({ ...row, components }));
+}
+export async function environment(
+  tx: Transaction | Database,
+  environmentId: string,
+) {
+  const row = required(
+    await tx.environment.findUnique({ where: { id: environmentId } }),
+    "Environment",
+  );
+  const pipeline = PipelineRevisionSchema.parse(
+    wire(
+      required(
+        await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),
+        "Pipeline",
+      ),
+    ),
+  );
+  return EnvironmentSchema.parse(
+    wire({
+      ...row,
+      approvalRequired: approvalRequired(row.serviceId, {
+        application: row.application,
+        name: row.name,
+        pipeline: pipeline.definition,
+      }),
+    }),
+  );
+}
+export async function evidence(
+  tx: Transaction,
+  deploymentId: string,
+  items: EvidenceInput[],
+  prefix: string,
+) {
+  for (const [offset, item] of items.entries()) {
+    const evidenceId = `${deploymentId}/${prefix}/${String(offset)}`;
+    const existing = await tx.evidence.findUnique({
+      where: { id: evidenceId },
+    });
+    if (existing === null) {
+      await tx.evidence.create({
+        data: {
+          id: evidenceId,
+          deploymentId,
+          kind: item.kind,
+          summary: item.summary,
+          url: item.url ?? null,
+          operationId: item.operationId ?? null,
+        },
+      });
+    } else {
+      if (
+        fingerprint({
+          kind: existing.kind,
+          summary: existing.summary,
+          ...(existing.url === null ? {} : { url: existing.url }),
+          ...(existing.operationId === null
+            ? {}
+            : { operationId: existing.operationId }),
+        }) !== fingerprint(item)
+      )
+        throw new DeliveryError("CONFLICT", "Evidence cannot be rewritten");
+    }
+  }
+}
+
+export async function validateSelection(
+  tx: Transaction,
+  input: CreateDeployment,
+  env: Environment,
+  selected: VersionSetRevision,
+) {
+  if (input.kind === "promote") {
+    if (input.sourceEnvironmentId === undefined)
+      throw new DeliveryError(
+        "INVALID",
+        "Promotion requires a source environment",
+      );
+    const source = await environment(tx, input.sourceEnvironmentId);
+    if (
+      source.serviceId !== env.serviceId ||
+      source.acceptedVersionSetRevisionId !== selected.id ||
+      (env.promotionSourceEnvironmentId !== null &&
+        env.promotionSourceEnvironmentId !== source.id)
+    )
+      throw new DeliveryError(
+        "CONFLICT",
+        "Promotion requires the selected revision to be accepted in the configured source environment",
+      );
+  } else if (
+    env.promotionSourceEnvironmentId !== null &&
+    input.kind !== "rollback"
+  )
+    throw new DeliveryError(
+      "INVALID",
+      "This environment requires promotion from its configured source",
+    );
+  if (input.kind === "rollback") {
+    const accepted = await tx.deployment.findFirst({
+      where: {
+        environmentId: env.id,
+        versionSetRevisionId: selected.id,
+        status: "succeeded",
+      },
+    });
+    if (accepted === null)
+      throw new DeliveryError(
+        "INVALID",
+        "Rollback target has never passed acceptance in this environment",
+      );
+  }
+}
+
+export async function automaticTarget(
+  database: Database,
+  env: { serviceId: string; promotionSourceEnvironmentId: string | null },
+) {
+  if (env.promotionSourceEnvironmentId === null)
+    return database.versionSet.findFirst({
+      where: { serviceId: env.serviceId, qualifiedBuildId: { not: null } },
+      orderBy: { revision: "desc" },
+    });
+  const source = await database.environment.findUnique({
+    where: { id: env.promotionSourceEnvironmentId },
+  });
+  return source?.acceptedVersionSetRevisionId === null ||
+    source?.acceptedVersionSetRevisionId === undefined
+    ? null
+    : database.versionSet.findUnique({
+        where: { id: source.acceptedVersionSetRevisionId },
+      });
+}
+export function validateRequirements(
+  components: Record<string, ArtifactVersion>,
+) {
+  for (const entry of Object.values(components)) {
+    for (const [component, digest] of Object.entries(entry.requires)) {
+      if (components[component]?.digest !== digest)
+        throw new DeliveryError(
+          "INVALID",
+          `${entry.component} requires exact ${component} digest ${digest}`,
+        );
+    }
+  }
+}

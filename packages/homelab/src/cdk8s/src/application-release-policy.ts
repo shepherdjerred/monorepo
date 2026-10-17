@@ -2,6 +2,11 @@ import { ApiObject, Chart, JsonPatch, type App } from "cdk8s";
 import { z } from "zod";
 import { releaseChartRevisions } from "./release-configuration.ts";
 import { BURST_SERVICE_PRIORITY } from "./misc/priority-classes.ts";
+import {
+  deliveryEnvironment,
+  DELIVERY_ACTIVE_DELEGATIONS,
+  DELIVERY_ENVIRONMENT_ANNOTATION,
+} from "homelab/src/delivery-ownership.ts";
 
 export const APPLICATION_RESOURCES_FINALIZER =
   "resources-finalizer.argocd.argoproj.io";
@@ -158,6 +163,17 @@ function rootResourceSyncWave(resource: ApiObject): string {
     : APPLICATION_SYNC_WAVES.structural;
 }
 
+function applyDeliveryOwnership(construct: ApiObject, applicationName: string) {
+  const delegatedEnvironment = DELIVERY_ACTIVE_DELEGATIONS[applicationName];
+  if (delegatedEnvironment !== undefined) {
+    construct.metadata.addAnnotation(
+      DELIVERY_ENVIRONMENT_ANNOTATION,
+      delegatedEnvironment,
+    );
+    deliveryEnvironment(construct.toJson());
+  }
+}
+
 function applyResourceReleasePolicy(
   construct: ApiObject,
   revisions: ReturnType<typeof releaseChartRevisions>,
@@ -185,6 +201,7 @@ function applyResourceReleasePolicy(
   }
   const manifest = parsedManifest.data;
   const applicationName = manifest.metadata.name;
+  applyDeliveryOwnership(construct, applicationName);
   if (isRootChartResource) {
     construct.metadata.addAnnotation(
       ARGOCD_SYNC_WAVE_ANNOTATION,
@@ -235,6 +252,7 @@ function applyResourceReleasePolicy(
     );
   }
   seenRepositoryCharts.add(chartName);
+  if (deliveryEnvironment(construct.toJson()) !== undefined) return;
   construct.addJsonPatch(
     JsonPatch.replace("/spec/source/targetRevision", revision),
   );

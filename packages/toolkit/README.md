@@ -21,6 +21,66 @@ bun run build
 bun run install:local
 ```
 
+## Delivery
+
+`toolkit deploy` uses the Delivery service's shared API and validated contracts.
+PostgreSQL owns release selections and deployment history. Desired, observed,
+and accepted releases are distinct states; an accepted build is not proof that
+an environment is running it.
+
+```bash
+toolkit deploy whoami
+toolkit deploy status --json
+toolkit deploy versions arcade
+toolkit deploy inventory --json
+toolkit deploy diff none <VERSION_SET_ID>
+toolkit deploy start <ENVIRONMENT_ID> <VERSION_SET_ID> --request-id <REQUEST_ID>
+toolkit deploy promote <SOURCE_ENVIRONMENT_ID> <DESTINATION_ENVIRONMENT_ID>
+toolkit deploy approve <DEPLOYMENT_ID> --reason "Reviewed release and checks"
+toolkit deploy wait <DEPLOYMENT_ID> --timeout 900 --json
+toolkit deploy rollback <ENVIRONMENT_ID> <VERSION_SET_ID>
+```
+
+The default endpoint is `https://delivery.tailnet-1a49.ts.net`; override bootstrap
+with `--url`, `DELIVERY_URL`, or `[delivery].url` in the toolkit config. Requests
+use the identity supplied by trusted Tailscale ingress. Toolkit never supplies
+identity headers. Production approvals and rejections require a human identity.
+
+Machine operations explicitly use `--machine`, which resolves
+`DELIVERY_API_TOKEN` through the credential broker. Its default locator selects
+the provisioned `DELIVERY_ADMIN_TOKEN` field of the Delivery service item in the
+homelab 1Password vault. A `[credentials].DELIVERY_API_TOKEN` locator can select a
+different provisioned credential. The token must have the necessary server-side
+scopes. Machine tokens cannot approve production releases, including admin tokens.
+There is no token command-line option and credentials are never printed.
+
+Mutations use the currently read environment generation unless
+`--expected-generation` is supplied. Concurrent changes are rejected by the
+service. Use `--request-id` to repeat a request after a lost response; generated
+request IDs are printed to stderr before submission. Cancellation waits for a
+safe boundary. Retry creates a new attempt and reevaluates required approval.
+Rollback selects an exact previous release and does not restore persistent data.
+
+All commands support `--json`. `wait` polls in the foreground and returns 0 for
+success, 1 for a failed/canceled deployment, and 2 when its deadline expires.
+Other errors return 1. Timeout never reports a queued or approving deployment as
+failed. Run `toolkit deploy --help` for every operation.
+
+Bootstrap uses reviewed JSON files and an admin machine credential:
+
+```bash
+toolkit deploy pipeline register <PIPELINE_REVISION_ID> --file <DEFINITION_JSON> --machine
+toolkit deploy environment register --file <ENVIRONMENT_JSON> --machine
+toolkit deploy import --file <SNAPSHOT_JSON> --machine
+toolkit deploy imports --json
+```
+
+Pipeline and environment files conform to the shared Delivery contracts. Import
+files contain an explicit request ID, service ID, capture timestamp, source
+(`version-catalog`, `argocd`, or `runtime`), component references, and evidence.
+Imports remain unverified migration snapshots: they do not manufacture CI
+qualification, make artifacts eligible, or change desired environment state.
+
 ## Tracker
 
 `toolkit tracker` talks directly to the private tracker over tRPC and needs no
@@ -341,6 +401,15 @@ aliases, and variants come from the `@shepherdjerred/ops-model` service catalog,
 and reports (including the `service` field of `--json`) name each service by
 its catalog id, for example `temporal` or `static-sites`; the older names
 `temporal-worker` and `caddy-s3proxy` still work as selectors.
+
+Applications annotated with `delivery.shepherdjerred.com/environment` use
+PostgreSQL artifact provenance for the selected release. `--delivery` also
+queries this evidence explicitly, including with `--no-cluster`. The report
+keeps desired, observed, accepted, and live pod digests separate; `SELECTED`
+means the commit is selected but its runtime digest is unconfirmed. Delegated
+applications report `UNKNOWN` when Delivery cannot be read or its environment
+does not match the Argo ownership annotation. Historical Git pins cannot
+substitute for that evidence.
 
 `toolkit screenshot <package> [route]` starts a registered package on its fixed
 development port and drives a PinchTab-controlled browser. It fails if the port

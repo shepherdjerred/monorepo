@@ -60,6 +60,28 @@ const CI_POD_PEER = {
  * *grant* extra access based on one.
  */
 export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
+  new KubeNetworkPolicy(chart, "delivery-publication-egress", {
+    metadata: { namespace: WOODPECKER_CI_NAMESPACE },
+    spec: {
+      podSelector: {
+        matchLabels: { [CI_STEP_POD_LABEL]: "delivery-publish" },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "delivery" },
+              },
+              podSelector: { matchLabels: { app: "delivery" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7353), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
   return new KubeNetworkPolicy(chart, "woodpecker-step-netpol", {
     metadata: {
       name: "woodpecker-step-netpol",

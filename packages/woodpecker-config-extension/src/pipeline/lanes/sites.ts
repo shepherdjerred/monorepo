@@ -98,9 +98,14 @@ const PREBUILT_SITES = [
   { lane: "site-wiki", site: "wiki", artifact: "wiki-dist" },
 ] as const;
 
-function siteCommands(): string[] {
+function siteCommands(archivePublication: boolean): string[] {
+  const archiveFlag = archivePublication ? " --archive" : "";
   const lines: string[] = [
-    "if ! bun --no-install ci/scripts/selectors/ci-changed.ts sites; then exit 0; fi",
+    ...(archivePublication
+      ? []
+      : [
+          "if ! bun --no-install ci/scripts/selectors/ci-changed.ts sites; then exit 0; fi",
+        ]),
     ". ci/scripts/toolchain.sh",
     // Prebuilt-only deploys still call ci-artifact from the root scripts.
     "filters=(--filter '@shepherdjerred/root-scripts')",
@@ -134,6 +139,7 @@ function siteCommands(): string[] {
   lines.push(
     'ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
     ...AWS_ALIASES,
+    ...(archivePublication ? ["mkdir -p .delivery-artifacts"] : []),
   );
 
   for (const { lane, site, artifact } of PREBUILT_SITES) {
@@ -141,38 +147,45 @@ function siteCommands(): string[] {
     lines.push(
       `if [ "$${flag}" = "true" ]; then`,
       `  bun --no-install scripts/ci/ci-artifact.ts get ${artifact}`,
-      `  bun --no-install scripts/release/deploy-site.ts ${site} --prebuilt`,
+      `  bun --no-install scripts/release/deploy-site.ts ${site} --prebuilt${archiveFlag}`,
       "fi",
     );
   }
   for (const { lane, site } of SOURCE_BUILT_SITES) {
     const flag = lane.replaceAll("-", "_");
     lines.push(
-      `if [ "$${flag}" = "true" ]; then bun --no-install scripts/release/deploy-site.ts ${site}; fi`,
+      `if [ "$${flag}" = "true" ]; then bun --no-install scripts/release/deploy-site.ts ${site}${archiveFlag}; fi`,
     );
   }
   lines.push(
     `if [ "$${storybookFlag}" = "true" ]; then`,
     ...STORYBOOK_SITE.prebuild.map((command) => `  ${command}`),
-    `  bun --no-install scripts/release/deploy-site.ts ${STORYBOOK_SITE.site}`,
+    `  bun --no-install scripts/release/deploy-site.ts ${STORYBOOK_SITE.site}${archiveFlag}`,
     "fi",
   );
+
+  if (archivePublication)
+    lines.push("bun --no-install scripts/ci/write-site-archive-handoff.ts");
 
   return lines;
 }
 
-export function siteSteps(images: CiImages): CiStep[] {
+export function siteSteps(
+  images: CiImages,
+  archivePublication = false,
+): CiStep[] {
   return [
     {
       key: "sites",
       label: "deploy sites",
       image: images.base,
-      commands: siteCommands(),
+      commands: siteCommands(archivePublication),
       dependsOn: [
         "verify",
         "playwright-e2e",
         "resume-build",
         "tofu-apply-seaweedfs",
+        ...(archivePublication ? ["scout-beta-release"] : []),
       ],
       timeoutMinutes: 30,
       resources: VERIFY_TIER,

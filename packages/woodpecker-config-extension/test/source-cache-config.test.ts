@@ -12,6 +12,7 @@ vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
 }));
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
+import { deliveryPublicationEnabled } from "#src/delivery-config.ts";
 import {
   performanceConfig,
   DISABLED_PERFORMANCE,
@@ -19,6 +20,22 @@ import {
 beforeEach(() => {
   vi.clearAllMocks();
   flag.mockReset();
+});
+
+test("Delivery publication requires a fresh explicit boolean authorization", async () => {
+  flag.mockResolvedValue(undefined);
+  expect(await deliveryPublicationEnabled("main")).toBe(false);
+  flag.mockResolvedValue({ value: true });
+  expect(await deliveryPublicationEnabled("main")).toBe(true);
+  expect(factory).toHaveBeenLastCalledWith(
+    expect.objectContaining({ requireFreshSnapshot: true }),
+  );
+  flag.mockResolvedValue({ value: false });
+  expect(await deliveryPublicationEnabled("main")).toBe(false);
+  flag.mockResolvedValue({ value: "true" });
+  await expect(deliveryPublicationEnabled("main")).rejects.toThrow();
+  flag.mockRejectedValue(new Error("Unavailable"));
+  expect(await deliveryPublicationEnabled("main")).toBe(false);
 });
 test("performance flags preserve explicit false, reject invalid values and default off on absence or outage", async () => {
   flag.mockResolvedValue(undefined);

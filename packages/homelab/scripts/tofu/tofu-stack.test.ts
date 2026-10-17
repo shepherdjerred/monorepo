@@ -58,6 +58,7 @@ const STACKS: readonly TofuStack[] = [
   "posthog",
   "seaweedfs",
   "tailscale",
+  "tailscale-delivery",
 ];
 
 describe("OpenTofu credential contracts", () => {
@@ -156,6 +157,21 @@ describe("OpenTofu credential contracts", () => {
     ).not.toThrow();
     expect(() =>
       assertStackExecutionContext("dockerhub", "apply", "true"),
+    ).not.toThrow();
+  });
+
+  test("Delivery Tailscale identity provisioning is operator-only while CI can validate its source", () => {
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "validate", "true"),
+    ).not.toThrow();
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "plan", "true"),
+    ).toThrow("operator-only");
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "apply", "true"),
+    ).toThrow("operator-only");
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "apply", undefined),
     ).not.toThrow();
   });
 

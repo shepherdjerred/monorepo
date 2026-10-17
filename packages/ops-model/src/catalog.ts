@@ -19,6 +19,8 @@ export const ServiceSchema = z.strictObject({
   aliases: z.array(IdSchema).default([]),
   namespaces: NameListSchema,
   argoApps: NameListSchema,
+  charts: NameListSchema.default([]),
+  images: NameListSchema.default([]),
   bugsinkProjects: NameListSchema.default([]),
   analyticsSites: NameListSchema.default([]),
   grafanaDashboards: NameListSchema.default([]),
@@ -63,6 +65,13 @@ export const CatalogSchema = z
     assertUnique(catalog.services, (s) => s.argoApps, "Argo app", context);
     assertUnique(
       catalog.services,
+      (s) => [...s.argoApps, ...s.charts],
+      "chart",
+      context,
+    );
+    assertUnique(catalog.services, (s) => s.images, "image", context);
+    assertUnique(
+      catalog.services,
       (s) => s.bugsinkProjects,
       "Bugsink project",
       context,
@@ -91,6 +100,8 @@ export class ServiceIndex {
   readonly #byId = new Map<string, Service>();
   readonly #byNamespace = new Map<string, Service>();
   readonly #byArgoApp = new Map<string, Service>();
+  readonly #byChart = new Map<string, Service>();
+  readonly #byImage = new Map<string, Service>();
   readonly #byBugsinkProject = new Map<string, Service>();
   readonly #byAnalyticsSite = new Map<string, Service>();
 
@@ -105,6 +116,9 @@ export class ServiceIndex {
       for (const app of service.argoApps) {
         this.#byArgoApp.set(app, service);
       }
+      for (const chart of [...service.argoApps, ...service.charts])
+        this.#byChart.set(chart, service);
+      for (const image of service.images) this.#byImage.set(image, service);
       for (const project of service.bugsinkProjects) {
         this.#byBugsinkProject.set(project, service);
       }
@@ -138,6 +152,14 @@ export class ServiceIndex {
 
   byArgoApp(app: string): Service | undefined {
     return this.#byArgoApp.get(app);
+  }
+
+  byImage(image: string): Service | undefined {
+    return this.#byImage.get(image);
+  }
+
+  byChart(chart: string): Service | undefined {
+    return this.#byChart.get(chart);
   }
 
   byBugsinkProject(slug: string): Service | undefined {

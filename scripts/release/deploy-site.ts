@@ -23,6 +23,8 @@ import { run, requireEnv, optionalEnv } from "../lib/run.ts";
 import { s3SyncStaticSite } from "../lib/s3-static-site.ts";
 import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 import { fileURLToPath } from "node:url";
+import { staticSiteWriter } from "../../packages/homelab/src/static-site-delivery-ownership.ts";
+import { publishStaticSiteArchive } from "../lib/static-site-publication.ts";
 
 // ---------------------------------------------------------------------------
 // Static site deploy catalog (translated verbatim from DEPLOY_SITES)
@@ -379,7 +381,9 @@ async function main(): Promise<void> {
 
   const dryRun = args.includes("--dry-run");
   const prebuilt = args.includes("--prebuilt");
+  const archive = args.includes("--archive");
   const site = selectSite(args);
+  const writer = staticSiteWriter(site.bucket, archive);
 
   const root = repoRoot();
   const buildDir = `${root}/${site.buildDir}`;
@@ -421,12 +425,20 @@ async function main(): Promise<void> {
   // (e.g. build 5648's artifact, where the `**/*` glob dropped every
   // root-level file) would wipe them from the bucket and take the site down.
   // Dry runs may legitimately have no dist (the build is skipped).
-  if (!dryRun && !(await Bun.file(`${distDir}/index.html`).exists())) {
-    throw new Error(
-      `${site.distDir}/index.html is missing — refusing to sync (--delete would remove the site's root files from s3://${site.bucket}/)`,
-    );
-  }
+  await assertSiteRoot(site, distDir, dryRun);
   await assertRequiredErrorPage(site.name, distDir, dryRun);
+
+  if (archive && !dryRun) {
+    await publishStaticSiteArchive({
+      bucket: site.bucket,
+      source: distDir,
+      metadataDirectory: `${root}/.delivery-artifacts`,
+    });
+  }
+  if (writer === "delivery") {
+    console.log(`Published ${site.name}; activation belongs to Delivery`);
+    return;
+  }
 
   console.log(`+++ sync: ${site.distDir} -> s3://${site.bucket}/`);
   await s3SyncStaticSite({
@@ -466,4 +478,16 @@ async function assertRequiredErrorPage(
   }
 }
 
-await main();
+async function assertSiteRoot(
+  site: DeploySite,
+  distDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  if (!dryRun && !(await Bun.file(`${distDir}/index.html`).exists())) {
+    throw new Error(
+      `${site.distDir}/index.html is missing — refusing to sync (--delete would remove the site's root files from s3://${site.bucket}/)`,
+    );
+  }
+}
+
+if (import.meta.main) await main();

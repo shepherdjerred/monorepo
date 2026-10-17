@@ -2,6 +2,7 @@
 
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { staticSiteDeliveryOwner } from "../../packages/homelab/src/static-site-delivery-ownership.ts";
 
 import { optionalEnv, requireEnv, run } from "../lib/run.ts";
 import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
@@ -390,6 +391,20 @@ async function main(): Promise<void> {
   if (command === undefined) {
     usage();
   }
+  const bucket =
+    command === "deploy-beta"
+      ? "scout-frontend-beta"
+      : ["reconcile-prod", "reconcile-prod-pin"].includes(command)
+        ? "scout-frontend"
+        : undefined;
+  if (
+    !dryRun &&
+    bucket !== undefined &&
+    staticSiteDeliveryOwner(bucket) !== undefined
+  )
+    throw new Error(
+      `Static bucket ${bucket} is delegated to Delivery; legacy activation is disabled`,
+    );
   switch (command) {
     case "resolve-backend-digest": {
       const index = args.indexOf("--candidate-digest");

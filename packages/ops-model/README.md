@@ -20,7 +20,12 @@ stores it. The web UI, the TRMNL screen, the email digest, and
 `services.json` is language-neutral and validated by `services.schema.json`
 and `CatalogSchema`. A name may belong to only one service. The homelab
 drift test requires every ArgoCD Application to belong to exactly one service,
-and this package's test requires the same of every analytics site.
+and this package's tests require the same of every analytics site and registered
+first-party image. The `images` entries use image registry base names;
+`charts` adds ownership for packaged charts without an active Application.
+Charts sharing an existing `argoApps` name inherit that service owner.
+`ServiceIndex.byImage` resolves build outputs without guessing from package or
+Application names. Delivery records release selections separately in PostgreSQL.
 
 Prepared services still own their declared inventory. The launcher has no
 `deploy` variant while its chart renders no workload and its image pin is an
