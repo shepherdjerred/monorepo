@@ -3,6 +3,9 @@
   "extends": ["//"],
   "tasks": {
     "build": { "dependsOn": ["generate", "^build"] },
-    "test:e2e": { "dependsOn": ["generate", "^build"] }
+    "test:e2e": {
+      "dependsOn": ["generate", "^build"],
+      "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
+    }
   }
 }

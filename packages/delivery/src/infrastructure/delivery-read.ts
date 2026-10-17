@@ -1,10 +1,12 @@
 import {
   ArtifactVersionSchema,
+  IdentifierSchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   BuildSummarySchema,
   LatestQualifiedArtifactQuerySchema,
 } from "#shared/contract.ts";
+import { z } from "zod";
 import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
@@ -14,7 +16,7 @@ import {
   ensureService,
 } from "./delivery-data.ts";
 
-/** Resolve one exact CI-qualified artifact without consulting manual compositions. */
+/** Resolve an exact component from the newest coherent automatic version set. */
 export async function latestQualifiedArtifact(
   this: Delivery,
   rawInput: LatestQualifiedArtifactQuery,
@@ -22,19 +24,40 @@ export async function latestQualifiedArtifact(
 ) {
   const input = LatestQualifiedArtifactQuerySchema.parse(rawInput);
   ensureService(input.serviceId);
+  const matches = z.array(z.object({ id: IdentifierSchema })).parse(
+    await this.database.$queryRaw`
+      SELECT version."id" FROM "VersionSet" version
+      JOIN "Build" build ON build."id" = version."qualifiedBuildId"
+      WHERE version."serviceId" = ${input.serviceId}
+        AND build."serviceId" = ${input.serviceId}
+        AND build."repositoryId" = ${repositoryId}
+        AND build."status" = 'verified'
+      ORDER BY build."pipelineNumber" DESC, version."revision" DESC LIMIT 1
+    `,
+  );
+  const selected = required(
+    matches[0] ?? null,
+    "Qualified automatic version set",
+  );
   const row = required(
-    await this.database.artifact.findFirst({
+    await this.database.versionSetEntry.findFirst({
       where: {
+        revisionId: selected.id,
         component: input.component,
-        kind: input.kind,
-        build: { serviceId: input.serviceId, repositoryId, status: "verified" },
+        artifact: {
+          kind: input.kind,
+          build: {
+            serviceId: input.serviceId,
+            repositoryId,
+            status: "verified",
+          },
+        },
       },
-      orderBy: [{ build: { pipelineNumber: "desc" } }, { id: "asc" }],
-      include: { build: true },
+      include: { artifact: { include: { build: true } } },
     }),
     `Qualified ${input.kind} artifact ${input.serviceId}/${input.component}`,
   );
-  const { build, ...entry } = row;
+  const { build, ...entry } = row.artifact;
   return ArtifactVersionSchema.parse(
     wire({
       ...entry,

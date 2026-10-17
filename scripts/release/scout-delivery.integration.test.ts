@@ -100,13 +100,13 @@ async function publication(
   return result;
 }
 
-async function qualify(build: number, input: PublishBuild) {
-  const registered = await delivery.publish(input, testPublisher, {
+async function qualify(build: number, input: PublishBuild, store = delivery) {
+  const registered = await store.publish(input, testPublisher, {
     repositoryId: 1,
     pipelineNumber: build,
   });
   expect(
-    await delivery.qualify(registered.buildId, "verified", testExecutor),
+    await store.qualify(registered.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });
   return registered;
 }
@@ -230,6 +230,112 @@ test("fresh runtime-equivalent imageB and later site-onlyC retain genuine image 
       pipelineNumber: 3,
     }),
   ).toThrow("frozen backend artifact");
+}, 60_000);
+
+test("late image build cannot replace the backend of a newer coherent site release", async () => {
+  const isolated = await createTestDatabase();
+  try {
+    const store = new Delivery(isolated.database);
+    const sourceA = "a".repeat(40);
+    const sourceD = "d".repeat(40);
+    const fresh = async (build: number, source: string, digest: string) =>
+      await resolveScoutDeliveryBackend(
+        {
+          digests: { "shepherdjerred/scout-for-lol": digest },
+          sourceRevision: source,
+          repositoryId: 1,
+          pipelineNumber: build,
+        },
+        async () => {
+          throw new Error("Fresh candidate must not read prior releases");
+        },
+      );
+    const latest = (query: {
+      serviceId: string;
+      component: string;
+      kind: "image";
+    }) => store.latestQualifiedArtifact(query, 1);
+    const initial = await publication(
+      1,
+      sourceA,
+      {},
+      await fresh(1, sourceA, imageA),
+    );
+    initial.artifacts.unshift({
+      id: "ci/1/1/image/scout-for-lol",
+      component: "image:scout-for-lol",
+      kind: "image",
+      uri: "docker.io/shepherdjerred/scout-for-lol",
+      digest: imageA,
+      runtimeDigests: [],
+      requires: {},
+      version: "build-1",
+    });
+    const build1 = await qualify(1, initial, store);
+    const backend3 = await resolveScoutDeliveryBackend(
+      {
+        digests: {},
+        sourceRevision: sourceC,
+        repositoryId: 1,
+        pipelineNumber: 3,
+      },
+      latest,
+    );
+    await qualify(3, await publication(3, sourceC, {}, backend3), store);
+    const build2 = await qualify(
+      2,
+      await publication(
+        2,
+        sourceB,
+        { "shepherdjerred/scout-for-lol": imageB },
+        await fresh(2, sourceB, imageB),
+      ),
+      store,
+    );
+    expect(
+      await isolated.database.versionSet.count({
+        where: { qualifiedBuildId: build2.buildId },
+      }),
+    ).toBe(0);
+
+    const backend4 = await resolveScoutDeliveryBackend(
+      {
+        digests: {},
+        sourceRevision: sourceD,
+        repositoryId: 1,
+        pipelineNumber: 4,
+      },
+      latest,
+    );
+    expect(backend4).toMatchObject({
+      provenance: "qualified-artifact",
+      artifact: {
+        id: "ci/1/1/image/scout-for-lol",
+        buildId: build1.buildId,
+        sourceRevision: sourceA,
+        digest: imageA,
+      },
+    });
+    const input4 = await publication(4, sourceD, {}, backend4);
+    expect(input4.artifacts.map((artifact) => artifact.kind)).toEqual([
+      "archive",
+      "archive",
+    ]);
+    await qualify(4, input4, store);
+    const [selected] = await store.versions("scout-for-lol");
+    expect(selected?.components["image:scout-for-lol"]).toMatchObject({
+      id: "ci/1/1/image/scout-for-lol",
+      buildId: build1.buildId,
+      sourceRevision: sourceA,
+      digest: imageA,
+    });
+    expect(selected?.components["site:scout-frontend"]).toMatchObject({
+      sourceRevision: sourceD,
+      requires: { "image:scout-for-lol": imageA },
+    });
+  } finally {
+    await isolated.close();
+  }
 }, 60_000);
 
 test("site-only publication fails closed without a qualified image", async () => {
