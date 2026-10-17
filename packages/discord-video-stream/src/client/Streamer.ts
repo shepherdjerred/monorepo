@@ -15,6 +15,8 @@ import type { VoiceReceiveObserver } from "./voice/VoiceReceiveObserver.js";
 
 export type VoiceJoinOptions = {
   receiveAudio?: boolean;
+  /** Cancel a pending voice handshake without logging out the gateway client. */
+  signal?: AbortSignal;
 
   /**
    * Install the outbound audio RTP packetizer, so this connection can SEND audio without opting
@@ -47,15 +49,16 @@ export class Streamer {
   private _voiceConnection: VoiceConnection | undefined;
   private _client: Client;
   private _gatewayEmitter = new EventEmitter<GatewayEventMap>();
+  private readonly onGatewayEvent = (packet: GatewayEvent): void => {
+    // @ts-expect-error I don't know how to make this work with TypeScript, so whatever
+    this._gatewayEmitter.emit(packet.t, packet.d);
+  };
 
   constructor(client: Client) {
     this._client = client;
 
     //listen for messages
-    this.client.on("raw", (packet: GatewayEvent) => {
-      // @ts-expect-error I don't know how to make this work with TypeScript, so whatever
-      this._gatewayEmitter.emit(packet.t, packet.d);
-    });
+    this.client.on("raw", this.onGatewayEvent);
   }
 
   public get client(): Client {
@@ -106,17 +109,26 @@ export class Streamer {
     options: VoiceJoinOptions = {},
   ): Promise<WebRtcConnWrapper> {
     return new Promise<WebRtcConnWrapper>((resolve, reject) => {
+      if (options.signal?.aborted) {
+        reject(options.signal.reason);
+        return;
+      }
       if (!this.client.user) {
         reject("Client not logged in");
         return;
       }
       const user_id = this.client.user.id;
+      const abortJoin = () => {
+        reject(options.signal?.reason);
+        if (this._voiceConnection === voiceConn) this.leaveVoice();
+      };
       const voiceConn = new VoiceConnection(
         this,
         guild_id,
         user_id,
         channel_id,
         (conn) => {
+          options.signal?.removeEventListener("abort", abortJoin);
           if ((options.receiveAudio ?? false) || (options.sendAudio ?? false)) {
             try {
               conn.setAudioPacketizer();
@@ -136,6 +148,7 @@ export class Streamer {
         options,
       );
       this._voiceConnection = voiceConn;
+      options.signal?.addEventListener("abort", abortJoin, { once: true });
       this._gatewayEmitter.on("VOICE_STATE_UPDATE", (d) => {
         if (user_id !== d.user_id) return;
         voiceConn.setSession(d.session_id);
@@ -222,26 +235,31 @@ export class Streamer {
 
   public stopStream(): void {
     const stream = this.voiceConnection?.streamConnection;
-
-    if (!stream) return;
-
-    stream.stop();
-
-    this.signalStopStream();
-
-    this.voiceConnection.streamConnection = undefined;
+    if (stream) {
+      stream.stop();
+      this.signalStopStream();
+      if (this.voiceConnection) this.voiceConnection.streamConnection = undefined;
+    }
     this._gatewayEmitter.removeAllListeners("STREAM_CREATE");
     this._gatewayEmitter.removeAllListeners("STREAM_SERVER_UPDATE");
   }
 
   public leaveVoice(): void {
-    this.voiceConnection?.stop();
+    const voice = this.voiceConnection;
+    this.stopStream();
+    voice?.stop();
 
-    this.signalLeaveVoice();
+    if (voice) this.signalLeaveVoice();
 
     this._voiceConnection = undefined;
     this._gatewayEmitter.removeAllListeners("VOICE_STATE_UPDATE");
     this._gatewayEmitter.removeAllListeners("VOICE_SERVER_UPDATE");
+  }
+
+  /** Release session listeners while the caller keeps its pooled gateway client. */
+  public dispose(): void {
+    this.leaveVoice();
+    this.client.off("raw", this.onGatewayEvent);
   }
 
   public signalVideo(video_enabled: boolean): void {
@@ -300,7 +318,7 @@ export class Streamer {
 
   public signalLeaveVoice(): void {
     this.sendOpcode(GatewayOpCodes.VOICE_STATE_UPDATE, {
-      guild_id: null,
+      guild_id: this.voiceConnection?.guildId ?? null,
       channel_id: null,
       self_mute: true,
       self_deaf: false,

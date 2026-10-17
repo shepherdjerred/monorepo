@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { PassThrough } from "node:stream";
+import { encoderFixture } from "@shepherdjerred/discord-stream-lifecycle/test-fixtures/encoder";
 import { createActor, waitFor } from "xstate";
 import { createRawGoLiveMachine } from "@shepherdjerred/discord-stream-lifecycle";
 import type {
@@ -43,12 +43,7 @@ function makeHarness(
   overrides: Partial<Pick<RawGoLiveDeps, "retryDelayMs">> = {},
 ): Harness {
   const calls: string[] = [];
-  const sink = new PassThrough();
-  const encoder: EncoderHandles = {
-    sink,
-    output: new PassThrough(),
-    playing: Promise.resolve(),
-  };
+  const encoder = encoderFixture();
   const gates = {
     join: deferred<true>(),
     prepare: deferred<EncoderHandles>(),

@@ -322,6 +322,7 @@ export function createRawGoLiveMachine(deps: RawGoLiveDeps) {
         entry: [
           ({ context }) => {
             context.frameSink?.end();
+            context.encoder?.stop();
           },
           assign({ frameSink: null }),
         ],
@@ -346,6 +347,7 @@ export function createRawGoLiveMachine(deps: RawGoLiveDeps) {
           // teardownReason/lastError — otherwise a move arriving while stopping would be dropped and
           // the machine would later rejoin (or retry) the stale channel.
           VOICE_TARGET_MOVED: { actions: "updateVoiceTarget" },
+          SHUTDOWN: { actions: "markTerminalTeardown" },
         },
         exit: assign({ encoder: null }),
       },

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { PassThrough } from "node:stream";
+import { encoderFixture } from "./fixtures/encoder.ts";
 import { createActor, waitFor } from "xstate";
 import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";
 import type {
@@ -32,11 +32,7 @@ type Harness = {
 };
 
 function makeHarness(): Harness {
-  const encoder: EncoderHandles = {
-    sink: new PassThrough(),
-    output: new PassThrough(),
-    playing: Promise.resolve(),
-  };
+  const encoder = encoderFixture();
   const gates = {
     join: deferred<true>(),
     run: deferred<true>(),

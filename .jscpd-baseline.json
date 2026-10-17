@@ -266,11 +266,11 @@
     },
     "packages/discord-plays-pokemon/packages/backend/src/stream/orchestrator-machine.test.ts|packages/discord-stream-lifecycle/test/desired-stream-machine.test.ts": {
       "clones": 6,
-      "tokens": 779
+      "tokens": 739
     },
     "packages/discord-plays-pokemon/packages/backend/src/stream/stream-machine.test.ts|packages/discord-stream-lifecycle/test/raw-go-live-machine.test.ts": {
-      "clones": 8,
-      "tokens": 997
+      "clones": 7,
+      "tokens": 907
     },
     "packages/discord-plays-pokemon/scripts/generate-battle-data.ts|packages/discord-plays-pokemon/scripts/generate-battle-data.ts": {
       "clones": 1,

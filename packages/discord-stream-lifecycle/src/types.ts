@@ -15,6 +15,8 @@ export type EncoderHandles = {
   readonly sink: FrameSink;
   readonly output: Readable;
   readonly playing: Promise<void>;
+  /** Stop the producer even when its input/output pipes are backpressured. Idempotent. */
+  readonly stop: () => void;
 };
 
 export type StreamTeardownReason =

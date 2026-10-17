@@ -1195,21 +1195,21 @@ export function prepareStream(
   observer?.onCommand?.(ffmpegCommandLine(executable, args));
   if (command.pid !== undefined) observer?.onProcessStart?.(command.pid);
 
-  const primaryInput = commandBuilder.inputs[0]?.source;
-  if (typeof primaryInput === "string" || primaryInput === undefined) {
-    child.stdin.end();
-  } else {
-    primaryInput.pipe(child.stdin);
-  }
-  child.stdout.pipe(output);
-
   const stderrTail: string[] = [];
   const stderrLines = createInterface({ input: child.stderr });
   const handleStderr = createFfmpegStderrHandler(observer, stderrTail);
   stderrLines.on("line", handleStderr);
 
   let spawnError: Error | undefined;
+  let inputError: Error | undefined;
   const promise = new Promise<void>((resolve, reject) => {
+    // An encoder may exit while a raw-frame write is still queued. Own the
+    // pipe error here so it rejects this encode rather than the entire bot.
+    child.stdin.on("error", (error) => {
+      if (child.killed) return;
+      inputError = error;
+      command.kill("SIGKILL");
+    });
     child.once("error", (error) => {
       spawnError = error;
       if (cancelSignal?.aborted) reject(cancelSignal.reason);
@@ -1230,6 +1230,15 @@ export function prepareStream(
         return;
       }
       if (spawnError !== undefined) return;
+      if (inputError !== undefined) {
+        reject(new FfmpegExitError("ffmpeg input pipe failed", {
+          cause: inputError,
+          exitCode: code,
+          stderrTail: [...stderrTail],
+          startTimeSeconds: mergedOptions.startTime,
+        }));
+        return;
+      }
       if (code === 0) {
         resolve();
         return;
@@ -1250,6 +1259,13 @@ export function prepareStream(
     });
   });
   promise.catch(() => {});
+  const primaryInput = commandBuilder.inputs[0]?.source;
+  if (typeof primaryInput === "string" || primaryInput === undefined) {
+    child.stdin.end();
+  } else {
+    primaryInput.pipe(child.stdin);
+  }
+  child.stdout.pipe(output);
   cancelSignal?.addEventListener("abort", () => command.kill("SIGTERM"), {
     once: true,
   });

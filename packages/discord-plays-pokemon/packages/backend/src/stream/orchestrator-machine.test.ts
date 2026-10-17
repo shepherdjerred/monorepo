@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { PassThrough } from "node:stream";
+import { encoderFixture } from "@shepherdjerred/discord-stream-lifecycle/test-fixtures/encoder";
 import { createActor, waitFor } from "xstate";
 import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";
 import type {
@@ -35,11 +35,7 @@ type Harness = {
 // join/leave auto-resolve by default (override the gate to make them pending);
 // run stays pending so the orchestrator settles in `streaming`.
 function makeHarness(): Harness {
-  const encoder: EncoderHandles = {
-    sink: new PassThrough(),
-    output: new PassThrough(),
-    playing: Promise.resolve(),
-  };
+  const encoder = encoderFixture();
   const gates = {
     join: deferred<true>(),
     run: deferred<true>(),

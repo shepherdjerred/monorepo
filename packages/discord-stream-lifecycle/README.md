@@ -8,6 +8,12 @@ this package owns state-machine modeling for joining voice, preparing encoders,
 streaming, stopping, retrying, reacting to Discord topology events, and
 reconciling desired stream state.
 
+Encoder implementations return an idempotent `EncoderHandles.stop()` that
+terminates their process and closes auxiliary inputs. The stopping state calls
+it before awaiting encoder exit; ending the video sink alone cannot release an
+encoder blocked on audio probing or output backpressure. Preparation cancellation
+must also stop any process already created before its handles reach the machine.
+
 ## Subsystems
 
 - `src/raw-go-live-machine.ts` / `src/desired-stream-machine.ts` — the two
@@ -35,9 +41,13 @@ import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userb
 import { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager";
 ```
 
+Game-backend tests share `encoderFixture` through the explicit
+`@shepherdjerred/discord-stream-lifecycle/test-fixtures/encoder` source export.
+It supplies in-memory encoder handles without a Discord connection or process.
+
 ## Build and test
 
-Subpath exports resolve against `dist/`, so the package must be built before
+Runtime subpath exports resolve against `dist/`, so the package must be built before
 anything imports it; `test`, `typecheck`, and `lint` all chain `bun run build`
 first. Run them per-package:
 

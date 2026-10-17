@@ -85,7 +85,7 @@ export class GameStreamer extends GameStreamerBase {
       throw new DOMException("encoder preparation aborted", "AbortError");
     }
     this.audioTransport = audioTransport;
-    const { output, promise } = prepareStream(rgba, {
+    const { command, output, promise } = prepareStream(rgba, {
       width: content.width,
       height: content.height,
       pad: canvas,
@@ -122,6 +122,24 @@ export class GameStreamer extends GameStreamerBase {
             x264: { preset: "ultrafast", tune: "zerolatency" },
           }),
     });
-    return { sink: rgba, output, playing: promise };
+    let stopped = false;
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      rgba.end();
+      audioTransport.close();
+      command.kill("SIGKILL");
+    };
+    signal.addEventListener("abort", stop, { once: true });
+    void (async () => {
+      try {
+        await promise;
+      } catch {
+        // The stream lifecycle reports encoder errors and awaits shutdown.
+      } finally {
+        signal.removeEventListener("abort", stop);
+      }
+    })();
+    return { sink: rgba, output, playing: promise, stop };
   }
 }

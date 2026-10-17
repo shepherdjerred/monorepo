@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { PassThrough } from "node:stream";
+import { encoderFixture } from "./fixtures/encoder.ts";
 import { createActor, waitFor } from "xstate";
 import { createRawGoLiveMachine } from "@shepherdjerred/discord-stream-lifecycle";
 import type {
@@ -40,12 +40,7 @@ function makeHarness(
   } = {},
 ): Harness {
   const calls: string[] = [];
-  const sink = new PassThrough();
-  const encoder: EncoderHandles = {
-    sink,
-    output: new PassThrough(),
-    playing: Promise.resolve(),
-  };
+  const encoder = encoderFixture();
   const gates = {
     join: deferred<true>(),
     prepare: deferred<EncoderHandles>(),
@@ -94,6 +89,65 @@ function createHarnessActor(h: Harness, maxRetries = 3) {
 }
 
 describe("raw Go-Live machine", () => {
+  test("shutdown during an existing stop still reaches its terminal state", async () => {
+    const h = makeHarness();
+    h.gates.leave = deferred<true>();
+    const actor = createHarnessActor(h).start();
+    try {
+      actor.send({ type: "START" });
+      await waitFor(actor, (s) => s.matches("streaming"));
+      actor.send({ type: "STOP" });
+      await waitFor(actor, (s) => s.matches("stopping"));
+      actor.send({ type: "SHUTDOWN" });
+      h.gates.leave.resolve(true);
+      await waitFor(actor, (s) => s.status === "done", { timeout: 1000 });
+      expect(actor.getSnapshot().context.teardownReason).toBe("shutdown");
+    } finally {
+      actor.stop();
+    }
+  });
+  test("shutdown stops a blocked encoder before awaiting its exit", async () => {
+    const h = makeHarness();
+    const exited = deferred<true>();
+    const encoder: EncoderHandles = {
+      ...h.encoder,
+      playing: (async () => {
+        await exited.promise;
+      })(),
+      stop: () => {
+        h.calls.push("stopEncoder");
+        exited.resolve(true);
+      },
+    };
+    const deps: RawGoLiveDeps = {
+      ...h.deps,
+      prepareEncoder: () => Promise.resolve(encoder),
+      leaveVoice: async (playing) => {
+        await playing;
+        h.calls.push("encoderExited");
+      },
+    };
+    const actor = createActor(createRawGoLiveMachine(deps), {
+      input: { voiceTarget: { guildId: "guild-1", channelId: "channel-1" } },
+    }).start();
+    try {
+      actor.send({ type: "START" });
+      await waitFor(actor, (s) => s.matches("streaming"));
+      actor.send({ type: "SHUTDOWN" });
+      await waitFor(actor, (s) => s.status === "done", { timeout: 1000 });
+      expect(h.calls).toEqual([
+        "joinVoice",
+        "runStream",
+        "stopEncoder",
+        "encoderExited",
+      ]);
+    } finally {
+      actor.stop();
+    }
+  });
+});
+
+describe("raw Go-Live transitions", () => {
   test("happy path reaches streaming and stops back to idle", async () => {
     const h = makeHarness();
     const actor = createHarnessActor(h);

@@ -85,6 +85,15 @@ function collectCloses(conn: TestMediaConnection): MediaConnectionCloseInfo[] {
 }
 
 describe("BaseMediaConnection close handling", () => {
+  test("late gateway events cannot restart a stopped connection", () => {
+    const conn = connect();
+    conn.stop();
+    conn.sockets[0]?.fireClose(1000);
+    conn.setSession("next-session");
+    conn.setTokens("voice.example.discord.media", "next-token");
+    expect(conn.sockets).toHaveLength(1);
+    expect(conn.status.started).toBe(false);
+  });
   test("resumable close (4015) resumes internally without emitting close", () => {
     const conn = connect();
     const closes = collectCloses(conn);

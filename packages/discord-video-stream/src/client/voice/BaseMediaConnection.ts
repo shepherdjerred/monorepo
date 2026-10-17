@@ -320,6 +320,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   }
 
   start(): void {
+    if (this._closed) return;
     /*
      ** Connection can only start once both
      ** session description and tokens have been gathered

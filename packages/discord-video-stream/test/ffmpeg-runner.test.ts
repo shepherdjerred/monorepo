@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { fileURLToPath } from "node:url";
+import { PassThrough } from "node:stream";
 import {
   FfmpegExitError,
   prepareStream,
@@ -14,6 +15,22 @@ const fakeFfmpegPath = fileURLToPath(
 );
 
 describe("direct ffmpeg runner", () => {
+  test("an encoder closing stdin rejects the encode without an unhandled pipe error", async () => {
+    const input = new PassThrough();
+    const prepared = prepareStream(input, {
+      includeAudio: false,
+      customFfmpegFlags: ["/discord-video-stream-close-stdin"],
+      ffmpegPath: fakeFfmpegPath,
+    });
+    prepared.output.resume();
+    try {
+      input.end(Buffer.alloc(2 * 1024 * 1024));
+      await expect(prepared.promise).rejects.toThrow("ffmpeg input pipe failed");
+    } finally {
+      prepared.command.kill("SIGKILL");
+      input.destroy();
+    }
+  });
   test("streams stdout and reports command, codec metadata, and progress", async () => {
     let command = "";
     let codecData: FfmpegCodecData | undefined;

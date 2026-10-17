@@ -198,7 +198,7 @@ export class GameStreamer extends GameStreamerBase {
     // (only) connection pipes it to ffmpeg's audio input.
     this.audioTransport = audioTransport;
 
-    const { output, promise } = prepareStream(bgra, {
+    const { command, output, promise } = prepareStream(bgra, {
       observer,
       width: content.width,
       height: content.height,
@@ -250,9 +250,27 @@ export class GameStreamer extends GameStreamerBase {
           }),
     });
 
+    let stopped = false;
+    const stop = () => {
+      if (stopped) return;
+      stopped = true;
+      bgra.end();
+      audioTransport.close();
+      command.kill("SIGKILL");
+    };
+    signal.addEventListener("abort", stop, { once: true });
+    void (async () => {
+      try {
+        await promise;
+      } catch {
+        // The stream lifecycle reports encoder errors and awaits shutdown.
+      } finally {
+        signal.removeEventListener("abort", stop);
+      }
+    })();
     logger.info("Go-Live stream started");
     this.options.onEncoderStarted();
-    return { sink: bgra, output, playing: promise };
+    return { sink: bgra, output, playing: promise, stop };
   }
 
   protected override async afterLeaveVoice(): Promise<void> {
