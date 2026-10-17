@@ -9,6 +9,7 @@ export const BootstrapSchema = z
     PLEX_SERVER_MACHINE_ID: z.string().min(1),
     PLEX_SERVER_URL: z.url(),
     PLEX_OWNER_ACCOUNT_ID: z.string().min(1),
+    PLEX_WEBHOOK_SECRET: z.string().min(32).max(256).optional(),
     TMDB_TOKEN: z.string().min(1).optional(),
     TMDB_API_KEY: z.string().min(1).optional(),
     DISCORD_CLIENT_ID: z.string().min(1).optional(),
@@ -78,6 +79,12 @@ export function mediaBehaviorConfig(
         default: false,
         names: { flag: "media-capacity-observation-enabled" },
       },
+      plexEventHintsEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: false,
+        names: { flag: "media-plex-event-hints-enabled" },
+      },
       sourceCleanupEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
@@ -143,6 +150,7 @@ export function mediaBehaviorConfig(
           requestsEnabled: "boolean",
           acquisitionEnabled: "boolean",
           capacityObservationEnabled: "boolean",
+          plexEventHintsEnabled: "boolean",
           sourceCleanupEnabled: "boolean",
           quarantineEnabled: "boolean",
           purgeEnabled: "boolean",

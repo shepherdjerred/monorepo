@@ -28,6 +28,7 @@ export const MEDIA_BOOLEAN_FLAG_KEYS = [
   "media-requests-enabled",
   "media-acquisition-enabled",
   "media-capacity-observation-enabled",
+  "media-plex-event-hints-enabled",
   "media-source-cleanup-enabled",
   "media-quarantine-enabled",
   "media-purge-enabled",

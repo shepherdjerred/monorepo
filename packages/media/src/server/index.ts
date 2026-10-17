@@ -33,6 +33,7 @@ import { createMediaWorkflowStarter } from "#automation/temporal-client.ts";
 import { createOutboxActivities } from "#automation/store.ts";
 import { renderMediaMetrics } from "#infrastructure/metrics.ts";
 import { PrismaCapacityAdministration } from "#infrastructure/capacity/service.ts";
+import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags();
@@ -134,6 +135,27 @@ const app = createMediaApp({
   }),
   admin: new PrismaAdminApplication(database, cipher),
   capacityAdmin: new PrismaCapacityAdministration(database, capacityEnabled),
+  plexEvents: {
+    ingress: new PrismaPlexEventIngress(database, {
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      permittedSections: async () => {
+        const current = mediaBehaviorConfig(bootstrap.ENVIRONMENT, true);
+        const movie = await current.get("permittedMovieSectionId");
+        const series = await current.get("permittedTvSectionId");
+        return {
+          movie: movie.value,
+          series: series.value,
+        };
+      },
+    }),
+    enabled: async () => {
+      const result = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
+        "plexEventHintsEnabled",
+      );
+      return result.value;
+    },
+    secret: bootstrap.PLEX_WEBHOOK_SECRET,
+  },
   numberingAdmin: new PrismaNumberingAdministration(database, tmdbClient),
   handoffAdmin: new PrismaMediaHandoff(database),
   nativeRecoveryAdmin: new PrismaNativeRecovery(database),

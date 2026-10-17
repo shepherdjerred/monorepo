@@ -62,6 +62,7 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  observe_plex_hint: "observePlexEventHintWorkflow",
   prepare_native_quarantine: "prepareNativeQuarantineWorkflow",
   apply_native_quarantine: "applyNativeQuarantineWorkflow",
   restore_native_quarantine: "restoreNativeQuarantineWorkflow",

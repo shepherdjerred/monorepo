@@ -150,6 +150,24 @@ The application image publication gate controls whether the Media workloads are
 synthesized. Media schedules are declared initially paused; their existence does
 not establish that application workers or recovery procedures are ready.
 
+Plex event hints use the existing durable outbox to start
+`observePlexEventHintWorkflow` on `monorepo-workflows`; its only observation
+Activity runs on `media-network`. History contains bounded media/mapping IDs,
+never the webhook capability, raw payload, account or poster. The default-off
+hint gate does not replace polling or final retention checks. A hint requests a
+fresh scoped watch read; it grants no deletion authority.
+
+Each watch observation obtains the current Activity cancellation signal and a
+wall/monotonic deadline before IO. The current attempt's scheduled timestamp
+plus its explicit start-to-close timeout bounds work conservatively, including
+queue delay. The SDK's required overall timeout further caps it. Both SDK
+timestamps and budgets must be finite and positive, including when the server
+supplies the overall budget for an omitted Workflow option. Existing
+Workflow options remain unchanged. The new hint Activity declares both budgets,
+heartbeats and bounded retries, and sanitizes failures before history encoding.
+Capability provisioning, proxy URL-log privacy and actual PMS delivery remain
+separate prerequisites before enabling hints.
+
 The initially paused `media-capacity` schedule runs each minute with SKIP overlap.
 Its new Workflow first observes canonical mounts on `media-network`, then samples
 them on `media-files`; the API never mounts libraries. Each Activity checks the
