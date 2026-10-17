@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { prepareGoalAuth } from "#src/goal-auth.ts";
+import { prepareGoalAuth } from "@discord-plays-pokemon/backend/goal/codex/codex-auth.ts";
 
 const homes: string[] = [];
 const syntheticId = `${Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url")}.${Buffer.from("{}").toString("base64url")}.c3ludGhldGlj`;

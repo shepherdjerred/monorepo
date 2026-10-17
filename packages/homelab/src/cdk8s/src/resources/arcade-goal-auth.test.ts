@@ -2,6 +2,21 @@ import { expect, test } from "vitest";
 import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import { createArcadeDeployment } from "./arcade.ts";
+import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+
+const GoalContainer = z.object({
+  env: ContainerEnvSchema,
+  volumeMounts: z.array(z.object({ name: z.string(), mountPath: z.string() })),
+});
+const GoalPod = z.object({
+  containers: z.array(GoalContainer),
+  volumes: z.array(
+    z.object({
+      name: z.string(),
+      persistentVolumeClaim: z.object({ claimName: z.string() }).optional(),
+    }),
+  ),
+});
 
 test("refreshable goal credentials mount separately from backed-up saves and database", () => {
   const chart = new Chart(new App(), "test", {
@@ -37,26 +52,7 @@ test("refreshable goal credentials mount separately from backed-up saves and dat
     .object({
       spec: z.object({
         template: z.object({
-          spec: z.object({
-            containers: z.array(
-              z.object({
-                env: z.array(
-                  z.object({ name: z.string(), value: z.string().optional() }),
-                ),
-                volumeMounts: z.array(
-                  z.object({ name: z.string(), mountPath: z.string() }),
-                ),
-              }),
-            ),
-            volumes: z.array(
-              z.object({
-                name: z.string(),
-                persistentVolumeClaim: z
-                  .object({ claimName: z.string() })
-                  .optional(),
-              }),
-            ),
-          }),
+          spec: GoalPod,
         }),
       }),
     })

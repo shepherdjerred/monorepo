@@ -76,6 +76,8 @@ cache from the dedicated vault item. Startup validates it and seeds a private
 changing the vault seed replaces that cache. Credentials stay outside game saves
 and archives. A bare OAuth access token does not replace the CLI's subscription
 authentication cache.
+The existing Pokémon Codex adapter owns credential validation and cache persistence;
+Arcade wires its bootstrap environment without another provider credential reader.
 Local goal-enabled processes must set `CODEX_HOME` to an absolute private directory.
 
 Private WASM builds use `runtimes/prepare-assets.py --help`. The script accepts
