@@ -109,6 +109,10 @@ describe("Arcade account handover", () => {
               env: expect.arrayContaining([
                 { name: "FLIPT_ENVIRONMENT", value: "prod" },
                 { name: "DEPLOYMENT_ENVIRONMENT", value: "prod" },
+                {
+                  name: "WEB_PUBLIC_ORIGIN",
+                  value: "https://arcade.sjer.red",
+                },
               ]),
             }),
           ]),
@@ -184,6 +188,6 @@ describe("Arcade account handover", () => {
           resource.kind === "ConfigMap" &&
           resource.metadata.name === "pokemon-web-redirect-config",
       )?.data?.["Caddyfile"],
-    ).toContain("redir https://mariokart.sjer.red 307");
+    ).toContain("redir https://arcade.sjer.red 307");
   });
 });

@@ -3,12 +3,19 @@ import { describe, expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createMarioKartChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/mario-kart.ts";
+import {
+  getRegisteredBackendProbes,
+  getRegisteredPublicProbes,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 
 const Resource = z.object({
   kind: z.string(),
   metadata: z.object({ name: z.string() }),
   spec: z.record(z.string(), z.unknown()).optional(),
-  subjects: z.array(z.object({ name: z.string() })).optional(),
+  subjects: z
+    .array(z.object({ name: z.string(), spec: z.object({ fqdn: z.string() }) }))
+    .optional(),
+  tunnelRef: z.object({ disableDNSUpdates: z.boolean() }).optional(),
 });
 
 function resources() {
@@ -46,7 +53,7 @@ describe("Mario Kart direct ingress", () => {
     });
   });
 
-  test("keeps the existing tunnel on the bootstrap listener until DNS cutover", () => {
+  test("retains recovery routes for both hostnames without taking DNS ownership", () => {
     const synthesized = resources();
     const bootstrap = synthesized.find(
       (resource) =>
@@ -54,10 +61,30 @@ describe("Mario Kart direct ingress", () => {
         resource.metadata.name.endsWith("edge-bootstrap"),
     );
     expect(bootstrap).toBeDefined();
+    const bindings = synthesized.filter(
+      (resource) => resource.kind === "TunnelBinding",
+    );
+    expect(bindings).toHaveLength(2);
+    expect(bindings.flatMap((binding) => binding.subjects ?? [])).toEqual(
+      expect.arrayContaining([
+        {
+          name: bootstrap?.metadata.name,
+          spec: { fqdn: "mariokart.sjer.red" },
+        },
+        { name: bootstrap?.metadata.name, spec: { fqdn: "arcade.sjer.red" } },
+      ]),
+    );
+    for (const binding of bindings) {
+      expect(binding.tunnelRef?.disableDNSUpdates).toBe(true);
+    }
     expect(
-      synthesized.find((resource) => resource.kind === "TunnelBinding")
-        ?.subjects,
-    ).toEqual([expect.objectContaining({ name: bootstrap?.metadata.name })]);
+      getRegisteredBackendProbes().filter(
+        (probe) => probe.serviceName === bootstrap?.metadata.name,
+      ),
+    ).toEqual([expect.objectContaining({ port: 8082, path: "/healthz" })]);
+    expect(getRegisteredPublicProbes()).toContainEqual(
+      expect.objectContaining({ fqdn: "arcade.sjer.red", path: "/health" }),
+    );
   });
 
   test("preserves ACME state across replacement pods without overlapping RWO mounts", () => {
