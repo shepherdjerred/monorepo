@@ -12,7 +12,7 @@ import path from "node:path";
 import { z } from "zod";
 
 const SubscriptionAuthSchema = z.object({
-  auth_mode: z.literal("chatgpt").optional(),
+  auth_mode: z.literal("chatgpt"),
   tokens: z.object({
     access_token: z.string().min(1),
     account_id: z.string().min(1),

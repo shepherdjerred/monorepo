@@ -39,6 +39,30 @@ describe("Emerald subscription authentication", () => {
       ).rejects.toThrow("Emerald goals require an absolute CODEX_HOME");
     },
   );
+  it("rejects a mixed API-key cache without explicit subscription mode", async () => {
+    const auth: unknown = JSON.parse(authentication());
+    if (typeof auth !== "object" || auth === null)
+      throw new Error("Invalid test fixture");
+    const home = await authDirectory();
+    await expect(
+      prepareGoalAuth(
+        encoded(
+          JSON.stringify({
+            ...auth,
+            auth_mode: undefined,
+            OPENAI_API_KEY: "synthetic-api-key",
+          }),
+        ),
+        home,
+      ),
+    ).rejects.toThrow(/^Invalid Emerald subscription authentication$/u);
+    await expect(
+      prepareGoalAuth(
+        encoded(JSON.stringify({ ...auth, auth_mode: "apikey" })),
+        home,
+      ),
+    ).rejects.toThrow(/^Invalid Emerald subscription authentication$/u);
+  });
   it("makes the complete refreshable cache available in an isolated private home", async () => {
     const contents = authentication();
     const home = await prepareGoalAuth(
