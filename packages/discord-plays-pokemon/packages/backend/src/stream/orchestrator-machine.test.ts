@@ -39,6 +39,9 @@ function makeHarness(): Harness {
     sink: new PassThrough(),
     output: new PassThrough(),
     playing: Promise.resolve(),
+    stop: () => {
+      /* No encoder process in this fixture. */
+    },
   };
   const gates = {
     join: deferred<true>(),

@@ -48,6 +48,9 @@ function makeHarness(
     sink,
     output: new PassThrough(),
     playing: Promise.resolve(),
+    stop: () => {
+      sink.end();
+    },
   };
   const gates = {
     join: deferred<true>(),

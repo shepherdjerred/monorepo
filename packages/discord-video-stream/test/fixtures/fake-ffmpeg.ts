@@ -1,6 +1,14 @@
 #!/usr/bin/env bun
 
+import { closeSync } from "node:fs";
+
 const missingInput = "/definitely/not/a/real/discord-video-stream-input";
+
+if (process.argv.includes("/discord-video-stream-close-stdin")) {
+  closeSync(0);
+  await Bun.sleep(5000);
+  process.exit(0);
+}
 
 if (process.argv.includes(missingInput)) {
   console.error(`${missingInput}: No such file or directory`);

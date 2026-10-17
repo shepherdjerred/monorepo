@@ -8,6 +8,12 @@ this package owns state-machine modeling for joining voice, preparing encoders,
 streaming, stopping, retrying, reacting to Discord topology events, and
 reconciling desired stream state.
 
+Encoder implementations return an idempotent `EncoderHandles.stop()` that
+terminates their process and closes auxiliary inputs. The stopping state calls
+it before awaiting encoder exit; ending the video sink alone cannot release an
+encoder blocked on audio probing or output backpressure. Preparation cancellation
+must also stop any process already created before its handles reach the machine.
+
 ## Subsystems
 
 - `src/raw-go-live-machine.ts` / `src/desired-stream-machine.ts` — the two
