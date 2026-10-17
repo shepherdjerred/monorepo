@@ -8,6 +8,8 @@ import { TmdbClient } from "#integrations/tmdb.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { DatabaseProviderRegistry } from "./providers.ts";
 import type { MediaAutomationContext } from "./context.ts";
+import { testWatchExecution } from "#testing/watch-execution.ts";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
@@ -78,6 +80,7 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
 
 async function fixture(episode = false) {
   const db = cluster.database;
+  const ratingKey = String(crypto.getRandomValues(new Uint32Array(1))[0]);
   await grantTestLease(db);
   const user = await db.mediaUser.create({
     data: {
@@ -88,6 +91,7 @@ async function fixture(episode = false) {
       notificationPreference: { create: { emailEnabled: true } },
     },
   });
+  await grantTestRequesterAccess(db, user.id, "fixture-server");
   const parent = episode
     ? await db.mediaItem.create({
         data: { kind: "series", title: "Fixture series" },
@@ -99,7 +103,10 @@ async function fixture(episode = false) {
       parentId: parent?.id ?? null,
       title: "Fixture",
       availability: "available",
-      externalIds: { plexRatingKey: "42" },
+      externalIds: {
+        plexRatingKey: ratingKey,
+        plexSectionId: episode ? "2" : "1",
+      },
     },
   });
   await db.$transaction(async (tx) => {
@@ -152,7 +159,7 @@ async function fixture(episode = false) {
     },
     async (url) => {
       const item = {
-        ratingKey: "42",
+        ratingKey,
         type: "movie",
         title: "Fixture",
         viewCount: observation.watched ? 1 : 0,
@@ -169,6 +176,8 @@ async function fixture(episode = false) {
   );
   const context: MediaAutomationContext = {
     db,
+    watchExecution: testWatchExecution,
+    serverMachineId: "fixture-server",
     tmdb: new TmdbClient({ kind: "bearer", token: "fixture" }),
     describeWorkflow: async () => null,
     permittedSections: async () => ({ movie: "1", series: "2" }),
@@ -398,7 +407,7 @@ test("a shared physical file stays protected for another unwatched requester", a
       parentId: item.media.parentId,
       title: "Other",
       availability: "available",
-      externalIds: { plexRatingKey: "43" },
+      externalIds: { plexRatingKey: "43", plexSectionId: "2" },
       intents: {
         create: { automationEpoch: 0, editionRootId: item.asset.editionRootId },
       },

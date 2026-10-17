@@ -111,7 +111,40 @@ library access. Members receive scoped progress and their own household evidence
 owner diagnostics are omitted. Raw observations, private URLs, torrent hashes,
 filesystem paths and unrelated shared-pack claims do not enter this response.
 Aggregate metrics at `/metrics` remain read-only and contain no media/user/torrent
-identifiers. Plex event hints remain an unfinished capability tracked in AI-300.
+identifiers.
+
+## Plex watch event hints
+
+`POST /events/plex` accepts bounded multipart event hints through a dedicated
+query capability, outside browser session/Origin/CSRF middleware. The typed
+`plexEventHintsEnabled` flag defaults off; the optional API bootstrap
+`PLEX_WEBHOOK_SECRET` must also be configured. A missing, invalid or duplicate
+query key cannot read the request body or enqueue work. The authenticated reader
+caps the whole body at 2 MiB and its single JSON payload at 64 KiB; an optional
+poster is discarded. No account, player, poster or raw payload is stored.
+
+Hints resolve only an exact configured-server, section and rating-key mapping to
+one existing default target. Unsupported or ambiguous hints return the same
+generic acknowledgement without creating catalog records or intent. Accepted
+hints commit an operation and outbox record before acknowledgement; a 30-second
+receiver-time bucket coalesces duplicates. The network workflow reads current
+watch state with each effective requester's scoped token. Event account IDs and
+scrobble notifications never directly set watched state or permit deletion.
+
+The shared polling/event observer allocates a whole-media ordering revision
+before external reads and atomically commits the complete current cohort.
+Epoch, mapping, credential, claim or generation drift and older completions
+cannot refresh or invalidate newer watch evidence. Unknown scoped metadata,
+including a missing rating key after quarantine, remains protected. Existing
+polling, warning/grace, recovery holds and final watch/session guards continue
+to apply; the endpoint grants no new deletion or acquisition authority.
+
+Capability-bearing URLs must never enter logs, error callbacks, traces or
+workflow history. Application errors expose only fixed categories and request
+IDs. The current source adds no HTTP trace collector. Proxy/PMS URL logging,
+HTTPS reachability, query preservation and real event delivery still require
+separate verification before activation. Source availability does not enable
+delivery, provision a secret, or establish live acceptance.
 
 ## Storage capacity observations
 

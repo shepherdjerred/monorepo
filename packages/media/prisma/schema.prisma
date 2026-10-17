@@ -406,6 +406,7 @@ model MediaEditionDefinition {
 }
 
 model MediaIntent {
+  watchObservationFence WatchObservationFence?
   automationEpoch Int @default(-1)
   mediaId                String
   media                  MediaItem       @relation(fields: [mediaId], references: [id])
@@ -714,6 +715,15 @@ model MediaSubtitlePolicyVersion {
   rules Json
   createdAt DateTime @default(now())
   @@unique([mediaId, edition, version])
+}
+
+model WatchObservationFence {
+  mediaId String
+  edition String @default("default")
+  issuedRevision BigInt @default(0)
+  settledRevision BigInt @default(0)
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
+  @@id([mediaId, edition])
 }
 
 model WatchState {

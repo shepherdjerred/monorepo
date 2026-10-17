@@ -10,6 +10,7 @@ import { verifyIdentityHttp } from "./media/identity-http.test-support.ts";
 import { verifyVisibilityHttp } from "./media/visibility-http.test-support.ts";
 import { verifyDefaultCommandsHttp } from "./media/edition-http.test-support.ts";
 import { verifyDefaultReplayHttp } from "./media/edition-replay.test-support.ts";
+import { verifyPlexEventHttp } from "./plex-events/http.test-support.ts";
 
 const actor: MediaActor = {
   id: "member",
@@ -236,6 +237,15 @@ function fixture() {
     },
   };
   const dependencies: MediaAppDependencies = {
+    plexEvents: {
+      secret: undefined,
+      enabled: async () => false,
+      ingress: {
+        accept: async () => {
+          throw new Error("Unexpected Plex event");
+        },
+      },
+    },
     capacityAdmin: {
       capacity: () =>
         Promise.resolve({
@@ -398,6 +408,10 @@ test("capacity route is registered behind normal session authentication", async 
     schemaVersion: 1,
     samplingEnabled: false,
   });
+});
+
+test("Plex hints authenticate before body reads and sanitize all event errors", async () => {
+  await verifyPlexEventHttp(fixture().dependencies);
 });
 
 describe("media HTTP security and errors", () => {
