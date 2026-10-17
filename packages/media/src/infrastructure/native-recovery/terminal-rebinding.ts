@@ -6,7 +6,8 @@ import {
   FinishedNativeV2Schema,
 } from "#shared/native-recovery/lifecycle.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import type { NativeSubtitleSnapshotSchema } from "#shared/native-subtitles.ts";
+import { NativeSubtitleSnapshotSchema } from "#shared/native-subtitles.ts";
+import { NativeArchiveScopeSchema } from "#shared/native-recovery/archive.ts";
 
 export const TerminalSubtitleBindingSchema = z.object({
   id: z.uuid(),
@@ -109,7 +110,9 @@ export async function terminalRebindingChain(
     if (match === undefined || matches.length !== 1)
       throw new Error("Native terminal version has no unique receipt binding");
     const { row, selection, binding } = match;
-    const scope = NativePublishedScopeSchema.parse(row.plan.scope);
+    const scope = z
+      .union([NativePublishedScopeSchema, NativeArchiveScopeSchema])
+      .parse(row.plan.scope);
     const finished = Finished.parse(row.plan.plan);
     const files = scope.files.filter((file) => file.assetId === asset.id);
     const file = files[0];
@@ -133,7 +136,9 @@ export async function terminalRebindingChain(
       id: row.id,
       planHash: row.planHash,
       binding,
-      subtitleSnapshots: file.subtitles,
+      subtitleSnapshots: file.subtitles.map((subtitle) =>
+        NativeSubtitleSnapshotSchema.parse(subtitle),
+      ),
     });
     version = binding.beforeVersion;
     epoch = file.ownershipEpoch;
@@ -147,7 +152,10 @@ export async function terminalRebindingChain(
 
 function validateSubtitleBindings(
   binding: z.infer<typeof Binding>,
-  snapshots: z.infer<typeof NativeSubtitleSnapshotSchema>[],
+  snapshots: Pick<
+    z.infer<typeof NativeSubtitleSnapshotSchema>,
+    "id" | "version" | "ownershipEpoch" | "videoVersion" | "qualityStatus"
+  >[],
 ) {
   if (
     binding.subtitles.length !== snapshots.length ||

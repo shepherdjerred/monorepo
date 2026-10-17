@@ -4,7 +4,7 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaFileRoots } from "#filesystem/operations-types.ts";
 import type { MediaProbe } from "#filesystem/media-tools.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
-import { FileIdentityEvidenceSchema } from "#shared/acquisition/identity.ts";
+import * as filePlan from "#shared/file-plan.ts";
 
 export type Transaction = Prisma.TransactionClient;
 export type FileContext = {
@@ -24,44 +24,9 @@ export type FileContext = {
   contentProof?: ContentProof;
   verifyPlexExclusion?: (roots: MediaFileRoots) => Promise<void>;
 };
-export const GenerationsSchema = z.record(
-  z.string(),
-  z.number().int().nonnegative(),
-);
-export const EmbeddedSubtitleSchema = z.object({
-  id: z.string(),
-  language: z.enum(["en", "zh-Hans"]),
-  relativePath: z.string(),
-  checksum: z.string(),
-  format: z.enum(["srt", "ass"]),
-  streamIndex: z.number().int(),
-});
-export const FilePlanEntrySchema = z.object({
-  identityEvidence: FileIdentityEvidenceSchema.optional(),
-  assetId: z.string(),
-  mediaIds: z.array(z.string()).min(1),
-  generations: GenerationsSchema,
-  libraryKind: z.enum(["movies", "tv"]),
-  downloadPath: z.string(),
-  libraryPath: z.string(),
-  checksum: z.string().regex(/^[a-f0-9]{64}$/u),
-  sizeBytes: z.string().regex(/^\d+$/u),
-  properties: z.json(),
-  operationId: z.string(),
-  previousAssetId: z.string().nullable(),
-  previousChecksum: z.string().nullable(),
-  previousVersion: z.number().int().nullable(),
-  previousSidecars: z.array(
-    z.object({
-      subtitleId: z.string(),
-      libraryPath: z.string(),
-      checksum: z.string(),
-      quarantineId: z.string(),
-      operationId: z.string(),
-    }),
-  ),
-  embeddedSubtitles: z.array(EmbeddedSubtitleSchema),
-});
+export const GenerationsSchema = filePlan.GenerationsSchema;
+export const EmbeddedSubtitleSchema = filePlan.EmbeddedSubtitleSchema;
+export const FilePlanEntrySchema = filePlan.FilePlanEntrySchema;
 export const FilePlanSchema = z.array(FilePlanEntrySchema).min(1);
 export type FilePlanEntry = z.infer<typeof FilePlanEntrySchema>;
 export const RemovalEntrySchema = z.object({

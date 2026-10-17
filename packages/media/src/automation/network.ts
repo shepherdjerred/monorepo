@@ -46,6 +46,9 @@ import type { FileContext } from "./files/types.ts";
 import { createCapacityFileProducer } from "./capacity/files.ts";
 import { createCapacityNetworkProducer } from "./capacity/network.ts";
 import { createPlexEventActivities } from "./plex-events/activities.ts";
+import { createNativeArchiveFileActivities } from "./native-archive/activities.ts";
+import type { NativeArchiveExecution } from "./native-archive/execution.ts";
+import { createNativeArchiveNetworkActivities } from "#migration/native-archive/activities.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -220,6 +223,7 @@ export async function createMediaNetworkContext(
 export async function createMediaFileRuntime(
   environment: Record<string, string | undefined>,
   checkpoint: (phase: string) => Promise<void>,
+  archiveExecution: () => NativeArchiveExecution,
 ) {
   const config = FilesBootstrapSchema.parse(environment);
   const db = createDatabase(config.DATABASE_URL);
@@ -253,6 +257,10 @@ export async function createMediaFileRuntime(
     verifyPlexExclusion: (root) => requirePlexExclusionProof(db, root),
   };
   const activities = {
+    ...createNativeArchiveFileActivities(
+      { files: fileContext, workerPodUid: config.MEDIA_FILE_WORKER_POD_UID },
+      archiveExecution,
+    ),
     ...createMediaFileActivities(fileContext),
     ...createSubtitleReplacementActivities(fileContext),
     ...createHandoffFileActivities({
@@ -305,6 +313,7 @@ const DeliveryBootstrapSchema = z
 export async function createMediaNetworkRuntime(
   environment: Record<string, string | undefined>,
   watchExecution: MediaAutomationContext["watchExecution"],
+  archiveExecution: () => NativeArchiveExecution,
 ) {
   const config = DeliveryBootstrapSchema.parse(environment);
   const temporal = createMediaWorkflowStarter({
@@ -399,6 +408,12 @@ export async function createMediaNetworkRuntime(
     },
     activities: {
       ...createMediaNetworkActivities(context, lifecycle),
+      ...createNativeArchiveNetworkActivities({
+        ...context,
+        observer: createLegacyObserver(environment),
+        expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        archiveExecution,
+      }),
       ...createPlexEventActivities(context, async () => {
         const flag = await behavior.get("plexEventHintsEnabled");
         return flag.value;

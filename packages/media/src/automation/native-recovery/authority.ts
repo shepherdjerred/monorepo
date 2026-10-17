@@ -38,7 +38,8 @@ export async function nativeApprovingActor(
   planHash: string,
   expectedKind:
     | "apply_native_recovery"
-    | "apply_native_quarantine" = "apply_native_recovery",
+    | "apply_native_quarantine"
+    | "apply_native_archive" = "apply_native_recovery",
 ) {
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },

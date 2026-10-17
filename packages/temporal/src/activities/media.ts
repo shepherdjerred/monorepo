@@ -1,6 +1,7 @@
 import { ApplicationFailure, heartbeat, Context } from "@temporalio/activity";
 import { CancelledFailure } from "@temporalio/common";
 import { watchExecution } from "./media/watch-execution.ts";
+import { archiveExecution } from "./media/archive-execution.ts";
 import type {
   SubtitleReplacementFileActivities,
   SubtitleReplacementNetworkActivities,
@@ -33,7 +34,11 @@ type FileActivities = MediaFileActivities &
   NativeRecoveryFileActivities &
   NativeQuarantineFileActivities;
 export async function getMediaNetworkRuntime() {
-  networkRuntime ??= createMediaNetworkRuntime(Bun.env, watchExecution);
+  networkRuntime ??= createMediaNetworkRuntime(
+    Bun.env,
+    watchExecution,
+    archiveExecution,
+  );
   try {
     const runtime = await networkRuntime;
     return runtime;
@@ -43,11 +48,15 @@ export async function getMediaNetworkRuntime() {
   }
 }
 export async function getMediaFileRuntime() {
-  fileRuntime ??= createMediaFileRuntime(Bun.env, (phase) => {
-    assertNotCancelled();
-    heartbeat({ phase });
-    return Promise.resolve();
-  });
+  fileRuntime ??= createMediaFileRuntime(
+    Bun.env,
+    (phase) => {
+      assertNotCancelled();
+      heartbeat({ phase });
+      return Promise.resolve();
+    },
+    archiveExecution,
+  );
   try {
     const runtime = await fileRuntime;
     return runtime;

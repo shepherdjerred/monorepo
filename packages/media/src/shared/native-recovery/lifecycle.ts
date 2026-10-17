@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  NativeArchiveScopeSchema,
+  NativeArchiveFileEvidenceSchema,
+} from "./archive.ts";
+import { NativeArchiveContinuationViewSchema } from "./archive-view.ts";
+import {
   NativeRecoveryScopeSchema,
   NativeRecoveryFileEvidenceSchema,
   NativeRecoveryDetailSchema,
@@ -90,14 +95,20 @@ export const NativePublishedFileEvidenceSchema = z.union([
 export const NativeStoredScopeSchema = z.union([
   NativePublishedScopeSchema,
   NativeQuarantineScopeSchema,
+  NativeArchiveScopeSchema,
 ]);
 export const NativeStoredFileEvidenceSchema = z.union([
   NativePublishedFileEvidenceSchema,
   NativeQuarantineFileEvidenceSchema,
+  NativeArchiveFileEvidenceSchema,
 ]);
 export const FinishedNativeV2Schema = z.strictObject({
   schemaVersion: z.literal(2),
-  lifecycleKind: z.enum(["published", "committed_quarantine"]),
+  lifecycleKind: z.enum([
+    "published",
+    "committed_quarantine",
+    "superseded_archive",
+  ]),
   scopeHash: z.string().regex(/^[a-f0-9]{64}$/u),
   network: z.json(),
   files: z.json(),
@@ -105,6 +116,7 @@ export const FinishedNativeV2Schema = z.strictObject({
 export type NativePublishedScope = z.infer<typeof NativePublishedScopeSchema>;
 export const NativeLifecycleDetailSchema = NativeRecoveryDetailSchema.extend({
   scope: NativeStoredScopeSchema,
+  archiveContinuations: z.array(NativeArchiveContinuationViewSchema).optional(),
   continuations: z.array(
     z.strictObject({
       id: z.uuid(),

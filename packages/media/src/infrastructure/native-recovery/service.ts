@@ -1,4 +1,11 @@
 import { z } from "zod";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import type { PrepareNativeArchiveSchema } from "#shared/native-recovery/archive.ts";
+import { PrismaNativeArchive } from "#infrastructure/native-archive/service.ts";
+import {
+  archiveInventory,
+  archiveContinuationViews,
+} from "#infrastructure/native-archive/view.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
@@ -34,6 +41,23 @@ import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 export class PrismaNativeRecovery extends MediaCommandBase {
   constructor(private readonly db: Database) {
     super(db, { keepDays: 30 });
+  }
+  prepareArchive(
+    actor: MediaActor,
+    key: string,
+    input: z.input<typeof PrepareNativeArchiveSchema>,
+  ) {
+    return new PrismaNativeArchive(this.db).prepare(actor, key, input);
+  }
+  async archiveInventory(actor: MediaActor, cursor: string | null = null) {
+    requireOwner(actor);
+    return this.db.$transaction(async (tx) => {
+      await assertNativeOwner(tx, actor.id);
+      return archiveInventory(
+        tx,
+        cursor === null ? null : z.uuid().parse(cursor),
+      );
+    });
   }
   prepareQuarantine(
     actor: MediaActor,
@@ -252,6 +276,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
           media: media.map(({ intents: _intents, ...item }) => item),
         });
       }
+      const storedScope = NativeStoredScopeSchema.parse(row.scope);
       return NativeLifecycleDetailSchema.parse({
         id: row.id,
         state: row.state,
@@ -262,6 +287,10 @@ export class PrismaNativeRecovery extends MediaCommandBase {
         expiresAt: row.expiresAt?.toISOString() ?? null,
         receiptId: row.receipt?.id ?? null,
         continuations: continuationViews,
+        ...(storedScope.schemaVersion === 2 &&
+        storedScope.lifecycleKind === "superseded_archive"
+          ? { archiveContinuations: await archiveContinuationViews(tx, id) }
+          : {}),
       });
     });
   }
@@ -276,6 +305,12 @@ export class PrismaNativeRecovery extends MediaCommandBase {
     const selected = await this.db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id },
     });
+    const selectedScope = NativeStoredScopeSchema.parse(selected.scope);
+    if (
+      selectedScope.schemaVersion === 2 &&
+      selectedScope.lifecycleKind === "superseded_archive"
+    )
+      return new PrismaNativeArchive(this.db).apply(actor, key, id, input);
     if (NativeQuarantineScopeSchema.safeParse(selected.scope).success)
       return new PrismaNativeQuarantine(this.db).apply(actor, key, id, input);
     return this.command(

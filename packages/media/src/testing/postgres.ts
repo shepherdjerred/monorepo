@@ -40,7 +40,8 @@ export async function startMediaTestPostgres(
     migrationCeiling?:
       | "20261017001600_visibility"
       | "20261017001700_default_edition_scope"
-      | "20261017001800_capacity_observation";
+      | "20261017001800_capacity_observation"
+      | "20261017001900_watch_observation_fence";
   } = {},
 ) {
   const directory = await mkdtemp(path.join(tmpdir(), "media-pg-"));

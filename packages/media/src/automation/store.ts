@@ -62,6 +62,9 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_native_archive: "prepareNativeArchiveWorkflow",
+  apply_native_archive: "applyNativeArchiveWorkflow",
+  cleanup_native_archive: "cleanupNativeArchiveWorkflow",
   observe_plex_hint: "observePlexEventHintWorkflow",
   prepare_native_quarantine: "prepareNativeQuarantineWorkflow",
   apply_native_quarantine: "applyNativeQuarantineWorkflow",
