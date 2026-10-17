@@ -98,7 +98,7 @@ export async function listCompletedScheduleActions(
     'ExecutionStatus = "Completed"',
   ].join(" AND ");
   const actions: ScheduleCompletedAction[] = [];
-  for await (const execution of list({ query, pageSize: 100 })) {
+  for await (const execution of list({ query, pageSize: 1000 })) {
     const scheduleId = execution.typedSearchAttributes.get(
       TEMPORAL_SCHEDULED_BY_ID,
     );

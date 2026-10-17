@@ -201,7 +201,7 @@ describe("Temporal Schedule SDK boundary", () => {
       new Date(now.getTime() - 24 * 60 * 60 * 1000),
     );
     expect(list).toHaveBeenCalledWith({
-      pageSize: 100,
+      pageSize: 1000,
       query:
         'TemporalScheduledById IS NOT NULL AND TemporalScheduledStartTime > "2026-09-30T12:00:00.000Z" AND ExecutionStatus = "Completed"',
     });
