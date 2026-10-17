@@ -112,7 +112,7 @@ const { mk64: preparedMk64Config, emerald: preparedEmeraldConfig } =
   });
 const controllerActive = await config.value("controllerActive");
 if (controllerActive && settings.emeraldGoal.enabled)
-  Bun.env["CODEX_HOME"] = await prepareGoalAuth(Bun.env);
+  Bun.env["CODEX_HOME"] = await prepareGoalAuth(Bun.env, databasePath);
 const build = controllerActive
   ? await prepareEngine(preparedMk64Config)
   : undefined;
