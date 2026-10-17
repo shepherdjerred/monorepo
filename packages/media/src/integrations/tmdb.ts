@@ -1,5 +1,19 @@
 import { z } from "zod";
-import { endpoint, json, request, type FetchTransport } from "./http.ts";
+import {
+  endpoint,
+  IntegrationError,
+  request,
+  type FetchTransport,
+} from "./http.ts";
+import { boundedBytes } from "./providers.ts";
+import {
+  GroupIdSchema,
+  MovieTitlesSchema,
+  SeriesTitlesSchema,
+  EpisodeGroupsSchema,
+  EpisodeGroupSchema,
+  normalizeEpisodeGroup,
+} from "./tmdb/catalog.ts";
 
 const MovieSchema = z.object({
   id: z.number().int().positive(),
@@ -142,6 +156,63 @@ export class TmdbClient {
       .parse(await this.get(`tv/${String(id)}/external_ids`, {}, signal));
   }
 
+  async alternativeTitles(
+    kind: "movie" | "series",
+    id: number,
+    signal?: AbortSignal,
+  ) {
+    z.int().positive().parse(id);
+    const wire = await this.get(
+      `${kind === "movie" ? "movie" : "tv"}/${String(id)}/alternative_titles`,
+      {},
+      signal,
+    );
+    const result =
+      kind === "movie"
+        ? MovieTitlesSchema.parse(wire)
+        : SeriesTitlesSchema.parse(wire);
+    if (result.id !== id)
+      throw new IntegrationError("tmdb", "invalid-response");
+    const titles = "titles" in result ? result.titles : result.results;
+    return {
+      id,
+      titles: titles.map((title) => ({
+        title: title.title,
+        country: title.iso_3166_1,
+        type: title.type,
+      })),
+    };
+  }
+
+  async episodeGroups(seriesId: number, signal?: AbortSignal) {
+    z.int().positive().parse(seriesId);
+    const result = EpisodeGroupsSchema.parse(
+      await this.get(`tv/${String(seriesId)}/episode_groups`, {}, signal),
+    );
+    if (result.id !== seriesId)
+      throw new IntegrationError("tmdb", "invalid-response");
+    return {
+      seriesId,
+      groups: result.results.map((group) => ({
+        id: group.id,
+        name: group.name,
+        type: group.type,
+        episodeCount: group.episode_count,
+        groupCount: group.group_count,
+      })),
+    };
+  }
+
+  async episodeGroup(groupId: string, signal?: AbortSignal) {
+    GroupIdSchema.parse(groupId);
+    const result = EpisodeGroupSchema.parse(
+      await this.get(`tv/episode_group/${groupId}`, {}, signal),
+    );
+    if (result.id !== groupId)
+      throw new IntegrationError("tmdb", "invalid-response");
+    return normalizeEpisodeGroup(result);
+  }
+
   private async get(
     path: string,
     params: Record<string, string>,
@@ -157,6 +228,13 @@ export class TmdbClient {
       headers,
       ...(signal === undefined ? {} : { signal }),
     });
-    return await json(response, "tmdb");
+    const bytes = await boundedBytes(response, 8 * 1024 * 1024, "tmdb");
+    try {
+      return JSON.parse(
+        new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+      );
+    } catch {
+      throw new IntegrationError("tmdb", "invalid-response");
+    }
   }
 }

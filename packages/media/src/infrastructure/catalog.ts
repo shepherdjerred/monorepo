@@ -3,6 +3,11 @@ import type { TmdbClient } from "#integrations/tmdb.ts";
 import type { Database } from "./database.ts";
 import type { CatalogSearch } from "#shared/api.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
+import {
+  loadMovieCatalogIdentity,
+  loadSeriesCatalogIdentity,
+} from "./catalog-identity/catalog.ts";
+import { persistCatalogMedia } from "./catalog-identity/persist.ts";
 
 function year(date: string | null): number | null {
   if (date === null || date.length === 0) return null;
@@ -70,45 +75,36 @@ export class TmdbCatalogApplication implements CatalogApplication {
 
   async adopt(kind: "movie" | "series", externalId: number) {
     if (kind === "movie") {
-      const movie = await this.tmdb.movie(externalId);
-      const item = await this.db.mediaItem.upsert({
-        where: { kind_tmdbId: { kind, tmdbId: movie.id } },
-        create: {
+      const { details: movie, identity } = await loadMovieCatalogIdentity(
+        this.tmdb,
+        externalId,
+      );
+      const item = await serializable(this.db, (tx) =>
+        persistCatalogMedia(tx, {
           kind,
           tmdbId: movie.id,
           title: movie.title,
           year: year(movie.release_date),
           runtimeMinutes: movie.runtime,
           originalLanguage: movie.original_language,
-          externalIds: { tmdb: movie.id, imdb: movie.imdb_id },
-        },
-        update: {
-          title: movie.title,
-          year: year(movie.release_date),
-          runtimeMinutes: movie.runtime,
-          originalLanguage: movie.original_language,
-        },
-      });
+          identity,
+        }),
+      );
       return { mediaId: item.id };
     }
-    const series = await this.tmdb.series(externalId);
+    const { details: series, identity } = await loadSeriesCatalogIdentity(
+      this.tmdb,
+      externalId,
+    );
     return serializable(this.db, async (db) => {
-      const item = await db.mediaItem.upsert({
-        where: { kind_tmdbId: { kind, tmdbId: series.id } },
-        create: {
-          kind,
-          tmdbId: series.id,
-          title: series.name,
-          year: year(series.first_air_date),
-          originalLanguage: series.original_language,
-          externalIds: { tmdb: series.id },
-          catalogState: "pending",
-        },
-        update: {
-          title: series.name,
-          year: year(series.first_air_date),
-          originalLanguage: series.original_language,
-        },
+      const item = await persistCatalogMedia(db, {
+        kind,
+        tmdbId: series.id,
+        title: series.name,
+        year: year(series.first_air_date),
+        originalLanguage: series.original_language,
+        runtimeMinutes: null,
+        identity,
       });
       await queueOperation(db, {
         key: `catalog:${item.id}:${String(Math.floor(Date.now() / 3_600_000))}`,

@@ -88,7 +88,21 @@ test("separates network credentials from writable media mounts", () => {
         containers: z.array(
           z.object({
             env: z.array(
-              z.object({ name: z.string(), value: z.string().optional() }),
+              z.object({
+                name: z.string(),
+                value: z.string().optional(),
+                valueFrom: z
+                  .object({
+                    secretKeyRef: z
+                      .object({
+                        name: z.string(),
+                        key: z.string(),
+                        optional: z.boolean().optional(),
+                      })
+                      .optional(),
+                  })
+                  .optional(),
+              }),
             ),
             volumeMounts: z.array(
               z.object({
@@ -102,7 +116,14 @@ test("separates network credentials from writable media mounts", () => {
       }),
     }),
   });
-  const deployments = resources().filter(
+  const manifests = resources();
+  const bootstrap = manifests.find(
+    (resource) =>
+      resource.kind === "OnePasswordItem" &&
+      resource.metadata.name.endsWith("media-config"),
+  );
+  expect(bootstrap).toBeDefined();
+  const deployments = manifests.filter(
     (resource) => resource.kind === "Deployment",
   );
   expect(deployments).toHaveLength(3);
@@ -116,6 +137,18 @@ test("separates network credentials from writable media mounts", () => {
     const mounts = container?.volumeMounts ?? [];
     const env = container?.env.map((value) => value.name) ?? [];
     if (deployment.metadata.name.endsWith("media-files")) {
+      const serverBinding = container?.env.find(
+        (value) => value.name === "PLEX_SERVER_MACHINE_ID",
+      );
+      expect(serverBinding).toMatchObject({
+        valueFrom: {
+          secretKeyRef: {
+            name: bootstrap?.metadata.name,
+            key: "PLEX_SERVER_MACHINE_ID",
+          },
+        },
+      });
+      expect(serverBinding?.valueFrom?.secretKeyRef?.optional).not.toBe(true);
       expect(mounts).toContainEqual(
         expect.objectContaining({ mountPath: "/downloads", readOnly: true }),
       );

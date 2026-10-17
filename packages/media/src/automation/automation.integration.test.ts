@@ -29,13 +29,9 @@ test("Retry after committed promotion adopts the coordinator and verifies Plex w
         rules: QualityRulesSchema.parse(f.profile.rules),
       },
     });
-    await database().operation.create({
-      data: {
-        id: p.attempt.operationId,
-        kind: "acquire_release",
-        payload: {},
-        status: "running",
-      },
+    await database().operation.update({
+      where: { id: p.attempt.operationId },
+      data: { status: "running" },
     });
     await createOutboxActivities(database(), async () => {
       throw new Error("Unexpected dispatch");

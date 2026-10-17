@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { commandAutomationEpoch } from "./handoff/authority.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
@@ -10,11 +9,11 @@ import {
   applyHold,
   actionIntentChange,
   actionCommand,
-  authorizeRenewal,
 } from "./action-guards.ts";
-import { lockMedia, needsRestore } from "./locks.ts";
+import { needsRestore } from "./locks.ts";
 import { confirmRemoval } from "./removal-confirmation.ts";
-import { lockEffectiveRequests } from "./request-claims.ts";
+import { lockAcquisitionMedia } from "./acquisition-identity/locks.ts";
+import { prepareActionAuthority } from "./acquisition-identity/action.ts";
 
 import { MediaRequestCommands } from "./request-commands.ts";
 export class PrismaMediaCommands extends MediaRequestCommands {
@@ -82,20 +81,12 @@ export class PrismaMediaCommands extends MediaRequestCommands {
           input.action === "remove"
             ? await confirmRemoval(db, mediaId, input)
             : null;
-        await lockMedia(db, [mediaId]);
-        await lockEffectiveRequests(db, [mediaId]);
-        const renewal =
-          input.action === "retry" || input.action === "select_release";
-        const authority = renewal
-          ? { automationEpoch: await commandAutomationEpoch(db) }
-          : {};
-        const currentActor = renewal
-          ? await authorizeRenewal(db, actor, {
-              mediaId,
-              action: input.action,
-              ...this.settings,
-            })
-          : actor;
+        const { authority, currentActor, identityDecision } =
+          await prepareActionAuthority(db, actor, {
+            mediaId,
+            input,
+            settings: this.settings,
+          });
         await validateAction(db, currentActor, mediaId, input);
         const updated = await db.mediaItem.updateMany({
           where: { id: mediaId, version: input.expectedVersion },
@@ -176,6 +167,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
           details: {
             action: input.action,
             ...ownerOverride,
+            ...(identityDecision === null ? {} : { identityDecision }),
             ...(input.action === "select_release"
               ? { releaseId: input.releaseId }
               : {}),
@@ -256,7 +248,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
         const affected = await db.mediaIntent.findMany({
           where: { profileId },
         });
-        await lockMedia(
+        await lockAcquisitionMedia(
           db,
           affected.map((intent) => intent.mediaId),
         );

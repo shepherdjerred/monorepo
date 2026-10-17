@@ -10,6 +10,7 @@ import {
 } from "#shared/numbering.ts";
 import { queryClient, readApi, writeApi } from "./api.ts";
 import { ErrorNotice, Loading, Notice } from "./components.tsx";
+import { NumberingGroups } from "./acquisition-identity/numbering-groups.tsx";
 
 function EpisodeEditor({
   user,
@@ -152,6 +153,9 @@ export function NumberingAdministration({ user }: { user: MediaUser }) {
         </select>
       </label>
       {series.error !== null && <ErrorNotice error={series.error} />}
+      {seriesId !== "" && (
+        <NumberingGroups key={seriesId} user={user} seriesId={seriesId} />
+      )}
       {episodes.error !== null && <ErrorNotice error={episodes.error} />}
       {seriesId !== "" && episodes.isPending && <Loading />}
       <div className="item-list">

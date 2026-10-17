@@ -407,6 +407,8 @@ model ReleaseCandidate {
   evaluation        Json
   encryptedSource   String?
   mediaIds          String[]
+  searchedForMediaIds String[] @default([])
+  sourceEvidence Json?
   createdAt         DateTime             @default(now())
   attempts          AcquisitionAttempt[]
 
@@ -479,6 +481,7 @@ model AcquisitionAttempt {
   coordinatorOperationId String?
   failure          Json?
   filePlan         Json?
+  identityEvidence Json?
   recoveryEpoch    Int                      @default(0)
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt

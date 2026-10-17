@@ -9,7 +9,8 @@ const { database, fixture } = automationTestHarness();
 test("a 1001 episode request commits one root, resumes bounded pages, and cancels authority before cleanup", async () => {
   const { user, profile } = await fixture();
   const db = database();
-  await db.plexIdentityMapping.create({
+  await db.plexIdentityMapping.update({
+    where: { userId: user.id },
     data: {
       userId: user.id,
       serverMachineId: "fixture",
@@ -134,7 +135,8 @@ test("a 1001 episode request commits one root, resumes bounded pages, and cancel
 test("future expansion preserves explicit episode cancellation and overlapping direct claims", async () => {
   const { user } = await fixture();
   const db = database();
-  await db.plexIdentityMapping.create({
+  await db.plexIdentityMapping.update({
+    where: { userId: user.id },
     data: {
       userId: user.id,
       serverMachineId: "fixture",

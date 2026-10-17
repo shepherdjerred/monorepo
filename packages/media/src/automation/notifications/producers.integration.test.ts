@@ -29,16 +29,9 @@ test("actual committed import Retry publishes once using adopted authority witho
       data: { userId: f.user.id, emailEnabled: true },
     });
     const acquired = await f.acquisition();
-    await db.operation.create({
-      data: {
-        id: acquired.input.operationId,
-        idempotencyKey: crypto.randomUUID(),
-        userId: f.user.id,
-        kind: "acquire_release",
-        targetId: f.media.id,
-        status: "reconciling",
-        payload: {},
-      },
+    await db.operation.update({
+      where: { id: acquired.input.operationId },
+      data: { status: "reconciling" },
     });
     const files = createMediaFileActivities(f.context);
     expect(await files.inspectAndStageMedia(acquired.input)).toEqual({

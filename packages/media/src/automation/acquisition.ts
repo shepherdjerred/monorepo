@@ -1,3 +1,5 @@
+import type { QualityProfile } from "#shared/contract.ts";
+import { MediaError } from "#application/errors.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
@@ -84,9 +86,13 @@ async function reconcile(
   const operation = await context.db.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
-  const selected = z
-    .object({ releaseId: z.string().optional() })
-    .parse(operation.payload).releaseId;
+  const selection = z
+    .object({
+      releaseId: z.string().optional(),
+      identityDecision: z.unknown().optional(),
+    })
+    .parse(operation.payload);
+  const selected = selection.releaseId;
   const candidates =
     selected === undefined
       ? await searchCandidates(context, input.mediaId, profile)
@@ -99,22 +105,14 @@ async function reconcile(
       attemptId: null,
       reason: "no_acceptable_release",
     };
-  const release = await context.db.releaseCandidate.findUniqueOrThrow({
-    where: { id: releaseId },
-  });
-  const evaluated = chooseUpgrade({
-    candidate: {
-      id: release.id,
-      providerId: release.providerId,
-      title: release.title,
-      ...PublicReleaseAttributesSchema.parse(release.attributes),
-    },
-    current: await currentRelease(context, input.mediaId),
+  const blocker = await selectionBlocker(context, {
+    releaseId,
     profile,
-    mediaIds: [input.mediaId],
+    mediaId: input.mediaId,
+    reviewed: selection.identityDecision !== undefined,
   });
-  if (!evaluated.upgrade)
-    return { status: "blocked", attemptId: null, reason: evaluated.reason };
+  if (blocker !== null)
+    return { status: "blocked", attemptId: null, reason: blocker };
   const attemptId = await reserveCandidate(context, input, {
     releaseId,
     profile,
@@ -131,8 +129,24 @@ export function createAcquisitionActivities(
   context: MediaAutomationContext,
 ): AcquisitionActivities {
   return {
-    reconcileMediaIntent: (input) => reconcile(context, input),
-    submitMediaTorrent: (input) => submit(context, input),
+    async reconcileMediaIntent(input) {
+      try {
+        return await reconcile(context, input);
+      } catch (error) {
+        if (error instanceof MediaError)
+          return { status: "blocked", attemptId: null, reason: error.code };
+        throw error;
+      }
+    },
+    async submitMediaTorrent(input) {
+      try {
+        return await submit(context, input);
+      } catch (error) {
+        if (error instanceof MediaError)
+          return { status: "blocked", reason: error.code };
+        throw error;
+      }
+    },
     async observeMediaAcquisition(input) {
       const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
         where: { id: input.attemptId },
@@ -168,4 +182,31 @@ export function createAcquisitionActivities(
       };
     },
   };
+}
+
+async function selectionBlocker(
+  context: MediaAutomationContext,
+  input: {
+    releaseId: string;
+    profile: QualityProfile;
+    mediaId: string;
+    reviewed: boolean;
+  },
+) {
+  if (input.reviewed) return null;
+  const release = await context.db.releaseCandidate.findUniqueOrThrow({
+    where: { id: input.releaseId },
+  });
+  const evaluated = chooseUpgrade({
+    candidate: {
+      id: release.id,
+      providerId: release.providerId,
+      title: release.title,
+      ...PublicReleaseAttributesSchema.parse(release.attributes),
+    },
+    current: await currentRelease(context, input.mediaId),
+    profile: input.profile,
+    mediaIds: [input.mediaId],
+  });
+  return evaluated.upgrade ? null : evaluated.reason;
 }
