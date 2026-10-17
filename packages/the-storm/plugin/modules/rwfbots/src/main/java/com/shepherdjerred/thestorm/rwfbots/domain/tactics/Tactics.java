@@ -176,15 +176,17 @@ public final class Tactics {
   private static Routed route(Planning planning, Situation situation, TacticsContext context) {
     var plan = planning.plan();
     var memory = planning.objective().memory();
+    if (planning.objective().forced().isEmpty()
+        && memory.excludes(
+            Planner.slotPoint(situation, context).orElseGet(() -> situation.self().pos()),
+            situation.now())) {
+      var recovery = Planner.recovery(situation, context);
+      return new Routed(
+          recovery, Planner.decide(recovery, situation, context, planning.lifeEpoch()), memory);
+    }
     var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
     if (decision.routeFailure().isPresent()) {
       memory = memory.blocked(decision.routeFailure().orElseThrow().goal(), situation.now());
-      plan = Planner.recovery(situation, context);
-      decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
-    } else if (memory.excludes(
-            Planner.slotPoint(situation, context).orElseGet(() -> situation.self().pos()),
-            situation.now())
-        && planning.objective().forced().isEmpty()) {
       plan = Planner.recovery(situation, context);
       decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
     }

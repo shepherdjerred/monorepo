@@ -45,6 +45,13 @@ final class ThinkFlight {
     return task;
   }
 
+  /** A single bot's work, nested inside its stage batch when recordings are enabled. */
+  static Task bot(@Nullable Context context, int botId) {
+    var task = section(context, 1);
+    if (task.span != null) task.span.botId = botId;
+    return task;
+  }
+
   @Category({"Red Warfare", "The Storm"})
   @Label("Bot thinking span")
   @Name("storm.BotThink")
@@ -55,6 +62,7 @@ final class ThinkFlight {
     long tick;
     int batch;
     int inputs;
+    int botId = -1;
     @Timespan long queueNanos;
     @Timespan long workerNanos;
     @Timespan long cpuNanos;
