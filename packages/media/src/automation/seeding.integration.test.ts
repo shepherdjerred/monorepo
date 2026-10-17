@@ -32,12 +32,23 @@ async function seededTorrent() {
   const isolated = `/downloads/media/${attempt.id}`;
   const observed = {
     hash: torrent.infoHash,
+    infohash_v1: torrent.infoHash,
+    infohash_v2: "",
     name: "Example.mkv",
     state: "uploading",
     category: "media",
-    tags: `media-${data.input.operationId}`,
+    tags: `media-${data.input.operationId},media-attempt-${attempt.id}`,
     progress: 1,
     ratio: 2,
+    ratio_limit: -1,
+    seeding_time_limit: -1,
+    inactive_seeding_time_limit: -1,
+    max_ratio: -1,
+    max_seeding_time: -1,
+    max_inactive_seeding_time: -1,
+    share_limit_action: "Stop",
+    auto_tmm: false,
+    force_start: false,
     seeding_time: 100,
     size: 1000,
     save_path: isolated,
@@ -99,6 +110,7 @@ test("a foreign torrent sharing the isolated source directory prevents file dele
               {
                 ...data.observed,
                 hash: "a".repeat(40),
+                infohash_v1: "a".repeat(40),
                 category: "unmanaged",
                 tags: "",
               },
@@ -115,5 +127,44 @@ test("a foreign torrent sharing the isolated source directory prevents file dele
   ).toMatchObject({ status: "protected", reason: "source_directory_shared" });
   expect(
     await database().torrent.findUnique({ where: { id: data.torrent.id } }),
+  ).toMatchObject({ state: "seeding" });
+});
+
+test("a late native-limit writer prevents removal and releases the pre-effect claim", async () => {
+  const data = await seededTorrent();
+  let reads = 0;
+  let deletes = 0;
+  const ctx = context(async (url) => {
+    if (url.pathname.endsWith("/auth/login"))
+      return new Response(null, {
+        status: 204,
+        headers: { "set-cookie": "SID=fixture" },
+      });
+    if (url.pathname.endsWith("/torrents/info")) {
+      reads++;
+      return Response.json([
+        {
+          ...data.observed,
+          ...(reads > 1
+            ? { seeding_time_limit: 123, max_seeding_time: 123 }
+            : {}),
+        },
+      ]);
+    }
+    if (url.pathname.endsWith("/torrents/files")) return Response.json([]);
+    if (url.pathname.endsWith("/torrents/delete")) deletes++;
+    throw new Error("Unexpected mutation");
+  });
+  expect(
+    await createSeedingActivities(ctx).removeMediaTorrent({
+      operationId: data.input.operationId,
+      torrentId: data.torrent.id,
+    }),
+  ).toEqual({ status: "protected", reason: "torrent_policy_drift" });
+  expect(deletes).toBe(0);
+  expect(
+    await database().torrent.findUniqueOrThrow({
+      where: { id: data.torrent.id },
+    }),
   ).toMatchObject({ state: "seeding" });
 });

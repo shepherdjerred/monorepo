@@ -17,6 +17,7 @@ export const CommandResultSchema = z.object({
   mediaId: z.string().optional(),
   profileId: z.string().optional(),
   userId: z.string().optional(),
+  runId: z.uuid().optional(),
   status: z.enum(["queued", "completed"]).optional(),
   version: z.number().int().optional(),
   restricted: z.boolean().optional(),

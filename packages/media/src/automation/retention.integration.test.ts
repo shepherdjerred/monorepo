@@ -148,6 +148,7 @@ async function fixture() {
     tmdb: new TmdbClient({ kind: "bearer", token: "fixture" }),
     describeWorkflow: async () => null,
     permittedSections: async () => ({ movie: "1", series: "2" }),
+    refreshExclusionProofs: () => Promise.resolve(),
     cipher,
     plex,
     userPlex: () => plex,

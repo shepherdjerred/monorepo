@@ -179,12 +179,23 @@ describe("private torrent submission", () => {
         if (url.pathname.endsWith("info")) return Response.json([]);
         expect(init.body).toBeInstanceOf(FormData);
         submitted = true;
-        return new Response("Ok.");
+        return Response.json({
+          added_torrent_ids: [expected],
+          success_count: 1,
+          failure_count: 0,
+          pending_count: 0,
+        });
       },
     );
     await client.login();
     await expect(
-      client.submitTorrent({ operationId: "attempt1", hash: expected, bytes }),
+      client.submitTorrent({
+        operationId: "00000000-0000-4000-8000-000000000001",
+        attemptId: "00000000-0000-4000-8000-000000000002",
+        savePath: "/downloads/media/00000000-0000-4000-8000-000000000002",
+        hash: expected,
+        bytes,
+      }),
     ).resolves.toBe("accepted");
     expect(submitted).toBe(true);
   });

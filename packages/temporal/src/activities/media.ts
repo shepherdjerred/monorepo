@@ -94,6 +94,8 @@ export const mediaNetworkWorkerActivities: MediaNetworkActivities = {
     withNetwork((activities) => activities.observeMediaAcquisition(input)),
   publishMediaToPlex: (input) =>
     withNetwork((activities) => activities.publishMediaToPlex(input)),
+  publishRolledBackMedia: (input) =>
+    withNetwork((activities) => activities.publishRolledBackMedia(input)),
   publishRestoredMedia: (input) =>
     withNetwork((activities) => activities.publishRestoredMedia(input)),
   finalizeMediaAcquisition: (input) =>
@@ -112,6 +114,8 @@ export const mediaNetworkWorkerActivities: MediaNetworkActivities = {
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
 export const mediaFileWorkerActivities: MediaFileActivities = {
+  cleanupSupersededMediaFile: (input) =>
+    withFiles((activities) => activities.cleanupSupersededMediaFile(input)),
   inspectAndStageMedia: (input) =>
     withFiles((activities) => activities.inspectAndStageMedia(input)),
   promoteMediaFiles: (input) =>

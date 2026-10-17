@@ -54,6 +54,10 @@ export type MediaNetworkActivities = {
     status: "available" | "waiting" | "blocked";
     reason: string | null;
   }>;
+  publishRolledBackMedia: (input: MediaAttemptOperation) => Promise<{
+    status: "available" | "waiting" | "blocked" | "not_applicable";
+    reason: string | null;
+  }>;
   publishRestoredMedia: (input: MediaOperation) => Promise<{
     status: "available" | "waiting" | "blocked";
     reason: string | null;
@@ -107,6 +111,13 @@ export type MediaNetworkActivities = {
 };
 
 export type MediaFileActivities = {
+  cleanupSupersededMediaFile: (input: {
+    operationId: string;
+    cleanupId: string;
+  }) => Promise<{
+    status: "purged" | "protected" | "obsolete";
+    reason?: string;
+  }>;
   inspectAndStageMedia: (
     input: MediaAttemptOperation,
   ) => Promise<{ status: "staged" | "blocked"; reason?: string }>;

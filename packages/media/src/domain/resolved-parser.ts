@@ -3,6 +3,7 @@ import type {
   ResolvedRelease,
   SourceQuality,
 } from "./resolved-contract.ts";
+import { parseResolvedAnime } from "./resolved-anime-parser.ts";
 
 type ParsedScene = {
   qualityId: number;
@@ -18,7 +19,7 @@ const UNKNOWN: ParsedScene = {
   revision: null,
   reasons: ["source_parse_unsupported"],
 };
-// This deliberately narrow grammar excludes anime, sites, brackets, editions and ambiguous source markers.
+// Scene grammar excludes sites, brackets, editions and ambiguous source markers; verified anime is parsed separately.
 // The captured source parser fixtures verify this subset; unsupported syntax is never approximated.
 const TOKENS = new Set(
   "720p 1080p 2160p amzn nf dsnp atvp hmax hulu pcok web-dl webdl webrip bluray remux complete avc hevc av1 x264 x265 h264 h265 h 264 265 dv hdr hdr10 hdr10+ dolby vision sdr truehd atmos dts hd ma aac ac3 eac3 dd ddp 2 0 5 1 7 10bit 8bit proper repack repack2 repack3 rerip real english multi dual audio ddp5 ddp2 ddp7 dts-hd".split(
@@ -119,6 +120,8 @@ export function parseResolvedScene(
   profile: ResolvedProfile,
   title: string,
 ): ParsedScene {
+  const anime = parseResolvedAnime(profile, title);
+  if (anime !== null) return anime;
   const parts = sceneParts(title, profile.source);
   if (parts === null) return UNKNOWN;
   const qualities = profile.qualityDefinitions.filter((definition) =>

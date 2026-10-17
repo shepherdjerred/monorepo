@@ -16,6 +16,7 @@ import type {
   MediaWorkflowResult,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import * as cleanup from "./media/cleanup.ts";
 
 const network = proxyActivities<MediaNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
@@ -115,6 +116,9 @@ async function withRecoveryCheckpoint(
 async function acquire(
   input: MediaAttemptOperation & { submitted?: boolean },
 ): Promise<MediaWorkflowResult> {
+  const rollback = await network.publishRolledBackMedia(input);
+  if (rollback.status !== "not_applicable")
+    return verifyRollback(input, "acquisition_rolled_back", rollback);
   if (input.submitted !== true) {
     const submission = await awaitSubmission(input);
     if (submission.status === "waiting")
@@ -195,12 +199,49 @@ async function rollbackAcquisition(
   publicationReason: string,
 ): Promise<MediaWorkflowResult> {
   const result = await files.rollbackMediaPromotion(input);
-  return finish(input.operationId, {
-    status: "blocked",
-    reason:
+  if (
+    result.status === "rolled_back" ||
+    result.reason === "new_publications_quarantined"
+  ) {
+    return verifyRollback(
+      input,
       result.status === "protected"
         ? (result.reason ?? "rollback_protected")
         : publicationReason,
+      await network.publishRolledBackMedia(input),
+    );
+  }
+  return finish(input.operationId, {
+    status: "blocked",
+    reason: result.reason ?? "rollback_protected",
+  });
+}
+
+async function verifyRollback(
+  input: MediaAttemptOperation,
+  publicationReason: string,
+  initial: Awaited<
+    ReturnType<MediaNetworkActivities["publishRolledBackMedia"]>
+  >,
+): Promise<MediaWorkflowResult> {
+  let result = initial;
+  for (let poll = 0; poll < 30; poll++) {
+    if (result.status === "available")
+      return finish(input.operationId, {
+        status: "blocked",
+        reason: publicationReason,
+      });
+    if (result.status !== "waiting")
+      return finish(input.operationId, {
+        status: "blocked",
+        reason: result.reason ?? "rollback_publication_unconfirmed",
+      });
+    await sleep("1 minute");
+    result = await network.publishRolledBackMedia(input);
+  }
+  return finish(input.operationId, {
+    status: "blocked",
+    reason: "rollback_publication_unconfirmed",
   });
 }
 
@@ -243,6 +284,8 @@ async function acquireSubtitles(input: {
   }
   return continueAsNew<typeof acquireMediaSubtitlesWorkflow>(input);
 }
+
+export const cleanupMediaUpgradeWorkflow = cleanup.cleanupMediaUpgradeWorkflow;
 
 export async function installMediaSubtitleWorkflow(input: {
   operationId: string;

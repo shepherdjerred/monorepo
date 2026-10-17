@@ -3,6 +3,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaFileRoots } from "#filesystem/operations-types.ts";
 import type { MediaProbe } from "#filesystem/media-tools.ts";
+import type { ContentProof } from "#filesystem/content-proof.ts";
 
 export type Transaction = Prisma.TransactionClient;
 export type FileContext = {
@@ -17,6 +18,7 @@ export type FileContext = {
   };
   inspect?: (path: string) => Promise<MediaProbe>;
   minimumFreeBytes?: number;
+  contentProof?: ContentProof;
   verifyPlexExclusion?: (roots: MediaFileRoots) => Promise<void>;
 };
 export const GenerationsSchema = z.record(

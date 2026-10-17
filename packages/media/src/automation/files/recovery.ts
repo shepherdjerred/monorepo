@@ -1,7 +1,5 @@
 import nodePath from "node:path";
-import { lstat, realpath } from "node:fs/promises";
 import { z } from "zod";
-import { sha256File } from "#filesystem/operations-io.ts";
 import { fileOperations } from "./file-operations.ts";
 import { assertRuntime } from "./guards.ts";
 import {
@@ -47,7 +45,9 @@ export async function recoverObsoletePublication(input: {
     const journal = await operations.readManifest(entry.operationId);
     if (journal === null) continue;
     const target = nodePath.join(roots.library, entry.libraryPath);
-    const digest = await existingDigest(target);
+    if (context.contentProof === undefined)
+      throw new Error("Recovery content proof is required");
+    const digest = await context.contentProof.digest(target);
     await compensateVideo(operations, entry, digest);
     for (const sidecar of entry.previousSidecars) {
       const sidecarJournal = await operations.readManifest(sidecar.operationId);
@@ -91,17 +91,4 @@ async function compensateVideo(
     }
   } else if (digest !== null && digest !== entry.previousChecksum)
     throw new FileGuardError("recovery_content_changed");
-}
-
-async function existingDigest(path: string): Promise<string | null> {
-  try {
-    const info = await lstat(path);
-    if (!info.isFile() || (await realpath(path)) !== path)
-      throw new FileGuardError("recovery_path_unsafe");
-  } catch (error) {
-    if (z.object({ code: z.literal("ENOENT") }).safeParse(error).success)
-      return null;
-    throw error;
-  }
-  return await sha256File(path);
 }

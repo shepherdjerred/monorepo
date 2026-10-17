@@ -5,6 +5,15 @@ import { secureHeaders } from "hono/secure-headers";
 import { registerAdminRoutes, type AdminApplication } from "./admin-routes.ts";
 import { registerPlexRoutes, type PlexAdministration } from "./plex-routes.ts";
 import {
+  registerMigrationRoutes,
+  type MigrationAdministration,
+} from "./migration-routes.ts";
+import { MAX_MIGRATION_BYTES } from "#shared/migration.ts";
+import {
+  registerPlexExclusionRoutes,
+  type PlexExclusionAdministration,
+} from "./plex-exclusion-routes.ts";
+import {
   registerNumberingRoutes,
   type NumberingAdministration,
 } from "./numbering-routes.ts";
@@ -35,6 +44,8 @@ export type MediaAppDependencies = {
   admin: AdminApplication;
   plexAdmin: PlexAdministration;
   numberingAdmin: NumberingAdministration;
+  migrationAdmin: MigrationAdministration;
+  plexExclusionAdmin: PlexExclusionAdministration;
   publicOrigin: string;
   requestsEnabled: () => Promise<boolean>;
   onError: (error: Error, requestId: string) => void;
@@ -83,7 +94,12 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     const upload =
       c.req.method === "POST" && c.req.path === "/api/v1/admin/subtitles";
     return bodyLimit({
-      maxSize: upload ? 12 * 1024 * 1024 : 64 * 1024,
+      maxSize:
+        c.req.method === "POST" && c.req.path === "/api/v1/admin/migration"
+          ? MAX_MIGRATION_BYTES
+          : upload
+            ? 12 * 1024 * 1024
+            : 64 * 1024,
       onError: (context) =>
         context.json(
           {
@@ -437,6 +453,8 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   registerAdminRoutes(app, dependencies.admin);
   registerPlexRoutes(app, dependencies.plexAdmin);
   registerNumberingRoutes(app, dependencies.numberingAdmin);
+  registerMigrationRoutes(app, dependencies.migrationAdmin);
+  registerPlexExclusionRoutes(app, dependencies.plexExclusionAdmin);
   app.notFound((c) =>
     c.json(
       { error: { code: "not_found", message: "Endpoint does not exist" } },

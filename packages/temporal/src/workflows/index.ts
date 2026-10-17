@@ -464,11 +464,19 @@ export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
 import * as media from "./media.ts";
+import * as mediaMaintenance from "./media/maintenance.ts";
+export const preparePlexExclusionWorkflow =
+  mediaMaintenance.preparePlexExclusionWorkflow;
+export const executePlexExclusionWorkflow =
+  mediaMaintenance.executePlexExclusionWorkflow;
+export const recoverPlexExclusionWorkflow =
+  mediaMaintenance.recoverPlexExclusionWorkflow;
 export const reconcileMediaWorkflow = media.reconcileMediaWorkflow;
 export const acquireMediaReleaseWorkflow = media.acquireMediaReleaseWorkflow;
 export const acquireMediaSubtitlesWorkflow =
   media.acquireMediaSubtitlesWorkflow;
 export const installMediaSubtitleWorkflow = media.installMediaSubtitleWorkflow;
+export const cleanupMediaUpgradeWorkflow = media.cleanupMediaUpgradeWorkflow;
 export const maintainMediaTorrentWorkflow = media.maintainMediaTorrentWorkflow;
 export const retainMediaWorkflow = media.retainMediaWorkflow;
 export const restoreMediaWorkflow = media.restoreMediaWorkflow;

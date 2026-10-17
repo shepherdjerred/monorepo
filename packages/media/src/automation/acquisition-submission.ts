@@ -7,6 +7,8 @@ import { evaluateRelease } from "#domain/quality.ts";
 import { requireActiveRuntime } from "./runtime.ts";
 import { serializable, queueOperation } from "./store.ts";
 import { IntegrationError } from "#integrations/http.ts";
+import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
+import type { TorrentObservation } from "#integrations/qbittorrent.ts";
 import { StoredCandidateSchema } from "./providers.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
@@ -112,10 +114,22 @@ export async function submit(
     where: { id: input.attemptId },
     include: { release: true, torrent: true },
   });
-  if (!(await validAttempt(context, attempt.id)))
-    return { status: "obsolete", reason: "intent_changed" };
-  if (!(await context.gates.acquisition()))
-    return { status: "blocked", reason: "acquisition_disabled" };
+  const recovering =
+    attempt.state === "submitting" || attempt.state === "submission_unknown";
+  const prerequisite = await submissionPrerequisite(
+    context,
+    attempt,
+    recovering,
+  );
+  if (prerequisite !== null)
+    return {
+      status:
+        prerequisite === "intent_changed" ||
+        (!recovering && prerequisite === "recovery_epoch_changed")
+          ? "obsolete"
+          : "blocked",
+      reason: prerequisite,
+    };
   if (attempt.state === "imported")
     return { status: "submitted", reason: "resume_committed_publication" };
   if (attempt.release.encryptedSource === null)
@@ -131,28 +145,77 @@ export async function submit(
   await context.qbittorrent.login();
   const existing = await context.qbittorrent.observe(candidate.infoHash);
   if (existing === null) {
-    const preparation = await prepareTorrent(context, candidate);
-    if (preparation.reason !== null)
-      return {
-        status: preparation.wait ? "waiting" : "blocked",
-        reason: preparation.reason,
-      };
-    const reason = await submitNew(
-      context,
-      attempt,
-      candidate,
-      preparation.bytes,
-    );
-    if (reason !== null) return { status: "blocked", reason };
-  } else {
-    if (!ownedTorrent(context, existing, attempt))
-      return { status: "blocked", reason: "torrent_ownership_conflict" };
-  }
+    if (recovering)
+      return { status: "blocked", reason: "submission_outcome_unknown" };
+    const result = await prepareAndSubmit(context, attempt, candidate);
+    if (result !== null) return result;
+  } else if (!ownedTorrent(context, existing, attempt))
+    return { status: "blocked", reason: "torrent_ownership_conflict" };
+  const observed = await context.qbittorrent.observe(candidate.infoHash);
+  if (observed === null)
+    return { status: "waiting", reason: "submission_visibility_pending" };
+  return ownedTorrent(context, observed, attempt)
+    ? registerObservedSubmission(context, attempt, candidate, observed)
+    : { status: "blocked", reason: "torrent_ownership_conflict" };
+}
+
+async function submissionPrerequisite(
+  context: MediaAutomationContext,
+  attempt: AcquisitionAttempt,
+  recovering: boolean,
+): Promise<string | null> {
+  const runtime = await requireActiveRuntime(context.db);
+  if (runtime.epoch !== attempt.recoveryEpoch) return "recovery_epoch_changed";
+  if (!runtime.active) return "runtime_observe";
+  if (!recovering && !(await validAttempt(context, attempt.id)))
+    return "intent_changed";
+  return !recovering && !(await context.gates.acquisition())
+    ? "acquisition_disabled"
+    : null;
+}
+
+async function prepareAndSubmit(
+  context: MediaAutomationContext,
+  attempt: AcquisitionAttempt,
+  candidate: ProviderCandidate,
+): Promise<{ status: "waiting" | "blocked"; reason: string } | null> {
+  const preparation = await prepareTorrent(context, candidate);
+  if (preparation.reason !== null)
+    return {
+      status: preparation.wait ? "waiting" : "blocked",
+      reason: preparation.reason,
+    };
+  const reason = await submitNew(
+    context,
+    attempt,
+    candidate,
+    preparation.bytes,
+  );
+  return reason === null ? null : { status: "blocked", reason };
+}
+
+async function registerObservedSubmission(
+  context: MediaAutomationContext,
+  attempt: AcquisitionAttempt,
+  candidate: ProviderCandidate,
+  observed: TorrentObservation,
+): ReturnType<MediaNetworkActivities["submitMediaTorrent"]> {
+  const policySafe = hasApplicationSeedingPolicy(observed);
   const provider = await context.db.mediaProvider.findUniqueOrThrow({
     where: { id: candidate.providerId },
   });
-  await serializable(context.db, async (tx) => {
+  const registered = await serializable(context.db, async (tx) => {
     await lockMedia(tx, attempt.mediaIds);
+    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+    const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    if (
+      currentRuntime.mode !== "active" ||
+      !currentRuntime.ownershipConfirmed ||
+      currentRuntime.recoveryEpoch !== attempt.recoveryEpoch
+    )
+      return false;
     await lockEffectiveRequests(tx, attempt.mediaIds);
     const activeClaims = await tx.mediaRequest.findMany({
       where: { mediaId: { in: attempt.mediaIds }, ...effectiveRequestWhere },
@@ -174,14 +237,15 @@ export async function submit(
       where: { infoHash: candidate.infoHash },
       create: {
         infoHash: candidate.infoHash,
+        qbittorrentId: observed.hash,
         providerId: candidate.providerId,
         owned: true,
         seedingPolicy: z
           .record(z.string(), z.json())
           .parse(provider.seedingPolicy),
-        state: "downloading",
+        state: policySafe ? "downloading" : "policy_drift",
       },
-      update: {},
+      update: { qbittorrentId: observed.hash },
     });
     if (!torrent.owned) throw new Error("Cannot adopt unowned torrent");
     await tx.acquisitionAttempt.update({
@@ -202,8 +266,37 @@ export async function submit(
         where: { id: { in: attempt.mediaIds } },
         data: { availability: "downloading" },
       });
+    return true;
   });
-  return { status: "submitted", reason: null };
+  if (!registered)
+    return { status: "blocked", reason: "recovery_epoch_changed" };
+  return policySafe
+    ? { status: "submitted", reason: null }
+    : { status: "blocked", reason: "torrent_policy_drift" };
+}
+
+/** Observe a journaled uncertain add even after its requesting claim was cancelled. */
+export async function reconcileUnconfirmedSubmission(
+  context: MediaAutomationContext,
+  attemptId: string,
+): Promise<void> {
+  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: attemptId },
+  });
+  if (
+    attempt.torrentId !== null ||
+    !["submitting", "submission_unknown"].includes(attempt.state)
+  )
+    return;
+  const result = await submit(context, {
+    operationId: attempt.operationId,
+    attemptId,
+  });
+  if (result.status === "blocked")
+    await context.db.operation.update({
+      where: { id: attempt.coordinatorOperationId ?? attempt.operationId },
+      data: { status: "reconciling" },
+    });
 }
 
 function ownedTorrent(
@@ -216,6 +309,7 @@ function ownedTorrent(
   try {
     context.qbittorrent.validateOwnership(observed, {
       operationId: attempt.operationId,
+      attemptId: attempt.id,
       savePath: path.join(context.downloadRoot, "media", attempt.id),
     });
     return true;
@@ -278,6 +372,7 @@ async function submitNew(
           await context.qbittorrent.submit(
             {
               operationId: attempt.operationId,
+              attemptId: attempt.id,
               hash: candidate.infoHash,
               magnet: candidate.download.value,
               savePath,
@@ -289,6 +384,7 @@ async function submitNew(
           await context.qbittorrent.submitTorrent(
             {
               operationId: attempt.operationId,
+              attemptId: attempt.id,
               hash: candidate.infoHash,
               bytes,
               savePath,
