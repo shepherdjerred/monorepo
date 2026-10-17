@@ -2,6 +2,7 @@ import { ApplicationFailure, heartbeat, Context } from "@temporalio/activity";
 import { CancelledFailure } from "@temporalio/common";
 import { watchExecution } from "./media/watch-execution.ts";
 import { archiveExecution } from "./media/archive-execution.ts";
+import { compensationExecution } from "./media/compensation-execution.ts";
 import type {
   SubtitleReplacementFileActivities,
   SubtitleReplacementNetworkActivities,
@@ -38,6 +39,7 @@ export async function getMediaNetworkRuntime() {
     Bun.env,
     watchExecution,
     archiveExecution,
+    compensationExecution,
   );
   try {
     const runtime = await networkRuntime;
@@ -56,6 +58,7 @@ export async function getMediaFileRuntime() {
       return Promise.resolve();
     },
     archiveExecution,
+    compensationExecution,
   );
   try {
     const runtime = await fileRuntime;

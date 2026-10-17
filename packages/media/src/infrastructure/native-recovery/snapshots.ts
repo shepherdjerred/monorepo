@@ -144,8 +144,15 @@ export async function nativeLifecycle(
   tx: Prisma.TransactionClient,
   ids: string[],
   assetIds: string[],
-  settledDecisionIds: string[] = [],
+  settled: {
+    decisionIds?: readonly string[];
+    attemptIds?: readonly string[];
+  } = {},
 ) {
+  const {
+    decisionIds: settledDecisionIds = [],
+    attemptIds: settledAttemptIds = [],
+  } = settled;
   const attempts = await tx.acquisitionAttempt.findMany({
     where: { edition: "default", mediaIds: { hasSome: ids } },
     orderBy: { id: "asc" },
@@ -174,6 +181,7 @@ export async function nativeLifecycle(
     reservations.length > 0 ||
     attempts.some(
       (row) =>
+        !settledAttemptIds.includes(row.id) &&
         !["completed", "cancelled", "obsolete", "rolled_back"].includes(
           row.state,
         ),

@@ -60,19 +60,48 @@ export async function requireCapacity(
 export async function saveManifest(
   path: string,
   manifest: FileOperationManifest,
+  hooks?: ManifestSaveHooks,
 ): Promise<void> {
   const temporary = `${path}.tmp`;
   if (await exists(temporary)) await unlinkRegular(temporary);
   const handle = await open(temporary, "wx", 0o600);
+  let installed: ManifestInstallation | undefined;
   try {
     await handle.writeFile(JSON.stringify(manifest));
     await handle.sync();
+    if (hooks?.acknowledge !== undefined) {
+      const info = await handle.stat({ bigint: true });
+      installed = {
+        device: info.dev.toString(),
+        inode: info.ino.toString(),
+        sizeBytes: info.size.toString(),
+        mtimeNs: info.mtimeNs.toString(),
+      };
+    }
   } finally {
     await handle.close();
   }
+  hooks?.beforeInstall?.();
   await rename(temporary, path);
   await syncDirectory(nodePath.dirname(path));
+  if (hooks?.acknowledge !== undefined) {
+    if (installed === undefined)
+      throw new Error("Missing installed journal identity");
+    await hooks.acknowledge(installed);
+  }
 }
+
+export type ManifestInstallation = {
+  device: string;
+  inode: string;
+  sizeBytes: string;
+  mtimeNs: string;
+};
+
+export type ManifestSaveHooks = {
+  beforeInstall?: () => void;
+  acknowledge?: (installed: ManifestInstallation) => Promise<void>;
+};
 
 export async function verifyControlExclusion(
   roots: MediaFileRoots,
@@ -178,10 +207,14 @@ export async function exists(path: string): Promise<boolean> {
     throw error;
   }
 }
-export async function unlinkRegular(path: string): Promise<void> {
+export async function unlinkRegular(
+  path: string,
+  beforeEffect?: () => void,
+): Promise<void> {
   const info = await lstat(path);
   if (!info.isFile())
     throw new FileOperationConflict("Refusing to unlink a non-file");
+  beforeEffect?.();
   await unlink(path);
 }
 export async function syncFile(path: string): Promise<void> {

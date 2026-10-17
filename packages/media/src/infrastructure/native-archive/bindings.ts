@@ -1,33 +1,37 @@
 import { z } from "zod";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeArchiveBindingSchema,
-  PriorNativeBindingSchema,
   type NativeArchiveContinuation,
   type NativeArchiveFile,
 } from "#shared/native-recovery/archive.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { archiveClosure } from "./closure.ts";
 import { archiveTerminalDependency } from "./terminal.ts";
-import { assertPriorNativeBinding } from "./prior-binding.ts";
+import { assertArchiveAuthority } from "./authority.ts";
+import { PublicationAuthorityReferenceSchema } from "#shared/publication-proof/references.ts";
 import { nativePhysicalIdentity } from "./physical-identity.ts";
 import { snapshotArchiveSubtitles } from "#automation/native-archive/subtitles.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function resolveArchiveBindings(
   tx: Prisma.TransactionClient,
   receipt: Prisma.NativeRecoveryReceiptGetPayload<object>,
   descriptor: NativeArchiveContinuation,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
+  budget.consume(1);
   const selection = z
     .object({
       bindings: z.array(NativeArchiveBindingSchema),
-      reusedBindings: z.array(PriorNativeBindingSchema),
+      reusedBindings: z.array(PublicationAuthorityReferenceSchema),
     })
     .parse(receipt.selection);
   if (
     snapshotHash(selection.bindings) !== snapshotHash(descriptor.bindings) ||
-    snapshotHash(selection.reusedBindings) !==
-      snapshotHash(descriptor.reusedBindings)
+    snapshotHash(nativeJson(selection.reusedBindings)) !==
+      snapshotHash(nativeJson(descriptor.reusedBindings))
   )
     throw new Error("Archive continuation grant selection changed");
   const closure = await archiveClosure(tx, descriptor.scope.request.cleanupIds);
@@ -49,12 +53,17 @@ export async function resolveArchiveBindings(
       if (cleanup === undefined)
         throw new Error("Archive terminal pair missing");
       terminalDependencies.push(
-        await archiveTerminalDependency(tx, cleanup, closure.assets),
+        await archiveTerminalDependency(tx, cleanup, closure.assets, budget),
       );
       continue;
     }
     const { reference, current } = effectiveGrant(receipt, descriptor, file);
-    const verified = await assertPriorNativeBinding(tx, current, reference);
+    const verified = await assertArchiveAuthority(
+      tx,
+      current,
+      reference,
+      budget,
+    );
     await assertCurrentFile(tx, actual, current);
     files.push({ ...current, authority: reference });
     bindings.push(verified);

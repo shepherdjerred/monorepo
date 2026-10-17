@@ -1,5 +1,15 @@
 import path from "node:path";
 import { settledEvidence } from "./settled-proof.ts";
+import {
+  compensationDependencyPaths,
+  compensationDependencyEvidence,
+  compensationDependencyJournals,
+} from "./compensation-proof.ts";
+import { inspectCompensationJournals } from "./compensation-journals.ts";
+import {
+  prepareCompensationSubtitleLineages,
+  type CompensationSubtitleLineages,
+} from "./compensation-proof.ts";
 import { z } from "zod";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { safePath } from "#filesystem/operations-io.ts";
@@ -27,6 +37,7 @@ export type PreparedNativeFiles = {
   content: ContentProof;
   journals: JournalProof[];
   evidence: z.infer<typeof NativePublishedFileEvidenceSchema>;
+  subtitleLineages: CompensationSubtitleLineages;
 };
 
 /** Canonical names remain stable; only trusted configured worker roots determine local IO. */
@@ -34,6 +45,8 @@ export function nativeLocalPath(
   context: NativeFileContext,
   canonical: string,
 ): string {
+  if (context.files.pathMapping !== undefined)
+    return context.files.pathMapping.local(canonical);
   for (const kind of ["movies", "tv"] as const) {
     const relative = path.relative(`/data/${kind}`, canonical);
     if (
@@ -76,6 +89,10 @@ export async function prepareNativeFiles(
   )
     throw new Error("Native network evidence is stale");
   const content = new ContentProof();
+  const subtitleLineages = await prepareCompensationSubtitleLineages(
+    context.files,
+    scope,
+  );
   const journals: JournalProof[] = [];
   const measured = [];
   const resolvePath = (canonical: string) =>
@@ -90,43 +107,34 @@ export async function prepareNativeFiles(
     await verifyNativeRoot(context, network, kind);
     await safePath(roots.control, "locks/native-proof.lock", true);
     const selected = scope.files.filter((file) => file.libraryKind === kind);
-    const journal = await inspectHandoffJournals(
-      roots.control,
-      selectedJournalPaths(scope, kind, resolvePath),
-    );
+    const settledJournals = compensationDependencyJournals(
+      scope,
+      context.files.roots,
+    ).filter((journal) => journal.libraryKind === kind);
+    const targets = selectedJournalPaths(scope, kind, resolvePath);
+    const journal =
+      settledJournals.length === 0
+        ? await inspectHandoffJournals(roots.control, targets)
+        : await inspectCompensationJournals(
+            roots.control,
+            targets,
+            settledJournals,
+          );
     journals.push(journal);
     for (const file of selected) {
-      const local = resolvePath(file.canonicalPath);
-      if (
-        (await safePath(
-          roots.library,
-          path.relative(roots.library, local),
-          false,
-        )) !== local
-      )
-        throw new Error("Native local file binding changed");
-      await content.capture(local, () =>
-        context.files.checkpoint("native-file-hashing"),
-      );
-      const probe = await (context.files.inspect ?? inspectMedia)(local);
-      if (!probe.streams.some((stream) => stream.codec_type === "video"))
-        throw new Error("Native file has no measured video stream");
-      measured.push({
-        file,
-        journalDigest: journal.digest,
-        properties: z.json().parse(probe),
-        captured: await captureNativeSubtitles({
-          file,
-          libraryRoot: roots.library,
-          content,
-          probe,
-          checkpoint: () => context.files.checkpoint("native-subtitle-hashing"),
+      measured.push(
+        await measureNativeFile(context, content, file, {
+          journalDigest: journal.digest,
           resolvePath,
         }),
-      });
+      );
     }
   }
   await captureTerminalPaths({ scope, content, resolvePath, context });
+  for (const name of compensationDependencyPaths(scope, context.files.roots))
+    await content.capture(resolvePath(name), () =>
+      context.files.checkpoint("native-compensation-dependency-hashing"),
+    );
   content.seal();
   const terminal = await terminalEvidence({
     scope,
@@ -139,6 +147,14 @@ export async function prepareNativeFiles(
     content,
     journals,
     resolvePath,
+  });
+  const compensation = await compensationDependencyEvidence({
+    scope,
+    content,
+    roots: context.files.roots,
+    resolvePath,
+    subtitleLineages,
+    context: context.files,
   });
   const files = [];
   for (const item of measured) {
@@ -164,16 +180,57 @@ export async function prepareNativeFiles(
     });
   }
   return {
+    subtitleLineages,
     scope,
     content,
     journals,
     evidence: NativePublishedFileEvidenceSchema.parse({
       ...evidenceVersion(scope, terminal, settled),
+      ...(scope.schemaVersion === 2 && scope.settledCompensations !== undefined
+        ? { compensationEvidence: compensation }
+        : {}),
       planId,
       recoveryEpoch: plan.recoveryEpoch,
       workerPodUid: context.workerPodUid,
       capturedAt: new Date().toISOString(),
       files,
+    }),
+  };
+}
+
+async function measureNativeFile(
+  context: NativeFileContext,
+  content: ContentProof,
+  file: NativePublishedScope["files"][number],
+  input: { journalDigest: string; resolvePath: (canonical: string) => string },
+) {
+  const roots = context.files.roots[file.libraryKind];
+  const local = input.resolvePath(file.canonicalPath);
+  if (
+    (await safePath(
+      roots.library,
+      path.relative(roots.library, local),
+      false,
+    )) !== local
+  )
+    throw new Error("Native local file binding changed");
+  await content.capture(local, () =>
+    context.files.checkpoint("native-file-hashing"),
+  );
+  const probe = await (context.files.inspect ?? inspectMedia)(local);
+  if (!probe.streams.some((stream) => stream.codec_type === "video"))
+    throw new Error("Native file has no measured video stream");
+  return {
+    file,
+    journalDigest: input.journalDigest,
+    properties: z.json().parse(probe),
+    captured: await captureNativeSubtitles({
+      file,
+      libraryRoot: roots.library,
+      content,
+      probe,
+      checkpoint: () => context.files.checkpoint("native-subtitle-hashing"),
+      resolvePath: input.resolvePath,
     }),
   };
 }

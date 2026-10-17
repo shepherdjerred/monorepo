@@ -117,6 +117,14 @@ export async function apply(input: NativeArchiveApplyInput): Promise<void> {
 export async function cleanup(input: CleanupNativeArchiveInput): Promise<void> {
   try {
     const state = await network.nativeArchiveCleanupState(input);
+    if (state.state === "superseded") {
+      await finish(
+        input.operationId,
+        true,
+        "native_archive_approval_superseded",
+      );
+      return;
+    }
     if (state.state === "cleaned") {
       await finish(input.operationId, true, null);
       return;
@@ -148,6 +156,14 @@ export async function cleanup(input: CleanupNativeArchiveInput): Promise<void> {
   } catch (error) {
     const settled = await CancellationScope.nonCancellable(async () => {
       const state = await network.nativeArchiveCleanupState(input);
+      if (state.state === "superseded") {
+        await finish(
+          input.operationId,
+          true,
+          "native_archive_approval_superseded",
+        );
+        return true;
+      }
       const success = state.state === "cleaned";
       await finish(
         input.operationId,

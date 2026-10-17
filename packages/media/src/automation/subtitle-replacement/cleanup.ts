@@ -164,10 +164,15 @@ async function authorizeCleanup(input: {
   const filenames = receipt.artifacts.map((item) => item.path);
   if (
     (await tx.libraryAsset.count({
-      where: { path: { in: filenames } },
+      where: {
+        path: { in: filenames.map((filename) => paths.storedPath(filename)) },
+      },
     })) ||
     (await tx.subtitleAsset.count({
-      where: { path: { in: filenames }, id: { not: row.oldSubtitleId } },
+      where: {
+        path: { in: filenames.map((filename) => paths.storedPath(filename)) },
+        id: { not: row.oldSubtitleId },
+      },
     }))
   )
     throw new FileGuardError("subtitle_replacement_archive_referenced");
@@ -177,7 +182,7 @@ async function authorizeCleanup(input: {
   if (
     current.receipt?.outcome === "installed" &&
     (old.state !== "superseded" ||
-      old.path !== paths.oldArchive ||
+      old.path !== paths.storedPath(paths.oldArchive) ||
       old.ownershipEpoch !== row.recoveryEpoch ||
       old.checksum !== paths.scope.old.checksum)
   )

@@ -1,6 +1,7 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import nodePath from "node:path";
+import { workerFilePath } from "./paths/locations.ts";
 import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
 import {
@@ -18,7 +19,7 @@ export function libraryLocation(
   for (const libraryKind of ["movies", "tv"] as const) {
     const relative = nodePath.relative(
       context.roots[libraryKind].library,
-      path,
+      workerFilePath(context, path),
     );
     if (
       relative !== ".." &&

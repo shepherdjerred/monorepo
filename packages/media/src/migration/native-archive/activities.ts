@@ -96,7 +96,7 @@ export function createNativeArchiveNetworkActivities(
               id: input.continuationId,
               coordinatorOperationId: input.operationId,
               recoveryEpoch: input.recoveryEpoch,
-              state: { not: "cleaned" },
+              state: { in: ["pending", "cleaning", "protected"] },
             },
             data: { state: "protected", version: { increment: 1 } },
           }),

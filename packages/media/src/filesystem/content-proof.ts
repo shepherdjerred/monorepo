@@ -41,6 +41,11 @@ export class ContentProof {
     this.sealedAt = performance.now();
   }
 
+  assertActive(): void {
+    if (this.sealedAt === null || performance.now() - this.sealedAt > 60_000)
+      throw new FileOperationConflict("Content proof is unsealed or expired");
+  }
+
   async digest(path: string): Promise<string | null> {
     const proof = await this.assert(path);
     return proof?.sha256 ?? null;
@@ -70,6 +75,27 @@ export class ContentProof {
     return { ancestors: this.reviewAncestors(path) };
   }
 
+  /** Exact captured aliases whose ctime can change with our own link/unlink/rename. */
+  async mutationPaths(paths: readonly string[]): Promise<string[]> {
+    const identities = new Set<string>();
+    for (const path of paths) {
+      const proof = await this.assert(path);
+      if (proof !== null)
+        identities.add(`${String(proof.dev)}:${String(proof.ino)}`);
+    }
+    const affected = new Set(paths);
+    for (const [path, proof] of this.files) {
+      if (
+        proof !== null &&
+        identities.has(`${String(proof.dev)}:${String(proof.ino)}`)
+      ) {
+        await this.assert(path);
+        affected.add(path);
+      }
+    }
+    return [...affected].sort();
+  }
+
   private reviewAncestors(path: string) {
     return ancestors(path).map((parent) => {
       const identity = this.parents.get(parent);
@@ -85,12 +111,18 @@ export class ContentProof {
     });
   }
 
-  async link(source: string, target: string): Promise<void> {
+  async link(
+    source: string,
+    target: string,
+    beforeEffect?: () => void,
+  ): Promise<void> {
     const proof = await this.require(source);
     if ((await this.assert(target)) !== null)
       throw new FileOperationConflict(
         "Verified link destination already exists",
       );
+    this.assertActive();
+    beforeEffect?.();
     await link(source, target);
     await this.recordMutation(source, proof);
     const current = await this.require(source);
@@ -98,9 +130,15 @@ export class ContentProof {
     await this.assert(target);
   }
 
-  async rename(source: string, target: string): Promise<void> {
+  async rename(
+    source: string,
+    target: string,
+    beforeEffect?: () => void,
+  ): Promise<void> {
     const proof = await this.require(source);
     const previous = await this.assert(target);
+    this.assertActive();
+    beforeEffect?.();
     await rename(source, target);
     this.files.set(source, null);
     this.files.set(target, Object.freeze({ ...proof, target }));
@@ -108,9 +146,12 @@ export class ContentProof {
     if (previous !== null) await this.refreshRemainingAlias(previous);
   }
 
-  async unlink(path: string): Promise<void> {
+  async unlink(path: string, beforeEffect?: () => void): Promise<void> {
     const proof = await this.require(path);
-    await unlinkRegular(path);
+    await unlinkRegular(path, () => {
+      this.assertActive();
+      beforeEffect?.();
+    });
     this.files.set(path, null);
     await this.refreshRemainingAlias(proof);
   }
@@ -124,8 +165,7 @@ export class ContentProof {
   }
 
   private async assert(path: string): Promise<VerifiedFileProof | null> {
-    if (this.sealedAt === null || performance.now() - this.sealedAt > 60_000)
-      throw new FileOperationConflict("Content proof is unsealed or expired");
+    this.assertActive();
     await this.assertParents(path);
     const proof = this.files.get(path);
     if (proof === undefined)

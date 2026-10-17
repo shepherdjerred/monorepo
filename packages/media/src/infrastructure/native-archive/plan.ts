@@ -19,6 +19,19 @@ export function stableArchiveNetwork(raw: unknown) {
     targetsDigest: evidence.quiescence.targetsDigest,
     controllers: evidence.quiescence.controllers,
     mounts: evidence.mounts.mounts,
+    ...(evidence.supersededCoordinators === undefined
+      ? {}
+      : {
+          supersededCoordinators: evidence.supersededCoordinators.map(
+            ({
+              continuationId,
+              closedCoordinator: {
+                observedAt: _observed,
+                ...closedCoordinator
+              },
+            }) => ({ continuationId, closedCoordinator }),
+          ),
+        }),
     plex: {
       currentPlayback: evidence.plex.currentPlayback,
       archiveAbsence: evidence.plex.archiveAbsence.map(

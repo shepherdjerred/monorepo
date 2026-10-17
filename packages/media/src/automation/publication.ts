@@ -1,9 +1,19 @@
 import { z } from "zod";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
-import type { PlexItem } from "#integrations/plex.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { queueOperation, serializable } from "./store.ts";
-import type { MediaItem } from "#generated/prisma/client.ts";
+import {
+  publicationAwait,
+  type CompensationPublicationPort,
+} from "./publication/execution.ts";
+import { verifiedPublicationItems } from "./publication/verified.ts";
+import { findPublished, publicationSections } from "./publication/plex.ts";
+import { publicationMatchesReceipt } from "./publication/receipt.ts";
+import {
+  beforePublicationRefresh,
+  lockPublicationScope,
+} from "./publication/fence.ts";
+import { NativeCompensationProtection } from "#infrastructure/native-compensation/protection.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
@@ -34,99 +44,6 @@ type PublicationActivities = Pick<
   | "publishRestoredMedia"
   | "finalizeMediaAcquisition"
 >;
-
-const ScanCheckpointSchema = z.object({
-  plexScan: z
-    .object({
-      sectionId: z.string(),
-      scope: z.string().optional(),
-      offset: z.number().int().nonnegative(),
-      matches: z.array(z.object({ path: z.string(), ratingKey: z.string() })),
-    })
-    .optional(),
-});
-const ExternalIdsSchema = z.record(z.string(), z.json());
-async function findPublished(
-  context: MediaAutomationContext,
-  input: {
-    sectionId: string;
-    kind: "movie" | "episode";
-    paths: ReadonlySet<string>;
-    operationId: string;
-    scope: string;
-  },
-): Promise<Map<string, PlexItem[]>> {
-  const { sectionId, kind, paths, operationId } = input;
-  const found = new Map<string, PlexItem[]>();
-  const operation = await context.db.operation.findUniqueOrThrow({
-    where: { id: operationId },
-  });
-  const stored = ScanCheckpointSchema.parse(operation.result ?? {}).plexScan;
-  const checkpoint = stored?.scope === input.scope ? stored : undefined;
-  let offset = checkpoint?.sectionId === sectionId ? checkpoint.offset : 0;
-  for (const match of checkpoint?.matches ?? [])
-    collectPaths(found, await context.plex.metadata(match.ratingKey), paths);
-  for (let page = 0; page < 20; page++) {
-    const result = await context.plex.libraryPage({
-      sectionId,
-      kind,
-      offset,
-      limit: 200,
-    });
-    for (const item of result.items) collectPaths(found, item, paths);
-    offset += result.items.length;
-    if (offset >= result.total) {
-      offset = 0;
-      break;
-    }
-  }
-  const matches = [...found].flatMap(([path, items]) =>
-    items.map((item) => ({ path, ratingKey: item.ratingKey })),
-  );
-  await context.db
-    .$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ plexScan: { sectionId, scope: input.scope, offset, matches } })}::jsonb, "updatedAt" = NOW() WHERE id = ${operationId}`;
-  return found;
-}
-
-function collectPaths(
-  found: Map<string, PlexItem[]>,
-  item: PlexItem,
-  paths: ReadonlySet<string>,
-): void {
-  for (const part of item.Media?.flatMap((media) => media.Part) ?? []) {
-    if (!paths.has(part.file)) continue;
-    const items = found.get(part.file) ?? [];
-    if (!items.some((existing) => existing.ratingKey === item.ratingKey))
-      items.push(item);
-    found.set(part.file, items);
-  }
-}
-
-async function matchesIdentity(
-  context: MediaAutomationContext,
-  media: MediaItem,
-  item: PlexItem,
-): Promise<boolean> {
-  const external = z
-    .object({
-      imdb: z.string().nullable().optional(),
-      seriesTmdb: z.number().optional(),
-    })
-    .parse(media.externalIds);
-  const metadata =
-    media.kind === "episode" && item.grandparentRatingKey !== undefined
-      ? await context.plex.metadata(item.grandparentRatingKey)
-      : await context.plex.metadata(item.ratingKey);
-  const identifiers = new Set(metadata.Guid?.map((guid) => guid.id));
-  return media.kind === "episode"
-    ? external.seriesTmdb !== undefined &&
-        identifiers.has(`tmdb://${String(external.seriesTmdb)}`) &&
-        item.index === media.episodeNumber &&
-        item.parentIndex === media.seasonNumber
-    : (media.tmdbId !== null &&
-        identifiers.has(`tmdb://${String(media.tmdbId)}`)) ||
-        (external.imdb != null && identifiers.has(`imdb://${external.imdb}`));
-}
 
 export function createPublicationActivities(
   context: MediaAutomationContext,
@@ -217,21 +134,43 @@ const RestoreReceiptSchema = z.object({
   }),
 });
 
-async function publishCoverage(
+type PublicationProof = {
+  epoch: number;
+  notificationAttemptId?: string;
+  receipt?: Pick<
+    z.infer<typeof RestoreReceiptSchema>["restoreReceipt"],
+    "mediaIds" | "assets"
+  >;
+  requiredGenerations?: Readonly<Record<string, number>>;
+  releaseAttemptId?: string;
+  compensation?: CompensationPublicationPort;
+};
+
+export async function publishCoverage(
   context: MediaAutomationContext,
   mediaIds: string[],
   operationId: string,
-  proof: {
-    epoch: number;
-    notificationAttemptId?: string;
-    receipt?: Pick<
-      z.infer<typeof RestoreReceiptSchema>["restoreReceipt"],
-      "mediaIds" | "assets"
-    >;
-    requiredGenerations?: Readonly<Record<string, number>>;
-    releaseAttemptId?: string;
-  },
+  proof: PublicationProof,
 ): ReturnType<PublicationActivities["publishMediaToPlex"]> {
+  try {
+    return await publishCoverageChecked(context, mediaIds, operationId, proof);
+  } catch (error) {
+    if (error instanceof NativeCompensationProtection)
+      return { status: "blocked", reason: error.reason };
+    throw error;
+  }
+}
+
+async function publishCoverageChecked(
+  context: MediaAutomationContext,
+  mediaIds: string[],
+  operationId: string,
+  proof: PublicationProof,
+): ReturnType<PublicationActivities["publishMediaToPlex"]> {
+  const execution = proof.compensation?.execution;
+  await publicationAwait(execution, async () =>
+    proof.compensation?.beforeNetwork(),
+  );
   const runtime = await requireActiveRuntime(context.db);
   if (!runtime.active) return { status: "blocked", reason: "runtime_observe" };
   if (runtime.epoch !== proof.epoch)
@@ -262,37 +201,30 @@ async function publishCoverage(
     )
   )
     return { status: "blocked", reason: "rollback_intent_changed" };
-  if (
-    receipt !== undefined &&
-    (coverages.length !== receipt.mediaIds.length ||
-      coverages.some(
-        (coverage) =>
-          !receipt.assets.some(
-            (asset) =>
-              asset.assetId === coverage.assetId &&
-              asset.assetVersion === coverage.asset.version &&
-              asset.checksum === coverage.asset.checksum,
-          ),
-      ))
-  )
+  if (!publicationMatchesReceipt(coverages, receipt))
     return { status: "blocked", reason: "restore_evidence_obsolete" };
   const kind = coverages[0]?.media.kind === "movie" ? "movie" : "episode";
-  const allSections = await context.plex.sections();
-  const permitted = await context.permittedSections();
-  const sections = allSections.filter(
-    (section) =>
-      section.type === (kind === "movie" ? "movie" : "show") &&
-      section.key === (kind === "movie" ? permitted.movie : permitted.series),
-  );
+  const sections = await publicationSections(context, kind, execution);
   const section = sections[0];
   if (section === undefined || sections.length !== 1)
     return { status: "blocked", reason: "plex_section_ambiguous" };
-  await context.plex.refresh(section.key);
+  const publicationScope = {
+    mediaIds,
+    assetIds: coverages.map((item) => item.assetId),
+    compensation: proof.compensation,
+  };
+  await publicationAwait(execution, () =>
+    beforePublicationRefresh(context, publicationScope),
+  );
+  await publicationAwait(execution, () =>
+    context.plex.refresh(section.key, execution?.signal),
+  );
   const items = await findPublished(context, {
     sectionId: section.key,
     kind,
     paths: new Set(coverages.map((coverage) => coverage.asset.path)),
     operationId,
+    execution,
     scope:
       proof.releaseAttemptId === undefined
         ? "publication"
@@ -303,121 +235,101 @@ async function publishCoverage(
     new Set(coverages.map((coverage) => coverage.asset.path)).size
   )
     return { status: "waiting", reason: "plex_scan_pending" };
-  const verified: {
-    mediaId: string;
-    assetId: string;
-    ratingKey: string;
-    externalIds: z.infer<typeof ExternalIdsSchema>;
-  }[] = [];
-  for (const coverage of coverages) {
-    const item = await matchedItem(
-      context,
-      coverage.media,
-      items.get(coverage.asset.path) ?? [],
-    );
-    if (item === undefined)
-      return { status: "blocked", reason: "plex_identity_mismatch" };
-    const externalIds = ExternalIdsSchema.parse(coverage.media.externalIds);
-    verified.push({
-      mediaId: coverage.mediaId,
-      assetId: coverage.assetId,
-      ratingKey: item.ratingKey,
-      externalIds,
-    });
-  }
-  await serializable(context.db, async (tx) => {
-    await lockDefaultScopes(
-      tx,
-      mediaIds.map((id) => defaultScope(id)),
-      {
-        createMissing: false,
-      },
-    );
-    if (
-      !(await lockRuntimeAuthority(tx, runtime.epoch)) ||
-      !(await recordsAuthorized(tx, {
-        epoch: runtime.epoch,
-        mediaIds,
-        assetIds: coverages.map((item) => item.assetId),
-      }))
-    )
-      throw new Error("Publication ownership authority changed");
-    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
-    const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    if (
-      currentRuntime.mode !== "active" ||
-      !currentRuntime.ownershipConfirmed ||
-      currentRuntime.recoveryEpoch !== runtime.epoch
-    )
-      throw new Error("Publication recovery epoch changed");
-    for (const snapshot of coverages) {
-      const current = await tx.assetCoverage.findUniqueOrThrow({
-        where: {
-          assetId_mediaId: {
-            assetId: snapshot.assetId,
-            mediaId: snapshot.mediaId,
-          },
-        },
-        include: publicationCoverageInclude,
-      });
-      if (!samePublicationEvidence(current, snapshot))
-        throw new Error("Publication evidence changed before commit");
-    }
-    for (const entry of verified) {
-      const stillCurrent = await tx.assetCoverage.findUniqueOrThrow({
-        where: {
-          assetId_mediaId: { assetId: entry.assetId, mediaId: entry.mediaId },
-        },
-      });
-      if (!stillCurrent.current || stillCurrent.edition !== "default")
-        throw new Error("Publication asset changed during Plex verification");
-      await tx.mediaItem.update({
-        where: { id: entry.mediaId },
-        data: {
-          externalIds: {
-            ...entry.externalIds,
-            plexRatingKey: entry.ratingKey,
-            plexSectionId: section.key,
-          },
-          availability: "available",
-        },
-      });
-      await mirrorDefaultAvailability(tx, [entry.mediaId], "available");
-    }
-    await recordVerifiedPublication(
-      tx,
-      verified.map((entry) => entry.assetId),
-      runtime.epoch,
-    );
-    if (proof.notificationAttemptId !== undefined) {
-      await queuePublicationNotifications(tx, proof.notificationAttemptId);
-      const shared = await context.sharedAnnouncements?.();
-      if (shared !== undefined)
-        await queueSharedPublication(tx, proof.notificationAttemptId, shared);
-    }
-    if (proof.releaseAttemptId !== undefined)
-      await tx.acquisitionReservation.deleteMany({
-        where: { attemptId: proof.releaseAttemptId, edition: "default" },
-      });
+  const matched = await verifiedPublicationItems(context, {
+    coverages,
+    items,
+    sectionId: section.key,
+    compensation: proof.compensation !== undefined,
+    execution,
   });
+  if (matched === null)
+    return { status: "blocked", reason: "plex_identity_mismatch" };
+  const { verified, compensationItems } = matched;
+  if (
+    new Set(compensationItems.map((item) => item.ratingKey)).size !==
+    compensationItems.length
+  )
+    return { status: "blocked", reason: "plex_identity_ambiguous" };
+  await publicationAwait(execution, () =>
+    serializable(context.db, async (tx) => {
+      await publicationAwait(execution, () =>
+        lockPublicationScope(tx, publicationScope),
+      );
+      if (
+        !(await lockRuntimeAuthority(tx, runtime.epoch)) ||
+        !(await recordsAuthorized(tx, {
+          epoch: runtime.epoch,
+          mediaIds,
+          assetIds: coverages.map((item) => item.assetId),
+        }))
+      )
+        throw new Error("Publication ownership authority changed");
+      await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+      const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
+      if (
+        currentRuntime.mode !== "active" ||
+        !currentRuntime.ownershipConfirmed ||
+        currentRuntime.recoveryEpoch !== runtime.epoch
+      )
+        throw new Error("Publication recovery epoch changed");
+      for (const snapshot of coverages) {
+        const current = await tx.assetCoverage.findUniqueOrThrow({
+          where: {
+            assetId_mediaId: {
+              assetId: snapshot.assetId,
+              mediaId: snapshot.mediaId,
+            },
+          },
+          include: publicationCoverageInclude,
+        });
+        if (!samePublicationEvidence(current, snapshot))
+          throw new Error("Publication evidence changed before commit");
+      }
+      for (const entry of verified) {
+        const stillCurrent = await tx.assetCoverage.findUniqueOrThrow({
+          where: {
+            assetId_mediaId: { assetId: entry.assetId, mediaId: entry.mediaId },
+          },
+        });
+        if (!stillCurrent.current || stillCurrent.edition !== "default")
+          throw new Error("Publication asset changed during Plex verification");
+        await tx.mediaItem.update({
+          where: { id: entry.mediaId },
+          data: {
+            externalIds: {
+              ...entry.externalIds,
+              plexRatingKey: entry.ratingKey,
+              plexSectionId: section.key,
+            },
+            availability: "available",
+          },
+        });
+        await mirrorDefaultAvailability(tx, [entry.mediaId], "available");
+      }
+      if (proof.compensation === undefined)
+        await recordVerifiedPublication(
+          tx,
+          verified.map((entry) => entry.assetId),
+          runtime.epoch,
+        );
+      await proof.compensation?.commitVerified(tx, compensationItems);
+      if (proof.notificationAttemptId !== undefined) {
+        await queuePublicationNotifications(tx, proof.notificationAttemptId);
+        const shared = await context.sharedAnnouncements?.();
+        if (shared !== undefined)
+          await queueSharedPublication(tx, proof.notificationAttemptId, shared);
+      }
+      if (proof.releaseAttemptId !== undefined)
+        await tx.acquisitionReservation.deleteMany({
+          where: { attemptId: proof.releaseAttemptId, edition: "default" },
+        });
+      execution?.signal.throwIfAborted();
+      execution?.assertActive();
+    }),
+  );
   return { status: "available", reason: null };
-}
-
-async function matchedItem(
-  context: MediaAutomationContext,
-  media: MediaItem,
-  candidates: PlexItem[],
-): Promise<PlexItem | undefined> {
-  for (const candidate of candidates) {
-    if (
-      candidate.type === media.kind &&
-      (await matchesIdentity(context, media, candidate))
-    )
-      return candidate;
-  }
-  return undefined;
 }
 
 async function finalize(

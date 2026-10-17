@@ -37,6 +37,9 @@ export function stableNativeFiles(raw: unknown) {
           ...(files.settledEvidence === undefined
             ? {}
             : { settledEvidence: files.settledEvidence }),
+          ...(files.compensationEvidence === undefined
+            ? {}
+            : { compensationEvidence: files.compensationEvidence }),
         }),
     planId: files.planId,
     recoveryEpoch: files.recoveryEpoch,

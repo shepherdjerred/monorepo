@@ -6,8 +6,9 @@ import {
   snapshotArchiveSubtitles,
   assertArchiveSubtitleBindings,
 } from "#automation/native-archive/subtitles.ts";
-import { resolvePriorNativeBinding } from "./prior-binding.ts";
+import { resolveArchiveAuthority } from "./authority.ts";
 import type { archiveClosure } from "./closure.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 export async function snapshotArchiveFile(
   tx: Prisma.TransactionClient,
   asset: Awaited<ReturnType<typeof archiveClosure>>["assets"][number],
@@ -16,6 +17,7 @@ export async function snapshotArchiveFile(
     cleanupIds: string[];
     epoch: number;
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const { cleanups, cleanupIds, epoch } = selection;
   const kinds = new Set(asset.coverage.map((row) => row.media.kind));
@@ -78,7 +80,7 @@ export async function snapshotArchiveFile(
   });
   assertArchiveSubtitleBindings(file);
   if (file.ownershipEpoch === epoch)
-    file.authority = await resolvePriorNativeBinding(tx, file, epoch);
+    file.authority = await resolveArchiveAuthority(tx, file, budget);
 
   return file;
 }

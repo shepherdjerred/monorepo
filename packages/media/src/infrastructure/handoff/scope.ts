@@ -1,6 +1,7 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import path from "node:path";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -82,6 +83,7 @@ async function projectScope(
       createMissing: true,
     },
   );
+  await assertNoPublicationCompensationFence(tx, { mediaIds });
   const media = await tx.mediaItem.findMany({
     where: { id: { in: mediaIds } },
     include: {

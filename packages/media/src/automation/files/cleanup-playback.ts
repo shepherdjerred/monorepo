@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { workerFilePath } from "./paths/locations.ts";
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import type { ContentReference } from "./content-proof.ts";
 import { FileGuardError, type FileContext, type Transaction } from "./types.ts";
@@ -58,7 +59,10 @@ export function playbackReferences(
   return snapshots.map((snapshot) => ({
     libraryKind,
     root: "library",
-    path: nodePath.relative(context.roots[libraryKind].library, snapshot.path),
+    path: nodePath.relative(
+      context.roots[libraryKind].library,
+      workerFilePath(context, snapshot.path),
+    ),
   }));
 }
 
@@ -94,7 +98,9 @@ export async function assertCurrentPlayback(
     )
       throw new FileGuardError("cleanup_playback_changed");
     if (
-      (await context.contentProof.digest(snapshot.path)) !== snapshot.checksum
+      (await context.contentProof.digest(
+        workerFilePath(context, snapshot.path),
+      )) !== snapshot.checksum
     )
       throw new FileGuardError("cleanup_playback_content_changed");
   }

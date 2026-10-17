@@ -17,10 +17,13 @@ import {
 import { assertNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
 import { observeNativeTorrents } from "#migration/native-network/torrents.ts";
 import { observeArchivePlex } from "./plex.ts";
+import type { MediaAutomationContext } from "#automation/context.ts";
+import { observeSupersededCoordinators } from "./coordinators.ts";
 
-export type NativeArchiveObserverContext = NativeQuarantineObserverContext & {
-  archiveExecution: () => NativeArchiveExecution;
-};
+export type NativeArchiveObserverContext = NativeQuarantineObserverContext &
+  Pick<MediaAutomationContext, "describeWorkflow"> & {
+    archiveExecution: () => NativeArchiveExecution;
+  };
 
 /** IO only; callers bind the complete immutable selection before and after this observation. */
 export async function observeArchiveEvidence(
@@ -61,6 +64,11 @@ export async function observeArchiveEvidence(
     ]),
   );
   signal.throwIfAborted();
+  const supersededCoordinators = await observeSupersededCoordinators(
+    context,
+    input.scope,
+    execution,
+  );
   const expiresAt = new Date(
     Math.min(
       Date.parse(quiescence.expiresAt),
@@ -79,5 +87,6 @@ export async function observeArchiveEvidence(
     mounts,
     plex,
     torrents,
+    ...(supersededCoordinators === undefined ? {} : { supersededCoordinators }),
   });
 }

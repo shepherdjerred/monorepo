@@ -33,6 +33,8 @@ import { recoveryView } from "./view.ts";
 import { recoveryAuthority } from "./authority.ts";
 import { assertRecoveryRespondent } from "./permissions.ts";
 import { claimAccounting } from "./legacy-claims/accounting.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import { assertCompensationGroupUnchanged } from "#infrastructure/native-compensation/routing.ts";
 
 export class PrismaRecovery extends MediaCommandBase {
   constructor(
@@ -192,6 +194,7 @@ export class PrismaRecovery extends MediaCommandBase {
       async (db) => {
         const ids = await sharedRecoveryMedia(db, input.mediaIds);
         await lockRecoveryScope(db, ids);
+        await assertCompensationGroupUnchanged(db, ids, ids);
         await currentOwner(db, actor);
         const scope = await snapshotRecoveryScope(db, ids, this.machineId);
         const review = await db.recoveryReview.create({
@@ -199,8 +202,8 @@ export class PrismaRecovery extends MediaCommandBase {
             actorId: actor.id,
             recoveryEpoch: scope.recoveryEpoch,
             runtimeVersion: scope.runtimeVersion,
-            scope,
-            scopeHash: snapshotHash(scope),
+            scope: z.record(z.string(), z.json()).parse(scope),
+            scopeHash: snapshotHash(nativeJson(scope)),
             expiresAt: new Date(Date.now() + 7 * 86_400_000),
           },
         });
@@ -407,6 +410,10 @@ export class PrismaRecovery extends MediaCommandBase {
           if (changed.count !== 1)
             throw recoveryConflict("Recovery hold changed");
         }
+        await queueHouseholdCompensations(db, {
+          mediaIds: scope.media.map((item) => item.id),
+          triggerKey: `household:${id}`,
+        });
         await db.recoveryReview.update({
           where: { id },
           data: { state: "released", version: { increment: 1 } },
@@ -451,6 +458,11 @@ async function currentReview(
     db,
     scope.media.map((media) => media.id),
   );
+  await assertCompensationGroupUnchanged(
+    db,
+    scope.media.map((media) => media.id),
+    scope.media.map((media) => media.id),
+  );
   await db.$queryRaw`SELECT id FROM "RecoveryReview" WHERE id = ${id} FOR UPDATE`;
   const review = await db.recoveryReview.findUniqueOrThrow({ where: { id } });
   if (review.state !== "awaiting_responses" || review.expiresAt <= new Date())
@@ -463,7 +475,7 @@ async function currentReview(
     machineId,
     isRecoveryScopeV2(scope) ? 2 : 1,
   );
-  if (snapshotHash(current) !== review.scopeHash)
+  if (snapshotHash(nativeJson(current)) !== review.scopeHash)
     throw recoveryConflict(
       "Household, requests, pins, physical coverage or recovery authority changed; prepare a fresh review",
     );
@@ -481,3 +493,4 @@ async function currentOwner(db: Prisma.TransactionClient, actor: MediaActor) {
       403,
     );
 }
+import { queueHouseholdCompensations } from "#infrastructure/native-compensation/routing.ts";

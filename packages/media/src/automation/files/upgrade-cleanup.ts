@@ -1,4 +1,5 @@
 import { Prisma } from "#generated/prisma/client.ts";
+import { workerFilePath } from "./paths/locations.ts";
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type UpgradeCleanupPlan,
 } from "./upgrade-cleanup-plan.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { videoSubtitleWhere } from "./subtitle-lifecycle/ownership.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
@@ -77,6 +79,11 @@ export async function cleanupUpgrade(
       });
       if (current.state === "purged") return;
       const authorize = async () => {
+        await assertPublicationUnfenced(tx, plan.mediaIds, [
+          current.assetId,
+          current.successorAssetId,
+          ...playback.map((item) => item.id),
+        ]);
         await assertDefaultPhysicalAsset(tx, current.assetId);
         await assertDefaultPhysicalAsset(tx, current.successorAssetId);
         if (!(await context.enabled.purge()))
@@ -148,14 +155,19 @@ export async function cleanupUpgrade(
       for (const file of plan.files) {
         if (context.contentProof === undefined)
           throw new Error("Cleanup proof missing");
-        if ((await context.contentProof.digest(file.path)) !== null) continue;
+        if (
+          (await context.contentProof.digest(
+            workerFilePath(context, file.path),
+          )) !== null
+        )
+          continue;
         const journal = await operations.readManifest(
           `upgrade-purge-${cleanupId}-${file.id}`,
         );
         if (
           journal?.kind !== "purge" ||
-          journal.source !== file.path ||
-          journal.target !== file.path ||
+          journal.source !== workerFilePath(context, file.path) ||
+          journal.target !== workerFilePath(context, file.path) ||
           journal.sha256 !== file.checksum
         )
           throw new FileGuardError("cleanup_missing_unproven");

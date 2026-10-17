@@ -1,6 +1,31 @@
 import { expect, test } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 
+function reuseSelections(receiptId: string) {
+  const valid = {
+    scope: {
+      schemaVersion: 2,
+      lifecycleKind: "superseded_archive",
+      request: { activation: "extend" },
+    },
+    bindings: [],
+    reusedBindings: [{ receiptId }],
+  };
+  const selections = [
+    {},
+    { ...valid, scope: { schemaVersion: 1 } },
+    {
+      ...valid,
+      scope: { ...valid.scope, request: { activation: "activate" } },
+    },
+    { ...valid, bindings: [{}] },
+    { ...valid, reusedBindings: [] },
+    { ...valid, reusedBindings: {} },
+    { ...valid, reusedBindings: Array.from({ length: 26 }, () => ({})) },
+  ];
+  return { valid, selections };
+}
+
 test("020 preserves populated history and admits only exact archive observation/reuse branches", async () => {
   const cluster = await startMediaTestPostgres({
     migrationCeiling: "20261017001900_watch_observation_fence",
@@ -76,6 +101,7 @@ test("020 preserves populated history and admits only exact archive observation/
     expect(await snapshot()).toEqual(before);
     expect(await db.nativeArchiveCleanupContinuation.count()).toBe(0);
     const continuation = await db.nativeArchiveCleanupContinuation.create({
+      select: { id: true },
       data: {
         receiptId: receipt.id,
         originalCleanupId: cleanup.id,
@@ -86,37 +112,44 @@ test("020 preserves populated history and admits only exact archive observation/
     });
     await expect(
       db.nativeArchiveCleanupContinuation.update({
+        select: { id: true },
         where: { id: continuation.id },
         data: { descriptor: { changed: true } },
       }),
     ).rejects.toThrow();
     await db.nativeArchiveCleanupContinuation.update({
+      select: { id: true },
       where: { id: continuation.id },
       data: { executionEvidence: { original: true } },
     });
     await expect(
       db.nativeArchiveCleanupContinuation.update({
+        select: { id: true },
         where: { id: continuation.id },
         data: { executionEvidence: { changed: true } },
       }),
     ).rejects.toThrow();
     await db.nativeArchiveCleanupContinuation.update({
+      select: { id: true },
       where: { id: continuation.id },
       data: { completion: { original: true }, state: "cleaned" },
     });
     await expect(
       db.nativeArchiveCleanupContinuation.update({
+        select: { id: true },
         where: { id: continuation.id },
         data: { completion: { changed: true } },
       }),
     ).rejects.toThrow();
     await expect(
       db.nativeArchiveCleanupContinuation.delete({
+        select: { id: true },
         where: { id: continuation.id },
       }),
     ).rejects.toThrow();
     await expect(
       db.nativeArchiveCleanupContinuation.create({
+        select: { id: true },
         data: {
           receiptId: receipt.id,
           originalCleanupId: crypto.randomUUID(),
@@ -140,27 +173,7 @@ test("020 preserves populated history and admits only exact archive observation/
         data: { ...observation, kind: "archive_other" },
       }),
     ).rejects.toThrow();
-    const valid = {
-      scope: {
-        schemaVersion: 2,
-        lifecycleKind: "superseded_archive",
-        request: { activation: "extend" },
-      },
-      bindings: [],
-      reusedBindings: [{ receiptId: receipt.id }],
-    };
-    const selections = [
-      {},
-      { ...valid, scope: { schemaVersion: 1 } },
-      {
-        ...valid,
-        scope: { ...valid.scope, request: { activation: "activate" } },
-      },
-      { ...valid, bindings: [{}] },
-      { ...valid, reusedBindings: [] },
-      { ...valid, reusedBindings: {} },
-      { ...valid, reusedBindings: Array.from({ length: 26 }, () => ({})) },
-    ];
+    const { valid, selections } = reuseSelections(receipt.id);
     for (const selection of [...selections, valid]) {
       const next = await db.nativeRecoveryPlan.create({
         data: {

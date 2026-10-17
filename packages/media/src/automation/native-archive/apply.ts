@@ -15,7 +15,8 @@ import {
   stableArchiveNetwork,
 } from "#infrastructure/native-archive/plan.ts";
 import { nativePhysicalIdentity } from "#infrastructure/native-archive/physical-identity.ts";
-import { assertPriorNativeBinding } from "#infrastructure/native-archive/prior-binding.ts";
+import { assertArchiveAuthority } from "#infrastructure/native-archive/authority.ts";
+import { commitArchiveSupersessions } from "#infrastructure/native-archive/supersession.ts";
 import {
   assertNativeEvidenceFresh,
   installNativeAuthority,
@@ -39,8 +40,13 @@ async function rebindFiles(
   const bindings: NativeArchiveBinding[] = [];
   for (const file of prepared.scope.files) {
     assertArchiveActive(context.execution);
-    if (file.authority.kind === "prior_native_binding") {
-      await assertPriorNativeBinding(tx, file, file.authority);
+    if (file.authority.kind !== "rebaseline") {
+      await assertArchiveAuthority(
+        tx,
+        file,
+        file.authority,
+        prepared.authorityProof.budget,
+      );
       continue;
     }
     if (file.ownershipEpoch >= epoch)
@@ -120,7 +126,7 @@ export async function applyPreparedNativeArchive(
         snapshotHash(finished) !== plan.planHash ||
         finished.scopeHash !== snapshotHash(z.json().parse(prepared.scope)) ||
         snapshotHash(finished.files) !==
-          snapshotHash(stableArchiveFiles(prepared.evidence))
+          snapshotHash(z.json().parse(stableArchiveFiles(prepared.evidence)))
       )
         throw new Error("Archive reviewed physical identity changed");
       const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
@@ -134,7 +140,7 @@ export async function applyPreparedNativeArchive(
         network.planId !== plan.id ||
         network.recoveryEpoch !== runtime.recoveryEpoch ||
         observation.expiresAt <= new Date() ||
-        observation.evidenceHash !== snapshotHash(network) ||
+        observation.evidenceHash !== snapshotHash(z.json().parse(network)) ||
         snapshotHash(finished.network) !==
           snapshotHash(stableArchiveNetwork(network))
       )
@@ -161,9 +167,7 @@ export async function applyPreparedNativeArchive(
           bindings.flatMap((binding) => binding.mediaIds),
         );
         const reusedBindings = prepared.scope.files.flatMap((file) =>
-          file.authority.kind === "prior_native_binding"
-            ? [file.authority]
-            : [],
+          file.authority.kind === "rebaseline" ? [] : [file.authority],
         );
         const policies = await appendNativeSubtitlePolicies(tx, {
           policies: prepared.scope.subtitlePolicies.filter((policy) =>
@@ -222,6 +226,14 @@ export async function applyPreparedNativeArchive(
               policies,
             }),
           },
+        });
+        await commitArchiveSupersessions(tx, {
+          scope: prepared.scope,
+          fileEvidence: prepared.evidence,
+          networkEvidence: network,
+          planId: plan.id,
+          receiptId: receipt.id,
+          planHash: input.planHash,
         });
         for (const edge of prepared.scope.edges.filter(
           (item) => item.selected,

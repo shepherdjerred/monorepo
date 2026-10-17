@@ -1,4 +1,5 @@
 import { assertDefaultFileEdition } from "#automation/files/editions/guard.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
@@ -73,6 +74,7 @@ export async function assertAcquisition(
   const epoch = z
     .object({ recoveryEpoch: z.number().int() })
     .parse(attempt).recoveryEpoch;
+  await assertPublicationUnfenced(tx, attempt.mediaIds);
   if (
     attempt.edition !== "default" ||
     attempt.reservations.some((row) => row.edition !== "default")
@@ -135,6 +137,7 @@ export async function assertRetention(input: {
   purge: boolean;
 }): Promise<void> {
   const { tx, context } = input;
+  await assertPublicationUnfenced(tx, input.mediaIds);
   await assertNoMediaSubtitleReplacement(tx, input.mediaIds);
   await lockEffectiveRequests(tx, input.mediaIds);
   const decision = await tx.retentionDecision.findUniqueOrThrow({

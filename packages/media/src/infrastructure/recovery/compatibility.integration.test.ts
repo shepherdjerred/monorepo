@@ -7,6 +7,7 @@ import {
   RecoveryStoredResponseSchema,
 } from "#shared/recovery.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { lockRecoveryScope, snapshotRecoveryScope } from "./scope.ts";
 import { responseJson } from "./release.ts";
 import { recoveryHarness, releaseInput } from "./test-support.ts";
@@ -25,7 +26,7 @@ test("unversioned v1 scope and response retain their original hashes and conserv
         recoveryEpoch: 3,
         runtimeVersion: 7,
         scope,
-        scopeHash: snapshotHash(scope),
+        scopeHash: snapshotHash(nativeJson(scope)),
         expiresAt: new Date(Date.now() + 86_400_000),
       },
     });

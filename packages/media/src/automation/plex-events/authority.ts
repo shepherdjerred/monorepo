@@ -17,6 +17,7 @@ import {
   type ObservePlexHintInput,
 } from "#shared/plex-events/contract.ts";
 import { watchAwait, type WatchExecution } from "./execution.ts";
+import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
 
 export const PlexIdentitySchema = z.object({
   plexRatingKey: z.string().regex(/^\d+$/u).optional(),
@@ -28,6 +29,24 @@ type WatchScope = {
   sections: { movie: string; series: string };
   expectedHint?: ObservePlexHintInput;
 };
+
+function hintTargetMatches(
+  scope: WatchScope,
+  target: {
+    sectionId: string | undefined;
+    kind: MediaKind;
+    targetEpoch: number;
+    runtimeEpoch: number;
+  },
+) {
+  if (scope.expectedHint === undefined) return true;
+  return (
+    target.sectionId ===
+      (target.kind === "movie"
+        ? scope.sections.movie
+        : scope.sections.series) && target.targetEpoch === target.runtimeEpoch
+  );
+}
 
 export async function watchScope(
   context: MediaAutomationContext,
@@ -83,15 +102,23 @@ export async function lockWatchAuthority(
   const identity = PlexIdentitySchema.parse(media.externalIds);
   if (media.kind !== "movie" && media.kind !== "episode") return null;
   if (!(await uniqueBinding(tx, media, identity, execution))) return null;
+  const compensation = await watchAwait(
+    execution,
+    compensationPlayback(tx, {
+      mediaId: media.id,
+      recoveryEpoch: runtime.recoveryEpoch,
+      serverMachineId: scope.serverMachineId,
+      externalIds: media.externalIds,
+    }),
+  );
+  if (compensation.state === "protected") return null;
   if (
-    scope.expectedHint !== undefined &&
-    identity.plexSectionId !==
-      (media.kind === "movie" ? scope.sections.movie : scope.sections.series)
-  )
-    return null;
-  if (
-    scope.expectedHint !== undefined &&
-    target.automationEpoch !== runtime.recoveryEpoch
+    !hintTargetMatches(scope, {
+      sectionId: identity.plexSectionId,
+      kind: media.kind,
+      targetEpoch: target.automationEpoch,
+      runtimeEpoch: runtime.recoveryEpoch,
+    })
   )
     return null;
   if (
@@ -152,6 +179,9 @@ export async function lockWatchAuthority(
     mediaId: media.id,
     kind: media.kind,
     identity,
+    ...(compensation.state === "verified"
+      ? { compensationPublicationHash: compensation.proofHash }
+      : {}),
     serverMachineId: scope.serverMachineId,
     sections: scope.sections,
     epoch: runtime.recoveryEpoch,

@@ -17,6 +17,7 @@ import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { loadProfile } from "./acquisition-candidates.ts";
 import { authorizedSubmission } from "./reconciliation/submission.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
 import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
@@ -76,6 +77,9 @@ export async function validAttempt(
   }
   const identity = await serializable(context.db, async (tx) => {
     await lockAcquisitionMedia(tx, attempt.mediaIds);
+    await assertNoPublicationCompensationFence(tx, {
+      mediaIds: attempt.mediaIds,
+    });
     await lockEffectiveRequests(tx, attempt.mediaIds);
     if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return null;
     await assertLegacySubmissionSponsor(tx, attempt, context.serverMachineId);
@@ -99,6 +103,9 @@ export async function validAttempt(
     if (intent.generation === generations[intent.mediaId]) continue;
     await serializable(context.db, async (tx) => {
       await lockAcquisitionMedia(tx, attempt.mediaIds);
+      await assertNoPublicationCompensationFence(tx, {
+        mediaIds: attempt.mediaIds,
+      });
       await lockEffectiveRequests(tx, attempt.mediaIds);
       if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)))
         throw new IntegrationError("media", "conflict");
@@ -230,6 +237,9 @@ async function registerObservedSubmission(
   });
   const registered = await serializable(context.db, async (tx) => {
     await lockAcquisitionMedia(tx, attempt.mediaIds);
+    await assertNoPublicationCompensationFence(tx, {
+      mediaIds: attempt.mediaIds,
+    });
     await lockEffectiveRequests(tx, attempt.mediaIds);
     if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return false;
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;

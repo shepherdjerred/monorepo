@@ -13,10 +13,12 @@ import {
 } from "#client/components.tsx";
 import { NativeRecoveryReview } from "./review.tsx";
 import { NativeArchiveIndex } from "./archive/index.tsx";
+import { NativeCompensationIndex } from "./compensation/index.tsx";
 
 export function NativeRecoveryPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
   if (id === "archives") return <NativeArchiveIndex user={user} />;
+  if (id === "compensations") return <NativeCompensationIndex user={user} />;
   return id === undefined ? (
     <NativeRecoveryIndex user={user} />
   ) : (
@@ -83,6 +85,10 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
         <Link to="/recovery">Household recovery protection</Link>
         {" · "}
         <Link to="/recovery/native/archives">Review upgrade archives</Link>
+        {" · "}
+        <Link to="/recovery/native/compensations">
+          Review interrupted upgrades
+        </Link>
       </p>
       {inventory.isPending && <Loading />}
       {inventory.error !== null && <ErrorNotice error={inventory.error} />}

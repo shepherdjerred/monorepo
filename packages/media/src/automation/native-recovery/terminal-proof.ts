@@ -126,7 +126,7 @@ export async function verifyInstallationJournal(
 }
 
 export async function terminalFileEvidence(
-  input: ProofInput,
+  input: Pick<ProofInput, "content" | "resolvePath">,
   file: NativeTerminalDescriptor["files"][number],
 ) {
   const local = input.resolvePath(file.canonicalPath);

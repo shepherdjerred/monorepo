@@ -86,9 +86,9 @@ export function NativeArchiveReview({
               records. Quality and provenance are preserved.
             </p>
             <p>
-              {file.authority.kind === "prior_native_binding"
-                ? "Existing unchanged physical approval is reused; ownership versions and holds are not renewed."
-                : "This exact physical version needs new ownership proof."}
+              {file.authority.kind === "rebaseline"
+                ? "This exact physical version needs new ownership proof."
+                : "An exact recorded physical approval or publication transition is reused; ownership versions and holds are not renewed."}
             </p>
             {scope.edges
               .filter((edge) => edge.assetId === file.assetId)
@@ -101,6 +101,17 @@ export function NativeArchiveReview({
           </article>
         ))}
       </section>
+      {scope.supersessions !== undefined && (
+        <section className="panel">
+          <h2>Replace stopped cleanup approvals</h2>
+          <p>
+            This review replaces {scope.supersessions.length} earlier cleanup
+            approval(s) after a recorded upgrade. Earlier workers must have
+            stopped, all retained files must be unchanged, and no earlier purge
+            may have begun. The original expiry deadlines remain unchanged.
+          </p>
+        </section>
+      )}
       {scope.terminalDependencies.length > 0 && (
         <section className="panel">
           <h2>Already removed dependencies</h2>
@@ -122,6 +133,13 @@ export function NativeArchiveReview({
               <p>
                 Original expiry: {new Date(item.expiresAt).toLocaleString()}
               </p>
+              {item.state === "superseded" && (
+                <p>
+                  A newer exact review replaced this stopped approval. This
+                  approval cannot restart or delete files; it is not a cleanup
+                  completion.
+                </p>
+              )}
               {item.reasons.map((reason) => (
                 <p key={reason}>{archiveReasons[reason]}</p>
               ))}
@@ -145,9 +163,10 @@ export function NativeArchiveReview({
           </li>
         </ul>
         <p>
-          A later upgrade or an incomplete historical effect may require
-          recovery support that is not available yet. Preparing another review
-          does not override that protection.
+          A later upgrade needs its exact durable publication record and proof
+          that earlier cleanup stopped without effects. Missing records or
+          incomplete effects remain protected; another review cannot override
+          them.
         </p>
         {review.state === "awaiting_review" && (
           <>

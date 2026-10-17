@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CompensationPhysicalReferenceSchema } from "#shared/publication-proof/references.ts";
 import {
   RecoveryClaimAcknowledgementSchema,
   RecoveryClaimProjectionSchema,
@@ -154,6 +155,11 @@ export const LegacyRecoveryScopeSchema = z
           id: z.uuid(),
           planHash: Hash,
           assetIds: z.array(z.uuid()),
+          compensationReferences: z
+            .array(CompensationPhysicalReferenceSchema)
+            .min(1)
+            .max(25)
+            .optional(),
         }),
       )
       .default([]),

@@ -6,6 +6,7 @@ import type { Database } from "./database.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { isRetryableTransaction } from "./locks.ts";
 import { routeNativeQuarantineOperation } from "./native-quarantine/continuation.ts";
+import { routeCompensationDemand } from "./native-compensation/routing.ts";
 type Transaction = Prisma.TransactionClient;
 type JsonResult = Prisma.InputJsonObject;
 function canonical(value: unknown): string {
@@ -132,6 +133,14 @@ export class MediaCommandBase {
       recoveryEpoch: runtime.recoveryEpoch,
       ...details,
     };
+    const compensation = await routeCompensationDemand(db, {
+      kind,
+      targetId: mediaId,
+      payload: initialPayload,
+      key: `compensation-demand:${operationId}`,
+      userId: actor.id,
+    });
+    if (compensation !== null) return compensation;
     const route = await routeNativeQuarantineOperation(db, {
       kind,
       targetId: mediaId,

@@ -1,4 +1,4 @@
-import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
 import {
   FileGuardError,
   type FileContext,
@@ -6,6 +6,7 @@ import {
   type Transaction,
 } from "./types.ts";
 import { assertRuntime, assertNoMediaSubtitleReplacement } from "./guards.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { fileOperations } from "./file-operations.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 
@@ -24,6 +25,7 @@ export async function quarantineInitialPublication(input: {
     if (!(await context.enabled.acquisition()))
       throw new FileGuardError("acquisition_disabled");
     await assertRuntime(tx, recoveryEpoch);
+    await assertPublicationUnfenced(tx, entry.mediaIds, [entry.assetId]);
     await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
     const intents = await tx.mediaIntent.findMany({
       where: { mediaId: { in: entry.mediaIds }, edition: "default" },
@@ -47,7 +49,13 @@ export async function quarantineInitialPublication(input: {
       asset.ownershipEpoch !== recoveryEpoch ||
       asset.checksum !== entry.checksum ||
       asset.state !== "published" ||
-      asset.path !== nodePath.join(roots.library, entry.libraryPath) ||
+      asset.path !==
+        storedFilePath(
+          context,
+          entry.libraryKind,
+          "library",
+          entry.libraryPath,
+        ) ||
       asset.coverage.length !== entry.mediaIds.length ||
       asset.coverage.some((item) => !entry.mediaIds.includes(item.mediaId))
     )
@@ -67,7 +75,12 @@ export async function quarantineInitialPublication(input: {
   await tx.libraryAsset.update({
     where: { id: entry.assetId },
     data: {
-      path: nodePath.join(roots.control, "quarantine", entry.assetId),
+      path: storedFilePath(
+        context,
+        entry.libraryKind,
+        "control",
+        `quarantine/${entry.assetId}`,
+      ),
       state: "rejected",
       version: { increment: 1 },
     },

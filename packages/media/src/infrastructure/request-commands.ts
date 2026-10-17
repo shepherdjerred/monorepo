@@ -37,8 +37,14 @@ export class MediaRequestCommands extends MediaCommandBase {
     input: CreateRequest,
     expected?: ExpectedTarget,
   ) {
-    await lockCanonicalMedia(db, [input.mediaId]);
-    await lockExistingDefaultTargets(db, [input.mediaId]);
+    const compensationGroup = await compensationGroupMedia(db, [input.mediaId]);
+    await lockCanonicalMedia(db, compensationGroup);
+    await lockExistingDefaultTargets(db, compensationGroup);
+    await assertCompensationGroupUnchanged(
+      db,
+      [input.mediaId],
+      compensationGroup,
+    );
     if (expected !== undefined)
       await assertDefaultCommandCas(db, defaultScope(input.mediaId), expected);
     const targets = await lockDefaultScopes(db, [defaultScope(input.mediaId)], {
@@ -52,7 +58,7 @@ export class MediaRequestCommands extends MediaCommandBase {
         "Canonical media ancestry requires reconciliation",
         409,
       );
-    await lockEffectiveRequests(db, [input.mediaId]);
+    await lockEffectiveRequests(db, compensationGroup);
     const automationEpoch = await commandAutomationEpoch(db);
     const media = await db.mediaItem.findUnique({
       where: { id: input.mediaId },
@@ -269,3 +275,7 @@ export class MediaRequestCommands extends MediaCommandBase {
     return { requestId, operationId, status: "queued" };
   }
 }
+import {
+  compensationGroupMedia,
+  assertCompensationGroupUnchanged,
+} from "#infrastructure/native-compensation/routing.ts";

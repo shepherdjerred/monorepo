@@ -16,6 +16,7 @@ import {
 } from "#infrastructure/request-claims.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { NativeQuarantineProtection } from "./errors.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 
 export type NativeQuarantineRestoreInput = {
   operationId: string;
@@ -123,6 +124,10 @@ export async function assertNativeQuarantineRestore(
     initial.descriptor,
   );
   await lockDefaultMedia(tx, descriptor.group.mediaIds);
+  await assertNoPublicationCompensationFence(tx, {
+    mediaIds: descriptor.group.mediaIds,
+    assetIds: descriptor.group.assetIds,
+  });
   await lockEffectiveRequests(tx, descriptor.group.mediaIds);
   if (!(await lockRuntimeAuthority(tx, initial.recoveryEpoch)))
     throw new NativeQuarantineProtection("native_quarantine_runtime_protected");

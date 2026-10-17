@@ -81,6 +81,7 @@ async function persistExecution(
         const latest = await archiveCleanupAuthority(tx, context, input);
         if (latest.scopeHash !== scopeHash)
           throw new Error("Archive selection changed before execution");
+        return latest.beforeEffect;
       };
       await withCleanupLocks(context, proof, authorize, async () => {
         if (current.row.executionEvidence === null)
@@ -101,6 +102,7 @@ async function persistExecution(
       });
       assertArchiveActive(context.execution);
       assertArchiveCleanupFresh(current.network);
+      current.beforeEffect();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );
@@ -126,6 +128,7 @@ async function executeCleanup(
         )
           throw new Error("Archive exact execution authority changed");
         assertArchiveActive(context.execution);
+        return latest.beforeEffect;
       };
       await withCleanupLocks(context, proof, authorize, async (operations) => {
         const journals = [];
@@ -238,6 +241,7 @@ async function executeCleanup(
         throw new Error("Archive authority expired before commit");
       assertArchiveCleanupFresh(current.network);
       assertArchiveActive(context.execution);
+      current.beforeEffect();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );

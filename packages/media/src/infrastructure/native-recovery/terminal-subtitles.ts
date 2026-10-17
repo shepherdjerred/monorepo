@@ -10,6 +10,8 @@ import {
   type NativeSubtitleSnapshot,
 } from "#shared/native-subtitles.ts";
 import type { TerminalSubtitleBindingSchema } from "./terminal-rebinding.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationSubtitleLineageSchema } from "#shared/publication-proof/subtitle-lineage.ts";
 
 const Receipt = z.object({
   schemaVersion: z.literal(1),
@@ -63,10 +65,12 @@ type Input = {
 export async function terminalSubtitleChain(
   tx: Prisma.TransactionClient,
   input: Input,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const files: NativeTerminalDescriptor["files"] = [];
   const journals: NativeTerminalDescriptor["journals"] = [];
   const history = [];
+  const artifactIdentities = [];
   let id = input.subtitleId;
   let checksum = input.checksum;
   let expected: NativeSubtitleSnapshot | undefined;
@@ -81,14 +85,15 @@ export async function terminalSubtitleChain(
     if (isCurrent(subtitle, input, checksum)) {
       const current = nativeSubtitleSnapshot(subtitle);
       assertRenewedSubtitle(expected, current, input);
-      return { files, journals, history, current };
+      return { files, journals, history, current, artifactIdentities };
     }
     if (index === 20) break;
     const rows = await tx.subtitleReplacement.findMany({
       where: { oldSubtitleId: id, receipt: { outcome: "installed" } },
       include: { receipt: true },
-      take: 2,
+      take: Math.min(2, budget?.take ?? 2),
     });
+    budget?.consume(rows.length);
     const row = rows[0];
     if (row === undefined || rows.length !== 1 || row.receipt === null)
       throw new Error(
@@ -107,6 +112,10 @@ export async function terminalSubtitleChain(
     const artifacts = replacementArtifacts({ input, row, scope, receipt });
     files.push(...artifacts.files);
     journals.push(...artifacts.journals);
+    if (row.cleanupState !== "cleaned")
+      artifactIdentities.push(
+        ...receiptArtifactIdentities(row.receipt.evidence, receipt, artifacts),
+      );
     history.push({
       row,
       subtitle: {
@@ -327,7 +336,10 @@ function replacementArtifacts({
   if (
     archive?.identity?.checksum !== scope.old.checksum ||
     source?.identity?.checksum !== scope.candidate.checksum ||
-    archive.path !== receipt.archivePath
+    (receipt.archivePath !== path.join(root, relative.oldArchive) &&
+      receipt.archivePath !== archive.path) ||
+    archive.path !==
+      path.join(path.dirname(path.dirname(archive.path)), relative.oldArchive)
   )
     throw new Error("Native replacement artifact receipt changed");
   const recordedRoot = path.dirname(path.dirname(archive.path));
@@ -362,4 +374,38 @@ function replacementArtifacts({
       previousSha256: null,
     });
   return { files, journals };
+}
+
+function receiptArtifactIdentities(
+  evidence: unknown,
+  receipt: z.infer<typeof Receipt>,
+  artifacts: ReturnType<typeof replacementArtifacts>,
+) {
+  const artifactIdentities = [];
+  const raw = z
+    .object({
+      artifacts: z.array(
+        z.object({
+          path: z.string(),
+          identity:
+            PublicationSubtitleLineageSchema.shape.artifactIdentities.element.shape.identity.nullable(),
+        }),
+      ),
+    })
+    .parse(evidence);
+  for (const item of raw.artifacts) {
+    if (item.identity === null) continue;
+    const artifactIndex = receipt.artifacts.findIndex(
+      (artifact) => artifact.path === item.path,
+    );
+    const file = artifacts.files[artifactIndex];
+    if (file?.expectedChecksum !== item.identity.checksum)
+      throw new Error("Native replacement artifact identity is unbound");
+    artifactIdentities.push({
+      canonicalPath: file.canonicalPath,
+      identity: item.identity,
+    });
+  }
+
+  return artifactIdentities;
 }

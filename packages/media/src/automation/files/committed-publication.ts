@@ -1,5 +1,5 @@
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
-import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
 import { z } from "zod";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
@@ -114,8 +114,10 @@ async function assertCommittedAsset(input: {
     asset.ownershipEpoch !== input.recoveryEpoch ||
     asset.state !== "published" ||
     asset.path !==
-      nodePath.join(
-        context.roots[entry.libraryKind].library,
+      storedFilePath(
+        context,
+        entry.libraryKind,
+        "library",
         entry.libraryPath,
       ) ||
     asset.checksum !== entry.checksum ||

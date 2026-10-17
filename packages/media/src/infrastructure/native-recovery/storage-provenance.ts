@@ -9,6 +9,11 @@ import {
 } from "#shared/canonical-storage.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import { NativeCompensationSelectionSchema } from "#shared/native-recovery/compensation-runtime.ts";
+import { FinishedNativeCompensationSchema } from "#shared/native-recovery/compensation.ts";
+import { stableCompensationNetwork } from "#infrastructure/native-compensation/plan.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 type StorageRow = Prisma.MediaStorageAuthorityGetPayload<Record<string, never>>;
 const LegacySelection = z.object({
@@ -89,6 +94,22 @@ function approvedPlan(receipt: {
   const selection = z
     .object({ networkEvidence: z.json() })
     .safeParse(receipt.selection);
+  const compensation =
+    z.object({ lifecycleKind: z.string().optional() }).parse(receipt.plan.plan)
+      .lifecycleKind === "publication_compensation";
+  const matchingNetwork = compensation
+    ? FinishedNativeCompensationSchema.parse(receipt.plan.plan).network
+        .identityHash ===
+      snapshotHash(
+        stableCompensationNetwork(
+          NativeCompensationSelectionSchema.parse(receipt.selection)
+            .networkEvidence,
+        ),
+      )
+    : finished.success &&
+      selection.success &&
+      snapshotHash(finished.data.network) ===
+        snapshotHash(selection.data.networkEvidence);
   return (
     receipt.plan.state === "applied" &&
     receipt.planId === receipt.plan.id &&
@@ -96,15 +117,32 @@ function approvedPlan(receipt: {
     receipt.planHash === receipt.plan.planHash &&
     receipt.plan.plan !== null &&
     snapshotHash(z.json().parse(receipt.plan.plan)) === receipt.planHash &&
-    finished.success &&
-    selection.success &&
-    snapshotHash(finished.data.network) ===
-      snapshotHash(selection.data.networkEvidence)
+    matchingNetwork
   );
+}
+function nativeStorageProof(receipt: {
+  selection: Prisma.JsonValue;
+  plan: { scope: Prisma.JsonValue };
+}) {
+  const scope = NativeStoredScopeSchema.parse(receipt.plan.scope);
+  if (
+    scope.schemaVersion === 2 &&
+    scope.lifecycleKind === "publication_compensation"
+  ) {
+    const network = NativeCompensationSelectionSchema.parse(
+      receipt.selection,
+    ).networkEvidence;
+    return {
+      configurationDigest: network.mounts.configurationDigest,
+      mounts: network.mounts.mounts,
+    };
+  }
+  return NativeSelection.parse(receipt.selection).networkEvidence;
 }
 export async function assertNativeStorageRoots(
   tx: Prisma.TransactionClient,
   raw: unknown,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<ApprovedStorageRoot[]> {
   const roots = ApprovedStorageRootsSchema.parse(raw);
   for (const root of roots) {
@@ -114,6 +152,7 @@ export async function assertNativeStorageRoots(
     assertStoredEvidence(row);
     if (!rowMatches(root, row))
       throw new Error("Native storage authority identity changed");
+    budget?.consume(1);
     if (root.receipt.kind === "legacy") {
       const receipt = await tx.mediaHandoffReceipt.findUniqueOrThrow({
         where: { id: root.receipt.id },
@@ -133,7 +172,7 @@ export async function assertNativeStorageRoots(
         where: { id: root.receipt.id },
         include: { plan: true },
       });
-      const proof = NativeSelection.parse(receipt.selection).networkEvidence;
+      const proof = nativeStorageProof(receipt);
       if (
         !approvedPlan(receipt) ||
         receipt.planHash !== root.receipt.planHash ||
@@ -149,6 +188,7 @@ export async function assertNativeStorageRoots(
 /** Find prior owner-approved receipts, never approve a storage authority row by itself. */
 export async function resolveNativeStorageRoots(
   tx: Prisma.TransactionClient,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<ApprovedStorageRoot[]> {
   const rows = await tx.mediaStorageAuthority.findMany({
     where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
@@ -158,18 +198,18 @@ export async function resolveNativeStorageRoots(
     throw new Error(
       "Native recovery requires prior approval of both library roots",
     );
-  const [legacy, native] = await Promise.all([
-    tx.mediaHandoffReceipt.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      include: { plan: true },
-    }),
-    tx.nativeRecoveryReceipt.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      include: { plan: true },
-    }),
-  ]);
+  const legacy = await tx.mediaHandoffReceipt.findMany({
+    orderBy: { createdAt: "desc" },
+    take: budget?.take ?? 100,
+    include: { plan: true },
+  });
+  budget?.consume(legacy.length);
+  const native = await tx.nativeRecoveryReceipt.findMany({
+    orderBy: { createdAt: "desc" },
+    take: budget?.take ?? 100,
+    include: { plan: true },
+  });
+  budget?.consume(native.length);
   const roots = rows.map((row) => {
     const base = {
       rootPath: row.rootPath,
@@ -181,7 +221,7 @@ export async function resolveNativeStorageRoots(
       ...native.map((receipt) => ({
         kind: "native" as const,
         receipt,
-        mounts: NativeSelection.parse(receipt.selection).networkEvidence.mounts,
+        mounts: nativeStorageProof(receipt).mounts,
       })),
       ...legacy.map((receipt) => ({
         kind: "legacy" as const,
@@ -214,5 +254,5 @@ export async function resolveNativeStorageRoots(
       },
     };
   });
-  return assertNativeStorageRoots(tx, roots);
+  return assertNativeStorageRoots(tx, roots, budget);
 }

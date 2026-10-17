@@ -1,9 +1,22 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type {
+  MediaItem,
+  MediaRequest,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import {
+  effectiveRequestWhere,
+  lockEffectiveRequests,
+} from "#infrastructure/request-claims.ts";
+import {
+  compensationGroupMedia,
+  assertCompensationGroupUnchanged,
+  pendingCompensationGroups,
+  queueHouseholdCompensations,
+} from "#infrastructure/native-compensation/routing.ts";
 import { needsRestore } from "#infrastructure/locks.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
@@ -96,13 +109,19 @@ export function createCoverageActivities(
           orderBy: { id: "asc" },
           take: 25,
         });
+        const initialIds = [root.mediaId, ...episodes.map((item) => item.id)];
+        const compensationGroup = await compensationGroupMedia(tx, initialIds);
         const targets = await lockDefaultScopes(
           tx,
-          [root.mediaId, ...episodes.map((item) => item.id)].map((id) =>
-            defaultScope(id),
-          ),
+          compensationGroup.map((id) => defaultScope(id)),
           { createMissing: true },
         );
+        await assertCompensationGroupUnchanged(
+          tx,
+          initialIds,
+          compensationGroup,
+        );
+        await lockEffectiveRequests(tx, compensationGroup);
         const current = await tx.mediaRequest.findUniqueOrThrow({
           where: { id: root.id },
         });
@@ -131,16 +150,7 @@ export function createCoverageActivities(
             .map((entry) => entry.target.mediaId),
         );
         for (const episode of episodes) {
-          const inSnapshot =
-            current.includeFutureEpisodes ||
-            current.coverageCompletedAt === null ||
-            episode.createdAt <= current.coverageCompletedAt;
-          const allowed =
-            current.active &&
-            !current.excluded &&
-            current.direct &&
-            inSnapshot &&
-            includesSeason(current.includeSpecials, episode.seasonNumber);
+          const allowed = episodeIncluded(current, episode);
           await projectEpisode(tx, {
             root: current,
             mediaId: episode.id,
@@ -150,6 +160,10 @@ export function createCoverageActivities(
             targetExisted: existingTargets.has(episode.id),
           });
         }
+        await queueHouseholdCompensations(tx, {
+          mediaIds: compensationGroup,
+          triggerKey: `coverage:${input.operationId}:${input.cursor ?? "first"}`,
+        });
         if (
           episodes.length < 25 &&
           catalogReady(root.media) &&
@@ -171,6 +185,20 @@ export function createCoverageActivities(
 
 function projectionEpoch(rootEpoch: number, authorizedEpoch: number) {
   return rootEpoch === authorizedEpoch ? authorizedEpoch : -1;
+}
+
+function episodeIncluded(current: MediaRequest, episode: MediaItem) {
+  const inSnapshot =
+    current.includeFutureEpisodes ||
+    current.coverageCompletedAt === null ||
+    episode.createdAt <= current.coverageCompletedAt;
+  return (
+    current.active &&
+    !current.excluded &&
+    current.direct &&
+    inSnapshot &&
+    includesSeason(current.includeSpecials, episode.seasonNumber)
+  );
 }
 
 function includesSeason(includeSpecials: boolean, seasonNumber: number | null) {
@@ -305,6 +333,8 @@ async function projectEpisode(
     data: { version: { increment: 1 } },
   });
   await invalidateRetention(tx, mediaId);
+  const pending = await pendingCompensationGroups(tx, [mediaId]);
+  if (pending.length > 0) return;
   await queueMediaSubtitleTargets(tx, mediaId);
   await queueOperation(tx, {
     key: `coverage:${root.id}:${String(root.version)}:${mediaId}`,

@@ -59,7 +59,7 @@ export async function finishArchivePreparation(
       );
       if (
         observation.expiresAt <= new Date() ||
-        observation.evidenceHash !== snapshotHash(network) ||
+        observation.evidenceHash !== snapshotHash(z.json().parse(network)) ||
         network.planId !== plan.id ||
         network.recoveryEpoch !== plan.recoveryEpoch
       )
@@ -77,7 +77,7 @@ export async function finishArchivePreparation(
           data: {
             planId: plan.id,
             kind: "files",
-            evidenceHash: snapshotHash(prepared.evidence),
+            evidenceHash: snapshotHash(z.json().parse(prepared.evidence)),
             evidence: prepared.evidence,
             observedAt: new Date(prepared.evidence.capturedAt),
             expiresAt: new Date(Date.now() + 12 * 3_600_000),

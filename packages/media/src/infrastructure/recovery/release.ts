@@ -14,6 +14,7 @@ import {
 import { needsRestore } from "#infrastructure/locks.ts";
 import { queueOperation } from "#automation/store.ts";
 import { recoveryConflict } from "./scope.ts";
+import { pendingCompensationGroups } from "#infrastructure/native-compensation/routing.ts";
 
 export async function applyRecoveryDeclarations(
   db: Prisma.TransactionClient,
@@ -61,7 +62,7 @@ export async function applyRecoveryDeclarations(
     await db.watchState.deleteMany({
       where: { edition: "default", mediaId: media.id },
     });
-    if (restoring.has(media.id))
+    if (await queueRestoredMedia(db, media.id, restoring))
       await queueOperation(db, {
         key: `recovery-restore:${input.reviewId}:${media.id}`,
         kind: (await needsRestore(db, media.id))
@@ -148,4 +149,14 @@ export function responseProjection(
 
 export function responseJson(rows: Parameters<typeof responseProjection>[0]) {
   return z.json().parse(responseProjection(rows));
+}
+
+async function queueRestoredMedia(
+  db: Prisma.TransactionClient,
+  mediaId: string,
+  restoring: ReadonlySet<string>,
+) {
+  if (!restoring.has(mediaId)) return false;
+  const groups = await pendingCompensationGroups(db, [mediaId]);
+  return groups.length === 0;
 }

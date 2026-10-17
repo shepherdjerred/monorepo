@@ -8,11 +8,13 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { archiveClosure } from "./closure.ts";
 import { archiveCompletionDependency } from "./completion.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function archiveTerminalDependency(
   tx: Prisma.TransactionClient,
   cleanup: Prisma.UpgradeCleanupGetPayload<object>,
   assets: Awaited<ReturnType<typeof archiveClosure>>["assets"],
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const old = assets.find((row) => row.id === cleanup.assetId);
   const successor = assets.find((row) => row.id === cleanup.successorAssetId);
@@ -31,8 +33,9 @@ export async function archiveTerminalDependency(
     where: { originalCleanupId: cleanup.id, state: "cleaned" },
     include: { receipt: { include: { plan: true } } },
     orderBy: { createdAt: "desc" },
-    take: 101,
+    take: Math.min(101, Math.floor((budget?.take ?? 202) / 2) + 1),
   });
+  budget?.consume(completed.length * 2);
   if (completed.length > 100)
     throw new Error("Archive terminal receipt lookup exceeds bound");
   const matches = completed.filter(

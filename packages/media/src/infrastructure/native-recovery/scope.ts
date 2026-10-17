@@ -24,6 +24,7 @@ import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacemen
 import { nativeTerminalDependencies } from "./terminal-lifecycle.ts";
 import { NativePublishedScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { settledNativeQuarantines } from "#infrastructure/native-quarantine/settled.ts";
+import { settledNativeCompensations } from "#infrastructure/native-compensation/settled.ts";
 
 function stableTorrentObservation(raw: unknown) {
   const observed = z
@@ -172,12 +173,11 @@ export async function buildNativeScope(
     tx,
     NativeRecoveryScopeSchema.shape.files.parse(files),
   );
-  const lifecycle = await nativeLifecycle(
-    tx,
-    ids,
-    assetIds,
-    settledQuarantines.flatMap((item) => item.decisionIds),
-  );
+  const settledCompensations = await settledNativeCompensations(tx, assetIds);
+  const lifecycle = await nativeLifecycle(tx, ids, assetIds, {
+    decisionIds: settledQuarantines.flatMap((item) => item.decisionIds),
+    attemptIds: settledCompensations.map((item) => item.settlement.attemptId),
+  });
   const cleanupRows = await tx.upgradeCleanup.findMany({
     where: { id: { in: lifecycle.cleanup.map((row) => row.id) } },
     orderBy: { id: "asc" },
@@ -188,7 +188,11 @@ export async function buildNativeScope(
     assetIds,
   );
   return NativePublishedScopeSchema.parse({
-    ...publishedVersion(terminalDependencies, settledQuarantines),
+    ...publishedVersion(
+      terminalDependencies,
+      settledQuarantines,
+      settledCompensations,
+    ),
     request: { ...input, assetIds },
     media: rows.map(({ intents, parent, ...row }) => {
       const intent = defaultIntent(intents);
@@ -258,14 +262,18 @@ export async function buildNativeScope(
 function publishedVersion(
   terminalDependencies: Awaited<ReturnType<typeof nativeTerminalDependencies>>,
   settledQuarantines: Awaited<ReturnType<typeof settledNativeQuarantines>>,
+  settledCompensations: Awaited<ReturnType<typeof settledNativeCompensations>>,
 ) {
-  return terminalDependencies.length === 0 && settledQuarantines.length === 0
+  return terminalDependencies.length === 0 &&
+    settledQuarantines.length === 0 &&
+    settledCompensations.length === 0
     ? { schemaVersion: 1 }
     : {
         schemaVersion: 2,
         lifecycleKind: "published",
         terminalDependencies,
         ...(settledQuarantines.length === 0 ? {} : { settledQuarantines }),
+        ...(settledCompensations.length === 0 ? {} : { settledCompensations }),
       };
 }
 import { defaultIntent } from "#shared/editions/scope.ts";

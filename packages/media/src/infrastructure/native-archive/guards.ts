@@ -13,6 +13,7 @@ import { assertNativeExclusion } from "#infrastructure/native-recovery/guards.ts
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { buildNativeArchiveScope } from "./scope.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 
 export async function lockNativeArchiveScope(
   tx: Prisma.TransactionClient,
@@ -20,6 +21,10 @@ export async function lockNativeArchiveScope(
 ) {
   const ids = scope.media.map((row) => row.id);
   await lockDefaultMedia(tx, ids);
+  await assertNoPublicationCompensationFence(tx, {
+    mediaIds: ids,
+    assetIds: scope.files.map((row) => row.assetId),
+  });
   await lockEffectiveRequests(tx, ids);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR UPDATE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id='singleton' FOR UPDATE`;

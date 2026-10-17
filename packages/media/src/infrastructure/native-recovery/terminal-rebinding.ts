@@ -8,6 +8,7 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { NativeSubtitleSnapshotSchema } from "#shared/native-subtitles.ts";
 import { NativeArchiveScopeSchema } from "#shared/native-recovery/archive.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export const TerminalSubtitleBindingSchema = z.object({
   id: z.uuid(),
@@ -64,6 +65,7 @@ export async function terminalRebindingChain(
     originalVersion: number;
     originalEpoch: number;
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const { asset } = input;
   const rows = await tx.nativeRecoveryReceipt.findMany({
@@ -75,8 +77,9 @@ export async function terminalRebindingChain(
     },
     include: { plan: true },
     orderBy: { createdAt: "desc" },
-    take: 101,
+    take: budget?.take ?? 101,
   });
+  budget?.consume(rows.length);
   if (rows.length > 100)
     throw new Error("Native terminal receipt chain exceeds bounded lookup");
   let version = asset.version;
@@ -143,11 +146,19 @@ export async function terminalRebindingChain(
     version = binding.beforeVersion;
     epoch = file.ownershipEpoch;
   }
+  assertOriginalBinding(version, epoch, input);
+  return chain;
+}
+
+function assertOriginalBinding(
+  version: number,
+  epoch: number,
+  input: { originalVersion: number; originalEpoch: number },
+) {
   if (version !== input.originalVersion || epoch !== input.originalEpoch)
     throw new Error(
       "Native terminal receipt chain does not reach the original rollback",
     );
-  return chain;
 }
 
 function validateSubtitleBindings(

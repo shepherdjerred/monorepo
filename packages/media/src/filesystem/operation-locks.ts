@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { FileLockError, withAdvisoryLock } from "./advisory-lock.ts";
+import {
+  FileLockError,
+  withAdvisoryLock,
+  withAdvisoryLocks,
+} from "./advisory-lock.ts";
 import {
   FileOperationConflict,
   IdSchema,
@@ -148,33 +152,33 @@ export class OperationLocks {
     const operationKeys = [
       ...new Set(operationIds.map((id) => `operation:${IdSchema.parse(id)}`)),
     ].sort();
-    const operations = async (index: number): Promise<T> => {
-      const key = operationKeys[index];
-      return key === undefined
-        ? await enter(0)
-        : await this.withLock(key, () => operations(index + 1));
-    };
-    const enter = async (index: number): Promise<T> => {
-      const target = sorted[index];
-      if (target === undefined) {
-        for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
-        const result = await this.proofScope.run(
-          {
-            allowed: new Set([...operationKeys, ...sorted]),
-            busy: new Set(),
-          },
-          action,
-        );
-        for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
-        return result;
-      }
-      return await this.withLock(target, async () => {
-        await this.verifyControlExclusion();
-        await validate(target);
-        return await enter(index + 1);
-      });
-    };
-    return await operations(0);
+    const targets = [...operationKeys, ...sorted];
+    const held = this.heldTargets.getStore() ?? new Set<string>();
+    if (targets.some((target) => held.has(target)))
+      throw new FileLockError("busy");
+    const lockPaths = [];
+    for (const target of targets) {
+      const name = createHash("sha256").update(target).digest("hex");
+      lockPaths.push(await this.controlPath(`locks/${name}.lock`));
+    }
+    const outerLocks = this.locks.getStore() ?? [];
+    return await withAdvisoryLocks(lockPaths, (assertHeld) =>
+      this.heldTargets.run(new Set([...held, ...targets]), () =>
+        this.locks.run([...outerLocks, assertHeld], async () => {
+          for (const target of sorted) {
+            await this.verifyControlExclusion();
+            await validate(target);
+          }
+          for (const check of this.locks.getStore() ?? []) check();
+          const result = await this.proofScope.run(
+            { allowed: new Set(targets), busy: new Set() },
+            action,
+          );
+          for (const check of this.locks.getStore() ?? []) check();
+          return result;
+        }),
+      ),
+    );
   }
 
   async withLock<T>(target: string, action: () => Promise<T>): Promise<T> {
