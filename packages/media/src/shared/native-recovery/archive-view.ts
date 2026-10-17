@@ -37,7 +37,7 @@ export const NativeArchiveInventorySchema = z.strictObject({
 export const NativeArchiveContinuationViewSchema = z.strictObject({
   id: z.uuid(),
   originalCleanupId: z.uuid(),
-  state: z.enum(["pending", "cleaning", "protected", "cleaned"]),
+  state: z.enum(["pending", "cleaning", "protected", "cleaned", "superseded"]),
   version: z.int().nonnegative(),
   expiresAt: z.iso.datetime(),
   titles: z.array(z.string()),

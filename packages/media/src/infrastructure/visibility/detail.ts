@@ -4,6 +4,7 @@ import { MediaVisibilitySchema } from "#shared/visibility/detail.ts";
 import { torrentVisibility } from "./torrent.ts";
 import { visibilityAncestry, type VisibleMedia } from "./access.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
 
 function hasPlayableBinding(item: MediaItem): boolean {
   if (["importing", "quarantined", "removed"].includes(item.availability))
@@ -26,6 +27,7 @@ export async function mediaVisibility(
     userId: string;
     owner: boolean;
     epoch: number;
+    serverMachineId?: string | undefined;
     visible: (item: VisibleMedia) => boolean;
   },
 ) {
@@ -99,12 +101,35 @@ export async function mediaVisibility(
     orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     take: 21,
   });
+  const eligiblePlayback = [];
+  const compensationGroups =
+    await tx.nativePublicationCompensationContinuation.findMany({
+      where: { mediaIds: { hasSome: mediaIds } },
+      select: { mediaIds: true },
+      take: 1001,
+    });
+  if (compensationGroups.length > 1000)
+    throw new Error("Visibility compensation history exceeds bound");
+  const compensationMedia = new Set(
+    compensationGroups.flatMap((row) => row.mediaIds),
+  );
+  for (const item of visible.filter((entry) => hasPlayableBinding(entry))) {
+    if (!compensationMedia.has(item.id)) {
+      eligiblePlayback.push(item.id);
+      continue;
+    }
+    const proof = await compensationPlayback(tx, {
+      mediaId: item.id,
+      recoveryEpoch: input.epoch,
+      serverMachineId: input.serverMachineId,
+      externalIds: item.externalIds,
+    });
+    if (proof.state !== "protected") eligiblePlayback.push(item.id);
+  }
   const playable = await tx.assetCoverage.findMany({
     where: {
       mediaId: {
-        in: visible
-          .filter((item) => hasPlayableBinding(item))
-          .map((item) => item.id),
+        in: eligiblePlayback,
       },
       current: true,
       edition: "default",

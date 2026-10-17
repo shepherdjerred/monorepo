@@ -13,12 +13,58 @@ export async function withAdvisoryLock<T>(
   path: string,
   action: (assertHeld: () => void) => Promise<T>,
 ): Promise<T> {
+  return await withLockHelper([path], action);
+}
+
+/** Exact existing lock files, in caller order; bounded descriptors per child. */
+export async function withAdvisoryLocks<T>(
+  paths: readonly string[],
+  action: (assertHeld: () => void) => Promise<T>,
+): Promise<T> {
+  if (
+    paths.length === 0 ||
+    paths.some((path) => path.length === 0) ||
+    new Set(paths).size !== paths.length
+  )
+    throw new FileLockError("unavailable");
+  const enter = async (
+    offset: number,
+    held: readonly (() => void)[],
+  ): Promise<T> => {
+    if (offset === paths.length) {
+      const assertHeld = () => {
+        for (const check of held) check();
+      };
+      assertHeld();
+      const result = await action(assertHeld);
+      assertHeld();
+      return result;
+    }
+    const chunk = paths.slice(offset, offset + 128);
+    return await withLockHelper(chunk, (assertHeld) =>
+      enter(offset + chunk.length, [...held, assertHeld]),
+    );
+  };
+  return await enter(0, []);
+}
+
+async function withLockHelper<T>(
+  paths: readonly string[],
+  action: (assertHeld: () => void) => Promise<T>,
+): Promise<T> {
   const helper = fileURLToPath(new URL("lock-helper.py", import.meta.url));
-  const child = spawn("python3", ["-I", "-u", helper, path], {
-    stdio: ["pipe", "pipe", "ignore"],
-    // Python is a system runtime prerequisite; the helper inherits no application credentials.
-    env: {},
-  });
+  const first = paths[0];
+  if (first === undefined) throw new FileLockError("unavailable");
+  const batch = paths.length > 1;
+  const child = spawn(
+    "python3",
+    ["-I", "-u", helper, batch ? "--batch" : first],
+    {
+      stdio: ["pipe", "pipe", "ignore"],
+      // Python is a system runtime prerequisite; the helper inherits no application credentials.
+      env: {},
+    },
+  );
   const exited = new Promise<void>((resolve) => {
     child.once("exit", () => {
       resolve();
@@ -58,10 +104,15 @@ export async function withAdvisoryLock<T>(
         finish();
         reject(new FileLockError("unavailable"));
       });
+      child.stdin.once("error", () => {
+        finish();
+        reject(new FileLockError("unavailable"));
+      });
       child.once("exit", (code) => {
         finish();
         reject(new FileLockError(code === 3 ? "busy" : "unavailable"));
       });
+      if (batch) child.stdin.write(`${JSON.stringify(paths)}\n`);
     });
     const assertHeld = () => {
       if (lost || child.exitCode !== null || child.signalCode !== null)

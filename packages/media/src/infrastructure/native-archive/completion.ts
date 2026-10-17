@@ -134,10 +134,10 @@ function assertCompletionReceipt(
     snapshotHash(selected.scope) !==
       snapshotHash(z.json().parse(descriptor.scope)) ||
     snapshotHash(selected.bindings) !== snapshotHash(descriptor.bindings) ||
-    snapshotHash(selected.reusedBindings) !==
-      snapshotHash(descriptor.reusedBindings) ||
+    snapshotHash(nativeJson(selected.reusedBindings)) !==
+      snapshotHash(nativeJson(descriptor.reusedBindings)) ||
     snapshotHash(selected.fileEvidence) !== snapshotHash(plan.files) ||
-    snapshotHash(stableArchiveFiles(descriptor.fileEvidence)) !==
+    snapshotHash(nativeJson(stableArchiveFiles(descriptor.fileEvidence))) !==
       snapshotHash(selected.fileEvidence)
   )
     throw new Error("Archive terminal parent receipt changed");

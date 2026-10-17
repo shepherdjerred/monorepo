@@ -11,6 +11,9 @@ import {
 import type { z } from "zod";
 import { MediaError } from "#application/errors.ts";
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
+import { deriveArchiveSupersessions } from "./supersession.ts";
+import { NativeArchiveSupersessionSchema } from "#shared/native-recovery/archive.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function archiveInventory(
   tx: Prisma.TransactionClient,
@@ -58,15 +61,6 @@ export async function archiveInventory(
       !(await eligibleClosure(tx, row.id, runtime.recoveryEpoch))
     )
       reasons.push("archive_transition_reconciliation_required");
-    if (
-      await tx.nativeArchiveCleanupContinuation.count({
-        where: {
-          originalCleanupId: row.id,
-          recoveryEpoch: runtime.recoveryEpoch,
-        },
-      })
-    )
-      reasons.push("archive_current_continuation_exists");
     cleanups.push({
       id: row.id,
       version: row.version,
@@ -114,44 +108,15 @@ export async function archiveContinuationViews(
     if (edge === undefined)
       throw new Error("Archive continuation selected edge missing");
     const mediaIds = edge.derivedPlan.mediaIds;
-    const reasons: z.infer<typeof NativeArchiveReasonSchema>[] = [];
-    if (row.state !== "cleaned") {
-      if (
-        await tx.recoveryHold.count({
-          where: {
-            edition: "default",
-            mediaId: { in: mediaIds },
-            releasedAt: null,
-          },
-        })
-      )
-        reasons.push("archive_household_reconciliation_required");
-      if (
-        await tx.retentionHold.count({
-          where: {
-            edition: "default",
-            mediaId: { in: mediaIds },
-            OR: [
-              { isPin: true },
-              { until: null },
-              { until: { gt: new Date() } },
-            ],
-          },
-        })
-      )
-        reasons.push("archive_media_held");
-      if (
-        await tx.libraryAsset.count({
-          where: {
-            id: {
-              in: descriptor.scope.currentPlayback.map((item) => item.assetId),
-            },
-            state: { not: "published" },
-          },
-        })
-      )
-        reasons.push("archive_transition_reconciliation_required");
-    }
+    if (row.state === "superseded")
+      NativeArchiveSupersessionSchema.parse(row.supersession);
+    const reasons = await continuationReasons(tx, {
+      state: row.state,
+      mediaIds,
+      playbackAssetIds: descriptor.scope.currentPlayback.map(
+        (item) => item.assetId,
+      ),
+    });
     views.push(
       NativeArchiveContinuationViewSchema.parse({
         id: row.id,
@@ -169,22 +134,82 @@ export async function archiveContinuationViews(
   return views;
 }
 
+async function continuationReasons(
+  tx: Prisma.TransactionClient,
+  input: {
+    state: string;
+    mediaIds: string[];
+    playbackAssetIds: string[];
+  },
+) {
+  const reasons: z.infer<typeof NativeArchiveReasonSchema>[] = [];
+  const { mediaIds } = input;
+  if (input.state !== "cleaned" && input.state !== "superseded") {
+    if (
+      await tx.recoveryHold.count({
+        where: {
+          edition: "default",
+          mediaId: { in: mediaIds },
+          releasedAt: null,
+        },
+      })
+    )
+      reasons.push("archive_household_reconciliation_required");
+    if (
+      await tx.retentionHold.count({
+        where: {
+          edition: "default",
+          mediaId: { in: mediaIds },
+          OR: [{ isPin: true }, { until: null }, { until: { gt: new Date() } }],
+        },
+      })
+    )
+      reasons.push("archive_media_held");
+    if (
+      await tx.libraryAsset.count({
+        where: {
+          id: {
+            in: input.playbackAssetIds,
+          },
+          state: { not: "published" },
+        },
+      })
+    )
+      reasons.push("archive_transition_reconciliation_required");
+  }
+  return reasons;
+}
+
 async function eligibleClosure(
   tx: Prisma.TransactionClient,
   cleanupId: string,
   epoch: number,
 ) {
   try {
+    const budget = new PublicationAuthorityReadBudget();
     const closure = await archiveClosure(tx, [cleanupId]);
+    const files = [];
     for (const asset of closure.assets) {
       await assertDefaultPhysicalAsset(tx, asset.id);
       if (asset.state !== "purged")
-        await snapshotArchiveFile(tx, asset, {
-          cleanups: closure.cleanups,
-          cleanupIds: [cleanupId],
-          epoch,
-        });
+        files.push(
+          await snapshotArchiveFile(
+            tx,
+            asset,
+            {
+              cleanups: closure.cleanups,
+              cleanupIds: [cleanupId],
+              epoch,
+            },
+            budget,
+          ),
+        );
     }
+    await deriveArchiveSupersessions(
+      tx,
+      { files, request: { cleanupIds: [cleanupId], recoveryEpoch: epoch } },
+      budget,
+    );
     return true;
   } catch (error) {
     if (error instanceof NativeArchiveScopeProtection) return false;

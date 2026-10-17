@@ -5,6 +5,15 @@ import {
 } from "./archive.ts";
 import { NativeArchiveContinuationViewSchema } from "./archive-view.ts";
 import {
+  NativeCompensationScopeSchema,
+  NativeCompensationFileEvidenceSchema,
+} from "./compensation.ts";
+import {
+  NativeCompensationContinuationViewSchema,
+  SettledNativeCompensationSchema,
+  SettledNativeCompensationEvidenceSchema,
+} from "./compensation-runtime.ts";
+import {
   NativeRecoveryScopeSchema,
   NativeRecoveryFileEvidenceSchema,
   NativeRecoveryDetailSchema,
@@ -67,10 +76,16 @@ export const NativePublishedScopeV2Schema = NativeRecoveryScopeSchema.extend({
     .min(1)
     .max(100)
     .optional(),
+  settledCompensations: z
+    .array(SettledNativeCompensationSchema)
+    .min(1)
+    .max(100)
+    .optional(),
 }).refine(
   (scope) =>
     scope.terminalDependencies.length > 0 ||
-    scope.settledQuarantines !== undefined,
+    scope.settledQuarantines !== undefined ||
+    scope.settledCompensations !== undefined,
   "Published v2 requires exact lifecycle dependencies",
 );
 export const NativePublishedFileEvidenceV2Schema =
@@ -80,6 +95,11 @@ export const NativePublishedFileEvidenceV2Schema =
     terminalEvidence: z.array(NativeTerminalEvidenceSchema).max(100),
     settledEvidence: z
       .array(SettledNativeEvidenceSchema)
+      .min(1)
+      .max(100)
+      .optional(),
+    compensationEvidence: z
+      .array(SettledNativeCompensationEvidenceSchema)
       .min(1)
       .max(100)
       .optional(),
@@ -96,11 +116,13 @@ export const NativeStoredScopeSchema = z.union([
   NativePublishedScopeSchema,
   NativeQuarantineScopeSchema,
   NativeArchiveScopeSchema,
+  NativeCompensationScopeSchema,
 ]);
 export const NativeStoredFileEvidenceSchema = z.union([
   NativePublishedFileEvidenceSchema,
   NativeQuarantineFileEvidenceSchema,
   NativeArchiveFileEvidenceSchema,
+  NativeCompensationFileEvidenceSchema,
 ]);
 export const FinishedNativeV2Schema = z.strictObject({
   schemaVersion: z.literal(2),
@@ -108,6 +130,7 @@ export const FinishedNativeV2Schema = z.strictObject({
     "published",
     "committed_quarantine",
     "superseded_archive",
+    "publication_compensation",
   ]),
   scopeHash: z.string().regex(/^[a-f0-9]{64}$/u),
   network: z.json(),
@@ -117,6 +140,9 @@ export type NativePublishedScope = z.infer<typeof NativePublishedScopeSchema>;
 export const NativeLifecycleDetailSchema = NativeRecoveryDetailSchema.extend({
   scope: NativeStoredScopeSchema,
   archiveContinuations: z.array(NativeArchiveContinuationViewSchema).optional(),
+  compensationContinuations: z
+    .array(NativeCompensationContinuationViewSchema)
+    .optional(),
   continuations: z.array(
     z.strictObject({
       id: z.uuid(),

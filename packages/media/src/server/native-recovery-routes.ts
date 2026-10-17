@@ -10,6 +10,10 @@ import {
 import { parseInput, readJson } from "./validation.ts";
 import { PrepareNativeQuarantineSchema } from "#shared/native-recovery/quarantine.ts";
 import { PrepareNativeArchiveSchema } from "#shared/native-recovery/archive.ts";
+import {
+  PrepareNativeCompensationSchema,
+  ApplyNativeCompensationSchema,
+} from "#shared/native-recovery/compensation.ts";
 
 export type NativeRecoveryAdministration = Pick<
   PrismaNativeRecovery,
@@ -18,6 +22,9 @@ export type NativeRecoveryAdministration = Pick<
   | "prepareQuarantine"
   | "prepareArchive"
   | "archiveInventory"
+  | "prepareCompensation"
+  | "compensationInventory"
+  | "retryCompensation"
   | "detail"
   | "apply"
 >;
@@ -25,6 +32,38 @@ export function registerNativeRecoveryRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   service: NativeRecoveryAdministration,
 ) {
+  app.get("/api/v1/admin/native-recovery/compensations", async (c) =>
+    c.json(
+      await service.compensationInventory(
+        c.get("actor"),
+        parseInput(z.uuid().nullable(), c.req.query("cursor") ?? null),
+      ),
+    ),
+  );
+  app.post("/api/v1/admin/native-recovery/compensations", async (c) =>
+    c.json(
+      await service.prepareCompensation(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        parseInput(PrepareNativeCompensationSchema, await readJson(c.req.raw)),
+      ),
+      202,
+    ),
+  );
+  app.post("/api/v1/admin/native-recovery/compensations/:id/retry", async (c) =>
+    c.json(
+      await service.retryCompensation(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        parseInput(z.uuid(), c.req.param("id")),
+        parseInput(
+          z.strictObject({ expectedVersion: z.int().nonnegative() }),
+          await readJson(c.req.raw),
+        ),
+      ),
+      202,
+    ),
+  );
   app.get("/api/v1/admin/native-recovery/archives", async (c) =>
     c.json(
       await service.archiveInventory(
@@ -85,7 +124,10 @@ export function registerNativeRecoveryRoutes(
         c.get("actor"),
         parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
         parseInput(z.uuid(), c.req.param("id")),
-        parseInput(ApplyNativeRecoverySchema, await readJson(c.req.raw)),
+        parseInput(
+          z.union([ApplyNativeRecoverySchema, ApplyNativeCompensationSchema]),
+          await readJson(c.req.raw),
+        ),
       ),
       202,
     ),

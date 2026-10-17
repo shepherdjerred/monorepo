@@ -184,26 +184,34 @@ it("rejects nested, duplicate and empty explicit proof scopes", async () => {
   });
 });
 
+function ownedHelpers() {
+  return execFileSync("ps", ["-axo", "pid=,ppid=,args="], { encoding: "utf8" })
+    .split("\n")
+    .flatMap((row) => {
+      const ids = /^(\d+)\s+(\d+)\s/u.exec(row.trim());
+      return ids?.[1] !== undefined &&
+        Number(ids[2]) === process.pid &&
+        row.includes("lock-helper.py")
+        ? [Number(ids[1])]
+        : [];
+    });
+}
+
 it("helper death inside a scoped callback cannot return a successful result", async () => {
   const f = await fixture();
   const files = new FileOperations(f.roots, {
     authorize: () => Promise.resolve(),
     contentProof: f.proof,
   });
-  const target = path.join(f.roots.library, "video.mkv");
-  const lockPath = path.join(f.roots.control, "locks", `${hash(target)}.lock`);
+  const before = new Set(ownedHelpers());
   await expect(
     files.withFileIdentities(f.identities, async () => {
-      const rows = execFileSync("ps", ["-axo", "pid=,ppid=,args="], {
-        encoding: "utf8",
-      }).split("\n");
-      const match = rows.find(
-        (row) => row.includes(lockPath) && row.includes("lock-helper.py"),
-      );
-      const ids = match?.trim().match(/^(\d+)\s+(\d+)\s/u);
-      if (ids?.[1] === undefined || Number(ids[2]) !== process.pid)
+      const batch = ownedHelpers().filter((pid) => !before.has(pid));
+      expect(batch).toHaveLength(1);
+      const pid = batch[0];
+      if (pid === undefined)
         throw new Error("Exact fixture lock helper missing");
-      process.kill(Number(ids[1]), "SIGKILL");
+      process.kill(pid, "SIGKILL");
       await delay(30);
       return "must not succeed";
     }),

@@ -11,12 +11,38 @@ import {
 } from "./files.ts";
 import { assertArchiveNeighbors } from "./subtitle-proof.ts";
 import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
+import {
+  assertArchiveAuthorityProof,
+  archiveSubtitleAuthorityEvidence,
+} from "./authority-proof.ts";
+import { archiveSupersessionEvidence } from "./supersession-proof.ts";
+import { archivePurgeId } from "./purge-manifest.ts";
 
 export async function assertArchivePhysical(
   context: ArchiveFileContext,
   prepared: PreparedNativeArchive,
 ) {
   assertArchiveActive(context.execution);
+  await assertArchiveAuthorityProof(
+    context,
+    prepared.content,
+    prepared.authorityProof.participants,
+  );
+  const subtitleEvidence = await archiveSubtitleAuthorityEvidence(
+    context,
+    prepared.content,
+    prepared.authorityProof,
+  );
+  if (
+    snapshotHash(subtitleEvidence) !==
+    snapshotHash(prepared.evidence.subtitleEvidence ?? [])
+  )
+    throw new Error("Archive subtitle authority evidence changed");
+  await archiveSupersessionEvidence(
+    context,
+    prepared.content,
+    prepared.supersessions,
+  );
   for (const file of prepared.evidence.files)
     await assertArchiveFile(context, prepared, file);
   for (const file of prepared.evidence.artifactAbsences)
@@ -63,6 +89,7 @@ async function assertArchiveFile(
     throw new Error("Archive physical participant is not reviewed");
   if (
     scopeFile.authority.kind === "prior_native_binding" &&
+    scopeFile.authority.subtitleLineage === undefined &&
     snapshotHash(nativePhysicalIdentity(file)) !==
       scopeFile.authority.physicalEvidenceHash
   )
@@ -76,7 +103,13 @@ export async function withArchiveLocks<T>(
   action: () => Promise<T>,
 ): Promise<T> {
   const kinds = ["movies", "tv"] as const;
-  const paths = archiveAllPaths(prepared.scope);
+  const paths = [
+    ...new Set([
+      ...archiveAllPaths(prepared.scope),
+      ...prepared.authorityProof.paths,
+      ...prepared.supersessions.paths,
+    ]),
+  ].sort();
   const journals = archiveOriginalJournals(context, prepared.scope);
   const enter = async (index: number): Promise<T> => {
     const kind = kinds[index];
@@ -110,13 +143,28 @@ export async function withArchiveLocks<T>(
         };
       }),
       () => enter(index + 1),
-      journals
-        .filter(
-          (journal) =>
-            journal.target.startsWith(roots.library + path.sep) ||
-            journal.target.startsWith(roots.control + path.sep),
-        )
-        .map((journal) => journal.operationId),
+      [
+        ...journals
+          .filter(
+            (journal) =>
+              journal.target.startsWith(roots.library + path.sep) ||
+              journal.target.startsWith(roots.control + path.sep),
+          )
+          .map((journal) => journal.operationId),
+        ...prepared.supersessions.selections.flatMap((selection) =>
+          selection.participants
+            .filter((item) => item.libraryKind === kind)
+            .map((item) =>
+              archivePurgeId(
+                selection.target.continuationId,
+                item.canonicalPath,
+              ),
+            ),
+        ),
+        ...prepared.authorityProof.subtitleLineages
+          .filter((item) => item.prepared.kind === kind)
+          .flatMap((item) => item.prepared.operationIds),
+      ],
     );
   };
   return await enter(0);

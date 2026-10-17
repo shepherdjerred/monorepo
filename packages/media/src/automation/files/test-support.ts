@@ -9,6 +9,7 @@ import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
 export async function fileFixture(
   db: Database,
@@ -24,6 +25,27 @@ export async function fileFixture(
     control: nodePath.join(directory, "control"),
   };
   for (const root of Object.values(roots)) await mkdir(root);
+  // Explicit synthetic fixture evidence; no live mount or Kubernetes attestation.
+  for (const kind of ["movies", "tv"]) {
+    const observedAt = new Date();
+    const evidence = {
+      recoveryEpoch: 0,
+      pvcUid: `synthetic-${kind}`,
+      volumeName: `synthetic-${kind}`,
+      volumePath: roots.library,
+      workerPodUid: "synthetic-files-worker",
+      evidence: { source: "synthetic-file-fixture" },
+      observedAt,
+      expiresAt: new Date(observedAt.getTime() + 120_000),
+      revokedAt: null,
+    };
+    await db.mediaStorageAuthority.upsert({
+      where: { rootPath: `/data/${kind}` },
+      create: { rootPath: `/data/${kind}`, ...evidence },
+      // Native fixtures may already have an exact reviewed mount receipt. Preserve it.
+      update: {},
+    });
+  }
   let clock = new Date();
   const context: FileContext = {
     db,
@@ -37,6 +59,23 @@ export async function fileFixture(
       purge: () => Promise.resolve(true),
     },
     checkpoint: () => Promise.resolve(),
+    publicationExecution: () => {
+      const signal = new AbortController().signal;
+      const wallDeadline = Date.now() + 300_000;
+      const monotonicDeadline = performance.now() + 300_000;
+      return {
+        signal,
+        checkpoint: () => Promise.resolve(),
+        assertActive: () => {
+          signal.throwIfAborted();
+          if (
+            Date.now() >= wallDeadline ||
+            performance.now() >= monotonicDeadline
+          )
+            throw new Error("Synthetic publication invocation expired");
+        },
+      };
+    },
     verifyStorageAuthority: () => Promise.resolve(),
     inspect: async (path) => {
       const info = await stat(path);
@@ -129,6 +168,25 @@ export async function fileFixture(
   });
 
   async function acquisition(content = "Fixture media contents") {
+    const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    const intent = await db.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(media.id)),
+    });
+    const sponsor = await db.mediaRequest.findFirstOrThrow({
+      where: { id: request.id, ...effectiveRequestWhere },
+    });
+    if (
+      runtime.mode !== "active" ||
+      !runtime.ownershipConfirmed ||
+      intent.automationEpoch !== runtime.recoveryEpoch ||
+      intent.editionRootId === null ||
+      !intent.desiredPresence
+    )
+      throw new Error(
+        "Fixture acquisition requires current positive target authority",
+      );
     await db.plexIdentityMapping.upsert({
       where: { userId: user.id },
       create: {
@@ -167,7 +225,7 @@ export async function fileFixture(
         providerId: "fixture",
         infoHash: crypto.randomUUID(),
         owned: true,
-        ownershipEpoch: 0,
+        ownershipEpoch: runtime.recoveryEpoch,
         state: "ready",
         seedingPolicy: { kind: "public" },
         observation: {
@@ -183,9 +241,6 @@ export async function fileFixture(
         },
       },
     });
-    const intent = await db.mediaIntent.findUniqueOrThrow({
-      where: targetWhere(defaultScope(media.id)),
-    });
     const operation = await db.operation.create({
       data: {
         idempotencyKey: crypto.randomUUID(),
@@ -196,7 +251,7 @@ export async function fileFixture(
           mediaId: media.id,
           generation: intent.generation,
           requestId: request.id,
-          requestVersion: request.version,
+          requestVersion: sponsor.version,
         },
       },
     });
@@ -209,7 +264,7 @@ export async function fileFixture(
         state: "ready",
         operationId: operation.id,
         torrentId: torrent.id,
-        recoveryEpoch: 0,
+        recoveryEpoch: runtime.recoveryEpoch,
         reservations: {
           create: { mediaId: media.id, generation: intent.generation },
         },

@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
-import { CommandResultSchema } from "#shared/api.ts";
-import { readApi, writeApi } from "#client/api.ts";
+import { readApi } from "#client/api.ts";
+import { useNativeReviewApproval } from "./approval.ts";
+import { NativeReviewStatus } from "./review-status.tsx";
 import { QuarantineContinuations } from "./continuations.tsx";
 import { NativeArchiveReview } from "./archive/review.tsx";
+import { NativeCompensationReview } from "./compensation/review.tsx";
+import {
+  nativeReviewIdentity,
+  nativeReviewAcknowledged,
+} from "./acknowledgement.ts";
 import type { z } from "zod";
 import {
   PageTitle,
@@ -22,38 +28,47 @@ export function NativeRecoveryReview({
   user: MediaUser;
   id: string;
 }) {
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledgement, setAcknowledgement] = useState<string | null>(null);
   const result = useQuery({
     queryKey: ["native-recovery-detail", id],
     queryFn: () =>
       readApi(`/admin/native-recovery/${id}`, NativeLifecycleDetailSchema),
     refetchInterval: (query) => reviewInterval(query.state.data),
   });
-  const apply = useMutation({
-    mutationFn: async () => {
-      const review = result.data;
-      if (!acknowledged || review?.planHash == null)
-        throw new Error("Review the prepared file proof before applying");
-      return writeApi({
-        actorId: user.id,
-        path: `/admin/native-recovery/${id}/apply`,
-        schema: CommandResultSchema,
-        body: {
-          expectedVersion: review.version,
-          planHash: review.planHash,
-          recoveryEpoch: review.scope.request.recoveryEpoch,
-          runtimeVersion: review.scope.request.runtimeVersion,
-          acknowledgePhysicalOwnershipOnly: true,
-          acknowledgeRecoveryHolds: true,
-          acknowledgeSubtitlePolicies: true,
-        },
-      });
-    },
+  const acknowledged = nativeReviewAcknowledged(acknowledgement, result.data);
+  const setAcknowledged = (checked: boolean) => {
+    setAcknowledgement(checked ? nativeReviewIdentity(result.data) : null);
+  };
+  const apply = useNativeReviewApproval({
+    user,
+    id,
+    acknowledgement,
     onSuccess: async () => {
       await result.refetch();
     },
   });
   const review = result.data;
+  const compensationScope = compensationSelection(review);
+  if (compensationScope !== null && review !== undefined)
+    return (
+      <NativeCompensationReview
+        user={user}
+        review={review}
+        scope={compensationScope}
+        acknowledged={acknowledged}
+        onAcknowledge={setAcknowledged}
+        onApply={() => {
+          apply.mutate();
+        }}
+        pending={apply.isPending}
+        error={apply.error ?? result.error}
+        onRefresh={() => {
+          void result.refetch();
+        }}
+        refreshing={result.isFetching}
+      />
+    );
+  const subtitlePolicies = reviewSubtitlePolicies(review);
   const quarantined = quarantineSelection(review);
   const archiveScope = archiveSelection(review);
   if (archiveScope !== null && review !== undefined)
@@ -97,37 +112,7 @@ export function NativeRecoveryReview({
       {apply.error !== null && <ErrorNotice error={apply.error} />}
       {review !== undefined && (
         <>
-          <section className="panel">
-            <h2>{humanize(review.state)}</h2>
-            {quarantined && (
-              <p>
-                Approval preserves quarantine, subtitle quality and existing
-                retention history. Files stay in quarantine until current
-                household intent authorizes restoration. This does not prove
-                anyone watched them or permit deletion.
-              </p>
-            )}
-            {review.state === "preparing" && (
-              <p>
-                Ownership remains unchanged while workers inspect files,
-                subtitles, storage and Plex identity.
-              </p>
-            )}
-            {review.state === "applying" && (
-              <p>
-                Your approval is queued. Current content and authority will be
-                checked again before ownership changes.
-              </p>
-            )}
-            {review.state === "applied" && (
-              <p>
-                Physical ownership is restored. Household protection remains
-                active.{" "}
-                <Link to="/recovery">Review current household intent</Link>{" "}
-                before releasing the selected recovery holds.
-              </p>
-            )}
-          </section>
+          <NativeReviewStatus state={review.state} quarantined={quarantined} />
           <QuarantineContinuations items={review.continuations} />
           <section className="panel">
             <h2>Affected titles</h2>
@@ -160,7 +145,7 @@ export function NativeRecoveryReview({
           </section>
           <section className="panel">
             <h2>Subtitle policies being renewed</h2>
-            {review.scope.subtitlePolicies.map((policy) => (
+            {subtitlePolicies.map((policy) => (
               <article key={policy.mediaId}>
                 <h3>
                   {
@@ -270,16 +255,31 @@ export function NativeRecoveryReview({
                   Recorded SHA-256: {file.checksum}
                 </p>
               ))}
-              <p>
-                Selected policy snapshots:{" "}
-                {review.scope.subtitlePolicies.length}
-              </p>
+              <p>Selected policy snapshots: {subtitlePolicies.length}</p>
             </details>
           </section>
         </>
       )}
     </>
   );
+}
+
+function reviewSubtitlePolicies(
+  review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
+) {
+  return review !== undefined && "subtitlePolicies" in review.scope
+    ? review.scope.subtitlePolicies
+    : [];
+}
+
+function compensationSelection(
+  review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
+) {
+  const scope = review?.scope;
+  return scope?.schemaVersion === 2 &&
+    scope.lifecycleKind === "publication_compensation"
+    ? scope
+    : null;
 }
 
 function archiveSelection(
@@ -304,6 +304,15 @@ function quarantineSelection(
 function reviewInterval(
   review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
 ) {
+  if (
+    review?.compensationContinuations?.some(
+      (item) =>
+        item.state === "pending" ||
+        item.state === "compensating" ||
+        item.publicationState === "publishing",
+    ) === true
+  )
+    return 5000;
   if (
     ["preparing", "applying"].includes(review?.state ?? "") ||
     review?.continuations.some(

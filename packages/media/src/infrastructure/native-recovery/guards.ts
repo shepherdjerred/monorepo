@@ -13,6 +13,7 @@ import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { buildNativeScope } from "./scope.ts";
 import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
 import type { NativeTerminalDescriptor } from "#shared/native-recovery/terminal.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 
 export async function assertNativeExclusion(tx: Prisma.TransactionClient) {
   for (const library of ["/data/movies", "/data/tv"]) {
@@ -32,6 +33,10 @@ export async function lockNativeScope(
 ) {
   const ids = scope.media.map((row) => row.id);
   await lockDefaultMedia(tx, ids);
+  await assertNoPublicationCompensationFence(tx, {
+    mediaIds: ids,
+    assetIds: scope.files.map((row) => row.assetId),
+  });
   await lockEffectiveRequests(tx, ids);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
   const assets = [

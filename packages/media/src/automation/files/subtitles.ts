@@ -1,5 +1,6 @@
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
 import { createHash } from "node:crypto";
 import { mkdir, writeFile, readFile, realpath, lstat } from "node:fs/promises";
 import { z } from "zod";
@@ -10,6 +11,7 @@ import {
   type FileContext,
 } from "./types.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { libraryLocation } from "./removal-plan.ts";
 import { fileOperations } from "./file-operations.ts";
 import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
@@ -43,6 +45,7 @@ export async function installSubtitle(
     await context.db.$transaction(async (tx) => {
       const ids = subtitle.asset.coverage.map((item) => item.mediaId);
       await lockMedia(tx, ids);
+      await assertPublicationUnfenced(tx, ids, [subtitle.assetId]);
       await assertNoSubtitleReplacement(tx, [subtitle.assetId]);
       await lockEffectiveRequests(tx, ids);
       await assertRuntime(tx, subtitle.ownershipEpoch);
@@ -144,6 +147,7 @@ export async function installSubtitle(
       await assertRuntime(tx, evidence.recoveryEpoch);
       await lockSubtitlePolicies(tx);
       const authorize = async () => {
+        await assertPublicationUnfenced(tx, mediaIds, [subtitle.assetId]);
         await context.checkpoint("subtitle-authorization");
         if (!(await context.enabled.acquisition()))
           throw new FileGuardError("acquisition_disabled");
@@ -204,7 +208,12 @@ export async function installSubtitle(
         where: { id: subtitleId },
         data: {
           state: "installed",
-          path: nodePath.join(roots.library, libraryPath),
+          path: storedFilePath(
+            context,
+            location.libraryKind,
+            "library",
+            libraryPath,
+          ),
           provenance: { ...provenance, checksum },
           checksum,
           version: { increment: 1 },

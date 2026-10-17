@@ -1,7 +1,7 @@
 import nodePath from "node:path";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { createHash } from "node:crypto";
-import { mkdir, realpath, writeFile, readFile } from "node:fs/promises";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
 import {
   extractEmbeddedSubtitle,
   type MediaProbe,
@@ -139,10 +139,13 @@ export async function commitEmbedded(input: {
       context.roots[entry.libraryKind].control,
       subtitle.relativePath,
     );
-    if ((await realpath(path)) !== path)
-      throw new FileGuardError("embedded_staging_unsafe");
-    const bytes = await readFile(path);
-    if (createHash("sha256").update(bytes).digest("hex") !== subtitle.checksum)
+    const prepared = context.preparedEmbedded?.get(subtitle.id);
+    if (
+      prepared?.path !== path ||
+      prepared.checksum !== subtitle.checksum ||
+      context.contentProof === undefined ||
+      (await context.contentProof.digest(path)) !== subtitle.checksum
+    )
       throw new FileGuardError("embedded_content_changed");
     await tx.subtitleAsset.upsert({
       where: { id: subtitle.id },
@@ -159,7 +162,7 @@ export async function commitEmbedded(input: {
         checksum: subtitle.checksum,
         videoChecksum: entry.checksum,
         videoVersion: 0,
-        content: bytes,
+        content: new Uint8Array(prepared.bytes),
         provenance: {
           filename: `embedded.${subtitle.format}`,
           description: "Embedded text track from the exact imported video",

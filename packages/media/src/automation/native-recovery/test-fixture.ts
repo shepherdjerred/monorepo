@@ -22,6 +22,7 @@ export async function nativeStorageFixture(
   cipher: CredentialCipher,
   sourceState: "seeding" | "removed" = "seeding",
   options: {
+    omitLegacySubtitlePolicy?: boolean;
     fileFactory?: () => Promise<Awaited<ReturnType<typeof fileFixture>>>;
     settle?: (
       file: Awaited<ReturnType<typeof fileFixture>>,
@@ -55,33 +56,41 @@ export async function nativeStorageFixture(
   const canonicalRoot = `/data/${libraryKind}`;
   const sectionId = libraryKind === "movies" ? "1" : "2";
   const canonicalPath = `${canonicalRoot}/${published.entry.libraryPath}`;
-  await db.libraryAsset.update({
-    where: { id: asset.id },
-    data: { path: canonicalPath },
-  });
-  const policy = await db.mediaSubtitlePolicyVersion.create({
-    data: {
-      mediaId: file.media.id,
-      version: 0,
-      recoveryEpoch: 0,
-      actorId: prior.actor.id,
-      source: { kind: "prior_native_owner_choice" },
-      rules: {
-        schemaVersion: 1,
-        protectedReasons: [],
-        targets: [
-          {
-            sourceItemId: 1,
-            language: "en",
-            audioLanguage: "en",
-            forced: false,
-            hearingImpaired: "any",
-            audio: "any",
+  if (file.context.pathMapping === undefined)
+    await db.libraryAsset.update({
+      where: { id: asset.id },
+      data: { path: canonicalPath },
+    });
+  else if (asset.path !== canonicalPath)
+    throw new Error(
+      "Mapped first publication must already have its canonical path",
+    );
+  const policy =
+    options.omitLegacySubtitlePolicy === true
+      ? null
+      : await db.mediaSubtitlePolicyVersion.create({
+          data: {
+            mediaId: file.media.id,
+            version: 0,
+            recoveryEpoch: 0,
+            actorId: prior.actor.id,
+            source: { kind: "prior_native_owner_choice" },
+            rules: {
+              schemaVersion: 1,
+              protectedReasons: [],
+              targets: [
+                {
+                  sourceItemId: 1,
+                  language: "en",
+                  audioLanguage: "en",
+                  forced: false,
+                  hearingImpaired: "any",
+                  audio: "any",
+                },
+              ],
+            },
           },
-        ],
-      },
-    },
-  });
+        });
   const sidecar = canonicalPath.replace(/\.[^.]+$/u, ".en.srt");
   const subtitleText = "1\n00:00:00,000 --> 00:00:01,000\nSynthetic subtitle\n";
   await writeFile(
@@ -189,13 +198,18 @@ export async function nativeStorageFixture(
   });
   const proofs = await grantTestExclusionProofs(db, prior.actor.id);
   const unusedKind = libraryKind === "movies" ? "tv" : "movies";
-  const unused = {
-    library: path.join(file.directory, unusedKind),
-    control: path.join(file.directory, `${unusedKind}-control`),
-    downloads: file.context.roots[libraryKind].downloads,
-  };
-  await mkdir(unused.library);
-  await mkdir(unused.control);
+  const unused =
+    file.context.pathMapping === undefined
+      ? {
+          library: path.join(file.directory, unusedKind),
+          control: path.join(file.directory, `${unusedKind}-control`),
+          downloads: file.context.roots[libraryKind].downloads,
+        }
+      : file.context.roots[unusedKind];
+  if (file.context.pathMapping === undefined) {
+    await mkdir(unused.library);
+    await mkdir(unused.control);
+  }
   file.context.roots[unusedKind] = unused;
   for (const proof of proofs) {
     const roots =
@@ -280,6 +294,7 @@ export async function nativeFileFixture(
     restore,
     context,
   } = setup;
+  if (policy === null) throw new Error("Default native fixture policy missing");
   const service = new PrismaNativeRecovery(db);
   const prepared = await service.prepare(prior.actor, crypto.randomUUID(), {
     restoreOperationId: restore.id,

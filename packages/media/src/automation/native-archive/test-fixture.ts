@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { rm, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { expect, vi } from "vitest";
@@ -129,7 +130,7 @@ export async function nativeArchiveFixture(
           const sidecar = asset.path.replace(/\.[^.]+$/u, ".en.srt");
           const bytes =
             "1\n00:00:00,000 --> 00:00:01,000\nExact archive subtitle\n";
-          await writeFile(sidecar, bytes);
+          await writeFile(workerFilePath(file.context, sidecar), bytes);
           await db.subtitleAsset.create({
             data: {
               assetId: asset.id,
@@ -208,6 +209,7 @@ export async function nativeArchiveFixture(
           );
         }
         for (const published of publications) {
+          if (file.context.pathMapping !== undefined) continue;
           const asset = await db.libraryAsset.findUniqueOrThrow({
             where: { id: published.entry.assetId },
           });
@@ -285,6 +287,7 @@ export async function nativeArchiveFixture(
     }
     const execution = testArchiveExecution;
     const observerContext: NativeArchiveObserverContext = {
+      describeWorkflow: () => Promise.resolve(null),
       ...setup.prior.context,
       archiveExecution: execution,
       plex: {

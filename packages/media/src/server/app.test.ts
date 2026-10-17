@@ -96,6 +96,23 @@ const recoveryFixture = {
 
 function nativeRecoveryFixture() {
   return {
+    async prepareCompensation(): Promise<never> {
+      throw new MediaError(
+        "conflict",
+        "No fixture publication compensation",
+        409,
+      );
+    },
+    async retryCompensation(): Promise<never> {
+      throw new MediaError(
+        "conflict",
+        "No fixture publication compensation",
+        409,
+      );
+    },
+    async compensationInventory() {
+      return { items: [], nextCursor: null };
+    },
     async prepareArchive(): Promise<never> {
       throw new MediaError("conflict", "No fixture archive recovery", 409);
     },

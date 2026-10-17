@@ -1,4 +1,5 @@
-import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import {
   advanceSubtitleBindings,
   ownedSubtitleSidecars,
@@ -66,6 +67,10 @@ export async function rollbackPromotion(
         const roots = context.roots[entry.libraryKind];
         const authorize = async () => {
           await context.checkpoint("rollback-authorization");
+          await assertPublicationUnfenced(tx, entry.mediaIds, [
+            entry.assetId,
+            previousAssetId,
+          ]);
           if (!(await context.enabled.acquisition()))
             throw new FileGuardError("acquisition_disabled");
           const epoch = z
@@ -125,7 +130,12 @@ export async function rollbackPromotion(
             previous.checksum !== previousChecksum ||
             previous.state !== "superseded" ||
             previous.path !==
-              nodePath.join(roots.control, "rollback", entry.operationId)
+              storedFilePath(
+                context,
+                entry.libraryKind,
+                "control",
+                `rollback/${entry.operationId}`,
+              )
           )
             throw new FileGuardError("rollback_asset_changed");
         };
@@ -148,7 +158,12 @@ export async function rollbackPromotion(
           await tx.subtitleAsset.update({
             where: { id: sidecar.subtitleId },
             data: {
-              path: nodePath.join(roots.library, sidecar.libraryPath),
+              path: storedFilePath(
+                context,
+                entry.libraryKind,
+                "library",
+                sidecar.libraryPath,
+              ),
             },
           });
         }
@@ -159,7 +174,12 @@ export async function rollbackPromotion(
         await tx.libraryAsset.update({
           where: { id: entry.assetId },
           data: {
-            path: nodePath.join(roots.control, "rollback", rollbackOperationId),
+            path: storedFilePath(
+              context,
+              entry.libraryKind,
+              "control",
+              `rollback/${rollbackOperationId}`,
+            ),
             state: "rejected",
             version: { increment: 1 },
           },
@@ -167,7 +187,12 @@ export async function rollbackPromotion(
         await tx.libraryAsset.update({
           where: { id: previousAssetId },
           data: {
-            path: nodePath.join(roots.library, entry.libraryPath),
+            path: storedFilePath(
+              context,
+              entry.libraryKind,
+              "library",
+              entry.libraryPath,
+            ),
             state: "published",
             supersededByAssetId: null,
             rollbackExpiresAt: null,

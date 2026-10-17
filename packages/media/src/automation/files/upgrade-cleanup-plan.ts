@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import type {
@@ -98,7 +99,8 @@ export async function prepareUpgradeCleanupPlan(
     throw new FileGuardError("cleanup_coverage_unknown");
   const libraryKind = kind === "movie" ? "movies" : "tv";
   const roots = context.roots[libraryKind];
-  const importId = controlId(roots.control, asset.path, "rollback");
+  const controlRoot = storedFilePath(context, libraryKind, "control", "");
+  const importId = controlId(controlRoot, asset.path, "rollback");
   const operations = fileOperations(context, roots, () =>
     Promise.reject(new Error("Cleanup planning cannot mutate files")),
   );
@@ -113,7 +115,7 @@ export async function prepareUpgradeCleanupPlan(
   const plan = deriveUpgradeCleanupPlan({
     asset,
     successor,
-    controlRoot: roots.control,
+    controlRoot,
   });
   await context.db.upgradeCleanup.updateMany({
     where: {

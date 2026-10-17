@@ -37,10 +37,57 @@ import {
 import { PrismaNativeQuarantine } from "#infrastructure/native-quarantine/service.ts";
 import { assertNativeOwner } from "./owner.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import type { MediaAutomationContext } from "#automation/context.ts";
+import { PrismaNativeCompensation } from "#infrastructure/native-compensation/service.ts";
+import {
+  compensationInventory,
+  compensationContinuationViews,
+} from "#infrastructure/native-compensation/view.ts";
+import {
+  type PrepareNativeCompensationSchema,
+  ApplyNativeCompensationSchema,
+} from "#shared/native-recovery/compensation.ts";
 
 export class PrismaNativeRecovery extends MediaCommandBase {
-  constructor(private readonly db: Database) {
+  constructor(
+    private readonly db: Database,
+    private readonly describe?: MediaAutomationContext["describeWorkflow"],
+  ) {
     super(db, { keepDays: 30 });
+  }
+  prepareCompensation(
+    actor: MediaActor,
+    key: string,
+    input: z.input<typeof PrepareNativeCompensationSchema>,
+  ) {
+    return new PrismaNativeCompensation(this.db, this.describe).prepare(
+      actor,
+      key,
+      input,
+    );
+  }
+  retryCompensation(
+    actor: MediaActor,
+    key: string,
+    id: string,
+    input: { expectedVersion: number },
+  ) {
+    return new PrismaNativeCompensation(this.db, this.describe).retry(
+      actor,
+      key,
+      id,
+      input,
+    );
+  }
+  async compensationInventory(actor: MediaActor, cursor: string | null = null) {
+    requireOwner(actor);
+    return this.db.$transaction(async (tx) => {
+      await assertNativeOwner(tx, actor.id);
+      return compensationInventory(
+        tx,
+        cursor === null ? null : z.uuid().parse(cursor),
+      );
+    });
   }
   prepareArchive(
     actor: MediaActor,
@@ -288,6 +335,15 @@ export class PrismaNativeRecovery extends MediaCommandBase {
         receiptId: row.receipt?.id ?? null,
         continuations: continuationViews,
         ...(storedScope.schemaVersion === 2 &&
+        storedScope.lifecycleKind === "publication_compensation"
+          ? {
+              compensationContinuations: await compensationContinuationViews(
+                tx,
+                id,
+              ),
+            }
+          : {}),
+        ...(storedScope.schemaVersion === 2 &&
         storedScope.lifecycleKind === "superseded_archive"
           ? { archiveContinuations: await archiveContinuationViews(tx, id) }
           : {}),
@@ -298,14 +354,26 @@ export class PrismaNativeRecovery extends MediaCommandBase {
     actor: MediaActor,
     key: string,
     id: string,
-    raw: z.input<typeof ApplyNativeRecoverySchema>,
+    raw:
+      | z.input<typeof ApplyNativeRecoverySchema>
+      | z.input<typeof ApplyNativeCompensationSchema>,
   ) {
     requireOwner(actor);
-    const input = ApplyNativeRecoverySchema.parse(raw);
     const selected = await this.db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id },
     });
     const selectedScope = NativeStoredScopeSchema.parse(selected.scope);
+    if (
+      selectedScope.schemaVersion === 2 &&
+      selectedScope.lifecycleKind === "publication_compensation"
+    )
+      return new PrismaNativeCompensation(this.db, this.describe).apply(
+        actor,
+        key,
+        id,
+        ApplyNativeCompensationSchema.parse(raw),
+      );
+    const input = ApplyNativeRecoverySchema.parse(raw);
     if (
       selectedScope.schemaVersion === 2 &&
       selectedScope.lifecycleKind === "superseded_archive"

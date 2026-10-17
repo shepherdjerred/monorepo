@@ -27,7 +27,7 @@ export async function settleReplacement(
       where: { id: row.oldSubtitleId },
       data: {
         state: "superseded",
-        path: paths.oldArchive,
+        path: paths.storedPath(paths.oldArchive),
         version: { increment: 1 },
       },
     });
@@ -78,8 +78,8 @@ export async function settleReplacement(
         candidateSubtitleId: row.candidateSubtitleId,
         videoVersion: scope.asset.version,
         oldPath: scope.old.path,
-        archivePath: paths.oldArchive,
-        rejectedPath: paths.rejected,
+        archivePath: paths.storedPath(paths.oldArchive),
+        rejectedPath: paths.storedPath(paths.rejected),
         importOperationId: row.importOperationId,
         rollbackOperationId: row.rollbackOperationId,
         settledAt: settledAt.toISOString(),

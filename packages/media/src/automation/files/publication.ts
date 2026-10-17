@@ -1,4 +1,4 @@
-import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
 import {
   ownedSubtitleSidecars,
   advanceSubtitleBindings,
@@ -21,12 +21,19 @@ import {
 } from "./types.ts";
 import { assertAcquisition } from "./guards.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
-import { importDescriptor } from "./inspection.ts";
-import { fileOperations } from "./file-operations.ts";
 import { recoverObsoletePublication } from "./recovery.ts";
 import { commitEmbedded } from "./embedded.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
-import { preparePublicationProof } from "./content-proof.ts";
+import { prepareRecordedPublicationProof } from "#automation/publication-proof/embedded.ts";
+import {
+  publicationInvocation,
+  requirePublicationExecution,
+} from "#automation/publication-proof/invocation.ts";
+import { producePublication } from "#automation/publication-proof/producer.ts";
+import { loadPublicationIntent } from "#infrastructure/publication-proof/store.ts";
+import { compensateRecordedPublication } from "#automation/publication-proof/local-compensation.ts";
+import { snapshotHash } from "#migration/profile-import.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { assertPlanEdition } from "./editions/acquisition.ts";
 import {
   assertMeasuredUpgrade,
@@ -37,6 +44,8 @@ export async function promote(
   initialContext: FileContext,
   attemptId: string,
 ): Promise<void> {
+  const execution = initialContext.publicationExecution?.();
+  execution?.assertActive();
   if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
   if (await resumeCommittedPublication({ context: initialContext, attemptId }))
@@ -44,62 +53,49 @@ export async function promote(
   const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  const rawFilePlanHash = snapshotHash(nativeJson(attempt.filePlan));
   const plan = FilePlanSchema.parse(attempt.filePlan);
-  const context = await preparePublicationProof(initialContext, plan);
-  const result = await context.db.$transaction(
-    async (tx) => {
-      await lockAcquisitionMedia(tx, attempt.mediaIds);
-      const current = await tx.acquisitionAttempt.findUniqueOrThrow({
-        where: { id: attemptId },
-      });
-      if (current.state === "imported") return "resume_committed";
-      try {
+  const context = await prepareRecordedPublicationProof(
+    publicationInvocation(
+      initialContext,
+      requirePublicationExecution(execution),
+    ),
+    plan,
+    attemptId,
+  );
+  try {
+    await producePublication({
+      context,
+      attempt,
+      plan,
+      rawFilePlanHash,
+      authorizePlan: async (tx, current) => {
+        await context.checkpoint("publication-authorization");
+        if (!(await context.enabled.acquisition()))
+          throw new FileGuardError("acquisition_disabled");
         await assertAcquisition(tx, attemptId, context.serverMachineId);
         await assertPlanEdition(tx, current, plan);
-        for (const entry of plan) await assertProfile(tx, entry);
-      } catch (error) {
-        if (
-          !(error instanceof FileGuardError) ||
-          !error.reason.includes("obsolete")
-        )
-          throw error;
-        await recoverObsoletePublication({ context, tx, attemptId, plan });
-        return error.reason;
-      }
-      for (const entry of plan) {
-        const authorize = async () => {
-          await context.checkpoint("publication-authorization");
-          if (!(await context.enabled.acquisition()))
-            throw new FileGuardError("acquisition_disabled");
-          await assertAcquisition(tx, attemptId, context.serverMachineId);
-          await assertPlanEdition(tx, current, plan);
-          await assertProfile(tx, entry);
-          await assertPrevious(tx, entry, current.recoveryEpoch);
-          await assertMeasuredUpgrade(
-            tx,
-            storedMeasuredRelease(entry.properties),
-            entry.mediaIds,
-            entry.assetId,
-          );
-        };
-        await authorize();
-        const roots = context.roots[entry.libraryKind];
-        const operations = fileOperations(context, roots, authorize);
-        for (const sidecar of entry.previousSidecars) {
-          await operations.quarantine({
-            operationId: sidecar.operationId,
-            libraryPath: sidecar.libraryPath,
-            quarantineId: sidecar.quarantineId,
-            sha256: sidecar.checksum,
-          });
-        }
-        await operations.importFile(importDescriptor(entry));
+      },
+      authorizeEntry: async (tx, current, entry) => {
+        await context.checkpoint("publication-authorization");
+        if (!(await context.enabled.acquisition()))
+          throw new FileGuardError("acquisition_disabled");
+        await assertProfile(tx, entry);
+        await assertPrevious(tx, entry, current.recoveryEpoch);
+        await assertMeasuredUpgrade(
+          tx,
+          storedMeasuredRelease(entry.properties),
+          entry.mediaIds,
+          entry.assetId,
+        );
+      },
+      commit: async (tx, entry) => {
         await commitPublication({
           tx,
           entry,
-          roots,
+          context,
           torrentId: attempt.torrentId,
-          recoveryEpoch: current.recoveryEpoch,
+          recoveryEpoch: attempt.recoveryEpoch,
         });
         await commitEmbedded({
           context,
@@ -107,19 +103,29 @@ export async function promote(
           entry,
           recoveryEpoch: attempt.recoveryEpoch,
         });
-      }
-      await tx.acquisitionAttempt.update({
-        where: { id: attemptId },
-        data: { state: "imported" },
-      });
-      return null;
-    },
-    { timeout: 30_000, maxWait: 30_000 },
-  );
-  if (result === "resume_committed") {
-    if (!(await resumeCommittedPublication({ context, attemptId })))
-      throw new FileGuardError("committed_plan_changed");
-  } else if (result !== null) throw new FileGuardError(result);
+      },
+    });
+  } catch (error) {
+    if (
+      !(error instanceof FileGuardError) ||
+      !error.reason.includes("obsolete")
+    )
+      throw error;
+    if (await compensateRecordedPublication(context, attemptId, plan))
+      throw error;
+    await context.db.$transaction(
+      async (tx) => {
+        await lockAcquisitionMedia(tx, attempt.mediaIds);
+        if ((await loadPublicationIntent(tx, attemptId)) !== null)
+          throw new FileGuardError(
+            "publication_recorded_compensation_required",
+          );
+        await recoverObsoletePublication({ context, tx, attemptId, plan });
+      },
+      { timeout: 30_000, maxWait: 30_000 },
+    );
+    throw error;
+  }
 }
 
 async function assertProfile(
@@ -227,11 +233,11 @@ async function assertPrevious(
 async function commitPublication(input: {
   tx: Transaction;
   entry: FilePlanEntry;
-  roots: FileContext["roots"]["movies"];
+  context: FileContext;
   torrentId: string | null;
   recoveryEpoch: number;
 }): Promise<void> {
-  const { tx, entry, roots, torrentId } = input;
+  const { tx, entry, torrentId } = input;
   if (
     (await tx.libraryAsset.findUnique({ where: { id: entry.assetId } })) !==
     null
@@ -247,7 +253,12 @@ async function commitPublication(input: {
     await tx.libraryAsset.update({
       where: { id: entry.previousAssetId },
       data: {
-        path: nodePath.join(roots.control, "rollback", entry.operationId),
+        path: storedFilePath(
+          input.context,
+          entry.libraryKind,
+          "control",
+          `rollback/${entry.operationId}`,
+        ),
         state: "superseded",
         supersededByAssetId: entry.assetId,
         version: { increment: 1 },
@@ -257,10 +268,11 @@ async function commitPublication(input: {
       await tx.subtitleAsset.update({
         where: { id: sidecar.subtitleId },
         data: {
-          path: nodePath.join(
-            roots.control,
-            "quarantine",
-            sidecar.quarantineId,
+          path: storedFilePath(
+            input.context,
+            entry.libraryKind,
+            "control",
+            `quarantine/${sidecar.quarantineId}`,
           ),
         },
       });
@@ -280,8 +292,18 @@ async function commitPublication(input: {
       id: entry.assetId,
       edition: "default",
       editionRootId: await defaultPhysicalRoot(tx, entry.mediaIds),
-      path: nodePath.join(roots.library, entry.libraryPath),
-      sourcePath: nodePath.join(roots.downloads, entry.downloadPath),
+      path: storedFilePath(
+        input.context,
+        entry.libraryKind,
+        "library",
+        entry.libraryPath,
+      ),
+      sourcePath: storedFilePath(
+        input.context,
+        entry.libraryKind,
+        "downloads",
+        entry.downloadPath,
+      ),
       torrentId,
       sizeBytes: BigInt(entry.sizeBytes),
       checksum: entry.checksum,

@@ -182,6 +182,7 @@ export class PrismaMediaApplication
           userId: actor.id,
           owner: reader.owner,
           epoch: runtime.recoveryEpoch,
+          serverMachineId: this.settings.serverMachineId,
           visible: reader.visible,
         }),
         subtitlePolicies: policies,

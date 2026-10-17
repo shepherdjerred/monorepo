@@ -1,5 +1,13 @@
 import { z } from "zod";
 import {
+  PublicationSubtitleEvidenceSchema,
+  PublicationSubtitleLineageSchema,
+} from "#shared/publication-proof/subtitle-lineage.ts";
+import {
+  PublicationAuthorityReferenceSchema,
+  ClosedCoordinatorObservationSchema,
+} from "#shared/publication-proof/references.ts";
+import {
   NativeRecoveryScopeSchema,
   NativeRecoveryFileSchema,
   NativeRecoveryFileEvidenceSchema,
@@ -23,6 +31,54 @@ const Ids = z
   .min(1)
   .max(100)
   .refine((ids) => new Set(ids).size === ids.length, "Duplicate IDs");
+export const NativeArchiveSupersessionTargetSchema = z.strictObject({
+  continuationId: z.uuid(),
+  receiptId: z.uuid(),
+  originalCleanupId: z.uuid(),
+  version: z.int().nonnegative(),
+  descriptorHash: Hash,
+  coordinatorOperationId: z.uuid(),
+  executionHash: Hash.nullable(),
+});
+const ArchiveParticipant = z.strictObject({
+  assetId: z.uuid(),
+  subtitleId: z.uuid().nullable(),
+  libraryKind: z.enum(["movies", "tv"]),
+  location: z.enum(["rollback", "quarantine"]),
+  id: z.string().regex(/^[\w-]{1,100}$/u),
+  canonicalPath: Path,
+  checksum: Hash,
+  sizeBytes: z.string().regex(/^\d+$/u),
+  identity: NativeFileIdentitySchema,
+});
+export const NativeArchiveSupersessionEvidenceSchema = z.strictObject({
+  continuationId: z.uuid(),
+  descriptorHash: Hash,
+  executionHash: Hash.nullable(),
+  participants: z.array(ArchiveParticipant).min(1).max(101),
+  absentJournals: z
+    .array(
+      z.strictObject({
+        libraryKind: z.enum(["movies", "tv"]),
+        canonicalPath: Path,
+        ancestors: NativeFileIdentitySchema.shape.ancestors,
+      }),
+    )
+    .min(1)
+    .max(101),
+});
+export const NativeArchiveSupersessionSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  continuationId: z.uuid(),
+  descriptorHash: Hash,
+  replacingPlanId: z.uuid(),
+  replacingReceiptId: z.uuid(),
+  replacingPlanHash: Hash,
+  target: NativeArchiveSupersessionTargetSchema,
+  closedCoordinator: ClosedCoordinatorObservationSchema,
+  evidence: NativeArchiveSupersessionEvidenceSchema,
+  supersededAt: z.iso.datetime(),
+});
 export const PrepareNativeArchiveSchema = z.strictObject({
   restoreOperationId: z.uuid(),
   recoveryEpoch: z.int().nonnegative(),
@@ -42,6 +98,7 @@ export const PriorNativeBindingSchema = z.strictObject({
   assetId: z.uuid(),
   bindingHash: Hash,
   physicalEvidenceHash: Hash,
+  subtitleLineage: PublicationSubtitleLineageSchema.optional(),
 });
 export const NativeArchiveSubtitleSnapshotSchema =
   NativeSubtitleSnapshotSchema.extend({
@@ -69,7 +126,7 @@ export const NativeArchiveFileSchema = NativeRecoveryFileSchema.extend({
   subtitles: z.array(NativeArchiveSubtitleSnapshotSchema).max(100),
   authority: z.discriminatedUnion("kind", [
     z.strictObject({ kind: z.literal("rebaseline") }),
-    PriorNativeBindingSchema,
+    ...PublicationAuthorityReferenceSchema.options,
   ]),
 });
 export const NativeArchiveEdgeSchema = z.strictObject({
@@ -125,6 +182,11 @@ export const NativeArchiveScopeSchema = NativeRecoveryScopeSchema.extend({
     .array(z.strictObject({ assetId: z.uuid(), mediaIds: Ids }))
     .min(1)
     .max(25),
+  supersessions: z
+    .array(NativeArchiveSupersessionTargetSchema)
+    .min(1)
+    .max(25)
+    .optional(),
 });
 export const NativeArchiveFileEvidenceSchema =
   NativeRecoveryFileEvidenceSchema.extend({
@@ -139,11 +201,36 @@ export const NativeArchiveFileEvidenceSchema =
         }),
       )
       .max(2525),
+    supersessionEvidence: z
+      .array(NativeArchiveSupersessionEvidenceSchema)
+      .min(1)
+      .max(25)
+      .optional(),
+    subtitleEvidence: z
+      .array(
+        z.strictObject({
+          assetId: z.uuid(),
+          evidence: PublicationSubtitleEvidenceSchema,
+        }),
+      )
+      .min(1)
+      .max(25)
+      .optional(),
   });
 export const NativeArchiveNetworkEvidenceSchema =
   NativeRecoveryNetworkEvidenceSchema.extend({
     schemaVersion: z.literal(2),
     lifecycleKind: z.literal("superseded_archive"),
+    supersededCoordinators: z
+      .array(
+        z.strictObject({
+          continuationId: z.uuid(),
+          closedCoordinator: ClosedCoordinatorObservationSchema,
+        }),
+      )
+      .min(1)
+      .max(25)
+      .optional(),
     plex: z.strictObject({
       currentPlayback: z
         .array(
@@ -216,7 +303,7 @@ export const NativeArchiveContinuationSchema = z.strictObject({
   scope: NativeArchiveScopeSchema,
   fileEvidence: NativeArchiveFileEvidenceSchema,
   bindings: z.array(NativeArchiveBindingSchema).max(25),
-  reusedBindings: z.array(PriorNativeBindingSchema).max(25),
+  reusedBindings: z.array(PublicationAuthorityReferenceSchema).max(25),
 });
 export const CleanupNativeArchiveInputSchema = z.strictObject({
   schemaVersion: z.literal(1),

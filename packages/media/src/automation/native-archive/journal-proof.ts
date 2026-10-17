@@ -12,7 +12,7 @@ import {
 } from "#automation/handoff/journals.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
-import { archiveOriginalJournals } from "./paths.ts";
+import { archiveOriginalJournals, archiveAllPaths } from "./paths.ts";
 import type {
   ArchiveCleanupProof,
   ArchiveCleanupBase,
@@ -115,7 +115,12 @@ export async function prepareCleanupJournalProof(
     const parents = await ancestors(path.join(control, "journal"));
     const before = await inventory(path.join(control, "journal"));
     const targets = new Set(
-      proof.paths
+      [
+        ...new Set([
+          ...archiveAllPaths(proof.descriptor.scope),
+          ...archiveAllPaths(proof.scope),
+        ]),
+      ]
         .filter((name) => name.startsWith(`/data/${kind}/`))
         .map((name) => nativeLocalPath(context, name)),
     );

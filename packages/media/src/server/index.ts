@@ -158,7 +158,7 @@ const app = createMediaApp({
   },
   numberingAdmin: new PrismaNumberingAdministration(database, tmdbClient),
   handoffAdmin: new PrismaMediaHandoff(database),
-  nativeRecoveryAdmin: new PrismaNativeRecovery(database),
+  nativeRecoveryAdmin: new PrismaNativeRecovery(database, temporal.describe),
   subtitleReplacements: new PrismaSubtitleReplacements(
     database,
     temporal.describe,

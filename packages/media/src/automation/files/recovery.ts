@@ -2,6 +2,7 @@ import nodePath from "node:path";
 import { z } from "zod";
 import { fileOperations } from "./file-operations.ts";
 import { assertRuntime, assertNoMediaSubtitleReplacement } from "./guards.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import {
   FileGuardError,
@@ -34,6 +35,10 @@ export async function recoverObsoletePublication(input: {
     const roots = context.roots[entry.libraryKind];
     const authorize = async () => {
       await context.checkpoint("obsolete-publication-recovery");
+      await assertPublicationUnfenced(tx, entry.mediaIds, [
+        entry.assetId,
+        ...(entry.previousAssetId === null ? [] : [entry.previousAssetId]),
+      ]);
       await assertRuntime(tx, epoch);
       await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
       if (

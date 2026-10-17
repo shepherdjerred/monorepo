@@ -1,3 +1,4 @@
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import {
   FileGuardError,
   RemovalPlanSchema,
@@ -268,6 +269,7 @@ export async function restoreFiles(
       for (const entry of plan) {
         const authorize = async () => {
           await context.checkpoint("restore-authorization");
+          await assertPublicationUnfenced(tx, entry.mediaIds, [entry.assetId]);
           if (!(await context.enabled.acquisition()))
             throw new FileGuardError("acquisition_disabled");
           await assertRuntime(tx, epoch);

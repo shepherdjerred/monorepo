@@ -21,11 +21,15 @@ import { archiveMedia, archiveTorrents } from "./snapshots.ts";
 import { snapshotArchiveFile } from "./file-snapshot.ts";
 import { archiveTerminalDependency } from "./terminal.ts";
 import { assertArchiveOrigin } from "./origin.ts";
+import { deriveArchiveSupersessions } from "./supersession.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { archiveCompensationSettlements } from "./compensation-settlement.ts";
 
 export async function buildNativeArchiveScope(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PrepareNativeArchiveSchema>,
 ) {
+  const budget = new PublicationAuthorityReadBudget();
   await assertNativeRestore(tx, { ...input, assetIds: [] });
   const closure = await archiveClosure(tx, input.cleanupIds);
   const assetIds = closure.assets.map((row) => row.id);
@@ -63,15 +67,20 @@ export async function buildNativeArchiveScope(
           "Absent archive lacks terminal cleanup",
         );
       terminalDependencies.push(
-        await archiveTerminalDependency(tx, pair, closure.assets),
+        await archiveTerminalDependency(tx, pair, closure.assets, budget),
       );
       continue;
     }
-    const file = await snapshotArchiveFile(tx, asset, {
-      cleanups: closure.cleanups,
-      cleanupIds: input.cleanupIds,
-      epoch: input.recoveryEpoch,
-    });
+    const file = await snapshotArchiveFile(
+      tx,
+      asset,
+      {
+        cleanups: closure.cleanups,
+        cleanupIds: input.cleanupIds,
+        epoch: input.recoveryEpoch,
+      },
+      budget,
+    );
     files.push(file);
   }
   for (const cleanup of closure.cleanups) {
@@ -90,18 +99,12 @@ export async function buildNativeArchiveScope(
     throw new NativeArchiveScopeProtection(
       "Selected archive cleanup already completed",
     );
-  await assertOriginalFiles(tx, files, edges);
-  if (
-    await tx.nativeArchiveCleanupContinuation.count({
-      where: {
-        originalCleanupId: { in: input.cleanupIds },
-        recoveryEpoch: input.recoveryEpoch,
-      },
-    })
-  )
-    throw new NativeArchiveScopeProtection(
-      "Archive cleanup already has current authority; changed publication requires transition reconciliation",
-    );
+  await assertOriginalFiles(tx, files, edges, budget);
+  const supersessions = await deriveArchiveSupersessions(
+    tx,
+    { request: input, files },
+    budget,
+  );
   const ancestors = media.flatMap((row) =>
     [row.parent?.id, row.parent?.parent?.id].filter((id) => id !== undefined),
   );
@@ -117,10 +120,13 @@ export async function buildNativeArchiveScope(
       assetId: asset.id,
       mediaIds: asset.coverage.map((row) => row.mediaId),
     })),
-    storageRoots: await resolveNativeStorageRoots(tx),
+    ...(supersessions.length === 0 ? {} : { supersessions }),
+    storageRoots: await resolveNativeStorageRoots(tx, budget),
     subtitlePolicies: await snapshotNativeSubtitlePolicies(tx, ids),
     household: await nativeHousehold(tx, ids, ancestors),
-    lifecycle: await nativeLifecycle(tx, ids, assetIds),
+    lifecycle: await nativeLifecycle(tx, ids, assetIds, {
+      attemptIds: await archiveCompensationSettlements(tx, files, budget),
+    }),
     torrents: await archiveTorrents(tx, assetIds),
   });
 }
@@ -129,11 +135,12 @@ async function assertOriginalFiles(
   tx: Prisma.TransactionClient,
   files: NativeArchiveFile[],
   edges: NativeArchiveEdge[],
+  budget: PublicationAuthorityReadBudget,
 ) {
   for (const edge of edges) {
     const file = files.find((item) => item.assetId === edge.assetId);
     if (file === undefined) throw new Error("Archive original file missing");
-    await assertArchiveOrigin(tx, file, edge);
+    await assertArchiveOrigin(tx, file, edge, budget);
   }
 }
 

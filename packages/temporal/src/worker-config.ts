@@ -40,6 +40,10 @@ import {
   nativeArchiveNetworkActivities,
   nativeArchiveFileActivities,
 } from "./activities/media/native-archive.ts";
+import {
+  nativeCompensationNetworkActivities,
+  nativeCompensationFileActivities,
+} from "./activities/media/native-compensation.ts";
 
 export type QueueWorkerRole =
   | "streambot"
@@ -111,6 +115,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
       ...capacityNetworkActivities,
       ...plexEventNetworkActivities,
       ...nativeArchiveNetworkActivities,
+      ...nativeCompensationNetworkActivities,
       ...plexExclusionNetworkWorkerActivities,
     },
     maxConcurrentActivityTaskExecutions: 4,
@@ -123,6 +128,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
       ...mediaFileWorkerActivities,
       ...capacityFileActivities,
       ...nativeArchiveFileActivities,
+      ...nativeCompensationFileActivities,
       ...plexExclusionFileWorkerActivities,
     },
     maxConcurrentActivityTaskExecutions: 1,

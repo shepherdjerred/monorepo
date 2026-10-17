@@ -34,6 +34,15 @@ import {
   archiveSubtitleEvidence,
   assertArchiveNeighbors,
 } from "./subtitle-proof.ts";
+import {
+  captureArchiveAuthority,
+  assertArchiveAuthorityProof,
+  archiveSubtitleAuthorityEvidence,
+} from "./authority-proof.ts";
+import {
+  captureArchiveSupersessions,
+  archiveSupersessionEvidence,
+} from "./supersession-proof.ts";
 
 export async function prepareNativeArchiveFiles(
   context: ArchiveFileContext,
@@ -81,12 +90,19 @@ export async function prepareNativeArchiveFiles(
   if (
     network.planId !== plan.id ||
     network.recoveryEpoch !== plan.recoveryEpoch ||
-    observation.evidenceHash !== snapshotHash(network) ||
+    observation.evidenceHash !== snapshotHash(z.json().parse(network)) ||
     observation.expiresAt <= new Date()
   )
     throw new Error("Archive network evidence changed");
   assertNativeEvidenceFresh(network);
   const content = new ContentProof();
+  const authorityProof = await captureArchiveAuthority(context, scope, content);
+  const supersessions = await captureArchiveSupersessions(
+    context,
+    scope,
+    content,
+    authorityProof.budget,
+  );
   const journals: JournalProof[] = [];
   const measured = [];
   const canonicalPaths = archiveAllPaths(scope);
@@ -109,6 +125,21 @@ export async function prepareNativeArchiveFiles(
   await assertArchiveNeighbors(context, scope);
   await verifyArchiveOriginalJournals(context, scope);
   content.seal();
+  await assertArchiveAuthorityProof(
+    context,
+    content,
+    authorityProof.participants,
+  );
+  const subtitleEvidence = await archiveSubtitleAuthorityEvidence(
+    context,
+    content,
+    authorityProof,
+  );
+  const supersessionEvidence = await archiveSupersessionEvidence(
+    context,
+    content,
+    supersessions,
+  );
   const files = await measuredArchiveEvidence(context, content, measured);
   const artifactAbsences = [];
   for (const name of archiveAbsentPaths(scope)) {
@@ -136,8 +167,10 @@ export async function prepareNativeArchiveFiles(
     files,
     terminalEvidence,
     artifactAbsences,
+    ...(scope.supersessions === undefined ? {} : { supersessionEvidence }),
+    ...(subtitleEvidence.length === 0 ? {} : { subtitleEvidence }),
   });
-  return { scope, content, journals, evidence };
+  return { scope, content, journals, evidence, authorityProof, supersessions };
 }
 export type PreparedNativeArchive = Awaited<
   ReturnType<typeof prepareNativeArchiveFiles>
