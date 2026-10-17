@@ -17,6 +17,8 @@ import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { assertSubtitleTarget } from "#automation/subtitles/install-authority.ts";
 import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
+import { subtitleDestination } from "#domain/subtitle-path.ts";
+import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 
 export async function installSubtitle(
   context: FileContext,
@@ -30,10 +32,17 @@ export async function installSubtitle(
     where: { id: subtitleId },
     include: { asset: { include: { coverage: { where: { current: true } } } } },
   });
+  if (
+    z
+      .object({ replacementFor: z.unknown() })
+      .safeParse(subtitle.matchingEvidence).success
+  )
+    throw new FileGuardError("subtitle_replacement_review_required");
   if (subtitle.storageKind === "embedded" || subtitle.state === "installed") {
     await context.db.$transaction(async (tx) => {
       const ids = subtitle.asset.coverage.map((item) => item.mediaId);
       await lockMedia(tx, ids);
+      await assertNoSubtitleReplacement(tx, [subtitle.assetId]);
       await lockEffectiveRequests(tx, ids);
       await assertRuntime(tx, subtitle.ownershipEpoch);
       await lockSubtitlePolicies(tx);
@@ -109,12 +118,13 @@ export async function installSubtitle(
     if (!bytes.equals(await readFile(source)))
       throw new FileGuardError("subtitle_staging_conflict");
   }
-  const language = z
-    .string()
-    .regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/u)
-    .parse(subtitle.language);
-  const suffix = `${subtitle.forced === true ? ".forced" : ""}${subtitle.hearingImpaired === true ? ".sdh" : ""}`;
-  const libraryPath = `${location.libraryPath.slice(0, -nodePath.extname(location.libraryPath).length)}.${language}${suffix}.${validated.format}`;
+  const libraryPath = subtitleDestination({
+    videoPath: location.libraryPath,
+    language: subtitle.language,
+    forced: subtitle.forced,
+    hearingImpaired: subtitle.hearingImpaired,
+    format: validated.format,
+  });
   const descriptor = {
     operationId,
     downloadPath: relativeSource,
@@ -128,6 +138,7 @@ export async function installSubtitle(
         (coverage) => coverage.mediaId,
       );
       await lockMedia(tx, mediaIds);
+      await assertNoSubtitleReplacement(tx, [subtitle.assetId]);
       await lockEffectiveRequests(tx, mediaIds);
       await assertRuntime(tx, evidence.recoveryEpoch);
       await lockSubtitlePolicies(tx);

@@ -109,6 +109,19 @@ function nativeRecoveryFixture() {
   };
 }
 
+async function unavailableSubtitleReplacement(): Promise<never> {
+  throw new MediaError("conflict", "No fixture subtitle replacement", 409);
+}
+function subtitleReplacementFixture() {
+  return {
+    list: async () => ({ items: [], nextCursor: null }),
+    detail: unavailableSubtitleReplacement,
+    prepare: unavailableSubtitleReplacement,
+    apply: unavailableSubtitleReplacement,
+    reconcile: unavailableSubtitleReplacement,
+  };
+}
+
 function fixture() {
   const act = vi.fn<MediaApplication["act"]>(async () => ({
     status: "queued",
@@ -265,6 +278,7 @@ function fixture() {
     migrationAdmin: migrationFixture,
     handoffAdmin: handoffFixture,
     nativeRecoveryAdmin: nativeRecoveryFixture(),
+    subtitleReplacements: subtitleReplacementFixture(),
     recoveryAdmin: recoveryFixture,
     plexExclusionAdmin: {
       async list() {

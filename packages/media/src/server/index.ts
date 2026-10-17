@@ -23,6 +23,7 @@ import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.t
 import { PrismaMigrationAdministration } from "#migration/persistence.ts";
 import { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
+import { PrismaSubtitleReplacements } from "#infrastructure/subtitle-replacement/service.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
 import { MigrationCatalogDiscovery } from "#migration/catalog-discovery.ts";
 import { PrismaPlexExclusionAdministration } from "#infrastructure/plex-exclusion-service.ts";
@@ -120,6 +121,10 @@ const app = createMediaApp({
   numberingAdmin: new PrismaNumberingAdministration(database),
   handoffAdmin: new PrismaMediaHandoff(database),
   nativeRecoveryAdmin: new PrismaNativeRecovery(database),
+  subtitleReplacements: new PrismaSubtitleReplacements(
+    database,
+    temporal.describe,
+  ),
   recoveryAdmin: new PrismaRecovery(database, bootstrap.PLEX_SERVER_MACHINE_ID),
   migrationAdmin: new PrismaMigrationAdministration(
     database,

@@ -5,7 +5,12 @@ import {
   type RemovalEntry,
   now,
 } from "./types.ts";
-import { assertRetention, assertRuntime, lockMedia } from "./guards.ts";
+import {
+  assertRetention,
+  assertRuntime,
+  assertNoMediaSubtitleReplacement,
+  lockMedia,
+} from "./guards.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { removalPlan, assertOwnedAsset } from "./removal-plan.ts";
 import { advanceSubtitleBindings } from "./subtitle-lifecycle/ownership.ts";
@@ -248,6 +253,7 @@ export async function restoreFiles(
           if (!(await context.enabled.acquisition()))
             throw new FileGuardError("acquisition_disabled");
           await assertRuntime(tx, epoch);
+          await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
           if (
             !(await recordsAuthorized(tx, {
               epoch,

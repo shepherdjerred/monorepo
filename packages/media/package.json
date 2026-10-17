@@ -6,6 +6,7 @@
   "exports": {
     "./contract": "./src/shared/contract.ts",
     "./automation": "./src/shared/automation.ts",
+    "./subtitle-replacement": "./src/shared/subtitle-replacement.ts",
     "./automation/network": "./src/automation/network.ts",
     "./automation/files": "./src/automation/files/activities.ts",
     "./plex-exclusion": "./src/shared/plex-exclusion.ts",

@@ -1,5 +1,19 @@
-import type { LibraryAsset, SubtitleAsset } from "#generated/prisma/client.ts";
+import type {
+  LibraryAsset,
+  SubtitleAsset,
+  Prisma,
+} from "#generated/prisma/client.ts";
 import { FileGuardError, type Transaction } from "#automation/files/types.ts";
+
+/** These immutable receipts own subtitle-only archives independently of the video lifecycle. */
+export const videoSubtitleWhere = {
+  NOT: {
+    state: { in: ["superseded", "purged"] },
+    oldReplacementArchives: {
+      some: { receipt: { is: { outcome: "installed" } } },
+    },
+  },
+} satisfies Prisma.SubtitleAssetWhereInput;
 
 /** Every tracked installed subtitle is checked; unowned historical records protect the video. */
 export function ownedSubtitleSidecars(

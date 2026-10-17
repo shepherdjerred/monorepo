@@ -5,7 +5,7 @@ import {
   type FilePlanEntry,
   type Transaction,
 } from "./types.ts";
-import { assertRuntime } from "./guards.ts";
+import { assertRuntime, assertNoMediaSubtitleReplacement } from "./guards.ts";
 import { fileOperations } from "./file-operations.ts";
 
 /** A failed first publication has no playable predecessor; retain its bytes outside Plex. */
@@ -23,6 +23,7 @@ export async function quarantineInitialPublication(input: {
     if (!(await context.enabled.acquisition()))
       throw new FileGuardError("acquisition_disabled");
     await assertRuntime(tx, recoveryEpoch);
+    await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
     const intents = await tx.mediaIntent.findMany({
       where: { mediaId: { in: entry.mediaIds } },
     });

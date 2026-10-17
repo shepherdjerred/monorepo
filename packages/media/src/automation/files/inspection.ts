@@ -311,16 +311,17 @@ async function inspectEntry(input: {
   ).map((subtitle) => {
     if (subtitle.path === null)
       throw new FileGuardError("subtitle_path_missing");
-    const evidence = z
-      .object({ checksum: z.string().regex(/^[a-f0-9]{64}$/u) })
-      .parse(subtitle.provenance);
+    const subtitleChecksum = z
+      .string()
+      .regex(/^[a-f0-9]{64}$/u)
+      .parse(subtitle.checksum);
     return {
       subtitleId: subtitle.id,
       libraryPath: nodePath.relative(
         context.roots[kind].library,
         subtitle.path,
       ),
-      checksum: evidence.checksum,
+      checksum: subtitleChecksum,
       quarantineId: crypto.randomUUID(),
       operationId: crypto.randomUUID(),
     };

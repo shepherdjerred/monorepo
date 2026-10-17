@@ -5,6 +5,7 @@ import { requireActiveRuntime } from "#automation/runtime.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { reconcileUnconfirmedSubmission } from "#automation/acquisition-submission.ts";
+import { sweepSubtitleReplacements } from "#infrastructure/subtitle-replacement/sweep.ts";
 
 const failedStatuses = new Set([
   "FAILED",
@@ -20,6 +21,7 @@ export async function sweepDownloads(
   if (cursor === null) {
     await context.refreshWriterLease();
     await context.refreshExclusionProofs();
+    await sweepSubtitleReplacements(context);
   }
   return await sweepDownloadAttempts(context, cursor);
 }

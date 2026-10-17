@@ -143,6 +143,12 @@ export const ManualSubtitleSchema = z
       .enum(["utf8", "utf-16le", "utf-16be", "gb18030"])
       .optional(),
     confirmedMatchingVideo: z.literal(true),
+    replacementFor: z
+      .strictObject({
+        oldSubtitleId: z.uuid(),
+        expectedOldVersion: z.int().nonnegative(),
+      })
+      .optional(),
   })
   .strict();
 export const SubtitleTargetListSchema = z.array(
@@ -153,6 +159,22 @@ export const SubtitleTargetListSchema = z.array(
     filename: z.string(),
     titles: z.array(z.string()),
     installedLanguages: z.array(z.string()),
+    subtitles: z
+      .array(
+        z.strictObject({
+          id: z.uuid(),
+          version: z.int().nonnegative(),
+          state: z.enum(["validated", "installed"]),
+          qualityStatus: z.enum(["accepted", "unverified", "rejected"]),
+          language: z.string(),
+          forced: z.boolean().nullable(),
+          hearingImpaired: z.boolean().nullable(),
+          providerId: z.string(),
+          filename: z.string().nullable(),
+          storageKind: z.string(),
+        }),
+      )
+      .max(200),
   }),
 );
 export type ManualSubtitle = z.infer<typeof ManualSubtitleSchema>;

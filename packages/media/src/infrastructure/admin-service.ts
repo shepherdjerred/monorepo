@@ -14,15 +14,14 @@ import {
   type SaveProvider,
   type ManualSubtitle,
 } from "#shared/admin.ts";
-import { validateSubtitle } from "#integrations/subtitle-validation.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { currentSubtitleWork } from "#automation/subtitles/authority.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { createHash } from "node:crypto";
-import type { Prisma } from "#generated/prisma/client.ts";
 import { PrismaMediaCommands } from "./commands.ts";
 import type { Database } from "./database.ts";
-import { lockMedia } from "./locks.ts";
+import { parseManualSubtitle, lockSubtitleAsset } from "./manual-subtitle.ts";
+import { createManualReplacementCandidate } from "./manual-subtitle-replacement.ts";
 import { queueOperation } from "#automation/store.ts";
 
 const privateTrackers = new Set<AdminProviderId>([
@@ -280,15 +279,37 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
       orderBy: { createdAt: "desc" },
       include: {
         coverage: { where: { current: true }, include: { media: true } },
-        subtitles: { where: { state: { in: ["validated", "installed"] } } },
+        subtitles: {
+          where: { state: { in: ["validated", "installed"] } },
+          take: 201,
+        },
       },
     });
+    if (assets.some((asset) => asset.subtitles.length > 200))
+      throw new MediaError(
+        "subtitle_inventory_large",
+        "This video needs a bounded subtitle inventory review",
+        409,
+      );
     return assets.map((asset) => ({
       assetId: asset.id,
       version: asset.version,
       checksum: z.string().parse(asset.checksum),
       filename: nodePath.basename(asset.sourcePath ?? asset.path),
       titles: asset.coverage.map((coverage) => coverage.media.title),
+      subtitles: asset.subtitles.map((subtitle) => ({
+        id: subtitle.id,
+        version: subtitle.version,
+        state: subtitle.state,
+        qualityStatus: subtitle.qualityStatus,
+        language: subtitle.language,
+        forced: subtitle.forced,
+        hearingImpaired: subtitle.hearingImpaired,
+        providerId: subtitle.providerId,
+        filename:
+          subtitle.path === null ? null : nodePath.basename(subtitle.path),
+        storageKind: subtitle.storageKind,
+      })),
       installedLanguages: asset.subtitles
         .filter((subtitle) =>
           subtitleAccepted({
@@ -312,6 +333,14 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
         422,
       );
     const validated = parseManualSubtitle(input, bytes);
+    if (input.replacementFor !== undefined)
+      return this.command(
+        actor,
+        key,
+        { kind: "upload_subtitle_replacement", input },
+        (tx) =>
+          createManualReplacementCandidate(tx, { actor, input, validated }),
+      );
     return this.command(
       actor,
       key,
@@ -416,57 +445,4 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
       },
     );
   }
-}
-
-function parseManualSubtitle(input: ManualSubtitle, bytes: Uint8Array) {
-  try {
-    return validateSubtitle({
-      bytes,
-      filename: input.filename,
-      provenanceText: input.description,
-      requireSimplified: input.language === "zh-Hans",
-      ...(input.declaredEncoding === undefined
-        ? {}
-        : { declaredEncoding: input.declaredEncoding }),
-    });
-  } catch {
-    throw new MediaError(
-      "subtitle_invalid",
-      "Subtitle timing, encoding, script, or human translation evidence could not be validated",
-      422,
-    );
-  }
-}
-
-async function lockSubtitleAsset(
-  tx: Prisma.TransactionClient,
-  input: ManualSubtitle,
-) {
-  const before = await tx.libraryAsset.findUnique({
-    where: { id: input.assetId },
-    include: { coverage: { where: { current: true } } },
-  });
-  if (before === null)
-    throw new MediaError("asset_not_found", "Video asset does not exist", 404);
-  const ids = before.coverage.map((coverage) => coverage.mediaId);
-  await lockMedia(tx, ids);
-  const asset = await tx.libraryAsset.findUniqueOrThrow({
-    where: { id: input.assetId },
-    include: { coverage: { where: { current: true } } },
-  });
-  if (
-    !asset.owned ||
-    asset.state !== "published" ||
-    asset.checksum !== input.expectedChecksum ||
-    asset.version !== input.expectedAssetVersion ||
-    ids.length === 0 ||
-    asset.coverage.length !== ids.length ||
-    asset.coverage.some((coverage) => !ids.includes(coverage.mediaId))
-  )
-    throw new MediaError(
-      "asset_version_conflict",
-      "The owned video version changed; select it again",
-      409,
-    );
-  return asset;
 }

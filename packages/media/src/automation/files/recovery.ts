@@ -1,7 +1,7 @@
 import nodePath from "node:path";
 import { z } from "zod";
 import { fileOperations } from "./file-operations.ts";
-import { assertRuntime } from "./guards.ts";
+import { assertRuntime, assertNoMediaSubtitleReplacement } from "./guards.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import {
   FileGuardError,
@@ -35,6 +35,7 @@ export async function recoverObsoletePublication(input: {
     const authorize = async () => {
       await context.checkpoint("obsolete-publication-recovery");
       await assertRuntime(tx, epoch);
+      await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
       if (
         !(await recordsAuthorized(tx, {
           epoch,

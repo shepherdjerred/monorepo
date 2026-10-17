@@ -1,6 +1,5 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
-import { z } from "zod";
 import {
   ownedSubtitleSidecars,
   advanceSubtitleBindings,
@@ -12,6 +11,8 @@ import {
   type UpgradeCleanupPlan,
 } from "./upgrade-cleanup-plan.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
+import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
+import { videoSubtitleWhere } from "./subtitle-lifecycle/ownership.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { fileOperations } from "./file-operations.ts";
 import {
@@ -190,12 +191,16 @@ async function assertCleanupAssets(input: {
   plan: UpgradeCleanupPlan;
 }): Promise<void> {
   const { tx, context, cleanup, plan } = input;
+  await assertNoSubtitleReplacement(tx, [
+    cleanup.assetId,
+    cleanup.successorAssetId,
+  ]);
   await tx.$queryRaw(
     Prisma.sql`SELECT id FROM "LibraryAsset" WHERE id IN (${Prisma.join([cleanup.assetId, cleanup.successorAssetId].sort())}) ORDER BY id FOR UPDATE`,
   );
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: cleanup.assetId },
-    include: { coverage: true, subtitles: true },
+    include: { coverage: true, subtitles: { where: videoSubtitleWhere } },
   });
   const successor = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: cleanup.successorAssetId },
@@ -258,9 +263,7 @@ async function assertSidecars(
           subtitle.id === file.subtitleId &&
           subtitle.state === "superseded" &&
           subtitle.path === file.path &&
-          z
-            .object({ checksum: z.literal(file.checksum) })
-            .safeParse(subtitle.provenance).success,
+          subtitle.checksum === file.checksum,
       )
     )
       throw new FileGuardError("cleanup_sidecar_changed");

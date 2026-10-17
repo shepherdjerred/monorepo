@@ -25,6 +25,8 @@ export const CommandResultSchema = z.object({
   runId: z.uuid().optional(),
   handoffId: z.uuid().optional(),
   nativeRecoveryId: z.uuid().optional(),
+  subtitleId: z.uuid().optional(),
+  subtitleReplacementId: z.uuid().optional(),
   recoveryReviewId: z.uuid().optional(),
   recoveryReceiptId: z.uuid().optional(),
   status: z.enum(["queued", "completed"]).optional(),

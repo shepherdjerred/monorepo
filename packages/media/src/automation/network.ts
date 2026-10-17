@@ -37,6 +37,8 @@ import { createHandoffNetworkProducer } from "#migration/handoff-network/produce
 import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
 import { createHandoffFileActivities } from "./handoff/activities.ts";
 import { createNativeFileActivities } from "./native-recovery/activities.ts";
+import { createSubtitleReplacementActivities } from "./subtitle-replacement/activities.ts";
+import { createSubtitleReplacementNetworkActivities } from "#infrastructure/subtitle-replacement/activities.ts";
 import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
 import type { FileContext } from "./files/types.ts";
 
@@ -243,6 +245,7 @@ export async function createMediaFileRuntime(
   };
   const activities = {
     ...createMediaFileActivities(fileContext),
+    ...createSubtitleReplacementActivities(fileContext),
     ...createHandoffFileActivities({
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
@@ -355,6 +358,7 @@ export async function createMediaNetworkRuntime(
   return {
     activities: {
       ...createMediaNetworkActivities(context, lifecycle),
+      ...createSubtitleReplacementNetworkActivities(context.db),
       observeNativeRecovery: async (input: { planId: string }) => {
         await context.qbittorrent.login();
         await createNativeRecoveryObserver({

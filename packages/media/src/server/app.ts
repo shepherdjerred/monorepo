@@ -5,6 +5,10 @@ import {
 } from "./recovery-routes.ts";
 import { registerNotificationActions } from "./notification-actions.ts";
 import {
+  registerSubtitleReplacementRoutes,
+  type SubtitleReplacementAdministration,
+} from "./subtitle-replacement-routes.ts";
+import {
   registerHandoffRoutes,
   type HandoffAdministration,
 } from "./handoff-routes.ts";
@@ -60,6 +64,7 @@ export type MediaAppDependencies = {
   migrationAdmin: MigrationAdministration;
   handoffAdmin: HandoffAdministration;
   nativeRecoveryAdmin: NativeRecoveryAdministration;
+  subtitleReplacements: SubtitleReplacementAdministration;
   recoveryAdmin: RecoveryAdministration;
   plexExclusionAdmin: PlexExclusionAdministration;
   publicOrigin: string;
@@ -474,6 +479,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   registerMigrationRoutes(app, dependencies.migrationAdmin);
   registerHandoffRoutes(app, dependencies.handoffAdmin);
   registerNativeRecoveryRoutes(app, dependencies.nativeRecoveryAdmin);
+  registerSubtitleReplacementRoutes(app, dependencies.subtitleReplacements);
   registerPlexExclusionRoutes(app, dependencies.plexExclusionAdmin);
   app.notFound((c) =>
     c.json(

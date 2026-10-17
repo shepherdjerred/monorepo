@@ -1,10 +1,9 @@
-import { createHash } from "node:crypto";
-import { AsyncLocalStorage } from "node:async_hooks";
 import { lstat, readFile } from "node:fs/promises";
 import { contentIO } from "./content-io.ts";
 import type { ContentProof } from "./content-proof.ts";
 import nodePath from "node:path";
-import { withAdvisoryLock } from "./advisory-lock.ts";
+import { FileLockError } from "./advisory-lock.ts";
+import { OperationLocks } from "./operation-locks.ts";
 import {
   verifyStableFile,
   requireFileIdentity,
@@ -35,7 +34,7 @@ import {
 
 /** Filesystem journal complements the database operation journal. All paths are root-relative. */
 export class FileOperations {
-  private readonly locks = new AsyncLocalStorage<readonly (() => void)[]>();
+  private readonly locks: OperationLocks;
   private readonly content: ReturnType<typeof contentIO>;
   constructor(
     private readonly roots: MediaFileRoots,
@@ -50,6 +49,11 @@ export class FileOperations {
     },
   ) {
     validateMediaRoots(roots, options.verifyPlexExclusion !== undefined);
+    this.locks = new OperationLocks(
+      roots,
+      (relative) => this.controlPath(relative),
+      () => this.verifyControlExclusion(),
+    );
     this.content = contentIO(options.contentProof, async () => {
       await this.checkpoint("hashing");
     });
@@ -61,7 +65,7 @@ export class FileOperations {
     action: (proof: VerifiedFileProof) => Promise<T>,
   ): Promise<T> {
     const target = await safePath(this.roots.library, input.libraryPath, false);
-    return await this.withLock(target, async () => {
+    return await this.locks.withLock(target, async () => {
       await this.verifyControlExclusion();
       await safePath(this.roots.library, input.libraryPath, false);
       const proof = await verifyStableFile(target, input, async () => {
@@ -81,16 +85,25 @@ export class FileOperations {
     proof: VerifiedFileProof,
     action: () => Promise<T>,
   ): Promise<T> {
+    if (this.locks.isHeld(proof.target)) throw new FileLockError("busy");
     const target = await safePath(this.roots.library, proof.libraryPath, false);
-    return await this.withLock(target, async () => {
+    return await this.locks.withLock(target, async () => {
       await this.verifyControlExclusion();
-      await safePath(this.roots.library, proof.libraryPath, false);
       await requireFileIdentity(target, proof);
       for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
       const result = await action();
       for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
       return result;
     });
+  }
+
+  /** Sorted operation→library locks, with exact same-instance mutation composition. */
+  async withFileIdentities<T>(
+    proofs: readonly VerifiedFileProof[],
+    action: () => Promise<T>,
+    operationIds: readonly string[] = [],
+  ): Promise<T> {
+    return await this.locks.withFileIdentities(proofs, action, operationIds);
   }
 
   async importFile(input: ImportFile): Promise<FileOperationManifest> {
@@ -104,95 +117,98 @@ export class FileOperations {
       false,
     );
     const target = await safePath(this.roots.library, input.libraryPath, true);
-    return await this.withLock(`operation:${input.operationId}`, async () => {
-      const descriptor = {
-        version: 1,
-        operationId: input.operationId,
-        kind: "import",
-        source,
-        target,
-        sha256: input.sha256,
-        previousSha256: input.previousSha256 ?? null,
-        phase: "prepared",
-      };
-      let manifest = await this.prepare(ManifestSchema.parse(descriptor));
-      const staged = await this.controlPath(`staging/${input.operationId}`);
-      const backup = await this.controlPath(`rollback/${input.operationId}`);
-      if (manifest.phase === "complete") {
-        await this.requireDigest(target, input.sha256);
-        return manifest;
-      }
-      if (manifest.phase === "prepared") {
-        if (this.options.contentProof !== undefined)
-          throw new FileOperationConflict(
-            "Publication requires previously staged content",
-          );
-        await this.requireDigest(source, input.sha256);
-        const sourceStat = await lstat(source);
-        await requireCapacity(
-          staged,
-          sourceStat.size,
-          this.options.minimumFreeBytes,
-        );
-        if (!(await exists(staged))) {
-          const partial = `${staged}.partial`;
-          // Only this operation's journal-owned incomplete copy can be removed.
-          if (await exists(partial)) await this.content.unlink(partial);
-          await copyExclusive(source, partial, async () => {
-            await this.checkpoint("copying");
-          });
-          await this.requireDigest(partial, input.sha256);
-          await syncFile(partial);
-          await this.content.rename(partial, staged);
-          await syncDirectory(nodePath.dirname(staged));
+    return await this.locks.withLock(
+      `operation:${input.operationId}`,
+      async () => {
+        const descriptor = {
+          version: 1,
+          operationId: input.operationId,
+          kind: "import",
+          source,
+          target,
+          sha256: input.sha256,
+          previousSha256: input.previousSha256 ?? null,
+          phase: "prepared",
+        };
+        let manifest = await this.prepare(ManifestSchema.parse(descriptor));
+        const staged = await this.controlPath(`staging/${input.operationId}`);
+        const backup = await this.controlPath(`rollback/${input.operationId}`);
+        if (manifest.phase === "complete") {
+          await this.requireDigest(target, input.sha256);
+          return manifest;
         }
-        await this.requireDigest(staged, input.sha256);
-        manifest = { ...manifest, phase: "staged" };
-        await this.save(manifest);
-        await this.checkpoint("staged");
-      }
-      if (input.stopAfterStaging === true) return manifest;
-      return await this.withLock(target, async () => {
-        await this.authorize(manifest);
-        if (await exists(target)) {
-          const digest = await this.digest(target);
-          if (digest === input.sha256) {
-            if (await exists(staged)) await this.content.unlink(staged);
-            return await this.complete(manifest);
-          }
-          if (
-            input.previousSha256 === undefined ||
-            digest !== input.previousSha256
-          )
+        if (manifest.phase === "prepared") {
+          if (this.options.contentProof !== undefined)
             throw new FileOperationConflict(
-              "Publication would replace an unrecognized file",
+              "Publication requires previously staged content",
             );
-          if (await exists(backup))
-            await this.requireDigest(backup, input.previousSha256);
-          else {
-            await this.content.link(target, backup);
-            await syncDirectory(nodePath.dirname(backup));
+          await this.requireDigest(source, input.sha256);
+          const sourceStat = await lstat(source);
+          await requireCapacity(
+            staged,
+            sourceStat.size,
+            this.options.minimumFreeBytes,
+          );
+          if (!(await exists(staged))) {
+            const partial = `${staged}.partial`;
+            // Only this operation's journal-owned incomplete copy can be removed.
+            if (await exists(partial)) await this.content.unlink(partial);
+            await copyExclusive(source, partial, async () => {
+              await this.checkpoint("copying");
+            });
+            await this.requireDigest(partial, input.sha256);
+            await syncFile(partial);
+            await this.content.rename(partial, staged);
+            await syncDirectory(nodePath.dirname(staged));
           }
-          await this.checkpoint("previous-version-preserved");
-          await this.requireDigest(target, input.previousSha256);
-        } else if (input.previousSha256 !== undefined) {
-          await this.requireDigest(backup, input.previousSha256);
+          await this.requireDigest(staged, input.sha256);
+          manifest = { ...manifest, phase: "staged" };
+          await this.save(manifest);
+          await this.checkpoint("staged");
         }
-        await this.requireDigest(staged, input.sha256);
-        await this.authorize(manifest);
-        if (input.previousSha256 === undefined) {
-          // New publications must never replace an unmanaged destination.
-          await this.content.link(staged, target);
-          await this.content.unlink(staged);
-        } else {
-          // The old file stays playable until this same-filesystem atomic replacement.
-          await this.content.rename(staged, target);
-        }
-        await syncDirectory(nodePath.dirname(target));
-        await this.checkpoint("published");
-        return await this.complete(manifest);
-      });
-    });
+        if (input.stopAfterStaging === true) return manifest;
+        return await this.locks.withLock(target, async () => {
+          await this.authorize(manifest);
+          if (await exists(target)) {
+            const digest = await this.digest(target);
+            if (digest === input.sha256) {
+              if (await exists(staged)) await this.content.unlink(staged);
+              return await this.complete(manifest);
+            }
+            if (
+              input.previousSha256 === undefined ||
+              digest !== input.previousSha256
+            )
+              throw new FileOperationConflict(
+                "Publication would replace an unrecognized file",
+              );
+            if (await exists(backup))
+              await this.requireDigest(backup, input.previousSha256);
+            else {
+              await this.content.link(target, backup);
+              await syncDirectory(nodePath.dirname(backup));
+            }
+            await this.checkpoint("previous-version-preserved");
+            await this.requireDigest(target, input.previousSha256);
+          } else if (input.previousSha256 !== undefined) {
+            await this.requireDigest(backup, input.previousSha256);
+          }
+          await this.requireDigest(staged, input.sha256);
+          await this.authorize(manifest);
+          if (input.previousSha256 === undefined) {
+            // New publications must never replace an unmanaged destination.
+            await this.content.link(staged, target);
+            await this.content.unlink(staged);
+          } else {
+            // The old file stays playable until this same-filesystem atomic replacement.
+            await this.content.rename(staged, target);
+          }
+          await syncDirectory(nodePath.dirname(target));
+          await this.checkpoint("published");
+          return await this.complete(manifest);
+        });
+      },
+    );
   }
 
   async quarantine(input: MoveFile): Promise<FileOperationManifest> {
@@ -232,10 +248,10 @@ export class FileOperations {
     const rejected = await this.controlPath(
       `rollback/${input.rollbackOperationId}`,
     );
-    return await this.withLock(
+    return await this.locks.withLock(
       `operation:${input.rollbackOperationId}`,
       async () =>
-        await this.withLock(target, async () => {
+        await this.locks.withLock(target, async () => {
           const original = await this.readManifest(input.operationId);
           if (
             original?.kind !== "import" ||
@@ -316,10 +332,10 @@ export class FileOperations {
     const source = await this.controlPath(
       `${input.location ?? "quarantine"}/${input.quarantineId}`,
     );
-    return await this.withLock(
+    return await this.locks.withLock(
       `operation:${input.operationId}`,
       async () =>
-        await this.withLock(source, async () => {
+        await this.locks.withLock(source, async () => {
           // Absence is evidence too: never let either recovery branch bypass its
           // captured parent and leaf identities merely because exists() is false.
           await this.options.contentProof?.digest(source);
@@ -376,13 +392,13 @@ export class FileOperations {
     const second = paths[1];
     if (first === undefined || second === undefined)
       throw new Error("Missing move paths");
-    return await this.withLock(
+    return await this.locks.withLock(
       `operation:${operationId}`,
       async () =>
-        await this.withLock(
+        await this.locks.withLock(
           first,
           async () =>
-            await this.withLock(second, async () => {
+            await this.locks.withLock(second, async () => {
               const manifest = await this.prepare({
                 version: 1,
                 operationId,
@@ -461,20 +477,6 @@ export class FileOperations {
   private async save(manifest: FileOperationManifest): Promise<void> {
     const path = await this.controlPath(`journal/${manifest.operationId}.json`);
     await saveManifest(path, manifest);
-  }
-
-  private async withLock<T>(
-    target: string,
-    action: () => Promise<T>,
-  ): Promise<T> {
-    const name = createHash("sha256").update(target).digest("hex");
-    const path = await this.controlPath(`locks/${name}.lock`);
-    const outerLocks = this.locks.getStore() ?? [];
-    return await withAdvisoryLock(
-      path,
-      async (assertHeld) =>
-        await this.locks.run([...outerLocks, assertHeld], action),
-    );
   }
 
   private async authorize(manifest: FileOperationManifest): Promise<void> {
