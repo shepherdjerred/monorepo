@@ -318,7 +318,7 @@ export class Streamer {
 
   public signalLeaveVoice(): void {
     this.sendOpcode(GatewayOpCodes.VOICE_STATE_UPDATE, {
-      guild_id: null,
+      guild_id: this.voiceConnection?.guildId ?? null,
       channel_id: null,
       self_mute: true,
       self_deaf: false,
