@@ -105,6 +105,43 @@ define these roles and monitoring requirements.
    legacy progression delivery Schedule while its producers remain active.
    Reconciliation never backfills every missed occurrence.
 
+## Protect long-lived signal receivers
+
+Before ramping a producer with new signal fields, prepare its existing receivers.
+Compare the [signal contracts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/temporal/src/workflow-contracts.ts)
+and [discovery producer](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/temporal/src/workflows/shared-match-dispatch.ts).
+An optional field in the new contract can still fail an old strict reader.
+
+1. Deploy the compatible candidate without changing Current. Replay each
+   protected receiver run and pass the exact-version queue canary.
+2. For production, first verify that beta accepted this exact build as Current
+   with no ramp. Coordinate the receiver change with the rollout owner.
+3. Describe the receiver's exact Workflow ID and Run ID. Inspect its existing
+   override and version transition before changing either.
+4. For a receiver without an in-progress transition, forward-pin that exact run
+   to the verified candidate using
+   [`workflow update-options`](https://docs.temporal.io/cli/command-reference/workflow#update-options):
+
+   ```bash
+   temporal workflow update-options \
+     --namespace <beta-or-prod> \
+     --workflow-id <receiver-workflow-id> --run-id <receiver-run-id> \
+     --versioning-override-behavior pinned \
+     --versioning-override-deployment-name <stage-deployment-name> \
+     --versioning-override-build-id <candidate-image-git-sha>
+   ```
+
+5. Read back the override before starting the producer ramp. If a transition
+   was already pending, do not treat a stored override as successful recovery.
+   Verify the actual task receiver through the supported forward rollout;
+   do not reset executions or edit their histories.
+6. Keep the native ramp and health gates below. Verify pending receiver work
+   completes on the candidate. For an idle receiver, retain replay and canary
+   evidence; do not fabricate matches or product signals to make it run.
+7. After the candidate is accepted as Current with no ramp, clear only this
+   rollout's temporary override using behavior `unspecified`. Inspect the latest
+   canonical run first: a natural Continue-As-New can inherit the override.
+
 ## Start the beta Workflow Deployment ramp
 
 For Activity-only changes, keep the accepted Workflow Deployment pins and
