@@ -6,6 +6,14 @@ import {
   QuiescenceEvidenceSchema,
 } from "./legacy-observer.ts";
 import { PublicReleaseAttributesSchema } from "./api.ts";
+import {
+  HandoffSubtitleSchema,
+  HandoffSubtitleEvidenceSchema,
+} from "./subtitle-handoff.ts";
+import {
+  SubtitlePolicyResolutionSchema,
+  HandoffSubtitlePolicySchema,
+} from "./subtitle-policy.ts";
 
 export const PrepareHandoffSchema = z.strictObject({
   bundleReviewId: z.uuid(),
@@ -17,6 +25,10 @@ export const PrepareHandoffSchema = z.strictObject({
   purpose: z.enum(["migration", "recovery"]),
   activation: z.enum(["activate", "extend"]),
   selected: MigrationSelectionSchema.min(1).max(100),
+  subtitlePolicies: z
+    .array(SubtitlePolicyResolutionSchema)
+    .max(100)
+    .default([]),
   profiles: z
     .array(
       z.strictObject({
@@ -70,6 +82,8 @@ export const HandoffScopeSchema = z.strictObject({
     )
     .max(100),
   files: z.array(HandoffFileSchema).max(25),
+  subtitles: z.array(HandoffSubtitleSchema).max(100).default([]),
+  subtitlePolicies: z.array(HandoffSubtitlePolicySchema).max(100).default([]),
   protected: z
     .array(
       z.strictObject({
@@ -162,6 +176,7 @@ export const HandoffFileEvidenceSchema = z.strictObject({
           title: z.string(),
         }),
         journalDigest: EvidenceHashSchema,
+        subtitles: z.array(HandoffSubtitleEvidenceSchema).max(100).default([]),
         unmanagedSidecars: z
           .array(
             z.strictObject({

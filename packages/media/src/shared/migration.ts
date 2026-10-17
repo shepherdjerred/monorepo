@@ -89,6 +89,7 @@ const Subtitle = Base.extend({
   kind: z.literal("subtitle"),
   mediaSourceId: SourceId,
   path: Path.nullable(),
+  videoPath: Path.nullable().optional(),
   embeddedTrackId: z.number().int().nonnegative().nullable().optional(),
   forced: z.boolean().nullable().optional(),
   hearingImpaired: z.boolean().nullable().optional(),

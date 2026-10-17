@@ -130,6 +130,8 @@ export const ManualSubtitleSchema = z
     expectedAssetVersion: z.number().int().nonnegative(),
     expectedChecksum: z.string().regex(/^[a-f0-9]{64}$/u),
     language: z.enum(["en", "zh-Hans"]),
+    forced: z.boolean().optional(),
+    hearingImpaired: z.boolean().optional(),
     filename: z
       .string()
       .min(1)

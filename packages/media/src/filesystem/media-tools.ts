@@ -83,6 +83,12 @@ const StreamSchema = z.object({
   color_transfer: z.string().optional(),
   color_primaries: z.string().optional(),
   channels: z.number().int().positive().optional(),
+  disposition: z
+    .object({
+      forced: z.union([z.literal(0), z.literal(1)]),
+      hearing_impaired: z.union([z.literal(0), z.literal(1)]),
+    })
+    .optional(),
   tags: z
     .object({ language: z.string().optional(), title: z.string().optional() })
     .optional(),

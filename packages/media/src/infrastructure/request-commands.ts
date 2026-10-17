@@ -1,16 +1,24 @@
 import type { MediaActor } from "#application/auth.ts";
+import { z } from "zod";
 import { MediaError } from "#application/errors.ts";
 import type { CreateRequest } from "#shared/contract.ts";
 import { MediaCommandBase } from "./command-base.ts";
 import { authorizeRequester } from "./requester-authorization.ts";
-import { effectiveRequestWhere } from "./request-claims.ts";
+import {
+  effectiveRequestWhere,
+  lockEffectiveRequests,
+} from "./request-claims.ts";
 import { invalidateRetention } from "./action-guards.ts";
 import { lockMedia, needsRestore } from "./locks.ts";
 import { commandAutomationEpoch } from "./handoff/authority.ts";
+import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 
 export class MediaRequestCommands extends MediaCommandBase {
   createRequest(actor: MediaActor, key: string, input: CreateRequest) {
     return this.command(actor, key, { kind: "request", input }, async (db) => {
+      await lockMedia(db, [input.mediaId]);
+      await lockEffectiveRequests(db, [input.mediaId]);
+      const automationEpoch = await commandAutomationEpoch(db);
       const media = await db.mediaItem.findUnique({
         where: { id: input.mediaId },
       });
@@ -21,9 +29,13 @@ export class MediaRequestCommands extends MediaCommandBase {
           404,
         );
       const userId = input.requesterUserId ?? actor.id;
+      const { plexSectionId } = z
+        .object({ plexSectionId: z.string().min(1).optional() })
+        .parse(media.externalIds);
       await authorizeRequester(db, actor, userId, {
         ...this.settings,
         kind: media.kind,
+        ...(plexSectionId === undefined ? {} : { sectionId: plexSectionId }),
       });
       if (input.includeFutureEpisodes === true && media.kind !== "series")
         throw new MediaError(
@@ -31,7 +43,6 @@ export class MediaRequestCommands extends MediaCommandBase {
           "Future episodes require a series",
           422,
         );
-      await lockMedia(db, [media.id]);
       const options = {
         subtitleLanguages: input.subtitleLanguages,
         includeSpecials: input.includeSpecials,
@@ -57,7 +68,6 @@ export class MediaRequestCommands extends MediaCommandBase {
         where: { mediaId: media.id },
       });
       const profileId = prior?.profileId ?? defaults?.profileId ?? null;
-      const automationEpoch = await commandAutomationEpoch(db);
       const intent = await db.mediaIntent.upsert({
         where: { mediaId: media.id },
         create: {
@@ -81,6 +91,7 @@ export class MediaRequestCommands extends MediaCommandBase {
         data: { version: { increment: 1 } },
       });
       await invalidateRetention(db, media.id);
+      await queueMediaSubtitleTargets(db, media.id);
       const container = media.kind === "series" || media.kind === "season";
       const restore = !container && (await needsRestore(db, media.id));
       const operationId = await this.enqueue(db, actor, {

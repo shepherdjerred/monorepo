@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { queueLifecycleNotifications } from "./events.ts";
 import { createOutboxActivities } from "#automation/store.ts";
@@ -57,12 +58,14 @@ test("actual committed import Retry publishes once using adopted authority witho
     const current = await db.mediaItem.findUniqueOrThrow({
       where: { id: f.media.id },
     });
-    const retry = await new PrismaMediaApplication(db, { keepDays: 30 }).act(
-      { ...f.user, role: "member" },
-      crypto.randomUUID(),
-      f.media.id,
-      { action: "retry", expectedVersion: current.version },
-    );
+    await grantTestRequesterAccess(db, f.user.id, "fixture-server");
+    const retry = await new PrismaMediaApplication(db, {
+      keepDays: 30,
+      serverMachineId: "fixture-server",
+    }).act({ ...f.user, role: "member" }, crypto.randomUUID(), f.media.id, {
+      action: "retry",
+      expectedVersion: current.version,
+    });
     if (retry.operationId === undefined)
       throw new Error("Retry operation missing");
     const ctx = context(async (url) => {

@@ -167,18 +167,25 @@ function normalizeRecord(
     record.managerReference !== undefined
   )
     match.reasons.push("manager_instance_binding_requires_review");
-  if (record.kind === "file" || record.kind === "subtitle") {
-    if (record.checksum === null) match.reasons.push("checksum_unknown");
-    else if (
-      match.mediaIds.some(
-        (id) => index.targetIds.get(id)?.checksum !== record.checksum,
-      )
-    )
-      match.reasons.push("checksum_not_verified");
-  }
+  if (record.kind === "file") checkVideoChecksum(record, match, index);
+  if (record.kind === "subtitle")
+    match.reasons.push("subtitle_content_proof_required");
   if (record.kind === "subtitle" && record.provenance === "unknown")
     match.reasons.push("subtitle_provenance_unknown");
   return match;
+}
+function checkVideoChecksum(
+  record: Extract<MigrationRecord, { kind: "file" }>,
+  match: Match,
+  index: NormalizationIndex,
+) {
+  if (record.checksum === null) match.reasons.push("checksum_unknown");
+  else if (
+    match.mediaIds.some(
+      (id) => index.targetIds.get(id)?.checksum !== record.checksum,
+    )
+  )
+    match.reasons.push("checksum_not_verified");
 }
 export function normalizeCapture(value: unknown, options: Options) {
   const capture = validateCapture(value);

@@ -10,9 +10,11 @@ import {
   applyHold,
   actionIntentChange,
   actionCommand,
+  authorizeRenewal,
 } from "./action-guards.ts";
 import { lockMedia, needsRestore } from "./locks.ts";
 import { confirmRemoval } from "./removal-confirmation.ts";
+import { lockEffectiveRequests } from "./request-claims.ts";
 
 import { MediaRequestCommands } from "./request-commands.ts";
 export class PrismaMediaCommands extends MediaRequestCommands {
@@ -81,7 +83,20 @@ export class PrismaMediaCommands extends MediaRequestCommands {
             ? await confirmRemoval(db, mediaId, input)
             : null;
         await lockMedia(db, [mediaId]);
-        await validateAction(db, actor, mediaId, input);
+        await lockEffectiveRequests(db, [mediaId]);
+        const renewal =
+          input.action === "retry" || input.action === "select_release";
+        const authority = renewal
+          ? { automationEpoch: await commandAutomationEpoch(db) }
+          : {};
+        const currentActor = renewal
+          ? await authorizeRenewal(db, actor, {
+              mediaId,
+              action: input.action,
+              ...this.settings,
+            })
+          : actor;
+        await validateAction(db, currentActor, mediaId, input);
         const updated = await db.mediaItem.updateMany({
           where: { id: mediaId, version: input.expectedVersion },
           data: { version: { increment: 1 } },
@@ -97,11 +112,6 @@ export class PrismaMediaCommands extends MediaRequestCommands {
           keepDays: this.settings.keepDays,
         });
         await invalidateRetention(db, mediaId);
-        const renewal =
-          input.action === "retry" || input.action === "select_release";
-        const authority = renewal
-          ? { automationEpoch: await commandAutomationEpoch(db) }
-          : {};
         const intent = await db.mediaIntent.upsert({
           where: { mediaId },
           create: {

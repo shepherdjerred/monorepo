@@ -1,4 +1,8 @@
 import nodePath from "node:path";
+import {
+  ownedSubtitleSidecars,
+  advanceSubtitleBindings,
+} from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import {
@@ -153,7 +157,9 @@ async function assertPrevious(
   }
   const current = await tx.assetCoverage.findMany({
     where: { mediaId: { in: entry.mediaIds }, current: true },
-    include: { asset: true },
+    include: {
+      asset: { include: { subtitles: { where: { state: "installed" } } } },
+    },
   });
   if (entry.previousAssetId === null) {
     if (current.length > 0) throw new FileGuardError("asset_version_changed");
@@ -181,6 +187,22 @@ async function assertPrevious(
     )
   )
     throw new FileGuardError("sidecar_ownership_unconfirmed");
+  const previous = current[0]?.asset;
+  if (previous !== undefined) {
+    const sidecars = ownedSubtitleSidecars(previous);
+    if (
+      sidecars.length !== entry.previousSidecars.length ||
+      entry.previousSidecars.some(
+        (item) =>
+          !sidecars.some(
+            (subtitle) =>
+              subtitle.id === item.subtitleId &&
+              subtitle.checksum === item.checksum,
+          ),
+      )
+    )
+      throw new FileGuardError("subtitle_manifest_changed");
+  }
 }
 
 async function commitPublication(input: {
@@ -197,6 +219,8 @@ async function commitPublication(input: {
   )
     return;
   if (entry.previousAssetId !== null) {
+    if (entry.previousChecksum === null || entry.previousVersion === null)
+      throw new FileGuardError("previous_asset_unproven");
     await tx.assetCoverage.updateMany({
       where: { assetId: entry.previousAssetId, current: true },
       data: { current: false },
@@ -214,7 +238,6 @@ async function commitPublication(input: {
       await tx.subtitleAsset.update({
         where: { id: sidecar.subtitleId },
         data: {
-          state: "superseded",
           path: nodePath.join(
             roots.control,
             "quarantine",
@@ -222,6 +245,16 @@ async function commitPublication(input: {
           ),
         },
       });
+    await advanceSubtitleBindings(tx, {
+      assetId: entry.previousAssetId,
+      checksum: entry.previousChecksum,
+      epoch: input.recoveryEpoch,
+      fromVersion: entry.previousVersion,
+      toVersion: entry.previousVersion + 1,
+      fromState: "installed",
+      sidecarIds: entry.previousSidecars.map((item) => item.subtitleId),
+      state: "superseded",
+    });
   }
   await tx.libraryAsset.create({
     data: {

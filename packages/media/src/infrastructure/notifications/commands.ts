@@ -3,10 +3,8 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import type { CredentialCipher } from "#application/security.ts";
-import {
-  lockDelivery,
-  deliveryRuntimeActive,
-} from "#automation/notifications/locks.ts";
+import { lockDelivery } from "#automation/notifications/locks.ts";
+import { deliveryAuthority } from "#automation/notifications/authority.ts";
 import { composeMessage } from "#automation/notifications/message.ts";
 import { queueDelivery } from "#automation/notifications/events.ts";
 
@@ -51,7 +49,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
             "Refresh the delivery before retrying",
             409,
           );
-        if (!(await deliveryRuntimeActive(tx, delivery.recoveryEpoch)))
+        if ((await deliveryAuthority(tx, delivery)) !== null)
           throw new MediaError(
             "delivery_protected",
             "This delivery belongs to an inactive recovery epoch",
@@ -62,7 +60,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
           orderBy: { attemptNumber: "desc" },
         });
         if (
-          attempt === null ||
+          attempt?.recoveryEpoch !== delivery.recoveryEpoch ||
           (!bounced &&
             (attempt.state !== "rejected" ||
               attempt.providerReceipt !== null)) ||
@@ -144,7 +142,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
             "Refresh the delivery before checking its receipt",
             409,
           );
-        if (!(await deliveryRuntimeActive(tx, delivery.recoveryEpoch)))
+        if ((await deliveryAuthority(tx, delivery)) !== null)
           throw new MediaError(
             "delivery_protected",
             "Restored delivery attempts cannot be authorized again",
@@ -154,12 +152,37 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
           where: { deliveryId: id },
           orderBy: { attemptNumber: "desc" },
         });
-        if (attempt === null)
+        if (attempt?.recoveryEpoch !== delivery.recoveryEpoch)
           throw new MediaError(
             "delivery_receipt_missing",
             "This historical delivery has no verifiable attempt journal",
             409,
           );
+        if (
+          ["owner_health", "email_verification"].includes(delivery.event.kind)
+        ) {
+          const message = await composeMessage(
+            tx,
+            {
+              cipher: this.deliveryCipher,
+              publicOrigin: this.publicOrigin,
+              personalDiscordAvailable: this.personalDiscordAvailable,
+            },
+            delivery,
+          );
+          if (
+            message === null ||
+            this.deliveryCipher.fingerprint(
+              `${message.channel}:${message.recipient}`,
+              "notification-recipient",
+            ) !== attempt.recipientFingerprint
+          )
+            throw new MediaError(
+              "delivery_protected",
+              "The current recipient no longer matches this attempt",
+              409,
+            );
+        }
         if (input.receipt !== undefined) {
           if (actor.role !== "owner")
             throw new MediaError(

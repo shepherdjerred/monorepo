@@ -99,7 +99,8 @@ async function queueForUser(
           requests.some(
             (claim) =>
               claim.mediaId === item.mediaId &&
-              (item.language === undefined ||
+              (input.kind === "subtitles_ready" ||
+                item.language === undefined ||
                 claim.subtitleLanguages.includes(item.language)),
           ),
         );

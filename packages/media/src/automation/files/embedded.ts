@@ -153,6 +153,12 @@ export async function commitEmbedded(input: {
         language: subtitle.language,
         providerId: "embedded",
         state: "validated",
+        qualityStatus: "accepted",
+        storageKind: "sidecar",
+        ownershipEpoch: recoveryEpoch,
+        checksum: subtitle.checksum,
+        videoChecksum: entry.checksum,
+        videoVersion: 0,
         content: bytes,
         provenance: {
           filename: `embedded.${subtitle.format}`,

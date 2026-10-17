@@ -7,9 +7,9 @@ import {
   deliveryInclude,
   type Message,
 } from "./notifications/message.ts";
-import { deliveryRuntimeActive, lockDelivery } from "./notifications/locks.ts";
+import { lockDelivery } from "./notifications/locks.ts";
+import { deliveryAuthority } from "./notifications/authority.ts";
 import { reconcileDelivery } from "./notifications/reconcile.ts";
-import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 
 const result = (
   status: "accepted" | "failed" | "unknown",
@@ -36,14 +36,17 @@ export function createNotificationActivities(
         return result("failed", "delivery_requires_explicit_retry");
       if (snapshot.state !== "pending")
         throw new Error("Unknown notification state");
-      const authority = await runtimeAuthority(context.db);
-      if (!authority.active || authority.epoch !== snapshot.recoveryEpoch)
-        return result("failed", "notification_runtime_protected");
       const claim = await context.db.$transaction(async (tx) => {
         const delivery = await lockDelivery(tx, snapshot.id);
         if (delivery.state !== "pending") return null;
-        if (!(await deliveryRuntimeActive(tx, delivery.recoveryEpoch)))
-          return null;
+        const protectedReason = await deliveryAuthority(tx, delivery);
+        if (protectedReason !== null) {
+          await tx.notificationDelivery.update({
+            where: { id: delivery.id },
+            data: { failureReason: protectedReason },
+          });
+          return { protectedReason };
+        }
         const message = await composeMessage(tx, context, delivery);
         if (message === null) {
           await tx.notificationDelivery.update({
@@ -81,17 +84,18 @@ export function createNotificationActivities(
       });
       if (claim === null)
         return result("failed", "notification_runtime_or_event_protected");
+      if ("protectedReason" in claim)
+        return result("failed", claim.protectedReason);
       try {
+        await context.checkpoint?.("notification-claimed");
         return await context.db.$transaction(
           async (tx) => {
             const delivery = await lockDelivery(tx, snapshot.id);
-            const current = await deliveryRuntimeActive(
-              tx,
-              delivery.recoveryEpoch,
-            );
-            const message = current
-              ? await composeMessage(tx, context, delivery)
-              : null;
+            const current = await deliveryAuthority(tx, delivery);
+            const message =
+              current === null
+                ? await composeMessage(tx, context, delivery)
+                : null;
             if (
               message === null ||
               delivery.state !== "sending" ||

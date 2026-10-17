@@ -4,6 +4,7 @@ import { inspectAndStage } from "./inspection.ts";
 import { promote } from "./publication.ts";
 import { removeFiles, restoreFiles } from "./removal.ts";
 import { installSubtitle } from "./subtitles.ts";
+import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { rollbackPromotion } from "./rollback.ts";
 import { cleanupUpgrade } from "./upgrade-cleanup.ts";
 
@@ -98,6 +99,11 @@ export function createMediaFileActivities(
         await installSubtitle(context, subtitleId, operationId);
         return { status: "installed" };
       } catch (error) {
+        if (error instanceof FileOperationConflict)
+          return {
+            status: "blocked",
+            reason: "subtitle_path_requires_owner_review",
+          };
         if (error instanceof FileGuardError) return { status: "obsolete" };
         throw error;
       }

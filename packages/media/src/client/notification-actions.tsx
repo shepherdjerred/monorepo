@@ -27,6 +27,15 @@ export function DeliveryActions({
     onSuccess: async () =>
       queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
+  if (
+    delivery.event.healthState === "superseded" ||
+    delivery.event.healthState === "invalid"
+  )
+    return (
+      <p className="muted">
+        This historical alert is protected from delivery and receipt changes.
+      </p>
+    );
   return (
     <div className="stack-form">
       {delivery.failureReason !== null && (
