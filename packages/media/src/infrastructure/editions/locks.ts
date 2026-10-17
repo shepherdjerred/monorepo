@@ -12,7 +12,7 @@ const hierarchy = {
 } satisfies Prisma.MediaItemInclude;
 type Hierarchy = Prisma.MediaItemGetPayload<{ include: typeof hierarchy }>;
 
-function rootOf(row: Hierarchy): string | null {
+export function canonicalRootId(row: Hierarchy): string | null {
   if (row.kind === "movie" || row.kind === "series") return row.id;
   if (row.kind === "season" && row.parent?.kind === "series")
     return row.parent.id;
@@ -61,7 +61,7 @@ async function lockCanonicalRows(
   const roots = [
     ...new Set(
       rows.flatMap((row) => {
-        const root = rootOf(row);
+        const root = canonicalRootId(row);
         return root === null ? [] : [root];
       }),
     ),
@@ -135,7 +135,7 @@ export async function lockDefaultScopes(
     for (const row of current.filter(
       (item) => !existing.some((target) => target.mediaId === item.id),
     )) {
-      const root = rootOf(row);
+      const root = canonicalRootId(row);
       if (root !== null)
         await tx.mediaEditionDefinition.upsert({
           where: { rootMediaId_key: { rootMediaId: root, key: "default" } },
@@ -167,7 +167,10 @@ export async function lockDefaultScopes(
     const target = await readDefaultTarget(tx, defaultScope(id));
     const row = current.find((item) => item.id === id);
     if (row === undefined) throw new Error("Locked media disappeared");
-    if (target.editionRootId !== null && target.editionRootId !== rootOf(row))
+    if (
+      target.editionRootId !== null &&
+      target.editionRootId !== canonicalRootId(row)
+    )
       throw new MediaError(
         "lineage_unresolved",
         "Default target ancestry requires reconciliation",

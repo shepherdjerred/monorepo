@@ -20,9 +20,17 @@ import { ReleaseCandidates } from "./releases.tsx";
 import { AssignProfile } from "./profile-controls.tsx";
 import { RequestTitle } from "./request-controls.tsx";
 import { MediaProgress } from "./media-progress/panel.tsx";
+import { useTarget } from "./target-controls/api.ts";
+import {
+  ProtectionControls,
+  ProtectionNotice,
+} from "./target-controls/protection.tsx";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import { RemovalReview } from "./target-controls/removal.tsx";
 
 export function MediaPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
+  const target = useTarget(id);
   const item = useQuery({
     queryKey: ["media", id],
     enabled: id !== undefined,
@@ -30,19 +38,56 @@ export function MediaPage({ user }: { user: MediaUser }) {
       readApi(`/media/${encodeURIComponent(String(id))}`, MediaDetailSchema),
     refetchInterval: 15_000,
   });
-  const profiles = useQuery({
-    queryKey: ["profiles"],
-    queryFn: async () => readApi("/profiles", ProfileListSchema),
-  });
   if (id === undefined)
     return (
       <EmptyState title="Title unavailable">
         Return to your requests to select a title.
       </EmptyState>
     );
+  if (target.isPending) return <Loading />;
+  if (target.error !== null) return <ErrorNotice error={target.error} />;
+  const context = target.data;
+  if (context.access === "protection_only")
+    return (
+      <>
+        <Link className="back-link" to="/requests">
+          ← My requests
+        </Link>
+        <PageTitle eyebrow="Your request" title="Request protections" />
+        <ProtectionNotice />
+        <ProtectionControls user={user} context={context} />
+      </>
+    );
   if (item.isPending) return <Loading />;
   if (item.error !== null) return <ErrorNotice error={item.error} />;
-  const media = item.data;
+  return (
+    <MediaDetails
+      user={user}
+      media={item.data}
+      context={context}
+      refresh={() => {
+        void Promise.all([item.refetch(), target.refetch()]);
+      }}
+    />
+  );
+}
+
+function MediaDetails({
+  user,
+  media,
+  context,
+  refresh,
+}: {
+  user: MediaUser;
+  media: MediaDetail;
+  context: Extract<DefaultTargetView, { access: "detail" }>;
+  refresh: () => void;
+}) {
+  const profiles = useQuery({
+    queryKey: ["profiles"],
+    queryFn: async () => readApi("/profiles", ProfileListSchema),
+  });
+  const paired = media.version === context.expected.mediaVersion;
   const profile = profiles.data?.find(
     (candidate) => candidate.id === media.intent?.profileId,
   );
@@ -65,7 +110,18 @@ export function MediaPage({ user }: { user: MediaUser }) {
         </Notice>
       )}
       <MediaProgress visibility={media.visibility} />
-      <div className="detail-columns">
+      {!paired && (
+        <Notice>
+          <p>
+            This title changed while its details were loading. Refresh before
+            choosing an action.
+          </p>
+          <button className="button" type="button" onClick={refresh}>
+            Refresh title
+          </button>
+        </Notice>
+      )}
+      <div className="detail-columns" inert={!paired}>
         <section className="panel">
           <h2>In your library</h2>
           <dl className="facts">
@@ -91,9 +147,20 @@ export function MediaPage({ user }: { user: MediaUser }) {
             </div>
           </dl>
           {profiles.error !== null && <ErrorNotice error={profiles.error} />}
-          <MediaControls media={media} user={user} claimed={claimed} />
+          <MediaControls
+            key={media.id}
+            media={media}
+            user={user}
+            claimed={claimed}
+            context={context}
+          />
           {!claimed && (
-            <RequestTitle user={user} mediaId={media.id} kind={media.kind} />
+            <RequestTitle
+              key={media.id}
+              user={user}
+              context={context}
+              kind={media.kind}
+            />
           )}
           {user.role === "owner" && (
             <AssignProfile
@@ -198,11 +265,14 @@ export function MediaPage({ user }: { user: MediaUser }) {
         </section>
       )}
       <History media={media} />
-      <ReleaseCandidates
-        user={user}
-        mediaId={media.id}
-        version={media.version}
-      />
+      <div inert={!paired}>
+        <ReleaseCandidates
+          key={media.id}
+          user={user}
+          mediaId={media.id}
+          context={context}
+        />
+      </div>
     </>
   );
 }
@@ -211,10 +281,12 @@ function MediaControls({
   media,
   user,
   claimed,
+  context,
 }: {
   media: MediaDetail;
   user: MediaUser;
   claimed: boolean;
+  context: DefaultTargetView;
 }) {
   const pinned = media.holds.some(
     (hold) => hold.isPin && hold.userId === user.id,
@@ -223,37 +295,21 @@ function MediaControls({
     <>
       <div className="button-row">
         {claimed && (
-          <MediaActionButton
-            user={user}
-            mediaId={media.id}
-            version={media.version}
-            action="keep"
-          />
+          <MediaActionButton user={user} context={context} action="keep" />
         )}
         {user.role === "owner" && (
           <MediaActionButton
             user={user}
-            mediaId={media.id}
-            version={media.version}
+            context={context}
             action={pinned ? "unpin" : "pin"}
           />
         )}
         {(claimed || user.role === "owner") &&
           media.availability === "quarantined" && (
-            <MediaActionButton
-              user={user}
-              mediaId={media.id}
-              version={media.version}
-              action="restore"
-            />
+            <MediaActionButton user={user} context={context} action="restore" />
           )}
         {user.role === "owner" && media.availability !== "available" && (
-          <MediaActionButton
-            user={user}
-            mediaId={media.id}
-            version={media.version}
-            action="retry"
-          />
+          <MediaActionButton user={user} context={context} action="retry" />
         )}
       </div>
       {media.holds.map((hold) => (
@@ -274,39 +330,7 @@ function MediaControls({
         </div>
       ))}
       {user.role === "owner" && media.availability === "available" && (
-        <details className="retention-summary">
-          <summary>Remove from library</summary>
-          <p className="helper">
-            This queues an intentional removal and stops acquisition and upgrade
-            monitoring. The file remains recoverable during quarantine.
-          </p>
-          {media.removalConfirmation !== undefined && (
-            <>
-              <p>
-                These titles share the affected files. Confirm removal of all
-                listed titles:
-              </p>
-              <ul>
-                {media.removalConfirmation.media.map((item) => (
-                  <li key={item.id}>{item.title}</li>
-                ))}
-              </ul>
-              <MediaActionButton
-                user={user}
-                mediaId={media.id}
-                version={media.version}
-                action="remove"
-                confirmation={media.removalConfirmation}
-              />
-            </>
-          )}
-          {media.removalConfirmation === undefined && (
-            <p className="helper">
-              Removal details are unavailable. Refresh this title before
-              confirming removal.
-            </p>
-          )}
-        </details>
+        <RemovalReview user={user} media={media} context={context} />
       )}
     </>
   );

@@ -8,6 +8,8 @@ import type { NotificationApplication } from "#application/notification-ports.ts
 import { verifyRevokedRetryHttp } from "./retry-http.test-support.ts";
 import { verifyIdentityHttp } from "./media/identity-http.test-support.ts";
 import { verifyVisibilityHttp } from "./media/visibility-http.test-support.ts";
+import { verifyDefaultCommandsHttp } from "./media/edition-http.test-support.ts";
+import { verifyDefaultReplayHttp } from "./media/edition-replay.test-support.ts";
 
 const actor: MediaActor = {
   id: "member",
@@ -131,7 +133,7 @@ function subtitleReplacementFixture() {
   };
 }
 
-function fixture() {
+function mediaFixture() {
   const act = vi.fn<MediaApplication["act"]>(async () => ({
     status: "queued",
     operationId: "operation",
@@ -141,6 +143,8 @@ function fixture() {
     operationId: "operation",
   }));
   const media: MediaApplication = {
+    getDefaultCommandContext: unavailableSubtitleReplacement,
+    executeDefaultCommand: unavailableSubtitleReplacement,
     identityPreview: unavailableSubtitleReplacement,
     createRequest,
     act,
@@ -187,6 +191,11 @@ function fixture() {
       return { status: "queued" };
     },
   };
+  return { media, act, createRequest };
+}
+
+function fixture() {
+  const { media, act, createRequest } = mediaFixture();
   const notifications: NotificationApplication = {
     async retryDelivery() {
       return { status: "queued" };
@@ -343,6 +352,14 @@ const headers = {
 test("detail GET rechecks current role/library and does not leak raw observations or other household data", async () => {
   await verifyVisibilityHttp(fixture().dependencies, headers);
 }, 60_000);
+
+test("v2 commands use current scoped CAS and preserve revoked-access request controls", async () => {
+  await verifyDefaultCommandsHttp(fixture().dependencies, headers);
+});
+
+test("v2 HTTP replay precedes mutable gate/proxy refresh but fresh commands remain authorized", async () => {
+  await verifyDefaultReplayHttp(fixture().dependencies, headers);
+});
 
 describe("media HTTP security and errors", () => {
   test("identity preview and selection use current scoped owner authority and strict input", async () => {

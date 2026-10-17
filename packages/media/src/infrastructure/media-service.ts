@@ -27,6 +27,7 @@ import { defaultIntent } from "#shared/editions/scope.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { currentSubtitlePolicies, policyStatus } from "./subtitle-policy.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
+import { readDefaultCommandContext } from "./editions/command-context.ts";
 
 export class PrismaMediaApplication
   extends PrismaMediaCommands
@@ -42,6 +43,17 @@ export class PrismaMediaApplication
     this.visibilitySections = settings.visibilitySections;
   }
   private readonly visibilitySections: VisibilitySections | undefined;
+
+  getDefaultCommandContext(actor: MediaActor, mediaId: string) {
+    return this.db.$transaction(
+      (tx) =>
+        readDefaultCommandContext(tx, actor, mediaId, {
+          serverMachineId: this.settings.serverMachineId,
+          sections: this.visibilitySections,
+        }),
+      { isolationLevel: "RepeatableRead" },
+    );
+  }
 
   async listRequests(actor: MediaActor) {
     return RequestListSchema.parse(

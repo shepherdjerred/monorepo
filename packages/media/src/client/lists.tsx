@@ -23,7 +23,10 @@ import {
   PageTitle,
   Status,
 } from "./components.tsx";
-import { MediaActionButton } from "./media-actions.tsx";
+import {
+  ListedMediaAction,
+  RequestProtection,
+} from "./target-controls/protection.tsx";
 import {
   ProviderAdministration,
   ManualSubtitleAdministration,
@@ -40,17 +43,6 @@ export function RequestsPage({ user }: { user: MediaUser }) {
     queryFn: async () => readApi("/requests", RequestListSchema),
     refetchInterval: 15_000,
   });
-  const cancel = useMutation({
-    mutationFn: async (input: { id: string; version: number }) =>
-      writeApi({
-        actorId: user.id,
-        path: `/requests/${encodeURIComponent(input.id)}/cancel`,
-        body: { expectedVersion: input.version },
-        schema: CommandResultSchema,
-      }),
-    onSuccess: async () =>
-      queryClient.invalidateQueries({ queryKey: ["requests"] }),
-  });
   return (
     <>
       <PageTitle eyebrow="Your watchlist, in motion" title="My requests">
@@ -60,7 +52,6 @@ export function RequestsPage({ user }: { user: MediaUser }) {
       </PageTitle>
       {requests.isPending && <Loading />}
       {requests.error !== null && <ErrorNotice error={requests.error} />}
-      {cancel.error !== null && <ErrorNotice error={cancel.error} />}
       {requests.data?.length === 0 && (
         <EmptyState title="Your next favorite is waiting">
           Search Discover to add your first film or series.{" "}
@@ -94,17 +85,7 @@ export function RequestsPage({ user }: { user: MediaUser }) {
             <Status
               value={request.active ? request.media.availability : "cancelled"}
             />
-            {request.active && (
-              <button
-                className="button subtle"
-                disabled={cancel.isPending}
-                onClick={() => {
-                  cancel.mutate({ id: request.id, version: request.version });
-                }}
-              >
-                Cancel request
-              </button>
-            )}
+            <RequestProtection user={user} request={request} />
           </article>
         ))}
       </div>
@@ -201,10 +182,9 @@ export function RemovalsPage({ user }: { user: MediaUser }) {
               </p>
             </div>
             <Status value={removal.state} />
-            <MediaActionButton
+            <ListedMediaAction
               user={user}
               mediaId={removal.mediaId}
-              version={removal.media.version}
               action={removal.state === "quarantined" ? "restore" : "keep"}
             />
           </article>

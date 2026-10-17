@@ -8,6 +8,14 @@ import { authorizeRequester } from "./requester-authorization.ts";
 import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
 import { readDefaultTarget } from "./editions/targets.ts";
 
+export function assertOwnerAction(
+  actor: MediaActor,
+  action: MediaAction["action"],
+): void {
+  if (["pin", "unpin", "remove", "select_release"].includes(action))
+    requireOwner(actor);
+}
+
 /** Caller locks media/claims and runtime first; retain current identity through commit. */
 export async function authorizeRenewal(
   db: Prisma.TransactionClient,

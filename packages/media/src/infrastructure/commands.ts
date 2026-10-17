@@ -1,4 +1,13 @@
 import { z } from "zod";
+import type { Prisma } from "#generated/prisma/client.ts";
+import {
+  DefaultCommandV2Schema,
+  DefaultCommandResultV2Schema,
+  type DefaultCommandV2,
+  type ExpectedTarget,
+} from "#shared/editions/commands.ts";
+import { MediaActionSchema, CreateRequestSchema } from "#shared/contract.ts";
+import { readCommandVersions } from "./editions/command-cas.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
@@ -10,6 +19,7 @@ import {
   actionIntentChange,
   actionCommand,
   initialActionIntent,
+  assertOwnerAction,
 } from "./action-guards.ts";
 import { needsRestore } from "./locks.ts";
 import { confirmRemoval } from "./removal-confirmation.ts";
@@ -20,6 +30,62 @@ import { prepareActionAuthority } from "./acquisition-identity/action.ts";
 
 import { MediaRequestCommands } from "./request-commands.ts";
 export class PrismaMediaCommands extends MediaRequestCommands {
+  executeDefaultCommand(
+    actor: MediaActor,
+    key: string,
+    raw: DefaultCommandV2,
+    beforeNewCommand?: () => Promise<void>,
+  ) {
+    const input = DefaultCommandV2Schema.parse(raw);
+    return this.commandWithProtocol(
+      actor,
+      key,
+      {
+        command: input,
+        decode: (value) => DefaultCommandResultV2Schema.parse(value),
+        beforeNewCommand,
+      },
+      async (db) => {
+        const { command, expected, scope } = input;
+        const result =
+          command.action === "request"
+            ? await this.requestWork(
+                db,
+                actor,
+                CreateRequestSchema.parse({
+                  ...Object.fromEntries(
+                    Object.entries(command).filter(
+                      ([field]) => field !== "action",
+                    ),
+                  ),
+                  mediaId: scope.mediaId,
+                }),
+                expected,
+              )
+            : command.action === "cancel_request"
+              ? await this.cancelWork(db, actor, {
+                  requestId: command.requestId,
+                  expectedVersion: command.requestVersion,
+                  context: { mediaId: scope.mediaId, expected },
+                })
+              : await this.actionWork(db, actor, {
+                  mediaId: scope.mediaId,
+                  input: MediaActionSchema.parse({
+                    ...command,
+                    expectedVersion: expected.mediaVersion,
+                  }),
+                  expected,
+                });
+        return DefaultCommandResultV2Schema.parse({
+          schemaVersion: 2,
+          scope,
+          result,
+          appliedVersions: await readCommandVersions(db, scope),
+        });
+      },
+    );
+  }
+
   setProfileDefault(
     actor: MediaActor,
     key: string,
@@ -73,122 +139,130 @@ export class PrismaMediaCommands extends MediaRequestCommands {
     mediaId: string,
     input: MediaAction,
   ) {
-    if (["pin", "unpin", "remove", "select_release"].includes(input.action))
-      requireOwner(actor);
     return this.command(
       actor,
       key,
       { kind: "media_action", input: { mediaId, ...input } },
-      async (db) => {
-        const removal =
-          input.action === "remove"
-            ? await confirmRemoval(db, mediaId, input)
-            : null;
-        const { authority, currentActor, identityDecision, targetExisted } =
-          await prepareActionAuthority(db, actor, {
-            mediaId,
-            input,
-            settings: this.settings,
-          });
-        await validateAction(db, currentActor, mediaId, input);
-        const updated = await db.mediaItem.updateMany({
-          where: { id: mediaId, version: input.expectedVersion },
+      (db) => this.actionWork(db, actor, { mediaId, input }),
+    );
+  }
+
+  private async actionWork(
+    db: Prisma.TransactionClient,
+    actor: MediaActor,
+    options: { mediaId: string; input: MediaAction; expected?: ExpectedTarget },
+  ) {
+    const { mediaId, input, expected } = options;
+    assertOwnerAction(actor, input.action);
+    const removal =
+      input.action === "remove"
+        ? await confirmRemoval(db, mediaId, input)
+        : null;
+    const { authority, currentActor, identityDecision, targetExisted } =
+      await prepareActionAuthority(db, actor, {
+        mediaId,
+        input,
+        settings: this.settings,
+        expected,
+      });
+    assertOwnerAction(currentActor, input.action);
+    await validateAction(db, currentActor, mediaId, input);
+    const updated = await db.mediaItem.updateMany({
+      where: { id: mediaId, version: input.expectedVersion },
+      data: { version: { increment: 1 } },
+    });
+    if (updated.count !== 1)
+      throw new MediaError(
+        "version_conflict",
+        "Media changed; refresh before continuing",
+        409,
+      );
+    await applyHold(db, currentActor, mediaId, {
+      action: input.action,
+      keepDays: this.settings.keepDays,
+    });
+    await invalidateRetention(db, mediaId);
+    const intent = await db.mediaIntent.upsert({
+      where: targetWhere(defaultScope(mediaId)),
+      create: {
+        mediaId,
+        generation: 1,
+        ...authority,
+        ...initialActionIntent(input.action),
+      },
+      update: {
+        ...authority,
+        generation: { increment: 1 },
+        version: targetExisted ? { increment: 1 } : 0,
+        ...(targetExisted ? {} : initialActionIntent(input.action)),
+        ...actionIntentChange(input.action),
+      },
+    });
+    const kind =
+      (input.action === "keep" || input.action === "pin") &&
+      (await needsRestore(db, mediaId))
+        ? "restore_media"
+        : actionCommand(input.action);
+    if (removal !== null) {
+      for (const item of removal.media) {
+        if (item.id === mediaId) continue;
+        await db.mediaItem.update({
+          where: { id: item.id },
           data: { version: { increment: 1 } },
         });
-        if (updated.count !== 1)
-          throw new MediaError(
-            "version_conflict",
-            "Media changed; refresh before continuing",
-            409,
-          );
-        await applyHold(db, actor, mediaId, {
-          action: input.action,
-          keepDays: this.settings.keepDays,
-        });
-        await invalidateRetention(db, mediaId);
-        const intent = await db.mediaIntent.upsert({
-          where: targetWhere(defaultScope(mediaId)),
-          create: {
-            mediaId,
-            generation: 1,
-            ...authority,
-            ...initialActionIntent(input.action),
-          },
-          update: {
-            ...authority,
-            generation: { increment: 1 },
-            version: targetExisted ? { increment: 1 } : 0,
-            ...(targetExisted ? {} : initialActionIntent(input.action)),
-            ...actionIntentChange(input.action),
-          },
-        });
-        const kind =
-          (input.action === "keep" || input.action === "pin") &&
-          (await needsRestore(db, mediaId))
-            ? "restore_media"
-            : actionCommand(input.action);
-        if (removal !== null) {
-          for (const item of removal.media) {
-            if (item.id === mediaId) continue;
-            await db.mediaItem.update({
-              where: { id: item.id },
-              data: { version: { increment: 1 } },
-            });
-            await db.mediaIntent.update({
-              where: targetWhere(defaultScope(item.id)),
-              data: {
-                desiredPresence: false,
-                monitoring: false,
-                intentionallyRemovedAt: new Date(),
-                generation: { increment: 1 },
-                version: { increment: 1 },
-              },
-            });
-            await invalidateRetention(db, item.id);
-          }
-        }
-        const ownerOverride =
-          removal === null
-            ? {}
-            : {
-                ownerOverride: {
-                  ownerId: actor.id,
-                  media: removal.media.map((item) => ({
-                    ...item,
-                    version: item.version + 1,
-                    generation: item.generation + 1,
-                  })),
-                  assets: removal.assets,
-                },
-              };
-        const operationId = await this.enqueue(db, actor, {
-          kind,
-          mediaId,
-          generation: intent.generation,
-          details: {
-            action: input.action,
-            ...ownerOverride,
-            ...(identityDecision === null ? {} : { identityDecision }),
-            ...(input.action === "select_release"
-              ? { releaseId: input.releaseId }
-              : {}),
-          },
-        });
-        await db.applicationEvent.create({
+        await db.mediaIntent.update({
+          where: targetWhere(defaultScope(item.id)),
           data: {
-            mediaId,
-            actorId: actor.id,
-            kind: `media_${input.action}`,
-            payload: { operationId, generation: intent.generation },
+            desiredPresence: false,
+            monitoring: false,
+            intentionallyRemovedAt: new Date(),
+            generation: { increment: 1 },
+            version: { increment: 1 },
           },
         });
-        return {
-          operationId,
-          status: "queued",
-          version: input.expectedVersion + 1,
-        };
+        await invalidateRetention(db, item.id);
+      }
+    }
+    const ownerOverride =
+      removal === null
+        ? {}
+        : {
+            ownerOverride: {
+              ownerId: actor.id,
+              media: removal.media.map((item) => ({
+                ...item,
+                version: item.version + 1,
+                generation: item.generation + 1,
+              })),
+              assets: removal.assets,
+            },
+          };
+    const operationId = await this.enqueue(db, actor, {
+      kind,
+      mediaId,
+      generation: intent.generation,
+      details: {
+        action: input.action,
+        ...ownerOverride,
+        ...(identityDecision === null ? {} : { identityDecision }),
+        ...(input.action === "select_release"
+          ? { releaseId: input.releaseId }
+          : {}),
       },
-    );
+    });
+    await db.applicationEvent.create({
+      data: {
+        mediaId,
+        actorId: actor.id,
+        kind: `media_${input.action}`,
+        payload: { operationId, generation: intent.generation },
+      },
+    });
+    return {
+      operationId,
+      status: "queued",
+      version: input.expectedVersion + 1,
+    };
   }
 
   async restrictUser(
