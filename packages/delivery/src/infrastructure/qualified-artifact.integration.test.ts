@@ -97,6 +97,48 @@ async function publication(
   return { artifactId, buildId: build.buildId, sourceRevision };
 }
 
+async function sitePublication(input: {
+  number: number;
+  requiredDigest: string;
+  imageId?: string;
+}) {
+  const { number, requiredDigest, imageId } = input;
+  return delivery.publish(
+    {
+      requestId: `release/${String(number)}`,
+      serviceId: query.serviceId,
+      sourceRevision: String(number).padStart(40, "0"),
+      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
+      verifiedAt: new Date().toISOString(),
+      artifacts: [
+        ...(imageId === undefined
+          ? []
+          : [
+              {
+                id: imageId,
+                component: query.component,
+                kind: query.kind,
+                uri: "docker.io/shepherdjerred/scout-for-lol",
+                version: `build-${String(number)}`,
+                digest: requiredDigest,
+              },
+            ]),
+        {
+          id: `site/${String(number)}`,
+          component: "site:scout-frontend-beta",
+          kind: "archive",
+          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"a".repeat(64)}.tar`,
+          version: `build-${String(number)}`,
+          digest: `sha256:${"a".repeat(64)}`,
+          requires: { [query.component]: requiredDigest },
+        },
+      ],
+    },
+    testPublisher,
+    { repositoryId: 1, pipelineNumber: number },
+  );
+}
+
 describe("latest qualified artifact reads over PostgreSQL and the authenticated API", () => {
   test("orders genuine configured-repository CI pipelines and ignores pending, failed, late older and manual selections", async () => {
     const newest = await publication(10, "verified");
@@ -165,6 +207,75 @@ describe("latest qualified artifact reads over PostgreSQL and the authenticated 
     }
     const selected = await client().latestQualifiedArtifact(query);
     expect(selected.id).toBe("image/1/1");
+  });
+});
+
+test("late verified outputs cannot replace the image in the newest coherent automatic set", async () => {
+  const a = `sha256:${"a".repeat(64)}`;
+  const b = `sha256:${"b".repeat(64)}`;
+  const one = await sitePublication({
+    number: 1,
+    requiredDigest: a,
+    imageId: "image/a",
+  });
+  const two = await sitePublication({
+    number: 2,
+    requiredDigest: b,
+    imageId: "image/b",
+  });
+  const three = await sitePublication({ number: 3, requiredDigest: a });
+  for (const build of [one, three, two])
+    expect(
+      await delivery.qualify(build.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+  expect(
+    await cluster.database.versionSet.count({
+      where: { qualifiedBuildId: two.buildId },
+    }),
+  ).toBe(0);
+  await delivery.compose(
+    {
+      requestId: "manual-late-b",
+      serviceId: query.serviceId,
+      components: { [query.component]: "image/b" },
+    },
+    testOperator,
+  );
+  const selected = await client().latestQualifiedArtifact(query);
+  expect(selected).toMatchObject({
+    id: "image/a",
+    buildId: one.buildId,
+    sourceRevision: "1".padStart(40, "0"),
+    digest: a,
+  });
+  const four = await sitePublication({
+    number: 4,
+    requiredDigest: selected.digest,
+  });
+  expect(
+    await delivery.qualify(four.buildId, "verified", testExecutor),
+  ).toEqual({ status: "verified" });
+  const latest = await cluster.database.versionSet.findUniqueOrThrow({
+    where: { qualifiedBuildId: four.buildId },
+  });
+  const coherent = await delivery.version(latest.id);
+  expect(coherent.components[query.component]?.id).toBe(selected.id);
+  expect(coherent.components["site:scout-frontend-beta"]?.id).toBe("site/4");
+});
+
+test("a missing component in the newest coherent set does not fall back to an older set", async () => {
+  await publication(1, "verified");
+  const newest = await publication(2, "verified");
+  const version = await cluster.database.versionSet.findUniqueOrThrow({
+    where: { qualifiedBuildId: newest.buildId },
+  });
+  // Model a newest set without this component; the older set still has it.
+  await cluster.database.versionSetEntry.deleteMany({
+    where: { revisionId: version.id, component: query.component },
+  });
+  await expect(client().latestQualifiedArtifact(query)).rejects.toMatchObject({
+    status: 404,
+    code: "NOT_FOUND",
   });
 });
 

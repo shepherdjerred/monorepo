@@ -69,10 +69,13 @@ main-push pipeline reached success. Artifact selection cannot consume pending
 or failed publications. Qualification and initial version set composition commit
 atomically; pipeline order prevents a late older build from becoming the newest
 automatic selection. New sets retain unchanged components from their base.
-The latest-qualified-artifact lookup selects one matching service, component,
-and kind from verified builds in the configured CI repository, ordered by CI
-pipeline number. It returns the original artifact and source identity; manual
-version-set composition does not affect this read-only producer lookup.
+The latest-qualified-artifact lookup reads the matching component and kind from
+the newest coherent automatic version set, ordered by its qualifying CI pipeline
+number in the configured repository. Both the set's qualifying build and the
+component's original build must be verified in that repository. It returns the
+original artifact and source identity. Manual compositions and late outputs that
+never entered an automatic set do not affect this read-only producer lookup;
+a missing component in the newest set returns 404 without searching older sets.
 Artifact requirements bind dependent components to exact digests; an incompatible
 combination fails release qualification with a visible reason. Automatic selection
 coalesces only queued, unapproved automatic requests. Cancellation or rejection
