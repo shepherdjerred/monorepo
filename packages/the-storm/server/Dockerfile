@@ -20,12 +20,11 @@ COPY public-status.json public-status.json
 # `managed-flags` is a BuildKit named context supplied by docker-bake.hcl.
 # hadolint ignore=DL3022
 COPY --from=managed-flags managed-flag-inventory.json /feature-flags/src/managed-flag-inventory.json
-# The companions module bundles the shared brain contract from
+# The companions and safety modules bundle their shared brain contracts from
 # ../../storm-brain/contracts (relative to plugin/); without it TheStorm fails
 # to enable. `storm-brain-contracts` is a BuildKit named context.
 # hadolint ignore=DL3022
-COPY --from=storm-brain-contracts companion-chat.json /storm-brain/contracts/companion-chat.json
-COPY --from=storm-brain-contracts content-moderation.json /storm-brain/contracts/content-moderation.json
+COPY --from=storm-brain-contracts companion-chat.json content-moderation.json /storm-brain/contracts/
 # hadolint ignore=DL3022
 COPY --from=mc-harness-contracts evidence-contract.json /mc-harness/src/protocol/evidence-contract.json
 RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
