@@ -52,6 +52,54 @@ handoff and quiescing/draining in-flight legacy hook processes before labeling.
 An unknown add outcome is reconciled without blindly submitting again, including
 after the requesting claim is cancelled.
 
+## Ownership handoff API contract
+
+The owner-only handoff API accepts stored immutable migration bundle reviews.
+Normal session authentication, CSRF protection, and an `Idempotency-Key` apply to
+commands. The application never accepts caller assertions of stopped managers,
+verified files, or trusted mount identities.
+
+| Endpoint                                | Contract                                                                                                                                                                                                             |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/v1/admin/handoffs`           | `PrepareHandoffSchema`: exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Returns an operation and handoff ID.                 |
+| `GET /api/v1/admin/handoffs/:id`        | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                          |
+| `POST /api/v1/admin/handoffs/:id/apply` | `ApplyHandoffSchema`: exact prepared plan hash/version and runtime epoch/version, plus explicit acknowledgements of protected legacy sources and household recovery holds. Queues a fresh proof and apply operation. |
+
+Preparation authorizes observation only. File hashing and probing run on
+`media-files`; a concurrent Temporal activity refreshes network evidence every
+30 seconds on `media-network`. Apply hashes again, compares the exact reviewed
+identity evidence, and checks current owner authority under the final database
+locks. Video content remains unchanged. A durable receipt makes a committed
+apply idempotent after an interrupted response.
+
+Each batch covers at most 25 physical files and 100 canonical media items.
+`activation: "activate"` changes the reviewed observe runtime to active at its
+existing recovery epoch. Later `activation: "extend"` batches require current
+active authority and a newly reviewed exact runtime version. Explicit selected
+episodes may use an approved canonical series scope; unrelated or ambiguous
+items remain unowned. No previous acquisition or notification birth epoch is
+rewritten.
+
+Effects also require a fresh trusted legacy-writer lease and current per-record
+epochs. Minute reconciliation refreshes the lease and observed worker storage
+bindings. Resumed writers or changed PVC/subpath identities revoke authority
+when observed; expired evidence protects effects when observation fails. A
+replacement files Pod on the same verified storage requires a fresh binding.
+
+Whole-media requests with exact current Plex account access can be adopted;
+whole-series requests retain future episode monitoring through bounded coverage
+expansion. Managed Home profiles, ambiguous or partial requests, nuanced
+subtitle preferences, and existing subtitle files remain protected. Legacy
+torrents are recorded as unowned obligations; this API does not change their
+paths, tags, cleanup authority, or assert that legacy hooks have drained.
+
+Every adopted physical item retains a separate household recovery hold.
+Checksums cannot reconstruct lost post-backup requesters, Keep actions, or pins.
+Ordinary Keep/unpin commands cannot release that hold. Scoped household
+reconciliation and release, subtitle adoption, and reviewed permanent retirement
+of deleted legacy controllers require separate supported contracts; absent
+legacy controllers currently protect rather than prove quiescence.
+
 ## Plex exclusion API contract
 
 `@shepherdjerred/media/plex-exclusion` exports the identifier-only maintenance
@@ -117,6 +165,55 @@ repository's password-manager wrappers. Runtime behavior comes from typed
 configuration and the managed `media` flag namespace. The database migration
 command is `bun run --cwd packages/media migrate:deploy`; set `DATABASE_URL` only
 to the intended application database.
+
+## Notification contracts
+
+Verified publication records per-item history and batches deliveries by acquisition,
+recipient, channel, and first availability versus upgrade. Upgrades and completed
+removals require recipient opt-in. Subtitle notifications bind the installed track
+to the exact current video asset/version and requested language. Shared Discord
+announcements contain availability or upgrade titles only; they cannot satisfy a
+personal removal warning.
+
+Each send has a durable attempt identity, keyed recipient fingerprint, and immutable
+birth recovery epoch. Unknown outcomes are never resent automatically. The notification
+workflow makes two bounded receipt observations after acceptance; retention additionally
+refreshes exact personal receipts before authorizing removal. A bounce or unknown
+receipt protects the files. Postal receipt reads validate the original attempt tag;
+Discord reads validate the bot identity, message nonce, channel, and recipient.
+
+Retention repeats bounded watch, playback, and personal receipt observations while
+one files Activity verifies content, waiting twenty seconds between observations.
+After hashing, that Activity
+may wait up to thirty seconds without database or path locks for fresh authority;
+it retains the same process-local file proof. Final effects still require evidence
+no older than sixty seconds and unchanged file identity, intent, ownership, and
+holds. Provider failure or cancellation stops the effect and records an operation
+requiring reconciliation; uncertain file effects are not blindly retried.
+
+Authenticated `POST /api/v1/notifications/:id/retry` accepts `expectedVersion` only
+for the recipient's confirmed rejection or bounce, with a one-minute delay and three
+attempt maximum. Prior attempts remain journaled; a new acceptance starts a fresh
+seven-day warning grace. `POST /api/v1/notifications/:id/reconcile` performs a receipt
+read and never sends; an owner may supply an exact missing `receipt` for an unknown
+outcome. Restored old-epoch deliveries cannot be retried or reconciled into authority.
+
+Personal Discord requires OAuth configuration, the default-off personal Discord
+flag, and the worker's bot credential. Shared announcements have separate default-off
+enable/upgrade flags and a typed channel ID (`disabled` means unconfigured). No
+transport credential or verification token is returned in delivery history.
+
+The deployment currently omits Discord credentials. Before configuring Discord,
+provision `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_BOT_TOKEN`
+in the Media bootstrap item through the repository's password-manager workflow.
+Then add required secret-key references for the OAuth ID and secret to
+[`api.ts`](../homelab/src/cdk8s/src/resources/media/application/api.ts), and the
+bot token only to the network worker in
+[`workers.ts`](../homelab/src/cdk8s/src/resources/media/application/workers.ts).
+The files worker and workflow executor receive none. Both OAuth fields must be
+configured together; partial configuration fails API startup. Keep Discord flags
+disabled until provisioning, deployment, and authenticated delivery verification
+are complete; optional secret references are prohibited by homelab policy.
 
 ## Restore preparation command
 
@@ -380,3 +477,59 @@ Require exit 0 **and** the explicit empty-migration output. Verify the procedure
 with a deliberately different schema, which must return exit 2 and a nonempty
 diff. Prisma's schema-only diff can silently exit without output when no
 datasource is configured; see Tracker AI-305.
+
+## Legacy-writer evidence
+
+The read-only [observer](src/integrations/legacy-observer/runtime.ts) takes two
+bounded Kubernetes snapshots in the `media` namespace. Repository-owned typed
+topology requires Radarr, Sonarr, Seerr, Bazarr, Maintainerr, Recyclarr, Prowlarr,
+Tautulli, and Whisperbridge to have zero desired/current/ready replicas and an
+observed current generation. Live or terminating descendants, relevant writable
+PVC consumers, active jobs, and unsuspended schedules prevent quiescence.
+Streambot remains a separate read-only library consumer. Plex and qBittorrent
+remain running; this observation does not prove that qBittorrent hooks drained.
+
+Only the network worker receives a namespace-scoped Kubernetes account with
+`get`/`list` access to workload metadata and PVC identity. It receives no library
+mount, Secret access, exec, scaling, or mutation permission. API requests use the
+mounted service-account token and CA with normal TLS verification. Snapshot
+limits are five pages per resource kind, 2,000 objects, 16 MiB, and 30 seconds;
+evidence expires 90 seconds after capture begins. Raw specs remain in memory;
+persisted evidence contains identities, digests, counts, and protection reasons.
+
+Mount evidence proves an explicit source-root mapping through the same PVC UID,
+PV name, and volume-relative path. It rejects ambiguous mounts, `subPathExpr`,
+replacement claims, and changing snapshots. Canonical mounts come from the
+unique ready files-worker Pod with a current ReplicaSet/Deployment lineage;
+old, competing, or terminating pollers prevent proof. Physical execution must
+match its trusted `MEDIA_FILE_WORKER_POD_UID` Downward API value to that proof.
+Source controller UID/spec evidence must match the current quiescence lease.
+These are expiring observations, not ownership transfer or authorization by
+themselves; effect guards must consume a current nonrevoked lease.
+
+Missing retired Deployments currently protect the handoff. Permanent removal
+requires a separate reviewed retirement policy binding prior controller and
+cluster identity; absence is never automatically treated as successful drain.
+
+The [handoff network producer](src/migration/handoff-network/producer.ts) accepts
+only a stored plan ID. It binds fresh controller and actual Pod/PVC evidence,
+complete bounded Plex section inventory with exact external identity and Part
+paths, current requester access, and selected torrents' full cryptographic
+identities and effective seeding policies. Plex scans are limited to 10,000 items
+per section; larger or incomplete inventories protect the handoff. Observations
+expire after at most 90 seconds and append immutable database records. Final
+publication rechecks runtime, review, media, profile, and requester versions under
+database locks. This producer performs external GETs only and grants no ownership.
+Managed Plex Home claims currently remain protected because an account token does
+not independently prove the managed profile's access. Legacy torrent source
+cleanup remains protected even when its identity matches; evolving seed counters
+are audit evidence and do not change the stable identity/policy review hash.
+
+The [storage refresher](src/infrastructure/handoff/storage-observer.ts) permits
+a replacement files-worker Pod only on the same PVC UID, PV name, and
+volume-relative path. The source controller UID, generation, spec digest, and
+full mount binding must still equal the approved evidence as well as the current
+lease; a fresh lease cannot approve a replacement legacy controller. Changed,
+ambiguous, unavailable, or expired evidence
+revokes storage authority and returns an active runtime to observation mode.
+It never adopts a replacement PVC or automatically clears revoked authority.

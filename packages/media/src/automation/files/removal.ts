@@ -6,11 +6,18 @@ import {
   now,
 } from "./types.ts";
 import { assertRetention, assertRuntime, lockMedia } from "./guards.ts";
+import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { removalPlan, assertOwnedAsset } from "./removal-plan.ts";
 import { fileOperations } from "./file-operations.ts";
 import { z } from "zod";
 import { prepareRemovalProof } from "./content-proof.ts";
 import { Prisma } from "#generated/prisma/client.ts";
+import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
+import {
+  awaitRetentionFreshness,
+  RetentionEpochSchema,
+  requireFreshRetentionStart,
+} from "./retention-freshness.ts";
 import {
   assertRestoredGenerations,
   recordRestoreReceipt,
@@ -26,14 +33,26 @@ export async function removeFiles(
     ? initialContext.enabled.purge
     : initialContext.enabled.quarantine;
   if (!(await enabled())) throw new FileGuardError("retention_disabled");
-  const plan = await initialContext.db.$transaction(async (tx) => {
+  const snapshot = await initialContext.db.$transaction(async (tx) => {
     const decision = await tx.retentionDecision.findUniqueOrThrow({
       where: { id: decisionId },
     });
     await lockMedia(tx, [decision.mediaId]);
-    return await removalPlan(tx, initialContext, decisionId);
+    if (decision.state !== (purge ? "purged" : "quarantined"))
+      requireFreshRetentionStart(initialContext, decision.evidence);
+    return {
+      plan: await removalPlan(tx, initialContext, decisionId),
+      epoch: RetentionEpochSchema.parse(decision.evidence).recoveryEpoch,
+    };
   });
+  const { plan } = snapshot;
   const context = await prepareRemovalProof(initialContext, plan);
+  await awaitRetentionFreshness(context, {
+    decisionId,
+    plan,
+    epoch: snapshot.epoch,
+    purge,
+  });
   const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
   await context.db.$transaction(
     async (tx) => {
@@ -113,11 +132,20 @@ export async function removeFiles(
           version: { increment: 1 },
         },
       });
-      await tx.applicationEvent.createMany({
-        data: mediaIds.map((mediaId) => ({
-          mediaId,
-          kind: `files_${completeState}`,
-          payload: { decisionId },
+      const evidence = z
+        .object({ recoveryEpoch: z.number().int() })
+        .parse(decision.evidence);
+      const intents = await tx.mediaIntent.findMany({
+        where: { mediaId: { in: mediaIds } },
+      });
+      await queueLifecycleNotifications(tx, {
+        key: `retention:${decisionId}:${completeState}`,
+        kind: purge ? "files_purged" : "files_quarantined",
+        epoch: evidence.recoveryEpoch,
+        items: intents.map((intent) => ({
+          mediaId: intent.mediaId,
+          generation: intent.generation,
+          decisionId,
         })),
       });
     },
@@ -215,6 +243,14 @@ export async function restoreFiles(
           if (!(await context.enabled.acquisition()))
             throw new FileGuardError("acquisition_disabled");
           await assertRuntime(tx, epoch);
+          if (
+            !(await recordsAuthorized(tx, {
+              epoch,
+              mediaIds: entry.mediaIds,
+              assetIds: [entry.assetId],
+            }))
+          )
+            throw new FileGuardError("record_ownership_unconfirmed");
           await assertOwnedAsset(
             tx,
             entry,

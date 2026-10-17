@@ -1,4 +1,5 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
 import { randomBytes } from "node:crypto";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { CredentialCipher } from "#application/security.ts";
@@ -10,6 +11,7 @@ import type { MediaAutomationContext } from "./context.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
+import { grantTestLease } from "#testing/authority.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const cipher = new CredentialCipher(randomBytes(32).toString("base64"));
@@ -74,6 +76,7 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
 
 async function fixture() {
   const db = cluster.database;
+  await grantTestLease(db);
   const user = await db.mediaUser.create({
     data: {
       plexAccountId: crypto.randomUUID(),
@@ -89,7 +92,7 @@ async function fixture() {
       title: "Fixture",
       availability: "available",
       externalIds: { plexRatingKey: "42" },
-      intent: { create: {} },
+      intent: { create: { automationEpoch: 0 } },
       requests: { create: { userId: user.id } },
     },
   });
@@ -99,6 +102,7 @@ async function fixture() {
       sizeBytes: 1024,
       checksum: "a".repeat(64),
       owned: true,
+      ownershipEpoch: 0,
       properties: {},
       state: "published",
       coverage: { create: { mediaId: media.id, current: true } },
@@ -119,6 +123,7 @@ async function fixture() {
     playing: false,
     sends: 0,
     loseResponse: false,
+    bounced: false,
   };
   const plex = new PlexClient(
     {
@@ -149,6 +154,7 @@ async function fixture() {
     describeWorkflow: async () => null,
     permittedSections: async () => ({ movie: "1", series: "2" }),
     refreshExclusionProofs: () => Promise.resolve(),
+    refreshWriterLease: () => Promise.resolve(),
     cipher,
     plex,
     userPlex: () => plex,
@@ -170,6 +176,10 @@ async function fixture() {
       purge: async () => true,
     },
     publicOrigin: "https://media.example.com",
+    reconcileNotification: async () => ({
+      status: observation.bounced ? "bounced" : "delivered",
+      recipient: user.email,
+    }),
     notify: async () => {
       observation.sends++;
       if (observation.loseResponse) throw new Error("lost response");
@@ -266,6 +276,101 @@ test("unknown delivery is not retried or counted as acceptance", async () => {
   ).toMatchObject({ acceptedAt: null });
 });
 
+test("a late bounce revokes grace and explicit retry starts seven fresh days", async () => {
+  const item = await fixture();
+  const retention = createRetentionActivities(item.context);
+  const notifications = createNotificationActivities(item.context);
+  await retention.evaluateMediaRetention(item.input);
+  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
+    { where: { userId: item.user.id } },
+  );
+  const input = { operationId: "notification", notificationId: delivery.id };
+  await notifications.deliverMediaNotification(input);
+  await retention.evaluateMediaRetention(item.input);
+  await cluster.database.notificationDelivery.update({
+    where: { id: delivery.id },
+    data: { acceptedAt: new Date(Date.now() - 8 * 86_400_000) },
+  });
+  item.observation.bounced = true;
+  expect(await retention.evaluateMediaRetention(item.input)).toMatchObject({
+    status: "warning",
+  });
+  const bounced = await cluster.database.notificationDelivery.findUniqueOrThrow(
+    { where: { id: delivery.id } },
+  );
+  expect(bounced.providerStatus).toBe("bounced");
+  expect(item.observation.sends).toBe(1);
+  const service = new PrismaNotificationApplication(
+    cluster.database,
+    cipher,
+    null,
+    { publicOrigin: item.context.publicOrigin },
+  );
+  const now = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(now + 61_000);
+  try {
+    await service.retryDelivery(
+      { ...item.user, role: "member" },
+      crypto.randomUUID(),
+      delivery.id,
+      bounced.version,
+    );
+  } finally {
+    clock.mockRestore();
+  }
+  item.observation.bounced = false;
+  await notifications.deliverMediaNotification(input);
+  expect(await retention.evaluateMediaRetention(item.input)).toMatchObject({
+    status: "grace",
+  });
+  const retried = await cluster.database.notificationDelivery.findUniqueOrThrow(
+    { where: { id: delivery.id }, include: { deliveryAttempts: true } },
+  );
+  expect(retried.acceptedAt?.getTime()).toBeGreaterThanOrEqual(now);
+  expect(retried.deliveryAttempts).toHaveLength(2);
+  expect(
+    retried.deliveryAttempts.every(
+      (attempt) => attempt.providerReceipt !== null,
+    ),
+  ).toBe(true);
+});
+
+test.each(["keep", "unknown_watch", "unwatched", "preferences"] as const)(
+  "warning final boundary protects %s changes",
+  async (change) => {
+    const item = await fixture();
+    await createRetentionActivities(item.context).evaluateMediaRetention(
+      item.input,
+    );
+    const db = cluster.database;
+    const delivery = await db.notificationDelivery.findFirstOrThrow({
+      where: { userId: item.user.id },
+    });
+    if (change === "keep")
+      await db.retentionHold.create({
+        data: { userId: item.user.id, mediaId: item.media.id, isPin: true },
+      });
+    if (change === "unknown_watch")
+      await db.watchState.deleteMany({ where: { mediaId: item.media.id } });
+    if (change === "unwatched")
+      await db.watchState.updateMany({
+        where: { mediaId: item.media.id },
+        data: { watched: false },
+      });
+    if (change === "preferences")
+      await db.notificationPreference.update({
+        where: { userId: item.user.id },
+        data: { emailEnabled: false },
+      });
+    expect(
+      await createNotificationActivities(item.context).deliverMediaNotification(
+        { operationId: "notification", notificationId: delivery.id },
+      ),
+    ).toMatchObject({ status: "failed" });
+    expect(item.observation.sends).toBe(0);
+  },
+);
+
 test("a shared physical file stays protected for another unwatched requester", async () => {
   const item = await fixture();
   const other = await cluster.database.mediaItem.create({
@@ -274,7 +379,7 @@ test("a shared physical file stays protected for another unwatched requester", a
       title: "Other",
       availability: "available",
       externalIds: { plexRatingKey: "43" },
-      intent: { create: {} },
+      intent: { create: { automationEpoch: 0 } },
       requests: { create: { userId: item.user.id } },
       assets: { create: { assetId: item.asset.id, current: true } },
     },

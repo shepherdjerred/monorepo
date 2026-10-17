@@ -105,7 +105,7 @@ test("a partial season publication followed by Keep compensates every uncommitte
       title: "Second Episode",
       seasonNumber: 1,
       episodeNumber: 2,
-      intent: { create: { profileId: f.profile.id } },
+      intent: { create: { profileId: f.profile.id, automationEpoch: 0 } },
       requests: {
         create: { userId: f.user.id, sponsorRequestId: f.request.id },
       },
@@ -415,6 +415,14 @@ test("the same retention operation quarantines then purges only after seven days
   await cluster.database.watchState.update({
     where: { userId_mediaId: { userId: f.user.id, mediaId: f.media.id } },
     data: { observedAt: timestamp },
+  });
+  expect(await activities.purgeMediaFiles(input)).toMatchObject({
+    status: "protected",
+    reason: "warning_unconfirmed",
+  });
+  await cluster.database.notificationDelivery.updateMany({
+    where: { event: { mediaId: f.media.id }, userId: f.user.id },
+    data: { reconciledAt: timestamp },
   });
   expect(await activities.purgeMediaFiles(input)).toEqual({
     status: "purged",

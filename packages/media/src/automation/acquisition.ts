@@ -66,6 +66,12 @@ async function reconcile(
       attemptId: null,
       reason: "acquisition_disabled",
     };
+  if (intent.automationEpoch !== runtime.epoch)
+    return {
+      status: "blocked",
+      attemptId: null,
+      reason: "intent_ownership_unconfirmed",
+    };
   const profile = await loadProfile(context.db, input.mediaId);
   if (profile === null)
     return {

@@ -79,7 +79,17 @@ export class MediaCommandBase {
   ) {
     const { kind, mediaId, generation, details = {} } = command;
     const operationId = crypto.randomUUID();
-    const payload = { operationId, kind, mediaId, generation, ...details };
+    const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    const payload = {
+      operationId,
+      kind,
+      mediaId,
+      generation,
+      recoveryEpoch: runtime.recoveryEpoch,
+      ...details,
+    };
     await db.operation.create({
       data: {
         id: operationId,

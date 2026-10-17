@@ -3,6 +3,7 @@ import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
+import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import {
   effectiveRequestWhere,
   lockEffectiveRequests,
@@ -18,6 +19,8 @@ export async function authorizedSubmission(
     async (tx) => {
       await lockMedia(tx, attempt.mediaIds);
       await lockEffectiveRequests(tx, attempt.mediaIds);
+      if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)))
+        return false;
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
       const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
         where: { id: "singleton" },
@@ -54,6 +57,7 @@ export async function authorizedSubmission(
         intents.some(
           (intent) =>
             !intent.desiredPresence ||
+            intent.automationEpoch !== attempt.recoveryEpoch ||
             !intent.monitoring ||
             intent.intentionallyRemovedAt !== null ||
             intent.generation !== generations[intent.mediaId] ||

@@ -5,6 +5,53 @@ import { requireActiveRuntime } from "#automation/runtime.ts";
 
 const { database, fixture } = automationTestHarness();
 
+test("restoring rows that lost a later requester creates an independent unreleased hold even when file bytes did not change", async () => {
+  const data = await fixture();
+  const db = database();
+  const asset = await db.libraryAsset.create({
+    data: {
+      path: `/fixture/${crypto.randomUUID()}.mkv`,
+      owned: true,
+      ownershipEpoch: 0,
+      state: "published",
+      checksum: "a".repeat(64),
+      sizeBytes: 10,
+      properties: {},
+      coverage: { create: { mediaId: data.media.id, current: true } },
+    },
+  });
+  const later = await db.mediaUser.create({
+    data: {
+      plexAccountId: crypto.randomUUID(),
+      displayName: "Post-backup requester",
+    },
+  });
+  await db.mediaRequest.create({
+    data: { userId: later.id, mediaId: data.media.id },
+  });
+  // Restoring the older snapshot loses this later claim but preserves identical file evidence.
+  await db.mediaRequest.delete({
+    where: { userId_mediaId: { userId: later.id, mediaId: data.media.id } },
+  });
+  await prepareMediaRestore(db, {
+    recoveryId: crypto.randomUUID(),
+    expectedEpoch: 0,
+    reason: "Isolated older backup",
+  });
+  expect(
+    await db.recoveryHold.findUniqueOrThrow({
+      where: { mediaId: data.media.id },
+    }),
+  ).toMatchObject({
+    recoveryEpoch: 1,
+    releasedAt: null,
+    reason: "recovery_request_history_unconfirmed",
+  });
+  expect(
+    await db.libraryAsset.findUniqueOrThrow({ where: { id: asset.id } }),
+  ).toMatchObject({ checksum: "a".repeat(64), ownershipEpoch: 0 });
+});
+
 test("restored active backup is placed into observe with a new epoch exactly once before workers reconnect", async () => {
   await fixture();
   const db = database();

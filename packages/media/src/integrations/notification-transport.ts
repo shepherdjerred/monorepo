@@ -10,7 +10,7 @@ import {
 import { postalHttp } from "./postal-http.ts";
 
 type Message = {
-  channel: "email" | "discord";
+  channel: "email" | "discord" | "discord_shared";
   recipient: string;
   subject: string;
   text: string;
@@ -81,24 +81,35 @@ export function createNotificationTransport(
       "Content-Type": "application/json",
       Authorization: `Bot ${config.discord.botToken}`,
     };
-    const channel = z.object({ id: z.string().regex(/^\d+$/u) }).parse(
-      await json(
-        await request(
-          transport ?? fetch,
-          "discord",
-          endpoint("https://discord.com/api/v10", "users/@me/channels"),
-          {
-            method: "POST",
-            mutation: true,
-            headers,
-            body: JSON.stringify({
-              recipient_id: z.string().regex(/^\d+$/u).parse(message.recipient),
-            }),
-          },
-        ),
-        "discord",
-      ),
-    );
+    const channel =
+      message.channel === "discord_shared"
+        ? {
+            id: z
+              .string()
+              .regex(/^\d{1,25}$/u)
+              .parse(message.recipient),
+          }
+        : z.object({ id: z.string().regex(/^\d+$/u) }).parse(
+            await json(
+              await request(
+                transport ?? fetch,
+                "discord",
+                endpoint("https://discord.com/api/v10", "users/@me/channels"),
+                {
+                  method: "POST",
+                  mutation: true,
+                  headers,
+                  body: JSON.stringify({
+                    recipient_id: z
+                      .string()
+                      .regex(/^\d+$/u)
+                      .parse(message.recipient),
+                  }),
+                },
+              ),
+              "discord",
+            ),
+          );
     // Discord's nonce window is short; the durable database sending journal remains the retry boundary.
     const nonce = createHash("sha256")
       .update(message.idempotencyKey)
@@ -131,6 +142,6 @@ export function createNotificationTransport(
         "discord",
       ),
     );
-    return { receipt: result.id };
+    return { receipt: `discord:${channel.id}:${result.id}` };
   };
 }

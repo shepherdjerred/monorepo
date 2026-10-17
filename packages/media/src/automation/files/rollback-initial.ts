@@ -31,6 +31,7 @@ export async function quarantineInitialPublication(input: {
       intents.some(
         (intent) =>
           !intent.desiredPresence ||
+          intent.automationEpoch !== recoveryEpoch ||
           intent.generation !== entry.generations[intent.mediaId],
       )
     )
@@ -41,6 +42,7 @@ export async function quarantineInitialPublication(input: {
     });
     if (
       !asset.owned ||
+      asset.ownershipEpoch !== recoveryEpoch ||
       asset.checksum !== entry.checksum ||
       asset.state !== "published" ||
       asset.path !== nodePath.join(roots.library, entry.libraryPath) ||

@@ -17,7 +17,10 @@ export async function sweepDownloads(
   context: MediaAutomationContext,
   cursor: string | null,
 ) {
-  if (cursor === null) await context.refreshExclusionProofs();
+  if (cursor === null) {
+    await context.refreshWriterLease();
+    await context.refreshExclusionProofs();
+  }
   return await sweepDownloadAttempts(context, cursor);
 }
 

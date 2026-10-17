@@ -5,6 +5,10 @@ import type { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import type { ProviderRegistry } from "./providers.ts";
 import type { WorkflowStarter } from "./store.ts";
 import type { TmdbClient } from "#integrations/tmdb.ts";
+import type {
+  ReceiptQuery,
+  ReceiptObservation,
+} from "#integrations/notifications/receipts.ts";
 
 export type MediaAutomationContext = {
   db: Database;
@@ -31,6 +35,7 @@ export type MediaAutomationContext = {
   } | null>;
   permittedSections: () => Promise<{ movie: string; series: string }>;
   refreshExclusionProofs: () => Promise<void>;
+  refreshWriterLease: () => Promise<void>;
   gates: {
     acquisition: () => Promise<boolean>;
     sourceCleanup: () => Promise<boolean>;
@@ -40,10 +45,18 @@ export type MediaAutomationContext = {
   publicOrigin: string;
   downloadRoot: string;
   notify: (message: {
-    channel: "email" | "discord";
+    channel: "email" | "discord" | "discord_shared";
     recipient: string;
     subject: string;
     text: string;
     idempotencyKey: string;
   }) => Promise<{ receipt: string }>;
+  reconcileNotification?: (input: ReceiptQuery) => Promise<ReceiptObservation>;
+  personalDiscordAvailable?: () => Promise<boolean>;
+  sharedAnnouncements?: () => Promise<{
+    enabled: boolean;
+    upgrades: boolean;
+    channelId: string;
+    available: boolean;
+  }>;
 };

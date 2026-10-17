@@ -21,6 +21,7 @@ import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
 import { PrismaPlexAdministration } from "#infrastructure/plex-admin.ts";
 import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.ts";
 import { PrismaMigrationAdministration } from "#migration/persistence.ts";
+import { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { MigrationCatalogDiscovery } from "#migration/catalog-discovery.ts";
 import { PrismaPlexExclusionAdministration } from "#infrastructure/plex-exclusion-service.ts";
 import { DiscordOAuth } from "#infrastructure/discord-auth.ts";
@@ -104,9 +105,18 @@ const app = createMediaApp({
     keepDays: keepDays.value,
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
   }),
-  notifications: new PrismaNotificationApplication(database, cipher, discord),
+  notifications: new PrismaNotificationApplication(database, cipher, discord, {
+    publicOrigin: bootstrap.PUBLIC_ORIGIN,
+    discordEnabled: async () => {
+      const flag = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
+        "personalDiscordEnabled",
+      );
+      return flag.value;
+    },
+  }),
   admin: new PrismaAdminApplication(database, cipher),
   numberingAdmin: new PrismaNumberingAdministration(database),
+  handoffAdmin: new PrismaMediaHandoff(database),
   migrationAdmin: new PrismaMigrationAdministration(
     database,
     new MigrationCatalogDiscovery(database, tmdbClient, catalogApplication),

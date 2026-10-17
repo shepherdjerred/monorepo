@@ -12,19 +12,27 @@ import {
   type UpdateNotificationPreferences,
   type CommandResult,
 } from "#shared/api.ts";
-import { PrismaMediaCommands } from "./commands.ts";
+import { NotificationDeliveryCommands } from "./notifications/commands.ts";
 import type { Database } from "./database.ts";
 
 export class PrismaNotificationApplication
-  extends PrismaMediaCommands
+  extends NotificationDeliveryCommands
   implements NotificationApplication
 {
   constructor(
     private readonly db: Database,
     private readonly cipher: CredentialCipher,
     private readonly discord: DiscordIdentityProvider | null,
+    private readonly options: {
+      publicOrigin: string;
+      discordEnabled?: () => Promise<boolean>;
+    },
   ) {
-    super(db, { keepDays: 30 });
+    super(db, cipher, options.publicOrigin, options.discordEnabled);
+  }
+
+  private discordEnabled() {
+    return this.options.discordEnabled?.() ?? Promise.resolve(false);
   }
 
   async preferences(actor: MediaActor) {
@@ -36,6 +44,7 @@ export class PrismaNotificationApplication
       email: user.email,
       emailVerified: user.emailVerifiedAt !== null,
       discordLinked: user.discordId !== null,
+      discordAvailable: this.discord !== null && (await this.discordEnabled()),
       emailEnabled: false,
       discordEnabled: false,
       upgrades: false,
@@ -55,6 +64,7 @@ export class PrismaNotificationApplication
       key,
       { kind: "notification_preferences", input },
       async (db) => {
+        await db.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actor.id} FOR UPDATE`;
         const user = await db.mediaUser.findUniqueOrThrow({
           where: { id: actor.id },
         });
@@ -64,7 +74,12 @@ export class PrismaNotificationApplication
             "Verify an email address before enabling email notifications",
             422,
           );
-        if (input.discordEnabled && user.discordId === null)
+        if (
+          input.discordEnabled &&
+          (user.discordId === null ||
+            this.discord === null ||
+            !(await this.discordEnabled()))
+        )
           throw new MediaError(
             "discord_not_linked",
             "Link a Discord account before enabling Discord messages",
@@ -102,6 +117,7 @@ export class PrismaNotificationApplication
       key,
       { kind: "verify_email", input: { email } },
       async (db) => {
+        await db.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actor.id} FOR UPDATE`;
         const recent = await db.emailVerification.findFirst({
           where: {
             userId: actor.id,
@@ -199,7 +215,7 @@ export class PrismaNotificationApplication
   }
 
   async startDiscordLink(actor: MediaActor) {
-    if (this.discord === null)
+    if (this.discord === null || !(await this.discordEnabled()))
       throw new MediaError(
         "discord_not_configured",
         "Discord account linking is not configured",
@@ -220,7 +236,7 @@ export class PrismaNotificationApplication
     actor: MediaActor,
     input: { code: string; state: string; issuer: string },
   ): Promise<CommandResult> {
-    if (this.discord === null)
+    if (this.discord === null || !(await this.discordEnabled()))
       throw new MediaError(
         "discord_not_configured",
         "Discord account linking is not configured",

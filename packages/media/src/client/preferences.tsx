@@ -83,13 +83,17 @@ function PreferencesForm({
         <input
           type="checkbox"
           checked={draft.discordEnabled}
-          disabled={!preferences.discordLinked}
+          disabled={!preferences.discordLinked || !preferences.discordAvailable}
           onChange={(event) => {
             setDraft({ ...draft, discordEnabled: event.target.checked });
           }}
         />
         Send personal Discord messages
-        {preferences.discordLinked ? "" : " (link Discord first)"}
+        {preferences.discordAvailable
+          ? preferences.discordLinked
+            ? ""
+            : " (link Discord first)"
+          : " (not configured)"}
       </label>
       <label className="check-label">
         <input
@@ -205,13 +209,21 @@ function ContactSettings({
         </span>
         <button
           className="button"
-          disabled={discord.isPending || unlink.isPending}
+          disabled={
+            discord.isPending ||
+            unlink.isPending ||
+            (!preferences.discordAvailable && !preferences.discordLinked)
+          }
           onClick={() => {
             if (preferences.discordLinked) unlink.mutate();
             else discord.mutate();
           }}
         >
-          {preferences.discordLinked ? "Unlink Discord" : "Link Discord"}
+          {preferences.discordLinked
+            ? "Unlink Discord"
+            : preferences.discordAvailable
+              ? "Link Discord"
+              : "Discord unavailable"}
         </button>
       </div>
       {discord.error !== null && <ErrorNotice error={discord.error} />}

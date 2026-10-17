@@ -1,224 +1,191 @@
 import { z } from "zod";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { IntegrationError } from "#integrations/http.ts";
-import type { MediaAutomationContext } from "./context.ts";
+import type { NotificationContext } from "./notifications/types.ts";
+import {
+  composeMessage,
+  deliveryInclude,
+  type Message,
+} from "./notifications/message.ts";
+import { deliveryRuntimeActive, lockDelivery } from "./notifications/locks.ts";
+import { reconcileDelivery } from "./notifications/reconcile.ts";
+import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 
-type Context = Pick<
-  MediaAutomationContext,
-  "db" | "cipher" | "publicOrigin" | "notify"
->;
-type Delivery = Awaited<ReturnType<typeof loadDelivery>>;
-async function loadDelivery(context: Context, id: string) {
-  return await context.db.notificationDelivery.findUniqueOrThrow({
-    where: { id },
-    include: {
-      event: true,
-      user: { include: { notificationPreference: true } },
-    },
-  });
-}
-
-async function verificationMessage(
-  context: Context,
-  delivery: Delivery,
-): Promise<{
-  channel: "email";
-  recipient: string;
-  subject: string;
-  text: string;
-} | null> {
-  if (delivery.channel !== "email")
-    throw new Error("Verification delivery channel is invalid");
-  const { verificationId } = z
-    .object({ verificationId: z.string() })
-    .parse(delivery.event.payload);
-  const verification = await context.db.emailVerification.findUnique({
-    where: { id: verificationId },
-  });
-  if (
-    verification?.userId !== delivery.userId ||
-    verification.expiresAt <= new Date()
-  )
-    return null;
-  const url = new URL("/notifications/email", context.publicOrigin);
-  url.hash = new URLSearchParams({
-    verify: context.cipher.decrypt(
-      verification.encryptedToken,
-      `email:${verification.id}`,
-    ),
-  }).toString();
-  return {
-    channel: "email",
-    recipient: verification.email,
-    subject: "Verify your Media email",
-    text: `Verify this address while signed in to Media: ${url.toString()}`,
-  };
-}
-
-async function warningCurrent(
-  context: Context,
-  delivery: Delivery,
-): Promise<boolean> {
-  if (delivery.event.kind !== "retention_warning") return true;
-  const { decisionId, generation } = z
-    .object({ decisionId: z.string(), generation: z.number().int() })
-    .parse(delivery.event.payload);
-  const decision = await context.db.retentionDecision.findUnique({
-    where: { id: decisionId },
-    include: { media: { include: { intent: true } } },
-  });
-  return (
-    decision?.mediaId === delivery.event.mediaId &&
-    decision.generation === generation &&
-    decision.media.intent?.generation === generation &&
-    ["warning_pending", "grace_period"].includes(decision.state)
+const result = (
+  status: "accepted" | "failed" | "unknown",
+  reason: string | null = null,
+) => ({ status, reason });
+const fingerprint = (context: NotificationContext, message: Message) =>
+  context.cipher.fingerprint(
+    `${message.channel}:${message.recipient}`,
+    "notification-recipient",
   );
-}
-
-async function compose(context: Context, delivery: Delivery) {
-  const channel = z.enum(["email", "discord"]).parse(delivery.channel);
-  if (delivery.event.kind === "email_verification")
-    return await verificationMessage(context, delivery);
-  if (delivery.event.mediaId === null)
-    throw new Error("Media notification has no media identity");
-  const media = await context.db.mediaItem.findUniqueOrThrow({
-    where: { id: delivery.event.mediaId },
-  });
-  const preference = delivery.user.notificationPreference;
-  const recipient =
-    channel === "email" ? delivery.user.email : delivery.user.discordId;
-  const enabled =
-    channel === "email"
-      ? preference?.emailEnabled === true &&
-        delivery.user.emailVerifiedAt !== null
-      : preference?.discordEnabled === true;
-  if (recipient === null || !enabled) return null;
-  if (!(await warningCurrent(context, delivery))) return null;
-  const descriptions: Record<string, string> = {
-    media_available: "is available in Plex",
-    media_upgraded: "has been upgraded in Plex",
-    acquisition_failed: "needs attention",
-    retention_warning:
-      "is eligible for removal after at least seven days. Open Media to Keep it or pin it",
-    files_quarantined:
-      "has moved to quarantine and can be restored for seven days",
-    files_purged: "has been removed",
-  };
-  const description = descriptions[delivery.event.kind];
-  if (description === undefined)
-    throw new Error("Unknown media notification event");
-  if (delivery.event.kind === "media_upgraded" && preference?.upgrades !== true)
-    return null;
-  if (
-    ["files_quarantined", "files_purged"].includes(delivery.event.kind) &&
-    preference?.removalCompleted !== true
-  )
-    return null;
-  const url = new URL(
-    `/media/${encodeURIComponent(media.id)}`,
-    context.publicOrigin,
-  );
-  return {
-    channel,
-    recipient,
-    subject: `Media: ${media.title.slice(0, 200)}`,
-    text: `${media.title} ${description}.\n${url.toString()}`,
-  };
-}
 
 export function createNotificationActivities(
-  context: Context,
+  context: NotificationContext,
 ): Pick<MediaNetworkActivities, "deliverMediaNotification"> {
   return {
     async deliverMediaNotification(input) {
-      const delivery = await loadDelivery(context, input.notificationId);
-      if (delivery.state === "accepted")
-        return { status: "accepted", reason: null };
-      if (["sending", "unknown"].includes(delivery.state))
-        return { status: "unknown", reason: "delivery_outcome_unknown" };
-      if (delivery.state === "failed")
-        return { status: "failed", reason: "delivery_requires_explicit_retry" };
-      if (delivery.state !== "pending")
-        throw new Error("Unknown notification delivery state");
-      const runtime = await context.db.mediaRuntimeState.findUniqueOrThrow({
-        where: { id: "singleton" },
+      const snapshot = await context.db.notificationDelivery.findUniqueOrThrow({
+        where: { id: input.notificationId },
+        include: deliveryInclude,
       });
-      if (
-        runtime.mode !== "active" ||
-        !runtime.ownershipConfirmed ||
-        runtime.recoveryEpoch !== delivery.recoveryEpoch
-      )
-        return { status: "failed", reason: "notification_runtime_protected" };
-      const message = await compose(context, delivery);
-      if (message === null) {
-        await context.db.notificationDelivery.updateMany({
-          where: { id: delivery.id, state: "pending" },
-          data: { state: "failed" },
+      if (["sending", "unknown", "accepted"].includes(snapshot.state))
+        return reconcileDelivery(context, snapshot);
+      if (snapshot.state === "failed")
+        return result("failed", "delivery_requires_explicit_retry");
+      if (snapshot.state !== "pending")
+        throw new Error("Unknown notification state");
+      const authority = await runtimeAuthority(context.db);
+      if (!authority.active || authority.epoch !== snapshot.recoveryEpoch)
+        return result("failed", "notification_runtime_protected");
+      const claim = await context.db.$transaction(async (tx) => {
+        const delivery = await lockDelivery(tx, snapshot.id);
+        if (delivery.state !== "pending") return null;
+        if (!(await deliveryRuntimeActive(tx, delivery.recoveryEpoch)))
+          return null;
+        const message = await composeMessage(tx, context, delivery);
+        if (message === null) {
+          await tx.notificationDelivery.update({
+            where: { id: delivery.id },
+            data: {
+              state: "failed",
+              failureReason: "recipient_or_event_unavailable",
+              version: { increment: 1 },
+            },
+          });
+          return null;
+        }
+        const recipientFingerprint = fingerprint(context, message);
+        const attempt = await tx.notificationDeliveryAttempt.create({
+          data: {
+            deliveryId: delivery.id,
+            attemptNumber: delivery.attempts + 1,
+            recoveryEpoch: delivery.recoveryEpoch,
+            recipientFingerprint,
+            state: "sending",
+            startedAt: new Date(),
+          },
         });
-        return { status: "failed", reason: "recipient_or_event_unavailable" };
-      }
-      // Commit before the external send. A killed worker leaves 'sending', requiring reconciliation.
-      const claim = await context.db.notificationDelivery.updateMany({
-        where: { id: delivery.id, state: "pending" },
-        data: { state: "sending", attempts: { increment: 1 } },
+        await tx.notificationDelivery.update({
+          where: { id: delivery.id },
+          data: {
+            state: "sending",
+            attempts: { increment: 1 },
+            recipientFingerprint,
+            failureReason: null,
+            version: { increment: 1 },
+          },
+        });
+        return { attemptId: attempt.id, recipientFingerprint };
       });
-      if (claim.count !== 1)
-        return { status: "unknown", reason: "delivery_already_claimed" };
+      if (claim === null)
+        return result("failed", "notification_runtime_or_event_protected");
       try {
-        const sent = await context.db.$transaction(
+        return await context.db.$transaction(
           async (tx) => {
-            await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
-            const current = await tx.mediaRuntimeState.findUniqueOrThrow({
-              where: { id: "singleton" },
-            });
+            const delivery = await lockDelivery(tx, snapshot.id);
+            const current = await deliveryRuntimeActive(
+              tx,
+              delivery.recoveryEpoch,
+            );
+            const message = current
+              ? await composeMessage(tx, context, delivery)
+              : null;
             if (
-              current.mode !== "active" ||
-              !current.ownershipConfirmed ||
-              current.recoveryEpoch !== delivery.recoveryEpoch
-            )
-              return false;
-            const result = await context.notify({
+              message === null ||
+              delivery.state !== "sending" ||
+              fingerprint(context, message) !== claim.recipientFingerprint
+            ) {
+              await tx.notificationDeliveryAttempt.update({
+                where: { id: claim.attemptId },
+                data: {
+                  state: "rejected",
+                  rejectionReason: "authority_changed_before_send",
+                  finishedAt: new Date(),
+                },
+              });
+              await tx.notificationDelivery.update({
+                where: { id: delivery.id },
+                data: {
+                  state: "failed",
+                  failureReason: "authority_changed_before_send",
+                  version: { increment: 1 },
+                },
+              });
+              return result("failed", "authority_changed_before_send");
+            }
+            const sent = await context.notify({
               ...message,
-              idempotencyKey: delivery.id,
+              idempotencyKey: claim.attemptId,
             });
-            const receipt = z.string().min(1).max(1000).parse(result.receipt);
+            const receipt = z.string().min(1).max(1000).parse(sent.receipt);
+            // Independent durable receipt survives a subsequent transaction commit failure.
+            await context.db.notificationDeliveryAttempt.update({
+              where: { id: claim.attemptId },
+              data: { providerReceipt: receipt },
+            });
+            await tx.notificationDeliveryAttempt.update({
+              where: { id: claim.attemptId },
+              data: { state: "accepted", finishedAt: new Date() },
+            });
             await tx.notificationDelivery.update({
               where: { id: delivery.id },
               data: {
                 state: "accepted",
                 providerReceipt: receipt,
                 acceptedAt: new Date(),
+                version: { increment: 1 },
               },
             });
-            return true;
+            return result("accepted");
           },
           { timeout: 45_000 },
         );
-        if (!sent) {
-          await context.db.notificationDelivery.updateMany({
-            where: { id: delivery.id, state: "sending" },
-            data: { state: "pending" },
-          });
-          return { status: "failed", reason: "notification_runtime_protected" };
-        }
-        return { status: "accepted", reason: null };
       } catch (error) {
-        const knownRejection =
+        const rejected =
           error instanceof IntegrationError &&
           ["authentication", "rate-limited", "interaction-required"].includes(
             error.kind,
           );
-        const state = knownRejection ? "failed" : "unknown";
-        await context.db.notificationDelivery.updateMany({
-          where: { id: delivery.id, state: "sending" },
-          data: { state },
-        });
-        return {
-          status: state,
-          reason: knownRejection
-            ? "delivery_rejected"
-            : "delivery_outcome_unknown",
-        };
+        const preservedAcceptance = await context.db.$transaction(
+          async (tx) => {
+            const delivery = await lockDelivery(tx, snapshot.id);
+            if (delivery.state === "accepted") return true;
+            const latest = await tx.notificationDeliveryAttempt.findFirst({
+              where: { deliveryId: delivery.id },
+              orderBy: { attemptNumber: "desc" },
+            });
+            if (latest?.id !== claim.attemptId || latest.state !== "sending")
+              return false;
+            await tx.notificationDeliveryAttempt.updateMany({
+              where: { id: claim.attemptId, state: "sending" },
+              data: {
+                state: rejected ? "rejected" : "unknown",
+                rejectionReason: rejected
+                  ? "provider_rejected"
+                  : "provider_outcome_unknown",
+                finishedAt: new Date(),
+              },
+            });
+            await tx.notificationDelivery.updateMany({
+              where: { id: snapshot.id, state: "sending" },
+              data: {
+                state: rejected ? "failed" : "unknown",
+                failureReason: rejected
+                  ? "provider_rejected"
+                  : "provider_outcome_unknown",
+                version: { increment: 1 },
+              },
+            });
+            return false;
+          },
+        );
+        if (preservedAcceptance) return result("accepted");
+        return result(
+          rejected ? "failed" : "unknown",
+          rejected ? "delivery_rejected" : "delivery_outcome_unknown",
+        );
       }
     },
   };

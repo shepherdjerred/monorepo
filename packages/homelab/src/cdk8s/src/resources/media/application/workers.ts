@@ -3,12 +3,14 @@ import { Size } from "cdk8s";
 import {
   Cpu,
   EnvValue,
+  EnvFieldPaths,
   type ISecret,
   type PersistentVolumeClaim,
   Volume,
 } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { createLegacyObserverAccount } from "./legacy-observer.ts";
 import {
   MEDIA_APPLICATION_LABEL,
   MEDIA_PUBLIC_ORIGIN,
@@ -47,6 +49,8 @@ export function createMediaActivityWorkers(
   };
   const network = createTemporalDomainWorker(chart, {
     name: "media-network",
+    serviceAccount: createLegacyObserverAccount(chart),
+    automountServiceAccountToken: true,
     component: "media-network",
     featureFlagsEnabled: false,
     podLabels: { [MEDIA_APPLICATION_LABEL]: "true" },
@@ -109,6 +113,7 @@ export function createMediaActivityWorkers(
     envVariables: {
       ...shared,
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("media-files"),
+      MEDIA_FILE_WORKER_POD_UID: EnvValue.fromFieldRef(EnvFieldPaths.POD_UID),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("media-files"),
       MEDIA_MOVIES_DOWNLOAD_ROOT: EnvValue.fromValue("/downloads"),
       MEDIA_TV_DOWNLOAD_ROOT: EnvValue.fromValue("/downloads"),

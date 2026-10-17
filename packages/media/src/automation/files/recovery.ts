@@ -2,6 +2,7 @@ import nodePath from "node:path";
 import { z } from "zod";
 import { fileOperations } from "./file-operations.ts";
 import { assertRuntime } from "./guards.ts";
+import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import {
   FileGuardError,
   type FileContext,
@@ -34,6 +35,15 @@ export async function recoverObsoletePublication(input: {
     const authorize = async () => {
       await context.checkpoint("obsolete-publication-recovery");
       await assertRuntime(tx, epoch);
+      if (
+        !(await recordsAuthorized(tx, {
+          epoch,
+          mediaIds: entry.mediaIds,
+          assetIds:
+            entry.previousAssetId === null ? [] : [entry.previousAssetId],
+        }))
+      )
+        throw new FileGuardError("record_ownership_unconfirmed");
       const coverage = await tx.assetCoverage.findMany({
         where: { mediaId: { in: entry.mediaIds }, current: true },
       });

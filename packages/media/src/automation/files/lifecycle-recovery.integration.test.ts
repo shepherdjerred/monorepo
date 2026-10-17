@@ -46,7 +46,7 @@ async function episodePack(
       title: "Second Episode",
       seasonNumber: 1,
       episodeNumber: 2,
-      intent: { create: { profileId: f.profile.id } },
+      intent: { create: { profileId: f.profile.id, automationEpoch: 0 } },
       requests: {
         create: { userId: f.user.id, sponsorRequestId: f.request.id },
       },
@@ -197,7 +197,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
       kind: "movie",
       title: "Shared part",
       availability: "available",
-      intent: { create: { profileId: f.profile.id } },
+      intent: { create: { profileId: f.profile.id, automationEpoch: 0 } },
       requests: { create: { userId: f.user.id } },
       watchStates: {
         create: {
@@ -223,6 +223,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
           channel: "email",
           state: "accepted",
           acceptedAt: retention.decision.warningAcceptedAt,
+          reconciledAt: timestamp,
         },
       },
     },

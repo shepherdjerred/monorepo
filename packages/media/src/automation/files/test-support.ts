@@ -5,8 +5,10 @@ import type { Database } from "#infrastructure/database.ts";
 import type { FileContext } from "./types.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
+import { grantTestLease } from "#testing/authority.ts";
 
 export async function fileFixture(db: Database) {
+  await grantTestLease(db);
   const directory = await realpath(
     await mkdtemp(nodePath.join(tmpdir(), "media-file-activity-")),
   );
@@ -28,6 +30,7 @@ export async function fileFixture(db: Database) {
       purge: () => Promise.resolve(true),
     },
     checkpoint: () => Promise.resolve(),
+    verifyStorageAuthority: () => Promise.resolve(),
     inspect: async (path) => {
       const info = await stat(path);
       return {
@@ -77,7 +80,7 @@ export async function fileFixture(db: Database) {
       year: 2026,
       tmdbId:
         (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) % 2_000_000_000,
-      intent: { create: { profileId: profile.id } },
+      intent: { create: { profileId: profile.id, automationEpoch: 0 } },
     },
   });
   const user = await db.mediaUser.create({
@@ -122,6 +125,7 @@ export async function fileFixture(db: Database) {
         providerId: "fixture",
         infoHash: crypto.randomUUID(),
         owned: true,
+        ownershipEpoch: 0,
         state: "ready",
         seedingPolicy: { kind: "public" },
         observation: {
@@ -194,6 +198,7 @@ export async function fileFixture(db: Database) {
             userId: user.id,
             channel: "email",
             state: "accepted",
+            reconciledAt: clock,
             acceptedAt,
           },
         },

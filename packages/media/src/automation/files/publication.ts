@@ -59,7 +59,7 @@ export async function promote(
             throw new FileGuardError("acquisition_disabled");
           await assertAcquisition(tx, attemptId);
           await assertProfile(tx, entry);
-          await assertPrevious(tx, entry);
+          await assertPrevious(tx, entry, current.recoveryEpoch);
           await assertMeasuredUpgrade(
             tx,
             storedMeasuredRelease(entry.properties),
@@ -84,6 +84,7 @@ export async function promote(
           entry,
           roots,
           torrentId: attempt.torrentId,
+          recoveryEpoch: current.recoveryEpoch,
         });
         await commitEmbedded({
           context,
@@ -135,6 +136,7 @@ async function assertProfile(
 async function assertPrevious(
   tx: Transaction,
   entry: FilePlanEntry,
+  recoveryEpoch: number,
 ): Promise<void> {
   const published = await tx.libraryAsset.findUnique({
     where: { id: entry.assetId },
@@ -143,6 +145,7 @@ async function assertPrevious(
     if (
       published.checksum !== entry.checksum ||
       !published.owned ||
+      published.ownershipEpoch !== recoveryEpoch ||
       published.state !== "published"
     )
       throw new FileGuardError("publication_conflict");
@@ -165,6 +168,19 @@ async function assertPrevious(
     )
   )
     throw new FileGuardError("asset_version_changed");
+  if (
+    current.some((coverage) => coverage.asset.ownershipEpoch !== recoveryEpoch)
+  )
+    throw new FileGuardError("asset_ownership_unconfirmed");
+  if (
+    current.some(
+      (coverage) =>
+        z
+          .object({ handoffSidecarsUnresolved: z.boolean().optional() })
+          .parse(coverage.asset.properties).handoffSidecarsUnresolved === true,
+    )
+  )
+    throw new FileGuardError("sidecar_ownership_unconfirmed");
 }
 
 async function commitPublication(input: {
@@ -172,6 +188,7 @@ async function commitPublication(input: {
   entry: FilePlanEntry;
   roots: FileContext["roots"]["movies"];
   torrentId: string | null;
+  recoveryEpoch: number;
 }): Promise<void> {
   const { tx, entry, roots, torrentId } = input;
   if (
@@ -216,6 +233,7 @@ async function commitPublication(input: {
       checksum: entry.checksum,
       properties: entry.properties ?? Prisma.JsonNull,
       owned: true,
+      ownershipEpoch: input.recoveryEpoch,
       state: "published",
       coverage: {
         create: entry.mediaIds.map((mediaId) => ({ mediaId, current: true })),

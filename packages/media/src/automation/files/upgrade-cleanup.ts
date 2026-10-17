@@ -8,6 +8,7 @@ import {
   type UpgradeCleanupPlan,
 } from "./upgrade-cleanup-plan.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
+import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 import { fileOperations } from "./file-operations.ts";
 import {
   FileGuardError,
@@ -66,6 +67,24 @@ export async function cleanupUpgrade(
         if (!(await context.enabled.purge()))
           throw new FileGuardError("purge_disabled");
         await assertRuntime(tx, snapshot.recoveryEpoch);
+        if (
+          !(await recordsAuthorized(tx, {
+            epoch: snapshot.recoveryEpoch,
+            mediaIds: plan.mediaIds,
+            assetIds: [
+              current.assetId,
+              current.successorAssetId,
+              ...playback.map((item) => item.id),
+            ],
+          }))
+        )
+          throw new FileGuardError("record_ownership_unconfirmed");
+        if (
+          await tx.recoveryHold.count({
+            where: { mediaId: { in: plan.mediaIds }, releasedAt: null },
+          })
+        )
+          throw new FileGuardError("recovery_request_history_unconfirmed");
         if (
           current.state !== "pending" ||
           current.recoveryEpoch !== snapshot.recoveryEpoch ||

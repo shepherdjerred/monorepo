@@ -100,6 +100,7 @@ export function createCoverageActivities(
             mediaId: episode.id,
             active: allowed,
             profileId: rootIntent.profileId,
+            automationEpoch: rootIntent.automationEpoch,
           });
         }
         if (
@@ -142,6 +143,7 @@ async function projectEpisode(
     mediaId: string;
     active: boolean;
     profileId: string | null;
+    automationEpoch: number;
   },
 ): Promise<void> {
   const { root, mediaId, active } = input;
@@ -203,10 +205,12 @@ async function projectEpisode(
       mediaId,
       profileId: input.profileId,
       generation: 1,
+      automationEpoch: input.automationEpoch,
       desiredPresence: wants,
       monitoring: count > 0,
     },
     update: {
+      automationEpoch: input.automationEpoch,
       profileId: prior?.profileId ?? input.profileId,
       generation: { increment: 1 },
       version: { increment: 1 },

@@ -121,20 +121,51 @@ export class PrismaMediaApplication
   }
 
   async activity(actor: MediaActor) {
-    return OperationListSchema.parse(
-      await this.db.operation.findMany({
-        where: actor.role === "owner" ? {} : { userId: actor.id },
-        orderBy: { updatedAt: "desc" },
-        take: 100,
-        select: {
-          id: true,
-          kind: true,
-          targetId: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
+    const operations = await this.db.operation.findMany({
+      where: actor.role === "owner" ? {} : { userId: actor.id },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        kind: true,
+        targetId: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    const mediaTargets = operations.filter((operation) =>
+      [
+        "reconcile_media",
+        "acquire_release",
+        "restore_media",
+        "retain_media",
+        "acquire_subtitles",
+        "refresh_catalog",
+        "expand_catalog_requests",
+      ].includes(operation.kind),
+    );
+    const media = await this.db.mediaItem.findMany({
+      where: {
+        id: {
+          in: mediaTargets.flatMap((operation) =>
+            operation.targetId === null ? [] : [operation.targetId],
+          ),
         },
-      }),
+      },
+      select: { id: true },
+    });
+    const ids = new Set(media.map((item) => item.id));
+    return OperationListSchema.parse(
+      operations.map((operation) => ({
+        ...operation,
+        mediaId:
+          mediaTargets.includes(operation) &&
+          operation.targetId !== null &&
+          ids.has(operation.targetId)
+            ? operation.targetId
+            : null,
+      })),
     );
   }
 
@@ -173,6 +204,10 @@ export class PrismaMediaApplication
           id: true,
           channel: true,
           state: true,
+          version: true,
+          failureReason: true,
+          providerStatus: true,
+          attempts: true,
           acceptedAt: true,
           createdAt: true,
           event: { select: { mediaId: true, kind: true } },

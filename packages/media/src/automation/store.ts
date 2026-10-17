@@ -2,6 +2,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { isRetryableTransaction } from "#infrastructure/locks.ts";
+import { queueIntervention } from "./notifications/interventions.ts";
 
 export type WorkflowStart = {
   workflowType: string;
@@ -25,7 +26,15 @@ export async function queueOperation(
   });
   if (existing !== null) return existing.id;
   const id = crypto.randomUUID();
-  const payload = { operationId: id, kind: input.kind, ...input.payload };
+  const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
+  const payload = {
+    operationId: id,
+    kind: input.kind,
+    recoveryEpoch: runtime.recoveryEpoch,
+    ...input.payload,
+  };
   await db.operation.create({
     data: {
       id,
@@ -41,6 +50,8 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_handoff: "prepareMediaHandoffWorkflow",
+  apply_handoff: "applyMediaHandoffWorkflow",
   plex_exclusion_prepare: "preparePlexExclusionWorkflow",
   plex_exclusion_execute: "executePlexExclusionWorkflow",
   plex_exclusion_recover: "recoverPlexExclusionWorkflow",
@@ -110,9 +121,13 @@ export function createOutboxActivities(
       return { dispatched, deferred };
     },
     async finishMediaOperation(input) {
-      const updated =
-        await database.$executeRaw`UPDATE "Operation" SET status = ${input.status}::"OperationStatus", result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ reason: input.reason })}::jsonb, "updatedAt" = NOW() WHERE id = ${input.operationId}`;
-      if (updated !== 1) throw new Error("Media operation does not exist");
+      await serializable(database, async (tx) => {
+        const updated =
+          await tx.$executeRaw`UPDATE "Operation" SET status = ${input.status}::"OperationStatus", result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ reason: input.reason })}::jsonb, "updatedAt" = NOW() WHERE id = ${input.operationId}`;
+        if (updated !== 1) throw new Error("Media operation does not exist");
+        if (input.status !== "completed")
+          await queueIntervention(tx, input.operationId);
+      });
     },
   };
 }

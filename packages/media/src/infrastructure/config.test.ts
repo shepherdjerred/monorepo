@@ -10,6 +10,21 @@ afterEach(async () => {
   await shutdownFeatureFlags();
 });
 
+test.each(["", "wrong", "-1", "1,2"])(
+  "invalid shared Discord channel %s fails closed",
+  async (value) => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        "media-shared-discord-channel-id": value,
+      }),
+    });
+    await expect(
+      mediaBehaviorConfig("production").get("sharedDiscordChannelId"),
+    ).rejects.toThrow();
+  },
+);
+
 test("unavailable flags keep every media effect gate closed", async () => {
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
   const config = mediaBehaviorConfig("production");
@@ -19,10 +34,16 @@ test("unavailable flags keep every media effect gate closed", async () => {
     "sourceCleanupEnabled",
     "quarantineEnabled",
     "purgeEnabled",
+    "sharedAnnouncementsEnabled",
+    "personalDiscordEnabled",
+    "sharedAnnouncementsUpgrades",
   ] as const) {
     expect(await config.get(key)).toMatchObject({ value: false });
   }
   expect(await config.get("keepDays")).toMatchObject({ value: 30 });
+  expect(await config.get("sharedDiscordChannelId")).toMatchObject({
+    value: "",
+  });
   expect(await config.get("permittedMovieSectionId")).toMatchObject({
     value: "1",
   });

@@ -8,7 +8,10 @@ export function fileOperations(
   authorize: () => Promise<void>,
 ): FileOperations {
   return new FileOperations(roots, {
-    authorize,
+    authorize: async () => {
+      await authorize();
+      await context.verifyStorageAuthority(roots);
+    },
     checkpoint: context.checkpoint,
     ...(context.contentProof === undefined
       ? {}

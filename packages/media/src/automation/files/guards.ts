@@ -9,6 +9,10 @@ import {
 } from "./types.ts";
 import { assertOwnerRemoval } from "./owner-removal.ts";
 import {
+  lockRuntimeAuthority,
+  recordsAuthorized,
+} from "#infrastructure/handoff/authority.ts";
+import {
   effectiveRequestWhere,
   lockEffectiveRequests,
 } from "#infrastructure/request-claims.ts";
@@ -27,18 +31,7 @@ export async function assertRuntime(
   tx: Transaction,
   recoveryEpoch: number,
 ): Promise<void> {
-  // Shared row lock prevents an emergency mode/epoch change racing the filesystem effect.
-  await tx.$queryRaw(
-    Prisma.sql`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`,
-  );
-  const runtime = await tx.mediaRuntimeState.findUnique({
-    where: { id: "singleton" },
-  });
-  if (
-    runtime?.mode !== "active" ||
-    !runtime.ownershipConfirmed ||
-    runtime.recoveryEpoch !== recoveryEpoch
-  )
+  if (!(await lockRuntimeAuthority(tx, recoveryEpoch)))
     throw new FileGuardError("runtime_protected");
 }
 
@@ -64,6 +57,7 @@ export async function assertAcquisition(
     intents.some(
       (intent) =>
         !intent.desiredPresence ||
+        intent.automationEpoch !== epoch ||
         intent.generation !== generations[intent.mediaId],
     )
   )
@@ -119,6 +113,11 @@ export async function assertRetention(input: {
   const age = timestamp - Date.parse(evidence.data.authorizedAt);
   if (age < 0 || age > 60_000) throw new FileGuardError("evidence_stale");
   await assertRuntime(tx, evidence.data.recoveryEpoch);
+  await assertRetentionAuthority(
+    tx,
+    input.mediaIds,
+    evidence.data.recoveryEpoch,
+  );
   const due = input.purge ? decision.purgeAfter : decision.graceUntil;
   if (due === null || due.getTime() > timestamp)
     throw new FileGuardError("retention_not_due");
@@ -157,6 +156,26 @@ export async function assertRetention(input: {
       warningEventId: warning.warningEventId,
     });
   }
+}
+
+async function assertRetentionAuthority(
+  tx: Transaction,
+  mediaIds: readonly string[],
+  epoch: number,
+): Promise<void> {
+  if (
+    !(await recordsAuthorized(tx, {
+      epoch,
+      mediaIds,
+    }))
+  )
+    throw new FileGuardError("record_ownership_unconfirmed");
+  if (
+    await tx.recoveryHold.count({
+      where: { mediaId: { in: [...mediaIds] }, releasedAt: null },
+    })
+  )
+    throw new FileGuardError("recovery_request_history_unconfirmed");
 }
 
 function assertQuarantineElapsed(
@@ -252,7 +271,13 @@ async function assertRetentionItem(input: {
         eventId: input.warningEventId,
         userId: requester.userId,
         state: "accepted",
+        channel: { in: ["email", "discord"] },
+        OR: [{ providerStatus: null }, { providerStatus: { not: "bounced" } }],
         acceptedAt: { lte: new Date(timestamp - 7 * 86_400_000) },
+        reconciledAt: {
+          gte: new Date(timestamp - 60_000),
+          lte: new Date(timestamp),
+        },
         event: { mediaId },
       },
     });

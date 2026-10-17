@@ -141,8 +141,12 @@ export async function assertOwnedAsset(
     include: { coverage: { where: { current: true } } },
   });
   const version = entry.assetVersion + (state === "quarantined" ? 1 : 0);
+  const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
   if (
     !asset.owned ||
+    asset.ownershipEpoch !== runtime.recoveryEpoch ||
     asset.checksum !== entry.checksum ||
     asset.version !== version ||
     asset.state !== state ||

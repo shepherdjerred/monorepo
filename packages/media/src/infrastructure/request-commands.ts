@@ -6,6 +6,7 @@ import { authorizeRequester } from "./requester-authorization.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
 import { invalidateRetention } from "./action-guards.ts";
 import { lockMedia, needsRestore } from "./locks.ts";
+import { commandAutomationEpoch } from "./handoff/authority.ts";
 
 export class MediaRequestCommands extends MediaCommandBase {
   createRequest(actor: MediaActor, key: string, input: CreateRequest) {
@@ -56,10 +57,17 @@ export class MediaRequestCommands extends MediaCommandBase {
         where: { mediaId: media.id },
       });
       const profileId = prior?.profileId ?? defaults?.profileId ?? null;
+      const automationEpoch = await commandAutomationEpoch(db);
       const intent = await db.mediaIntent.upsert({
         where: { mediaId: media.id },
-        create: { mediaId: media.id, generation: 1, profileId },
+        create: {
+          mediaId: media.id,
+          generation: 1,
+          profileId,
+          automationEpoch,
+        },
         update: {
+          automationEpoch,
           desiredPresence: true,
           monitoring: true,
           intentionallyRemovedAt: null,

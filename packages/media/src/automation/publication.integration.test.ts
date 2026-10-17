@@ -20,6 +20,7 @@ test.each(["acquisition", "restore"])(
       data: {
         kind: "episode",
         title: "Second",
+        intent: { create: { automationEpoch: 0 } },
         seasonNumber: 1,
         episodeNumber: 2,
         externalIds: { seriesTmdb: 999 },
@@ -32,6 +33,7 @@ test.each(["acquisition", "restore"])(
         sizeBytes: 1000n,
         checksum: "abc",
         owned: true,
+        ownershipEpoch: 0,
         properties: {},
         state: "published",
         coverage: {
@@ -86,8 +88,17 @@ test.each(["acquisition", "restore"])(
         releaseId: data.release.id,
         sponsorRequestId: request.id,
         mediaIds: [data.media.id, second.id],
-        generations: {},
+        generations: { [data.media.id]: 1, [second.id]: 0 },
         state: "imported",
+        filePlan: [
+          {
+            assetId: asset.id,
+            mediaIds: [data.media.id, second.id],
+            checksum: asset.checksum,
+            generations: { [data.media.id]: 1, [second.id]: 1 },
+            previousAssetId: null,
+          },
+        ],
       },
     });
     const ctx = context(async (url) => {
@@ -174,6 +185,7 @@ test("a correct Plex path with the wrong canonical movie identity stays unavaila
       path: `/fixture/${crypto.randomUUID()}.mkv`,
       sizeBytes: 1000n,
       owned: true,
+      ownershipEpoch: 0,
       properties: {},
       state: "published",
       coverage: { create: { mediaId: data.media.id, current: true } },
@@ -188,7 +200,7 @@ test("a correct Plex path with the wrong canonical movie identity stays unavaila
       releaseId: data.release.id,
       sponsorRequestId: request.id,
       mediaIds: [data.media.id],
-      generations: {},
+      generations: { [data.media.id]: 1 },
       state: "imported",
     },
   });
@@ -237,6 +249,7 @@ test("Plex verification cannot mark a concurrently quarantined asset available",
       sizeBytes: 1000n,
       checksum: "abc",
       owned: true,
+      ownershipEpoch: 0,
       properties: {},
       state: "published",
       coverage: { create: { mediaId: data.media.id, current: true } },
@@ -251,7 +264,7 @@ test("Plex verification cannot mark a concurrently quarantined asset available",
       releaseId: data.release.id,
       sponsorRequestId: request.id,
       mediaIds: [data.media.id],
-      generations: {},
+      generations: { [data.media.id]: 1 },
       state: "imported",
     },
   });

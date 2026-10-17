@@ -9,7 +9,13 @@ import { evaluateRetention, RETENTION_DEFAULTS } from "#domain/retention.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { observeRequesterWatch, PlexIdentitySchema } from "./watch.ts";
 import { queueOperation, serializable } from "./store.ts";
+import {
+  lockRuntimeAuthority,
+  runtimeAuthority,
+} from "#infrastructure/handoff/authority.ts";
+import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { evaluateOwnerOverride, readOwnerOverride } from "./retention-owner.ts";
+import { refreshRetentionReceipts } from "./notifications/retention-receipts.ts";
 
 type Result = Awaited<
   ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>
@@ -168,7 +174,16 @@ async function evaluateItem(
           where: {
             eventId: warning,
             state: "accepted",
+            channel: { in: ["email", "discord"] },
+            OR: [
+              { providerStatus: null },
+              { providerStatus: { not: "bounced" } },
+            ],
             acceptedAt: { not: null },
+            reconciledAt: {
+              gte: new Date(timestamp.getTime() - 60_000),
+              lte: timestamp,
+            },
           },
           orderBy: { acceptedAt: "asc" },
         });
@@ -282,15 +297,33 @@ async function evaluateGroup(
     await tx.$queryRaw(
       Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join(ids)}) ORDER BY id FOR UPDATE`,
     );
+    await lockEffectiveRequests(tx, ids);
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
     });
-    if (runtime.mode !== "active" || !runtime.ownershipConfirmed)
+    if (!(await lockRuntimeAuthority(tx, runtime.recoveryEpoch)))
       return protect("runtime_protected");
     const items = await tx.mediaItem.findMany({
       where: { id: { in: ids } },
       include: mediaInclude,
     });
+    if (
+      items.some(
+        (item) =>
+          item.intent?.automationEpoch !== runtime.recoveryEpoch ||
+          item.assets.some(
+            (coverage) =>
+              coverage.asset.ownershipEpoch !== runtime.recoveryEpoch,
+          ),
+      )
+    )
+      return protect("ownership_epoch_unconfirmed");
+    if (
+      (await tx.recoveryHold.count({
+        where: { mediaId: { in: ids }, releasedAt: null },
+      })) > 0
+    )
+      return protect("recovery_hold");
     if (
       items.some(
         (item) =>
@@ -353,6 +386,8 @@ export function createRetentionActivities(
 ): Pick<MediaNetworkActivities, "evaluateMediaRetention"> {
   return {
     async evaluateMediaRetention(input) {
+      const authority = await runtimeAuthority(context.db);
+      if (!authority.active) return protect("runtime_protected");
       const ownerOverride = await readOwnerOverride(context, input);
       const ids =
         ownerOverride === null
@@ -402,6 +437,8 @@ export function createRetentionActivities(
             }),
           );
       }
+      if (!(await refreshRetentionReceipts(context, ids)))
+        return protect("warning_receipt_reconciliation_required");
       return (await currentPlayback(context, snapshots))
         ? protect("active_playback")
         : await evaluateGroup(context, input, {
