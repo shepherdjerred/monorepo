@@ -7,6 +7,7 @@ import type { MediaApplication } from "#application/ports.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
 import { verifyRevokedRetryHttp } from "./retry-http.test-support.ts";
 import { verifyIdentityHttp } from "./media/identity-http.test-support.ts";
+import { verifyVisibilityHttp } from "./media/visibility-http.test-support.ts";
 
 const actor: MediaActor = {
   id: "member",
@@ -338,6 +339,10 @@ const headers = {
   "Content-Type": "application/json",
   "Idempotency-Key": "request-key",
 };
+
+test("detail GET rechecks current role/library and does not leak raw observations or other household data", async () => {
+  await verifyVisibilityHttp(fixture().dependencies, headers);
+}, 60_000);
 
 describe("media HTTP security and errors", () => {
   test("identity preview and selection use current scoped owner authority and strict input", async () => {

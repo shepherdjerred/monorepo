@@ -16,6 +16,7 @@ beforeAll(async () => {
   app = new PrismaMediaApplication(cluster.database, {
     keepDays: 30,
     serverMachineId: "fixture-server",
+    visibilitySections: { movie: "1", series: "2" },
   });
 }, 60_000);
 afterAll(async () => {
