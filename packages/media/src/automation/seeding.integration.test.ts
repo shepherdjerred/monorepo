@@ -14,6 +14,7 @@ async function seededTorrent() {
       infoHash: data.source.infoHash,
       providerId: "knaben",
       owned: true,
+      ownershipEpoch: 0,
       seedingPolicy: { kind: "public" },
       state: "seeding",
     },

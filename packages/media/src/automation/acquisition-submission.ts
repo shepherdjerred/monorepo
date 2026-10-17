@@ -16,6 +16,7 @@ import { loadProfile } from "./acquisition-candidates.ts";
 import { authorizedSubmission } from "./reconciliation/submission.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
+import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
 const ProfileSnapshotSchema = z.object({
   profileId: z.string(),
@@ -49,6 +50,7 @@ export async function validAttempt(
     intents.some(
       (intent) =>
         !intent.desiredPresence ||
+        intent.automationEpoch !== attempt.recoveryEpoch ||
         !intent.monitoring ||
         intent.profile === null,
     )
@@ -206,6 +208,7 @@ async function registerObservedSubmission(
   });
   const registered = await serializable(context.db, async (tx) => {
     await lockMedia(tx, attempt.mediaIds);
+    if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return false;
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
@@ -240,6 +243,7 @@ async function registerObservedSubmission(
         qbittorrentId: observed.hash,
         providerId: candidate.providerId,
         owned: true,
+        ownershipEpoch: attempt.recoveryEpoch,
         seedingPolicy: z
           .record(z.string(), z.json())
           .parse(provider.seedingPolicy),
@@ -247,7 +251,8 @@ async function registerObservedSubmission(
       },
       update: { qbittorrentId: observed.hash },
     });
-    if (!torrent.owned) throw new Error("Cannot adopt unowned torrent");
+    if (!torrent.owned || torrent.ownershipEpoch !== attempt.recoveryEpoch)
+      throw new Error("Cannot adopt unowned torrent");
     await tx.acquisitionAttempt.update({
       where: { id: attempt.id },
       data: {

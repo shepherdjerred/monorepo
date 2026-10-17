@@ -7,6 +7,7 @@ import {
   type Transaction,
 } from "./types.ts";
 import { assertRuntime } from "./guards.ts";
+import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
 
 export async function recordRestoreReceipt(input: {
   tx: Transaction;
@@ -27,6 +28,14 @@ export async function recordRestoreReceipt(input: {
     plan,
   } = input;
   await assertRuntime(tx, recoveryEpoch);
+  if (
+    !(await recordsAuthorized(tx, {
+      epoch: recoveryEpoch,
+      mediaIds,
+      assetIds: plan.map((entry) => entry.assetId),
+    }))
+  )
+    throw new FileGuardError("record_ownership_unconfirmed");
   const assets = [];
   for (const entry of plan) {
     const asset = await tx.libraryAsset.findUniqueOrThrow({

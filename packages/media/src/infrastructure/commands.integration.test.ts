@@ -47,6 +47,35 @@ async function fixture(role: "owner" | "member" = "member") {
   return { actor, media };
 }
 
+test("activity links only verified media targets, never delivery, cleanup or handoff identifiers", async () => {
+  const { actor, media } = await fixture();
+  for (const kind of [
+    "reconcile_media",
+    "deliver_notification",
+    "cleanup_upgrade",
+    "media_handoff_apply",
+    "maintain_torrent",
+  ])
+    await cluster.database.operation.create({
+      data: {
+        idempotencyKey: crypto.randomUUID(),
+        userId: actor.id,
+        kind,
+        targetId: media.id,
+        payload: {},
+      },
+    });
+  const activity = await app.activity({ ...actor, role: "member" });
+  expect(
+    activity.find((item) => item.kind === "reconcile_media")?.mediaId,
+  ).toBe(media.id);
+  expect(
+    activity
+      .filter((item) => item.kind !== "reconcile_media")
+      .every((item) => item.mediaId === null),
+  ).toBe(true);
+});
+
 test("concurrent identical commands create exactly one request and outbox entry", async () => {
   const { actor, media } = await fixture();
   const input = {
@@ -375,6 +404,7 @@ test("email verification queues only identifiers and cannot be used by a differe
     cluster.database,
     cipher,
     null,
+    { publicOrigin: "http://media.fixture" },
   );
   const result = await notifications.requestEmailVerification(
     actor,
@@ -413,6 +443,7 @@ test("notification channels require proof and preference updates are versioned",
     cluster.database,
     new CredentialCipher(randomBytes(32).toString("base64")),
     null,
+    { publicOrigin: "http://media.fixture" },
   );
   const prefs = {
     emailEnabled: true,
@@ -450,6 +481,7 @@ test("Discord account linking binds state to the authenticated user", async () =
         return { id: "123456789012345678" };
       },
     },
+    { publicOrigin: "http://media.fixture", discordEnabled: async () => true },
   );
   const { authorizationUrl } = await notifications.startDiscordLink(actor);
   const state = new URL(authorizationUrl).searchParams.get("state");

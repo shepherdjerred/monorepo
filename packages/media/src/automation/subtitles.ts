@@ -1,5 +1,10 @@
 import nodePath from "node:path";
 import { z } from "zod";
+import {
+  runtimeAuthority,
+  lockRuntimeAuthority,
+  recordsAuthorized,
+} from "#infrastructure/handoff/authority.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import {
@@ -142,6 +147,8 @@ async function persist(
     await tx.$queryRaw(
       Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join(ids)}) ORDER BY id FOR UPDATE`,
     );
+    if (!(await lockRuntimeAuthority(tx, recoveryEpoch)))
+      return blocked("runtime_protected");
     const current = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: asset.id },
       include: { coverage: { where: { current: true } } },
@@ -174,6 +181,7 @@ async function persist(
       intents.some(
         (intent) =>
           !intent.desiredPresence ||
+          intent.automationEpoch !== recoveryEpoch ||
           intent.generation !== generations[intent.mediaId],
       )
     )
@@ -323,7 +331,17 @@ export function createSubtitleActivities(
       });
       if (runtime.mode !== "active" || !runtime.ownershipConfirmed)
         return blocked("runtime_protected");
+      const authority = await runtimeAuthority(context.db);
+      if (!authority.active) return blocked("runtime_protected");
       const asset = await loadAsset(context, input.assetId);
+      if (
+        !(await recordsAuthorized(context.db, {
+          epoch: runtime.recoveryEpoch,
+          mediaIds: asset.coverage.map((item) => item.mediaId),
+          assetIds: [asset.id],
+        }))
+      )
+        return blocked("record_ownership_unconfirmed");
       if (
         !asset.owned ||
         asset.checksum === null ||

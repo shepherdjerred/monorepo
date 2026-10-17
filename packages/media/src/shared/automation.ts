@@ -4,6 +4,17 @@ export type MediaOperation = {
   generation: number;
 };
 export type MediaAttemptOperation = { operationId: string; attemptId: string };
+export type MediaHandoffOperation = { operationId: string; planId: string };
+export type MediaHandoffNetworkActivities = {
+  observeMediaHandoff: (input: MediaHandoffOperation) => Promise<void>;
+  mediaHandoffState: (
+    input: MediaHandoffOperation,
+  ) => Promise<{ state: string; applied: boolean }>;
+};
+export type MediaHandoffFileActivities = {
+  prepareMediaHandoffFiles: (input: MediaHandoffOperation) => Promise<void>;
+  applyMediaHandoffFiles: (input: MediaHandoffOperation) => Promise<void>;
+};
 export type MediaDecisionOperation = {
   operationId: string;
   decisionId: string;

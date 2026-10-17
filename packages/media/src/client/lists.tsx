@@ -28,6 +28,7 @@ import {
   ManualSubtitleAdministration,
 } from "./admin.tsx";
 import { NotificationCallback, NotificationSettings } from "./preferences.tsx";
+import { DeliveryActions } from "./notification-actions.tsx";
 import { ProfileEditor } from "./profile-controls.tsx";
 import { PlexProfileAdministration } from "./plex-admin.tsx";
 import { NumberingAdministration } from "./numbering-admin.tsx";
@@ -135,10 +136,10 @@ export function ActivityPage() {
             <div className="item-main">
               <h2>{humanize(operation.kind)}</h2>
               <p>{dateLabel(operation.updatedAt)}</p>
-              {operation.targetId !== null && (
+              {operation.mediaId !== null && (
                 <Link
                   className="text-link"
-                  to={`/media/${encodeURIComponent(operation.targetId)}`}
+                  to={`/media/${encodeURIComponent(operation.mediaId)}`}
                 >
                   View title →
                 </Link>
@@ -259,8 +260,9 @@ export function NotificationsPage({ user }: { user: MediaUser }) {
                   View title →
                 </Link>
               )}
+              <DeliveryActions user={user} delivery={notification} />
             </div>
-            <Status value={notification.state} />
+            <Status value={notification.providerStatus ?? notification.state} />
           </article>
         ))}
       </div>

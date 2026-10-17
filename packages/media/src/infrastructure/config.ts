@@ -34,6 +34,32 @@ export function mediaBehaviorConfig(
 ) {
   return defineConfig({
     definition: {
+      personalDiscordEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: false,
+        names: { flag: "media-personal-discord-enabled" },
+      },
+      sharedAnnouncementsEnabled: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: false,
+        names: { flag: "media-shared-announcements-enabled" },
+      },
+      sharedAnnouncementsUpgrades: {
+        schema: z.boolean(),
+        sources: ["flag", "default"],
+        default: false,
+        names: { flag: "media-shared-announcements-upgrades" },
+      },
+      sharedDiscordChannelId: {
+        schema: z
+          .union([z.literal("disabled"), z.string().regex(/^\d{1,25}$/u)])
+          .transform((value) => (value === "disabled" ? "" : value)),
+        sources: ["flag", "default"],
+        default: "disabled",
+        names: { flag: "media-shared-discord-channel-id" },
+      },
       requestsEnabled: {
         schema: z.boolean(),
         sources: ["flag", "default"],
@@ -105,6 +131,9 @@ export function mediaBehaviorConfig(
         targetingKey: "media",
         attributes: { stage },
         kinds: {
+          sharedAnnouncementsEnabled: "boolean",
+          sharedAnnouncementsUpgrades: "boolean",
+          sharedDiscordChannelId: "string",
           requestsEnabled: "boolean",
           acquisitionEnabled: "boolean",
           sourceCleanupEnabled: "boolean",

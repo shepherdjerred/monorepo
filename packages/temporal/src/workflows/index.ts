@@ -465,6 +465,10 @@ export const discordAgentChatWorkflow =
   discordAgentChat.discordAgentChatWorkflow;
 export const httpAgentChatWorkflow = httpAgentChat.httpAgentChatWorkflow;
 import * as media from "./media.ts";
+import * as mediaHandoff from "./media/handoff.ts";
+export const prepareMediaHandoffWorkflow =
+  mediaHandoff.prepareMediaHandoffWorkflow;
+export const applyMediaHandoffWorkflow = mediaHandoff.applyMediaHandoffWorkflow;
 import * as mediaMaintenance from "./media/maintenance.ts";
 export const preparePlexExclusionWorkflow =
   mediaMaintenance.preparePlexExclusionWorkflow;

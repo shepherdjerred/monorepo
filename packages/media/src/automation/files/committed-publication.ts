@@ -50,6 +50,7 @@ export async function resumeCommittedPublication(input: {
       context,
       entry,
       releaseId: attempt.releaseId,
+      recoveryEpoch: attempt.recoveryEpoch,
     });
   }
   const verified = await verifyEntries(context, plan);
@@ -77,6 +78,7 @@ export async function resumeCommittedPublication(input: {
           context,
           entry,
           releaseId: current.releaseId,
+          recoveryEpoch: current.recoveryEpoch,
         });
         await assertCurrentProfiles(tx, entry);
       }
@@ -92,6 +94,7 @@ async function assertCommittedAsset(input: {
   context: FileContext;
   entry: FilePlanEntry;
   releaseId: string;
+  recoveryEpoch: number;
 }): Promise<void> {
   const { tx, context, entry, releaseId } = input;
   const asset = await tx.libraryAsset.findUnique({
@@ -101,6 +104,7 @@ async function assertCommittedAsset(input: {
   if (
     asset === null ||
     !asset.owned ||
+    asset.ownershipEpoch !== input.recoveryEpoch ||
     asset.state !== "published" ||
     asset.path !==
       nodePath.join(

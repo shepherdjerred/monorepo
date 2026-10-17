@@ -11,6 +11,35 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const workflowsPath = new URL("media.ts", import.meta.url).pathname;
 
+test.each(["accepted", "unknown", "failed"] as const)(
+  "notification %s schedules only bounded receipt observations",
+  async (status) => {
+    let calls = 0;
+    const result = await runScenario({
+      workflow: "deliverMediaNotificationWorkflow",
+      args: {
+        operationId: "notification-operation",
+        notificationId: "delivery",
+      },
+      files: {},
+      network: {
+        deliverMediaNotification: async () => {
+          calls++;
+          return { status, reason: null };
+        },
+        finishMediaOperation: async (input) => {
+          expect(input.operationId).toBe("notification-operation");
+        },
+      },
+    });
+    expect(calls).toBe(status === "accepted" ? 3 : 1);
+    expect(result).toEqual({
+      status: status === "accepted" ? "completed" : "blocked",
+    });
+  },
+  60_000,
+);
+
 test.each(["purged", "obsolete"] as const)(
   "rollback cleanup remains scheduled through protection and bounded history rollover until %s",
   async (terminalStatus) => {

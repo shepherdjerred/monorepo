@@ -8,6 +8,7 @@ import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { type FetchTransport } from "#integrations/http.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
+import { grantTestLease } from "#testing/authority.ts";
 
 export function automationTestHarness() {
   let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
@@ -61,12 +62,14 @@ export function automationTestHarness() {
         Promise.reject(new Error("Unexpected workflow description")),
       permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
       refreshExclusionProofs: () => Promise.resolve(),
+      refreshWriterLease: () => grantTestLease(cluster.database),
       notify: () => Promise.reject(new Error("Unexpected notification")),
     };
   }
 
   async function fixture() {
     const db = cluster.database;
+    await grantTestLease(db);
     await db.mediaRuntimeState.update({
       where: { id: "singleton" },
       data: { mode: "active", ownershipConfirmed: true, recoveryEpoch: 0 },
@@ -101,7 +104,12 @@ export function automationTestHarness() {
       },
     });
     await db.mediaIntent.create({
-      data: { mediaId: media.id, generation: 1, profileId: profile.id },
+      data: {
+        mediaId: media.id,
+        generation: 1,
+        profileId: profile.id,
+        automationEpoch: 0,
+      },
     });
     await db.mediaRequest.create({
       data: { userId: user.id, mediaId: media.id },

@@ -74,6 +74,99 @@
   ],
   "flags": [
     {
+      "key": "media-personal-discord-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Enable personal Discord notifications after explicit operator provisioning.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-shared-announcements-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow optional shared Discord availability announcements only after explicit operator configuration.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-shared-announcements-upgrades",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow shared Discord upgrade announcements independently of availability announcements.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": false
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-shared-discord-channel-id",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Explicit shared Discord channel snowflake; disabled leaves the optional channel unconfigured.",
+      "type": "variant",
+      "default": "disabled",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "media-requests-enabled",
       "owner": "media",
       "namespace": "media",

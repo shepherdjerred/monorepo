@@ -7,6 +7,7 @@ import path from "node:path";
 import { lockMedia } from "#infrastructure/locks.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
+import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 
 const PolicySchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("public") }),
@@ -88,6 +89,7 @@ async function evaluate(
   const runtime = await requireActiveRuntime(context.db);
   if (
     !runtime.active ||
+    torrent.ownershipEpoch !== runtime.epoch ||
     !(await context.gates.sourceCleanup()) ||
     torrent.attempts.some((attempt) => attempt.recoveryEpoch !== runtime.epoch)
   )
@@ -174,12 +176,15 @@ export function createSeedingActivities(
       try {
         return await context.db.$transaction(
           async (tx) => {
-            await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
-            await tx.$queryRaw`SELECT id FROM "Torrent" WHERE id = ${torrent.id} FOR UPDATE`;
             await lockMedia(
               tx,
               torrent.attempts.flatMap((attempt) => attempt.mediaIds),
             );
+            const authorized = await lockRuntimeAuthority(
+              tx,
+              torrent.ownershipEpoch,
+            );
+            await tx.$queryRaw`SELECT id FROM "Torrent" WHERE id = ${torrent.id} FOR UPDATE`;
             const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
               where: { id: "singleton" },
             });
@@ -188,6 +193,8 @@ export function createSeedingActivities(
               include: { attempts: true },
             });
             if (
+              !authorized ||
+              current.ownershipEpoch !== runtime.recoveryEpoch ||
               runtime.mode !== "active" ||
               !runtime.ownershipConfirmed ||
               !(await context.gates.sourceCleanup()) ||

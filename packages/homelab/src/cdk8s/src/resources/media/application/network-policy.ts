@@ -87,6 +87,8 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
             ? []
             : [
                 externalHttpsEgressRule(),
+                // Kubernetes API endpoint; namespace-scoped read-only SA grants bound access.
+                { ports: [tcp(6443)] },
                 // Existing Plex uses a CDK-generated pod selector; the namespace and port bound this access.
                 { to: [{ podSelector: {} }], ports: [tcp(32_400)] },
                 {
