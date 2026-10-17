@@ -16,3 +16,6 @@ and owned artwork. The public forum endpoint chooses the operator's calendar
 theme independently of visitor preferences, checks guest visibility, and caches
 cards by content and renderer/artwork revision. `docs.json` lists public player
 documentation paths and titles; its test checks the actual Markdown pages.
+Both test tasks hash those external pages. Verification explicitly selects the
+theme tests for page edits because the docs already depend on this theme, so a
+reverse workspace dependency would create a cycle.

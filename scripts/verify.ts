@@ -225,6 +225,16 @@ export async function affectedVerifyFilters(
   // hashes changed. Package tasks cover changed workspaces plus reverse
   // dependents and their task dependencies.
   const filters = [`--filter=...[${base}]`, "--filter=//"];
+  // The shared theme's title consistency test reads player pages. The docs
+  // already depend on the theme, so declaring the reverse workspace edge
+  // would create a cycle; select this cross-package test explicitly.
+  if (
+    changedFiles.some((file) =>
+      file.startsWith("packages/ts-mc-docs/src/content/docs/"),
+    )
+  ) {
+    filters.push("--filter=@shepherdjerred/storm-theme");
+  }
   if (rootScriptsInputsChanged(changedFiles)) {
     filters.push("--filter=@shepherdjerred/root-scripts");
   }
