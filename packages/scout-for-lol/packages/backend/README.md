@@ -1309,10 +1309,9 @@ which is how a resumed settlement receipt still names a Dare an earlier attempt
 resolved. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
-outbox and its post-match drain are retired; settlement sinks only decide
-whether the intents may be minted. Until its tables are dropped, a standing
-legacy event still owns its deduplication key and prevents the notification
-lane from announcing the same event again.
+outbox, its tables and its post-match drain are retired; settlement sinks only
+decide whether the intents may be minted. The drop migration refuses to run
+while a legacy delivery is still owed.
 
 The offline recovery notice is a `product-announcement` intent with the
 `offline-recovery` effect, one per subscribed channel and outage, minted with
