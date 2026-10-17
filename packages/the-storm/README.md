@@ -2767,6 +2767,12 @@ thinking cycle.
 Role distances stop at the scoring cap of 128; directed reachability distinguishes
 long reachable paths from unreachable targets, which retain their existing
 horizontal-distance scoring. Other path queries keep their full search.
+Failed tactical destinations are remembered for 100 ticks. While an unforced
+formation slot remains excluded, tactics selects its recovery step before
+searching the discarded plan and preserves the original retry deadline. The
+slot can be retried exactly at expiry; a new failure starts another cooldown.
+Forced objective directives bypass this formation exclusion, and a new life
+clears remembered destinations.
 Each navigation graph owns a derived strongly connected component index. Its
 reachability bitsets use at most 8MiB of payload per graph; larger component sets
 use exact traversal of the condensed directed graph with exclusive search scratch.
