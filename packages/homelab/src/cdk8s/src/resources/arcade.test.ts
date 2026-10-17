@@ -180,7 +180,7 @@ test("Arcade owns one credential item and keeps limits and goal grants outside i
     "DISCORD_APPLICATION_ID",
     "DISCORD_STREAMING_TOKENS",
     "DISCORD_CLIENT_SECRET",
-    "CODEX_ACCESS_TOKEN",
+    "CODEX_AUTH_JSON_B64",
   ]) {
     expect(
       container.env.find((entry) => entry.name === key)?.valueFrom

@@ -202,9 +202,9 @@ model = "gpt-5.6-sol"
           secret: credentialSecret,
           key: "DISCORD_CLIENT_SECRET",
         }),
-        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
+        CODEX_AUTH_JSON_B64: EnvValue.fromSecretValue({
           secret: credentialSecret,
-          key: "CODEX_ACCESS_TOKEN",
+          key: "CODEX_AUTH_JSON_B64",
         }),
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
