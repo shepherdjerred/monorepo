@@ -1,6 +1,11 @@
 import type { CreateRequest, MediaAction } from "#shared/contract.ts";
 import type { MediaActor } from "./auth.ts";
 import type {
+  DefaultCommandV2,
+  DefaultCommandResultV2,
+} from "#shared/editions/commands.ts";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import type {
   CommandResult,
   RequestList,
   MediaDetail,
@@ -16,6 +21,16 @@ import type { ReleaseList, SaveQualityProfile } from "#shared/api.ts";
 import type { ProfileDefaults } from "#shared/api.ts";
 
 export type MediaApplication = {
+  getDefaultCommandContext: (
+    actor: MediaActor,
+    mediaId: string,
+  ) => Promise<DefaultTargetView>;
+  executeDefaultCommand: (
+    actor: MediaActor,
+    key: string,
+    input: DefaultCommandV2,
+    beforeNewCommand?: () => Promise<void>,
+  ) => Promise<DefaultCommandResultV2>;
   identityPreview: (
     actor: MediaActor,
     mediaId: string,

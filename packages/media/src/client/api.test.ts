@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { ApiError, commandKey, parseResponse, writeApi } from "./api.ts";
+import {
+  ApiError,
+  commandKey,
+  parseResponse,
+  readApi,
+  writeApi,
+} from "./api.ts";
 
 function memoryStorage() {
   const values = new Map<string, string>();
@@ -20,6 +26,45 @@ afterEach(() => {
 });
 
 describe("browser command identity", () => {
+  it("uses the requested protocol without aliasing outstanding v1 and v2 commands", async () => {
+    vi.stubGlobal("sessionStorage", memoryStorage());
+    vi.stubGlobal("document", { cookie: "media-csrf=fixture" });
+    const calls: { url: string; key: string | null }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string, init: RequestInit) => {
+        calls.push({
+          url,
+          key: new Headers(init.headers).get("Idempotency-Key"),
+        });
+        return init.method === undefined
+          ? Promise.resolve(Response.json({ status: "ready" }))
+          : Promise.reject(new TypeError("Unacknowledged command"));
+      }),
+    );
+    const input = {
+      actorId: "user",
+      path: "/media/film/commands",
+      body: { action: "keep" },
+      schema: z.object({ status: z.string() }),
+    };
+    await expect(writeApi(input)).rejects.toThrow("Unacknowledged");
+    await expect(writeApi({ ...input, version: 2 })).rejects.toThrow(
+      "Unacknowledged",
+    );
+    await expect(writeApi({ ...input, version: 2 })).rejects.toThrow(
+      "Unacknowledged",
+    );
+    expect(calls[0]?.url).toBe("/api/v1/media/film/commands");
+    expect(calls[1]?.url).toBe("/api/v2/media/film/commands");
+    expect(calls[0]?.key).not.toBe(calls[1]?.key);
+    expect(calls[1]?.key).toBe(calls[2]?.key);
+    await expect(
+      readApi("/media/film/targets/default", input.schema, 2),
+    ).resolves.toEqual({ status: "ready" });
+    expect(calls[3]?.url).toBe("/api/v2/media/film/targets/default");
+    expect(calls[3]?.key).toBeNull();
+  });
   it("keeps a command identity through retries but separates users and generations", async () => {
     const storage = memoryStorage();
     const first = await commandKey(storage, "user", "/media/film/actions", {

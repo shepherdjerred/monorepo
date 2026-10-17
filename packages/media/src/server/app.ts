@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { registerAcquisitionRoutes } from "./media/acquisition-routes.ts";
+import { registerEditionCommandRoutes } from "./media/edition-routes.ts";
 import {
   registerLegacyRequesterBindingRoutes,
   type LegacyRequesterBindings,
@@ -332,6 +333,11 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     return c.json(detail.children);
   });
   registerAcquisitionRoutes(app, dependencies.media, requireRequestsEnabled);
+  registerEditionCommandRoutes(app, dependencies.media, {
+    requireRequestsEnabled,
+    refreshProfileAccess: (actor, userId) =>
+      dependencies.plexAdmin.refreshProfileAccess(actor, userId),
+  });
   app.get("/api/v1/activity", async (c) =>
     c.json(await dependencies.media.activity(c.get("actor"))),
   );

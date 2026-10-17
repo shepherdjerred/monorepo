@@ -26,8 +26,9 @@ export class ApiError extends Error {
 export async function readApi<T>(
   path: string,
   schema: z.ZodType<T>,
+  version: 1 | 2 = 1,
 ): Promise<T> {
-  const response = await fetch(`/api/v1${path}`, {
+  const response = await fetch(`/api/v${String(version)}${path}`, {
     credentials: "same-origin",
   });
   return parseResponse(response, schema);
@@ -112,24 +113,28 @@ export async function writeApi<T>(input: {
   method?: "POST" | "PATCH" | "PUT" | "DELETE";
   /** Secret-bearing forms retain retry identity only in memory, never browser storage. */
   sensitive?: boolean;
+  version?: 1 | 2;
 }): Promise<T> {
   const storage = input.sensitive === true ? transientStorage : sessionStorage;
   const command = await commandKey(
     storage,
     input.actorId,
-    input.path,
+    input.version === 2 ? `/api/v2${input.path}` : input.path,
     input.body,
   );
-  const response = await fetch(`/api/v1${input.path}`, {
-    method: input.method ?? "POST",
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRF-Token": csrfToken(),
-      "Idempotency-Key": command.key,
+  const response = await fetch(
+    `/api/v${String(input.version ?? 1)}${input.path}`,
+    {
+      method: input.method ?? "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken(),
+        "Idempotency-Key": command.key,
+      },
+      body: JSON.stringify(input.body),
     },
-    body: JSON.stringify(input.body),
-  });
+  );
   const result = await parseResponse(response, input.schema);
   storage.removeItem(command.storageKey);
   return result;

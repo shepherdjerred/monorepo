@@ -1,33 +1,43 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { CommandResultSchema } from "#shared/api.ts";
 import { LanguageSchema } from "#shared/contract.ts";
 import type { MediaUser } from "#shared/contract.ts";
-import { queryClient, writeApi, readApi } from "./api.ts";
+import { readApi } from "./api.ts";
 import { PlexProfilesSchema } from "#shared/plex-admin.ts";
 import { ErrorNotice, Notice } from "./components.tsx";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import { invalidateTarget } from "./target-controls/api.ts";
+import { useTargetCommand } from "./target-controls/mutation.ts";
+import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 
 export function RequestTitle({
   user,
-  mediaId,
+  context,
   kind,
 }: {
   user: MediaUser;
-  mediaId: string;
+  context: DefaultTargetView;
   kind: string;
 }) {
   const [languages, setLanguages] = useState("en");
   const [future, setFuture] = useState(kind === "series");
   const [specials, setSpecials] = useState(false);
   const [requesterUserId, setRequesterUserId] = useState(user.id);
+  const [validationError, setValidationError] = useState<Error | null>(null);
   const profiles = useQuery({
     queryKey: ["plex-profiles"],
     queryFn: async () => readApi("/admin/plex/profiles", PlexProfilesSchema),
     enabled: user.role === "owner",
   });
-  const request = useMutation({
-    mutationFn: async () => {
+  const request = useTargetCommand(user.id);
+  async function reviewLatest() {
+    await invalidateTarget(context.scope.mediaId);
+    request.reset();
+  }
+  function submit() {
+    setValidationError(null);
+    try {
       const subtitleLanguages = z
         .array(LanguageSchema)
         .max(20)
@@ -37,32 +47,27 @@ export function RequestTitle({
             .map((language) => language.trim())
             .filter((language) => language.length > 0),
         );
-      return writeApi({
-        actorId: user.id,
-        path: "/requests",
-        body: {
-          mediaId,
+      request.submit({
+        context,
+        command: {
+          action: "request",
           subtitleLanguages,
           includeFutureEpisodes: future,
           includeSpecials: specials,
           ...(requesterUserId === user.id ? {} : { requesterUserId }),
         },
-        schema: CommandResultSchema,
       });
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["media", mediaId] }),
-        queryClient.invalidateQueries({ queryKey: ["requests"] }),
-      ]);
-    },
-  });
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      setValidationError(error);
+    }
+  }
   return (
     <form
       className="stack-form"
       onSubmit={(event) => {
         event.preventDefault();
-        request.mutate();
+        submit();
       }}
     >
       {user.role === "owner" && (
@@ -125,11 +130,23 @@ export function RequestTitle({
       <button
         className="button primary"
         type="submit"
-        disabled={request.isPending || user.restricted}
+        disabled={
+          request.isPending ||
+          request.isSuccess ||
+          user.restricted ||
+          context.access !== "detail" ||
+          commandNeedsReview(request.error)
+        }
       >
         {request.isPending ? "Requesting…" : "Request this title"}
       </button>
-      {request.error !== null && <ErrorNotice error={request.error} />}
+      <CommandError
+        error={request.error}
+        review={() => {
+          void reviewLatest();
+        }}
+      />
+      {validationError !== null && <ErrorNotice error={validationError} />}
       {request.isSuccess && <Notice>Request added.</Notice>}
     </form>
   );

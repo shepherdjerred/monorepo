@@ -1,8 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
-import { CommandResultSchema, type MediaDetail } from "#shared/api.ts";
+import type { MediaDetail } from "#shared/api.ts";
 import type { MediaAction, MediaUser } from "#shared/contract.ts";
-import { queryClient, writeApi } from "./api.ts";
-import { ErrorNotice } from "./components.tsx";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import { useTargetCommand } from "./target-controls/mutation.ts";
+import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 
 const actionLabels: Record<MediaAction["action"], string> = {
   keep: "Keep for 30 days",
@@ -16,54 +16,50 @@ const actionLabels: Record<MediaAction["action"], string> = {
 
 export function MediaActionButton({
   user,
-  mediaId,
-  version,
+  context,
   action,
   confirmation,
 }: {
   user: MediaUser;
-  mediaId: string;
-  version: number;
+  context: DefaultTargetView;
   action: Exclude<MediaAction["action"], "select_release">;
   confirmation?: NonNullable<MediaDetail["removalConfirmation"]>;
 }) {
-  const mutation = useMutation({
-    mutationFn: async () =>
-      writeApi({
-        actorId: user.id,
-        path: `/media/${encodeURIComponent(mediaId)}/actions`,
-        body: {
-          action,
-          expectedVersion: version,
-          ...(action === "remove" && confirmation !== undefined
-            ? { confirmation }
-            : {}),
-        },
-        schema: CommandResultSchema,
-      }),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["media", mediaId] }),
-        queryClient.invalidateQueries({ queryKey: ["removals"] }),
-        queryClient.invalidateQueries({ queryKey: ["activity"] }),
-      ]);
-    },
-  });
+  const mutation = useTargetCommand(user.id);
   return (
     <div className="action-control">
       <button
         className={`button ${action === "keep" || action === "restore" ? "primary" : "subtle"}`}
-        disabled={mutation.isPending}
+        disabled={
+          mutation.isPending ||
+          mutation.isSuccess ||
+          commandNeedsReview(mutation.error)
+        }
         onClick={() => {
-          mutation.mutate();
+          mutation.submit({
+            context,
+            command: {
+              action,
+              ...(action === "remove" && confirmation !== undefined
+                ? { confirmation }
+                : {}),
+            },
+          });
         }}
       >
         {mutation.isPending ? "Saving…" : actionLabels[action]}
       </button>
-      {mutation.error !== null && <ErrorNotice error={mutation.error} />}
+      <CommandError
+        error={mutation.error}
+        review={() => {
+          globalThis.location.reload();
+        }}
+      />
       {mutation.isSuccess && (
         <span className="helper" role="status">
-          {mutation.data.status === "completed" ? "Saved" : "Action queued"}
+          {mutation.data.result.status === "completed"
+            ? "Saved"
+            : "Action queued"}
         </span>
       )}
     </div>

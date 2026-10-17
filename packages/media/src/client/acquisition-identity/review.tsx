@@ -1,12 +1,17 @@
 import { useState, type SyntheticEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { MediaUser } from "#shared/contract.ts";
-import { CommandResultSchema } from "#shared/api.ts";
 import {
   IdentityConfirmationSchema,
   type IdentityPreview,
 } from "#shared/acquisition/preview.ts";
-import { writeApi, queryClient } from "#client/api.ts";
+import { ApiError } from "#client/api.ts";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import { useTargetCommand } from "#client/target-controls/mutation.ts";
+import {
+  CommandError,
+  commandNeedsReview,
+} from "#client/target-controls/errors.tsx";
 import { ErrorNotice, Notice, humanize } from "#client/components.tsx";
 import { CoveragePicker } from "./coverage.tsx";
 import { identityPreviewOptions } from "./preview.ts";
@@ -20,6 +25,7 @@ type ReviewProps = {
   mediaId: string;
   releaseId: string;
   initialCoverage: string[];
+  context: DefaultTargetView;
 };
 export function IdentityReview(props: ReviewProps) {
   const [open, setOpen] = useState(false);
@@ -42,6 +48,7 @@ function IdentityReviewForm({
   mediaId,
   releaseId,
   initialCoverage,
+  context,
 }: ReviewProps) {
   const [selected, setSelected] = useState([
     ...new Set([mediaId, ...initialCoverage]),
@@ -69,18 +76,24 @@ function IdentityReviewForm({
         }
         onClick={() => {
           preview.reset();
-          preview.mutate([...selected]);
+          preview.mutate({ mediaIds: [...selected], context });
         }}
       >
         Review this coverage
       </button>
-      {preview.error !== null && <ErrorNotice error={preview.error} />}
+      <CommandError
+        error={preview.error}
+        review={() => {
+          globalThis.location.reload();
+        }}
+      />
       {preview.data !== undefined && (
         <ConfirmIdentity
-          key={preview.data.previewDigest}
+          key={preview.data.preview.previewDigest}
           user={user}
           mediaId={mediaId}
-          preview={preview.data}
+          preview={preview.data.preview}
+          context={preview.data.context}
         />
       )}
     </div>
@@ -91,41 +104,42 @@ function ConfirmIdentity({
   user,
   mediaId,
   preview,
+  context,
 }: {
   user: MediaUser;
   mediaId: string;
   preview: IdentityPreview;
+  context: DefaultTargetView;
 }) {
   const [error, setError] = useState<Error | null>(null);
-  const confirm = useMutation({
-    mutationFn: async (reason: string) => {
-      const requested = preview.media.find((item) => item.id === mediaId);
-      if (requested === undefined)
-        throw new Error("Reviewed coverage omits the requested item.");
-      const confirmation = IdentityConfirmationSchema.parse({
-        previewDigest: preview.previewDigest,
-        candidateDigest: preview.candidateDigest,
-        mediaIds: preview.media.map((item) => item.id),
-        numberingDigest: preview.numberingDigest,
-        reason,
-        acknowledgeIdentity: true,
-      });
-      return writeApi({
-        actorId: user.id,
-        path: `/media/${mediaId}/actions`,
-        body: {
-          action: "select_release",
-          expectedVersion: requested.version,
-          releaseId: preview.releaseId,
-          identityConfirmation: confirmation,
-        },
-        schema: CommandResultSchema,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["media", mediaId] });
-    },
-  });
+  const confirm = useTargetCommand(user.id);
+  function confirmIdentity(reason: string) {
+    const requested = preview.media.find((item) => item.id === mediaId);
+    if (requested === undefined)
+      throw new Error("Reviewed coverage omits the requested item.");
+    if (requested.version !== context.expected.mediaVersion)
+      throw new ApiError(
+        "version_conflict",
+        "The reviewed title changed. Prepare a new review.",
+        409,
+      );
+    const confirmation = IdentityConfirmationSchema.parse({
+      previewDigest: preview.previewDigest,
+      candidateDigest: preview.candidateDigest,
+      mediaIds: preview.media.map((item) => item.id),
+      numberingDigest: preview.numberingDigest,
+      reason,
+      acknowledgeIdentity: true,
+    });
+    confirm.submit({
+      context,
+      command: {
+        action: "select_release",
+        releaseId: preview.releaseId,
+        identityConfirmation: confirmation,
+      },
+    });
+  }
   function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -136,7 +150,12 @@ function ConfirmIdentity({
       );
       return;
     }
-    confirm.mutate(reason);
+    try {
+      confirmIdentity(reason);
+    } catch (error_) {
+      if (!(error_ instanceof Error)) throw error_;
+      setError(error_);
+    }
   }
   return (
     <form className="panel stack-form" onSubmit={submit}>
@@ -210,13 +229,19 @@ function ConfirmIdentity({
           !preview.confirmationAllowed ||
           !preview.edition.accepted ||
           confirm.isPending ||
+          commandNeedsReview(confirm.error) ||
           confirm.isSuccess
         }
       >
         Confirm identity and select release
       </button>
       {error !== null && <ErrorNotice error={error} />}
-      {confirm.error !== null && <ErrorNotice error={confirm.error} />}
+      <CommandError
+        error={confirm.error}
+        review={() => {
+          globalThis.location.reload();
+        }}
+      />
       {confirm.isSuccess && (
         <Notice>
           Selection queued. Acquisition will recheck current access, requests
