@@ -26,6 +26,18 @@ export type NotificationApplication = {
     input: { code: string; state: string; issuer: string },
   ) => Promise<CommandResult>;
   unlinkDiscord: (actor: MediaActor) => Promise<CommandResult>;
+  retryDelivery: (
+    actor: MediaActor,
+    key: string,
+    id: string,
+    expectedVersion: number,
+  ) => Promise<CommandResult>;
+  reconcileDelivery: (
+    actor: MediaActor,
+    key: string,
+    id: string,
+    input: { expectedVersion: number; receipt?: string },
+  ) => Promise<CommandResult>;
 };
 
 export type DiscordIdentityProvider = {

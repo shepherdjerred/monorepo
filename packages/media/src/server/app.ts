@@ -1,4 +1,9 @@
 import { Hono } from "hono";
+import { registerNotificationActions } from "./notification-actions.ts";
+import {
+  registerHandoffRoutes,
+  type HandoffAdministration,
+} from "./handoff-routes.ts";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
@@ -45,6 +50,7 @@ export type MediaAppDependencies = {
   plexAdmin: PlexAdministration;
   numberingAdmin: NumberingAdministration;
   migrationAdmin: MigrationAdministration;
+  handoffAdmin: HandoffAdministration;
   plexExclusionAdmin: PlexExclusionAdministration;
   publicOrigin: string;
   requestsEnabled: () => Promise<boolean>;
@@ -451,9 +457,11 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     c.json(await dependencies.notifications.unlinkDiscord(c.get("actor"))),
   );
   registerAdminRoutes(app, dependencies.admin);
+  registerNotificationActions(app, dependencies.notifications);
   registerPlexRoutes(app, dependencies.plexAdmin);
   registerNumberingRoutes(app, dependencies.numberingAdmin);
   registerMigrationRoutes(app, dependencies.migrationAdmin);
+  registerHandoffRoutes(app, dependencies.handoffAdmin);
   registerPlexExclusionRoutes(app, dependencies.plexExclusionAdmin);
   app.notFound((c) =>
     c.json(

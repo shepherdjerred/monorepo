@@ -5,6 +5,7 @@ import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { setTimeout } from "node:timers/promises";
+import { grantTestLease } from "#testing/authority.ts";
 
 const { database, context, fixture } = automationTestHarness();
 
@@ -156,6 +157,7 @@ test("a restore epoch fences old publication before Plex network effects and fin
     reason: "restore epoch test",
   });
   // Simulate a separately reviewed later ownership transfer, leaving old attempt untouched.
+  await grantTestLease(database(), 1);
   await database().mediaRuntimeState.update({
     where: { id: "singleton" },
     data: { mode: "active", ownershipConfirmed: true },
@@ -169,5 +171,5 @@ test("a restore epoch fences old publication before Plex network effects and fin
   ).toEqual({ status: "blocked", reason: "recovery_epoch_changed" });
   await expect(
     createPublicationActivities(ctx).finalizeMediaAcquisition(input),
-  ).rejects.toThrow("Finalization recovery epoch changed");
+  ).rejects.toThrow("Finalization ownership authority changed");
 });

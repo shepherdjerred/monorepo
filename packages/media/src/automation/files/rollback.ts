@@ -67,6 +67,7 @@ export async function rollbackPromotion(
             intents.some(
               (intent) =>
                 !intent.desiredPresence ||
+                intent.automationEpoch !== epoch ||
                 intent.generation !== entry.generations[intent.mediaId],
             )
           )
@@ -80,10 +81,12 @@ export async function rollbackPromotion(
           });
           if (
             !asset.owned ||
+            asset.ownershipEpoch !== epoch ||
             asset.checksum !== entry.checksum ||
             asset.state !== "published" ||
             asset.coverage.length !== entry.mediaIds.length ||
             !previous.owned ||
+            previous.ownershipEpoch !== epoch ||
             previous.checksum !== previousChecksum ||
             previous.state !== "superseded" ||
             previous.path !==

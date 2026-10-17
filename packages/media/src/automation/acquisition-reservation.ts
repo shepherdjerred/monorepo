@@ -11,6 +11,10 @@ import { serializable } from "./store.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { sponsorClaim } from "#infrastructure/action-guards.ts";
 import { currentRelease } from "./acquisition-candidates.ts";
+import {
+  lockRuntimeAuthority,
+  recordsAuthorized,
+} from "#infrastructure/handoff/authority.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
 export async function reserveCandidate(
   context: MediaAutomationContext,
@@ -40,6 +44,7 @@ export async function reserveCandidate(
   }
   return serializable(context.db, async (tx) => {
     await lockMedia(tx, proposed.mediaIds);
+    if (!(await lockRuntimeAuthority(tx, epoch))) return null;
     await tx.mediaItem.update({
       where: { id: input.mediaId },
       data: { version: { increment: 1 } },
@@ -49,6 +54,7 @@ export async function reserveCandidate(
     });
     if (
       intent.generation !== input.generation ||
+      intent.automationEpoch !== epoch ||
       !intent.desiredPresence ||
       !intent.monitoring ||
       intent.profileId !== profile.id
@@ -84,14 +90,20 @@ export async function reserveCandidate(
       });
       if (
         coveredIntent !== null &&
-        (coveredIntent.intentionallyRemovedAt !== null ||
+        (coveredIntent.automationEpoch !== epoch ||
+          coveredIntent.intentionallyRemovedAt !== null ||
           (coveredIntent.profileId !== null &&
             coveredIntent.profileId !== profile.id))
       )
         return null;
       const claimed = await tx.mediaIntent.upsert({
         where: { mediaId },
-        create: { mediaId, generation: 1, profileId: profile.id },
+        create: {
+          mediaId,
+          generation: 1,
+          profileId: profile.id,
+          automationEpoch: epoch,
+        },
         update: { desiredPresence: true, profileId: profile.id },
       });
       generations[mediaId] = claimed.generation;
@@ -139,13 +151,36 @@ export async function adoptReservation(
 ): Promise<Awaited<
   ReturnType<MediaNetworkActivities["reconcileMediaIntent"]>
 > | null> {
+  const snapshot = await context.db.acquisitionReservation.findUnique({
+    where: { mediaId: input.mediaId },
+    include: { attempt: true },
+  });
+  if (snapshot === null) return null;
   return serializable(context.db, async (tx) => {
-    await lockMedia(tx, [input.mediaId]);
+    await lockMedia(tx, snapshot.attempt.mediaIds);
     const reservation = await tx.acquisitionReservation.findUnique({
       where: { mediaId: input.mediaId },
       include: { attempt: { include: { release: true } } },
     });
     if (reservation === null) return null;
+    if (
+      reservation.attemptId !== snapshot.attemptId ||
+      !(await recordsAuthorized(tx, {
+        epoch: reservation.attempt.recoveryEpoch,
+        mediaIds: reservation.attempt.mediaIds,
+      }))
+    )
+      return {
+        status: "blocked",
+        attemptId: null,
+        reason: "record_ownership_unconfirmed",
+      };
+    if (!(await lockRuntimeAuthority(tx, reservation.attempt.recoveryEpoch)))
+      return {
+        status: "blocked",
+        attemptId: null,
+        reason: "recovery_epoch_changed",
+      };
     const waiting = {
       status: "waiting" as const,
       attemptId: null,

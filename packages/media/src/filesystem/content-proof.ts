@@ -46,6 +46,34 @@ export class ContentProof {
     return proof?.sha256 ?? null;
   }
 
+  /** Process-local identity capability for final PG → path-lock authority checks. */
+  async verifiedFile(path: string): Promise<VerifiedFileProof> {
+    return await this.require(path);
+  }
+
+  /** Audit identity for owner review only. It cannot reconstruct or authorize a content proof. */
+  async reviewIdentity(path: string) {
+    const proof = await this.require(path);
+    return {
+      device: proof.dev.toString(),
+      inode: proof.ino.toString(),
+      mtimeNs: proof.mtimeNs.toString(),
+      ctimeNs: proof.ctimeNs.toString(),
+      ancestors: ancestors(path).map((parent) => {
+        const identity = this.parents.get(parent);
+        if (identity === undefined)
+          throw new FileOperationConflict(
+            "Media ancestor has no captured identity",
+          );
+        return {
+          path: parent,
+          device: identity.dev.toString(),
+          inode: identity.ino.toString(),
+        };
+      }),
+    };
+  }
+
   async link(source: string, target: string): Promise<void> {
     const proof = await this.require(source);
     if ((await this.assert(target)) !== null)

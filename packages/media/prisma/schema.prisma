@@ -66,6 +66,9 @@ model MediaUser {
   migrationProposals AdoptionProposal[]
   migrationBundleReviews MigrationBundleReview[]
   plexExclusionRuns PlexExclusionRun[]
+  handoffPlans MediaHandoffPlan[]
+  handoffReceipts MediaHandoffReceipt[]
+  releasedRecoveryHolds RecoveryHold[]
 }
 
 model MigrationCapture {
@@ -134,6 +137,7 @@ model MigrationBundleCapture {
 }
 
 model MigrationBundleReview {
+  handoffPlans MediaHandoffPlan[]
   id String @id @default(uuid())
   bundleId String
   bundle MigrationBundle @relation(fields: [bundleId], references: [id], onDelete: Restrict)
@@ -269,6 +273,7 @@ model Credential {
 }
 
 model MediaItem {
+  recoveryHold RecoveryHold?
   id            String              @id @default(uuid())
   kind          MediaKind
   title         String
@@ -367,6 +372,7 @@ model QualityProfileVersion {
 }
 
 model MediaIntent {
+  automationEpoch Int @default(-1)
   mediaId                String          @id
   media                  MediaItem       @relation(fields: [mediaId], references: [id])
   generation             Int             @default(0)
@@ -478,6 +484,7 @@ model AcquisitionReservation {
 }
 
 model Torrent {
+  ownershipEpoch Int @default(-1)
   qbittorrentId String?
   id            String               @id @default(uuid())
   infoHash      String               @unique
@@ -493,6 +500,7 @@ model Torrent {
 }
 
 model LibraryAsset {
+  ownershipEpoch Int @default(-1)
   plexPublishedAt DateTime?
   supersededByAssetId String?
   rollbackExpiresAt DateTime?
@@ -640,7 +648,95 @@ model IdempotencyRecord {
   @@id([userId, key])
 }
 
+model RecoveryHold {
+  mediaId String @id
+  media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  reason String
+  createdAt DateTime @default(now())
+  releasedAt DateTime?
+  releasedById String?
+  releasedBy MediaUser? @relation(fields: [releasedById], references: [id], onDelete: Restrict)
+  releaseEvidence Json?
+}
+
+model MediaHandoffPlan {
+  id String @id @default(uuid())
+  bundleReviewId String
+  bundleReview MigrationBundleReview @relation(fields: [bundleReviewId], references: [id], onDelete: Restrict)
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  bundleReviewVersion Int
+  requestHash String
+  scope Json
+  plan Json?
+  planHash String?
+  state String @default("preparing")
+  version Int @default(0)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  observations MediaHandoffObservation[]
+  receipt MediaHandoffReceipt?
+}
+
+model MediaHandoffObservation {
+  id String @id @default(uuid())
+  planId String
+  plan MediaHandoffPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  kind String
+  evidenceHash String
+  evidence Json
+  observedAt DateTime
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([planId, kind, createdAt])
+}
+
+model MediaHandoffReceipt {
+  id String @id @default(uuid())
+  planId String @unique
+  plan MediaHandoffPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planHash String
+  recoveryEpoch Int
+  previousRuntimeVersion Int
+  runtimeVersion Int
+  selection Json
+  actorId String
+  actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+}
+
+model MediaStorageAuthority {
+  rootPath String @id
+  recoveryEpoch Int
+  pvcUid String
+  volumeName String
+  volumePath String
+  workerPodUid String
+  evidence Json
+  observedAt DateTime
+  expiresAt DateTime
+  revokedAt DateTime?
+  version Int @default(0)
+}
+
+model LegacyWriterLease {
+  id String @id
+  recoveryEpoch Int
+  targetsDigest String
+  configurationDigest String
+  observation Json
+  observedAt DateTime
+  expiresAt DateTime
+  revokedAt DateTime?
+  version Int @default(0)
+}
+
 model ApplicationEvent {
+  dedupeKey String? @unique
   id            String                 @id @default(uuid())
   mediaId       String?
   actorId       String?
@@ -653,6 +749,12 @@ model ApplicationEvent {
 }
 
 model NotificationDelivery {
+  version Int @default(0)
+  failureReason String?
+  recipientFingerprint String?
+  reconciledAt DateTime?
+  providerStatus String?
+  deliveryAttempts NotificationDeliveryAttempt[]
   id              String           @id @default(uuid())
   eventId         String
   event           ApplicationEvent @relation(fields: [eventId], references: [id])
@@ -668,4 +770,19 @@ model NotificationDelivery {
   updatedAt       DateTime         @updatedAt
 
   @@unique([eventId, userId, channel])
+}
+
+model NotificationDeliveryAttempt {
+  id String @id @default(uuid())
+  deliveryId String
+  delivery NotificationDelivery @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  attemptNumber Int
+  recoveryEpoch Int
+  state String
+  providerReceipt String?
+  recipientFingerprint String
+  startedAt DateTime
+  finishedAt DateTime?
+  rejectionReason String?
+  @@unique([deliveryId, attemptNumber])
 }

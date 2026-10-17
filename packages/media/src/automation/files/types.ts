@@ -10,6 +10,7 @@ export type FileContext = {
   db: Database;
   roots: { movies: MediaFileRoots; tv: MediaFileRoots };
   checkpoint: (phase: string) => Promise<void>;
+  verifyStorageAuthority: (roots: MediaFileRoots) => Promise<void>;
   now?: () => Date;
   enabled: {
     acquisition: () => Promise<boolean>;

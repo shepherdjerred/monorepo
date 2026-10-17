@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { commandAutomationEpoch } from "./handoff/authority.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
@@ -96,17 +97,24 @@ export class PrismaMediaCommands extends MediaRequestCommands {
           keepDays: this.settings.keepDays,
         });
         await invalidateRetention(db, mediaId);
+        const renewal =
+          input.action === "retry" || input.action === "select_release";
+        const authority = renewal
+          ? { automationEpoch: await commandAutomationEpoch(db) }
+          : {};
         const intent = await db.mediaIntent.upsert({
           where: { mediaId },
           create: {
             mediaId,
             generation: 1,
+            ...authority,
             desiredPresence: input.action !== "remove",
             monitoring: input.action !== "remove",
             intentionallyRemovedAt:
               input.action === "remove" ? new Date() : null,
           },
           update: {
+            ...authority,
             generation: { increment: 1 },
             version: { increment: 1 },
             ...actionIntentChange(input.action),

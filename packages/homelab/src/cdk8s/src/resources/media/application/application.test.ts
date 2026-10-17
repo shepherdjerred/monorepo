@@ -46,6 +46,8 @@ function resources() {
           labels: z.record(z.string(), z.string()).optional(),
         }),
         spec: z.unknown().optional(),
+        rules: z.unknown().optional(),
+        subjects: z.unknown().optional(),
       }),
     )
     .parse(chart.toJson());
@@ -106,7 +108,9 @@ test("separates network credentials from writable media mounts", () => {
   expect(deployments).toHaveLength(3);
   for (const deployment of deployments) {
     const pod = DeploymentSchema.parse(deployment.spec).template.spec;
-    expect(pod.automountServiceAccountToken).toBe(false);
+    expect(pod.automountServiceAccountToken).toBe(
+      deployment.metadata.name.endsWith("media-network"),
+    );
     const container = pod.containers[0];
     expect(container).toBeDefined();
     const mounts = container?.volumeMounts ?? [];
@@ -168,4 +172,41 @@ test("declares protected PostgreSQL and denies files worker external network acc
   expect(ports).toEqual(expect.arrayContaining([5432, 7233, 8080, 4318]));
   expect(ports).not.toContain(443);
   expect(ports).not.toContain(32_400);
+  expect(ports).not.toContain(6443);
+});
+
+test("grants only the network observer namespace-scoped metadata reads", () => {
+  const manifests = resources();
+  const roles = manifests.filter((resource) => resource.kind === "Role");
+  expect(roles).toHaveLength(1);
+  const rules = z
+    .array(
+      z.object({
+        apiGroups: z.array(z.string()),
+        resources: z.array(z.string()),
+        verbs: z.array(z.string()),
+      }),
+    )
+    .parse(roles[0]?.rules);
+  expect(rules.flatMap((rule) => rule.resources).sort()).toEqual([
+    "cronjobs",
+    "daemonsets",
+    "deployments",
+    "horizontalpodautoscalers",
+    "jobs",
+    "persistentvolumeclaims",
+    "pods",
+    "replicasets",
+    "statefulsets",
+  ]);
+  expect(new Set(rules.flatMap((rule) => rule.verbs))).toEqual(
+    new Set(["get", "list"]),
+  );
+  expect(
+    manifests.filter((resource) => resource.kind === "ClusterRole"),
+  ).toHaveLength(0);
+  const binding = manifests.find((resource) => resource.kind === "RoleBinding");
+  expect(binding?.subjects).toEqual([
+    { kind: "ServiceAccount", name: "media-network", namespace: "media" },
+  ]);
 });

@@ -46,6 +46,29 @@ const migrationFixture: MediaAppDependencies["migrationAdmin"] = {
   },
 };
 
+const handoffFixture = {
+  async prepare() {
+    throw new Error("Unexpected fixture handoff prepare");
+  },
+  async detail() {
+    throw new Error("Unexpected fixture handoff detail");
+  },
+  async apply() {
+    throw new Error("Unexpected fixture handoff apply");
+  },
+};
+const numberingFixture = {
+  async series() {
+    return [];
+  },
+  async episodes() {
+    return [];
+  },
+  async save() {
+    return { status: "completed" as const };
+  },
+};
+
 function fixture() {
   const act = vi.fn<MediaApplication["act"]>(async () => ({
     status: "queued",
@@ -102,11 +125,18 @@ function fixture() {
     },
   };
   const notifications: NotificationApplication = {
+    async retryDelivery() {
+      return { status: "queued" };
+    },
+    async reconcileDelivery() {
+      return { status: "queued" };
+    },
     async preferences() {
       return {
         email: null,
         emailVerified: false,
         discordLinked: false,
+        discordAvailable: false,
         emailEnabled: false,
         discordEnabled: false,
         upgrades: false,
@@ -191,18 +221,9 @@ function fixture() {
         /* Fixture explicitly authorizes the profile. */
       },
     },
-    numberingAdmin: {
-      async series() {
-        return [];
-      },
-      async episodes() {
-        return [];
-      },
-      async save() {
-        return { status: "completed" };
-      },
-    },
+    numberingAdmin: numberingFixture,
     migrationAdmin: migrationFixture,
+    handoffAdmin: handoffFixture,
     plexExclusionAdmin: {
       async list() {
         return {
@@ -250,6 +271,42 @@ const headers = {
 };
 
 describe("media HTTP security and errors", () => {
+  test("handoff apply forwards the authenticated actor and exact reviewed hash; malformed scope is rejected", async () => {
+    const { dependencies } = fixture();
+    const apply = vi.fn<MediaAppDependencies["handoffAdmin"]["apply"]>(
+      async () => ({ status: "queued", operationId: crypto.randomUUID() }),
+    );
+    dependencies.handoffAdmin = { ...handoffFixture, apply };
+    const app = createMediaApp(dependencies);
+    const id = crypto.randomUUID();
+    const input = {
+      expectedVersion: 2,
+      planHash: "a".repeat(64),
+      recoveryEpoch: 3,
+      runtimeVersion: 4,
+      acknowledgeProtectedLegacySources: true,
+      acknowledgeRecoveryHolds: true,
+    };
+    const response = await app.request(`/api/v1/admin/handoffs/${id}/apply`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(input),
+    });
+    expect(response.status).toBe(202);
+    expect(apply).toHaveBeenCalledWith(
+      actor,
+      headers["Idempotency-Key"],
+      id,
+      input,
+    );
+    const invalid = await app.request(`/api/v1/admin/handoffs/${id}/apply`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ...input, acknowledgeRecoveryHolds: false }),
+    });
+    expect(invalid.status).toBe(400);
+    expect(apply).toHaveBeenCalledOnce();
+  });
   test("only manual subtitle upload accepts a body larger than the normal API limit", async () => {
     const { dependencies } = fixture();
     const app = createMediaApp(dependencies);

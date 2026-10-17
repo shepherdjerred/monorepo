@@ -11,6 +11,7 @@ import {
 import { assertRuntime, lockMedia } from "./guards.ts";
 import { libraryLocation } from "./removal-plan.ts";
 import { fileOperations } from "./file-operations.ts";
+import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
 
 export async function installSubtitle(
   context: FileContext,
@@ -108,6 +109,7 @@ export async function installSubtitle(
         });
         if (
           !asset.owned ||
+          asset.ownershipEpoch !== evidence.recoveryEpoch ||
           asset.version !== evidence.assetVersion ||
           asset.checksum !== evidence.assetChecksum ||
           asset.state !== "published" ||
@@ -122,6 +124,7 @@ export async function installSubtitle(
           intents.some(
             (intent) =>
               !intent.desiredPresence ||
+              intent.automationEpoch !== evidence.recoveryEpoch ||
               intent.generation !== evidence.generations[intent.mediaId],
           )
         )
@@ -140,6 +143,20 @@ export async function installSubtitle(
           path: nodePath.join(roots.library, libraryPath),
           provenance: { ...provenance, checksum },
         },
+      });
+      await queueLifecycleNotifications(tx, {
+        key: `subtitle-installed:${subtitleId}:${String(evidence.assetVersion)}`,
+        kind: "subtitles_ready",
+        epoch: evidence.recoveryEpoch,
+        items: mediaIds.map((mediaId) => ({
+          mediaId,
+          generation: z.number().int().parse(evidence.generations[mediaId]),
+          assetId: subtitle.assetId,
+          assetVersion: evidence.assetVersion,
+          assetChecksum: evidence.assetChecksum,
+          subtitleId,
+          language: subtitle.language,
+        })),
       });
     },
     { timeout: 60_000 },

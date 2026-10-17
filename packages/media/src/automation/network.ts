@@ -19,6 +19,7 @@ import { createMediaFileActivities } from "./files/activities.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createNotificationTransport } from "#integrations/notification-transport.ts";
+import { createNotificationReceiptReader } from "#integrations/notifications/receipts.ts";
 import { createMediaWorkflowStarter } from "./temporal-client.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
 import { cleanupSubtitleBrowser } from "./subtitle-browser-lifecycle.ts";
@@ -28,6 +29,14 @@ import {
   refreshPlexExclusionProofs,
 } from "./plex-exclusion/proof.ts";
 import { PlexMaintenanceClient } from "#integrations/plex-maintenance.ts";
+import { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
+import { refreshWriterLease } from "#infrastructure/handoff/lease.ts";
+import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-observer.ts";
+import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
+import { createHandoffNetworkProducer } from "#migration/handoff-network/producer.ts";
+import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
+import { createHandoffFileActivities } from "./handoff/activities.ts";
+import type { FileContext } from "./files/types.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -94,6 +103,7 @@ const NetworkBootstrapSchema = CommonBootstrapSchema.extend({
   "Exactly one TMDB credential is required",
 );
 const FilesBootstrapSchema = CommonBootstrapSchema.extend({
+  MEDIA_FILE_WORKER_POD_UID: z.string().min(1),
   MEDIA_MOVIES_DOWNLOAD_ROOT: z.string().min(1),
   MEDIA_MOVIES_LIBRARY_ROOT: z.string().min(1),
   MEDIA_MOVIES_CONTROL_ROOT: z.string().min(1),
@@ -126,7 +136,12 @@ export async function createMediaNetworkContext(
   environment: Record<string, string | undefined>,
   ports: Pick<
     MediaAutomationContext,
-    "startWorkflow" | "describeWorkflow" | "notify"
+    | "startWorkflow"
+    | "describeWorkflow"
+    | "notify"
+    | "reconcileNotification"
+    | "sharedAnnouncements"
+    | "personalDiscordAvailable"
   >,
 ): Promise<MediaAutomationContext> {
   const config = NetworkBootstrapSchema.parse(environment);
@@ -141,6 +156,11 @@ export async function createMediaNetworkContext(
   };
   return {
     db,
+    refreshWriterLease: async () => {
+      const observer = createLegacyObserver(environment);
+      await refreshWriterLease(db, () => observer.observe());
+      await refreshStorageAuthorities(db, observer);
+    },
     async refreshExclusionProofs() {
       const [movie, series] = await Promise.all([
         behavior.get("permittedMovieSectionId"),
@@ -206,13 +226,26 @@ export async function createMediaFileRuntime(
       controlPolicy: "plex-excluded" as const,
     },
   };
-  const activities = createMediaFileActivities({
+  const fileContext: FileContext = {
     db,
     roots,
     checkpoint,
+    verifyStorageAuthority: (root) =>
+      requireStorageAuthority(
+        db,
+        root.library,
+        config.MEDIA_FILE_WORKER_POD_UID,
+      ),
     enabled: createGates(config.ENVIRONMENT),
     verifyPlexExclusion: (root) => requirePlexExclusionProof(db, root),
-  });
+  };
+  const activities = {
+    ...createMediaFileActivities(fileContext),
+    ...createHandoffFileActivities({
+      files: fileContext,
+      workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+    }),
+  };
   return { activities, close: () => db.$disconnect() };
 }
 
@@ -244,9 +277,9 @@ export async function createMediaNetworkRuntime(
     CommonBootstrapSchema.parse(environment).ENVIRONMENT,
     true,
   );
-  const notify: MediaAutomationContext["notify"] = async (message) => {
+  const deliveryConfig = async () => {
     const sender = await behavior.get("emailSender");
-    return createNotificationTransport({
+    return {
       ...(config.POSTAL_HOST === undefined ||
       config.POSTAL_API_KEY === undefined
         ? {}
@@ -263,20 +296,69 @@ export async function createMediaNetworkRuntime(
       ...(config.DISCORD_BOT_TOKEN === undefined
         ? {}
         : { discord: { botToken: config.DISCORD_BOT_TOKEN } }),
-    })(message);
+    };
   };
   const context = await createMediaNetworkContext(environment, {
     startWorkflow: temporal.start,
     describeWorkflow: temporal.describe,
-    notify,
+    personalDiscordAvailable: async () => {
+      const flag = await behavior.get("personalDiscordEnabled");
+      return config.DISCORD_BOT_TOKEN !== undefined && flag.value;
+    },
+    notify: async (message) =>
+      createNotificationTransport(await deliveryConfig())(message),
+    reconcileNotification: async (input) =>
+      createNotificationReceiptReader(await deliveryConfig())(input),
+    sharedAnnouncements: async () => {
+      const [enabled, upgrades, channelId] = await Promise.all([
+        behavior.get("sharedAnnouncementsEnabled"),
+        behavior.get("sharedAnnouncementsUpgrades"),
+        behavior.get("sharedDiscordChannelId"),
+      ]);
+      return {
+        enabled: enabled.value,
+        upgrades: upgrades.value,
+        channelId: channelId.value,
+        available: config.DISCORD_BOT_TOKEN !== undefined,
+      };
+    },
   });
   const lifecycle = {
     ...createRetentionActivities(context),
     ...createNotificationActivities(context),
     ...createSubtitleActivities(context),
   };
+  const bootstrap = NetworkBootstrapSchema.parse(environment);
+  const handoff = async (planId: string) => {
+    const sections = await context.permittedSections();
+    await context.qbittorrent.login();
+    await createHandoffNetworkProducer({
+      ...context,
+      observer: createLegacyObserver(environment),
+      expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      authentication: new PlexPinAuthentication({
+        serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        serverUrl: bootstrap.PLEX_SERVER_URL,
+        permittedMovieSectionId: sections.movie,
+        permittedTvSectionId: sections.series,
+        applicationName: "Media",
+        returnUrl: bootstrap.PUBLIC_ORIGIN,
+      }),
+    })(planId);
+  };
   return {
-    activities: createMediaNetworkActivities(context, lifecycle),
+    activities: {
+      ...createMediaNetworkActivities(context, lifecycle),
+      observeMediaHandoff: async (input: { planId: string }) =>
+        handoff(input.planId),
+      mediaHandoffState: async (input: { planId: string }) => {
+        const plan = await context.db.mediaHandoffPlan.findUniqueOrThrow({
+          where: { id: input.planId },
+          include: { receipt: true },
+        });
+        return { state: plan.state, applied: plan.receipt !== null };
+      },
+    },
     close: async () => {
       await temporal.close();
       await context.db.$disconnect();

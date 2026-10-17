@@ -85,7 +85,7 @@ test("Discord creates the linked user's DM and disables mention expansion", asyn
   );
   await expect(
     send({ ...message, channel: "discord", recipient: "123" }),
-  ).resolves.toEqual({ receipt: "789" });
+  ).resolves.toEqual({ receipt: "discord:456:789" });
   await expect(createNotificationTransport({})(message)).rejects.toMatchObject({
     kind: "interaction-required",
   });

@@ -17,6 +17,8 @@ import type {
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import * as cleanup from "./media/cleanup.ts";
+import * as notifications from "./media/notifications.ts";
+import * as retention from "./media/retention.ts";
 
 const network = proxyActivities<MediaNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
@@ -315,48 +317,7 @@ export async function maintainMediaTorrentWorkflow(input: {
   return continueAsNew<typeof maintainMediaTorrentWorkflow>(input);
 }
 
-export async function retainMediaWorkflow(
-  input: MediaOperation,
-): Promise<MediaWorkflowResult> {
-  for (let poll = 0; poll < 100; poll++) {
-    const result = await network.evaluateMediaRetention(input);
-    if (result.status === "protected" || result.status === "obsolete")
-      return finish(input.operationId, {
-        status: result.status === "protected" ? "waiting" : "obsolete",
-        ...reason(result.reason),
-      });
-    if (result.status === "complete")
-      return finish(input.operationId, { status: "completed" });
-    if (result.status === "quarantine" || result.status === "purge") {
-      const removed = await executeRetentionEffect(input.operationId, result);
-      if (removed !== null) return removed;
-    }
-    const delay =
-      result.wakeAt === null
-        ? 60_000
-        : Math.max(1000, new Date(result.wakeAt).getTime() - Date.now());
-    await sleep(delay);
-  }
-  return continueAsNew<typeof retainMediaWorkflow>(input);
-}
-
-async function executeRetentionEffect(
-  operationId: string,
-  result: Awaited<ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>>,
-): Promise<MediaWorkflowResult | null> {
-  if (result.decisionId === null)
-    throw new Error("Removal requires a retention decision");
-  const operation = { operationId, decisionId: result.decisionId };
-  const removed =
-    result.status === "quarantine"
-      ? await files.quarantineMediaFiles(operation)
-      : await files.purgeMediaFiles(operation);
-  if (removed.status === "purged")
-    return finish(operationId, { status: "completed" });
-  return removed.status === "protected"
-    ? finish(operationId, { status: "waiting", ...reason(removed.reason) })
-    : null;
-}
+export const retainMediaWorkflow = retention.retainMediaWorkflow;
 
 export async function restoreMediaWorkflow(
   input: MediaOperation,
@@ -384,16 +345,8 @@ export async function restoreMediaWorkflow(
   });
 }
 
-export async function deliverMediaNotificationWorkflow(input: {
-  operationId: string;
-  notificationId: string;
-}): Promise<MediaWorkflowResult> {
-  const result = await writes.deliverMediaNotification(input);
-  return finish(input.operationId, {
-    status: result.status === "accepted" ? "completed" : "blocked",
-    ...(result.reason === null ? {} : { reason: result.reason }),
-  });
-}
+export const deliverMediaNotificationWorkflow =
+  notifications.deliverMediaNotificationWorkflow;
 
 export async function dispatchMediaOutboxWorkflow(): Promise<{
   dispatched: number;

@@ -6,9 +6,15 @@ import { queueOperation, serializable } from "./store.ts";
 import type { MediaItem } from "#generated/prisma/client.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { requireActiveRuntime } from "./runtime.ts";
+import {
+  lockRuntimeAuthority,
+  recordsAuthorized,
+} from "#infrastructure/handoff/authority.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { recordVerifiedPublication } from "./reconciliation/upgrade-cleanup.ts";
 import { publishRollback } from "./reconciliation/rollback-publication.ts";
+import { queuePublicationNotifications } from "./notifications/events.ts";
+import { queueSharedPublication } from "./notifications/shared.ts";
 
 type PublicationActivities = Pick<
   MediaNetworkActivities,
@@ -111,71 +117,6 @@ async function matchesIdentity(
         (external.imdb != null && identifiers.has(`imdb://${external.imdb}`));
 }
 
-async function queueAvailableNotifications(
-  context: MediaAutomationContext,
-  attemptId: string,
-): Promise<void> {
-  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: attemptId },
-  });
-  await serializable(context.db, async (tx) => {
-    for (const mediaId of attempt.mediaIds) {
-      const existing = await tx.applicationEvent.findFirst({
-        where: {
-          mediaId,
-          kind: "media_available",
-          payload: { path: ["attemptId"], equals: attempt.id },
-        },
-      });
-      if (existing !== null) continue;
-      const event = await tx.applicationEvent.create({
-        data: {
-          mediaId,
-          kind: "media_available",
-          payload: { attemptId: attempt.id },
-        },
-      });
-      const requests = await tx.mediaRequest.findMany({
-        where: { mediaId, ...effectiveRequestWhere },
-        include: { user: { include: { notificationPreference: true } } },
-      });
-      for (const request of requests) {
-        const preferences = request.user.notificationPreference;
-        if (preferences === null) continue;
-        const channels = notificationChannels(preferences);
-        for (const channel of channels) {
-          const notification = await tx.notificationDelivery.create({
-            data: {
-              eventId: event.id,
-              userId: request.userId,
-              channel,
-              state: "pending",
-              recoveryEpoch: attempt.recoveryEpoch,
-            },
-          });
-          await queueOperation(tx, {
-            key: `notification:${notification.id}`,
-            kind: "deliver_notification",
-            targetId: notification.id,
-            userId: request.userId,
-            payload: { notificationId: notification.id },
-          });
-        }
-      }
-    }
-  });
-}
-
-function notificationChannels(preferences: {
-  emailEnabled: boolean;
-  discordEnabled: boolean;
-}): string[] {
-  return [
-    preferences.emailEnabled ? "email" : null,
-    preferences.discordEnabled ? "discord" : null,
-  ].filter((channel) => channel !== null);
-}
-
 export function createPublicationActivities(
   context: MediaAutomationContext,
 ): PublicationActivities {
@@ -217,6 +158,10 @@ export function createPublicationActivities(
       });
       return publishCoverage(context, attempt.mediaIds, input.operationId, {
         epoch: attempt.recoveryEpoch,
+        notificationAttemptId: attempt.id,
+        requiredGenerations: z
+          .record(z.string(), z.number().int().nonnegative())
+          .parse(attempt.generations),
       });
     },
     async finalizeMediaAcquisition(input) {
@@ -248,6 +193,7 @@ async function publishCoverage(
   operationId: string,
   proof: {
     epoch: number;
+    notificationAttemptId?: string;
     receipt?: Pick<
       z.infer<typeof RestoreReceiptSchema>["restoreReceipt"],
       "mediaIds" | "assets"
@@ -267,6 +213,14 @@ async function publishCoverage(
   });
   if (coverages.length === 0)
     return { status: "blocked", reason: "published_asset_missing" };
+  if (
+    !(await recordsAuthorized(context.db, {
+      epoch: runtime.epoch,
+      mediaIds,
+      assetIds: coverages.map((item) => item.assetId),
+    }))
+  )
+    return { status: "blocked", reason: "record_ownership_unconfirmed" };
   if (
     proof.requiredGenerations !== undefined &&
     coverages.some(
@@ -342,6 +296,15 @@ async function publishCoverage(
   }
   await serializable(context.db, async (tx) => {
     await lockMedia(tx, mediaIds);
+    if (
+      !(await lockRuntimeAuthority(tx, runtime.epoch)) ||
+      !(await recordsAuthorized(tx, {
+        epoch: runtime.epoch,
+        mediaIds,
+        assetIds: coverages.map((item) => item.assetId),
+      }))
+    )
+      throw new Error("Publication ownership authority changed");
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
@@ -396,6 +359,12 @@ async function publishCoverage(
       verified.map((entry) => entry.assetId),
       runtime.epoch,
     );
+    if (proof.notificationAttemptId !== undefined) {
+      await queuePublicationNotifications(tx, proof.notificationAttemptId);
+      const shared = await context.sharedAnnouncements?.();
+      if (shared !== undefined)
+        await queueSharedPublication(tx, proof.notificationAttemptId, shared);
+    }
     if (proof.releaseAttemptId !== undefined)
       await tx.acquisitionReservation.deleteMany({
         where: { attemptId: proof.releaseAttemptId },
@@ -428,6 +397,14 @@ async function finalize(
   });
   await serializable(context.db, async (tx) => {
     await lockMedia(tx, attempt.mediaIds);
+    if (
+      !(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)) ||
+      !(await recordsAuthorized(tx, {
+        epoch: attempt.recoveryEpoch,
+        mediaIds: attempt.mediaIds,
+      }))
+    )
+      throw new Error("Finalization ownership authority changed");
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
@@ -478,5 +455,4 @@ async function finalize(
         });
     }
   });
-  await queueAvailableNotifications(context, attempt.id);
 }

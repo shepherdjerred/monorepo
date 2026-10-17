@@ -464,6 +464,10 @@ export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
 import * as media from "./media.ts";
+import * as mediaHandoff from "./media/handoff.ts";
+export const prepareMediaHandoffWorkflow =
+  mediaHandoff.prepareMediaHandoffWorkflow;
+export const applyMediaHandoffWorkflow = mediaHandoff.applyMediaHandoffWorkflow;
 import * as mediaMaintenance from "./media/maintenance.ts";
 export const preparePlexExclusionWorkflow =
   mediaMaintenance.preparePlexExclusionWorkflow;

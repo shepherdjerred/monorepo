@@ -24,7 +24,13 @@ async function rolledBackFixture() {
       episodeNumber: 2,
       externalIds: { seriesTmdb: 999 },
       availability: "importing",
-      intent: { create: { generation: 1, profileId: data.profile.id } },
+      intent: {
+        create: {
+          generation: 1,
+          profileId: data.profile.id,
+          automationEpoch: 0,
+        },
+      },
     },
   });
   const mediaIds = [data.media.id, second.id];
@@ -34,6 +40,7 @@ async function rolledBackFixture() {
       sizeBytes: 1000n,
       checksum: "abc",
       owned: true,
+      ownershipEpoch: 0,
       properties: {},
       state: "published",
       coverage: {

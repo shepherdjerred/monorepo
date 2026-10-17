@@ -3,6 +3,8 @@ import { CancelledFailure } from "@temporalio/common";
 import type {
   MediaNetworkActivities,
   MediaFileActivities,
+  MediaHandoffNetworkActivities,
+  MediaHandoffFileActivities,
 } from "@shepherdjerred/media/automation";
 import {
   createMediaNetworkRuntime,
@@ -11,7 +13,9 @@ import {
 
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
-async function network(): Promise<MediaNetworkActivities> {
+async function network(): Promise<
+  MediaNetworkActivities & MediaHandoffNetworkActivities
+> {
   networkRuntime ??= createMediaNetworkRuntime(Bun.env);
   try {
     const runtime = await networkRuntime;
@@ -21,7 +25,9 @@ async function network(): Promise<MediaNetworkActivities> {
     throw error;
   }
 }
-async function files(): Promise<MediaFileActivities> {
+async function files(): Promise<
+  MediaFileActivities & MediaHandoffFileActivities
+> {
   fileRuntime ??= createMediaFileRuntime(Bun.env, (phase) => {
     assertNotCancelled();
     heartbeat({ phase });
@@ -38,7 +44,9 @@ async function files(): Promise<MediaFileActivities> {
 
 /** Do not serialize Prisma queries, provider URLs, or credentials into Workflow history. */
 async function withNetwork<T>(
-  work: (activities: MediaNetworkActivities) => Promise<T>,
+  work: (
+    activities: MediaNetworkActivities & MediaHandoffNetworkActivities,
+  ) => Promise<T>,
 ): Promise<T> {
   try {
     assertNotCancelled();
@@ -54,7 +62,9 @@ async function withNetwork<T>(
   }
 }
 async function withFiles<T>(
-  work: (activities: MediaFileActivities) => Promise<T>,
+  work: (
+    activities: MediaFileActivities & MediaHandoffFileActivities,
+  ) => Promise<T>,
 ): Promise<T> {
   try {
     assertNotCancelled();
@@ -75,7 +85,12 @@ function assertNotCancelled(): void {
     throw new CancelledFailure("Media Activity cancelled");
 }
 
-export const mediaNetworkWorkerActivities: MediaNetworkActivities = {
+export const mediaNetworkWorkerActivities: MediaNetworkActivities &
+  MediaHandoffNetworkActivities = {
+  observeMediaHandoff: (input) =>
+    withNetwork((activities) => activities.observeMediaHandoff(input)),
+  mediaHandoffState: (input) =>
+    withNetwork((activities) => activities.mediaHandoffState(input)),
   refreshMediaCatalog: (input) =>
     withNetwork((activities) => activities.refreshMediaCatalog(input)),
   expandCatalogRequests: (input) =>
@@ -113,7 +128,12 @@ export const mediaNetworkWorkerActivities: MediaNetworkActivities = {
   finishMediaOperation: (input) =>
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
-export const mediaFileWorkerActivities: MediaFileActivities = {
+export const mediaFileWorkerActivities: MediaFileActivities &
+  MediaHandoffFileActivities = {
+  prepareMediaHandoffFiles: (input) =>
+    withFiles((activities) => activities.prepareMediaHandoffFiles(input)),
+  applyMediaHandoffFiles: (input) =>
+    withFiles((activities) => activities.applyMediaHandoffFiles(input)),
   cleanupSupersededMediaFile: (input) =>
     withFiles((activities) => activities.cleanupSupersededMediaFile(input)),
   inspectAndStageMedia: (input) =>

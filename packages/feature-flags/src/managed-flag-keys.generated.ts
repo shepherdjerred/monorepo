@@ -45,6 +45,9 @@ export const DELIVERY_FLAG_KEYS = [
 
 export type DeliveryFlagKey = (typeof DELIVERY_FLAG_KEYS)[number];
 export const MEDIA_BOOLEAN_FLAG_KEYS = [
+  "media-personal-discord-enabled",
+  "media-shared-announcements-enabled",
+  "media-shared-announcements-upgrades",
   "media-requests-enabled",
   "media-acquisition-enabled",
   "media-source-cleanup-enabled",
@@ -55,6 +58,7 @@ export const MEDIA_BOOLEAN_FLAG_KEYS = [
 export type MediaBooleanFlagKey = (typeof MEDIA_BOOLEAN_FLAG_KEYS)[number];
 
 export const MEDIA_VARIANT_FLAG_KEYS = [
+  "media-shared-discord-channel-id",
   "media-session-lifetime-ms",
   "media-email-sender",
   "media-permitted-movie-section-id",
