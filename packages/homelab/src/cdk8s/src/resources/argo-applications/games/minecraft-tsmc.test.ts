@@ -66,8 +66,13 @@ function tsmcValues(): Record<string, unknown> {
 test("The Storm stays available without changing other Minecraft servers", () => {
   expect(tsmcValues()["replicaCount"]).toBe(1);
   expect(tsmcValues()["serviceAnnotations"]).toMatchObject({
+    "mc-router.itzg.me/externalServerName": "ts-mc.net,mc.ts-mc.net",
+    "mc-router.itzg.me/defaultServer": "true",
     "mc-router.itzg.me/autoScaleDown": "false",
   });
+  expect(shuxinValues()["serviceAnnotations"]).not.toHaveProperty(
+    "mc-router.itzg.me/defaultServer",
+  );
   expect(shuxinValues()["serviceAnnotations"]).not.toHaveProperty(
     "mc-router.itzg.me/autoScaleDown",
   );
