@@ -305,6 +305,7 @@ export async function adoptReservation(
       tx,
       reservation.attempt,
       context.serverMachineId,
+      "resume_recorded_submission",
     );
     const rawAttributes = {
       id: reservation.attempt.release.id,

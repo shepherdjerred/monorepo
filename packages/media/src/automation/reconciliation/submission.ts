@@ -106,7 +106,8 @@ async function submissionIdentityAuthorized(
   } catch (error) {
     if (
       error instanceof MediaError &&
-      error.code === "acquisition_sponsor_changed"
+      (error.code === "acquisition_sponsor_changed" ||
+        error.code.startsWith("edition_"))
     )
       return false;
     throw error;

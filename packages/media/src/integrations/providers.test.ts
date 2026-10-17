@@ -128,7 +128,16 @@ describe("private family protocol", () => {
       const result = await provider.search({ query: "Fixture", kind: "anime" });
       expect(result[0]?.providerId).toBe(providerId);
       expect(result[0]).not.toHaveProperty("references");
-      expect(result[0]).not.toHaveProperty("editionEvidence");
+      expect(result[0]?.editionEvidence).toEqual([
+        {
+          text: "Fixture.S01E01.mkv",
+          provenance: { kind: "release-title", field: "file_name" },
+        },
+        {
+          text: "Fixture Episode 1",
+          provenance: { kind: "release-title", field: "release_title" },
+        },
+      ]);
       expect(result[0]?.title).toBe(
         providerId === "animez" ? "Fixture Episode 1" : "Fixture.S01E01.mkv",
       );

@@ -17,6 +17,16 @@ no specific edition; this does not prove a theatrical cut. Ordinary compatible
 quality upgrades retain their existing behavior. Named-edition requests and
 physical classification are not exposed by these commands.
 
+Default acquisition separately evaluates cut markers in every retained provider
+title, original selected torrent member, and current file's original provenance.
+Recognized named cuts and ambiguous or conflicting cut labels protect the default
+target, including when the current file fails its quality profile. Canonical
+title/alias matches prevent titles such as “The Final Cut” from becoming cut
+labels. Identity confirmation cannot override this check. Preview exposes the
+cut assessment separately from quality; final reservation, submission and file
+publication recheck it. Generated library filenames do not prove an unmarked
+original. Already committed effects retain their receipt recovery path.
+
 `MediaItem.availability` remains the public default-target projection and is
 mirrored transactionally into the default intent. An unrequested catalog item
 may have no intent; reading it never creates demand. Missing expected effect
@@ -419,9 +429,13 @@ Catalog adoption and refresh store a versioned `externalIds.catalogIdentity`
 snapshot with namespace-qualified TMDB/IMDb/TVDB references, original titles and
 alternative titles. Writes preserve unrelated Plex and owner-numbering keys.
 Conflicting existing identities protect the record. Current tracker adapters
-omit structured catalog references and edition evidence because their verified
-wire contracts do not establish those fields; synthetic identity fixtures do
-not establish upstream support.
+omit structured catalog references because their verified wire contracts do not
+establish those fields. Their actual title fields are retained as attributed
+edition text, including distinct secondary title fields; this is text evidence,
+not a structured provider edition claim. Synthetic identity fixtures do not
+establish upstream identifier support. Rediscovery with changed attribution
+cannot rewrite an existing candidate snapshot, even before it has an attempt.
+Historical primary-title-only sources keep their original bytes and hashes.
 
 The owner numbering API reads `GET /api/v1/admin/numbering/series/:id/groups`
 and `GET /api/v1/admin/numbering/series/:id/groups/:groupId`. Only a listed TMDB

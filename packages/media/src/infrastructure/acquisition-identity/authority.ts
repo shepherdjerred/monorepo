@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assertDefaultAcquisitionEdition } from "#infrastructure/editions/acquisition.ts";
 import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import {
@@ -67,6 +68,7 @@ export async function assertAttemptIdentity(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
   serverMachineId?: string,
+  purpose: "new_effect" | "resume_recorded_submission" = "new_effect",
 ): Promise<AcquisitionIdentitySnapshot | null> {
   if (attempt.edition !== "default")
     throw new MediaError(
@@ -74,6 +76,7 @@ export async function assertAttemptIdentity(
       "Only default acquisition is available",
       409,
     );
+  await assertAttemptCut(tx, attempt, purpose);
   if (attempt.identityEvidence === null) return null;
   const identity = AcquisitionIdentitySnapshotSchema.parse(
     attempt.identityEvidence,
@@ -139,4 +142,21 @@ export async function assertAttemptIdentity(
   if (identity.proof.kind === "automatic")
     await assertAutomaticIdentity(tx, release, current);
   return identity;
+}
+
+async function assertAttemptCut(
+  tx: Prisma.TransactionClient,
+  attempt: AcquisitionAttempt,
+  purpose: "new_effect" | "resume_recorded_submission",
+): Promise<void> {
+  if (attempt.state === "imported") return;
+  if (
+    purpose === "resume_recorded_submission" &&
+    (attempt.state === "submitting" || attempt.state === "submission_unknown")
+  )
+    return;
+  await assertDefaultAcquisitionEdition(tx, {
+    releaseId: attempt.releaseId,
+    mediaIds: attempt.mediaIds,
+  });
 }

@@ -15,6 +15,7 @@ import type { ProviderCandidate } from "#integrations/providers.ts";
 import { EpisodeNumberingSchema } from "#shared/numbering.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { persistCandidateSnapshot } from "./candidate-evidence.ts";
+import { previewDefaultEdition } from "#infrastructure/editions/acquisition.ts";
 import {
   prepareResolvedEvidence,
   collectResolvedEvidence,
@@ -204,6 +205,12 @@ async function storeCandidate(
     searchedForMediaId: target.identity.id,
   });
   if (stored === null) return null;
+  const edition = await previewDefaultEdition(context.db, {
+    releaseId: stored.id,
+    mediaIds:
+      stored.mediaIds.length === 0 ? [target.identity.id] : stored.mediaIds,
+  });
+  if (!edition.accepted) return null;
   const authoritative = chooseUpgrade({
     candidate: stored,
     ...policy,

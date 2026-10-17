@@ -27,6 +27,7 @@ import { recoverObsoletePublication } from "./recovery.ts";
 import { commitEmbedded } from "./embedded.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
 import { preparePublicationProof } from "./content-proof.ts";
+import { assertPlanEdition } from "./editions/acquisition.ts";
 import {
   assertMeasuredUpgrade,
   storedMeasuredRelease,
@@ -54,6 +55,7 @@ export async function promote(
       if (current.state === "imported") return "resume_committed";
       try {
         await assertAcquisition(tx, attemptId, context.serverMachineId);
+        await assertPlanEdition(tx, current, plan);
         for (const entry of plan) await assertProfile(tx, entry);
       } catch (error) {
         if (
@@ -70,6 +72,7 @@ export async function promote(
           if (!(await context.enabled.acquisition()))
             throw new FileGuardError("acquisition_disabled");
           await assertAcquisition(tx, attemptId, context.serverMachineId);
+          await assertPlanEdition(tx, current, plan);
           await assertProfile(tx, entry);
           await assertPrevious(tx, entry, current.recoveryEpoch);
           await assertMeasuredUpgrade(
