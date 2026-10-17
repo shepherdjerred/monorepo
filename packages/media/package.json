@@ -8,6 +8,8 @@
     "./automation": "./src/shared/automation.ts",
     "./automation/network": "./src/automation/network.ts",
     "./automation/files": "./src/automation/files/activities.ts",
+    "./plex-exclusion": "./src/shared/plex-exclusion.ts",
+    "./automation/plex-exclusion": "./src/automation/plex-exclusion/runtime.ts",
     "./integrations/*": "./src/integrations/*.ts",
     "./filesystem/*": "./src/filesystem/*.ts",
     "./domain/*": "./src/domain/*.ts"

@@ -18,7 +18,7 @@ export type SeedingPolicy =
     };
 
 export type TorrentObservation = {
-  ratio: number;
+  ratio: number | { kind: "infinite" };
   seedingSeconds: number;
   sizeBytes: number;
   complete: boolean;
@@ -46,10 +46,11 @@ export function evaluateSeeding(
   if (!torrent.complete) return hold("download_incomplete");
   if (torrent.dependenciesRemaining) return hold("source_in_use");
   if (
-    ![torrent.ratio, torrent.seedingSeconds, torrent.sizeBytes].every((value) =>
+    ![torrent.seedingSeconds, torrent.sizeBytes].every((value) =>
       Number.isFinite(value),
     ) ||
-    torrent.ratio < 0 ||
+    (typeof torrent.ratio === "number" &&
+      (!Number.isFinite(torrent.ratio) || torrent.ratio < 0)) ||
     torrent.seedingSeconds < 0 ||
     torrent.sizeBytes <= 0
   ) {
@@ -59,7 +60,8 @@ export function evaluateSeeding(
   if (policy.kind === "public") {
     const requiredSeconds = 7 * SECONDS_PER_DAY;
     const eligible =
-      torrent.ratio >= 1 || torrent.seedingSeconds >= requiredSeconds;
+      ratioSatisfied(torrent.ratio, 1) ||
+      torrent.seedingSeconds >= requiredSeconds;
     return {
       eligible,
       reason: eligible ? "obligations_satisfied" : "seeding_required",
@@ -80,7 +82,7 @@ function evaluatePrivateHd(
   if (ratio !== null && (!Number.isFinite(ratio) || ratio <= 0))
     throw new Error("Invalid PrivateHD ratio requirement");
   const eligible =
-    (ratio !== null && torrent.ratio >= ratio) ||
+    (ratio !== null && ratioSatisfied(torrent.ratio, ratio)) ||
     torrent.seedingSeconds >= requiredSeconds;
   return {
     eligible,
@@ -128,7 +130,7 @@ function evaluatePrivateSeeding(
   if (policy.ratio !== null) {
     if (!Number.isFinite(policy.ratio) || policy.ratio < 0)
       throw new Error("Invalid private ratio policy");
-    requirements.push(torrent.ratio >= policy.ratio);
+    requirements.push(ratioSatisfied(torrent.ratio, policy.ratio));
   }
   if (requiredSeconds !== null) {
     if (!Number.isFinite(requiredSeconds) || requiredSeconds < 0)
@@ -145,6 +147,13 @@ function evaluatePrivateSeeding(
     reason: eligible ? "obligations_satisfied" : "seeding_required",
     requiredSeconds,
   };
+}
+
+function ratioSatisfied(
+  ratio: TorrentObservation["ratio"],
+  required: number,
+): boolean {
+  return typeof ratio !== "number" || ratio >= required;
 }
 
 /** Existing PrivateHD rule: decimal GB, rounded up to complete minutes. */

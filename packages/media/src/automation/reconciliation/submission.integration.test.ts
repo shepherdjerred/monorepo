@@ -17,16 +17,50 @@ test("cancellation cannot commit between the final authority guard and the exter
   const entered = Promise.withResolvers<undefined>();
   const release = Promise.withResolvers<undefined>();
   let adds = 0;
-  const ctx = context(async (url) => {
+  let added: Record<string, unknown> | null = null;
+  const ctx = context(async (url, init) => {
     if (url.pathname.endsWith("/auth/login"))
       return new Response("Ok.", {
         headers: { "Set-Cookie": "SID=fixture; HttpOnly" },
       });
-    if (url.pathname.endsWith("/torrents/info")) return Response.json([]);
+    if (url.pathname.endsWith("/torrents/info"))
+      return Response.json(added === null ? [] : [added]);
     if (url.pathname.endsWith("/torrents/add")) {
       adds++;
       entered.resolve(undefined);
       await release.promise;
+      if (!(init.body instanceof URLSearchParams))
+        throw new TypeError("Expected form");
+      added = {
+        hash: f.source.infoHash,
+        infohash_v1: f.source.infoHash,
+        infohash_v2: "",
+        tags: init.body.get("tags"),
+        save_path: init.body.get("savepath"),
+        content_path: `${String(init.body.get("savepath"))}/fixture.mkv`,
+        name: "fixture",
+        state: "downloading",
+        category: "media",
+        progress: 0,
+        ratio: 0,
+        seeding_time: 0,
+        size: 1000,
+        ratio_limit: -1,
+        seeding_time_limit: -1,
+        inactive_seeding_time_limit: -1,
+        max_ratio: -1,
+        max_seeding_time: -1,
+        max_inactive_seeding_time: -1,
+        share_limit_action: "Stop",
+        auto_tmm: false,
+        force_start: false,
+      };
+      return Response.json({
+        added_torrent_ids: [f.source.infoHash],
+        success_count: 1,
+        failure_count: 0,
+        pending_count: 0,
+      });
     }
     return new Response("Ok.");
   });

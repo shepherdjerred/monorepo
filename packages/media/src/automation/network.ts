@@ -23,6 +23,11 @@ import { createMediaWorkflowStarter } from "./temporal-client.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
 import { cleanupSubtitleBrowser } from "./subtitle-browser-lifecycle.ts";
 import { IntegrationError } from "#integrations/http.ts";
+import {
+  requirePlexExclusionProof,
+  refreshPlexExclusionProofs,
+} from "./plex-exclusion/proof.ts";
+import { PlexMaintenanceClient } from "#integrations/plex-maintenance.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -79,8 +84,7 @@ const NetworkBootstrapSchema = CommonBootstrapSchema.extend({
   QBITTORRENT_URL: z.url(),
   QBITTORRENT_USERNAME: z.string().min(1),
   QBITTORRENT_PASSWORD: z.string().min(1),
-  QBITTORRENT_CATEGORY: z.string().min(1),
-  QBITTORRENT_DOWNLOAD_ROOT: z.string().min(1),
+  QBITTORRENT_DOWNLOAD_ROOT: z.literal("/downloads"),
   PUBLIC_ORIGIN: z.url(),
   TMDB_API_KEY: z.string().min(1).optional(),
   TMDB_TOKEN: z.string().min(1).optional(),
@@ -137,6 +141,21 @@ export async function createMediaNetworkContext(
   };
   return {
     db,
+    async refreshExclusionProofs() {
+      const [movie, series] = await Promise.all([
+        behavior.get("permittedMovieSectionId"),
+        behavior.get("permittedTvSectionId"),
+      ]);
+      await refreshPlexExclusionProofs(
+        db,
+        new PlexMaintenanceClient(plexConfig),
+        {
+          machineId: config.PLEX_SERVER_MACHINE_ID,
+          movieSectionId: movie.value,
+          tvSectionId: series.value,
+        },
+      );
+    },
     async permittedSections() {
       const [movie, series] = await Promise.all([
         behavior.get("permittedMovieSectionId"),
@@ -157,7 +176,7 @@ export async function createMediaNetworkContext(
       baseUrl: config.QBITTORRENT_URL,
       username: config.QBITTORRENT_USERNAME,
       password: config.QBITTORRENT_PASSWORD,
-      category: config.QBITTORRENT_CATEGORY,
+      category: "media",
     }),
     downloadRoot: config.QBITTORRENT_DOWNLOAD_ROOT,
     gates: createGates(config.ENVIRONMENT),
@@ -192,33 +211,7 @@ export async function createMediaFileRuntime(
     roots,
     checkpoint,
     enabled: createGates(config.ENVIRONMENT),
-    verifyPlexExclusion: async (root) => {
-      const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
-      const proof = await db.applicationEvent.findFirst({
-        where: {
-          kind: "plex_control_exclusion_verified",
-          payload: { path: ["libraryRoot"], equals: root.library },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      const evidence = z
-        .object({
-          controlRoot: z.string(),
-          recoveryEpoch: z.number().int(),
-          scannerExcluded: z.literal(true),
-        })
-        .safeParse(proof?.payload);
-      if (
-        !evidence.success ||
-        evidence.data.controlRoot !== root.control ||
-        evidence.data.recoveryEpoch !== runtime.recoveryEpoch
-      )
-        throw new Error(
-          "Plex control-directory exclusion has not been verified for this recovery epoch",
-        );
-    },
+    verifyPlexExclusion: (root) => requirePlexExclusionProof(db, root),
   });
   return { activities, close: () => db.$disconnect() };
 }

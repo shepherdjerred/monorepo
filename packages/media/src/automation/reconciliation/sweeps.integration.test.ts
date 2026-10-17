@@ -44,7 +44,14 @@ test("terminated coordinator after reservation commit is recovered once and adop
 
 test("running child, unknown Temporal history, and old recovery epochs cannot authorize takeover", async () => {
   const f = await fixture();
-  const ctx = context();
+  const ctx = context(async (url) => {
+    if (url.pathname.endsWith("/auth/login"))
+      return new Response("Ok.", {
+        headers: { "set-cookie": "QBT_SID_8080=fixture; Path=/" },
+      });
+    if (url.pathname.endsWith("/torrents/info")) return Response.json([]);
+    throw new Error("Unexpected recovery observation request");
+  });
   const reserved = await createAcquisitionActivities(ctx).reconcileMediaIntent(
     f.input,
   );

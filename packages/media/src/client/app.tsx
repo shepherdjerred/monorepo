@@ -15,6 +15,7 @@ import {
 } from "./lists.tsx";
 import { MediaPage } from "./media.tsx";
 import { NotificationCallback } from "./preferences.tsx";
+import { MigrationPage } from "./migration.tsx";
 
 export function App() {
   const session = useQuery({
@@ -81,8 +82,13 @@ function Shell({ user }: { user: MediaUser }) {
             <span aria-hidden="true">◉</span> Notifications
           </NavLink>
           {user.role === "owner" && (
-            <NavLink to="/admin">
+            <NavLink to="/admin" end>
               <span aria-hidden="true">⚙</span> Administration
+            </NavLink>
+          )}
+          {user.role === "owner" && (
+            <NavLink to="/admin/migration">
+              <span aria-hidden="true">⇥</span> Migration review
             </NavLink>
           )}
         </nav>
@@ -124,6 +130,16 @@ function Shell({ user }: { user: MediaUser }) {
         )}
         {signOut.error !== null && <ErrorNotice error={signOut.error} />}
         <Routes>
+          <Route
+            path="/admin/migration"
+            element={
+              user.role === "owner" ? (
+                <MigrationPage user={user} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
           <Route path="/" element={<Discover />} />
           <Route
             path="/catalog/:kind/:id"

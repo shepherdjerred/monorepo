@@ -1,0 +1,29 @@
+{
+  "observedOn": "2026-10-16",
+  "authorization": "GET-only probes using existing local service credentials inside each service process; no credentials or raw responses exported",
+  "seerr": {
+    "version": "3.5.0",
+    "method": "Production captureSeerr bundled for Node and executed through kubectl exec stdin against localhost",
+    "endpoints": [
+      "GET /api/v1/status",
+      "GET /api/v1/auth/me",
+      "GET /api/v1/request?take=100&skip=...&sort=added"
+    ],
+    "records": 243,
+    "complete": true,
+    "stable": true,
+    "requesterIdentityImported": false
+  },
+  "bazarr": {
+    "version": "1.6.2",
+    "method": "JSON Schema generated from production Zod input contracts; in-pod jsonschema validator emits counts and issue paths only",
+    "profiles": 2,
+    "moviePages": 2,
+    "seriesPages": 2,
+    "pageSize": 2,
+    "episodes": 6,
+    "schemaIssues": 0,
+    "perLanguageAudioOnlyIncludeObserved": true,
+    "completeInventoryClaimed": false
+  }
+}

@@ -1,9 +1,10 @@
 import snapshot from "#migration/fixtures/resolved-profiles.json";
 import cases from "#migration/fixtures/source-parse.json";
+import anime from "#migration/fixtures/source-parse-anime.json";
 import { observeSourceRegexes } from "./migration-regex-oracle.ts";
 
 const requests = new Map<string, { pattern: string; value: string }>();
-for (const test of cases.cases) {
+for (const test of [...cases.cases, ...anime.cases]) {
   const inventory = snapshot.inventories.find(
     (item) => item.source === test.source,
   );

@@ -1,20 +1,32 @@
 import nodePath from "node:path";
 import { z } from "zod";
-import { FileGuardError, FilePlanSchema, type FileContext } from "./types.ts";
+import {
+  FileGuardError,
+  FilePlanSchema,
+  type FileContext,
+  type FilePlanEntry,
+  type Transaction,
+} from "./types.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
 import { fileOperations } from "./file-operations.ts";
 import { quarantineInitialPublication } from "./rollback-initial.ts";
+import { preparePublicationProof } from "./content-proof.ts";
 
 /** Failed Plex verification restores the last playable version, preserving both files. */
 export async function rollbackPromotion(
-  context: FileContext,
+  initialContext: FileContext,
   attemptId: string,
   operationId: string,
 ): Promise<void> {
-  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+  const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
   const plan = FilePlanSchema.parse(attempt.filePlan);
+  const context = await preparePublicationProof(
+    initialContext,
+    plan,
+    operationId,
+  );
   await context.db.$transaction(
     async (tx) => {
       await lockMedia(tx, attempt.mediaIds);
@@ -120,8 +132,18 @@ export async function rollbackPromotion(
           data: {
             path: nodePath.join(roots.library, entry.libraryPath),
             state: "published",
+            supersededByAssetId: null,
+            rollbackExpiresAt: null,
             version: { increment: 1 },
           },
+        });
+        await tx.upgradeCleanup.updateMany({
+          where: {
+            assetId: previousAssetId,
+            successorAssetId: entry.assetId,
+            state: "pending",
+          },
+          data: { state: "cancelled", version: { increment: 1 } },
         });
         await tx.assetCoverage.updateMany({
           where: { assetId: previousAssetId, mediaId: { in: entry.mediaIds } },
@@ -129,16 +151,50 @@ export async function rollbackPromotion(
         });
         await tx.mediaItem.updateMany({
           where: { id: { in: entry.mediaIds } },
-          data: { availability: "available", version: { increment: 1 } },
+          data: { availability: "importing", version: { increment: 1 } },
         });
       }
-      await tx.acquisitionAttempt.update({
-        where: { id: attemptId },
-        data: { state: "rolled_back" },
+      await recordRollbackReceipt(tx, plan, {
+        attemptId,
+        recoveryEpoch: current.recoveryEpoch,
       });
     },
-    { timeout: 300_000, maxWait: 30_000 },
+    { timeout: 30_000, maxWait: 30_000 },
   );
   if (plan.some((entry) => entry.previousAssetId === null))
     throw new FileGuardError("new_publications_quarantined");
+}
+
+async function recordRollbackReceipt(
+  tx: Transaction,
+  plan: FilePlanEntry[],
+  input: { attemptId: string; recoveryEpoch: number },
+): Promise<void> {
+  const restored = plan.filter((entry) => entry.previousAssetId !== null);
+  const assets = await tx.libraryAsset.findMany({
+    where: {
+      id: {
+        in: restored.flatMap((entry) =>
+          entry.previousAssetId === null ? [] : [entry.previousAssetId],
+        ),
+      },
+    },
+    select: { id: true, version: true, checksum: true },
+  });
+  const receipt = {
+    recoveryEpoch: input.recoveryEpoch,
+    mediaIds: [...new Set(restored.flatMap((entry) => entry.mediaIds))],
+    assets: assets.map((asset) => ({
+      assetId: asset.id,
+      assetVersion: asset.version,
+      checksum: z.string().parse(asset.checksum),
+    })),
+  };
+  await tx.$executeRaw`UPDATE "AcquisitionAttempt" SET state = 'rolled_back', failure = COALESCE(failure, '{}'::jsonb) || ${JSON.stringify({ rollbackReceipt: receipt })}::jsonb, "updatedAt" = NOW() WHERE id = ${input.attemptId}`;
+  // Every first-publication effect is compensated in this same transaction.
+  // Mixed batches retain all reservations until Plex verifies their predecessors.
+  if (restored.length === 0)
+    await tx.acquisitionReservation.deleteMany({
+      where: { attemptId: input.attemptId },
+    });
 }

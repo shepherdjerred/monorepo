@@ -106,6 +106,42 @@ export class TmdbClient {
       ).episodes;
   }
 
+  async findExternal(
+    source: "tvdb_id" | "imdb_id",
+    id: string,
+    signal?: AbortSignal,
+  ) {
+    (source === "tvdb_id"
+      ? z.string().regex(/^[1-9]\d{0,10}$/u)
+      : z.string().regex(/^tt\d{1,12}$/u)
+    ).parse(id);
+    const result = z.object({
+      movie_results: z
+        .array(z.object({ id: z.number().int().positive() }))
+        .max(100),
+      tv_results: z
+        .array(z.object({ id: z.number().int().positive() }))
+        .max(100),
+    });
+    return result.parse(
+      await this.get(`find/${id}`, { external_source: source }, signal),
+    );
+  }
+
+  async seriesExternalIds(id: number, signal?: AbortSignal) {
+    z.number().int().positive().parse(id);
+    return z
+      .object({
+        id: z.number().int().positive(),
+        tvdb_id: z.number().int().positive().nullable(),
+        imdb_id: z
+          .string()
+          .regex(/^tt\d+$/u)
+          .nullable(),
+      })
+      .parse(await this.get(`tv/${String(id)}/external_ids`, {}, signal));
+  }
+
   private async get(
     path: string,
     params: Record<string, string>,

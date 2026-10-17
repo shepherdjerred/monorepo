@@ -1,0 +1,358 @@
+{
+  "provenance": {
+    "source": "sonarr",
+    "version": "4.0.20.3014",
+    "endpoint": "GET /api/v3/parse?title=<synthetic>",
+    "capturedAt": "2026-10-17T02:31:00.902Z"
+  },
+  "cases": [
+    {
+      "source": "sonarr",
+      "title": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 9,
+          "name": "HDTV-1080p",
+          "source": "television",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "releaseGroup": "SubsPlease",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 9,
+          "name": "HDTV-1080p",
+          "source": "television",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 2,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "releaseGroup": "SubsPlease",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345].mkv",
+      "quality": {
+        "quality": {
+          "id": 9,
+          "name": "HDTV-1080p",
+          "source": "television",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "releaseGroup": "Erai-raws",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 4,
+          "name": "HDTV-720p",
+          "source": "television",
+          "resolution": 720
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "releaseGroup": "SubsPlease",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 2,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 1,
+      "episodeNumbers": [1],
+      "absoluteEpisodeNumbers": [],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p",
+          "source": "bluray",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p",
+          "source": "bluray",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": [4]
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 8,
+          "name": "Japanese"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 0,
+          "name": "Unknown"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD].mkv",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "releaseGroup": "ExampleGroup",
+      "languages": [
+        {
+          "id": 1,
+          "name": "English"
+        }
+      ],
+      "seasonNumber": 0,
+      "episodeNumbers": [],
+      "absoluteEpisodeNumbers": [1],
+      "matchedFormatIds": []
+    }
+  ]
+}

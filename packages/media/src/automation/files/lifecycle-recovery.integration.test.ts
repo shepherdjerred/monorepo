@@ -160,6 +160,30 @@ test("mixed pack rollback restores old playback and quarantines first publicatio
       where: { id: second.id },
     }),
   ).toMatchObject({ availability: "wanted" });
+  expect(
+    await cluster.database.acquisitionReservation.count({
+      where: { attemptId: acquired.attempt.id },
+    }),
+  ).toBe(2);
+  expect(
+    await cluster.database.mediaItem.findUniqueOrThrow({
+      where: { id: f.media.id },
+    }),
+  ).toMatchObject({ availability: "importing" });
+  expect(
+    await cluster.database.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: acquired.attempt.id },
+    }),
+  ).toMatchObject({
+    state: "rolled_back",
+    failure: {
+      rollbackReceipt: {
+        recoveryEpoch: 0,
+        mediaIds: [f.media.id],
+        assets: [{ assetId: original.entry.assetId }],
+      },
+    },
+  });
 });
 
 test("concurrent sibling restore operations receive complete shared-file receipts without another filesystem move", async () => {

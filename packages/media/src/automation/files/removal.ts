@@ -9,6 +9,7 @@ import { assertRetention, assertRuntime, lockMedia } from "./guards.ts";
 import { removalPlan, assertOwnedAsset } from "./removal-plan.ts";
 import { fileOperations } from "./file-operations.ts";
 import { z } from "zod";
+import { prepareRemovalProof } from "./content-proof.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import {
   assertRestoredGenerations,
@@ -16,20 +17,23 @@ import {
 } from "./restore-receipt.ts";
 
 export async function removeFiles(
-  context: FileContext,
+  initialContext: FileContext,
   decisionId: string,
   operationId: string,
   purge: boolean,
 ): Promise<void> {
-  const enabled = purge ? context.enabled.purge : context.enabled.quarantine;
+  const enabled = purge
+    ? initialContext.enabled.purge
+    : initialContext.enabled.quarantine;
   if (!(await enabled())) throw new FileGuardError("retention_disabled");
-  const plan = await context.db.$transaction(async (tx) => {
+  const plan = await initialContext.db.$transaction(async (tx) => {
     const decision = await tx.retentionDecision.findUniqueOrThrow({
       where: { id: decisionId },
     });
     await lockMedia(tx, [decision.mediaId]);
-    return await removalPlan(tx, context, decisionId);
+    return await removalPlan(tx, initialContext, decisionId);
   });
+  const context = await prepareRemovalProof(initialContext, plan);
   const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
   await context.db.$transaction(
     async (tx) => {
@@ -117,7 +121,7 @@ export async function removeFiles(
         })),
       });
     },
-    { timeout: 300_000, maxWait: 30_000 },
+    { timeout: 30_000, maxWait: 30_000 },
   );
 }
 
@@ -140,13 +144,13 @@ async function removeEntry(
 }
 
 export async function restoreFiles(
-  context: FileContext,
+  initialContext: FileContext,
   mediaId: string,
   operationId: string,
 ): Promise<boolean> {
-  if (!(await context.enabled.acquisition()))
+  if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
-  const decision = await context.db.retentionDecision.findFirst({
+  const decision = await initialContext.db.retentionDecision.findFirst({
     where: {
       mediaId,
       state: { in: ["quarantined", "restored", "grace_period", "cancelled"] },
@@ -156,6 +160,7 @@ export async function restoreFiles(
   });
   if (decision === null) return false;
   const plan = RemovalPlanSchema.parse(decision.manifest).assets;
+  const context = await prepareRemovalProof(initialContext, plan);
   const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
   await context.db.$transaction(
     async (tx) => {
@@ -270,7 +275,7 @@ export async function restoreFiles(
         plan,
       });
     },
-    { timeout: 300_000, maxWait: 30_000 },
+    { timeout: 30_000, maxWait: 30_000 },
   );
   return true;
 }

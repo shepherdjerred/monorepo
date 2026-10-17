@@ -7,16 +7,22 @@ import type { MediaItem } from "#generated/prisma/client.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { requireActiveRuntime } from "./runtime.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { recordVerifiedPublication } from "./reconciliation/upgrade-cleanup.ts";
+import { publishRollback } from "./reconciliation/rollback-publication.ts";
 
 type PublicationActivities = Pick<
   MediaNetworkActivities,
-  "publishMediaToPlex" | "publishRestoredMedia" | "finalizeMediaAcquisition"
+  | "publishMediaToPlex"
+  | "publishRolledBackMedia"
+  | "publishRestoredMedia"
+  | "finalizeMediaAcquisition"
 >;
 
 const ScanCheckpointSchema = z.object({
   plexScan: z
     .object({
       sectionId: z.string(),
+      scope: z.string().optional(),
       offset: z.number().int().nonnegative(),
       matches: z.array(z.object({ path: z.string(), ratingKey: z.string() })),
     })
@@ -30,6 +36,7 @@ async function findPublished(
     kind: "movie" | "episode";
     paths: ReadonlySet<string>;
     operationId: string;
+    scope: string;
   },
 ): Promise<Map<string, PlexItem[]>> {
   const { sectionId, kind, paths, operationId } = input;
@@ -37,9 +44,8 @@ async function findPublished(
   const operation = await context.db.operation.findUniqueOrThrow({
     where: { id: operationId },
   });
-  const checkpoint = ScanCheckpointSchema.parse(
-    operation.result ?? {},
-  ).plexScan;
+  const stored = ScanCheckpointSchema.parse(operation.result ?? {}).plexScan;
+  const checkpoint = stored?.scope === input.scope ? stored : undefined;
   let offset = checkpoint?.sectionId === sectionId ? checkpoint.offset : 0;
   for (const match of checkpoint?.matches ?? [])
     collectPaths(found, await context.plex.metadata(match.ratingKey), paths);
@@ -61,7 +67,7 @@ async function findPublished(
     items.map((item) => ({ path, ratingKey: item.ratingKey })),
   );
   await context.db
-    .$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ plexScan: { sectionId, offset, matches } })}::jsonb, "updatedAt" = NOW() WHERE id = ${operationId}`;
+    .$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ plexScan: { sectionId, scope: input.scope, offset, matches } })}::jsonb, "updatedAt" = NOW() WHERE id = ${operationId}`;
   return found;
 }
 
@@ -174,6 +180,10 @@ export function createPublicationActivities(
   context: MediaAutomationContext,
 ): PublicationActivities {
   return {
+    publishRolledBackMedia: async (input) =>
+      publishRollback(context, input, (mediaIds, proof) =>
+        publishCoverage(context, mediaIds, input.operationId, proof),
+      ),
     async publishRestoredMedia(input) {
       const intent = await context.db.mediaIntent.findUniqueOrThrow({
         where: { mediaId: input.mediaId },
@@ -238,7 +248,12 @@ async function publishCoverage(
   operationId: string,
   proof: {
     epoch: number;
-    receipt?: z.infer<typeof RestoreReceiptSchema>["restoreReceipt"];
+    receipt?: Pick<
+      z.infer<typeof RestoreReceiptSchema>["restoreReceipt"],
+      "mediaIds" | "assets"
+    >;
+    requiredGenerations?: Readonly<Record<string, number>>;
+    releaseAttemptId?: string;
   },
 ): ReturnType<PublicationActivities["publishMediaToPlex"]> {
   const runtime = await requireActiveRuntime(context.db);
@@ -252,6 +267,16 @@ async function publishCoverage(
   });
   if (coverages.length === 0)
     return { status: "blocked", reason: "published_asset_missing" };
+  if (
+    proof.requiredGenerations !== undefined &&
+    coverages.some(
+      (coverage) =>
+        coverage.media.intent?.desiredPresence !== true ||
+        coverage.media.intent.generation !==
+          proof.requiredGenerations?.[coverage.mediaId],
+    )
+  )
+    return { status: "blocked", reason: "rollback_intent_changed" };
   if (
     receipt !== undefined &&
     (coverages.length !== receipt.mediaIds.length ||
@@ -283,6 +308,10 @@ async function publishCoverage(
     kind,
     paths: new Set(coverages.map((coverage) => coverage.asset.path)),
     operationId,
+    scope:
+      proof.releaseAttemptId === undefined
+        ? "publication"
+        : `rollback:${proof.releaseAttemptId}`,
   });
   if (
     items.size !==
@@ -312,8 +341,8 @@ async function publishCoverage(
     });
   }
   await serializable(context.db, async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     await lockMedia(tx, mediaIds);
+    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
     });
@@ -362,6 +391,15 @@ async function publishCoverage(
         },
       });
     }
+    await recordVerifiedPublication(
+      tx,
+      verified.map((entry) => entry.assetId),
+      runtime.epoch,
+    );
+    if (proof.releaseAttemptId !== undefined)
+      await tx.acquisitionReservation.deleteMany({
+        where: { attemptId: proof.releaseAttemptId },
+      });
   });
   return { status: "available", reason: null };
 }

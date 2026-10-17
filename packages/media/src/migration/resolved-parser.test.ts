@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import snapshot from "#migration/fixtures/resolved-profiles.json";
 import cases from "#migration/fixtures/source-parse.json";
-import { importResolvedProfiles } from "#migration/profile-import.ts";
+import { importResolvedProfiles } from "./profile-import.ts";
 import { parseResolvedScene } from "#domain/resolved-parser.ts";
 
 describe("verified source scene subset", () => {

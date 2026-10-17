@@ -4,6 +4,7 @@ import { queueOperation, serializable } from "#automation/store.ts";
 import { requireActiveRuntime } from "#automation/runtime.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { reconcileUnconfirmedSubmission } from "#automation/acquisition-submission.ts";
 
 const failedStatuses = new Set([
   "FAILED",
@@ -13,6 +14,14 @@ const failedStatuses = new Set([
 ]);
 
 export async function sweepDownloads(
+  context: MediaAutomationContext,
+  cursor: string | null,
+) {
+  if (cursor === null) await context.refreshExclusionProofs();
+  return await sweepDownloadAttempts(context, cursor);
+}
+
+async function sweepDownloadAttempts(
   context: MediaAutomationContext,
   cursor: string | null,
 ) {
@@ -28,9 +37,16 @@ export async function sweepDownloads(
   const runtime = await requireActiveRuntime(context.db);
   for (const attempt of attempts) {
     if (!runtime.active || attempt.recoveryEpoch !== runtime.epoch) continue;
-    if (attempt.torrent !== null)
+    await reconcileUnconfirmedSubmission(context, attempt.id);
+    const observedAttempt =
+      await context.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: attempt.id },
+        include: { torrent: true },
+      });
+    if (observedAttempt.torrent !== null)
       await observeDownload(context, {
-        ...attempt.torrent,
+        ...observedAttempt.torrent,
+        attemptId: attempt.id,
         operationId: attempt.operationId,
         sourcePath: path.join(context.downloadRoot, "media", attempt.id),
       });
@@ -113,6 +129,7 @@ async function observeDownload(
     owned: boolean;
     operationId: string;
     sourcePath: string | null;
+    attemptId: string;
   },
 ) {
   if (!torrent.owned || torrent.sourcePath === null) return;
@@ -126,6 +143,7 @@ async function observeDownload(
     return;
   }
   context.qbittorrent.validateOwnership(observed, {
+    attemptId: torrent.attemptId,
     operationId: torrent.operationId,
     savePath: torrent.sourcePath,
   });

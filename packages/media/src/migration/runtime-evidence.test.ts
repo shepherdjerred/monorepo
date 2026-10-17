@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import snapshot from "./fixtures/resolved-profiles.json";
-import cases from "./fixtures/source-parse.json";
-import observations from "./fixtures/regex-observations.json";
+import snapshot from "#migration/fixtures/resolved-profiles.json";
+import cases from "#migration/fixtures/source-parse.json";
+import observations from "#migration/fixtures/regex-observations.json";
 import { importResolvedProfiles } from "./profile-import.ts";
 import { prepareResolvedEvidence, regexRequests } from "./runtime-evidence.ts";
 import { evaluateRelease, chooseUpgrade } from "#domain/quality.ts";

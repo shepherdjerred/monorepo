@@ -63,6 +63,129 @@ model MediaUser {
   emailVerifications EmailVerification[]
   discordLinks DiscordLink[]
   plexIdentity PlexIdentityMapping?
+  migrationProposals AdoptionProposal[]
+  migrationBundleReviews MigrationBundleReview[]
+  plexExclusionRuns PlexExclusionRun[]
+}
+
+model MigrationCapture {
+  id String @id @default(uuid())
+  schemaVersion Int
+  sourceInstanceId String
+  sourceKind String
+  sourceVersion String
+  startedAt DateTime
+  completedAt DateTime
+  complete Boolean
+  stable Boolean
+  manifestHash String @unique
+  manifest Json
+  records MigrationRecord[]
+  proposals AdoptionProposal[]
+  bundles MigrationBundleCapture[]
+  createdAt DateTime @default(now())
+  @@index([sourceInstanceId, completedAt])
+}
+
+model MigrationRecord {
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  provenanceKey String
+  kind String
+  sourceId String
+  observationHash String
+  payload Json
+  @@id([captureId, provenanceKey])
+}
+
+model AdoptionProposal {
+  id String @id @default(uuid())
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  reportHash String
+  recoveryEpoch Int
+  runtimeVersion Int
+  status String
+  report Json
+  actorId String?
+  actor MediaUser? @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  approvedAt DateTime?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([captureId, reportHash, recoveryEpoch, runtimeVersion])
+}
+
+model MigrationBundle {
+  id String @id @default(uuid())
+  bundleHash String @unique
+  manifest Json
+  captures MigrationBundleCapture[]
+  reviews MigrationBundleReview[]
+  createdAt DateTime @default(now())
+}
+
+model MigrationBundleCapture {
+  bundleId String
+  bundle MigrationBundle @relation(fields: [bundleId], references: [id], onDelete: Restrict)
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  @@id([bundleId, captureId])
+}
+
+model MigrationBundleReview {
+  id String @id @default(uuid())
+  bundleId String
+  bundle MigrationBundle @relation(fields: [bundleId], references: [id], onDelete: Restrict)
+  reportHash String
+  report Json
+  selection Json
+  recoveryEpoch Int
+  runtimeVersion Int
+  status String
+  actorId String?
+  actor MediaUser? @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  approvedAt DateTime?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([bundleId, reportHash, recoveryEpoch, runtimeVersion])
+}
+
+model PlexExclusionRun {
+  id String @id @default(uuid())
+  ownerId String
+  owner MediaUser @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  state String
+  recoveryEpoch Int
+  runtimeVersion Int
+  planDigest String
+  plan Json
+  journal Json
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  proof PlexExclusionProof?
+}
+
+model PlexExclusionProof {
+  id String @id @default(uuid())
+  runId String @unique
+  run PlexExclusionRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  serverMachineId String
+  serverVersion String
+  sectionId String
+  sectionUuid String
+  libraryRoot String
+  controlRoot String
+  rootMarkerSha256 String
+  controlMarkerSha256 String
+  configurationDigest String
+  recoveryEpoch Int
+  evidence Json
+  verifiedAt DateTime
+  revokedAt DateTime?
+  @@index([serverMachineId, sectionId, libraryRoot, recoveryEpoch])
 }
 
 model PlexIdentityMapping {
@@ -355,6 +478,7 @@ model AcquisitionReservation {
 }
 
 model Torrent {
+  qbittorrentId String?
   id            String               @id @default(uuid())
   infoHash      String               @unique
   providerId    String
@@ -369,6 +493,10 @@ model Torrent {
 }
 
 model LibraryAsset {
+  plexPublishedAt DateTime?
+  supersededByAssetId String?
+  rollbackExpiresAt DateTime?
+  upgradeCleanups UpgradeCleanup[]
   id         String          @id @default(uuid())
   path       String          @unique
   sourcePath String?
@@ -383,6 +511,24 @@ model LibraryAsset {
   createdAt  DateTime        @default(now())
   coverage   AssetCoverage[]
   subtitles  SubtitleAsset[]
+  @@index([supersededByAssetId])
+}
+
+model UpgradeCleanup {
+  id String @id @default(uuid())
+  assetId String
+  asset LibraryAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  successorAssetId String
+  recoveryEpoch Int
+  expiresAt DateTime
+  state String @default("pending")
+  manifest Json?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([state, expiresAt])
+  @@unique([assetId, successorAssetId])
+  @@index([assetId])
 }
 
 model AssetCoverage {

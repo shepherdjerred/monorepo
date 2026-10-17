@@ -13213,6 +13213,4266 @@
       "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
       "value": "The.Office.S02E01.1080p.WEB-DL.H264-GROUP",
       "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BRiNK)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BTM)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CHX)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CTFOH)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(d3g)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DepraveD)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(EVO)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Feranki1980)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FGT)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FMD)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(GHOSTS)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HiQVE)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iNTENSO)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iVy)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(JFF)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KC)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MeGusta)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(nhanc3)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(OFT)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "Pahe(\\.(ph|in))?\\b",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PSA)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SasukeducK)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SHD)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ShieldBearer)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TBS)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TG)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(VIDEOHOLE)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(worldmkv)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(XLF)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Zero00)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ABBiE)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(AJP69)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(APEX|PAXA|PEXA|XEPA)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CasStudio)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CRFW)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CtrlHD)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FLUX)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HONE)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KiNGS)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Kitsune)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(monkee)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NOSiViD)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NTb)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NTG)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(QOQ)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RAWR)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RTN)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SiC)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(T6D)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TOMMY)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ViSUM)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(3cTWeB)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BLUTONiUM)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BTW)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BYNDR)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Chotab)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Cinefeel)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CiT)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CMRG)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Coo7)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(dB)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DEEP)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(END)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ETHiCS)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FC)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Flights)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(GNOME)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iJP)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iKA)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iT00NZ)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(JETIX)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KHN)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KiMCHI)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(LAZY)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MiU)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MZABI)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NPMS)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NYH)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(orbitron)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PHOENiX)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(playWEB)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PSiG)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ROCCaT)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RTFM)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SA89)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SbR)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SDCC)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SIGMA)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SMURF)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SPiRiT)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TEPES)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TVSmash)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(WELP)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(XEBEC|4KBEC|CEBEX)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Dooky)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DRACULA)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HHWEB)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NINJACENTRAL)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SLiGNOME)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SwAgLaNdEr)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(T4H)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ViSiON)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DEFLATE)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(INFLATE)$",
+      "value": "SubsPlease",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[SubsPlease] Astral Journey - 01 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[SubsPlease] Astral Journey - 01v2 (1080p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BRiNK)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BTM)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CHX)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CTFOH)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(d3g)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DepraveD)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(EVO)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Feranki1980)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FGT)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FMD)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(GHOSTS)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HiQVE)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iNTENSO)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iVy)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(JFF)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KC)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MeGusta)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(nhanc3)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(OFT)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "Pahe(\\.(ph|in))?\\b",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PSA)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SasukeducK)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SHD)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ShieldBearer)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TBS)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TG)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(VIDEOHOLE)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(worldmkv)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(XLF)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Zero00)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ABBiE)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(AJP69)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(APEX|PAXA|PEXA|XEPA)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CasStudio)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CRFW)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CtrlHD)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FLUX)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HONE)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KiNGS)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Kitsune)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(monkee)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NOSiViD)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NTb)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NTG)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(QOQ)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RAWR)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RTN)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SiC)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(T6D)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TOMMY)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ViSUM)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(3cTWeB)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BLUTONiUM)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BTW)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BYNDR)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Chotab)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Cinefeel)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CiT)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CMRG)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Coo7)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(dB)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DEEP)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(END)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ETHiCS)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FC)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Flights)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(GNOME)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iJP)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iKA)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iT00NZ)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(JETIX)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KHN)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KiMCHI)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(LAZY)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MiU)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MZABI)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NPMS)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NYH)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(orbitron)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PHOENiX)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(playWEB)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PSiG)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ROCCaT)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RTFM)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SA89)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SbR)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SDCC)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SIGMA)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SMURF)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SPiRiT)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TEPES)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TVSmash)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(WELP)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(XEBEC|4KBEC|CEBEX)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Dooky)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DRACULA)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HHWEB)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NINJACENTRAL)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SLiGNOME)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SwAgLaNdEr)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(T4H)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ViSiON)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DEFLATE)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(INFLATE)$",
+      "value": "Erai-raws",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[Erai-raws] Astral Journey - 01 [1080p][Multiple Subtitle][ABC12345]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[SubsPlease] Astral Journey - 01 (720p) [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BRiNK)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BTM)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CHX)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CTFOH)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(d3g)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DepraveD)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(EVO)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Feranki1980)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FGT)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FMD)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(GHOSTS)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HiQVE)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iNTENSO)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iVy)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(JFF)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KC)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MeGusta)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(nhanc3)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(OFT)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "Pahe(\\.(ph|in))?\\b",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PSA)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SasukeducK)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SHD)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ShieldBearer)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TBS)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TG)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(VIDEOHOLE)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(worldmkv)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(XLF)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Zero00)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ABBiE)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(AJP69)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(APEX|PAXA|PEXA|XEPA)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CasStudio)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CRFW)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CtrlHD)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FLUX)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HONE)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KiNGS)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Kitsune)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(monkee)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NOSiViD)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NTb)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NTG)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(QOQ)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RAWR)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RTN)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SiC)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(T6D)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TOMMY)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ViSUM)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(3cTWeB)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BLUTONiUM)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BTW)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(BYNDR)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Chotab)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Cinefeel)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CiT)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(CMRG)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Coo7)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(dB)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DEEP)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(END)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ETHiCS)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(FC)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Flights)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(GNOME)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iJP)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iKA)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(iT00NZ)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(JETIX)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KHN)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(KiMCHI)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(LAZY)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MiU)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(MZABI)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NPMS)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NYH)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(orbitron)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PHOENiX)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(playWEB)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(PSiG)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ROCCaT)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(RTFM)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SA89)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SbR)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SDCC)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SIGMA)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SMURF)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SPiRiT)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TEPES)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(TVSmash)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(WELP)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(XEBEC|4KBEC|CEBEX)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(Dooky)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DRACULA)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(HHWEB)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(NINJACENTRAL)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SLiGNOME)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(SwAgLaNdEr)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(T4H)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(ViSiON)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(DEFLATE)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(INFLATE)$",
+      "value": "ExampleGroup",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01v2 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey S01E01 [1080p WEB-DL H264 AAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x264 FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p BluRay x265 10bit FLAC] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Japanese] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC Dual Audio] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?!.*\\b((?<!HD[._ -]|HD)DVD|BDRip|720p|MKV|XviD|WMV|d3g|(BD)?REMUX|^(?=.*1080p)(?=.*HEVC)|[xh][-_. ]?26[45]|German.*[DM]L|((?<=\\d{4}).*German.*([DM]L)?)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2)\\b))\\b)(((?=.*\\b(Blu[-_. ]?ray|BD|HD[-_. ]?DVD)\\b)(?=.*\\b(AVC|HEVC|VC[-_. ]?1|MVC|MPEG[-_. ]?2|BDMV|ISO)\\b))|^((?=.*\\b(((?=.*\\b((.*_)?COMPLETE.*|Dis[ck])\\b)(?=.*(Blu[-_. ]?ray|HD[-_. ]?DVD)))|3D[-_. ]?BD|BR[-_. ]?DISK|Full[-_. ]?Blu[-_. ]?ray|^((?=.*((BD|UHD)[-_. ]?(25|50|66|100|ISO)))))))).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(BEN[ ._-]THE[ ._-]MEN)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?=.*?(\\b2160p\\b))(?=.*?(\\bBiTOR\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CREATiVE24)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Feranki1980)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(TeeWee)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "[xh][ ._-]?265|\\bHEVC(\\b|\\d)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "(?<=\\bS\\d+\\b).*\\b(Extras|Bonus|Extended[ ._-]Clip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\bAV1\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(Repack|Proper|Rerip)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((Repack|Proper)[2-3])\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)2)\\b|\\b(REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((repack|proper)3)\\b|\\b(REAL\\.REAL\\.(PROPER|REPACK))\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(amzn|amazon(hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(atvp|aptv|Apple TV\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(CC)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(CC)\\b|\\b(CC)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dcu|DC Universe)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((dscp|dcp|disc)\\b|dscv\\+?)[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(DSCP)\\b|\\b(DSCP)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(dsnp|dsny|disney|Disney\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hbo)(?![ ._-]max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HBO)\\b|\\b(HBO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hmax|hbom|hbo[ ._-]?max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(HMAX)\\b|\\b(HMAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(hulu)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(it|itunes)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(iT)\\b|\\b(iT)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b((?<!hbo[ ._-])max)\\b(?=[ ._-]web[ ._-]?(dl|rip)\\b)",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(MAX)\\b|\\b(MAX)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(nf|netflix(u?hd)?)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pcok|Peacock TV)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(pmtp|Paramount\\+)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(sho|showtime)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(SHO)\\b|\\b(SHO)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(stan)\\b[ ._-]web[ ._-]?(dl|rip)?\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\[(STAN)\\b|\\b(STAN)\\]",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(SYFY)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(dv|dovi|dolby[ .]?v(ision)?)\\b)(?!(?=.*\\b(WEB[ ._-]?(DL|Rip)?)\\b)(?!.*\\b(hulu)\\b))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?![+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HDR10(?=[+]|P(lus)?))",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(HLG)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "\\b(PQ)\\b",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
+    },
+    {
+      "pattern": "^(?=.*\\b(FraMeSToR|HQMUX|SiCFoI)\\b)(?=.*\\b(2160p)\\b)(?!.*\\b(HDR10([+]|P(lus)?)))(?!.*\\b(SDR)\\b).*",
+      "value": "[ExampleGroup] Astral Journey - 01 [1080p WEB-DL H264 AAC English] [1234ABCD]",
+      "result": "no_match"
     }
   ]
 }

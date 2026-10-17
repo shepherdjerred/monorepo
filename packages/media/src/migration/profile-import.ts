@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalOrder } from "./canonical-order.ts";
 import { createHash } from "node:crypto";
 import {
   ResolvedProfileSchema,
@@ -22,7 +23,7 @@ function canonical(value: Json): Json {
     ? value
     : Object.fromEntries(
         Object.entries(value)
-          .sort(([left], [right]) => left.localeCompare(right))
+          .sort(([left], [right]) => canonicalOrder(left, right))
           .map(([key, item]) => [key, canonical(item)]),
       );
 }

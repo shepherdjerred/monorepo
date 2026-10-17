@@ -11,6 +11,41 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const workflowsPath = new URL("media.ts", import.meta.url).pathname;
 
+test.each(["purged", "obsolete"] as const)(
+  "rollback cleanup remains scheduled through protection and bounded history rollover until %s",
+  async (terminalStatus) => {
+    let attempts = 0;
+    const checkpoints: string[] = [];
+    const result = await runScenario({
+      workflow: "cleanupMediaUpgradeWorkflow",
+      args: { operationId: "cleanup-operation", cleanupId: "cleanup" },
+      network: {
+        finishMediaOperation: async (input) => {
+          checkpoints.push(input.status);
+        },
+      },
+      files: {
+        cleanupSupersededMediaFile: async (input) => {
+          expect(input.cleanupId).toBe("cleanup");
+          attempts++;
+          return attempts <= 15
+            ? { status: "protected", reason: "rollback_window_incomplete" }
+            : { status: terminalStatus };
+        },
+      },
+    });
+    expect(result).toEqual({
+      status: terminalStatus === "purged" ? "completed" : "obsolete",
+    });
+    expect(attempts).toBe(16);
+    expect(checkpoints).toEqual([
+      ...Array.from({ length: 15 }, () => "reconciling"),
+      "completed",
+    ]);
+  },
+  60_000,
+);
+
 test("whole-series expansion continues with the durable cursor after each bounded history", async () => {
   const cursors: (string | null)[] = [];
   let completed = 0;
@@ -124,7 +159,13 @@ async function runScenario(input: {
   const networkWorker = await Worker.create({
     connection: environment.nativeConnection,
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-    activities: input.network,
+    activities: {
+      publishRolledBackMedia: async () => ({
+        status: "not_applicable",
+        reason: null,
+      }),
+      ...input.network,
+    },
   });
   const fileWorker =
     Object.keys(input.files).length === 0
@@ -295,10 +336,20 @@ test.each(["rolled_back", "protected"] as const)(
   "failed Plex verification reports the %s rollback outcome",
   async (rollbackStatus) => {
     const calls: string[] = [];
+    let rolledBack = false;
+    let restoredScans = 0;
     const result = await runScenario({
       workflow: "acquireMediaReleaseWorkflow",
       args: { operationId: "operation", attemptId: "attempt", submitted: true },
       network: {
+        publishRolledBackMedia: async () => {
+          if (!rolledBack) return { status: "not_applicable", reason: null };
+          restoredScans++;
+          return {
+            status: restoredScans === 1 ? "waiting" : "available",
+            reason: null,
+          };
+        },
         observeMediaAcquisition: async () => ({
           status: "ready",
           reason: null,
@@ -316,6 +367,7 @@ test.each(["rolled_back", "protected"] as const)(
         promoteMediaFiles: async () => ({ status: "published" }),
         rollbackMediaPromotion: async () => {
           calls.push("rollback");
+          rolledBack = true;
           return {
             status: rollbackStatus,
             reason: "new_publications_quarantined",
@@ -331,9 +383,33 @@ test.each(["rolled_back", "protected"] as const)(
           : "plex_identity_mismatch",
     });
     expect(calls).toEqual(["rollback", "finish:reconciling"]);
+    expect(restoredScans).toBe(2);
   },
   60_000,
 );
+
+test("retrying a rolled-back acquisition only verifies restored playback", async () => {
+  let scans = 0;
+  const result = await runScenario({
+    workflow: "acquireMediaReleaseWorkflow",
+    args: { operationId: "retry", attemptId: "rolled-back" },
+    files: {},
+    network: {
+      publishRolledBackMedia: async () => {
+        scans++;
+        return { status: scans === 1 ? "waiting" : "available", reason: null };
+      },
+      finishMediaOperation: async (input) => {
+        expect(input.status).toBe("reconciling");
+      },
+    },
+  });
+  expect(result).toEqual({
+    status: "blocked",
+    reason: "acquisition_rolled_back",
+  });
+  expect(scans).toBe(2);
+}, 60_000);
 
 test("restoration remains pending until Plex confirms the restored file", async () => {
   let scans = 0;

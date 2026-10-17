@@ -1,9 +1,10 @@
 import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
+import { queueUpgradeCleanupPage } from "./upgrade-cleanup.ts";
 
 const ProgressSchema = z.object({
-  section: z.number().int().min(0).max(2),
+  section: z.number().int().min(0).max(3),
   offset: z.number().int().nonnegative(),
   assetCursor: z.string().nullable().default(null),
 });
@@ -24,6 +25,8 @@ export async function sweepInventory(
   });
   if (scan.state === "completed") return { processed: 0, nextCursor: null };
   const progress = ProgressSchema.parse(scan.progress);
+  if (progress.section === 3)
+    return reconcileCleanup(context, scanId, progress.assetCursor);
   if (progress.section === 2)
     return reconcileInventory(context, scanId, progress.assetCursor);
   const permitted = await context.permittedSections();
@@ -141,14 +144,33 @@ async function reconcileInventory(
   await context.db.reconciliationScan.update({
     where: { id: scanId },
     data: {
-      progress: { section: 2, offset: 0, assetCursor: nextCursor },
-      ...(nextCursor === null
-        ? { state: "completed", completedAt: new Date() }
-        : {}),
+      progress: {
+        section: nextCursor === null ? 3 : 2,
+        offset: 0,
+        assetCursor: nextCursor,
+      },
     },
   });
   return {
     processed: assets.length,
-    nextCursor: nextCursor === null ? null : `assets:${nextCursor}`,
+    nextCursor: nextCursor === null ? "cleanup" : `assets:${nextCursor}`,
   };
+}
+
+async function reconcileCleanup(
+  context: MediaAutomationContext,
+  scanId: string,
+  cursor: string | null,
+) {
+  const result = await queueUpgradeCleanupPage(context, { scanId, cursor });
+  await context.db.reconciliationScan.update({
+    where: { id: scanId },
+    data: {
+      progress: { section: 3, offset: 0, assetCursor: result.nextCursor },
+      ...(result.nextCursor === null
+        ? { state: "completed", completedAt: new Date() }
+        : {}),
+    },
+  });
+  return result;
 }

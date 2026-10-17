@@ -5,18 +5,32 @@ import { PlexClient } from "./plex.ts";
 import { TmdbClient } from "./tmdb.ts";
 
 const hash = "a".repeat(40);
+const operationId = "00000000-0000-4000-8000-000000000001";
+const attemptId = "00000000-0000-4000-8000-000000000002";
+const savePath = `/downloads/media/${attemptId}`;
 const torrent = {
   hash,
+  infohash_v1: hash,
+  infohash_v2: "",
   name: "fixture",
   state: "stalledUP",
   category: "media",
-  tags: "media-attempt1",
+  tags: `media-${operationId},media-attempt-${attemptId}`,
   progress: 1,
   ratio: 1,
+  ratio_limit: -1,
+  seeding_time_limit: -1,
+  inactive_seeding_time_limit: -1,
+  max_ratio: -1,
+  max_seeding_time: -1,
+  max_inactive_seeding_time: -1,
+  share_limit_action: "Stop" as const,
+  auto_tmm: false,
+  force_start: false,
   seeding_time: 86_400,
   size: 10,
-  save_path: "/downloads",
-  content_path: "/downloads/fixture.mkv",
+  save_path: savePath,
+  content_path: `${savePath}/fixture.mkv`,
 };
 const login = () =>
   new Response("Ok.", {
@@ -43,13 +57,23 @@ describe("qBittorrent protocol", () => {
     );
     await client.login();
     expect(await client.listAll()).toHaveLength(2);
-    const ownership = { operationId: "attempt1", savePath: "/downloads/" };
-    expect(() => client.validateOwnership(torrent, ownership)).not.toThrow();
+    const ownership = { operationId, attemptId, savePath: `${savePath}/` };
+    const observed = {
+      ...torrent,
+      ratio: { kind: "finite" as const, value: 1 },
+    };
+    expect(() => client.validateOwnership(observed, ownership)).not.toThrow();
     for (const changed of [
-      { ...torrent, category: "legacy" },
-      { ...torrent, tags: "media-attempt10" },
-      { ...torrent, save_path: "/downloads/other" },
-      { ...torrent, save_path: "downloads" },
+      { ...observed, category: "legacy" },
+      { ...observed, tags: "media-attempt10" },
+      { ...observed, save_path: "/downloads/other" },
+      { ...observed, save_path: "downloads" },
+      { ...observed, save_path: `/downloads/other/../media/${attemptId}` },
+      { ...observed, auto_tmm: true },
+      {
+        ...observed,
+        tags: `${torrent.tags},media-00000000-0000-4000-8000-000000000003`,
+      },
     ])
       expect(() => client.validateOwnership(changed, ownership)).toThrow(
         "conflict",
@@ -79,7 +103,9 @@ describe("qBittorrent protocol", () => {
     await client.login();
     await expect(
       client.submit({
-        operationId: "attempt1",
+        operationId,
+        attemptId,
+        savePath,
         hash,
         magnet: `magnet:?xt=urn:btih:${hash}`,
       }),
@@ -87,10 +113,11 @@ describe("qBittorrent protocol", () => {
     expect(paths).toEqual(["/api/v2/auth/login", "/api/v2/torrents/info"]);
     await expect(
       client.submit({
-        operationId: "attempt1",
+        operationId,
+        attemptId: "00000000-0000-4000-8000-000000000003",
         hash,
         magnet: `magnet:?xt=urn:btih:${hash}`,
-        savePath: "/downloads/other",
+        savePath: "/downloads/media/00000000-0000-4000-8000-000000000003",
       }),
     ).rejects.toMatchObject({ kind: "conflict" });
   });
@@ -113,7 +140,13 @@ describe("qBittorrent protocol", () => {
     );
     await client.login();
     await expect(
-      client.remove({ operationId: "attempt1", hash, deleteFiles: true }),
+      client.remove({
+        operationId,
+        attemptId,
+        savePath,
+        hash,
+        deleteFiles: true,
+      }),
     ).rejects.toMatchObject({ kind: "conflict" });
     expect(paths.some((path) => path.endsWith("delete"))).toBe(false);
   });
@@ -135,8 +168,11 @@ describe("qBittorrent protocol", () => {
         if (!(body instanceof URLSearchParams))
           throw new TypeError("Expected form body");
         expect(body.get("ratioLimit")).toBe("-1");
-        expect(body.get("tags")).toBe("media-attempt1");
-        expect(body.get("savepath")).toBe("/downloads/media/attempt1");
+        expect(body.get("tags")).toBe(
+          `media-${operationId},media-attempt-${attemptId}`,
+        );
+        expect(body.get("savepath")).toBe(savePath);
+        expect(body.get("shareLimitAction")).toBe("Stop");
         throw new Error(
           "Network connection dropped after server accepted request with secret detail",
         );
@@ -145,10 +181,11 @@ describe("qBittorrent protocol", () => {
     await client.login();
     await expect(
       client.submit({
-        operationId: "attempt1",
+        operationId,
+        attemptId,
         hash,
         magnet: `magnet:?xt=urn:btih:${hash}`,
-        savePath: "/downloads/media/attempt1",
+        savePath,
       }),
     ).rejects.toMatchObject({
       kind: "outcome-unknown",
@@ -172,7 +209,9 @@ describe("qBittorrent protocol", () => {
     });
     await expect(
       client.submit({
-        operationId: "attempt1",
+        operationId,
+        attemptId,
+        savePath,
         hash,
         magnet: `magnet:?xt=urn:btih:${"b".repeat(40)}`,
       }),

@@ -5,12 +5,28 @@ import { promote } from "./publication.ts";
 import { removeFiles, restoreFiles } from "./removal.ts";
 import { installSubtitle } from "./subtitles.ts";
 import { rollbackPromotion } from "./rollback.ts";
+import { cleanupUpgrade } from "./upgrade-cleanup.ts";
 
 /** Callbacks heartbeat and throw on Activity cancellation; only IDs leave the worker. */
 export function createMediaFileActivities(
   context: FileContext,
 ): MediaFileActivities {
   return {
+    cleanupSupersededMediaFile: async ({ cleanupId }) => {
+      try {
+        await cleanupUpgrade(context, cleanupId);
+        return { status: "purged" };
+      } catch (error) {
+        if (
+          error instanceof FileGuardError &&
+          error.reason === "cleanup_cancelled"
+        )
+          return { status: "obsolete", reason: error.reason };
+        if (error instanceof FileGuardError)
+          return { status: "protected", reason: error.reason };
+        throw error;
+      }
+    },
     rollbackMediaPromotion: async ({ attemptId, operationId }) => {
       try {
         await rollbackPromotion(context, attemptId, operationId);

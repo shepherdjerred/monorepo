@@ -14,22 +14,25 @@ import { fileOperations } from "./file-operations.ts";
 import { recoverObsoletePublication } from "./recovery.ts";
 import { commitEmbedded } from "./embedded.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
+import { preparePublicationProof } from "./content-proof.ts";
 import {
   assertMeasuredUpgrade,
   storedMeasuredRelease,
 } from "./quality-guard.ts";
 
 export async function promote(
-  context: FileContext,
+  initialContext: FileContext,
   attemptId: string,
 ): Promise<void> {
-  if (!(await context.enabled.acquisition()))
+  if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
-  if (await resumeCommittedPublication({ context, attemptId })) return;
-  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+  if (await resumeCommittedPublication({ context: initialContext, attemptId }))
+    return;
+  const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
   const plan = FilePlanSchema.parse(attempt.filePlan);
+  const context = await preparePublicationProof(initialContext, plan);
   const result = await context.db.$transaction(
     async (tx) => {
       await lockMedia(tx, attempt.mediaIds);
@@ -95,7 +98,7 @@ export async function promote(
       });
       return null;
     },
-    { timeout: 300_000, maxWait: 30_000 },
+    { timeout: 30_000, maxWait: 30_000 },
   );
   if (result === "resume_committed") {
     if (!(await resumeCommittedPublication({ context, attemptId })))
@@ -186,6 +189,7 @@ async function commitPublication(input: {
       data: {
         path: nodePath.join(roots.control, "rollback", entry.operationId),
         state: "superseded",
+        supersededByAssetId: entry.assetId,
         version: { increment: 1 },
       },
     });

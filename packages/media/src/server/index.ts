@@ -20,6 +20,9 @@ import { PrismaNotificationApplication } from "#infrastructure/notification-serv
 import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
 import { PrismaPlexAdministration } from "#infrastructure/plex-admin.ts";
 import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.ts";
+import { PrismaMigrationAdministration } from "#migration/persistence.ts";
+import { MigrationCatalogDiscovery } from "#migration/catalog-discovery.ts";
+import { PrismaPlexExclusionAdministration } from "#infrastructure/plex-exclusion-service.ts";
 import { DiscordOAuth } from "#infrastructure/discord-auth.ts";
 import { createMediaWorkflowStarter } from "#automation/temporal-client.ts";
 import { createOutboxActivities } from "#automation/store.ts";
@@ -93,6 +96,8 @@ const auth = new MediaAuth(
     sessionLifetimeMs: sessionLifetime.value,
   },
 );
+const tmdbClient = new TmdbClient(tmdbCredential);
+const catalogApplication = new TmdbCatalogApplication(database, tmdbClient);
 const app = createMediaApp({
   auth,
   media: new PrismaMediaApplication(database, {
@@ -102,6 +107,14 @@ const app = createMediaApp({
   notifications: new PrismaNotificationApplication(database, cipher, discord),
   admin: new PrismaAdminApplication(database, cipher),
   numberingAdmin: new PrismaNumberingAdministration(database),
+  migrationAdmin: new PrismaMigrationAdministration(
+    database,
+    new MigrationCatalogDiscovery(database, tmdbClient, catalogApplication),
+  ),
+  plexExclusionAdmin: new PrismaPlexExclusionAdministration(
+    database,
+    temporal.describe,
+  ),
   plexAdmin: new PrismaPlexAdministration(
     database,
     cipher,
@@ -111,7 +124,7 @@ const app = createMediaApp({
       serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
     },
   ),
-  catalog: new TmdbCatalogApplication(database, new TmdbClient(tmdbCredential)),
+  catalog: catalogApplication,
   publicOrigin: bootstrap.PUBLIC_ORIGIN,
   afterWrite: () => {
     dispatching ??= dispatchCommittedCommands();

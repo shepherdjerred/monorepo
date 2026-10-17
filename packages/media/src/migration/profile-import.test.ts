@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import snapshot from "./fixtures/resolved-profiles.json";
-import sourceCases from "./fixtures/source-parse.json";
-import regexEvidence from "./fixtures/regex-observations.json";
+import snapshot from "#migration/fixtures/resolved-profiles.json";
+import sourceCases from "#migration/fixtures/source-parse.json";
+import regexEvidence from "#migration/fixtures/regex-observations.json";
 import {
   importResolvedProfiles,
   ProfileSnapshotSchema,
