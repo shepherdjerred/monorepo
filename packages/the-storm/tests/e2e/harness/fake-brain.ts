@@ -2,6 +2,7 @@ import { z } from "zod";
 import { rwfTestSettings } from "./rwf-settings.ts";
 import { BeginnerFlags } from "./beginner-flags.ts";
 import { moderate } from "./brain/moderation.ts";
+import { expansionEvaluation } from "./brain/flags.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
@@ -42,7 +43,7 @@ export type FakeBrain = {
   stop: () => Promise<void>;
 };
 
-export type FakeBrainMode = "ok" | "down";
+export type FakeBrainMode = "ok" | "down" | "screening-disabled";
 
 type BrainState = {
   mode: FakeBrainMode;
@@ -147,7 +148,7 @@ async function control(request: Request, state: BrainState): Promise<Response> {
     return new Response("not found\n", { status: 404 });
   }
   const seen = z
-    .object({ mode: z.enum(["ok", "down"]) })
+    .object({ mode: z.enum(["ok", "down", "screening-disabled"]) })
     .safeParse(await request.json().catch(() => null));
   if (!seen.success) {
     return new Response("invalid request\n", { status: 400 });
@@ -298,37 +299,6 @@ export async function setBrainMode(
   }
 }
 
-function expansionEvaluation(
-  body: unknown,
-  request: Request,
-): Response | undefined {
-  const expansion = z
-    .strictObject({
-      namespace_key: z.literal("the-storm"),
-      flag_key: z.enum([
-        "the-storm-staff-tools-enabled",
-        "the-storm-identity-enabled",
-        "the-storm-letters-enabled",
-        "the-storm-ip-enforcement-enabled",
-        "the-storm-analytics-enabled",
-        "the-storm-content-safety-enabled",
-        "the-storm-anticheat-corrections-enabled",
-      ]),
-      entity_id: z.uuid(),
-      context: z.strictObject({}),
-    })
-    .safeParse(body);
-  return expansion.success &&
-    request.headers.get("x-flipt-environment") === "prod"
-    ? Response.json({
-        enabled: ![
-          "the-storm-ip-enforcement-enabled",
-          "the-storm-anticheat-corrections-enabled",
-        ].includes(expansion.data.flag_key),
-      })
-    : undefined;
-}
-
 /** Bot chat is one server-wide flag, evaluated with the rwf world as context. */
 const BotChatFlagSchema = z.strictObject({
   namespace_key: z.literal("the-storm"),
@@ -360,7 +330,11 @@ async function evaluateFlag(
   state: BrainState,
 ): Promise<Response> {
   const body: unknown = await request.json();
-  const expanded = expansionEvaluation(body, request);
+  const expanded = expansionEvaluation(
+    body,
+    request,
+    state.mode !== "screening-disabled",
+  );
   if (expanded !== undefined) return expanded;
   const prod = request.headers.get("x-flipt-environment") === "prod";
   const companion = z

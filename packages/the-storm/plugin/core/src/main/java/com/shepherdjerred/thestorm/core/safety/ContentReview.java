@@ -11,7 +11,8 @@ public record ContentReview(
     String model,
     long costMicros,
     int muteSeconds,
-    java.util.Map<String, Double> scores) {
+    java.util.Map<String, Double> scores,
+    boolean screened) {
   public ContentReview {
     scores = java.util.Map.copyOf(scores);
     if (scores.values().stream()
@@ -31,5 +32,10 @@ public record ContentReview(
 
   public boolean allowed() {
     return decision.equals("allow");
+  }
+
+  public ContentReview withoutScreening() {
+    return new ContentReview(
+        decision, category, confidence, reason, model, costMicros, muteSeconds, scores, false);
   }
 }

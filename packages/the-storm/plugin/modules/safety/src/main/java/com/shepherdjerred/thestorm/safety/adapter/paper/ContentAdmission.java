@@ -59,7 +59,13 @@ final class ContentAdmission {
                   else if (!review.allowed()) {
                     outcome = review.decision();
                     reject(player, submission, review);
-                  } else outcome = apply(submission.id(), publish);
+                  } else
+                    outcome =
+                        apply(
+                            submission.id(),
+                            () ->
+                                com.shepherdjerred.thestorm.core.safety.ContentPublication.deliver(
+                                    review.screened(), publish));
                   record(submission.id(), outcome);
                 },
                 context.scheduler().mainThread());

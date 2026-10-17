@@ -24,7 +24,8 @@ final class SafetyServiceTest {
       new SafetyConfig("http://localhost:3000", "TEST", 1000, 30, 32);
 
   private static ContentReview allow() {
-    return new ContentReview("allow", "none", 1, "Allowed.", "fixture", 0, 0, java.util.Map.of());
+    return new ContentReview(
+        "allow", "none", 1, "Allowed.", "fixture", 0, 0, java.util.Map.of(), true);
   }
 
   private static ContentSubmission submission(String text) {
@@ -173,7 +174,8 @@ final class SafetyServiceTest {
                           "fixture",
                           0,
                           0,
-                          java.util.Map.of())),
+                          java.util.Map.of(),
+                          true)),
               new SafetyService.Policy(
                   InstantSource.fixed(NOW),
                   CONFIG,
@@ -207,7 +209,8 @@ final class SafetyServiceTest {
                           "fixture",
                           0,
                           0,
-                          java.util.Map.of())),
+                          java.util.Map.of(),
+                          true)),
               new SafetyService.Policy(
                   InstantSource.fixed(NOW),
                   CONFIG,
@@ -236,7 +239,9 @@ final class SafetyServiceTest {
                   InstantSource.fixed(NOW),
                   CONFIG,
                   player -> CompletableFuture.completedFuture(false)));
-      assertThat(service.check(submission("hello")).join().allowed()).isTrue();
+      var review = service.check(submission("hello")).join();
+      assertThat(review.allowed()).isTrue();
+      assertThat(review.screened()).isFalse();
       assertThat(store.search("Alice", "hello", 100).join()).contains("hello");
     }
   }

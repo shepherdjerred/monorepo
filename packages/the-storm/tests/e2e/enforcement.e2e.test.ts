@@ -4,7 +4,11 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import type { Bot } from "mineflayer";
 import { connectBot, disconnectBot, waitForMessage } from "./harness/bot.ts";
 import { waitForDecision } from "./harness/decisions.ts";
-import { startFakeBrain, type FakeBrain } from "./harness/fake-brain.ts";
+import {
+  startFakeBrain,
+  setBrainMode,
+  type FakeBrain,
+} from "./harness/fake-brain.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import {
@@ -131,5 +135,38 @@ describe.skipIf(external)("active enforcement", () => {
     );
     expect(second[0]).not.toContain("shadow");
     expect(Number(second[1] ?? "0")).toBeGreaterThan(Number(first[1] ?? "0"));
+  });
+
+  test("disabled screening preserves legacy burst enforcement", async () => {
+    if (brain === undefined || rcon === undefined)
+      throw new Error("Active fixture is missing");
+    const legacyBot = await connectBot({
+      host: info.host,
+      port: info.gamePort,
+      username: username("l"),
+    });
+    try {
+      await rcon.command(`op ${legacyBot.username}`);
+      await setBrainMode(brain.port, "screening-disabled");
+      const decision = waitForDecision(
+        legacyBot,
+        new RegExp(
+          String.raw`#(\d+) ${legacyBot.username} spam mute .*prefilter rung=0.*rung 0: rate`,
+        ),
+      );
+      for (let i = 1; i <= 6; i += 1)
+        legacyBot.chat(`legacy burst ${i.toString()}`);
+      const matched = await decision;
+      expect(matched[0]).not.toContain("shadow");
+      const denied = waitForMessage(
+        legacyBot,
+        /You are muted or chat state is still loading/,
+      );
+      legacyBot.chat("the legacy mute is enforced");
+      await denied;
+    } finally {
+      await setBrainMode(brain.port, "ok");
+      await disconnectBot(legacyBot);
+    }
   });
 });

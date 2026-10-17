@@ -5,9 +5,11 @@ import com.shepherdjerred.thestorm.agent.adapter.http.HttpBrainClient;
 import com.shepherdjerred.thestorm.agent.adapter.paper.AgentCommands;
 import com.shepherdjerred.thestorm.agent.adapter.paper.AgentJoinListener;
 import com.shepherdjerred.thestorm.agent.adapter.paper.AgentRuntime;
+import com.shepherdjerred.thestorm.agent.adapter.paper.PaperPlayerContact;
 import com.shepherdjerred.thestorm.agent.app.AgentConfig;
 import com.shepherdjerred.thestorm.agent.app.AgentServices;
 import com.shepherdjerred.thestorm.agent.app.CaseFlow;
+import com.shepherdjerred.thestorm.agent.app.ChatFlow;
 import com.shepherdjerred.thestorm.agent.app.DecisionLog;
 import com.shepherdjerred.thestorm.agent.app.EndorseFlow;
 import com.shepherdjerred.thestorm.agent.app.FaqFlow;
@@ -37,8 +39,8 @@ import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Ticket triage and human review. Safety owns publication and limited content penalties; Global
- * chat supplies ticket context only. Every model and human review decision is retained.
+ * Ticket triage and human review. Safety owns screened publications and limited content penalties;
+ * unscreened Global lines keep the existing chat enforcement. Every decision is retained.
  */
 public final class AgentModule implements StormModule {
 
@@ -96,6 +98,12 @@ public final class AgentModule implements StormModule {
                                         .record(submission, review),
                                 context.scheduler().mainThread())));
     var recents = new RecentChat();
+    var chatFlow =
+        new ChatFlow(
+            recents,
+            chat,
+            new PaperPlayerContact(context.plugin().getServer(), context.scheduler()),
+            services);
     var triageFlow = new TriageFlow(recents, moderation, services);
     var faqFlow = new FaqFlow(new FaqMemory(), services);
     var sweep = new SweepFlow(triageFlow, services);
@@ -106,8 +114,9 @@ public final class AgentModule implements StormModule {
           listen(context, faqFlow.onEvent(event), "agent: answering a ticket failed");
         };
     tickets.addListener(ticketListener);
-    // Publication and penalties belong to safety for every surface; Global is context only.
-    Subscription subscription = lines.subscribe(recents::record);
+    Subscription subscription =
+        lines.subscribe(
+            line -> listen(context, chatFlow.onChatLine(line), "agent: watching chat failed"));
     Runnable sweepOnce =
         () -> {
           var _ =

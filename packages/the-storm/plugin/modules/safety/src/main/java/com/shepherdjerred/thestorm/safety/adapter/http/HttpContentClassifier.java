@@ -44,7 +44,8 @@ public final class HttpContentClassifier implements ContentClassifier, AutoClose
     for (var category :
         com.shepherdjerred.thestorm.safety.adapter.contract.SharedContracts.strings(
             contract, "categories"))
-      new ContentReview("allow", category, 1, "contract", "contract", 0, 0, java.util.Map.of());
+      new ContentReview(
+          "allow", category, 1, "contract", "contract", 0, 0, java.util.Map.of(), true);
     this.uri = URI.create(url.replaceAll("/+$", "") + "/v1/moderate");
     if (uri.getHost() == null
         || uri.getUserInfo() != null
@@ -78,7 +79,7 @@ public final class HttpContentClassifier implements ContentClassifier, AutoClose
     ContentReview review() {
       if (version != 1) throw new IllegalArgumentException("Unknown content contract version");
       return new ContentReview(
-          decision, category, confidence, reason, model, costMicros, 0, scores);
+          decision, category, confidence, reason, model, costMicros, 0, scores, true);
     }
   }
 

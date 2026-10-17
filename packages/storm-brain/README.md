@@ -5,8 +5,9 @@ holds player publications while `POST /v1/moderate` checks them with OpenAI's
 dedicated Moderation API through `@shepherdjerred/llm-runtime`. The shared runtime
 owns the authenticated transport, bounded timeout and score validation; this
 service owns the content policy and contextual advertising/ambiguity checks.
-The agent calls `POST /v1/triage` for tickets; `/v1/classify` remains a
-legacy contract and does not own live chat enforcement.
+The agent calls `POST /v1/triage` for tickets. Unscreened Global chat retains the
+existing prefilters and `/v1/classify` flow until content screening is enabled;
+screened publications bypass that legacy enforcement.
 The companions module also calls `POST /v1/conversation` for open-ended chat.
 Companion gameplay runs entirely in the Paper plugin.
 

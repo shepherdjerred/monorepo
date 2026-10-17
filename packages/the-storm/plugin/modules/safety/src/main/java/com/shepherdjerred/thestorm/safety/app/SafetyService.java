@@ -187,10 +187,11 @@ public final class SafetyService implements ContentSafety {
                             if (!screen)
                               return CompletableFuture.completedFuture(
                                   verdict(
-                                      "allow",
-                                      "none",
-                                      "Screening rollout disabled; attempt retained.",
-                                      0));
+                                          "allow",
+                                          "none",
+                                          "Screening rollout disabled; attempt retained.",
+                                          0)
+                                      .withoutScreening());
                             return store
                                 .recent(submission.player(), time.instant().minusSeconds(20), 64)
                                 .thenCompose(recent -> classify(submission, recent, deadline));
@@ -311,7 +312,8 @@ public final class SafetyService implements ContentSafety {
                                             Math.addExact(
                                                 previous.costMicros(), review.costMicros()),
                                             review.muteSeconds(),
-                                            review.scores())));
+                                            review.scores(),
+                                            review.screened())));
               });
     }
     return result.thenCompose(review -> advertising(submission, review, deadline));
@@ -363,7 +365,8 @@ public final class SafetyService implements ContentSafety {
                       review.model(),
                       review.costMicros(),
                       seconds,
-                      review.scores()));
+                      review.scores(),
+                      review.screened()));
             });
   }
 
@@ -391,7 +394,7 @@ public final class SafetyService implements ContentSafety {
 
   private static ContentReview verdict(String decision, String category, String reason, int mute) {
     return new ContentReview(
-        decision, category, 1, reason, "deterministic-v1", 0, mute, java.util.Map.of());
+        decision, category, 1, reason, "deterministic-v1", 0, mute, java.util.Map.of(), true);
   }
 
   private static ContentSubmission sanitized(ContentSubmission submission) {

@@ -57,7 +57,9 @@ The [agent reference](/reference/the-storm-agent/) defines the exact policy.
 
 Every surface uses the same admission owner so a player cannot move abuse from chat
 to signs, books or message commands. A link is judged in its conversation rather
-than treated as advertising by itself. The old Global-only ladder no longer acts.
+than treated as advertising by itself. Until screening is enabled, unscreened
+Global chat retains the existing prefilters and ladder. A screened publication
+never runs through that legacy enforcement again.
 
 Private evidence preserves allowed attempts as well as refusals, enabling later analysis
 without exposing DMs through console logs or incident summaries. Evidence references

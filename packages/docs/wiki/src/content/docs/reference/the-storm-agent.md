@@ -37,8 +37,9 @@ cannot record a reviewer. `/agent case` and `/agent faq` work from console.
 ## agent.yml
 
 Content admission is owned by Safety. The agent retains ticket triage, sampled
-review rows and human review commands. Its legacy chat prefilters and ladders are
-not subscribed to live Global chat.
+review rows and human review commands. Unscreened Global publications retain its
+legacy chat prefilters and ladders while the Safety rollout is disabled or absent.
+Screened publications supply context without repeating legacy enforcement.
 
 The owned file is `packages/the-storm/server/owned/plugins/TheStorm/agent.yml`.
 Every key is required; unknown keys stop the module.
