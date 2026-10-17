@@ -5,8 +5,7 @@ import { WorkflowFailedError } from "@temporalio/client";
 import { expect, test } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
-const workflowsPath = new URL("subtitle-replacement.ts", import.meta.url)
-  .pathname;
+const workflowsPath = new URL("../index.ts", import.meta.url).pathname;
 test.each(["success", "lost-ack", "cancel-compensates", "unknown"] as const)(
   "subtitle replacement %s settles only durable evidence and replays",
   async (scenario) => {

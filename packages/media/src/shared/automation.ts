@@ -6,6 +6,21 @@ export type MediaOperation = {
 export type MediaAttemptOperation = { operationId: string; attemptId: string };
 export type MediaHandoffOperation = { operationId: string; planId: string };
 export type NativeRecoveryOperation = { operationId: string; planId: string };
+export type NativeQuarantineRestoreOperation = MediaOperation & {
+  continuationId: string;
+};
+export type NativeQuarantineNetworkActivities = {
+  observeNativeQuarantine: (input: NativeRecoveryOperation) => Promise<void>;
+};
+export type NativeQuarantineFileActivities = {
+  prepareNativeQuarantineFiles: (
+    input: NativeRecoveryOperation,
+  ) => Promise<void>;
+  applyNativeQuarantineFiles: (input: NativeRecoveryOperation) => Promise<void>;
+  restoreNativeQuarantineFiles: (
+    input: NativeQuarantineRestoreOperation,
+  ) => Promise<{ status: "restored" | "protected"; reason?: string }>;
+};
 export type NativeRecoveryNetworkActivities = {
   observeNativeRecovery: (input: NativeRecoveryOperation) => Promise<void>;
   nativeRecoveryState: (
