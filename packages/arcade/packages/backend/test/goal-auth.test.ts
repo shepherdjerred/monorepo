@@ -5,6 +5,7 @@ import path from "node:path";
 import { prepareGoalAuth } from "#src/goal-auth.ts";
 
 const homes: string[] = [];
+const syntheticId = `${Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url")}.${Buffer.from("{}").toString("base64url")}.c3ludGhldGlj`;
 async function database() {
   const parent = await mkdtemp(path.join(tmpdir(), "arcade-goal-auth-test-"));
   homes.push(parent);
@@ -17,7 +18,7 @@ function authentication(access = "synthetic-access") {
       access_token: access,
       refresh_token: "synthetic-refresh",
       account_id: "synthetic-account",
-      id_token: "synthetic-id",
+      id_token: syntheticId,
     },
     last_refresh: "2026-10-16T00:00:00Z",
   });
@@ -76,4 +77,47 @@ describe("Emerald subscription authentication", () => {
       );
     }
   });
+
+  it.each([
+    {
+      tokens: {
+        access_token: "synthetic-access",
+        refresh_token: "synthetic-refresh",
+        account_id: "synthetic-account",
+      },
+      last_refresh: "2026-10-16T00:00:00Z",
+    },
+    {
+      tokens: {
+        access_token: "synthetic-access",
+        refresh_token: "synthetic-refresh",
+        account_id: "synthetic-account",
+        id_token: syntheticId,
+      },
+    },
+    {
+      tokens: {
+        access_token: "synthetic-access",
+        refresh_token: "synthetic-refresh",
+        account_id: "synthetic-account",
+        id_token: syntheticId,
+      },
+      last_refresh: "not-a-timestamp",
+    },
+  ])(
+    "rejects a CLI-incompatible vault seed and persisted cache: %j",
+    async (invalid) => {
+      const db = await database();
+      const contents = JSON.stringify(invalid);
+      await expect(prepareGoalAuth(encoded(contents), db)).rejects.toThrow(
+        /^Invalid Emerald subscription authentication$/u,
+      );
+      const seed = encoded(authentication());
+      const home = await prepareGoalAuth(seed, db);
+      await writeFile(path.join(home, "auth.json"), contents);
+      await expect(prepareGoalAuth(seed, db)).rejects.toThrow(
+        /^Invalid Emerald subscription authentication$/u,
+      );
+    },
+  );
 });

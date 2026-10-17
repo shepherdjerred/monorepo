@@ -17,7 +17,9 @@ const SubscriptionAuthSchema = z.object({
     access_token: z.string().min(1),
     account_id: z.string().min(1),
     refresh_token: z.string().min(1),
+    id_token: z.jwt(),
   }),
+  last_refresh: z.iso.datetime({ offset: true }),
 });
 
 /** Codex SDK uses the CLI's auth cache for ChatGPT subscription credentials. */
