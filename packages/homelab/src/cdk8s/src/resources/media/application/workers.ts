@@ -93,7 +93,6 @@ export function createMediaActivityWorkers(
         secret: props.qbittorrent,
         key: "password",
       }),
-      QBITTORRENT_CATEGORY: EnvValue.fromValue("media"),
       PUBLIC_ORIGIN: EnvValue.fromValue(MEDIA_PUBLIC_ORIGIN),
       QBITTORRENT_DOWNLOAD_ROOT: EnvValue.fromValue("/downloads"),
     },

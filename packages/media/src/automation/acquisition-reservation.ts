@@ -172,7 +172,13 @@ export async function adoptReservation(
       where: { id: reservation.attemptId },
       data: {
         generations: { ...generations, [input.mediaId]: input.generation },
-        failure: { profileId: profile.id, profileVersion: profile.version },
+        failure: {
+          ...z
+            .record(z.string(), z.json())
+            .parse(reservation.attempt.failure ?? {}),
+          profileId: profile.id,
+          profileVersion: profile.version,
+        },
       },
     });
     const coordinatorId =

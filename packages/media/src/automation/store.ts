@@ -41,6 +41,9 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  plex_exclusion_prepare: "preparePlexExclusionWorkflow",
+  plex_exclusion_execute: "executePlexExclusionWorkflow",
+  plex_exclusion_recover: "recoverPlexExclusionWorkflow",
   expand_request: "expandMediaRequestWorkflow",
   refresh_catalog: "refreshMediaCatalogWorkflow",
   expand_catalog_requests: "expandCatalogRequestsWorkflow",
@@ -52,6 +55,7 @@ const workflowTypes: Readonly<Record<string, string>> = {
   maintain_torrent: "maintainMediaTorrentWorkflow",
   deliver_notification: "deliverMediaNotificationWorkflow",
   install_subtitle: "installMediaSubtitleWorkflow",
+  cleanup_upgrade: "cleanupMediaUpgradeWorkflow",
 };
 
 export function createOutboxActivities(

@@ -10,6 +10,9 @@ export function fileOperations(
   return new FileOperations(roots, {
     authorize,
     checkpoint: context.checkpoint,
+    ...(context.contentProof === undefined
+      ? {}
+      : { contentProof: context.contentProof }),
     ...(context.minimumFreeBytes === undefined
       ? {}
       : { minimumFreeBytes: context.minimumFreeBytes }),

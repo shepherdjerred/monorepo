@@ -30,6 +30,7 @@ export type MediaAutomationContext = {
     runId: string;
   } | null>;
   permittedSections: () => Promise<{ movie: string; series: string }>;
+  refreshExclusionProofs: () => Promise<void>;
   gates: {
     acquisition: () => Promise<boolean>;
     sourceCleanup: () => Promise<boolean>;

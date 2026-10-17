@@ -14,6 +14,37 @@ const actor: MediaActor = {
   restricted: false,
   version: 0,
 };
+const migrationFixture: MediaAppDependencies["migrationAdmin"] = {
+  async discover() {
+    throw new MediaError("unavailable", "No fixture catalog", 503);
+  },
+  bundles: {
+    async create() {
+      throw new MediaError("invalid_bundle", "No fixture bundle", 422);
+    },
+    async detail() {
+      throw new MediaError("not_found", "No fixture bundle", 404);
+    },
+    async list() {
+      return [];
+    },
+    async review() {
+      return { status: "completed" };
+    },
+  },
+  async detail() {
+    throw new MediaError("not_found", "No fixture proposal", 404);
+  },
+  async list() {
+    return [];
+  },
+  async upload() {
+    throw new MediaError("invalid_capture", "No fixture capture", 422);
+  },
+  async review() {
+    return { status: "completed" };
+  },
+};
 
 function fixture() {
   const act = vi.fn<MediaApplication["act"]>(async () => ({
@@ -169,6 +200,27 @@ function fixture() {
       },
       async save() {
         return { status: "completed" };
+      },
+    },
+    migrationAdmin: migrationFixture,
+    plexExclusionAdmin: {
+      async list() {
+        return {
+          runtime: { mode: "observe", recoveryEpoch: 0, version: 0 },
+          runs: [],
+        };
+      },
+      async recover() {
+        throw new MediaError("conflict", "No fixture exclusion plan", 409);
+      },
+      async prepare() {
+        throw new MediaError("conflict", "No fixture exclusion plan", 409);
+      },
+      async detail() {
+        throw new MediaError("not_found", "No fixture exclusion plan", 404);
+      },
+      async execute() {
+        throw new MediaError("conflict", "No fixture exclusion plan", 409);
       },
     },
     catalog: {

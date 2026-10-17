@@ -28,8 +28,21 @@ export async function verifyStableFile(
   DigestSchema.parse(input.sha256);
   if (!/^(?:0|[1-9]\d*)$/u.test(input.sizeBytes))
     throw new FileOperationConflict("Invalid expected media size");
+  const proof = await hashStableFile(path, checkpoint);
+  if (proof.sha256 !== input.sha256 || proof.sizeBytes !== input.sizeBytes)
+    throw new FileOperationConflict(
+      "Media content does not match its committed checksum",
+    );
+  return Object.freeze({ ...proof, libraryPath: input.libraryPath });
+}
+
+/** Hash through a pinned descriptor before acquiring any database authority locks. */
+export async function hashStableFile(
+  path: string,
+  checkpoint: () => Promise<void>,
+): Promise<VerifiedFileProof> {
   const before = await lstat(path, { bigint: true });
-  if (!before.isFile() || before.size !== BigInt(input.sizeBytes))
+  if (!before.isFile())
     throw new FileOperationConflict("Media file type or size changed");
   const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
@@ -44,12 +57,10 @@ export async function verifyStableFile(
     }
     requireSameFile(before, await handle.stat({ bigint: true }));
     requireSameFile(before, await lstat(path, { bigint: true }));
-    if (hash.digest("hex") !== input.sha256)
-      throw new FileOperationConflict(
-        "Media content does not match its committed checksum",
-      );
     return Object.freeze({
-      ...input,
+      libraryPath: path,
+      sha256: hash.digest("hex"),
+      sizeBytes: before.size.toString(),
       target: path,
       dev: before.dev,
       ino: before.ino,

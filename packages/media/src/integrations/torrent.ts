@@ -3,8 +3,8 @@ import { IntegrationError } from "./http.ts";
 
 /** Hash the original bencoded info bytes; re-encoding changes torrent identity. */
 export function torrentInfoHashes(bytes: Uint8Array): {
-  v1: string;
-  v2: string;
+  v1: string | null;
+  v2: string | null;
 } {
   if (bytes.length > 16 * 1024 * 1024 || bytes[0] !== 100)
     throw invalidTorrent();
@@ -25,10 +25,83 @@ export function torrentInfoHashes(bytes: Uint8Array): {
     cursor = end;
   }
   if (info === undefined || cursor + 1 !== bytes.length) throw invalidTorrent();
+  const versions = infoVersions(info);
   return {
-    v1: createHash("sha1").update(info).digest("hex"),
-    v2: createHash("sha256").update(info).digest("hex"),
+    v1: versions.v1 ? createHash("sha1").update(info).digest("hex") : null,
+    v2: versions.v2 ? createHash("sha256").update(info).digest("hex") : null,
   };
+}
+
+function infoVersions(info: Uint8Array): { v1: boolean; v2: boolean } {
+  const fields = dictionaryEntries(info);
+  const name = fields.get("name");
+  const pieceLength = fields.get("piece length");
+  if (
+    name === undefined ||
+    pieceLength === undefined ||
+    readString(name, 0).value.length === 0 ||
+    integer(pieceLength) <= 0n
+  )
+    throw invalidTorrent();
+  const pieces = fields.get("pieces");
+  const version = fields.get("meta version");
+  const tree = fields.get("file tree");
+  const v2 = version !== undefined;
+  if (v2 && (integer(version) !== 2n || tree?.[0] !== 100))
+    throw invalidTorrent();
+  if (pieces !== undefined) validateV1(fields, pieces);
+  if (pieces === undefined && !v2) throw invalidTorrent();
+  return { v1: pieces !== undefined, v2 };
+}
+
+function dictionaryEntries(bytes: Uint8Array): Map<string, Uint8Array> {
+  if (bytes[0] !== 100) throw invalidTorrent();
+  const fields = new Map<string, Uint8Array>();
+  let cursor = 1;
+  while (bytes[cursor] !== 101) {
+    const key = readString(bytes, cursor);
+    const end = skipValue(bytes, key.end, 0);
+    fields.set(
+      new TextDecoder().decode(key.value),
+      bytes.subarray(key.end, end),
+    );
+    cursor = end;
+  }
+  return fields;
+}
+
+function integer(bytes: Uint8Array): bigint {
+  const value = new TextDecoder().decode(bytes);
+  if (!/^i(?:0|[1-9]\d*)e$/u.test(value)) throw invalidTorrent();
+  return BigInt(value.slice(1, -1));
+}
+
+function validateV1(fields: Map<string, Uint8Array>, pieces: Uint8Array): void {
+  const hashes = readString(pieces, 0).value;
+  if (hashes.length % 20 !== 0) throw invalidTorrent();
+  const length = fields.get("length");
+  const files = fields.get("files");
+  if ((length === undefined) === (files === undefined)) throw invalidTorrent();
+  let total = length === undefined ? 0n : integer(length);
+  if (files !== undefined) {
+    if (files[0] !== 108 || files[1] === 101) throw invalidTorrent();
+    let cursor = 1;
+    while (files[cursor] !== 101) {
+      const end = skipValue(files, cursor, 0);
+      const file = dictionaryEntries(files.subarray(cursor, end));
+      const fileLength = file.get("length");
+      const path = file.get("path");
+      if (fileLength === undefined || path?.[0] !== 108 || path[1] === 101)
+        throw invalidTorrent();
+      total += integer(fileLength);
+      cursor = end;
+    }
+  }
+  const pieceLength = fields.get("piece length");
+  if (pieceLength === undefined) throw invalidTorrent();
+  const pieceBytes = integer(pieceLength);
+  if (BigInt(hashes.length / 20) !== (total + pieceBytes - 1n) / pieceBytes)
+    throw invalidTorrent();
 }
 
 function invalidTorrent(): IntegrationError {

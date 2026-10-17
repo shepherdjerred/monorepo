@@ -7,7 +7,13 @@ import {
   type FetchTransport,
 } from "./http.ts";
 import { torrentInfoHashes } from "./torrent.ts";
+import { magnetTorrentIds } from "./magnet.ts";
 import nodePath from "node:path";
+import {
+  TorrentPolicySchema,
+  TorrentRatioSchema,
+  hasApplicationSeedingPolicy,
+} from "./qbittorrent-policy.ts";
 
 function validateSavePath(path: string): void {
   if (
@@ -23,15 +29,58 @@ function validateSavePath(path: string): void {
 }
 
 const HashSchema = z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u);
-const OperationSchema = z.string().regex(/^[\w-]{1,100}$/u);
-const TorrentSchema = z.object({
-  hash: HashSchema,
+const OperationSchema = z.uuid().regex(/^[a-f0-9-]+$/u);
+function submissionTags(input: {
+  operationId: string;
+  attemptId: string;
+  savePath: string;
+}): string {
+  OperationSchema.parse(input.operationId);
+  OperationSchema.parse(input.attemptId);
+  validateSavePath(input.savePath);
+  if (input.savePath !== `/downloads/media/${input.attemptId}`)
+    throw new Error("Submission path must be isolated by acquisition attempt");
+  return `media-${input.operationId},media-attempt-${input.attemptId}`;
+}
+// Pinned qBittorrent 5.2.4 / WebAPI 2.15.1. Older "Ok." replies are not accepted.
+const AddResultSchema = z.object({
+  added_torrent_ids: z.array(HashSchema),
+  failure_count: z.number().int().nonnegative(),
+  pending_count: z.number().int().nonnegative(),
+  success_count: z.number().int().nonnegative(),
+});
+
+async function requireAcceptedAdd(
+  response: Response,
+  expectedIds: readonly string[],
+): Promise<void> {
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw new IntegrationError("qbittorrent", "outcome-unknown");
+  }
+  const result = AddResultSchema.safeParse(body);
+  if (
+    !result.success ||
+    result.data.failure_count !== 0 ||
+    result.data.pending_count !== 0 ||
+    result.data.success_count !== 1 ||
+    result.data.added_torrent_ids.length !== 1 ||
+    !expectedIds.includes(result.data.added_torrent_ids[0] ?? "")
+  )
+    throw new IntegrationError("qbittorrent", "outcome-unknown");
+}
+const TorrentSchema = TorrentPolicySchema.extend({
+  hash: z.string().regex(/^[a-f0-9]{40}$/u),
+  infohash_v1: z.union([z.literal(""), z.string().regex(/^[a-f0-9]{40}$/u)]),
+  infohash_v2: z.union([z.literal(""), z.string().regex(/^[a-f0-9]{64}$/u)]),
   name: z.string(),
   state: z.string(),
   category: z.string(),
   tags: z.string(),
   progress: z.number().min(0).max(1),
-  ratio: z.number().nonnegative(),
+  ratio: TorrentRatioSchema,
   seeding_time: z.number().int().nonnegative(),
   size: z.number().int().nonnegative(),
   save_path: z.string(),
@@ -62,8 +111,8 @@ export class QbittorrentClient {
     private readonly transport: FetchTransport = fetch,
   ) {
     endpoint(config.baseUrl, "/api/v2/");
-    if (config.category.length === 0)
-      throw new Error("Managed torrent category is required");
+    if (config.category !== "media")
+      throw new Error("The media protocol reserves category media");
   }
 
   async login(signal?: AbortSignal): Promise<void> {
@@ -82,12 +131,30 @@ export class QbittorrentClient {
       },
     );
     const body = await response.text();
-    const cookie = response.headers
-      .get("set-cookie")
-      ?.match(/(?:^|,\s*)SID=([^;\s,]+)/u)?.[1];
-    if (cookie === undefined || body.trim() !== "Ok.")
+    const cookies = [
+      ...(response.headers.get("set-cookie") ?? "").matchAll(
+        /(?:^|,\s*)(QBT_SID_\d+|SID)=([^;\s,]+)/gu,
+      ),
+    ];
+    const cookie = cookies.length === 1 ? cookies[0] : undefined;
+    if (
+      cookie === undefined ||
+      !(
+        (response.status === 204 && body.length === 0) ||
+        (response.status === 200 && body.trim() === "Ok.")
+      )
+    )
       throw new IntegrationError("qbittorrent", "authentication");
-    this.cookie = `SID=${cookie}`;
+    this.cookie = `${String(cookie[1])}=${String(cookie[2])}`;
+  }
+
+  async version(signal?: AbortSignal): Promise<string> {
+    const response = await this.call("app/version", "GET", {}, signal);
+    return z
+      .string()
+      .max(64)
+      .regex(/^v?\d+\.\d+\.\d+$/u)
+      .parse(await response.text());
   }
 
   async list(signal?: AbortSignal): Promise<TorrentObservation[]> {
@@ -104,6 +171,7 @@ export class QbittorrentClient {
   async listAll(signal?: AbortSignal): Promise<TorrentObservation[]> {
     return z
       .array(TorrentSchema)
+      .max(50_000)
       .parse(
         await json(
           await this.call("torrents/info", "GET", {}, signal),
@@ -114,17 +182,42 @@ export class QbittorrentClient {
 
   validateOwnership(
     observation: TorrentObservation,
-    input: { operationId: string; savePath: string },
+    input: { operationId: string; attemptId: string; savePath: string },
   ): void {
     OperationSchema.parse(input.operationId);
+    OperationSchema.parse(input.attemptId);
     if (!nodePath.posix.isAbsolute(input.savePath))
       throw new Error("Expected an absolute ownership path");
-    validateSavePath(nodePath.posix.resolve(input.savePath));
+    validateSavePath(input.savePath.replace(/\/$/u, ""));
+    if (
+      input.savePath.replace(/\/$/u, "") !==
+      `/downloads/media/${input.attemptId}`
+    )
+      throw new IntegrationError("qbittorrent", "conflict");
+    const tags = observation.tags.split(",").map((tag) => tag.trim());
+    const operationTags = tags.filter((tag) =>
+      /^media-[a-f0-9-]{36}$/u.test(tag),
+    );
+    const attemptTags = tags.filter((tag) => tag.startsWith("media-attempt-"));
     if (
       !nodePath.posix.isAbsolute(observation.save_path) ||
+      observation.save_path.replace(/\/$/u, "") !==
+        nodePath.posix.resolve(input.savePath) ||
       nodePath.posix.resolve(observation.save_path) !==
         nodePath.posix.resolve(input.savePath) ||
       observation.category !== this.config.category ||
+      observation.auto_tmm ||
+      operationTags.length !== 1 ||
+      attemptTags.length !== 1 ||
+      nodePath.posix.basename(nodePath.posix.resolve(input.savePath)) !==
+        input.attemptId ||
+      nodePath.posix.basename(
+        nodePath.posix.dirname(nodePath.posix.resolve(input.savePath)),
+      ) !== "media" ||
+      !observation.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .includes(`media-attempt-${input.attemptId}`) ||
       !observation.tags
         .split(",")
         .map((tag) => tag.trim())
@@ -138,23 +231,30 @@ export class QbittorrentClient {
     signal?: AbortSignal,
   ): Promise<TorrentObservation | null> {
     HashSchema.parse(hash);
-    const response = await this.call(
-      "torrents/info",
-      "GET",
-      { hashes: hash },
-      signal,
+    // WebAPI IDs are truncated v2 hashes (also for hybrid torrents). A filtered
+    // lookup using the release's full SHA1/SHA256 can falsely report absence.
+    const inventory = await this.listAll(signal);
+    const torrents = inventory.filter(
+      (item) => item.infohash_v1 === hash || item.infohash_v2 === hash,
     );
-    const torrents = z
-      .array(TorrentSchema)
-      .parse(await json(response, "qbittorrent"));
-    if (torrents.length > 1 || torrents.some((item) => item.hash !== hash))
+    if (torrents.length > 1)
       throw new IntegrationError("qbittorrent", "invalid-response");
     return torrents[0] ?? null;
   }
 
-  async files(hash: string, signal?: AbortSignal): Promise<TorrentFile[]> {
-    HashSchema.parse(hash);
-    const response = await this.call("torrents/files", "GET", { hash }, signal);
+  async files(
+    wireTorrentId: string,
+    signal?: AbortSignal,
+  ): Promise<TorrentFile[]> {
+    z.string()
+      .regex(/^[a-f0-9]{40}$/u)
+      .parse(wireTorrentId);
+    const response = await this.call(
+      "torrents/files",
+      "GET",
+      { hash: wireTorrentId },
+      signal,
+    );
     return z.array(FileSchema).parse(await json(response, "qbittorrent"));
   }
 
@@ -162,33 +262,22 @@ export class QbittorrentClient {
   async submit(
     input: {
       operationId: string;
+      attemptId: string;
       hash: string;
       magnet: string;
-      savePath?: string;
+      savePath: string;
     },
     signal?: AbortSignal,
   ): Promise<"accepted" | "already-present"> {
-    OperationSchema.parse(input.operationId);
+    const tag = submissionTags(input);
     HashSchema.parse(input.hash);
-    if (input.savePath !== undefined) validateSavePath(input.savePath);
-    const magnet = new URL(input.magnet);
-    if (magnet.protocol !== "magnet:") throw new Error("Expected a magnet URI");
-    const identities = magnet.searchParams.getAll("xt");
-    if (
-      !identities.some(
-        (identity) =>
-          identity.toLowerCase() === `urn:btih:${input.hash}` ||
-          identity.toLowerCase() === `urn:btmh:1220${input.hash}`,
-      )
-    ) {
-      throw new Error("Magnet identity does not match acquisition hash");
-    }
+    const magnetIds = magnetTorrentIds(input.magnet, input.hash);
     const existing = await this.observe(input.hash, signal);
-    const tag = `media-${input.operationId}`;
     if (existing !== null) {
       this.validateOwnership(existing, {
         operationId: input.operationId,
-        savePath: input.savePath ?? existing.save_path,
+        attemptId: input.attemptId,
+        savePath: input.savePath,
       });
       return "already-present";
     }
@@ -197,19 +286,18 @@ export class QbittorrentClient {
       "POST",
       {
         urls: input.magnet,
-        ...(input.savePath === undefined ? {} : { savepath: input.savePath }),
+        savepath: input.savePath,
         category: this.config.category,
         tags: tag,
         autoTMM: "false",
         ratioLimit: "-1",
         seedingTimeLimit: "-1",
         inactiveSeedingTimeLimit: "-1",
+        shareLimitAction: "Stop",
       },
       signal,
     );
-    const responseBody = await response.text();
-    if (responseBody.trim() !== "Ok.")
-      throw new IntegrationError("qbittorrent", "outcome-unknown");
+    await requireAcceptedAdd(response, magnetIds);
     return "accepted";
   }
 
@@ -217,24 +305,24 @@ export class QbittorrentClient {
   async submitTorrent(
     input: {
       operationId: string;
+      attemptId: string;
       hash: string;
       bytes: Uint8Array<ArrayBuffer>;
-      savePath?: string;
+      savePath: string;
     },
     signal?: AbortSignal,
   ): Promise<"accepted" | "already-present"> {
-    OperationSchema.parse(input.operationId);
+    const tag = submissionTags(input);
     HashSchema.parse(input.hash);
-    if (input.savePath !== undefined) validateSavePath(input.savePath);
     const hashes = torrentInfoHashes(input.bytes);
     if (input.hash !== hashes.v1 && input.hash !== hashes.v2)
       throw new IntegrationError("qbittorrent", "conflict");
     const existing = await this.observe(input.hash, signal);
-    const tag = `media-${input.operationId}`;
     if (existing !== null) {
       this.validateOwnership(existing, {
         operationId: input.operationId,
-        savePath: input.savePath ?? existing.save_path,
+        attemptId: input.attemptId,
+        savePath: input.savePath,
       });
       return "already-present";
     }
@@ -247,12 +335,13 @@ export class QbittorrentClient {
       "media.torrent",
     );
     form.set("category", this.config.category);
-    if (input.savePath !== undefined) form.set("savepath", input.savePath);
+    form.set("savepath", input.savePath);
     form.set("tags", tag);
     form.set("autoTMM", "false");
     form.set("ratioLimit", "-1");
     form.set("seedingTimeLimit", "-1");
     form.set("inactiveSeedingTimeLimit", "-1");
+    form.set("shareLimitAction", "Stop");
     const url = endpoint(this.config.baseUrl, "api/v2/torrents/add");
     const response = await request(this.transport, "qbittorrent", url, {
       method: "POST",
@@ -261,34 +350,38 @@ export class QbittorrentClient {
       mutation: true,
       ...(signal === undefined ? {} : { signal }),
     });
-    const body = await response.text();
-    if (body.trim() !== "Ok.")
-      throw new IntegrationError("qbittorrent", "outcome-unknown");
+    await requireAcceptedAdd(
+      response,
+      [hashes.v1, hashes.v2].flatMap((hash) =>
+        hash === null ? [] : [hash.slice(0, 40)],
+      ),
+    );
     return "accepted";
   }
 
   /** Policy and dependency checks must already be committed by the calling Activity. */
   async remove(
-    input: { hash: string; operationId: string; deleteFiles: boolean },
+    input: {
+      hash: string;
+      operationId: string;
+      attemptId: string;
+      savePath: string;
+      deleteFiles: boolean;
+    },
     signal?: AbortSignal,
   ): Promise<void> {
     HashSchema.parse(input.hash);
     OperationSchema.parse(input.operationId);
     const existing = await this.observe(input.hash, signal);
     if (existing === null) return;
-    if (
-      existing.category !== this.config.category ||
-      !existing.tags
-        .split(",")
-        .map((value) => value.trim())
-        .includes(`media-${input.operationId}`)
-    ) {
+    this.validateOwnership(existing, input);
+    if (!hasApplicationSeedingPolicy(existing)) {
       throw new IntegrationError("qbittorrent", "conflict");
     }
     await this.call(
       "torrents/delete",
       "POST",
-      { hashes: input.hash, deleteFiles: String(input.deleteFiles) },
+      { hashes: existing.hash, deleteFiles: String(input.deleteFiles) },
       signal,
     );
   }

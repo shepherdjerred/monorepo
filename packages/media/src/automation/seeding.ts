@@ -6,6 +6,7 @@ import { requireActiveRuntime } from "./runtime.ts";
 import path from "node:path";
 import { lockMedia } from "#infrastructure/locks.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
 
 const PolicySchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("public") }),
@@ -97,12 +98,18 @@ async function evaluate(
     return { status: "protected", reason: "torrent_missing" };
   const files =
     observed.progress === 1
-      ? await context.qbittorrent.files(torrent.infoHash)
+      ? await context.qbittorrent.files(observed.hash)
       : [];
   await context.db.torrent.update({
     where: { id: torrent.id },
-    data: { observation: { torrent: observed, files }, observedAt: new Date() },
+    data: {
+      qbittorrentId: observed.hash,
+      observation: { torrent: observed, files },
+      observedAt: new Date(),
+    },
   });
+  if (!hasApplicationSeedingPolicy(observed))
+    return { status: "protected", reason: "torrent_policy_drift" };
   const dependenciesRemaining =
     torrent.attempts.some(
       (attempt) =>
@@ -118,7 +125,10 @@ async function evaluate(
   const evaluation = evaluateSeeding(
     PolicySchema.parse(torrent.seedingPolicy),
     {
-      ratio: observed.ratio,
+      ratio:
+        observed.ratio.kind === "finite"
+          ? observed.ratio.value
+          : observed.ratio,
       seedingSeconds: observed.seeding_time,
       sizeBytes: observed.size,
       complete: observed.progress === 1,
@@ -215,12 +225,20 @@ export function createSeedingActivities(
               );
             context.qbittorrent.validateOwnership(observed, {
               operationId: submitted.operationId,
+              attemptId: submitted.id,
               savePath: isolated,
             });
+            if (!hasApplicationSeedingPolicy(observed))
+              return releaseRemovalClaim(
+                tx,
+                torrent.id,
+                torrent.state,
+                "torrent_policy_drift",
+              );
             if (
               !(await sourceDirectoryExclusive(
                 context,
-                torrent.infoHash,
+                observed.hash,
                 isolated,
               ))
             )
@@ -233,7 +251,10 @@ export function createSeedingActivities(
             const evaluated = evaluateSeeding(
               PolicySchema.parse(current.seedingPolicy),
               {
-                ratio: observed.ratio,
+                ratio:
+                  observed.ratio.kind === "finite"
+                    ? observed.ratio.value
+                    : observed.ratio,
                 seedingSeconds: observed.seeding_time,
                 sizeBytes: observed.size,
                 complete: observed.progress === 1,
@@ -252,6 +273,8 @@ export function createSeedingActivities(
             await context.qbittorrent.remove({
               hash: torrent.infoHash,
               operationId: submitted.operationId,
+              attemptId: submitted.id,
+              savePath: isolated,
               deleteFiles: true,
             });
             await tx.torrent.update({

@@ -44,7 +44,7 @@ export function prepareResolvedEvidence(
     schemaVersion: 1,
     source: profile.source,
     sourceVersion: profile.sourceVersion,
-    parserVersion: "scene-v1",
+    parserVersion: "scene-anime-v2",
     release,
     protectedReasons: parsed.reasons,
     regex: { engine: "dotnet-ignorecase", culture: "en-US", observations: [] },

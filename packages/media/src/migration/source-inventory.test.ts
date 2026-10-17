@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 import { createServer } from "node:http";
 import { once } from "node:events";
 import { inventoryProfiles } from "./source-inventory.ts";
-import snapshot from "./fixtures/resolved-profiles.json";
+import snapshot from "#migration/fixtures/resolved-profiles.json";
 
 let origin = "";
 let requests = 0;

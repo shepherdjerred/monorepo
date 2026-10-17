@@ -60,6 +60,7 @@ export function automationTestHarness() {
       describeWorkflow: () =>
         Promise.reject(new Error("Unexpected workflow description")),
       permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
+      refreshExclusionProofs: () => Promise.resolve(),
       notify: () => Promise.reject(new Error("Unexpected notification")),
     };
   }
