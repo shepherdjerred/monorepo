@@ -52,3 +52,38 @@ test("bad flags emit a single parseable JSON error and exit 2 before authenticat
     });
   }
 });
+
+test("benchmark help is credential-free and malformed evidence arguments fail before authentication", async () => {
+  for (const args of [
+    ["--help"],
+    ["evidence", "123", "--variant", "candidate"],
+    ["evidence", "123", "--head", "a".repeat(40), "--variant", "other"],
+    [
+      "evidence",
+      "123",
+      "456",
+      "--head",
+      "a".repeat(40),
+      "--variant",
+      "candidate",
+    ],
+  ]) {
+    const child = Bun.spawn(
+      [process.execPath, "run", entry, "ci", "benchmark", ...args, "--json"],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    const [output, error, code] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
+    if (args[0] === "--help") {
+      expect(code, error).toBe(0);
+      expect(output).toContain("does not qualify physical savings");
+    } else {
+      expect(code, error).toBe(2);
+      expect(JSON.parse(output)).toMatchObject({ outcome: "error" });
+    }
+    expect(error).not.toContain("via service-account");
+  }
+});
