@@ -12,7 +12,8 @@ import {
   type Transaction,
   type FilePlanEntry,
 } from "./types.ts";
-import { assertAcquisition, lockMedia } from "./guards.ts";
+import { assertAcquisition } from "./guards.ts";
+import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import { importDescriptor } from "./inspection.ts";
 import { fileOperations } from "./file-operations.ts";
 import { recoverObsoletePublication } from "./recovery.ts";
@@ -39,13 +40,13 @@ export async function promote(
   const context = await preparePublicationProof(initialContext, plan);
   const result = await context.db.$transaction(
     async (tx) => {
-      await lockMedia(tx, attempt.mediaIds);
+      await lockAcquisitionMedia(tx, attempt.mediaIds);
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
       if (current.state === "imported") return "resume_committed";
       try {
-        await assertAcquisition(tx, attemptId);
+        await assertAcquisition(tx, attemptId, context.serverMachineId);
         for (const entry of plan) await assertProfile(tx, entry);
       } catch (error) {
         if (
@@ -61,7 +62,7 @@ export async function promote(
           await context.checkpoint("publication-authorization");
           if (!(await context.enabled.acquisition()))
             throw new FileGuardError("acquisition_disabled");
-          await assertAcquisition(tx, attemptId);
+          await assertAcquisition(tx, attemptId, context.serverMachineId);
           await assertProfile(tx, entry);
           await assertPrevious(tx, entry, current.recoveryEpoch);
           await assertMeasuredUpgrade(

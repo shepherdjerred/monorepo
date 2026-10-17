@@ -12,6 +12,7 @@ import type {
 
 export type MediaAutomationContext = {
   db: Database;
+  serverMachineId?: string;
   tmdb: TmdbClient;
   cipher: CredentialCipher;
   providers: ProviderRegistry;

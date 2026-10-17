@@ -63,7 +63,10 @@ export async function validateAction(
     const release = await db.releaseCandidate.findUnique({
       where: { id: input.releaseId },
     });
-    if (release?.mediaIds.includes(mediaId) !== true)
+    if (
+      release?.mediaIds.includes(mediaId) !== true &&
+      input.identityConfirmation === undefined
+    )
       throw new MediaError(
         "invalid_release",
         "Release does not cover this media item",

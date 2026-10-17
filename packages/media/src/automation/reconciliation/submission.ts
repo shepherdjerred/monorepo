@@ -1,8 +1,11 @@
 import { z } from "zod";
+import { MediaError } from "#application/errors.ts";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
+import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import {
   effectiveRequestWhere,
@@ -17,7 +20,7 @@ export async function authorizedSubmission(
 ): Promise<boolean> {
   return context.db.$transaction(
     async (tx) => {
-      await lockMedia(tx, attempt.mediaIds);
+      await lockAcquisitionMedia(tx, attempt.mediaIds);
       await lockEffectiveRequests(tx, attempt.mediaIds);
       if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)))
         return false;
@@ -28,6 +31,14 @@ export async function authorizedSubmission(
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attempt.id },
       });
+      if (
+        !(await submissionIdentityAuthorized(
+          tx,
+          current,
+          context.serverMachineId,
+        ))
+      )
+        return false;
       if (
         runtime.mode !== "active" ||
         !runtime.ownershipConfirmed ||
@@ -80,4 +91,23 @@ export async function authorizedSubmission(
     },
     { timeout: 20_000 },
   );
+}
+
+async function submissionIdentityAuthorized(
+  tx: Prisma.TransactionClient,
+  attempt: AcquisitionAttempt,
+  serverMachineId?: string,
+) {
+  try {
+    await assertAttemptIdentity(tx, attempt, serverMachineId);
+    await assertLegacySubmissionSponsor(tx, attempt, serverMachineId);
+    return true;
+  } catch (error) {
+    if (
+      error instanceof MediaError &&
+      error.code === "acquisition_sponsor_changed"
+    )
+      return false;
+    throw error;
+  }
 }

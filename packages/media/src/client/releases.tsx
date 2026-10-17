@@ -3,6 +3,7 @@ import { CommandResultSchema, ReleaseListSchema } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
 import { queryClient, readApi, writeApi } from "./api.ts";
 import { ErrorNotice, Loading, Notice } from "./components.tsx";
+import { IdentityReview } from "./acquisition-identity/review.tsx";
 
 export function ReleaseCandidates({
   user,
@@ -55,21 +56,32 @@ export function ReleaseCandidates({
             {release.title}
             <span className="helper"> {release.providerId}</span>
           </summary>
-          <h3>Matching and quality decision</h3>
-          <pre>{JSON.stringify(release.evaluation, null, 2)}</pre>
-          <h3>Release attributes</h3>
-          <pre>{JSON.stringify(release.attributes, null, 2)}</pre>
           {user.role === "owner" && (
-            <button
-              className="button"
-              disabled={select.isPending}
-              onClick={() => {
-                select.mutate(release.id);
-              }}
-            >
-              Select release
-            </button>
+            <IdentityReview
+              user={user}
+              mediaId={mediaId}
+              releaseId={release.id}
+              initialCoverage={release.attributes.mediaIds}
+            />
           )}
+          {user.role === "owner" &&
+            release.attributes.identityConfidence === "exact" && (
+              <button
+                className="button"
+                disabled={select.isPending}
+                onClick={() => {
+                  select.mutate(release.id);
+                }}
+              >
+                Select release
+              </button>
+            )}
+          <details>
+            <summary>Matching and quality evidence</summary>
+            <pre>{JSON.stringify(release.evaluation, null, 2)}</pre>
+            <h3>Release attributes</h3>
+            <pre>{JSON.stringify(release.attributes, null, 2)}</pre>
+          </details>
         </details>
       ))}
     </section>

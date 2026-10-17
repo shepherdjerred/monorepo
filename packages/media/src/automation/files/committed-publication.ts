@@ -5,7 +5,8 @@ import { evaluateRelease } from "#domain/quality.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import type { VerifiedFileProof } from "#filesystem/verification.ts";
-import { assertAcquisition, lockMedia } from "./guards.ts";
+import { assertAcquisition } from "./guards.ts";
+import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import { fileOperations } from "./file-operations.ts";
 import { storedMeasuredRelease } from "./quality-guard.ts";
 import {
@@ -56,7 +57,7 @@ export async function resumeCommittedPublication(input: {
   const verified = await verifyEntries(context, plan);
   await context.db.$transaction(
     async (tx) => {
-      await lockMedia(tx, attempt.mediaIds);
+      await lockAcquisitionMedia(tx, attempt.mediaIds);
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
@@ -71,7 +72,7 @@ export async function resumeCommittedPublication(input: {
       if (!(await context.enabled.acquisition()))
         throw new FileGuardError("acquisition_disabled");
       // Checks adopted intent/reservation generations, never rewrites the physical-effect snapshot.
-      await assertAcquisition(tx, attemptId);
+      await assertAcquisition(tx, attemptId, context.serverMachineId);
       for (const entry of plan) {
         await assertCommittedAsset({
           tx,

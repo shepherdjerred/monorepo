@@ -6,6 +6,7 @@ import type { MediaActor } from "#application/auth.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
 import { verifyRevokedRetryHttp } from "./retry-http.test-support.ts";
+import { verifyIdentityHttp } from "./media/identity-http.test-support.ts";
 
 const actor: MediaActor = {
   id: "member",
@@ -59,6 +60,10 @@ const handoffFixture = {
   },
 };
 const numberingFixture = {
+  groups: unavailableSubtitleReplacement,
+  group: unavailableSubtitleReplacement,
+  previewGroup: unavailableSubtitleReplacement,
+  commitGroup: unavailableSubtitleReplacement,
   async series() {
     return [];
   },
@@ -135,6 +140,7 @@ function fixture() {
     operationId: "operation",
   }));
   const media: MediaApplication = {
+    identityPreview: unavailableSubtitleReplacement,
     createRequest,
     act,
     async cancelRequest() {
@@ -334,6 +340,9 @@ const headers = {
 };
 
 describe("media HTTP security and errors", () => {
+  test("identity preview and selection use current scoped owner authority and strict input", async () => {
+    await verifyIdentityHttp(fixture().dependencies, headers);
+  });
   test("Retry reauthorizes current DB access after authentication while Keep remains protective", async () => {
     await verifyRevokedRetryHttp(fixture().dependencies, headers);
   }, 60_000);

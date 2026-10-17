@@ -27,13 +27,9 @@ test("two actual Retries after initial rollback search and reserve new attempts 
       data: { id: "knaben", enabled: true, seedingPolicy: { kind: "public" } },
     });
     const initial = await f.acquisition();
-    await db.operation.create({
-      data: {
-        id: initial.input.operationId,
-        kind: "acquire_release",
-        status: "running",
-        payload: {},
-      },
+    await db.operation.update({
+      where: { id: initial.input.operationId },
+      data: { status: "running" },
     });
     const ctx = context();
     let searches = 0;
