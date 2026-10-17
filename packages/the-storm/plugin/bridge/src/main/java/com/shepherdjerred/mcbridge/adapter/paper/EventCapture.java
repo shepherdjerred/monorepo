@@ -38,7 +38,11 @@ public final class EventCapture implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onChat(AsyncChatEvent event) {
-    ring.add(EventType.CHAT, event.getPlayer().getName(), plain(event.message()));
+    deliveredChat(event.getPlayer(), event.message());
+  }
+
+  void deliveredChat(Player player, Component message) {
+    ring.add(EventType.CHAT, player.getName(), plain(message));
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
