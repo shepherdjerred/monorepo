@@ -11,6 +11,10 @@ import { request, StatusSchema, type Session } from "#client/protocol.ts";
 import { evidence } from "./probes.ts";
 import { CapacityCombatCapture, verifyNativeCombat } from "./native-combat.ts";
 import { captureCapacityBehavior } from "./behavior.ts";
+import {
+  awaitNativeCandidate,
+  retainNativeFailure,
+} from "./native-readiness.ts";
 
 async function state(session: Session) {
   const value = StatusSchema.parse(await request(session, "status"));
@@ -18,7 +22,7 @@ async function state(session: Session) {
   return value;
 }
 
-async function isLive(rcon: RconClient) {
+async function isLive(rcon: Pick<RconClient, "command">) {
   const now = await status(rcon);
   return now.phase === "Live";
 }
@@ -29,20 +33,21 @@ test(
   async ({ rcon, server }) => {
     const total = capacityNativeTotal();
     const beganAt = Date.now();
-    await eventually(
-      "the imported map to finish preparing",
-      async () => {
-        const reply = await rcon.command("rwf admin status");
-        return reply.includes("Ready: true, phase: Lobby");
-      },
-      15 * 60_000,
+    const { preparation, observed } = await awaitNativeCandidate(
+      rcon,
+      capacityMap(),
     );
     const inputs = await evidence(server, rcon);
     expect(inputs.personalityCount).toBe(512);
+    await Bun.write(
+      path.join(path.dirname(preparation.replies), "inputs.json"),
+      JSON.stringify(inputs, null, 2),
+    );
     const { session, artifacts, client } = await startCapacityClient(
       server,
       "capacity-native",
     );
+    let failure: { error: unknown } | undefined;
     try {
       const teams = capacityMap() === "apex-expanse" ? 2 : 4;
       expect(
@@ -51,10 +56,10 @@ test(
       await request(session, "command", { text: "rwf join" });
       await eventually(
         "the ordinary draft to go live",
-        async () => isLive(rcon),
+        async () => isLive(observed),
         120_000,
       );
-      const live = await status(rcon);
+      const live = await status(observed);
       expect([live.humans, live.bots]).toEqual([1, total - 1]);
       const behavior = await captureCapacityBehavior(rcon, {
         match: live.matchId,
@@ -87,7 +92,7 @@ test(
       let capturedHurt = false;
       // Walk into play, then let combat and the match rules end the round.
       // No teleport, damage or finish commands.
-      while ((await isLive(rcon)) && Date.now() - began < 16 * 60_000) {
+      while ((await isLive(observed)) && Date.now() - began < 16 * 60_000) {
         const current = await state(session);
         observations.push(current);
         if (!capturedHurt && current.health < before.health) {
@@ -107,7 +112,7 @@ test(
           await Bun.sleep(1000);
         }
       }
-      expect(await isLive(rcon)).toBe(false);
+      expect(await isLive(observed)).toBe(false);
       const settled = await settledMatch(server, live.matchId);
       expect([settled.match.humans, settled.match.bots]).toEqual([
         1,
@@ -178,6 +183,7 @@ test(
         JSON.stringify(
           {
             inputs,
+            preparation,
             behavior,
             beganAt,
             completedAt: Date.now(),
@@ -197,7 +203,7 @@ test(
       await eventually(
         "reset and empty roster",
         async () => {
-          const now = await status(rcon);
+          const now = await status(observed);
           const debug = await rcon.command("rwfbots debug");
           return (
             now.ready &&
@@ -209,8 +215,17 @@ test(
         15 * 60_000,
       );
       console.warn(`Native capacity evidence: ${artifacts}`);
+    } catch (error) {
+      failure = { error };
+      await retainNativeFailure(session, error);
     } finally {
-      await client.stop();
+      try {
+        await client.stop();
+      } catch (error) {
+        failure ??= { error };
+        console.warn(`Native cleanup failed: ${String(error)}`);
+      }
     }
+    if (failure !== undefined) throw failure.error;
   },
 );

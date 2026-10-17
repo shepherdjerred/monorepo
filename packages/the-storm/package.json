@@ -62,7 +62,7 @@
     "test:capacity": "STORM_E2E_PROFILE=capacity bun --no-install --bun vitest run --config vitest.capacity.config.ts",
     "test:capacity-native": "STORM_E2E_PROFILE=capacity bun --no-install --bun vitest run --config vitest.capacity-native.config.ts",
     "test:capacity-frame-pacing": "STORM_E2E_PROFILE=capacity bun --no-install --bun vitest run --config vitest.capacity-frame-pacing.config.ts",
-    "test:capacity-tools": "bun --no-install --bun vitest run tools/capacity tests/capacity/runtime.test.ts tests/capacity/native-combat.test.ts tests/capacity/map-readiness.test.ts tests/capacity/behavior.test.ts tests/capacity/features.test.ts --exclude '**/.cache/**' --config ../../vitest.config.ts",
+    "test:capacity-tools": "bun --no-install --bun vitest run tools/capacity tests/capacity/runtime.test.ts tests/capacity/native-combat.test.ts tests/capacity/map-readiness.test.ts tests/capacity/native-readiness.test.ts tests/capacity/behavior.test.ts tests/capacity/features.test.ts --exclude '**/.cache/**' --config ../../vitest.config.ts",
     "capacity:qualify": "bun tools/capacity/index.ts",
     "rwf:watch": "bun scripts/rwf-watch.ts",
     "rwf:trails": "bun scripts/rwf-trails.ts",
