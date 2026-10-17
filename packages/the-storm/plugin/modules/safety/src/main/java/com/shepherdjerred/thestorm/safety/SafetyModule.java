@@ -73,7 +73,18 @@ public final class SafetyModule implements StormModule {
                   var cached = flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, player);
                   return cached
                       .map(java.util.concurrent.CompletableFuture::completedFuture)
-                      .orElseGet(() -> flags.enabled(ManagedGameplay.CONTENT_SAFETY, player));
+                      .orElseGet(
+                          () ->
+                              flags.enabledOrDefault(
+                                  ManagedGameplay.CONTENT_SAFETY,
+                                  player,
+                                  false,
+                                  failure ->
+                                      context
+                                          .logger()
+                                          .warn(
+                                              "Safety rollout provider unavailable; retaining unscreened legacy enforcement",
+                                              failure)));
                 }));
     context.services().provide(ContentSafety.class, service);
     grim = new GrimHooks(context, service);

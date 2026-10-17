@@ -93,19 +93,31 @@ public final class ManagedGameplay implements AutoCloseable {
                   .build();
           return client
               .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-              .thenApply(
-                  response -> {
-                    if (response.statusCode() != 200)
-                      throw new IllegalStateException(
-                          "rollout returned HTTP " + response.statusCode());
-                    var value = json.readTree(response.body()).get("enabled");
-                    if (value == null || !value.isBoolean())
-                      throw new IllegalStateException("rollout response lacks enabled");
-                    return value.booleanValue();
-                  });
+              .exceptionallyCompose(
+                  failure -> {
+                    var cause = FlagProviderUnavailableException.unwrap(failure);
+                    return CompletableFuture.failedFuture(
+                        cause instanceof java.io.IOException
+                            ? new FlagProviderUnavailableException(cause)
+                            : cause);
+                  })
+              .thenApply(response -> readEvaluation(response, json));
         },
         client::shutdownNow,
         "beta".equals(environment));
+  }
+
+  private static boolean readEvaluation(HttpResponse<String> response, JsonMapper json) {
+    if ((response.statusCode() >= 500 && response.statusCode() < 600)
+        || response.statusCode() == 429)
+      throw new FlagProviderUnavailableException(
+          new IllegalStateException("rollout returned HTTP " + response.statusCode()));
+    if (response.statusCode() != 200)
+      throw new IllegalStateException("rollout returned HTTP " + response.statusCode());
+    var value = json.readTree(response.body()).get("enabled");
+    if (value == null || !value.isBoolean())
+      throw new IllegalStateException("rollout response lacks enabled");
+    return value.booleanValue();
   }
 
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
@@ -124,6 +136,26 @@ public final class ManagedGameplay implements AutoCloseable {
                   new EvaluationKey(key, actor),
                   new CachedEvaluation(enabled, now.plus(CACHE_TTL)));
               return enabled;
+            });
+  }
+
+  /** Uses and briefly caches the declared default only for an observed provider outage. */
+  public CompletableFuture<Boolean> enabledOrDefault(
+      String key,
+      UUID actor,
+      boolean fallback,
+      java.util.function.Consumer<Throwable> unavailable) {
+    return enabled(key, actor)
+        .exceptionally(
+            failure -> {
+              var cause = FlagProviderUnavailableException.unwrap(failure);
+              if (!(cause instanceof FlagProviderUnavailableException))
+                throw new java.util.concurrent.CompletionException(cause);
+              unavailable.accept(cause);
+              evaluations.put(
+                  new EvaluationKey(key, actor),
+                  new CachedEvaluation(fallback, time.instant().plus(CACHE_TTL)));
+              return fallback;
             });
   }
 
