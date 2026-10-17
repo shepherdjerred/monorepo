@@ -801,7 +801,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
+      "value": "2.0.0-1010485@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
       "notes": [
         "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -858,7 +858,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010085@sha256:b73cc0f6ab45ba896df4fcd3f513e9f7082972d3d5ca9fbaa1f53b2041003295",
+      "value": "2.0.0-1010387@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
       "notes": [
         "Stable Scout beta Workflow Worker image - bootstrapped from the accepted beta backend image; later pins are promoted after a healthy 100% ramp",
         "not managed by renovate"
@@ -910,7 +910,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
+      "value": "2.0.0-1010387@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
       "notes": [
         "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
