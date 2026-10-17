@@ -12,6 +12,10 @@ import {
   lockMedia,
 } from "./guards.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
+import {
+  PendingLegacyClaimsError,
+  reopenLegacyClaimProtection,
+} from "#infrastructure/recovery/legacy-claims/protection.ts";
 import { removalPlan, assertOwnedAsset } from "./removal-plan.ts";
 import { advanceSubtitleBindings } from "./subtitle-lifecycle/ownership.ts";
 import { fileOperations } from "./file-operations.ts";
@@ -52,6 +56,9 @@ export async function removeFiles(
     };
   });
   const { plan } = snapshot;
+  const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
+  if (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
+    throw new PendingLegacyClaimsError(mediaIds);
   const context = await prepareRemovalProof(initialContext, plan);
   await awaitRetentionFreshness(context, {
     decisionId,
@@ -59,7 +66,6 @@ export async function removeFiles(
     epoch: snapshot.epoch,
     purge,
   });
-  const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
   const completeState = purge ? "purged" : "quarantined";
   const previousSubtitleState = purge ? "quarantined" : "installed";
   await context.db.$transaction(

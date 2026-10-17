@@ -12,9 +12,40 @@ afterAll(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-test.each(["request", "no_longer_request"] as const)(
-  "native physical receipt permits exact household %s declaration without reviving old effects",
-  async (intent) => {
+async function householdMappings(
+  db: Parameters<typeof nativeFileFixture>[0],
+  f: Awaited<ReturnType<typeof nativeFileFixture>>,
+  managed: boolean,
+) {
+  const users = await db.mediaUser.findMany();
+  for (const user of users) {
+    const relevant = user.id === f.prior.actor.id || user.id === f.file.user.id;
+    const isManaged = managed && user.id === f.file.user.id;
+    const mapping = {
+      serverMachineId: "server",
+      kind: isManaged ? "managed" : "account",
+      homeUserId: isManaged ? `home-${user.id}` : null,
+      permittedSectionIds: relevant ? ["1"] : ["2"],
+      permittedMediaKinds: relevant ? ["movie"] : ["series"],
+      plexRestricted: isManaged,
+      verifiedAt: new Date(),
+    };
+    await db.plexIdentityMapping.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, ...mapping },
+      update: { ...mapping, version: { increment: 1 } },
+    });
+  }
+}
+
+test.each([
+  { intent: "request", managed: false },
+  { intent: "no_longer_request", managed: false },
+  { intent: "request", managed: true },
+  { intent: "no_longer_request", managed: true },
+] as const)(
+  "native physical receipt permits exact household $intent declaration (managed=$managed) without reviving old effects",
+  async ({ intent, managed }) => {
     const db = harness.database();
     const f = await nativeFileFixture(db, harness.context().cipher);
     directories.push(f.file.directory);
@@ -24,24 +55,7 @@ test.each(["request", "no_longer_request"] as const)(
       planId: f.planId,
       operationId: z.uuid().parse(approved.operationId),
     });
-    const users = await db.mediaUser.findMany();
-    for (const user of users) {
-      const relevant =
-        user.id === f.prior.actor.id || user.id === f.file.user.id;
-      const mapping = {
-        serverMachineId: "server",
-        kind: "account",
-        permittedSectionIds: relevant ? ["1"] : ["2"],
-        permittedMediaKinds: relevant ? ["movie"] : ["series"],
-        plexRestricted: false,
-        verifiedAt: new Date(),
-      };
-      await db.plexIdentityMapping.upsert({
-        where: { userId: user.id },
-        create: { userId: user.id, ...mapping },
-        update: { ...mapping, version: { increment: 1 } },
-      });
-    }
+    await householdMappings(db, f, managed);
     await db.retentionHold.create({
       data: { mediaId: f.file.media.id, userId: f.prior.actor.id, isPin: true },
     });
@@ -57,12 +71,25 @@ test.each(["request", "no_longer_request"] as const)(
       [f.prior.actor.id, f.file.user.id].sort(),
     );
     for (const actor of [f.prior.actor, f.file.user]) {
-      await service.respond(actor, crypto.randomUUID(), id, {
-        scopeHash: initial.scopeHash,
-        declarations: [{ mediaId: f.file.media.id, intent }],
-        acknowledgePending: true,
-      });
+      const proxy = managed && actor.id === f.file.user.id;
+      await service.respond(
+        proxy ? f.prior.actor : actor,
+        crypto.randomUUID(),
+        id,
+        {
+          scopeHash: initial.scopeHash,
+          ...(proxy ? { subjectUserId: actor.id } : {}),
+          declarations: [{ mediaId: f.file.media.id, intent }],
+          acknowledgePending: true,
+        },
+      );
     }
+    if (managed)
+      expect(
+        await db.recoveryResponse.findUniqueOrThrow({
+          where: { reviewId_userId: { reviewId: id, userId: f.file.user.id } },
+        }),
+      ).toMatchObject({ actorId: f.prior.actor.id, userId: f.file.user.id });
     const final = await service.detail(f.prior.actor, id);
     await service.release(f.prior.actor, crypto.randomUUID(), id, {
       expectedVersion: final.version,

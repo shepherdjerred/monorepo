@@ -7,6 +7,17 @@ import { installSubtitle } from "./subtitles.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { rollbackPromotion } from "./rollback.ts";
 import { cleanupUpgrade } from "./upgrade-cleanup.ts";
+import {
+  LEGACY_CLAIM_PROTECTION,
+  PendingLegacyClaimsError,
+  reopenLegacyClaimProtection,
+} from "#infrastructure/recovery/legacy-claims/protection.ts";
+
+async function repairLegacyProtection(context: FileContext, error: unknown) {
+  if (!(error instanceof PendingLegacyClaimsError)) return false;
+  await reopenLegacyClaimProtection(context.db, error.mediaIds);
+  return true;
+}
 
 /** Callbacks heartbeat and throw on Activity cancellation; only IDs leave the worker. */
 export function createMediaFileActivities(
@@ -18,6 +29,8 @@ export function createMediaFileActivities(
         await cleanupUpgrade(context, cleanupId);
         return { status: "purged" };
       } catch (error) {
+        if (await repairLegacyProtection(context, error))
+          return { status: "protected", reason: LEGACY_CLAIM_PROTECTION };
         if (
           error instanceof FileGuardError &&
           error.reason === "cleanup_cancelled"
@@ -66,6 +79,8 @@ export function createMediaFileActivities(
         await removeFiles(context, decisionId, operationId, false);
         return { status: "quarantined" };
       } catch (error) {
+        if (await repairLegacyProtection(context, error))
+          return { status: "protected", reason: LEGACY_CLAIM_PROTECTION };
         if (error instanceof FileGuardError)
           return { status: "protected", reason: error.reason };
         throw error;
@@ -76,6 +91,8 @@ export function createMediaFileActivities(
         await removeFiles(context, decisionId, operationId, true);
         return { status: "purged" };
       } catch (error) {
+        if (await repairLegacyProtection(context, error))
+          return { status: "protected", reason: LEGACY_CLAIM_PROTECTION };
         if (error instanceof FileGuardError)
           return { status: "protected", reason: error.reason };
         throw error;

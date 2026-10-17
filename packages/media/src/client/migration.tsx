@@ -185,6 +185,14 @@ function ProposalReview({
         <span className="badge">{proposal.status.replaceAll("_", " ")}</span>
       </div>
       <p>
+        <Link
+          to={`/recovery?captureId=${encodeURIComponent(proposal.captureId)}`}
+        >
+          Associate captured requesters with exact household identities
+        </Link>
+        . Identity association alone creates no demand or ownership.
+      </p>
+      <p>
         <strong>{proposal.source.kind}</strong> · Version{" "}
         {proposal.source.version}
       </p>

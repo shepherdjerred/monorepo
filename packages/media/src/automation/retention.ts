@@ -16,6 +16,12 @@ import {
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { evaluateOwnerOverride, readOwnerOverride } from "./retention-owner.ts";
 import { refreshRetentionReceipts } from "./notifications/retention-receipts.ts";
+import {
+  hasPendingLegacyClaims,
+  persistLegacyClaimProtection,
+  reopenLegacyClaimProtection,
+  LEGACY_CLAIM_PROTECTION,
+} from "#infrastructure/recovery/legacy-claims/protection.ts";
 
 type Result = Awaited<
   ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>
@@ -27,6 +33,15 @@ const protect = (reason: string): Result => ({
   decisionId: null,
   wakeAt: null,
 });
+async function legacyProtection(
+  context: MediaAutomationContext,
+  ids: string[],
+) {
+  if (ids.length > 500) return protect("coverage_requires_review");
+  return (await reopenLegacyClaimProtection(context.db, ids))
+    ? protect(LEGACY_CLAIM_PROTECTION)
+    : null;
+}
 function incompleteWatchReason(observation: {
   quarantined: boolean;
   reason: string | null;
@@ -303,6 +318,10 @@ async function evaluateGroup(
     });
     if (!(await lockRuntimeAuthority(tx, runtime.recoveryEpoch)))
       return protect("runtime_protected");
+    if (await hasPendingLegacyClaims(tx, ids)) {
+      await persistLegacyClaimProtection(tx, ids);
+      return protect(LEGACY_CLAIM_PROTECTION);
+    }
     const items = await tx.mediaItem.findMany({
       where: { id: { in: ids } },
       include: mediaInclude,
@@ -393,7 +412,8 @@ export function createRetentionActivities(
         ownerOverride === null
           ? await coveredMedia(context, input.mediaId)
           : ownerOverride.media.map((item) => item.id);
-      if (ids.length > 500) return protect("coverage_requires_review");
+      const legacy = await legacyProtection(context, ids);
+      if (legacy !== null) return legacy;
       const snapshots = await context.db.mediaItem.findMany({
         where: { id: { in: ids } },
         include: mediaInclude,

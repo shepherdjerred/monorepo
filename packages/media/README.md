@@ -108,21 +108,24 @@ protect rather than prove quiescence.
 
 The `/recovery` interface shows owners protected titles and household reviews.
 Owners select media to prepare a review; shared physical files expand the scope
-to all covered episodes. Each relevant household member signs in and declares
-retain/request, Keep for a stated period, or no longer request for every title.
+to all covered episodes. Independent accounts sign in and declare retain/request,
+Keep for a stated period, or no longer request for their applicable titles. The
+owner may declare for an exactly mapped managed Plex Home profile; the immutable
+response records both actor and subject. Members never receive another person's
+roster, excluded titles, source requester identity or declarations.
 Declarations are immutable and **pending** until the owner applies the exact
 review. An immediate ordinary Keep/pin remains available and invalidates a stale
 review instead of releasing the system hold.
 
 `shared/recovery.ts` defines the request and response schemas:
 
-| Route                                         | Contract                                                                                                                                              |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /api/v1/recovery`                        | Accessible reviews; owners also receive active recovery holds.                                                                                        |
-| `POST /api/v1/recovery/reviews`               | Owner prepares up to 100 media items with `PrepareRecoverySchema`.                                                                                    |
-| `GET /api/v1/recovery/reviews/:id`            | Owner sees exact scope, outstanding respondents, pins, blockers and responses. Members see only currently permitted titles and their own declaration. |
-| `POST /api/v1/recovery/reviews/:id/responses` | Authenticated self declaration with `RespondRecoverySchema`; caller-supplied proxy identities are rejected.                                           |
-| `POST /api/v1/recovery/reviews/:id/release`   | Current owner confirms household completeness, existing pins and the limits of lost history using `ReleaseRecoverySchema`.                            |
+| Route                                         | Contract                                                                                                                                                   |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v1/recovery`                        | Accessible reviews; owners also receive active recovery holds.                                                                                             |
+| `POST /api/v1/recovery/reviews`               | Owner prepares up to 100 media items with `PrepareRecoverySchema`.                                                                                         |
+| `GET /api/v1/recovery/reviews/:id`            | Owner sees exact scope, outstanding respondents, pins, blockers and responses. Members see only currently permitted titles and their own declaration.      |
+| `POST /api/v1/recovery/reviews/:id/responses` | Self declaration, or current owner declaration for an exact managed subject, using `RespondRecoverySchema` and the subject's exact claim acknowledgements. |
+| `POST /api/v1/recovery/reviews/:id/release`   | Current owner confirms household completeness, existing pins and the limits of lost history using `ReleaseRecoverySchema`.                                 |
 
 Writes require the authenticated session, CSRF and an idempotency key. Release
 compares the reviewed scope and response hashes under sorted media, effective
@@ -134,14 +137,32 @@ preserves restoration manifests and clears cached watch evidence. Existing
 personal pins remain intact. Asset ownership and old acquisition/delivery birth
 epochs are never renewed by this flow.
 
-An unrelated household identity with freshly proven denial of every affected
-library and no relevant current or historical request/personal hold is listed
-separately and does not require a response. Unknown access never counts as
-denial; a relevant old claim keeps the person in scope even after access revocation.
+Fresh denial is evaluated per person and selected title. A person with no
+relevant current or historical request/personal hold need not declare for that
+inaccessible title. Unknown access never counts as denial; a relevant old claim
+keeps the person in scope even after access revocation.
 
-Silence, relevant managed/unmapped household identities, incomplete or partial root
-claims, unresolved migration claims affecting these titles, and stale Plex access
-keep protection in place. Each respondent's scoped access must have been
+Completed series/season requests can be reconciled one complete physical group
+at a time. Only selected leaf declarations change: root future-episode settings,
+outside claims, pins and authority epochs remain unchanged. A negative leaf
+declaration persists through later root projection. Incomplete root projection
+remains protected. Old immutable reviews retain their original v1 meaning.
+
+The owner can associate a captured legacy requester with an exact household
+identity through `GET`/`POST /api/v1/admin/legacy-requester-bindings`. This
+versioned, owner-declared association grants no demand or ownership. A fresh
+review binds capture and record hashes, binding revisions and selected leaves;
+each subject explicitly acknowledges that evidence. Outside claim coverage
+remains unresolved until separately reviewed.
+
+Retention and final file removal recheck later captured claims. An unaccounted
+claim reopens the affected household hold and invalidates the previous warning
+and grace period, while preserving any quarantine manifest for recovery.
+Historical accounting covers only its exact capture, record, selected leaves
+and recovery epoch; a later capture requires fresh review.
+
+Silence, unknown identity or coordinates, unresolved relevant migration claims,
+and stale Plex access keep protection in place. Each respondent's scoped access must have been
 verified within five minutes of release. Unrelated protected legacy torrent or
 subtitle records do not block household review; their own ownership guards
 remain independent. Reviews expire after seven days; changes require a new

@@ -8,6 +8,12 @@ import type {
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { serializable } from "./store.ts";
+import {
+  hasPendingLegacyClaims,
+  persistLegacyClaimProtection,
+  LEGACY_CLAIM_PROTECTION,
+} from "#infrastructure/recovery/legacy-claims/protection.ts";
+import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 
 const OwnerOverrideSchema = RemovalConfirmationSchema.extend({
   ownerId: z.string(),
@@ -23,6 +29,23 @@ const protectedResult = (reason: string): Result => ({
   decisionId: null,
   wakeAt: null,
 });
+async function legacyProtection(
+  tx: Prisma.TransactionClient,
+  ids: string[],
+  epoch: number,
+) {
+  if (!(await lockRuntimeAuthority(tx, epoch)))
+    return protectedResult("runtime_protected");
+  if (await hasPendingLegacyClaims(tx, ids)) {
+    await persistLegacyClaimProtection(tx, ids);
+    return protectedResult(LEGACY_CLAIM_PROTECTION);
+  }
+  return (await tx.recoveryHold.count({
+    where: { mediaId: { in: ids }, releasedAt: null },
+  }))
+    ? protectedResult("recovery_hold")
+    : null;
+}
 
 function ownerResult(
   target: Decision | null,
@@ -154,6 +177,8 @@ export async function evaluateOwnerOverride(
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
     });
+    const legacy = await legacyProtection(tx, ids, runtime.recoveryEpoch);
+    if (legacy !== null) return legacy;
     if (
       owner.role !== "owner" ||
       runtime.mode !== "active" ||
