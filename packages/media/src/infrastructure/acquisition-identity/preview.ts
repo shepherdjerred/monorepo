@@ -1,3 +1,4 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
 import {
   coordinateBlockers,
   referenceConflict,
@@ -89,7 +90,9 @@ export async function buildIdentityPreview(
   });
   const rows = await tx.mediaItem.findMany({
     where: { id: { in: ids } },
-    include: { intent: { include: { profile: true } } },
+    include: {
+      intents: { where: { edition: "default" }, include: { profile: true } },
+    },
     orderBy: { id: "asc" },
   });
   const proposed: AcquisitionIdentitySnapshot = {
@@ -132,7 +135,7 @@ export async function buildIdentityPreview(
       title: row.title,
       year: row.year,
       version: row.version,
-      generation: row.intent?.generation ?? 0,
+      generation: defaultIntent(row.intents)?.generation ?? 0,
     })),
     sponsorRequestId: sponsor?.id ?? null,
     numberingDigest:

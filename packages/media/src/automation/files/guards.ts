@@ -1,4 +1,7 @@
-import { Prisma } from "#generated/prisma/client.ts";
+import { assertDefaultFileEdition } from "#automation/files/editions/guard.ts";
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import {
   FileGuardError,
@@ -11,6 +14,7 @@ import { assertOwnerRemoval } from "./owner-removal.ts";
 import { assertAcquisitionIdentity } from "./acquisition-identity/guard.ts";
 import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { MediaError } from "#application/errors.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import {
   lockRuntimeAuthority,
@@ -41,9 +45,12 @@ export async function lockMedia(
   mediaIds: readonly string[],
 ): Promise<void> {
   if (mediaIds.length === 0) throw new FileGuardError("coverage_missing");
-  await tx.$queryRaw(
-    Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join([...new Set(mediaIds)].sort())}) ORDER BY id FOR UPDATE`,
-  );
+  try {
+    await lockDefaultMedia(tx, mediaIds);
+  } catch (error) {
+    if (error instanceof MediaError) throw new FileGuardError(error.code);
+    throw error;
+  }
 }
 
 export async function assertRuntime(
@@ -66,6 +73,11 @@ export async function assertAcquisition(
   const epoch = z
     .object({ recoveryEpoch: z.number().int() })
     .parse(attempt).recoveryEpoch;
+  if (
+    attempt.edition !== "default" ||
+    attempt.reservations.some((row) => row.edition !== "default")
+  )
+    throw new FileGuardError("edition_not_available");
   await lockEffectiveRequests(tx, attempt.mediaIds);
   await assertRuntime(tx, epoch);
   if (attempt.state !== "imported") {
@@ -79,7 +91,7 @@ export async function assertAcquisition(
   await assertNoMediaSubtitleReplacement(tx, attempt.mediaIds);
   const generations = GenerationsSchema.parse(attempt.generations);
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: attempt.mediaIds } },
+    where: { edition: "default", mediaId: { in: attempt.mediaIds } },
   });
   if (
     intents.length !== attempt.mediaIds.length ||
@@ -128,6 +140,7 @@ export async function assertRetention(input: {
   const decision = await tx.retentionDecision.findUniqueOrThrow({
     where: { id: input.decisionId },
   });
+  assertDefaultFileEdition(decision.edition);
   if (decision.state !== (input.purge ? "quarantined" : "grace_period"))
     throw new FileGuardError("decision_obsolete");
   const evidence = z
@@ -204,7 +217,11 @@ async function assertRetentionAuthority(
     throw new FileGuardError("record_ownership_unconfirmed");
   if (
     await tx.recoveryHold.count({
-      where: { mediaId: { in: [...mediaIds] }, releasedAt: null },
+      where: {
+        edition: "default",
+        mediaId: { in: [...mediaIds] },
+        releasedAt: null,
+      },
     })
   )
     throw new FileGuardError("recovery_request_history_unconfirmed");
@@ -233,6 +250,7 @@ async function coveredWarning(input: {
   if (generation === undefined) throw new FileGuardError("coverage_missing");
   const covered = await tx.retentionDecision.findFirst({
     where: {
+      edition: "default",
       mediaId,
       generation,
       state: input.purge ? "quarantined" : "grace_period",
@@ -267,13 +285,13 @@ async function assertRetentionItem(input: {
   const item = await tx.mediaItem.findUniqueOrThrow({
     where: { id: mediaId },
     include: {
-      intent: true,
-      holds: true,
+      intents: { where: { edition: "default" } },
+      holds: { where: { edition: "default" } },
       requests: { where: effectiveRequestWhere, include: { user: true } },
-      watchStates: true,
+      watchStates: { where: { edition: "default" } },
     },
   });
-  if (item.intent?.generation !== generations[mediaId])
+  if (defaultIntent(item.intents)?.generation !== generations[mediaId])
     throw new FileGuardError("intent_obsolete");
   if (
     item.holds.some(
@@ -316,7 +334,7 @@ async function assertRetentionItem(input: {
     if (accepted === null) throw new FileGuardError("warning_unconfirmed");
   }
   const reservation = await tx.acquisitionReservation.findUnique({
-    where: { mediaId },
+    where: targetWhere(defaultScope(mediaId)),
   });
   if (reservation !== null) throw new FileGuardError("acquisition_active");
 }

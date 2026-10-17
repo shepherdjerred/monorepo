@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import { HandoffNetworkEvidenceSchema } from "#shared/handoff.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { FileOperations } from "#filesystem/operations.ts";
 import { verifyControlExclusion } from "#filesystem/operations-io.ts";
@@ -30,7 +30,7 @@ export async function applyPreparedHandoff(
   const db = context.files.db;
   return db.$transaction(
     async (tx) => {
-      await lockMedia(
+      await lockDefaultMedia(
         tx,
         prepared.scope.media.map((item) => item.mediaId),
       );

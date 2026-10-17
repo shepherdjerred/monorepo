@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
@@ -39,7 +41,7 @@ async function committedRetry() {
     where: { id: entry.assetId },
   });
   await db.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { generation: 1 },
   });
   await db.acquisitionAttempt.update({
@@ -47,7 +49,7 @@ async function committedRetry() {
     data: { generations: { [f.media.id]: 1 } },
   });
   await db.acquisitionReservation.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { generation: 1 },
   });
   return { ...f, acquired, activities, attempt, entry, asset };
@@ -63,7 +65,7 @@ test("committed Retry accepts adopted generations and compatible profiles withou
     },
   });
   await db.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { profileId: compatible.id },
   });
   await rm(nodePath.join(f.roots.downloads, f.entry.downloadPath));
@@ -99,7 +101,7 @@ test("committed Retry accepts adopted generations and compatible profiles withou
 test("committed Retry with removed intent stays imported and preserves recovery ownership", async () => {
   const f = await committedRetry();
   await cluster.database.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { desiredPresence: false },
   });
   expect(await f.activities.promoteMediaFiles(f.acquired.input)).toEqual({
@@ -129,7 +131,7 @@ test("committed Retry rejects current profiles that no longer accept the measure
     },
   });
   await cluster.database.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { profileId: incompatible.id },
   });
   expect(await f.activities.inspectAndStageMedia(f.acquired.input)).toEqual({
@@ -215,7 +217,7 @@ test("hashing leaves authority rows unlocked and rejects an intent changed befor
       await tx.$executeRaw`SET LOCAL lock_timeout = '500ms'`;
       await tx.$queryRaw`SELECT id FROM "MediaItem" WHERE id = ${f.media.id} FOR UPDATE`;
       await tx.mediaIntent.update({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
         data: { desiredPresence: false, generation: { increment: 1 } },
       });
     });

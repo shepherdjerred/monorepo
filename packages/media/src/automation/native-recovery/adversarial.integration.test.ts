@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, expect, test } from "vitest";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -43,7 +45,7 @@ async function expectNoGrant(f: Awaited<ReturnType<typeof fixture>>) {
   ).toMatchObject({ ownershipEpoch: 0, version: f.asset.version });
   expect(
     await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.file.media.id },
+      where: targetWhere(defaultScope(f.file.media.id)),
     }),
   ).toMatchObject({ automationEpoch: 0 });
   expect(

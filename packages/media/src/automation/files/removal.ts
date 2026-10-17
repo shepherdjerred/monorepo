@@ -5,6 +5,9 @@ import {
   type RemovalEntry,
   now,
 } from "./types.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 import {
   assertRetention,
   assertRuntime,
@@ -47,6 +50,8 @@ export async function removeFiles(
     const decision = await tx.retentionDecision.findUniqueOrThrow({
       where: { id: decisionId },
     });
+    if (decision.edition !== "default")
+      throw new FileGuardError("edition_not_available");
     await lockMedia(tx, [decision.mediaId]);
     if (decision.state !== (purge ? "purged" : "quarantined"))
       requireFreshRetentionStart(initialContext, decision.evidence);
@@ -127,6 +132,7 @@ export async function removeFiles(
       await tx.retentionDecision.updateMany({
         where: {
           mediaId: { in: mediaIds },
+          edition: "default",
           state: purge ? "quarantined" : "grace_period",
         },
         data: {
@@ -148,11 +154,16 @@ export async function removeFiles(
           version: { increment: 1 },
         },
       });
+      await mirrorDefaultAvailability(
+        tx,
+        mediaIds,
+        purge ? "removed" : "quarantined",
+      );
       const evidence = z
         .object({ recoveryEpoch: z.number().int() })
         .parse(decision.evidence);
       const intents = await tx.mediaIntent.findMany({
-        where: { mediaId: { in: mediaIds } },
+        where: { mediaId: { in: mediaIds }, edition: "default" },
       });
       await queueLifecycleNotifications(tx, {
         key: `retention:${decisionId}:${completeState}`,
@@ -196,6 +207,7 @@ export async function restoreFiles(
     throw new FileGuardError("acquisition_disabled");
   const decision = await initialContext.db.retentionDecision.findFirst({
     where: {
+      edition: "default",
       mediaId,
       state: { in: ["quarantined", "restored", "grace_period", "cancelled"] },
       manifest: { not: Prisma.DbNull },
@@ -227,7 +239,7 @@ export async function restoreFiles(
       if (operation.kind !== "restore_media" || payload.mediaId !== mediaId)
         throw new FileGuardError("restore_operation_invalid");
       const intent = await tx.mediaIntent.findUniqueOrThrow({
-        where: { mediaId },
+        where: targetWhere(defaultScope(mediaId)),
       });
       if (!intent.desiredPresence || intent.generation !== payload.generation)
         throw new FileGuardError("intent_obsolete");
@@ -301,7 +313,7 @@ export async function restoreFiles(
         .record(z.string(), z.json())
         .parse(currentDecision.evidence);
       const restoredIntents = await tx.mediaIntent.findMany({
-        where: { mediaId: { in: mediaIds } },
+        where: { mediaId: { in: mediaIds }, edition: "default" },
       });
       const restoredGenerations = Object.fromEntries(
         restoredIntents.map((restoredIntent) => [
@@ -312,6 +324,7 @@ export async function restoreFiles(
       await tx.retentionDecision.updateMany({
         where: {
           mediaId: { in: mediaIds },
+          edition: "default",
           state: { in: ["quarantined", "grace_period", "cancelled"] },
         },
         data: {
@@ -328,6 +341,7 @@ export async function restoreFiles(
         where: { id: { in: mediaIds } },
         data: { availability: "importing", version: { increment: 1 } },
       });
+      await mirrorDefaultAvailability(tx, mediaIds, "importing");
       await recordRestoreReceipt({
         tx,
         context,

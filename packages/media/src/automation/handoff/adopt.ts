@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type {
@@ -9,6 +11,11 @@ import { queueOperation } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { BundleReportSchema } from "#shared/migration-handoff.ts";
 import { adoptSubtitles } from "./subtitles.ts";
+import {
+  defaultPhysicalRoot,
+  assertDefaultPhysicalAsset,
+} from "#infrastructure/handoff/default-edition.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 
 type Network = z.infer<typeof HandoffNetworkEvidenceSchema>;
 type Files = z.infer<typeof HandoffFileEvidenceSchema>;
@@ -46,7 +53,7 @@ async function adoptMedia(
   const epoch = scope.request.recoveryEpoch;
   for (const selected of scope.media) {
     const intent = await tx.mediaIntent.upsert({
-      where: { mediaId: selected.mediaId },
+      where: targetWhere(defaultScope(selected.mediaId)),
       create: {
         mediaId: selected.mediaId,
         profileId: selected.profileId,
@@ -87,10 +94,12 @@ async function adoptMedia(
       },
     });
     await invalidateRetention(tx, selected.mediaId);
+    if (plex !== undefined)
+      await mirrorDefaultAvailability(tx, [selected.mediaId], "available");
     // Physical proof cannot reconstruct post-backup requests/Keep, nor silently import omitted claims.
     if (scope.files.some((file) => file.mediaIds.includes(selected.mediaId)))
       await tx.recoveryHold.upsert({
-        where: { mediaId: selected.mediaId },
+        where: targetWhere(defaultScope(selected.mediaId)),
         create: {
           mediaId: selected.mediaId,
           recoveryEpoch: epoch,
@@ -132,7 +141,11 @@ async function adoptFiles(
     if (evidence === undefined)
       throw new Error("Handoff file evidence incomplete");
     const coverage = await tx.assetCoverage.findMany({
-      where: { mediaId: { in: file.mediaIds }, current: true },
+      where: {
+        mediaId: { in: file.mediaIds },
+        edition: "default",
+        current: true,
+      },
     });
     if (coverage.some((item) => item.assetId !== file.existingAssetId))
       throw new Error("Handoff overlaps another current asset");
@@ -165,6 +178,8 @@ async function adoptFiles(
       await tx.libraryAsset.create({
         data: {
           id: file.assetId,
+          edition: "default",
+          editionRootId: await defaultPhysicalRoot(tx, file.mediaIds),
           path: file.canonicalPath,
           ...data,
           coverage: {
@@ -196,6 +211,7 @@ async function assertExistingCoverage(
   file: HandoffScope["files"][number],
 ) {
   if (file.existingAssetId === null) return;
+  await assertDefaultPhysicalAsset(tx, file.existingAssetId);
   const existing = await tx.assetCoverage.findMany({
     where: { assetId: file.existingAssetId, current: true },
   });
@@ -214,7 +230,11 @@ async function adoptClaims(
   for (const claim of scope.claims) {
     const existing = await tx.mediaRequest.findUnique({
       where: {
-        userId_mediaId: { userId: claim.userId, mediaId: claim.mediaId },
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: claim.userId,
+          mediaId: claim.mediaId,
+        },
       },
     });
     const languages = [
@@ -225,7 +245,11 @@ async function adoptClaims(
     ];
     const request = await tx.mediaRequest.upsert({
       where: {
-        userId_mediaId: { userId: claim.userId, mediaId: claim.mediaId },
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: claim.userId,
+          mediaId: claim.mediaId,
+        },
       },
       create: {
         userId: claim.userId,

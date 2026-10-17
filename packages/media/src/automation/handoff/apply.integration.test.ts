@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { rm, readFile, writeFile, rename, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -45,12 +47,12 @@ test("real owner prepare/proof/apply adopts only selected bytes at the restored 
   });
   expect(
     await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.network.media.id },
+      where: targetWhere(defaultScope(f.network.media.id)),
     }),
   ).toMatchObject({ automationEpoch: 0 });
   expect(
     await db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.network.media.id },
+      where: targetWhere(defaultScope(f.network.media.id)),
     }),
   ).toMatchObject({
     releasedAt: null,

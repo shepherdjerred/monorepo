@@ -286,7 +286,8 @@ model Credential {
 
 model MediaItem {
   subtitlePolicies MediaSubtitlePolicyVersion[]
-  recoveryHold RecoveryHold?
+  recoveryHolds RecoveryHold[]
+  editionDefinitions MediaEditionDefinition[]
   id            String              @id @default(uuid())
   kind          MediaKind
   title         String
@@ -307,12 +308,12 @@ model MediaItem {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
   requests      MediaRequest[]
-  intent        MediaIntent?
+  intents       MediaIntent[]
   assets        AssetCoverage[]
   watchStates   WatchState[]
   holds         RetentionHold[]
   retention     RetentionDecision[]
-  acquisitionReservation AcquisitionReservation?
+  acquisitionReservations AcquisitionReservation[]
 
   @@unique([kind, tmdbId])
   @@index([parentId, seasonNumber, episodeNumber])
@@ -324,6 +325,8 @@ model MediaRequest {
   user                  MediaUser @relation(fields: [userId], references: [id])
   mediaId               String
   media                 MediaItem @relation(fields: [mediaId], references: [id])
+  edition               String @default("default")
+  target                MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   active                Boolean   @default(true)
   direct                Boolean   @default(true)
   excluded              Boolean   @default(false)
@@ -338,16 +341,19 @@ model MediaRequest {
   coverageSources RequestCoverage[] @relation("CoveredRequest")
   expandedCoverage RequestCoverage[] @relation("RootRequest")
 
-  @@unique([userId, mediaId])
+  @@unique([userId, mediaId, edition])
+  @@unique([id, edition])
+  @@unique([id, mediaId, edition])
   @@index([mediaId, active])
 }
 
 model RequestCoverage {
   rootRequestId String
-  rootRequest MediaRequest @relation("RootRequest", fields: [rootRequestId], references: [id], onDelete: Cascade)
+  rootRequest MediaRequest @relation("RootRequest", fields: [rootRequestId, edition], references: [id, edition], onDelete: Cascade)
   requestId String
-  request MediaRequest @relation("CoveredRequest", fields: [requestId], references: [id], onDelete: Cascade)
+  request MediaRequest @relation("CoveredRequest", fields: [requestId, mediaId, edition], references: [id, mediaId, edition], onDelete: Cascade)
   mediaId String
+  edition String @default("default")
   active Boolean @default(true)
   sourceVersion Int
   createdAt DateTime @default(now())
@@ -384,10 +390,29 @@ model QualityProfileVersion {
   @@id([profileId, version])
 }
 
+model MediaEditionDefinition {
+  rootMediaId String
+  root MediaItem @relation(fields: [rootMediaId], references: [id], onDelete: Restrict)
+  key String
+  policy String
+  pathLabel String
+  plexLabel String
+  definitionVersion Int @default(0)
+  displayLabel String
+  displayVersion Int @default(0)
+  targets MediaIntent[]
+  assets LibraryAsset[]
+  @@id([rootMediaId, key])
+}
+
 model MediaIntent {
   automationEpoch Int @default(-1)
-  mediaId                String          @id
+  mediaId                String
   media                  MediaItem       @relation(fields: [mediaId], references: [id])
+  edition                String @default("default")
+  editionRootId          String?
+  definition             MediaEditionDefinition? @relation(fields: [editionRootId, edition], references: [rootMediaId, key], onDelete: Restrict)
+  availability           Availability @default(wanted)
   generation             Int             @default(0)
   desiredPresence        Boolean         @default(true)
   monitoring             Boolean         @default(true)
@@ -396,6 +421,15 @@ model MediaIntent {
   version                Int             @default(0)
   intentionallyRemovedAt DateTime?
   updatedAt              DateTime        @updatedAt
+  requests MediaRequest[]
+  reservations AcquisitionReservation[]
+  coverage AssetCoverage[]
+  watchStates WatchState[]
+  holds RetentionHold[]
+  retention RetentionDecision[]
+  recoveryHolds RecoveryHold[]
+  subtitlePolicies MediaSubtitlePolicyVersion[]
+  @@id([mediaId, edition])
 }
 
 model ReleaseCandidate {
@@ -468,6 +502,7 @@ model MediaRuntimeState {
 }
 
 model AcquisitionAttempt {
+  edition          String @default("default")
   id               String                   @id @default(uuid())
   releaseId        String
   release          ReleaseCandidate         @relation(fields: [releaseId], references: [id])
@@ -486,17 +521,21 @@ model AcquisitionAttempt {
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
   reservations     AcquisitionReservation[]
+  @@unique([id, edition])
 }
 
 model AcquisitionReservation {
-  mediaId    String             @id
+  mediaId    String
   media      MediaItem          @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  edition    String @default("default")
+  target     MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   attemptId  String
-  attempt    AcquisitionAttempt @relation(fields: [attemptId], references: [id])
+  attempt    AcquisitionAttempt @relation(fields: [attemptId, edition], references: [id, edition])
   generation Int
   createdAt  DateTime           @default(now())
 
   @@index([attemptId])
+  @@id([mediaId, edition])
 }
 
 model Torrent {
@@ -517,6 +556,9 @@ model Torrent {
 }
 
 model LibraryAsset {
+  edition String @default("default")
+  editionRootId String?
+  definition MediaEditionDefinition? @relation(fields: [editionRootId, edition], references: [rootMediaId, key], onDelete: Restrict)
   subtitleReplacements SubtitleReplacement[]
   ownershipEpoch Int @default(-1)
   plexPublishedAt DateTime?
@@ -538,6 +580,7 @@ model LibraryAsset {
   coverage   AssetCoverage[]
   subtitles  SubtitleAsset[]
   @@index([supersededByAssetId])
+  @@unique([id, edition])
 }
 
 model UpgradeCleanup {
@@ -559,10 +602,11 @@ model UpgradeCleanup {
 
 model AssetCoverage {
   assetId String
-  asset   LibraryAsset @relation(fields: [assetId], references: [id])
+  asset   LibraryAsset @relation(fields: [assetId, edition], references: [id, edition])
   mediaId String
   media   MediaItem    @relation(fields: [mediaId], references: [id])
   edition String       @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   current Boolean      @default(false)
 
   @@id([assetId, mediaId])
@@ -660,6 +704,8 @@ model MediaSubtitlePolicyVersion {
   id String @id @default(uuid())
   mediaId String
   media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   version Int
   actorId String
   actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
@@ -667,7 +713,7 @@ model MediaSubtitlePolicyVersion {
   source Json
   rules Json
   createdAt DateTime @default(now())
-  @@unique([mediaId, version])
+  @@unique([mediaId, edition, version])
 }
 
 model WatchState {
@@ -675,11 +721,13 @@ model WatchState {
   user       MediaUser @relation(fields: [userId], references: [id])
   mediaId    String
   media      MediaItem @relation(fields: [mediaId], references: [id])
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   watched    Boolean
   observedAt DateTime
   source     String
 
-  @@id([userId, mediaId])
+  @@id([userId, mediaId, edition])
 }
 
 model RetentionHold {
@@ -688,17 +736,21 @@ model RetentionHold {
   user      MediaUser @relation(fields: [userId], references: [id])
   mediaId   String
   media     MediaItem @relation(fields: [mediaId], references: [id])
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   until     DateTime?
   isPin     Boolean   @default(false)
   createdAt DateTime  @default(now())
 
-  @@unique([userId, mediaId])
+  @@unique([userId, mediaId, edition])
 }
 
 model RetentionDecision {
   id                String    @id @default(uuid())
   mediaId           String
   media             MediaItem @relation(fields: [mediaId], references: [id])
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   generation        Int
   state             String
   evidence          Json
@@ -711,7 +763,7 @@ model RetentionDecision {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  @@index([mediaId, state])
+  @@index([mediaId, edition, state])
 }
 
 model Operation {
@@ -758,8 +810,10 @@ model IdempotencyRecord {
 
 model RecoveryHold {
   version Int @default(0)
-  mediaId String @id
+  mediaId String
   media MediaItem @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  edition String @default("default")
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict)
   recoveryEpoch Int
   reason String
   createdAt DateTime @default(now())
@@ -767,6 +821,7 @@ model RecoveryHold {
   releasedById String?
   releasedBy MediaUser? @relation(fields: [releasedById], references: [id], onDelete: Restrict)
   releaseEvidence Json?
+  @@id([mediaId, edition])
 }
 
 model RecoveryReview {

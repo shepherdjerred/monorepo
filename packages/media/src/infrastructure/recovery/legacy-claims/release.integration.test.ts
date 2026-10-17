@@ -122,7 +122,7 @@ test("actual household self-declaration and owner release commits only exact ack
   expect(remaining.claims).toEqual([]);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).not.toMatchObject({ releasedAt: null });
 });
@@ -146,7 +146,7 @@ test("a fresh owner binding revision invalidates an actual pending review before
   ).toBe(0);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ releasedAt: null });
 });

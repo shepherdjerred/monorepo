@@ -2,7 +2,9 @@ import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
 import { queueOperation, serializable } from "./store.ts";
 import { IntegrationError } from "#integrations/http.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
 async function invalidateWatch(
@@ -11,9 +13,15 @@ async function invalidateWatch(
   userId?: string,
 ): Promise<void> {
   await serializable(context.db, async (tx) => {
-    await lockMedia(tx, [mediaId]);
+    await lockDefaultScopes(tx, [defaultScope(mediaId)], {
+      createMissing: false,
+    });
     await tx.watchState.deleteMany({
-      where: { mediaId, ...(userId === undefined ? {} : { userId }) },
+      where: {
+        mediaId,
+        edition: "default",
+        ...(userId === undefined ? {} : { userId }),
+      },
     });
   });
 }
@@ -32,7 +40,10 @@ export async function observeRequesterWatch(
   const media = await context.db.mediaItem.findUniqueOrThrow({
     where: { id: mediaId },
     include: {
-      requests: { where: effectiveRequestWhere, include: { user: true } },
+      requests: {
+        where: { ...effectiveRequestWhere, edition: "default" },
+        include: { user: true },
+      },
     },
   });
   const identity = PlexIdentitySchema.parse(media.externalIds);
@@ -64,15 +75,28 @@ export async function observeRequesterWatch(
         .userPlex(token.serverToken)
         .watched(identity.plexRatingKey);
       await serializable(context.db, async (tx) => {
-        await tx.$queryRaw`SELECT id FROM "MediaItem" WHERE id = ${mediaId} FOR UPDATE`;
+        await lockDefaultScopes(tx, [defaultScope(mediaId)], {
+          createMissing: false,
+        });
         const prior = await tx.watchState.findUnique({
-          where: { userId_mediaId: { userId: request.userId, mediaId } },
+          where: {
+            userId_mediaId_edition: {
+              userId: request.userId,
+              ...defaultScope(mediaId),
+            },
+          },
         });
         await tx.watchState.upsert({
-          where: { userId_mediaId: { userId: request.userId, mediaId } },
+          where: {
+            userId_mediaId_edition: {
+              userId: request.userId,
+              ...defaultScope(mediaId),
+            },
+          },
           create: {
             userId: request.userId,
             mediaId,
+            edition: "default",
             watched,
             observedAt: new Date(),
             source: "plex_current",
@@ -83,6 +107,7 @@ export async function observeRequesterWatch(
         const outstanding = await tx.retentionDecision.count({
           where: {
             mediaId,
+            edition: "default",
             state: { in: ["eligible", "warning_pending", "grace_period"] },
           },
         });
@@ -92,12 +117,13 @@ export async function observeRequesterWatch(
           data: { version: { increment: 1 } },
         });
         const intent = await tx.mediaIntent.update({
-          where: { mediaId },
+          where: targetWhere(defaultScope(mediaId)),
           data: { generation: { increment: 1 }, version: { increment: 1 } },
         });
         await tx.retentionDecision.updateMany({
           where: {
             mediaId,
+            edition: "default",
             state: { in: ["eligible", "warning_pending", "grace_period"] },
           },
           data: { state: "cancelled", version: { increment: 1 } },
@@ -133,7 +159,7 @@ export async function queueRetentionCheck(
   bucket: string,
 ): Promise<void> {
   const intent = await context.db.mediaIntent.findUnique({
-    where: { mediaId },
+    where: targetWhere(defaultScope(mediaId)),
   });
   if (intent === null) return;
   await serializable(context.db, async (tx) => {

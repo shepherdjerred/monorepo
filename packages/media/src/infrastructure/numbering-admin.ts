@@ -9,7 +9,10 @@ import {
 } from "#shared/numbering.ts";
 import type { Database } from "./database.ts";
 import { MediaCommandBase } from "./command-base.ts";
-import { lockAcquisitionMedia } from "./acquisition-identity/locks.ts";
+import {
+  lockCanonicalMedia,
+  lockExistingDefaultTargets,
+} from "./editions/locks.ts";
 import { lockEffectiveRequests } from "./request-claims.ts";
 import {
   assertNumberingOwner,
@@ -100,14 +103,18 @@ export class PrismaNumberingAdministration extends MediaCommandBase {
             "Select an episode in a canonical series",
             422,
           );
-        await lockAcquisitionMedia(tx, [seriesId]);
+        await lockCanonicalMedia(tx, [seriesId]);
         const siblings = await tx.mediaItem.findMany({
           where: {
             kind: "episode",
             OR: [{ parentId: seriesId }, { parent: { parentId: seriesId } }],
           },
         });
-        await lockAcquisitionMedia(
+        await lockCanonicalMedia(
+          tx,
+          siblings.map((item) => item.id),
+        );
+        await lockExistingDefaultTargets(
           tx,
           siblings.map((item) => item.id),
         );

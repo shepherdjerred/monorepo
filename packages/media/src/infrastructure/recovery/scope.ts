@@ -1,8 +1,10 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { historicalDefaultRow } from "#infrastructure/native-recovery/legacy-snapshot.ts";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import { LegacyRecoveryScopeSchema } from "#shared/recovery.ts";
 import { MediaError } from "#application/errors.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { unresolvedRecoveryClaims } from "./provenance.ts";
 import { hasProvenNoRecoveryAccess } from "./household.ts";
@@ -27,6 +29,7 @@ export async function sharedRecoveryMedia(
   for (let page = 0; page < 100; page++) {
     const rows = await db.libraryAsset.findMany({
       where: {
+        edition: "default",
         state: { not: "purged" },
         coverage: { some: { mediaId: { in: [...ids] }, current: true } },
       },
@@ -53,7 +56,7 @@ export async function lockRecoveryScope(
   db: Prisma.TransactionClient,
   ids: string[],
 ) {
-  await lockMedia(db, ids);
+  await lockDefaultMedia(db, ids);
   await lockEffectiveRequests(db, ids);
   await db.$queryRaw(Prisma.sql`
     SELECT r.id FROM "MediaRequest" r WHERE r."mediaId" IN (
@@ -99,13 +102,16 @@ async function snapshotLegacyRecoveryScope(
   });
   const media = await db.mediaItem.findMany({
     where: { id: { in: ids } },
-    include: { intent: true, parent: { include: { parent: true } } },
+    include: {
+      intents: { where: { edition: "default" } },
+      parent: { include: { parent: true } },
+    },
     orderBy: { id: "asc" },
   });
   if (media.length !== ids.length)
     throw recoveryConflict("Recovery media no longer exists");
   const holds = await db.recoveryHold.findMany({
-    where: { mediaId: { in: ids }, releasedAt: null },
+    where: { edition: "default", mediaId: { in: ids }, releasedAt: null },
     orderBy: { mediaId: "asc" },
   });
   const knownUsers = await db.mediaUser.findMany({
@@ -117,6 +123,7 @@ async function snapshotLegacyRecoveryScope(
     throw recoveryConflict("Household exceeds the supported review bound");
   const assets = await db.libraryAsset.findMany({
     where: {
+      edition: "default",
       state: { not: "purged" },
       coverage: { some: { mediaId: { in: ids }, current: true } },
     },
@@ -127,7 +134,7 @@ async function snapshotLegacyRecoveryScope(
     take: 101,
   });
   const coverage = await db.requestCoverage.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: [{ rootRequestId: "asc" }, { mediaId: "asc" }],
     take: 1001,
   });
@@ -135,6 +142,7 @@ async function snapshotLegacyRecoveryScope(
   const ancestorIds = media.flatMap((item) => recoveryAncestors(item));
   const requests = await db.mediaRequest.findMany({
     where: {
+      edition: "default",
       OR: [
         { mediaId: { in: [...ids, ...ancestorIds] } },
         { id: { in: rootIds } },
@@ -149,7 +157,7 @@ async function snapshotLegacyRecoveryScope(
       .map((row) => row.id),
   );
   const personalHolds = await db.retentionHold.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: { id: "asc" },
     take: 1001,
   });
@@ -203,7 +211,10 @@ async function snapshotLegacyRecoveryScope(
     blockers.push("select_physical_episode_coverage");
   if (
     media.some((item) => {
-      if (item.intent?.automationEpoch === runtime.recoveryEpoch) return false;
+      if (
+        defaultIntent(item.intents)?.automationEpoch === runtime.recoveryEpoch
+      )
+        return false;
       const covered = assets.filter((asset) =>
         asset.coverage.some((row) => row.mediaId === item.id),
       );
@@ -244,6 +255,7 @@ async function snapshotLegacyRecoveryScope(
     blockers.push("root_request_projection_incomplete");
   const outside = await db.requestCoverage.count({
     where: {
+      edition: "default",
       rootRequestId: { in: rootIds },
       active: true,
       mediaId: { notIn: ids },
@@ -262,8 +274,8 @@ async function snapshotLegacyRecoveryScope(
           .object({ plexSectionId: z.string().optional() })
           .parse(item.externalIds).plexSectionId ?? null,
       version: item.version,
-      generation: item.intent?.generation ?? null,
-      automationEpoch: item.intent?.automationEpoch ?? null,
+      generation: defaultIntent(item.intents)?.generation ?? null,
+      automationEpoch: defaultIntent(item.intents)?.automationEpoch ?? null,
     })),
     holds: holds.map((hold) => ({
       mediaId: hold.mediaId,
@@ -302,9 +314,9 @@ async function snapshotLegacyRecoveryScope(
       owned: asset.owned,
       mediaIds: asset.coverage.map((row) => row.mediaId),
     })),
-    requests: requests.map((row) => json(row)),
-    coverage: coverage.map((row) => json(row)),
-    personalHolds: personalHolds.map((row) => json(row)),
+    requests: requests.map((row) => json(historicalDefaultRow(row))),
+    coverage: coverage.map((row) => json(historicalDefaultRow(row))),
+    personalHolds: personalHolds.map((row) => json(historicalDefaultRow(row))),
     handoffReceipts: receipts,
     nativeReceipts,
     blockers,

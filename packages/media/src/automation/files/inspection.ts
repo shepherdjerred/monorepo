@@ -374,7 +374,7 @@ async function inspectEntry(input: {
 
 async function previousAsset(context: FileContext, mediaIds: string[]) {
   const coverage = await context.db.assetCoverage.findMany({
-    where: { mediaId: { in: mediaIds }, current: true },
+    where: { mediaId: { in: mediaIds }, edition: "default", current: true },
     include: {
       asset: {
         include: {
@@ -385,6 +385,8 @@ async function previousAsset(context: FileContext, mediaIds: string[]) {
     },
   });
   if (coverage.length === 0) return null;
+  for (const row of coverage)
+    await assertDefaultPhysicalAsset(context.db, row.assetId);
   const asset = coverage[0]?.asset;
   if (
     asset === undefined ||
@@ -412,3 +414,4 @@ export function importDescriptor(
       : { previousSha256: entry.previousChecksum }),
   };
 }
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";

@@ -1,3 +1,6 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
@@ -17,16 +20,30 @@ async function preservePersonalState(f: Fixture) {
   const pin = await f.db.retentionHold.create({
     data: { userId: f.owner.id, mediaId: f.media.id, isPin: true },
   });
-  const outside = await f.db.mediaItem.create({
+  const media = await f.db.mediaItem.create({
     data: {
       kind: "movie",
       title: "Outside the selected recovery",
       externalIds: {},
-      intent: { create: { automationEpoch: 0, generation: 19 } },
-      requests: { create: { userId: f.user.id, active: true } },
-      holds: { create: { userId: f.owner.id, isPin: true } },
     },
-    include: { intent: true, requests: true, holds: true },
+  });
+  await createTestDefaultTarget(f.db, media.id, {
+    automationEpoch: 0,
+    generation: 19,
+  });
+  await f.db.mediaRequest.create({
+    data: { mediaId: media.id, userId: f.user.id, active: true },
+  });
+  await f.db.retentionHold.create({
+    data: { mediaId: media.id, userId: f.owner.id, isPin: true },
+  });
+  const outside = await f.db.mediaItem.findUniqueOrThrow({
+    where: { id: media.id },
+    include: {
+      intents: { where: { edition: "default" } },
+      requests: { where: { edition: "default" } },
+      holds: { where: { edition: "default" } },
+    },
   });
   return { pin, outside };
 }
@@ -156,11 +173,15 @@ test.each([
     expect(
       await f.db.mediaItem.findUniqueOrThrow({
         where: { id: personal.outside.id },
-        include: { intent: true, requests: true, holds: true },
+        include: {
+          intents: { where: { edition: "default" } },
+          requests: { where: { edition: "default" } },
+          holds: { where: { edition: "default" } },
+        },
       }),
     ).toEqual(personal.outside);
     const intent = await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     });
     expect(intent.generation).toBeGreaterThan(before.generation);
     const old = await f.db.retentionDecision.findUniqueOrThrow({

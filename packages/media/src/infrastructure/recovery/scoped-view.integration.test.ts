@@ -3,6 +3,9 @@ import { z } from "zod";
 import { recoveryHarness } from "./test-support.ts";
 import { isRecoveryScopeV2 } from "#shared/recovery.ts";
 import { recoveryView } from "./view.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 
 const { fixture } = recoveryHarness();
 test("a member sees only applicable fresh titles and no household roster, excluded pairs or legacy requester identity", async () => {
@@ -15,30 +18,41 @@ test("a member sees only applicable fresh titles and no household roster, exclud
       version: { increment: 1 },
     },
   });
+  const series = await f.db.mediaItem.create({
+    data: { kind: "series", title: "Hidden series" },
+  });
   const hidden = await f.db.mediaItem.create({
     data: {
       kind: "episode",
+      parentId: series.id,
       title: "Hidden household episode",
       externalIds: { plexSectionId: "2" },
-      intent: { create: { automationEpoch: 3 } },
-      recoveryHold: { create: { recoveryEpoch: 3, reason: "fixture" } },
-      assets: {
-        create: {
-          current: true,
-          asset: {
-            create: {
-              path: `/fixture/${crypto.randomUUID()}.mkv`,
-              sizeBytes: 100,
-              checksum: "b".repeat(64),
-              owned: true,
-              ownershipEpoch: 3,
-              state: "published",
-              properties: {},
-            },
-          },
-        },
-      },
     },
+  });
+  await f.db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(hidden.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(hidden.id)),
+      data: { automationEpoch: 3, desiredPresence: true, monitoring: true },
+    });
+    await tx.recoveryHold.create({
+      data: { mediaId: hidden.id, recoveryEpoch: 3, reason: "fixture" },
+    });
+    await tx.libraryAsset.create({
+      data: {
+        path: `/fixture/${crypto.randomUUID()}.mkv`,
+        editionRootId: series.id,
+        sizeBytes: 100,
+        checksum: "b".repeat(64),
+        owned: true,
+        ownershipEpoch: 3,
+        state: "published",
+        properties: {},
+        coverage: { create: { mediaId: hidden.id, current: true } },
+      },
+    });
   });
   const prepared = await f.service.prepare(f.owner, crypto.randomUUID(), {
     mediaIds: [f.media.id, hidden.id],

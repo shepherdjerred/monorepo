@@ -1,4 +1,4 @@
-import { mkdtemp, chown, rm } from "node:fs/promises";
+import { mkdtemp, chown, rm, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createDatabase } from "#infrastructure/database.ts";
@@ -35,7 +35,11 @@ function postgresCommand(args: string[]): string[] {
 }
 
 /** Private short-lived PostgreSQL cluster; no developer or production database access. */
-export async function startMediaTestPostgres() {
+export async function startMediaTestPostgres(
+  options: {
+    migrationCeiling?: "20261017001600_visibility";
+  } = {},
+) {
   const directory = await mkdtemp(path.join(tmpdir(), "media-pg-"));
   if (process.getuid?.() === 0) await chown(directory, 65_534, 65_534);
   const probe = Bun.serve({
@@ -81,11 +85,32 @@ export async function startMediaTestPostgres() {
     );
     started = true;
     const url = `postgres://media@127.0.0.1:${String(port)}/postgres`;
-    run(["bun", "run", "migrate:deploy"], { DATABASE_URL: url });
+    const entries = await readdir(path.join(packageRoot, "prisma/migrations"));
+    const migrations = entries
+      .filter((name) => /^\d{14}_[a-z0-9_]+$/.test(name))
+      .sort();
+    const applyMigration = (name: string) => {
+      if (!migrations.includes(name)) throw new Error("Unknown test migration");
+      run([
+        "psql",
+        url,
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-f",
+        path.join(packageRoot, "prisma/migrations", name, "migration.sql"),
+      ]);
+    };
+    const ceiling = options.migrationCeiling;
+    if (ceiling === undefined)
+      run(["bun", "run", "migrate:deploy"], { DATABASE_URL: url });
+    else
+      for (const migration of migrations.filter((name) => name <= ceiling))
+        applyMigration(migration);
     const database = createDatabase(url);
     return {
       database,
       url,
+      applyMigration,
       async close() {
         await database.$disconnect();
         await stop();

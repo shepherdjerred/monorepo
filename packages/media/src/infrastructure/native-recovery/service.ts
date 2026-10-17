@@ -60,6 +60,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
       });
       const assets = await tx.libraryAsset.findMany({
         where: {
+          edition: "default",
           owned: true,
           ownershipEpoch: { lt: runtime.recoveryEpoch },
           ...(cursor === null ? {} : { id: { gt: z.uuid().parse(cursor) } }),
@@ -212,7 +213,12 @@ export class PrismaNativeRecovery extends MediaCommandBase {
         );
         const media = await tx.mediaItem.findMany({
           where: { id: { in: descriptor.group.mediaIds } },
-          select: { id: true, title: true, availability: true, intent: true },
+          select: {
+            id: true,
+            title: true,
+            availability: true,
+            intents: { where: { edition: "default" } },
+          },
           orderBy: { id: "asc" },
         });
         const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -226,14 +232,16 @@ export class PrismaNativeRecovery extends MediaCommandBase {
           select: { mediaId: true },
         });
         const currentPositiveMediaIds = media
-          .filter(
-            ({ id: mediaId, intent }) =>
+          .filter(({ id: mediaId, intents }) => {
+            const intent = defaultIntent(intents);
+            return (
               intent?.automationEpoch === runtime.recoveryEpoch &&
               intent.desiredPresence &&
               intent.monitoring &&
               intent.intentionallyRemovedAt === null &&
-              claims.some((claim) => claim.mediaId === mediaId),
-          )
+              claims.some((claim) => claim.mediaId === mediaId)
+            );
+          })
           .map((item) => item.id);
         continuationViews.push({
           id: continuation.id,
@@ -241,7 +249,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
           state: continuation.state,
           version: continuation.version,
           currentPositiveMediaIds,
-          media: media.map(({ intent: _intent, ...item }) => item),
+          media: media.map(({ intents: _intents, ...item }) => item),
         });
       }
       return NativeLifecycleDetailSchema.parse({
@@ -318,3 +326,4 @@ export class PrismaNativeRecovery extends MediaCommandBase {
     );
   }
 }
+import { defaultIntent } from "#shared/editions/scope.ts";

@@ -1,7 +1,9 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { isRetryableTransaction } from "#infrastructure/locks.ts";
 import { buildRecoveryClaims } from "./projection.ts";
@@ -23,7 +25,7 @@ export async function hasPendingLegacyClaims(
     throw new Error("Legacy claim protection requires selected media");
   const ids = [...new Set(mediaIds)].sort();
   await tx.$queryRaw(
-    Prisma.sql`SELECT "mediaId" FROM "RecoveryHold" WHERE "mediaId" IN (${Prisma.join(ids)}) ORDER BY "mediaId" FOR UPDATE`,
+    Prisma.sql`SELECT "mediaId" FROM "RecoveryHold" WHERE edition = 'default' AND "mediaId" IN (${Prisma.join(ids)}) ORDER BY "mediaId" FOR UPDATE`,
   );
   const users = await tx.$queryRaw<
     { id: string }[]
@@ -65,7 +67,13 @@ export async function reopenLegacyClaimProtection(
       return await db.$transaction(
         async (tx) => {
           const ids = [...new Set(mediaIds)].sort();
-          await lockMedia(tx, ids);
+          await lockDefaultScopes(
+            tx,
+            ids.map((id) => defaultScope(id)),
+            {
+              createMissing: false,
+            },
+          );
           await lockEffectiveRequests(tx, ids);
           await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`;
           if (!(await hasPendingLegacyClaims(tx, ids))) return false;
@@ -91,10 +99,12 @@ export async function persistLegacyClaimProtection(
     where: { id: "singleton" },
   });
   for (const mediaId of mediaIds) {
-    const hold = await tx.recoveryHold.findUnique({ where: { mediaId } });
+    const hold = await tx.recoveryHold.findUnique({
+      where: targetWhere(defaultScope(mediaId)),
+    });
     if (hold !== null && hold.releasedAt === null) continue;
     await tx.recoveryHold.upsert({
-      where: { mediaId },
+      where: targetWhere(defaultScope(mediaId)),
       create: {
         mediaId,
         recoveryEpoch: runtime.recoveryEpoch,
@@ -112,6 +122,7 @@ export async function persistLegacyClaimProtection(
     await tx.retentionDecision.updateMany({
       where: {
         mediaId,
+        edition: "default",
         state: { in: ["eligible", "warning_pending", "grace_period"] },
       },
       data: {
@@ -124,7 +135,7 @@ export async function persistLegacyClaimProtection(
     // Retain the exact quarantine manifest and elapsed recovery window. A fresh
     // household release changes intent generation; old warning acceptance cannot resume purge.
     await tx.retentionDecision.updateMany({
-      where: { mediaId, state: "quarantined" },
+      where: { ...defaultScope(mediaId), state: "quarantined" },
       data: {
         warningAcceptedAt: null,
         graceUntil: null,

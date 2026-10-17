@@ -1,3 +1,4 @@
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import nodePath from "node:path";
 import { createHash } from "node:crypto";
 import { mkdir, writeFile, readFile, realpath, lstat } from "node:fs/promises";
@@ -156,6 +157,7 @@ export async function installSubtitle(
           where: { id: subtitle.assetId },
           include: { coverage: { where: { current: true } } },
         });
+        await assertDefaultPhysicalAsset(tx, asset.id);
         const currentSubtitle = await tx.subtitleAsset.findUniqueOrThrow({
           where: { id: subtitleId },
         });
@@ -179,7 +181,7 @@ export async function installSubtitle(
         )
           throw new FileGuardError("subtitle_obsolete");
         const intents = await tx.mediaIntent.findMany({
-          where: { mediaId: { in: mediaIds } },
+          where: { mediaId: { in: mediaIds }, edition: "default" },
         });
         if (
           intents.length !== mediaIds.length ||

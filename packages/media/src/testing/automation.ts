@@ -10,6 +10,9 @@ import { queueOperation, serializable } from "#automation/store.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import type { Database } from "#infrastructure/database.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 export async function ensureTestProvider(db: Database) {
   await db.mediaProvider.createMany({
@@ -123,13 +126,20 @@ export function automationTestHarness() {
         versions: { create: { version: 0, rules } },
       },
     });
-    await db.mediaIntent.create({
-      data: {
-        mediaId: media.id,
-        generation: 1,
-        profileId: profile.id,
-        automationEpoch: 0,
-      },
+    await db.$transaction(async (tx) => {
+      await lockDefaultScopes(tx, [defaultScope(media.id)], {
+        createMissing: true,
+      });
+      await tx.mediaIntent.update({
+        where: targetWhere(defaultScope(media.id)),
+        data: {
+          generation: 1,
+          profileId: profile.id,
+          automationEpoch: 0,
+          desiredPresence: true,
+          monitoring: true,
+        },
+      });
     });
     await db.mediaRequest.create({
       data: { userId: user.id, mediaId: media.id },

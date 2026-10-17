@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { beforeAll, afterAll, test, expect } from "vitest";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
@@ -69,7 +71,7 @@ test("an omitted active migration claim affecting the adopted title remains an e
   ).rejects.toThrow("resolve all scope and household blockers");
   expect(
     await db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.network.media.id },
+      where: targetWhere(defaultScope(f.network.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
 });
@@ -206,7 +208,7 @@ test("real movie handoff release ignores unrelated TV TMDB collisions while TV a
   );
   expect(
     await db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.network.media.id },
+      where: targetWhere(defaultScope(f.network.media.id)),
     }),
   ).toMatchObject({ releasedById: f.network.actor.id });
   expect(

@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -240,7 +242,7 @@ export async function nativeQuarantineFixture(
         },
       });
       const intent = await tx.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: setup.file.media.id },
+        where: targetWhere(defaultScope(setup.file.media.id)),
       });
       return await queueOperation(tx, {
         key: `native-fixture-positive:${crypto.randomUUID()}`,

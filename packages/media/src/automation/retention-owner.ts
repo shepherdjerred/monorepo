@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { Prisma } from "#generated/prisma/client.ts";
+import { defaultIntent, defaultScope } from "#shared/editions/scope.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import { RemovalConfirmationSchema } from "#shared/contract.ts";
 import type {
   MediaOperation,
@@ -41,7 +43,7 @@ async function legacyProtection(
     return protectedResult(LEGACY_CLAIM_PROTECTION);
   }
   return (await tx.recoveryHold.count({
-    where: { mediaId: { in: ids }, releasedAt: null },
+    where: { mediaId: { in: ids }, edition: "default", releasedAt: null },
   }))
     ? protectedResult("recovery_hold")
     : null;
@@ -114,9 +116,11 @@ async function confirmedOwnership(
 ) {
   const media = await tx.mediaItem.findMany({
     where: { id: { in: ids } },
-    include: { intent: true },
+    include: { intents: { where: { edition: "default" } } },
   });
   const quarantine = media.every((item) => item.availability === "quarantined");
+  if (media.some((item) => defaultIntent(item.intents)?.editionRootId === null))
+    return { error: "lineage_unresolved", media, quarantine };
   const offset = quarantine ? 1 : 0;
   if (
     media.length !== ids.length ||
@@ -125,14 +129,21 @@ async function confirmedOwnership(
       return (
         expected === undefined ||
         item.version !== expected.version + offset ||
-        item.intent?.generation !== expected.generation ||
-        item.intent.desiredPresence
+        defaultIntent(item.intents)?.generation !== expected.generation ||
+        defaultIntent(item.intents)?.desiredPresence !== false
       );
     })
   )
     return { error: "owner_confirmation_obsolete", media, quarantine };
+  const roots = new Map(
+    media.map((item) => [item.id, defaultIntent(item.intents)?.editionRootId]),
+  );
   const assets = await tx.libraryAsset.findMany({
-    where: { coverage: { some: { mediaId: { in: ids }, current: true } } },
+    where: {
+      coverage: {
+        some: { mediaId: { in: ids }, current: true, edition: "default" },
+      },
+    },
     include: { coverage: { where: { current: true } } },
   });
   if (
@@ -142,10 +153,17 @@ async function confirmedOwnership(
       return (
         expected === undefined ||
         !asset.owned ||
+        asset.edition !== "default" ||
+        asset.editionRootId === null ||
         asset.version !== expected.version + offset ||
         asset.checksum !== expected.checksum ||
         asset.state !== (quarantine ? "quarantined" : "published") ||
-        asset.coverage.some((coverage) => !ids.includes(coverage.mediaId))
+        asset.coverage.some(
+          (coverage) =>
+            coverage.edition !== "default" ||
+            !ids.includes(coverage.mediaId) ||
+            roots.get(coverage.mediaId) !== asset.editionRootId,
+        )
       );
     })
   )
@@ -168,8 +186,12 @@ export async function evaluateOwnerOverride(
   )
     return protectedResult("owner_confirmation_invalid");
   return await serializable(context.db, async (tx) => {
-    await tx.$queryRaw(
-      Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join(ids)}) ORDER BY id FOR UPDATE`,
+    await lockDefaultScopes(
+      tx,
+      ids.map((id) => defaultScope(id)),
+      {
+        createMissing: false,
+      },
     );
     const owner = await tx.mediaUser.findUniqueOrThrow({
       where: { id: override.ownerId },
@@ -194,7 +216,7 @@ export async function evaluateOwnerOverride(
     );
     if (error !== null) return protectedResult(error);
     const reservation = await tx.acquisitionReservation.findFirst({
-      where: { mediaId: { in: ids } },
+      where: { mediaId: { in: ids }, edition: "default" },
     });
     if (reservation !== null) return protectedResult("acquisition_active");
     const evidence = {
@@ -206,12 +228,13 @@ export async function evaluateOwnerOverride(
     let target: Awaited<ReturnType<typeof tx.retentionDecision.findFirst>> =
       null;
     for (const item of media) {
-      const generation = item.intent?.generation;
+      const generation = defaultIntent(item.intents)?.generation;
       if (generation === undefined)
         throw new Error("Confirmed owner removal intent disappeared");
       let decision = await tx.retentionDecision.findFirst({
         where: {
           mediaId: item.id,
+          edition: "default",
           generation,
           state: { in: ["grace_period", "quarantined"] },
           evidence: {
@@ -228,6 +251,7 @@ export async function evaluateOwnerOverride(
           ? await tx.retentionDecision.create({
               data: {
                 mediaId: item.id,
+                edition: "default",
                 generation,
                 state: "grace_period",
                 graceUntil: observedAt,

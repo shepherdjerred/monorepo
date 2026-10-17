@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { defaultIntent, assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { currentSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
@@ -67,14 +68,22 @@ export async function currentSubtitleWork(
       subtitles: true,
       coverage: {
         where: { current: true },
-        include: { media: { include: { intent: true } } },
+        include: {
+          media: { include: { intents: { where: { edition: "default" } } } },
+        },
       },
     },
   });
+  assertDefaultEdition(asset.edition);
+  for (const coverage of asset.coverage) assertDefaultEdition(coverage.edition);
   const ids = asset.coverage.map((item) => item.mediaId).sort();
   const policies = await currentSubtitlePolicies(tx, ids);
   const requests = await tx.mediaRequest.findMany({
-    where: { mediaId: { in: ids }, ...effectiveRequestWhere },
+    where: {
+      mediaId: { in: ids },
+      ...effectiveRequestWhere,
+      edition: "default",
+    },
     orderBy: { id: "asc" },
   });
   const properties = z
@@ -102,8 +111,8 @@ export async function currentSubtitleWork(
   if (
     asset.coverage.some(
       (item) =>
-        item.media.intent?.desiredPresence !== true ||
-        item.media.intent.automationEpoch !== epoch,
+        defaultIntent(item.media.intents)?.desiredPresence !== true ||
+        defaultIntent(item.media.intents)?.automationEpoch !== epoch,
     )
   )
     reasons.push("subtitle_intent_not_authorized");
@@ -139,7 +148,7 @@ export async function currentSubtitleWork(
     coverage: asset.coverage
       .map((item) => ({
         mediaId: item.mediaId,
-        generation: item.media.intent?.generation ?? null,
+        generation: defaultIntent(item.media.intents)?.generation ?? null,
       }))
       .sort((a, b) => a.mediaId.localeCompare(b.mediaId)),
     policies: policies

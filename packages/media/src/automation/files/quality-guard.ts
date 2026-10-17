@@ -6,6 +6,8 @@ import {
 import type { ReleaseAttributes } from "#shared/contract.ts";
 import { FileGuardError, type Transaction } from "./types.ts";
 import { z } from "zod";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 
 const StoredReleaseSchema = PublicReleaseAttributesSchema.extend({
   id: z.string(),
@@ -22,7 +24,7 @@ export async function assertMeasuredUpgrade(
   const profileVersions: Record<string, number> = {};
   for (const mediaId of mediaIds) {
     const intent = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId },
+      where: targetWhere(defaultScope(mediaId)),
       include: { profile: true },
     });
     if (intent.profile === null) throw new FileGuardError("profile_missing");
@@ -34,7 +36,7 @@ export async function assertMeasuredUpgrade(
     if (!evaluateRelease(measured, profile, [mediaId]).accepted)
       throw new FileGuardError("measured_quality_rejected");
     const coverage = await db.assetCoverage.findMany({
-      where: { mediaId, current: true },
+      where: { mediaId, edition: "default", current: true },
       include: { asset: true },
     });
     for (const current of coverage) {

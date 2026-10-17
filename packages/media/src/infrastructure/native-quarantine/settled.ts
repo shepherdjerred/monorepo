@@ -28,6 +28,7 @@ export async function settledNativeQuarantines(
   const mediaIds = files.flatMap((file) => file.mediaIds);
   const decisions = await tx.retentionDecision.findMany({
     where: {
+      edition: "default",
       mediaId: { in: mediaIds },
       state: "quarantined",
       manifest: { not: Prisma.DbNull },

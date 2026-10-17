@@ -55,6 +55,11 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
     },
   });
   const captureIds = [crypto.randomUUID(), crypto.randomUUID()];
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(media.id)], {
+      createMissing: true,
+    });
+  });
   const captures = ["radarr", "sonarr"].map((sourceKind, index) => ({
     sourceKind,
     captureId: captureIds[index],
@@ -152,7 +157,7 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
       {
         mediaId: media.id,
         version: 0,
-        generation: null,
+        generation: 0,
         profileId: null,
         profileVersion: null,
         monitored: true,
@@ -315,3 +320,5 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
 function json(value: unknown) {
   return z.record(z.string(), z.json()).parse(value);
 }
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";

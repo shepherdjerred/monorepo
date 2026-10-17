@@ -13,7 +13,13 @@ test("cancellation cannot commit between the final authority guard and the exter
   const f = await fixture();
   const db = database();
   const claim = await db.mediaRequest.findUniqueOrThrow({
-    where: { userId_mediaId: { userId: f.user.id, mediaId: f.media.id } },
+    where: {
+      userId_mediaId_edition: {
+        edition: "default",
+        userId: f.user.id,
+        mediaId: f.media.id,
+      },
+    },
   });
   const entered = Promise.withResolvers<undefined>();
   const release = Promise.withResolvers<undefined>();
@@ -109,7 +115,13 @@ test("cancellation during qBit lookup revokes the final submission authority", a
   const f = await fixture();
   const db = database();
   const claim = await db.mediaRequest.findUniqueOrThrow({
-    where: { userId_mediaId: { userId: f.user.id, mediaId: f.media.id } },
+    where: {
+      userId_mediaId_edition: {
+        edition: "default",
+        userId: f.user.id,
+        mediaId: f.media.id,
+      },
+    },
   });
   let adds = 0;
   const ctx = context(async (url) => {

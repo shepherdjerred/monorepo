@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { mkdir, mkdtemp, realpath, writeFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import nodePath from "node:path";
@@ -6,8 +8,12 @@ import type { FileContext } from "./types.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
 import { grantTestLease } from "#testing/authority.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 
-export async function fileFixture(db: Database) {
+export async function fileFixture(
+  db: Database,
+  episode?: { seriesId: string; title?: string },
+) {
   await grantTestLease(db);
   const directory = await realpath(
     await mkdtemp(nodePath.join(tmpdir(), "media-file-activity-")),
@@ -81,8 +87,30 @@ export async function fileFixture(db: Database) {
       year: 2026,
       tmdbId:
         (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) % 2_000_000_000,
-      intent: { create: { profileId: profile.id, automationEpoch: 0 } },
+      ...(episode === undefined
+        ? {}
+        : {
+            kind: "episode",
+            parentId: episode.seriesId,
+            seasonNumber: 1,
+            episodeNumber: 1,
+            title: episode.title ?? "First Episode",
+          }),
     },
+  });
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(media.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(media.id)),
+      data: {
+        profileId: profile.id,
+        automationEpoch: 0,
+        desiredPresence: true,
+        monitoring: true,
+      },
+    });
   });
   const user = await db.mediaUser.create({
     data: {
@@ -114,7 +142,7 @@ export async function fileFixture(db: Database) {
       },
       update: {},
     });
-    const filename = `${crypto.randomUUID()}.mkv`;
+    const filename = `${media.kind === "episode" ? "Coastlines.S01E01." : ""}${crypto.randomUUID()}.mkv`;
     await writeFile(nodePath.join(roots.downloads, filename), content);
     const release = await db.releaseCandidate.create({
       data: {
@@ -156,7 +184,7 @@ export async function fileFixture(db: Database) {
       },
     });
     const intent = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: media.id },
+      where: targetWhere(defaultScope(media.id)),
     });
     const operation = await db.operation.create({
       data: {
@@ -238,7 +266,7 @@ export async function fileFixture(db: Database) {
       },
     });
     const intent = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: media.id },
+      where: targetWhere(defaultScope(media.id)),
     });
     const decision = await db.retentionDecision.create({
       data: {

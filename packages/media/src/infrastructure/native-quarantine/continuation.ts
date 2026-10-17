@@ -9,7 +9,7 @@ import {
   recordsAuthorized,
   lockRuntimeAuthority,
 } from "#infrastructure/handoff/authority.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import {
   lockEffectiveRequests,
   effectiveRequestWhere,
@@ -98,7 +98,7 @@ export async function routeNativeQuarantineOperation(
       );
   }
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: descriptor.group.mediaIds } },
+    where: { edition: "default", mediaId: { in: descriptor.group.mediaIds } },
   });
   const generations = Object.fromEntries(
     intents.map((intent) => [intent.mediaId, intent.generation]),
@@ -122,7 +122,7 @@ export async function assertNativeQuarantineRestore(
   const descriptor = NativeQuarantineContinuationSchema.parse(
     initial.descriptor,
   );
-  await lockMedia(tx, descriptor.group.mediaIds);
+  await lockDefaultMedia(tx, descriptor.group.mediaIds);
   await lockEffectiveRequests(tx, descriptor.group.mediaIds);
   if (!(await lockRuntimeAuthority(tx, initial.recoveryEpoch)))
     throw new NativeQuarantineProtection("native_quarantine_runtime_protected");
@@ -161,7 +161,7 @@ export async function assertNativeQuarantineRestore(
     mediaIds: descriptor.group.mediaIds,
   });
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: descriptor.group.mediaIds } },
+    where: { edition: "default", mediaId: { in: descriptor.group.mediaIds } },
   });
   if (
     snapshotHash(payload.generations) !==

@@ -4,6 +4,8 @@ import {
   ownedSubtitleSidecars,
 } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import {
   FileGuardError,
   FilePlanSchema,
@@ -28,6 +30,8 @@ export async function rollbackPromotion(
     where: { id: attemptId },
   });
   const plan = FilePlanSchema.parse(attempt.filePlan);
+  if (attempt.edition !== "default")
+    throw new FileGuardError("edition_not_available");
   const context = await preparePublicationProof(
     initialContext,
     plan,
@@ -41,6 +45,9 @@ export async function rollbackPromotion(
       });
       if (current.state === "rolled_back") return;
       for (const entry of plan) {
+        await assertDefaultPhysicalAsset(tx, entry.assetId);
+        if (entry.previousAssetId !== null)
+          await assertDefaultPhysicalAsset(tx, entry.previousAssetId);
         if (entry.previousAssetId === null) {
           await quarantineInitialPublication({
             context,
@@ -70,7 +77,7 @@ export async function rollbackPromotion(
             previousAssetId,
           ]);
           const intents = await tx.mediaIntent.findMany({
-            where: { mediaId: { in: entry.mediaIds } },
+            where: { mediaId: { in: entry.mediaIds }, edition: "default" },
           });
           if (
             intents.length !== entry.mediaIds.length ||
@@ -193,6 +200,7 @@ export async function rollbackPromotion(
           where: { id: { in: entry.mediaIds } },
           data: { availability: "importing", version: { increment: 1 } },
         });
+        await mirrorDefaultAvailability(tx, entry.mediaIds, "importing");
       }
       await recordRollbackReceipt(tx, plan, {
         attemptId,

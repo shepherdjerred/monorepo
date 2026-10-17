@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
 import path from "node:path";
@@ -20,6 +22,7 @@ import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-ident
 import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
 const ProfileSnapshotSchema = z.object({
   profileId: z.string(),
@@ -35,11 +38,12 @@ export async function validAttempt(
     include: { release: true },
   });
   const runtime = await requireActiveRuntime(context.db);
+  if (attempt.edition !== "default") return false;
   if (!runtime.active || runtime.epoch !== attempt.recoveryEpoch) return false;
   const generations = GenerationsSchema.parse(attempt.generations);
   ProfileSnapshotSchema.parse(attempt.failure);
   const intents = await context.db.mediaIntent.findMany({
-    where: { mediaId: { in: attempt.mediaIds } },
+    where: { edition: "default", mediaId: { in: attempt.mediaIds } },
     include: { profile: true },
   });
   const claims = await context.db.mediaRequest.findMany({
@@ -104,7 +108,7 @@ export async function validAttempt(
         data: { version: { increment: 1 } },
       });
       const current = await tx.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: intent.mediaId },
+        where: targetWhere(defaultScope(intent.mediaId)),
       });
       if (current.generation !== intent.generation)
         throw new IntegrationError("media", "conflict");
@@ -117,7 +121,7 @@ export async function validAttempt(
         },
       });
       await tx.acquisitionReservation.update({
-        where: { mediaId: intent.mediaId },
+        where: targetWhere(defaultScope(intent.mediaId)),
         data: { generation: current.generation },
       });
     });
@@ -183,6 +187,7 @@ async function submissionPrerequisite(
   attempt: AcquisitionAttempt,
   recovering: boolean,
 ): Promise<string | null> {
+  if (attempt.edition !== "default") return "edition_not_available";
   const runtime = await requireActiveRuntime(context.db);
   if (runtime.epoch !== attempt.recoveryEpoch) return "recovery_epoch_changed";
   if (!runtime.active) return "runtime_observe";
@@ -243,7 +248,7 @@ async function registerObservedSubmission(
       select: { mediaId: true },
     });
     const currentIntents = await tx.mediaIntent.findMany({
-      where: { mediaId: { in: attempt.mediaIds } },
+      where: { edition: "default", mediaId: { in: attempt.mediaIds } },
     });
     const canProject =
       activeClaims.length === attempt.mediaIds.length &&
@@ -283,11 +288,13 @@ async function registerObservedSubmission(
       targetId: torrent.id,
       payload: { torrentId: torrent.id },
     });
-    if (canProject)
+    if (canProject) {
       await tx.mediaItem.updateMany({
         where: { id: { in: attempt.mediaIds } },
         data: { availability: "downloading" },
       });
+      await mirrorDefaultAvailability(tx, attempt.mediaIds, "downloading");
+    }
     return true;
   });
   if (!registered)

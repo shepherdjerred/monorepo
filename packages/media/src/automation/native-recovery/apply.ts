@@ -1,3 +1,6 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import path from "node:path";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
@@ -135,7 +138,7 @@ export async function applyPreparedNative(
         });
         for (const media of prepared.scope.media) {
           await tx.recoveryHold.upsert({
-            where: { mediaId: media.id },
+            where: targetWhere(defaultScope(media.id)),
             create: {
               mediaId: media.id,
               recoveryEpoch: runtime.recoveryEpoch,
@@ -154,6 +157,7 @@ export async function applyPreparedNative(
             where: { id: media.id },
             data: { availability: "available", version: { increment: 1 } },
           });
+          await mirrorDefaultAvailability(tx, [media.id], "available");
         }
         await tx.mediaRuntimeState.update({
           where: { id: "singleton" },

@@ -4,6 +4,8 @@ import { MediaError, requireOwner } from "#application/errors.ts";
 import { NumberingProvenanceSchema } from "#shared/acquisition/coordinates.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { queueOperation } from "#automation/store.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 export async function assertNumberingOwner(
   tx: Prisma.TransactionClient,
@@ -75,11 +77,11 @@ export async function writeNumberingMapping(
     },
   });
   const intent = await tx.mediaIntent.findUnique({
-    where: { mediaId: episode.id },
+    where: targetWhere(defaultScope(episode.id)),
   });
   if (intent !== null) {
     const updated = await tx.mediaIntent.update({
-      where: { mediaId: episode.id },
+      where: targetWhere(defaultScope(episode.id)),
       data: { generation: { increment: 1 }, version: { increment: 1 } },
     });
     await queueOperation(tx, {

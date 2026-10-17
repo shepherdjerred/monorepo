@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import {
   LegacyRecoveryScopeSchema,
@@ -120,7 +122,7 @@ test("managed mapping revocation that holds the final identity lock invalidates 
   ).toBe(0);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
 });

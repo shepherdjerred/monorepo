@@ -17,7 +17,7 @@ test("explicit owner removal cannot bypass a newly arrived unresolved household 
     data: { version: { increment: 1 } },
   });
   const intent = await f.db.mediaIntent.update({
-    where: { mediaId: media.id },
+    where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
     data: { generation: { increment: 1 }, desiredPresence: false },
   });
   const ownerOverride = {
@@ -166,7 +166,7 @@ test("a late claim during upgrade archive hashing prevents cleanup of the recove
   ).toBe(upgrade.content);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ releasedAt: null });
 });
@@ -197,7 +197,7 @@ test.each([false, true])(
     });
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).toMatchObject({ releasedAt: null, reason: LEGACY_CLAIM_PROTECTION });
     expect(
@@ -219,7 +219,7 @@ test.each([false, true])(
     expect(resolved.blockers).toEqual([]);
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).not.toMatchObject({ releasedAt: null });
     expect(
@@ -280,7 +280,7 @@ test.each([false, true])(
     ).toBe(f.published.content);
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).toMatchObject({ releasedAt: null });
   },
@@ -316,7 +316,7 @@ test.each([false, true])(
     ).toBe(f.published.content);
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).toMatchObject({ releasedAt: null });
   },

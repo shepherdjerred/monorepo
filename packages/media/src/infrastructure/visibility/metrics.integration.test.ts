@@ -135,7 +135,7 @@ test("watch cohort excludes cancelled roots and exclusions, includes direct+effe
     data: { mode: "active", ownershipConfirmed: true },
   });
   const series = await f.db.mediaItem.create({
-    data: { kind: "series", title: "Series" },
+    data: { kind: "series", title: "Series", intents: { create: {} } },
   });
   const root = await f.db.mediaRequest.create({
     data: { mediaId: series.id, userId: f.member.id, direct: true },
@@ -182,7 +182,13 @@ test("watch cohort excludes cancelled roots and exclusions, includes direct+effe
     data: { direct: true },
   });
   await f.db.watchState.update({
-    where: { userId_mediaId: { userId: f.member.id, mediaId: f.media.id } },
+    where: {
+      userId_mediaId_edition: {
+        userId: f.member.id,
+        mediaId: f.media.id,
+        edition: "default",
+      },
+    },
     data: { observedAt: new Date() },
   });
   expect(

@@ -91,7 +91,7 @@ test("absolute numbering preserves canonical IDs, rejects collisions and stale e
       seasonNumber: 2,
       episodeNumber: 1,
       externalIds: { tvdbId: 123 },
-      intent: { create: {} },
+      intents: { create: {} },
     },
   });
   const second = await cluster.database.mediaItem.create({
@@ -121,7 +121,7 @@ test("absolute numbering preserves canonical IDs, rejects collisions and stale e
   });
   expect(
     await cluster.database.mediaIntent.findUnique({
-      where: { mediaId: first.id },
+      where: { mediaId_edition: { mediaId: first.id, edition: "default" } },
     }),
   ).toMatchObject({ generation: 1 });
   await expect(

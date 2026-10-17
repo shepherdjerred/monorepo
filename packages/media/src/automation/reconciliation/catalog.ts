@@ -5,7 +5,7 @@ import type { MediaNetworkActivities } from "#shared/automation.ts";
 import type { Prisma, MediaItem } from "#generated/prisma/client.ts";
 import { loadSeriesCatalogIdentity } from "#infrastructure/catalog-identity/catalog.ts";
 import { persistCatalogMedia } from "#infrastructure/catalog-identity/persist.ts";
-import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { lockCanonicalMedia } from "#infrastructure/editions/locks.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 
 const SeasonSchema = z.object({
@@ -94,7 +94,7 @@ export function createCatalogActivities(
         episodes: finishedSeason ? null : episodes,
       };
       await serializable(context.db, async (tx) => {
-        await lockAcquisitionMedia(tx, [media.id]);
+        await lockCanonicalMedia(tx, [media.id]);
         const current = await tx.operation.findUniqueOrThrow({
           where: { id: operation.id },
         });
@@ -180,7 +180,7 @@ async function lockCatalogPage(
     );
   // Root is already held. Acquire the complete existing set once before
   // upserting any row; upstream episode order is not the database lock order.
-  await lockAcquisitionMedia(tx, [
+  await lockCanonicalMedia(tx, [
     ...(previousSeason === null ? [] : [previousSeason.id]),
     ...episodes.map((item) => item.id),
   ]);
@@ -283,7 +283,7 @@ async function completeCatalog(
   checkpoint: z.infer<typeof CheckpointSchema>,
 ): Promise<void> {
   await serializable(context.db, async (tx) => {
-    await lockAcquisitionMedia(tx, [input.mediaId]);
+    await lockCanonicalMedia(tx, [input.mediaId]);
     await tx.mediaItem.updateMany({
       where: { id: input.mediaId, catalogState: { not: "ready" } },
       data: { catalogState: "ready", version: { increment: 1 } },

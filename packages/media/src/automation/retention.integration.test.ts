@@ -12,6 +12,8 @@ import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
 import { grantTestLease } from "#testing/authority.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const cipher = new CredentialCipher(randomBytes(32).toString("base64"));
@@ -74,7 +76,7 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
   }
 });
 
-async function fixture() {
+async function fixture(episode = false) {
   const db = cluster.database;
   await grantTestLease(db);
   const user = await db.mediaUser.create({
@@ -86,15 +88,31 @@ async function fixture() {
       notificationPreference: { create: { emailEnabled: true } },
     },
   });
+  const parent = episode
+    ? await db.mediaItem.create({
+        data: { kind: "series", title: "Fixture series" },
+      })
+    : null;
   const media = await db.mediaItem.create({
     data: {
-      kind: "movie",
+      kind: episode ? "episode" : "movie",
+      parentId: parent?.id ?? null,
       title: "Fixture",
       availability: "available",
       externalIds: { plexRatingKey: "42" },
-      intent: { create: { automationEpoch: 0 } },
-      requests: { create: { userId: user.id } },
     },
+  });
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(media.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: { mediaId_edition: defaultScope(media.id) },
+      data: { automationEpoch: 0, desiredPresence: true },
+    });
+    await tx.mediaRequest.create({
+      data: { mediaId: media.id, userId: user.id },
+    });
   });
   const asset = await db.libraryAsset.create({
     data: {
@@ -103,6 +121,7 @@ async function fixture() {
       checksum: "a".repeat(64),
       owned: true,
       ownershipEpoch: 0,
+      editionRootId: parent?.id ?? media.id,
       properties: {},
       state: "published",
       coverage: { create: { mediaId: media.id, current: true } },
@@ -372,14 +391,17 @@ test.each(["keep", "unknown_watch", "unwatched", "preferences"] as const)(
 );
 
 test("a shared physical file stays protected for another unwatched requester", async () => {
-  const item = await fixture();
+  const item = await fixture(true);
   const other = await cluster.database.mediaItem.create({
     data: {
       kind: "episode",
+      parentId: item.media.parentId,
       title: "Other",
       availability: "available",
       externalIds: { plexRatingKey: "43" },
-      intent: { create: { automationEpoch: 0 } },
+      intents: {
+        create: { automationEpoch: 0, editionRootId: item.asset.editionRootId },
+      },
       requests: { create: { userId: item.user.id } },
       assets: { create: { assetId: item.asset.id, current: true } },
     },
@@ -472,7 +494,7 @@ test("owner confirmation authorizes recoverable removal and rejects subsequent a
     data: { role: "owner" },
   });
   await cluster.database.mediaIntent.update({
-    where: { mediaId: item.media.id },
+    where: { mediaId_edition: { mediaId: item.media.id, edition: "default" } },
     data: { desiredPresence: false },
   });
   const ownerOverride = {

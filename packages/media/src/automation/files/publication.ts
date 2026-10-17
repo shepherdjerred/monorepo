@@ -4,6 +4,13 @@ import {
   advanceSubtitleBindings,
 } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
+import {
+  defaultPhysicalRoot,
+  assertDefaultPhysicalAsset,
+} from "#infrastructure/handoff/default-edition.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import {
   FileGuardError,
@@ -121,7 +128,7 @@ async function assertProfile(
     .parse(entry.properties);
   for (const mediaId of entry.mediaIds) {
     const intent = await tx.mediaIntent.findUniqueOrThrow({
-      where: { mediaId },
+      where: targetWhere(defaultScope(mediaId)),
     });
     if (intent.profileId === null) throw new FileGuardError("profile_missing");
     await tx.$queryRaw(
@@ -147,6 +154,9 @@ async function assertPrevious(
     where: { id: entry.assetId },
   });
   if (published !== null) {
+    await assertDefaultPhysicalAsset(tx, published.id);
+    if (published.edition !== "default")
+      throw new FileGuardError("edition_not_available");
     if (
       published.checksum !== entry.checksum ||
       !published.owned ||
@@ -157,7 +167,11 @@ async function assertPrevious(
     return;
   }
   const current = await tx.assetCoverage.findMany({
-    where: { mediaId: { in: entry.mediaIds }, current: true },
+    where: {
+      mediaId: { in: entry.mediaIds },
+      edition: "default",
+      current: true,
+    },
     include: {
       asset: { include: { subtitles: { where: { state: "installed" } } } },
     },
@@ -190,6 +204,7 @@ async function assertPrevious(
     throw new FileGuardError("sidecar_ownership_unconfirmed");
   const previous = current[0]?.asset;
   if (previous !== undefined) {
+    await assertDefaultPhysicalAsset(tx, previous.id);
     const sidecars = ownedSubtitleSidecars(previous);
     if (
       sidecars.length !== entry.previousSidecars.length ||
@@ -260,6 +275,8 @@ async function commitPublication(input: {
   await tx.libraryAsset.create({
     data: {
       id: entry.assetId,
+      edition: "default",
+      editionRootId: await defaultPhysicalRoot(tx, entry.mediaIds),
       path: nodePath.join(roots.library, entry.libraryPath),
       sourcePath: nodePath.join(roots.downloads, entry.downloadPath),
       torrentId,
@@ -278,6 +295,7 @@ async function commitPublication(input: {
     where: { id: { in: entry.mediaIds } },
     data: { availability: "importing", version: { increment: 1 } },
   });
+  await mirrorDefaultAvailability(tx, entry.mediaIds, "importing");
   await tx.applicationEvent.createMany({
     data: entry.mediaIds.map((mediaId) => ({
       mediaId,

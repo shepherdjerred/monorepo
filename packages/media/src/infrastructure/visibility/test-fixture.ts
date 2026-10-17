@@ -29,6 +29,7 @@ export async function visibilityFixture(db: Database) {
       title: "Visibility movie",
       externalIds: { plexSectionId: "1" },
       availability: "downloading",
+      intents: { create: { availability: "downloading" } },
     },
   });
   const request = await db.mediaRequest.create({
@@ -139,7 +140,7 @@ export async function visibilityFixture(db: Database) {
         },
         torrentId: torrent.id,
         coverage: {
-          create: { mediaId: media.id, current: true, edition: "default" },
+          create: { mediaId: media.id, current: true },
         },
       },
     });

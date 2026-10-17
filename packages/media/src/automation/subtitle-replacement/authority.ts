@@ -1,3 +1,4 @@
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { assertRuntime } from "#automation/files/guards.ts";
@@ -80,6 +81,7 @@ export async function assertReplacementSnapshot(
     where: { id: row.assetId },
     include: { coverage: { where: { current: true } } },
   });
+  await assertDefaultPhysicalAsset(tx, asset.id);
   const old = await tx.subtitleAsset.findUniqueOrThrow({
     where: { id: row.oldSubtitleId },
   });

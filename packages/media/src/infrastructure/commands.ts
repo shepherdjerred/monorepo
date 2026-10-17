@@ -9,10 +9,13 @@ import {
   applyHold,
   actionIntentChange,
   actionCommand,
+  initialActionIntent,
 } from "./action-guards.ts";
 import { needsRestore } from "./locks.ts";
 import { confirmRemoval } from "./removal-confirmation.ts";
-import { lockAcquisitionMedia } from "./acquisition-identity/locks.ts";
+import { lockDefaultScopes } from "./editions/locks.ts";
+import { targetWhere } from "./editions/targets.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 import { prepareActionAuthority } from "./acquisition-identity/action.ts";
 
 import { MediaRequestCommands } from "./request-commands.ts";
@@ -81,7 +84,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
           input.action === "remove"
             ? await confirmRemoval(db, mediaId, input)
             : null;
-        const { authority, currentActor, identityDecision } =
+        const { authority, currentActor, identityDecision, targetExisted } =
           await prepareActionAuthority(db, actor, {
             mediaId,
             input,
@@ -104,20 +107,18 @@ export class PrismaMediaCommands extends MediaRequestCommands {
         });
         await invalidateRetention(db, mediaId);
         const intent = await db.mediaIntent.upsert({
-          where: { mediaId },
+          where: targetWhere(defaultScope(mediaId)),
           create: {
             mediaId,
             generation: 1,
             ...authority,
-            desiredPresence: input.action !== "remove",
-            monitoring: input.action !== "remove",
-            intentionallyRemovedAt:
-              input.action === "remove" ? new Date() : null,
+            ...initialActionIntent(input.action),
           },
           update: {
             ...authority,
             generation: { increment: 1 },
-            version: { increment: 1 },
+            version: targetExisted ? { increment: 1 } : 0,
+            ...(targetExisted ? {} : initialActionIntent(input.action)),
             ...actionIntentChange(input.action),
           },
         });
@@ -134,7 +135,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
               data: { version: { increment: 1 } },
             });
             await db.mediaIntent.update({
-              where: { mediaId: item.id },
+              where: targetWhere(defaultScope(item.id)),
               data: {
                 desiredPresence: false,
                 monitoring: false,
@@ -246,11 +247,12 @@ export class PrismaMediaCommands extends MediaRequestCommands {
           );
         const version = input.expectedVersion + 1;
         const affected = await db.mediaIntent.findMany({
-          where: { profileId },
+          where: { profileId, edition: "default" },
         });
-        await lockAcquisitionMedia(
+        await lockDefaultScopes(
           db,
-          affected.map((intent) => intent.mediaId),
+          affected.map((intent) => defaultScope(intent.mediaId)),
+          { createMissing: false },
         );
         await db.qualityProfile.upsert({
           where: { id: profileId },
@@ -267,7 +269,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
         });
         for (const intent of affected) {
           const changed = await db.mediaIntent.update({
-            where: { mediaId: intent.mediaId },
+            where: targetWhere(defaultScope(intent.mediaId)),
             data: { generation: { increment: 1 }, version: { increment: 1 } },
           });
           await this.enqueue(db, actor, {
@@ -293,6 +295,11 @@ export class PrismaMediaCommands extends MediaRequestCommands {
       key,
       { kind: "assign_profile", input: { mediaId, ...input } },
       async (db) => {
+        const targets = await lockDefaultScopes(db, [defaultScope(mediaId)], {
+          createMissing: true,
+        });
+        const target = targets[0];
+        if (target === undefined) throw new Error("Profile target missing");
         const profile = await db.qualityProfile.findUnique({
           where: { id: input.profileId },
         });
@@ -313,12 +320,15 @@ export class PrismaMediaCommands extends MediaRequestCommands {
             409,
           );
         const intent = await db.mediaIntent.upsert({
-          where: { mediaId },
+          where: targetWhere(defaultScope(mediaId)),
           create: { mediaId, profileId: profile.id, generation: 1 },
           update: {
             profileId: profile.id,
             generation: { increment: 1 },
-            version: { increment: 1 },
+            version: target.existed ? { increment: 1 } : 0,
+            ...(target.existed
+              ? {}
+              : { desiredPresence: true, monitoring: true }),
           },
         });
         const operationId = await this.enqueue(db, actor, {

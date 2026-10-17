@@ -1,5 +1,8 @@
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import nodePath from "node:path";
 import { z } from "zod";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { evaluateRelease } from "#domain/quality.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
@@ -34,6 +37,8 @@ export async function resumeCommittedPublication(input: {
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  if (attempt.edition !== "default")
+    throw new FileGuardError("edition_not_available");
   if (attempt.state !== "imported") return false;
   if (attempt.filePlan === null)
     throw new FileGuardError("committed_plan_missing");
@@ -102,6 +107,7 @@ async function assertCommittedAsset(input: {
     where: { id: entry.assetId },
     include: { coverage: { where: { current: true } } },
   });
+  if (asset !== null) await assertDefaultPhysicalAsset(tx, asset.id);
   if (
     asset === null ||
     !asset.owned ||
@@ -121,7 +127,11 @@ async function assertCommittedAsset(input: {
   )
     throw new FileGuardError("committed_asset_changed");
   const coverage = await tx.assetCoverage.findMany({
-    where: { mediaId: { in: entry.mediaIds }, current: true },
+    where: {
+      mediaId: { in: entry.mediaIds },
+      edition: "default",
+      current: true,
+    },
   });
   if (
     coverage.length !== entry.mediaIds.length ||
@@ -144,7 +154,7 @@ async function assertCurrentProfiles(
   const measured = storedMeasuredRelease(entry.properties);
   for (const mediaId of entry.mediaIds) {
     const intent = await tx.mediaIntent.findUniqueOrThrow({
-      where: { mediaId },
+      where: targetWhere(defaultScope(mediaId)),
     });
     if (intent.profileId === null) throw new FileGuardError("profile_missing");
     await tx.$queryRaw(

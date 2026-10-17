@@ -5,7 +5,9 @@ import { queueOperation, serializable } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { needsRestore } from "#infrastructure/locks.ts";
-import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
 
@@ -20,6 +22,7 @@ export function createCoverageActivities(
     async expandCatalogRequests(input) {
       const roots = await context.db.mediaRequest.findMany({
         where: {
+          edition: "default",
           ...(input.cursor === null ? {} : { id: { gt: input.cursor } }),
           active: true,
           direct: true,
@@ -60,7 +63,22 @@ export function createCoverageActivities(
           where: { id: input.requestId },
           include: { media: { include: { parent: true } } },
         });
+        assertDefaultEdition(root.edition);
         if (root.version !== input.requestVersion)
+          return { processed: 0, nextCursor: null };
+        const priorRoot = await tx.mediaIntent.findUniqueOrThrow({
+          where: targetWhere(defaultScope(root.mediaId)),
+        });
+        const priorRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
+        if (
+          unapprovedRoot(
+            root,
+            priorRoot.automationEpoch,
+            priorRuntime.recoveryEpoch,
+          )
+        )
           return { processed: 0, nextCursor: null };
         const episodes = await tx.mediaItem.findMany({
           where: {
@@ -78,17 +96,20 @@ export function createCoverageActivities(
           orderBy: { id: "asc" },
           take: 25,
         });
-        await lockAcquisitionMedia(tx, [
-          root.mediaId,
-          ...episodes.map((item) => item.id),
-        ]);
+        const targets = await lockDefaultScopes(
+          tx,
+          [root.mediaId, ...episodes.map((item) => item.id)].map((id) =>
+            defaultScope(id),
+          ),
+          { createMissing: true },
+        );
         const current = await tx.mediaRequest.findUniqueOrThrow({
           where: { id: root.id },
         });
         if (current.version !== input.requestVersion)
           return { processed: 0, nextCursor: null };
         const rootIntent = await tx.mediaIntent.findUniqueOrThrow({
-          where: { mediaId: root.mediaId },
+          where: targetWhere(defaultScope(root.mediaId)),
         });
         const epoch = await commandAutomationEpoch(tx);
         const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -104,6 +125,11 @@ export function createCoverageActivities(
           )
         )
           return { processed: 0, nextCursor: null };
+        const existingTargets = new Set(
+          targets
+            .filter((entry) => entry.existed)
+            .map((entry) => entry.target.mediaId),
+        );
         for (const episode of episodes) {
           const inSnapshot =
             current.includeFutureEpisodes ||
@@ -114,13 +140,14 @@ export function createCoverageActivities(
             !current.excluded &&
             current.direct &&
             inSnapshot &&
-            (current.includeSpecials || episode.seasonNumber !== 0);
+            includesSeason(current.includeSpecials, episode.seasonNumber);
           await projectEpisode(tx, {
             root: current,
             mediaId: episode.id,
             active: allowed,
             profileId: rootIntent.profileId,
             automationEpoch: projectionEpoch(rootIntent.automationEpoch, epoch),
+            targetExisted: existingTargets.has(episode.id),
           });
         }
         if (
@@ -144,6 +171,10 @@ export function createCoverageActivities(
 
 function projectionEpoch(rootEpoch: number, authorizedEpoch: number) {
   return rootEpoch === authorizedEpoch ? authorizedEpoch : -1;
+}
+
+function includesSeason(includeSpecials: boolean, seasonNumber: number | null) {
+  return includeSpecials || seasonNumber !== 0;
 }
 
 function unapprovedRoot(
@@ -182,6 +213,7 @@ async function projectEpisode(
     active: boolean;
     profileId: string | null;
     automationEpoch: number;
+    targetExisted: boolean;
   },
 ): Promise<void> {
   const { root, mediaId, active } = input;
@@ -191,7 +223,9 @@ async function projectEpisode(
   if (previous?.sourceVersion === root.version && previous.active === active)
     return;
   const claim = await tx.mediaRequest.upsert({
-    where: { userId_mediaId: { userId: root.userId, mediaId } },
+    where: {
+      userId_mediaId_edition: { userId: root.userId, ...defaultScope(mediaId) },
+    },
     create: {
       userId: root.userId,
       mediaId,
@@ -216,8 +250,14 @@ async function projectEpisode(
   const inherited = await tx.requestCoverage.count({
     where: {
       requestId: claim.id,
+      edition: "default",
       active: true,
-      rootRequest: { active: true, direct: true, excluded: false },
+      rootRequest: {
+        edition: "default",
+        active: true,
+        direct: true,
+        excluded: false,
+      },
     },
   });
   const claimActive = !claim.excluded && (claim.direct || inherited > 0);
@@ -234,11 +274,13 @@ async function projectEpisode(
   const count = await tx.mediaRequest.count({
     where: { mediaId, ...effectiveRequestWhere },
   });
-  const prior = await tx.mediaIntent.findUnique({ where: { mediaId } });
+  const prior = await tx.mediaIntent.findUnique({
+    where: targetWhere(defaultScope(mediaId)),
+  });
   // A cancelled container never resurrects intentionally removed episodes.
   const wants = active && claimActive;
   const intent = await tx.mediaIntent.upsert({
-    where: { mediaId },
+    where: targetWhere(defaultScope(mediaId)),
     create: {
       mediaId,
       profileId: input.profileId,
@@ -253,7 +295,7 @@ async function projectEpisode(
         : {}),
       profileId: prior?.profileId ?? input.profileId,
       generation: { increment: 1 },
-      version: { increment: 1 },
+      version: input.targetExisted ? { increment: 1 } : 0,
       monitoring: count > 0,
       ...(wants ? { desiredPresence: true, intentionallyRemovedAt: null } : {}),
     },

@@ -68,6 +68,12 @@ export async function assertAttemptIdentity(
   attempt: AcquisitionAttempt,
   serverMachineId?: string,
 ): Promise<AcquisitionIdentitySnapshot | null> {
+  if (attempt.edition !== "default")
+    throw new MediaError(
+      "edition_not_available",
+      "Only default acquisition is available",
+      409,
+    );
   if (attempt.identityEvidence === null) return null;
   const identity = AcquisitionIdentitySnapshotSchema.parse(
     attempt.identityEvidence,

@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { test, expect } from "vitest";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -108,7 +110,7 @@ test("real worker kill during rollback is reconciled without reviving the candid
   const input = await f.approve();
   await killAt(f, input, "published");
   await f.db.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { desiredPresence: false, generation: { increment: 1 } },
   });
   const current = await f.row();

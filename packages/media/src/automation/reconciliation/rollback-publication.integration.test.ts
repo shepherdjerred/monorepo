@@ -1,11 +1,13 @@
 import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
+import { publicationSeries } from "./publication.test-support.ts";
 
 const { database, context, fixture } = automationTestHarness();
 
 async function rolledBackFixture() {
   const data = await fixture();
+  const series = await publicationSeries(database(), data.media.id);
   await database().mediaItem.update({
     where: { id: data.media.id },
     data: {
@@ -20,15 +22,17 @@ async function rolledBackFixture() {
     data: {
       kind: "episode",
       title: "Second",
+      parentId: series.id,
       seasonNumber: 1,
       episodeNumber: 2,
       externalIds: { seriesTmdb: 999 },
       availability: "importing",
-      intent: {
+      intents: {
         create: {
           generation: 1,
           profileId: data.profile.id,
           automationEpoch: 0,
+          editionRootId: series.id,
         },
       },
     },
@@ -41,6 +45,7 @@ async function rolledBackFixture() {
       checksum: "abc",
       owned: true,
       ownershipEpoch: 0,
+      editionRootId: series.id,
       properties: {},
       state: "published",
       coverage: {
@@ -194,7 +199,9 @@ test.each(["epoch", "generation", "asset"] as const)(
       });
     if (change === "generation")
       await database().mediaIntent.update({
-        where: { mediaId: data.media.id },
+        where: {
+          mediaId_edition: { mediaId: data.media.id, edition: "default" },
+        },
         data: { generation: 2 },
       });
     if (change === "asset")

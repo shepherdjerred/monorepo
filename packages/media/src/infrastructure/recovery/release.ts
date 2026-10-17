@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { RecoveryScope } from "#shared/recovery.ts";
@@ -44,7 +46,7 @@ export async function applyRecoveryDeclarations(
       covered.length > 0 &&
       covered.every((asset) => nativeIds.has(asset.id));
     const intent = await db.mediaIntent.update({
-      where: { mediaId: media.id },
+      where: targetWhere(defaultScope(media.id)),
       data: {
         generation: { increment: 1 },
         version: { increment: 1 },
@@ -56,7 +58,9 @@ export async function applyRecoveryDeclarations(
       },
     });
     await invalidateRetention(db, media.id);
-    await db.watchState.deleteMany({ where: { mediaId: media.id } });
+    await db.watchState.deleteMany({
+      where: { edition: "default", mediaId: media.id },
+    });
     if (restoring.has(media.id))
       await queueOperation(db, {
         key: `recovery-restore:${input.reviewId}:${media.id}`,
@@ -95,7 +99,13 @@ async function applyRespondent(
       throw recoveryConflict("Response includes unreviewed media");
     const wants = declaration.intent !== "no_longer_request";
     await db.mediaRequest.upsert({
-      where: { userId_mediaId: { userId: row.userId, mediaId } },
+      where: {
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: row.userId,
+          mediaId,
+        },
+      },
       create: {
         userId: row.userId,
         mediaId,

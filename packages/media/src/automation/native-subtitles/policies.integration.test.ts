@@ -1,3 +1,6 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { expect, test } from "vitest";
 import { nativeSubtitleHarness } from "./test-fixture.ts";
 import {
@@ -23,32 +26,23 @@ const rules = {
 };
 
 test("reviewed inherited policy renewal appends only selected media and preserves every old row and unselected sibling epoch", async () => {
-  const f = await harness.setup();
-  const series = await f.db.mediaItem.create({
-    data: { kind: "series", title: "Fixture series" },
-  });
-  const season = await f.db.mediaItem.create({
+  const series = await harness.database().mediaItem.create({
     data: {
-      kind: "season",
-      title: "Season one",
-      parentId: series.id,
-      seasonNumber: 1,
+      kind: "series",
+      title: "Coastlines",
+      year: 2026,
+      tmdbId: 1234,
     },
   });
-  await f.db.mediaItem.update({
-    where: { id: f.media.id },
-    data: {
-      kind: "episode",
-      parentId: season.id,
-      seasonNumber: 1,
-      episodeNumber: 1,
-    },
-  });
+  const f = await harness.setup("accepted", false, { seriesId: series.id });
+  await f.db.$transaction((tx) =>
+    lockDefaultScopes(tx, [defaultScope(series.id)], { createMissing: true }),
+  );
   const sibling = await f.db.mediaItem.create({
     data: {
       kind: "episode",
       title: "Unselected episode",
-      parentId: season.id,
+      parentId: series.id,
       seasonNumber: 1,
       episodeNumber: 2,
     },
@@ -102,13 +96,13 @@ test("reviewed inherited policy renewal appends only selected media and preserve
   ]);
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ automationEpoch: 0 });
   expect(await f.db.operation.count()).toBe(operationCount);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null, recoveryEpoch: 1 });
   await expect(

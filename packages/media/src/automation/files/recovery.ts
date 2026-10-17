@@ -46,7 +46,11 @@ export async function recoverObsoletePublication(input: {
       )
         throw new FileGuardError("record_ownership_unconfirmed");
       const coverage = await tx.assetCoverage.findMany({
-        where: { mediaId: { in: entry.mediaIds }, current: true },
+        where: {
+          mediaId: { in: entry.mediaIds },
+          edition: "default",
+          current: true,
+        },
       });
       if (coverage.some((item) => item.assetId !== entry.previousAssetId))
         throw new FileGuardError("recovery_asset_changed");

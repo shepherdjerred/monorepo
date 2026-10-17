@@ -259,6 +259,11 @@ export async function restoreNativeQuarantine(
               where: { id: { in: descriptor.group.mediaIds } },
               data: { availability: "importing", version: { increment: 1 } },
             });
+            await mirrorDefaultAvailability(
+              tx,
+              descriptor.group.mediaIds,
+              "importing",
+            );
             await writeNativeRestoreOperationReceipt(
               tx,
               input.operationId,
@@ -286,3 +291,4 @@ export async function restoreNativeQuarantine(
     { timeout: 30_000, maxWait: 30_000 },
   );
 }
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";

@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import type { QualityProfile } from "#shared/contract.ts";
 import { MediaError } from "#application/errors.ts";
 import { z } from "zod";
@@ -28,7 +30,7 @@ async function reconcile(
   input: MediaOperation,
 ): ReturnType<AcquisitionActivities["reconcileMediaIntent"]> {
   const intent = await context.db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId: input.mediaId },
+    where: targetWhere(defaultScope(input.mediaId)),
     include: { media: true },
   });
   if (
@@ -40,6 +42,7 @@ async function reconcile(
     return { status: "obsolete", attemptId: null, reason: "intent_changed" };
   const removal = await context.db.retentionDecision.findFirst({
     where: {
+      edition: "default",
       mediaId: input.mediaId,
       state: { in: ["warning_pending", "grace_period", "quarantined"] },
     },

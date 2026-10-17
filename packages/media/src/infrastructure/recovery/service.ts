@@ -54,7 +54,7 @@ export class PrismaRecovery extends MediaCommandBase {
     const owner = current.role === "owner" && !current.restricted;
     const holds = owner
       ? await this.db.recoveryHold.findMany({
-          where: { releasedAt: null },
+          where: { edition: "default", releasedAt: null },
           include: { media: true },
           take: 100,
           orderBy: { createdAt: "desc" },
@@ -383,6 +383,7 @@ export class PrismaRecovery extends MediaCommandBase {
         for (const hold of scope.holds) {
           const changed = await db.recoveryHold.updateMany({
             where: {
+              edition: "default",
               mediaId: hold.mediaId,
               version: hold.version,
               releasedAt: null,

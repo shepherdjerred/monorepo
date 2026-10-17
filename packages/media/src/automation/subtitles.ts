@@ -1,4 +1,10 @@
 import nodePath from "node:path";
+import {
+  defaultIntent,
+  defaultScope,
+  assertDefaultEdition,
+} from "#shared/editions/scope.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { createHash } from "node:crypto";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
@@ -22,7 +28,6 @@ import {
   isMachineLabelled,
 } from "#integrations/subtitle-validation.ts";
 import { evaluateSubtitle } from "#domain/subtitles.ts";
-import { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import {
   fromAssrt,
@@ -58,15 +63,20 @@ const blocked = (reason: string): Result => ({
 });
 
 async function loadAsset(context: MediaAutomationContext, assetId: string) {
-  return await context.db.libraryAsset.findUniqueOrThrow({
+  const asset = await context.db.libraryAsset.findUniqueOrThrow({
     where: { id: assetId },
     include: {
       coverage: {
         where: { current: true },
-        include: { media: { include: { intent: true } } },
+        include: {
+          media: { include: { intents: { where: { edition: "default" } } } },
+        },
       },
     },
   });
+  assertDefaultEdition(asset.edition);
+  for (const coverage of asset.coverage) assertDefaultEdition(coverage.edition);
+  return asset;
 }
 
 async function withProvider(
@@ -161,8 +171,12 @@ async function persist(
   if (!evaluation.accepted) return blocked(evaluation.reasons.join(","));
   return await serializable(context.db, async (tx) => {
     const ids = asset.coverage.map((coverage) => coverage.mediaId).sort();
-    await tx.$queryRaw(
-      Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join(ids)}) ORDER BY id FOR UPDATE`,
+    await lockDefaultScopes(
+      tx,
+      ids.map((id) => defaultScope(id)),
+      {
+        createMissing: false,
+      },
     );
     await lockEffectiveRequests(tx, ids);
     if (!(await lockRuntimeAuthority(tx, recoveryEpoch)))
@@ -198,17 +212,21 @@ async function persist(
       current.version !== asset.version ||
       current.checksum !== asset.checksum ||
       current.state !== "published" ||
+      current.edition !== "default" ||
       current.coverage.length !== ids.length ||
-      current.coverage.some((coverage) => !ids.includes(coverage.mediaId))
+      current.coverage.some(
+        (coverage) =>
+          coverage.edition !== "default" || !ids.includes(coverage.mediaId),
+      )
     )
       return { status: "obsolete", subtitleId: null, reason: "asset_changed" };
     const intents = await tx.mediaIntent.findMany({
-      where: { mediaId: { in: ids } },
+      where: { mediaId: { in: ids }, edition: "default" },
     });
     const generations = Object.fromEntries(
       asset.coverage.map((coverage) => [
         coverage.mediaId,
-        coverage.media.intent?.generation,
+        defaultIntent(coverage.media.intents)?.generation,
       ]),
     );
     if (

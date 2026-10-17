@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import { createCoverageActivities } from "./coverage.ts";
@@ -11,7 +12,7 @@ test("observe-mode bootstrap projects metadata without granting or downgrading l
     data: { mode: "observe", ownershipConfirmed: false },
   });
   await f.db.mediaIntent.update({
-    where: { mediaId: f.series.id },
+    where: { mediaId_edition: { mediaId: f.series.id, edition: "default" } },
     data: { automationEpoch: -1 },
   });
   const root = await f.db.mediaRequest.update({
@@ -35,22 +36,30 @@ test("observe-mode bootstrap projects metadata without granting or downgrading l
   ).toMatchObject({ processed: 2 });
   expect(
     await f.db.mediaRequest.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.user.id, mediaId: future.id } },
+      where: {
+        userId_mediaId_edition: {
+          userId: f.user.id,
+          mediaId: future.id,
+          edition: "default",
+        },
+      },
     }),
   ).toMatchObject({ active: true, direct: false });
   expect(
-    await f.db.mediaIntent.findUniqueOrThrow({ where: { mediaId: future.id } }),
+    await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: future.id, edition: "default" } },
+    }),
   ).toMatchObject({ automationEpoch: -1, monitoring: true });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.episode.id },
+      where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     }),
   ).toMatchObject({ automationEpoch: 0 });
   expect(
     await f.db.mediaRequest.findUniqueOrThrow({ where: { id: root.id } }),
   ).toMatchObject({ coverageCompletedAt: expect.any(Date) });
   await f.db.mediaIntent.update({
-    where: { mediaId: f.series.id },
+    where: { mediaId_edition: { mediaId: f.series.id, edition: "default" } },
     data: { automationEpoch: 0 },
   });
   await f.db.mediaRuntimeState.update({
@@ -58,7 +67,7 @@ test("observe-mode bootstrap projects metadata without granting or downgrading l
     data: { recoveryEpoch: 1 },
   });
   await f.db.mediaIntent.update({
-    where: { mediaId: f.episode.id },
+    where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     data: { automationEpoch: 1 },
   });
   expect(
@@ -68,7 +77,7 @@ test("observe-mode bootstrap projects metadata without granting or downgrading l
     }),
   ).toEqual({ processed: 0, nextCursor: null });
   await f.db.mediaIntent.update({
-    where: { mediaId: f.series.id },
+    where: { mediaId_edition: { mediaId: f.series.id, edition: "default" } },
     data: { automationEpoch: -1 },
   });
   const renewed = await f.db.mediaRequest.update({
@@ -83,11 +92,13 @@ test("observe-mode bootstrap projects metadata without granting or downgrading l
   ).toMatchObject({ processed: 2 });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.episode.id },
+      where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     }),
   ).toMatchObject({ automationEpoch: 1 });
   expect(
-    await f.db.mediaIntent.findUniqueOrThrow({ where: { mediaId: future.id } }),
+    await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: future.id, edition: "default" } },
+    }),
   ).toMatchObject({ automationEpoch: -1 });
 });
 
@@ -98,9 +109,9 @@ async function setup() {
     data: {
       kind: "series",
       title: "Restored series",
-      intent: { create: { automationEpoch: 0 } },
     },
   });
+  await createTestDefaultTarget(db, series.id, { automationEpoch: 0 });
   const root = await db.mediaRequest.create({
     data: {
       userId: base.user.id,
@@ -131,7 +142,7 @@ async function setup() {
 test("catalog expansion cannot renew an old root or its leaves after runtime recovery", async () => {
   const f = await setup();
   const before = await f.db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId: f.episode.id },
+    where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
   });
   await grantTestLease(f.db, 1);
   await f.db.mediaRuntimeState.update({
@@ -153,11 +164,13 @@ test("catalog expansion cannot renew an old root or its leaves after runtime rec
   });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.episode.id },
+      where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     }),
   ).toEqual(before);
   expect(
-    await f.db.mediaIntent.findUnique({ where: { mediaId: future.id } }),
+    await f.db.mediaIntent.findUnique({
+      where: { mediaId_edition: { mediaId: future.id, edition: "default" } },
+    }),
   ).toBeNull();
   expect(await f.db.mediaRequest.count({ where: { mediaId: future.id } })).toBe(
     0,
@@ -167,7 +180,13 @@ test("catalog expansion cannot renew an old root or its leaves after runtime rec
 test("negative leaf declarations survive fresh root versions and future episodes without epoch renewal", async () => {
   const f = await setup();
   await f.db.mediaRequest.update({
-    where: { userId_mediaId: { userId: f.user.id, mediaId: f.episode.id } },
+    where: {
+      userId_mediaId_edition: {
+        userId: f.user.id,
+        mediaId: f.episode.id,
+        edition: "default",
+      },
+    },
     data: {
       direct: true,
       excluded: true,
@@ -176,7 +195,7 @@ test("negative leaf declarations survive fresh root versions and future episodes
     },
   });
   await f.db.mediaIntent.update({
-    where: { mediaId: f.episode.id },
+    where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     data: { automationEpoch: -1, monitoring: false },
   });
   const root = await f.db.mediaRequest.update({
@@ -198,16 +217,24 @@ test("negative leaf declarations survive fresh root versions and future episodes
   });
   expect(
     await f.db.mediaRequest.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.user.id, mediaId: f.episode.id } },
+      where: {
+        userId_mediaId_edition: {
+          userId: f.user.id,
+          mediaId: f.episode.id,
+          edition: "default",
+        },
+      },
     }),
   ).toMatchObject({ direct: true, excluded: true, active: false });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.episode.id },
+      where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     }),
   ).toMatchObject({ automationEpoch: -1, monitoring: false });
   expect(
-    await f.db.mediaIntent.findUniqueOrThrow({ where: { mediaId: future.id } }),
+    await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: future.id, edition: "default" } },
+    }),
   ).toMatchObject({
     automationEpoch: 0,
     desiredPresence: true,
@@ -230,11 +257,17 @@ test("old-root cancellation can remove inherited authority without downgrading a
     data: { recoveryEpoch: 1 },
   });
   await f.db.mediaIntent.update({
-    where: { mediaId: f.episode.id },
+    where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     data: { automationEpoch: 1 },
   });
   await f.db.mediaRequest.update({
-    where: { userId_mediaId: { userId: f.user.id, mediaId: f.episode.id } },
+    where: {
+      userId_mediaId_edition: {
+        userId: f.user.id,
+        mediaId: f.episode.id,
+        edition: "default",
+      },
+    },
     data: { direct: true },
   });
   const cancelled = await f.db.mediaRequest.update({
@@ -252,7 +285,7 @@ test("old-root cancellation can remove inherited authority without downgrading a
   });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.episode.id },
+      where: { mediaId_edition: { mediaId: f.episode.id, edition: "default" } },
     }),
   ).toMatchObject({ automationEpoch: 1, monitoring: true });
   expect(

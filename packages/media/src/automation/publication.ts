@@ -4,7 +4,10 @@ import type { PlexItem } from "#integrations/plex.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { queueOperation, serializable } from "./store.ts";
 import type { MediaItem } from "#generated/prisma/client.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
+import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
 import { requireActiveRuntime } from "./runtime.ts";
 import {
   lockRuntimeAuthority,
@@ -16,6 +19,13 @@ import { publishRollback } from "./reconciliation/rollback-publication.ts";
 import { queuePublicationNotifications } from "./notifications/events.ts";
 import { queueSharedPublication } from "./notifications/shared.ts";
 import { nativeRestorePublication } from "#infrastructure/native-quarantine/publication.ts";
+import {
+  publicationCoverageInclude,
+  publicationLineageResolved,
+  publicationGenerationMatches,
+  samePublicationEvidence,
+  assertDefaultPublicationCoverage,
+} from "./reconciliation/publication-evidence.ts";
 
 type PublicationActivities = Pick<
   MediaNetworkActivities,
@@ -128,7 +138,7 @@ export function createPublicationActivities(
       ),
     async publishRestoredMedia(input) {
       const intent = await context.db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: input.mediaId },
+        where: targetWhere(defaultScope(input.mediaId)),
       });
       if (intent.generation !== input.generation)
         return { status: "blocked", reason: "intent_changed" };
@@ -160,6 +170,7 @@ export function createPublicationActivities(
       const decision = await context.db.retentionDecision.findUniqueOrThrow({
         where: { id: receipt.decisionId },
       });
+      assertDefaultEdition(decision.edition);
       const runtime = await requireActiveRuntime(context.db);
       return decision.state !== "restored" ||
         !runtime.active ||
@@ -174,6 +185,7 @@ export function createPublicationActivities(
       const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
         where: { id: input.attemptId },
       });
+      assertDefaultEdition(attempt.edition);
       return publishCoverage(context, attempt.mediaIds, input.operationId, {
         epoch: attempt.recoveryEpoch,
         notificationAttemptId: attempt.id,
@@ -226,11 +238,14 @@ async function publishCoverage(
     return { status: "blocked", reason: "recovery_epoch_changed" };
   const { receipt } = proof;
   const coverages = await context.db.assetCoverage.findMany({
-    where: { mediaId: { in: mediaIds }, current: true },
-    include: { asset: true, media: { include: { intent: true } } },
+    where: { mediaId: { in: mediaIds }, current: true, edition: "default" },
+    include: publicationCoverageInclude,
   });
   if (coverages.length === 0)
     return { status: "blocked", reason: "published_asset_missing" };
+  assertDefaultPublicationCoverage(coverages);
+  if (coverages.some((coverage) => !publicationLineageResolved(coverage)))
+    return { status: "blocked", reason: "lineage_unresolved" };
   if (
     !(await recordsAuthorized(context.db, {
       epoch: runtime.epoch,
@@ -240,12 +255,10 @@ async function publishCoverage(
   )
     return { status: "blocked", reason: "record_ownership_unconfirmed" };
   if (
-    proof.requiredGenerations !== undefined &&
-    coverages.some(
+    !coverages.every(
       (coverage) =>
-        coverage.media.intent?.desiredPresence !== true ||
-        coverage.media.intent.generation !==
-          proof.requiredGenerations?.[coverage.mediaId],
+        proof.requiredGenerations === undefined ||
+        publicationGenerationMatches(coverage, proof.requiredGenerations),
     )
   )
     return { status: "blocked", reason: "rollback_intent_changed" };
@@ -313,7 +326,13 @@ async function publishCoverage(
     });
   }
   await serializable(context.db, async (tx) => {
-    await lockMedia(tx, mediaIds);
+    await lockDefaultScopes(
+      tx,
+      mediaIds.map((id) => defaultScope(id)),
+      {
+        createMissing: false,
+      },
+    );
     if (
       !(await lockRuntimeAuthority(tx, runtime.epoch)) ||
       !(await recordsAuthorized(tx, {
@@ -341,15 +360,9 @@ async function publishCoverage(
             mediaId: snapshot.mediaId,
           },
         },
-        include: { asset: true, media: { include: { intent: true } } },
+        include: publicationCoverageInclude,
       });
-      if (
-        !current.current ||
-        current.asset.state !== "published" ||
-        current.asset.version !== snapshot.asset.version ||
-        current.asset.checksum !== snapshot.asset.checksum ||
-        current.media.intent?.generation !== snapshot.media.intent?.generation
-      )
+      if (!samePublicationEvidence(current, snapshot))
         throw new Error("Publication evidence changed before commit");
     }
     for (const entry of verified) {
@@ -358,7 +371,7 @@ async function publishCoverage(
           assetId_mediaId: { assetId: entry.assetId, mediaId: entry.mediaId },
         },
       });
-      if (!stillCurrent.current)
+      if (!stillCurrent.current || stillCurrent.edition !== "default")
         throw new Error("Publication asset changed during Plex verification");
       await tx.mediaItem.update({
         where: { id: entry.mediaId },
@@ -371,6 +384,7 @@ async function publishCoverage(
           availability: "available",
         },
       });
+      await mirrorDefaultAvailability(tx, [entry.mediaId], "available");
     }
     await recordVerifiedPublication(
       tx,
@@ -385,7 +399,7 @@ async function publishCoverage(
     }
     if (proof.releaseAttemptId !== undefined)
       await tx.acquisitionReservation.deleteMany({
-        where: { attemptId: proof.releaseAttemptId },
+        where: { attemptId: proof.releaseAttemptId, edition: "default" },
       });
   });
   return { status: "available", reason: null };
@@ -413,8 +427,15 @@ async function finalize(
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  assertDefaultEdition(attempt.edition);
   await serializable(context.db, async (tx) => {
-    await lockMedia(tx, attempt.mediaIds);
+    await lockDefaultScopes(
+      tx,
+      attempt.mediaIds.map((id) => defaultScope(id)),
+      {
+        createMissing: false,
+      },
+    );
     if (
       !(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)) ||
       !(await recordsAuthorized(tx, {
@@ -443,7 +464,7 @@ async function finalize(
       data: { state: "completed" },
     });
     await tx.acquisitionReservation.deleteMany({
-      where: { attemptId: attempt.id },
+      where: { attemptId: attempt.id, edition: "default" },
     });
     if (attempt.torrentId !== null)
       await queueOperation(tx, {
@@ -453,7 +474,11 @@ async function finalize(
         payload: { torrentId: attempt.torrentId },
       });
     const coverages = await tx.assetCoverage.findMany({
-      where: { mediaId: { in: attempt.mediaIds }, current: true },
+      where: {
+        mediaId: { in: attempt.mediaIds },
+        current: true,
+        edition: "default",
+      },
     });
     for (const assetId of new Set(coverages.map((item) => item.assetId)))
       await queueCurrentSubtitleTargets(tx, {

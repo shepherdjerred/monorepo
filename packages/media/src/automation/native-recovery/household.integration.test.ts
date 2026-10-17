@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, expect, test } from "vitest";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
@@ -101,20 +103,21 @@ test.each([
     });
     expect(
       await db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.file.media.id },
+        where: targetWhere(defaultScope(f.file.media.id)),
       }),
     ).toMatchObject({
       automationEpoch: intent === "request" ? 1 : 0,
       monitoring: intent === "request",
     });
     const released = await db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.file.media.id },
+      where: targetWhere(defaultScope(f.file.media.id)),
     });
     expect(released.releasedAt).not.toBeNull();
     expect(
       await db.retentionHold.findUniqueOrThrow({
         where: {
-          userId_mediaId: {
+          userId_mediaId_edition: {
+            edition: "default",
             userId: f.prior.actor.id,
             mediaId: f.file.media.id,
           },

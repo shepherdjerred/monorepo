@@ -4,7 +4,10 @@ import { MediaError, requireOwner } from "#application/errors.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { MediaCommandBase } from "#infrastructure/command-base.ts";
 import type { TmdbClient } from "#integrations/tmdb.ts";
-import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import {
+  lockCanonicalMedia,
+  lockExistingDefaultTargets,
+} from "#infrastructure/editions/locks.ts";
 import {
   NumberingGroupListSchema,
   type PreviewNumberingGroup,
@@ -89,9 +92,13 @@ export class CatalogNumberingAdministration extends MediaCommandBase {
       key,
       { kind: "map_tmdb_group", input: { seriesId, ...input } },
       async (tx) => {
-        await lockAcquisitionMedia(tx, [seriesId]);
+        await lockCanonicalMedia(tx, [seriesId]);
         const catalog = await numberingCatalog(tx, seriesId);
-        await lockAcquisitionMedia(
+        await lockCanonicalMedia(
+          tx,
+          catalog.episodes.map((item) => item.id),
+        );
+        await lockExistingDefaultTargets(
           tx,
           catalog.episodes.map((item) => item.id),
         );

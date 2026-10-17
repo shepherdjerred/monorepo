@@ -392,7 +392,7 @@ test.each(["policy", "epoch", "asset"] as const)(
 test("bounded due reconciliation starts missing imported policy targets even when upgrade monitoring is disabled", async () => {
   const f = await harness.setup();
   await f.db.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     data: { monitoring: false },
   });
   const sweep = createSweepActivities(f.network);

@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import { queueOperation } from "#automation/store.ts";
 import { serializable } from "#automation/store.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
@@ -11,6 +12,7 @@ export async function recordVerifiedPublication(
 ): Promise<void> {
   const timestamp = new Date();
   for (const assetId of new Set(assetIds)) {
+    await assertDefaultPhysicalAsset(tx, assetId);
     await tx.libraryAsset.updateMany({
       where: { id: assetId, plexPublishedAt: null },
       data: { plexPublishedAt: timestamp },
@@ -24,7 +26,12 @@ export async function recordVerifiedPublication(
       successor.plexPublishedAt.getTime() + 7 * 86_400_000,
     );
     const previous = await tx.libraryAsset.findMany({
-      where: { supersededByAssetId: assetId, state: "superseded", owned: true },
+      where: {
+        supersededByAssetId: assetId,
+        edition: "default",
+        state: "superseded",
+        owned: true,
+      },
     });
     for (const asset of previous) {
       await tx.libraryAsset.update({

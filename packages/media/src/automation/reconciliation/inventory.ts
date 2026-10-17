@@ -116,6 +116,23 @@ async function reconcileInventory(
     include: { coverage: { where: { current: true } } },
   });
   for (const asset of assets) {
+    if (
+      asset.edition !== "default" ||
+      asset.coverage.some((coverage) => coverage.edition !== "default")
+    ) {
+      // Keep unexpected physical inventory visible without attributing it to a
+      // legacy default title or granting it publication/cleanup authority.
+      await context.db.applicationEvent.upsert({
+        where: { dedupeKey: `inventory-edition:${scanId}:${asset.id}` },
+        create: {
+          dedupeKey: `inventory-edition:${scanId}:${asset.id}`,
+          kind: "inventory_edition_unavailable",
+          payload: { scanId, assetId: asset.id, assetVersion: asset.version },
+        },
+        update: {},
+      });
+      continue;
+    }
     const observation = await context.db.plexInventoryObservation.findFirst({
       where: { scanId, path: asset.path },
     });

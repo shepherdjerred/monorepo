@@ -1,5 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { FileGuardError } from "#automation/files/types.ts";
@@ -30,7 +30,7 @@ export async function lockSubtitleReplacementScope(
     replacementId?: string;
   },
 ) {
-  await lockMedia(tx, [...input.mediaIds]);
+  await lockDefaultMedia(tx, [...input.mediaIds]);
   await lockEffectiveRequests(tx, [...input.mediaIds]);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;

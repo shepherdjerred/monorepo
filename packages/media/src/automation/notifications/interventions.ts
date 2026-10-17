@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { queueLifecycleNotifications } from "./events.ts";
 
@@ -17,6 +18,7 @@ export async function queueIntervention(
   const attempt = await tx.acquisitionAttempt.findFirst({
     where: { OR: [{ operationId }, { coordinatorOperationId: operationId }] },
   });
+  if (attempt !== null) assertDefaultEdition(attempt.edition);
   const birth = z
     .object({
       recoveryEpoch: z.number().int().optional(),
@@ -27,7 +29,7 @@ export async function queueIntervention(
   const ids =
     attempt?.mediaIds ?? (birth.mediaId === undefined ? [] : [birth.mediaId]);
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: ids } },
+    where: { mediaId: { in: ids }, edition: "default" },
   });
   const items = intents.map((intent) => ({
     mediaId: intent.mediaId,

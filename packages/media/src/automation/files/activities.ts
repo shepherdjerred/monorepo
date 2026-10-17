@@ -1,3 +1,4 @@
+import { MediaError } from "#application/errors.ts";
 import type { MediaFileActivities } from "#shared/automation.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { inspectAndStage } from "./inspection.ts";
@@ -28,7 +29,8 @@ export function createMediaFileActivities(
       try {
         await cleanupUpgrade(context, cleanupId);
         return { status: "purged" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (await repairLegacyProtection(context, error))
           return { status: "protected", reason: LEGACY_CLAIM_PROTECTION };
         if (
@@ -45,7 +47,8 @@ export function createMediaFileActivities(
       try {
         await rollbackPromotion(context, attemptId, operationId);
         return { status: "rolled_back" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (error instanceof FileGuardError)
           return { status: "protected", reason: error.reason };
         throw error;
@@ -55,7 +58,8 @@ export function createMediaFileActivities(
       try {
         await inspectAndStage(context, attemptId);
         return { status: "staged" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (error instanceof FileGuardError)
           return { status: "blocked", reason: error.reason };
         throw error;
@@ -65,7 +69,8 @@ export function createMediaFileActivities(
       try {
         await promote(context, attemptId);
         return { status: "published" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (error instanceof FileGuardError)
           return {
             status: error.reason.includes("obsolete") ? "obsolete" : "blocked",
@@ -78,7 +83,8 @@ export function createMediaFileActivities(
       try {
         await removeFiles(context, decisionId, operationId, false);
         return { status: "quarantined" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (await repairLegacyProtection(context, error))
           return { status: "protected", reason: LEGACY_CLAIM_PROTECTION };
         if (error instanceof FileGuardError)
@@ -90,7 +96,8 @@ export function createMediaFileActivities(
       try {
         await removeFiles(context, decisionId, operationId, true);
         return { status: "purged" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (await repairLegacyProtection(context, error))
           return { status: "protected", reason: LEGACY_CLAIM_PROTECTION };
         if (error instanceof FileGuardError)
@@ -105,7 +112,8 @@ export function createMediaFileActivities(
             ? "restored"
             : "missing",
         };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (error instanceof FileGuardError)
           return { status: "protected", reason: error.reason };
         throw error;
@@ -115,7 +123,8 @@ export function createMediaFileActivities(
       try {
         await installSubtitle(context, subtitleId, operationId);
         return { status: "installed" };
-      } catch (error) {
+      } catch (error_) {
+        const error = physicalError(error_);
         if (error instanceof FileOperationConflict)
           return {
             status: "blocked",
@@ -126,4 +135,11 @@ export function createMediaFileActivities(
       }
     },
   };
+}
+
+function physicalError(error: unknown): unknown {
+  return error instanceof MediaError &&
+    ["lineage_unresolved", "edition_not_available"].includes(error.code)
+    ? new FileGuardError(error.code)
+    : error;
 }

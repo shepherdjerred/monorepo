@@ -104,7 +104,7 @@ export async function createManualReplacementCandidate(
       409,
     );
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: ids } },
+    where: { mediaId: { in: ids }, edition: "default" },
     orderBy: { mediaId: "asc" },
   });
   const candidate = await tx.subtitleAsset.create({

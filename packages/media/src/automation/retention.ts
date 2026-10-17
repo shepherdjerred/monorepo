@@ -1,6 +1,13 @@
 import { z } from "zod";
+import {
+  defaultIntent,
+  defaultScope,
+  assertDefaultEdition,
+} from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
-import { Prisma } from "#generated/prisma/client.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import type {
   MediaNetworkActivities,
   MediaOperation,
@@ -8,7 +15,8 @@ import type {
 import { evaluateRetention, RETENTION_DEFAULTS } from "#domain/retention.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { observeRequesterWatch, PlexIdentitySchema } from "./watch.ts";
-import { queueOperation, serializable } from "./store.ts";
+import { serializable } from "./store.ts";
+import { createWarning } from "./notifications/retention-warning.ts";
 import {
   lockRuntimeAuthority,
   runtimeAuthority,
@@ -52,25 +60,40 @@ function incompleteWatchReason(observation: {
 }
 const EvidenceSchema = z.object({ warningEventId: z.string() });
 const mediaInclude = {
-  intent: true,
+  intents: { where: { edition: "default" } },
   requests: {
-    where: effectiveRequestWhere,
+    where: { ...effectiveRequestWhere, edition: "default" },
     include: { user: { include: { notificationPreference: true } } },
   },
-  holds: true,
-  watchStates: true,
-  assets: { where: { current: true }, include: { asset: true } },
+  holds: { where: { edition: "default" } },
+  watchStates: { where: { edition: "default" } },
+  assets: {
+    where: { current: true, edition: "default" },
+    include: { asset: true },
+  },
 } satisfies Prisma.MediaItemInclude;
 type Media = Prisma.MediaItemGetPayload<{ include: typeof mediaInclude }>;
+function lineageResolved(item: Media): boolean {
+  const root = defaultIntent(item.intents)?.editionRootId;
+  return (
+    root != null &&
+    item.assets.every(({ asset }) => asset.editionRootId === root)
+  );
+}
 
 async function coveredMedia(
   context: MediaAutomationContext,
   mediaId: string,
 ): Promise<string[]> {
   const assets = await context.db.assetCoverage.findMany({
-    where: { mediaId, current: true },
+    where: { mediaId, current: true, edition: "default" },
     include: { asset: { include: { coverage: { where: { current: true } } } } },
   });
+  for (const { asset } of assets) {
+    assertDefaultEdition(asset.edition);
+    for (const coverage of asset.coverage)
+      assertDefaultEdition(coverage.edition);
+  }
   return [
     ...new Set([
       mediaId,
@@ -103,76 +126,19 @@ async function currentPlayback(
   );
 }
 
-async function createWarning(
-  tx: Transaction,
-  item: Media,
-  generation: number,
-  epoch: number,
-) {
-  const decisionId = crypto.randomUUID();
-  const event = await tx.applicationEvent.create({
-    data: {
-      mediaId: item.id,
-      kind: "retention_warning",
-      payload: { decisionId, generation },
-    },
-  });
-  const decision = await tx.retentionDecision.create({
-    data: {
-      id: decisionId,
-      mediaId: item.id,
-      generation,
-      state: "warning_pending",
-      evidence: { warningEventId: event.id, recoveryEpoch: epoch },
-    },
-  });
-  for (const claim of item.requests.filter(
-    (request) => request.user.role !== "owner",
-  )) {
-    const preference = claim.user.notificationPreference;
-    const channels = [
-      preference?.emailEnabled === true &&
-      claim.user.emailVerifiedAt !== null &&
-      claim.user.email !== null
-        ? "email"
-        : null,
-      preference?.discordEnabled === true && claim.user.discordId !== null
-        ? "discord"
-        : null,
-    ].filter((channel) => channel !== null);
-    for (const channel of channels) {
-      const notification = await tx.notificationDelivery.create({
-        data: {
-          eventId: event.id,
-          userId: claim.userId,
-          channel,
-          state: "pending",
-          recoveryEpoch: epoch,
-        },
-      });
-      await queueOperation(tx, {
-        key: `notification:${notification.id}`,
-        kind: "deliver_notification",
-        targetId: notification.id,
-        userId: claim.userId,
-        payload: { notificationId: notification.id },
-      });
-    }
-  }
-  return decision;
-}
-
 async function evaluateItem(
   tx: Transaction,
   item: Media,
   epoch: number,
   timestamp: Date,
 ): Promise<Result> {
-  const generation = item.intent?.generation;
+  const generation = defaultIntent(item.intents)?.generation;
   if (generation === undefined) return protect("intent_missing");
+  if (!lineageResolved(item)) return protect("lineage_unresolved");
   let decision = await tx.retentionDecision.findFirst({
     where: {
       mediaId: item.id,
+      edition: "default",
       generation,
       state: { in: ["warning_pending", "grace_period", "quarantined"] },
     },
@@ -203,7 +169,7 @@ async function evaluateItem(
           orderBy: { acceptedAt: "asc" },
         });
   const reserved = await tx.acquisitionReservation.findUnique({
-    where: { mediaId: item.id },
+    where: targetWhere(defaultScope(item.id)),
   });
   const evaluation = evaluateRetention({
     now: timestamp.getTime(),
@@ -214,6 +180,7 @@ async function evaluateItem(
       item.assets.every(
         ({ asset }) =>
           asset.owned &&
+          asset.edition === "default" &&
           asset.checksum !== null &&
           ["published", "quarantined"].includes(asset.state),
       ),
@@ -309,8 +276,12 @@ async function evaluateGroup(
 ): Promise<Result> {
   const { ids, snapshots, observedAt } = observation;
   return await serializable(context.db, async (tx) => {
-    await tx.$queryRaw(
-      Prisma.sql`SELECT id FROM "MediaItem" WHERE id IN (${Prisma.join(ids)}) ORDER BY id FOR UPDATE`,
+    await lockDefaultScopes(
+      tx,
+      ids.map((id) => defaultScope(id)),
+      {
+        createMissing: false,
+      },
     );
     await lockEffectiveRequests(tx, ids);
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -329,7 +300,8 @@ async function evaluateGroup(
     if (
       items.some(
         (item) =>
-          item.intent?.automationEpoch !== runtime.recoveryEpoch ||
+          defaultIntent(item.intents)?.automationEpoch !==
+            runtime.recoveryEpoch ||
           item.assets.some(
             (coverage) =>
               coverage.asset.ownershipEpoch !== runtime.recoveryEpoch,
@@ -339,7 +311,7 @@ async function evaluateGroup(
       return protect("ownership_epoch_unconfirmed");
     if (
       (await tx.recoveryHold.count({
-        where: { mediaId: { in: ids }, releasedAt: null },
+        where: { mediaId: { in: ids }, edition: "default", releasedAt: null },
       })) > 0
     )
       return protect("recovery_hold");
@@ -352,7 +324,10 @@ async function evaluateGroup(
     )
       return protect("media_changed_during_observation");
     const target = items.find((item) => item.id === input.mediaId);
-    if (target?.intent?.generation !== input.generation)
+    if (
+      target === undefined ||
+      defaultIntent(target.intents)?.generation !== input.generation
+    )
       return {
         status: "obsolete",
         decisionId: null,
@@ -400,6 +375,21 @@ async function evaluateGroup(
   });
 }
 
+async function groupWatch(
+  context: MediaAutomationContext,
+  ids: string[],
+  quarantined: boolean,
+): Promise<Result | null> {
+  for (const id of ids) {
+    const watch = await observeRequesterWatch(context, id);
+    if (!watch.complete)
+      return protect(
+        incompleteWatchReason({ quarantined, reason: watch.reason }),
+      );
+  }
+  return null;
+}
+
 export function createRetentionActivities(
   context: MediaAutomationContext,
 ): Pick<MediaNetworkActivities, "evaluateMediaRetention"> {
@@ -419,13 +409,18 @@ export function createRetentionActivities(
         include: mediaInclude,
       });
       const target = snapshots.find((item) => item.id === input.mediaId);
-      if (target?.intent?.generation !== input.generation)
+      if (
+        target === undefined ||
+        defaultIntent(target.intents)?.generation !== input.generation
+      )
         return {
           status: "obsolete",
           decisionId: null,
           wakeAt: null,
           reason: "intent_obsolete",
         };
+      if (snapshots.some((item) => !lineageResolved(item)))
+        return protect("lineage_unresolved");
       if (target.availability === "removed")
         return {
           status: "complete",
@@ -447,16 +442,12 @@ export function createRetentionActivities(
               ownerOverride,
               new Date(),
             );
-      for (const id of ids) {
-        const watch = await observeRequesterWatch(context, id);
-        if (!watch.complete)
-          return protect(
-            incompleteWatchReason({
-              quarantined: target.availability === "quarantined",
-              reason: watch.reason,
-            }),
-          );
-      }
+      const watch = await groupWatch(
+        context,
+        ids,
+        target.availability === "quarantined",
+      );
+      if (watch !== null) return watch;
       if (!(await refreshRetentionReceipts(context, ids)))
         return protect("warning_receipt_reconciliation_required");
       return (await currentPlayback(context, snapshots))

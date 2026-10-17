@@ -4,7 +4,8 @@ import type { MediaNetworkActivities } from "#shared/automation.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { requireActiveRuntime } from "./runtime.ts";
 import path from "node:path";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
@@ -133,6 +134,15 @@ async function evaluate(
       status: "removed",
       reason: null,
     });
+  // Source ownership is global: never hide another edition's participant.
+  if (
+    torrent.attempts.some((attempt) => attempt.edition !== "default") ||
+    torrent.assets.some((asset) => asset.edition !== "default")
+  )
+    return await recordOutcome(context.db, torrent, evaluationInput, {
+      status: "protected",
+      reason: "source_dependencies_changed",
+    });
   if (
     !runtime.active ||
     torrent.ownershipEpoch !== runtime.epoch ||
@@ -257,9 +267,12 @@ export function createSeedingActivities(
       try {
         return await context.db.$transaction(
           async (tx) => {
-            await lockMedia(
+            await lockDefaultScopes(
               tx,
-              torrent.attempts.flatMap((attempt) => attempt.mediaIds),
+              torrent.attempts
+                .flatMap((attempt) => attempt.mediaIds)
+                .map((id) => defaultScope(id)),
+              { createMissing: false },
             );
             const authorized = await lockRuntimeAuthority(
               tx,
@@ -271,7 +284,7 @@ export function createSeedingActivities(
             });
             const current = await tx.torrent.findUniqueOrThrow({
               where: { id: torrent.id },
-              include: { attempts: true },
+              include: { attempts: true, assets: true },
             });
             if (
               !authorized ||
@@ -279,8 +292,10 @@ export function createSeedingActivities(
               runtime.mode !== "active" ||
               !runtime.ownershipConfirmed ||
               !(await context.gates.sourceCleanup()) ||
+              current.assets.some((asset) => asset.edition !== "default") ||
               current.attempts.some(
                 (attempt) =>
+                  attempt.edition !== "default" ||
                   attempt.recoveryEpoch !== runtime.recoveryEpoch ||
                   (attempt.state !== "completed" &&
                     attempt.state !== "cancelled"),

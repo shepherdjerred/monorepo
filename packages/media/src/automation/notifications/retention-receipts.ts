@@ -2,6 +2,7 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { deliveryInclude } from "./message.ts";
 import { reconcileDelivery } from "./reconcile.ts";
 import { z } from "zod";
+import { defaultIntent } from "#shared/editions/scope.ts";
 
 /** Read provider state again before removal; delivery acceptance can later bounce. */
 export async function refreshRetentionReceipts(
@@ -11,15 +12,25 @@ export async function refreshRetentionReceipts(
   const decisions = await context.db.retentionDecision.findMany({
     where: {
       mediaId: { in: mediaIds },
+      edition: "default",
       state: { in: ["warning_pending", "grace_period", "quarantined"] },
     },
     include: {
-      media: { select: { intent: { select: { generation: true } } } },
+      media: {
+        select: {
+          intents: {
+            where: { edition: "default" },
+            select: { generation: true, edition: true },
+          },
+        },
+      },
     },
   });
   const eventIds = decisions
     .filter(
-      (decision) => decision.generation === decision.media.intent?.generation,
+      (decision) =>
+        decision.generation ===
+        defaultIntent(decision.media.intents)?.generation,
     )
     .map(
       (decision) =>

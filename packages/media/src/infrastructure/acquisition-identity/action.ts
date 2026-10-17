@@ -2,11 +2,15 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaAction } from "#shared/contract.ts";
 import type { MediaCommandSettings } from "#infrastructure/command-base.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import {
+  lockCanonicalMedia,
+  lockExistingDefaultTargets,
+  lockDefaultScopes,
+} from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
 import { authorizeRenewal } from "#infrastructure/action-guards.ts";
-import { lockAcquisitionMedia } from "./locks.ts";
 import { confirmIdentity } from "./decision.ts";
 import { assertAutomaticIdentity } from "./automatic.ts";
 import { identityHash } from "./snapshot.ts";
@@ -29,14 +33,26 @@ export async function prepareActionAuthority(
           where: { id: input.releaseId },
         })
       : null;
-  const selectedIds =
-    input.action === "select_release"
-      ? (input.identityConfirmation?.mediaIds ??
-        automatic?.mediaIds ?? [mediaId])
-      : [mediaId];
+  const selectedIds = await actionMediaIds(tx, {
+    mediaId,
+    input,
+    automaticIds: automatic?.mediaIds,
+  });
   const renewal = input.action === "select_release" || input.action === "retry";
-  if (renewal) await lockAcquisitionMedia(tx, selectedIds);
-  else await lockMedia(tx, [mediaId]);
+  await lockCanonicalMedia(tx, [...selectedIds, mediaId]);
+  await lockExistingDefaultTargets(tx, [...selectedIds, mediaId]);
+  const targets = await lockDefaultScopes(tx, [defaultScope(mediaId)], {
+    createMissing: true,
+  });
+  if (renewal && targets.some(({ target }) => target.lineage !== "resolved"))
+    throw new MediaError(
+      "lineage_unresolved",
+      "Canonical media ancestry needs reconciliation",
+      409,
+    );
+  const primary = targets.find(({ target }) => target.mediaId === mediaId);
+  if (primary === undefined)
+    throw new Error("Action primary target is missing");
   await lockEffectiveRequests(tx, selectedIds);
   const authority = renewal
     ? { automationEpoch: await commandAutomationEpoch(tx) }
@@ -77,5 +93,29 @@ export async function prepareActionAuthority(
       );
     await assertAutomaticIdentity(tx, current);
   }
-  return { authority, currentActor, identityDecision };
+  return {
+    authority,
+    currentActor,
+    identityDecision,
+    targetExisted: primary.existed,
+  };
+}
+import { removalConfirmation } from "#infrastructure/removal-confirmation.ts";
+
+async function actionMediaIds(
+  tx: Prisma.TransactionClient,
+  options: {
+    mediaId: string;
+    input: MediaAction;
+    automaticIds: string[] | undefined;
+  },
+): Promise<string[]> {
+  const { mediaId, input, automaticIds } = options;
+  if (input.action === "select_release")
+    return input.identityConfirmation?.mediaIds ?? automaticIds ?? [mediaId];
+  if (input.action === "remove") {
+    const confirmation = await removalConfirmation(tx, mediaId);
+    return confirmation.media.map((item) => item.id);
+  }
+  return [mediaId];
 }

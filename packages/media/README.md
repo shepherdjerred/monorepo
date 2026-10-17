@@ -8,6 +8,24 @@ Implementation and rollout acceptance are tracked in
 [AI-300](https://tracker.tailnet-1a49.ts.net/issues/AI-300). This package does not
 automatically take ownership of existing library files or torrents.
 
+## Edition scope
+
+Canonical media identity and lifecycle intent are separate. Current-state
+requests, reservations, watches, holds, policies and coverage address a
+`(mediaId, edition)` scope. Existing public commands address `default`, meaning
+no specific edition; this does not prove a theatrical cut. Ordinary compatible
+quality upgrades retain their existing behavior. Named-edition requests and
+physical classification are not exposed by these commands.
+
+`MediaItem.availability` remains the public default-target projection and is
+mirrored transactionally into the default intent. An unrequested catalog item
+may have no intent; reading it never creates demand. Missing expected effect
+state is an error. Historical default scopes without proven canonical ancestry
+retain their references and protections rather than receiving invented lineage
+or current ownership authority. Immutable operation, file and recovery evidence
+keeps its original serialization and hashes; default scope is interpreted after
+validation.
+
 ## Development
 
 Run dependency installation and generation from the repository root:

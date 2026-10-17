@@ -1,5 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { deliveryInclude, eventMediaIds } from "./message.ts";
@@ -12,7 +13,13 @@ export async function lockDelivery(tx: Prisma.TransactionClient, id: string) {
     include: deliveryInclude,
   });
   const mediaIds = eventMediaIds(snapshot);
-  await lockMedia(tx, mediaIds);
+  await lockDefaultScopes(
+    tx,
+    mediaIds.map((mediaId) => defaultScope(mediaId)),
+    {
+      createMissing: false,
+    },
+  );
   await lockEffectiveRequests(tx, mediaIds);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
   if (snapshot.event.kind === "subtitles_ready") await lockSubtitlePolicies(tx);

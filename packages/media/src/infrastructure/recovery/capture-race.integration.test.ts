@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { PrismaMigrationAdministration } from "#migration/persistence.ts";
@@ -145,7 +147,7 @@ test("actual capture upload waits for reviewed release commit and the later clai
   expect(receipt.claimAccounting).toEqual([]);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).not.toMatchObject({ releasedAt: null });
   const unbound = await buildRecoveryClaims(f.db, {
@@ -236,7 +238,7 @@ test("capture-first commit forces actual release to retry its older snapshot and
   ).toBe(0);
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
   expect(

@@ -1,6 +1,8 @@
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
+import { defaultIntent } from "#shared/editions/scope.ts";
 import type {
   Prisma,
   SubtitleAsset,
@@ -37,6 +39,7 @@ export async function captureReplacementSnapshot(
     epoch: number;
   },
 ) {
+  await assertDefaultPhysicalAsset(tx, input.assetId);
   const work = await currentSubtitleWork(tx, input.assetId, input.epoch);
   const { asset } = work;
   const old = asset.subtitles.find((item) => item.id === input.oldSubtitleId);
@@ -50,6 +53,7 @@ export async function captureReplacementSnapshot(
   if (
     await tx.recoveryHold.count({
       where: {
+        edition: "default",
         mediaId: { in: asset.coverage.map((item) => item.mediaId) },
         releasedAt: null,
       },
@@ -119,7 +123,7 @@ export async function captureReplacementSnapshot(
         .map((item) => ({
           mediaId: item.mediaId,
           title: item.media.title,
-          generation: item.media.intent?.generation,
+          generation: defaultIntent(item.media.intents)?.generation,
         }))
         .sort((a, b) => a.mediaId.localeCompare(b.mediaId)),
     },

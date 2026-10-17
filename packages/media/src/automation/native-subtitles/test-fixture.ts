@@ -26,9 +26,10 @@ export function nativeSubtitleHarness() {
   async function setup(
     qualityStatus: "accepted" | "unverified" | "rejected" = "accepted",
     mapped = false,
+    episode?: Parameters<typeof fileFixture>[1],
   ) {
     const db = harness.database();
-    const f = await fileFixture(db);
+    const f = await fileFixture(db, episode);
     directories.push(f.directory);
     const publication = await f.published();
     const originalAsset = await db.libraryAsset.findUniqueOrThrow({

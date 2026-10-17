@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { randomBytes } from "node:crypto";
 import { rm } from "node:fs/promises";
@@ -175,7 +177,7 @@ test.each(["selection", "reservation", "submission", "unchanged"])(
       const db = database();
       if (phase === "selection") {
         const before = await db.mediaIntent.findUniqueOrThrow({
-          where: { mediaId: f.f.media.id },
+          where: targetWhere(defaultScope(f.f.media.id)),
         });
         await f.changeCatalog();
         await expect(f.select()).rejects.toMatchObject({
@@ -183,7 +185,7 @@ test.each(["selection", "reservation", "submission", "unchanged"])(
         });
         expect(
           await db.mediaIntent.findUniqueOrThrow({
-            where: { mediaId: f.f.media.id },
+            where: targetWhere(defaultScope(f.f.media.id)),
           }),
         ).toEqual(before);
         expect(

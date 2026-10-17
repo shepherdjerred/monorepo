@@ -11,6 +11,9 @@ import {
 } from "#automation/acquisition-candidates.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -36,9 +39,24 @@ async function fixture(filename: string) {
         seriesTmdb: f.series.tmdbId,
         plexSectionId: "2",
       },
-      intent: { create: { profileId: f.files.profile.id, automationEpoch: 0 } },
-      requests: { create: { userId: f.actor.id } },
     },
+  });
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(second.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(second.id)),
+      data: {
+        profileId: f.files.profile.id,
+        automationEpoch: 0,
+        desiredPresence: true,
+        monitoring: true,
+      },
+    });
+    await tx.mediaRequest.create({
+      data: { mediaId: second.id, userId: f.actor.id },
+    });
   });
   f.source.title = "Example Show - 123-124 1080p WEB-DL H264 ENG";
   f.source.providerReleaseId = crypto.randomUUID();
@@ -93,6 +111,7 @@ async function fixture(filename: string) {
     .parse(operation.payload);
   const acquisition = createAcquisitionActivities(f.network);
   const result = await acquisition.reconcileMediaIntent(command);
+  expect(result.status).toBe("acquire");
   const attemptId = z.uuid().parse(result.attemptId);
   const input = { attemptId, operationId };
   const submission = await acquisition.submitMediaTorrent(input);

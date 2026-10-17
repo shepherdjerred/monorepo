@@ -7,6 +7,7 @@ import {
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 import { createMediaApp, type MediaAppDependencies } from "./app.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 /** Real command and HTTP middleware; identity is deliberately stale across revocation. */
 export async function verifyRevokedRetryHttp(
@@ -33,9 +34,14 @@ export async function verifyRevokedRetryHttp(
         kind: "movie",
         title: "Previously requested movie",
         externalIds: { plexSectionId: "1" },
-        intent: { create: { automationEpoch: 1, generation: 4 } },
-        requests: { create: { userId: actor.id } },
       },
+    });
+    await createTestDefaultTarget(db, media.id, {
+      automationEpoch: 1,
+      generation: 4,
+    });
+    await db.mediaRequest.create({
+      data: { mediaId: media.id, userId: actor.id },
     });
     dependencies.auth.authenticate = () =>
       Promise.resolve({
@@ -48,7 +54,7 @@ export async function verifyRevokedRetryHttp(
     });
     const app = createMediaApp(dependencies);
     const before = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: media.id },
+      where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
     });
     for (const restriction of [
       "restricted",
@@ -81,7 +87,7 @@ export async function verifyRevokedRetryHttp(
       expect(rerequest.status).toBe(403);
       expect(
         await db.mediaIntent.findUniqueOrThrow({
-          where: { mediaId: media.id },
+          where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
         }),
       ).toEqual(before);
       expect(
@@ -99,7 +105,9 @@ export async function verifyRevokedRetryHttp(
     });
     expect(keep.status).toBe(202);
     expect(
-      await db.mediaIntent.findUniqueOrThrow({ where: { mediaId: media.id } }),
+      await db.mediaIntent.findUniqueOrThrow({
+        where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
+      }),
     ).toMatchObject({ automationEpoch: 1 });
   } finally {
     await cluster.close();

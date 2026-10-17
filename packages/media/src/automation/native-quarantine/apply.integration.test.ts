@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, expect, test } from "vitest";
 import { rm, readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
@@ -26,7 +28,7 @@ test("committed quarantine rebaseline preserves bytes, qualities, decisions and 
     where: { mediaId: f.file.media.id },
   });
   const intent = await f.db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId: f.file.media.id },
+    where: targetWhere(defaultScope(f.file.media.id)),
   });
   const subtitles = await f.db.subtitleAsset.findMany({
     where: { assetId: f.asset.id },
@@ -45,7 +47,7 @@ test("committed quarantine rebaseline preserves bytes, qualities, decisions and 
   ).toEqual(decisions);
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.file.media.id },
+      where: targetWhere(defaultScope(f.file.media.id)),
     }),
   ).toEqual(intent);
   const after = await f.db.subtitleAsset.findMany({
@@ -83,7 +85,7 @@ test("committed quarantine rebaseline preserves bytes, qualities, decisions and 
   });
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.file.media.id },
+      where: targetWhere(defaultScope(f.file.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
 });

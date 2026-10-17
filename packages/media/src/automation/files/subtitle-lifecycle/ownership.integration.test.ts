@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import { writeFile, readFile, access, rm } from "node:fs/promises";
@@ -98,7 +100,7 @@ for (const qualityStatus of ["accepted", "unverified"] as const) {
       }
       await expect(access(target)).rejects.toThrow();
       const intent = await db.mediaIntent.update({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
         data: { generation: { increment: 1 } },
       });
       const operation = await db.operation.create({

@@ -25,7 +25,23 @@ export async function identityFixture(
   base: MediaAutomationContext,
   absolute = false,
 ) {
-  const files = await fileFixture(db);
+  const series = await db.mediaItem.create({
+    data: {
+      kind: "series",
+      title: "Example Show",
+      year: 2020,
+      tmdbId: Math.floor(Math.random() * 1_000_000_000),
+      catalogState: "ready",
+    },
+  });
+  const files = await fileFixture(db, {
+    seriesId: series.id,
+    title: "First episode",
+  });
+  await db.mediaItem.update({
+    where: { id: files.media.id },
+    data: { externalIds: { plexSectionId: "2", seriesTmdb: series.tmdbId } },
+  });
   const actor = await db.mediaUser.update({
     where: { id: files.user.id },
     data: { role: "owner" },
@@ -39,26 +55,6 @@ export async function identityFixture(
       permittedSectionIds: ["1", "2"],
       permittedMediaKinds: ["movie", "series"],
       verifiedAt: new Date(),
-    },
-  });
-  const series = await db.mediaItem.create({
-    data: {
-      kind: "series",
-      title: "Example Show",
-      year: 2020,
-      tmdbId: Math.floor(Math.random() * 1_000_000_000),
-      catalogState: "ready",
-    },
-  });
-  await db.mediaItem.update({
-    where: { id: files.media.id },
-    data: {
-      kind: "episode",
-      title: "First episode",
-      parentId: series.id,
-      seasonNumber: 1,
-      episodeNumber: 1,
-      externalIds: { plexSectionId: "2", seriesTmdb: series.tmdbId },
     },
   });
   await db.qualityProfileVersion.create({

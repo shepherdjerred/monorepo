@@ -4,6 +4,9 @@ import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { PrismaRecovery } from "./service.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 
 export function recoveryHarness() {
   let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
@@ -21,7 +24,9 @@ export function recoveryHarness() {
   afterAll(async () => {
     await cluster.close();
   });
-  async function fixture() {
+  async function fixture(
+    options: { kind?: "movie" | "episode"; nestedSeason?: boolean } = {},
+  ) {
     const db = cluster.database;
     await grantTestLease(db, 3);
     await db.mediaRuntimeState.update({
@@ -53,20 +58,57 @@ export function recoveryHarness() {
         update: permission,
       });
     }
+    const series =
+      options.kind === "episode"
+        ? await db.mediaItem.create({
+            data: { kind: "series", title: "Restored series" },
+          })
+        : null;
+    const season =
+      series !== null && options.nestedSeason === true
+        ? await db.mediaItem.create({
+            data: {
+              kind: "season",
+              title: "Season one",
+              parentId: series.id,
+              seasonNumber: 1,
+            },
+          })
+        : null;
     const media = await db.mediaItem.create({
       data: {
-        kind: "movie",
+        kind: options.kind ?? "movie",
         title: "Restored film",
-        externalIds: { plexSectionId: "1" },
+        parentId: season?.id ?? series?.id ?? null,
+        ...(series === null ? {} : { seasonNumber: 1, episodeNumber: 1 }),
+        externalIds: { plexSectionId: series === null ? "1" : "2" },
         availability: "available",
-        intent: { create: { automationEpoch: 3, generation: 4 } },
-        recoveryHold: {
-          create: {
-            recoveryEpoch: 3,
-            reason: "recovery_request_history_unconfirmed",
-          },
-        },
       },
+    });
+    const rootId = await db.$transaction(async (tx) => {
+      const targets = await lockDefaultScopes(tx, [defaultScope(media.id)], {
+        createMissing: true,
+      });
+      const root = targets[0]?.target.editionRootId;
+      if (root === undefined || root === null)
+        throw new Error("Recovery fixture requires proven lineage");
+      await tx.mediaIntent.update({
+        where: targetWhere(defaultScope(media.id)),
+        data: {
+          automationEpoch: 3,
+          generation: 4,
+          desiredPresence: true,
+          monitoring: true,
+        },
+      });
+      await tx.recoveryHold.create({
+        data: {
+          mediaId: media.id,
+          recoveryEpoch: 3,
+          reason: "recovery_request_history_unconfirmed",
+        },
+      });
+      return root;
     });
     const claim = await db.mediaRequest.create({
       data: { userId: member.id, mediaId: media.id },
@@ -74,6 +116,7 @@ export function recoveryHarness() {
     const asset = await db.libraryAsset.create({
       data: {
         path: `/fixture/${media.id}.mkv`,
+        editionRootId: rootId,
         sizeBytes: 100,
         checksum: "a".repeat(64),
         owned: true,
@@ -108,6 +151,8 @@ export function recoveryHarness() {
       owner,
       member,
       media,
+      series,
+      season,
       asset,
       claim,
       service,

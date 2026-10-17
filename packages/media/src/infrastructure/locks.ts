@@ -35,6 +35,7 @@ export async function needsRestore(
 ): Promise<boolean> {
   const decision = await db.retentionDecision.findFirst({
     where: {
+      edition: "default",
       mediaId,
       state: { in: ["grace_period", "cancelled", "quarantined"] },
       manifest: { not: Prisma.DbNull },

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { historicalDefaultRow } from "./legacy-snapshot.ts";
 
 export function nativeJson(value: unknown) {
   const encoded = JSON.stringify(value);
@@ -105,12 +106,13 @@ export async function nativeHousehold(
   ancestors: string[],
 ) {
   const coverage = await tx.requestCoverage.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: [{ rootRequestId: "asc" }, { mediaId: "asc" }],
     take: 1001,
   });
   const requests = await tx.mediaRequest.findMany({
     where: {
+      edition: "default",
       OR: [
         { mediaId: { in: [...ids, ...ancestors] } },
         { id: { in: coverage.map((row) => row.rootRequestId) } },
@@ -120,16 +122,21 @@ export async function nativeHousehold(
     take: 1001,
   });
   const personalHolds = await tx.retentionHold.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: { id: "asc" },
     take: 1001,
   });
   const recoveryHolds = await tx.recoveryHold.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: { mediaId: "asc" },
   });
   return NativeHouseholdSchema.parse(
-    nativeJson({ requests, coverage, personalHolds, recoveryHolds }),
+    nativeJson({
+      requests: requests.map((row) => historicalDefaultRow(row)),
+      coverage: coverage.map((row) => historicalDefaultRow(row)),
+      personalHolds: personalHolds.map((row) => historicalDefaultRow(row)),
+      recoveryHolds: recoveryHolds.map((row) => historicalDefaultRow(row)),
+    }),
   );
 }
 
@@ -140,16 +147,16 @@ export async function nativeLifecycle(
   settledDecisionIds: string[] = [],
 ) {
   const attempts = await tx.acquisitionAttempt.findMany({
-    where: { mediaIds: { hasSome: ids } },
+    where: { edition: "default", mediaIds: { hasSome: ids } },
     orderBy: { id: "asc" },
     take: 101,
   });
   const reservations = await tx.acquisitionReservation.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: { mediaId: "asc" },
   });
   const retention = await tx.retentionDecision.findMany({
-    where: { mediaId: { in: ids } },
+    where: { edition: "default", mediaId: { in: ids } },
     orderBy: { id: "asc" },
     take: 101,
   });
@@ -184,8 +191,8 @@ export async function nativeLifecycle(
   return NativeLifecycleSchema.parse(
     nativeJson({
       attempts: attempts.map((attempt) => nativeAttempt(attempt)),
-      reservations,
-      retention,
+      reservations: reservations.map((row) => historicalDefaultRow(row)),
+      retention: retention.map((row) => historicalDefaultRow(row)),
       cleanup,
     }),
   );
