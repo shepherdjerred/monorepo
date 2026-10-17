@@ -1,4 +1,5 @@
-import { rm } from "node:fs/promises";
+import { rename, rm } from "node:fs/promises";
+import path from "node:path";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
@@ -6,6 +7,8 @@ import { identityFixture } from "#infrastructure/acquisition-identity/test-fixtu
 import { candidateDigest } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
 import { createAcquisitionActivities } from "#automation/acquisition.ts";
+import { createMediaFileActivities } from "#automation/files/activities.ts";
+import { parseReleaseName } from "#domain/release-parser.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import { authorizedSubmission } from "#automation/reconciliation/submission.ts";
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
@@ -16,6 +19,62 @@ import {
 } from "#automation/acquisition-candidates.ts";
 
 const { database, context } = automationTestHarness();
+
+test("fixture filenames keep UUID episode-like prefixes outside episode coordinates", async () => {
+  const db = database();
+  const f = await identityFixture(db, context());
+  try {
+    const acquired = await f.files.acquisition();
+    const torrentId = z.uuid().parse(acquired.attempt.torrentId);
+    const torrent = await db.torrent.findUniqueOrThrow({
+      where: { id: torrentId },
+    });
+    const observation = z
+      .object({ files: z.array(z.object({ name: z.string() })).length(1) })
+      .parse(torrent.observation);
+    let previousName = z.string().parse(observation.files[0]?.name);
+    expect(previousName).toMatch(/^Coastlines\.S01E01\.fixture-/u);
+    const uuid = "e1234567-1234-4567-8123-123456789abc";
+    const activities = createMediaFileActivities(f.files.context);
+    for (const prefix of ["", "fixture-"]) {
+      const name = `Coastlines.S01E01.${prefix}${uuid}.mkv`;
+      expect(parseReleaseName(name).episodes).toEqual(
+        prefix === "" ? [1, 1234] : [1],
+      );
+      await rename(
+        path.join(f.files.roots.downloads, previousName),
+        path.join(f.files.roots.downloads, name),
+      );
+      await db.torrent.update({
+        where: { id: torrentId },
+        data: {
+          observation: {
+            torrent: { progress: 1, save_path: f.files.roots.downloads },
+            files: [
+              {
+                index: 0,
+                name,
+                size: Buffer.byteLength(acquired.content),
+                progress: 1,
+              },
+            ],
+          },
+        },
+      });
+      expect(await activities.inspectAndStageMedia(acquired.input)).toEqual(
+        prefix === ""
+          ? { status: "blocked", reason: "file_coverage_unconfirmed" }
+          : { status: "staged" },
+      );
+      previousName = name;
+    }
+    expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
+      status: "published",
+    });
+  } finally {
+    await rm(f.files.directory, { recursive: true, force: true });
+  }
+});
 
 test("another episode's title cannot hide a pack or single-member cut", async () => {
   const db = database();

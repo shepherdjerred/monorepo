@@ -25,6 +25,25 @@ export async function visibilityReader(
     sections?: VisibilitySections | undefined;
   },
 ) {
+  const access = await assessVisibilityAccess(tx, actor, settings);
+  if (access.reader === null)
+    throw new MediaError(
+      "plex_library_access_required",
+      "Refresh your library access",
+      403,
+    );
+  return { user: access.user, ...access.reader };
+}
+
+/** Missing/stale external permission is an expected read denial, never an internal-error fallback. */
+export async function assessVisibilityAccess(
+  tx: Prisma.TransactionClient,
+  actor: MediaActor,
+  settings: {
+    serverMachineId?: string | undefined;
+    sections?: VisibilitySections | undefined;
+  },
+) {
   await tx.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actor.id} FOR SHARE`;
   await tx.$queryRaw`SELECT "userId" FROM "PlexIdentityMapping" WHERE "userId" = ${actor.id} FOR SHARE`;
   const user = await tx.mediaUser.findUnique({
@@ -42,34 +61,32 @@ export async function visibilityReader(
     mapping.verifiedAt.getTime() > now ||
     now - mapping.verifiedAt.getTime() > 300_000
   )
-    throw new MediaError(
-      "plex_library_access_required",
-      "Refresh your library access",
-      403,
-    );
+    return { user, reader: null };
   return {
     user,
-    owner: user.role === "owner" && !user.restricted,
-    visible: (item: VisibleMedia): boolean => {
-      const kind = item.kind === "movie" ? "movie" : "series";
-      const sections = [item, item.parent, item.parent?.parent].flatMap(
-        (row) =>
-          row == null
-            ? []
-            : [
-                z
-                  .object({ plexSectionId: z.string().optional() })
-                  .parse(row.externalIds).plexSectionId,
-              ],
-      );
-      const section =
-        sections.find((value) => value !== undefined) ??
-        settings.sections?.[kind];
-      return (
-        mapping.permittedMediaKinds.includes(kind) &&
-        section !== undefined &&
-        mapping.permittedSectionIds.includes(section)
-      );
+    reader: {
+      owner: user.role === "owner" && !user.restricted,
+      visible: (item: VisibleMedia): boolean => {
+        const kind = item.kind === "movie" ? "movie" : "series";
+        const sections = [item, item.parent, item.parent?.parent].flatMap(
+          (row) =>
+            row == null
+              ? []
+              : [
+                  z
+                    .object({ plexSectionId: z.string().optional() })
+                    .parse(row.externalIds).plexSectionId,
+                ],
+        );
+        const section =
+          sections.find((value) => value !== undefined) ??
+          settings.sections?.[kind];
+        return (
+          mapping.permittedMediaKinds.includes(kind) &&
+          section !== undefined &&
+          mapping.permittedSectionIds.includes(section)
+        );
+      },
     },
   };
 }

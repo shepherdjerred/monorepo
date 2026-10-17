@@ -1,18 +1,21 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { CommandResultSchema, ReleaseListSchema } from "#shared/api.ts";
+import { useQuery } from "@tanstack/react-query";
+import { ReleaseListSchema } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
-import { queryClient, readApi, writeApi } from "./api.ts";
+import { readApi } from "./api.ts";
 import { ErrorNotice, Loading, Notice } from "./components.tsx";
 import { IdentityReview } from "./acquisition-identity/review.tsx";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import { useTargetCommand } from "./target-controls/mutation.ts";
+import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 
 export function ReleaseCandidates({
   user,
   mediaId,
-  version,
+  context,
 }: {
   user: MediaUser;
   mediaId: string;
-  version: number;
+  context: DefaultTargetView;
 }) {
   const releases = useQuery({
     queryKey: ["releases", mediaId],
@@ -22,23 +25,18 @@ export function ReleaseCandidates({
         ReleaseListSchema,
       ),
   });
-  const select = useMutation({
-    mutationFn: async (releaseId: string) =>
-      writeApi({
-        actorId: user.id,
-        path: `/media/${encodeURIComponent(mediaId)}/actions`,
-        body: { action: "select_release", expectedVersion: version, releaseId },
-        schema: CommandResultSchema,
-      }),
-    onSuccess: async () =>
-      queryClient.invalidateQueries({ queryKey: ["media", mediaId] }),
-  });
+  const select = useTargetCommand(user.id);
   return (
     <section className="panel">
       <h2>Release decisions</h2>
       {releases.isPending && <Loading />}
       {releases.error !== null && <ErrorNotice error={releases.error} />}
-      {select.error !== null && <ErrorNotice error={select.error} />}
+      <CommandError
+        error={select.error}
+        review={() => {
+          globalThis.location.reload();
+        }}
+      />
       {select.isSuccess && (
         <Notice>
           Release selection queued. Track its progress in Activity.
@@ -62,15 +60,26 @@ export function ReleaseCandidates({
               mediaId={mediaId}
               releaseId={release.id}
               initialCoverage={release.attributes.mediaIds}
+              context={context}
             />
           )}
           {user.role === "owner" &&
             release.attributes.identityConfidence === "exact" && (
               <button
                 className="button"
-                disabled={select.isPending}
+                disabled={
+                  select.isPending ||
+                  select.isSuccess ||
+                  commandNeedsReview(select.error)
+                }
                 onClick={() => {
-                  select.mutate(release.id);
+                  select.submit({
+                    context,
+                    command: {
+                      action: "select_release",
+                      releaseId: release.id,
+                    },
+                  });
                 }}
               >
                 Select release

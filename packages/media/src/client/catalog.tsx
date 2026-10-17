@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
-import {
-  CatalogDetailSchema,
-  CatalogSearchSchema,
-  CommandResultSchema,
-} from "#shared/api.ts";
+import { CatalogDetailSchema, CatalogSearchSchema } from "#shared/api.ts";
 import type { CatalogDetail } from "#shared/api.ts";
 import { LanguageSchema } from "#shared/contract.ts";
+import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import { readTarget, writeTarget } from "./target-controls/api.ts";
+import type { TargetSubmission } from "./target-controls/mutation.ts";
+import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 import type { MediaUser } from "#shared/contract.ts";
-import { queryClient, readApi, writeApi } from "./api.ts";
+import { ApiError, queryClient, readApi, writeApi } from "./api.ts";
 import {
   EmptyState,
   ErrorNotice,
@@ -188,7 +188,11 @@ export function CatalogPage({ user }: { user: MediaUser }) {
           <p className="muted">
             We’ll notify you when it’s ready to watch in Plex.
           </p>
-          <RequestForm user={user} item={item} />
+          <RequestForm
+            key={`${item.kind}:${String(item.externalId)}`}
+            user={user}
+            item={item}
+          />
           {item.kind === "series" && <ChooseEpisodes user={user} item={item} />}
         </section>
         <section className="panel">
@@ -260,8 +264,15 @@ function RequestForm({ user, item }: { user: MediaUser; item: CatalogDetail }) {
   const [languages, setLanguages] = useState("en");
   const [future, setFuture] = useState(item.kind === "series");
   const [specials, setSpecials] = useState(false);
+  const [context, setContext] = useState<DefaultTargetView | null>(null);
+  const unacknowledged = useRef<TargetSubmission | null>(null);
   const request = useMutation({
     mutationFn: async () => {
+      if (unacknowledged.current !== null) {
+        const pending = unacknowledged.current;
+        await writeTarget(user.id, pending.context, pending.command);
+        return { mediaId: pending.context.scope.mediaId };
+      }
       const subtitleLanguages = z
         .array(LanguageSchema)
         .max(20)
@@ -271,28 +282,50 @@ function RequestForm({ user, item }: { user: MediaUser; item: CatalogDetail }) {
             .map((language) => language.trim())
             .filter((language) => language.length > 0),
         );
-      const adopted = await writeApi({
-        actorId: user.id,
-        path: "/catalog/adopt",
-        body: { kind: item.kind, externalId: item.externalId },
-        schema: AdoptResultSchema,
-      });
-      await writeApi({
-        actorId: user.id,
-        path: "/requests",
-        body: {
-          mediaId: adopted.mediaId,
-          subtitleLanguages,
-          includeFutureEpisodes: future,
-          includeSpecials: specials,
-        },
-        schema: CommandResultSchema,
-      });
-      return adopted;
+      let observed = context;
+      if (observed === null) {
+        const adopted = await writeApi({
+          actorId: user.id,
+          path: "/catalog/adopt",
+          body: { kind: item.kind, externalId: item.externalId },
+          schema: AdoptResultSchema,
+        });
+        observed = await readTarget(adopted.mediaId);
+        setContext(observed);
+      }
+      const command = {
+        action: "request",
+        subtitleLanguages,
+        includeFutureEpisodes: future,
+        includeSpecials: specials,
+      } as const;
+      unacknowledged.current = { context: observed, command };
+      await writeTarget(user.id, observed, command);
+      return { mediaId: observed.scope.mediaId };
     },
     onSuccess: async (result) => {
+      unacknowledged.current = null;
       await queryClient.invalidateQueries({ queryKey: ["requests"] });
       void navigate(`/media/${encodeURIComponent(result.mediaId)}`);
+    },
+    onError: (error) => {
+      if (
+        error instanceof ApiError &&
+        error.status >= 400 &&
+        error.status < 500
+      )
+        unacknowledged.current = null;
+    },
+  });
+  const review = useMutation({
+    mutationFn: async () => {
+      if (context === null)
+        throw new Error("Request details have not loaded yet.");
+      return readTarget(context.scope.mediaId);
+    },
+    onSuccess: (current) => {
+      setContext(current);
+      request.reset();
     },
   });
   return (
@@ -342,13 +375,24 @@ function RequestForm({ user, item }: { user: MediaUser; item: CatalogDetail }) {
       <button
         className="button primary"
         type="submit"
-        disabled={request.isPending || user.restricted}
+        disabled={
+          request.isPending ||
+          review.isPending ||
+          user.restricted ||
+          commandNeedsReview(request.error)
+        }
       >
         {request.isPending
           ? "Adding your request…"
           : `Request ${item.kind === "movie" ? "film" : "series"}`}
       </button>
-      {request.error !== null && <ErrorNotice error={request.error} />}
+      <CommandError
+        error={request.error}
+        review={() => {
+          review.mutate();
+        }}
+      />
+      {review.error !== null && <ErrorNotice error={review.error} />}
     </form>
   );
 }

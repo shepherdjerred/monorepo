@@ -16,6 +16,9 @@ import { confirmIdentity } from "./decision.ts";
 import { assertAutomaticIdentity } from "./automatic.ts";
 import { identityHash } from "./snapshot.ts";
 import { MediaError } from "#application/errors.ts";
+import type { ExpectedTarget } from "#shared/editions/commands.ts";
+import { assertDefaultCommandCas } from "#infrastructure/editions/command-cas.ts";
+import { lockCommandActor } from "#infrastructure/editions/command-actor.ts";
 
 export async function prepareActionAuthority(
   tx: Prisma.TransactionClient,
@@ -24,16 +27,11 @@ export async function prepareActionAuthority(
     mediaId: string;
     input: MediaAction;
     settings: MediaCommandSettings;
+    expected?: ExpectedTarget | undefined;
   },
 ) {
   const { mediaId, input, settings } = options;
-  const automatic =
-    input.action === "select_release" &&
-    input.identityConfirmation === undefined
-      ? await tx.releaseCandidate.findUniqueOrThrow({
-          where: { id: input.releaseId },
-        })
-      : null;
+  const automatic = await automaticCandidate(tx, input);
   const selectedIds = await actionMediaIds(tx, {
     mediaId,
     input,
@@ -42,6 +40,8 @@ export async function prepareActionAuthority(
   const renewal = input.action === "select_release" || input.action === "retry";
   await lockCanonicalMedia(tx, [...selectedIds, mediaId]);
   await lockExistingDefaultTargets(tx, [...selectedIds, mediaId]);
+  if (options.expected !== undefined)
+    await assertDefaultCommandCas(tx, defaultScope(mediaId), options.expected);
   const targets = await lockDefaultScopes(tx, [defaultScope(mediaId)], {
     createMissing: true,
   });
@@ -64,7 +64,7 @@ export async function prepareActionAuthority(
         action: input.action,
         ...settings,
       })
-    : actor;
+    : await lockCommandActor(tx, actor);
   const identityDecision =
     input.action === "select_release" &&
     input.identityConfirmation !== undefined
@@ -107,6 +107,16 @@ export async function prepareActionAuthority(
   };
 }
 import { removalConfirmation } from "#infrastructure/removal-confirmation.ts";
+
+async function automaticCandidate(
+  tx: Prisma.TransactionClient,
+  input: MediaAction,
+) {
+  return input.action === "select_release" &&
+    input.identityConfirmation === undefined
+    ? tx.releaseCandidate.findUniqueOrThrow({ where: { id: input.releaseId } })
+    : null;
+}
 
 async function actionMediaIds(
   tx: Prisma.TransactionClient,

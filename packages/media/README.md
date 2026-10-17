@@ -481,6 +481,33 @@ operation and outbox command. Idempotency keys identify retried commands;
 expected versions reject conflicting edits. Workflow delivery must use stable
 operation identities because delivery and execution can be repeated.
 
+Browser request and media controls use the default-only v2 command protocol.
+`GET /api/v2/media/:id/targets/default` returns the observed media version and
+target version; a null target version means the target is absent. The read never
+creates an intent. `POST /api/v2/media/:id/commands` accepts a strict
+`{schemaVersion: 2, scope: {mediaId, edition: "default"}, expected:
+{mediaVersion, targetVersion}, command}` envelope. The inner `action` selects
+request, Keep, pin/unpin, restore, remove, Retry, release selection, or request
+cancellation. Cancellation also supplies the exact request ID and version.
+Unknown fields and named editions reject. Commands compare both versions after
+locking the complete affected scope, before creating or changing any target.
+A conflict requires reviewing the changed state before another submission.
+
+The v2 response contains `result` and `appliedVersions` from the same committed
+transaction. Idempotent replay returns that original response, even after later
+changes; reusing a key across different v1/v2 commands conflicts. V1 input hashes,
+saved responses, workflow payloads, physical plans, and immutable evidence remain
+unchanged. Both protocols use the same transactional command work and outbox.
+
+The context read distinguishes detailed access from `protection_only`. When
+library access is stale or revoked, an existing requester can still obtain only
+the scope/version fields and their own request actionability needed for Cancel
+and effective-request Keep. Current owners retain protective pin controls. This
+minimal response reveals no titles, ancestry, files, playback, or other people's
+requests. New commits recheck current role and claims under locks; acquisition
+keeps its existing permission, epoch, quality, and cut checks. Orphan lineage
+stays unresolved, and protective actions do not renew its automation authority.
+
 A release acquisition and a torrent's seeding obligation have independent
 lifetimes. Library availability does not authorize source deletion. Quality
 profiles have immutable version snapshots, and the database permits only one

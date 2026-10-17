@@ -142,7 +142,7 @@ export async function fileFixture(
       },
       update: {},
     });
-    const filename = `${media.kind === "episode" ? "Coastlines.S01E01." : ""}${crypto.randomUUID()}.mkv`;
+    const filename = `${media.kind === "episode" ? "Coastlines.S01E01." : ""}fixture-${crypto.randomUUID()}.mkv`;
     await writeFile(nodePath.join(roots.downloads, filename), content);
     const release = await db.releaseCandidate.create({
       data: {
@@ -225,8 +225,14 @@ export async function fileFixture(
   async function published() {
     const acquired = await acquisition();
     const activities = createMediaFileActivities(context);
-    await activities.inspectAndStageMedia(acquired.input);
-    await activities.promoteMediaFiles(acquired.input);
+    const staged = await activities.inspectAndStageMedia(acquired.input);
+    if (staged.status !== "staged")
+      throw new Error(`Fixture staging failed: ${JSON.stringify(staged)}`);
+    const promoted = await activities.promoteMediaFiles(acquired.input);
+    if (promoted.status !== "published")
+      throw new Error(
+        `Fixture publication failed: ${JSON.stringify(promoted)}`,
+      );
     await db.acquisitionReservation.deleteMany({
       where: { attemptId: acquired.attempt.id },
     });

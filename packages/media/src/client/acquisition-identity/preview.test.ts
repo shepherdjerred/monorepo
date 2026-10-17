@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { identityPreviewOptions } from "./preview.ts";
+import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -12,6 +13,15 @@ test.each(["success", "failure"])(
     const mediaId = crypto.randomUUID();
     const releaseId = crypto.randomUUID();
     const actorId = crypto.randomUUID();
+    const context = DefaultTargetViewSchema.parse({
+      schemaVersion: 2,
+      scope: { mediaId, edition: "default" },
+      expected: { mediaVersion: 0, targetVersion: 3 },
+      access: "detail",
+      target: { generation: 0, availability: "wanted", lineage: "resolved" },
+      ownRequests: [],
+      allowedProtectiveActions: [],
+    });
     const stale = Promise.withResolvers<Response>();
     const started = Promise.withResolvers<boolean>();
     const current = {
@@ -83,16 +93,17 @@ test.each(["success", "failure"])(
     );
     const observed: string[] = [];
     const unsubscribe = observer.subscribe((result) => {
-      if (result.data !== undefined) observed.push(result.data.previewDigest);
+      if (result.data !== undefined)
+        observed.push(result.data.preview.previewDigest);
     });
     try {
-      const oldRequest = observer.mutate([mediaId]);
+      const oldRequest = observer.mutate({ mediaIds: [mediaId], context });
       const settledOld = Promise.allSettled([oldRequest]);
       await started.promise;
       observer.reset();
       expect(observer.getCurrentResult().data).toBeUndefined();
       // Returning to the original selection must still create a new review.
-      await observer.mutate([mediaId]);
+      await observer.mutate({ mediaIds: [mediaId], context });
       if (outcome === "success")
         stale.resolve(
           Response.json({ ...current, previewDigest: "d".repeat(64) }),
@@ -110,9 +121,13 @@ test.each(["success", "failure"])(
       expect(results[0]?.status).toBe(
         outcome === "success" ? "fulfilled" : "rejected",
       );
-      expect(observer.getCurrentResult().data?.previewDigest).toBe(
+      expect(observer.getCurrentResult().data?.preview.previewDigest).toBe(
         current.previewDigest,
       );
+      expect(observer.getCurrentResult().data?.context.expected).toEqual({
+        mediaVersion: 0,
+        targetVersion: 3,
+      });
       expect(observer.getCurrentResult().error).toBeNull();
       expect(observed).not.toContain("d".repeat(64));
     } finally {

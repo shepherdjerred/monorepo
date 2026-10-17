@@ -35,28 +35,47 @@ export class MediaCommandBase {
     command: { kind: string; input: unknown },
     work: (db: Transaction) => Promise<JsonResult>,
   ) {
+    return this.commandWithProtocol(
+      actor,
+      key,
+      {
+        command,
+        decode: (value) => CommandResultSchema.parse(value),
+      },
+      work,
+    );
+  }
+
+  protected async commandWithProtocol<T>(
+    actor: MediaActor,
+    key: string,
+    protocol: {
+      command: unknown;
+      decode: (value: unknown) => T;
+      beforeNewCommand?: (() => Promise<void>) | undefined;
+    },
+    work: (db: Transaction) => Promise<JsonResult>,
+  ): Promise<T> {
+    const { command, decode } = protocol;
     const requestHash = tokenHash(canonical(command));
+    const replayInput = { userId: actor.id, key, requestHash, decode };
+    if (protocol.beforeNewCommand !== undefined) {
+      const replay = await this.readReplay(this.database, replayInput);
+      if (replay.found) return replay.result;
+      // External access refresh happens once, before transaction/authority locks.
+      await protocol.beforeNewCommand();
+    }
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
         return await this.database.$transaction(
           async (db) => {
-            const prior = await db.idempotencyRecord.findUnique({
-              where: { userId_key: { userId: actor.id, key } },
-            });
-            if (prior) {
-              if (prior.requestHash !== requestHash)
-                throw new MediaError(
-                  "idempotency_conflict",
-                  "Idempotency key was already used for a different command",
-                  409,
-                );
-              return CommandResultSchema.parse(prior.response);
-            }
+            const replay = await this.readReplay(db, replayInput);
+            if (replay.found) return replay.result;
             const result = await work(db);
             await db.idempotencyRecord.create({
               data: { userId: actor.id, key, requestHash, response: result },
             });
-            return CommandResultSchema.parse(result);
+            return decode(result);
           },
           { isolationLevel: "Serializable", timeout: 15_000 },
         );
@@ -66,6 +85,28 @@ export class MediaCommandBase {
       }
     }
     throw new Error("Transaction retry limit was not enforced");
+  }
+
+  private async readReplay<T>(
+    db: Pick<Transaction, "idempotencyRecord">,
+    input: {
+      userId: string;
+      key: string;
+      requestHash: string;
+      decode: (value: unknown) => T;
+    },
+  ) {
+    const prior = await db.idempotencyRecord.findUnique({
+      where: { userId_key: { userId: input.userId, key: input.key } },
+    });
+    if (prior === null) return { found: false as const };
+    if (prior.requestHash !== input.requestHash)
+      throw new MediaError(
+        "idempotency_conflict",
+        "Idempotency key was already used for a different command",
+        409,
+      );
+    return { found: true as const, result: input.decode(prior.response) };
   }
 
   protected async enqueue(
