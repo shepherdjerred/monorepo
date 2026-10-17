@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { notifyServerOwnerAboutPermissionError } from "#src/discord/utils/permissions.ts";
-import { mockClient } from "#src/testing/discord-mocks.ts";
+import { mockClient, mockDmClient } from "#src/testing/discord-mocks.ts";
 import {
   testGuildId,
   testAccountId,
@@ -13,23 +13,23 @@ const ownerId = testAccountId("789");
 
 /**
  * Build a client whose guild owner is resolvable and whose DM send is captured.
- * The DM flows through `sendDM` -> `client.users.fetch(ownerId).send()`, so the
- * recipient's `send` (not the GuildMember's) is what actually delivers.
+ * The DM flows through `sendDM`, which posts the message over the bot's REST
+ * client, so `send` receives the content of that message request.
  */
 function clientCapturingDm(send: (message: string) => Promise<unknown>) {
-  return mockClient({
-    guilds: {
-      fetch: async () => ({
-        name: "Test Server",
-        fetchOwner: async () => ({
-          id: ownerId,
-          user: { tag: "TestOwner#1234" },
+  return mockDmClient({
+    tag: "TestOwner#1234",
+    send: async (body) => await send(body.content ?? ""),
+    overrides: {
+      guilds: {
+        fetch: async () => ({
+          name: "Test Server",
+          fetchOwner: async () => ({
+            id: ownerId,
+            user: { tag: "TestOwner#1234" },
+          }),
         }),
-      }),
-    },
-    users: {
-      cache: new Map(),
-      fetch: async () => ({ tag: "TestOwner#1234", send }),
+      },
     },
   });
 }

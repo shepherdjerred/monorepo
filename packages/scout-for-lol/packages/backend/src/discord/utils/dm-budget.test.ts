@@ -10,7 +10,11 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { DiscordAPIError, type Client } from "discord.js";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { mockClient } from "#src/testing/discord-mocks.ts";
+import {
+  mockClient,
+  mockDmClient,
+  type DmMessageBody,
+} from "#src/testing/discord-mocks.ts";
 import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
@@ -26,40 +30,33 @@ type SendMock = ReturnType<typeof makeSendMock>;
 
 /** A DM send spy whose first argument is the message body. */
 function makeSendMock() {
-  return vi.fn((_body: unknown) => Promise.resolve({}));
+  return vi.fn((_body: DmMessageBody) => Promise.resolve({}));
+}
+
+/** The content of the first DM the spy delivered. */
+function sentContent(send: SendMock): string {
+  return send.mock.calls[0]?.[0].content ?? "";
 }
 
 /** A Discord client whose DMs always succeed. */
 function clientThatSends(send: SendMock) {
-  return mockClient({
-    users: {
-      fetch: vi.fn(() => Promise.resolve({ tag: "tester#0001", send })),
-    },
-  });
+  return mockDmClient({ send });
 }
 
 /** A Discord client that rejects DMs the way a closed-DM recipient does. */
 function clientThatCannotDm() {
-  return mockClient({
-    users: {
-      fetch: vi.fn(() =>
-        Promise.resolve({
-          tag: "tester#0001",
-          send: vi.fn(() =>
-            Promise.reject(
-              new DiscordAPIError(
-                { code: 50_007, message: "Cannot send messages to this user" },
-                50_007,
-                403,
-                "POST",
-                "",
-                {},
-              ),
-            ),
-          ),
-        }),
+  return mockDmClient({
+    send: () =>
+      Promise.reject(
+        new DiscordAPIError(
+          { code: 50_007, message: "Cannot send messages to this user" },
+          50_007,
+          403,
+          "POST",
+          "",
+          {},
+        ),
       ),
-    },
   });
 }
 
@@ -140,7 +137,7 @@ describe("sendDM message budget", () => {
 
     await sendDM(budgeted(clientThatSends(send)));
 
-    const body = String(send.mock.calls[0]?.[0]);
+    const body = sentContent(send);
     expect(body).toContain("1 of 3");
     expect(body).toContain("Budget Server");
   });
@@ -151,7 +148,7 @@ describe("sendDM message budget", () => {
 
     await sendDM(budgeted(clientThatSends(send)));
 
-    const body = String(send.mock.calls[0]?.[0]);
+    const body = sentContent(send);
     expect(body).toContain("3 of 3");
     expect(body).not.toContain("last message Scout will ever send");
   });
@@ -306,7 +303,7 @@ describe("sendDM message budget", () => {
     });
 
     expect(status).toBe("sent");
-    expect(String(send.mock.calls[0]?.[0])).not.toContain("Message");
+    expect(sentContent(send)).not.toContain("Message");
   });
 });
 
@@ -333,7 +330,7 @@ describe("sendDM reservation ownership", () => {
     });
     const send = makeSendMock();
     expect(await sendDM(budgeted(clientThatSends(send)))).toBe("sent");
-    expect(String(send.mock.calls[0]?.[0])).toContain("1 of 3");
+    expect(sentContent(send)).toContain("1 of 3");
   });
 
   it("retains a durable reservation across a failed lookup and retries that same row", async () => {

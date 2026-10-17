@@ -23,7 +23,8 @@ import type {
   GuildMember,
   Message,
 } from "discord.js";
-import { ChannelType, PermissionFlagsBits } from "discord.js";
+import { ChannelType, PermissionFlagsBits, Routes } from "discord.js";
+import { z } from "zod";
 import { testAccountId, testGuildId, testChannelId } from "./test-ids.ts";
 
 /**
@@ -316,4 +317,57 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
   };
 
   return castMock<Client>({ ...defaults, ...overrides });
+}
+
+/** The DM message body `sendDM` posts. Strict, so a new wire field is noticed. */
+export const DmMessageBodySchema = z
+  .object({
+    content: z.string().optional(),
+    embeds: z.array(z.unknown()).optional(),
+    allowed_mentions: z.object({ parse: z.array(z.string()) }).optional(),
+  })
+  .strict();
+export type DmMessageBody = z.infer<typeof DmMessageBodySchema>;
+
+/** The DM channel {@link mockDmClient} opens unless told otherwise. */
+export const MOCK_DM_CHANNEL_ID = testChannelId("900");
+
+const RestPostRequestSchema = z.object({ body: z.unknown() });
+
+/**
+ * A client that delivers DMs the way `sendDM` does: `users.fetch` resolves the
+ * recipient's tag, `rest.post` opens the DM channel and then hands the parsed
+ * message body to `send`. It has no `client.user`, like every role that never
+ * logs into the gateway, so nothing here can lean on the READY payload.
+ */
+export function mockDmClient(options: {
+  send: (body: DmMessageBody) => Promise<unknown>;
+  tag?: string;
+  /** Opening the DM channel; defaults to {@link MOCK_DM_CHANNEL_ID}. */
+  openDm?: () => Promise<unknown>;
+  overrides?: Record<string, unknown>;
+}): Client {
+  const messages = Routes.channelMessages(MOCK_DM_CHANNEL_ID);
+  return mockClient({
+    user: null,
+    users: {
+      cache: new Map(),
+      fetch: () => Promise.resolve({ tag: options.tag ?? "tester#0001" }),
+    },
+    rest: {
+      post: async (route: string, request: unknown) => {
+        if (route === Routes.userChannels()) {
+          return options.openDm === undefined
+            ? { id: MOCK_DM_CHANNEL_ID }
+            : await options.openDm();
+        }
+        if (route === messages) {
+          const { body } = RestPostRequestSchema.parse(request);
+          return await options.send(DmMessageBodySchema.parse(body));
+        }
+        throw new Error(`Unexpected Discord REST POST ${route}`);
+      },
+    },
+    ...options.overrides,
+  });
 }
