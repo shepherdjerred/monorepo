@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CanonicalIdentitySchema } from "./identity.ts";
 import { ProviderReferenceSchema } from "./catalog.ts";
+import { DefaultEditionDecisionSchema } from "#shared/editions/evidence.ts";
 
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 export const IdentityPreviewInputSchema = z.strictObject({
@@ -41,6 +42,7 @@ export const IdentityPreviewSchema = z.strictObject({
   sponsorRequestId: z.uuid().nullable(),
   numberingDigest: Hash.nullable(),
   qualityBlockers: z.array(z.string()),
+  edition: DefaultEditionDecisionSchema,
   confirmationAllowed: z.boolean(),
 });
 export type IdentityPreviewInput = z.infer<typeof IdentityPreviewInputSchema>;

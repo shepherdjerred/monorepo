@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { assertDefaultAcquisitionEdition } from "#infrastructure/editions/acquisition.ts";
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaAction } from "#shared/contract.ts";
 import type { MediaCommandSettings } from "#infrastructure/command-base.ts";
@@ -74,6 +75,11 @@ export async function prepareActionAuthority(
           ...settings,
         })
       : null;
+  if (input.action === "select_release")
+    await assertDefaultAcquisitionEdition(tx, {
+      releaseId: input.releaseId,
+      mediaIds: selectedIds,
+    });
   if (automatic !== null) {
     for (const id of selectedIds)
       await authorizeRenewal(tx, currentActor, {

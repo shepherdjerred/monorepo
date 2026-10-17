@@ -11,6 +11,7 @@ import {
   boundedBytes,
   magnetFor,
   sameOriginUrl,
+  releaseTitleEvidence,
   type ProviderCandidate,
 } from "./providers.ts";
 
@@ -61,6 +62,9 @@ export class MagnetDownloadProvider {
       providerId: "magnetdownload",
       providerReleaseId: result.id,
       title: result.title,
+      editionEvidence: releaseTitleEvidence("magnetdownload", [
+        { field: "search.infoAnchor.title", text: result.title },
+      ]),
       sizeBytes: result.sizeBytes,
       seeders: null,
       infoHash: hash,

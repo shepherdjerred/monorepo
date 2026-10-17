@@ -1,7 +1,8 @@
 import { z } from "zod";
-import type {
-  ProviderReference,
-  ProviderEditionEvidence,
+import {
+  ProviderEditionEvidenceSchema,
+  type ProviderReference,
+  type ProviderEditionEvidence,
 } from "#shared/acquisition/catalog.ts";
 import {
   endpoint,
@@ -47,6 +48,26 @@ export type ProviderCandidate = {
   /** Attributed text is evidence for quality rules, never a requested-edition declaration. */
   editionEvidence?: readonly ProviderEditionEvidence[] | undefined;
 };
+
+/** Preserve each actual title field independently; title text is not structured cut metadata. */
+export function releaseTitleEvidence(
+  providerId: ProviderCandidate["providerId"],
+  fields: readonly { field: string; text: string | null | undefined }[],
+): ProviderEditionEvidence[] {
+  const result = z
+    .array(ProviderEditionEvidenceSchema)
+    .max(20)
+    .safeParse(
+      fields.flatMap(({ field, text }) =>
+        text === undefined || text === null || text.length === 0
+          ? []
+          : [{ text, provenance: { kind: "release-title", field } }],
+      ),
+    );
+  if (!result.success)
+    throw new IntegrationError(providerId, "invalid-response");
+  return result.data;
+}
 
 const KnabenResponseSchema = z.object({
   hits: z.array(
@@ -95,6 +116,9 @@ export class KnabenProvider {
               providerId: "knaben",
               providerReleaseId: hit.id,
               title: hit.title,
+              editionEvidence: releaseTitleEvidence("knaben", [
+                { field: "title", text: hit.title },
+              ]),
               sizeBytes: hit.bytes,
               seeders: hit.seeders,
               infoHash: hit.hash,
@@ -148,6 +172,9 @@ export class PirateBayProvider {
         providerId: "thepiratebay",
         providerReleaseId: item.id,
         title: item.name,
+        editionEvidence: releaseTitleEvidence("thepiratebay", [
+          { field: "name", text: item.name },
+        ]),
         sizeBytes: item.size,
         seeders: item.seeders,
         infoHash: hash,
@@ -249,6 +276,10 @@ export class AvistazFamilyProvider {
       return {
         providerId: this.config.providerId,
         providerReleaseId: details.pathname,
+        editionEvidence: releaseTitleEvidence(this.config.providerId, [
+          { field: "file_name", text: item.file_name },
+          { field: "release_title", text: item.release_title },
+        ]),
         title:
           this.config.providerId === "animez" &&
           item.release_title !== undefined &&

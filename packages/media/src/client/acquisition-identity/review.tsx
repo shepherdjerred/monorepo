@@ -10,6 +10,10 @@ import { writeApi, queryClient } from "#client/api.ts";
 import { ErrorNotice, Notice, humanize } from "#client/components.tsx";
 import { CoveragePicker } from "./coverage.tsx";
 import { identityPreviewOptions } from "./preview.ts";
+import type {
+  DefaultEditionDecision,
+  CutReason,
+} from "#shared/editions/evidence.ts";
 
 type ReviewProps = {
   user: MediaUser;
@@ -54,7 +58,7 @@ function IdentityReviewForm({
       <h3>Confirm the release identity</h3>
       <p>
         Review which movie or episodes this release contains. Confirmation
-        resolves identity only; quality requirements still apply.
+        resolves identity only; cut and quality requirements still apply.
       </p>
       <CoveragePicker mediaId={mediaId} selected={selected} onChange={change} />
       <button
@@ -178,6 +182,7 @@ function ConfirmIdentity({
           </ul>
         </Notice>
       )}
+      <EditionNotice decision={preview.edition} />
       {!preview.confirmationAllowed && (
         <Notice>
           This release cannot be confirmed with the current evidence. Resolve
@@ -202,7 +207,10 @@ function ConfirmIdentity({
       <button
         className="button button-primary"
         disabled={
-          !preview.confirmationAllowed || confirm.isPending || confirm.isSuccess
+          !preview.confirmationAllowed ||
+          !preview.edition.accepted ||
+          confirm.isPending ||
+          confirm.isSuccess
         }
       >
         Confirm identity and select release
@@ -212,7 +220,7 @@ function ConfirmIdentity({
       {confirm.isSuccess && (
         <Notice>
           Selection queued. Acquisition will recheck current access, requests
-          and quality before downloading.
+          and cut and quality requirements before downloading.
         </Notice>
       )}
       <details>
@@ -234,5 +242,42 @@ function ConfirmIdentity({
         </pre>
       </details>
     </form>
+  );
+}
+
+const CUT_MESSAGES: Record<CutReason, string> = {
+  edition_candidate_incompatible:
+    "This release contains a named cut. It cannot fulfill a request with no specific edition.",
+  edition_evidence_ambiguous:
+    "The cut information is uncertain. Identity confirmation cannot resolve this cut blocker.",
+  edition_evidence_conflict:
+    "The source titles or downloaded files describe conflicting cuts.",
+  edition_current_requires_classification:
+    "The current file has named or uncertain cut information and is protected from replacement. Owner classification is not available yet.",
+};
+export function EditionNotice({
+  decision,
+}: {
+  decision: DefaultEditionDecision;
+}) {
+  if (decision.accepted)
+    return (
+      <p className="helper">
+        No specific edition requested. No conflicting cut evidence was found;
+        quality requirements still apply.
+      </p>
+    );
+  return (
+    <Notice>
+      <strong>Cut evidence blocks this release</strong>
+      <ul>
+        {decision.reasons.map((reason) => (
+          <li key={reason}>{CUT_MESSAGES[reason]}</li>
+        ))}
+      </ul>
+      <p>
+        Confirming the movie or episodes does not override these protections.
+      </p>
+    </Notice>
   );
 }

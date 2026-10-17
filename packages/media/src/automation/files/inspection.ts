@@ -29,6 +29,10 @@ import { assertMeasuredUpgrade } from "./quality-guard.ts";
 import { newLibraryPath, type NamingItem } from "./library-path.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
 import { measureResolvedEvidence } from "./resolved-measurement.ts";
+import {
+  assertObservedEdition,
+  assertPlanEdition,
+} from "./editions/acquisition.ts";
 
 const ObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
@@ -175,6 +179,7 @@ export async function inspectAndStage(
         ),
     );
     assertCandidateCount(media, candidates.length);
+    await assertObservedEdition(context.db, attempt, candidates);
     plan = [];
     for (const file of candidates)
       plan.push(
@@ -199,6 +204,7 @@ export async function inspectAndStage(
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
+      await assertPlanEdition(tx, current, committed);
       if (current.filePlan !== null)
         return FilePlanSchema.parse(current.filePlan);
       await tx.acquisitionAttempt.update({
@@ -208,6 +214,7 @@ export async function inspectAndStage(
       return committed;
     });
   }
+  await assertPlanEdition(context.db, attempt, plan);
   for (const entry of plan) {
     const files = fileOperations(
       context,

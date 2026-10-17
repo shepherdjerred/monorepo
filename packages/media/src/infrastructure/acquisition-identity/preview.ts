@@ -1,4 +1,5 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
+import { previewDefaultEdition } from "#infrastructure/editions/acquisition.ts";
 import {
   coordinateBlockers,
   referenceConflict,
@@ -118,6 +119,10 @@ export async function buildIdentityPreview(
     birthEpoch: runtime.recoveryEpoch,
   };
   const blockers = previewQuality(rows, input.mediaId, release, proposed);
+  const edition = await previewDefaultEdition(tx, {
+    releaseId: release.id,
+    mediaIds: ids,
+  });
   if (sponsor === null) blockers.add("request_required");
   const unsigned = {
     schemaVersion: 1 as const,
@@ -141,7 +146,12 @@ export async function buildIdentityPreview(
     numberingDigest:
       canonical.kind === "series" ? canonical.coordinates.digest : null,
     qualityBlockers: [...blockers].sort(),
-    confirmationAllowed: identityReasons.length === 0 && blockers.size === 0,
+    edition,
+    confirmationAllowed: permitsConfirmation(
+      identityReasons,
+      blockers,
+      edition.accepted,
+    ),
   };
   const mapping = await tx.plexIdentityMapping.findUniqueOrThrow({
     where: { userId: actor.id },
@@ -158,5 +168,16 @@ export async function buildIdentityPreview(
       mappingVersion: mapping.version,
     }),
   });
+}
+function permitsConfirmation(
+  identityReasons: readonly string[],
+  qualityBlockers: ReadonlySet<string>,
+  editionAccepted: boolean,
+): boolean {
+  return (
+    editionAccepted &&
+    identityReasons.length === 0 &&
+    qualityBlockers.size === 0
+  );
 }
 import { z } from "zod";

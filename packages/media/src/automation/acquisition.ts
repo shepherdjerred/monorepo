@@ -10,6 +10,8 @@ import type {
   MediaOperation,
 } from "#shared/automation.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
+import { previewDefaultEdition } from "#infrastructure/editions/acquisition.ts";
+import { operationCoverage } from "#infrastructure/acquisition-identity/acquisition.ts";
 import { requireActiveRuntime } from "./runtime.ts";
 import {
   loadProfile,
@@ -113,6 +115,7 @@ async function reconcile(
     profile,
     mediaId: input.mediaId,
     reviewed: selection.identityDecision !== undefined,
+    operationId: input.operationId,
   });
   if (blocker !== null)
     return { status: "blocked", attemptId: null, reason: blocker };
@@ -194,12 +197,20 @@ async function selectionBlocker(
     profile: QualityProfile;
     mediaId: string;
     reviewed: boolean;
+    operationId: string;
   },
 ) {
-  if (input.reviewed) return null;
   const release = await context.db.releaseCandidate.findUniqueOrThrow({
     where: { id: input.releaseId },
   });
+  const ids = await operationCoverage(context.db, input.operationId, release);
+  const edition = await previewDefaultEdition(context.db, {
+    releaseId: input.releaseId,
+    mediaIds: ids.length === 0 ? [input.mediaId] : ids,
+  });
+  if (!edition.accepted)
+    return edition.reasons[0] ?? "edition_evidence_ambiguous";
+  if (input.reviewed) return null;
   const evaluated = chooseUpgrade({
     candidate: {
       id: release.id,
