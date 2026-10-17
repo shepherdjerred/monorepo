@@ -37,7 +37,8 @@ public final class StormFixtures extends JavaPlugin implements Listener {
   private com.shepherdjerred.thestorm.e2e.maps.AuthoredCombatFixtures authoredCombat;
   private com.shepherdjerred.thestorm.e2e.maps.CloseStartFixtures closeStarts;
   private com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures detailsExporter;
-  private final FixtureShutdown shutdown = new FixtureShutdown(this::closeFixtures);
+  private JfrFixtures jfr;
+  private final FixtureShutdown shutdown = new FixtureShutdown(this::closeJfr, this::closeFixtures);
 
   @Override
   public void onEnable() {
@@ -104,6 +105,8 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     detailsExporter = new com.shepherdjerred.thestorm.e2e.maps.DetailsExportFixtures(this, world);
     detailsExporter.register();
     new com.shepherdjerred.thestorm.e2e.maps.MapLifecycleFixtures(this).register();
+    jfr = new JfrFixtures(this);
+    jfr.register();
     getServer().getPluginManager().registerEvents(this, this);
   }
 
@@ -128,6 +131,10 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     if (closeStarts != null) closeStarts.close();
     if (detailsExporter != null) detailsExporter.close();
     getLogger().info("Released synthetic fixture resources");
+  }
+
+  private void closeJfr() {
+    if (jfr != null) jfr.close();
   }
 
   /** Whether {@code module} is switched on; a config that omits it is a staging bug. */
