@@ -75,7 +75,7 @@ The source of truth is the [Storm server configuration](https://github.com/sheph
 
 | Boundary                                      | Behavior                                                                                                                 |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Screening rollout                             | `the-storm-content-safety-enabled`, namespace `the-storm`; production default off, beta on                               |
+| Screening rollout                             | `the-storm-content-safety-enabled`, namespace `the-storm`; production and beta on, Flipt-outage fallback off             |
 | Correction rollout                            | `the-storm-anticheat-corrections-enabled`; default off in both environments                                              |
 | New text                                      | Held until approved; outage rejects without a misconduct strike                                                          |
 | Private evidence                              | Allowed and blocked attempts, components, scores, decisions and receipts retained indefinitely                           |
