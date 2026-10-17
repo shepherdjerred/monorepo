@@ -3,6 +3,9 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
+CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+
 using var protocolStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("protocol.json")
     ?? throw new InvalidOperationException("Missing canonical protocol");
 using var protocol = JsonDocument.Parse(protocolStream);

@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import {
   ResolvedProfileSchema,
   SourceInventorySchema,
+  VERIFIED_SOURCE_COMMITS,
 } from "#domain/resolved-contract.ts";
 import type {
   ResolvedProfile,
@@ -13,10 +15,6 @@ export const ProfileSnapshotSchema = z.object({
   capturedAt: z.iso.datetime(),
   inventories: z.array(SourceInventorySchema),
 });
-const VERIFIED_SOURCE_COMMITS: Record<string, string> = {
-  "radarr:6.4.4.10685": "a96bf7c3ecb23cb76993770727285dc17a613fbc",
-  "sonarr:4.0.20.3014": "cab419ade8ac7fcab5bf80394ee492abd35d5f5a",
-};
 type Json = z.infer<ReturnType<typeof z.json>>;
 function canonical(value: Json): Json {
   if (Array.isArray(value)) return value.map((item) => canonical(item));
@@ -29,7 +27,7 @@ function canonical(value: Json): Json {
       );
 }
 export function snapshotHash(value: Json): string {
-  return new Bun.CryptoHasher("sha256")
+  return createHash("sha256")
     .update(JSON.stringify(canonical(value)))
     .digest("hex");
 }

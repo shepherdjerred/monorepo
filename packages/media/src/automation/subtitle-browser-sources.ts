@@ -1,45 +1,57 @@
-import { z } from "zod";
 import {
   SubhdProvider,
-  PinchTabSubtitleBrowser,
   ZimukuProvider,
 } from "#integrations/browser-subtitles.ts";
+import { IntegrationError } from "#integrations/http.ts";
+import {
+  cleanupSubtitleBrowser,
+  readBrowserState,
+  saveBrowserState,
+  subtitleBrowser,
+  type SubtitleBrowserState,
+} from "./subtitle-browser-lifecycle.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import {
   claimSubtitleDownload,
   subtitleArchive,
-  subtitleCredential,
   subtitleVersionMatches,
   type SubtitleSearch,
   type SubtitleSource,
 } from "./subtitle-sources.ts";
 
 export type SubtitleLookup = SubtitleSource | null | { pending: true };
-const BrowserStateSchema = z.object({
-  subtitleBrowser: z
-    .object({
-      tabId: z.string(),
-      subtitleId: z.string(),
-      phase: z.enum(["prepare", "resolve"]),
-      description: z.string(),
-    })
-    .optional(),
-});
+
+function requireResumableBrowser(
+  state: SubtitleBrowserState | undefined,
+  binding: string,
+): void {
+  if (
+    state !== undefined &&
+    (state.binding !== binding || !["prepare", "resolve"].includes(state.phase))
+  )
+    throw new IntegrationError(
+      "subtitle-browser",
+      state.phase === "closed" ? "interaction-required" : "outcome-unknown",
+    );
+}
 
 export async function fromSubhd(
-  context: MediaAutomationContext,
+  context: Pick<MediaAutomationContext, "db" | "cipher">,
   input: SubtitleSearch,
+  ports?: {
+    provider: Pick<SubhdProvider, "search" | "downloadAuthorized">;
+    browser: Pick<
+      Awaited<ReturnType<typeof subtitleBrowser>>,
+      "openSubhd" | "prepareSubhd" | "resolveSubhd" | "close"
+    >;
+  },
 ): Promise<SubtitleLookup> {
   if (!["zh-Hans", "zh-CN"].includes(input.language)) return null;
-  const credential = z
-    .object({ baseUrl: z.url(), token: z.string(), instanceId: z.string() })
-    .parse(await subtitleCredential(context, "subhd"));
-  const provider = new SubhdProvider();
-  const browser = new PinchTabSubtitleBrowser(credential);
-  const operation = await context.db.operation.findUniqueOrThrow({
-    where: { id: input.operationId },
-  });
-  let state = BrowserStateSchema.parse(operation.result ?? {}).subtitleBrowser;
+  const provider = ports?.provider ?? new SubhdProvider();
+  const browser = ports?.browser ?? (await subtitleBrowser(context));
+  let state = await readBrowserState(context, input.operationId);
+  const binding = `${input.language}:${input.sourceFilename}`;
+  requireResumableBrowser(state, binding);
   if (state === undefined) {
     const found = await provider.search(input.query);
     const candidates = found.filter((candidate) =>
@@ -48,45 +60,67 @@ export async function fromSubhd(
     if (candidates.length !== 1 || candidates[0] === undefined) return null;
     const candidate = candidates[0];
     state = {
-      tabId: await browser.openSubhd(candidate.id),
+      tabId: null,
       subtitleId: candidate.id,
-      phase: "prepare",
+      phase: "opening",
       description: `${candidate.provenance} ${candidate.release}`,
+      binding,
     };
-    await context.db.operation.update({
-      where: { id: input.operationId },
-      data: { result: { subtitleBrowser: state } },
-    });
+    await saveBrowserState(context, input.operationId, state);
+    const tabId = await browser.openSubhd(candidate.id);
+    state = { ...state, tabId, phase: "prepare" };
+    try {
+      await saveBrowserState(context, input.operationId, state);
+    } catch (error) {
+      await browser.close(tabId);
+      throw error;
+    }
   }
-  if (state.phase === "prepare") {
-    if (
-      (await browser.prepareSubhd(state.tabId, state.subtitleId)) === "loading"
-    )
-      return { pending: true };
-    await context.db.operation.update({
-      where: { id: input.operationId },
-      data: { result: { subtitleBrowser: { ...state, phase: "resolve" } } },
-    });
-    return { pending: true };
-  }
-  const subtitleId = state.subtitleId;
-  const resolved = await browser.resolveSubhd(
-    state.tabId,
-    subtitleId,
-    undefined,
-    async () => {
-      await claimSubtitleDownload(context, input, "subhd", subtitleId);
-    },
-  );
-  if (resolved.status === "loading") return { pending: true };
+  if (state.tabId === null)
+    throw new IntegrationError("subtitle-browser", "outcome-unknown");
+  let pending = false;
   try {
+    if (state.phase === "prepare") {
+      if (
+        (await browser.prepareSubhd(state.tabId, state.subtitleId)) ===
+        "loading"
+      ) {
+        pending = true;
+        return { pending: true };
+      }
+      await saveBrowserState(context, input.operationId, {
+        ...state,
+        phase: "resolve",
+      });
+      pending = true;
+      return { pending: true };
+    }
+    const subtitleId = state.subtitleId;
+    const resolved = await browser.resolveSubhd(
+      state.tabId,
+      subtitleId,
+      undefined,
+      async () => {
+        await claimSubtitleDownload(context, input, "subhd", subtitleId);
+      },
+    );
+    if (resolved.status === "loading") {
+      pending = true;
+      return { pending: true };
+    }
     return await subtitleArchive(
       await provider.downloadAuthorized(resolved.url),
       input,
       state.description,
     );
   } finally {
-    await browser.close(state.tabId);
+    if (!pending)
+      await cleanupSubtitleBrowser(
+        context,
+        input.operationId,
+        "lookup_finished",
+        browser,
+      );
   }
 }
 

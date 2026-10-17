@@ -23,7 +23,28 @@ test("unavailable flags keep every media effect gate closed", async () => {
     expect(await config.get(key)).toMatchObject({ value: false });
   }
   expect(await config.get("keepDays")).toMatchObject({ value: 30 });
+  expect(await config.get("permittedMovieSectionId")).toMatchObject({
+    value: "1",
+  });
+  expect(await config.get("permittedTvSectionId")).toMatchObject({
+    value: "2",
+  });
 });
+
+test.each(["0", "-1", "all", "1,2"])(
+  "invalid permitted section %s fails closed",
+  async (value) => {
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new StaticProvider({
+        "media-permitted-movie-section-id": value,
+      }),
+    });
+    await expect(
+      mediaBehaviorConfig("production").get("permittedMovieSectionId"),
+    ).rejects.toThrow();
+  },
+);
 
 test("a resolved false stays authoritative independently of another enabled gate", async () => {
   await initFeatureFlags({

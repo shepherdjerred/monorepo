@@ -72,7 +72,7 @@ export async function subtitleArchive(
 }
 
 export async function subtitleCredential(
-  context: MediaAutomationContext,
+  context: Pick<MediaAutomationContext, "db" | "cipher">,
   id: string,
 ): Promise<unknown> {
   const provider = await context.db.mediaProvider.findUniqueOrThrow({
@@ -90,12 +90,13 @@ export async function subtitleCredential(
 
 /** A durable claim prevents quota-consuming download-link calls from being blindly replayed. */
 export async function claimSubtitleDownload(
-  context: MediaAutomationContext,
+  context: Pick<MediaAutomationContext, "db">,
   input: SubtitleSearch,
   providerId: string,
   candidateId: string,
 ): Promise<void> {
   await context.db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Operation" WHERE id = ${input.operationId} FOR UPDATE`;
     const operation = await tx.operation.findUniqueOrThrow({
       where: { id: input.operationId },
     });
@@ -104,19 +105,14 @@ export async function claimSubtitleDownload(
       .parse(operation.result ?? {});
     if (existing.subtitleDownload !== undefined)
       throw new IntegrationError(providerId, "outcome-unknown");
-    const changed = await tx.operation.updateMany({
-      where: { id: operation.id, updatedAt: operation.updatedAt },
-      data: {
-        result: {
-          subtitleDownload: {
-            providerId,
-            candidateId,
-            requestedAt: new Date().toISOString(),
-          },
-        },
+    const claim = {
+      subtitleDownload: {
+        providerId,
+        candidateId,
+        requestedAt: new Date().toISOString(),
       },
-    });
-    if (changed.count !== 1) throw new IntegrationError(providerId, "conflict");
+    };
+    await tx.$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify(claim)}::jsonb, "updatedAt" = NOW() WHERE id = ${operation.id}`;
     await tx.applicationEvent.create({
       data: {
         kind: "subtitle_download_requested",

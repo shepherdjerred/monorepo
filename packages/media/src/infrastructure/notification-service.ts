@@ -134,12 +134,16 @@ export class PrismaNotificationApplication
             payload: { verificationId: id },
           },
         });
+        const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
         const delivery = await db.notificationDelivery.create({
           data: {
             userId: actor.id,
             eventId: event.id,
             channel: "email",
             state: "pending",
+            recoveryEpoch: runtime.recoveryEpoch,
           },
         });
         const operationId = crypto.randomUUID();

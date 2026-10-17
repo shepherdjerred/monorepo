@@ -17,6 +17,7 @@ const server = Bun.spawn(["bun", "src/server/index.ts"], {
     DATABASE_URL: database.url,
     MEDIA_CREDENTIAL_KEY: Buffer.alloc(32, 1).toString("base64"),
     PLEX_SERVER_MACHINE_ID: "image-smoke-server",
+    PLEX_SERVER_URL: "http://127.0.0.1:32400",
     PLEX_OWNER_ACCOUNT_ID: "image-smoke-owner",
     TMDB_TOKEN: "image-smoke-placeholder",
     PUBLIC_ORIGIN: origin,

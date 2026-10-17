@@ -30,34 +30,58 @@ const PrivatePolicyProof = {
   verified: z.boolean(),
   evidence: z.string().trim().min(10).max(2000),
 };
-export const ProviderSeedingPolicySchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("unknown") }).strict(),
-  z.object({ kind: z.literal("public") }).strict(),
-  z
-    .object({
-      kind: z.literal("privatehd"),
-      ...PrivatePolicyProof,
-      ratio: z.number().positive().nullable(),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("private"),
-      ...PrivatePolicyProof,
-      ratio: z.number().positive().nullable(),
-      minimumSeconds: z.number().int().positive().nullable(),
-      combination: z.enum(["all", "any"]),
-      sizeRule: z
-        .object({
-          secondsPerGiB: z.number().positive(),
-          minimumSeconds: z.number().int().nonnegative(),
-          maximumSeconds: z.number().int().positive().nullable(),
-        })
-        .strict()
-        .nullable(),
-    })
-    .strict(),
-]);
+export const ProviderSeedingPolicySchema = z
+  .discriminatedUnion("kind", [
+    z.object({ kind: z.literal("unknown") }).strict(),
+    z.object({ kind: z.literal("public") }).strict(),
+    z
+      .object({
+        kind: z.literal("privatehd"),
+        ...PrivatePolicyProof,
+        ratio: z.number().positive().nullable(),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal("private"),
+        ...PrivatePolicyProof,
+        ratio: z.number().positive().nullable(),
+        minimumSeconds: z.number().int().positive().nullable(),
+        combination: z.enum(["all", "any"]),
+        sizeRule: z
+          .object({
+            secondsPerGiB: z.number().positive(),
+            minimumSeconds: z.number().int().nonnegative(),
+            maximumSeconds: z.number().int().positive().nullable(),
+          })
+          .strict()
+          .nullable(),
+      })
+      .strict(),
+  ])
+  .superRefine((policy, context) => {
+    if (policy.kind !== "private") return;
+    if (
+      policy.sizeRule !== null &&
+      policy.sizeRule.maximumSeconds !== null &&
+      policy.sizeRule.maximumSeconds < policy.sizeRule.minimumSeconds
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Maximum size-rule duration must not be below its minimum",
+        path: ["sizeRule", "maximumSeconds"],
+      });
+    if (
+      policy.verified &&
+      policy.ratio === null &&
+      policy.minimumSeconds === null &&
+      policy.sizeRule === null
+    )
+      context.addIssue({
+        code: "custom",
+        message: "A verified private policy needs at least one obligation",
+      });
+  });
 export const SaveProviderSchema = z
   .object({
     expectedUpdatedAt: z.iso.datetime().nullable(),
@@ -92,6 +116,8 @@ export const ProviderStatusSchema = z.object({
     ])
     .nullable(),
   nextAllowedAt: DateTimeSchema.nullable(),
+  feedState: z.enum(["unconfigured", "unsupported_recent_feed"]),
+  lastFeedAt: DateTimeSchema.nullable(),
 });
 export const ProviderListSchema = z.array(ProviderStatusSchema);
 export type ProviderStatus = z.output<typeof ProviderStatusSchema>;

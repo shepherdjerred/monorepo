@@ -36,6 +36,45 @@ configuration and the managed `media` flag namespace. The database migration
 command is `bun run --cwd packages/media migrate:deploy`; set `DATABASE_URL` only
 to the intended application database.
 
+## Restore preparation command
+
+`bun scripts/restore-observe.ts --recovery-id <UUID> --expected-epoch <N> --reason <text>`
+requires an explicit `DATABASE_URL`. Run it against the restored database while
+the API and both media worker roles are stopped and schedules remain paused,
+before allowing any worker to reconnect. Inspect the restored
+`MediaRuntimeState.recoveryEpoch` to choose `N`; do not assume a backup contains
+observe mode. The command atomically sets observe mode, clears ownership
+confirmation, advances the recovery epoch, and records an idempotent receipt.
+It prints only that receipt. Reusing the same recovery identity and input is safe;
+conflicting input or a changed runtime fails without mutation.
+
+Verify the returned epoch and `mode: observe` before restarting workers for
+inspection. Existing acquisition and notification birth epochs cannot authorize
+effects in the new epoch. This command does not transfer ownership, activate
+schedules, repair files, or assert that a restored database matches external
+state. Reconcile inventory and effect journals before a separately reviewed
+ownership transfer. Keep acquisition, cleanup, quarantine, and purge gates closed
+through that review.
+
+## Bounded reconciliation
+
+Whole-series requests commit a parent claim and outbox entry; Temporal projects
+episode coverage in pages of 25. Parent cancellation immediately removes inherited
+authorization, even before descendant projections finish. Direct episode requests
+and overlapping parents retain their own claims. Catalog refresh stores episode
+runtime, air date, and original language from TMDB; pending metadata is explicit.
+Future episodes are expanded from later catalog refreshes only for monitored
+requests, and acquisition waits until a known future air date has passed.
+
+Download recovery queries the exact coordinator and acquisition Workflow identities.
+Only observed terminal runs permit takeover; missing or active child history holds
+ambiguous submissions. Stable recovery keys preserve the existing acquisition and
+its external-effect journals. Inventory scans record Plex observations in bounded
+pages without claiming foreign files. Missing-path diagnostics require both
+configured libraries to finish enumeration. Current provider adapters have no
+verified recent-release feed; their durable feed status reports
+`unsupported_recent_feed`, while six-hour due searches remain separate.
+
 ## Package boundaries
 
 | Directory            | Responsibility                                                                          |
@@ -114,11 +153,40 @@ It preserves quality groups, cutoffs, custom-format definitions and scores.
 Reports distinguish live source configuration from desired profile names;
 they do not grant file or torrent ownership.
 
-The pure resolved-profile evaluator accepts explicit release evidence and a
-regex matcher. Unknown rules, original-language evidence, or required release
-metadata protect the candidate. Stored regex observations are valid only for
-their exact pattern/input pairs. They are evidence for the committed fixtures,
-not a production matcher for arbitrary releases.
+Profiles with a `resolved` snapshot use the source evaluator for candidate
+selection, reservation, upgrades, and measured-file publication. Legacy profile
+fields remain the compatibility envelope; they do not override the resolved
+rules. Profile versions preserve the captured snapshot. Unknown rules,
+original-language evidence, or required release metadata protect the candidate.
+
+The production matcher invokes the self-contained
+`/opt/media-regex/RegexOracle` executable on Node or Bun. It uses .NET 10.0.11,
+explicit `en-US` culture, a 25 ms regex deadline and a 60 second process deadline.
+The production image excludes the .NET SDK. Input and output are bounded and
+validated through a Node child-process protocol. Matching happens before database
+locks; final guards use only exact pattern/input observations. New predicates
+without observations protect until evidence is refreshed. Acquisition-referenced
+candidate evidence stays immutable.
+
+The source parser currently supports a verified scene-name subset with explicit
+year or season numbering, source, resolution, and release group. Ambiguous
+markers, anime, site prefixes, and unrecognized edition syntax protect instead
+of guessing. File inspection replaces advertised resolution and audio with
+measured values. Missing catalog runtime or original-language evidence remains
+unknown; no default English track or guessed runtime is introduced.
+
+To produce a repeatable read-only import report from a saved nonsecret snapshot:
+
+```sh
+bun scripts/migration-profiles.ts --snapshot src/migration/fixtures/resolved-profiles.json --desired-profile Best
+```
+
+For live inventory, use `--recyclarr-reference` with the configured 1Password
+field reference. The command reads it in memory through the repository service
+account wrapper. Optional `--radarr-url` and `--sonarr-url` accept localhost
+port-forward endpoints only. Two consecutive GET-only captures must agree;
+the output contains validated profile data, provenance, and desired/live drift.
+The command never writes to either application or transfers ownership.
 
 To regenerate regex observations from the sanitized source snapshots and
 synthetic release fixtures, run from this package:

@@ -85,7 +85,9 @@ test("separates network credentials from writable media mounts", () => {
       spec: z.object({
         containers: z.array(
           z.object({
-            env: z.array(z.object({ name: z.string() })),
+            env: z.array(
+              z.object({ name: z.string(), value: z.string().optional() }),
+            ),
             volumeMounts: z.array(
               z.object({
                 mountPath: z.string(),
@@ -120,7 +122,18 @@ test("separates network credentials from writable media mounts", () => {
       expect(env).not.toContain("PLEX_SERVER_TOKEN");
       expect(env).not.toContain("MEDIA_CREDENTIAL_KEY");
       expect(env).not.toContain("POSTAL_API_KEY");
+      expect(env).not.toContain("TMDB_API_KEY");
     } else expect(mounts.map((mount) => mount.mountPath)).toEqual(["/tmp"]);
+    if (deployment.metadata.name.endsWith("media-api")) {
+      expect(container?.env).toContainEqual({
+        name: "PLEX_SERVER_URL",
+        value: "http://plex:32400",
+      });
+      expect(env).not.toContain("PLEX_SERVER_TOKEN");
+    }
+    if (deployment.metadata.name.endsWith("media-network")) {
+      expect(env).toContain("TMDB_API_KEY");
+    }
     expect(env).not.toContain("DISCORD_CLIENT_SECRET");
   }
 });

@@ -6,6 +6,7 @@ import { queueOperation, serializable } from "./store.ts";
 import type { MediaItem } from "#generated/prisma/client.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { requireActiveRuntime } from "./runtime.ts";
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
 type PublicationActivities = Pick<
   MediaNetworkActivities,
@@ -129,7 +130,7 @@ async function queueAvailableNotifications(
         },
       });
       const requests = await tx.mediaRequest.findMany({
-        where: { mediaId, active: true },
+        where: { mediaId, ...effectiveRequestWhere },
         include: { user: { include: { notificationPreference: true } } },
       });
       for (const request of requests) {
@@ -143,6 +144,7 @@ async function queueAvailableNotifications(
               userId: request.userId,
               channel,
               state: "pending",
+              recoveryEpoch: attempt.recoveryEpoch,
             },
           });
           await queueOperation(tx, {
@@ -194,18 +196,18 @@ export function createPublicationActivities(
         !runtime.active ||
         runtime.epoch !== receipt.recoveryEpoch
         ? { status: "blocked", reason: "restore_evidence_obsolete" }
-        : publishCoverage(
-            context,
-            receipt.mediaIds,
-            input.operationId,
+        : publishCoverage(context, receipt.mediaIds, input.operationId, {
+            epoch: receipt.recoveryEpoch,
             receipt,
-          );
+          });
     },
     async publishMediaToPlex(input) {
       const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
         where: { id: input.attemptId },
       });
-      return publishCoverage(context, attempt.mediaIds, input.operationId);
+      return publishCoverage(context, attempt.mediaIds, input.operationId, {
+        epoch: attempt.recoveryEpoch,
+      });
     },
     async finalizeMediaAcquisition(input) {
       await finalize(context, input.attemptId);
@@ -234,10 +236,16 @@ async function publishCoverage(
   context: MediaAutomationContext,
   mediaIds: string[],
   operationId: string,
-  receipt?: z.infer<typeof RestoreReceiptSchema>["restoreReceipt"],
+  proof: {
+    epoch: number;
+    receipt?: z.infer<typeof RestoreReceiptSchema>["restoreReceipt"];
+  },
 ): ReturnType<PublicationActivities["publishMediaToPlex"]> {
   const runtime = await requireActiveRuntime(context.db);
   if (!runtime.active) return { status: "blocked", reason: "runtime_observe" };
+  if (runtime.epoch !== proof.epoch)
+    return { status: "blocked", reason: "recovery_epoch_changed" };
+  const { receipt } = proof;
   const coverages = await context.db.assetCoverage.findMany({
     where: { mediaId: { in: mediaIds }, current: true },
     include: { asset: true, media: { include: { intent: true } } },
@@ -260,8 +268,11 @@ async function publishCoverage(
     return { status: "blocked", reason: "restore_evidence_obsolete" };
   const kind = coverages[0]?.media.kind === "movie" ? "movie" : "episode";
   const allSections = await context.plex.sections();
+  const permitted = await context.permittedSections();
   const sections = allSections.filter(
-    (section) => section.type === (kind === "movie" ? "movie" : "show"),
+    (section) =>
+      section.type === (kind === "movie" ? "movie" : "show") &&
+      section.key === (kind === "movie" ? permitted.movie : permitted.series),
   );
   const section = sections[0];
   if (section === undefined || sections.length !== 1)
@@ -378,6 +389,17 @@ async function finalize(
     where: { id: attemptId },
   });
   await serializable(context.db, async (tx) => {
+    await lockMedia(tx, attempt.mediaIds);
+    await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+    const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    if (
+      runtime.mode !== "active" ||
+      !runtime.ownershipConfirmed ||
+      runtime.recoveryEpoch !== attempt.recoveryEpoch
+    )
+      throw new Error("Finalization recovery epoch changed");
     const media = await tx.mediaItem.findMany({
       where: { id: { in: attempt.mediaIds } },
     });
@@ -401,7 +423,7 @@ async function finalize(
       where: { mediaId: { in: attempt.mediaIds }, current: true },
     });
     const requests = await tx.mediaRequest.findMany({
-      where: { mediaId: { in: attempt.mediaIds }, active: true },
+      where: { mediaId: { in: attempt.mediaIds }, ...effectiveRequestWhere },
     });
     for (const coverage of coverages) {
       const languages = new Set(

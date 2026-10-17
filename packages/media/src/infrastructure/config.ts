@@ -7,6 +7,7 @@ export const BootstrapSchema = z
     DATABASE_URL: z.url(),
     MEDIA_CREDENTIAL_KEY: z.string().min(1),
     PLEX_SERVER_MACHINE_ID: z.string().min(1),
+    PLEX_SERVER_URL: z.url(),
     PLEX_OWNER_ACCOUNT_ID: z.string().min(1),
     TMDB_TOKEN: z.string().min(1).optional(),
     TMDB_API_KEY: z.string().min(1).optional(),
@@ -85,6 +86,18 @@ export function mediaBehaviorConfig(
         default: "media@sjer.red",
         names: { flag: "media-email-sender" },
       },
+      permittedMovieSectionId: {
+        schema: z.string().regex(/^[1-9]\d*$/u),
+        sources: ["flag", "default"],
+        default: "1",
+        names: { flag: "media-permitted-movie-section-id" },
+      },
+      permittedTvSectionId: {
+        schema: z.string().regex(/^[1-9]\d*$/u),
+        sources: ["flag", "default"],
+        default: "2",
+        names: { flag: "media-permitted-tv-section-id" },
+      },
     },
     sources: {
       flag: createFlagConfigSource({
@@ -100,6 +113,8 @@ export function mediaBehaviorConfig(
           sessionLifetimeMs: "string",
           keepDays: "string",
           emailSender: "string",
+          permittedMovieSectionId: "string",
+          permittedTvSectionId: "string",
         },
       }),
     },

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { ResolvedProfile } from "#domain/resolved-contract.ts";
+import type { ResolvedEvidence } from "#domain/resolved-evidence.ts";
 
 export const MediaKindSchema = z.enum(["movie", "series", "season", "episode"]);
 export const AvailabilitySchema = z.enum([
@@ -27,6 +29,7 @@ export const MediaItemSchema = z.object({
   seasonNumber: z.number().int().nonnegative().nullable(),
   episodeNumber: z.number().int().nonnegative().nullable(),
   availability: AvailabilitySchema,
+  catalogState: z.enum(["pending", "ready"]).optional(),
   version: VersionSchema,
 });
 export const UserSchema = z.object({
@@ -40,6 +43,7 @@ export const UserSchema = z.object({
 export const CreateRequestSchema = z
   .object({
     mediaId: IdentifierSchema,
+    requesterUserId: z.uuid().optional(),
     subtitleLanguages: z.array(LanguageSchema).max(20).default([]),
     includeFutureEpisodes: z.boolean().optional(),
     includeSpecials: z.boolean().default(false),
@@ -141,6 +145,7 @@ export type ReleaseAttributes = {
   audioLanguages: readonly string[];
   sizeBytes: number;
   scoreTags: readonly string[];
+  resolvedEvidence?: ResolvedEvidence | undefined;
 };
 
 export type QualityProfile = {
@@ -155,6 +160,7 @@ export type QualityProfile = {
   cutoffQuality: string;
   cutoffScore: number;
   minimumScore: number;
+  resolved?: ResolvedProfile | undefined;
 };
 
 export type MediaCommand = {

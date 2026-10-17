@@ -50,6 +50,7 @@ export function createUnifiedMediaApplication(
     image: props.image,
     database,
     bootstrap,
+    plexServiceName: props.plex.serviceName,
   });
   const workers = createMediaActivityWorkers(chart, {
     database,

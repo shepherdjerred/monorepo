@@ -2,6 +2,8 @@ import { createPrivateKey, generateKeyPairSync, sign } from "node:crypto";
 import { z } from "zod";
 import type { PlexAuthentication } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
+import type { PlexServerAccess } from "#application/plex-access.ts";
+import { PlexClient } from "#integrations/plex.ts";
 
 const DeviceSchema = z.object({
   clientId: z.string(),
@@ -25,6 +27,9 @@ const ResourceSchema = z.array(
 
 export type PlexAuthSettings = {
   serverMachineId: string;
+  serverUrl: string;
+  permittedMovieSectionId: string;
+  permittedTvSectionId: string;
   applicationName: string;
   returnUrl: string;
 };
@@ -33,7 +38,10 @@ export type PlexAuthSettings = {
 export class PlexPinAuthentication implements PlexAuthentication {
   constructor(
     private readonly settings: PlexAuthSettings,
-    private readonly request: typeof fetch = fetch,
+    private readonly request: (
+      input: URL | string,
+      init?: RequestInit,
+    ) => Promise<Response> = fetch,
   ) {}
 
   private async json(
@@ -157,6 +165,51 @@ export class PlexPinAuthentication implements PlexAuthentication {
         resource.provides.split(",").includes("server"),
     );
     return server?.accessToken ?? null;
+  }
+
+  async resolveServerAccess(token: string): Promise<PlexServerAccess | null> {
+    const serverToken = await this.resolveServerToken(token);
+    if (serverToken === null) return null;
+    const identity = z
+      .object({ id: z.number().int().positive(), restricted: z.boolean() })
+      .parse(
+        await this.json("https://plex.tv/api/v2/user", "media-access-check", {
+          headers: { "X-Plex-Token": token },
+        }),
+      );
+    const client = new PlexClient(
+      {
+        baseUrl: this.settings.serverUrl,
+        token: serverToken,
+        clientIdentifier: "media-access-check",
+      },
+      this.request,
+    );
+    if ((await client.machineIdentifier()) !== this.settings.serverMachineId)
+      throw new MediaError(
+        "plex_server_mismatch",
+        "The configured Plex endpoint belongs to another server",
+        503,
+      );
+    const sections = await client.sections();
+    const permitted = sections.filter(
+      (section) =>
+        (section.key === this.settings.permittedMovieSectionId &&
+          section.type === "movie") ||
+        (section.key === this.settings.permittedTvSectionId &&
+          section.type === "show"),
+    );
+    if (permitted.length === 0) return null;
+    return {
+      accountId: String(identity.id),
+      serverMachineId: this.settings.serverMachineId,
+      serverToken,
+      permittedSectionIds: permitted.map((section) => section.key),
+      permittedMediaKinds: permitted.map((section) =>
+        section.type === "movie" ? "movie" : "series",
+      ),
+      plexRestricted: identity.restricted,
+    };
   }
 
   async refresh(deviceState: string): Promise<string> {

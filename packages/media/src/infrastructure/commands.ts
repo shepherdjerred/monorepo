@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
-import type { CreateRequest, MediaAction } from "#shared/contract.ts";
+import type { MediaAction } from "#shared/contract.ts";
 import type { SaveQualityProfile } from "#shared/api.ts";
 import {
   invalidateRetention,
@@ -9,219 +9,59 @@ import {
   applyHold,
   actionIntentChange,
   actionCommand,
-  sponsorClaim,
 } from "./action-guards.ts";
 import { lockMedia, needsRestore } from "./locks.ts";
 import { confirmRemoval } from "./removal-confirmation.ts";
 
-import { MediaCommandBase } from "./command-base.ts";
-export class PrismaMediaCommands extends MediaCommandBase {
-  async createRequest(actor: MediaActor, key: string, input: CreateRequest) {
-    return this.command(actor, key, { kind: "request", input }, async (db) => {
-      const user = await db.mediaUser.findUniqueOrThrow({
-        where: { id: actor.id },
-      });
-      if (user.restricted)
-        throw new MediaError(
-          "requests_restricted",
-          "This account cannot create requests",
-          403,
-        );
-      const media = await db.mediaItem.findUnique({
-        where: { id: input.mediaId },
-      });
-      if (!media)
-        throw new MediaError(
-          "media_not_found",
-          "Media item does not exist",
-          404,
-        );
-      if (input.includeFutureEpisodes === true && media.kind !== "series")
-        throw new MediaError(
-          "invalid_request_scope",
-          "Future episodes can only be requested for a series",
-          422,
-        );
-      const includeFutureEpisodes =
-        input.includeFutureEpisodes ?? media.kind === "series";
-      const children =
-        media.kind === "series"
-          ? await db.mediaItem.findMany({
-              where: {
-                OR: [
-                  { parentId: media.id, kind: "episode" },
-                  { parent: { parentId: media.id }, kind: "episode" },
-                ],
-              },
-            })
-          : media.kind === "season"
-            ? await db.mediaItem.findMany({
-                where: { parentId: media.id, kind: "episode" },
-              })
-            : [];
-      const covered = [
-        media,
-        ...children.filter(
-          (child) => input.includeSpecials || child.seasonNumber !== 0,
-        ),
-      ];
-      await lockMedia(
-        db,
-        covered.map((item) => item.id),
-      );
-      const root = await db.mediaRequest.upsert({
-        where: { userId_mediaId: { userId: actor.id, mediaId: media.id } },
-        create: { userId: actor.id, ...input, includeFutureEpisodes },
-        update: {
-          active: true,
-          subtitleLanguages: input.subtitleLanguages,
-          includeFutureEpisodes,
-          includeSpecials: input.includeSpecials,
-          version: { increment: 1 },
-        },
-      });
-      let firstOperationId = "";
-      for (const item of covered) {
-        if (item.id !== media.id) {
-          await sponsorClaim(db, actor.id, root.id, {
-            mediaId: item.id,
-            subtitleLanguages: input.subtitleLanguages,
-          });
-        }
-        const intent = await db.mediaIntent.upsert({
-          where: { mediaId: item.id },
-          create: { mediaId: item.id, generation: 1 },
-          update: {
-            desiredPresence: true,
-            monitoring: true,
-            intentionallyRemovedAt: null,
-            generation: { increment: 1 },
-            version: { increment: 1 },
-          },
-        });
-        await db.mediaItem.update({
-          where: { id: item.id },
-          data: { version: { increment: 1 } },
-        });
-        await invalidateRetention(db, item.id);
-        const operationId = await this.enqueue(db, actor, {
-          kind:
-            item.availability === "quarantined" ||
-            (await needsRestore(db, item.id))
-              ? "restore_media"
-              : "reconcile_media",
-          mediaId: item.id,
-          generation: intent.generation,
-          details: { requestId: root.id },
-        });
-        if (!firstOperationId) firstOperationId = operationId;
-      }
-      await db.applicationEvent.create({
-        data: {
-          mediaId: media.id,
-          actorId: actor.id,
-          kind: "request_created",
-          payload: {
-            requestId: root.id,
-            coveredMediaIds: covered.map((item) => item.id),
-          },
-        },
-      });
-      return {
-        requestId: root.id,
-        mediaId: media.id,
-        operationId: firstOperationId,
-        status: "queued",
-      };
-    });
-  }
-
-  async cancelRequest(
+import { MediaRequestCommands } from "./request-commands.ts";
+export class PrismaMediaCommands extends MediaRequestCommands {
+  setProfileDefault(
     actor: MediaActor,
     key: string,
-    requestId: string,
-    expectedVersion: number,
+    kind: "movie" | "series",
+    input: { expectedVersion: number; profileId: string },
   ) {
+    requireOwner(actor);
     return this.command(
       actor,
       key,
-      { kind: "cancel_request", input: { requestId, expectedVersion } },
+      { kind: "profile_default", input: { kind, ...input } },
       async (db) => {
-        const request = await db.mediaRequest.findUnique({
-          where: { id: requestId },
+        const profile = await db.qualityProfile.findUnique({
+          where: { id: input.profileId },
         });
-        if (!request)
+        if (profile === null)
           throw new MediaError(
-            "request_not_found",
-            "Request does not exist",
+            "profile_not_found",
+            "Quality profile does not exist",
             404,
           );
-        if (request.userId !== actor.id && actor.role !== "owner")
-          throw new MediaError(
-            "forbidden",
-            "You can only cancel your own requests",
-            403,
-          );
-        const sponsored = await db.mediaRequest.findMany({
-          where: { sponsorRequestId: requestId, active: true },
+        const prior = await db.qualityProfileDefault.findUnique({
+          where: { kind },
         });
-        await lockMedia(db, [
-          request.mediaId,
-          ...sponsored.map((child) => child.mediaId),
-        ]);
-        const updated = await db.mediaRequest.updateMany({
-          where: { id: requestId, version: expectedVersion, active: true },
-          data: { active: false, version: { increment: 1 } },
-        });
-        if (updated.count !== 1)
+        if ((prior?.version ?? 0) !== input.expectedVersion)
           throw new MediaError(
             "version_conflict",
-            "Request changed; refresh before cancelling",
+            "Default quality profile changed",
             409,
           );
-        await db.mediaRequest.updateMany({
-          where: { sponsorRequestId: requestId, active: true },
-          data: { active: false, version: { increment: 1 } },
+        const version = input.expectedVersion + 1;
+        await db.qualityProfileDefault.upsert({
+          where: { kind },
+          create: { kind, profileId: profile.id, version },
+          update: { profileId: profile.id, version },
         });
-        for (const mediaId of new Set([
-          request.mediaId,
-          ...sponsored.map((child) => child.mediaId),
-        ])) {
-          const remaining = await db.mediaRequest.count({
-            where: { mediaId, active: true },
-          });
-          await db.mediaItem.update({
-            where: { id: mediaId },
-            data: { version: { increment: 1 } },
-          });
-          const intent = await db.mediaIntent.update({
-            where: { mediaId },
-            data: {
-              generation: { increment: 1 },
-              version: { increment: 1 },
-              ...(remaining === 0 ? { monitoring: false } : {}),
-            },
-          });
-          await invalidateRetention(db, mediaId);
-          await this.enqueue(db, actor, {
-            kind: "reconcile_media",
-            mediaId,
-            generation: intent.generation,
-          });
-        }
         await db.applicationEvent.create({
           data: {
-            mediaId: request.mediaId,
             actorId: actor.id,
-            kind: "request_cancelled",
-            payload: { requestId },
+            kind: "profile_default_changed",
+            payload: { mediaKind: kind, profileId: profile.id, version },
           },
         });
-        return { requestId, status: "completed" };
+        return { profileId: profile.id, version, status: "completed" };
       },
     );
   }
-
   async act(
     actor: MediaActor,
     key: string,

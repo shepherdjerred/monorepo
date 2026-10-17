@@ -27,7 +27,12 @@ import {
 
 export function createMediaApi(
   chart: Chart,
-  props: { image: string; database: ISecret; bootstrap: ISecret },
+  props: {
+    image: string;
+    database: ISecret;
+    bootstrap: ISecret;
+    plexServiceName: string;
+  },
 ) {
   if (
     !/^docker\.io\/shepherdjerred\/media@sha256:[a-f0-9]{64}$/u.test(
@@ -101,6 +106,9 @@ export function createMediaApi(
         PORT: EnvValue.fromValue("7352"),
         ENVIRONMENT: EnvValue.fromValue("production"),
         PUBLIC_ORIGIN: EnvValue.fromValue(MEDIA_PUBLIC_ORIGIN),
+        PLEX_SERVER_URL: EnvValue.fromValue(
+          `http://${props.plexServiceName}:32400`,
+        ),
         HOME: EnvValue.fromValue("/tmp"),
         TEMPORAL_ADDRESS: EnvValue.fromValue(
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",

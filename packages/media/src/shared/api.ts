@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { ResolvedProfileSchema } from "#domain/resolved-contract.ts";
+import { ResolvedEvidenceSchema } from "#domain/resolved-evidence.ts";
 import {
   MediaItemSchema,
   RequestSchema,
@@ -198,22 +200,26 @@ export const PublicReleaseAttributesSchema = z.object({
   audioLanguages: z.array(z.string()),
   sizeBytes: z.number().int().nonnegative(),
   scoreTags: z.array(z.string()),
+  resolvedEvidence: ResolvedEvidenceSchema.optional(),
 });
 export const PublicReleaseEvaluationSchema = z.object({
   accepted: z.boolean(),
   qualityRank: z.number().int(),
   score: z.number(),
   reasons: z.array(
-    z.enum([
-      "identity_unconfirmed",
-      "coverage_unspecified",
-      "incomplete_coverage",
-      "quality_rejected",
-      "codec_rejected",
-      "audio_language_missing",
-      "size_unknown",
-      "size_rejected",
-      "score_below_minimum",
+    z.union([
+      z.string().regex(/^resolved_[a-z0-9_.:-]{1,150}$/u),
+      z.enum([
+        "identity_unconfirmed",
+        "coverage_unspecified",
+        "incomplete_coverage",
+        "quality_rejected",
+        "codec_rejected",
+        "audio_language_missing",
+        "size_unknown",
+        "size_rejected",
+        "score_below_minimum",
+      ]),
     ]),
   ),
 });
@@ -238,6 +244,7 @@ export const QualityRulesSchema = z
     tagScores: z.record(z.string(), z.number()),
     cutoffQuality: z.string(),
     cutoffScore: z.number(),
+    resolved: ResolvedProfileSchema.optional(),
   })
   .strict()
   .refine(
@@ -263,3 +270,11 @@ export type UpdateNotificationPreferences = z.output<
 >;
 export type ReleaseList = z.output<typeof ReleaseListSchema>;
 export type SaveQualityProfile = z.output<typeof SaveQualityProfileSchema>;
+export const ProfileDefaultsSchema = z.array(
+  z.object({
+    kind: z.enum(["movie", "series"]),
+    profileId: z.string().min(1),
+    version: z.number().int().nonnegative(),
+  }),
+);
+export type ProfileDefaults = z.output<typeof ProfileDefaultsSchema>;

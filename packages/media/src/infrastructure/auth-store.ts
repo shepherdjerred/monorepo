@@ -1,6 +1,8 @@
 import type { AuthStore, MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import type { Database } from "./database.ts";
+import type { PlexPermissionSnapshot } from "#application/plex-access.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 
 function publicActor(user: MediaActor): MediaActor {
   return {
@@ -63,6 +65,7 @@ export class PrismaAuthStore implements AuthStore {
         },
         update: { ciphertext: input.encryptedCredential },
       });
+      await saveAccountAccess(db, user.id, input.access);
       await db.mediaSession.create({
         data: {
           id: input.sessionId,
@@ -106,4 +109,59 @@ export class PrismaAuthStore implements AuthStore {
   async revokeSession(id: string): Promise<void> {
     await this.database.mediaSession.deleteMany({ where: { id } });
   }
+
+  async updateAccess(
+    userId: string,
+    access: PlexPermissionSnapshot,
+  ): Promise<void> {
+    await this.database.$transaction(async (db) => {
+      await saveAccountAccess(db, userId, access);
+    });
+  }
+}
+
+async function saveAccountAccess(
+  db: Prisma.TransactionClient,
+  userId: string,
+  access: PlexPermissionSnapshot,
+): Promise<void> {
+  const user = await db.mediaUser.findUniqueOrThrow({ where: { id: userId } });
+  if (user.plexAccountId !== access.accountId)
+    throw new MediaError(
+      "plex_identity_changed",
+      "Plex account identity changed",
+      403,
+    );
+  const prior = await db.plexIdentityMapping.findUnique({ where: { userId } });
+  if (prior?.kind === "managed")
+    throw new MediaError(
+      "managed_profile_login",
+      "Managed profiles cannot independently sign in",
+      403,
+    );
+  const scope = {
+    serverMachineId: access.serverMachineId,
+    permittedSectionIds: access.permittedSectionIds,
+    permittedMediaKinds: access.permittedMediaKinds,
+    plexRestricted: access.plexRestricted,
+    verifiedAt: new Date(),
+  };
+  const scopeChanged =
+    prior?.serverMachineId !== access.serverMachineId ||
+    prior.plexRestricted !== access.plexRestricted ||
+    JSON.stringify([...prior.permittedSectionIds].sort()) !==
+      JSON.stringify([...access.permittedSectionIds].sort()) ||
+    JSON.stringify([...prior.permittedMediaKinds].sort()) !==
+      JSON.stringify([...access.permittedMediaKinds].sort());
+  await db.plexIdentityMapping.upsert({
+    where: { userId },
+    create: { userId, kind: "account", ...scope },
+    update: {
+      ...scope,
+      ...(scopeChanged ? { version: { increment: 1 } } : {}),
+      ...(prior?.serverMachineId === access.serverMachineId
+        ? {}
+        : { serverAccountId: null, homeUserId: null }),
+    },
+  });
 }

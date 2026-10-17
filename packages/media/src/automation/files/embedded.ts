@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { createHash } from "node:crypto";
 import { mkdir, realpath, writeFile, readFile } from "node:fs/promises";
 import {
@@ -27,7 +28,7 @@ export async function stageEmbedded(input: {
 }> {
   const { context, kind, source, probe, mediaIds, assetId } = input;
   const requests = await context.db.mediaRequest.findMany({
-    where: { mediaId: { in: mediaIds }, active: true },
+    where: { ...effectiveRequestWhere, mediaId: { in: mediaIds } },
   });
   const wanted = new Set(
     requests.flatMap((request) => request.subtitleLanguages),

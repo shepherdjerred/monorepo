@@ -188,6 +188,13 @@ export class PrismaMediaApplication
       await this.db.qualityProfile.findMany({ orderBy: { name: "asc" } }),
     );
   }
+  async profileDefaults(_actor: MediaActor) {
+    return ProfileDefaultsSchema.parse(
+      await this.db.qualityProfileDefault.findMany({
+        orderBy: { kind: "asc" },
+      }),
+    );
+  }
 
   async releases(_actor: MediaActor, mediaId: string) {
     return ReleaseListSchema.parse(
@@ -224,3 +231,4 @@ export class PrismaMediaApplication
     );
   }
 }
+import { ProfileDefaultsSchema } from "#shared/api.ts";

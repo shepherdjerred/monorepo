@@ -55,6 +55,16 @@ export async function parseResponse<T>(
 }
 
 type StoragePort = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+const transientCommands = new Map<string, string>();
+const transientStorage: StoragePort = {
+  getItem: (key) => transientCommands.get(key) ?? null,
+  setItem: (key, value) => {
+    transientCommands.set(key, value);
+  },
+  removeItem: (key) => {
+    transientCommands.delete(key);
+  },
+};
 
 /** Retain a command's key until an acknowledged success, including across reloads. */
 export async function commandKey(
@@ -100,9 +110,12 @@ export async function writeApi<T>(input: {
   body: unknown;
   schema: z.ZodType<T>;
   method?: "POST" | "PATCH" | "PUT" | "DELETE";
+  /** Secret-bearing forms retain retry identity only in memory, never browser storage. */
+  sensitive?: boolean;
 }): Promise<T> {
+  const storage = input.sensitive === true ? transientStorage : sessionStorage;
   const command = await commandKey(
-    sessionStorage,
+    storage,
     input.actorId,
     input.path,
     input.body,
@@ -118,7 +131,7 @@ export async function writeApi<T>(input: {
     body: JSON.stringify(input.body),
   });
   const result = await parseResponse(response, input.schema);
-  sessionStorage.removeItem(command.storageKey);
+  storage.removeItem(command.storageKey);
   return result;
 }
 

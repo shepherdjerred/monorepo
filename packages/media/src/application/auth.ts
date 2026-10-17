@@ -6,6 +6,10 @@ import {
   type CredentialCipher,
 } from "./security.ts";
 import { z } from "zod";
+import type {
+  PlexServerAccess,
+  PlexPermissionSnapshot,
+} from "./plex-access.ts";
 
 export type MediaActor = {
   id: string;
@@ -36,6 +40,7 @@ export type PlexAuthentication = {
     deviceState: string,
   ) => Promise<PlexIdentity | null>;
   resolveServerToken: (token: string) => Promise<string | null>;
+  resolveServerAccess: (token: string) => Promise<PlexServerAccess | null>;
   refresh: (deviceState: string) => Promise<string>;
 };
 
@@ -64,6 +69,7 @@ export type AuthStore = {
     displayName: string;
     ownerAccountId: string;
     encryptedCredential: string;
+    access: PlexPermissionSnapshot;
     sessionId: string;
     csrfHash: string;
     expiresAt: Date;
@@ -82,6 +88,10 @@ export type AuthStore = {
     expectedCiphertext: string,
   ) => Promise<boolean>;
   revokeSession: (id: string) => Promise<void>;
+  updateAccess: (
+    userId: string,
+    access: PlexPermissionSnapshot,
+  ) => Promise<void>;
 };
 
 export type MediaAuthOptions = {
@@ -145,11 +155,11 @@ export class MediaAuth {
       deviceState,
     );
     if (!identity) return null;
-    const serverToken = await this.plex.resolveServerToken(identity.token);
-    if (serverToken === null) {
+    const access = await this.plex.resolveServerAccess(identity.token);
+    if (access?.accountId !== identity.accountId) {
       throw new MediaError(
         "server_access_required",
-        "This Plex account does not have access to the configured server",
+        "This Plex account does not have access to a permitted library on the configured server",
         403,
       );
     }
@@ -162,8 +172,13 @@ export class MediaAuth {
       accountId: identity.accountId,
       displayName: identity.displayName,
       ownerAccountId: this.options.ownerAccountId,
+      access: permissionSnapshot(access),
       encryptedCredential: this.cipher.encrypt(
-        JSON.stringify({ token: identity.token, serverToken, deviceState }),
+        JSON.stringify({
+          token: identity.token,
+          serverToken: access.serverToken,
+          deviceState,
+        }),
         `plex:${identity.accountId}`,
       ),
       sessionId: tokenHash(sessionToken),
@@ -197,27 +212,28 @@ export class MediaAuth {
           ),
         ),
       );
-    let scopedToken: string | null;
+    let access: PlexServerAccess | null;
     let refreshed = false;
     try {
-      scopedToken = await this.plex.resolveServerToken(credential.token);
+      access = await this.plex.resolveServerAccess(credential.token);
     } catch (error) {
       if (!(error instanceof MediaError) || error.code !== "plex_token_expired")
         throw error;
       credential.token = await this.plex.refresh(credential.deviceState);
       refreshed = true;
-      scopedToken = await this.plex.resolveServerToken(credential.token);
+      access = await this.plex.resolveServerAccess(credential.token);
     }
-    if (scopedToken === null) {
+    if (access?.accountId !== session.actor.plexAccountId) {
       await this.store.revokeSession(tokenHash(token));
       throw new MediaError(
         "server_access_revoked",
-        "Access to the configured Plex server was revoked",
+        "Access to the permitted Plex libraries was revoked",
         403,
       );
     }
-    if (refreshed || credential.serverToken !== scopedToken) {
-      credential.serverToken = scopedToken;
+    await this.store.updateAccess(session.actor.id, permissionSnapshot(access));
+    if (refreshed || credential.serverToken !== access.serverToken) {
+      credential.serverToken = access.serverToken;
       await this.store.updateCredential(
         session.actor.id,
         this.cipher.encrypt(
@@ -246,4 +262,9 @@ export class MediaAuth {
   async logout(token: string): Promise<void> {
     await this.store.revokeSession(tokenHash(token));
   }
+}
+
+function permissionSnapshot(access: PlexServerAccess): PlexPermissionSnapshot {
+  const { serverToken: _token, ...snapshot } = access;
+  return snapshot;
 }

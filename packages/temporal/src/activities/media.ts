@@ -76,6 +76,12 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: MediaNetworkActivities = {
+  refreshMediaCatalog: (input) =>
+    withNetwork((activities) => activities.refreshMediaCatalog(input)),
+  expandCatalogRequests: (input) =>
+    withNetwork((activities) => activities.expandCatalogRequests(input)),
+  expandMediaRequest: (input) =>
+    withNetwork((activities) => activities.expandMediaRequest(input)),
   dispatchMediaOutbox: () =>
     withNetwork((activities) => activities.dispatchMediaOutbox()),
   sweepMediaWork: (input) =>

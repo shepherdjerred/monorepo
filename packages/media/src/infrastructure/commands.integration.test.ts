@@ -7,12 +7,16 @@ import { CredentialCipher, tokenHash } from "#application/security.ts";
 import { PrismaAuthStore } from "./auth-store.ts";
 import { randomBytes } from "node:crypto";
 import { PrismaNotificationApplication } from "./notification-service.ts";
+import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let app: PrismaMediaApplication;
 beforeAll(async () => {
   cluster = await startMediaTestPostgres();
-  app = new PrismaMediaApplication(cluster.database, { keepDays: 30 });
+  app = new PrismaMediaApplication(cluster.database, {
+    keepDays: 30,
+    serverMachineId: "fixture-server",
+  });
 }, 60_000);
 afterAll(async () => {
   if (cluster !== undefined) await cluster.close();
@@ -28,6 +32,17 @@ async function fixture(role: "owner" | "member" = "member") {
   });
   const media = await cluster.database.mediaItem.create({
     data: { kind: "movie", title: "Example" },
+  });
+  await cluster.database.plexIdentityMapping.create({
+    data: {
+      userId: actor.id,
+      serverMachineId: "fixture-server",
+      serverAccountId: actor.plexAccountId,
+      kind: "account",
+      permittedSectionIds: ["1", "2"],
+      permittedMediaKinds: ["movie", "series"],
+      verifiedAt: new Date(),
+    },
   });
   return { actor, media };
 }
@@ -190,6 +205,14 @@ test("series claims cover episodes, omit specials, and monitor future episodes b
     subtitleLanguages: ["en"],
     includeSpecials: false,
   });
+  if (result.requestId === undefined || result.operationId === undefined)
+    throw new Error("Missing coverage operation");
+  await createCoverageActivities({ db: cluster.database }).expandMediaRequest({
+    operationId: result.operationId,
+    requestId: result.requestId,
+    requestVersion: 0,
+    cursor: null,
+  });
   const claims = await cluster.database.mediaRequest.findMany({
     where: { userId: actor.id, active: true },
   });
@@ -277,6 +300,9 @@ test("server access revocation invalidates an existing session", async () => {
         throw new Error("Not used");
       },
       async resolveServerToken() {
+        return null;
+      },
+      async resolveServerAccess() {
         return null;
       },
       async refresh() {

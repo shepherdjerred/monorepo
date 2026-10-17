@@ -180,7 +180,12 @@ export class PinchTabSubtitleBrowser {
   }
 
   async close(tabId: string, signal?: AbortSignal): Promise<void> {
-    await this.post(`tabs/${encodeURIComponent(tabId)}/close`, {}, signal);
+    try {
+      await this.post(`tabs/${encodeURIComponent(tabId)}/close`, {}, signal);
+    } catch (error) {
+      if (!(error instanceof IntegrationError) || error.status !== 404)
+        throw error;
+    }
   }
 
   private async pageState(
@@ -231,6 +236,7 @@ export class PinchTabSubtitleBrowser {
       endpoint(this.config.baseUrl, path),
       {
         method: "POST",
+        mutation: true,
         headers: {
           Authorization: `Bearer ${this.config.token}`,
           "Content-Type": "application/json",

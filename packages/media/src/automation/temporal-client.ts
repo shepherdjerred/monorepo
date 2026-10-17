@@ -2,14 +2,20 @@ import {
   Client,
   Connection,
   WorkflowExecutionAlreadyStartedError,
+  WorkflowNotFoundError,
 } from "@temporalio/client";
 import type { WorkflowStarter } from "./store.ts";
+import type { MediaAutomationContext } from "./context.ts";
 
 /** A failed connection is not cached; committed outbox entries remain retryable. */
 export function createMediaWorkflowStarter(config: {
   address: string;
   namespace: string;
-}): { start: WorkflowStarter; close: () => Promise<void> } {
+}): {
+  start: WorkflowStarter;
+  describe: MediaAutomationContext["describeWorkflow"];
+  close: () => Promise<void>;
+} {
   let connection: Connection | null = null;
   let connecting: Promise<Connection> | null = null;
   async function getConnection(): Promise<Connection> {
@@ -26,6 +32,23 @@ export function createMediaWorkflowStarter(config: {
     }
   }
   return {
+    async describe(workflowId) {
+      const connected = await getConnection();
+      const client = new Client({
+        connection: connected,
+        namespace: config.namespace,
+      });
+      try {
+        const description = await connected.withDeadline(
+          Date.now() + 5000,
+          () => client.workflow.getHandle(workflowId).describe(),
+        );
+        return { runId: description.runId, status: description.status.name };
+      } catch (error) {
+        if (error instanceof WorkflowNotFoundError) return null;
+        throw error;
+      }
+    },
     async start(input) {
       const connected = await getConnection();
       const client = new Client({

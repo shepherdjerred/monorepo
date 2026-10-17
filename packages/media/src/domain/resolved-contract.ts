@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const VERIFIED_SOURCE_COMMITS: Readonly<Record<string, string>> = {
+  "radarr:6.4.4.10685": "a96bf7c3ecb23cb76993770727285dc17a613fbc",
+  "sonarr:4.0.20.3014": "cab419ade8ac7fcab5bf80394ee492abd35d5f5a",
+};
+
 const Integer = z.number().int();
 export const SourceQualitySchema = z.object({
   id: Integer.nonnegative(),

@@ -2,6 +2,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
+import { effectiveRequestWhere } from "./request-claims.ts";
 
 export async function validateAction(
   db: Prisma.TransactionClient,
@@ -13,8 +14,8 @@ export async function validateAction(
   if (media === null)
     throw new MediaError("media_not_found", "Media item does not exist", 404);
   if (actor.role !== "owner") {
-    const claim = await db.mediaRequest.findUnique({
-      where: { userId_mediaId: { userId: actor.id, mediaId } },
+    const claim = await db.mediaRequest.findFirst({
+      where: { userId: actor.id, mediaId, ...effectiveRequestWhere },
     });
     if (claim?.active !== true)
       throw new MediaError(
@@ -101,10 +102,36 @@ export async function sponsorClaim(
   const existing = await db.mediaRequest.findUnique({
     where: { userId_mediaId: { userId, mediaId: input.mediaId } },
   });
-  if (existing?.active === true) return;
-  await db.mediaRequest.upsert({
+  if (existing?.excluded === true)
+    throw new MediaError(
+      "request_excluded",
+      "Pack includes an explicitly cancelled episode",
+      409,
+    );
+  const sponsor = await db.mediaRequest.findUniqueOrThrow({
+    where: { id: requestId },
+    include: {
+      coverageSources: {
+        where: {
+          active: true,
+          rootRequest: { active: true, direct: true, excluded: false },
+        },
+        include: { rootRequest: true },
+      },
+    },
+  });
+  const roots = sponsor.direct
+    ? [sponsor]
+    : sponsor.coverageSources.map((source) => source.rootRequest);
+  if (roots.length === 0)
+    throw new MediaError(
+      "sponsor_inactive",
+      "Pack sponsor no longer has authority",
+      409,
+    );
+  const claim = await db.mediaRequest.upsert({
     where: { userId_mediaId: { userId, mediaId: input.mediaId } },
-    create: { userId, ...input, sponsorRequestId: requestId },
+    create: { userId, ...input, direct: false, sponsorRequestId: requestId },
     update: {
       active: true,
       subtitleLanguages: input.subtitleLanguages,
@@ -112,6 +139,24 @@ export async function sponsorClaim(
       version: { increment: 1 },
     },
   });
+  for (const root of roots) {
+    if (root.id === claim.id) continue;
+    await db.requestCoverage.upsert({
+      where: {
+        rootRequestId_mediaId: {
+          rootRequestId: root.id,
+          mediaId: input.mediaId,
+        },
+      },
+      create: {
+        rootRequestId: root.id,
+        requestId: claim.id,
+        mediaId: input.mediaId,
+        sourceVersion: root.version,
+      },
+      update: { active: true, sourceVersion: root.version },
+    });
+  }
 }
 
 export async function invalidateRetention(

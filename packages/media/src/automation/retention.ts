@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import type {
   MediaNetworkActivities,
@@ -32,7 +33,7 @@ const EvidenceSchema = z.object({ warningEventId: z.string() });
 const mediaInclude = {
   intent: true,
   requests: {
-    where: { active: true },
+    where: effectiveRequestWhere,
     include: { user: { include: { notificationPreference: true } } },
   },
   holds: true,
@@ -125,6 +126,7 @@ async function createWarning(
           userId: claim.userId,
           channel,
           state: "pending",
+          recoveryEpoch: epoch,
         },
       });
       await queueOperation(tx, {

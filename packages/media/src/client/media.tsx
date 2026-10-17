@@ -11,6 +11,7 @@ import {
   humanize,
   Loading,
   MediaLink,
+  Notice,
   PageTitle,
   Status,
 } from "./components.tsx";
@@ -56,6 +57,12 @@ export function MediaPage({ user }: { user: MediaUser }) {
       >
         <Status value={media.availability} />
       </PageTitle>
+      {media.catalogState === "pending" && (
+        <Notice>
+          Episode details are still loading. You can request this series now;
+          matching episodes will be included as the catalog finishes updating.
+        </Notice>
+      )}
       <div className="detail-columns">
         <section className="panel">
           <h2>In your library</h2>
@@ -145,6 +152,9 @@ export function MediaPage({ user }: { user: MediaUser }) {
           {media.children.map((child) => (
             <div className="list-row" key={child.id}>
               <MediaLink id={child.id} title={child.title} />
+              {child.catalogState === "pending" && (
+                <span className="helper">Episode details pending</span>
+              )}
               <Status value={child.availability} />
             </div>
           ))}

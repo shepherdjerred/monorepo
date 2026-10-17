@@ -11,6 +11,67 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const workflowsPath = new URL("media.ts", import.meta.url).pathname;
 
+test("whole-series expansion continues with the durable cursor after each bounded history", async () => {
+  const cursors: (string | null)[] = [];
+  let completed = 0;
+  await runScenario({
+    workflow: "expandMediaRequestWorkflow",
+    args: {
+      operationId: "operation",
+      requestId: "root",
+      requestVersion: 3,
+      cursor: null,
+    },
+    files: {},
+    network: {
+      expandMediaRequest: async (input) => {
+        expect(input.requestVersion).toBe(3);
+        cursors.push(input.cursor);
+        const page = input.cursor === null ? 0 : Number(input.cursor);
+        return {
+          processed: page === 40 ? 1 : 25,
+          nextCursor: page === 40 ? null : String(page + 1),
+        };
+      },
+      finishMediaOperation: async (input) => {
+        expect(input.status).toBe("completed");
+        completed++;
+      },
+    },
+  });
+  expect(cursors).toEqual([
+    null,
+    ...Array.from({ length: 40 }, (_, index) => String(index + 1)),
+  ]);
+  expect(completed).toBe(1);
+}, 60_000);
+
+test("subtitle cancellation checkpoints terminal cleanup after the browser wait", async () => {
+  const checkpoints: string[] = [];
+  await runScenario({
+    workflow: "acquireMediaSubtitlesWorkflow",
+    args: {
+      operationId: "subtitle-operation",
+      assetId: "asset",
+      language: "en",
+    },
+    expectFailure: true,
+    cancelOnTimer: true,
+    files: {},
+    network: {
+      findMediaSubtitles: async () => ({
+        status: "waiting",
+        subtitleId: null,
+        reason: "subtitle_browser_pending",
+      }),
+      finishMediaOperation: async (input) => {
+        checkpoints.push(input.operationId);
+      },
+    },
+  });
+  expect(checkpoints).toEqual(["subtitle-operation"]);
+}, 60_000);
+
 test.each(["failed", "cancelled"])(
   "terminal acquisition %s records a resumable operation",
   async (mode) => {
@@ -65,13 +126,16 @@ async function runScenario(input: {
     taskQueue: TASK_QUEUES.MEDIA_NETWORK,
     activities: input.network,
   });
-  const fileWorker = await Worker.create({
-    connection: environment.nativeConnection,
-    taskQueue: TASK_QUEUES.MEDIA_FILES,
-    activities: input.files,
-  });
+  const fileWorker =
+    Object.keys(input.files).length === 0
+      ? null
+      : await Worker.create({
+          connection: environment.nativeConnection,
+          taskQueue: TASK_QUEUES.MEDIA_FILES,
+          activities: input.files,
+        });
   const networkRun = networkWorker.run();
-  const fileRun = fileWorker.run();
+  const fileRun = fileWorker?.run() ?? Promise.resolve();
   try {
     const handle = await environment.client.workflow.start(input.workflow, {
       workflowId: crypto.randomUUID(),
@@ -85,6 +149,9 @@ async function runScenario(input: {
     const [result] = await Promise.all([
       workflowWorker.runUntil(async () => {
         try {
+          // Keep test-server time locked until cancellation reaches a real timer.
+          // Awaiting result first auto-skips the timer and races Activity completion.
+          if (input.cancelOnTimer === true) await cancellation;
           return await handle.result();
         } catch (error) {
           if (!input.expectFailure || !(error instanceof WorkflowFailedError))
@@ -99,7 +166,7 @@ async function runScenario(input: {
     return result;
   } finally {
     networkWorker.shutdown();
-    fileWorker.shutdown();
+    fileWorker?.shutdown();
     await Promise.all([networkRun, fileRun]);
     await environment.teardown();
   }

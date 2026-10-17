@@ -11,6 +11,9 @@ import { StoredCandidateSchema } from "./providers.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { loadProfile } from "./acquisition-candidates.ts";
+import { authorizedSubmission } from "./reconciliation/submission.ts";
+import { lockMedia } from "#infrastructure/locks.ts";
+import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
 const ProfileSnapshotSchema = z.object({
   profileId: z.string(),
@@ -33,11 +36,13 @@ export async function validAttempt(
     where: { mediaId: { in: attempt.mediaIds } },
     include: { profile: true },
   });
-  const claims = await context.db.mediaRequest.count({
-    where: { mediaId: { in: attempt.mediaIds }, active: true },
+  const claims = await context.db.mediaRequest.findMany({
+    where: { mediaId: { in: attempt.mediaIds }, ...effectiveRequestWhere },
+    select: { mediaId: true },
+    distinct: ["mediaId"],
   });
   if (
-    claims === 0 ||
+    claims.length !== attempt.mediaIds.length ||
     intents.length !== attempt.mediaIds.length ||
     intents.some(
       (intent) =>
@@ -147,6 +152,24 @@ export async function submit(
     where: { id: candidate.providerId },
   });
   await serializable(context.db, async (tx) => {
+    await lockMedia(tx, attempt.mediaIds);
+    await lockEffectiveRequests(tx, attempt.mediaIds);
+    const activeClaims = await tx.mediaRequest.findMany({
+      where: { mediaId: { in: attempt.mediaIds }, ...effectiveRequestWhere },
+      distinct: ["mediaId"],
+      select: { mediaId: true },
+    });
+    const currentIntents = await tx.mediaIntent.findMany({
+      where: { mediaId: { in: attempt.mediaIds } },
+    });
+    const canProject =
+      activeClaims.length === attempt.mediaIds.length &&
+      currentIntents.every(
+        (intent) =>
+          intent.monitoring &&
+          intent.desiredPresence &&
+          intent.intentionallyRemovedAt === null,
+      );
     const torrent = await tx.torrent.upsert({
       where: { infoHash: candidate.infoHash },
       create: {
@@ -163,7 +186,10 @@ export async function submit(
     if (!torrent.owned) throw new Error("Cannot adopt unowned torrent");
     await tx.acquisitionAttempt.update({
       where: { id: attempt.id },
-      data: { torrentId: torrent.id, state: "downloading" },
+      data: {
+        torrentId: torrent.id,
+        state: canProject ? "downloading" : "cancelled",
+      },
     });
     await queueOperation(tx, {
       key: `seed:${torrent.id}`,
@@ -171,10 +197,11 @@ export async function submit(
       targetId: torrent.id,
       payload: { torrentId: torrent.id },
     });
-    await tx.mediaItem.updateMany({
-      where: { id: { in: attempt.mediaIds } },
-      data: { availability: "downloading" },
-    });
+    if (canProject)
+      await tx.mediaItem.updateMany({
+        where: { id: { in: attempt.mediaIds } },
+        data: { availability: "downloading" },
+      });
   });
   return { status: "submitted", reason: null };
 }
@@ -243,21 +270,40 @@ async function submitNew(
   if (claimed.count !== 1) return "submission_outcome_unknown";
   try {
     const savePath = path.join(context.downloadRoot, "media", attempt.id);
-    if (candidate.download.kind === "magnet")
-      await context.qbittorrent.submit({
-        operationId: attempt.operationId,
-        hash: candidate.infoHash,
-        magnet: candidate.download.value,
-        savePath,
+    const authorized = await authorizedSubmission(
+      context,
+      attempt,
+      async (signal) => {
+        if (candidate.download.kind === "magnet")
+          await context.qbittorrent.submit(
+            {
+              operationId: attempt.operationId,
+              hash: candidate.infoHash,
+              magnet: candidate.download.value,
+              savePath,
+            },
+            signal,
+          );
+        else {
+          if (bytes === null) throw new Error("Prepared torrent bytes missing");
+          await context.qbittorrent.submitTorrent(
+            {
+              operationId: attempt.operationId,
+              hash: candidate.infoHash,
+              bytes,
+              savePath,
+            },
+            signal,
+          );
+        }
+      },
+    );
+    if (!authorized) {
+      await context.db.acquisitionAttempt.updateMany({
+        where: { id: attempt.id, state: "submitting" },
+        data: { state: "reserved" },
       });
-    else {
-      if (bytes === null) throw new Error("Prepared torrent bytes missing");
-      await context.qbittorrent.submitTorrent({
-        operationId: attempt.operationId,
-        hash: candidate.infoHash,
-        bytes,
-        savePath,
-      });
+      return "submission_authority_changed";
     }
     return null;
   } catch (error) {
@@ -269,3 +315,4 @@ async function submitNew(
     return error.kind;
   }
 }
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";

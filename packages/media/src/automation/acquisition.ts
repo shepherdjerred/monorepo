@@ -54,6 +54,11 @@ async function reconcile(
       attemptId: null,
       reason: "episodes_reconcile_independently",
     };
+  if (
+    intent.media.airDate !== null &&
+    intent.media.airDate.getTime() > Date.now()
+  )
+    return { status: "waiting", attemptId: null, reason: "not_yet_aired" };
   const runtime = await requireActiveRuntime(context.db);
   if (!runtime.active || !(await context.gates.acquisition()))
     return {
