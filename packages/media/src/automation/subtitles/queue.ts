@@ -77,7 +77,7 @@ export async function queueMediaSubtitleTargets(
     where: { id: "singleton" },
   });
   const coverage = await tx.assetCoverage.findMany({
-    where: { mediaId, current: true },
+    where: { mediaId, current: true, edition: "default" },
   });
   for (const item of coverage)
     await queueCurrentSubtitleTargets(tx, {

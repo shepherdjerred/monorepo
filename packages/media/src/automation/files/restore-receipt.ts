@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import { z } from "zod";
 import {
   FileGuardError,
@@ -38,6 +39,7 @@ export async function recordRestoreReceipt(input: {
     throw new FileGuardError("record_ownership_unconfirmed");
   const assets = [];
   for (const entry of plan) {
+    await assertDefaultPhysicalAsset(tx, entry.assetId);
     const asset = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: entry.assetId },
       include: { coverage: { where: { current: true } } },
@@ -78,7 +80,7 @@ export async function assertRestoredGenerations(
     .object({ restoredGenerations: z.record(z.string(), z.number().int()) })
     .parse(evidence);
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: mediaIds } },
+    where: { mediaId: { in: mediaIds }, edition: "default" },
   });
   if (
     intents.length !== mediaIds.length ||

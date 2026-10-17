@@ -16,7 +16,7 @@ export async function measureResolvedEvidence(input: {
 }): Promise<void> {
   const { context, measured, filename } = input;
   const intents = await context.db.mediaIntent.findMany({
-    where: { mediaId: { in: [...measured.mediaIds] } },
+    where: { mediaId: { in: [...measured.mediaIds] }, edition: "default" },
     include: { profile: true, media: true },
   });
   for (const intent of intents) {

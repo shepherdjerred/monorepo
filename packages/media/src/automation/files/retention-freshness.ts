@@ -1,3 +1,4 @@
+import { assertDefaultFileEdition } from "#automation/files/editions/guard.ts";
 import { setTimeout } from "node:timers/promises";
 import { z } from "zod";
 import {
@@ -44,6 +45,7 @@ export async function awaitRetentionFreshness(
     const decision = await context.db.retentionDecision.findUniqueOrThrow({
       where: { id: input.decisionId },
     });
+    assertDefaultFileEdition(decision.edition);
     if (decision.state === completeState) return;
     if (decision.state !== expectedState)
       throw new FileGuardError("decision_obsolete");
@@ -68,7 +70,7 @@ async function assertCurrentIntents(
   epoch: number,
 ): Promise<void> {
   const intents = await context.db.mediaIntent.findMany({
-    where: { mediaId: { in: [...generations.keys()] } },
+    where: { mediaId: { in: [...generations.keys()] }, edition: "default" },
   });
   if (
     intents.length !== generations.size ||

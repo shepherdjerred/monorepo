@@ -1,3 +1,4 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
 import { z } from "zod";
 import { RemovalConfirmationSchema } from "#shared/contract.ts";
 import { FileGuardError, type Transaction } from "./types.ts";
@@ -46,7 +47,7 @@ export async function assertOwnerRemoval(input: {
   const offset = purge ? 1 : 0;
   const media = await tx.mediaItem.findMany({
     where: { id: { in: ids } },
-    include: { intent: true },
+    include: { intents: { where: { edition: "default" } } },
   });
   if (
     media.length !== ids.length ||
@@ -55,8 +56,8 @@ export async function assertOwnerRemoval(input: {
       return (
         snapshot === undefined ||
         item.version !== snapshot.version + offset ||
-        item.intent?.generation !== snapshot.generation ||
-        item.intent.desiredPresence
+        defaultIntent(item.intents)?.generation !== snapshot.generation ||
+        defaultIntent(item.intents)?.desiredPresence !== false
       );
     })
   )
@@ -82,7 +83,7 @@ export async function assertOwnerRemoval(input: {
     throw new FileGuardError("owner_asset_confirmation_obsolete");
   if (
     (await tx.acquisitionReservation.findFirst({
-      where: { mediaId: { in: ids } },
+      where: { mediaId: { in: ids }, edition: "default" },
     })) !== null
   )
     throw new FileGuardError("acquisition_active");

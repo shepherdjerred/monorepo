@@ -31,10 +31,10 @@ export async function renderMediaMetrics(database: Database): Promise<string> {
     SELECT COUNT(*) AS required, COUNT(w."userId") FILTER (WHERE w."observedAt" <= CURRENT_TIMESTAMP) AS observed, MIN(w."observedAt") FILTER (WHERE w."observedAt" <= CURRENT_TIMESTAMP) AS oldest
     FROM "MediaRequest" r JOIN "MediaUser" u ON u.id = r."userId"
     JOIN "MediaItem" m ON m.id = r."mediaId"
-    LEFT JOIN "WatchState" w ON w."userId" = r."userId" AND w."mediaId" = r."mediaId"
-    WHERE r.active = true AND r.excluded = false AND (r.direct = true OR EXISTS (
+    LEFT JOIN "WatchState" w ON w."userId" = r."userId" AND w."mediaId" = r."mediaId" AND w.edition = r.edition
+    WHERE r.edition = 'default' AND r.active = true AND r.excluded = false AND (r.direct = true OR EXISTS (
       SELECT 1 FROM "RequestCoverage" c JOIN "MediaRequest" root ON root.id=c."rootRequestId"
-      WHERE c."requestId"=r.id AND c.active=true AND root.active=true AND root.excluded=false AND root.direct=true
+      WHERE c."requestId"=r.id AND c.edition=r.edition AND root.edition=c.edition AND c.active=true AND root.active=true AND root.excluded=false AND root.direct=true
     )) AND u.role != 'owner' AND m.availability = 'available'
   `,
     );

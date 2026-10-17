@@ -1,6 +1,6 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { lockNativeSubtitleRows } from "#automation/native-subtitles/snapshot.ts";
@@ -31,7 +31,7 @@ export async function lockNativeScope(
   },
 ) {
   const ids = scope.media.map((row) => row.id);
-  await lockMedia(tx, ids);
+  await lockDefaultMedia(tx, ids);
   await lockEffectiveRequests(tx, ids);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
   const assets = [

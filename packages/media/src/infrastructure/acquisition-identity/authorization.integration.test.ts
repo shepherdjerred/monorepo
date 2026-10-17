@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
@@ -19,7 +21,7 @@ test.each(["restricted", "demoted", "section", "source"])(
     try {
       const preview = await f.review();
       const before = await db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.files.media.id },
+        where: targetWhere(defaultScope(f.files.media.id)),
       });
       if (kind === "restricted" || kind === "demoted")
         await db.mediaUser.update({
@@ -54,7 +56,7 @@ test.each(["restricted", "demoted", "section", "source"])(
       ).rejects.toThrow();
       expect(
         await db.mediaIntent.findUniqueOrThrow({
-          where: { mediaId: f.files.media.id },
+          where: targetWhere(defaultScope(f.files.media.id)),
         }),
       ).toEqual(before);
       expect(
@@ -103,7 +105,7 @@ test("season pack cannot authorize one leaf of twelve through owner or automatic
       },
     });
     const intent = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.files.media.id },
+      where: targetWhere(defaultScope(f.files.media.id)),
     });
     const operation = await db.operation.create({
       data: {

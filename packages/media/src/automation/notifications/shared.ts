@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { ItemSchema } from "./message.ts";
 import { queueDelivery } from "./events.ts";
@@ -20,6 +21,7 @@ export async function queueSharedPublication(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  assertDefaultEdition(attempt.edition);
   for (const kind of ["media_available", "media_upgraded"] as const) {
     if (kind === "media_upgraded" && !settings.upgrades) continue;
     const events = await tx.applicationEvent.findMany({

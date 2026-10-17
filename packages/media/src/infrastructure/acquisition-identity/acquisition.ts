@@ -140,7 +140,7 @@ async function assertReviewedGenerations(
     .object({ mediaId: z.uuid(), generation: z.number().int() })
     .parse(operation.payload);
   const intents = await tx.mediaIntent.findMany({
-    where: { mediaId: { in: decision.coverage } },
+    where: { edition: "default", mediaId: { in: decision.coverage } },
   });
   if (
     decision.reviewedMedia.some(

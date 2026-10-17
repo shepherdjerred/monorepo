@@ -54,6 +54,7 @@ export async function mediaVisibility(
     : await tx.mediaRequest.findMany({
         where: {
           ...effectiveRequestWhere,
+          edition: "default",
           mediaId: { in: mediaIds },
           userId: input.userId,
         },
@@ -64,6 +65,7 @@ export async function mediaVisibility(
   const requestedMediaIds =
     claims === null ? mediaIds : claims.map((claim) => claim.mediaId);
   const attemptWhere: Prisma.AcquisitionAttemptWhereInput = {
+    edition: "default",
     mediaIds: { hasSome: requestedMediaIds },
   };
   const attempts = await tx.acquisitionAttempt.findMany({
@@ -78,7 +80,13 @@ export async function mediaVisibility(
         {
           assets: {
             some: {
-              coverage: { some: { mediaId: { in: mediaIds }, current: true } },
+              coverage: {
+                some: {
+                  mediaId: { in: mediaIds },
+                  current: true,
+                  edition: "default",
+                },
+              },
             },
           },
         },
@@ -99,7 +107,9 @@ export async function mediaVisibility(
           .map((item) => item.id),
       },
       current: true,
+      edition: "default",
       asset: {
+        edition: "default",
         state: "published",
         owned: true,
         ownershipEpoch: input.epoch,

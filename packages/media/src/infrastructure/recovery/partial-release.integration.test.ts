@@ -1,27 +1,16 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { recoveryHarness, releaseInput } from "./test-support.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 const { fixture } = recoveryHarness();
 test("selected completed-root leaves reconcile without changing outside intent, claims, pins or future options", async () => {
-  const f = await fixture();
-  const series = await f.db.mediaItem.create({
-    data: {
-      kind: "series",
-      title: "Shared series",
-      intent: { create: { automationEpoch: 3 } },
-    },
-  });
-  await f.db.mediaItem.update({
-    where: { id: f.media.id },
-    data: {
-      kind: "episode",
-      parentId: series.id,
-      seasonNumber: 1,
-      episodeNumber: 1,
-      externalIds: { plexSectionId: "2" },
-    },
-  });
+  const f = await fixture({ kind: "episode" });
+  const series = f.series;
+  if (series === null) throw new Error("Series fixture missing");
+  await createTestDefaultTarget(f.db, series.id, { automationEpoch: 3 });
   const outside = await f.db.mediaItem.create({
     data: {
       kind: "episode",
@@ -30,9 +19,9 @@ test("selected completed-root leaves reconcile without changing outside intent, 
       seasonNumber: 1,
       episodeNumber: 2,
       externalIds: { plexSectionId: "2" },
-      intent: { create: { automationEpoch: -1 } },
     },
   });
+  await createTestDefaultTarget(f.db, outside.id, { automationEpoch: -1 });
   const root = await f.db.mediaRequest.create({
     data: {
       userId: f.member.id,
@@ -65,7 +54,7 @@ test("selected completed-root leaves reconcile without changing outside intent, 
     data: { userId: f.member.id, mediaId: outside.id, isPin: true },
   });
   const outsideIntent = await f.db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId: outside.id },
+    where: targetWhere(defaultScope(outside.id)),
   });
   const review = await f.prepare();
   expect(review.scope.blockers).toEqual([]);
@@ -95,7 +84,7 @@ test("selected completed-root leaves reconcile without changing outside intent, 
   ).toEqual(pin);
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: outside.id },
+      where: targetWhere(defaultScope(outside.id)),
     }),
   ).toEqual(outsideIntent);
   expect(
@@ -121,12 +110,18 @@ test("selected completed-root leaves reconcile without changing outside intent, 
   ).toMatchObject({ direct: true, active: false, excluded: true });
   expect(
     await f.db.mediaRequest.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.member.id, mediaId: future.id } },
+      where: {
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: f.member.id,
+          mediaId: future.id,
+        },
+      },
     }),
   ).toMatchObject({ active: true, excluded: false, direct: false });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: outside.id },
+      where: targetWhere(defaultScope(outside.id)),
     }),
   ).toEqual(outsideIntent);
 });

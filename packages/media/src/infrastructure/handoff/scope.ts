@@ -1,3 +1,6 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import path from "node:path";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -72,9 +75,19 @@ async function projectScope(
 ) {
   const { input, manifest, report, selected } = options;
   const mediaIds = [...new Set(selected.flatMap((entry) => entry.mediaIds))];
+  await lockDefaultScopes(
+    tx,
+    mediaIds.map((id) => defaultScope(id)),
+    {
+      createMissing: true,
+    },
+  );
   const media = await tx.mediaItem.findMany({
     where: { id: { in: mediaIds } },
-    include: { intent: true, parent: { include: { parent: true } } },
+    include: {
+      intents: { where: { edition: "default" } },
+      parent: { include: { parent: true } },
+    },
   });
   if (media.length !== mediaIds.length)
     throw conflict("handoff_catalog_changed");
@@ -104,7 +117,7 @@ async function projectScope(
     return {
       mediaId: item.id,
       version: item.version,
-      generation: item.intent?.generation ?? null,
+      generation: defaultIntent(item.intents)?.generation ?? null,
       profileId: profile?.id ?? null,
       profileVersion: profile?.version ?? null,
       monitored: record?.kind === "media" && record.monitored,

@@ -2,7 +2,8 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { ManualSubtitle } from "#shared/admin.ts";
 import { validateSubtitle } from "#integrations/subtitle-validation.ts";
 import { MediaError } from "#application/errors.ts";
-import { lockMedia } from "./locks.ts";
+import { lockDefaultScopes } from "./editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 export function parseManualSubtitle(input: ManualSubtitle, bytes: Uint8Array) {
   try {
@@ -33,20 +34,34 @@ export async function lockSubtitleAsset(
   });
   if (before === null)
     throw new MediaError("asset_not_found", "Video asset does not exist", 404);
+  if (before.edition !== "default")
+    throw new MediaError(
+      "edition_not_available",
+      "This edition is not available for subtitle changes",
+      409,
+    );
   const ids = before.coverage.map((coverage) => coverage.mediaId);
-  await lockMedia(tx, ids);
+  await lockDefaultScopes(
+    tx,
+    ids.map((id) => defaultScope(id)),
+    { createMissing: false },
+  );
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: input.assetId },
     include: { coverage: { where: { current: true } } },
   });
   if (
     !asset.owned ||
+    asset.edition !== "default" ||
     asset.state !== "published" ||
     asset.checksum !== input.expectedChecksum ||
     asset.version !== input.expectedAssetVersion ||
     ids.length === 0 ||
     asset.coverage.length !== ids.length ||
-    asset.coverage.some((coverage) => !ids.includes(coverage.mediaId))
+    asset.coverage.some(
+      (coverage) =>
+        coverage.edition !== "default" || !ids.includes(coverage.mediaId),
+    )
   )
     throw new MediaError(
       "asset_version_conflict",

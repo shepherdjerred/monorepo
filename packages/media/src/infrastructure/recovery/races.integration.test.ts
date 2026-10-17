@@ -1,8 +1,11 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { recoveryHarness, releaseInput } from "./test-support.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 const { fixture } = recoveryHarness();
 async function blocked(db: Database, table: string) {
@@ -63,7 +66,7 @@ test("an in-flight ordinary Keep completes before waiting recovery release, whic
   await expect(applying).rejects.toThrow("changed");
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
   expect(
@@ -74,37 +77,15 @@ test("an in-flight ordinary Keep completes before waiting recovery release, whic
 });
 
 test("root cancellation is bound even when its media is outside the selected physical leaves", async () => {
-  const f = await fixture();
-  const rootMedia = await f.db.mediaItem.create({
-    data: {
-      kind: "series",
-      title: "Root",
-      intent: { create: { automationEpoch: 3 } },
-    },
-  });
+  const f = await fixture({ kind: "episode", nestedSeason: true });
+  const rootMedia = f.series;
+  if (rootMedia === null) throw new Error("Series fixture missing");
+  await createTestDefaultTarget(f.db, rootMedia.id, { automationEpoch: 3 });
   const root = await f.db.mediaRequest.create({
     data: {
       userId: f.member.id,
       mediaId: rootMedia.id,
       coverageCompletedAt: new Date(),
-    },
-  });
-  const season = await f.db.mediaItem.create({
-    data: {
-      kind: "season",
-      title: "Season one",
-      parentId: rootMedia.id,
-      seasonNumber: 1,
-    },
-  });
-  await f.db.mediaItem.update({
-    where: { id: f.media.id },
-    data: {
-      kind: "episode",
-      parentId: season.id,
-      seasonNumber: 1,
-      episodeNumber: 1,
-      externalIds: { plexSectionId: "2" },
     },
   });
   await f.db.requestCoverage.create({
@@ -142,7 +123,7 @@ test("root cancellation is bound even when its media is outside the selected phy
       initial.id,
       releaseInput(review),
     );
-    await blocked(f.db, "MediaRequest");
+    await blocked(f.db, "MediaItem");
   } finally {
     release.resolve(undefined);
     await blocker;
@@ -152,7 +133,7 @@ test("root cancellation is bound even when its media is outside the selected phy
   await expect(applying).rejects.toThrow("changed");
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
 });

@@ -5,6 +5,8 @@ import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
 import { authorizeRequester } from "./requester-authorization.ts";
+import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
+import { readDefaultTarget } from "./editions/targets.ts";
 
 /** Caller locks media/claims and runtime first; retain current identity through commit. */
 export async function authorizeRenewal(
@@ -53,7 +55,8 @@ export async function validateAction(
         403,
       );
   }
-  if (input.action === "restore" && media.availability !== "quarantined")
+  const target = await readDefaultTarget(db, defaultScope(mediaId));
+  if (input.action === "restore" && target.availability !== "quarantined")
     throw new MediaError(
       "not_quarantined",
       "Only quarantined media can be restored",
@@ -83,13 +86,15 @@ export async function applyHold(
 ): Promise<void> {
   if (options.action === "unpin") {
     await db.retentionHold.deleteMany({
-      where: { userId: actor.id, mediaId, isPin: true },
+      where: { userId: actor.id, ...defaultScope(mediaId), isPin: true },
     });
     return;
   }
   if (options.action !== "keep" && options.action !== "pin") return;
   const previous = await db.retentionHold.findUnique({
-    where: { userId_mediaId: { userId: actor.id, mediaId } },
+    where: {
+      userId_mediaId_edition: { userId: actor.id, ...defaultScope(mediaId) },
+    },
   });
   const until = new Date(Date.now() + options.keepDays * 86_400_000);
   const isPin = options.action === "pin" || previous?.isPin === true;
@@ -101,7 +106,9 @@ export async function applyHold(
       ? previousUntil
       : until;
   await db.retentionHold.upsert({
-    where: { userId_mediaId: { userId: actor.id, mediaId } },
+    where: {
+      userId_mediaId_edition: { userId: actor.id, ...defaultScope(mediaId) },
+    },
     create: { userId: actor.id, mediaId, isPin, until: isPin ? null : until },
     update: { isPin, until: isPin ? null : effectiveUntil },
   });
@@ -119,6 +126,14 @@ export function actionIntentChange(action: MediaAction["action"]) {
     : {};
 }
 
+export function initialActionIntent(action: MediaAction["action"]) {
+  return {
+    desiredPresence: action !== "remove",
+    monitoring: action !== "remove",
+    intentionallyRemovedAt: action === "remove" ? new Date() : null,
+  };
+}
+
 export function actionCommand(action: MediaAction["action"]): string {
   if (action === "remove") return "retain_media";
   if (action === "restore") return "restore_media";
@@ -132,7 +147,9 @@ export async function sponsorClaim(
   input: { mediaId: string; subtitleLanguages: string[] },
 ): Promise<void> {
   const existing = await db.mediaRequest.findUnique({
-    where: { userId_mediaId: { userId, mediaId: input.mediaId } },
+    where: {
+      userId_mediaId_edition: { userId, ...defaultScope(input.mediaId) },
+    },
   });
   if (existing?.excluded === true)
     throw new MediaError(
@@ -145,13 +162,20 @@ export async function sponsorClaim(
     include: {
       coverageSources: {
         where: {
+          edition: "default",
           active: true,
-          rootRequest: { active: true, direct: true, excluded: false },
+          rootRequest: {
+            edition: "default",
+            active: true,
+            direct: true,
+            excluded: false,
+          },
         },
         include: { rootRequest: true },
       },
     },
   });
+  assertDefaultEdition(sponsor.edition);
   const roots = sponsor.direct
     ? [sponsor]
     : sponsor.coverageSources.map((source) => source.rootRequest);
@@ -162,7 +186,9 @@ export async function sponsorClaim(
       409,
     );
   const claim = await db.mediaRequest.upsert({
-    where: { userId_mediaId: { userId, mediaId: input.mediaId } },
+    where: {
+      userId_mediaId_edition: { userId, ...defaultScope(input.mediaId) },
+    },
     create: { userId, ...input, direct: false, sponsorRequestId: requestId },
     update: {
       active: true,
@@ -198,6 +224,7 @@ export async function invalidateRetention(
   await db.retentionDecision.updateMany({
     where: {
       mediaId,
+      edition: "default",
       state: { in: ["eligible", "warning_pending", "grace_period"] },
     },
     data: { state: "cancelled", version: { increment: 1 } },

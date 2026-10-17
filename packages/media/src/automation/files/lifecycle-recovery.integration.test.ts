@@ -1,3 +1,6 @@
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { access, readFile, rm, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
@@ -16,8 +19,21 @@ afterAll(async () => {
   for (const directory of directories)
     await rm(directory, { recursive: true, force: true });
 });
-async function fixture() {
-  const result = await fileFixture(cluster.database);
+async function fixture(episode = false) {
+  const series = episode
+    ? await cluster.database.mediaItem.create({
+        data: {
+          kind: "series",
+          title: "Coastlines",
+          year: 2026,
+          tmdbId: Math.floor(Math.random() * 1_000_000_000),
+        },
+      })
+    : null;
+  const result = await fileFixture(
+    cluster.database,
+    series === null ? undefined : { seriesId: series.id },
+  );
   directories.push(result.directory);
   return result;
 }
@@ -27,30 +43,37 @@ async function episodePack(
   acquired: Awaited<ReturnType<typeof f.acquisition>>,
 ) {
   const db = cluster.database;
-  const series = await db.mediaItem.create({
-    data: { kind: "series", title: "Coastlines", year: 2026, tmdbId: 1234 },
-  });
-  await db.mediaItem.update({
-    where: { id: f.media.id },
-    data: {
-      kind: "episode",
-      parentId: series.id,
-      seasonNumber: 1,
-      episodeNumber: 1,
-    },
-  });
+  const seriesId = f.media.parentId;
+  if (seriesId === null) throw new Error("Episode fixture has no series");
   const second = await db.mediaItem.create({
     data: {
       kind: "episode",
-      parentId: series.id,
+      parentId: seriesId,
       title: "Second Episode",
       seasonNumber: 1,
       episodeNumber: 2,
-      intent: { create: { profileId: f.profile.id, automationEpoch: 0 } },
-      requests: {
-        create: { userId: f.user.id, sponsorRequestId: f.request.id },
-      },
     },
+  });
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(second.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(second.id)),
+      data: {
+        profileId: f.profile.id,
+        automationEpoch: 0,
+        desiredPresence: true,
+        monitoring: true,
+      },
+    });
+    await tx.mediaRequest.create({
+      data: {
+        mediaId: second.id,
+        userId: f.user.id,
+        sponsorRequestId: f.request.id,
+      },
+    });
   });
   const names = ["Coastlines.S01E01.mkv", "Coastlines.S01E02.mkv"];
   for (const name of names)
@@ -80,7 +103,7 @@ async function episodePack(
 }
 
 test("mixed pack rollback restores old playback and quarantines first publications across an interruption", async () => {
-  const f = await fixture();
+  const f = await fixture(true);
   const original = await f.published();
   const acquired = await f.acquisition("Improved episode content");
   const second = await episodePack(f, acquired);
@@ -187,30 +210,53 @@ test("mixed pack rollback restores old playback and quarantines first publicatio
 });
 
 test("concurrent sibling restore operations receive complete shared-file receipts without another filesystem move", async () => {
-  const f = await fixture();
+  const f = await fixture(true);
   const original = await f.published();
   const retention = await f.retention();
   const timestamp = f.context.now?.();
   if (timestamp === undefined) throw new Error("Fixture clock missing");
   const second = await cluster.database.mediaItem.create({
     data: {
-      kind: "movie",
+      kind: "episode",
+      parentId: f.media.parentId,
+      seasonNumber: 1,
+      episodeNumber: 2,
       title: "Shared part",
       availability: "available",
-      intent: { create: { profileId: f.profile.id, automationEpoch: 0 } },
-      requests: { create: { userId: f.user.id } },
-      watchStates: {
-        create: {
-          userId: f.user.id,
-          watched: true,
-          observedAt: timestamp,
-          source: "fixture",
-        },
-      },
-      assets: {
-        create: { assetId: original.entry.assetId, current: true },
-      },
     },
+  });
+  await cluster.database.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(second.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(second.id)),
+      data: {
+        profileId: f.profile.id,
+        automationEpoch: 0,
+        desiredPresence: true,
+        monitoring: true,
+      },
+    });
+    await tx.mediaRequest.create({
+      data: { mediaId: second.id, userId: f.user.id },
+    });
+    await tx.watchState.create({
+      data: {
+        mediaId: second.id,
+        userId: f.user.id,
+        watched: true,
+        observedAt: timestamp,
+        source: "fixture",
+      },
+    });
+    await tx.assetCoverage.create({
+      data: {
+        mediaId: second.id,
+        assetId: original.entry.assetId,
+        current: true,
+      },
+    });
   });
   const warning = await cluster.database.applicationEvent.create({
     data: {
@@ -250,7 +296,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
   const operations = [];
   for (const mediaId of [f.media.id, second.id]) {
     const intent = await cluster.database.mediaIntent.update({
-      where: { mediaId },
+      where: targetWhere(defaultScope(mediaId)),
       data: { generation: { increment: 1 } },
     });
     const operation = await cluster.database.operation.create({
@@ -294,7 +340,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
   }
   expect(await readFile(asset.path, "utf8")).toBe(original.content);
   const newerIntent = await cluster.database.mediaIntent.update({
-    where: { mediaId: second.id },
+    where: targetWhere(defaultScope(second.id)),
     data: { generation: { increment: 1 } },
   });
   const laterOperation = await cluster.database.operation.create({
@@ -328,7 +374,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
     status: "restored",
   });
   await cluster.database.mediaIntent.update({
-    where: { mediaId: second.id },
+    where: targetWhere(defaultScope(second.id)),
     data: { generation: { increment: 1 }, desiredPresence: false },
   });
   expect(await activities.restoreMediaFiles(first)).toEqual({

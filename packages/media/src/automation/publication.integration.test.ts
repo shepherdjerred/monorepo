@@ -1,11 +1,13 @@
 import { expect, test } from "vitest";
 import { createPublicationActivities } from "./publication.ts";
 import { automationTestHarness } from "#testing/automation.ts";
+import { publicationSeries } from "./reconciliation/publication.test-support.ts";
 const { database, context, fixture } = automationTestHarness();
 test.each(["acquisition", "restore"])(
   "Plex %s publication verifies all episodes sharing one file",
   async (mode) => {
     const data = await fixture();
+    const series = await publicationSeries(database(), data.media.id);
     await database().mediaItem.update({
       where: { id: data.media.id },
       data: {
@@ -20,7 +22,8 @@ test.each(["acquisition", "restore"])(
       data: {
         kind: "episode",
         title: "Second",
-        intent: { create: { automationEpoch: 0 } },
+        parentId: series.id,
+        intents: { create: { automationEpoch: 0, editionRootId: series.id } },
         seasonNumber: 1,
         episodeNumber: 2,
         externalIds: { seriesTmdb: 999 },
@@ -34,6 +37,7 @@ test.each(["acquisition", "restore"])(
         checksum: "abc",
         owned: true,
         ownershipEpoch: 0,
+        editionRootId: series.id,
         properties: {},
         state: "published",
         coverage: {
@@ -142,6 +146,12 @@ test.each(["acquisition", "restore"])(
         });
       throw new Error("Unexpected Plex request");
     });
+    const priorIntents = await database().mediaIntent.findMany({
+      where: {
+        mediaId: { in: [data.media.id, second.id] },
+        edition: "default",
+      },
+    });
     expect(
       mode === "restore"
         ? await createPublicationActivities(ctx).publishRestoredMedia(
@@ -160,6 +170,22 @@ test.each(["acquisition", "restore"])(
         },
       }),
     ).toBe(2);
+    const currentIntents = await database().mediaIntent.findMany({
+      where: {
+        mediaId: { in: [data.media.id, second.id] },
+        edition: "default",
+      },
+    });
+    for (const prior of priorIntents) {
+      expect(
+        currentIntents.find((intent) => intent.mediaId === prior.mediaId),
+      ).toMatchObject({
+        availability: "available",
+        generation: prior.generation,
+        version: prior.version,
+        automationEpoch: prior.automationEpoch,
+      });
+    }
     if (mode === "restore")
       expect(
         await database().operation.findUnique({
@@ -186,6 +212,7 @@ test("a correct Plex path with the wrong canonical movie identity stays unavaila
       sizeBytes: 1000n,
       owned: true,
       ownershipEpoch: 0,
+      editionRootId: data.media.id,
       properties: {},
       state: "published",
       coverage: { create: { mediaId: data.media.id, current: true } },
@@ -250,6 +277,7 @@ test("Plex verification cannot mark a concurrently quarantined asset available",
       checksum: "abc",
       owned: true,
       ownershipEpoch: 0,
+      editionRootId: data.media.id,
       properties: {},
       state: "published",
       coverage: { create: { mediaId: data.media.id, current: true } },

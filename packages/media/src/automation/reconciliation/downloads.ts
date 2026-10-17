@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import path from "node:path";
 import { queueOperation, serializable } from "#automation/store.ts";
@@ -32,6 +34,7 @@ async function sweepDownloadAttempts(
 ) {
   const attempts = await context.db.acquisitionAttempt.findMany({
     where: {
+      edition: "default",
       ...(cursor === null ? {} : { id: { gt: cursor } }),
       state: { notIn: ["completed", "obsolete", "rejected"] },
     },
@@ -90,7 +93,7 @@ async function sweepDownloadAttempts(
       if (mediaId === undefined)
         throw new Error("Acquisition has no media coverage");
       const intent = await tx.mediaIntent.findUniqueOrThrow({
-        where: { mediaId },
+        where: targetWhere(defaultScope(mediaId)),
       });
       const claims = await tx.mediaRequest.count({
         where: { mediaId, ...effectiveRequestWhere },

@@ -70,11 +70,22 @@ export async function recordsAuthorized(
   const mediaIds = [...new Set(input.mediaIds)];
   const assetIds = [...new Set(input.assetIds)];
   const intents = await tx.mediaIntent.count({
-    where: { mediaId: { in: mediaIds }, automationEpoch: input.epoch },
+    where: {
+      mediaId: { in: mediaIds },
+      edition: "default",
+      editionRootId: { not: null },
+      automationEpoch: input.epoch,
+    },
   });
   if (intents !== mediaIds.length) return false;
   const assets = await tx.libraryAsset.count({
-    where: { id: { in: assetIds }, owned: true, ownershipEpoch: input.epoch },
+    where: {
+      id: { in: assetIds },
+      edition: "default",
+      editionRootId: { not: null },
+      owned: true,
+      ownershipEpoch: input.epoch,
+    },
   });
   return assets === assetIds.length;
 }

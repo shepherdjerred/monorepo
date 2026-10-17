@@ -84,9 +84,15 @@ export async function nativeNetworkFixture(
       },
     });
   const roots = await resolveNativeStorageRoots(db);
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(legacy.media.id)], {
+      createMissing: true,
+    });
+  });
   const asset = await db.libraryAsset.create({
     data: {
       path: `/data/movies/${legacy.media.id}/Film.mkv`,
+      editionRootId: legacy.media.id,
       checksum: "a".repeat(64),
       sizeBytes: 100n,
       properties: {},
@@ -196,3 +202,5 @@ export async function activateNativeFixture(
     },
   });
 }
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";

@@ -7,6 +7,7 @@ import {
 } from "./types.ts";
 import { assertRuntime, assertNoMediaSubtitleReplacement } from "./guards.ts";
 import { fileOperations } from "./file-operations.ts";
+import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 
 /** A failed first publication has no playable predecessor; retain its bytes outside Plex. */
 export async function quarantineInitialPublication(input: {
@@ -25,7 +26,7 @@ export async function quarantineInitialPublication(input: {
     await assertRuntime(tx, recoveryEpoch);
     await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
     const intents = await tx.mediaIntent.findMany({
-      where: { mediaId: { in: entry.mediaIds } },
+      where: { mediaId: { in: entry.mediaIds }, edition: "default" },
     });
     if (
       intents.length !== entry.mediaIds.length ||
@@ -75,4 +76,5 @@ export async function quarantineInitialPublication(input: {
     where: { id: { in: entry.mediaIds } },
     data: { availability: "wanted", version: { increment: 1 } },
   });
+  await mirrorDefaultAvailability(tx, entry.mediaIds, "wanted");
 }

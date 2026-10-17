@@ -8,6 +8,7 @@ import { PrismaAuthStore } from "./auth-store.ts";
 import { randomBytes } from "node:crypto";
 import { PrismaNotificationApplication } from "./notification-service.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let app: PrismaMediaApplication;
@@ -92,6 +93,39 @@ test("concurrent identical commands create exactly one request and outbox entry"
   ]);
   expect(responses[0]).toEqual(responses[1]);
   expect(
+    await cluster.database.idempotencyRecord.findUniqueOrThrow({
+      where: { userId_key: { userId: actor.id, key } },
+    }),
+  ).toMatchObject({
+    requestHash: tokenHash(
+      JSON.stringify({
+        input: {
+          includeFutureEpisodes: false,
+          includeSpecials: false,
+          mediaId: media.id,
+          subtitleLanguages: ["en"],
+        },
+        kind: "request",
+      }),
+    ),
+  });
+  expect(
+    await cluster.database.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
+    }),
+  ).toMatchObject({
+    version: 0,
+    generation: 1,
+    editionRootId: media.id,
+    desiredPresence: true,
+    monitoring: true,
+  });
+  expect(
+    await cluster.database.mediaItem.findUniqueOrThrow({
+      where: { id: media.id },
+    }),
+  ).toMatchObject({ version: 1 });
+  expect(
     await cluster.database.mediaRequest.count({
       where: { mediaId: media.id },
     }),
@@ -104,6 +138,71 @@ test("concurrent identical commands create exactly one request and outbox entry"
       where: { operation: { targetId: media.id } },
     }),
   ).toBe(1);
+});
+
+test("catalog-only detail and release reads leave the target absent", async () => {
+  const { actor, media } = await fixture();
+  expect(await app.getMedia(actor, media.id)).toMatchObject({
+    id: media.id,
+    intent: null,
+  });
+  expect(await app.releases(actor, media.id)).toEqual([]);
+  expect(
+    await cluster.database.mediaIntent.count({ where: { mediaId: media.id } }),
+  ).toBe(0);
+  expect(
+    await cluster.database.mediaEditionDefinition.count({
+      where: { rootMediaId: media.id },
+    }),
+  ).toBe(0);
+  expect(
+    await cluster.database.mediaItem.findUniqueOrThrow({
+      where: { id: media.id },
+    }),
+  ).toMatchObject({ version: 0 });
+});
+
+test("Keep on orphan metadata protects without inventing lineage or acquisition authority", async () => {
+  const { actor } = await fixture("owner");
+  const media = await cluster.database.mediaItem.create({
+    data: { kind: "episode", title: "Unresolved historical episode" },
+  });
+  await app.act(actor, crypto.randomUUID(), media.id, {
+    action: "keep",
+    expectedVersion: 0,
+  });
+  expect(
+    await cluster.database.retentionHold.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: actor.id,
+          mediaId: media.id,
+          edition: "default",
+        },
+      },
+    }),
+  ).toMatchObject({ userId: actor.id });
+  expect(
+    await cluster.database.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
+    }),
+  ).toMatchObject({
+    editionRootId: null,
+    automationEpoch: -1,
+    generation: 1,
+    version: 0,
+  });
+  await expect(
+    app.act(actor, crypto.randomUUID(), media.id, {
+      action: "retry",
+      expectedVersion: 1,
+    }),
+  ).rejects.toMatchObject({ code: "lineage_unresolved" });
+  expect(
+    await cluster.database.mediaItem.findUniqueOrThrow({
+      where: { id: media.id },
+    }),
+  ).toMatchObject({ version: 1 });
 });
 
 test("reusing a key with different input returns conflict without another mutation", async () => {
@@ -257,14 +356,11 @@ test("series claims cover episodes, omit specials, and monitor future episodes b
 
 test("new requester cancels a pending cleanup and restores desired presence", async () => {
   const { actor, media } = await fixture();
-  await cluster.database.mediaIntent.create({
-    data: {
-      mediaId: media.id,
-      generation: 5,
-      desiredPresence: false,
-      monitoring: false,
-      intentionallyRemovedAt: new Date(),
-    },
+  await createTestDefaultTarget(cluster.database, media.id, {
+    generation: 5,
+    desiredPresence: false,
+    monitoring: false,
+    intentionallyRemovedAt: new Date(),
   });
   const decision = await cluster.database.retentionDecision.create({
     data: {
@@ -286,7 +382,7 @@ test("new requester cancels a pending cleanup and restores desired presence", as
   ).toMatchObject({ state: "cancelled" });
   expect(
     await cluster.database.mediaIntent.findUnique({
-      where: { mediaId: media.id },
+      where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
     }),
   ).toMatchObject({
     generation: 6,
@@ -355,6 +451,7 @@ test("server access revocation invalidates an existing session", async () => {
 test("watch state is private to its requester", async () => {
   const { actor, media } = await fixture();
   const other = await fixture();
+  await createTestDefaultTarget(cluster.database, media.id);
   await cluster.database.watchState.createMany({
     data: [
       {

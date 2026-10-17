@@ -23,6 +23,7 @@ import {
 } from "./visibility/access.ts";
 import { mediaVisibility } from "./visibility/detail.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
+import { defaultIntent } from "#shared/editions/scope.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { currentSubtitlePolicies, policyStatus } from "./subtitle-policy.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
@@ -68,7 +69,7 @@ export class PrismaMediaApplication
             orderBy: [{ seasonNumber: "asc" }, { episodeNumber: "asc" }],
             take: 1000,
           },
-          intent: true,
+          intents: { where: { edition: "default" } },
           requests: {
             where: {
               ...effectiveRequestWhere,
@@ -83,11 +84,17 @@ export class PrismaMediaApplication
             },
           },
           holds: {
-            where: reader.owner ? {} : { userId: actor.id },
+            where: {
+              edition: "default",
+              ...(reader.owner ? {} : { userId: actor.id }),
+            },
             select: { id: true, userId: true, until: true, isPin: true },
           },
           retention: {
-            where: { state: { notIn: ["cancelled", "purged"] } },
+            where: {
+              edition: "default",
+              state: { notIn: ["cancelled", "purged"] },
+            },
             orderBy: { createdAt: "desc" },
             take: 1,
             select: {
@@ -99,10 +106,14 @@ export class PrismaMediaApplication
             },
           },
           watchStates: {
-            where: reader.owner ? {} : { userId: actor.id },
+            where: {
+              edition: "default",
+              ...(reader.owner ? {} : { userId: actor.id }),
+            },
             select: { userId: true, watched: true, observedAt: true },
           },
           assets: {
+            where: { edition: "default", asset: { edition: "default" } },
             select: {
               current: true,
               edition: true,
@@ -152,6 +163,7 @@ export class PrismaMediaApplication
       const policies = await currentSubtitlePolicies(tx, [mediaId]);
       return MediaDetailSchema.parse({
         ...item,
+        intent: defaultIntent(item.intents),
         children: item.children.filter((child) => reader.visible(child)),
         visibility: await mediaVisibility(tx, {
           media: item,
@@ -242,12 +254,15 @@ export class PrismaMediaApplication
     return RemovalListSchema.parse(
       await this.db.retentionDecision.findMany({
         where: {
+          edition: "default",
           state: { in: ["warning_pending", "grace_period", "quarantined"] },
           ...(actor.role === "owner"
             ? {}
             : {
                 media: {
-                  requests: { some: { userId: actor.id, active: true } },
+                  requests: {
+                    some: { userId: actor.id, ...effectiveRequestWhere },
+                  },
                 },
               }),
         },
@@ -338,7 +353,8 @@ export class PrismaMediaApplication
   ) {
     return this.db.$transaction(
       async (tx) => {
-        await lockAcquisitionMedia(tx, input.mediaIds);
+        await lockCanonicalMedia(tx, input.mediaIds);
+        await lockExistingDefaultTargets(tx, input.mediaIds);
         await lockEffectiveRequests(tx, input.mediaIds);
         await commandAutomationEpoch(tx);
         return buildIdentityPreview(tx, actor, {
@@ -354,7 +370,8 @@ export class PrismaMediaApplication
 
   async releases(actor: MediaActor, mediaId: string) {
     await this.db.$transaction(async (tx) => {
-      await lockAcquisitionMedia(tx, [mediaId]);
+      await lockCanonicalMedia(tx, [mediaId]);
+      await lockExistingDefaultTargets(tx, [mediaId]);
       await lockEffectiveRequests(tx, [mediaId]);
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
       await authorizeRenewal(tx, actor, {
@@ -405,7 +422,10 @@ export class PrismaMediaApplication
 import { ProfileDefaultsSchema } from "#shared/api.ts";
 import type { IdentityPreviewInput } from "#shared/acquisition/preview.ts";
 import { buildIdentityPreview } from "./acquisition-identity/preview.ts";
-import { lockAcquisitionMedia } from "./acquisition-identity/locks.ts";
+import {
+  lockCanonicalMedia,
+  lockExistingDefaultTargets,
+} from "./editions/locks.ts";
 import { lockEffectiveRequests } from "./request-claims.ts";
 import { commandAutomationEpoch } from "./handoff/authority.ts";
 import { authorizeRenewal } from "./action-guards.ts";

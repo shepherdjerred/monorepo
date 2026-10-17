@@ -1,4 +1,6 @@
 import { expect, test } from "vitest";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
@@ -125,16 +127,31 @@ test.each([
           seasonNumber: 1,
           episodeNumber: 2,
           externalIds: { plexSectionId: "9", seriesTmdb: f.series.tmdbId },
-          intent: {
-            create: { profileId: f.files.profile.id, automationEpoch: 0 },
-          },
         },
+      });
+      await db.$transaction(async (tx) => {
+        await lockDefaultScopes(tx, [defaultScope(second.id)], {
+          createMissing: true,
+        });
+        await tx.mediaIntent.update({
+          where: targetWhere(defaultScope(second.id)),
+          data: {
+            profileId: f.files.profile.id,
+            automationEpoch: 0,
+            desiredPresence: true,
+            monitoring: true,
+          },
+        });
       });
       let requester = f.actor.id;
       if (mode === "managed") {
         await db.mediaRequest.update({
           where: {
-            userId_mediaId: { userId: f.actor.id, mediaId: f.files.media.id },
+            userId_mediaId_edition: {
+              edition: "default",
+              userId: f.actor.id,
+              mediaId: f.files.media.id,
+            },
           },
           data: { active: false },
         });
@@ -223,7 +240,11 @@ test.each([
         expect(
           await db.mediaRequest.findUnique({
             where: {
-              userId_mediaId: { userId: requester, mediaId: second.id },
+              userId_mediaId_edition: {
+                edition: "default",
+                userId: requester,
+                mediaId: second.id,
+              },
             },
           }),
         ).toBeNull();
@@ -261,3 +282,4 @@ test.each([
     }
   },
 );
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";

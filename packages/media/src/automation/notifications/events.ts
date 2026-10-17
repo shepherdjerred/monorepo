@@ -1,5 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
+import { defaultIntent, assertDefaultEdition } from "#shared/editions/scope.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
 export type LifecycleKind =
@@ -67,6 +68,7 @@ export async function queueLifecycleNotifications(
               some: {
                 mediaId: { in: input.items.map((item) => item.mediaId) },
                 ...effectiveRequestWhere,
+                edition: "default",
               },
             },
           },
@@ -90,6 +92,7 @@ async function queueForUser(
             userId: user.id,
             mediaId: { in: input.items.map((item) => item.mediaId) },
             ...effectiveRequestWhere,
+            edition: "default",
           },
         });
   const items =
@@ -203,6 +206,7 @@ export async function queuePublicationNotifications(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  assertDefaultEdition(attempt.edition);
   // Retry adopts current intent authority without rewriting the immutable file-effect plan.
   const generations = z
     .record(z.string(), z.number().int().nonnegative())
@@ -219,14 +223,23 @@ export async function queuePublicationNotifications(
     )
     .parse(attempt.filePlan);
   const coverages = await tx.assetCoverage.findMany({
-    where: { mediaId: { in: attempt.mediaIds }, current: true },
-    include: { asset: true, media: { include: { intent: true } } },
+    where: {
+      mediaId: { in: attempt.mediaIds },
+      current: true,
+      edition: "default",
+    },
+    include: {
+      asset: true,
+      media: { include: { intents: { where: { edition: "default" } } } },
+    },
   });
   const groups: Record<
     "media_available" | "media_upgraded",
     NotificationItem[]
   > = { media_available: [], media_upgraded: [] };
   for (const coverage of coverages) {
+    assertDefaultEdition(coverage.asset.edition);
+    const intent = defaultIntent(coverage.media.intents);
     const entry = plan.find(
       (file) =>
         file.assetId === coverage.assetId &&
@@ -236,14 +249,14 @@ export async function queuePublicationNotifications(
       entry === undefined ||
       coverage.asset.version !== 0 ||
       coverage.asset.checksum !== entry.checksum ||
-      coverage.media.intent?.generation !== generations[coverage.mediaId]
+      intent?.generation !== generations[coverage.mediaId]
     )
       continue;
     if (
+      intent === null ||
       coverage.media.availability !== "available" ||
       coverage.asset.plexPublishedAt === null ||
-      coverage.asset.state !== "published" ||
-      coverage.media.intent === null
+      coverage.asset.state !== "published"
     )
       throw new Error("Notification publication evidence is unverified");
     const predecessor =
@@ -252,14 +265,17 @@ export async function queuePublicationNotifications(
         : await tx.libraryAsset.findFirst({
             where: {
               id: entry.previousAssetId,
+              edition: "default",
               supersededByAssetId: coverage.assetId,
               plexPublishedAt: { not: null },
-              coverage: { some: { mediaId: coverage.mediaId } },
+              coverage: {
+                some: { mediaId: coverage.mediaId, edition: "default" },
+              },
             },
           });
     groups[predecessor === null ? "media_available" : "media_upgraded"].push({
       mediaId: coverage.mediaId,
-      generation: coverage.media.intent.generation,
+      generation: intent.generation,
       assetId: coverage.assetId,
       assetVersion: coverage.asset.version,
       assetChecksum: coverage.asset.checksum,

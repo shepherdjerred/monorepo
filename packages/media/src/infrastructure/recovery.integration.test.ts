@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { prepareMediaRestore } from "./recovery.ts";
@@ -31,7 +33,13 @@ test("restoring rows that lost a later requester creates an independent unreleas
   });
   // Restoring the older snapshot loses this later claim but preserves identical file evidence.
   await db.mediaRequest.delete({
-    where: { userId_mediaId: { userId: later.id, mediaId: data.media.id } },
+    where: {
+      userId_mediaId_edition: {
+        edition: "default",
+        userId: later.id,
+        mediaId: data.media.id,
+      },
+    },
   });
   await prepareMediaRestore(db, {
     recoveryId: crypto.randomUUID(),
@@ -40,7 +48,7 @@ test("restoring rows that lost a later requester creates an independent unreleas
   });
   expect(
     await db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: data.media.id },
+      where: targetWhere(defaultScope(data.media.id)),
     }),
   ).toMatchObject({
     recoveryEpoch: 1,

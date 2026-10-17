@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { describe, expect, test } from "vitest";
 import { createOutboxActivities } from "./store.ts";
 import { observeRequesterWatch } from "./watch.ts";
@@ -68,7 +70,7 @@ describe("durable media Activity invariants in PostgreSQL", () => {
     expect(result.complete).toBe(true);
     expect(
       await database().mediaIntent.findUnique({
-        where: { mediaId: data.media.id },
+        where: targetWhere(defaultScope(data.media.id)),
       }),
     ).toMatchObject({ generation: 2 });
     expect(

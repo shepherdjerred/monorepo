@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { searchCandidates, loadProfile } from "./acquisition-candidates.ts";
@@ -15,7 +17,7 @@ test("candidate selection persists source evidence and refreshes only unclaimed 
   const f = await fixture();
   const db = database();
   const intent = await db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     include: { profile: true },
   });
   if (intent.profile === null) throw new Error("Fixture profile missing");

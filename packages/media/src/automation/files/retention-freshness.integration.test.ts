@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { rm, readFile, access } from "node:fs/promises";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
@@ -192,7 +194,7 @@ test("explicit owner removal refreshes after long hashing without bypassing quar
       data: { version: { increment: 1 } },
     });
     const intent = await db.mediaIntent.update({
-      where: { mediaId: media.id },
+      where: targetWhere(defaultScope(media.id)),
       data: { desiredPresence: false, generation: 1 },
     });
     const ownerOverride = {

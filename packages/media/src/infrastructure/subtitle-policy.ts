@@ -54,7 +54,11 @@ export async function currentSubtitlePolicies(
   tx: Prisma.TransactionClient,
   mediaIds: readonly string[],
 ) {
-  const select = { orderBy: { version: "desc" as const }, take: 1 };
+  const select = {
+    where: { edition: "default" },
+    orderBy: { version: "desc" as const },
+    take: 1,
+  };
   const media = await tx.mediaItem.findMany({
     where: { id: { in: [...mediaIds] } },
     include: {

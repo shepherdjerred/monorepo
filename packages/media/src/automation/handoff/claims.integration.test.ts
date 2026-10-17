@@ -146,7 +146,8 @@ test.each(["mapping", "credential"] as const)(
     expect(
       await db.mediaRequest.findUniqueOrThrow({
         where: {
-          userId_mediaId: {
+          userId_mediaId_edition: {
+            edition: "default",
             userId: f.network.actor.id,
             mediaId: f.network.media.id,
           },

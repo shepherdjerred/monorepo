@@ -1,7 +1,7 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type { CatalogIdentity } from "#shared/acquisition/catalog.ts";
-import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { lockCanonicalMedia } from "#infrastructure/editions/locks.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { mergeCatalogIdentity } from "./catalog.ts";
 
@@ -20,7 +20,7 @@ export async function persistCatalogMedia(
   const existing = await tx.mediaItem.findUnique({
     where: { kind_tmdbId: { kind: input.kind, tmdbId: input.tmdbId } },
   });
-  if (existing !== null) await lockAcquisitionMedia(tx, [existing.id]);
+  if (existing !== null) await lockCanonicalMedia(tx, [existing.id]);
   const current =
     existing === null
       ? null

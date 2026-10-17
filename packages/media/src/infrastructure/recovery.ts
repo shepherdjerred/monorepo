@@ -68,7 +68,7 @@ export async function prepareMediaRestore(database: Database, raw: unknown) {
     });
     // A backup cannot prove it contains every requester or personal protection.
     // This system hold is separate from ordinary Keep/pin and survives their edits.
-    await tx.$executeRaw`INSERT INTO "RecoveryHold" ("mediaId", "recoveryEpoch", "reason", "createdAt") SELECT DISTINCT coverage."mediaId", ${recoveryEpoch}::integer, 'recovery_request_history_unconfirmed', NOW() FROM "AssetCoverage" coverage JOIN "LibraryAsset" asset ON asset.id = coverage."assetId" WHERE asset.owned AND asset.state <> 'purged' ON CONFLICT ("mediaId") DO UPDATE SET "recoveryEpoch" = EXCLUDED."recoveryEpoch", "reason" = EXCLUDED.reason, "createdAt" = EXCLUDED."createdAt", "releasedAt" = NULL, "releasedById" = NULL, "releaseEvidence" = NULL, "version" = "RecoveryHold"."version" + 1`;
+    await tx.$executeRaw`INSERT INTO "RecoveryHold" ("mediaId", "edition", "recoveryEpoch", "reason", "createdAt") SELECT DISTINCT coverage."mediaId", coverage."edition", ${recoveryEpoch}::integer, 'recovery_request_history_unconfirmed', NOW() FROM "AssetCoverage" coverage JOIN "LibraryAsset" asset ON asset.id = coverage."assetId" WHERE asset.owned AND asset.state <> 'purged' ON CONFLICT ("mediaId", "edition") DO UPDATE SET "recoveryEpoch" = EXCLUDED."recoveryEpoch", "reason" = EXCLUDED.reason, "createdAt" = EXCLUDED."createdAt", "releasedAt" = NULL, "releasedById" = NULL, "releaseEvidence" = NULL, "version" = "RecoveryHold"."version" + 1`;
     const receipt = {
       recoveryId: input.recoveryId,
       previousEpoch: state.recoveryEpoch,

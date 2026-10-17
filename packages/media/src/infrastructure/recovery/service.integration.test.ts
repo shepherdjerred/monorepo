@@ -1,7 +1,10 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
 import { recoveryHarness, releaseInput } from "./test-support.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 const { fixture } = recoveryHarness();
 
@@ -56,7 +59,7 @@ test("pending declarations preserve protection; exact release applies household 
   });
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null, version: 0 });
   expect(
@@ -85,7 +88,13 @@ test("pending declarations preserve protection; exact release applies household 
   ).toEqual(pin);
   expect(
     await f.db.retentionHold.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.member.id, mediaId: f.media.id } },
+      where: {
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: f.member.id,
+          mediaId: f.media.id,
+        },
+      },
     }),
   ).toMatchObject({ isPin: false });
   expect(
@@ -100,7 +109,7 @@ test("pending declarations preserve protection; exact release applies household 
   ).toEqual(delivery);
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ automationEpoch: 3, generation: 5 });
 });
@@ -160,6 +169,7 @@ test.each(["keep", "pin", "epoch", "coverage", "request", "access"] as const)(
       const sibling = await f.db.mediaItem.create({
         data: { kind: "movie", title: "Shared coverage changed" },
       });
+      await createTestDefaultTarget(f.db, sibling.id);
       await f.db.assetCoverage.create({
         data: { assetId: f.asset.id, mediaId: sibling.id, current: true },
       });
@@ -187,26 +197,32 @@ test.each(["keep", "pin", "epoch", "coverage", "request", "access"] as const)(
     ).rejects.toThrow("changed");
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
       }),
     ).toMatchObject({ releasedAt: null });
   },
 );
 
 test("shared files expand exact coverage; noncanonical root claims and managed self-declarations remain protected", async () => {
-  const f = await fixture();
+  const f = await fixture({ kind: "episode" });
+  const physicalSeries = f.series;
+  if (physicalSeries === null) throw new Error("Series fixture missing");
   const sibling = await f.db.mediaItem.create({
     data: {
       kind: "episode",
       title: "Other episode",
+      parentId: physicalSeries.id,
+      seasonNumber: 1,
+      episodeNumber: 2,
       externalIds: { plexSectionId: "2" },
-      intent: { create: { automationEpoch: 3 } },
-      recoveryHold: {
-        create: {
-          recoveryEpoch: 3,
-          reason: "recovery_request_history_unconfirmed",
-        },
-      },
+    },
+  });
+  await createTestDefaultTarget(f.db, sibling.id, { automationEpoch: 3 });
+  await f.db.recoveryHold.create({
+    data: {
+      mediaId: sibling.id,
+      recoveryEpoch: 3,
+      reason: "recovery_request_history_unconfirmed",
     },
   });
   await f.db.assetCoverage.create({
@@ -220,8 +236,16 @@ test("shared files expand exact coverage; noncanonical root claims and managed s
     data: { kind: "series", title: "Series" },
   });
   const outside = await f.db.mediaItem.create({
-    data: { kind: "episode", title: "Outside" },
+    data: {
+      kind: "episode",
+      title: "Outside",
+      parentId: series.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
+    },
   });
+  await createTestDefaultTarget(f.db, series.id);
+  await createTestDefaultTarget(f.db, outside.id);
   const root = await f.db.mediaRequest.create({
     data: {
       userId: f.member.id,
