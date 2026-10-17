@@ -2,6 +2,19 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    // No build command: this node hashes the public source helpers for
+    // consumers' ^build edges. Release state and CLI-only dependencies must
+    // not invalidate those consumers. Root script checks retain full inputs.
+    "build": {
+      "dependsOn": ["@shepherdjerred/s3-signed-request#build"],
+      "inputs": [
+        "package.json",
+        "run-temporal-node.ts",
+        "temporal-replay.ts",
+        "types/**",
+        "lib/**"
+      ]
+    },
     "typecheck": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/ci/scripts/**/*.ts"]
     },
