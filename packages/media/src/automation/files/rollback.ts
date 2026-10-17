@@ -12,6 +12,8 @@ import {
   type Transaction,
 } from "./types.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
+import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
+import { videoSubtitleWhere } from "./subtitle-lifecycle/ownership.ts";
 import { fileOperations } from "./file-operations.ts";
 import { quarantineInitialPublication } from "./rollback-initial.ts";
 import { preparePublicationProof } from "./content-proof.ts";
@@ -63,6 +65,10 @@ export async function rollbackPromotion(
             .object({ recoveryEpoch: z.number().int() })
             .parse(current).recoveryEpoch;
           await assertRuntime(tx, epoch);
+          await assertNoSubtitleReplacement(tx, [
+            entry.assetId,
+            previousAssetId,
+          ]);
           const intents = await tx.mediaIntent.findMany({
             where: { mediaId: { in: entry.mediaIds } },
           });
@@ -82,7 +88,11 @@ export async function rollbackPromotion(
           });
           const previous = await tx.libraryAsset.findUniqueOrThrow({
             where: { id: previousAssetId },
-            include: { subtitles: { where: { state: "superseded" } } },
+            include: {
+              subtitles: {
+                where: { ...videoSubtitleWhere, state: "superseded" },
+              },
+            },
           });
           const sidecars = ownedSubtitleSidecars(previous);
           if (

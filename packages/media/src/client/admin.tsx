@@ -1,5 +1,6 @@
 import { useState, type SyntheticEvent } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import {
@@ -254,6 +255,14 @@ async function uploadInput(
   const file = form.get("subtitle");
   if (!(file instanceof File)) throw new TypeError("Choose a subtitle file.");
   const declaredEncoding = text(form, "encoding");
+  const replacementId = text(form, "replacementFor");
+  const old = target.subtitles.find(
+    (subtitle) => subtitle.id === replacementId,
+  );
+  if (replacementId !== "" && old === undefined)
+    throw new Error(
+      "The replacement subtitle must belong to the selected video.",
+    );
   return ManualSubtitleSchema.parse({
     assetId: target.assetId,
     expectedAssetVersion: target.version,
@@ -268,6 +277,14 @@ async function uploadInput(
       ? {}
       : { hearingImpaired: text(form, "hearingImpaired") === "yes" }),
     ...(declaredEncoding === "bom" ? {} : { declaredEncoding }),
+    ...(old === undefined
+      ? {}
+      : {
+          replacementFor: {
+            oldSubtitleId: old.id,
+            expectedOldVersion: old.version,
+          },
+        }),
   });
 }
 
@@ -333,6 +350,25 @@ function SubtitleUploader({
         </select>
       </label>
       <label>
+        Replace an existing sidecar (optional)
+        <select name="replacementFor" defaultValue="">
+          <option value="">Install a new subtitle variant</option>
+          {targets.flatMap((target) =>
+            target.subtitles
+              .filter(
+                (subtitle) =>
+                  subtitle.state === "installed" &&
+                  subtitle.storageKind === "sidecar",
+              )
+              .map((subtitle) => (
+                <option key={subtitle.id} value={subtitle.id}>
+                  {target.titles.join(" / ")} — {subtitle.filename}
+                </option>
+              )),
+          )}
+        </select>
+      </label>
+      <label>
         Language
         <select name="language">
           <option value="en">English</option>
@@ -391,14 +427,26 @@ function SubtitleUploader({
       {error !== null && <ErrorNotice error={error} />}
       {upload.error !== null && <ErrorNotice error={upload.error} />}
       {upload.isSuccess && (
-        <Notice>Subtitle validated and queued for installation.</Notice>
+        <Notice>
+          {upload.data.subtitleId === undefined ? (
+            "Subtitle validated and queued for installation."
+          ) : (
+            <>
+              Replacement candidate validated; no file has changed.{" "}
+              <Link to="/admin/subtitle-replacements">
+                Prepare its replacement review
+              </Link>
+              .
+            </>
+          )}
+        </Notice>
       )}
       <button
         className="button"
         type="submit"
         disabled={upload.isPending || targets.length === 0}
       >
-        {upload.isPending ? "Uploading…" : "Validate and install subtitle"}
+        {upload.isPending ? "Uploading…" : "Validate subtitle"}
       </button>
     </form>
   );
@@ -417,6 +465,13 @@ export function ManualSubtitleAdministration({ user }: { user: MediaUser }) {
   return (
     <section aria-labelledby="upload-heading">
       <h2 id="upload-heading">Upload subtitles</h2>
+      <p>
+        <Link to="/admin/subtitle-replacements">
+          Review subtitle replacements
+        </Link>
+        . Selecting an existing sidecar below creates a candidate for explicit
+        review, without installing it.
+      </p>
       <form
         className="stack-form"
         onSubmit={(event) => {

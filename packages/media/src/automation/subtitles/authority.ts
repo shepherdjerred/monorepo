@@ -193,6 +193,12 @@ export function reusableSubtitle(
   )
     return false;
   if (subtitle.state === "installed") return true;
+  if (
+    z
+      .object({ replacementFor: z.unknown() })
+      .safeParse(subtitle.matchingEvidence).success
+  )
+    return false;
   const binding = z
     .object({ targetAuthority: z.literal(work.authority) })
     .safeParse(subtitle.matchingEvidence);

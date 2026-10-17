@@ -18,6 +18,7 @@ import { NotificationCallback } from "./preferences.tsx";
 import { MigrationPage } from "./migration.tsx";
 import { RecoveryPage } from "./recovery/page.tsx";
 import { NativeRecoveryPage } from "./native-recovery/page.tsx";
+import { SubtitleReplacementPage } from "./subtitle-replacement/page.tsx";
 
 export function App() {
   const session = useQuery({
@@ -135,6 +136,16 @@ function Shell({ user }: { user: MediaUser }) {
         )}
         {signOut.error !== null && <ErrorNotice error={signOut.error} />}
         <Routes>
+          <Route
+            path="/admin/subtitle-replacements/:id?"
+            element={
+              user.role === "owner" ? (
+                <SubtitleReplacementPage user={user} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
           <Route
             path="/recovery/native"
             element={

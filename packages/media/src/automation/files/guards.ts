@@ -17,6 +17,21 @@ import {
   lockEffectiveRequests,
 } from "#infrastructure/request-claims.ts";
 
+/** Caller holds all affected MediaItem rows, shared with reservation creation. */
+export async function assertNoMediaSubtitleReplacement(
+  tx: Transaction,
+  mediaIds: readonly string[],
+) {
+  const reserved = await tx.subtitleReplacement.findFirst({
+    where: {
+      reservationActive: true,
+      asset: { coverage: { some: { mediaId: { in: [...mediaIds] } } } },
+    },
+  });
+  if (reserved !== null)
+    throw new FileGuardError("subtitle_replacement_unsettled");
+}
+
 export async function lockMedia(
   tx: Transaction,
   mediaIds: readonly string[],
@@ -47,6 +62,7 @@ export async function assertAcquisition(
     .object({ recoveryEpoch: z.number().int() })
     .parse(attempt).recoveryEpoch;
   await assertRuntime(tx, epoch);
+  await assertNoMediaSubtitleReplacement(tx, attempt.mediaIds);
   const generations = GenerationsSchema.parse(attempt.generations);
   await lockEffectiveRequests(tx, attempt.mediaIds);
   const intents = await tx.mediaIntent.findMany({
@@ -93,6 +109,7 @@ export async function assertRetention(input: {
   purge: boolean;
 }): Promise<void> {
   const { tx, context } = input;
+  await assertNoMediaSubtitleReplacement(tx, input.mediaIds);
   await lockEffectiveRequests(tx, input.mediaIds);
   const decision = await tx.retentionDecision.findUniqueOrThrow({
     where: { id: input.decisionId },

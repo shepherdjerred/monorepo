@@ -76,6 +76,8 @@ model MediaUser {
   recoveryReceipts RecoveryReleaseReceipt[]
   nativeRecoveryPlans NativeRecoveryPlan[]
   nativeRecoveryReceipts NativeRecoveryReceipt[]
+  subtitleReplacements SubtitleReplacement[]
+  subtitleReplacementApprovals SubtitleReplacementReview[]
 }
 
 model MigrationCapture {
@@ -508,6 +510,7 @@ model Torrent {
 }
 
 model LibraryAsset {
+  subtitleReplacements SubtitleReplacement[]
   ownershipEpoch Int @default(-1)
   plexPublishedAt DateTime?
   supersededByAssetId String?
@@ -560,6 +563,8 @@ model AssetCoverage {
 }
 
 model SubtitleAsset {
+  oldReplacementArchives SubtitleReplacement[] @relation("ReplacementOldSubtitle")
+  replacementCandidates SubtitleReplacement[] @relation("ReplacementCandidateSubtitle")
   id               String       @id @default(uuid())
   assetId          String
   asset            LibraryAsset @relation(fields: [assetId], references: [id])
@@ -584,6 +589,64 @@ model SubtitleAsset {
   createdAt        DateTime     @default(now())
 
   @@index([assetId, ownershipEpoch, state])
+}
+
+model SubtitleReplacement {
+  id String @id @default(uuid())
+  ownerId String
+  owner MediaUser @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  assetId String
+  asset LibraryAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  oldSubtitleId String
+  oldSubtitle SubtitleAsset @relation("ReplacementOldSubtitle", fields: [oldSubtitleId], references: [id], onDelete: Restrict)
+  candidateSubtitleId String
+  candidateSubtitle SubtitleAsset @relation("ReplacementCandidateSubtitle", fields: [candidateSubtitleId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  runtimeVersion Int
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
+  snapshot Json
+  snapshotHash String
+  importOperationId String @unique
+  rollbackOperationId String @unique
+  state String @default("preparing")
+  version Int @default(0)
+  reason String?
+  reservationActive Boolean @default(true)
+  appliedAt DateTime?
+  archiveExpiresAt DateTime?
+  cleanupState String @default("pending")
+  cleanupReason String?
+  cleanupManifest Json?
+  executionEvidence Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  review SubtitleReplacementReview?
+  receipt SubtitleReplacementReceipt?
+  @@index([state, updatedAt])
+  @@index([cleanupState, archiveExpiresAt])
+}
+
+model SubtitleReplacementReview {
+  id String @id @default(uuid())
+  replacementId String @unique
+  replacement SubtitleReplacement @relation(fields: [replacementId], references: [id], onDelete: Restrict)
+  observation Json
+  observationHash String
+  expiresAt DateTime
+  approvedById String?
+  approvedBy MediaUser? @relation(fields: [approvedById], references: [id], onDelete: Restrict)
+  approvedAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model SubtitleReplacementReceipt {
+  id String @id @default(uuid())
+  replacementId String @unique
+  replacement SubtitleReplacement @relation(fields: [replacementId], references: [id], onDelete: Restrict)
+  outcome String
+  evidence Json
+  createdAt DateTime @default(now())
 }
 
 model MediaSubtitlePolicyVersion {
@@ -645,6 +708,7 @@ model RetentionDecision {
 }
 
 model Operation {
+  subtitleReplacementCoordinators SubtitleReplacement[]
   nativeRecoveryPlans NativeRecoveryPlan[]
   id             String          @id @default(uuid())
   idempotencyKey String?         @unique

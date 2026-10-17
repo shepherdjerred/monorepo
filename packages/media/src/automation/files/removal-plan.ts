@@ -109,23 +109,24 @@ function planSidecars(
   subtitles: readonly {
     id: string;
     path: string | null;
-    provenance: unknown;
+    checksum: string | null;
   }[],
 ): RemovalEntry["sidecars"] {
   const sidecars: RemovalEntry["sidecars"] = [];
   for (const subtitle of subtitles) {
     if (subtitle.path === null)
       throw new FileGuardError("subtitle_path_missing");
-    const provenance = z
-      .object({ checksum: z.string().regex(/^[a-f0-9]{64}$/u) })
-      .parse(subtitle.provenance);
+    const checksum = z
+      .string()
+      .regex(/^[a-f0-9]{64}$/u)
+      .parse(subtitle.checksum);
     const sidecar = libraryLocation(context, subtitle.path);
     if (sidecar.libraryKind !== libraryKind)
       throw new FileGuardError("subtitle_location_conflict");
     sidecars.push({
       subtitleId: subtitle.id,
       libraryPath: sidecar.libraryPath,
-      checksum: provenance.checksum,
+      checksum,
       quarantineId: crypto.randomUUID(),
     });
   }

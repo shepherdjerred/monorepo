@@ -601,8 +601,33 @@ flags.
 
 An existing owned but quality-unverified sidecar does not satisfy readiness and
 is never silently overwritten by a newly accepted candidate. A canonical-path
-collision ends the install with `subtitle_path_requires_owner_review`; replacement
-of that owned legacy sidecar remains an explicit operator-review boundary.
+collision ends the install with `subtitle_path_requires_owner_review`. Owners can
+select an installed sidecar in Administration's upload form to create a separate
+validated candidate without queuing installation. At `/admin/subtitle-replacements`,
+select the current subtitle and candidate, prepare the file review, and approve
+its exact observation and version. Only the same video, destination and subtitle
+format are supported; embedded, unowned, cross-epoch and ambiguous files remain
+protected. The video's version does not change.
+
+An unsettled replacement reserves the video against concurrent file lifecycle
+changes and ordinary subtitle installation. Reconcile an expired or abandoned
+review to check its actual effects; reservations are released only after proven
+settlement, never by ignoring an uncertain journal. The retained original is a
+recovery-only archive with preserved quality and provenance, not a post-commit
+undo option. Its receipt owns its cleanup independently of later video upgrades,
+quarantine and restore. Temporal retains settled replacement artifacts for seven
+days before attempting guarded cleanup. The review shows a protected operation's
+reason and any separate cleanup failure; unresolved ownership or effects retain
+the reservation or archive for reconciliation. An expired review cannot approve
+a replacement, and reconciliation requires the prior coordinator to be terminal.
+
+A worker killed after creating subtitle source or staging bytes but before saving
+their durable file identity leaves
+`subtitle_replacement_artifact_ownership_unconfirmed`. The video stays reserved
+and those bytes remain in the excluded control root. Matching content or a
+filename does not prove ownership, so reconciliation does not automatically adopt
+or delete these artifacts. Keep the protection in place while investigating the
+exact journal and files; retrying alone cannot supply missing creation evidence.
 
 Owners can upload and review captures at `/admin/migration`. The API saves
 immutable capture records and report evidence. Approval binds capture/report
