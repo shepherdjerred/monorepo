@@ -180,6 +180,11 @@ test("Arcade owns one credential item and keeps limits and goal grants outside i
     );
   const container = deployment.spec.template.spec.containers[0];
   if (container === undefined) throw new Error("Missing Arcade container");
+  for (const name of ["FLIPT_ENVIRONMENT", "DEPLOYMENT_ENVIRONMENT"]) {
+    expect(container.env.find((entry) => entry.name === name)?.value).toBe(
+      "prod",
+    );
+  }
   for (const key of [
     "DISCORD_BOT_TOKEN",
     "DISCORD_APPLICATION_ID",

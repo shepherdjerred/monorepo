@@ -180,10 +180,8 @@ model = "gpt-5.6-sol"
         NODE_ENV: EnvValue.fromValue("production"),
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
         FLIPT_NAMESPACE: EnvValue.fromValue("arcade"),
-        // Exercise the real production workload behind existing beta targeting
-        // before promoting the verified games to the production flag environment.
-        FLIPT_ENVIRONMENT: EnvValue.fromValue("beta"),
-        DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("beta"),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("prod"),
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
