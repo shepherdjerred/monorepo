@@ -11,6 +11,8 @@ import type {
   MediaHandoffFileActivities,
   NativeRecoveryNetworkActivities,
   NativeRecoveryFileActivities,
+  NativeQuarantineNetworkActivities,
+  NativeQuarantineFileActivities,
 } from "@shepherdjerred/media/automation";
 import {
   createMediaNetworkRuntime,
@@ -22,11 +24,13 @@ let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
   MediaHandoffNetworkActivities &
   SubtitleReplacementNetworkActivities &
-  NativeRecoveryNetworkActivities;
+  NativeRecoveryNetworkActivities &
+  NativeQuarantineNetworkActivities;
 type FileActivities = MediaFileActivities &
   MediaHandoffFileActivities &
   SubtitleReplacementFileActivities &
-  NativeRecoveryFileActivities;
+  NativeRecoveryFileActivities &
+  NativeQuarantineFileActivities;
 async function network(): Promise<NetworkActivities> {
   networkRuntime ??= createMediaNetworkRuntime(Bun.env);
   try {
@@ -104,6 +108,8 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     ),
   observeNativeRecovery: (input) =>
     withNetwork((activities) => activities.observeNativeRecovery(input)),
+  observeNativeQuarantine: (input) =>
+    withNetwork((activities) => activities.observeNativeQuarantine(input)),
   nativeRecoveryState: (input) =>
     withNetwork((activities) => activities.nativeRecoveryState(input)),
   observeMediaHandoff: (input) =>
@@ -160,6 +166,12 @@ export const mediaFileWorkerActivities: FileActivities = {
     withFiles((activities) => activities.prepareNativeRecoveryFiles(input)),
   applyNativeRecoveryFiles: (input) =>
     withFiles((activities) => activities.applyNativeRecoveryFiles(input)),
+  prepareNativeQuarantineFiles: (input) =>
+    withFiles((activities) => activities.prepareNativeQuarantineFiles(input)),
+  applyNativeQuarantineFiles: (input) =>
+    withFiles((activities) => activities.applyNativeQuarantineFiles(input)),
+  restoreNativeQuarantineFiles: (input) =>
+    withFiles((activities) => activities.restoreNativeQuarantineFiles(input)),
   prepareMediaHandoffFiles: (input) =>
     withFiles((activities) => activities.prepareMediaHandoffFiles(input)),
   applyMediaHandoffFiles: (input) =>

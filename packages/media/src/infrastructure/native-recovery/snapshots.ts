@@ -137,6 +137,7 @@ export async function nativeLifecycle(
   tx: Prisma.TransactionClient,
   ids: string[],
   assetIds: string[],
+  settledDecisionIds: string[] = [],
 ) {
   const attempts = await tx.acquisitionAttempt.findMany({
     where: { mediaIds: { hasSome: ids } },
@@ -173,9 +174,9 @@ export async function nativeLifecycle(
     retention.some(
       (row) =>
         row.manifest !== null &&
-        !["cancelled", "restored", "purged"].includes(row.state),
-    ) ||
-    cleanup.some((row) => row.state !== "completed")
+        !["cancelled", "restored", "purged"].includes(row.state) &&
+        !settledDecisionIds.includes(row.id),
+    )
   )
     throw new Error(
       "Native recovery lifecycle requires separate reconciliation",

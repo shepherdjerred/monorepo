@@ -40,6 +40,8 @@ import { createNativeFileActivities } from "./native-recovery/activities.ts";
 import { createSubtitleReplacementActivities } from "./subtitle-replacement/activities.ts";
 import { createSubtitleReplacementNetworkActivities } from "#infrastructure/subtitle-replacement/activities.ts";
 import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { createNativeQuarantineObserver } from "#migration/native-network/quarantine.ts";
+import { createNativeQuarantineFileActivities } from "#automation/native-quarantine/activities.ts";
 import type { FileContext } from "./files/types.ts";
 
 type LifecycleActivities = Pick<
@@ -254,6 +256,10 @@ export async function createMediaFileRuntime(
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
     }),
+    ...createNativeQuarantineFileActivities({
+      files: fileContext,
+      workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+    }),
   };
   return { activities, close: () => db.$disconnect() };
 }
@@ -362,6 +368,14 @@ export async function createMediaNetworkRuntime(
       observeNativeRecovery: async (input: { planId: string }) => {
         await context.qbittorrent.login();
         await createNativeRecoveryObserver({
+          ...context,
+          observer: createLegacyObserver(environment),
+          expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        })(input.planId);
+      },
+      observeNativeQuarantine: async (input: { planId: string }) => {
+        await context.qbittorrent.login();
+        await createNativeQuarantineObserver({
           ...context,
           observer: createLegacyObserver(environment),
           expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,

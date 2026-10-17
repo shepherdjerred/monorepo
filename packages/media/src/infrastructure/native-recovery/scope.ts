@@ -20,6 +20,9 @@ import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
 import { normalizeTorrentObservation } from "#migration/capture/torrent-capture.ts";
 import { torrentIdentity } from "#migration/handoff-network/torrents.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
+import { nativeTerminalDependencies } from "./terminal-lifecycle.ts";
+import { NativePublishedScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import { settledNativeQuarantines } from "#infrastructure/native-quarantine/settled.ts";
 
 function stableTorrentObservation(raw: unknown) {
   const observed = z
@@ -163,8 +166,27 @@ export async function buildNativeScope(
   const ancestry = rows.flatMap((row) =>
     [row.parent?.id, row.parent?.parent?.id].filter((id) => id !== undefined),
   );
-  return NativeRecoveryScopeSchema.parse({
-    schemaVersion: 1,
+  const settledQuarantines = await settledNativeQuarantines(
+    tx,
+    NativeRecoveryScopeSchema.shape.files.parse(files),
+  );
+  const lifecycle = await nativeLifecycle(
+    tx,
+    ids,
+    assetIds,
+    settledQuarantines.flatMap((item) => item.decisionIds),
+  );
+  const cleanupRows = await tx.upgradeCleanup.findMany({
+    where: { id: { in: lifecycle.cleanup.map((row) => row.id) } },
+    orderBy: { id: "asc" },
+  });
+  const terminalDependencies = await nativeTerminalDependencies(
+    tx,
+    cleanupRows,
+    assetIds,
+  );
+  return NativePublishedScopeSchema.parse({
+    ...publishedVersion(terminalDependencies, settledQuarantines),
     request: { ...input, assetIds },
     media: rows.map(({ intent, parent, ...row }) => ({
       id: row.id,
@@ -208,7 +230,7 @@ export async function buildNativeScope(
     storageRoots: await resolveNativeStorageRoots(tx),
     subtitlePolicies: await snapshotNativeSubtitlePolicies(tx, ids),
     household: await nativeHousehold(tx, ids, ancestry),
-    lifecycle: await nativeLifecycle(tx, ids, assetIds),
+    lifecycle,
     torrents: torrents.map((row) => ({
       id: row.id,
       infoHash: row.infoHash,
@@ -221,4 +243,18 @@ export async function buildNativeScope(
       attempts: row.attempts.map((attempt) => nativeAttempt(attempt)),
     })),
   });
+}
+
+function publishedVersion(
+  terminalDependencies: Awaited<ReturnType<typeof nativeTerminalDependencies>>,
+  settledQuarantines: Awaited<ReturnType<typeof settledNativeQuarantines>>,
+) {
+  return terminalDependencies.length === 0 && settledQuarantines.length === 0
+    ? { schemaVersion: 1 }
+    : {
+        schemaVersion: 2,
+        lifecycleKind: "published",
+        terminalDependencies,
+        ...(settledQuarantines.length === 0 ? {} : { settledQuarantines }),
+      };
 }

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import { NativeQuarantineContinuationSchema } from "#shared/native-recovery/quarantine.ts";
 
 const Selection = z.object({
   bindings: z.array(
@@ -48,6 +50,19 @@ export async function currentNativeReceipts(
   const result = [];
   for (const row of rows) {
     const selection = Selection.parse(row.selection);
+    const scope = NativeStoredScopeSchema.parse(row.plan.scope);
+    const quarantined =
+      scope.schemaVersion === 2 &&
+      scope.lifecycleKind === "committed_quarantine";
+    const continuations = quarantined
+      ? await tx.nativeQuarantineContinuation.findMany({
+          where: {
+            receiptId: row.id,
+            recoveryEpoch: input.epoch,
+            state: { not: "restored" },
+          },
+        })
+      : [];
     if (
       row.plan.state !== "applied" ||
       row.plan.planHash !== row.planHash ||
@@ -59,8 +74,19 @@ export async function currentNativeReceipts(
       .filter(
         (asset) =>
           asset.owned &&
-          asset.state === "published" &&
+          asset.state === (quarantined ? "quarantined" : "published") &&
           asset.ownershipEpoch === input.epoch &&
+          (!quarantined ||
+            continuations.some((continuation) =>
+              NativeQuarantineContinuationSchema.parse(
+                continuation.descriptor,
+              ).bindings.some(
+                (binding) =>
+                  binding.assetId === asset.id &&
+                  binding.assetVersion === asset.version &&
+                  binding.checksum === asset.checksum,
+              ),
+            )) &&
           selection.bindings.some(
             (binding) =>
               binding.assetId === asset.id &&

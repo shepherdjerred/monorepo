@@ -469,6 +469,10 @@ import * as h from "./media/handoff.ts";
 export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
 import * as n from "./media/native-recovery.ts";
+import * as quarantine from "./media/native-quarantine.ts";
+export const prepareNativeQuarantineWorkflow = quarantine.prepare;
+export const applyNativeQuarantineWorkflow = quarantine.apply;
+export const restoreNativeQuarantineWorkflow = quarantine.restore;
 export const prepareNativeRecoveryWorkflow = n.prepareNativeRecoveryWorkflow;
 export const applyNativeRecoveryWorkflow = n.applyNativeRecoveryWorkflow;
 import * as p from "./media/maintenance.ts";
@@ -490,12 +494,8 @@ export const sweepMediaWorkflow = m.sweepMediaWorkflow;
 export const expandMediaRequestWorkflow = m.expandMediaRequestWorkflow;
 export const refreshMediaCatalogWorkflow = m.refreshMediaCatalogWorkflow;
 export const expandCatalogRequestsWorkflow = m.expandCatalogRequestsWorkflow;
-import * as s from "./media/subtitle-replacement.ts";
-export const prepareSubtitleReplacementWorkflow =
-  s.prepareSubtitleReplacementWorkflow;
-export const applySubtitleReplacementWorkflow =
-  s.applySubtitleReplacementWorkflow;
-export const reconcileSubtitleReplacementWorkflow =
-  s.reconcileSubtitleReplacementWorkflow;
-export const cleanupSubtitleReplacementWorkflow =
-  s.cleanupSubtitleReplacementWorkflow;
+import * as replacement from "./media/subtitle-replacement.ts";
+export const prepareSubtitleReplacementWorkflow = replacement.prepare;
+export const applySubtitleReplacementWorkflow = replacement.apply;
+export const reconcileSubtitleReplacementWorkflow = replacement.reconcile;
+export const cleanupSubtitleReplacementWorkflow = replacement.cleanup;

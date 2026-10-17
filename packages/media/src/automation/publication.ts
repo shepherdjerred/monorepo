@@ -15,6 +15,7 @@ import { recordVerifiedPublication } from "./reconciliation/upgrade-cleanup.ts";
 import { publishRollback } from "./reconciliation/rollback-publication.ts";
 import { queuePublicationNotifications } from "./notifications/events.ts";
 import { queueSharedPublication } from "./notifications/shared.ts";
+import { nativeRestorePublication } from "#infrastructure/native-quarantine/publication.ts";
 
 type PublicationActivities = Pick<
   MediaNetworkActivities,
@@ -134,6 +135,23 @@ export function createPublicationActivities(
       const operation = await context.db.operation.findUniqueOrThrow({
         where: { id: input.operationId },
       });
+      if (operation.kind === "restore_native_quarantine") {
+        const restored = z
+          .object({ restoreReceipt: z.unknown() })
+          .parse(operation.result);
+        const receipt = await nativeRestorePublication(
+          context.db,
+          operation.id,
+          restored.restoreReceipt,
+        );
+        if (!receipt.mediaIds.includes(input.mediaId))
+          throw new Error("Native restore receipt omitted requested media");
+        return publishCoverage(context, receipt.mediaIds, input.operationId, {
+          epoch: receipt.recoveryEpoch,
+          receipt,
+          requiredGenerations: receipt.generations,
+        });
+      }
       const receipt = RestoreReceiptSchema.parse(
         operation.result,
       ).restoreReceipt;
