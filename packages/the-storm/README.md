@@ -2785,6 +2785,12 @@ team planning, and tactics stages. Asynchronous barriers merge results in stable
 order without blocking pool workers. Tactics reads frozen team boards; an ordered
 merge resolves competing cover claims before publishing decisions. Search scratch
 arrays are reused exclusively by each batch and released when the match retires.
+Within tactics, each bounded job claims the next unstarted input when it finishes
+its current proposal, keeping its own search scratch arrays throughout. Results
+return to original input order before the commit barrier. A failed or rejected
+job still waits for every submitted sibling before the cycle can fail or retire;
+other jobs may finish more remaining inputs than the fixed partition would have.
+The other parallel stages retain their fixed partitions.
 Each immutable snapshot indexes combatants by ID while preserving roster order,
 so repeated enemy lookups do not scan the entire lobby.
 Role assignment prepares all teams before flattening their distinct source-node
@@ -2803,12 +2809,13 @@ thinking cycle.
 Role distances stop at the scoring cap of 128; directed reachability distinguishes
 long reachable paths from unreachable targets, which retain their existing
 horizontal-distance scoring. Other path queries keep their full search.
-Failed tactical destinations are remembered for 100 ticks. While an unforced
-formation slot remains excluded, tactics selects its recovery step before
-searching the discarded plan and preserves the original retry deadline. The
-slot can be retried exactly at expiry; a new failure starts another cooldown.
-Forced objective directives bypass this formation exclusion, and a new life
-clears remembered destinations.
+Failed tactical destinations are remembered for 100 ticks. An unforced
+`TAKE_SLOT` or `HOLD_SLOT` plan for an excluded formation slot yields to recovery
+before its search, preserving the original retry deadline. This formation
+exclusion does not replace independently selected poison-escape, combat, retreat
+or hunt plans. The slot can be retried exactly at expiry; a new failure starts
+another cooldown. Forced objective directives bypass this formation exclusion,
+and a new life clears remembered destinations.
 Each navigation graph owns a derived strongly connected component index. Its
 reachability bitsets use at most 8MiB of payload per graph; larger component sets
 use exact traversal of the condensed directed graph with exclusive search scratch.
@@ -2964,6 +2971,10 @@ tick to correlate recorded inputs and decisions. Single-bot `retake-route`
 spans also carry that ID; aggregate spans use `-1`. Per-bot wall and CPU times
 are included in their enclosing batch or commit, so do not add nested spans to
 aggregate durations. Built-in GC and execution samples share the same timeline.
+The native recording configuration enables object counting at chunk boundaries,
+which can trigger heap-inspection full collections during a long recording as
+well as at start and stop. Check GC cause and chunk timing before attributing
+those diagnostic pauses to application allocation or heap sizing.
 The diagnostic also saves container CPU counters before and after profiling.
 Disabled recordings allocate no stage markers or read the timing clock.
 Raw JFR files can include JVM environment metadata and stay private; upload only

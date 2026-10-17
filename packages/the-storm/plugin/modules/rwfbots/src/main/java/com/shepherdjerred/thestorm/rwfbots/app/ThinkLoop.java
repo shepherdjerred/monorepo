@@ -535,7 +535,7 @@ public final class ThinkLoop {
                 } finally {
                   teamCommit.close();
                 }
-                return batches.indexed(
+                return batches.balanced(
                     flight(cycle, "tactics"),
                     selectTactics(cycle, active),
                     (batch, work) -> propose(cycle, work, workspaces.get(batch)));

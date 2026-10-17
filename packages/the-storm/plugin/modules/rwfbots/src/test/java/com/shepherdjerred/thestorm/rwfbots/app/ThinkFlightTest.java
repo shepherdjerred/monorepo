@@ -9,14 +9,19 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 final class ThinkFlightTest {
-  @Test
-  void recordsQueueAndWorkForSuccessfulAndFailedBatches(@TempDir Path directory) throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void recordsQueueAndWorkForSuccessfulAndFailedBatches(boolean balanced, @TempDir Path directory)
+      throws Exception {
     var queue = new ArrayDeque<Runnable>();
     ComputePool pool =
         new ComputePool() {
@@ -39,16 +44,17 @@ final class ThinkFlightTest {
       recording.enable(ThinkFlight.Span.class);
       recording.start();
       var context = ThinkFlight.context("tactics", 7, 42, clock::get);
+      BiFunction<Integer, Integer, Integer> operation =
+          (workspace, input) -> {
+            clock.addAndGet(7_000_000);
+            if (input == 0) throw new IllegalStateException("failed batch");
+            return input;
+          };
+      var batches = new ThinkBatches(pool);
       var result =
-          new ThinkBatches(pool)
-              .map(
-                  context,
-                  List.of(0, 1),
-                  input -> {
-                    clock.addAndGet(7_000_000);
-                    if (input == 0) throw new IllegalStateException("failed batch");
-                    return input;
-                  });
+          balanced
+              ? batches.balanced(context, List.of(0, 1, 2), operation)
+              : batches.indexed(context, List.of(0, 1), operation);
       clock.set(15_000_000);
       queue.removeFirst().run();
       assertThat(result.isDone()).isFalse();
@@ -68,13 +74,15 @@ final class ThinkFlightTest {
               assertThat(event.getString("stage")).isEqualTo("tactics");
               assertThat(event.getInt("generation")).isEqualTo(7);
               assertThat(event.getLong("tick")).isEqualTo(42);
-              assertThat(event.getInt("inputs")).isEqualTo(1);
               assertThat(event.getInt("botId")).isEqualTo(-1);
-              assertThat(event.getLong("workerNanos")).isEqualTo(7_000_000);
+              assertThat(event.getLong("workerNanos"))
+                  .isEqualTo(event.getInt("inputs") * 7_000_000L);
               assertThat(event.getLong("cpuNanos")).isGreaterThanOrEqualTo(-1);
             });
     assertThat(spans.stream().map(event -> event.getLong("queueNanos")))
         .containsExactlyInAnyOrder(15_000_000L, 22_000_000L);
+    assertThat(spans.stream().map(event -> event.getInt("inputs")))
+        .containsExactlyInAnyOrderElementsOf(balanced ? List.of(1, 2) : List.of(1, 1));
   }
 
   @Test
@@ -128,6 +136,7 @@ final class ThinkFlightTest {
     var reads = new AtomicLong();
     var context = ThinkFlight.context("cycle", 1, 1, reads::incrementAndGet);
     var trace = ThinkFlight.section(context, 1);
+    trace.input();
     trace.close();
     ThinkFlight.bot(context, 3).close();
     assertThat(context).isNull();

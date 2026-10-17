@@ -177,9 +177,10 @@ public final class Tactics {
     var plan = planning.plan();
     var memory = planning.objective().memory();
     if (planning.objective().forced().isEmpty()
-        && memory.excludes(
-            Planner.slotPoint(situation, context).orElseGet(() -> situation.self().pos()),
-            situation.now())) {
+        && (plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT)
+        && Planner.slotPoint(situation, context)
+            .filter(point -> planning.objective().memory().excludes(point, situation.now()))
+            .isPresent()) {
       var recovery = Planner.recovery(situation, context);
       return new Routed(
           recovery, Planner.decide(recovery, situation, context, planning.lifeEpoch()), memory);
