@@ -18,6 +18,8 @@ import { TmdbClient } from "#integrations/tmdb.ts";
 import { createMediaApp } from "./app.ts";
 import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
 import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
+import { PrismaPlexAdministration } from "#infrastructure/plex-admin.ts";
+import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.ts";
 import { DiscordOAuth } from "#infrastructure/discord-auth.ts";
 import { createMediaWorkflowStarter } from "#automation/temporal-client.ts";
 import { createOutboxActivities } from "#automation/store.ts";
@@ -43,6 +45,8 @@ async function dispatchCommittedCommands(): Promise<void> {
 }
 const sessionLifetime = await behavior.get("sessionLifetimeMs");
 const keepDays = await behavior.get("keepDays");
+const permittedMovieSectionId = await behavior.get("permittedMovieSectionId");
+const permittedTvSectionId = await behavior.get("permittedTvSectionId");
 const cipher = new CredentialCipher(bootstrap.MEDIA_CREDENTIAL_KEY);
 const tmdbCredential =
   bootstrap.TMDB_API_KEY === undefined
@@ -72,13 +76,17 @@ const discord =
         ).toString(),
       })
     : null;
+const plexAuthentication = new PlexPinAuthentication({
+  serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  serverUrl: bootstrap.PLEX_SERVER_URL,
+  permittedMovieSectionId: permittedMovieSectionId.value,
+  permittedTvSectionId: permittedTvSectionId.value,
+  applicationName: "Media",
+  returnUrl: new URL("/", bootstrap.PUBLIC_ORIGIN).toString(),
+});
 const auth = new MediaAuth(
   new PrismaAuthStore(database),
-  new PlexPinAuthentication({
-    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-    applicationName: "Media",
-    returnUrl: new URL("/", bootstrap.PUBLIC_ORIGIN).toString(),
-  }),
+  plexAuthentication,
   cipher,
   {
     ownerAccountId: bootstrap.PLEX_OWNER_ACCOUNT_ID,
@@ -87,9 +95,22 @@ const auth = new MediaAuth(
 );
 const app = createMediaApp({
   auth,
-  media: new PrismaMediaApplication(database, { keepDays: keepDays.value }),
+  media: new PrismaMediaApplication(database, {
+    keepDays: keepDays.value,
+    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  }),
   notifications: new PrismaNotificationApplication(database, cipher, discord),
   admin: new PrismaAdminApplication(database, cipher),
+  numberingAdmin: new PrismaNumberingAdministration(database),
+  plexAdmin: new PrismaPlexAdministration(
+    database,
+    cipher,
+    plexAuthentication,
+    {
+      serverUrl: bootstrap.PLEX_SERVER_URL,
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    },
+  ),
   catalog: new TmdbCatalogApplication(database, new TmdbClient(tmdbCredential)),
   publicOrigin: bootstrap.PUBLIC_ORIGIN,
   afterWrite: () => {

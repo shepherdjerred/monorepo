@@ -15,8 +15,25 @@ export type MediaWorkflowResult = {
 
 /** Workflow payloads contain identifiers only. Providers and paths stay in Activities. */
 export type MediaNetworkActivities = {
+  refreshMediaCatalog: (input: {
+    operationId: string;
+    mediaId: string;
+    cursor: string | null;
+  }) => Promise<{ processed: number; nextCursor: string | null }>;
+  expandCatalogRequests: (input: {
+    operationId: string;
+    mediaId: string;
+    cursor: string | null;
+  }) => Promise<{ processed: number; nextCursor: string | null }>;
+  expandMediaRequest: (input: {
+    operationId: string;
+    requestId: string;
+    requestVersion: number;
+    cursor: string | null;
+  }) => Promise<{ processed: number; nextCursor: string | null }>;
   dispatchMediaOutbox: () => Promise<{ dispatched: number; deferred: number }>;
   sweepMediaWork: (input: {
+    sweepId: string;
     kind: "downloads" | "watch" | "feeds" | "due" | "inventory";
     cursor: string | null;
   }) => Promise<{ processed: number; nextCursor: string | null }>;

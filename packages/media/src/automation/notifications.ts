@@ -140,6 +140,15 @@ export function createNotificationActivities(
         return { status: "failed", reason: "delivery_requires_explicit_retry" };
       if (delivery.state !== "pending")
         throw new Error("Unknown notification delivery state");
+      const runtime = await context.db.mediaRuntimeState.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
+      if (
+        runtime.mode !== "active" ||
+        !runtime.ownershipConfirmed ||
+        runtime.recoveryEpoch !== delivery.recoveryEpoch
+      )
+        return { status: "failed", reason: "notification_runtime_protected" };
       const message = await compose(context, delivery);
       if (message === null) {
         await context.db.notificationDelivery.updateMany({
@@ -156,19 +165,42 @@ export function createNotificationActivities(
       if (claim.count !== 1)
         return { status: "unknown", reason: "delivery_already_claimed" };
       try {
-        const result = await context.notify({
-          ...message,
-          idempotencyKey: delivery.id,
-        });
-        const receipt = z.string().min(1).max(1000).parse(result.receipt);
-        await context.db.notificationDelivery.update({
-          where: { id: delivery.id },
-          data: {
-            state: "accepted",
-            providerReceipt: receipt,
-            acceptedAt: new Date(),
+        const sent = await context.db.$transaction(
+          async (tx) => {
+            await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+            const current = await tx.mediaRuntimeState.findUniqueOrThrow({
+              where: { id: "singleton" },
+            });
+            if (
+              current.mode !== "active" ||
+              !current.ownershipConfirmed ||
+              current.recoveryEpoch !== delivery.recoveryEpoch
+            )
+              return false;
+            const result = await context.notify({
+              ...message,
+              idempotencyKey: delivery.id,
+            });
+            const receipt = z.string().min(1).max(1000).parse(result.receipt);
+            await tx.notificationDelivery.update({
+              where: { id: delivery.id },
+              data: {
+                state: "accepted",
+                providerReceipt: receipt,
+                acceptedAt: new Date(),
+              },
+            });
+            return true;
           },
-        });
+          { timeout: 45_000 },
+        );
+        if (!sent) {
+          await context.db.notificationDelivery.updateMany({
+            where: { id: delivery.id, state: "sending" },
+            data: { state: "pending" },
+          });
+          return { status: "failed", reason: "notification_runtime_protected" };
+        }
         return { status: "accepted", reason: null };
       } catch (error) {
         const knownRejection =

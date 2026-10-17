@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { RegexMatcher } from "#domain/resolved-contract.ts";
-import protocol from "./regex-protocol.schema.json";
+import protocol from "./regex-protocol.schema.json" with { type: "json" };
 import { readRegexSchema } from "./regex-schema.ts";
 
 const responseValidator = z.fromJSONSchema(

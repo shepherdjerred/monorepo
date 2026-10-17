@@ -1,4 +1,4 @@
-import { chooseUpgrade } from "#domain/quality.ts";
+import { chooseUpgrade, evaluateRelease } from "#domain/quality.ts";
 import {
   PublicReleaseAttributesSchema,
   QualityRulesSchema,
@@ -31,6 +31,8 @@ export async function assertMeasuredUpgrade(
       id: intent.profile.id,
       version: intent.profile.version,
     };
+    if (!evaluateRelease(measured, profile, [mediaId]).accepted)
+      throw new FileGuardError("measured_quality_rejected");
     const coverage = await db.assetCoverage.findMany({
       where: { mediaId, current: true },
       include: { asset: true },
@@ -49,16 +51,6 @@ export async function assertMeasuredUpgrade(
           `measured_upgrade_rejected:${decision.reason}`,
         );
     }
-    if (
-      coverage.length === 0 &&
-      !chooseUpgrade({
-        candidate: measured,
-        current: null,
-        profile,
-        mediaIds: [mediaId],
-      }).upgrade
-    )
-      throw new FileGuardError("measured_quality_rejected");
     profileVersions[mediaId] = profile.version;
   }
   return profileVersions;

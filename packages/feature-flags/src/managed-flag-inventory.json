@@ -233,6 +233,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "media-permitted-movie-section-id",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Plex movie section whose scoped access and publication mapping must be verified.",
+      "type": "variant",
+      "default": "1",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-permitted-tv-section-id",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Plex television section whose scoped access and publication mapping must be verified.",
+      "type": "variant",
+      "default": "2",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "media-keep-days",
       "owner": "media",
       "namespace": "media",

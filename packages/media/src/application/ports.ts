@@ -13,6 +13,7 @@ import type {
   CatalogDetail,
 } from "#shared/api.ts";
 import type { ReleaseList, SaveQualityProfile } from "#shared/api.ts";
+import type { ProfileDefaults } from "#shared/api.ts";
 
 export type MediaApplication = {
   createRequest: (
@@ -38,6 +39,13 @@ export type MediaApplication = {
   removals: (actor: MediaActor) => Promise<RemovalList>;
   notifications: (actor: MediaActor) => Promise<NotificationList>;
   profiles: (actor: MediaActor) => Promise<ProfileList>;
+  profileDefaults: (actor: MediaActor) => Promise<ProfileDefaults>;
+  setProfileDefault: (
+    actor: MediaActor,
+    key: string,
+    kind: "movie" | "series",
+    input: { expectedVersion: number; profileId: string },
+  ) => Promise<CommandResult>;
   listUsers: (actor: MediaActor) => Promise<UserList>;
   restrictUser: (
     actor: MediaActor,

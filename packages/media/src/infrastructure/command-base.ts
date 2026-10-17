@@ -17,7 +17,10 @@ function canonical(value: unknown): string {
         .join(",")}}`;
 }
 
-export type MediaCommandSettings = { keepDays: number };
+export type MediaCommandSettings = {
+  keepDays: number;
+  serverMachineId?: string;
+};
 
 export class MediaCommandBase {
   constructor(

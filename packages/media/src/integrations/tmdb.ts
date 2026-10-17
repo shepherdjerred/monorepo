@@ -41,6 +41,7 @@ const EpisodeSchema = z.object({
   season_number: z.number().int().nonnegative(),
   episode_number: z.number().int().nonnegative(),
   air_date: z.string().nullable(),
+  runtime: z.number().int().positive().nullable().optional(),
 });
 
 export type TmdbCredential =

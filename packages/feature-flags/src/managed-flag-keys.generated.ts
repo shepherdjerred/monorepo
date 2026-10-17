@@ -34,6 +34,8 @@ export type MediaBooleanFlagKey = (typeof MEDIA_BOOLEAN_FLAG_KEYS)[number];
 export const MEDIA_VARIANT_FLAG_KEYS = [
   "media-session-lifetime-ms",
   "media-email-sender",
+  "media-permitted-movie-section-id",
+  "media-permitted-tv-section-id",
   "media-keep-days",
 ] as const;
 

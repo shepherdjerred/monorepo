@@ -15,6 +15,7 @@ import {
 } from "#shared/admin.ts";
 import { readApi, writeApi, queryClient } from "./api.ts";
 import { ErrorNotice, Loading, Notice, humanize } from "./components.tsx";
+import { SeedingPolicyEditor, readSeedingPolicy } from "./seeding-policy.tsx";
 
 const credentialFields: Readonly<Record<string, readonly string[]>> = {
   privatehd: ["username", "password", "pid"],
@@ -39,7 +40,7 @@ function providerInput(form: FormData, provider: ProviderStatus): SaveProvider {
           fields.map((field) => [field, text(form, `credential.${field}`)]),
         )
       : undefined;
-  const seedingPolicy: unknown = JSON.parse(text(form, "seedingPolicy"));
+  const seedingPolicy = readSeedingPolicy(form);
   return SaveProviderSchema.parse({
     expectedUpdatedAt: provider.updatedAt,
     enabled: form.get("enabled") === "on",
@@ -70,6 +71,7 @@ function ProviderEditor({
         body: input,
         schema: CommandResultSchema,
         method: "PUT",
+        sensitive: true,
       }),
     onSuccess: async () =>
       queryClient.invalidateQueries({ queryKey: ["admin-providers"] }),
@@ -101,6 +103,14 @@ function ProviderEditor({
           ? "No provider failure recorded. Saving settings does not verify the connection."
           : `Last result: ${humanize(provider.lastError)}`}
       </p>
+      {provider.kind === "tracker" && (
+        <p>
+          Recent-release feed:{" "}
+          {provider.feedState === "unsupported_recent_feed"
+            ? "This adapter does not support a verified recent-release feed. Scheduled searches remain available."
+            : "Not configured"}
+        </p>
+      )}
       {provider.nextAllowedAt !== null && (
         <p>
           Next permitted request:{" "}
@@ -146,25 +156,12 @@ function ProviderEditor({
         />
       )}
       {provider.kind === "tracker" ? (
-        <label>
-          Seeding policy
-          <textarea
-            name="seedingPolicy"
-            rows={5}
-            defaultValue={JSON.stringify(provider.seedingPolicy, null, 2)}
-            required
-          />
-          <small>
-            Use {'{"kind":"unknown"}'} to keep seeding until rules are verified.
-            Public trackers support {'{"kind":"public"}'}. Private policies
-            require the verified rules and supporting evidence.
-          </small>
-        </label>
+        <SeedingPolicyEditor provider={provider} />
       ) : (
-        <input type="hidden" name="seedingPolicy" value='{"kind":"unknown"}' />
+        <input type="hidden" name="policyKind" value="unknown" />
       )}
       {fields.length > 0 && (
-        <fieldset>
+        <fieldset className="stack-form">
           <legend>Credentials</legend>
           <label>
             <input

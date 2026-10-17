@@ -159,6 +159,8 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
           ),
           updatedAt: row?.updatedAt ?? null,
           lastError: row?.lastError ?? null,
+          feedState: row?.feedState ?? "unconfigured",
+          lastFeedAt: row?.lastFeedAt ?? null,
           nextAllowedAt:
             leases.find((lease) => lease.providerId === id)?.nextAllowedAt ??
             null,

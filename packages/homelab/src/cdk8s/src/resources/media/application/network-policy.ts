@@ -47,6 +47,8 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
         flipt,
         telemetry,
         externalHttpsEgressRule(),
+        // Login verifies the user's own library access against the existing Plex service.
+        { to: [{ podSelector: {} }], ports: [tcp(32_400)] },
         {
           to: [
             {

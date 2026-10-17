@@ -62,6 +62,23 @@ model MediaUser {
   notificationPreference NotificationPreference?
   emailVerifications EmailVerification[]
   discordLinks DiscordLink[]
+  plexIdentity PlexIdentityMapping?
+}
+
+model PlexIdentityMapping {
+  userId String @id
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverMachineId String
+  serverAccountId String?
+  homeUserId String?
+  kind String
+  permittedSectionIds String[] @default([])
+  permittedMediaKinds String[] @default([])
+  plexRestricted Boolean @default(false)
+  verifiedAt DateTime?
+  version Int @default(0)
+  @@unique([serverMachineId, serverAccountId])
+  @@unique([serverMachineId, homeUserId])
 }
 
 model NotificationPreference {
@@ -133,6 +150,10 @@ model MediaItem {
   kind          MediaKind
   title         String
   year          Int?
+  runtimeMinutes Int?
+  originalLanguage String?
+  airDate DateTime?
+  catalogState String @default("ready")
   parentId      String?
   parent        MediaItem?          @relation("MediaHierarchy", fields: [parentId], references: [id])
   children      MediaItem[]         @relation("MediaHierarchy")
@@ -150,6 +171,7 @@ model MediaItem {
   watchStates   WatchState[]
   holds         RetentionHold[]
   retention     RetentionDecision[]
+  acquisitionReservation AcquisitionReservation?
 
   @@unique([kind, tmdbId])
   @@index([parentId, seasonNumber, episodeNumber])
@@ -162,6 +184,9 @@ model MediaRequest {
   mediaId               String
   media                 MediaItem @relation(fields: [mediaId], references: [id])
   active                Boolean   @default(true)
+  direct                Boolean   @default(true)
+  excluded              Boolean   @default(false)
+  coverageCompletedAt   DateTime?
   subtitleLanguages     String[]  @default([])
   includeFutureEpisodes Boolean   @default(false)
   includeSpecials       Boolean   @default(false)
@@ -169,9 +194,24 @@ model MediaRequest {
   version               Int       @default(0)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  coverageSources RequestCoverage[] @relation("CoveredRequest")
+  expandedCoverage RequestCoverage[] @relation("RootRequest")
 
   @@unique([userId, mediaId])
   @@index([mediaId, active])
+}
+
+model RequestCoverage {
+  rootRequestId String
+  rootRequest MediaRequest @relation("RootRequest", fields: [rootRequestId], references: [id], onDelete: Cascade)
+  requestId String
+  request MediaRequest @relation("CoveredRequest", fields: [requestId], references: [id], onDelete: Cascade)
+  mediaId String
+  active Boolean @default(true)
+  sourceVersion Int
+  createdAt DateTime @default(now())
+  @@id([rootRequestId, mediaId])
+  @@index([requestId, active])
 }
 
 model QualityProfile {
@@ -183,6 +223,14 @@ model QualityProfile {
   updatedAt DateTime                @updatedAt
   intents   MediaIntent[]
   versions  QualityProfileVersion[]
+  defaults QualityProfileDefault[]
+}
+
+model QualityProfileDefault {
+  kind String @id
+  profileId String
+  profile QualityProfile @relation(fields: [profileId], references: [id])
+  version Int @default(0)
 }
 
 model QualityProfileVersion {
@@ -230,7 +278,33 @@ model MediaProvider {
   seedingPolicy Json @default("{\"kind\":\"unknown\"}")
   credentialId String?
   lastError String?
+  lastFeedAt DateTime?
+  feedState String @default("unconfigured")
   updatedAt DateTime @updatedAt
+}
+
+model PlexInventoryObservation {
+  sectionId String
+  ratingKey String
+  path String
+  kind String
+  guids Json
+  seasonNumber Int?
+  episodeNumber Int?
+  scanId String
+  observedAt DateTime @default(now())
+  @@id([sectionId, ratingKey, path])
+  @@index([path])
+  @@index([scanId])
+}
+
+model ReconciliationScan {
+  id String @id
+  kind String
+  state String @default("running")
+  progress Json @default("{}")
+  startedAt DateTime @default(now())
+  completedAt DateTime?
 }
 
 model ProviderLease {
@@ -271,6 +345,7 @@ model AcquisitionAttempt {
 
 model AcquisitionReservation {
   mediaId    String             @id
+  media      MediaItem          @relation(fields: [mediaId], references: [id], onDelete: Restrict)
   attemptId  String
   attempt    AcquisitionAttempt @relation(fields: [attemptId], references: [id])
   generation Int
@@ -439,6 +514,7 @@ model NotificationDelivery {
   user            MediaUser        @relation(fields: [userId], references: [id])
   channel         String
   state           String
+  recoveryEpoch   Int              @default(0)
   providerReceipt String?
   attempts        Int              @default(0)
   acceptedAt      DateTime?

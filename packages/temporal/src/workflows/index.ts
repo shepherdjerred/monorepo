@@ -152,18 +152,9 @@ import {
 import * as agentChat from "./agent-chat.ts";
 import * as agentChatReceipt from "./agent-chat-turn-receipt.ts";
 import * as agentChatCatalog from "./agent-chat-catalog.ts";
-import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
-import { discordAgentChatWorkflow as _discordAgentChatWorkflow } from "./discord-agent-chat.ts";
-import { httpAgentChatWorkflow as _httpAgentChatWorkflow } from "./http-agent-chat.ts";
-import type {
-  AgentChatTurnResult,
-  ScheduledAgentChatTurnInput,
-} from "#shared/agent/agent-chat.ts";
-import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
-import type {
-  HttpAgentChatCommand,
-  HttpAgentChatStartOptions,
-} from "#shared/agent/agent-chat-http.ts";
+import * as scheduledAgentChat from "./scheduled-agent-chat-turn.ts";
+import * as discordAgentChat from "./discord-agent-chat.ts";
+import * as httpAgentChat from "./http-agent-chat.ts";
 import type {
   BlueBubblesCursor,
   ImessageCommand,
@@ -468,24 +459,11 @@ export const agentChatTurnReceiptWorkflow =
 export const agentChatCatalogWorkflow =
   agentChatCatalog.agentChatCatalogWorkflow;
 
-export async function scheduledAgentChatTurnWorkflow(
-  input: ScheduledAgentChatTurnInput,
-): Promise<AgentChatTurnResult> {
-  return _scheduledAgentChatTurnWorkflow(input);
-}
-
-export async function discordAgentChatWorkflow(
-  input: DiscordAgentChatCommand,
-): Promise<void> {
-  return _discordAgentChatWorkflow(input);
-}
-
-export async function httpAgentChatWorkflow(
-  input: HttpAgentChatCommand,
-  options?: HttpAgentChatStartOptions,
-): Promise<AgentChatTurnResult> {
-  return _httpAgentChatWorkflow(input, options);
-}
+export const scheduledAgentChatTurnWorkflow =
+  scheduledAgentChat.scheduledAgentChatTurnWorkflow;
+export const discordAgentChatWorkflow =
+  discordAgentChat.discordAgentChatWorkflow;
+export const httpAgentChatWorkflow = httpAgentChat.httpAgentChatWorkflow;
 import * as media from "./media.ts";
 export const reconcileMediaWorkflow = media.reconcileMediaWorkflow;
 export const acquireMediaReleaseWorkflow = media.acquireMediaReleaseWorkflow;
@@ -499,3 +477,7 @@ export const deliverMediaNotificationWorkflow =
   media.deliverMediaNotificationWorkflow;
 export const dispatchMediaOutboxWorkflow = media.dispatchMediaOutboxWorkflow;
 export const sweepMediaWorkflow = media.sweepMediaWorkflow;
+export const expandMediaRequestWorkflow = media.expandMediaRequestWorkflow;
+export const refreshMediaCatalogWorkflow = media.refreshMediaCatalogWorkflow;
+export const expandCatalogRequestsWorkflow =
+  media.expandCatalogRequestsWorkflow;

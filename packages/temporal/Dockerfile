@@ -112,6 +112,49 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/temporal'
 
+# Publish the source-compatible regex engine with its runtime. The SDK stays
+# in this build stage; workers execute the bounded protocol without compiling.
+FROM base AS media-regex-build
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Match the repository SDK pin; checksum pins match the upstream SDK artifacts.
+# renovate: datasource=dotnet-sdk depName=dotnet-sdk
+ARG DOTNET_SDK_VERSION=10.0.303
+ARG DOTNET_SDK_SHA512_AMD64=538df11ceb9d86bdda061bab6ede3d1f6d46bb9ba087ae905643f3d456afe982949d1b952bceb305a5d22d2d6e69cc0e5100216ffcc709aaa86e867f2d9cdf9a
+ARG DOTNET_SDK_SHA512_ARM64=622e059198058ee5f92d7817bdd83885480a979628348f878201cb8dba52d168c1a324f9943a0e7a03ad547d85332aa82f16aced29da599ef02422b5378452de
+ENV DOTNET_ROOT=/opt/dotnet \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    PATH="/opt/dotnet:${PATH}"
+COPY .mise.toml /tmp/media-mise.toml
+# Debian's archive removes superseded point releases; the base digest owns
+# reproducibility while system security fixes remain available.
+# hadolint ignore=DL3008
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends ca-certificates curl libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 tzdata \
+    && rm -rf /var/lib/apt/lists/* \
+    && bun -e 'if (Bun.TOML.parse(await Bun.file("/tmp/media-mise.toml").text()).tools.dotnet !== process.env.DOTNET_SDK_VERSION) throw new Error("Media regex SDK must match the repository pin");' \
+    && case "$(dpkg --print-architecture)" in \
+      amd64) rid=linux-x64; checksum="${DOTNET_SDK_SHA512_AMD64}" ;; \
+      arm64) rid=linux-arm64; checksum="${DOTNET_SDK_SHA512_ARM64}" ;; \
+      *) echo "Unsupported regex runtime architecture" >&2; exit 1 ;; \
+    esac \
+    && curl -fsSL "https://builds.dotnet.microsoft.com/dotnet/Sdk/${DOTNET_SDK_VERSION}/dotnet-sdk-${DOTNET_SDK_VERSION}-${rid}.tar.gz" -o /tmp/media-dotnet.tar.gz \
+    && printf '%s  %s\n' "$checksum" /tmp/media-dotnet.tar.gz | sha512sum -c - \
+    && mkdir -p /opt/dotnet \
+    && tar -xzf /tmp/media-dotnet.tar.gz -C /opt/dotnet \
+    && rm /tmp/media-dotnet.tar.gz /tmp/media-mise.toml
+COPY --parents \
+    packages/media/scripts/regex-oracle/*.cs \
+    packages/media/scripts/regex-oracle/RegexOracle.csproj \
+    packages/media/src/migration/regex-protocol.schema.json \
+    ./
+RUN case "$(dpkg --print-architecture)" in \
+      amd64) rid=linux-x64 ;; arm64) rid=linux-arm64 ;; \
+      *) echo "Unsupported regex runtime architecture" >&2; exit 1 ;; \
+    esac \
+    && dotnet publish packages/media/scripts/regex-oracle/RegexOracle.csproj --configuration Release --runtime "$rid" --self-contained true --output /out/media-regex \
+    && cp /opt/dotnet/LICENSE.txt /opt/dotnet/ThirdPartyNotices.txt /out/media-regex/
+
 # ── runtime: operator CLIs + COPY-only app layers ───────────────────────────
 FROM base AS runtime
 
@@ -169,7 +212,7 @@ ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git iptables libxml2 procps socat tini util-linux xz-utils; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git iptables libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libxml2 procps socat tini tzdata util-linux xz-utils; \
     rm -rf /var/lib/apt/lists/*
 
 # Use the same upstream 7zz artifact as local and CI tests. Debian's 7zip
@@ -475,6 +518,7 @@ COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/di
 COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
 COPY --from=build /app/packages/media/generated packages/media/generated
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
+COPY --from=media-regex-build /out/media-regex /opt/media-regex
 
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker
 # imports `#generated/ha-schema.ts` (type-only, but keep the file present so
@@ -488,6 +532,7 @@ RUN toolkit --version \
     && 7zz i >/dev/null \
     && python3 -c 'import fcntl' \
     && test -f packages/media/src/filesystem/lock-helper.py
+RUN bun -e 'const request = {protocolVersion: 1, requests: [{pattern: "(?<=Movie[ .])2160p", value: "Movie.2160P.WEB"}, {pattern: "(?<!HD)TV", value: "HDTV"}, {pattern: "(", value: "invalid"}]}; const result = Bun.spawnSync(["/opt/media-regex/RegexOracle"], {stdin: Buffer.from(JSON.stringify(request)), stdout: "pipe", stderr: "pipe"}); if (result.exitCode !== 0) throw new Error("Media regex runtime failed"); const output = JSON.parse(result.stdout.toString()); if (output.protocolVersion !== 1 || output.engine !== "dotnet-ignorecase" || output.culture !== "en-US" || JSON.stringify(output.observations.map(item => item.result)) !== JSON.stringify(["match", "no_match", "unknown"])) throw new Error("Media regex protocol mismatch");'
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

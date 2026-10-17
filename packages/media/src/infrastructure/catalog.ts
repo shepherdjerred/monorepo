@@ -2,6 +2,7 @@ import type { CatalogApplication } from "#application/ports.ts";
 import type { TmdbClient } from "#integrations/tmdb.ts";
 import type { Database } from "./database.ts";
 import type { CatalogSearch } from "#shared/api.ts";
+import { queueOperation, serializable } from "#automation/store.ts";
 
 function year(date: string | null): number | null {
   if (date === null || date.length === 0) return null;
@@ -77,77 +78,45 @@ export class TmdbCatalogApplication implements CatalogApplication {
           tmdbId: movie.id,
           title: movie.title,
           year: year(movie.release_date),
+          runtimeMinutes: movie.runtime,
+          originalLanguage: movie.original_language,
           externalIds: { tmdb: movie.id, imdb: movie.imdb_id },
         },
-        update: { title: movie.title, year: year(movie.release_date) },
+        update: {
+          title: movie.title,
+          year: year(movie.release_date),
+          runtimeMinutes: movie.runtime,
+          originalLanguage: movie.original_language,
+        },
       });
       return { mediaId: item.id };
     }
     const series = await this.tmdb.series(externalId);
-    const seasons: {
-      season: (typeof series.seasons)[number];
-      episodes: Awaited<ReturnType<TmdbClient["season"]>>;
-    }[] = [];
-    for (const season of series.seasons)
-      seasons.push({
-        season,
-        episodes: await this.tmdb.season(series.id, season.season_number),
+    return serializable(this.db, async (db) => {
+      const item = await db.mediaItem.upsert({
+        where: { kind_tmdbId: { kind, tmdbId: series.id } },
+        create: {
+          kind,
+          tmdbId: series.id,
+          title: series.name,
+          year: year(series.first_air_date),
+          originalLanguage: series.original_language,
+          externalIds: { tmdb: series.id },
+          catalogState: "pending",
+        },
+        update: {
+          title: series.name,
+          year: year(series.first_air_date),
+          originalLanguage: series.original_language,
+        },
       });
-    return this.db.$transaction(
-      async (db) => {
-        const item = await db.mediaItem.upsert({
-          where: { kind_tmdbId: { kind, tmdbId: series.id } },
-          create: {
-            kind,
-            tmdbId: series.id,
-            title: series.name,
-            year: year(series.first_air_date),
-            externalIds: { tmdb: series.id },
-          },
-          update: { title: series.name, year: year(series.first_air_date) },
-        });
-        for (const { season, episodes } of seasons) {
-          const parent = await db.mediaItem.upsert({
-            where: { kind_tmdbId: { kind: "season", tmdbId: season.id } },
-            create: {
-              kind: "season",
-              tmdbId: season.id,
-              title: `${series.name}: ${season.name}`,
-              parentId: item.id,
-              seasonNumber: season.season_number,
-            },
-            update: {
-              title: `${series.name}: ${season.name}`,
-              parentId: item.id,
-              seasonNumber: season.season_number,
-            },
-          });
-          for (const episode of episodes) {
-            await db.mediaItem.upsert({
-              where: { kind_tmdbId: { kind: "episode", tmdbId: episode.id } },
-              create: {
-                kind: "episode",
-                tmdbId: episode.id,
-                title: episode.name,
-                parentId: parent.id,
-                seasonNumber: episode.season_number,
-                episodeNumber: episode.episode_number,
-                year: year(episode.air_date),
-                externalIds: { tmdb: episode.id, seriesTmdb: series.id },
-              },
-              update: {
-                title: episode.name,
-                parentId: parent.id,
-                seasonNumber: episode.season_number,
-                episodeNumber: episode.episode_number,
-                year: year(episode.air_date),
-              },
-            });
-          }
-        }
-        return { mediaId: item.id };
-      },
-      { timeout: 60_000 },
-    );
+      await queueOperation(db, {
+        key: `catalog:${item.id}:${String(Math.floor(Date.now() / 3_600_000))}`,
+        kind: "refresh_catalog",
+        targetId: item.id,
+        payload: { mediaId: item.id, cursor: null },
+      });
+      return { mediaId: item.id };
+    });
   }
 }

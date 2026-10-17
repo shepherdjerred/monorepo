@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { CredentialCipher } from "#application/security.ts";
 import { PlexClient } from "#integrations/plex.ts";
+import { TmdbClient } from "#integrations/tmdb.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { DatabaseProviderRegistry } from "./providers.ts";
 import type { MediaAutomationContext } from "./context.ts";
@@ -21,6 +22,54 @@ beforeAll(async () => {
 }, 60_000);
 afterAll(async () => {
   if (cluster !== undefined) await cluster.close();
+});
+
+test("observe mode and a changed recovery epoch cannot send restored pending notifications", async () => {
+  const item = await fixture();
+  await createRetentionActivities(item.context).evaluateMediaRetention(
+    item.input,
+  );
+  const delivery = await cluster.database.notificationDelivery.findFirstOrThrow(
+    { where: { userId: item.user.id } },
+  );
+  const input = {
+    operationId: item.input.operationId,
+    notificationId: delivery.id,
+  };
+  const notifications = createNotificationActivities(item.context);
+  try {
+    await cluster.database.mediaRuntimeState.update({
+      where: { id: "singleton" },
+      data: { mode: "observe" },
+    });
+    await expect(
+      notifications.deliverMediaNotification(input),
+    ).resolves.toMatchObject({
+      status: "failed",
+      reason: "notification_runtime_protected",
+    });
+    await cluster.database.mediaRuntimeState.update({
+      where: { id: "singleton" },
+      data: { mode: "active", recoveryEpoch: delivery.recoveryEpoch + 1 },
+    });
+    await expect(
+      notifications.deliverMediaNotification(input),
+    ).resolves.toMatchObject({
+      status: "failed",
+      reason: "notification_runtime_protected",
+    });
+    expect(item.observation.sends).toBe(0);
+    expect(
+      await cluster.database.notificationDelivery.findUnique({
+        where: { id: delivery.id },
+      }),
+    ).toMatchObject({ state: "pending" });
+  } finally {
+    await cluster.database.mediaRuntimeState.update({
+      where: { id: "singleton" },
+      data: { mode: "active", recoveryEpoch: delivery.recoveryEpoch },
+    });
+  }
 });
 
 async function fixture() {
@@ -96,6 +145,9 @@ async function fixture() {
   );
   const context: MediaAutomationContext = {
     db,
+    tmdb: new TmdbClient({ kind: "bearer", token: "fixture" }),
+    describeWorkflow: async () => null,
+    permittedSections: async () => ({ movie: "1", series: "2" }),
     cipher,
     plex,
     userPlex: () => plex,
