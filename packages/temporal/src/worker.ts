@@ -28,6 +28,7 @@ import {
   type TemporalBootstrap,
 } from "./shared/infra/temporal-bootstrap.ts";
 import { getWorkerRoleContract } from "./worker-config.ts";
+import { closeMediaActivityRuntimes } from "./activities/media.ts";
 import {
   executionDomainForTaskQueues,
   parseTemporalBootstrapMetadata,
@@ -446,6 +447,7 @@ async function main(): Promise<void> {
     await controlLifecycle;
   } else {
     await Promise.all(workerRuns);
+    await closeMediaActivityRuntimes();
   }
 }
 

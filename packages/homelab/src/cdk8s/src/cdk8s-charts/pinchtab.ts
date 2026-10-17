@@ -29,7 +29,7 @@ export function createPinchtabChart(app: App) {
 
   createPinchtabDeployment(chart);
 
-  // NetworkPolicy: allow ingress from birmel, Bazarr, Streambot, and Tailscale
+  // NetworkPolicy: allow ingress from birmel, Bazarr, Streambot, Media, and Tailscale
   // (dashboard/API access via TailscaleIngress) on the pinchtab port.
   new KubeNetworkPolicy(chart, "pinchtab-ingress-netpol", {
     metadata: { name: "pinchtab-ingress-netpol" },
@@ -50,6 +50,12 @@ export function createPinchtabChart(app: App) {
                 matchLabels: { "kubernetes.io/metadata.name": "media" },
               },
               podSelector: { matchLabels: { app: "streambot" } },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: { matchLabels: { component: "media-network" } },
             },
             {
               namespaceSelector: {

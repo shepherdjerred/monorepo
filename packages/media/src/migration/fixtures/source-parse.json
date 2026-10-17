@@ -1,0 +1,333 @@
+{
+  "capturedAt": "2026-10-17T01:09:06.516Z",
+  "cases": [
+    {
+      "source": "radarr",
+      "title": "Dune.2021.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "webdl",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb",
+      "releaseGroup": "NTb",
+      "matchedFormatIds": [23, 4]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.2160p.BluRay.REMUX.HEVC.DV.HDR.TrueHD.Atmos-FraMeSToR",
+      "quality": {
+        "quality": {
+          "id": 31,
+          "name": "Remux-2160p",
+          "source": "bluray",
+          "resolution": 2160,
+          "modifier": "remux"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.2160p.BluRay.REMUX.HEVC.DV.HDR.TrueHD.Atmos-FraMeSToR",
+      "releaseGroup": "FraMeSToR",
+      "matchedFormatIds": [52, 49]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.1080p.BluRay.x264-DON",
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p",
+          "source": "bluray",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.1080p.BluRay.x264-DON",
+      "releaseGroup": "DON",
+      "matchedFormatIds": [1]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.1080p.WEB-DL.x265-RARBG",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "webdl",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.1080p.WEB-DL.x265-RARBG",
+      "releaseGroup": "RARBG",
+      "matchedFormatIds": [12, 14]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.1080p.WEB-DL.H264.REPACK2-FLUX",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "webdl",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 3,
+          "real": 0,
+          "isRepack": true
+        }
+      },
+      "releaseTitle": "A Movie.2021.1080p.WEB-DL.H264.REPACK2-FLUX",
+      "releaseGroup": "FLUX",
+      "matchedFormatIds": [8, 4]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.2160p.NF.WEB-DL.AV1-DVSUX",
+      "quality": {
+        "quality": {
+          "id": 18,
+          "name": "WEBDL-2160p",
+          "source": "webdl",
+          "resolution": 2160,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.2160p.NF.WEB-DL.AV1-DVSUX",
+      "releaseGroup": "DVSUX",
+      "matchedFormatIds": [19, 31]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.1080p.BluRay.AVC.COMPLETE-GROUP",
+      "quality": {
+        "quality": {
+          "id": 22,
+          "name": "BR-DISK",
+          "source": "bluray",
+          "resolution": 1080,
+          "modifier": "brdisk"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.1080p.BluRay.AVC.COMPLETE-GROUP",
+      "releaseGroup": "GROUP",
+      "matchedFormatIds": [10]
+    },
+    {
+      "source": "radarr",
+      "title": "Dune.2021.1080p.WEB-DL.H264-GROUP",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "webdl",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "A Movie.2021.1080p.WEB-DL.H264-GROUP",
+      "releaseGroup": "GROUP",
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTb",
+      "releaseGroup": "NTb",
+      "matchedFormatIds": [10, 27]
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.2160p.BluRay.REMUX.HEVC.DV.HDR.TrueHD.Atmos-FraMeSToR",
+      "quality": {
+        "quality": {
+          "id": 21,
+          "name": "Bluray-2160p Remux",
+          "source": "blurayRaw",
+          "resolution": 2160
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.2160p.BluRay.REMUX.HEVC.DV.HDR.TrueHD.Atmos-FraMeSToR",
+      "releaseGroup": "FraMeSToR",
+      "matchedFormatIds": [44]
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.1080p.BluRay.x264-DON",
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p",
+          "source": "bluray",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.1080p.BluRay.x264-DON",
+      "releaseGroup": "DON",
+      "matchedFormatIds": []
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.1080p.WEB-DL.x265-RARBG",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.1080p.WEB-DL.x265-RARBG",
+      "releaseGroup": "RARBG",
+      "matchedFormatIds": [4]
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.1080p.WEB-DL.H264.REPACK2-FLUX",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 3,
+          "real": 0,
+          "isRepack": true
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.1080p.WEB-DL.H264.REPACK2-FLUX",
+      "releaseGroup": "FLUX",
+      "matchedFormatIds": [8, 27]
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.2160p.NF.WEB-DL.AV1-DVSUX",
+      "quality": {
+        "quality": {
+          "id": 18,
+          "name": "WEBDL-2160p",
+          "source": "web",
+          "resolution": 2160
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.2160p.NF.WEB-DL.AV1-DVSUX",
+      "releaseGroup": "DVSUX",
+      "matchedFormatIds": [6, 21, 42]
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.1080p.BluRay.AVC.COMPLETE-GROUP",
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p",
+          "source": "bluray",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.1080p.BluRay.AVC.COMPLETE-GROUP",
+      "releaseGroup": "GROUP",
+      "matchedFormatIds": [1]
+    },
+    {
+      "source": "sonarr",
+      "title": "The.Office.S02E01.1080p.WEB-DL.H264-GROUP",
+      "quality": {
+        "quality": {
+          "id": 3,
+          "name": "WEBDL-1080p",
+          "source": "web",
+          "resolution": 1080
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      },
+      "releaseTitle": "The.Office.S02E01.1080p.WEB-DL.H264-GROUP",
+      "releaseGroup": "GROUP",
+      "matchedFormatIds": []
+    }
+  ]
+}

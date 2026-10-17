@@ -38,6 +38,11 @@ export async function initializeCallGraphTracing(options: {
       log("warning", message);
     },
   });
+  if (
+    options.workerRole === "media-network" ||
+    options.workerRole === "media-files"
+  )
+    return false;
   const result = await isEnabled(FLAG_KEY, {
     default: callGraphTracingDefault(Bun.env, options.environment),
     targetingKey: `temporal-worker-${options.workerRole}`,

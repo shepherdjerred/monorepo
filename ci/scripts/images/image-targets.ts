@@ -11,6 +11,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
   tracker: {
     owner: "@shepherdjerred/tracker",
   },
+  media: { owner: "@shepherdjerred/media" },
   "alert-dashboard": {
     owner: "@shepherdjerred/alert-dashboard",
   },

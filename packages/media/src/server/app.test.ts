@@ -1,0 +1,299 @@
+import { describe, expect, test, vi } from "vitest";
+import { z } from "zod";
+import { createMediaApp, type MediaAppDependencies } from "./app.ts";
+import { MediaError } from "#application/errors.ts";
+import type { MediaActor } from "#application/auth.ts";
+import type { MediaApplication } from "#application/ports.ts";
+import type { NotificationApplication } from "#application/notification-ports.ts";
+
+const actor: MediaActor = {
+  id: "member",
+  plexAccountId: "plex-member",
+  displayName: "Member",
+  role: "member",
+  restricted: false,
+  version: 0,
+};
+
+function fixture() {
+  const act = vi.fn<MediaApplication["act"]>(async () => ({
+    status: "queued",
+    operationId: "operation",
+  }));
+  const createRequest = vi.fn<MediaApplication["createRequest"]>(async () => ({
+    status: "queued",
+    operationId: "operation",
+  }));
+  const media: MediaApplication = {
+    createRequest,
+    act,
+    async cancelRequest() {
+      return { status: "completed" };
+    },
+    async listRequests() {
+      return [];
+    },
+    async getMedia() {
+      throw new MediaError("media_not_found", "Missing", 404);
+    },
+    async activity() {
+      return [];
+    },
+    async removals() {
+      return [];
+    },
+    async notifications() {
+      return [];
+    },
+    async profiles() {
+      return [];
+    },
+    async listUsers() {
+      return [];
+    },
+    async restrictUser() {
+      return { status: "completed" };
+    },
+    async releases() {
+      return [];
+    },
+    async saveProfile() {
+      return { status: "completed" };
+    },
+    async assignProfile() {
+      return { status: "queued" };
+    },
+  };
+  const notifications: NotificationApplication = {
+    async preferences() {
+      return {
+        email: null,
+        emailVerified: false,
+        discordLinked: false,
+        emailEnabled: false,
+        discordEnabled: false,
+        upgrades: false,
+        removalCompleted: false,
+        version: 0,
+      };
+    },
+    async updatePreferences() {
+      return { status: "completed" };
+    },
+    async requestEmailVerification() {
+      return { status: "queued" };
+    },
+    async verifyEmail() {
+      return { status: "completed" };
+    },
+    async startDiscordLink() {
+      return { authorizationUrl: "https://discord.com/oauth2/authorize" };
+    },
+    async completeDiscordLink() {
+      return { status: "completed" };
+    },
+    async unlinkDiscord() {
+      return { status: "completed" };
+    },
+  };
+  const dependencies: MediaAppDependencies = {
+    auth: {
+      async start() {
+        return {
+          id: crypto.randomUUID(),
+          authorizationUrl: "https://app.plex.tv/auth",
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          browserToken: "browser-token",
+        };
+      },
+      async poll() {
+        return {
+          actor,
+          sessionToken: "session-token",
+          csrfToken: "csrf-token",
+          expiresAt: new Date(Date.now() + 60_000),
+        };
+      },
+      async authenticate(token) {
+        if (token !== "session-token")
+          throw new MediaError("unauthenticated", "Sign in", 401);
+        return { actor, csrfHash: "csrf-hash" };
+      },
+      verifyCsrf(token) {
+        if (token !== "csrf-token")
+          throw new MediaError("csrf_required", "CSRF required", 403);
+      },
+      async logout() {
+        return;
+      },
+    },
+    media,
+    notifications,
+    admin: {
+      async providers() {
+        return [];
+      },
+      async saveProvider() {
+        return { status: "completed" };
+      },
+      async subtitleTargets() {
+        return [];
+      },
+      async uploadSubtitle() {
+        return { status: "queued" };
+      },
+    },
+    catalog: {
+      async search() {
+        return { page: 1, totalPages: 0, results: [] };
+      },
+      async details() {
+        throw new MediaError("not_found", "Missing", 404);
+      },
+      async adopt() {
+        return { mediaId: "media" };
+      },
+    },
+    publicOrigin: "https://media.example.test",
+    requestsEnabled: async () => true,
+    onError: vi.fn(),
+  };
+  return { dependencies, act, createRequest };
+}
+
+const headers = {
+  Origin: "https://media.example.test",
+  Cookie: "__Host-media-session=session-token",
+  "X-CSRF-Token": "csrf-token",
+  "Content-Type": "application/json",
+  "Idempotency-Key": "request-key",
+};
+
+describe("media HTTP security and errors", () => {
+  test("only manual subtitle upload accepts a body larger than the normal API limit", async () => {
+    const { dependencies } = fixture();
+    const app = createMediaApp(dependencies);
+    const contentBase64 = Buffer.from(
+      "subtitle fixture\n".repeat(5000),
+    ).toString("base64");
+    const upload = await app.request("/api/v1/admin/subtitles", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        assetId: "00000000-0000-4000-8000-000000000001",
+        expectedAssetVersion: 0,
+        expectedChecksum: "a".repeat(64),
+        language: "en",
+        filename: "fixture.srt",
+        description: "Human translation",
+        contentBase64,
+        confirmedMatchingVideo: true,
+      }),
+    });
+    expect(upload.status).toBe(202);
+    const ordinary = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mediaId: contentBase64 }),
+    });
+    expect(ordinary.status).toBe(413);
+  });
+  test("anonymous access is denied and health remains public", async () => {
+    const { dependencies } = fixture();
+    const app = createMediaApp(dependencies);
+    const health = await app.request("/health");
+    const denied = await app.request("/api/v1/requests");
+    expect(health.status).toBe(200);
+    expect(denied.status).toBe(401);
+  });
+
+  test("cross-origin requests and missing CSRF never reach commands", async () => {
+    const { dependencies, createRequest } = fixture();
+    const app = createMediaApp(dependencies);
+    const foreign = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers: { ...headers, Origin: "https://attacker.example" },
+      body: JSON.stringify({ mediaId: "media" }),
+    });
+    const missingCsrf = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers: { ...headers, "X-CSRF-Token": "wrong" },
+      body: JSON.stringify({ mediaId: "media" }),
+    });
+    expect(foreign.status).toBe(403);
+    expect(missingCsrf.status).toBe(403);
+    expect(createRequest).not.toHaveBeenCalled();
+  });
+
+  test("request identity comes from the session and body cannot impersonate another user", async () => {
+    const { dependencies, createRequest } = fixture();
+    const app = createMediaApp(dependencies);
+    const rejected = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mediaId: "media", userId: "owner" }),
+    });
+    expect(rejected.status).toBe(400);
+    const accepted = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mediaId: "media" }),
+    });
+    expect(accepted.status).toBe(202);
+    expect(createRequest.mock.calls[0]?.[0]).toEqual(actor);
+  });
+
+  test("Keep remains available while new requests are gated off", async () => {
+    const { dependencies, act } = fixture();
+    dependencies.requestsEnabled = async () => false;
+    const app = createMediaApp(dependencies);
+    const request = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mediaId: "media" }),
+    });
+    const keep = await app.request("/api/v1/media/media/actions", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ action: "keep", expectedVersion: 0 }),
+    });
+    expect(request.status).toBe(503);
+    expect(keep.status).toBe(202);
+    expect(act).toHaveBeenCalledOnce();
+  });
+
+  test("invalid inbound JSON returns400, corrupt internal data returns500", async () => {
+    const { dependencies } = fixture();
+    dependencies.media.profiles = async () => {
+      z.string().parse(123);
+      return [];
+    };
+    const app = createMediaApp(dependencies);
+    const invalid = await app.request("/api/v1/requests", {
+      method: "POST",
+      headers,
+      body: "{",
+    });
+    expect(invalid.status).toBe(400);
+    const response = await app.request("/api/v1/profiles", { headers });
+    expect(response.status).toBe(500);
+    expect(await response.text()).not.toContain("123");
+    expect(dependencies.onError).toHaveBeenCalledOnce();
+  });
+
+  test("Plex login sets secure session cookies without exposing credentials", async () => {
+    const { dependencies } = fixture();
+    const app = createMediaApp(dependencies);
+    const response = await app.request("/api/v1/auth/plex/poll/login", {
+      method: "POST",
+      headers: {
+        Origin: headers.Origin,
+        Cookie: "__Host-media-login=browser-token",
+      },
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Set-Cookie")).toContain("HttpOnly");
+    expect(response.headers.get("Set-Cookie")).toContain("Secure");
+    expect(await response.text()).not.toContain("session-token");
+  });
+});
