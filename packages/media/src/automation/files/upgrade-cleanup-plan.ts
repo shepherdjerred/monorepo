@@ -4,7 +4,10 @@ import { Prisma } from "#generated/prisma/client.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { fileOperations } from "./file-operations.ts";
-import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
+import {
+  ownedSubtitleSidecars,
+  videoSubtitleWhere,
+} from "./subtitle-lifecycle/ownership.ts";
 
 export const UpgradeCleanupPlanSchema = z.object({
   libraryKind: z.enum(["movies", "tv"]),
@@ -33,7 +36,10 @@ export async function prepareUpgradeCleanupPlan(
     where: { id: cleanupId },
     include: {
       asset: {
-        include: { coverage: { include: { media: true } }, subtitles: true },
+        include: {
+          coverage: { include: { media: true } },
+          subtitles: { where: videoSubtitleWhere },
+        },
       },
     },
   });
@@ -110,14 +116,15 @@ function sidecarFiles(
     if (subtitle.state !== "superseded")
       throw new FileGuardError("cleanup_sidecar_referenced");
     const evidence = z
-      .object({ checksum: z.string().regex(/^[a-f0-9]{64}$/u) })
-      .safeParse(subtitle.provenance);
+      .string()
+      .regex(/^[a-f0-9]{64}$/u)
+      .safeParse(subtitle.checksum);
     if (!evidence.success) throw new FileGuardError("cleanup_sidecar_unproven");
     files.push({
       location: "quarantine",
       id: controlId(controlRoot, subtitle.path, "quarantine"),
       path: subtitle.path,
-      checksum: evidence.data.checksum,
+      checksum: evidence.data,
       subtitleId: subtitle.id,
     });
   }

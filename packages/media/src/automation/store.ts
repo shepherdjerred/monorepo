@@ -50,6 +50,10 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_subtitle_replacement: "prepareSubtitleReplacementWorkflow",
+  apply_subtitle_replacement: "applySubtitleReplacementWorkflow",
+  reconcile_subtitle_replacement: "reconcileSubtitleReplacementWorkflow",
+  cleanup_subtitle_replacement: "cleanupSubtitleReplacementWorkflow",
   prepare_native_recovery: "prepareNativeRecoveryWorkflow",
   apply_native_recovery: "applyNativeRecoveryWorkflow",
   prepare_handoff: "prepareMediaHandoffWorkflow",

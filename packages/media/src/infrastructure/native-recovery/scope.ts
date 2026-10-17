@@ -19,6 +19,7 @@ import {
 import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
 import { normalizeTorrentObservation } from "#migration/capture/torrent-capture.ts";
 import { torrentIdentity } from "#migration/handoff-network/torrents.ts";
+import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 
 function stableTorrentObservation(raw: unknown) {
   const observed = z
@@ -67,6 +68,7 @@ export async function buildNativeScope(
 ) {
   await assertNativeRestore(tx, input);
   const assetIds = [...new Set(input.assetIds)].sort();
+  await assertNoSubtitleReplacement(tx, assetIds);
   if (assetIds.length !== input.assetIds.length)
     throw new Error("Native recovery duplicate asset selection");
   const assets = await tx.libraryAsset.findMany({

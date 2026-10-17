@@ -464,37 +464,38 @@ export const scheduledAgentChatTurnWorkflow =
 export const discordAgentChatWorkflow =
   discordAgentChat.discordAgentChatWorkflow;
 export const httpAgentChatWorkflow = httpAgentChat.httpAgentChatWorkflow;
-import * as media from "./media.ts";
-import * as mediaHandoff from "./media/handoff.ts";
-export const prepareMediaHandoffWorkflow =
-  mediaHandoff.prepareMediaHandoffWorkflow;
-export const applyMediaHandoffWorkflow = mediaHandoff.applyMediaHandoffWorkflow;
-import * as nativeRecovery from "./media/native-recovery.ts";
-export const prepareNativeRecoveryWorkflow =
-  nativeRecovery.prepareNativeRecoveryWorkflow;
-export const applyNativeRecoveryWorkflow =
-  nativeRecovery.applyNativeRecoveryWorkflow;
-import * as mediaMaintenance from "./media/maintenance.ts";
-export const preparePlexExclusionWorkflow =
-  mediaMaintenance.preparePlexExclusionWorkflow;
-export const executePlexExclusionWorkflow =
-  mediaMaintenance.executePlexExclusionWorkflow;
-export const recoverPlexExclusionWorkflow =
-  mediaMaintenance.recoverPlexExclusionWorkflow;
-export const reconcileMediaWorkflow = media.reconcileMediaWorkflow;
-export const acquireMediaReleaseWorkflow = media.acquireMediaReleaseWorkflow;
-export const acquireMediaSubtitlesWorkflow =
-  media.acquireMediaSubtitlesWorkflow;
-export const installMediaSubtitleWorkflow = media.installMediaSubtitleWorkflow;
-export const cleanupMediaUpgradeWorkflow = media.cleanupMediaUpgradeWorkflow;
-export const maintainMediaTorrentWorkflow = media.maintainMediaTorrentWorkflow;
-export const retainMediaWorkflow = media.retainMediaWorkflow;
-export const restoreMediaWorkflow = media.restoreMediaWorkflow;
+import * as m from "./media.ts";
+import * as h from "./media/handoff.ts";
+export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
+export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
+import * as n from "./media/native-recovery.ts";
+export const prepareNativeRecoveryWorkflow = n.prepareNativeRecoveryWorkflow;
+export const applyNativeRecoveryWorkflow = n.applyNativeRecoveryWorkflow;
+import * as p from "./media/maintenance.ts";
+export const preparePlexExclusionWorkflow = p.preparePlexExclusionWorkflow;
+export const executePlexExclusionWorkflow = p.executePlexExclusionWorkflow;
+export const recoverPlexExclusionWorkflow = p.recoverPlexExclusionWorkflow;
+export const reconcileMediaWorkflow = m.reconcileMediaWorkflow;
+export const acquireMediaReleaseWorkflow = m.acquireMediaReleaseWorkflow;
+export const acquireMediaSubtitlesWorkflow = m.acquireMediaSubtitlesWorkflow;
+export const installMediaSubtitleWorkflow = m.installMediaSubtitleWorkflow;
+export const cleanupMediaUpgradeWorkflow = m.cleanupMediaUpgradeWorkflow;
+export const maintainMediaTorrentWorkflow = m.maintainMediaTorrentWorkflow;
+export const retainMediaWorkflow = m.retainMediaWorkflow;
+export const restoreMediaWorkflow = m.restoreMediaWorkflow;
 export const deliverMediaNotificationWorkflow =
-  media.deliverMediaNotificationWorkflow;
-export const dispatchMediaOutboxWorkflow = media.dispatchMediaOutboxWorkflow;
-export const sweepMediaWorkflow = media.sweepMediaWorkflow;
-export const expandMediaRequestWorkflow = media.expandMediaRequestWorkflow;
-export const refreshMediaCatalogWorkflow = media.refreshMediaCatalogWorkflow;
-export const expandCatalogRequestsWorkflow =
-  media.expandCatalogRequestsWorkflow;
+  m.deliverMediaNotificationWorkflow;
+export const dispatchMediaOutboxWorkflow = m.dispatchMediaOutboxWorkflow;
+export const sweepMediaWorkflow = m.sweepMediaWorkflow;
+export const expandMediaRequestWorkflow = m.expandMediaRequestWorkflow;
+export const refreshMediaCatalogWorkflow = m.refreshMediaCatalogWorkflow;
+export const expandCatalogRequestsWorkflow = m.expandCatalogRequestsWorkflow;
+import * as s from "./media/subtitle-replacement.ts";
+export const prepareSubtitleReplacementWorkflow =
+  s.prepareSubtitleReplacementWorkflow;
+export const applySubtitleReplacementWorkflow =
+  s.applySubtitleReplacementWorkflow;
+export const reconcileSubtitleReplacementWorkflow =
+  s.reconcileSubtitleReplacementWorkflow;
+export const cleanupSubtitleReplacementWorkflow =
+  s.cleanupSubtitleReplacementWorkflow;

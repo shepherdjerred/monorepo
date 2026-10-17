@@ -1,6 +1,10 @@
 import { ApplicationFailure, heartbeat, Context } from "@temporalio/activity";
 import { CancelledFailure } from "@temporalio/common";
 import type {
+  SubtitleReplacementFileActivities,
+  SubtitleReplacementNetworkActivities,
+} from "@shepherdjerred/media/subtitle-replacement";
+import type {
   MediaNetworkActivities,
   MediaFileActivities,
   MediaHandoffNetworkActivities,
@@ -17,9 +21,11 @@ let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
   MediaHandoffNetworkActivities &
+  SubtitleReplacementNetworkActivities &
   NativeRecoveryNetworkActivities;
 type FileActivities = MediaFileActivities &
   MediaHandoffFileActivities &
+  SubtitleReplacementFileActivities &
   NativeRecoveryFileActivities;
 async function network(): Promise<NetworkActivities> {
   networkRuntime ??= createMediaNetworkRuntime(Bun.env);
@@ -86,6 +92,16 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  beginSubtitleReplacementReconciliation: (input) =>
+    withNetwork((activities) =>
+      activities.beginSubtitleReplacementReconciliation(input),
+    ),
+  subtitleReplacementState: (input) =>
+    withNetwork((activities) => activities.subtitleReplacementState(input)),
+  queueSubtitleReplacementCleanup: (input) =>
+    withNetwork((activities) =>
+      activities.queueSubtitleReplacementCleanup(input),
+    ),
   observeNativeRecovery: (input) =>
     withNetwork((activities) => activities.observeNativeRecovery(input)),
   nativeRecoveryState: (input) =>
@@ -132,6 +148,14 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
 export const mediaFileWorkerActivities: FileActivities = {
+  prepareSubtitleReplacement: (input) =>
+    withFiles((activities) => activities.prepareSubtitleReplacement(input)),
+  applySubtitleReplacement: (input) =>
+    withFiles((activities) => activities.applySubtitleReplacement(input)),
+  reconcileSubtitleReplacement: (input) =>
+    withFiles((activities) => activities.reconcileSubtitleReplacement(input)),
+  cleanupSubtitleReplacement: (input) =>
+    withFiles((activities) => activities.cleanupSubtitleReplacement(input)),
   prepareNativeRecoveryFiles: (input) =>
     withFiles((activities) => activities.prepareNativeRecoveryFiles(input)),
   applyNativeRecoveryFiles: (input) =>
