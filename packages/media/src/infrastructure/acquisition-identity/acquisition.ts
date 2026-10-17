@@ -1,4 +1,5 @@
 import { coordinateBlockers, sourceIdentityProof } from "./evaluation.ts";
+import { assertDefaultAcquisitionEdition } from "#infrastructure/editions/acquisition.ts";
 import type { IdentityDecision } from "#shared/acquisition/identity.ts";
 import { z } from "zod";
 import type { Prisma, ReleaseCandidate } from "#generated/prisma/client.ts";
@@ -49,6 +50,10 @@ export async function acquisitionIdentity(
     serverMachineId?: string;
   },
 ) {
+  await assertDefaultAcquisitionEdition(tx, {
+    releaseId: release.id,
+    mediaIds: input.mediaIds,
+  });
   const sponsorAuthority =
     release.sourceEvidence === null
       ? null

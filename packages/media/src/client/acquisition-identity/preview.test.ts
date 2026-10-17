@@ -43,6 +43,14 @@ test.each(["success", "failure"])(
       sponsorRequestId: crypto.randomUUID(),
       numberingDigest: null,
       qualityBlockers: [],
+      edition: {
+        policy: "standard_unmarked",
+        accepted: true,
+        reasons: [],
+        candidate: { kind: "standard_unmarked" },
+        current: [],
+        members: [],
+      },
       confirmationAllowed: true,
     };
     vi.stubGlobal("document", { cookie: "media-csrf=fixture" });

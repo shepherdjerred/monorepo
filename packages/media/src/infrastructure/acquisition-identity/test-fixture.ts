@@ -24,6 +24,7 @@ export async function identityFixture(
   db: Database,
   base: MediaAutomationContext,
   absolute = false,
+  releaseTitle?: string,
 ) {
   const series = await db.mediaItem.create({
     data: {
@@ -78,9 +79,11 @@ export async function identityFixture(
   const source = StoredCandidateSchema.parse({
     providerId: "knaben",
     providerReleaseId: crypto.randomUUID(),
-    title: absolute
-      ? "Example Show - 123 1080p WEB-DL H264 ENG"
-      : "Example.Show.S01E01.1080p.WEB-DL.H264.ENG",
+    title:
+      releaseTitle ??
+      (absolute
+        ? "Example Show - 123 1080p WEB-DL H264 ENG"
+        : "Example.Show.S01E01.1080p.WEB-DL.H264.ENG"),
     sizeBytes: 20,
     infoHash: randomBytes(20).toString("hex"),
     seeders: 5,

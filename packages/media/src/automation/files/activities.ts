@@ -8,6 +8,7 @@ import { installSubtitle } from "./subtitles.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { rollbackPromotion } from "./rollback.ts";
 import { cleanupUpgrade } from "./upgrade-cleanup.ts";
+import { compensateRejectedCut } from "./editions/recovery.ts";
 import {
   LEGACY_CLAIM_PROTECTION,
   PendingLegacyClaimsError,
@@ -60,6 +61,7 @@ export function createMediaFileActivities(
         return { status: "staged" };
       } catch (error_) {
         const error = physicalError(error_);
+        await compensateRejectedCut(context, attemptId, error);
         if (error instanceof FileGuardError)
           return { status: "blocked", reason: error.reason };
         throw error;
@@ -71,6 +73,7 @@ export function createMediaFileActivities(
         return { status: "published" };
       } catch (error_) {
         const error = physicalError(error_);
+        await compensateRejectedCut(context, attemptId, error);
         if (error instanceof FileGuardError)
           return {
             status: error.reason.includes("obsolete") ? "obsolete" : "blocked",
