@@ -119,10 +119,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraPodSpec: { priorityClassName: BURST_SERVICE_PRIORITY },
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
-    // Include mc.ts-mc.net because SRV record redirects there and some clients send that hostname
     serviceAnnotations: {
-      "mc-router.itzg.me/externalServerName": "ts-mc.net,mc.ts-mc.net",
-      // Some directory pings send the resolved IP instead of the hostname.
+      // mc-router 1.47.2 ignores defaultServer when externalServerName is present.
+      // The default handles both Storm hostnames and IP-based directory pings.
       "mc-router.itzg.me/defaultServer": "true",
       "mc-router.itzg.me/autoScaleDown": "false",
     },
