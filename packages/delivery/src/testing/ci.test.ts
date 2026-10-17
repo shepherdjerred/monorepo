@@ -3,37 +3,20 @@ import { expect, test } from "vitest";
 import { z } from "zod";
 
 test("the browser CI graph generates Prisma and retains the image's browser directory", async () => {
-  const child = Bun.spawn(
-    [
-      "bun",
-      "x",
-      "--no-install",
-      "turbo",
-      "run",
-      "test:e2e",
-      "--filter=@shepherdjerred/delivery",
-      "--dry=json",
-    ],
-    {
-      cwd: fileURLToPath(new URL("../../../../", import.meta.url)),
-      env: {
+  const result =
+    await Bun.$`${process.execPath} x --no-install turbo run test:e2e --filter=@shepherdjerred/delivery --dry=json`
+      .cwd(fileURLToPath(new URL("../../../../", import.meta.url)))
+      .env({
         ...Object.fromEntries(
           Object.entries(Bun.env).filter(
             (entry) => typeof entry[1] === "string",
           ),
         ),
         PLAYWRIGHT_BROWSERS_PATH: "/fixture/baked-browsers",
-      },
-      stdout: "pipe",
-      stderr: "pipe",
-    },
-  );
-  const [exitCode, stdout, stderr] = await Promise.all([
-    child.exited,
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-  ]);
-  expect(exitCode, stderr).toBe(0);
+      })
+      .nothrow()
+      .quiet();
+  expect(result.exitCode, result.stderr.toString()).toBe(0);
   const graph = z
     .object({
       tasks: z.array(
@@ -49,7 +32,7 @@ test("the browser CI graph generates Prisma and retains the image's browser dire
         }),
       ),
     })
-    .parse(JSON.parse(stdout));
+    .parse(JSON.parse(result.stdout.toString()));
   const browser = graph.tasks.find(
     (task) => task.taskId === "@shepherdjerred/delivery#test:e2e",
   );

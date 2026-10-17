@@ -16,7 +16,7 @@ export const DeliverySelectionSchema = z.object({
 });
 export type DeliverySelection = z.infer<typeof DeliverySelectionSchema>;
 
-const SourceSchema = z
+export const DeliveryArgoSourceSchema = z
   .object({
     repoURL: z.string(),
     chart: z.string(),
@@ -61,7 +61,7 @@ const ApplicationSchema = z.object({
     annotations: z.record(z.string(), z.string()).optional(),
   }),
   spec: z.object({
-    source: SourceSchema,
+    source: DeliveryArgoSourceSchema,
     sources: z.unknown().optional(),
     destination: z.object({ namespace: z.string() }),
     syncPolicy: z.object({

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   deliverySelectionPatch,
   assertDeliveryRootPreservesSelection,
+  DeliveryArgoSourceSchema,
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
 
@@ -103,24 +104,13 @@ export async function syncArgoRelease(
   }
 }
 
-const SourceSchema = z.object({
-  repoURL: z.string(),
-  chart: z.string(),
-  targetRevision: z.string(),
-  helm: z
-    .object({
-      parameters: z
-        .array(
-          z.object({
-            name: z.string(),
-            value: z.string(),
-            forceString: z.literal(true),
-          }),
-        )
-        .optional(),
-    })
-    .optional(),
-});
+const SourceSchema = DeliveryArgoSourceSchema.refine(
+  (source) =>
+    source.helm?.parameters?.every(
+      (parameter) => parameter.forceString === true,
+    ) ?? true,
+  "Accepted Delivery parameters must explicitly force string values",
+);
 const ObservationSchema = z.object({
   operation: z.null().optional(),
   spec: z.object({ source: SourceSchema }),

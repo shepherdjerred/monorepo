@@ -93,6 +93,46 @@ describe("Delivery Argo operation evidence", () => {
       ),
     ).not.toThrow();
   });
+  it("requires explicit string typing in both current selection and deployment history", () => {
+    for (const forceString of [false, undefined]) {
+      const current = observation();
+      const source = {
+        ...current.spec.source,
+        helm: {
+          parameters: [
+            {
+              name: "delivery.image",
+              value: selection.parameters["delivery.image"],
+              forceString,
+            },
+          ],
+        },
+      };
+      expect(() =>
+        verifyArgoRelease(
+          { ...current, spec: { source } },
+          selection,
+          requestId,
+        ),
+      ).toThrow("force string");
+      expect(() =>
+        verifyArgoRelease(
+          {
+            ...current,
+            status: {
+              ...current.status,
+              history: current.status.history.map((entry) => ({
+                ...entry,
+                source,
+              })),
+            },
+          },
+          selection,
+          requestId,
+        ),
+      ).toThrow("force string");
+    }
+  });
   it("rejects comparison-only green while history still points at an older deployment", () => {
     const current = observation();
     const deployed = current.status.history[0];

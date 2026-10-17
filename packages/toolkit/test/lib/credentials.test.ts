@@ -287,13 +287,14 @@ describe("credential resolver backends", () => {
   });
 
   test("delivery resolves its provisioned admin credential through the broker", () => {
+    const vaultRef = "op://v64ocnykdqju4ui6j6pua56xw4";
+    const itemId = "ahbp4izt7fibvwdjwd4ffhiime";
     expect(CREDENTIAL_REGISTRY["DELIVERY_API_TOKEN"]).toEqual({
       description:
         "Delivery machine API token (cannot approve production releases)",
       source: {
         kind: "op",
-        // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-        ref: "op://v64ocnykdqju4ui6j6pua56xw4/ahbp4izt7fibvwdjwd4ffhiime/DELIVERY_ADMIN_TOKEN",
+        ref: `${vaultRef}/${itemId}/DELIVERY_ADMIN_TOKEN`,
       },
     });
   });

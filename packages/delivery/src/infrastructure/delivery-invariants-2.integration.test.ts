@@ -1,71 +1,19 @@
+import { describe, expect, test } from "vitest";
+import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
-import { createTestDatabase } from "#testing/postgres.ts";
-import {
-  seedDelivery,
-  testExecutor,
-  testOperator,
-  testPublisher,
-} from "#testing/seed.ts";
-import { Delivery } from "./delivery.ts";
-import type { CreateDeployment, PublishBuild } from "#shared/contract.ts";
+  useDeliveryFixture,
+  testPublication,
+} from "#testing/delivery-fixture.ts";
 
-function publication(number: number): PublishBuild {
-  return {
-    requestId: `publish/${String(number)}`,
-    serviceId: "arcade",
-    sourceRevision: "b".repeat(40),
-    ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
-    verifiedAt: new Date().toISOString(),
-    artifacts: [
-      {
-        id: `image/${String(number)}`,
-        component: "server",
-        kind: "image",
-        uri: "docker.io/shepherdjerred/arcade",
-        version: `1.0.${String(number)}`,
-        digest: `sha256:${"c".repeat(64)}`,
-      },
-    ],
-  };
-}
-
-let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let delivery: Delivery;
-let fixture: Awaited<ReturnType<typeof seedDelivery>>;
-beforeAll(async () => {
-  cluster = await createTestDatabase();
-  delivery = new Delivery(cluster.database);
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
-beforeEach(async () => {
-  await cluster.database.$executeRawUnsafe(
-    'TRUNCATE "ApplicationLock", "Outbox", "Evidence", "Approval", "Stage", "Deployment", "Environment", "Pipeline", "VersionSetEntry", "VersionSet", "Artifact", "Build", "Request", "Audit", "ImportedSnapshot" CASCADE',
-  );
-  fixture = await seedDelivery(delivery);
-});
-function input(requestId = "deploy/1"): CreateDeployment {
-  return {
-    requestId,
-    environmentId: fixture.environment.id,
-    versionSetRevisionId: fixture.versionSet.id,
-    expectedGeneration: fixture.environment.generation,
-    kind: "deploy",
-  };
-}
+const context = useDeliveryFixture();
 describe("PostgreSQL delivery invariants 2.1", () => {
   test("stages retain operation identity and completed evidence", async () => {
-    const deployment = await delivery.createDeployment(input(), testOperator);
-    await delivery.claim(deployment.id, testExecutor);
-    await delivery.stage(
+    const deployment = await context.delivery.createDeployment(
+      context.input(),
+      testOperator,
+    );
+    await context.delivery.claim(deployment.id, testExecutor);
+    await context.delivery.stage(
       deployment.id,
       {
         key: "preflight",
@@ -76,7 +24,7 @@ describe("PostgreSQL delivery invariants 2.1", () => {
       },
       testExecutor,
     );
-    await delivery.stage(
+    await context.delivery.stage(
       deployment.id,
       {
         key: "preflight",
@@ -88,7 +36,7 @@ describe("PostgreSQL delivery invariants 2.1", () => {
       testExecutor,
     );
     await expect(
-      delivery.stage(
+      context.delivery.stage(
         deployment.id,
         {
           key: "preflight",
@@ -100,31 +48,34 @@ describe("PostgreSQL delivery invariants 2.1", () => {
         testExecutor,
       ),
     ).rejects.toMatchObject({ code: "CONFLICT" });
-    const detail = await delivery.detail(deployment.id);
+    const detail = await context.delivery.detail(deployment.id);
     expect(detail.evidence).toHaveLength(1);
   });
   test("pending cancellation removes outbox without changing desired state", async () => {
-    const deployment = await delivery.createDeployment(input(), testOperator);
-    await delivery.cancel(deployment.id, testOperator);
-    const pending = await delivery.pending();
-    const overview = await delivery.overview();
+    const deployment = await context.delivery.createDeployment(
+      context.input(),
+      testOperator,
+    );
+    await context.delivery.cancel(deployment.id, testOperator);
+    const pending = await context.delivery.pending();
+    const overview = await context.delivery.overview();
     expect(pending.deployments).toEqual([]);
     expect(overview.environments[0]?.desiredVersionSetRevisionId).toBeNull();
   });
   test("publication callback retry ignores an untrusted wall clock while preserving artifact identity", async () => {
-    const original = publication(2);
-    const first = await delivery.publish(original, testPublisher, {
+    const original = testPublication(2);
+    const first = await context.delivery.publish(original, testPublisher, {
       repositoryId: 1,
       pipelineNumber: 2,
     });
-    const duplicate = await delivery.publish(
+    const duplicate = await context.delivery.publish(
       { ...original, verifiedAt: "2026-10-17T00:00:00.000Z" },
       testPublisher,
       { repositoryId: 1, pipelineNumber: 2 },
     );
     expect(duplicate.buildId).toBe(first.buildId);
     await expect(
-      delivery.publish(
+      context.delivery.publish(
         { ...original, sourceRevision: "d".repeat(40) },
         testPublisher,
         { repositoryId: 1, pipelineNumber: 2 },
@@ -132,32 +83,43 @@ describe("PostgreSQL delivery invariants 2.1", () => {
     ).rejects.toMatchObject({ code: "CONFLICT" });
   });
   test("concurrent qualification serializes version selection by pipeline order", async () => {
-    const older = await delivery.publish(publication(2), testPublisher, {
-      repositoryId: 1,
-      pipelineNumber: 2,
-    });
-    const newer = await delivery.publish(publication(3), testPublisher, {
-      repositoryId: 1,
-      pipelineNumber: 3,
-    });
+    const older = await context.delivery.publish(
+      testPublication(2),
+      testPublisher,
+      {
+        repositoryId: 1,
+        pipelineNumber: 2,
+      },
+    );
+    const newer = await context.delivery.publish(
+      testPublication(3),
+      testPublisher,
+      {
+        repositoryId: 1,
+        pipelineNumber: 3,
+      },
+    );
     await Promise.all([
-      delivery.qualify(older.buildId, "verified", testExecutor),
-      delivery.qualify(newer.buildId, "verified", testExecutor),
+      context.delivery.qualify(older.buildId, "verified", testExecutor),
+      context.delivery.qualify(newer.buildId, "verified", testExecutor),
     ]);
-    const revisions = await delivery.versions("arcade");
+    const revisions = await context.delivery.versions("arcade");
     expect(revisions[0]?.components["server"]?.id).toBe("image/3");
   });
 });
 describe("PostgreSQL delivery invariants 2.2", () => {
   test("the previous accepted configuration and version set are frozen with the request", async () => {
-    const first = await delivery.createDeployment(input(), testOperator);
-    await delivery.claim(first.id, testExecutor);
-    await delivery.finish(
+    const first = await context.delivery.createDeployment(
+      context.input(),
+      testOperator,
+    );
+    await context.delivery.claim(first.id, testExecutor);
+    await context.delivery.finish(
       first.id,
       {
         status: "succeeded",
         message: "accepted",
-        observedRevisionId: fixture.versionSet.id,
+        observedRevisionId: context.fixture.versionSet.id,
         evidence: [
           { kind: "reconciliation", summary: "exact operation completed" },
           { kind: "acceptance", summary: "acceptance checks passed" },
@@ -166,31 +128,33 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       },
       testExecutor,
     );
-    await cluster.database.environment.update({
-      where: { id: fixture.environment.id },
+    await context.cluster.database.environment.update({
+      where: { id: context.fixture.environment.id },
       data: {
         configurationRevision: "config/2",
         configuration: { mode: "next" },
       },
     });
-    const next = await delivery.createDeployment(
-      { ...input("next"), expectedGeneration: 1 },
+    const next = await context.delivery.createDeployment(
+      { ...context.input("next"), expectedGeneration: 1 },
       testOperator,
     );
     expect(next.previousAcceptedVersionSetRevisionId).toBe(
-      fixture.versionSet.id,
+      context.fixture.versionSet.id,
     );
     expect(next.previousAcceptedConfiguration).toEqual({});
-    const snapshot = await delivery.detail(next.id);
-    expect(snapshot.previousAcceptedVersionSet?.id).toBe(fixture.versionSet.id);
+    const snapshot = await context.delivery.detail(next.id);
+    expect(snapshot.previousAcceptedVersionSet?.id).toBe(
+      context.fixture.versionSet.id,
+    );
     expect(snapshot.deployment.configuration).toEqual({ mode: "next" });
   });
   test("unverified imports cannot become version sets or deployment acceptance", async () => {
-    const snapshot = await delivery.importSnapshot(
+    const snapshot = await context.delivery.importSnapshot(
       {
         requestId: "import/1",
         serviceId: "arcade",
-        environmentId: fixture.environment.id,
+        environmentId: context.fixture.environment.id,
         capturedAt: new Date().toISOString(),
         source: "argocd",
         components: {
@@ -202,9 +166,9 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       testOperator,
     );
     expect(snapshot.verified).toBe(false);
-    expect(await cluster.database.importedSnapshot.count()).toBe(1);
+    expect(await context.cluster.database.importedSnapshot.count()).toBe(1);
     await expect(
-      delivery.compose(
+      context.delivery.compose(
         {
           requestId: "bad-import-compose",
           serviceId: "arcade",
@@ -215,9 +179,9 @@ describe("PostgreSQL delivery invariants 2.2", () => {
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
   test("Scout production approval is human-only and bound to the frozen generation", async () => {
-    const build = await delivery.publish(
+    const build = await context.delivery.publish(
       {
-        ...publication(5),
+        ...testPublication(5),
         serviceId: "scout-for-lol",
         requestId: "scout-build",
         artifacts: [
@@ -234,16 +198,16 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       testPublisher,
       { repositoryId: 1, pipelineNumber: 5 },
     );
-    await delivery.qualify(build.buildId, "verified", testExecutor);
-    const revisions = await delivery.versions("scout-for-lol");
+    await context.delivery.qualify(build.buildId, "verified", testExecutor);
+    const revisions = await context.delivery.versions("scout-for-lol");
     const selected = revisions[0];
     if (selected === undefined) throw new Error("Scout version set missing");
-    await delivery.registerPipeline(
+    await context.delivery.registerPipeline(
       "scout-pipeline",
       { kind: "manual", reason: "Approval boundary test" },
       testOperator,
     );
-    await delivery.registerEnvironment(
+    await context.delivery.registerEnvironment(
       {
         id: "scout/prod",
         serviceId: "scout-for-lol",
@@ -256,7 +220,7 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       },
       testOperator,
     );
-    const deployment = await delivery.createDeployment(
+    const deployment = await context.delivery.createDeployment(
       {
         requestId: "scout-deploy",
         environmentId: "scout/prod",
@@ -267,16 +231,21 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       testOperator,
     );
     expect(deployment.status).toBe("awaiting_approval");
-    expect(await cluster.database.outbox.count()).toBe(0);
+    expect(await context.cluster.database.outbox.count()).toBe(0);
     await expect(
-      delivery.approve(deployment.id, "approve", "not a human", testExecutor),
+      context.delivery.approve(
+        deployment.id,
+        "approve",
+        "not a human",
+        testExecutor,
+      ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await cluster.database.environment.update({
+    await context.cluster.database.environment.update({
       where: { id: "scout/prod" },
       data: { generation: { increment: 1 } },
     });
     await expect(
-      delivery.approve(
+      context.delivery.approve(
         deployment.id,
         "approve",
         "reviewed exact inputs",
@@ -285,9 +254,12 @@ describe("PostgreSQL delivery invariants 2.2", () => {
     ).rejects.toMatchObject({ code: "CONFLICT" });
   });
   test("environment configuration cannot change while a deployment is pending or active", async () => {
-    const deployment = await delivery.createDeployment(input(), testOperator);
+    const deployment = await context.delivery.createDeployment(
+      context.input(),
+      testOperator,
+    );
     const registration = {
-      id: fixture.environment.id,
+      id: context.fixture.environment.id,
       serviceId: "arcade",
       name: "prod",
       application: "arcade",
@@ -297,11 +269,11 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       automatic: true,
     };
     await expect(
-      delivery.registerEnvironment(registration, testOperator),
+      context.delivery.registerEnvironment(registration, testOperator),
     ).rejects.toMatchObject({ code: "CONFLICT" });
-    await delivery.claim(deployment.id, testExecutor);
+    await context.delivery.claim(deployment.id, testExecutor);
     await expect(
-      delivery.registerEnvironment(registration, testOperator),
+      context.delivery.registerEnvironment(registration, testOperator),
     ).rejects.toMatchObject({ code: "CONFLICT" });
   });
 });
