@@ -1019,7 +1019,33 @@ and negative demand remains protected. The review distinguishes files restored
 from playback verified by exact Plex readback. Existing quarantine dates and old
 retention decisions remain history, never new purge permission.
 
-Superseded candidates, uncertain filesystem journals, unproved storage replacements
+The **Review upgrade archives** page reviews committed upgrade pairs and their
+complete recorded successor chain. Selecting A from A→B→C proves retained B and
+current playback C too, but grants expiry only for selected A. A review contains
+at most 25 video assets and 100 covered titles. Original upgrade plans,
+cleanup records, birth epochs and seven-day rollback deadlines remain unchanged.
+Preparation proves exact archive content, original import and sidecar journals,
+current Plex playback, no active sessions, and archive absence across every
+bounded movie and TV section on the configured server.
+
+Approval renews physical ownership and creates immutable, receipt-bound cleanup
+continuations. It never deletes bytes or renews household demand. Cleanup still
+requires fresh current intent authority, cleared system recovery holds, no Keep
+or pin, the original elapsed deadline, current worker/storage/exclusion proofs,
+and the existing purge gate. Fresh unresolved legacy claims protect cleanup.
+A later B-only review can reuse unchanged published or archive native grants
+without changing versions, subtitle quality, runtime version or holds. The review
+shows new grants and reused evidence separately. Cleanup can resume the same
+continuation after an exactly identified closed Workflow, retaining its original
+execution identities and journals; uncertain foreign effects remain protected.
+Completed cleanup receipts prove terminal archive absence in later native reviews.
+
+A new serving upgrade C→D after archive approval requires separate transition
+reconciliation before those continuations can proceed. It cannot inherit C's
+reviewed physical identity. Missing historical identities, partially proved
+foreign effects and unresolved archive transitions remain protected.
+
+Uncertain filesystem journals, unproved storage replacements
 and unresolved subtitle neighbors remain protected and require their separate
 restore, rollback or ownership reconciliation paths. Recovery does not override missing Plex watch
 evidence or authorize legacy torrent source deletion. Further bounded batches

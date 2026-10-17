@@ -9,15 +9,40 @@ import {
 } from "#shared/native-recovery.ts";
 import { parseInput, readJson } from "./validation.ts";
 import { PrepareNativeQuarantineSchema } from "#shared/native-recovery/quarantine.ts";
+import { PrepareNativeArchiveSchema } from "#shared/native-recovery/archive.ts";
 
 export type NativeRecoveryAdministration = Pick<
   PrismaNativeRecovery,
-  "inventory" | "prepare" | "prepareQuarantine" | "detail" | "apply"
+  | "inventory"
+  | "prepare"
+  | "prepareQuarantine"
+  | "prepareArchive"
+  | "archiveInventory"
+  | "detail"
+  | "apply"
 >;
 export function registerNativeRecoveryRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   service: NativeRecoveryAdministration,
 ) {
+  app.get("/api/v1/admin/native-recovery/archives", async (c) =>
+    c.json(
+      await service.archiveInventory(
+        c.get("actor"),
+        parseInput(z.uuid().nullable(), c.req.query("cursor") ?? null),
+      ),
+    ),
+  );
+  app.post("/api/v1/admin/native-recovery/archives", async (c) =>
+    c.json(
+      await service.prepareArchive(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        parseInput(PrepareNativeArchiveSchema, await readJson(c.req.raw)),
+      ),
+      202,
+    ),
+  );
   app.post("/api/v1/admin/native-recovery/quarantine", async (c) =>
     c.json(
       await service.prepareQuarantine(

@@ -7,6 +7,7 @@
     "./contract": "./src/shared/contract.ts",
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",
+    "./native-archive": "./src/shared/native-recovery/archive.ts",
     "./automation": "./src/shared/automation.ts",
     "./subtitle-replacement": "./src/shared/subtitle-replacement.ts",
     "./automation/network": "./src/automation/network.ts",

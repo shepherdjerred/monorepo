@@ -76,6 +76,12 @@ export async function currentNativeReceipts(
           asset.owned &&
           asset.state === (quarantined ? "quarantined" : "published") &&
           asset.ownershipEpoch === input.epoch &&
+          (scope.schemaVersion !== 2 ||
+            scope.lifecycleKind !== "superseded_archive" ||
+            scope.files.some(
+              (file) =>
+                file.assetId === asset.id && file.role === "current_playback",
+            )) &&
           (!quarantined ||
             continuations.some((continuation) =>
               NativeQuarantineContinuationSchema.parse(

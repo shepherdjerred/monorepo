@@ -5,11 +5,10 @@ import * as stormForum from "./homelab/storm-forum.ts";
 import * as seaweedBackup from "./homelab/seaweedfs-backup.ts";
 export const maintainStormForumWorkflow = stormForum.maintainStormForumWorkflow;
 export const backupStormForumWorkflow = stormForum.backupStormForumWorkflow;
-export const runSeaweedFsBackupWorkflow = (
-  input: Parameters<typeof seaweedBackup.runSeaweedFsBackupWorkflow>[0],
-) => seaweedBackup.runSeaweedFsBackupWorkflow(input);
-export const runSeaweedFsBackupRetentionAndGcWorkflow = () =>
-  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow();
+export const runSeaweedFsBackupWorkflow =
+  seaweedBackup.runSeaweedFsBackupWorkflow;
+export const runSeaweedFsBackupRetentionAndGcWorkflow =
+  seaweedBackup.runSeaweedFsBackupRetentionAndGcWorkflow;
 import { runWoodpeckerLogRetention as _runWoodpeckerLogRetention } from "./ci/woodpecker-retention.ts";
 import * as ciMaintenance from "./ci/maintenance.ts";
 export const runCiMaintenanceTick = ciMaintenance.runCiMaintenanceTick;
@@ -158,11 +157,10 @@ import type {
 import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
 import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
-import { photonConversationWorkflow as _photonConversationWorkflow } from "./photon/conversation.ts";
+import * as photonConversation from "./photon/conversation.ts";
 
-export const photonConversationWorkflow = (
-  ...args: Parameters<typeof _photonConversationWorkflow>
-) => _photonConversationWorkflow(...args);
+export const photonConversationWorkflow =
+  photonConversation.photonConversationWorkflow;
 export const photonAgentChatWorkflow = (
   ...args: Parameters<typeof _photonAgentChatWorkflow>
 ) => _photonAgentChatWorkflow(...args);
@@ -185,9 +183,8 @@ export function workerDeploymentCanaryWorkflow(
   return Promise.resolve();
 }
 
-export async function fetchSkillCappedManifest(): Promise<void> {
-  return _fetchSkillCappedManifest();
-}
+export const fetchSkillCappedManifest = (): Promise<void> =>
+  _fetchSkillCappedManifest();
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
@@ -463,6 +460,10 @@ export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
 import * as n from "./media/native-recovery.ts";
 import * as quarantine from "./media/native-quarantine.ts";
+import * as archive from "./media/native-archive.ts";
+export const prepareNativeArchiveWorkflow = archive.prepare;
+export const applyNativeArchiveWorkflow = archive.apply;
+export const cleanupNativeArchiveWorkflow = archive.cleanup;
 export const prepareNativeQuarantineWorkflow = quarantine.prepare;
 export const applyNativeQuarantineWorkflow = quarantine.apply;
 export const restoreNativeQuarantineWorkflow = quarantine.restore;

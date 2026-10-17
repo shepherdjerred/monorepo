@@ -6,6 +6,8 @@ import { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.t
 import { CommandResultSchema } from "#shared/api.ts";
 import { readApi, writeApi } from "#client/api.ts";
 import { QuarantineContinuations } from "./continuations.tsx";
+import { NativeArchiveReview } from "./archive/review.tsx";
+import type { z } from "zod";
 import {
   PageTitle,
   Loading,
@@ -25,16 +27,7 @@ export function NativeRecoveryReview({
     queryKey: ["native-recovery-detail", id],
     queryFn: () =>
       readApi(`/admin/native-recovery/${id}`, NativeLifecycleDetailSchema),
-    refetchInterval: (query) =>
-      ["preparing", "applying"].includes(query.state.data?.state ?? "") ||
-      query.state.data?.continuations.some(
-        (item) =>
-          item.state === "restoring" ||
-          (item.state === "restored" &&
-            item.media.some((media) => media.availability === "importing")),
-      ) === true
-        ? 5000
-        : false,
+    refetchInterval: (query) => reviewInterval(query.state.data),
   });
   const apply = useMutation({
     mutationFn: async () => {
@@ -61,9 +54,26 @@ export function NativeRecoveryReview({
     },
   });
   const review = result.data;
-  const quarantined =
-    review?.scope.schemaVersion === 2 &&
-    review.scope.lifecycleKind === "committed_quarantine";
+  const quarantined = quarantineSelection(review);
+  const archiveScope = archiveSelection(review);
+  if (archiveScope !== null && review !== undefined)
+    return (
+      <NativeArchiveReview
+        review={review}
+        scope={archiveScope}
+        acknowledged={acknowledged}
+        onAcknowledge={setAcknowledged}
+        onApply={() => {
+          apply.mutate();
+        }}
+        pending={apply.isPending}
+        error={apply.error ?? result.error}
+        onRefresh={() => {
+          void result.refetch();
+        }}
+        refreshing={result.isFetching}
+      />
+    );
   return (
     <>
       <PageTitle
@@ -270,4 +280,43 @@ export function NativeRecoveryReview({
       )}
     </>
   );
+}
+
+function archiveSelection(
+  review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
+) {
+  const scope = review?.scope;
+  return scope?.schemaVersion === 2 &&
+    scope.lifecycleKind === "superseded_archive"
+    ? scope
+    : null;
+}
+
+function quarantineSelection(
+  review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
+) {
+  return (
+    review?.scope.schemaVersion === 2 &&
+    review.scope.lifecycleKind === "committed_quarantine"
+  );
+}
+
+function reviewInterval(
+  review: z.infer<typeof NativeLifecycleDetailSchema> | undefined,
+) {
+  if (
+    ["preparing", "applying"].includes(review?.state ?? "") ||
+    review?.continuations.some(
+      (item) =>
+        item.state === "restoring" ||
+        (item.state === "restored" &&
+          item.media.some((media) => media.availability === "importing")),
+    ) === true
+  )
+    return 5000;
+  return review?.archiveContinuations?.some(
+    (item) => item.state === "pending" || item.state === "cleaning",
+  ) === true
+    ? 15_000
+    : false;
 }

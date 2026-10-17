@@ -96,6 +96,18 @@ const recoveryFixture = {
 
 function nativeRecoveryFixture() {
   return {
+    async prepareArchive(): Promise<never> {
+      throw new MediaError("conflict", "No fixture archive recovery", 409);
+    },
+    async archiveInventory() {
+      return {
+        nextCursor: null,
+        runtime: { mode: "observe", recoveryEpoch: 0, version: 0 },
+        restoreOperationId: null,
+        prerequisites: [],
+        cleanups: [],
+      };
+    },
     async prepareQuarantine(): Promise<never> {
       throw new MediaError("conflict", "No fixture quarantine recovery", 409);
     },

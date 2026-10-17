@@ -1,32 +1,67 @@
 import nodePath from "node:path";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
-import type { SubtitleAsset } from "#generated/prisma/client.ts";
+import type {
+  LibraryAsset,
+  SubtitleAsset,
+  MediaKind,
+} from "#generated/prisma/client.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { fileOperations } from "./file-operations.ts";
 import {
   ownedSubtitleSidecars,
   videoSubtitleWhere,
 } from "./subtitle-lifecycle/ownership.ts";
+import * as cleanupContract from "#shared/native-recovery/archive-plan.ts";
 
-export const UpgradeCleanupPlanSchema = z.object({
-  libraryKind: z.enum(["movies", "tv"]),
-  assetVersion: z.number().int(),
-  successorChecksum: z.string().regex(/^[a-f0-9]{64}$/u),
-  mediaIds: z.array(z.string()).min(1),
-  files: z
-    .array(
-      z.object({
-        location: z.enum(["rollback", "quarantine"]),
-        id: z.string().regex(/^[\w-]{1,100}$/u),
-        path: z.string(),
-        checksum: z.string().regex(/^[a-f0-9]{64}$/u),
-        subtitleId: z.string().nullable(),
-      }),
-    )
-    .min(1),
-});
-export type UpgradeCleanupPlan = z.infer<typeof UpgradeCleanupPlanSchema>;
+export const UpgradeCleanupPlanSchema =
+  cleanupContract.UpgradeCleanupPlanSchema;
+export type UpgradeCleanupPlan = cleanupContract.UpgradeCleanupPlan;
+
+type CleanupAsset = Pick<
+  LibraryAsset,
+  "owned" | "state" | "checksum" | "version" | "path" | "ownershipEpoch"
+> & {
+  coverage: { mediaId: string; media: { kind: MediaKind } }[];
+  subtitles: SubtitleAsset[];
+};
+
+/** Pure descriptor derivation. It neither certifies journals nor mutates historical cleanup rows. */
+export function deriveUpgradeCleanupPlan(input: {
+  asset: CleanupAsset;
+  successor: Pick<LibraryAsset, "owned" | "state" | "checksum">;
+  controlRoot: string;
+}): UpgradeCleanupPlan {
+  const { asset, successor, controlRoot } = input;
+  if (
+    !asset.owned ||
+    asset.state !== "superseded" ||
+    asset.checksum === null ||
+    successor.checksum === null ||
+    !successor.owned ||
+    !["published", "superseded", "purged"].includes(successor.state)
+  )
+    throw new FileGuardError("cleanup_ownership_changed");
+  const kind = asset.coverage[0]?.media.kind;
+  if (kind !== "movie" && kind !== "episode")
+    throw new FileGuardError("cleanup_coverage_unknown");
+  return UpgradeCleanupPlanSchema.parse({
+    libraryKind: kind === "movie" ? "movies" : "tv",
+    assetVersion: asset.version,
+    successorChecksum: successor.checksum,
+    mediaIds: asset.coverage.map((item) => item.mediaId).sort(),
+    files: [
+      {
+        location: "rollback",
+        id: controlId(controlRoot, asset.path, "rollback"),
+        path: asset.path,
+        checksum: asset.checksum,
+        subtitleId: null,
+      },
+      ...sidecarFiles(controlRoot, ownedSubtitleSidecars(asset)),
+    ],
+  });
+}
 
 export async function prepareUpgradeCleanupPlan(
   context: FileContext,
@@ -75,22 +110,10 @@ export async function prepareUpgradeCleanupPlan(
     journal.sha256 !== successor.checksum
   )
     throw new FileGuardError("cleanup_import_unproven");
-  const files: UpgradeCleanupPlan["files"] = [
-    {
-      location: "rollback",
-      id: importId,
-      path: asset.path,
-      checksum: asset.checksum,
-      subtitleId: null,
-    },
-  ];
-  files.push(...sidecarFiles(roots.control, ownedSubtitleSidecars(asset)));
-  const plan = UpgradeCleanupPlanSchema.parse({
-    libraryKind,
-    assetVersion: asset.version,
-    successorChecksum: successor.checksum,
-    mediaIds: asset.coverage.map((item) => item.mediaId).sort(),
-    files,
+  const plan = deriveUpgradeCleanupPlan({
+    asset,
+    successor,
+    controlRoot: roots.control,
   });
   await context.db.upgradeCleanup.updateMany({
     where: {

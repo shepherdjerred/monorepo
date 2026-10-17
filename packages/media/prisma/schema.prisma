@@ -585,6 +585,7 @@ model LibraryAsset {
 }
 
 model UpgradeCleanup {
+  nativeArchiveContinuations NativeArchiveCleanupContinuation[]
   id String @id @default(uuid())
   assetId String
   asset LibraryAsset @relation(fields: [assetId], references: [id], onDelete: Restrict)
@@ -777,6 +778,7 @@ model RetentionDecision {
 }
 
 model Operation {
+  nativeArchiveCoordinators NativeArchiveCleanupContinuation[]
   nativeQuarantineCoordinators NativeQuarantineContinuation[]
   subtitleReplacementCoordinators SubtitleReplacement[]
   nativeRecoveryPlans NativeRecoveryPlan[]
@@ -941,6 +943,7 @@ model NativeRecoveryObservation {
 }
 
 model NativeRecoveryReceipt {
+  archiveContinuations NativeArchiveCleanupContinuation[]
   quarantineContinuations NativeQuarantineContinuation[]
   id String @id @default(uuid())
   planId String @unique
@@ -953,6 +956,27 @@ model NativeRecoveryReceipt {
   actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
   selection Json
   createdAt DateTime @default(now())
+}
+
+model NativeArchiveCleanupContinuation {
+  id String @id @default(uuid())
+  receiptId String
+  receipt NativeRecoveryReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  originalCleanupId String
+  originalCleanup UpgradeCleanup @relation(fields: [originalCleanupId], references: [id], onDelete: Restrict)
+  recoveryEpoch Int
+  descriptor Json
+  descriptorHash String
+  state String @default("pending")
+  version Int @default(0)
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
+  executionEvidence Json?
+  completion Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([receiptId, originalCleanupId], map: "native_archive_receipt_cleanup_key")
+  @@index([state, recoveryEpoch])
 }
 
 model NativeQuarantineContinuation {
