@@ -5,6 +5,7 @@ import {
   taskInfoSchema,
 } from "@tasknotes/model";
 import { z } from "zod";
+import * as publicContract from "./v2.ts";
 
 import {
   CompleteInstanceRequestSchema,
@@ -12,6 +13,8 @@ import {
   RecurringCompletionRestoreSchema,
   StatusConfigV2Schema,
   TaskInfoV2Schema,
+  TaskCreationRequestSchema,
+  TaskUpdateRequestSchema,
   projectDisplayName,
   projectMatches,
   projectPath,
@@ -55,9 +58,19 @@ function v4Shape(schema: z.ZodObject): Map<string, { optional: boolean }> {
   return entries;
 }
 
-function assertMirrors(model: unknown, mirror: z.ZodObject, label: string) {
+function assertMirrors(
+  model: unknown,
+  mirror: z.ZodObject,
+  label: string,
+  retired: readonly string[] = [],
+) {
   const expected = v3Shape(model);
   const actual = v4Shape(mirror);
+  for (const key of retired) {
+    expect(expected.has(key)).toBe(true);
+    expect(actual.has(key)).toBe(false);
+    expected.delete(key);
+  }
   expect([...actual.keys()].sort()).toEqual([...expected.keys()].sort());
   for (const [key, entry] of expected) {
     const mirrored = actual.get(key);
@@ -69,8 +82,48 @@ function assertMirrors(model: unknown, mirror: z.ZodObject, label: string) {
 }
 
 describe("v2 wire schemas mirror @tasknotes/model", () => {
+  test("the public facade does not advertise retired operations or upstream tracking defaults", () => {
+    for (const name of [
+      "buildTimeTrackingStartPlan",
+      "buildTimeTrackingStopPlan",
+      "executeConformanceOperation",
+      "timeEntrySchema",
+      "TimeEntryV2Schema",
+      "TaskTimeResponseSchema",
+      "TimeSummaryResponseSchema",
+      "ALL_FIELD_ROLES",
+      "DEFAULT_FIELD_MAPPING",
+      "DEFAULT_MODEL_CONFIG",
+      "taskInfoSchema",
+    ]) {
+      expect(Object.hasOwn(publicContract, name)).toBe(false);
+    }
+  });
+
+  test("requests reject retired fields while preserving custom field support", () => {
+    for (const key of ["timeEstimate", "timeEntries", "totalTrackedTime"]) {
+      expect(
+        TaskCreationRequestSchema.safeParse({ title: "Task", [key]: null })
+          .success,
+      ).toBe(false);
+      expect(TaskUpdateRequestSchema.safeParse({ [key]: null }).success).toBe(
+        false,
+      );
+    }
+    expect(
+      TaskCreationRequestSchema.parse({
+        title: "Task",
+        customProperty: "kept",
+      }),
+    ).toEqual({ title: "Task", customProperty: "kept" });
+  });
+
   test("TaskInfoV2Schema matches taskInfoSchema keys and optionality", () => {
-    assertMirrors(taskInfoSchema, TaskInfoV2Schema, "TaskInfo");
+    assertMirrors(taskInfoSchema, TaskInfoV2Schema, "TaskInfo", [
+      "timeEstimate",
+      "timeEntries",
+      "totalTrackedTime",
+    ]);
   });
 
   test("StatusConfigV2Schema matches statusConfigSchema", () => {
@@ -96,7 +149,6 @@ describe("v2 wire schemas mirror @tasknotes/model", () => {
       recurrence: "FREQ=DAILY",
       recurrence_anchor: "scheduled",
       complete_instances: ["2026-07-01"],
-      timeEntries: [{ startTime: "2026-07-01T09:00:00Z", duration: 30 }],
       blockedBy: [{ uid: "other", reltype: "FINISHTOSTART" }],
       reminders: [{ id: "r1", type: "relative", relatedTo: "due" }],
     };

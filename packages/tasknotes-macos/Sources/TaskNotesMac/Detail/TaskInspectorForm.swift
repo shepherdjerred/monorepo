@@ -59,7 +59,6 @@ struct TaskInspectorForm: View {
     let dispatch: (CommandInput) -> Void
 
     @State private var title: EditedText
-    @State private var estimate: EditedText
     @State private var details: EditedText
     @State private var commitRegistrationID = UUID()
 
@@ -73,7 +72,6 @@ struct TaskInspectorForm: View {
     /// each other.
     private enum Field: Hashable {
         case title
-        case estimate
     }
 
     init(
@@ -91,8 +89,6 @@ struct TaskInspectorForm: View {
         self.attempt = attempt
         self.dispatch = dispatch
         _title = State(initialValue: EditedText(stored: detail.task.title))
-        _estimate = State(
-            initialValue: EditedText(stored: TaskTextEdit.estimateText(of: detail.task)))
         _details = State(initialValue: EditedText(stored: detail.task.details ?? ""))
     }
 
@@ -186,7 +182,6 @@ struct TaskInspectorForm: View {
             }
 
             Section("Effort") {
-                estimateField
             }
 
             Section("Details") {
@@ -204,9 +199,6 @@ struct TaskInspectorForm: View {
         // and `.id(detail.id)` rebuilds the form, so a refreshed title sat
         // behind a stale buffer that the next commit would write back over it.
         .onChange(of: detail.task.title) { _, stored in title.refresh(stored: stored) }
-        .onChange(of: detail.task.timeEstimate) { _, _ in
-            estimate.refresh(stored: TaskTextEdit.estimateText(of: detail.task))
-        }
         .onChange(of: detail.task.details) { _, stored in
             details.refresh(stored: stored ?? "")
         }
@@ -283,43 +275,6 @@ struct TaskInspectorForm: View {
         }
         .accessibilityIdentifier(AccessibilityIdentifier.Inspector.priority)
     }
-
-    /// The time estimate, in whole minutes.
-    ///
-    /// Minutes in, words out: the caption beside it is the same number spelled
-    /// by ``TaskDurationText``, so a user typing `90` sees "1 hr, 30 min" and
-    /// learns the unit without a label that says "minutes" forever.
-    ///
-    /// The placeholder is an em dash rather than the word "Minutes" — which
-    /// overflowed the field and read as a *value* sitting next to "No estimate",
-    /// so the row said two contradictory things at once. The unit reaches a
-    /// sighted reader through the caption and a VoiceOver user through the
-    /// field's own label.
-    private var estimateField: some View {
-        LabeledContent("Estimate") {
-            HStack(spacing: 8) {
-                PlainTextField(
-                    text: $estimate.text,
-                    prompt: "—",
-                    onSubmit: commitEstimate,
-                    onCancel: { estimate.revert(to: TaskTextEdit.estimateText(of: detail.task)) }
-                )
-                .help("Whole minutes")
-                .focused($focus, equals: .estimate)
-                .onChange(of: focus) { previous, _ in
-                    if previous == .estimate { commitEstimate() }
-                }
-                .frame(width: 72)
-                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.timeEstimate)
-                .accessibilityLabel("Time estimate in minutes")
-
-                Text(detail.timeEstimateText ?? "No estimate")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-            }
-        }
-    }
 }
 
 extension TaskInspectorForm {
@@ -365,7 +320,7 @@ extension TaskInspectorForm {
     /// the panel opened with back over an edit that arrived while it was open.
     ///
     /// The baseline is only advanced when the core actually took the value, so
-    /// a refused title or a mistyped estimate stays an edit rather than being
+    /// a refused title or note body stays an edit rather than being
     /// adopted and forgotten.
     ///
     /// ⚠️ **Validation succeeding is not the value being recorded, and the
@@ -379,7 +334,6 @@ extension TaskInspectorForm {
     /// the round trip is still an edit.
     private enum BufferedField: Sendable {
         case title
-        case estimate
         case details
     }
 
@@ -398,15 +352,6 @@ extension TaskInspectorForm {
         )
     }
 
-    private func estimateOffer() -> BufferedOffer? {
-        guard let offered = estimate.offer() else { return nil }
-        return BufferedOffer(
-            field: .estimate,
-            text: offered,
-            outcome: TaskTextEdit.estimating(offered, of: detail.task)
-        )
-    }
-
     private func detailsOffer() -> BufferedOffer? {
         guard let offered = details.offer() else { return nil }
         return BufferedOffer(
@@ -421,11 +366,6 @@ extension TaskInspectorForm {
         perform([offer])
     }
 
-    private func commitEstimate() {
-        guard let offer = estimateOffer() else { return }
-        perform([offer])
-    }
-
     private func commitDetails() {
         guard let offer = detailsOffer() else { return }
         perform([offer])
@@ -435,15 +375,15 @@ extension TaskInspectorForm {
     ///
     /// Safe to call unconditionally: each one is a no-op for a field the user
     /// did not edit. Sequential rather than concurrent so a panel closed with
-    /// three edits in it enqueues them in the order they appear.
+    /// two edits in it enqueues them in the order they appear.
     private func commitText() {
-        let offers = [titleOffer(), estimateOffer(), detailsOffer()].compactMap { $0 }
+        let offers = [titleOffer(), detailsOffer()].compactMap { $0 }
         perform(offers)
     }
 
     /// The termination path, which must not outlive the process that launched it.
     private func commitTextAndWait() async {
-        let offers = [titleOffer(), estimateOffer(), detailsOffer()].compactMap { $0 }
+        let offers = [titleOffer(), detailsOffer()].compactMap { $0 }
         await performAndWait(offers)
     }
 
@@ -457,7 +397,6 @@ extension TaskInspectorForm {
 
     private func performAndWait(_ offers: [BufferedOffer]) async {
         var acceptedTitle = false
-        var acceptedEstimate = false
         var acceptedDetails = false
         for offer in offers {
             let accepted = await attempt(offer.outcome)
@@ -465,7 +404,6 @@ extension TaskInspectorForm {
             guard accepted else { continue }
             switch offer.field {
             case .title: acceptedTitle = true
-            case .estimate: acceptedEstimate = true
             case .details: acceptedDetails = true
             }
         }
@@ -477,7 +415,6 @@ extension TaskInspectorForm {
         // the invalid value must remain visible for the user to correct.
         var retries: [BufferedOffer] = []
         if acceptedTitle, let offer = titleOffer() { retries.append(offer) }
-        if acceptedEstimate, let offer = estimateOffer() { retries.append(offer) }
         if acceptedDetails, let offer = detailsOffer() { retries.append(offer) }
         if !retries.isEmpty {
             await performAndWait(retries)
@@ -488,8 +425,6 @@ extension TaskInspectorForm {
         switch (offer.field, accepted) {
         case (.title, true): title.accept(offer.text)
         case (.title, false): title.reject(offer.text)
-        case (.estimate, true): estimate.accept(offer.text)
-        case (.estimate, false): estimate.reject(offer.text)
         case (.details, true): details.accept(offer.text)
         case (.details, false): details.reject(offer.text)
         }

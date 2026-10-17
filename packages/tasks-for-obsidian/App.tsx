@@ -5,18 +5,15 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Sentry from "@sentry/react-native";
 
 import { ApiClientProvider } from "./src/state/ApiClientContext";
-import { PomodoroProvider } from "./src/state/PomodoroContext";
 import { SettingsProvider } from "./src/state/SettingsContext";
 import { SyncProvider } from "./src/state/SyncContext";
 import { TaskProvider } from "./src/state/TaskContext";
-import { TimeTrackingProvider } from "./src/state/TimeTrackingContext";
 import { UndoProvider } from "./src/state/UndoContext";
 import { useSettings } from "./src/hooks/use-settings";
 import { useSyncContext } from "./src/state/SyncContext";
 import { useAppState } from "./src/hooks/use-app-state";
 import { ErrorBoundary } from "./src/components/common/ErrorBoundary";
 import { ConnectionBanner } from "./src/components/common/ConnectionBanner";
-import { ActiveTimeTrackingOverlay } from "./src/components/timer/ActiveTimeTrackingOverlay";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { E2EConfigHandler } from "./src/navigation/E2EConfigHandler";
 import { initFeedback } from "./src/lib/feedback";
@@ -49,7 +46,6 @@ function ThemedApp() {
       <ConnectionBanner />
       {__DEV__ && <E2EConfigHandler />}
       <AppNavigator />
-      <ActiveTimeTrackingOverlay />
     </>
   );
 }
@@ -65,17 +61,13 @@ function App() {
         <ErrorBoundary>
           <SettingsProvider>
             <ApiClientProvider>
-              <PomodoroProvider>
-                <TaskProvider>
-                  <SyncProvider>
-                    <TimeTrackingProvider>
-                      <UndoProvider>
-                        <ThemedApp />
-                      </UndoProvider>
-                    </TimeTrackingProvider>
-                  </SyncProvider>
-                </TaskProvider>
-              </PomodoroProvider>
+              <TaskProvider>
+                <SyncProvider>
+                  <UndoProvider>
+                    <ThemedApp />
+                  </UndoProvider>
+                </SyncProvider>
+              </TaskProvider>
             </ApiClientProvider>
           </SettingsProvider>
         </ErrorBoundary>

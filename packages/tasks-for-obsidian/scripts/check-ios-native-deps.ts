@@ -1,14 +1,6 @@
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-
-const DEPENDENCY_SECTIONS = [
-  "dependencies",
-  "devDependencies",
-  "optionalDependencies",
-  "peerDependencies",
-];
 
 const JsonObjectSchema = z.record(z.string(), z.unknown());
 
@@ -17,19 +9,6 @@ function jsonObjectOrUndefined(
 ): Record<string, unknown> | undefined {
   const result = JsonObjectSchema.safeParse(value);
   return result.success ? result.data : undefined;
-}
-
-function readJsonFile(filePath: string): unknown {
-  return JSON.parse(readFileSync(filePath, "utf8"));
-}
-
-function readJsonObject(filePath: string): Record<string, unknown> {
-  const value = readJsonFile(filePath);
-  const parsed = jsonObjectOrUndefined(value);
-  if (parsed === undefined) {
-    throw new Error(`${filePath} must contain a JSON object`);
-  }
-  return parsed;
 }
 
 function stringRecord(value: unknown): Map<string, string> {
@@ -61,14 +40,6 @@ function dependencyNames(
   return names;
 }
 
-function packagePath(rootDir: string, packageName: string): string {
-  return path.join(rootDir, "node_modules", ...packageName.split("/"));
-}
-
-function packageJsonPath(rootDir: string, packageName: string): string {
-  return path.join(packagePath(rootDir, packageName), "package.json");
-}
-
 function isOptionalPeer(
   packageJson: Record<string, unknown>,
   peerName: string,
@@ -85,45 +56,152 @@ function isNativePeerDependency(peerName: string): boolean {
   return peerName === "react-native" || peerName.startsWith("react-native-");
 }
 
-function formatList(items: Iterable<string>): string {
-  return [...items].sort((a, b) => a.localeCompare(b)).join(", ");
-}
-
-const MISE_BUN_PATTERN = /^bun\s*=\s*"([^"]+)"/m;
-const POST_CLONE_BUN_TAG_PATTERN = /BUN_INSTALL_TAG="bun-v([^"]+)"/;
-
-/**
- * The Xcode Cloud worker installs its own bun via ci_post_clone.sh instead of
- * using the repo's mise toolchain. An older bun cannot parse newer bun.lock
- * versions (lockfileVersion 2 from bun 1.4 failed every Archive from #92 to
- * #100 with "Unknown lockfile version"), so the script's pin must match the
- * root .mise.toml exactly. Either side being unparseable is a violation, not a
- * skip: a guard that cannot see the pin cannot protect the Archive.
- */
-export function findBunVersionDriftMessages(options: {
+/** Validate the native archive producer; legacy RN helpers below retain unit coverage. */
+export function findNativeBootstrapMessages(options: {
   miseToml: string;
   postCloneScript: string;
+  wrapper: string;
+  project: string;
+  wrapperExecutable: boolean;
+  packageJson: string;
 }): string[] {
-  const miseVersion = MISE_BUN_PATTERN.exec(options.miseToml)?.[1];
-  if (miseVersion === undefined) {
-    return [
-      'Could not find `bun = "<version>"` in the root .mise.toml; the Xcode Cloud bun pin cannot be validated.',
-    ];
+  const messages = findToolchainMessages(options);
+  messages.push(
+    ...findWrapperMessages(options.wrapper, options.wrapperExecutable),
+  );
+  if (
+    !/"ios:native:generate"\s*:\s*"ios\/ci_scripts\/mise-native\.sh exec -- xcodegen generate --spec ios\/project\.yml --project ios"/.test(
+      options.packageJson,
+    )
+  ) {
+    messages.push(
+      "Native project generation must use the tracked pinned Apple bootstrap, without untracked root bin tools.",
+    );
   }
-  const tagVersion = POST_CLONE_BUN_TAG_PATTERN.exec(
-    options.postCloneScript,
-  )?.[1];
-  if (tagVersion === undefined) {
-    return [
-      'Could not find BUN_INSTALL_TAG="bun-v<version>" in ios/ci_scripts/ci_post_clone.sh; the Xcode Cloud bun pin cannot be validated.',
-    ];
+  const requirements = [
+    [
+      'facet_mise="$facet_repo_root/packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh"',
+      "Post-clone must bootstrap the tracked native Apple mise wrapper.",
+    ],
+    [
+      '"$facet_mise" install --yes bun rust aqua:yonaskolb/XcodeGen',
+      "Post-clone must install native tools from the root manifest.",
+    ],
+    [
+      "export MISE_EXEC_AUTO_INSTALL=false",
+      "Post-clone must keep exec from installing unrelated monorepo tools after its explicit native tool install.",
+    ],
+    [
+      '"$facet_mise" exec -- bun install --frozen-lockfile --ignore-scripts',
+      "Post-clone must install the frozen root workspace without lifecycle scripts.",
+    ],
+    [
+      'cd "$facet_repo_root"',
+      "Post-clone must install dependencies at the repository root.",
+    ],
+    [
+      "build-xcframework --platform ios --platform ios-sim",
+      "Post-clone must build device and simulator Rust slices.",
+    ],
+    [
+      "cargo xtask check-xcframework",
+      "Post-clone must verify generated bindings against the XCFramework.",
+    ],
+    [
+      "bun ../tasknotes-macos/scripts/generate-native-notices.ts --ios",
+      "Post-clone must bundle locked native third-party license texts.",
+    ],
+    [
+      '"$facet_mise" exec -- xcodegen generate',
+      "Post-clone must generate the native project using the shared toolchain.",
+    ],
+  ] as const;
+  for (const [required, message] of requirements) {
+    if (!options.postCloneScript.includes(required)) messages.push(message);
   }
-  if (miseVersion !== tagVersion) {
-    return [
-      `Xcode Cloud installs bun ${tagVersion} but the repo pins bun ${miseVersion} in .mise.toml. Align BUN_INSTALL_TAG in ios/ci_scripts/ci_post_clone.sh — an older bun cannot parse the current bun.lock and fails the Archive during post-clone install.`,
-    ];
+  if (
+    /BUN_INSTALL_TAG|--linker[ =]hoisted|brew install|pod install|react-native|Metro/.test(
+      options.postCloneScript,
+    )
+  ) {
+    messages.push(
+      "Post-clone contains a separate tool pin or legacy React Native bootstrap.",
+    );
   }
-  return [];
+  const appTarget = options.project
+    .split("\n  TasksForObsidian:")[1]
+    ?.split(/\n {2}[\w-]+:/i)[0];
+  if (
+    appTarget === undefined ||
+    !appTarget.includes("product: TaskNotesFacetUI") ||
+    !appTarget.includes("path: Facet") ||
+    !appTarget.includes(
+      "PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian",
+    ) ||
+    !options.project.includes(
+      "CODE_SIGN_ENTITLEMENTS: TasksWidget/TasksWidget.entitlements",
+    )
+  ) {
+    messages.push(
+      "Native release project must preserve the registered app, widget and standalone SwiftUI product.",
+    );
+  }
+  return messages;
+}
+
+function findToolchainMessages(options: {
+  miseToml: string;
+  project: string;
+}): string[] {
+  const messages: string[] = [];
+  for (const tool of ["bun", "rust"]) {
+    if (
+      !new RegExp(String.raw`^${tool}\s*=\s*"\d+\.\d+\.\d+"`, "m").test(
+        options.miseToml,
+      )
+    ) {
+      messages.push(`Root .mise.toml must pin ${tool}.`);
+    }
+  }
+  const xcodeGen =
+    /^"aqua:yonaskolb\/XcodeGen"\s*=\s*\{\s*version\s*=\s*"([^"]+)",\s*os\s*=\s*\["macos"\]\s*\}/m.exec(
+      options.miseToml,
+    )?.[1];
+  if (xcodeGen === undefined)
+    messages.push("Root XcodeGen pin must be restricted to macOS.");
+  if (
+    xcodeGen !== undefined &&
+    !options.project.includes(`minimumXcodeGenVersion: "${xcodeGen}"`)
+  ) {
+    messages.push(
+      "Native project minimum XcodeGen version must match the root toolchain.",
+    );
+  }
+  return messages;
+}
+
+function findWrapperMessages(wrapper: string, executable: boolean): string[] {
+  const messages: string[] = [];
+  if (!executable)
+    messages.push(
+      "Shared mise wrapper must be executable in a fresh checkout.",
+    );
+  if (
+    !/mise_version="\d+\.\d+\.\d+"/.test(wrapper) ||
+    !wrapper.includes('export MISE_DATA_DIR="$localized_dir"') ||
+    !wrapper.includes("shasum -a 256 -c")
+  ) {
+    messages.push(
+      "Shared mise wrapper must pin, localize and verify its bootstrap download.",
+    );
+  }
+  for (const arch of ["x86_64", "arm64"]) {
+    if (!new RegExp(`checksum_macos_${arch}="[a-f0-9]{64}`).test(wrapper))
+      messages.push(
+        `Shared mise wrapper lacks a verified macOS ${arch} asset.`,
+      );
+  }
+  return messages;
 }
 
 export function findMissingNativePeerDependencyMessages(
@@ -218,55 +296,6 @@ export function findMissingIosPodspecMessages(
   return messages;
 }
 
-function loadInstalledPackageJsons(
-  rootDir: string,
-  appPackageJson: Record<string, unknown>,
-): Map<string, Record<string, unknown>> {
-  const installedPackageJsonByName = new Map<string, Record<string, unknown>>();
-  const declaredPackageNames = dependencyNames(
-    appPackageJson,
-    DEPENDENCY_SECTIONS,
-  );
-
-  for (const packageName of declaredPackageNames) {
-    const filePath = packageJsonPath(rootDir, packageName);
-    if (!existsSync(filePath)) continue;
-
-    installedPackageJsonByName.set(packageName, readJsonObject(filePath));
-  }
-
-  return installedPackageJsonByName;
-}
-
-function ensureNodeModules(rootDir: string): string[] {
-  const nodeModules = path.join(rootDir, "node_modules");
-  if (!existsSync(nodeModules)) {
-    return [
-      "node_modules is missing. Run bun install --frozen-lockfile (workspace root) before checking iOS native deps.",
-    ];
-  }
-
-  return statSync(nodeModules).isDirectory()
-    ? []
-    : ["node_modules exists but is not a directory."];
-}
-
-function loadReactNativeConfig(rootDir: string): unknown {
-  const executable = path.join(rootDir, "node_modules", ".bin", "react-native");
-  const result = spawnSync(executable, ["config"], {
-    cwd: rootDir,
-    encoding: "utf8",
-  });
-
-  if (result.status !== 0) {
-    throw new Error(
-      `react-native config failed with exit code ${result.status ?? "unknown"}:\n${result.stderr}`,
-    );
-  }
-
-  return JSON.parse(result.stdout);
-}
-
 function findRepoRoot(startDir: string): string | undefined {
   let dir: string | undefined = startDir;
   while (dir !== undefined) {
@@ -279,41 +308,31 @@ function findRepoRoot(startDir: string): string | undefined {
 
 function main(): void {
   const rootDir = process.cwd();
-  const packageJsonPathValue = path.join(rootDir, "package.json");
-  const appPackageJson = readJsonObject(packageJsonPathValue);
-  const issues = ensureNodeModules(rootDir);
-
-  if (issues.length === 0) {
-    const installedPackageJsons = loadInstalledPackageJsons(
-      rootDir,
-      appPackageJson,
-    );
-    issues.push(
-      ...findMissingNativePeerDependencyMessages(
-        appPackageJson,
-        installedPackageJsons,
-      ),
-    );
-    issues.push(
-      ...findMissingIosPodspecMessages(loadReactNativeConfig(rootDir), (p) =>
-        existsSync(p),
-      ),
-    );
-  }
-
+  const issues: string[] = [];
   const repoRoot = findRepoRoot(rootDir);
   if (repoRoot === undefined) {
     issues.push(
-      "Could not locate the repository root (.mise.toml) from the current directory; the Xcode Cloud bun pin cannot be validated.",
+      "Could not locate the repository root (.mise.toml) from the current directory.",
     );
   } else {
     issues.push(
-      ...findBunVersionDriftMessages({
+      ...findNativeBootstrapMessages({
         miseToml: readFileSync(path.join(repoRoot, ".mise.toml"), "utf8"),
         postCloneScript: readFileSync(
           path.join(rootDir, "ios", "ci_scripts", "ci_post_clone.sh"),
           "utf8",
         ),
+        wrapper: readFileSync(
+          path.join(rootDir, "ios", "ci_scripts", "mise-native.sh"),
+          "utf8",
+        ),
+        wrapperExecutable:
+          (statSync(path.join(rootDir, "ios", "ci_scripts", "mise-native.sh"))
+            .mode &
+            0o111) !==
+          0,
+        project: readFileSync(path.join(rootDir, "ios", "project.yml"), "utf8"),
+        packageJson: readFileSync(path.join(rootDir, "package.json"), "utf8"),
       }),
     );
   }
@@ -327,9 +346,7 @@ function main(): void {
   }
 
   console.log(
-    `iOS native dependency check passed for ${formatList(
-      dependencyNames(appPackageJson, ["dependencies"]),
-    )}`,
+    "iOS native archive dependency contract passed (shared mise, frozen workspace, Rust slices, SwiftUI and widget identities).",
   );
 }
 

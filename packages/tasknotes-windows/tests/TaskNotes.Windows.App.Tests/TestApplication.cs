@@ -14,6 +14,7 @@ namespace TaskNotes.Windows.App.Tests
         public TestApplication()
         {
             InitializeComponent();
+            TaskNotes.Windows.App.PresentationResources.Install(Resources);
         }
 
         /// <inheritdoc />

@@ -65,7 +65,6 @@ export const MissingTaskFieldSchema = z.enum([
   "scheduled",
   "deadline",
   "recurrence",
-  "estimate",
 ]);
 
 export const SavedViewCompletionQuerySchema = z.enum([

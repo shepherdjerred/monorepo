@@ -3,12 +3,14 @@ import {
   updateToNextScheduledOccurrence,
 } from "tasknotes-types/v2";
 import type {
-  FieldMapping,
+  TaskNotesModelConfig,
   RecurringCompletionRestore,
   RecurringTaskCompletePlan,
   TaskInfo,
   TaskPatchOperation,
 } from "tasknotes-types/v2";
+
+type FieldMapping = TaskNotesModelConfig["fieldMapping"];
 
 export type RestoreValidationInput = {
   readonly task: TaskInfo;

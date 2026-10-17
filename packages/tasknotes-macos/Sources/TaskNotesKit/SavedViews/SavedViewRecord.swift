@@ -102,10 +102,10 @@ struct SavedViewRecord: Codable, Equatable, Sendable {
     func view() throws(CoreError) -> SavedView {
         guard let resolvedSymbol = SavedViewSymbol(rawValue: symbol) else {
             throw CoreError.Validation(
-                message: "saved view \(id) uses an unknown symbol “\(symbol)”")
+                detail: "saved view \(id) uses an unknown symbol “\(symbol)”")
         }
         guard !name.trimmingWhitespace().isEmpty else {
-            throw CoreError.Validation(message: "saved view \(id) has no name")
+            throw CoreError.Validation(detail: "saved view \(id) has no name")
         }
         let draft = try CoreErrors.rethrowingCore("reading saved view \(id)") {
             SavedViewDraft(

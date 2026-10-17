@@ -54,8 +54,6 @@ namespace TaskNotes.Windows.Tests
         [DataRow("tasknotes://settings", "settings")]
         [DataRow("tasknotes://search?q=ship+windows", "search")]
         [DataRow("tasknotes://quick-add?text=ship+windows", "quick-add")]
-        [DataRow("tasknotes://pomodoro", "pomodoro")]
-        [DataRow("tasknotes://time-report", "time-report")]
         [DataRow("tasknotes://tasks/task%201", "tasks")]
         [DataRow("tasknotes://projects/Windows%20App", "projects")]
         [DataRow("tasknotes://contexts/desktop", "contexts")]
@@ -82,6 +80,8 @@ namespace TaskNotes.Windows.Tests
         [DataRow("tasknotes://tag")]
         [DataRow("tasknotes://view")]
         [DataRow("tasknotes://unsupported")]
+        [DataRow("tasknotes://pomodoro")]
+        [DataRow("tasknotes://time-report")]
         public void ActivationRejectsValuelessEntitiesAndUnknownHosts(string uri)
         {
             _ = Assert.ThrowsExactly<ArgumentException>(() =>
@@ -187,26 +187,16 @@ namespace TaskNotes.Windows.Tests
             Assert.IsFalse(editor.IsDirty);
         }
 
-        /// <summary>Projects dependency, estimate, and live timing state through the editor.</summary>
+        /// <summary>Projects dependency warnings and disposes dispatcher subscriptions.</summary>
         [TestMethod]
-        public async Task EditorProjectsTimingDependenciesAndDispatcherLifecycle()
+        public void EditorProjectsDependenciesAndDispatcherLifecycle()
         {
             TestTaskNotesStore store = new();
             ImmediateDispatcher dispatcher = new();
             TaskEditorViewModel editor = new(store, dispatcher);
-            _ = await Assert.ThrowsExactlyAsync<InvalidOperationException>(async () =>
-                await editor.ToggleTimeAsync(TestContext.CancellationToken)
-            );
-            _ = await Assert.ThrowsExactlyAsync<InvalidOperationException>(async () =>
-                await editor.LoadTimeAsync(TestContext.CancellationToken)
-            );
-            Assert.IsTrue(double.IsNaN(editor.EstimateValue));
-            Assert.AreEqual(string.Empty, editor.TrackedTimeLabel);
-            Assert.IsFalse(editor.IsTimerActive);
-
             TaskItem blocked = new(
-                "timed",
-                "Timed task",
+                "blocked",
+                "Blocked task",
                 null,
                 "open",
                 "Open",
@@ -219,71 +209,22 @@ namespace TaskNotes.Windows.Tests
                 [],
                 [],
                 [],
-                45,
-                12,
                 true,
                 false,
                 false,
                 false,
                 false,
                 null,
-                string.Empty,
-                true
+                string.Empty
             );
             editor.Load(blocked);
-            Assert.AreEqual(45d, editor.EstimateValue);
             Assert.AreEqual("Blocked by another task", editor.DependencyLabel);
-            Assert.AreEqual("Tracked: 12 minutes", editor.TrackedTimeLabel);
-            Assert.AreEqual("Stop timer", editor.TimerLabel);
-            editor.EstimateValue = 31.6;
-            Assert.AreEqual(32u, editor.TimeEstimate);
-            editor.EstimateValue = double.NaN;
-            Assert.IsNull(editor.TimeEstimate);
-            await editor.LoadTimeAsync(TestContext.CancellationToken);
-
-            store.Publish(
-                TaskNotesState.Unconfigured with
-                {
-                    TaskTime = new TaskTimeReading("other", 3, false),
-                }
-            );
-            Assert.IsTrue(editor.IsTimerActive);
-
-            store.Publish(
-                TaskNotesState.Unconfigured with
-                {
-                    TaskTime = new TaskTimeReading("timed", 12, true),
-                }
-            );
-            Assert.IsTrue(editor.IsTimerActive);
-            Assert.AreEqual("Stop timer", editor.TimerLabel);
-            await editor.ToggleTimeAsync(TestContext.CancellationToken);
-            Assert.AreEqual(2, store.TimingCount);
-
-            store.Publish(
-                TaskNotesState.Unconfigured with
-                {
-                    TaskTime = new TaskTimeReading("timed", 12, false),
-                }
-            );
-            Assert.IsFalse(editor.IsTimerActive);
-            Assert.AreEqual("Start timer", editor.TimerLabel);
-            await editor.ToggleTimeAsync(TestContext.CancellationToken);
-            Assert.AreEqual(3, store.TimingCount);
-            Assert.IsGreaterThanOrEqualTo(2, dispatcher.DispatchCount);
-
+            store.Publish(TaskNotesState.Unconfigured);
+            Assert.IsGreaterThanOrEqualTo(1, dispatcher.DispatchCount);
             int dispatchedOffThread = dispatcher.DispatchCount;
             dispatcher.HasThreadAccess = true;
-            store.Publish(
-                TaskNotesState.Unconfigured with
-                {
-                    TaskTime = new TaskTimeReading("timed", 12, true),
-                }
-            );
-            Assert.IsTrue(editor.IsTimerActive);
+            store.Publish(TaskNotesState.Unconfigured);
             Assert.AreEqual(dispatchedOffThread, dispatcher.DispatchCount);
-            dispatcher.HasThreadAccess = false;
-
             TaskItem blocking = new(
                 "blocking",
                 "Blocking task",
@@ -299,16 +240,13 @@ namespace TaskNotes.Windows.Tests
                 [],
                 [],
                 [],
-                null,
-                0,
                 false,
                 true,
                 false,
                 false,
                 false,
                 null,
-                string.Empty,
-                false
+                string.Empty
             );
             editor.Load(blocking);
             Assert.AreEqual("Blocking another task", editor.DependencyLabel);
@@ -356,31 +294,6 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual(2, store.ParkedCount);
             settings.Dispose();
             settings.Dispose();
-        }
-
-        /// <summary>Projects every live timing and Pomodoro operation from the store snapshot.</summary>
-        [TestMethod]
-        public async Task AuxiliaryViewModelsRefreshLiveServerState()
-        {
-            TestTaskNotesStore store = new();
-            PomodoroReading pomodoro = new(true, "one", 120, "focus");
-            TimeReportReading report = new(30, [new TimeReportRow("one", "Task", 30)]);
-            store.State = TaskNotesState.Unconfigured with
-            {
-                Pomodoro = pomodoro,
-                TimeReport = report,
-            };
-            PomodoroViewModel pomodoroViewModel = new(store);
-            await pomodoroViewModel.LoadAsync(TestContext.CancellationToken);
-            await pomodoroViewModel.StartAsync("one", TestContext.CancellationToken);
-            await pomodoroViewModel.PauseOrResumeAsync(TestContext.CancellationToken);
-            await pomodoroViewModel.StopAsync(TestContext.CancellationToken);
-            Assert.AreEqual(4, store.PomodoroCount);
-            Assert.AreSame(pomodoro, pomodoroViewModel.State);
-            TimeReportViewModel timeReport = new(store);
-            await timeReport.LoadAsync("week", TestContext.CancellationToken);
-            Assert.AreSame(report, timeReport.Report);
-            Assert.AreEqual(1, store.TimingCount);
         }
 
         /// <summary>Projects native global-hotkey success, collision, validation, and disposal.</summary>
@@ -433,16 +346,13 @@ namespace TaskNotes.Windows.Tests
                 [],
                 [],
                 [],
-                null,
-                0,
                 false,
                 false,
                 status == "done",
                 false,
                 false,
                 null,
-                string.Empty,
-                false
+                string.Empty
             );
         }
 

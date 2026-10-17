@@ -1,38 +1,214 @@
 import { z } from "zod";
 
 /**
- * v2 contract — the upstream TaskNotes plugin HTTP API, adopted verbatim.
+ * TaskNotes task API, using the upstream plugin's nontracking vocabulary.
  *
  * Task payloads are `TaskInfo` from `@tasknotes/model` (the plugin's own
  * engine library): snake_case recurrence fields (`complete_instances`,
  * `recurrence_anchor`), path-as-ID semantics, config-driven statuses and
- * priorities. Every route/shape below was transcribed from the upstream
- * controllers (`src/api/*Controller.ts` @ upstream `main`, spec 0.2.x).
- *
- * The legacy camelCase contract lives in `./index` until P6 deletes it.
+ * priorities. Time tracking, Pomodoro and estimates are excluded from the
+ * public task contract; existing vault metadata remains opaque to the app.
  */
 
-// Everything the model exports is part of the v2 vocabulary: TaskInfo,
-// TaskCreationData, TaskUpdateInput, StatusConfig/PriorityConfig,
-// TaskNotesModelConfig + resolveModelConfig, parse/serialize/plan builders,
-// recurrence helpers, and the conformance harness.
+// Curated model adapters retain task, recurrence and configuration behavior.
 //
 // NOTE: the model ships zod v3 schemas (its own bundled zod); they work at
 // runtime but cannot type-compose with this package's zod v4. The wire
-// schemas below are therefore v4 MIRRORS of the model's schemas — a test
-// pins them key-for-key against `taskInfoSchema.shape` so drift fails loudly.
-export * from "@tasknotes/model";
+// schemas below mirror its supported fields. Drift tests explicitly exclude
+// only the three retired task fields and pin every other key and optionality.
+export {
+  DEFAULT_DEPENDENCY_RELTYPE,
+  DEFAULT_PRIORITIES,
+  DEFAULT_STATUSES,
+  TASKNOTES_SPEC_VERSION,
+  VALID_DEPENDENCY_RELTYPES,
+  addDTSTARTToRecurrenceRule,
+  addDTSTARTToRecurrenceRuleWithDraggedTime,
+  applyFrontmatterPatch,
+  buildMaterializeOccurrencePlan,
+  buildMaterializedOccurrenceCompletePlan,
+  buildMaterializedOccurrenceSkipPlan,
+  buildMaterializedOccurrenceUncompletePlan,
+  buildMaterializedOccurrenceUnskipPlan,
+  buildRecurringTaskCompletePlan,
+  buildRecurringTaskSkippedPlan,
+  buildSpecCompleteTaskUpdate,
+  buildSpecRecurringSkipUpdate,
+  buildTaskPropertyUpdatePlan,
+  buildTaskUpdatePlan,
+  buildTaskUpdateRecurrenceUpdates,
+  buildUpdatedTaskFromPlan,
+  coerceStatusFrontmatterValue,
+  completeRecurringTask,
+  conformanceMetadata,
+  createUTCDateForRRule,
+  createUTCDateFromLocalCalendarDate,
+  defaultOccurrenceParentReference,
+  denormalizeSpecFrontmatter,
+  detectTaskFile,
+  extractDependencyUid,
+  findMaterializedOccurrence,
+  formatDateAsUTCString,
+  formatDateForStorage,
+  generateRecurringInstances,
+  getCurrentDateString,
+  getDatePart,
+  getDefaultCompletedStatus,
+  getDefaultSkippedStatus,
+  getDefaultSpecCompletedStatus,
+  getEffectiveTaskStatus,
+  getFiniteRecurringInstanceCount,
+  getFrontmatterTags,
+  getNextUncompletedOccurrence,
+  getOccurrenceMaterializationMode,
+  getOccurrenceNextTrigger,
+  getPriorityConfig,
+  getRecurrenceDisplayText,
+  getRecurringTaskActionDate,
+  getRecurringTaskCompletionText,
+  getStatusConfig,
+  getTodayLocal,
+  getTodayString,
+  hasTimeComponent,
+  isBeforeDateSafe,
+  isCompletedStatus,
+  isDueByRRule,
+  isMaterializedOccurrenceTask,
+  isPropertyForField,
+  isRecognizedProperty,
+  isSameDateSafe,
+  isSkippedStatus,
+  isSpecCompletedStatus,
+  isValidDependencyRelType,
+  lookupMappingKey,
+  mapTaskFromFrontmatter,
+  mapTaskToFrontmatter,
+  mergeFrontmatter,
+  normalizeBlockedByValue,
+  normalizeDependencyEntry,
+  normalizeDependencyList,
+  normalizeExcludedFolders,
+  normalizeFrontmatterTag,
+  normalizePriorityConfigValue,
+  normalizeSpecFrontmatter,
+  normalizeStatusConfigValue,
+  normalizeTaskPropertyValue,
+  normalizeTaskReference,
+  normalizeTaskUpdateDetails,
+  normalizeTaskUpdateInput,
+  normalizeTitleValue,
+  parseDateToLocal,
+  parseDateToUTC,
+  parseFrontmatter,
+  parseLinkToPath,
+  parseTaskDocument,
+  priorityConfigSchema,
+  recalculateRecurringSchedule,
+  recurringCompletePlanToFrontmatterPatch,
+  recurringSkippedPlanToFrontmatterPatch,
+  reminderSchema,
+  resolveDateOrToday,
+  resolveDateTimeRangeBound,
+  resolveDisplayTitle,
+  resolveModelConfig,
+  resolveOperationTargetDate,
+  serializeDependencies,
+  serializeMarkdownDocument,
+  serializeTaskDocument,
+  shouldShowRecurringTaskOnDate,
+  shouldUseRecurringTaskUI,
+  specFrontmatterToTaskInfo,
+  statusConfigSchema,
+  stringifyFrontmatter,
+  taskDependencyRelTypeSchema,
+  taskDependencySchema,
+  taskInfoToSpecFields,
+  toUserField,
+  toUserFields,
+  updateDTSTARTInRecurrenceRule,
+  updateToNextScheduledOccurrence,
+  validateCompleteInstances,
+  validateDateString,
+  validateFieldMapping,
+} from "@tasknotes/model";
+export type {
+  BuildMaterializeOccurrencePlanInput,
+  BuildMaterializedOccurrenceCompletePlanInput,
+  BuildMaterializedOccurrenceSkipPlanInput,
+  BuildMaterializedOccurrenceUncompletePlanInput,
+  BuildMaterializedOccurrenceUnskipPlanInput,
+  BuildSpecCompleteTaskUpdateInput,
+  BuildSpecRecurringSkipUpdateInput,
+  BuildTaskPropertyUpdatePlanInput,
+  BuildTaskUpdatePlanInput,
+  ConformanceEnvelope,
+  DateTimeRangeBound,
+  FrontmatterPropertyName,
+  HideIdentifyingTagsMode,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
+  MaterializeOccurrencePlan,
+  MaterializedOccurrenceStatusPlan,
+  OccurrenceConfig,
+  OccurrenceMaterializationMode,
+  OccurrenceNextTrigger,
+  ParseTaskDocumentOptions,
+  PriorityConfig,
+  RecurrenceAnchor,
+  RecurrenceCompletionInput,
+  RecurrenceCompletionResult,
+  RecurrenceConfig,
+  RecurrenceDateContext,
+  RecurrenceScheduleInput,
+  RecurrenceScheduleResult,
+  RecurringTaskCompletePlan,
+  RecurringTaskLike,
+  RecurringTaskSkippedPlan,
+  Reminder,
+  SerializeTaskDocumentOptions,
+  SpecTaskUpdatePlan,
+  StatusConfig,
+  TaskDefaults,
+  TaskDependency,
+  TaskDependencyRelType,
+  TaskDocument,
+  TaskIdentificationConfig,
+  TaskNotesModelConfig,
+  TaskOperationPlan,
+  TaskPatchOperation,
+  TaskValidationIssue,
+  TaskValidationResult,
+  TaskValidationSeverity,
+  UserMappedField,
+  UserMappedFieldType,
+} from "@tasknotes/model";
+import type {
+  TaskInfo as ModelTaskInfo,
+  TaskCreationData as ModelTaskCreationData,
+  TaskUpdateInput as ModelTaskUpdateInput,
+} from "@tasknotes/model";
+
+type RetiredTaskField = "timeEstimate" | "timeEntries" | "totalTrackedTime";
+export type TaskInfo = Omit<ModelTaskInfo, RetiredTaskField>;
+export type TaskCreationData = Omit<ModelTaskCreationData, RetiredTaskField>;
+export type TaskUpdateInput = Omit<ModelTaskUpdateInput, RetiredTaskField>;
+
+function rejectRetiredTaskFields(
+  request: Record<string, unknown>,
+  context: z.RefinementCtx,
+): void {
+  const keys = ["timeEstimate", "timeEntries", "totalTrackedTime"].filter(
+    (key) => Object.hasOwn(request, key),
+  );
+  if (keys.length > 0) {
+    context.addIssue({ code: "unrecognized_keys", keys });
+  }
+}
 
 // ---------------------------------------------------------------------------
 // TaskInfo wire schema (zod v4 mirror of the model's taskInfoSchema)
 // ---------------------------------------------------------------------------
-
-export const TimeEntryV2Schema = z.object({
-  startTime: z.string(),
-  endTime: z.string().optional(),
-  description: z.string().optional(),
-  duration: z.number().optional(),
-});
 
 export const ReminderV2Schema = z.object({
   id: z.string(),
@@ -54,7 +230,7 @@ export const TaskDependencyV2Schema = z.object({
   gap: z.string().optional(),
 });
 
-/** Mirrors `taskInfoSchema` from @tasknotes/model (spec 0.2.x), field for field. */
+/** Supported subset of the pinned upstream task schema. */
 export const TaskInfoV2Schema = z.object({
   id: z.string().optional(),
   title: z.string(),
@@ -83,9 +259,6 @@ export const TaskInfoV2Schema = z.object({
   occurrence_past_horizon: z.string().optional(),
   occurrence_future_horizon: z.string().optional(),
   completedDate: z.string().optional(),
-  timeEstimate: z.number().optional(),
-  timeEntries: z.array(TimeEntryV2Schema).optional(),
-  totalTrackedTime: z.number().optional(),
   dateCreated: z.string().optional(),
   dateModified: z.string().optional(),
   icsEventId: z.array(z.string()).optional(),
@@ -137,7 +310,8 @@ export const TaskCreationRequestSchema = TaskInfoV2Schema.partial()
     details: z.string().optional(),
     creationContext: z.string().optional(),
   })
-  .loose();
+  .loose()
+  .superRefine(rejectRetiredTaskFields);
 
 export type TaskCreationRequest = z.infer<typeof TaskCreationRequestSchema>;
 
@@ -156,10 +330,10 @@ export const TaskUpdateRequestSchema = TaskInfoV2Schema.partial()
       .nullable()
       .optional(),
     completedDate: z.string().nullable().optional(),
-    timeEstimate: z.number().nullable().optional(),
     details: z.string().nullable().optional(),
   })
-  .loose();
+  .loose()
+  .superRefine(rejectRetiredTaskFields);
 
 export type TaskUpdateRequest = z.infer<typeof TaskUpdateRequestSchema>;
 
@@ -250,7 +424,6 @@ export const StatsResponseSchema = z.object({
   active: z.number(),
   overdue: z.number(),
   archived: z.number(),
-  withTimeTracking: z.number(),
 });
 
 /** GET /api/health */
@@ -310,70 +483,6 @@ export const NlpParseResponseSchema = z.object({
 export const NlpCreateResponseSchema = z.object({
   task: TaskInfoV2Schema,
   parsed: z.record(z.string(), z.unknown()),
-});
-
-// --- time tracking (shapes from upstream src/utils/timeTrackingUtils.ts) ---
-
-export const ActiveSessionInfoSchema = z.object({
-  task: z.object({
-    id: z.string(),
-    title: z.string(),
-    status: z.string(),
-    priority: z.string(),
-    tags: z.array(z.string()),
-    projects: z.array(z.string()),
-  }),
-  session: z.object({
-    startTime: z.string(),
-    description: z.string().optional(),
-    elapsedMinutes: z.number(),
-  }),
-  elapsedMinutes: z.number(),
-});
-
-/** GET /api/time/active */
-export const ActiveSessionsResponseSchema = z.object({
-  activeSessions: z.array(ActiveSessionInfoSchema),
-  totalActiveSessions: z.number(),
-  totalElapsedMinutes: z.number(),
-});
-
-/** GET /api/time/summary */
-export const TimeSummaryResponseSchema = z.object({
-  period: z.string(),
-  dateRange: z.object({ from: z.string(), to: z.string() }),
-  summary: z.object({
-    totalMinutes: z.number(),
-    totalHours: z.number(),
-    tasksWithTime: z.number(),
-    activeTasks: z.number(),
-    completedTasks: z.number(),
-  }),
-  topTasks: z.array(
-    z.object({ task: z.string(), title: z.string(), minutes: z.number() }),
-  ),
-  topProjects: z.array(z.object({ project: z.string(), minutes: z.number() })),
-  topTags: z
-    .array(z.object({ tag: z.string(), minutes: z.number() }))
-    .optional(),
-});
-
-/** GET /api/tasks/:id/time */
-export const TaskTimeDataResponseSchema = z.object({
-  task: z.object({
-    id: z.string(),
-    title: z.string(),
-    status: z.string(),
-    priority: z.string(),
-  }),
-  summary: z.object({
-    totalMinutes: z.number(),
-    totalHours: z.number(),
-    totalSessions: z.number(),
-    completedSessions: z.number(),
-    activeSessions: z.number(),
-  }),
-  // Upstream appends per-session detail; keep it open until P5 needs it.
 });
 
 // --- calendars ---

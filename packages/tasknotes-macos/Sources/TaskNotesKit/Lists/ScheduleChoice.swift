@@ -91,7 +91,7 @@ public enum ScheduleChoice: String, CaseIterable, Sendable, Hashable {
         let walked = try CoreErrors.rethrowingCore("resolving \(what)", body)
         guard let walked else {
             throw CoreError.Invariant(
-                message: "\(what) runs off the end of the representable calendar"
+                detail: "\(what) runs off the end of the representable calendar"
             )
         }
         return walked

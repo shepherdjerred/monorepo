@@ -17,6 +17,18 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/NativeFeedbackAccessibility.cs"
+      Link="WindowsAdapters/NativeFeedbackAccessibility.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/NativeTaskFeedback.cs"
+      Link="WindowsAdapters/NativeTaskFeedback.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/TaskListWorkspaceView.Feedback.cs"
+      Link="Views/TaskListWorkspaceView.Feedback.cs"
+    />
     <Page Remove="TestApplication.xaml" />
     <ApplicationDefinition Include="TestApplication.xaml" />
     <ProjectCapability Include="TestContainer" />

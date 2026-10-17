@@ -111,6 +111,9 @@ namespace TaskNotes.Windows.Host
     /// <summary>An immutable UI-facing reading of the serialized synchronization engine.</summary>
     public sealed record TaskNotesState
     {
+        // Orders legacy worker observations when asynchronous continuations publish concurrently.
+        internal long PublicationSequence { get; init; }
+
         /// <summary>Initializes an engine reading.</summary>
         public TaskNotesState(
             IReadOnlyList<TodayTask> todayTasks,
@@ -143,11 +146,26 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets mutations that require user action.</summary>
         public IReadOnlyList<ParkedChange> ParkedChanges { get; init; }
 
+        /// <summary>Gets retained standalone conflicts without loading file payloads.</summary>
+        public IReadOnlyList<FacetConflict> FacetConflicts { get; init; } = [];
+
+        /// <summary>Retained immutable actions requiring explicit owner-directed resumption.</summary>
+        public IReadOnlyList<FacetPendingAction> FacetPendingActions { get; init; } = [];
+
         /// <summary>Gets the current UI synchronization state.</summary>
         public TaskNotesSyncState SyncState { get; init; }
 
         /// <summary>Gets the latest user-actionable error.</summary>
         public string? UserFacingError { get; init; }
+
+        /// <summary>Gets an applied task's fixed warning copy, separate from errors.</summary>
+        public FacetSavedNotice? SavedNotice { get; init; }
+
+        /// <summary>Gets the current profile, action, request and engine presentation fence.</summary>
+        public FacetNoticeOwner? SavedNoticeOwner { get; init; }
+
+        /// <summary>Gets local maintenance information after a successful applied action.</summary>
+        public string? SavedMaintenance { get; init; }
 
         /// <summary>Gets the most recent successful pull time.</summary>
         public DateTimeOffset? LastSyncTime { get; init; }
@@ -182,22 +200,26 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets every tag in use.</summary>
         public IReadOnlyList<string> Tags { get; init; } = [];
 
+        /// <summary>Open configured workflow choices, in vault order.</summary>
+        public IReadOnlyList<WorkflowChoice> StatusChoices { get; init; } = [];
+
+        /// <summary>Open configured priority choices, in vault order.</summary>
+        public IReadOnlyList<WorkflowChoice> PriorityChoices { get; init; } = [];
+
         /// <summary>Gets the device-local saved views.</summary>
         public IReadOnlyList<SavedViewDefinition> SavedViews { get; init; } = [];
-
-        /// <summary>Gets the selected task's live timing state.</summary>
-        public TaskTimeReading? TaskTime { get; init; }
-
-        /// <summary>Gets the latest aggregate time report.</summary>
-        public TimeReportReading? TimeReport { get; init; }
-
-        /// <summary>Gets the latest server-backed Pomodoro state.</summary>
-        public PomodoroReading? Pomodoro { get; init; }
 
         /// <summary>Gets whether another completion can be undone.</summary>
         public bool CanUndoCompletion { get; init; }
 
         /// <summary>Gets the number of completion undo entries.</summary>
         public int CompletionUndoDepth { get; init; }
+    }
+
+    /// <summary>A configured wire value and its display label.</summary>
+    public sealed record WorkflowChoice(string Value, string Label)
+    {
+        /// <summary>Exact configured presentation color, preserved independently from workflow meaning.</summary>
+        public string? Color { get; init; }
     }
 }
