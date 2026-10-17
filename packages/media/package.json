@@ -1,0 +1,60 @@
+{
+  "name": "@shepherdjerred/media",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./contract": "./src/shared/contract.ts",
+    "./automation": "./src/shared/automation.ts",
+    "./automation/network": "./src/automation/network.ts",
+    "./automation/files": "./src/automation/files/activities.ts",
+    "./integrations/*": "./src/integrations/*.ts",
+    "./filesystem/*": "./src/filesystem/*.ts",
+    "./domain/*": "./src/domain/*.ts"
+  },
+  "imports": {
+    "#generated/*": "./generated/*",
+    "#*": "./src/*"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "build": "vite build",
+    "start": "bun src/server/index.ts",
+    "migrate:deploy": "prisma migrate deploy",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "eslint . --max-warnings=0 && check-architecture",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@prisma/client-runtime-utils": "7.10.0",
+    "@shepherdjerred/config": "workspace:*",
+    "@shepherdjerred/feature-flags": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
+    "@temporalio/client": "1.24.0",
+    "cheerio": "1.2.0",
+    "hono": "^4.12.18",
+    "prisma": "^7.10.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "^8.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11",
+    "vitest": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.3"
+  }
+}

@@ -1,0 +1,235 @@
+import nodePath from "node:path";
+import { z } from "zod";
+import { Prisma } from "#generated/prisma/client.ts";
+import {
+  FileGuardError,
+  FilePlanSchema,
+  type FileContext,
+  type Transaction,
+  type FilePlanEntry,
+} from "./types.ts";
+import { assertAcquisition, lockMedia } from "./guards.ts";
+import { importDescriptor } from "./inspection.ts";
+import { fileOperations } from "./file-operations.ts";
+import { recoverObsoletePublication } from "./recovery.ts";
+import { commitEmbedded } from "./embedded.ts";
+import { resumeCommittedPublication } from "./committed-publication.ts";
+import {
+  assertMeasuredUpgrade,
+  storedMeasuredRelease,
+} from "./quality-guard.ts";
+
+export async function promote(
+  context: FileContext,
+  attemptId: string,
+): Promise<void> {
+  if (!(await context.enabled.acquisition()))
+    throw new FileGuardError("acquisition_disabled");
+  if (await resumeCommittedPublication({ context, attemptId })) return;
+  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: attemptId },
+  });
+  const plan = FilePlanSchema.parse(attempt.filePlan);
+  const result = await context.db.$transaction(
+    async (tx) => {
+      await lockMedia(tx, attempt.mediaIds);
+      const current = await tx.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: attemptId },
+      });
+      if (current.state === "imported") return "resume_committed";
+      try {
+        await assertAcquisition(tx, attemptId);
+        for (const entry of plan) await assertProfile(tx, entry);
+      } catch (error) {
+        if (
+          !(error instanceof FileGuardError) ||
+          !error.reason.includes("obsolete")
+        )
+          throw error;
+        await recoverObsoletePublication({ context, tx, attemptId, plan });
+        return error.reason;
+      }
+      for (const entry of plan) {
+        const authorize = async () => {
+          await context.checkpoint("publication-authorization");
+          if (!(await context.enabled.acquisition()))
+            throw new FileGuardError("acquisition_disabled");
+          await assertAcquisition(tx, attemptId);
+          await assertProfile(tx, entry);
+          await assertPrevious(tx, entry);
+          await assertMeasuredUpgrade(
+            tx,
+            storedMeasuredRelease(entry.properties),
+            entry.mediaIds,
+            entry.assetId,
+          );
+        };
+        await authorize();
+        const roots = context.roots[entry.libraryKind];
+        const operations = fileOperations(context, roots, authorize);
+        for (const sidecar of entry.previousSidecars) {
+          await operations.quarantine({
+            operationId: sidecar.operationId,
+            libraryPath: sidecar.libraryPath,
+            quarantineId: sidecar.quarantineId,
+            sha256: sidecar.checksum,
+          });
+        }
+        await operations.importFile(importDescriptor(entry));
+        await commitPublication({
+          tx,
+          entry,
+          roots,
+          torrentId: attempt.torrentId,
+        });
+        await commitEmbedded({
+          context,
+          tx,
+          entry,
+          recoveryEpoch: attempt.recoveryEpoch,
+        });
+      }
+      await tx.acquisitionAttempt.update({
+        where: { id: attemptId },
+        data: { state: "imported" },
+      });
+      return null;
+    },
+    { timeout: 300_000, maxWait: 30_000 },
+  );
+  if (result === "resume_committed") {
+    if (!(await resumeCommittedPublication({ context, attemptId })))
+      throw new FileGuardError("committed_plan_changed");
+  } else if (result !== null) throw new FileGuardError(result);
+}
+
+async function assertProfile(
+  tx: Transaction,
+  entry: FilePlanEntry,
+): Promise<void> {
+  const properties = z
+    .object({ profileVersions: z.record(z.string(), z.number().int()) })
+    .parse(entry.properties);
+  for (const mediaId of entry.mediaIds) {
+    const intent = await tx.mediaIntent.findUniqueOrThrow({
+      where: { mediaId },
+    });
+    if (intent.profileId === null) throw new FileGuardError("profile_missing");
+    await tx.$queryRaw(
+      Prisma.sql`SELECT id FROM "QualityProfile" WHERE id = ${intent.profileId} FOR SHARE`,
+    );
+    const profile = await tx.qualityProfile.findUniqueOrThrow({
+      where: { id: intent.profileId },
+    });
+    if (
+      profile.version !== properties.profileVersions[mediaId] ||
+      intent.generation !== entry.generations[mediaId]
+    )
+      throw new FileGuardError("profile_obsolete");
+  }
+}
+
+async function assertPrevious(
+  tx: Transaction,
+  entry: FilePlanEntry,
+): Promise<void> {
+  const published = await tx.libraryAsset.findUnique({
+    where: { id: entry.assetId },
+  });
+  if (published !== null) {
+    if (
+      published.checksum !== entry.checksum ||
+      !published.owned ||
+      published.state !== "published"
+    )
+      throw new FileGuardError("publication_conflict");
+    return;
+  }
+  const current = await tx.assetCoverage.findMany({
+    where: { mediaId: { in: entry.mediaIds }, current: true },
+    include: { asset: true },
+  });
+  if (entry.previousAssetId === null) {
+    if (current.length > 0) throw new FileGuardError("asset_version_changed");
+  } else if (
+    current.length !== entry.mediaIds.length ||
+    current.some(
+      (coverage) =>
+        coverage.assetId !== entry.previousAssetId ||
+        coverage.asset.version !== entry.previousVersion ||
+        coverage.asset.checksum !== entry.previousChecksum ||
+        !coverage.asset.owned,
+    )
+  )
+    throw new FileGuardError("asset_version_changed");
+}
+
+async function commitPublication(input: {
+  tx: Transaction;
+  entry: FilePlanEntry;
+  roots: FileContext["roots"]["movies"];
+  torrentId: string | null;
+}): Promise<void> {
+  const { tx, entry, roots, torrentId } = input;
+  if (
+    (await tx.libraryAsset.findUnique({ where: { id: entry.assetId } })) !==
+    null
+  )
+    return;
+  if (entry.previousAssetId !== null) {
+    await tx.assetCoverage.updateMany({
+      where: { assetId: entry.previousAssetId, current: true },
+      data: { current: false },
+    });
+    await tx.libraryAsset.update({
+      where: { id: entry.previousAssetId },
+      data: {
+        path: nodePath.join(roots.control, "rollback", entry.operationId),
+        state: "superseded",
+        version: { increment: 1 },
+      },
+    });
+    for (const sidecar of entry.previousSidecars)
+      await tx.subtitleAsset.update({
+        where: { id: sidecar.subtitleId },
+        data: {
+          state: "superseded",
+          path: nodePath.join(
+            roots.control,
+            "quarantine",
+            sidecar.quarantineId,
+          ),
+        },
+      });
+  }
+  await tx.libraryAsset.create({
+    data: {
+      id: entry.assetId,
+      path: nodePath.join(roots.library, entry.libraryPath),
+      sourcePath: nodePath.join(roots.downloads, entry.downloadPath),
+      torrentId,
+      sizeBytes: BigInt(entry.sizeBytes),
+      checksum: entry.checksum,
+      properties: entry.properties ?? Prisma.JsonNull,
+      owned: true,
+      state: "published",
+      coverage: {
+        create: entry.mediaIds.map((mediaId) => ({ mediaId, current: true })),
+      },
+    },
+  });
+  await tx.mediaItem.updateMany({
+    where: { id: { in: entry.mediaIds } },
+    data: { availability: "importing", version: { increment: 1 } },
+  });
+  await tx.applicationEvent.createMany({
+    data: entry.mediaIds.map((mediaId) => ({
+      mediaId,
+      kind: "files_published",
+      payload: {
+        assetId: entry.assetId,
+        previousAssetId: entry.previousAssetId,
+      },
+    })),
+  });
+}

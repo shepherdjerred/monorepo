@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const MANAGED_NAMESPACES = [
   "delivery",
+  "media",
   "arcade",
   "tracker",
   "woodpecker",
@@ -43,6 +44,30 @@ export const DELIVERY_FLAG_KEYS = [
 ] as const;
 
 export type DeliveryFlagKey = (typeof DELIVERY_FLAG_KEYS)[number];
+export const MEDIA_BOOLEAN_FLAG_KEYS = [
+  "media-requests-enabled",
+  "media-acquisition-enabled",
+  "media-source-cleanup-enabled",
+  "media-quarantine-enabled",
+  "media-purge-enabled",
+] as const;
+
+export type MediaBooleanFlagKey = (typeof MEDIA_BOOLEAN_FLAG_KEYS)[number];
+
+export const MEDIA_VARIANT_FLAG_KEYS = [
+  "media-session-lifetime-ms",
+  "media-email-sender",
+  "media-keep-days",
+] as const;
+
+export type MediaVariantFlagKey = (typeof MEDIA_VARIANT_FLAG_KEYS)[number];
+
+export const MEDIA_FLAG_KEYS = [
+  ...MEDIA_BOOLEAN_FLAG_KEYS,
+  ...MEDIA_VARIANT_FLAG_KEYS,
+] as const;
+
+export type MediaFlagKey = (typeof MEDIA_FLAG_KEYS)[number];
 
 export const ARCADE_BOOLEAN_FLAG_KEYS = [
   "arcade_enabled",
@@ -432,6 +457,7 @@ export type StormFlagKey = (typeof STORM_FLAG_KEYS)[number];
 
 export const MANAGED_FLAG_KEYS = [
   ...DELIVERY_FLAG_KEYS,
+  ...MEDIA_FLAG_KEYS,
   ...ARCADE_FLAG_KEYS,
   ...TRACKER_FLAG_KEYS,
   ...WOODPECKER_FLAG_KEYS,
@@ -451,6 +477,7 @@ export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
 
 export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...DELIVERY_BOOLEAN_FLAG_KEYS,
+  ...MEDIA_BOOLEAN_FLAG_KEYS,
   ...ARCADE_BOOLEAN_FLAG_KEYS,
   ...TRACKER_BOOLEAN_FLAG_KEYS,
   ...WOODPECKER_BOOLEAN_FLAG_KEYS,
@@ -470,6 +497,7 @@ export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
 
 export const MANAGED_VARIANT_FLAG_KEYS = [
   ...DELIVERY_VARIANT_FLAG_KEYS,
+  ...MEDIA_VARIANT_FLAG_KEYS,
   ...ARCADE_VARIANT_FLAG_KEYS,
   ...TRACKER_VARIANT_FLAG_KEYS,
   ...WOODPECKER_VARIANT_FLAG_KEYS,

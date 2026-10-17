@@ -650,7 +650,7 @@ command. Missing starts and unexplained stops remain failures.
 Retained histories use the pre-history verification branch through a Temporal
 patch marker.
 
-Production runs one image in twelve single-replica Kubernetes Deployments. The
+Production uses one worker image across role-specific Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 plus the `agent-chat-ingress` command queue and isolated
 `agent-chat-delivery` queue. The credentialless
@@ -697,6 +697,8 @@ existing executions.
 | `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
 | `glitter-context` | `glitter-context`                                                                      |                                  1 |
 | `maintenance`     | `maintenance`                                                                          |                                  1 |
+| `media-network`   | `media-network`                                                                        |                                  4 |
+| `media-files`     | `media-files`                                                                          |                                  1 |
 | `workflows`       | `monorepo-workflows`                                                                   |                               none |
 | `streambot`       | `streambot`                                                                            |                                  1 |
 
@@ -712,6 +714,15 @@ for browsing and cancellation commands.
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
+
+The [Media application](../media/README.md) defines two Activity roles in the
+media Kubernetes namespace. Network Activities own authenticated provider,
+qBittorrent, Plex, and notification calls. File Activities have read-only download
+mounts and writable library mounts, without provider credentials. Deterministic
+Media Workflows stay on `monorepo-workflows` in the `prod` Temporal namespace.
+The application image publication gate controls whether the Media workloads are
+synthesized. Media schedules are declared initially paused; their existence does
+not establish that application workers or recovery procedures are ready.
 
 The infra process polls `ops` separately so every-five-minute snapshot fan-out
 can overlap four bounded reads while heavyweight infra automation stays serial.

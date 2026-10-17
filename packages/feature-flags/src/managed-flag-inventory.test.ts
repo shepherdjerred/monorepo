@@ -161,6 +161,7 @@ describe("ManagedFlagInventorySchema", () => {
     ).toThrow(/unknown managed environment/);
     expect(managedFlagNamespaces).toEqual([
       "delivery",
+      "media",
       "arcade",
       "tracker",
       "woodpecker",

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "requests"],
+      "properties": {
+        "protocolVersion": { "const": 1 },
+        "requests": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pattern", "value"],
+            "properties": {
+              "pattern": { "type": "string", "maxLength": 8192 },
+              "value": { "type": "string", "maxLength": 4096 }
+            }
+          }
+        }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocolVersion",
+        "engine",
+        "runtimeVersion",
+        "culture",
+        "observations"
+      ],
+      "properties": {
+        "protocolVersion": { "const": 1 },
+        "engine": { "const": "dotnet-ignorecase" },
+        "runtimeVersion": { "type": "string", "minLength": 1 },
+        "culture": { "type": "string" },
+        "observations": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pattern", "value", "result"],
+            "properties": {
+              "pattern": { "type": "string", "maxLength": 8192 },
+              "value": { "type": "string", "maxLength": 4096 },
+              "result": { "enum": ["match", "no_match", "unknown"] }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-execution": {
+    "maxInputCharacters": 8000000,
+    "matchTimeoutMilliseconds": 25,
+    "processTimeoutMilliseconds": 60000
+  }
+}

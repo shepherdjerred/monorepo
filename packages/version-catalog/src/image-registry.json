@@ -15,6 +15,7 @@
     { "name": "discord-plays-pokemon", "visibility": "private" },
     { "name": "glitter-boys-launcher", "visibility": "private" },
     { "name": "macos-cross-compiler", "visibility": "public" },
+    { "name": "media", "visibility": "private" },
     { "name": "obsidian-headless", "visibility": "private" },
     { "name": "redlib", "visibility": "private" },
     { "name": "scout-for-lol", "visibility": "private" },

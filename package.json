@@ -137,6 +137,7 @@
     "packages/macos-cross-compiler",
     "packages/mc-build",
     "packages/mc-harness",
+    "packages/media",
     "packages/ops-clients",
     "packages/ops-model",
     "packages/monarch",

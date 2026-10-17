@@ -50,6 +50,7 @@
   "dependencies": {
     "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
+    "@shepherdjerred/media": "workspace:*",
     "@trpc/client": "^11.18.0",
     "@shepherdjerred/tracker": "workspace:*",
     "@shepherdjerred/bugsink-config": "workspace:*",

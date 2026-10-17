@@ -1,0 +1,449 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MediaKind {
+  movie
+  series
+  season
+  episode
+}
+
+enum Availability {
+  wanted
+  searching
+  downloading
+  validating
+  importing
+  available
+  quarantined
+  removed
+}
+
+enum UserRole {
+  owner
+  member
+}
+
+enum OperationStatus {
+  queued
+  running
+  completed
+  failed
+  reconciling
+}
+
+model MediaUser {
+  id                 String                 @id @default(uuid())
+  plexAccountId      String                 @unique
+  displayName        String
+  role               UserRole               @default(member)
+  restricted         Boolean                @default(false)
+  version            Int                    @default(0)
+  email              String?
+  emailVerifiedAt    DateTime?
+  discordId          String?                @unique
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  sessions           MediaSession[]
+  credentials        Credential[]
+  requests           MediaRequest[]
+  holds              RetentionHold[]
+  watchStates        WatchState[]
+  idempotencyRecords IdempotencyRecord[]
+  notifications      NotificationDelivery[]
+  notificationPreference NotificationPreference?
+  emailVerifications EmailVerification[]
+  discordLinks DiscordLink[]
+}
+
+model NotificationPreference {
+  userId String @id
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled Boolean @default(false)
+  discordEnabled Boolean @default(false)
+  upgrades Boolean @default(false)
+  removalCompleted Boolean @default(false)
+  version Int @default(0)
+}
+
+model EmailVerification {
+  id String @id @default(uuid())
+  userId String
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email String
+  tokenHash String @unique
+  encryptedToken String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+}
+
+model DiscordLink {
+  id String @id @default(uuid())
+  userId String
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stateHash String @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model MediaSession {
+  id        String    @id
+  userId    String
+  user      MediaUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  csrfHash  String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([expiresAt])
+}
+
+model PlexLogin {
+  id              String   @id @default(uuid())
+  pinId           String
+  pinCode         String
+  browserHash     String
+  encryptedDevice String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+}
+
+model Credential {
+  id         String     @id @default(uuid())
+  userId     String?
+  user       MediaUser? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String
+  ciphertext String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@unique([userId, kind])
+}
+
+model MediaItem {
+  id            String              @id @default(uuid())
+  kind          MediaKind
+  title         String
+  year          Int?
+  parentId      String?
+  parent        MediaItem?          @relation("MediaHierarchy", fields: [parentId], references: [id])
+  children      MediaItem[]         @relation("MediaHierarchy")
+  seasonNumber  Int?
+  episodeNumber Int?
+  tmdbId        Int?
+  externalIds   Json                @default("{}")
+  availability  Availability        @default(wanted)
+  version       Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  requests      MediaRequest[]
+  intent        MediaIntent?
+  assets        AssetCoverage[]
+  watchStates   WatchState[]
+  holds         RetentionHold[]
+  retention     RetentionDecision[]
+
+  @@unique([kind, tmdbId])
+  @@index([parentId, seasonNumber, episodeNumber])
+}
+
+model MediaRequest {
+  id                    String    @id @default(uuid())
+  userId                String
+  user                  MediaUser @relation(fields: [userId], references: [id])
+  mediaId               String
+  media                 MediaItem @relation(fields: [mediaId], references: [id])
+  active                Boolean   @default(true)
+  subtitleLanguages     String[]  @default([])
+  includeFutureEpisodes Boolean   @default(false)
+  includeSpecials       Boolean   @default(false)
+  sponsorRequestId      String?
+  version               Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([userId, mediaId])
+  @@index([mediaId, active])
+}
+
+model QualityProfile {
+  id        String                  @id @default(uuid())
+  name      String
+  version   Int                     @default(0)
+  rules     Json
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  intents   MediaIntent[]
+  versions  QualityProfileVersion[]
+}
+
+model QualityProfileVersion {
+  profileId String
+  profile   QualityProfile @relation(fields: [profileId], references: [id])
+  version   Int
+  rules     Json
+  createdAt DateTime       @default(now())
+
+  @@id([profileId, version])
+}
+
+model MediaIntent {
+  mediaId                String          @id
+  media                  MediaItem       @relation(fields: [mediaId], references: [id])
+  generation             Int             @default(0)
+  desiredPresence        Boolean         @default(true)
+  monitoring             Boolean         @default(true)
+  profileId              String?
+  profile                QualityProfile? @relation(fields: [profileId], references: [id])
+  version                Int             @default(0)
+  intentionallyRemovedAt DateTime?
+  updatedAt              DateTime        @updatedAt
+}
+
+model ReleaseCandidate {
+  id                String               @id @default(uuid())
+  providerId        String
+  providerReleaseId String
+  title             String
+  attributes        Json
+  evaluation        Json
+  encryptedSource   String?
+  mediaIds          String[]
+  createdAt         DateTime             @default(now())
+  attempts          AcquisitionAttempt[]
+
+  @@unique([providerId, providerReleaseId])
+}
+
+model MediaProvider {
+  id String @id
+  enabled Boolean @default(false)
+  configuration Json @default("{}")
+  seedingPolicy Json @default("{\"kind\":\"unknown\"}")
+  credentialId String?
+  lastError String?
+  updatedAt DateTime @updatedAt
+}
+
+model ProviderLease {
+  providerId String @id
+  ownerId String?
+  leaseUntil DateTime?
+  nextAllowedAt DateTime @default(now())
+}
+
+model MediaRuntimeState {
+  id String @id
+  mode String @default("observe")
+  recoveryEpoch Int @default(0)
+  ownershipConfirmed Boolean @default(false)
+  version Int @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model AcquisitionAttempt {
+  id               String                   @id @default(uuid())
+  releaseId        String
+  release          ReleaseCandidate         @relation(fields: [releaseId], references: [id])
+  sponsorRequestId String
+  mediaIds         String[]
+  generations      Json
+  state            String
+  torrentId        String?
+  torrent          Torrent?                 @relation(fields: [torrentId], references: [id])
+  operationId      String                   @unique
+  coordinatorOperationId String?
+  failure          Json?
+  filePlan         Json?
+  recoveryEpoch    Int                      @default(0)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  reservations     AcquisitionReservation[]
+}
+
+model AcquisitionReservation {
+  mediaId    String             @id
+  attemptId  String
+  attempt    AcquisitionAttempt @relation(fields: [attemptId], references: [id])
+  generation Int
+  createdAt  DateTime           @default(now())
+
+  @@index([attemptId])
+}
+
+model Torrent {
+  id            String               @id @default(uuid())
+  infoHash      String               @unique
+  providerId    String
+  owned         Boolean              @default(false)
+  seedingPolicy Json
+  observation   Json?
+  observedAt    DateTime?
+  state         String
+  createdAt     DateTime             @default(now())
+  attempts      AcquisitionAttempt[]
+  assets        LibraryAsset[]
+}
+
+model LibraryAsset {
+  id         String          @id @default(uuid())
+  path       String          @unique
+  sourcePath String?
+  torrentId  String?
+  torrent    Torrent?        @relation(fields: [torrentId], references: [id])
+  sizeBytes  BigInt
+  checksum   String?
+  properties Json
+  owned      Boolean         @default(false)
+  version    Int             @default(0)
+  state      String
+  createdAt  DateTime        @default(now())
+  coverage   AssetCoverage[]
+  subtitles  SubtitleAsset[]
+}
+
+model AssetCoverage {
+  assetId String
+  asset   LibraryAsset @relation(fields: [assetId], references: [id])
+  mediaId String
+  media   MediaItem    @relation(fields: [mediaId], references: [id])
+  edition String       @default("default")
+  current Boolean      @default(false)
+
+  @@id([assetId, mediaId])
+  @@index([mediaId, current])
+}
+
+model SubtitleAsset {
+  id               String       @id @default(uuid())
+  assetId          String
+  asset            LibraryAsset @relation(fields: [assetId], references: [id])
+  language         String
+  providerId       String
+  provenance       Json
+  matchingEvidence Json
+  content          Bytes?
+  path             String?
+  state            String
+  createdAt        DateTime     @default(now())
+}
+
+model WatchState {
+  userId     String
+  user       MediaUser @relation(fields: [userId], references: [id])
+  mediaId    String
+  media      MediaItem @relation(fields: [mediaId], references: [id])
+  watched    Boolean
+  observedAt DateTime
+  source     String
+
+  @@id([userId, mediaId])
+}
+
+model RetentionHold {
+  id        String    @id @default(uuid())
+  userId    String
+  user      MediaUser @relation(fields: [userId], references: [id])
+  mediaId   String
+  media     MediaItem @relation(fields: [mediaId], references: [id])
+  until     DateTime?
+  isPin     Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, mediaId])
+}
+
+model RetentionDecision {
+  id                String    @id @default(uuid())
+  mediaId           String
+  media             MediaItem @relation(fields: [mediaId], references: [id])
+  generation        Int
+  state             String
+  evidence          Json
+  warningAcceptedAt DateTime?
+  graceUntil        DateTime?
+  quarantinedAt     DateTime?
+  purgeAfter        DateTime?
+  manifest          Json?
+  version           Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([mediaId, state])
+}
+
+model Operation {
+  id             String          @id @default(uuid())
+  idempotencyKey String?         @unique
+  userId         String?
+  kind           String
+  targetId       String?
+  payload        Json
+  status         OperationStatus @default(queued)
+  result         Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  outbox         OutboxCommand?
+}
+
+model OutboxCommand {
+  id           String    @id @default(uuid())
+  operationId  String    @unique
+  operation    Operation @relation(fields: [operationId], references: [id])
+  kind         String
+  payload      Json
+  dispatchedAt DateTime?
+  attempts     Int       @default(0)
+  availableAt  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+
+  @@index([dispatchedAt, availableAt])
+}
+
+model IdempotencyRecord {
+  userId      String
+  user        MediaUser @relation(fields: [userId], references: [id])
+  key         String
+  requestHash String
+  response    Json
+  createdAt   DateTime  @default(now())
+
+  @@id([userId, key])
+}
+
+model ApplicationEvent {
+  id            String                 @id @default(uuid())
+  mediaId       String?
+  actorId       String?
+  kind          String
+  payload       Json
+  createdAt     DateTime               @default(now())
+  notifications NotificationDelivery[]
+
+  @@index([mediaId, createdAt])
+}
+
+model NotificationDelivery {
+  id              String           @id @default(uuid())
+  eventId         String
+  event           ApplicationEvent @relation(fields: [eventId], references: [id])
+  userId          String
+  user            MediaUser        @relation(fields: [userId], references: [id])
+  channel         String
+  state           String
+  providerReceipt String?
+  attempts        Int              @default(0)
+  acceptedAt      DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([eventId, userId, channel])
+}
