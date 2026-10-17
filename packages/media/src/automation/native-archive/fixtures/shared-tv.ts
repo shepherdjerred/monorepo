@@ -15,7 +15,10 @@ export function sharedTvDownloadName(attemptId: string) {
 }
 
 /** Every A/B/C publication is produced by the actual inspection/promotion Activities. */
-export async function sharedTvFileFixture(db: Database) {
+export async function sharedTvFileFixture(
+  db: Database,
+  fileFactory: typeof fileFixture = fileFixture,
+) {
   const series = await db.mediaItem.create({
     data: {
       kind: "series",
@@ -27,7 +30,7 @@ export async function sharedTvFileFixture(db: Database) {
           1_000_000_000),
     },
   });
-  const f = await fileFixture(db, { seriesId: series.id });
+  const f = await fileFactory(db, { seriesId: series.id });
   try {
     const second = await db.mediaItem.create({
       data: {
@@ -136,7 +139,7 @@ export async function sharedTvFileFixture(db: Database) {
 
 export async function configureArchiveTvPlex(
   db: Database,
-  context: NativeArchiveObserverContext,
+  context: Pick<NativeArchiveObserverContext, "plex">,
   input: { mediaIds: string[]; canonicalPath: string; sizeBytes: bigint },
 ) {
   const media = await db.mediaItem.findMany({

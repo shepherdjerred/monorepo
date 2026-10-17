@@ -115,6 +115,17 @@ test("later B-only approval reuses the exact A-only grants without renewing vers
       where: { originalCleanupId: later.id },
     }),
   ).toBe(1);
+  const duplicateState = () =>
+    Promise.all([
+      db.nativeRecoveryPlan.findMany({ orderBy: { id: "asc" } }),
+      db.nativeRecoveryReceipt.findMany({ orderBy: { id: "asc" } }),
+      db.nativeArchiveCleanupContinuation.findMany({ orderBy: { id: "asc" } }),
+      db.mediaRuntimeState.findUniqueOrThrow({ where: { id: "singleton" } }),
+      db.recoveryHold.findMany({ orderBy: { mediaId: "asc" } }),
+      db.libraryAsset.findMany({ orderBy: { id: "asc" } }),
+      db.subtitleAsset.findMany({ orderBy: { id: "asc" } }),
+    ]);
+  const beforeDuplicate = await duplicateState();
   await expect(
     f.service.prepare(f.prior.actor, crypto.randomUUID(), {
       restoreOperationId: f.restore.id,
@@ -124,6 +135,7 @@ test("later B-only approval reuses the exact A-only grants without renewing vers
       cleanupIds: [later.id],
     }),
   ).rejects.toThrow("already has current authority");
+  expect(await duplicateState()).toEqual(beforeDuplicate);
 });
 
 test("actual A→B→C joint review grants only selected cleanup and resolves both complete dependency scopes", async () => {

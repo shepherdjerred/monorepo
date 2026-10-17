@@ -3,6 +3,8 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { NativeQuarantineContinuationSchema } from "#shared/native-recovery/quarantine.ts";
+import { findCurrentCompensationReceipts } from "#infrastructure/native-compensation/receipts.ts";
+import type { CompensationPhysicalReference } from "#shared/publication-proof/references.ts";
 
 const Selection = z.object({
   bindings: z.array(
@@ -47,7 +49,12 @@ export async function currentNativeReceipts(
   });
   if (rows.length > 100)
     throw new Error("Native household receipt history exceeds bounded lookup");
-  const result = [];
+  const result: {
+    id: string;
+    planHash: string;
+    assetIds: string[];
+    compensationReferences?: CompensationPhysicalReference[];
+  }[] = [];
   for (const row of rows) {
     const selection = Selection.parse(row.selection);
     const scope = NativeStoredScopeSchema.parse(row.plan.scope);
@@ -106,6 +113,31 @@ export async function currentNativeReceipts(
       .map((asset) => asset.id);
     if (assetIds.length > 0)
       result.push({ id: row.id, planHash: row.planHash, assetIds });
+  }
+  const compensation = await findCurrentCompensationReceipts(tx, {
+    assetIds: input.assets
+      .filter(
+        (asset) =>
+          asset.state === "published" &&
+          asset.owned &&
+          asset.ownershipEpoch === input.epoch,
+      )
+      .map((asset) => asset.id),
+    recoveryEpoch: input.epoch,
+  });
+  for (const reference of compensation) {
+    const existing = result.find((item) => item.id === reference.receiptId);
+    if (existing === undefined)
+      result.push({
+        id: reference.receiptId,
+        planHash: reference.planHash,
+        assetIds: [reference.assetId],
+        compensationReferences: [reference],
+      });
+    else {
+      existing.assetIds.push(reference.assetId);
+      existing.compensationReferences?.push(reference);
+    }
   }
   return result;
 }

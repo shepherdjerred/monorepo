@@ -49,6 +49,10 @@ import { createPlexEventActivities } from "./plex-events/activities.ts";
 import { createNativeArchiveFileActivities } from "./native-archive/activities.ts";
 import type { NativeArchiveExecution } from "./native-archive/execution.ts";
 import { createNativeArchiveNetworkActivities } from "#migration/native-archive/activities.ts";
+import { createNativeCompensationNetworkActivities } from "#migration/native-compensation/activities.ts";
+import { createNativeCompensationFileActivities } from "./native-compensation/activities.ts";
+import type { NativeCompensationExecutionContext } from "#shared/native-recovery/compensation-runtime.ts";
+import { createMediaPathMapping } from "#filesystem/media-paths.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -224,6 +228,7 @@ export async function createMediaFileRuntime(
   environment: Record<string, string | undefined>,
   checkpoint: (phase: string) => Promise<void>,
   archiveExecution: () => NativeArchiveExecution,
+  compensationExecution: () => NativeCompensationExecutionContext,
 ) {
   const config = FilesBootstrapSchema.parse(environment);
   const db = createDatabase(config.DATABASE_URL);
@@ -246,7 +251,19 @@ export async function createMediaFileRuntime(
     db,
     serverMachineId: config.PLEX_SERVER_MACHINE_ID,
     roots,
+    pathMapping: createMediaPathMapping({
+      canonicalRoots: roots,
+      workerRoots: roots,
+    }),
     checkpoint,
+    publicationExecution: () => {
+      const execution = compensationExecution();
+      return {
+        signal: execution.signal,
+        assertActive: execution.assertActive,
+        checkpoint: () => execution.checkpoint("publication"),
+      };
+    },
     verifyStorageAuthority: (root) =>
       requireStorageAuthority(
         db,
@@ -257,6 +274,10 @@ export async function createMediaFileRuntime(
     verifyPlexExclusion: (root) => requirePlexExclusionProof(db, root),
   };
   const activities = {
+    ...createNativeCompensationFileActivities(
+      { files: fileContext, workerPodUid: config.MEDIA_FILE_WORKER_POD_UID },
+      compensationExecution,
+    ),
     ...createNativeArchiveFileActivities(
       { files: fileContext, workerPodUid: config.MEDIA_FILE_WORKER_POD_UID },
       archiveExecution,
@@ -314,6 +335,7 @@ export async function createMediaNetworkRuntime(
   environment: Record<string, string | undefined>,
   watchExecution: MediaAutomationContext["watchExecution"],
   archiveExecution: () => NativeArchiveExecution,
+  compensationExecution: () => NativeCompensationExecutionContext,
 ) {
   const config = DeliveryBootstrapSchema.parse(environment);
   const temporal = createMediaWorkflowStarter({
@@ -407,6 +429,14 @@ export async function createMediaNetworkRuntime(
       }),
     },
     activities: {
+      ...createNativeCompensationNetworkActivities(
+        {
+          ...context,
+          observer: createLegacyObserver(environment),
+          expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        },
+        compensationExecution,
+      ),
       ...createMediaNetworkActivities(context, lifecycle),
       ...createNativeArchiveNetworkActivities({
         ...context,

@@ -62,6 +62,10 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_native_compensation: "prepareNativeCompensationWorkflow",
+  apply_native_compensation: "applyNativeCompensationWorkflow",
+  compensate_native_publication: "compensateNativePublicationWorkflow",
+  publish_compensated_media: "publishCompensatedMediaWorkflow",
   prepare_native_archive: "prepareNativeArchiveWorkflow",
   apply_native_archive: "applyNativeArchiveWorkflow",
   cleanup_native_archive: "cleanupNativeArchiveWorkflow",

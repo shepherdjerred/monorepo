@@ -432,23 +432,17 @@ export const runGlitterCorpusDaily = () => _runGlitterCorpusDaily();
 
 export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
-
 export const runOpsSnapshot = () => _runOpsSnapshot();
-
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
 ): ReturnType<typeof _runOpsDigest> {
   return _runOpsDigest(input);
 }
-
 export const agentChatWorkflow = agentChat.agentChatWorkflow;
-
 export const agentChatTurnReceiptWorkflow =
   agentChatReceipt.agentChatTurnReceiptWorkflow;
-
 export const agentChatCatalogWorkflow =
   agentChatCatalog.agentChatCatalogWorkflow;
-
 export const scheduledAgentChatTurnWorkflow =
   scheduledAgentChat.scheduledAgentChatTurnWorkflow;
 export const discordAgentChatWorkflow =
@@ -499,3 +493,8 @@ export const observeMediaCapacityWorkflow =
 import * as plexEvents from "./media/plex-events.ts";
 export const observePlexEventHintWorkflow =
   plexEvents.observePlexEventHintWorkflow;
+import * as compensation from "./media/native-compensation.ts";
+export const prepareNativeCompensationWorkflow = compensation.prepare;
+export const applyNativeCompensationWorkflow = compensation.apply;
+export const compensateNativePublicationWorkflow = compensation.compensate;
+export const publishCompensatedMediaWorkflow = compensation.publish;

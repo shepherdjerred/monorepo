@@ -11,12 +11,14 @@ import {
 import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
+import { archiveCleanupDeadline } from "./cleanup/deadline.ts";
 
 export async function archiveCleanupAuthority(
   tx: Prisma.TransactionClient,
   context: ArchiveFileContext,
   input: CleanupNativeArchiveInput,
 ) {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   assertArchiveActive(context.execution);
   const current = await assertNativeArchiveCleanup(tx, input);
   assertArchiveActive(context.execution);
@@ -43,7 +45,7 @@ export async function archiveCleanupAuthority(
     network.operationId !== input.operationId ||
     network.recoveryEpoch !== input.recoveryEpoch ||
     network.planId !== current.row.receipt.planId ||
-    snapshotHash(network) !== observation.evidenceHash ||
+    snapshotHash(z.json().parse(network)) !== observation.evidenceHash ||
     observation.expiresAt <= new Date()
   )
     throw new NativeArchiveProtection("archive_network_evidence_changed");
@@ -107,6 +109,10 @@ export async function archiveCleanupAuthority(
   return {
     ...current,
     network,
+    beforeEffect: await archiveCleanupDeadline(tx, context, {
+      network,
+      observed,
+    }),
     scopeHash: snapshotHash(z.json().parse(current.networkScope)),
   };
 }

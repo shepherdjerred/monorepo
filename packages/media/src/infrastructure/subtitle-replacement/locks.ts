@@ -4,6 +4,7 @@ import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { MediaError } from "#application/errors.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 
 /** Media row locks serialize this read with creation/release of a reservation. */
 export async function assertNoSubtitleReplacement(
@@ -31,6 +32,10 @@ export async function lockSubtitleReplacementScope(
   },
 ) {
   await lockDefaultMedia(tx, [...input.mediaIds]);
+  await assertNoPublicationCompensationFence(tx, {
+    mediaIds: input.mediaIds,
+    assetIds: [input.assetId],
+  });
   await lockEffectiveRequests(tx, [...input.mediaIds]);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;

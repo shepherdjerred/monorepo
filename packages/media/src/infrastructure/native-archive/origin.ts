@@ -6,12 +6,14 @@ import {
 } from "#shared/native-recovery/archive.ts";
 import { resolvePriorNativeBinding } from "./prior-binding.ts";
 import { NativeArchiveScopeProtection } from "./errors.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Version changes after the committed import require exact immutable archive grants. */
 export async function assertArchiveOrigin(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   edge: NativeArchiveEdge,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   let cursor = file;
   for (
@@ -27,11 +29,13 @@ export async function assertArchiveOrigin(
       tx,
       cursor,
       cursor.ownershipEpoch,
+      budget,
     );
     if (reference.receiptLifecycle !== "superseded_archive")
       throw new NativeArchiveScopeProtection(
         "Archive transition has no original archive grant",
       );
+    budget?.consume(1);
     const receipt = await tx.nativeRecoveryReceipt.findUniqueOrThrow({
       where: { id: reference.receiptId },
       include: { plan: true },

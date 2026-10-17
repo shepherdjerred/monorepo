@@ -503,6 +503,7 @@ model MediaRuntimeState {
 }
 
 model AcquisitionAttempt {
+  publicationTransition MediaPublicationTransition?
   edition          String @default("default")
   id               String                   @id @default(uuid())
   releaseId        String
@@ -778,6 +779,8 @@ model RetentionDecision {
 }
 
 model Operation {
+  compensationExecutionCoordinators NativePublicationCompensationContinuation[] @relation("CompensationExecution")
+  compensationPublicationCoordinators NativePublicationCompensationContinuation[] @relation("CompensationPublication")
   nativeArchiveCoordinators NativeArchiveCleanupContinuation[]
   nativeQuarantineCoordinators NativeQuarantineContinuation[]
   subtitleReplacementCoordinators SubtitleReplacement[]
@@ -943,6 +946,7 @@ model NativeRecoveryObservation {
 }
 
 model NativeRecoveryReceipt {
+  compensationContinuation NativePublicationCompensationContinuation?
   archiveContinuations NativeArchiveCleanupContinuation[]
   quarantineContinuations NativeQuarantineContinuation[]
   id String @id @default(uuid())
@@ -973,10 +977,54 @@ model NativeArchiveCleanupContinuation {
   coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
   executionEvidence Json?
   completion Json?
+  supersession Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([receiptId, originalCleanupId], map: "native_archive_receipt_cleanup_key")
   @@index([state, recoveryEpoch])
+}
+
+model MediaPublicationTransition {
+  id String @id(map: "media_pub_transition_pk") @default(uuid())
+  attemptId String @unique(map: "media_pub_transition_attempt_key")
+  attempt AcquisitionAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict, map: "media_pub_transition_attempt_fk")
+  birthEpoch Int
+  filePlanHash String
+  intent Json
+  intentHash String
+  outcome Json?
+  outcomeHash String?
+  createdAt DateTime @default(now())
+  compensations NativePublicationCompensationContinuation[]
+}
+
+model NativePublicationCompensationContinuation {
+  id String @id(map: "native_pub_comp_pk") @default(uuid())
+  receiptId String @unique(map: "native_pub_comp_receipt_key")
+  receipt NativeRecoveryReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict, map: "native_pub_comp_receipt_fk")
+  transitionId String
+  transition MediaPublicationTransition @relation(fields: [transitionId], references: [id], onDelete: Restrict, map: "native_pub_comp_transition_fk")
+  recoveryEpoch Int
+  mediaIds String[]
+  assetIds String[]
+  descriptor Json
+  descriptorHash String
+  state String @default("pending")
+  version Int @default(0)
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation("CompensationExecution", fields: [coordinatorOperationId], references: [id], onDelete: Restrict, map: "native_pub_comp_execution_op_fk")
+  executionEvidence Json?
+  completion Json?
+  publicationCoordinatorOperationId String?
+  publicationCoordinatorOperation Operation? @relation("CompensationPublication", fields: [publicationCoordinatorOperationId], references: [id], onDelete: Restrict, map: "native_pub_comp_publication_op_fk")
+  verifiedPublication Json?
+  fenceRelease Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([transitionId, recoveryEpoch], map: "native_comp_transition_epoch_key")
+  @@index([state, recoveryEpoch], map: "native_pub_comp_state_epoch_idx")
+  @@index([mediaIds], type: Gin, map: "native_pub_comp_media_idx")
+  @@index([assetIds], type: Gin, map: "native_pub_comp_asset_idx")
 }
 
 model NativeQuarantineContinuation {

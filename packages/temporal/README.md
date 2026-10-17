@@ -181,6 +181,22 @@ deadlines before runtime initialization, with checks around awaited work and
 physical effects. Current-version transitions lacking an immutable physical
 receipt remain protected rather than renewing authority through another review.
 
+Interrupted upgrades use separate `prepareNativeCompensationWorkflow` and
+`applyNativeCompensationWorkflow` reviews, followed by
+`compensateNativePublicationWorkflow`. Network Activities refresh exact Plex,
+playback and storage observations; file Activities restore only the reviewed
+predecessor and retain successor bytes. Durable execution and coordinator fences
+allow an exact cold retry without resuming the old acquisition. Completion keeps
+files importing and household holds active. After fresh positive household
+authority covers every leaf, `publishCompensatedMediaWorkflow` verifies Plex and
+atomically releases the publication fence with availability. Mixed or missing
+choices remain protected. These operations use the existing outbox and role
+queues, with no additional schedule. Each invocation checks cancellation and
+finite SDK deadlines before and after runtime initialization, awaited locks and
+effects. Ordinary publication uses the same invocation-local deadline factory
+at its recorded filesystem boundary; existing Workflow timeout options and
+historical payload formats remain unchanged.
+
 The initially paused `media-capacity` schedule runs each minute with SKIP overlap.
 Its new Workflow first observes canonical mounts on `media-network`, then samples
 them on `media-files`; the API never mounts libraries. Each Activity checks the

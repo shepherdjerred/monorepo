@@ -590,6 +590,13 @@ An upgrade preserves a rollback copy and atomically replaces the visible path.
 The operation journal permits reconciliation after process termination; a
 database transaction alone cannot make a filesystem mutation atomic.
 
+Filesystem scopes retain a separate kernel lock for every exact path. Python 3
+helpers acquire those same ordered locks in batches of at most 128 descriptors,
+bounding helper and descriptor use without replacing them with a coarser lock.
+Partial acquisition releases the whole scope; loss of any helper invalidates
+ownership and protects subsequent effects. Lock files are never deleted to
+recover ownership.
+
 Superseded videos and archived sidecars remain recoverable for seven days after
 their successor is verified in Plex. A separate durable cleanup checks the exact
 archive journal, current playable coverage, ownership, recovery epoch, active
@@ -1040,10 +1047,50 @@ continuation after an exactly identified closed Workflow, retaining its original
 execution identities and journals; uncertain foreign effects remain protected.
 Completed cleanup receipts prove terminal archive absence in later native reviews.
 
-A new serving upgrade C→D after archive approval requires separate transition
-reconciliation before those continuations can proceed. It cannot inherit C's
-reviewed physical identity. Missing historical identities, partially proved
-foreign effects and unresolved archive transitions remain protected.
+New ordinary publications retain a complete immutable intent before effects,
+actual durable filesystem acknowledgments, and a separate committed outcome.
+The acknowledgments bind the exact file identities, ancestor directories and
+literal journal bytes. A journal-completion acknowledgment records the actual
+atomic journal replacement separately from media link, rename and unlink
+effects. Existing version-1 plans and journals keep their original bytes and
+meaning; historical inode identities are never reconstructed from checksums.
+Ordinary publication supports its existing complete coverage of up to 100 files
+and 100 leaves. Recovery reviews have the smaller 25-video-asset union limit
+and protect oversized transitions without truncating them.
+
+After a serving upgrade C→D, a new archive review can follow the exact adjacent
+publication receipt back to C's original native grant. It keeps A/B deadlines
+and historical receipts unchanged; C's deadline remains tied to D's actual
+verified publication. Replacing an old cleanup continuation requires a trusted
+terminal observation of its exact Workflow run and fresh proof that every
+selected byte remains unchanged and every old purge journal is absent. An
+allocated execution record with no effects can satisfy this proof. A prepared
+or completed purge journal with an uncertain database outcome cannot. The old
+continuation becomes terminally superseded, and only the new reviewed
+continuation may proceed.
+
+The **Review interrupted upgrades** page handles proof-backed partial
+publication after a database restore. The owner reviews the whole interrupted
+plan, its exact acknowledged effects and the inverse steps needed to recover
+the predecessor. Approval grants compensation only; it neither resumes the old
+attempt nor deletes the successor. Missing acknowledgments, substituted
+same-byte files and changed ancestors remain protected. A subsequent restore
+can review an interrupted inverse through its exact bounded acknowledgment
+ancestry and the prior coordinator's trusted terminal observation.
+
+Physical compensation preserves the old attempt, release and publication
+history. It settles only the reviewed reservation tuples, leaves the predecessor
+importing under recovery holds, and retains successor bytes. A separate effect
+fence blocks conflicting acquisition, subtitle, rollback, removal and native
+effects until fresh whole-group household intent and a separate scoped Plex
+publication verify the exact predecessor bindings. Mixed demand keeps the whole
+physical group held. Lost acknowledgments resolve through immutable completion
+and verified-publication receipts. Later caption installations and replacements
+require their own exact app provenance, completed journals and fresh physical
+proof; they do not modify the original compensation receipt. The same proof
+participates in later video upgrades, native rebaselines and archive review.
+Compensation does not renew an old subtitle policy: replacement still requires
+a current requested target and reconciled policy authority.
 
 Uncertain filesystem journals, unproved storage replacements
 and unresolved subtitle neighbors remain protected and require their separate

@@ -1,5 +1,11 @@
-import { lstat, readFile } from "node:fs/promises";
-import { contentIO } from "./content-io.ts";
+import { lstat } from "node:fs/promises";
+import { OperationJournal } from "./operations/journal.ts";
+import { completeDuplicateImport } from "./operations/import.ts";
+import { orderedMovePaths, assertSameMoveIdentity } from "./operations/move.ts";
+import {
+  recordedContentIO,
+  type PrimitiveRecorder,
+} from "./publication-proof/recorder.ts";
 import type { ContentProof } from "./content-proof.ts";
 import nodePath from "node:path";
 import { OperationLocks, type ContentPath } from "./operation-locks.ts";
@@ -22,14 +28,14 @@ import {
   syncDirectory,
   copyExclusive,
   verifyControlExclusion,
-  saveManifest,
   requireCapacity,
 } from "./operations-io.ts";
 
 /** Filesystem journal complements the database operation journal. All paths are root-relative. */
 export class FileOperations {
+  private readonly journal: OperationJournal;
   private readonly locks: OperationLocks;
-  private readonly content: ReturnType<typeof contentIO>;
+  private readonly content: ReturnType<typeof recordedContentIO>;
   constructor(
     private readonly roots: MediaFileRoots,
     private readonly options: {
@@ -40,17 +46,39 @@ export class FileOperations {
       /** Activity heartbeat/cancellation checkpoint. Throwing leaves a recoverable journal. */
       checkpoint?: (phase: string) => Promise<void>;
       contentProof?: ContentProof;
+      effectRecorder?: PrimitiveRecorder;
+      /** Invocation-local authority check immediately before a syscall or journal installation. */
+      beforeEffect?: () => void;
     },
   ) {
+    this.journal = new OperationJournal(
+      (relative) => this.controlPath(relative),
+      (manifest, save) => this.content.completeJournal(manifest, save),
+      options.effectRecorder === undefined && options.beforeEffect === undefined
+        ? undefined
+        : () => {
+            this.content.assertActive();
+          },
+    );
     validateMediaRoots(roots, options.verifyPlexExclusion !== undefined);
     this.locks = new OperationLocks(
       roots,
       (relative) => this.controlPath(relative),
       () => this.verifyControlExclusion(),
     );
-    this.content = contentIO(options.contentProof, async () => {
-      await this.checkpoint("hashing");
-    });
+    this.content = recordedContentIO(
+      {
+        roots,
+        locks: this.locks,
+        proof: options.contentProof,
+        recorder: options.effectRecorder,
+        beforeEffect: options.beforeEffect,
+        verify: () => this.verifyControlExclusion(),
+      },
+      async () => {
+        await this.checkpoint("hashing");
+      },
+    );
   }
 
   /** Return an in-process proof before taking PG locks; never acquire PG inside this callback. */
@@ -122,7 +150,9 @@ export class FileOperations {
           previousSha256: input.previousSha256 ?? null,
           phase: "prepared",
         };
-        let manifest = await this.prepare(ManifestSchema.parse(descriptor));
+        let manifest = await this.journal.prepare(
+          ManifestSchema.parse(descriptor),
+        );
         const staged = await this.controlPath(`staging/${input.operationId}`);
         const backup = await this.controlPath(`rollback/${input.operationId}`);
         if (manifest.phase === "complete") {
@@ -155,7 +185,7 @@ export class FileOperations {
           }
           await this.requireDigest(staged, input.sha256);
           manifest = { ...manifest, phase: "staged" };
-          await this.save(manifest);
+          await this.journal.save(manifest);
           await this.checkpoint("staged");
         }
         if (input.stopAfterStaging === true) return manifest;
@@ -163,10 +193,14 @@ export class FileOperations {
           await this.authorize(manifest);
           if (await exists(target)) {
             const digest = await this.content.digest(target);
-            if (digest === input.sha256) {
-              if (await exists(staged)) await this.content.unlink(staged);
-              return await this.complete(manifest);
-            }
+            if (digest === input.sha256)
+              return await completeDuplicateImport({
+                content: this.content,
+                journal: this.journal,
+                manifest,
+                staged,
+                recorded: this.options.effectRecorder !== undefined,
+              });
             if (
               input.previousSha256 === undefined ||
               digest !== input.previousSha256
@@ -177,7 +211,10 @@ export class FileOperations {
             if (await exists(backup))
               await this.requireDigest(backup, input.previousSha256);
             else {
-              await this.content.link(target, backup);
+              await this.content.link(target, backup, {
+                manifest,
+                step: "import_backup_link",
+              });
               await syncDirectory(nodePath.dirname(backup));
             }
             await this.checkpoint("previous-version-preserved");
@@ -189,15 +226,24 @@ export class FileOperations {
           await this.authorize(manifest);
           if (input.previousSha256 === undefined) {
             // New publications must never replace an unmanaged destination.
-            await this.content.link(staged, target);
-            await this.content.unlink(staged);
+            await this.content.link(staged, target, {
+              manifest,
+              step: "import_publish_link",
+            });
+            await this.content.unlink(staged, {
+              manifest,
+              step: "import_stage_unlink",
+            });
           } else {
             // The old file stays playable until this same-filesystem atomic replacement.
-            await this.content.rename(staged, target);
+            await this.content.rename(staged, target, {
+              manifest,
+              step: "import_publish_rename",
+            });
           }
           await syncDirectory(nodePath.dirname(target));
           await this.checkpoint("published");
-          return await this.complete(manifest);
+          return await this.journal.complete(manifest);
         });
       },
     );
@@ -254,7 +300,7 @@ export class FileOperations {
             throw new FileOperationConflict(
               "Rollback does not match its import manifest",
             );
-          const manifest = await this.prepare({
+          const manifest = await this.journal.prepare({
             version: 1,
             operationId: input.rollbackOperationId,
             kind: "rollback",
@@ -269,7 +315,7 @@ export class FileOperations {
           const current = await this.content.digest(target);
           if (current === input.previousSha256) {
             await this.requireDigest(rejected, input.sha256);
-            return await this.complete(manifest);
+            return await this.journal.complete(manifest);
           }
           if (current !== input.sha256 || manifest.phase === "complete")
             throw new FileOperationConflict(
@@ -278,7 +324,10 @@ export class FileOperations {
           if (await exists(rejected))
             await this.requireDigest(rejected, input.sha256);
           else {
-            await this.content.link(target, rejected);
+            await this.content.link(target, rejected, {
+              manifest,
+              step: "rollback_rejected_link",
+            });
             await syncDirectory(nodePath.dirname(rejected));
           }
           const staged = await this.controlPath(
@@ -286,14 +335,21 @@ export class FileOperations {
           );
           if (await exists(staged))
             await this.requireDigest(staged, input.previousSha256);
-          else await this.content.link(source, staged);
+          else
+            await this.content.link(source, staged, {
+              manifest,
+              step: "rollback_stage_link",
+            });
           await this.authorize(manifest);
           await this.requireDigest(target, input.sha256);
           await this.authorize(manifest);
-          await this.content.rename(staged, target);
+          await this.content.rename(staged, target, {
+            manifest,
+            step: "rollback_publish_rename",
+          });
           await syncDirectory(nodePath.dirname(target));
           await this.checkpoint("rollback-published");
-          return await this.complete(manifest);
+          return await this.journal.complete(manifest);
         }),
     );
   }
@@ -331,7 +387,7 @@ export class FileOperations {
           // Absence is evidence too: never let either recovery branch bypass its
           // captured parent and leaf identities merely because exists() is false.
           await this.options.contentProof?.digest(source);
-          const manifest = await this.prepare({
+          const manifest = await this.journal.prepare({
             version: 1,
             operationId: input.operationId,
             kind: "purge",
@@ -353,19 +409,13 @@ export class FileOperations {
             await syncDirectory(nodePath.dirname(source));
           }
           await this.checkpoint("purged");
-          return await this.complete(manifest);
+          return await this.journal.complete(manifest);
         }),
     );
   }
 
-  async readManifest(
-    operationId: string,
-  ): Promise<FileOperationManifest | null> {
-    IdSchema.parse(operationId);
-    const path = await this.controlPath(`journal/${operationId}.json`);
-    return (await exists(path))
-      ? ManifestSchema.parse(JSON.parse(await readFile(path, "utf8")))
-      : null;
+  async readManifest(operationId: string) {
+    return await this.journal.read(operationId);
   }
 
   private async move(input: {
@@ -379,11 +429,7 @@ export class FileOperations {
     IdSchema.parse(operationId);
     DigestSchema.parse(sha256);
     // Both names are locked in a stable order, so quarantine/purge/restore cannot overlap.
-    const paths = [source, target].sort();
-    const first = paths[0];
-    const second = paths[1];
-    if (first === undefined || second === undefined)
-      throw new Error("Missing move paths");
+    const { first, second } = orderedMovePaths(source, target);
     return await this.locks.withLock(
       `operation:${operationId}`,
       async () =>
@@ -391,7 +437,7 @@ export class FileOperations {
           first,
           async () =>
             await this.locks.withLock(second, async () => {
-              const manifest = await this.prepare({
+              const manifest = await this.journal.prepare({
                 version: 1,
                 operationId,
                 kind,
@@ -412,63 +458,32 @@ export class FileOperations {
               await this.authorize(manifest);
               if (await exists(target)) {
                 await this.requireDigest(target, sha256);
-                if (await exists(source)) {
-                  const left = await lstat(source);
-                  const right = await lstat(target);
-                  if (left.dev !== right.dev || left.ino !== right.ino)
-                    throw new FileOperationConflict(
-                      "Move destination already exists",
-                    );
-                }
+                if (await exists(source))
+                  await assertSameMoveIdentity(source, target);
               } else {
                 await this.requireDigest(source, sha256);
                 await this.authorize(manifest);
-                await this.content.link(source, target);
+                await this.content.link(source, target, {
+                  manifest,
+                  step: "move_link",
+                });
                 await syncDirectory(nodePath.dirname(target));
               }
               await this.checkpoint("move-linked");
               if (await exists(source)) {
                 await this.requireDigest(source, sha256);
                 await this.authorize(manifest);
-                await this.content.unlink(source);
+                await this.content.unlink(source, {
+                  manifest,
+                  step: "move_unlink",
+                });
                 await syncDirectory(nodePath.dirname(source));
               }
               await this.checkpoint("move-unlinked");
-              return await this.complete(manifest);
+              return await this.journal.complete(manifest);
             }),
         ),
     );
-  }
-
-  private async prepare(
-    descriptor: FileOperationManifest,
-  ): Promise<FileOperationManifest> {
-    const existing = await this.readManifest(descriptor.operationId);
-    if (existing !== null) {
-      if (
-        JSON.stringify({ ...existing, phase: "prepared" }) !==
-        JSON.stringify(descriptor)
-      )
-        throw new FileOperationConflict(
-          "Operation identifier was reused with different inputs",
-        );
-      return existing;
-    }
-    await this.save(descriptor);
-    return descriptor;
-  }
-
-  private async complete(
-    manifest: FileOperationManifest,
-  ): Promise<FileOperationManifest> {
-    const completed: FileOperationManifest = { ...manifest, phase: "complete" };
-    await this.save(completed);
-    return completed;
-  }
-
-  private async save(manifest: FileOperationManifest): Promise<void> {
-    const path = await this.controlPath(`journal/${manifest.operationId}.json`);
-    await saveManifest(path, manifest);
   }
 
   private async authorize(manifest: FileOperationManifest): Promise<void> {
@@ -490,12 +505,8 @@ export class FileOperations {
     await verifyControlExclusion(this.roots, this.options.verifyPlexExclusion);
   }
 
-  private async requireDigest(path: string, digest: string): Promise<void> {
-    if (!(await exists(path)) || (await this.content.digest(path)) !== digest)
-      throw new FileOperationConflict(
-        "Media content does not match its operation manifest",
-      );
-  }
+  private readonly requireDigest = (path: string, digest: string) =>
+    this.content.requireDigest(path, digest);
   private async checkpoint(phase: string): Promise<void> {
     for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
     await this.options.checkpoint?.(phase);

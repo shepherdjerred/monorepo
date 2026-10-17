@@ -4,6 +4,7 @@ import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
 import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
@@ -21,6 +22,9 @@ export async function authorizedSubmission(
   return context.db.$transaction(
     async (tx) => {
       await lockAcquisitionMedia(tx, attempt.mediaIds);
+      await assertNoPublicationCompensationFence(tx, {
+        mediaIds: attempt.mediaIds,
+      });
       await lockEffectiveRequests(tx, attempt.mediaIds);
       if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)))
         return false;

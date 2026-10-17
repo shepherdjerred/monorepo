@@ -25,6 +25,7 @@ import type { QualityProfile } from "#shared/contract.ts";
 import { chooseUpgrade, evaluateRelease } from "#domain/quality.ts";
 import { serializable } from "./store.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import {
   operationCoverage,
@@ -133,6 +134,7 @@ async function reserveLockedCandidate(
     newTargetIds,
   } = options;
   await lockEffectiveRequests(tx, proposedIds);
+  await assertNoPublicationCompensationFence(tx, { mediaIds: proposedIds });
   if (!(await lockRuntimeAuthority(tx, epoch))) return null;
   await tx.mediaItem.update({
     where: { id: input.mediaId },
@@ -272,6 +274,9 @@ export async function adoptReservation(
   if (snapshot === null) return null;
   return serializable(context.db, async (tx) => {
     await lockAcquisitionMedia(tx, snapshot.attempt.mediaIds);
+    await assertNoPublicationCompensationFence(tx, {
+      mediaIds: snapshot.attempt.mediaIds,
+    });
     await lockEffectiveRequests(tx, snapshot.attempt.mediaIds);
     const reservation = await tx.acquisitionReservation.findUnique({
       where: targetWhere(defaultScope(input.mediaId)),

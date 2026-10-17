@@ -23,7 +23,7 @@ export const archiveReasons: Record<
     "Household recovery protection must be reconciled before cleanup.",
   archive_media_held: "A current Keep choice or pin protects these files.",
   archive_transition_reconciliation_required:
-    "The playable version or archive evidence changed. This transition needs recovery support that is not available yet; another review cannot authorize it.",
+    "The playable version or archive evidence changed. Exact publication and stopped-cleanup evidence is required before another review can authorize it.",
 };
 export function archiveBytes(value: string): string {
   return `${BigInt(value).toLocaleString("en-US")} bytes`;

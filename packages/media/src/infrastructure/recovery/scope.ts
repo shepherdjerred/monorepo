@@ -11,6 +11,7 @@ import { hasProvenNoRecoveryAccess } from "./household.ts";
 import { currentNativeReceipts } from "./native-receipts.ts";
 import { buildHouseholdScope } from "./household-scope.ts";
 import { lockLegacyClaimKnowledge } from "./legacy-claims/knowledge-fence.ts";
+import { compensationGroupMedia } from "#infrastructure/native-compensation/routing.ts";
 
 export function recoveryConflict(message: string) {
   return new MediaError("recovery_review_changed", message, 409);
@@ -45,6 +46,7 @@ export async function sharedRecoveryMedia(
     const previous = ids.size;
     for (const row of rows)
       for (const coverage of row.coverage) ids.add(coverage.mediaId);
+    for (const id of await compensationGroupMedia(db, [...ids])) ids.add(id);
     if (ids.size > 100)
       throw recoveryConflict("Shared recovery scope exceeds 100 media items");
     if (ids.size === previous) return [...ids].sort();

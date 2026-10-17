@@ -3,7 +3,10 @@ import { FileOperations } from "#filesystem/operations.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
 import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
 import { archiveOriginalJournals } from "./paths.ts";
-import { assertCleanupContent } from "./cleanup-proof.ts";
+import {
+  assertCleanupContent,
+  archiveCleanupSubtitleDependencies,
+} from "./cleanup-proof.ts";
 import type { ArchiveCleanupProof } from "./cleanup-types.ts";
 import { archivePurgeManifest } from "./purge-manifest.ts";
 import { assertCleanupJournalProof } from "./journal-proof.ts";
@@ -11,10 +14,14 @@ import { assertCleanupJournalProof } from "./journal-proof.ts";
 export async function withCleanupLocks<T>(
   context: ArchiveFileContext,
   proof: ArchiveCleanupProof,
-  authorize: () => Promise<void>,
+  authorize: () => Promise<() => void>,
   action: (operations: Map<"movies" | "tv", FileOperations>) => Promise<T>,
 ): Promise<T> {
   const operations = new Map<"movies" | "tv", FileOperations>();
+  let beforeEffect: (() => void) | undefined;
+  const check = async () => {
+    beforeEffect = await authorize();
+  };
   const kinds = ["movies", "tv"] as const;
   const journals = [
     ...archiveOriginalJournals(context, proof.scope),
@@ -28,7 +35,7 @@ export async function withCleanupLocks<T>(
       assertArchiveActive(context.execution);
       await assertCleanupContent(context, proof);
       await assertCleanupJournalProof(context, proof);
-      await authorize();
+      await check();
       const result = await action(operations);
       await assertCleanupContent(context, proof);
       await assertCleanupJournalProof(context, proof);
@@ -41,7 +48,12 @@ export async function withCleanupLocks<T>(
     );
     if (selected.length === 0) return await enter(index + 1);
     const instance = new FileOperations(roots, {
-      authorize,
+      authorize: check,
+      beforeEffect: () => {
+        if (beforeEffect === undefined)
+          throw new Error("Archive effect authority was not captured");
+        beforeEffect();
+      },
       contentProof: proof.content,
       checkpoint: context.files.checkpoint,
       ...(context.files.verifyPlexExclusion === undefined
@@ -61,13 +73,18 @@ export async function withCleanupLocks<T>(
         };
       }),
       () => enter(index + 1),
-      journals
-        .filter(
-          (journal) =>
-            journal.target.startsWith(roots.library + path.sep) ||
-            journal.target.startsWith(roots.control + path.sep),
-        )
-        .map((journal) => journal.operationId),
+      [
+        ...journals
+          .filter(
+            (journal) =>
+              journal.target.startsWith(roots.library + path.sep) ||
+              journal.target.startsWith(roots.control + path.sep),
+          )
+          .map((journal) => journal.operationId),
+        ...archiveCleanupSubtitleDependencies(proof.descriptor)
+          .filter((item) => item.kind === kind)
+          .flatMap((item) => item.operationIds),
+      ],
     );
   };
   return await enter(0);

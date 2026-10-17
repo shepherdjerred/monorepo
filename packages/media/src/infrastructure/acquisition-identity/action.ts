@@ -19,6 +19,10 @@ import { MediaError } from "#application/errors.ts";
 import type { ExpectedTarget } from "#shared/editions/commands.ts";
 import { assertDefaultCommandCas } from "#infrastructure/editions/command-cas.ts";
 import { lockCommandActor } from "#infrastructure/editions/command-actor.ts";
+import {
+  compensationGroupMedia,
+  assertCompensationGroupUnchanged,
+} from "#infrastructure/native-compensation/routing.ts";
 
 export async function prepareActionAuthority(
   tx: Prisma.TransactionClient,
@@ -38,8 +42,11 @@ export async function prepareActionAuthority(
     automaticIds: automatic?.mediaIds,
   });
   const renewal = input.action === "select_release" || input.action === "retry";
-  await lockCanonicalMedia(tx, [...selectedIds, mediaId]);
-  await lockExistingDefaultTargets(tx, [...selectedIds, mediaId]);
+  const affected = [...new Set([...selectedIds, mediaId])];
+  const compensationGroup = await compensationGroupMedia(tx, affected);
+  await lockCanonicalMedia(tx, compensationGroup);
+  await lockExistingDefaultTargets(tx, compensationGroup);
+  await assertCompensationGroupUnchanged(tx, affected, compensationGroup);
   if (options.expected !== undefined)
     await assertDefaultCommandCas(tx, defaultScope(mediaId), options.expected);
   const targets = await lockDefaultScopes(tx, [defaultScope(mediaId)], {
@@ -54,7 +61,7 @@ export async function prepareActionAuthority(
   const primary = targets.find(({ target }) => target.mediaId === mediaId);
   if (primary === undefined)
     throw new Error("Action primary target is missing");
-  await lockEffectiveRequests(tx, selectedIds);
+  await lockEffectiveRequests(tx, compensationGroup);
   const authority = renewal
     ? { automationEpoch: await commandAutomationEpoch(tx) }
     : {};

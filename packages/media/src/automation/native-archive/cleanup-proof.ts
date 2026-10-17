@@ -3,6 +3,10 @@ import { ContentProof } from "#filesystem/content-proof.ts";
 import { FileOperations } from "#filesystem/operations.ts";
 import { safePath } from "#filesystem/operations-io.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import { terminalFileEvidence } from "#automation/native-recovery/terminal-proof.ts";
+import { assertPublicationJournalIdentity } from "#filesystem/publication-proof/journal.ts";
+import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import { subtitleLineageReferences } from "#automation/publication-proof/subtitle-lineage.ts";
 import {
   NativeArchiveExecutionSchema,
   type NativeArchiveContinuation,
@@ -24,7 +28,92 @@ import type {
   ArchiveParticipant,
   ArchiveCleanupBase,
 } from "./cleanup-types.ts";
-function executionFor(
+
+export function archiveCleanupSubtitleDependencies(
+  descriptor: NativeArchiveContinuation,
+) {
+  return (descriptor.fileEvidence.subtitleEvidence ?? []).map((item) => {
+    const file = descriptor.scope.files.find(
+      (candidate) => candidate.assetId === item.assetId,
+    );
+    if (file === undefined)
+      throw new Error("Archive subtitle dependency has no reviewed asset");
+    const lineage =
+      file.authority.kind === "rebaseline"
+        ? undefined
+        : file.authority.subtitleLineage;
+    if (
+      lineage === undefined ||
+      snapshotHash(nativeJson(lineage)) !== item.evidence.lineageHash
+    )
+      throw new Error("Archive subtitle dependency descriptor changed");
+    return {
+      ...item,
+      kind: file.libraryKind,
+      references: subtitleLineageReferences(file.libraryKind, lineage),
+      operationIds: [
+        ...lineage.journals,
+        ...lineage.installations.flatMap(
+          (installation) => installation.journals,
+        ),
+      ].map((journal) => journal.operationId),
+    };
+  });
+}
+
+function subtitleDependencyPaths(descriptor: NativeArchiveContinuation) {
+  return archiveCleanupSubtitleDependencies(descriptor).flatMap((item) => [
+    ...item.evidence.files.map((file) => file.canonicalPath),
+    ...item.references.map(
+      (reference) =>
+        `/data/${reference.libraryKind}/${reference.root === "control" ? ".media-control/" : ""}${reference.path}`,
+    ),
+    ...item.evidence.journals.map(
+      (journal) => `/data/${item.kind}/.media-control/${journal.path}`,
+    ),
+  ]);
+}
+
+async function assertSubtitleDependencies(
+  context: ArchiveFileContext,
+  proof: ArchiveCleanupBase,
+) {
+  for (const item of archiveCleanupSubtitleDependencies(proof.descriptor)) {
+    for (const expected of item.evidence.files) {
+      const actual = await terminalFileEvidence(
+        {
+          content: proof.content,
+          resolvePath: (name) => nativeLocalPath(context, name),
+        },
+        {
+          canonicalPath: expected.canonicalPath,
+          expectedChecksum: expected.sha256,
+        },
+      );
+      if (
+        snapshotHash(nativeJson(actual)) !== snapshotHash(nativeJson(expected))
+      )
+        throw new FileOperationConflict(
+          "Archive subtitle dependency identity changed",
+        );
+    }
+    for (const journal of item.evidence.journals) {
+      const local = nativeLocalPath(
+        context,
+        `/data/${item.kind}/.media-control/${journal.path}`,
+      );
+      if ((await proof.content.digest(local)) !== journal.sha256)
+        throw new FileOperationConflict(
+          "Archive subtitle dependency journal changed",
+        );
+      await assertPublicationJournalIdentity(
+        context.files.roots[item.kind],
+        journal,
+      );
+    }
+  }
+}
+export function executionFor(
   row: { id: string; descriptorHash: string; recoveryEpoch: number },
   descriptor: NativeArchiveContinuation,
 ): ArchiveExecution {
@@ -103,6 +192,7 @@ export async function prepareArchiveCleanupProof(
     ...new Set([
       ...archiveAllPaths(descriptor.scope),
       ...archiveAllPaths(scope),
+      ...subtitleDependencyPaths(descriptor),
     ]),
   ].sort();
   for (const name of paths) {
@@ -196,6 +286,7 @@ export async function assertCleanupContent(
   for (const item of proof.execution.participants)
     await assertParticipant(context, proof, item);
   await assertRetainedContent(context, proof, selected);
+  await assertSubtitleDependencies(context, proof);
   for (const terminal of proof.scope.terminalDependencies)
     for (const item of terminal.dependency.files)
       if (

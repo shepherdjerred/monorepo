@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { workerFilePath } from "./paths/locations.ts";
 import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 import { lstat, realpath } from "node:fs/promises";
 import { z } from "zod";
@@ -323,7 +324,10 @@ async function inspectEntry(input: {
           media.filter((item) => mediaIds.includes(item.id)),
           file.name,
         )
-      : nodePath.relative(context.roots[kind].library, previous.path);
+      : nodePath.relative(
+          context.roots[kind].library,
+          workerFilePath(context, previous.path),
+        );
   const previousSidecars = (
     previous === null ? [] : ownedSubtitleSidecars(previous)
   ).map((subtitle) => {
@@ -337,7 +341,7 @@ async function inspectEntry(input: {
       subtitleId: subtitle.id,
       libraryPath: nodePath.relative(
         context.roots[kind].library,
-        subtitle.path,
+        workerFilePath(context, subtitle.path),
       ),
       checksum: subtitleChecksum,
       quarantineId: crypto.randomUUID(),

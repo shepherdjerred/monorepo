@@ -1,4 +1,8 @@
 import path from "node:path";
+import {
+  workerFilePath,
+  storedWorkerPath,
+} from "#automation/files/paths/locations.ts";
 import { readFile, writeFile, lstat } from "node:fs/promises";
 import { z } from "zod";
 import { ContentProof } from "#filesystem/content-proof.ts";
@@ -39,8 +43,17 @@ export function replacementPaths(
     scope,
     roots,
     sourceRelative,
-    video: scope.asset.path,
-    target: scope.destination,
+    storedPath: (filename: string) =>
+      storedWorkerPath(context, scope.libraryKind, filename),
+    expectedNeighbors: scope.installed
+      .flatMap((item) =>
+        item.storageKind === "sidecar" && item.path !== null
+          ? [workerFilePath(context, item.path)]
+          : [],
+      )
+      .sort(),
+    video: workerFilePath(context, scope.asset.path),
+    target: workerFilePath(context, scope.destination),
     source: path.join(roots.control, sourceRelative),
     staged: path.join(roots.control, `staging/${row.importOperationId}`),
     partial: path.join(
@@ -56,7 +69,10 @@ export function replacementPaths(
     descriptor: {
       operationId: row.importOperationId,
       downloadPath: sourceRelative,
-      libraryPath: path.relative(roots.library, scope.destination),
+      libraryPath: path.relative(
+        roots.library,
+        workerFilePath(context, scope.destination),
+      ),
       sha256: z.string().parse(scope.candidate.checksum),
       previousSha256: z.string().parse(scope.old.checksum),
     },
@@ -67,11 +83,7 @@ export type ReplacementPaths = ReturnType<typeof replacementPaths>;
 export async function replacementNeighbors(paths: ReplacementPaths) {
   const neighbors = await unmanagedSidecars(paths.video);
   const actual = neighbors.map((item) => item.canonicalPath).sort();
-  const expected = paths.scope.installed
-    .flatMap((item) =>
-      item.storageKind === "sidecar" && item.path !== null ? [item.path] : [],
-    )
-    .sort();
+  const expected = paths.expectedNeighbors;
   if (
     new Set(expected).size !== expected.length ||
     snapshotHash(actual) !== snapshotHash(expected)

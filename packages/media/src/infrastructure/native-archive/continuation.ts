@@ -54,6 +54,7 @@ export async function queueNativeArchiveCleanup(
   if (
     row.version !== input.expectedVersion ||
     row.state === "cleaned" ||
+    row.state === "superseded" ||
     row.recoveryEpoch !== runtime.recoveryEpoch
   )
     return null;

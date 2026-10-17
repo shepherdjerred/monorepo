@@ -4,6 +4,7 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaFileRoots } from "#filesystem/operations-types.ts";
 import type { MediaProbe } from "#filesystem/media-tools.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
+import type { MediaPathMapping } from "#filesystem/media-paths.ts";
 import * as filePlan from "#shared/file-plan.ts";
 
 export type Transaction = Prisma.TransactionClient;
@@ -11,7 +12,13 @@ export type FileContext = {
   db: Database;
   serverMachineId?: string;
   roots: { movies: MediaFileRoots; tv: MediaFileRoots };
+  pathMapping?: MediaPathMapping;
   checkpoint: (phase: string) => Promise<void>;
+  publicationExecution?: () => {
+    signal: AbortSignal;
+    assertActive: () => void;
+    checkpoint: () => Promise<void>;
+  };
   verifyStorageAuthority: (roots: MediaFileRoots) => Promise<void>;
   now?: () => Date;
   enabled: {
@@ -22,6 +29,10 @@ export type FileContext = {
   inspect?: (path: string) => Promise<MediaProbe>;
   minimumFreeBytes?: number;
   contentProof?: ContentProof;
+  preparedEmbedded?: ReadonlyMap<
+    string,
+    { path: string; checksum: string; bytes: Uint8Array }
+  >;
   verifyPlexExclusion?: (roots: MediaFileRoots) => Promise<void>;
 };
 export const GenerationsSchema = filePlan.GenerationsSchema;

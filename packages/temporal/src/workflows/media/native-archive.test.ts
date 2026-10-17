@@ -6,12 +6,25 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { archiveCall } from "#activities/media/archive-execution.ts";
 
 const workflowsPath = new URL("../index.ts", import.meta.url).pathname;
+const expected = {
+  prepare: { calls: 1, status: "completed", reason: null },
+  apply_lost_ack: { calls: 2, status: "completed", reason: null },
+  cleanup: { calls: 1, status: "completed", reason: null },
+  future_cleanup: { calls: 1, status: "completed", reason: null },
+  protected: { calls: 0, status: "reconciling", reason: "archive_media_held" },
+  superseded: {
+    calls: 0,
+    status: "completed",
+    reason: "native_archive_approval_superseded",
+  },
+};
 test.each([
   "prepare",
   "apply_lost_ack",
   "cleanup",
   "future_cleanup",
   "protected",
+  "superseded",
 ] as const)(
   "archive %s routes roles, preserves outcome and replays",
   async (mode) => {
@@ -22,7 +35,7 @@ test.each([
             (await environment.currentTimeMs()) + 86_400_000,
           ).toISOString()
         : new Date(0).toISOString();
-    let state = "preparing";
+    let state = mode === "superseded" ? "superseded" : "preparing";
     let physicalCalls = 0;
     let observations = 0;
     const finished: unknown[] = [];
@@ -112,15 +125,14 @@ test.each([
         args: [name === "cleanupNativeArchiveWorkflow" ? cleanup : input],
       });
       await workflow.runUntil(handle.result());
-      expect(observations).toBeGreaterThan(0);
-      expect(physicalCalls).toBe(
-        mode === "protected" ? 0 : mode === "apply_lost_ack" ? 2 : 1,
-      );
+      if (mode === "superseded") expect(observations).toBe(0);
+      else expect(observations).toBeGreaterThan(0);
+      expect(physicalCalls).toBe(expected[mode].calls);
       expect(finished).toEqual([
         {
           operationId: input.operationId,
-          status: mode === "protected" ? "reconciling" : "completed",
-          reason: mode === "protected" ? "archive_media_held" : null,
+          status: expected[mode].status,
+          reason: expected[mode].reason,
         },
       ]);
       const history = await handle.fetchHistory();

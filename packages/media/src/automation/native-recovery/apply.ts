@@ -17,6 +17,12 @@ import { appendNativeSubtitlePolicies } from "#automation/native-subtitles/polic
 import { terminalPaths, terminalDependencies } from "./terminal-proof.ts";
 import { settledJournals } from "./settled-proof.ts";
 import {
+  compensationDependencyPaths,
+  compensationDependencyJournals,
+  compensationDependencyEvidence,
+} from "./compensation-proof.ts";
+import { compensationSubtitleOperations } from "./compensation-proof.ts";
+import {
   FinishedNativeSchema,
   stableNativeFiles,
   stableNativeNetwork,
@@ -259,10 +265,25 @@ async function withTerminalIdentities<T>(
   action: () => Promise<T>,
 ): Promise<T> {
   const kind = (["movies", "tv"] as const)[index];
-  if (kind === undefined) return action();
+  if (kind === undefined) {
+    const verify = () =>
+      compensationDependencyEvidence({
+        scope: prepared.scope,
+        content: prepared.content,
+        roots: context.files.roots,
+        resolvePath: (name) => nativeLocalPath(context, name),
+        subtitleLineages: prepared.subtitleLineages,
+        context: context.files,
+      });
+    await verify();
+    const result = await action();
+    await verify();
+    return result;
+  }
   const roots = context.files.roots[kind];
   const canonical = [
     ...terminalPaths(prepared.scope),
+    ...compensationDependencyPaths(prepared.scope, context.files.roots),
     ...prepared.scope.files.flatMap((file) => [
       file.canonicalPath,
       ...file.subtitles.flatMap((subtitle) =>
@@ -286,6 +307,12 @@ async function withTerminalIdentities<T>(
   ]
     .filter((journal) => journal.target.startsWith(`/data/${kind}/`))
     .map((journal) => journal.operationId);
+  operationIds.push(
+    ...compensationDependencyJournals(prepared.scope, context.files.roots)
+      .filter((journal) => journal.libraryKind === kind)
+      .map((journal) => journal.operationId),
+  );
+  operationIds.push(...compensationSubtitleOperations(prepared.scope, kind));
   const operations = new FileOperations(roots, {
     authorize: () =>
       Promise.reject(new Error("Native rebaseline cannot mutate files")),

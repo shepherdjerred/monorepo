@@ -1,4 +1,5 @@
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
+import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { assertRuntime } from "#automation/files/guards.ts";
@@ -52,6 +53,11 @@ export async function assertReplacementSnapshot(
     where: { id: replacementId },
   });
   const scope = SubtitleReplacementSnapshotSchema.parse(row.snapshot);
+  await assertPublicationUnfenced(
+    tx,
+    scope.asset.coverage.map((item) => item.mediaId),
+    [scope.asset.id],
+  );
   await assertRuntime(tx, row.recoveryEpoch);
   await assertReplacementOwner(
     tx,
