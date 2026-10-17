@@ -12,7 +12,10 @@ vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
 }));
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
-import { deliveryPublicationEnabled } from "#src/delivery-config.ts";
+import {
+  deliveryPublicationEnabled,
+  deliveryStaticArchivesEnabled,
+} from "#src/delivery-config.ts";
 import {
   performanceConfig,
   DISABLED_PERFORMANCE,
@@ -36,6 +39,32 @@ test("Delivery publication requires a fresh explicit boolean authorization", asy
   await expect(deliveryPublicationEnabled("main")).rejects.toThrow();
   flag.mockRejectedValue(new Error("Unavailable"));
   expect(await deliveryPublicationEnabled("main")).toBe(false);
+});
+
+test("Delivery static archive publication is independently typed, fresh, and default off", async () => {
+  flag.mockResolvedValue(undefined);
+  expect(await deliveryStaticArchivesEnabled("main")).toBe(false);
+  expect(flag.mock.calls[0]?.[0]).toMatchObject({
+    flag: "woodpecker-delivery-static-archives-enabled",
+  });
+  expect(factory).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      targetingKey: "main",
+      attributes: { stage: "prod" },
+      requireFreshSnapshot: true,
+    }),
+  );
+  flag.mockResolvedValue({ value: false });
+  expect(await deliveryStaticArchivesEnabled("main")).toBe(false);
+  flag.mockResolvedValue({ value: true });
+  expect(await deliveryStaticArchivesEnabled("ci-canary/delivery")).toBe(true);
+  expect(factory).toHaveBeenLastCalledWith(
+    expect.objectContaining({ attributes: { stage: "beta" } }),
+  );
+  flag.mockResolvedValue({ value: "true" });
+  await expect(deliveryStaticArchivesEnabled("main")).rejects.toThrow();
+  flag.mockRejectedValue(new Error("Unavailable"));
+  expect(await deliveryStaticArchivesEnabled("main")).toBe(false);
 });
 test("performance flags preserve explicit false, reject invalid values and default off on absence or outage", async () => {
   flag.mockResolvedValue(undefined);

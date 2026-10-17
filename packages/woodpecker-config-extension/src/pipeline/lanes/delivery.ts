@@ -15,6 +15,7 @@ import {
 export function deliveryPublicationSteps(
   images: CiImages,
   enabled: boolean,
+  staticArchives = false,
 ): CiStep[] {
   if (!enabled) return [];
   return [
@@ -25,7 +26,7 @@ export function deliveryPublicationSteps(
       commands: [
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         DOCKERHUB_READ_LOGIN,
-        "bun --no-install scripts/ci/publish-delivery.ts",
+        `bun --no-install scripts/ci/publish-delivery.ts${staticArchives ? " --static-archives" : ""}`,
       ],
       environment: {
         DELIVERY_URL: "http://delivery.delivery.svc.cluster.local:7353",
@@ -34,8 +35,7 @@ export function deliveryPublicationSteps(
         "verify",
         "images",
         "helm-push",
-        "sites",
-        "scout-beta-release",
+        ...(staticArchives ? ["sites", "scout-beta-release"] : []),
       ],
       defaultBranchOnly: true,
       timeoutMinutes: 5,

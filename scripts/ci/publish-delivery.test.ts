@@ -4,7 +4,11 @@ import {
   buildPublications,
   downloadChartArtifact,
   imageRuntimeDigests,
+  parsePublicationOptions,
+  readPublicationHandoffs,
 } from "./publish-delivery.ts";
+
+const absentChartHandoffs = new Map<string, string>();
 
 const childDigest = `sha256:${"a".repeat(64)}`;
 const index = JSON.stringify({
@@ -17,6 +21,98 @@ const index = JSON.stringify({
       platform: { architecture: "unknown", os: "unknown" },
     },
   ],
+});
+
+const scoutReceipt = {
+  serviceId: "scout-for-lol",
+  artifact: {
+    id: "ci/1/42/site/scout-frontend",
+    component: "site:scout-frontend",
+    kind: "archive",
+    uri: "s3://delivery-artifacts/sites/scout-frontend/archive.tar",
+    digest: childDigest,
+    version: "build-42",
+  },
+};
+
+describe("explicit static archive publication", () => {
+  test("strict options default to catalog-only and reject unknown inputs", () => {
+    expect(parsePublicationOptions([])).toEqual({ staticArchives: false });
+    expect(parsePublicationOptions(["--static-archives"])).toEqual({
+      staticArchives: true,
+    });
+    expect(() => parsePublicationOptions(["--archives"])).toThrow();
+    expect(() => parsePublicationOptions(["unexpected"])).toThrow();
+  });
+
+  test("catalog-only does not read static producer handoffs", async () => {
+    const reads: string[] = [];
+    const result = await readPublicationHandoffs(false, {
+      required: async (key) => {
+        reads.push(key);
+        if (key !== "delivery-image-digests")
+          throw new Error("Unexpected static producer dependency");
+        return JSON.stringify({ "shepherdjerred/arcade": indexDigest });
+      },
+      optional: async (key) => {
+        reads.push(key);
+        return JSON.stringify([{ name: "arcade", revision: "2.0.0-42" }]);
+      },
+    });
+    expect(reads).toEqual([
+      "delivery-image-digests",
+      "argocd-release-expected",
+    ]);
+    expect(result.siteArtifacts).toEqual([]);
+  });
+
+  test.each(["site-artifacts", "scout-site-artifacts"])(
+    "enabled archive publication requires the %s producer receipt",
+    async (missing) => {
+      await expect(
+        readPublicationHandoffs(true, {
+          required: async (key) => {
+            if (key === missing) throw new Error(`Missing producer ${key}`);
+            return key === "delivery-image-digests" ? "{}" : "[]";
+          },
+          optional: async (key) => absentChartHandoffs.get(key),
+        }),
+      ).rejects.toThrow(`Missing producer ${missing}`);
+    },
+  );
+
+  test("an explicit producer no-op remains valid", async () => {
+    const result = await readPublicationHandoffs(true, {
+      required: async (key) => (key === "delivery-image-digests" ? "{}" : "[]"),
+      optional: async (key) => absentChartHandoffs.get(key),
+    });
+    expect(result.siteArtifacts).toEqual([]);
+  });
+
+  test("matching archive producer receipts preserve the published artifact", async () => {
+    const result = await readPublicationHandoffs(true, {
+      required: async (key) =>
+        key === "delivery-image-digests"
+          ? "{}"
+          : JSON.stringify([scoutReceipt]),
+      optional: async (key) => absentChartHandoffs.get(key),
+    });
+    expect(result.siteArtifacts).toMatchObject([scoutReceipt]);
+  });
+
+  test("a Scout archive cannot disappear from the combined producer handoff", async () => {
+    await expect(
+      readPublicationHandoffs(true, {
+        required: async (key) =>
+          key === "delivery-image-digests"
+            ? "{}"
+            : key === "site-artifacts"
+              ? "[]"
+              : JSON.stringify([scoutReceipt]),
+        optional: async (key) => absentChartHandoffs.get(key),
+      }),
+    ).rejects.toThrow("omitted or changed a Scout producer artifact");
+  });
 });
 const indexDigest = `sha256:${createHash("sha256").update(index).digest("hex")}`;
 const ci = {

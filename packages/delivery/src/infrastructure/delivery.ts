@@ -11,7 +11,13 @@ import {
 import { createDeployment, approve, cancel } from "./delivery-requests.ts";
 import { claim, stage, finish, releaseLock } from "./delivery-execution.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
-import { detail, versions, version, overview } from "./delivery-read.ts";
+import {
+  detail,
+  versions,
+  version,
+  overview,
+  latestQualifiedArtifact,
+} from "./delivery-read.ts";
 import {
   pendingQualification,
   findBuild,
@@ -44,6 +50,7 @@ export class Delivery {
   versions = versions;
   version = version;
   overview = overview;
+  latestQualifiedArtifact = latestQualifiedArtifact;
   pendingQualification = pendingQualification;
   build = findBuild;
   markQualificationAttempt = markQualificationAttempt;

@@ -14,6 +14,7 @@ import {
   CreateDeploymentSchema,
   FinishDeploymentSchema,
   IdentifierSchema,
+  LatestQualifiedArtifactQuerySchema,
   PipelineDefinitionSchema,
   PublishBuildSchema,
   RegisterEnvironmentSchema,
@@ -106,6 +107,14 @@ export function createApp(options: Options) {
     );
   });
   app.get("/api/v1/overview", async (c) => c.json(await delivery.overview()));
+  app.get("/api/v1/artifacts/latest-qualified", async (c) =>
+    c.json(
+      await delivery.latestQualifiedArtifact(
+        LatestQualifiedArtifactQuerySchema.parse(c.req.query()),
+        options.ciRepositoryId,
+      ),
+    ),
+  );
   app.get("/api/v1/versions", async (c) =>
     c.json(await delivery.versions(c.req.query("serviceId"))),
   );

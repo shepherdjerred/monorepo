@@ -3,6 +3,12 @@ import { teeOutputTail } from "../reporting/command-output.ts";
 import { asRecord } from "../../../scripts/lib/json.ts";
 import { writeJsonHandoff } from "../../../scripts/lib/ci/ci-handoff.ts";
 import {
+  setDigestMetadata,
+  setDeliveryDigestMetadata,
+  setVersionCatalogMetadata,
+  imageDigestWriters,
+} from "../../../scripts/lib/ci/image-publication-handoff.ts";
+import {
   classifyRuntimeChange,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
@@ -168,24 +174,6 @@ export async function manifestDigest(
   return digest;
 }
 
-async function setDigestMetadata(
-  digests: Readonly<Record<string, string>>,
-): Promise<void> {
-  await writeJsonHandoff("image-digests", digests);
-}
-
-async function setVersionCatalogMetadata(source: string): Promise<void> {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(source);
-  } catch (error) {
-    throw new Error("Version catalog handoff is not valid JSON", {
-      cause: error,
-    });
-  }
-  await writeJsonHandoff("version-catalog", parsed);
-}
-
 async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
@@ -291,6 +279,9 @@ export async function pushImages(
     readonly writeMetadata?: (
       digests: Readonly<Record<string, string>>,
     ) => Promise<void>;
+    readonly writeDeliveryMetadata?: (
+      digests: Readonly<Record<string, string>>,
+    ) => Promise<void>;
     readonly writeCandidates?: (
       digests: Readonly<Record<string, string>>,
       buildNumber: string,
@@ -328,7 +319,8 @@ export async function pushImages(
         executor,
         environment,
       ));
-  const writeMetadata = dependencies.writeMetadata ?? setDigestMetadata;
+  const { writeMetadata, writeDeliveryMetadata } =
+    imageDigestWriters(dependencies);
   const writeCandidates =
     dependencies.writeCandidates ?? setPinCandidatesMetadata;
   const writeText = dependencies.writeText ?? Bun.write;
@@ -362,6 +354,7 @@ export async function pushImages(
   if (pushExitCode !== 0) throw new Error("Production image push failed");
 
   const digests: Record<string, string> = {};
+  const deliveryDigests: Record<string, string> = {};
   const outcomes: PushOutcome[] = [];
   for (const { name, pin: managedPin } of targetsWithPins) {
     const image = `${registry}/${name}`;
@@ -385,6 +378,7 @@ export async function pushImages(
       getRuntimeFingerprint,
     );
     outcomes.push({ image: name, outcome });
+    deliveryDigests[`shepherdjerred/${name}`] = digest;
     if (outcome === "content-unchanged") continue;
     if (name === "starlight-karma-bot") {
       const tag = await executor([
@@ -401,6 +395,7 @@ export async function pushImages(
     digests[managedPin.key] = digest;
   }
   await writeMetadata(digests);
+  await writeDeliveryMetadata(deliveryDigests);
   await writeCandidates(digests, buildNumber, commit, versionCatalog);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
@@ -436,6 +431,7 @@ async function main(): Promise<void> {
         liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
       );
       await setDigestMetadata({});
+      await setDeliveryDigestMetadata({});
       await setPinCandidatesMetadata(
         {},
         buildNumber,

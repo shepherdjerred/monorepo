@@ -1,0 +1,14 @@
+{
+  "kind": "argocd",
+  "application": "arcade",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "arcade",
+  "chartComponent": "chart:arcade",
+  "namespace": "arcade",
+  "parameters": {},
+  "artifactParameters": { "delivery.image": "image:arcade" },
+  "verification": {
+    "url": "https://mariokart.sjer.red/health",
+    "expectedStatus": 200
+  }
+}

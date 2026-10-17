@@ -32,7 +32,7 @@ const Resources = z.array(
 );
 
 describe("Delivery infrastructure", () => {
-  it("grants publication egress only to the generated publication step", () => {
+  it("confines Delivery API egress to publication and the gated Scout archive producer", () => {
     const chart = new Chart(new App(), "ci-network");
     createWoodpeckerStepNetworkPolicy(chart);
     const policy = z
@@ -42,6 +42,15 @@ describe("Delivery infrastructure", () => {
             podSelector: z
               .object({
                 matchLabels: z.record(z.string(), z.string()).optional(),
+                matchExpressions: z
+                  .array(
+                    z.object({
+                      key: z.string(),
+                      operator: z.string(),
+                      values: z.array(z.string()).optional(),
+                    }),
+                  )
+                  .optional(),
               })
               .loose(),
             egress: z.unknown(),
@@ -51,9 +60,17 @@ describe("Delivery infrastructure", () => {
       .parse(chart.toJson())
       .find(
         (item) =>
-          item.spec.podSelector.matchLabels?.["ci.sjer.red/step-key"] ===
-          "delivery-publish",
+          item.spec.podSelector.matchExpressions?.some((expression) =>
+            expression.values?.includes("delivery-publish"),
+          ) === true,
       );
+    expect(policy?.spec.podSelector.matchExpressions).toEqual([
+      {
+        key: "ci.sjer.red/step-key",
+        operator: "In",
+        values: ["delivery-publish", "scout-beta-release"],
+      },
+    ]);
     expect(policy?.spec.egress).toEqual([
       {
         to: [
@@ -166,7 +183,7 @@ describe("Delivery infrastructure", () => {
         .every((port) => port.port === 7353),
     ).toBe(true);
     expect(JSON.stringify(spec.ingress)).toContain(
-      '"ci.sjer.red/step-key":"delivery-publish"',
+      '"values":["delivery-publish","scout-beta-release"]',
     );
     expect(JSON.stringify(spec.ingress)).toContain(
       '"kubernetes.io/metadata.name":"woodpecker-ci"',

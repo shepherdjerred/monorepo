@@ -74,6 +74,33 @@
   ],
   "flags": [
     {
+      "key": "woodpecker-delivery-static-archives-enabled",
+      "owner": "woodpecker",
+      "namespace": "woodpecker",
+      "source": "code",
+      "purpose": "Publish immutable static site archives for Delivery only when catalog publication is also enabled and archive storage is accepted.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "woodpecker-delivery-static-archives-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "woodpecker-delivery-publication-enabled",
       "owner": "woodpecker",
       "namespace": "woodpecker",

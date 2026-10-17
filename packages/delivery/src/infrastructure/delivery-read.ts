@@ -3,10 +3,46 @@ import {
   DeploymentDetailSchema,
   DeploymentSchema,
   BuildSummarySchema,
+  LatestQualifiedArtifactQuerySchema,
 } from "#shared/contract.ts";
+import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
-import { version as readVersion, environment } from "./delivery-data.ts";
+import {
+  version as readVersion,
+  environment,
+  ensureService,
+} from "./delivery-data.ts";
+
+/** Resolve one exact CI-qualified artifact without consulting manual compositions. */
+export async function latestQualifiedArtifact(
+  this: Delivery,
+  rawInput: LatestQualifiedArtifactQuery,
+  repositoryId: number,
+) {
+  const input = LatestQualifiedArtifactQuerySchema.parse(rawInput);
+  ensureService(input.serviceId);
+  const row = required(
+    await this.database.artifact.findFirst({
+      where: {
+        component: input.component,
+        kind: input.kind,
+        build: { serviceId: input.serviceId, repositoryId, status: "verified" },
+      },
+      orderBy: [{ build: { pipelineNumber: "desc" } }, { id: "asc" }],
+      include: { build: true },
+    }),
+    `Qualified ${input.kind} artifact ${input.serviceId}/${input.component}`,
+  );
+  const { build, ...entry } = row;
+  return ArtifactVersionSchema.parse(
+    wire({
+      ...entry,
+      serviceId: build.serviceId,
+      sourceRevision: build.sourceRevision,
+    }),
+  );
+}
 
 export async function detail(this: Delivery, deploymentId: string) {
   const row = required(

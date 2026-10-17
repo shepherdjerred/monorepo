@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   ApiErrorSchema,
+  ArtifactVersionSchema,
+  LatestQualifiedArtifactQuerySchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   EnvironmentSchema,
@@ -17,6 +19,7 @@ import type {
   ComposeVersionSet,
   PipelineDefinition,
   RegisterEnvironment,
+  LatestQualifiedArtifactQuery,
   ImportSnapshotSchema,
 } from "./contract.ts";
 
@@ -77,6 +80,11 @@ export function createDeliveryClient(options: {
   return {
     identity: () => request("/identity", PrincipalSchema),
     overview: () => request("/overview", OverviewSchema),
+    latestQualifiedArtifact: (input: LatestQualifiedArtifactQuery) =>
+      request(
+        `/artifacts/latest-qualified?${new URLSearchParams(LatestQualifiedArtifactQuerySchema.parse(input)).toString()}`,
+        ArtifactVersionSchema,
+      ),
     versions: (serviceId?: string) =>
       request(
         `/versions${serviceId === undefined ? "" : `?serviceId=${encodeURIComponent(serviceId)}`}`,

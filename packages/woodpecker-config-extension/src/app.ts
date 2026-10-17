@@ -40,6 +40,7 @@ import {
 
 export type AppOptions = {
   readonly deliveryPublicationEnabled?: (branch: string) => Promise<boolean>;
+  readonly deliveryStaticArchivesEnabled?: (branch: string) => Promise<boolean>;
   readonly maintenanceEnabled?: (manual: boolean) => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly performanceOptions?: (branch: string) => Promise<PerformanceOptions>;
@@ -334,6 +335,8 @@ export function createApp(options: AppOptions): Hono {
     options.maintenanceEnabled ?? (() => Promise.resolve(false));
   const publishDelivery =
     options.deliveryPublicationEnabled ?? (() => Promise.resolve(false));
+  const publishStaticArchives =
+    options.deliveryStaticArchivesEnabled ?? (() => Promise.resolve(false));
   app.get("/healthz", (context) => context.text("ok"));
   app.post("/ciconfig", async (context) => {
     const request = await authenticatedRequest(context, options);
@@ -454,6 +457,7 @@ export function createApp(options: AppOptions): Hono {
       images,
       trustedGateImage: options.trustedGateImage,
       deliveryPublication: await publishDelivery(pipeline.branch),
+      deliveryStaticArchives: await publishStaticArchives(pipeline.branch),
       changedBase,
       verifyBase,
       imageReleaseBase: imageReleaseBase?.commit,

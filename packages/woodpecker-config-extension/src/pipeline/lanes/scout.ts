@@ -72,9 +72,16 @@ export function scoutSteps(
           "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         ),
         'scout_candidate="$(bun --no-install scripts/ci/read-ci-handoff.ts image-digests | jq -r \'."shepherdjerred/scout-for-lol/beta" // empty\')"',
+        ...(archivePublication
+          ? [
+              'scout_delivery_candidate="$(bun --no-install scripts/ci/read-ci-handoff.ts delivery-image-digests | jq -r \'."shepherdjerred/scout-for-lol" // empty\')"',
+            ]
+          : []),
         "scout_source_changed=false",
         "if bun --no-install ci/scripts/selectors/ci-changed.ts site-scout; then scout_source_changed=true; fi",
-        'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
+        archivePublication
+          ? 'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ] && [ -z "$scout_delivery_candidate" ]; then exit 0; fi'
+          : 'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
         ". ci/scripts/toolchain.sh",
         `ci/scripts/bun-install.sh --frozen-lockfile ${SCOUT_WORKSPACE_FILTERS}`,
         "bun --no-install run --cwd packages/llm-models build",
@@ -82,6 +89,11 @@ export function scoutSteps(
         "bun --no-install run --cwd packages/glitter-context build",
         ...AWS_ALIASES,
         DOCKERHUB_READ_LOGIN,
+        ...(archivePublication
+          ? [
+              'if [ -n "$scout_candidate" ] || [ "$scout_source_changed" = "true" ]; then',
+            ]
+          : []),
         "mkdir -p .scout-release",
         "bun --no-install scripts/ci/read-ci-handoff.ts version-catalog > .scout-release/version-catalog.json",
         'if [ -n "$scout_candidate" ]; then',
@@ -92,16 +104,28 @@ export function scoutSteps(
         'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output .scout-release/state.json',
         'scout_state="$(cat .scout-release/state.json)"',
         'bun --no-install scripts/release/scout-site-release.ts archive --state "$scout_state"',
-        ...(archivePublication
-          ? [
-              "bun --no-install scripts/release/publish-scout-site-archives.ts .scout-release/state.json",
-            ]
-          : []),
         // Published before the beta deploy so a failed deploy still leaves the
         // tag and reconcile lanes able to see what was archived.
         "bun --no-install scripts/ci/write-ci-handoff.ts scout-release-state < .scout-release/state.json",
         'if [ "$(bun --no-install scripts/release/static-site-writer.ts scout-frontend-beta)" = "legacy" ]; then bun --no-install scripts/release/scout-site-release.ts deploy-beta --state "$scout_state"; fi',
+        ...(archivePublication
+          ? [
+              "fi",
+              'if [ -n "$scout_delivery_candidate" ] || [ "$scout_source_changed" = "true" ]; then',
+              '  scout_delivery_backend="$(bun --no-install scripts/release/resolve-scout-delivery-backend.ts)"',
+              '  bun --no-install scripts/release/scout-site-release.ts prepare-state --delivery-archive --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_delivery_backend" --output .delivery-artifacts/scout-release/state.json',
+              "  bun --no-install scripts/release/publish-scout-site-archives.ts .delivery-artifacts/scout-release/state.json",
+              "fi",
+            ]
+          : []),
       ],
+      ...(archivePublication
+        ? {
+            environment: {
+              DELIVERY_URL: "http://delivery.delivery.svc.cluster.local:7353",
+            },
+          }
+        : {}),
       dependsOn: ["images", "argocd-sync"],
       timeoutMinutes: 30,
       resources: VERIFY_TIER,
@@ -112,6 +136,15 @@ export function scoutSteps(
         DOCKERHUB_READ,
         ...DEPLOY_KEYS,
         ...HANDOFF_KEYS,
+        ...(archivePublication
+          ? [
+              grant(
+                "ci-delivery-credentials",
+                "DELIVERY_PUBLISHER_TOKEN",
+                "DELIVERY_API_TOKEN",
+              ),
+            ]
+          : []),
       ],
     },
     {
