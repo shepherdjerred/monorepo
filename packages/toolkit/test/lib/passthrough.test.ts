@@ -528,7 +528,8 @@ process.stdin.once("data", (input) => {
   try {
     expect(await child.exited).toBe(0);
     expect(answered).toBe(true);
-    expect(output).toContain("declined");
+    // Exit can resolve before the final PTY data callback has drained.
+    await expect.poll(() => output, { timeout: 1000 }).toContain("declined");
   } finally {
     terminal.close();
   }
