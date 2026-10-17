@@ -154,10 +154,10 @@
       "digest": "sha256:93d34d5a9174fe89598df4f1ae1c68a5512914bc5431212268c0ae792290fef4"
     },
     "shepherdjerred/the-storm-server/prod": {
-      "version": "2.0.0-1010232",
-      "digest": "sha256:93d34d5a9174fe89598df4f1ae1c68a5512914bc5431212268c0ae792290fef4",
-      "buildNumber": 1010232,
-      "gitSha": "920166cd102f128bd3763cd00e731619f2d3dc35"
+      "version": "2.0.0-1010387",
+      "digest": "sha256:ce3fae8f5c1ee695e014b2d9235196120f7bd7034c556d83ef6f6d51a14c3790",
+      "buildNumber": 1010387,
+      "gitSha": "11b99ce23035b26a73832f61113c1286bdea0629"
     },
     "shepherdjerred/tracker": {
       "buildNumber": 1010232,

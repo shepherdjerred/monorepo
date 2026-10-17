@@ -3,15 +3,15 @@
   "releases": [
     {
       "stage": "prod",
-      "image": "docker.io/shepherdjerred/storm-forum@sha256:2e7f48be50067d9e4355446b4f27df88f8456deab6d08d8096dd0b87b3e416a6",
+      "image": "docker.io/shepherdjerred/storm-forum@sha256:893ea890c3b3de7087cb3e2a461e1e9535e305f042c61e96df7c8705e064a19a",
       "secretItemId": "xdstbl5gobpao35rjprlp3hzgi",
       "bundleSha256": "3c13bac1221ec67ca6ba6334b025505c1e410e0a941fe688f8cf0e63dbfc31df",
       "bundleKey": "releases/3c13bac1221ec67ca6ba6334b025505c1e410e0a941fe688f8cf0e63dbfc31df.zip",
-      "releaseId": "2e7f48be5006",
+      "releaseId": "893ea890c3b3",
       "preUpgradeBackup": {
         "bundleSha256": "3c13bac1221ec67ca6ba6334b025505c1e410e0a941fe688f8cf0e63dbfc31df",
         "xenforoVersion": "2.3.13",
-        "runtimeImage": "docker.io/shepherdjerred/storm-forum@sha256:29fd5bbc717c7dd274107d5b0918f385bc2b179d5b56dcc8ad5aae9966dec0d8"
+        "runtimeImage": "docker.io/shepherdjerred/storm-forum@sha256:2e7f48be50067d9e4355446b4f27df88f8456deab6d08d8096dd0b87b3e416a6"
       },
       "trustedConnectorCidr": "10.244.0.0/24"
     }
