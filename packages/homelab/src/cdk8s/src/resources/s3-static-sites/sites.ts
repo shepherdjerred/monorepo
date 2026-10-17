@@ -141,6 +141,32 @@ const scoutDocsProbes = [
 ] as const satisfies NonNullable<StaticSiteConfig["probes"]>;
 
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
+/** The Scout site: the SPA and docs from the bucket, with API traffic to the stage backend. */
+function scoutSite(
+  hostname: string,
+  bucket: string,
+  stage: "prod" | "beta",
+): StaticSiteConfig {
+  const upstream = `scout-service-${stage}.scout-${stage}.svc.cluster.local:3000`;
+  return {
+    hostname,
+    bucket,
+    reverseProxies: [
+      { path: "/api/healthz", upstream, rewriteTo: "/healthz" },
+      { path: "/trpc*", upstream },
+      { path: "/api/*", upstream },
+    ],
+    probes: [
+      { endpoint: "app", path: "/app/", module: "http_2xx" },
+      { endpoint: "docs", path: "/docs/", module: "http_2xx" },
+      ...scoutDocsProbes,
+      { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
+    ],
+    spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
+    responseHeaders: { "Content-Security-Policy": scoutCsp },
+  };
+}
+
 export const staticSites: StaticSiteConfig[] = [
   { hostname: "statically-typed.com", bucket: "statically-typed" },
   {
@@ -160,60 +186,8 @@ export const staticSites: StaticSiteConfig[] = [
     bucket: "resume",
     responseHeaders: { "X-Frame-Options": "SAMEORIGIN" },
   },
-  {
-    hostname: "scout-for-lol.com",
-    bucket: "scout-frontend",
-    reverseProxies: [
-      {
-        path: "/api/healthz",
-        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
-        rewriteTo: "/healthz",
-      },
-      {
-        path: "/trpc*",
-        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
-      },
-      {
-        path: "/api/*",
-        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
-      },
-    ],
-    probes: [
-      { endpoint: "app", path: "/app/", module: "http_2xx" },
-      { endpoint: "docs", path: "/docs/", module: "http_2xx" },
-      ...scoutDocsProbes,
-      { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
-    ],
-    spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
-    responseHeaders: { "Content-Security-Policy": scoutCsp },
-  },
-  {
-    hostname: "beta.scout-for-lol.com",
-    bucket: "scout-frontend-beta",
-    reverseProxies: [
-      {
-        path: "/api/healthz",
-        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
-        rewriteTo: "/healthz",
-      },
-      {
-        path: "/trpc*",
-        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
-      },
-      {
-        path: "/api/*",
-        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
-      },
-    ],
-    probes: [
-      { endpoint: "app", path: "/app/", module: "http_2xx" },
-      { endpoint: "docs", path: "/docs/", module: "http_2xx" },
-      ...scoutDocsProbes,
-      { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
-    ],
-    spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
-    responseHeaders: { "Content-Security-Policy": scoutCsp },
-  },
+  scoutSite("scout-for-lol.com", "scout-frontend", "prod"),
+  scoutSite("beta.scout-for-lol.com", "scout-frontend-beta", "beta"),
   {
     hostname: "design.scout-for-lol.com",
     bucket: "scout-design-system",

@@ -41,6 +41,25 @@ function factStore() {
   };
 }
 
+/** A healthy retry that applies the effect by recording three effects. */
+async function recoverByRecording(
+  store: ReturnType<typeof factStore>,
+  key: string,
+  onRun: () => void,
+) {
+  return await runGuardedEffect(
+    {
+      key,
+      alreadyApplied: store.probe(key),
+      apply: () => {
+        onRun();
+        return Promise.resolve(store.record(key, 3));
+      },
+    },
+    { database: prisma },
+  );
+}
+
 describe("the V2 effect fence", () => {
   test("applies once and reports the guard and the fact apart", async () => {
     const store = factStore();
@@ -156,17 +175,9 @@ describe("the V2 effect fence", () => {
       ),
     ).rejects.toThrow("worker died mid-effect");
 
-    const recovered = await runGuardedEffect(
-      {
-        key,
-        alreadyApplied: store.probe(key),
-        apply: () => {
-          runs += 1;
-          return Promise.resolve(store.record(key, 3));
-        },
-      },
-      { database: prisma },
-    );
+    const recovered = await recoverByRecording(store, key, () => {
+      runs += 1;
+    });
 
     expect(runs).toBe(2);
     expect(recovered).toEqual({
@@ -334,17 +345,9 @@ describe("a fence whose lock cannot outlast its effect", () => {
     expect(runs).toBe(1);
     expect(store.facts.has(key)).toBe(false);
 
-    const recovered = await runGuardedEffect(
-      {
-        key,
-        alreadyApplied: store.probe(key),
-        apply: () => {
-          runs += 1;
-          return Promise.resolve(store.record(key, 3));
-        },
-      },
-      { database: prisma },
-    );
+    const recovered = await recoverByRecording(store, key, () => {
+      runs += 1;
+    });
     expect(runs).toBe(2);
     expect(recovered.fact).toEqual({ outcome: "applied" });
   }, 30_000);
