@@ -2988,6 +2988,56 @@ this diagnostic mode explicitly; profiled probes cannot establish release
 acceptance. Compare clean measuring windows and keep the separate profiler
 overhead out of capacity claims.
 
+For a whole-window diagnostic without the native ObjectCount trigger, the
+disposable fixture exposes private RCON commands
+`storm-fixture-jfr start|status|stop <live-match-uuid> <unique-attempt-uuid>`.
+It permits one attempt per server and requires the exact current Live match.
+The server thread grants activation after preparation and validates the same
+Live binding again after JFR starts; a changed or missing match invalidates the
+capture. Starting on a worker cannot be atomic with a match transition, so an
+invalidated start may briefly record before cleanup. Such an attempt cannot
+report COMPLETE.
+
+One owned worker loads `/flightrecorder-config.jfc` through the server
+implementation class and requires SHA256
+`7cf2a220574ade30738da8b50b9fc470331331911e84a99abacb06c5857176c9`.
+Missing, malformed or different resources fail. The applied settings change
+only `jdk.ObjectCount#enabled=false` and `storm.BotThink#enabled=true`.
+Existing active or delayed recordings reject activation. A listener retains
+later foreign RUNNING observations, and the worker also scans for active or
+delayed recordings every 100 ms and before/after export. An observed foreign
+recording invalidates the diagnostic; the fixture never stops it. Public JFR
+offers no exclusive global recording lock: this cannot prevent a foreign
+recording from starting, or observe a delayed recording created and closed
+between scans. A foreign recording can combine settings and re-enable
+ObjectCount before invalidation is observed. Retain that limit when auditing
+the resulting event inventory and pauses.
+
+The worker owns JFR settings, start, stop and all file I/O. It captures at most
+300 seconds with a 250 MiB retained-chunk size limit; that JFR limit can exceed
+its nominal bound by a chunk and can discard old chunks, so actual file size
+and full measurement coverage still need inspection. Files remain private under
+`plugins/TheStormFixtures/jfr/<attempt-uuid>/`: original `paper.jfc`,
+`applied-settings.txt` and `capture.jfr`. Status includes applied settings,
+hashes, actual times and a streamed event inventory. The output directory is
+exclusive and cannot be reused.
+
+Explicitly stop the exact attempt, poll until status is COMPLETE with
+`workerAlive=false`, copy the closed readable file, and verify its reported
+SHA256 **before** removing the server. COMPLETE requires successful explicit
+stop after Live validation, CLOSED recording, readable export and worker
+termination. Expiry or export failure cannot pass. Destination stop exports
+and closes the recording; the fixture does not dump an already closed one.
+The server thread never waits for the worker. Unexpected plugin disable marks
+an unfinished attempt incomplete and requests asynchronous cleanup, while
+still attempting the existing early fixture cleanup. That path cannot
+guarantee export or worker termination before the fixture classloader closes.
+The worker retains fixture support classes and the server implementation Class
+until it exits; it has no Bukkit/plugin instance, product classes or product
+callbacks, and uses the platform context classloader. Normal teardown must use
+the explicit COMPLETE precondition. This recorder is solely diagnostic:
+its reports are excluded from load qualification and production acceptance.
+
 `test:capacity-native` boots the same disposable capacity profile with an
 ordinary rendered Minecraft client. It joins a 256-combatant draft by default;
 `STORM_CAPACITY_NATIVE_TOTAL` selects 64, 100, 128 or 192 for tier acceptance.

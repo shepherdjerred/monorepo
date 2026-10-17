@@ -64,4 +64,28 @@ final class FixtureShutdownTest {
         failure,
         assertThrows(NoClassDefFoundError.class, () -> shutdown.pluginDisabling("TheStorm")));
   }
+
+  @Test
+  void attemptsEveryCleanupAndPreservesFirstFailureOnce() {
+    var first = new NoClassDefFoundError("first cleanup failed");
+    var second = new IllegalStateException("second cleanup failed");
+    var calls = new AtomicInteger();
+    var shutdown =
+        new FixtureShutdown(
+            () -> {
+              calls.incrementAndGet();
+              throw first;
+            },
+            () -> {
+              calls.incrementAndGet();
+              throw second;
+            });
+
+    assertSame(first, assertThrows(NoClassDefFoundError.class, shutdown::close));
+    assertEquals(2, calls.get());
+    assertEquals(1, first.getSuppressed().length);
+    assertSame(second, first.getSuppressed()[0]);
+    shutdown.close();
+    assertEquals(2, calls.get());
+  }
 }
