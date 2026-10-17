@@ -1,9 +1,10 @@
 {
-  "93d34d5a9174fe89598df4f1ae1c68a5512914bc5431212268c0ae792290fef4": {
-    "configSha256": "dc297511fb5e007b520f63f9cda7b819248ac50ffbb9df6dff66a6693df642ea",
+  "bfdd2f32ac6093b792956ddfdd21366a072abeb9af8ba27a9829be223857f08c": {
+    "configSha256": "5404183d3bd7f9c3f7c5912114748a48570e15abcf2f1e745ce9043efb2ee86d",
     "moduleKeys": [
       "economy",
       "messages",
+      "safety",
       "mail",
       "chat",
       "discord",
