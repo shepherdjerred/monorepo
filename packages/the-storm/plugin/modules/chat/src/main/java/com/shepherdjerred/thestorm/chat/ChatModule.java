@@ -90,6 +90,19 @@ public final class ChatModule implements StormModule {
             new com.shepherdjerred.thestorm.chat.adapter.paper.PaperNpcChat(service, output));
 
     server.getPluginManager().registerEvents(new ChatListener(service, hub), context.plugin());
+    server
+        .getPluginManager()
+        .registerEvents(
+            new com.shepherdjerred.thestorm.chat.adapter.paper.ApprovedChatListener(
+                service, hub, output),
+            context.plugin());
+    context
+        .services()
+        .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
+        .ifPresent(
+            safety ->
+                com.shepherdjerred.thestorm.chat.adapter.paper.SafetyChatRoutes.install(
+                    safety, service, context));
     server.getPluginManager().registerEvents(identityCommands, context.plugin());
     identityRefresh =
         context

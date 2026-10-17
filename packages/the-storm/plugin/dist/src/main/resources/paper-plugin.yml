@@ -7,6 +7,10 @@ authors: [ShepherdJerred]
 website: https://ts-mc.net
 dependencies:
   server:
+    GrimAC:
+      load: BEFORE
+      required: false
+      join-classpath: true
     Citizens:
       load: BEFORE
       required: true

@@ -37,11 +37,18 @@ final class PrefiltersTest {
   }
 
   @Test
-  void floodsAct() {
+  void lengthAloneRequestsContextWhileLongBurstsAndRepeatsStillAct() {
     assertThat(Prefilters.check(line("x".repeat(401)), List.of(), LIMITS))
-        .isEqualTo(new PrefilterVerdict.Act(Offense.SPAM, "flood"));
+        .isEqualTo(new PrefilterVerdict.Check("length"));
     assertThat(Prefilters.check(line("x".repeat(400)), List.of(), LIMITS))
         .isEqualTo(new PrefilterVerdict.Allow());
+    assertThat(Prefilters.check(line("😀".repeat(400)), List.of(), LIMITS))
+        .isEqualTo(new PrefilterVerdict.Allow());
+    assertThat(Prefilters.check(line("x".repeat(401)), burst("other", 5), LIMITS))
+        .isEqualTo(new PrefilterVerdict.Act(Offense.SPAM, "rate"));
+    var repeated = line("x".repeat(401));
+    assertThat(Prefilters.check(repeated, List.of(repeated, repeated, repeated), LIMITS))
+        .isEqualTo(new PrefilterVerdict.Act(Offense.SPAM, "repeat"));
   }
 
   @Test

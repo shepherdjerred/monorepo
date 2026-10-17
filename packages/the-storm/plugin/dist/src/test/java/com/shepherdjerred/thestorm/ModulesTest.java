@@ -40,6 +40,7 @@ final class ModulesTest {
           "quests",
           "rwf",
           "rwfbots",
+          "safety",
           "seasonal",
           "shards",
           "shops",
@@ -75,7 +76,7 @@ final class ModulesTest {
     var config = ConfigFiles.load(SHIPPED_CONFIG, PluginConfig.class);
     var registered = ModuleRegistry.ids(Modules.all());
 
-    assertThat(registered).hasSize(25);
+    assertThat(registered).hasSize(26);
     assertThat(config.modules().keySet()).containsExactlyInAnyOrderElementsOf(registered);
     assertThat(
             config.modules().entrySet().stream()

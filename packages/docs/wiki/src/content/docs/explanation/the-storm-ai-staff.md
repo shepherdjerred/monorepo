@@ -3,23 +3,22 @@ title: The Storm AI staff
 description: Why the game judges in-plugin, the brain answers statelessly, and the sweep runs on the game scheduler instead of Temporal.
 ---
 
-The AI staff is a Paper plugin that enforces chat rules and works tickets, with
-a stateless Hono service behind it for the judgments that need a model. The
-game owns context and action; the brain owns nothing but the next verdict.
+The Storm prevents abusive publication in the game and keeps private evidence for human review.
+Its Safety module owns admission; the agent works tickets and exposes the review queue.
+The stateless brain supplies content judgments without owning punishment or player history.
 
 ```mermaid
-flowchart LR
-accTitle: AI staff request flow
-accDescr: Chat and tickets flow from the game to the agent, which calls the brain over HTTPS and enforces through ladders or records to the decision log.
-  Chat([Chat]) --> Agent
-  Tickets([Tickets]) --> Agent
-  Agent -->|POST /v1/classify or /v1/triage| Brain
-  Brain -->|OpenRouter| Luna[gpt-5.6-luna]
-  Brain -->|flag off| Off([503, silent skip])
-  Agent --> Ladders[Ladders]
-  Ladders --> Act([mute, warn, kick])
-  Agent --> Log[(Decision log)]
-  Agent --> Discord([Discord relay])
+flowchart TB
+accTitle: Content admission flow
+accDescr: Safety saves each attempt, obtains a stateless content judgment, and either publishes it or holds it for review. Both outcomes stay in private evidence.
+  Content([Player content]) --> Save[Safety saves attempt]
+  Save --> Brain[Brain screens content]
+  Brain --> Verdict{Safety verdict}
+  Verdict -->|allow| Publication([Publish])
+  Verdict -->|block or review| Hold([Withhold])
+  Publication --> Evidence[(Private evidence)]
+  Hold --> Evidence
+  Evidence --> Review[Staff reviews reference]
 ```
 
 ## Judgments cross the wire; state does not
@@ -38,23 +37,34 @@ brain never calls back.
 The plugin side lives in `packages/the-storm/plugin/modules/agent`; the service
 contract lives in `packages/storm-brain/src/schemas.ts`.
 
-## Shadow mode is a rollout strategy, not a log level
+## Ticket shadow mode bounds rollout
 
-Every decision records whether the agent was watching or acting. Shadow rows
-are complete would-have-dones: same ladders, same thresholds, no effects. The
-soak gate is reviewer agreement on sampled shadow rows, not uptime.
+Ticket decisions record whether the agent was watching or acting. Shadow rows
+retain proposed triage and sweep actions without applying them. Reviewer agreement
+on sampled rows determines whether those flows are ready to act.
 
-Shadow also bounds every new flow. The sweep records would-escalate rows
+The sweep records would-escalate rows
 instead of moving tickets. Triage attaches nothing. The queue, the case view,
 and Discord all render shadow rows, so reviewers calibrate on the same
 surface they will operate later.
 
-## Ladders bound autonomy; bans stay human
+## Prevention limits punishment
 
-A verdict names an offense, never a punishment. Ladders map repeated offenses
-to warn, mute, and kick rungs with configured durations, and the top rung
-files a review ticket instead of banning. Bans are absent from the action
-enum on purpose: the agent escalates to them but can never execute one.
+A publication can be withheld without punishing its author. Ambiguity, a provider
+outage and an actual offense have different evidence and different consequences.
+Only clear abuse receives a short automatic mute; bans remain human decisions.
+The [agent reference](/reference/the-storm-agent/) defines the exact policy.
+
+Every surface uses the same admission owner so a player cannot move abuse from chat
+to signs, books or message commands. A link is judged in its conversation rather
+than treated as advertising by itself. Until screening is enabled, unscreened
+Global chat retains the existing prefilters and ladder. A screened publication
+never runs through that legacy enforcement again.
+
+Private evidence preserves allowed attempts as well as refusals, enabling later analysis
+without exposing DMs through console logs or incident summaries. Evidence references
+let staff find the original context without copying it into public surfaces.
+The implementation lives in the [Storm modules](https://github.com/shepherdjerred/monorepo/tree/main/packages/the-storm/plugin/modules).
 
 Unknown offense and priority ids fail closed. The flows drop verdicts that
 name offenses outside the ladder list rather than guessing, and low
@@ -106,11 +116,12 @@ cannot distinguish its own quiet hours from a brain outage, and metrics can.
 
 ## Rows carry their server
 
-Every ticket and decision row names its server, every store reads only its
+Every agent ticket and decision row names its server, and those stores read only their
 own server's rows, and Discord ticket posts carry the server in brackets.
 Today each server keeps its own SQLite file, so the filter is defense in
 depth; the labels are the point. Shared surfaces — one Discord channel, one
-brain, one day possibly one database — never mix servers up.
+brain, one day possibly one database — never mix servers up. Private evidence exports
+also record their explicit bridge target and time bounds in a manifest.
 
 ## Strictness is skew detection
 

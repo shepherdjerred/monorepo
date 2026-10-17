@@ -32,6 +32,12 @@ dependencyResolutionManagement {
       content { includeModule("net.citizensnpcs", "citizens-main") }
     }
     maven("https://maven.playpro.com") { content { includeGroup("net.coreprotect") } }
+    // Compile against the exact API shipped by the immutable runtime artifact.
+    ivy("https://cdn.modrinth.com/data/LJNGWSvH/versions/QyX6GKLl") {
+      patternLayout { artifact("[artifact]-[revision].[ext]") }
+      metadataSources { artifact() }
+      content { includeModule("ac.grim.artifact", "grimac-bukkit") }
+    }
   }
 }
 
@@ -42,6 +48,7 @@ rootProject.name = "the-storm"
 val modules =
     listOf(
         "economy",
+        "safety",
         "shops",
         "chat",
         "discord",

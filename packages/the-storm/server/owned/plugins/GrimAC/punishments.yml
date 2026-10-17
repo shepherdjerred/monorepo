@@ -1,0 +1,21 @@
+# Findings go to TheStorm's permanent evidence journal. No kick or ban commands.
+# Movement correction and packet modification use their separate managed rollout gate.
+Punishments:
+  Evidence:
+    remove-violations-after: 300
+    checks:
+      - "Simulation"
+      - "GroundSpoof"
+      - "Timer"
+      - "NoFall"
+      - "Knockback"
+      - "Explosion"
+      - "Reach"
+      - "BadPackets"
+      - "Phase"
+      - "NoSlow"
+      - "Place"
+      - "Break"
+      - "PacketOrder"
+    commands:
+      - "1:1 [log]"

@@ -129,6 +129,34 @@ final class ChatFlowTest {
   }
 
   @Test
+  void screenedBurstsRetainContextWithoutRepeatingLegacyPenalties() {
+    var chatFlow = flow(brain(verdict(Optional.of("spam"), 1)), spamLadder("active"));
+    for (var i = 1; i <= 6; i++) {
+      chatFlow
+          .onChatLine(
+              new ChatLine(
+                  clock.instant(), new ChatAuthor.InGame(ALICE, "Alice"), "message " + i, true))
+          .join();
+    }
+    assertThat(chat.activeMute(ALICE)).isEmpty();
+    assertThat(brainCalls).isEmpty();
+    assertThat(log.recent(10).join()).isEmpty();
+    assertThat(recents.lastBy(ALICE, 10)).hasSize(6);
+  }
+
+  @Test
+  void aLongOrdinaryMessageIsNotAutomaticallyMutedDuringTheRollout() {
+    var chatFlow = flow(brain(verdict(Optional.empty(), 1)), spamLadder("active"));
+    chatFlow.onChatLine(chat("a detailed explanation ".repeat(25))).join();
+    assertThat(brainCalls).hasSize(1);
+    assertThat(chat.activeMute(ALICE)).isEmpty();
+    assertThat(log.recent(10).join())
+        .singleElement()
+        .extracting(decision -> decision.action())
+        .isEqualTo(DecisionAction.ALLOW);
+  }
+
+  @Test
   void rateBurstsMuteWithoutTheBrain() {
     var chatFlow = flow(brain(verdict(Optional.of("spam"), 1)), spamLadder("active"));
 

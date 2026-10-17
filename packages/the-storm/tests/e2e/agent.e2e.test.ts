@@ -21,12 +21,17 @@ describe("agent", () => {
     expect(row[1]).toBe(id);
   });
 
-  test("chat bursts record a shadow mute decision", async ({ bot, rcon }) => {
+  test("ordinary conversation is sampled without automatic punishment", async ({
+    bot,
+    rcon,
+    secondBot,
+  }) => {
     await rcon.command(`op ${bot.username}`);
     for (let i = 1; i <= 6; i += 1) {
       bot.chat(`burst message ${i.toString()}`);
     }
 
-    await waitForDecision(bot, /spam mute shadow.*rung=0/);
+    await waitForMessage(secondBot, /burst message 6/);
+    await waitForDecision(bot, /other allow .*safety-allow/);
   });
 });

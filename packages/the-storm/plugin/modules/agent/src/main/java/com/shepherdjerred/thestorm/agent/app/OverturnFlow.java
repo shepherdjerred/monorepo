@@ -30,10 +30,30 @@ public final class OverturnFlow {
 
   private final AgentServices services;
   private final ChatService chat;
+  private final java.util.concurrent.Executor mutations;
+  private final java.util.function.BiFunction<AgentDecision, UUID, CompletableFuture<Void>>
+      correction;
 
   public OverturnFlow(AgentServices services, ChatService chat) {
+    this(services, chat, (decision, staff) -> CompletableFuture.completedFuture(null));
+  }
+
+  public OverturnFlow(
+      AgentServices services,
+      ChatService chat,
+      java.util.function.BiFunction<AgentDecision, UUID, CompletableFuture<Void>> correction) {
+    this(services, chat, correction, Runnable::run);
+  }
+
+  public OverturnFlow(
+      AgentServices services,
+      ChatService chat,
+      java.util.function.BiFunction<AgentDecision, UUID, CompletableFuture<Void>> correction,
+      java.util.concurrent.Executor mutations) {
     this.services = services;
     this.chat = chat;
+    this.correction = correction;
+    this.mutations = mutations;
   }
 
   /** Overturns decision {@code id} as {@code staff}. */
@@ -41,7 +61,7 @@ public final class OverturnFlow {
     return services
         .log()
         .find(id)
-        .thenCompose(
+        .thenComposeAsync(
             found -> {
               if (found.isEmpty()) {
                 return CompletableFuture.completedFuture(new Outcome.Missing(id));
@@ -52,22 +72,30 @@ public final class OverturnFlow {
                     new Outcome.AlreadyOverturned(decision, decision.overturnedBy().orElseThrow()));
               }
               return reverse(decision, staff, staffName);
-            });
+            },
+            mutations);
   }
 
   private CompletableFuture<Outcome> reverse(AgentDecision decision, UUID staff, String staffName) {
     var lifted =
         switch (decision.action()) {
-          case MUTE -> chat.unmute(decision.player());
+          case MUTE -> liftMute(decision);
           // The agent never executes tempbans; the review ticket is the record.
           case WARN, KICK, TEMPBAN, ALLOW, ESCALATE -> false;
         };
     // The row existed a moment ago and rows are never deleted, so the mark lands.
-    return services
-        .log()
-        .overturn(decision.id(), staff, services.time().instant())
+    return correction
+        .apply(decision, staff)
+        .thenCompose(
+            done -> services.log().overturn(decision.id(), staff, services.time().instant()))
         .thenCompose(marked -> note(decision, staffName, lifted))
         .thenApply(done -> new Outcome.Overturned(decision, lifted));
+  }
+
+  private boolean liftMute(AgentDecision decision) {
+    if (!decision.classification().startsWith("safety-")) return chat.unmute(decision.player());
+    var reference = SafetyReviews.reference(decision);
+    return chat.unmute(decision.player(), "StormSafety", reference);
   }
 
   private CompletableFuture<Void> note(AgentDecision decision, String staffName, boolean lifted) {

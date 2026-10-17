@@ -1,9 +1,13 @@
 # storm-brain
 
-The LLM brain for The Storm's AI staff agent: chat classification and ticket
-triage over structured outputs. The Paper plugin (`packages/the-storm`) calls
-`POST /v1/classify` for ambiguous chat and `POST /v1/triage` for new
-tickets; this service answers with a verdict the plugin's ladders enforce.
+The content-screening and ticket service for The Storm. The Paper plugin
+holds player publications while `POST /v1/moderate` checks them with OpenAI's
+dedicated Moderation API through `@shepherdjerred/llm-runtime`. The shared runtime
+owns the authenticated transport, bounded timeout and score validation; this
+service owns the content policy and contextual advertising/ambiguity checks.
+The agent calls `POST /v1/triage` for tickets. Unscreened Global chat retains the
+existing prefilters and `/v1/classify` flow until content screening is enabled;
+screened publications bypass that legacy enforcement.
 The companions module also calls `POST /v1/conversation` for open-ended chat.
 Companion gameplay runs entirely in the Paper plugin.
 
@@ -15,6 +19,14 @@ unknown keys fail with 400 so plugin/brain version skew surfaces loudly.
 
 - `POST /v1/classify` — `{ player, lines }` → `{ offense | null,
 confidence, label, reasoning, model, costMicros }`
+- `POST /v1/moderate` — the versioned
+  [content contract](contracts/content-moderation.json). Every text window is
+  screened with its visible author name, including ordinary messages without caps
+  or links. A promotional display name also receives contextual review. Author
+  screening preserves the complete allowed message body. Responses include
+  the publication decision, category scores, model identifiers and actual contextual
+  cost. Provider errors never become approvals. Native gameplay violence is judged
+  in context, and a link alone is not advertising. Raw prompts are not logged.
 - `POST /v1/triage` — `{ ticket, comments, reporterHistory, reporterBanned,
 reporterRecentChat }` → `{ priorityId, confidence, duplicates, evidence,
 draftReply, resolve, resolutionNote, model, costMicros }`
@@ -36,9 +48,9 @@ Errors are plain-text bodies with bounded outcomes:
 | 502    | Upstream LLM call failed (may still bill) |
 | 500    | Unexpected failure                        |
 
-A 503 is the normal shape of "off": the plugin treats it as a disabled
-flow and completes silently, recording nothing. Billed usage is metered
-even on 502s.
+A disabled conversation flow returns 503. Content admission treats unavailable
+screening as unpublished content without a misconduct strike. Billed usage is
+metered even on 502s.
 
 ## Operations
 

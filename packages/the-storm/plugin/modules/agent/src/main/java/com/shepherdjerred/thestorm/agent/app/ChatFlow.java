@@ -57,6 +57,10 @@ public final class ChatFlow {
 
   /** Handles one Global line. Completes when the decision is recorded and acted on. */
   public CompletableFuture<Void> onChatLine(ChatLine line) {
+    if (line.screened()) {
+      recents.record(line);
+      return CompletableFuture.completedFuture(null);
+    }
     if (!(line.author() instanceof ChatAuthor.InGame(var id, var name))) {
       recents.record(line);
       return CompletableFuture.completedFuture(null);

@@ -21,6 +21,7 @@ describe("The Storm plugin", () => {
       "essentials",
       "mail",
       "rwf",
+      "safety",
       "tickets",
       "towns",
       "tracks",

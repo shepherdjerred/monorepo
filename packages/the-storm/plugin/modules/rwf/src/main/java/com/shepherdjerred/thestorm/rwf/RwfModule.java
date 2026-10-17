@@ -182,6 +182,32 @@ public final class RwfModule implements StormModule {
         .services()
         .provide(com.shepherdjerred.thestorm.rwf.app.map.MapLoading.class, started.loading());
     context.services().provide(MatchView.class, started.view());
+    context
+        .services()
+        .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
+        .ifPresent(
+            safety ->
+                safety.evidenceContext(
+                    "rwf",
+                    player ->
+                        started
+                            .view()
+                            .current()
+                            .map(
+                                match ->
+                                    "match="
+                                        + match.matchId()
+                                        + " map="
+                                        + match.mapId()
+                                        + " phase="
+                                        + match.phase()
+                                        + " fighter="
+                                        + match.combatants().stream()
+                                            .filter(fighter -> fighter.id().uuid().equals(player))
+                                            .toList()
+                                        + " noFallUntil="
+                                        + started.view().noFallUntil(player))
+                            .orElse("none")));
     context.services().provide(MatchEvents.class, started.events());
     discordPosts =
         context

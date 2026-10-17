@@ -63,7 +63,8 @@ public final class GlobalChatHub implements GlobalChat {
         new ChatLine(
             line.at(),
             new ChatAuthor.InGame(line.speaker().id(), line.speaker().name()),
-            line.text()));
+            line.text(),
+            com.shepherdjerred.thestorm.core.safety.ContentPublication.screened()));
   }
 
   private void notify(ChatLine line) {

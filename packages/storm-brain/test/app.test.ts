@@ -43,6 +43,19 @@ function dependencies(overrides: Partial<BrainAppDependencies> = {}) {
     metrics,
     app: createBrainApp(config, {
       brain: {
+        moderate: async () => ({
+          response: {
+            version: 1,
+            decision: "allow",
+            category: "none",
+            confidence: 1,
+            reason: "clean",
+            model: "moderation-fixture",
+            costMicros: 0,
+            scores: {},
+          },
+          usage: usage({ catalogCostUsd: 0 }),
+        }),
         classify: async () => ({
           response: {
             offense: "spam",
@@ -328,6 +341,9 @@ describe("storm-brain app", () => {
   test("charges billed usage even when the upstream call fails", async () => {
     const { app, metrics } = dependencies({
       brain: {
+        moderate: async () => {
+          throw new BrainUpstreamError("unreachable", undefined);
+        },
         classify: async () => {
           throw new BrainUpstreamError("timeout", usage());
         },
@@ -356,6 +372,9 @@ describe("storm-brain app", () => {
   test("maps unexpected failures to 500", async () => {
     const { app, metrics } = dependencies({
       brain: {
+        moderate: async () => {
+          throw new Error("boom");
+        },
         classify: async () => {
           throw new Error("boom");
         },

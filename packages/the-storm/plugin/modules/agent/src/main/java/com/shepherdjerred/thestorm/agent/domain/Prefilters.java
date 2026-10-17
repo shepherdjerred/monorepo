@@ -27,9 +27,6 @@ public final class Prefilters {
   public static PrefilterVerdict check(
       ChatSample current, List<ChatSample> recent, PrefilterLimits limits) {
     var text = current.text();
-    if (text.length() > limits.maxLength()) {
-      return new PrefilterVerdict.Act(Offense.SPAM, "flood");
-    }
     if (INVITE.matcher(text).find() || BARE_IP.matcher(text).find()) {
       return new PrefilterVerdict.Act(Offense.ADVERTISING, "ad-pattern");
     }
@@ -41,6 +38,9 @@ public final class Prefilters {
     var repeats = inWindow.stream().filter(line -> line.text().equals(text)).count();
     if (repeats + 1 > limits.maxRepeats()) {
       return new PrefilterVerdict.Act(Offense.SPAM, "repeat");
+    }
+    if (text.codePointCount(0, text.length()) > limits.maxLength()) {
+      return new PrefilterVerdict.Check("length");
     }
     if (capsHeavy(text, limits)) {
       return new PrefilterVerdict.Check("caps");

@@ -16,7 +16,7 @@ Rules:
 - Unlocked chests are fair game under the server rules. Taking their contents, or discussing doing so, is clean. Do not infer that a container was locked.
 - PvP is allowed outside spawn when the players' PvP settings permit it. Ordinary fights, kills, and combat talk are clean; harassment, griefing, or killing others' animals, pets, or villagers remain prohibited.
 - Ordinary chat, banter between friends, and game talk are clean (null). Do not moralize normal play.
-- Caps, links, and shouting alone are not offenses; they are why a human-sized second look was requested. Only name an offense the lines actually show.
+- Message length, caps, links, and shouting alone are not offenses; they are why a human-sized second look was requested. Only name an offense the lines actually show.
 - The newest line matters most; earlier lines are context.
 - Confidence is your honest certainty, 0-1. Below 0.5 means lean null.
 - Reasoning is one or two sentences quoting the decisive words.

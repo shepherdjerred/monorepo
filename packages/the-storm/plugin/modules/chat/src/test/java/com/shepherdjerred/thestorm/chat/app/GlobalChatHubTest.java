@@ -45,6 +45,33 @@ final class GlobalChatHubTest {
   }
 
   @Test
+  void publicationCapturesScreeningModeAndRestoresItAfterDelivery() {
+    var lines = new ArrayList<ChatLine>();
+    hub.subscribe(lines::add);
+    com.shepherdjerred.thestorm.core.safety.ContentPublication.deliver(
+        true,
+        () -> {
+          hub.published(line(ChannelKey.GLOBAL, "screened"));
+          return "delivered";
+        });
+    hub.published(line(ChannelKey.GLOBAL, "legacy"));
+    assertThat(lines).extracting(ChatLine::screened).containsExactly(true, false);
+  }
+
+  @Test
+  void failedPublicationCannotLeakItsModeIntoLaterChat() {
+    assertThatThrownBy(
+            () ->
+                com.shepherdjerred.thestorm.core.safety.ContentPublication.deliver(
+                    true,
+                    () -> {
+                      throw new IllegalStateException("native publication failed");
+                    }))
+        .isInstanceOf(IllegalStateException.class);
+    assertThat(com.shepherdjerred.thestorm.core.safety.ContentPublication.screened()).isFalse();
+  }
+
+  @Test
   void emotesAreNotPublished() {
     var lines = new ArrayList<ChatLine>();
     hub.subscribe(lines::add);

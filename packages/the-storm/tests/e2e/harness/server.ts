@@ -23,6 +23,7 @@ import { stageCompanionsE2e } from "./companions-e2e.ts";
 import {
   overlayAgentTopLevel,
   overlayBrainUrl,
+  overlaySafetyBrain,
   overlaySweep,
   stageModuleConfigs,
   type ModuleConfigOverrides,
@@ -235,13 +236,14 @@ export async function stagePlugins(
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
     });
-    // Citizens' owned config keeps rwfbots' NPCs off the tab and online
-    // lists, as the production image's plugin sync does.
-    await cp(
-      path.join(path.dirname(options.ownedConfigDir), "Citizens"),
-      path.join(pluginsDir, "Citizens"),
-      { recursive: true },
-    );
+    // Exercise the same NPC visibility and detection-only punishment policy as the image.
+    for (const plugin of ["Citizens", "GrimAC"]) {
+      await cp(
+        path.join(path.dirname(options.ownedConfigDir), plugin),
+        path.join(pluginsDir, plugin),
+        { recursive: true },
+      );
+    }
   }
   await stageModuleConfigs(path.join(pluginsDir, "TheStorm"), options);
   if (options.fixturesJar !== undefined) {
@@ -312,6 +314,10 @@ export async function stagePlugins(
     }
     const stagedAgentYml = path.join(pluginsDir, "TheStorm", "agent.yml");
     await overlayBrainUrl(stagedAgentYml, options.brain.baseUrl);
+    await overlaySafetyBrain(
+      path.join(pluginsDir, "TheStorm"),
+      options.brain.baseUrl,
+    );
     await overlaySweep(stagedAgentYml, options.sweep);
     await overlayAgentTopLevel(stagedAgentYml, options.agent);
   }

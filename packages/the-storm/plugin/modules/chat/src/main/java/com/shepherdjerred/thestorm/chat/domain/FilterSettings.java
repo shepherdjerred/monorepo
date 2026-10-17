@@ -14,9 +14,11 @@ public record FilterSettings(int maxLength, int maxCapsWords, long repeatCooldow
   /** Minecraft's own limit on a chat message. */
   public static final int CLIENT_LIMIT = 256;
 
+  public static final int MAX_COMMAND_LENGTH = 2000;
+
   public FilterSettings {
-    if (maxLength < 1 || maxLength > CLIENT_LIMIT) {
-      throw new IllegalArgumentException("maxLength must be 1.." + CLIENT_LIMIT);
+    if (maxLength < 1 || maxLength > MAX_COMMAND_LENGTH) {
+      throw new IllegalArgumentException("maxLength must be 1.." + MAX_COMMAND_LENGTH);
     }
     if (maxCapsWords < 0) {
       throw new IllegalArgumentException("maxCapsWords must not be negative");

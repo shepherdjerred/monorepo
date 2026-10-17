@@ -29,6 +29,13 @@
   ],
   "plugins": [
     {
+      "name": "GrimAC",
+      "version": "2.3.74-3a9cdf1",
+      "url": "https://cdn.modrinth.com/data/LJNGWSvH/versions/QyX6GKLl/grimac-bukkit-2.3.74-3a9cdf1.jar",
+      "sha256": "218e43326553f33e678edfd03b96c3e7671f8818cdbc7b97b298c7714b61f41f",
+      "file": "GrimAC-2.3.74-3a9cdf1.jar"
+    },
+    {
       "name": "Citizens",
       "version": "2.0.44-b4256",
       "url": "https://ci.citizensnpcs.co/job/Citizens2/4256/artifact/dist/target/Citizens-2.0.44-b4256.jar",

@@ -293,6 +293,7 @@ target "the-storm-server" {
   contexts = {
     managed-flags          = "packages/feature-flags/src"
     storm-brain-contracts  = "packages/storm-brain/contracts"
+    mc-harness-contracts   = "packages/mc-harness/src/protocol"
   }
   dockerfile = "server/Dockerfile"
   target     = "image"

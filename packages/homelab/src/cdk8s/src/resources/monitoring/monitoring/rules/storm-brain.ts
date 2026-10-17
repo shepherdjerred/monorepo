@@ -61,6 +61,20 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          alert: "StormContentScreeningSlow",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'histogram_quantile(0.95, sum by (le) (rate(storm_brain_request_duration_seconds_bucket{flow="moderate"}[5m]))) > 3',
+          ),
+          for: "10m",
+          labels: { severity: "warning", category: "llm" },
+          annotations: {
+            summary: "Player content is waiting on slow screening",
+            description: escapePrometheusTemplate(
+              "Content-screening p95 exceeds 3 seconds. Player text stays unpublished while screening runs; the game rejects unavailable checks without misconduct strikes. Check the dedicated moderation API and contextual model latency.",
+            ),
+          },
+        },
+        {
           alert: "StormBrainRequestErrors",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'sum(increase(storm_brain_requests_total{outcome=~"error|upstream_error"}[15m])) > 0',
@@ -69,7 +83,7 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "StormBrain requests are failing",
             description: escapePrometheusTemplate(
-              "At least one StormBrain request failed with an inference or upstream error in the last 15 minutes. The plugin treats these as unjudged lines and unworked tickets, so enforcement quietly degrades while this fires. Check service logs and OpenAI status.",
+              "At least one StormBrain request failed with an inference or upstream error in the last 15 minutes. Content screening withholds publication and records no misconduct strike on failure; ticket triage remains unworked. Check the flow label, service logs and OpenAI status.",
             ),
           },
         },

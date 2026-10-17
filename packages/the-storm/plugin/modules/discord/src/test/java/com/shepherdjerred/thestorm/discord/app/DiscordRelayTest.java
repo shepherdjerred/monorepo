@@ -178,8 +178,8 @@ final class DiscordRelayTest {
   }
 
   @Test
-  void postsTicketDetailsWithPlayerTextEscaped() {
-    relay.onTicketOpened(
+  void postsTicketReferencesWithoutPrivateReportText() {
+    var ticket =
         new TicketDetails(
             7,
             "grief",
@@ -187,13 +187,18 @@ final class DiscordRelayTest {
             "cool_guy",
             "@everyone **help**",
             "staff",
-            "evidence",
-            "survival"));
+            "raw private evidence",
+            "survival");
+    relay.onTicketOpened(ticket);
+    relay.onTicketEscalated(ticket);
+    relay.onTicketTriaged(ticket);
 
     assertThat(posts)
         .containsExactly(
             "Ticket #7 [survival/urgent] grief from **cool\\_guy**: "
-                + "@\u200Beveryone \\*\\*help\\*\\*");
+                + "Private report; authorized staff can view the ticket.",
+            "Ticket #7 [survival/urgent] needs a human: Private report; authorized staff can view the ticket.",
+            "Ticket #7 [survival] triaged [urgent]: Review the private ticket and linked evidence.");
   }
 
   @Test

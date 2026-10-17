@@ -97,6 +97,58 @@ final class OverturnFlowTest {
   }
 
   @Test
+  void safetyOverturnDoesNotLiftAnUnrelatedLaterStaffMute() {
+    var reference = new UUID(3, 4);
+    var decision =
+        log.record(
+                new DecisionDraft(
+                    ALICE,
+                    Offense.SPAM,
+                    Optional.empty(),
+                    "safety-block",
+                    1,
+                    "deterministic-v1",
+                    DecisionAction.MUTE,
+                    false,
+                    false,
+                    Optional.empty(),
+                    0,
+                    "safety-block evidence " + reference + " surface=chat"),
+                clock.instant())
+            .join();
+    chat.mute(ALICE, Duration.ofHours(1), "separate staff action", "Mod");
+    var outcome = overturn.overturn(decision.id(), MOD, "Mod").join();
+    assertThat(outcome).isEqualTo(new OverturnFlow.Outcome.Overturned(decision, false));
+    assertThat(chat.activeMute(ALICE)).isPresent();
+  }
+
+  @Test
+  void safetyOverturnLiftsOnlyItsReferencedMute() {
+    var reference = new UUID(3, 4);
+    var decision =
+        log.record(
+                new DecisionDraft(
+                    ALICE,
+                    Offense.SPAM,
+                    Optional.empty(),
+                    "safety-block",
+                    1,
+                    "deterministic-v1",
+                    DecisionAction.MUTE,
+                    false,
+                    false,
+                    Optional.empty(),
+                    0,
+                    "safety-block evidence " + reference + " surface=chat"),
+                clock.instant())
+            .join();
+    chat.mute(ALICE, Duration.ofMinutes(10), "spam evidence " + reference, "StormSafety");
+    assertThat(overturn.overturn(decision.id(), MOD, "Mod").join())
+        .isEqualTo(new OverturnFlow.Outcome.Overturned(decision, true));
+    assertThat(chat.activeMute(ALICE)).isEmpty();
+  }
+
+  @Test
   void overturnLiftsMutes() {
     chat.mute(ALICE, Duration.ofMinutes(10), "spam-burst", "StormAgent");
     var decision = record(DecisionAction.MUTE, Optional.empty());

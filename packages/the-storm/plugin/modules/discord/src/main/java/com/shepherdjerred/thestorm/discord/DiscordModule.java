@@ -107,6 +107,10 @@ public final class DiscordModule implements StormModule {
                 chat, context.scheduler(), new PaperOnlinePlayers(server), context.time()),
             links);
     context.services().provide(DiscordRelay.class, relay);
+    context
+        .services()
+        .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
+        .ifPresent(relay::contentSafety);
     var sealed = context.services().require(SealedWorlds.class);
     // Chat lines arrive on the async chat thread; the filter answers from its own main-thread map.
     var sealedPlayers = SealedPlayers.track(server, sealed);

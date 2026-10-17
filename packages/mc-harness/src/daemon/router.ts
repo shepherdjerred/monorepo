@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EvidencePageSchema, EvidenceQuerySchema } from "#protocol/evidence.ts";
 import { BridgeRequestError } from "#bridge/client.ts";
 import {
   ACTOR_ACTIONS,
@@ -162,6 +163,11 @@ async function targetPost(call: TargetCall): Promise<Response | null> {
           (live) => live.bridge.command(command),
         ),
       );
+    }
+    case "evidence": {
+      const query = await body(request, EvidenceQuerySchema);
+      ctx.log("evidence access", { target: id, action: query.action });
+      return reply(EvidencePageSchema, await bridge.evidence(query));
     }
     case "we": {
       const run = await body(request, WeRunRequestSchema);

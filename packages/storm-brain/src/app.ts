@@ -13,6 +13,7 @@ import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
 import { ConversationRequestSchema } from "./conversation-schema.ts";
 import { ConversationBudgetError } from "./conversation-budget.ts";
 import type { Conversation } from "./conversation.ts";
+import { ModerationRequestSchema } from "./moderation-schema.ts";
 
 export type BrainLogger = {
   info: (message: string, fields?: Record<string, unknown>) => void;
@@ -27,7 +28,7 @@ export type BrainAppDependencies = {
   conversation: { enabled: () => Promise<boolean>; decide: Conversation };
 };
 
-type Flow = "classify" | "triage" | "conversation";
+type Flow = "classify" | "triage" | "conversation" | "moderate";
 
 class PayloadTooLargeError extends Error {}
 class InvalidJsonError extends Error {}
@@ -145,6 +146,14 @@ export function createBrainApp(
   app.get("/livez", (context) => context.text("ok\n"));
   app.get("/readyz", (context) => context.json({ status: "ready" }));
 
+  app.post(
+    "/v1/moderate",
+    flowRoute("moderate", ModerationRequestSchema, {
+      decide: dependencies.brain.moderate,
+      config,
+      dependencies,
+    }),
+  );
   app.post(
     "/v1/classify",
     flowRoute("classify", ClassifyRequestSchema, {

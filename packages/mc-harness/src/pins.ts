@@ -106,3 +106,11 @@ export const multiverseCore: PluginPin = PluginPinSchema.parse({
   url: "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
   sha256: "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
 });
+
+/** Exact 26.2 build required by TheStorm's safety module; corrections are separately gated. */
+export const grim: PluginPin = PluginPinSchema.parse({
+  name: "GrimAC",
+  version: "2.3.74-3a9cdf1",
+  url: "https://cdn.modrinth.com/data/LJNGWSvH/versions/QyX6GKLl/grimac-bukkit-2.3.74-3a9cdf1.jar",
+  sha256: "218e43326553f33e678edfd03b96c3e7671f8818cdbc7b97b298c7714b61f41f",
+});

@@ -59,7 +59,9 @@ public final class PaperChatOutput implements ChatOutput {
     for (var player : server.getOnlinePlayers()) {
       if (audience.test(player.getUniqueId())
           && service.receives(line, player.getUniqueId(), Speakers.isStaff(player))) {
-        player.sendMessage(component);
+        player.sendMessage(
+            MiniMessage.miniMessage()
+                .deserialize(service.render(line, service.nameColor(line, player.getUniqueId()))));
       }
     }
     server.getConsoleSender().sendMessage(component);

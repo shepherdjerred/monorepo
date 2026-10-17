@@ -34,6 +34,7 @@ export function basePaperEnv(jar: PaperJarSource): Record<string, string> {
     ONLINE_MODE: "FALSE",
     SKIP_DOWNLOAD_DEFAULTS: "true",
     MEMORY: "1G",
+    JVM_DD_OPTS: "paper.maxChatCommandInputSize=4096",
     LEVEL_TYPE: "minecraft:flat",
     GENERATE_STRUCTURES: "false",
     SPAWN_PROTECTION: "0",

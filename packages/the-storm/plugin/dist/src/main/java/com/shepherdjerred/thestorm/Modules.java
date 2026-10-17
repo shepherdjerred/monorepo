@@ -17,6 +17,7 @@ import com.shepherdjerred.thestorm.qol.QolModule;
 import com.shepherdjerred.thestorm.quests.QuestsModule;
 import com.shepherdjerred.thestorm.rwf.RwfModule;
 import com.shepherdjerred.thestorm.rwfbots.RwfBotsModule;
+import com.shepherdjerred.thestorm.safety.SafetyModule;
 import com.shepherdjerred.thestorm.seasonal.SeasonalModule;
 import com.shepherdjerred.thestorm.shards.ShardsModule;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
@@ -46,6 +47,7 @@ final class Modules {
     return List.of(
         new EconomyModule(),
         new MessagesModule(),
+        new SafetyModule(),
         new ChatModule(),
         new MailModule(),
         new TracksModule(),

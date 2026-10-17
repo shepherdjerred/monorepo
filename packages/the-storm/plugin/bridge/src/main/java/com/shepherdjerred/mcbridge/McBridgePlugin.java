@@ -2,6 +2,7 @@ package com.shepherdjerred.mcbridge;
 
 import com.shepherdjerred.mcbridge.adapter.citizens.CitizensActors;
 import com.shepherdjerred.mcbridge.adapter.http.BridgeHttpServer;
+import com.shepherdjerred.mcbridge.adapter.paper.ApprovedChatCapture;
 import com.shepherdjerred.mcbridge.adapter.paper.EventCapture;
 import com.shepherdjerred.mcbridge.adapter.paper.LogCapture;
 import com.shepherdjerred.mcbridge.adapter.paper.PaperMainThread;
@@ -69,7 +70,11 @@ public final class McBridgePlugin extends JavaPlugin {
                 snapshots,
                 ring,
                 harnessActors));
-    getServer().getPluginManager().registerEvents(new EventCapture(ring), this);
+    var capture = new EventCapture(ring);
+    getServer().getPluginManager().registerEvents(capture, this);
+    // TheStorm is optional: its event classes load only behind this check.
+    if (getServer().getPluginManager().isPluginEnabled("TheStorm"))
+      getServer().getPluginManager().registerEvents(new ApprovedChatCapture(capture), this);
     logCapture = LogCapture.attach(ring);
     try {
       http = BridgeHttpServer.start(config, routes.router(), getLogger());

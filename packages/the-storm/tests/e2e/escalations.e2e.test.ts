@@ -49,7 +49,7 @@ describe("escalations", () => {
     }
     const row = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} spam mute shadow.*rung=0`),
+      new RegExp(String.raw`#(\d+) ${bot.username} other allow .*safety-allow`),
     );
     const decisionId = row[1] ?? "0";
 
@@ -67,7 +67,7 @@ describe("escalations", () => {
     }
     const row = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} spam mute shadow.*rung=0`),
+      new RegExp(String.raw`#(\d+) ${bot.username} other allow .*safety-allow`),
     );
     const decisionId = row[1] ?? "0";
 

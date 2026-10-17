@@ -4,7 +4,11 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import type { Bot } from "mineflayer";
 import { connectBot, disconnectBot, waitForMessage } from "./harness/bot.ts";
 import { waitForDecision } from "./harness/decisions.ts";
-import { startFakeBrain, type FakeBrain } from "./harness/fake-brain.ts";
+import {
+  startFakeBrain,
+  setBrainMode,
+  type FakeBrain,
+} from "./harness/fake-brain.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import {
@@ -51,6 +55,7 @@ describe.skipIf(external)("active enforcement", () => {
         "tickets",
         "agent",
         "chat",
+        "safety",
       ]),
       ownedConfigDir,
       // The plugin's typed flag provider bootstraps even when only moderation runs.
@@ -92,24 +97,26 @@ describe.skipIf(external)("active enforcement", () => {
     if (brain !== undefined) await brain.stop();
   });
 
-  test("repeat bursts climb to rung 1", async () => {
-    for (let i = 1; i <= 6; i += 1) {
-      bot.chat(`rung burst ${i.toString()}`);
-    }
+  test("obvious repeated-link spam is muted and a repeat offense escalates", async () => {
+    const blocked = waitForMessage(bot, /not published \(spam\)/);
+    for (let i = 1; i <= 3; i += 1) bot.chat("https://example.com");
+    await blocked;
     const first = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} spam mute .*rung=0`),
+      new RegExp(
+        String.raw`#(\d+) ${bot.username} spam mute .*safety-block evidence`,
+      ),
     );
     expect(first[0]).not.toContain("shadow");
     expect(Number(first[1] ?? "0")).toBeGreaterThan(0);
 
-    // The mute is real: speech stops with the ladder's receipt.
+    // The mute is real even for an operator.
     bot.chat("can anyone hear this");
     const denial = await waitForMessage(
       bot,
-      /You are muted for .*prefilter\/rate/,
+      /You are muted or chat state is still loading/,
     );
-    expect(denial[0]).toContain("prefilter/rate");
+    expect(denial[0]).toContain("muted");
 
     // A staff unmute lifts the gag without touching the strike, so the next
     // burst climbs instead of restarting. The opped bot lifts its own mute;
@@ -117,14 +124,80 @@ describe.skipIf(external)("active enforcement", () => {
     bot.chat(`/unmute ${bot.username}`);
     await waitForMessage(bot, /You can chat again\./);
 
-    for (let i = 1; i <= 6; i += 1) {
-      bot.chat(`rung burst again ${i.toString()}`);
-    }
+    const blockedAgain = waitForMessage(bot, /not published \(spam\)/);
+    bot.chat("https://example.com");
+    await blockedAgain;
     const second = await waitForDecision(
       bot,
-      new RegExp(String.raw`#(\d+) ${bot.username} spam mute .*rung=1`),
+      new RegExp(
+        String.raw`#((?!${first[1] ?? "0"}\b)\d+) ${bot.username} spam mute .*safety-block evidence`,
+      ),
     );
     expect(second[0]).not.toContain("shadow");
     expect(Number(second[1] ?? "0")).toBeGreaterThan(Number(first[1] ?? "0"));
+  });
+
+  test("disabled screening preserves legacy burst enforcement", async () => {
+    if (brain === undefined || rcon === undefined)
+      throw new Error("Active fixture is missing");
+    const legacyBot = await connectBot({
+      host: info.host,
+      port: info.gamePort,
+      username: username("l"),
+    });
+    try {
+      await rcon.command(`op ${legacyBot.username}`);
+      await setBrainMode(brain.port, "screening-disabled");
+      const decision = waitForDecision(
+        legacyBot,
+        new RegExp(
+          String.raw`#(\d+) ${legacyBot.username} spam mute .*prefilter rung=0.*rung 0: rate`,
+        ),
+      );
+      for (let i = 1; i <= 6; i += 1)
+        legacyBot.chat(`legacy burst ${i.toString()}`);
+      const matched = await decision;
+      expect(matched[0]).not.toContain("shadow");
+      const denied = waitForMessage(
+        legacyBot,
+        /You are muted or chat state is still loading/,
+      );
+      legacyBot.chat("the legacy mute is enforced");
+      await denied;
+    } finally {
+      await setBrainMode(brain.port, "ok");
+      await disconnectBot(legacyBot);
+    }
+  });
+
+  test("disabled screening does not punish an occasional long Global message", async () => {
+    if (brain === undefined || rcon === undefined)
+      throw new Error("Active fixture is missing");
+    const longBot = await connectBot({
+      host: info.host,
+      port: info.gamePort,
+      username: username("long"),
+    });
+    try {
+      await rcon.command(`op ${longBot.username}`);
+      await setBrainMode(brain.port, "screening-disabled");
+      const reviewed = waitForDecision(
+        longBot,
+        new RegExp(
+          String.raw`#(\d+) ${longBot.username} other allow .*fake-brain`,
+        ),
+      );
+      longBot.chat(`/g ${"a detailed explanation ".repeat(25).trimEnd()}`);
+      await reviewed;
+      const delivered = waitForMessage(
+        longBot,
+        /a long message leaves chat available/,
+      );
+      longBot.chat("a long message leaves chat available");
+      await delivered;
+    } finally {
+      await setBrainMode(brain.port, "ok");
+      await disconnectBot(longBot);
+    }
   });
 });

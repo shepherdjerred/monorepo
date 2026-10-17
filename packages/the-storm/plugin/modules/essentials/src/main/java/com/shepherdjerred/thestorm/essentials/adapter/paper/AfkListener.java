@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.safety.ApprovedChatEvent;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import java.util.Locale;
@@ -66,6 +67,11 @@ final class AfkListener implements Listener {
     if (afk.active(player.getUniqueId())) {
       runtime.scheduler().runOnMainThread(() -> announceBack(player));
     }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onApprovedChat(ApprovedChatEvent event) {
+    if (event.delivered()) active(event.player());
   }
 
   private void active(Player player) {

@@ -2392,6 +2392,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-content-safety-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-safety",
+      "purpose": "Screen every player text surface before publication; evidence is always retained.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-anticheat-corrections-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-safety",
+      "purpose": "Enable Grim corrective checks after custom gameplay compatibility acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-letters-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",
@@ -3010,6 +3034,22 @@
           "key": "the-storm-identity-enabled",
           "type": "boolean",
           "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-content-safety-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-anticheat-corrections-enabled",
+          "type": "boolean",
+          "default": false,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

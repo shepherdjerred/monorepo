@@ -229,6 +229,7 @@ async function profileFixtures(
           "economy",
           "mail",
           "chat",
+          "safety",
           "tracks",
           "towns",
           "essentials",
