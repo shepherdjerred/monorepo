@@ -86,6 +86,7 @@ function contract(): DareContract {
 }
 
 beforeEach(async () => {
+  await db.bucksDareNotificationEvent.deleteMany();
   await db.bucksDareEvidence.deleteMany();
   await db.bucksDareTarget.deleteMany();
   await db.bucksDare.deleteMany();

@@ -274,6 +274,8 @@ function blanked(column: string): ColumnRedaction {
  * password. `TournamentLobby` was dropped with the Tournament API model; it
  * stays here while a pull can target a deployed pre-retirement schema, and
  * {@link redactionsForSource} skips it once the source no longer has it.
+ * `ScoutEffectClaim.key` is documented in the schema as deliberately *not* a
+ * credential and is left alone.
  */
 export const REDACTED_COLUMNS: Readonly<
   Record<string, readonly ColumnRedaction[]>

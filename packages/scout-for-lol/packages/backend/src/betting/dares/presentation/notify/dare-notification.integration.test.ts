@@ -68,9 +68,27 @@ async function mint(
   });
 }
 
+/** A pre-cutover event written by the retired legacy outbox. */
+async function seedLegacy(dareId: number): Promise<void> {
+  await db.bucksDareNotificationEvent.create({
+    data: {
+      dareId,
+      revision: 1,
+      category: "progress",
+      kind: "advanced",
+      matchId: RiotMatchIdSchema.parse("NA1_9100000000"),
+      payload: JSON.stringify({
+        serverId: SERVER,
+        summary: "One win remains.",
+      }),
+      deduplicationKey: `test:${dareId.toString()}:advance`,
+      occurredAt: NOW,
+    },
+  });
+}
+
 beforeEach(async () => {
-  await db.matchNotificationIntent.deleteMany();
-  await db.scoutWorkflowStart.deleteMany();
+  await db.bucksDareNotificationEvent.deleteMany();
   await db.bucksDareTarget.deleteMany();
   await db.bucksDare.deleteMany();
 });
@@ -127,5 +145,19 @@ describe("Dare status intents", () => {
         where: { requestSource: "dare-status:advanced" },
       }),
     ).toBe(2);
+  });
+
+  test("never announces an event a pre-cutover legacy row already owns", async () => {
+    // The legacy drain is retired, but a standing legacy event still owns its
+    // deduplication key: re-announcing it as an intent would DM the same
+    // recipients a second time.
+    const dareId = await seedDare();
+    await seedLegacy(dareId);
+    await mint(dareId);
+    expect(
+      await db.matchNotificationIntent.count({
+        where: { subjectKind: "dare", subjectId: dareId.toString() },
+      }),
+    ).toBe(0);
   });
 });

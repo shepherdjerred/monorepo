@@ -1774,12 +1774,13 @@ model BucksDare {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  revisions     BucksDareRevision[]
-  targets       BucksDareTarget[]
-  contributions BucksDareContribution[]
-  evidence      BucksDareEvidence[]
-  intents       ConfirmationIntent[]
-  activation    BucksDareActivation?
+  revisions          BucksDareRevision[]
+  targets            BucksDareTarget[]
+  contributions      BucksDareContribution[]
+  evidence           BucksDareEvidence[]
+  intents            ConfirmationIntent[]
+  notificationEvents BucksDareNotificationEvent[]
+  activation         BucksDareActivation?
 
   @@index([challengerDiscordId, dareState, updatedAt])
   @@index([serverId, dareState, updatedAt])
@@ -1924,6 +1925,46 @@ model ConfirmationIntent {
   expectedRevision Int?
 
   @@index([dareId, expiresAt])
+}
+
+// Transactional outbox for Dare lifecycle and material-progress DMs. An event
+// freezes the recipients at occurrence time; delivery checks each recipient's
+// current preference so suppression remains an operator-controlled decision.
+model BucksDareNotificationEvent {
+  id               String    @id @default(uuid())
+  dareId           Int
+  dare             BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision         Int
+  category         String
+  kind             String
+  actorDiscordId   String?
+  matchId          String?
+  payload          String
+  deduplicationKey String    @unique
+  occurredAt       DateTime
+  createdAt        DateTime  @default(now())
+
+  deliveries BucksDareNotificationDelivery[]
+
+  @@index([dareId, occurredAt])
+}
+
+model BucksDareNotificationDelivery {
+  id            Int                        @id @default(autoincrement())
+  eventId       String
+  event         BucksDareNotificationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  discordId     String
+  deliveryState String                     @default("pending")
+  attemptCount  Int                        @default(0)
+  nextAttemptAt DateTime?
+  lastAttemptAt DateTime?
+  lastError     String?
+  sentAt        DateTime?
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  @@unique([eventId, discordId])
+  @@index([deliveryState, nextAttemptAt, createdAt])
 }
 
 // Durable marker for Bucks EARNINGS on a (match, guild).
@@ -2260,6 +2301,22 @@ model ScoutInteractiveRun {
   @@index([kind, guildId, createdAt])
   @@index([state, createdAt])
   @@index([conversationId, state])
+}
+
+/// Durable claim for an external side effect. The key is derived from the
+/// product operation (for example report-run plus message chunk), never from a
+/// Temporal attempt, so Activity retries cannot create a second effect.
+model ScoutEffectClaim {
+  key         String    @id
+  kind        String
+  state       String    @default("CLAIMED")
+  lastError   String?
+  resultId    String?
+  claimedAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([kind, state, claimedAt])
 }
 
 // =============================================================================

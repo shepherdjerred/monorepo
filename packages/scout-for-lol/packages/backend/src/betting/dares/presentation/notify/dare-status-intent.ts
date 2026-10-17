@@ -68,9 +68,21 @@ export async function mintDareStatusIntents(
   input: DareNotificationEventInput,
 ): Promise<void> {
   const prefix = eventPrefix(input.deduplicationKey);
+  const legacy = await db.bucksDareNotificationEvent.findUnique({
+    where: { deduplicationKey: input.deduplicationKey },
+    select: { id: true },
+  });
   const standingRows = await db.matchNotificationIntent.findMany({
     where: { intentKey: { startsWith: prefix } },
   });
+  if (legacy !== null) {
+    if (standingRows.length > 0) {
+      throw new Error(
+        `Dare notification ${input.deduplicationKey} has legacy and V2 owners`,
+      );
+    }
+    return;
+  }
   if (standingRows.length > 0) {
     assertStandingRecipients(standingRows, input);
     // The first committed event owns its payload and recipient set. A replay
