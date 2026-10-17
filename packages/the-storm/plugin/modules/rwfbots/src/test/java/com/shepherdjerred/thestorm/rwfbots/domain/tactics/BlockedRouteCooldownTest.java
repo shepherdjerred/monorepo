@@ -50,10 +50,14 @@ final class BlockedRouteCooldownTest {
           null);
 
   private static Situation situation(long tick, List<BombView> bombs) {
+    return situation(tick, bombs, GOAL);
+  }
+
+  private static Situation situation(long tick, List<BombView> bombs, Vec3 goal) {
     var self = combatant(1, RED, START);
     var slot =
         new Slot(
-            "blocked-slot", SlotKind.FLANK, Role.ROTATE, GOAL, GOAL, -1, -1, Optional.empty(), 0);
+            "blocked-slot", SlotKind.FLANK, Role.ROTATE, goal, goal, -1, -1, Optional.empty(), 0);
     var board =
         Blackboard.open(RED, Strategy.RUSH)
             .withPlan(
@@ -130,6 +134,81 @@ final class BlockedRouteCooldownTest {
     assertThat(thought.decision().option()).isEqualTo(Option.DEFUSE);
     assertThat(thought.state().memory().defusing()).contains(bomb.id());
     assertThat(thought.state().memory().blockedUntil()).containsEntry(GOAL, 150L);
+  }
+
+  @Test
+  void anExcludedFormationSlotCannotReplaceAnUrgentPoisonEscape() {
+    var bomb = new BombView(new BombId(0), new BombOwner.Team(RED), START, new BombState.Idle());
+    var assignedSlot = new Vec3(28.5, 1, 20.5);
+    var original = situation(100, List.of(bomb), assignedSlot);
+    var snapshot = original.snapshot();
+    var poisoned =
+        new WorldSnapshot(
+            snapshot.tick(),
+            snapshot.matchPhase(),
+            snapshot.combatants(),
+            snapshot.bombs(),
+            PoisonView.startedAt(0, 0.1),
+            snapshot.mapId(),
+            snapshot.stimuli());
+    var scene =
+        new Situation(
+            original.self(), poisoned, original.percept(), original.board(), original.role());
+    var slot = Planner.slotPoint(scene, CONTEXT).orElseThrow();
+    assertThat(slot).isEqualTo(assignedSlot);
+    assertThat(CONTEXT.nav().graph().nearestNode(slot)).isPresent();
+    var memory = TacticalMemory.EMPTY.blocked(slot, 50);
+    assertThat(ObjectivePolicy.direct(memory, scene, CONTEXT).forced()).isEmpty();
+    var escape = Planner.expand(Option.ESCAPE_POISON, scene, CONTEXT);
+    assertThat(escape.current()).isInstanceOf(PlanStep.Route.class);
+    assertThat(((PlanStep.Route) escape.current()).goal()).isNotEqualTo(slot);
+    assertThat(memory.excludes(((PlanStep.Route) escape.current()).goal(), 100)).isFalse();
+    assertThat(Planner.decide(escape, scene, CONTEXT, 1).routeFailure()).isEmpty();
+    var thought = Tactics.think(state(100, memory), scene, CONTEXT, new SplittableRandom(1));
+    assertThat(thought.trace().choice()).isEqualTo(Option.ESCAPE_POISON);
+    assertThat(thought.decision().option()).isEqualTo(Option.ESCAPE_POISON);
+    assertThat(thought.state().plan())
+        .hasValueSatisfying(plan -> assertThat(plan.option()).isEqualTo(Option.ESCAPE_POISON));
+    assertThat(thought.state().memory().blockedUntil()).containsEntry(slot, 150L);
+  }
+
+  @Test
+  void anExcludedFormationSlotCannotReplaceYoungCombatPlans() {
+    for (var option : List.of(Option.ENGAGE, Option.RETREAT)) {
+      var original = situation(100, List.of());
+      var self = option == Option.RETREAT ? original.self().withHealth(4, 0) : original.self();
+      var enemy = combatant(2, BLUE, START.plus(3, 0, 0));
+      var snapshot =
+          new WorldSnapshot(
+              100,
+              MatchPhase.LIVE,
+              List.of(self, enemy),
+              List.of(),
+              PoisonView.NONE,
+              CONTEXT.nav().mapId(),
+              List.of());
+      var scene =
+          new Situation(
+              self,
+              snapshot,
+              new Percept(PerceptionState.EMPTY, List.of(enemy), 100),
+              original.board(),
+              original.role());
+      PlanStep step =
+          option == Option.ENGAGE
+              ? new PlanStep.Fight(enemy.id())
+              : new PlanStep.Flee(START.plus(0, 0, 4), Optional.empty());
+      var plan = Plan.of(option, 95, step);
+      for (var memory : List.of(TacticalMemory.EMPTY, TacticalMemory.EMPTY.blocked(GOAL, 50))) {
+        var state = new TacticsState(Optional.of(plan), 95, 1, 0, RewindClock.UNSTARTED, memory);
+        assertThat(ObjectivePolicy.direct(memory, scene, CONTEXT).forced()).isEmpty();
+        var thought = Tactics.think(state, scene, CONTEXT, new SplittableRandom(1));
+        assertThat(thought.trace().choice()).isEqualTo(option);
+        assertThat(thought.decision().option()).isEqualTo(option);
+        assertThat(thought.state().plan()).contains(plan);
+        assertThat(thought.state().memory().blockedUntil()).isEqualTo(memory.blockedUntil());
+      }
+    }
   }
 
   @Test
