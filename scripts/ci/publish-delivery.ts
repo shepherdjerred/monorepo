@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual, parseArgs } from "node:util";
 import { z } from "zod";
 import { createDeliveryClient } from "@shepherdjerred/delivery/client";
 import {
@@ -18,6 +19,7 @@ import {
   readRequiredHandoff,
 } from "../lib/ci/ci-handoff.ts";
 import { requireEnv, run } from "../lib/run.ts";
+import { DELIVERY_IMAGE_DIGESTS_HANDOFF } from "../lib/ci/image-publication-handoff.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/u);
 const DigestsSchema = z.record(
@@ -31,6 +33,10 @@ const ChartInventorySchema = z.array(
     prune: z.boolean().optional(),
   }),
 );
+const SitePublicationSchema = z.object({
+  serviceId: z.string().min(1),
+  artifact: ArtifactInputSchema,
+});
 const IndexSchema = z.object({
   schemaVersion: z.literal(2),
   mediaType: z.enum([
@@ -234,11 +240,7 @@ export async function buildPublications(
     });
   }
   const sites = z
-    .array(
-      z
-        .object({ serviceId: z.string().min(1), artifact: ArtifactInputSchema })
-        .strict(),
-    )
+    .array(SitePublicationSchema.strict())
     .parse(input.siteArtifacts ?? []);
   for (const site of sites) {
     if (!catalog.services.some((service) => service.id === site.serviceId))
@@ -263,21 +265,68 @@ export async function buildPublications(
   );
 }
 
-async function main() {
-  const rawDigests: unknown = JSON.parse(
-    await readRequiredHandoff("image-digests"),
+export function parsePublicationOptions(args: string[]) {
+  const { values } = parseArgs({
+    args,
+    strict: true,
+    allowPositionals: false,
+    options: { "static-archives": { type: "boolean", default: false } },
+  });
+  return { staticArchives: values["static-archives"] };
+}
+
+const HANDOFF_READERS = {
+  required: readRequiredHandoff,
+  optional: readOptionalHandoff,
+};
+
+export async function readPublicationHandoffs(
+  staticArchives: boolean,
+  read: {
+    required: typeof readRequiredHandoff;
+    optional: typeof readOptionalHandoff;
+  } = HANDOFF_READERS,
+) {
+  const digests: unknown = JSON.parse(
+    await read.required(DELIVERY_IMAGE_DIGESTS_HANDOFF),
   );
-  const rawCharts = await readOptionalHandoff("argocd-release-expected");
+  const rawCharts = await read.optional("argocd-release-expected");
   const charts: unknown =
     rawCharts === undefined ? undefined : JSON.parse(rawCharts);
-  const siteArtifacts: unknown = JSON.parse(
-    await readRequiredHandoff("site-artifacts"),
-  );
+  if (!staticArchives) return { digests, charts, siteArtifacts: [] };
+  const [rawSites, rawScout] = await Promise.all([
+    read.required("site-artifacts"),
+    read.required("scout-site-artifacts"),
+  ]);
+  const siteArtifacts = z
+    .array(SitePublicationSchema.strict())
+    .parse(JSON.parse(rawSites));
+  const scout = z
+    .array(
+      SitePublicationSchema.extend({
+        serviceId: z.literal("scout-for-lol"),
+      }).strict(),
+    )
+    .parse(JSON.parse(rawScout));
+  for (const entry of [...siteArtifacts, ...scout])
+    if (entry.artifact.kind !== "archive")
+      throw new Error(
+        "Static publication requires an immutable archive artifact",
+      );
+  for (const entry of scout)
+    if (!siteArtifacts.some((aggregate) => isDeepStrictEqual(aggregate, entry)))
+      throw new Error(
+        "Static aggregate omitted or changed a Scout producer artifact",
+      );
+  return { digests, charts, siteArtifacts };
+}
+
+async function main() {
+  const options = parsePublicationOptions(Bun.argv.slice(2));
+  const handoffs = await readPublicationHandoffs(options.staticArchives);
   const publications = await buildPublications(
     {
-      digests: rawDigests,
-      charts,
-      siteArtifacts,
+      ...handoffs,
       sourceRevision: requireEnv("CI_COMMIT_SHA"),
       ciUrl: requireEnv("CI_PIPELINE_URL"),
       pipelineNumber: z.coerce

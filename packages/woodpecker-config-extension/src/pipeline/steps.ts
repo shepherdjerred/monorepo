@@ -113,6 +113,7 @@ export function verifyCommands(options: {
 
 export type PipelineInputs = {
   readonly deliveryPublication?: boolean;
+  readonly deliveryStaticArchives?: boolean;
   readonly images: CiImages;
   /** Image of the deployed policy service, supplied by trusted bootstrap. */
   readonly trustedGateImage?: string | undefined;
@@ -136,6 +137,7 @@ export type PipelineInputs = {
 
 export function buildPipelineSteps({
   deliveryPublication = false,
+  deliveryStaticArchives = false,
   images,
   trustedGateImage,
   changedBase = "",
@@ -144,6 +146,7 @@ export function buildPipelineSteps({
   imageReleasePipeline,
   platformOperation,
 }: PipelineInputs): CiStep[] {
+  const publishStaticArchives = deliveryPublication && deliveryStaticArchives;
   const sharedEnvironment = {
     CI_CHANGED_BASE: changedBase,
     CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase,
@@ -187,10 +190,14 @@ export function buildPipelineSteps({
     releaseAdmissionStep(images),
     ...tofuApplySteps(images, platformOperation),
     ...releaseChainSteps(images, sharedEnvironment),
-    ...deliveryPublicationSteps(images, deliveryPublication),
+    ...deliveryPublicationSteps(
+      images,
+      deliveryPublication,
+      publishStaticArchives,
+    ),
     ...ciImageSteps(images),
-    ...scoutSteps(images, deliveryPublication),
-    ...siteSteps(images, deliveryPublication),
+    ...scoutSteps(images, publishStaticArchives),
+    ...siteSteps(images, publishStaticArchives),
     // Native lanes are paused until the Mac agent runs in the GUI audit
     // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),

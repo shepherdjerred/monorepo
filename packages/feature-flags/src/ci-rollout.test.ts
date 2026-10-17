@@ -5,6 +5,31 @@ import {
 } from "./managed-flag-inventory.ts";
 
 test.each(["beta", "prod"])(
+  "%s Delivery static archives require explicit publication enablement and retain beta-only targeting",
+  (environment) => {
+    const flag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "woodpecker",
+    ).find(
+      (entry) => entry.key === "woodpecker-delivery-static-archives-enabled",
+    );
+    expect(flag).toMatchObject({
+      type: "boolean",
+      default: false,
+      rules: [],
+      thresholdRollouts: [],
+      rollouts: [
+        {
+          result: true,
+          constraints: [{ property: "stage", operator: "eq", value: "beta" }],
+        },
+      ],
+    });
+  },
+);
+
+test.each(["beta", "prod"])(
   "%s RAM scratch defaults off and targets canaries only",
   (environment) => {
     const flag = materializeManagedNamespaceEnvironment(

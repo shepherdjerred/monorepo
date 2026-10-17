@@ -42,21 +42,22 @@ injected transport and credentials. Responses are validated before consumption.
 
 The API is rooted at `/api/v1`:
 
-| Operation                                                     | Route                                                         |
-| ------------------------------------------------------------- | ------------------------------------------------------------- |
-| Authenticated principal                                       | `GET /identity`                                               |
-| Environments, recent executions, eligible artifacts           | `GET /overview`                                               |
-| Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                          |
-| Register pending CI publication                               | `POST /builds`                                                |
-| Compose exact component versions                              | `POST /versions`                                              |
-| Register immutable pipeline revision                          | `POST /pipelines`                                             |
-| Register environment/configuration                            | `POST /environments`                                          |
-| Request deployment, promotion, or rollback                    | `POST /deployments`                                           |
-| Execution, stages, approval, evidence                         | `GET /deployments/:id`                                        |
-| Human production approval                                     | `POST /deployments/:id/approval`                              |
-| Cancel or retry                                               | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry` |
-| Independently inspect and recover an ambiguous Argo operation | `POST /deployments/:id/release-lock`                          |
-| Retain unverified migration evidence                          | `GET /imports`, `POST /imports`                               |
+| Operation                                                     | Route                                                            |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Authenticated principal                                       | `GET /identity`                                                  |
+| Environments, recent executions, eligible artifacts           | `GET /overview`                                                  |
+| Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                             |
+| Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…` |
+| Register pending CI publication                               | `POST /builds`                                                   |
+| Compose exact component versions                              | `POST /versions`                                                 |
+| Register immutable pipeline revision                          | `POST /pipelines`                                                |
+| Register environment/configuration                            | `POST /environments`                                             |
+| Request deployment, promotion, or rollback                    | `POST /deployments`                                              |
+| Execution, stages, approval, evidence                         | `GET /deployments/:id`                                           |
+| Human production approval                                     | `POST /deployments/:id/approval`                                 |
+| Cancel or retry                                               | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`    |
+| Independently inspect and recover an ambiguous Argo operation | `POST /deployments/:id/release-lock`                             |
+| Retain unverified migration evidence                          | `GET /imports`, `POST /imports`                                  |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
 `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
@@ -68,14 +69,68 @@ main-push pipeline reached success. Artifact selection cannot consume pending
 or failed publications. Qualification and initial version set composition commit
 atomically; pipeline order prevents a late older build from becoming the newest
 automatic selection. New sets retain unchanged components from their base.
+The latest-qualified-artifact lookup selects one matching service, component,
+and kind from verified builds in the configured CI repository, ordered by CI
+pipeline number. It returns the original artifact and source identity; manual
+version-set composition does not affect this read-only producer lookup.
 Artifact requirements bind dependent components to exact digests; an incompatible
 combination fails release qualification with a visible reason. Automatic selection
 coalesces only queued, unapproved automatic requests. Cancellation or rejection
 suppresses that revision until a new eligible revision or explicit operator request.
 
+The image producer writes `delivery-image-digests` for every candidate it
+actually built, pushed, and verified in that pipeline, including candidates
+whose runtime fingerprint matches the current deployment. Delivery requires
+this handoff and records that candidate's exact digest and CI source. The
+legacy `image-digests` and commit-back candidates continue to include only
+runtime changes; existing deployment pins are never republished as new builds.
+Catalog publication reads no static archive handoffs. The publisher's explicit
+`--static-archives` option requires both the sites aggregate and Scout producer
+receipts, including exact agreement on Scout artifacts. CI enables that option
+only after the separately gated archive publication path is provisioned.
+
+Scout's gated archive producer freezes an independent Delivery release state.
+It uses this build's verified candidate image, or reads the latest qualified
+Scout image artifact from PostgreSQL for frontend-only builds. Reused images
+retain their original artifact, build, and source identities; legacy beta
+deployment and tagging retain their existing state. The static producer alone
+receives the existing CI credential with read and publish scopes when archive
+publication is enabled. It uses the read scope for backend selection; it has no
+deployment, execution, administration, or production approval scope.
+
 Import snapshots retain source pins or runtime observations with `verified:
 false`. They never create eligible artifacts, accepted deployments, or desired
 environment selections.
+
+## Reviewed Arcade registration
+
+The [pipeline definition](registrations/arcade.pipeline.json) binds the published
+`chart:arcade` chart and `image:arcade` image to Arcade's `delivery.image` Helm
+parameter. Its public health check reaches Arcade through the existing Mario
+Kart edge. The [environment definition](registrations/arcade.environment.json)
+declares automatic selection; the enabled-environment and write flags, reviewed
+Argo ownership transfer, and paused dispatch Schedule still gate activation.
+Neither file selects an artifact or records deployment state.
+
+After reviewing the existing inventory, run these explicit registrations from
+the repository root with the brokered admin credential:
+
+```sh
+toolkit deploy inventory --machine
+toolkit deploy pipeline register arcade/1 --file packages/delivery/registrations/arcade.pipeline.json --machine
+toolkit deploy environment register --file packages/delivery/registrations/arcade.environment.json --machine
+```
+
+The environment command writes configuration. Use it for initial registration
+or an explicitly reviewed configuration change; do not rerun it to reset live
+settings after a rollback. Pipeline revisions are immutable. A new pipeline
+definition requires a new revision ID and a reviewed environment update.
+
+An eligible Arcade version set must contain both components from qualified CI
+publications. An unverified import or an image-only first publication cannot
+provide the deployment chart. Before enabling automatic selection, verify the
+delegated Application, exact chart bytes, running image digests, public health,
+and the Arcade user flow.
 
 ## Authentication and configuration
 

@@ -34,7 +34,13 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
             {
               ...ns(WOODPECKER_CI_NAMESPACE),
               podSelector: {
-                matchLabels: { "ci.sjer.red/step-key": "delivery-publish" },
+                matchExpressions: [
+                  {
+                    key: "ci.sjer.red/step-key",
+                    operator: "In",
+                    values: ["delivery-publish", "scout-beta-release"],
+                  },
+                ],
               },
             },
           ],

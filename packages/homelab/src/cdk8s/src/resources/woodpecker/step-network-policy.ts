@@ -64,7 +64,13 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
     metadata: { namespace: WOODPECKER_CI_NAMESPACE },
     spec: {
       podSelector: {
-        matchLabels: { [CI_STEP_POD_LABEL]: "delivery-publish" },
+        matchExpressions: [
+          {
+            key: CI_STEP_POD_LABEL,
+            operator: "In",
+            values: ["delivery-publish", "scout-beta-release"],
+          },
+        ],
       },
       policyTypes: ["Egress"],
       egress: [

@@ -34,6 +34,7 @@ test("static artifact registration waits for ordinary and Scout archives without
     images: IMAGES,
     changedBase: "x",
     deliveryPublication: true,
+    deliveryStaticArchives: true,
   });
   const sites = steps.find((entry) => entry.key === "sites");
   const scout = steps.find((entry) => entry.key === "scout-beta-release");
@@ -49,14 +50,60 @@ test("static artifact registration waits for ordinary and Scout archives without
     "scripts/ci/write-site-archive-handoff.ts",
   );
   expect(scout?.commands.join("\n")).toContain("scout-site-artifacts");
+  expect(scout?.secrets).toContainEqual({
+    secret: "ci-delivery-credentials",
+    key: "DELIVERY_PUBLISHER_TOKEN",
+    env: "DELIVERY_API_TOKEN",
+  });
   expect(scout?.commands.join("\n")).toContain(
-    "publish-scout-site-archives.ts .scout-release/state.json",
+    "publish-scout-site-archives.ts .delivery-artifacts/scout-release/state.json",
   );
   expect(scout?.commands.join("\n")).toContain(
     "static-site-writer.ts scout-frontend-beta",
   );
   expect(sites?.commands[0]).not.toContain("ci-changed.ts sites");
+  expect(publication?.commands).toContain(
+    "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
+  );
 });
+
+test.each([
+  [false, false],
+  [false, true],
+  [true, false],
+])(
+  "static archives stay off unless both flags are enabled (catalog=%s, archives=%s)",
+  (deliveryPublication, deliveryStaticArchives) => {
+    const steps = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+      deliveryPublication,
+      deliveryStaticArchives,
+    });
+    const sites = steps.find((entry) => entry.key === "sites");
+    const scout = steps.find((entry) => entry.key === "scout-beta-release");
+    const publication = steps.find((entry) => entry.key === "delivery-publish");
+    expect(sites?.commands.join("\n")).not.toContain("--archive");
+    expect(sites?.commands.join("\n")).not.toContain(
+      "write-site-archive-handoff.ts",
+    );
+    expect(scout?.commands.join("\n")).not.toContain(
+      "publish-scout-site-archives.ts",
+    );
+    expect(scout?.commands.join("\n")).not.toContain("scout-site-artifacts");
+    expect(
+      scout?.secrets?.some(
+        (entry) => entry.secret === "ci-delivery-credentials",
+      ),
+    ).toBe(false);
+    if (deliveryPublication) {
+      expect(publication?.commands).toContain(
+        "bun --no-install scripts/ci/publish-delivery.ts",
+      );
+      expect(publication?.dependsOn).toEqual(["verify", "images", "helm-push"]);
+    } else expect(publication).toBeUndefined();
+  },
+);
 
 test("Delivery publisher cannot run on PRs or make verification wait for deployment acceptance", () => {
   const steps = buildPipelineSteps({

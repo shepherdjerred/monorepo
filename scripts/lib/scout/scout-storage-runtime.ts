@@ -1,5 +1,8 @@
 import { optionalEnv, requireEnv } from "../run.ts";
 
+export const DELIVERY_SCOUT_RELEASE_WORK_DIR =
+  ".delivery-artifacts/scout-release";
+
 export function scoutStorageRoot(): string {
   return new URL("../../..", import.meta.url).pathname.replace(/\/$/, "");
 }

@@ -1,8 +1,39 @@
 import { DeliveryError } from "#domain/error.ts";
+import { z } from "zod";
+import { IdentifierSchema } from "#shared/contract.ts";
 import type { Principal, ArtifactVersion } from "#shared/contract.ts";
 import { lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
-import { id, artifact, validateRequirements } from "./delivery-data.ts";
+import {
+  id,
+  artifact,
+  validateRequirements,
+  type Transaction,
+} from "./delivery-data.ts";
+
+async function qualifiedBase(
+  tx: Transaction,
+  source: { serviceId: string; repositoryId: number },
+) {
+  const matches = z.array(z.object({ id: IdentifierSchema })).parse(
+    await tx.$queryRaw`
+    SELECT version."id" FROM "VersionSet" version
+    JOIN "Build" build ON build."id" = version."qualifiedBuildId"
+    WHERE version."serviceId" = ${source.serviceId}
+      AND build."serviceId" = ${source.serviceId}
+      AND build."repositoryId" = ${source.repositoryId}
+      AND build."status" = 'verified'
+    ORDER BY version."revision" DESC LIMIT 1
+  `,
+  );
+  const selected = matches[0];
+  return selected === undefined
+    ? null
+    : tx.versionSet.findUniqueOrThrow({
+        where: { id: selected.id },
+        include: { entries: true },
+      });
+}
 
 export async function pendingQualification(this: Delivery) {
   return {
@@ -82,10 +113,10 @@ export async function qualify(
         if (latest?.id !== buildId) return;
         await lock(tx, `versionSet:${build.serviceId}`);
         const outputs = await tx.artifact.findMany({ where: { buildId } });
-        const base = await tx.versionSet.findFirst({
+        const base = await qualifiedBase(tx, build);
+        const highest = await tx.versionSet.aggregate({
           where: { serviceId: build.serviceId },
-          orderBy: { revision: "desc" },
-          include: { entries: true },
+          _max: { revision: true },
         });
         const components = {
           ...Object.fromEntries(
@@ -107,7 +138,7 @@ export async function qualify(
             id: id(),
             qualifiedBuildId: buildId,
             serviceId: build.serviceId,
-            revision: (base?.revision ?? 0) + 1,
+            revision: (highest._max.revision ?? 0) + 1,
             baseRevisionId: base?.id ?? null,
             entries: {
               create: Object.entries(components).map(

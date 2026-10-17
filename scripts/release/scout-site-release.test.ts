@@ -12,6 +12,7 @@ import {
   hashReleaseInputFiles,
   readBackendCatalogSource,
   writeScoutReleaseState,
+  parseScoutPreparationArgs,
 } from "./scout-site-release.ts";
 import { selectPostHogSite } from "../lib/scout/scout-analytics-config.ts";
 import {
@@ -27,6 +28,38 @@ import { hashSiteArchive } from "../lib/scout/scout-site-storage.ts";
 
 const DIGEST =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+test("Delivery archive preparation freezes its own digest and scratch without changing legacy preparation", () => {
+  const input = [
+    "prepare-state",
+    "--build-number",
+    "42",
+    "--backend-digest",
+    DIGEST,
+    "--output",
+    ".scout-release/state.json",
+  ];
+  const legacy = parseScoutPreparationArgs(input);
+  expect(legacy.workDirectory).toBe(".scout-release");
+  const fresh = `sha256:${"b".repeat(64)}`;
+  const delivery = parseScoutPreparationArgs([
+    "prepare-state",
+    "--delivery-archive",
+    "--build-number",
+    "42",
+    "--backend-digest",
+    fresh,
+    "--output",
+    ".delivery-artifacts/scout-release/state.json",
+  ]);
+  expect(delivery.workDirectory).toBe(".delivery-artifacts/scout-release");
+  expect(delivery.backendImageDigest).toBe(fresh);
+  expect(legacy.backendImageDigest).toBe(DIGEST);
+  expect(() => parseScoutPreparationArgs([...input, "--unknown"])).toThrow();
+  expect(() =>
+    parseScoutPreparationArgs([...input, "--delivery-archive=false"]),
+  ).toThrow();
+});
 
 const POSTHOG_REGISTRY = {
   provider: "posthog",

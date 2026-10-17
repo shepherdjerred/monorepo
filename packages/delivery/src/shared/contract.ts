@@ -36,6 +36,16 @@ export const ArtifactVersionSchema = ArtifactInputSchema.extend({
   sourceRevision: SourceRevisionSchema,
   createdAt: TimestampSchema,
 });
+export const LatestQualifiedArtifactQuerySchema = z
+  .object({
+    serviceId: IdentifierSchema,
+    component: IdentifierSchema,
+    kind: ArtifactInputSchema.shape.kind,
+  })
+  .strict();
+export type LatestQualifiedArtifactQuery = z.infer<
+  typeof LatestQualifiedArtifactQuerySchema
+>;
 export const BuildSummarySchema = z.object({
   id: IdentifierSchema,
   serviceId: IdentifierSchema,

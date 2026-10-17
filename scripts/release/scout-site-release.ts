@@ -2,6 +2,7 @@
 
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { parseArgs } from "node:util";
 import { staticSiteDeliveryOwner } from "../../packages/homelab/src/static-site-delivery-ownership.ts";
 
 import { optionalEnv, requireEnv, run } from "../lib/run.ts";
@@ -23,6 +24,7 @@ import {
   type ScoutReleaseState,
 } from "../lib/scout/scout-release-state.ts";
 import { reconcileLegacyScoutProd } from "../lib/scout/scout-legacy-site-storage.ts";
+import { DELIVERY_SCOUT_RELEASE_WORK_DIR } from "../lib/scout/scout-storage-runtime.ts";
 import {
   archiveScout,
   assertScoutArchiveBytes,
@@ -238,16 +240,43 @@ function stateArg(args: string[]): ScoutReleaseState {
   return parseScoutReleaseState(requiredArg(args, "--state"));
 }
 
-async function prepareState(args: string[], dryRun: boolean): Promise<void> {
+export function parseScoutPreparationArgs(args: string[]) {
+  const { values } = parseArgs({
+    args: args.slice(1),
+    strict: true,
+    allowPositionals: false,
+    options: {
+      output: { type: "string" },
+      "build-number": { type: "string" },
+      "backend-digest": { type: "string" },
+      "delivery-archive": { type: "boolean", default: false },
+      "dry-run": { type: "boolean" },
+    },
+  });
   const output = requiredArg(args, "--output");
-  const buildNumber = Number.parseInt(requiredArg(args, "--build-number"), 10);
+  const buildNumber = Number(values["build-number"]);
   if (!Number.isSafeInteger(buildNumber) || buildNumber <= 0) {
     throw new Error("--build-number must be a positive integer");
   }
-  const backendImageDigest = requiredArg(args, "--backend-digest");
-  if (!CANONICAL_DIGEST_PATTERN.test(backendImageDigest)) {
+  const backendImageDigest = values["backend-digest"];
+  if (
+    backendImageDigest === undefined ||
+    !CANONICAL_DIGEST_PATTERN.test(backendImageDigest)
+  )
     throw new Error("--backend-digest must be a canonical sha256 digest");
-  }
+  return {
+    output,
+    buildNumber,
+    backendImageDigest,
+    workDirectory: values["delivery-archive"]
+      ? DELIVERY_SCOUT_RELEASE_WORK_DIR
+      : SCOUT_RELEASE_WORK_DIR,
+  };
+}
+
+async function prepareState(args: string[], dryRun: boolean): Promise<void> {
+  const { output, buildNumber, backendImageDigest, workDirectory } =
+    parseScoutPreparationArgs(args);
   const sourceCommit = await resolveGitSha();
   if (!/^[0-9a-f]{40}$/.test(sourceCommit)) {
     throw new Error(`source commit is not canonical: ${sourceCommit}`);
@@ -286,7 +315,7 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
       return;
     }
   }
-  const releaseDir = `${repoRoot()}/${SCOUT_RELEASE_WORK_DIR}`;
+  const releaseDir = `${repoRoot()}/${workDirectory}`;
   if (dryRun) {
     await buildSite("prod", provisional, true);
     await buildSite("beta", provisional, true);

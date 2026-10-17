@@ -1,0 +1,10 @@
+{
+  "id": "arcade/prod",
+  "serviceId": "arcade",
+  "name": "prod",
+  "application": "arcade",
+  "pipelineRevisionId": "arcade/1",
+  "configurationRevision": "arcade/1",
+  "configuration": {},
+  "automatic": true
+}
