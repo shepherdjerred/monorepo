@@ -85,6 +85,10 @@ final class ThinkFlight {
       if (span != null) span.tick = tick;
     }
 
+    void input() {
+      if (span != null) span.inputs++;
+    }
+
     void enter() {
       if (span == null) return;
       enteredAt = clock.getAsLong();

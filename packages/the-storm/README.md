@@ -2785,6 +2785,12 @@ team planning, and tactics stages. Asynchronous barriers merge results in stable
 order without blocking pool workers. Tactics reads frozen team boards; an ordered
 merge resolves competing cover claims before publishing decisions. Search scratch
 arrays are reused exclusively by each batch and released when the match retires.
+Within tactics, each bounded job claims the next unstarted input when it finishes
+its current proposal, keeping its own search scratch arrays throughout. Results
+return to original input order before the commit barrier. A failed or rejected
+job still waits for every submitted sibling before the cycle can fail or retire;
+other jobs may finish more remaining inputs than the fixed partition would have.
+The other parallel stages retain their fixed partitions.
 Each immutable snapshot indexes combatants by ID while preserving roster order,
 so repeated enemy lookups do not scan the entire lobby.
 Role assignment prepares all teams before flattening their distinct source-node
@@ -2964,6 +2970,10 @@ tick to correlate recorded inputs and decisions. Single-bot `retake-route`
 spans also carry that ID; aggregate spans use `-1`. Per-bot wall and CPU times
 are included in their enclosing batch or commit, so do not add nested spans to
 aggregate durations. Built-in GC and execution samples share the same timeline.
+The native recording configuration enables object counting at chunk boundaries,
+which can trigger heap-inspection full collections during a long recording as
+well as at start and stop. Check GC cause and chunk timing before attributing
+those diagnostic pauses to application allocation or heap sizing.
 The diagnostic also saves container CPU counters before and after profiling.
 Disabled recordings allocate no stage markers or read the timing clock.
 Raw JFR files can include JVM environment metadata and stay private; upload only

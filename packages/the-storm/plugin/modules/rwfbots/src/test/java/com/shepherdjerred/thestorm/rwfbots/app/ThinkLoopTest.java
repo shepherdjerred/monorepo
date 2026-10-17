@@ -354,9 +354,11 @@ final class ThinkLoopTest {
 
   @Test
   void parallelStagesMatchSerialDecisionsDespiteReversedTaskCompletion() {
-    var serial = loop(new DirectComputePool(), governor(), TraceSink.none());
+    var serialTraces = new CountingTraces();
+    var parallelTraces = new CountingTraces();
+    var serial = loop(new DirectComputePool(), governor(), serialTraces);
     var pool = new ManualPool(4);
-    var parallel = loop(pool, governor(), TraceSink.none());
+    var parallel = loop(pool, governor(), parallelTraces);
     serial.beginMatch(42, NAV);
     parallel.beginMatch(42, NAV);
     var roster = new ArrayList<CombatantView>();
@@ -384,6 +386,7 @@ final class ThinkLoopTest {
       assertThat(parallel.board().thoughts()).isEqualTo(serial.board().thoughts());
       assertThat(parallel.board().plans()).isEqualTo(serial.board().plans());
       assertThat(parallel.board().perceptions()).isEqualTo(serial.board().perceptions());
+      assertThat(parallelTraces.traces).isEqualTo(serialTraces.traces);
     }
     assertThat(pool.submitted).isGreaterThan(80);
     serial.close();

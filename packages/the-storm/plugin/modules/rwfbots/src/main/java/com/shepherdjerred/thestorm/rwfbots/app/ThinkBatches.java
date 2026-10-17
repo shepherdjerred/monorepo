@@ -2,9 +2,11 @@ package com.shepherdjerred.thestorm.rwfbots.app;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
@@ -30,6 +32,50 @@ final class ThinkBatches {
   <T, R> CompletableFuture<List<R>> indexed(List<T> inputs, BiFunction<Integer, T, R> operation) {
     return indexed(null, inputs, operation);
   }
+
+  /** Jobs retain exclusive scratch ownership while claiming independent inputs as they finish. */
+  <T, R> CompletableFuture<List<R>> balanced(
+      ThinkFlight.@Nullable Context context, List<T> inputs, BiFunction<Integer, T, R> operation) {
+    if (inputs.isEmpty() || pool.parallelism() == 1) return indexed(context, inputs, operation);
+    var count = Math.min(pool.parallelism(), inputs.size());
+    var next = new AtomicInteger();
+    var jobs = new ArrayList<CompletableFuture<List<IndexedResult<R>>>>(count);
+    for (var batch = 0; batch < count; batch++) {
+      var owner = batch;
+      try {
+        var trace = ThinkFlight.queued(context, owner, 0);
+        jobs.add(
+            pool.submit(
+                () ->
+                    trace.measure(
+                        () -> {
+                          var results = new ArrayList<IndexedResult<R>>();
+                          for (var index = next.getAndIncrement();
+                              index < inputs.size();
+                              index = next.getAndIncrement()) {
+                            trace.input();
+                            results.add(
+                                new IndexedResult<>(
+                                    index, operation.apply(owner, inputs.get(index))));
+                          }
+                          return List.copyOf(results);
+                        })));
+      } catch (RejectedExecutionException rejected) {
+        jobs.add(CompletableFuture.failedFuture(rejected));
+      }
+    }
+    return CompletableFuture.allOf(jobs.toArray(CompletableFuture<?>[]::new))
+        .thenApply(
+            ignored ->
+                List.copyOf(
+                    jobs.stream()
+                        .flatMap(job -> job.resultNow().stream())
+                        .sorted(Comparator.comparingInt(IndexedResult::index))
+                        .map(IndexedResult::value)
+                        .toList()));
+  }
+
+  private record IndexedResult<R>(int index, R value) {}
 
   <T, R> CompletableFuture<List<R>> indexed(
       ThinkFlight.@Nullable Context context, List<T> inputs, BiFunction<Integer, T, R> operation) {
