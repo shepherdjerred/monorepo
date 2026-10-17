@@ -280,6 +280,10 @@ function fixture() {
     nativeRecoveryAdmin: nativeRecoveryFixture(),
     subtitleReplacements: subtitleReplacementFixture(),
     recoveryAdmin: recoveryFixture,
+    legacyRequesterBindings: {
+      list: unavailableSubtitleReplacement,
+      bind: unavailableSubtitleReplacement,
+    },
     plexExclusionAdmin: {
       async list() {
         return {

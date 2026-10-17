@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import type { MediaUser } from "#shared/contract.ts";
 import type { RecoveryDetail } from "#shared/recovery.ts";
+import { isRecoveryScopeV2, respondentMediaIds } from "#shared/recovery.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { writeApi, queryClient } from "#client/api.ts";
 import { ErrorNotice, Notice, humanize } from "#client/components.tsx";
@@ -14,9 +15,50 @@ export function RecoveryResponseForm({
   user: MediaUser;
   review: RecoveryDetail;
 }) {
+  const subjects = review.scope.users.filter(
+    (person) =>
+      person.id === user.id ||
+      (user.role === "owner" &&
+        !user.restricted &&
+        "declarationAuthority" in person &&
+        person.declarationAuthority === "managed_owner"),
+  );
+  return (
+    <>
+      {subjects.map((subject) => (
+        <SubjectResponseForm
+          key={`${review.id}:${subject.id}`}
+          user={user}
+          review={review}
+          subjectId={subject.id}
+        />
+      ))}
+    </>
+  );
+}
+
+function SubjectResponseForm({
+  user,
+  review,
+  subjectId,
+}: {
+  user: MediaUser;
+  review: RecoveryDetail;
+  subjectId: string;
+}) {
   const [choices, setChoices] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
-  const previous = review.responses.find((row) => row.userId === user.id);
+  const subject = review.scope.users.find((person) => person.id === subjectId);
+  const applicable = respondentMediaIds(review.scope, subjectId);
+  const selectedMedia = review.scope.media.filter((item) =>
+    applicable.includes(item.id),
+  );
+  const proxy = subjectId !== user.id;
+  const acknowledgements = isRecoveryScopeV2(review.scope)
+    ? (review.scope.users.find((person) => person.id === subjectId)
+        ?.claimAcknowledgements ?? [])
+    : [];
+  const previous = review.responses.find((row) => row.userId === subjectId);
   const submit = useMutation({
     mutationFn: () =>
       writeApi({
@@ -25,8 +67,14 @@ export function RecoveryResponseForm({
         schema: CommandResultSchema,
         body: {
           scopeHash: review.scopeHash,
+          ...(isRecoveryScopeV2(review.scope)
+            ? {
+                subjectUserId: subjectId,
+                claimAcknowledgements: acknowledgements,
+              }
+            : {}),
           acknowledgePending: pending,
-          declarations: review.scope.media.map((media) => ({
+          declarations: selectedMedia.map((media) => ({
             mediaId: media.id,
             intent: choices[media.id],
             ...(choices[media.id] === "keep" ? { days: 30 } : {}),
@@ -39,10 +87,32 @@ export function RecoveryResponseForm({
   });
   return (
     <section className="panel stack-form">
-      <h2>Your present intent</h2>
+      <h2>
+        {proxy
+          ? `Declare for ${subject?.displayName ?? "managed profile"}`
+          : "Your present intent"}
+      </h2>
+      {proxy && (
+        <p>
+          You are declaring as the owner for this exact managed Plex profile.
+          The record keeps you as the actor and {subject?.displayName} as the
+          requester. Independent accounts must respond themselves.
+        </p>
+      )}
+      <p>
+        This declaration covers only the {selectedMedia.length} listed titles.
+        Other episodes, series subscriptions and existing pins remain unchanged.
+      </p>
+      {acknowledgements.length > 0 && (
+        <p>
+          {acknowledgements.length} exact legacy request records are associated
+          with this person and these titles. Your declaration accounts for this
+          selected scope only; unselected history remains protected.
+        </p>
+      )}
       {previous === undefined ? (
         <>
-          {review.scope.media.map((media) => (
+          {selectedMedia.map((media) => (
             <label className="field" key={media.id}>
               {media.title}
               <select
@@ -53,13 +123,9 @@ export function RecoveryResponseForm({
                 disabled={review.state === "released"}
               >
                 <option value="">Choose explicitly</option>
-                <option value="request">Retain / request for me</option>
-                <option value="keep">
-                  Keep for me for 30 days after apply
-                </option>
-                <option value="no_longer_request">
-                  I no longer request this
-                </option>
+                <option value="request">Retain / request</option>
+                <option value="keep">Keep for 30 days after apply</option>
+                <option value="no_longer_request">No longer requested</option>
               </select>
             </label>
           ))}
@@ -72,7 +138,8 @@ export function RecoveryResponseForm({
               }}
             />
             I understand these declarations are pending, and do not replace an
-            immediate Keep action.
+            immediate Keep action. I reviewed the associated legacy records for
+            this exact selected scope.
           </label>
           <button
             className="button"
@@ -81,20 +148,21 @@ export function RecoveryResponseForm({
               !pending ||
               review.state !== "awaiting_responses" ||
               review.scope.blockers.length > 0 ||
-              review.scope.media.some(
-                (media) => (choices[media.id] ?? "") === "",
-              )
+              selectedMedia.length === 0 ||
+              selectedMedia.some((media) => (choices[media.id] ?? "") === "")
             }
             onClick={() => {
               submit.mutate();
             }}
           >
-            Record my declaration
+            {proxy
+              ? "Record managed-profile declaration"
+              : "Record my declaration"}
           </button>
         </>
       ) : (
         <Notice>
-          Your immutable declaration is{" "}
+          This immutable declaration is{" "}
           {review.state === "released" ? "applied" : "pending owner review"}. To
           change it, ask the owner to prepare a new review.
           {previous.response.declarations.map((declaration) => (
@@ -153,9 +221,10 @@ export function RecoveryReleaseForm({
     <section className="panel stack-form">
       <h2>Owner: household baseline</h2>
       <p>
-        Every person must respond for themselves. Managed or unresolved
-        identities remain protected. Respondents must have freshly verified Plex
-        access when you apply.
+        Independent accounts respond for themselves. The current owner may
+        declare for an exact verified managed profile. Each person responds only
+        for their scoped titles; unknown identities or access remain protected.
+        Plex access must be freshly verified when you apply.
       </p>
       {review.scope.users.map((person) => (
         <p key={person.id}>
@@ -163,6 +232,22 @@ export function RecoveryReleaseForm({
           {review.missingUserIds.includes(person.id)
             ? "Awaiting an explicit response"
             : "Declaration recorded"}
+          {"declarationAuthority" in person &&
+            person.declarationAuthority === "managed_owner" &&
+            " · Managed profile; owner declaration"}
+          {review.responses.find((row) => row.userId === person.id)?.actorId !==
+            undefined && (
+            <span>
+              {" "}
+              · Recorded by{" "}
+              {review.scope.users.find(
+                (actor) =>
+                  actor.id ===
+                  review.responses.find((row) => row.userId === person.id)
+                    ?.actorId,
+              )?.displayName ?? "verified review actor"}
+            </span>
+          )}
           {review.responses
             .find((row) => row.userId === person.id)
             ?.response.declarations.map((declaration) => (
@@ -180,6 +265,21 @@ export function RecoveryReleaseForm({
         </p>
       ))}
       <h3>Keep and pins to preserve</h3>
+      {isRecoveryScopeV2(review.scope) &&
+        review.scope.excludedPairs.map((pair) => (
+          <p key={`${pair.userId}:${pair.mediaId}`}>
+            {review.scope.users.find((person) => person.id === pair.userId)
+              ?.displayName ??
+              review.scope.excludedUsers.find(
+                (person) => person.id === pair.userId,
+              )?.displayName ??
+              "Household profile"}{" "}
+            ·{" "}
+            {review.scope.media.find((item) => item.id === pair.mediaId)?.title}
+            : no declaration required for this pair after fresh denial with no
+            relevant historical claim.
+          </p>
+        ))}
       {review.scope.excludedUsers.map((person) => (
         <p key={person.id}>
           {person.displayName}: no response required because freshly verified

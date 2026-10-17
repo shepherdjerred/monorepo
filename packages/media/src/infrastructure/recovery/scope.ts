@@ -1,12 +1,14 @@
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
-import { RecoveryScopeSchema } from "#shared/recovery.ts";
+import { LegacyRecoveryScopeSchema } from "#shared/recovery.ts";
 import { MediaError } from "#application/errors.ts";
 import { lockMedia } from "#infrastructure/locks.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { unresolvedRecoveryClaims } from "./provenance.ts";
 import { hasProvenNoRecoveryAccess } from "./household.ts";
 import { currentNativeReceipts } from "./native-receipts.ts";
+import { buildHouseholdScope } from "./household-scope.ts";
+import { lockLegacyClaimKnowledge } from "./legacy-claims/knowledge-fence.ts";
 
 export function recoveryConflict(message: string) {
   return new MediaError("recovery_review_changed", message, 409);
@@ -68,6 +70,7 @@ export async function lockRecoveryScope(
   );
   await db.$queryRaw`SELECT id FROM "MediaUser" ORDER BY id FOR SHARE`;
   await db.$queryRaw`SELECT "userId" FROM "PlexIdentityMapping" ORDER BY "userId" FOR SHARE`;
+  await lockLegacyClaimKnowledge(db);
   await db.$queryRaw(
     Prisma.sql`SELECT a.id FROM "LibraryAsset" a WHERE EXISTS (SELECT 1 FROM "AssetCoverage" c WHERE c."assetId" = a.id AND c.current AND c."mediaId" IN (${Prisma.join(ids)})) ORDER BY a.id FOR UPDATE`,
   );
@@ -77,6 +80,16 @@ export async function lockRecoveryScope(
 }
 
 export async function snapshotRecoveryScope(
+  db: Prisma.TransactionClient,
+  ids: string[],
+  machineId: string,
+  version: 1 | 2 = 2,
+) {
+  const legacy = await snapshotLegacyRecoveryScope(db, ids, machineId);
+  return version === 1 ? legacy : buildHouseholdScope(db, legacy, machineId);
+}
+
+async function snapshotLegacyRecoveryScope(
   db: Prisma.TransactionClient,
   ids: string[],
   machineId: string,
@@ -237,7 +250,7 @@ export async function snapshotRecoveryScope(
     },
   });
   if (outside > 0) blockers.push("partial_root_request_scope");
-  return RecoveryScopeSchema.parse({
+  return LegacyRecoveryScopeSchema.parse({
     recoveryEpoch: runtime.recoveryEpoch,
     runtimeVersion: runtime.version,
     media: media.map((item) => ({

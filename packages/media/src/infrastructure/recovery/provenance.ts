@@ -5,7 +5,15 @@ import { BundleReportSchema } from "#shared/migration-handoff.ts";
 /** Only unresolved household claims for this physical scope block reconciliation. */
 export async function unresolvedRecoveryClaims(
   db: Prisma.TransactionClient,
-  input: { planIds: string[]; mediaIds: string[] },
+  input: {
+    planIds: string[];
+    mediaIds: string[];
+    evaluatedRecords?: {
+      captureHash: string;
+      provenanceKey: string;
+      recordDigest: string;
+    }[];
+  },
 ) {
   const plans = await db.mediaHandoffPlan.findMany({
     where: { id: { in: input.planIds }, state: "applied" },
@@ -36,6 +44,7 @@ export async function unresolvedRecoveryClaims(
           ));
       if (!affectsScope) continue;
       if (
+        !evaluatedRecord(input.evaluatedRecords ?? [], entry) &&
         !scope.claims.some(
           (claim) => claim.provenanceKey === entry.provenanceKey,
         )
@@ -44,4 +53,24 @@ export async function unresolvedRecoveryClaims(
     }
   }
   return false;
+}
+
+function evaluatedRecord(
+  records: {
+    captureHash: string;
+    provenanceKey: string;
+    recordDigest: string;
+  }[],
+  entry: {
+    captureHash: string;
+    provenanceKey: string;
+    observationHash: string;
+  },
+) {
+  return records.some(
+    (stored) =>
+      stored.captureHash === entry.captureHash &&
+      stored.provenanceKey === entry.provenanceKey &&
+      stored.recordDigest === entry.observationHash,
+  );
 }

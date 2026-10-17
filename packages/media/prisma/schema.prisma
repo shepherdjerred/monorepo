@@ -78,6 +78,8 @@ model MediaUser {
   nativeRecoveryReceipts NativeRecoveryReceipt[]
   subtitleReplacements SubtitleReplacement[]
   subtitleReplacementApprovals SubtitleReplacementReview[]
+  legacyRequesterBindings LegacyRequesterBinding[] @relation("LegacyRequesterSubject")
+  legacyRequesterDeclarations LegacyRequesterBinding[] @relation("LegacyRequesterActor")
 }
 
 model MigrationCapture {
@@ -95,6 +97,7 @@ model MigrationCapture {
   records MigrationRecord[]
   proposals AdoptionProposal[]
   bundles MigrationBundleCapture[]
+  requesterBindings LegacyRequesterBinding[]
   createdAt DateTime @default(now())
   @@index([sourceInstanceId, completedAt])
 }
@@ -800,7 +803,37 @@ model RecoveryReleaseReceipt {
   scopeHash String
   responseHash String
   releasedHoldIds String[]
+  claimAccounting Json?
   createdAt DateTime @default(now())
+}
+
+model LegacyClaimKnowledge {
+  id String @id
+  version Int @default(0)
+}
+
+model LegacyRequesterBinding {
+  id String @id @default(uuid())
+  sourceKind String
+  sourceInstanceId String
+  requesterSourceId String
+  captureId String
+  capture MigrationCapture @relation(fields: [captureId], references: [id], onDelete: Restrict)
+  captureHash String
+  requesterEvidenceHash String
+  userId String
+  user MediaUser @relation("LegacyRequesterSubject", fields: [userId], references: [id], onDelete: Restrict)
+  identitySnapshot Json
+  actorId String
+  actor MediaUser @relation("LegacyRequesterActor", fields: [actorId], references: [id], onDelete: Restrict)
+  revision Int
+  previousId String? @unique
+  previous LegacyRequesterBinding? @relation("LegacyRequesterRevision", fields: [previousId], references: [id], onDelete: Restrict)
+  next LegacyRequesterBinding? @relation("LegacyRequesterRevision")
+  createdAt DateTime @default(now())
+  @@unique([sourceKind, sourceInstanceId, requesterSourceId, revision])
+  @@index([captureId])
+  @@index([userId])
 }
 
 model NativeRecoveryPlan {

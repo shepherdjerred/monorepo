@@ -3,7 +3,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { RecoveryListSchema, RecoveryDetailSchema } from "#shared/recovery.ts";
+import {
+  RecoveryListSchema,
+  RecoveryDetailSchema,
+  isRecoveryScopeV2,
+} from "#shared/recovery.ts";
 import { readApi, writeApi, queryClient } from "#client/api.ts";
 import {
   PageTitle,
@@ -13,6 +17,7 @@ import {
   humanize,
 } from "#client/components.tsx";
 import { RecoveryResponseForm, RecoveryReleaseForm } from "./review.tsx";
+import { LegacyRequesterBindings } from "./legacy-bindings.tsx";
 
 export function RecoveryPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
@@ -89,7 +94,9 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
           <h2>Prepare a household review</h2>
           <p>
             Select protected titles. Shared physical files automatically include
-            every affected episode. Existing Keep and pins remain effective.
+            every affected episode. A completed series request can be reviewed
+            one physical group at a time; other episodes and future-series
+            options remain unchanged. Existing Keep and pins remain effective.
           </p>
           {result.data?.holds.map((hold) => (
             <label className="check-label" key={hold.mediaId}>
@@ -143,6 +150,9 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
           <p>No reviews need your response.</p>
         )}
       </section>
+      {user.role === "owner" && !user.restricted && (
+        <LegacyRequesterBindings user={user} />
+      )}
     </>
   );
 }
@@ -191,6 +201,55 @@ function RecoveryReview({ user, id }: { user: MediaUser; id: string }) {
             ))}
           </section>
           <RecoveryResponseForm user={user} review={review} />
+          {user.role === "owner" &&
+            isRecoveryScopeV2(review.scope) &&
+            review.scope.legacyClaims.length > 0 && (
+              <section className="panel">
+                <h2>Selected legacy claim evidence</h2>
+                <p>
+                  Identity associations are owner-declared. Current declarations
+                  account only for the listed leaves; outside records remain
+                  unresolved until separately reviewed.
+                </p>
+                {review.scope.legacyClaims.map((claim) => (
+                  <article key={`${claim.captureHash}:${claim.provenanceKey}`}>
+                    <h3>
+                      {humanize(claim.sourceKind)} requester{" "}
+                      {claim.requesterSourceId} · {humanize(claim.sourceScope)}
+                    </h3>
+                    <p>
+                      {claim.seasons.length > 0
+                        ? `Captured seasons: ${claim.seasons.join(", ")}. `
+                        : ""}
+                      Binding revision {claim.bindingRevision};{" "}
+                      {claim.outsideMediaIds.length} outside leaves remain
+                      outside this approval.
+                    </p>
+                    <ul>
+                      {claim.mediaIds.map((mediaId) => (
+                        <li key={mediaId}>
+                          {
+                            review.scope.media.find(
+                              (item) => item.id === mediaId,
+                            )?.title
+                          }
+                        </li>
+                      ))}
+                    </ul>
+                    <details>
+                      <summary>Exact provenance</summary>
+                      <p>
+                        Source instance {claim.sourceInstanceId}
+                        <br />
+                        Capture {claim.captureHash}
+                        <br />
+                        Record {claim.recordDigest}
+                      </p>
+                    </details>
+                  </article>
+                ))}
+              </section>
+            )}
           {user.role === "owner" && (
             <RecoveryReleaseForm user={user} review={review} />
           )}

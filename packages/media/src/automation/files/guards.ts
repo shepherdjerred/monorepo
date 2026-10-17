@@ -8,6 +8,7 @@ import {
   now,
 } from "./types.ts";
 import { assertOwnerRemoval } from "./owner-removal.ts";
+import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import {
   lockRuntimeAuthority,
   recordsAuthorized,
@@ -180,6 +181,7 @@ async function assertRetentionAuthority(
   mediaIds: readonly string[],
   epoch: number,
 ): Promise<void> {
+  await assertLegacyClaimsResolved(tx, mediaIds);
   if (
     !(await recordsAuthorized(tx, {
       epoch,

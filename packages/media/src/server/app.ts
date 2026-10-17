@@ -1,5 +1,9 @@
 import { Hono } from "hono";
 import {
+  registerLegacyRequesterBindingRoutes,
+  type LegacyRequesterBindings,
+} from "./legacy-requester-binding-routes.ts";
+import {
   registerRecoveryRoutes,
   type RecoveryAdministration,
 } from "./recovery-routes.ts";
@@ -66,6 +70,7 @@ export type MediaAppDependencies = {
   nativeRecoveryAdmin: NativeRecoveryAdministration;
   subtitleReplacements: SubtitleReplacementAdministration;
   recoveryAdmin: RecoveryAdministration;
+  legacyRequesterBindings: LegacyRequesterBindings;
   plexExclusionAdmin: PlexExclusionAdministration;
   publicOrigin: string;
   requestsEnabled: () => Promise<boolean>;
@@ -232,6 +237,10 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   });
   app.get("/api/v1/me", (c) => c.json(c.get("actor")));
   registerRecoveryRoutes(app, dependencies.recoveryAdmin);
+  registerLegacyRequesterBindingRoutes(
+    app,
+    dependencies.legacyRequesterBindings,
+  );
   app.post("/api/v1/auth/logout", async (c) => {
     await dependencies.auth.logout(readCookie(c.req.raw, sessionName) ?? "");
     deleteCookie(c, sessionName, cookie);

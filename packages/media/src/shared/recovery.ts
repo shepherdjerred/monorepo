@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  RecoveryClaimAcknowledgementSchema,
+  RecoveryClaimProjectionSchema,
+} from "./recovery-claims.ts";
 
 const Hash = z.string().regex(/^[a-f0-9]{64}$/u);
 export const PrepareRecoverySchema = z
@@ -19,13 +23,37 @@ export const RecoveryIntentSchema = z.discriminatedUnion("intent", [
     })
     .strict(),
 ]);
-export const RespondRecoverySchema = z
+export const LegacyRespondRecoverySchema = z
   .object({
     scopeHash: Hash,
     declarations: z.array(RecoveryIntentSchema).min(1).max(100),
     acknowledgePending: z.literal(true),
   })
   .strict();
+export const RespondRecoverySchema = LegacyRespondRecoverySchema.extend({
+  subjectUserId: z.uuid().optional(),
+  claimAcknowledgements: z
+    .array(RecoveryClaimAcknowledgementSchema)
+    .max(1000)
+    .optional(),
+});
+export const RecoveryStoredResponseSchema = z.union([
+  LegacyRespondRecoverySchema,
+  RespondRecoverySchema.extend({
+    schemaVersion: z.literal(2),
+    subjectUserId: z.uuid(),
+    claimAcknowledgements: z
+      .array(RecoveryClaimAcknowledgementSchema)
+      .max(1000),
+    authority: z.strictObject({
+      mode: z.enum(["self", "managed_owner"]),
+      actorId: z.uuid(),
+      actorVersion: z.number().int(),
+      subjectUserId: z.uuid(),
+      mappingVersion: z.number().int(),
+    }),
+  }),
+]);
 export const ReleaseRecoverySchema = z
   .object({
     expectedVersion: z.number().int().nonnegative(),
@@ -36,7 +64,7 @@ export const ReleaseRecoverySchema = z
     acknowledgeMissingHistory: z.literal(true),
   })
   .strict();
-export const RecoveryScopeSchema = z
+export const LegacyRecoveryScopeSchema = z
   .object({
     excludedUsers: z.array(
       z
@@ -132,12 +160,51 @@ export const RecoveryScopeSchema = z
     blockers: z.array(z.string()),
   })
   .strict();
+export const RecoverySubjectSchema =
+  LegacyRecoveryScopeSchema.shape.users.element.extend({
+    declarationAuthority: z.enum(["self", "managed_owner"]),
+    applicableMediaIds: z.array(z.uuid()).max(100),
+    claimAcknowledgements: z
+      .array(RecoveryClaimAcknowledgementSchema)
+      .max(1000),
+    homeUserId: z.string().nullable(),
+    serverAccountId: z.string().nullable(),
+  });
+export const RecoveryScopeV2Schema = LegacyRecoveryScopeSchema.extend({
+  schemaVersion: z.literal(2),
+  users: z.array(RecoverySubjectSchema).max(100),
+  householdRoster: z.array(RecoverySubjectSchema).max(100),
+  excludedPairs: z
+    .array(
+      z.strictObject({
+        userId: z.uuid(),
+        mediaId: z.uuid(),
+        reason: z.literal("fresh_scope_denial_without_relevant_claim"),
+      }),
+    )
+    .max(10_000),
+  legacyClaims: z.array(RecoveryClaimProjectionSchema).max(1000),
+});
+export const RecoveryScopeSchema = z.union([
+  LegacyRecoveryScopeSchema,
+  RecoveryScopeV2Schema,
+]);
+export function isRecoveryScopeV2(scope: RecoveryScope) {
+  return "schemaVersion" in scope;
+}
+export function respondentMediaIds(scope: RecoveryScope, userId: string) {
+  return isRecoveryScopeV2(scope)
+    ? (scope.users.find((user) => user.id === userId)?.applicableMediaIds ?? [])
+    : scope.users.some((user) => user.id === userId)
+      ? scope.media.map((media) => media.id)
+      : [];
+}
 export const RecoveryResponseSchema = z
   .object({
     userId: z.uuid(),
     actorId: z.uuid(),
     createdAt: z.iso.datetime(),
-    response: RespondRecoverySchema,
+    response: RecoveryStoredResponseSchema,
   })
   .strict();
 export const RecoveryDetailSchema = z

@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -13,7 +13,10 @@ import {
   RecoveryScopeSchema,
   RecoveryDetailSchema,
   RecoveryListSchema,
-  type RecoveryScope,
+  RecoveryStoredResponseSchema,
+  LegacyRespondRecoverySchema,
+  isRecoveryScopeV2,
+  respondentMediaIds,
 } from "#shared/recovery.ts";
 import {
   sharedRecoveryMedia,
@@ -28,11 +31,17 @@ import {
 } from "./release.ts";
 import { recoveryView } from "./view.ts";
 import { recoveryAuthority } from "./authority.ts";
+import { assertRecoveryRespondent } from "./permissions.ts";
+import { claimAccounting } from "./legacy-claims/accounting.ts";
 
 export class PrismaRecovery extends MediaCommandBase {
   constructor(
     private readonly db: Database,
     private readonly machineId: string,
+    private readonly refreshManaged?: (
+      actor: MediaActor,
+      userId: string,
+    ) => Promise<void>,
   ) {
     super(db, { keepDays: 30 });
   }
@@ -127,6 +136,16 @@ export class PrismaRecovery extends MediaCommandBase {
           declarations: row.response.declarations.filter((declaration) =>
             scope.media.some((media) => media.id === declaration.mediaId),
           ),
+          ...("schemaVersion" in row.response
+            ? {
+                claimAcknowledgements:
+                  row.response.claimAcknowledgements.filter((ack) =>
+                    ack.mediaIds.every((mediaId) =>
+                      scope.media.some((media) => media.id === mediaId),
+                    ),
+                  ),
+              }
+            : {}),
         },
       })),
       missingUserIds: scope.users
@@ -145,6 +164,27 @@ export class PrismaRecovery extends MediaCommandBase {
   ) {
     requireOwner(actor);
     const input = PrepareRecoverySchema.parse(raw);
+    await currentOwner(this.db, actor);
+    if (this.refreshManaged !== undefined) {
+      const stale = await this.db.plexIdentityMapping.findMany({
+        where: {
+          kind: "managed",
+          OR: [
+            { verifiedAt: null },
+            { verifiedAt: { lt: new Date(Date.now() - 300_000) } },
+            { verifiedAt: { gt: new Date() } },
+          ],
+        },
+        select: { userId: true },
+        take: 101,
+      });
+      if (stale.length > 100)
+        throw recoveryConflict(
+          "Household access refresh exceeds the bounded review size",
+        );
+      for (const subject of stale)
+        await this.refreshManaged(actor, subject.userId);
+    }
     return this.command(
       actor,
       key,
@@ -188,24 +228,45 @@ export class PrismaRecovery extends MediaCommandBase {
         const { review, scope } = await currentReview(db, id, this.machineId);
         if (input.scopeHash !== review.scopeHash)
           throw recoveryConflict("Respond to the exact current review");
-        await assertPermissions(db, scope, this.machineId, [actor.id]);
+        const subjectUserId = input.subjectUserId ?? actor.id;
+        if (
+          !isRecoveryScopeV2(scope) &&
+          !LegacyRespondRecoverySchema.safeParse(input).success
+        )
+          throw recoveryConflict(
+            "Prepare a new household review to use managed declarations or legacy claim acknowledgements",
+          );
+        const authority = await assertRecoveryRespondent(db, {
+          scope,
+          actor,
+          subjectUserId,
+          machineId: this.machineId,
+        });
         const ids = input.declarations
           .map((declaration) => declaration.mediaId)
           .sort();
         if (
           new Set(ids).size !== ids.length ||
           ids.join(",") !==
-            scope.media
-              .map((media) => media.id)
-              .sort()
-              .join(",")
+            respondentMediaIds(scope, subjectUserId).sort().join(",")
         )
           throw recoveryConflict(
-            "Declare intent for every reviewed media item exactly once",
+            "Declare intent for each applicable reviewed title exactly once",
+          );
+        const expectedClaims = isRecoveryScopeV2(scope)
+          ? (scope.users.find((user) => user.id === subjectUserId)
+              ?.claimAcknowledgements ?? [])
+          : [];
+        if (
+          snapshotHash(expectedClaims) !==
+          snapshotHash(input.claimAcknowledgements ?? [])
+        )
+          throw recoveryConflict(
+            "Acknowledge the exact selected legacy claims for this person",
           );
         if (
           await db.recoveryResponse.findUnique({
-            where: { reviewId_userId: { reviewId: id, userId: actor.id } },
+            where: { reviewId_userId: { reviewId: id, userId: subjectUserId } },
           })
         )
           throw recoveryConflict(
@@ -214,9 +275,19 @@ export class PrismaRecovery extends MediaCommandBase {
         await db.recoveryResponse.create({
           data: {
             reviewId: id,
-            userId: actor.id,
+            userId: subjectUserId,
             actorId: actor.id,
-            response: input,
+            response: z.record(z.string(), z.json()).parse(
+              isRecoveryScopeV2(scope)
+                ? {
+                    ...input,
+                    schemaVersion: 2,
+                    subjectUserId,
+                    claimAcknowledgements: expectedClaims,
+                    authority,
+                  }
+                : input,
+            ),
           },
         });
         await db.recoveryReview.update({
@@ -259,12 +330,6 @@ export class PrismaRecovery extends MediaCommandBase {
           throw recoveryConflict(
             "Review changed; inspect all current responses again",
           );
-        await assertPermissions(
-          db,
-          scope,
-          this.machineId,
-          scope.users.map((user) => user.id),
-        );
         const responses = await db.recoveryResponse.findMany({
           where: { reviewId: id },
           orderBy: { userId: "asc" },
@@ -281,6 +346,26 @@ export class PrismaRecovery extends MediaCommandBase {
           );
         if (snapshotHash(responseJson(responses)) !== input.responseHash)
           throw recoveryConflict("Response review changed");
+        for (const response of responses) {
+          const declarant = await db.mediaUser.findUniqueOrThrow({
+            where: { id: response.actorId },
+          });
+          const current = await assertRecoveryRespondent(db, {
+            scope,
+            actor: declarant,
+            subjectUserId: response.userId,
+            machineId: this.machineId,
+          });
+          const stored = RecoveryStoredResponseSchema.parse(response.response);
+          if (
+            isRecoveryScopeV2(scope) &&
+            (!("schemaVersion" in stored) ||
+              snapshotHash(stored.authority) !== snapshotHash(current))
+          )
+            throw recoveryConflict(
+              "A declaration's current actor or subject authority changed",
+            );
+        }
         await applyRecoveryDeclarations(db, { reviewId: id, scope, responses });
         const receipt = await db.recoveryReleaseReceipt.create({
           data: {
@@ -290,6 +375,9 @@ export class PrismaRecovery extends MediaCommandBase {
             scopeHash: input.scopeHash,
             responseHash: input.responseHash,
             releasedHoldIds: scope.holds.map((hold) => hold.mediaId),
+            ...(isRecoveryScopeV2(scope)
+              ? { claimAccounting: claimAccounting(scope.legacyClaims) }
+              : {}),
           },
         });
         for (const hold of scope.holds) {
@@ -372,6 +460,7 @@ async function currentReview(
     db,
     scope.media.map((media) => media.id),
     machineId,
+    isRecoveryScopeV2(scope) ? 2 : 1,
   );
   if (snapshotHash(current) !== review.scopeHash)
     throw recoveryConflict(
@@ -390,43 +479,4 @@ async function currentOwner(db: Prisma.TransactionClient, actor: MediaActor) {
       "A current unrestricted owner must review recovery",
       403,
     );
-}
-
-async function assertPermissions(
-  db: Prisma.TransactionClient,
-  scope: RecoveryScope,
-  machineId: string,
-  userIds: string[],
-) {
-  for (const userId of userIds) {
-    const expected = scope.users.find((user) => user.id === userId);
-    const mapping = await db.plexIdentityMapping.findUnique({
-      where: { userId },
-    });
-    if (
-      expected === undefined ||
-      mapping?.kind !== "account" ||
-      expected.restricted ||
-      mapping.homeUserId !== null ||
-      mapping.plexRestricted ||
-      mapping.serverMachineId !== machineId ||
-      mapping.verifiedAt === null ||
-      mapping.verifiedAt < new Date(Date.now() - 300_000) ||
-      mapping.verifiedAt > new Date()
-    )
-      throw recoveryConflict(
-        "Each respondent must sign in with their own freshly verified Plex identity; managed profiles remain protected",
-      );
-    if (
-      scope.media.some(
-        (media) =>
-          !mapping.permittedMediaKinds.includes(
-            media.kind === "movie" ? "movie" : "series",
-          ) ||
-          media.sectionId === null ||
-          !mapping.permittedSectionIds.includes(media.sectionId),
-      )
-    )
-      throw recoveryConflict("Respondent no longer has scoped Plex access");
-  }
 }

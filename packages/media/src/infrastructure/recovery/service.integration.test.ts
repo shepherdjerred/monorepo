@@ -193,7 +193,7 @@ test.each(["keep", "pin", "epoch", "coverage", "request", "access"] as const)(
   },
 );
 
-test("shared files expand exact coverage; root claims outside that scope and managed profiles remain protected", async () => {
+test("shared files expand exact coverage; noncanonical root claims and managed self-declarations remain protected", async () => {
   const f = await fixture();
   const sibling = await f.db.mediaItem.create({
     data: {
@@ -254,10 +254,10 @@ test("shared files expand exact coverage; root claims outside that scope and man
   });
   const protectedReview = await f.prepare();
   expect(protectedReview.scope.blockers).toContain(
-    "partial_root_request_scope",
+    "root_request_coordinates_unconfirmed",
   );
-  expect(protectedReview.scope.blockers).toContain(
-    "household_identity_requires_reconciliation",
+  expect(protectedReview.scope.blockers).not.toContain(
+    "partial_root_request_scope",
   );
   await expect(
     f.service.respond(f.member, crypto.randomUUID(), protectedReview.id, {
@@ -268,5 +268,5 @@ test("shared files expand exact coverage; root claims outside that scope and man
         intent: "request",
       })),
     }),
-  ).rejects.toThrow("managed profiles remain protected");
+  ).rejects.toThrow("Independent accounts must respond themselves");
 });

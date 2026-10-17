@@ -25,6 +25,7 @@ import { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
 import { PrismaSubtitleReplacements } from "#infrastructure/subtitle-replacement/service.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
+import { PrismaLegacyRequesterBindings } from "#infrastructure/recovery/legacy-claims/service.ts";
 import { MigrationCatalogDiscovery } from "#migration/catalog-discovery.ts";
 import { PrismaPlexExclusionAdministration } from "#infrastructure/plex-exclusion-service.ts";
 import { DiscordOAuth } from "#infrastructure/discord-auth.ts";
@@ -102,6 +103,15 @@ const auth = new MediaAuth(
 );
 const tmdbClient = new TmdbClient(tmdbCredential);
 const catalogApplication = new TmdbCatalogApplication(database, tmdbClient);
+const plexAdministration = new PrismaPlexAdministration(
+  database,
+  cipher,
+  plexAuthentication,
+  {
+    serverUrl: bootstrap.PLEX_SERVER_URL,
+    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  },
+);
 const app = createMediaApp({
   auth,
   media: new PrismaMediaApplication(database, {
@@ -125,7 +135,15 @@ const app = createMediaApp({
     database,
     temporal.describe,
   ),
-  recoveryAdmin: new PrismaRecovery(database, bootstrap.PLEX_SERVER_MACHINE_ID),
+  recoveryAdmin: new PrismaRecovery(
+    database,
+    bootstrap.PLEX_SERVER_MACHINE_ID,
+    (actor, userId) => plexAdministration.refreshProfileAccess(actor, userId),
+  ),
+  legacyRequesterBindings: new PrismaLegacyRequesterBindings(
+    database,
+    bootstrap.PLEX_SERVER_MACHINE_ID,
+  ),
   migrationAdmin: new PrismaMigrationAdministration(
     database,
     new MigrationCatalogDiscovery(database, tmdbClient, catalogApplication),
@@ -134,15 +152,7 @@ const app = createMediaApp({
     database,
     temporal.describe,
   ),
-  plexAdmin: new PrismaPlexAdministration(
-    database,
-    cipher,
-    plexAuthentication,
-    {
-      serverUrl: bootstrap.PLEX_SERVER_URL,
-      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-    },
-  ),
+  plexAdmin: plexAdministration,
   catalog: catalogApplication,
   publicOrigin: bootstrap.PUBLIC_ORIGIN,
   afterWrite: () => {

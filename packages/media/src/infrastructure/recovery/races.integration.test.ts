@@ -89,6 +89,24 @@ test("root cancellation is bound even when its media is outside the selected phy
       coverageCompletedAt: new Date(),
     },
   });
+  const season = await f.db.mediaItem.create({
+    data: {
+      kind: "season",
+      title: "Season one",
+      parentId: rootMedia.id,
+      seasonNumber: 1,
+    },
+  });
+  await f.db.mediaItem.update({
+    where: { id: f.media.id },
+    data: {
+      kind: "episode",
+      parentId: season.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
+      externalIds: { plexSectionId: "2" },
+    },
+  });
   await f.db.requestCoverage.create({
     data: {
       rootRequestId: root.id,

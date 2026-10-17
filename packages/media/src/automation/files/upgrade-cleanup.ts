@@ -14,6 +14,11 @@ import { assertRuntime, lockMedia } from "./guards.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { videoSubtitleWhere } from "./subtitle-lifecycle/ownership.ts";
 import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
+import {
+  assertLegacyClaimsResolved,
+  PendingLegacyClaimsError,
+  reopenLegacyClaimProtection,
+} from "#infrastructure/recovery/legacy-claims/protection.ts";
 import { fileOperations } from "./file-operations.ts";
 import {
   FileGuardError,
@@ -45,6 +50,8 @@ export async function cleanupUpgrade(
   if (snapshot.expiresAt > now(initialContext))
     throw new FileGuardError("rollback_window_incomplete");
   const plan = await prepareUpgradeCleanupPlan(initialContext, cleanupId);
+  if (await reopenLegacyClaimProtection(initialContext.db, plan.mediaIds))
+    throw new PendingLegacyClaimsError(plan.mediaIds);
   const intents = await initialContext.db.mediaIntent.findMany({
     where: { mediaId: { in: plan.mediaIds } },
   });
@@ -72,6 +79,7 @@ export async function cleanupUpgrade(
         if (!(await context.enabled.purge()))
           throw new FileGuardError("purge_disabled");
         await assertRuntime(tx, snapshot.recoveryEpoch);
+        await assertLegacyClaimsResolved(tx, plan.mediaIds);
         if (
           !(await recordsAuthorized(tx, {
             epoch: snapshot.recoveryEpoch,
