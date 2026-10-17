@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
 import {
@@ -23,7 +25,7 @@ export async function loadProfile(
   mediaId: string,
 ): Promise<QualityProfile | null> {
   const intent = await db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId },
+    where: targetWhere(defaultScope(mediaId)),
     include: { profile: true },
   });
   if (intent.profile === null) return null;
@@ -47,7 +49,7 @@ export async function currentRelease(
   mediaId: string,
 ): Promise<ReleaseAttributes | null> {
   const coverage = await context.db.assetCoverage.findFirst({
-    where: { mediaId, current: true },
+    where: { mediaId, edition: "default", current: true },
     include: { asset: true },
   });
   if (coverage === null) return null;

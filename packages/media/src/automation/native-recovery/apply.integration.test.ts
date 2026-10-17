@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, expect, test } from "vitest";
 import { readFile, rm, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
@@ -51,7 +53,7 @@ test.each(["seeding", "removed"] as const)(
     });
     expect(
       await db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.file.media.id },
+        where: targetWhere(defaultScope(f.file.media.id)),
       }),
     ).toMatchObject({ automationEpoch: 0 });
     expect(
@@ -61,7 +63,7 @@ test.each(["seeding", "removed"] as const)(
     ).toMatchObject({ recoveryEpoch: 0 });
     expect(
       await db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.file.media.id },
+        where: targetWhere(defaultScope(f.file.media.id)),
       }),
     ).toMatchObject({ recoveryEpoch: 1, releasedAt: null });
     expect(
@@ -202,7 +204,7 @@ test("a second restore resolves prior native receipt storage and grants only the
   ).toMatchObject({ ownershipEpoch: 2, qualityStatus: "accepted" });
   expect(
     await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.file.media.id },
+      where: targetWhere(defaultScope(f.file.media.id)),
     }),
   ).toMatchObject({ automationEpoch: 0 });
 });

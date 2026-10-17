@@ -1,14 +1,18 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
-import { lockMedia } from "./locks.ts";
+import {
+  lockDefaultMedia,
+  assertDefaultPhysicalAsset,
+} from "#infrastructure/handoff/default-edition.ts";
 
 export async function removalConfirmation(
   db: Prisma.TransactionClient,
   mediaId: string,
 ) {
   const coverage = await db.assetCoverage.findMany({
-    where: { mediaId, current: true },
+    where: { mediaId, edition: "default", current: true },
     include: { asset: { include: { coverage: { where: { current: true } } } } },
   });
   const mediaIds = [
@@ -21,7 +25,7 @@ export async function removalConfirmation(
   ].sort();
   const media = await db.mediaItem.findMany({
     where: { id: { in: mediaIds } },
-    include: { intent: true },
+    include: { intents: { where: { edition: "default" } } },
     orderBy: { id: "asc" },
   });
   return {
@@ -29,7 +33,7 @@ export async function removalConfirmation(
       id: item.id,
       title: item.title,
       version: item.version,
-      generation: item.intent?.generation ?? 0,
+      generation: defaultIntent(item.intents)?.generation ?? 0,
     })),
     assets: coverage
       .map((item) => ({
@@ -47,12 +51,14 @@ export async function confirmRemoval(
   input: Extract<MediaAction, { action: "remove" }>,
 ) {
   const preview = await removalConfirmation(db, mediaId);
-  await lockMedia(
+  await lockDefaultMedia(
     db,
     preview.media.map((item) => item.id),
   );
   const current = await removalConfirmation(db, mediaId);
   if (current.assets.length === 0) return null;
+  for (const asset of current.assets)
+    await assertDefaultPhysicalAsset(db, asset.id);
   if (
     input.confirmation === undefined ||
     JSON.stringify(current) !== JSON.stringify(input.confirmation)

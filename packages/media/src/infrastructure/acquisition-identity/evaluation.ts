@@ -1,3 +1,4 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
 import type {
   MediaItem,
   Prisma,
@@ -125,7 +126,9 @@ export async function coordinateBlockers(
 }
 
 type ProfileMedia = Prisma.MediaItemGetPayload<{
-  include: { intent: { include: { profile: true } } };
+  include: {
+    intents: { where: { edition: "default" }; include: { profile: true } };
+  };
 }>;
 export function previewQuality(
   rows: ProfileMedia[],
@@ -145,7 +148,11 @@ export function previewQuality(
   );
   const blockers = new Set<string>();
   for (const row of rows) {
-    const profile = row.intent?.profile ?? primary?.intent?.profile;
+    const profile =
+      defaultIntent(row.intents)?.profile ??
+      (primary === undefined
+        ? undefined
+        : defaultIntent(primary.intents)?.profile);
     if (profile === null || profile === undefined) {
       blockers.add("quality_profile_missing");
       continue;
@@ -161,7 +168,7 @@ export function previewQuality(
     );
     if (!evaluation.accepted)
       for (const reason of evaluation.reasons) blockers.add(reason);
-    if (row.intent?.intentionallyRemovedAt != null)
+    if (defaultIntent(row.intents)?.intentionallyRemovedAt != null)
       blockers.add("intentionally_removed");
   }
   return blockers;

@@ -28,7 +28,11 @@ test("current direct and root-covered co-requesters see shared progress; exclusi
   expect(JSON.stringify(direct.visibility)).not.toContain(f.member.id);
   expect(JSON.stringify(direct.visibility)).not.toContain(f.request.id);
   const rootMedia = await f.db.mediaItem.create({
-    data: { kind: "series", title: "Requested series" },
+    data: {
+      kind: "series",
+      title: "Requested series",
+      intents: { create: {} },
+    },
   });
   const root = await f.db.mediaRequest.create({
     data: { mediaId: rootMedia.id, userId: joined.id },

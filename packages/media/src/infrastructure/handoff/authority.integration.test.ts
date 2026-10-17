@@ -1,3 +1,6 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { beforeAll, afterAll, test, expect } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import {
@@ -137,15 +140,26 @@ test("Keep and pin preserve stale intent authority and system recovery hold; exp
     data: {
       title: "Restored movie",
       kind: "movie",
-      intent: { create: { automationEpoch: 5 } },
-      requests: { create: { userId: user.id } },
-      recoveryHold: {
-        create: {
-          recoveryEpoch: 6,
-          reason: "recovery_request_history_unconfirmed",
-        },
-      },
     },
+  });
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(media.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(media.id)),
+      data: { automationEpoch: 5 },
+    });
+    await tx.mediaRequest.create({
+      data: { mediaId: media.id, userId: user.id },
+    });
+    await tx.recoveryHold.create({
+      data: {
+        mediaId: media.id,
+        recoveryEpoch: 6,
+        reason: "recovery_request_history_unconfirmed",
+      },
+    });
   });
   const asset = await db.libraryAsset.create({
     data: {
@@ -153,6 +167,7 @@ test("Keep and pin preserve stale intent authority and system recovery hold; exp
       state: "published",
       owned: true,
       ownershipEpoch: 5,
+      editionRootId: media.id,
       sizeBytes: 10,
       properties: {},
       coverage: { create: { mediaId: media.id, current: true } },
@@ -170,10 +185,10 @@ test("Keep and pin preserve stale intent authority and system recovery hold; exp
       expectedVersion: version,
     });
     const protectedIntent = await db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: media.id },
+      where: targetWhere(defaultScope(media.id)),
     });
     const hold = await db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: media.id },
+      where: targetWhere(defaultScope(media.id)),
     });
     expect(protectedIntent.automationEpoch).toBe(5);
     expect(hold.releasedAt).toBeNull();
@@ -184,7 +199,7 @@ test("Keep and pin preserve stale intent authority and system recovery hold; exp
     expectedVersion: 3,
   });
   const renewed = await db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId: media.id },
+    where: targetWhere(defaultScope(media.id)),
   });
   expect(renewed.automationEpoch).toBe(6);
   expect(

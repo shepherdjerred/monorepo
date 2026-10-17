@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { readFile, copyFile, rename, writeFile } from "node:fs/promises";
 import { replacementHarness } from "./test-fixture.ts";
@@ -86,7 +88,7 @@ test("cancelled intent compensates an interrupted swap and both archives expire"
     "Interrupted",
   );
   await f.db.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { desiredPresence: false, generation: { increment: 1 } },
   });
   f.context.checkpoint = () => Promise.resolve();

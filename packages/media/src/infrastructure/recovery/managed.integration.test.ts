@@ -1,3 +1,6 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { Hono } from "hono";
@@ -64,7 +67,7 @@ test("current owner declares exact managed demand with distinct attribution; ord
   });
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
   const ready = await f.service.detail(f.owner, review.id);
@@ -76,12 +79,24 @@ test("current owner declares exact managed demand with distinct attribution; ord
   );
   expect(
     await f.db.mediaRequest.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.member.id, mediaId: f.media.id } },
+      where: {
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: f.member.id,
+          mediaId: f.media.id,
+        },
+      },
     }),
   ).toMatchObject({ active: true, excluded: false });
   expect(
     await f.db.retentionHold.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.member.id, mediaId: f.media.id } },
+      where: {
+        userId_mediaId_edition: {
+          edition: "default",
+          userId: f.member.id,
+          mediaId: f.media.id,
+        },
+      },
     }),
   ).toMatchObject({ isPin: false });
 });
@@ -132,7 +147,7 @@ test.each(["restriction", "mapping"])(
     ).toBe(0);
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
       }),
     ).toMatchObject({ releasedAt: null });
   },
@@ -144,24 +159,36 @@ test("disjoint current libraries require per-person leaves and member HTTP canno
     where: { id: f.claim.id },
     data: { userId: f.owner.id },
   });
+  const series = await f.db.mediaItem.create({
+    data: {
+      kind: "series",
+      title: "Member-only series",
+      externalIds: { plexSectionId: "2" },
+    },
+  });
   const tv = await f.db.mediaItem.create({
     data: {
       kind: "episode",
       title: "Member-only episode",
+      parentId: series.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
       externalIds: { plexSectionId: "2" },
       availability: "available",
-      intent: { create: { automationEpoch: 3 } },
-      recoveryHold: {
-        create: {
-          recoveryEpoch: 3,
-          reason: "recovery_request_history_unconfirmed",
-        },
-      },
+    },
+  });
+  await createTestDefaultTarget(f.db, tv.id, { automationEpoch: 3 });
+  await f.db.recoveryHold.create({
+    data: {
+      mediaId: tv.id,
+      recoveryEpoch: 3,
+      reason: "recovery_request_history_unconfirmed",
     },
   });
   await f.db.libraryAsset.create({
     data: {
       path: `/fixture/${tv.id}.mkv`,
+      editionRootId: series.id,
       sizeBytes: 100,
       checksum: "b".repeat(64),
       owned: true,

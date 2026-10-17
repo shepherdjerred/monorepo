@@ -40,6 +40,7 @@ export async function authorizedSubmission(
       )
         return false;
       if (
+        current.edition !== "default" ||
         runtime.mode !== "active" ||
         !runtime.ownershipConfirmed ||
         runtime.recoveryEpoch !== attempt.recoveryEpoch ||
@@ -61,7 +62,7 @@ export async function authorizedSubmission(
       });
       if (profile?.version !== snapshot.profileVersion) return false;
       const intents = await tx.mediaIntent.findMany({
-        where: { mediaId: { in: attempt.mediaIds } },
+        where: { edition: "default", mediaId: { in: attempt.mediaIds } },
       });
       if (
         intents.length !== attempt.mediaIds.length ||

@@ -1,11 +1,14 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { recoveryHarness, releaseInput } from "./test-support.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 const { fixture } = recoveryHarness();
 test("owner authority status remains visible with no household holds and is redacted from members", async () => {
   const f = await fixture();
   await f.db.recoveryHold.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { releasedAt: new Date() },
   });
   await f.db.mediaRuntimeState.update({
@@ -35,17 +38,10 @@ test("owner authority status remains visible with no household holds and is reda
 });
 
 test("an ancestor request protects episodes before any coverage projection exists", async () => {
-  const f = await fixture();
-  const series = await f.db.mediaItem.create({
-    data: { kind: "series", title: "Pending series" },
-  });
-  const season = await f.db.mediaItem.create({
-    data: { kind: "season", title: "Season one", parentId: series.id },
-  });
-  await f.db.mediaItem.update({
-    where: { id: f.media.id },
-    data: { kind: "episode", parentId: season.id },
-  });
+  const f = await fixture({ kind: "episode", nestedSeason: true });
+  const series = f.series;
+  if (series === null) throw new Error("Series fixture missing");
+  await createTestDefaultTarget(f.db, series.id);
   const root = await f.db.mediaRequest.create({
     data: {
       mediaId: series.id,
@@ -98,7 +94,7 @@ test("a freshly denied unrelated managed profile does not block the adult librar
   );
   // A later new system hold must not inherit the previous declaration receipt.
   await f.db.recoveryHold.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { releasedAt: null, releasedById: null, version: { increment: 1 } },
   });
   await f.db.plexIdentityMapping.update({

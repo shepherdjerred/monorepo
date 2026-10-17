@@ -20,7 +20,7 @@ async function setup() {
   const db = database();
   await grantTestLease(db);
   await db.mediaIntent.update({
-    where: { mediaId: data.media.id },
+    where: { mediaId_edition: { mediaId: data.media.id, edition: "default" } },
     data: { automationEpoch: 0 },
   });
   await db.mediaItem.update({
@@ -88,7 +88,7 @@ test("a mixed acquisition groups new episodes, preserves upgrade opt-in, and nev
         kind: "episode",
         title: `Episode ${String(index)}`,
         availability: "available",
-        intent: { create: { generation: 1, automationEpoch: 0 } },
+        intents: { create: { generation: 1, automationEpoch: 0 } },
         requests: { create: { userId: data.user.id } },
       },
     });

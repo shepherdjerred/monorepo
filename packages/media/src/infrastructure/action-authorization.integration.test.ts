@@ -23,11 +23,11 @@ test.each(["demoted", "restricted"] as const)(
       serverMachineId: "fixture",
     });
     await f.db.mediaIntent.update({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       data: { automationEpoch: 2 },
     });
     const before = await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     });
     await f.db.mediaUser.update({
       where: { id: f.owner.id },
@@ -46,7 +46,7 @@ test.each(["demoted", "restricted"] as const)(
     ).toEqual(f.claim);
     expect(
       await f.db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).toEqual(before);
     expect(
@@ -83,7 +83,7 @@ test("current unrestricted owner may request for an exactly scoped Plex-restrict
   expect(result).toMatchObject({ status: "queued", requestId: f.claim.id });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ automationEpoch: 3, generation: 5 });
   expect(
@@ -158,7 +158,7 @@ test("proxy owner restriction committed while createRequest waits on media locks
   ).toEqual(f.claim);
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ generation: 4 });
   expect(
@@ -228,7 +228,7 @@ test("access revocation committed while Retry waits on media authority is observ
   ).toMatchObject({ version: 0 });
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ generation: 4 });
   expect(
@@ -252,7 +252,7 @@ test.each([
       serverMachineId: "fixture",
     });
     await f.db.mediaIntent.update({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       data: { automationEpoch: 2 },
     });
     if (change === "restricted")
@@ -270,7 +270,7 @@ test.each([
         plexRestricted: change === "plex_restricted",
       });
     const before = await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     });
     await expect(
       commands.act(f.member, crypto.randomUUID(), f.media.id, {
@@ -280,7 +280,7 @@ test.each([
     ).rejects.toMatchObject({ status: 403 });
     expect(
       await f.db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).toEqual(before);
     expect(
@@ -300,7 +300,7 @@ test.each([
     });
     expect(
       await f.db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
       }),
     ).toMatchObject({ automationEpoch: 2 });
     await commands.cancelRequest(
@@ -369,7 +369,13 @@ test("manual release selection uses current owner role and scoped access; protec
   });
   expect(
     await f.db.retentionHold.findUniqueOrThrow({
-      where: { userId_mediaId: { userId: f.owner.id, mediaId: f.media.id } },
+      where: {
+        userId_mediaId_edition: {
+          userId: f.owner.id,
+          mediaId: f.media.id,
+          edition: "default",
+        },
+      },
     }),
   ).toMatchObject({ isPin: true });
 });
@@ -377,7 +383,7 @@ test("manual release selection uses current owner role and scoped access; protec
 test("currently scoped Retry grants current intent authority and a new operation while the system hold remains", async () => {
   const f = await fixture();
   await f.db.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     data: { automationEpoch: 2 },
   });
   const commands = new PrismaMediaCommands(f.db, {
@@ -391,12 +397,12 @@ test("currently scoped Retry grants current intent authority and a new operation
   expect(result.operationId).toBeDefined();
   expect(
     await f.db.mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ automationEpoch: 3, generation: 5 });
   expect(
     await f.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ releasedAt: null });
 });

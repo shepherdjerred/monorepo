@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createNativeRecoveryObserver } from "./producer.ts";
@@ -38,7 +40,7 @@ test("native network capture uses approved canonical storage without inventing l
   ).toMatchObject({ mode: "observe", recoveryEpoch: 1 });
   expect(
     await f.context.db.recoveryHold.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     }),
   ).toMatchObject({ releasedAt: null });
 });

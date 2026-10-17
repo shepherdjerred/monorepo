@@ -1,3 +1,4 @@
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import path from "node:path";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -96,6 +97,7 @@ export async function buildNativeScope(
     throw new Error(
       "Native recovery requires owned published assets from an earlier epoch",
     );
+  for (const asset of assets) await assertDefaultPhysicalAsset(tx, asset.id);
   const ids = [
     ...new Set(
       assets.flatMap((row) => row.coverage.map((item) => item.mediaId)),
@@ -106,7 +108,7 @@ export async function buildNativeScope(
   const rows = await tx.mediaItem.findMany({
     where: { id: { in: ids } },
     include: {
-      intent: { include: { profile: true } },
+      intents: { where: { edition: "default" }, include: { profile: true } },
       parent: { include: { parent: true } },
     },
     orderBy: { id: "asc" },
@@ -188,44 +190,52 @@ export async function buildNativeScope(
   return NativePublishedScopeSchema.parse({
     ...publishedVersion(terminalDependencies, settledQuarantines),
     request: { ...input, assetIds },
-    media: rows.map(({ intent, parent, ...row }) => ({
-      id: row.id,
-      title: row.title,
-      kind: row.kind,
-      version: row.version,
-      tmdbId: row.tmdbId,
-      externalIds: row.externalIds,
-      seasonNumber: row.seasonNumber,
-      episodeNumber: row.episodeNumber,
-      parent:
-        parent === null
-          ? null
-          : {
-              id: parent.id,
-              version: parent.version,
-              tmdbId: parent.tmdbId,
-              externalIds: parent.externalIds,
-              parent:
-                parent.parent === null
-                  ? null
-                  : {
-                      id: parent.parent.id,
-                      version: parent.parent.version,
-                      tmdbId: parent.parent.tmdbId,
-                      externalIds: parent.parent.externalIds,
-                    },
-            },
-      intent:
-        intent === null ? null : nativeJson({ ...intent, profile: undefined }),
-      profile:
-        intent?.profile === undefined || intent.profile === null
-          ? null
-          : {
-              id: intent.profile.id,
-              version: intent.profile.version,
-              rules: QualityRulesSchema.parse(intent.profile.rules),
-            },
-    })),
+    media: rows.map(({ intents, parent, ...row }) => {
+      const intent = defaultIntent(intents);
+      return {
+        id: row.id,
+        title: row.title,
+        kind: row.kind,
+        version: row.version,
+        tmdbId: row.tmdbId,
+        externalIds: row.externalIds,
+        seasonNumber: row.seasonNumber,
+        episodeNumber: row.episodeNumber,
+        parent:
+          parent === null
+            ? null
+            : {
+                id: parent.id,
+                version: parent.version,
+                tmdbId: parent.tmdbId,
+                externalIds: parent.externalIds,
+                parent:
+                  parent.parent === null
+                    ? null
+                    : {
+                        id: parent.parent.id,
+                        version: parent.parent.version,
+                        tmdbId: parent.parent.tmdbId,
+                        externalIds: parent.parent.externalIds,
+                      },
+              },
+        intent:
+          intent === null
+            ? null
+            : nativeJson({
+                ...historicalDefaultIntent(intent),
+                profile: undefined,
+              }),
+        profile:
+          intent?.profile === undefined || intent.profile === null
+            ? null
+            : {
+                id: intent.profile.id,
+                version: intent.profile.version,
+                rules: QualityRulesSchema.parse(intent.profile.rules),
+              },
+      };
+    }),
     files,
     storageRoots: await resolveNativeStorageRoots(tx),
     subtitlePolicies: await snapshotNativeSubtitlePolicies(tx, ids),
@@ -258,3 +268,5 @@ function publishedVersion(
         ...(settledQuarantines.length === 0 ? {} : { settledQuarantines }),
       };
 }
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { historicalDefaultIntent } from "./legacy-snapshot.ts";

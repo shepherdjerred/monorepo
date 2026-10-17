@@ -1,4 +1,5 @@
 import nodePath from "node:path";
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import type { ContentReference } from "./content-proof.ts";
 import { FileGuardError, type FileContext, type Transaction } from "./types.ts";
 
@@ -16,7 +17,11 @@ export async function currentPlayback(
   mediaIds: readonly string[],
 ): Promise<PlaybackSnapshot[]> {
   const coverage = await context.db.assetCoverage.findMany({
-    where: { current: true, mediaId: { in: [...mediaIds] } },
+    where: {
+      current: true,
+      edition: "default",
+      mediaId: { in: [...mediaIds] },
+    },
     include: { asset: true, media: true },
   });
   if (mediaIds.some((id) => !coverage.some((item) => item.mediaId === id)))
@@ -65,6 +70,7 @@ export async function assertCurrentPlayback(
   if (context.contentProof === undefined)
     throw new Error("Cleanup requires content proofs");
   for (const snapshot of snapshots) {
+    await assertDefaultPhysicalAsset(tx, snapshot.id);
     const asset = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: snapshot.id },
       include: {

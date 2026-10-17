@@ -1,3 +1,4 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { Prisma } from "#generated/prisma/client.ts";
@@ -8,7 +9,7 @@ import {
   type HandoffScope,
 } from "#shared/handoff.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import type { PreparedHandoffFiles } from "./files.ts";
 
 export function stableNetwork(raw: unknown) {
@@ -82,13 +83,14 @@ export async function assertHandoffSnapshot(
     throw new Error("Handoff runtime, approval, or immutable scope changed");
   const media = await tx.mediaItem.findMany({
     where: { id: { in: scope.media.map((item) => item.mediaId) } },
-    include: { intent: true },
+    include: { intents: { where: { edition: "default" } } },
   });
   for (const expected of scope.media) {
     const current = media.find((item) => item.id === expected.mediaId);
     if (
       current?.version !== expected.version ||
-      (current.intent?.generation ?? null) !== expected.generation
+      (defaultIntent(current.intents)?.generation ?? null) !==
+        expected.generation
     )
       throw new Error("Handoff media intent changed");
     if (expected.profileId !== null) {
@@ -110,7 +112,7 @@ export async function finishHandoffPreparation(
 ): Promise<void> {
   await db.$transaction(
     async (tx) => {
-      await lockMedia(
+      await lockDefaultMedia(
         tx,
         prepared.scope.media.map((item) => item.mediaId),
       );

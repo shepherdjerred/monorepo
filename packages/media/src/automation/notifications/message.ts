@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
@@ -152,11 +153,11 @@ async function eligibleTitles(
   for (const item of batch.items) {
     const media = await tx.mediaItem.findUniqueOrThrow({
       where: { id: item.mediaId },
-      include: { intent: true },
+      include: { intents: { where: { edition: "default" } } },
     });
     if (
-      media.intent?.generation !== item.generation ||
-      media.intent.automationEpoch !== delivery.recoveryEpoch
+      defaultIntent(media.intents)?.generation !== item.generation ||
+      defaultIntent(media.intents)?.automationEpoch !== delivery.recoveryEpoch
     )
       continue;
     if (!batch.ownerOnly) {
@@ -165,6 +166,7 @@ async function eligibleTitles(
           userId: delivery.userId,
           mediaId: item.mediaId,
           ...effectiveRequestWhere,
+          edition: "default",
         },
       });
       if (
@@ -229,11 +231,12 @@ async function sharedMessage(
   for (const item of batch.items) {
     const media = await tx.mediaItem.findUniqueOrThrow({
       where: { id: item.mediaId },
-      include: { intent: true },
+      include: { intents: { where: { edition: "default" } } },
     });
     if (
-      media.intent?.automationEpoch === delivery.recoveryEpoch &&
-      media.intent.generation === item.generation &&
+      defaultIntent(media.intents)?.automationEpoch ===
+        delivery.recoveryEpoch &&
+      defaultIntent(media.intents)?.generation === item.generation &&
       (await itemCurrent(tx, delivery.event.kind, item, delivery.recoveryEpoch))
     )
       titles.push(media.title);
@@ -267,7 +270,8 @@ async function itemCurrent(
       where: { id: item.decisionId ?? "" },
     });
     return (
-      decision?.state === (kind === "files_purged" ? "purged" : "quarantined")
+      decision?.edition === "default" &&
+      decision.state === (kind === "files_purged" ? "purged" : "quarantined")
     );
   }
   return true;
@@ -293,6 +297,8 @@ async function publishedItemCurrent(
   });
   if (
     coverage?.current !== true ||
+    coverage.edition !== "default" ||
+    coverage.asset.edition !== "default" ||
     coverage.media.availability !== "available" ||
     coverage.asset.state !== "published" ||
     coverage.asset.ownershipEpoch !== epoch ||
@@ -332,13 +338,22 @@ async function warning(
     .parse(delivery.event.payload);
   const decision = await tx.retentionDecision.findUnique({
     where: { id: decisionId },
-    include: { media: { include: { intent: true, holds: true } } },
+    include: {
+      media: {
+        include: {
+          intents: { where: { edition: "default" } },
+          holds: { where: { edition: "default" } },
+        },
+      },
+    },
   });
   if (
     decision?.mediaId !== delivery.event.mediaId ||
+    decision.edition !== "default" ||
     decision.generation !== generation ||
-    decision.media.intent?.generation !== generation ||
-    decision.media.intent.automationEpoch !== delivery.recoveryEpoch ||
+    defaultIntent(decision.media.intents)?.generation !== generation ||
+    defaultIntent(decision.media.intents)?.automationEpoch !==
+      delivery.recoveryEpoch ||
     !["warning_pending", "grace_period"].includes(decision.state) ||
     decision.media.holds.some(
       (hold) => hold.isPin || hold.until === null || hold.until > new Date(),
@@ -350,6 +365,7 @@ async function warning(
       userId: delivery.userId,
       mediaId: decision.mediaId,
       ...effectiveRequestWhere,
+      edition: "default",
     },
   });
   if (
@@ -373,10 +389,13 @@ async function allRequestersWatched(
     where: {
       mediaId,
       ...effectiveRequestWhere,
+      edition: "default",
       user: { role: { not: "owner" } },
     },
   });
-  const observations = await tx.watchState.findMany({ where: { mediaId } });
+  const observations = await tx.watchState.findMany({
+    where: { mediaId, edition: "default" },
+  });
   const now = Date.now();
   return (
     claims.length > 0 &&

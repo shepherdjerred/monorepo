@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
 import {
@@ -119,7 +121,7 @@ export async function applyPreparedQuarantine(
           });
           for (const media of prepared.scope.media)
             await tx.recoveryHold.upsert({
-              where: { mediaId: media.id },
+              where: targetWhere(defaultScope(media.id)),
               create: {
                 mediaId: media.id,
                 recoveryEpoch: runtime.recoveryEpoch,

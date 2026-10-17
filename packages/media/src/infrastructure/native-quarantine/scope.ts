@@ -1,3 +1,4 @@
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import path from "node:path";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -55,6 +56,7 @@ export async function buildNativeQuarantineScope(
     throw new Error(
       "Select complete owned quarantined files from the restored epoch",
     );
+  for (const asset of assets) await assertDefaultPhysicalAsset(tx, asset.id);
   const ids = [
     ...new Set(
       assets.flatMap((asset) => asset.coverage.map((row) => row.mediaId)),
@@ -75,7 +77,7 @@ export async function buildNativeQuarantineScope(
   const media = await tx.mediaItem.findMany({
     where: { id: { in: ids } },
     include: {
-      intent: { include: { profile: true } },
+      intents: { where: { edition: "default" }, include: { profile: true } },
       parent: { include: { parent: true } },
     },
     orderBy: { id: "asc" },
@@ -90,7 +92,7 @@ export async function buildNativeQuarantineScope(
   )
     throw new Error("Native quarantine has inconsistent media coverage");
   const decisions = await tx.retentionDecision.findMany({
-    where: { mediaId: { in: ids }, state: "quarantined" },
+    where: { edition: "default", mediaId: { in: ids }, state: "quarantined" },
     orderBy: { id: "asc" },
     take: 101,
   });
@@ -155,44 +157,52 @@ export async function buildNativeQuarantineScope(
     request: { ...input, assetIds },
     groups,
     files,
-    media: media.map(({ intent, parent, ...item }) => ({
-      id: item.id,
-      title: item.title,
-      kind: item.kind,
-      version: item.version,
-      tmdbId: item.tmdbId,
-      externalIds: item.externalIds,
-      seasonNumber: item.seasonNumber,
-      episodeNumber: item.episodeNumber,
-      parent:
-        parent === null
-          ? null
-          : {
-              id: parent.id,
-              version: parent.version,
-              tmdbId: parent.tmdbId,
-              externalIds: parent.externalIds,
-              parent:
-                parent.parent === null
-                  ? null
-                  : {
-                      id: parent.parent.id,
-                      version: parent.parent.version,
-                      tmdbId: parent.parent.tmdbId,
-                      externalIds: parent.parent.externalIds,
-                    },
-            },
-      intent:
-        intent === null ? null : nativeJson({ ...intent, profile: undefined }),
-      profile:
-        intent?.profile == null
-          ? null
-          : {
-              id: intent.profile.id,
-              version: intent.profile.version,
-              rules: QualityRulesSchema.parse(intent.profile.rules),
-            },
-    })),
+    media: media.map(({ intents, parent, ...item }) => {
+      const intent = defaultIntent(intents);
+      return {
+        id: item.id,
+        title: item.title,
+        kind: item.kind,
+        version: item.version,
+        tmdbId: item.tmdbId,
+        externalIds: item.externalIds,
+        seasonNumber: item.seasonNumber,
+        episodeNumber: item.episodeNumber,
+        parent:
+          parent === null
+            ? null
+            : {
+                id: parent.id,
+                version: parent.version,
+                tmdbId: parent.tmdbId,
+                externalIds: parent.externalIds,
+                parent:
+                  parent.parent === null
+                    ? null
+                    : {
+                        id: parent.parent.id,
+                        version: parent.parent.version,
+                        tmdbId: parent.parent.tmdbId,
+                        externalIds: parent.parent.externalIds,
+                      },
+              },
+        intent:
+          intent === null
+            ? null
+            : nativeJson({
+                ...historicalDefaultIntent(intent),
+                profile: undefined,
+              }),
+        profile:
+          intent?.profile == null
+            ? null
+            : {
+                id: intent.profile.id,
+                version: intent.profile.version,
+                rules: QualityRulesSchema.parse(intent.profile.rules),
+              },
+      };
+    }),
     storageRoots: await resolveNativeStorageRoots(tx),
     subtitlePolicies: await snapshotNativeSubtitlePolicies(tx, ids),
     household: await nativeHousehold(tx, ids, ancestry),
@@ -290,7 +300,7 @@ async function quarantineLifecycle(
         ),
     ) ||
     (await tx.acquisitionReservation.count({
-      where: { mediaId: { in: mediaIds } },
+      where: { mediaId: { in: mediaIds }, edition: "default" },
     })) ||
     (await tx.upgradeCleanup.count({
       where: {
@@ -337,3 +347,5 @@ async function quarantineTorrents(
     };
   });
 }
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { historicalDefaultIntent } from "#infrastructure/native-recovery/legacy-snapshot.ts";

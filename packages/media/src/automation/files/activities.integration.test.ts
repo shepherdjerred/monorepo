@@ -1,3 +1,6 @@
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { readFile, rm, access, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
@@ -20,8 +23,16 @@ afterAll(async () => {
   for (const directory of directories)
     await rm(directory, { recursive: true, force: true });
 });
-async function fixture() {
-  const value = await fileFixture(cluster.database);
+async function fixture(episode = false) {
+  const series = episode
+    ? await cluster.database.mediaItem.create({
+        data: { kind: "series", title: "Coastlines", year: 2026, tmdbId: 1234 },
+      })
+    : null;
+  const value = await fileFixture(
+    cluster.database,
+    series === null ? undefined : { seriesId: series.id },
+  );
   directories.push(value.directory);
   return value;
 }
@@ -68,7 +79,7 @@ test("a new generation after staging prevents publication", async () => {
   const activities = createMediaFileActivities(f.context);
   await activities.inspectAndStageMedia(acquired.input);
   await cluster.database.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { generation: { increment: 1 } },
   });
   expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
@@ -85,33 +96,40 @@ test("a new generation after staging prevents publication", async () => {
 });
 
 test("a partial season publication followed by Keep compensates every uncommitted file", async () => {
-  const f = await fixture();
+  const f = await fixture(true);
   const acquired = await f.acquisition();
   const db = cluster.database;
-  const series = await db.mediaItem.create({
-    data: { kind: "series", title: "Coastlines", year: 2026, tmdbId: 1234 },
-  });
-  await db.mediaItem.update({
-    where: { id: f.media.id },
-    data: {
-      kind: "episode",
-      parentId: series.id,
-      seasonNumber: 1,
-      episodeNumber: 1,
-    },
-  });
+  const seriesId = f.media.parentId;
+  if (seriesId === null) throw new Error("Episode fixture has no series");
   const second = await db.mediaItem.create({
     data: {
       kind: "episode",
-      parentId: series.id,
+      parentId: seriesId,
       title: "Second Episode",
       seasonNumber: 1,
       episodeNumber: 2,
-      intent: { create: { profileId: f.profile.id, automationEpoch: 0 } },
-      requests: {
-        create: { userId: f.user.id, sponsorRequestId: f.request.id },
-      },
     },
+  });
+  await db.$transaction(async (tx) => {
+    await lockDefaultScopes(tx, [defaultScope(second.id)], {
+      createMissing: true,
+    });
+    await tx.mediaIntent.update({
+      where: targetWhere(defaultScope(second.id)),
+      data: {
+        profileId: f.profile.id,
+        automationEpoch: 0,
+        desiredPresence: true,
+        monitoring: true,
+      },
+    });
+    await tx.mediaRequest.create({
+      data: {
+        mediaId: second.id,
+        userId: f.user.id,
+        sponsorRequestId: f.request.id,
+      },
+    });
   });
   const files = ["Coastlines.S01E01.mkv", "Coastlines.S01E02.mkv"];
   for (const name of files)
@@ -163,7 +181,7 @@ test("a partial season publication followed by Keep compensates every uncommitte
   });
   const plan = FilePlanSchema.parse(attempt.filePlan);
   await db.mediaIntent.update({
-    where: { mediaId: second.id },
+    where: targetWhere(defaultScope(second.id)),
     data: { generation: 1 },
   });
   f.context.checkpoint = () => Promise.resolve();
@@ -203,7 +221,7 @@ test("restore recovers a quarantine filesystem effect whose database commit was 
     activities.quarantineMediaFiles(retention.input),
   ).rejects.toThrow("quarantine interrupted");
   const intent = await cluster.database.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { generation: 1 },
   });
   await cluster.database.retentionDecision.update({
@@ -358,7 +376,7 @@ test("quarantine and restore preserve exact content and invalidated deletion sta
     access(nodePath.join(f.roots.library, original.entry.libraryPath)),
   ).rejects.toThrow();
   const intent = await cluster.database.mediaIntent.update({
-    where: { mediaId: f.media.id },
+    where: targetWhere(defaultScope(f.media.id)),
     data: { generation: { increment: 1 } },
   });
   const operation = await cluster.database.operation.create({
@@ -440,7 +458,13 @@ test("the same retention operation quarantines then purges only after seven days
     reason: "watch_unconfirmed",
   });
   await cluster.database.watchState.update({
-    where: { userId_mediaId: { userId: f.user.id, mediaId: f.media.id } },
+    where: {
+      userId_mediaId_edition: {
+        edition: "default",
+        userId: f.user.id,
+        mediaId: f.media.id,
+      },
+    },
     data: { observedAt: timestamp },
   });
   expect(await activities.purgeMediaFiles(input)).toMatchObject({
@@ -500,7 +524,7 @@ test("only an authenticated owner confirmation bypasses watch and notification g
     data: { version: { increment: 1 } },
   });
   const intent = await db.mediaIntent.update({
-    where: { mediaId: media.id },
+    where: targetWhere(defaultScope(media.id)),
     data: { desiredPresence: false, generation: 1 },
   });
   const ownerOverride = {

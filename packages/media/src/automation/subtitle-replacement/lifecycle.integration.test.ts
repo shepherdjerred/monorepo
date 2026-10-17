@@ -139,7 +139,13 @@ test("quarantine and purge consume the replacement checksum without changing qua
     data: { evidence: { ...evidence, authorizedAt: timestamp.toISOString() } },
   });
   await f.db.watchState.update({
-    where: { userId_mediaId: { userId: f.user.id, mediaId: f.media.id } },
+    where: {
+      userId_mediaId_edition: {
+        edition: "default",
+        userId: f.user.id,
+        mediaId: f.media.id,
+      },
+    },
     data: { observedAt: timestamp },
   });
   await f.db.notificationDelivery.updateMany({

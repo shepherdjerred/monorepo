@@ -1,3 +1,5 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import nodePath from "node:path";
 import { ownedSubtitleSidecars } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
@@ -54,14 +56,18 @@ export async function removalPlan(
       }
     : { mediaId: decision.mediaId };
   const coverage = await tx.assetCoverage.findMany({
-    where: { ...scope, current: true },
+    where: { ...scope, edition: "default", current: true },
     distinct: ["assetId"],
     include: {
       asset: {
         include: {
           coverage: {
             where: { current: true },
-            include: { media: { include: { intent: true } } },
+            include: {
+              media: {
+                include: { intents: { where: { edition: "default" } } },
+              },
+            },
           },
           subtitles: { where: { state: "installed" } },
         },
@@ -70,14 +76,15 @@ export async function removalPlan(
   });
   const assets: RemovalEntry[] = [];
   for (const { asset } of coverage) {
+    await assertDefaultPhysicalAsset(tx, asset.id);
     if (!asset.owned || asset.checksum === null || asset.state !== "published")
       throw new FileGuardError("asset_not_owned");
     const location = libraryLocation(context, asset.path);
     const generations: Record<string, number> = {};
     for (const item of asset.coverage) {
-      if (item.media.intent === null)
-        throw new FileGuardError("intent_missing");
-      generations[item.mediaId] = item.media.intent.generation;
+      const intent = defaultIntent(item.media.intents);
+      if (intent === null) throw new FileGuardError("intent_missing");
+      generations[item.mediaId] = intent.generation;
     }
     const sidecars = planSidecars(
       context,
@@ -146,6 +153,7 @@ export async function assertOwnedAsset(
     },
   });
   const version = entry.assetVersion + (state === "quarantined" ? 1 : 0);
+  await assertDefaultPhysicalAsset(tx, asset.id);
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });

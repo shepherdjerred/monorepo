@@ -179,7 +179,13 @@ test("future expansion preserves explicit episode cancellation and overlapping d
   });
   await activity.expandMediaRequest(input);
   const inherited = await db.mediaRequest.findUniqueOrThrow({
-    where: { userId_mediaId: { userId: user.id, mediaId: episode.id } },
+    where: {
+      userId_mediaId_edition: {
+        userId: user.id,
+        mediaId: episode.id,
+        edition: "default",
+      },
+    },
   });
   await commands.cancelRequest(
     user,

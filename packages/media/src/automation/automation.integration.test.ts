@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { IntegrationError } from "#integrations/http.ts";
 import { createAcquisitionActivities } from "./acquisition.ts";
@@ -57,7 +59,7 @@ test("Retry after committed promotion adopts the coordinator and verifies Plex w
     if (retry.operationId === undefined)
       throw new Error("Retry operation missing");
     const intent = await database().mediaIntent.findUniqueOrThrow({
-      where: { mediaId: f.media.id },
+      where: targetWhere(defaultScope(f.media.id)),
     });
     const ctx = context(async (url) => {
       if (url.hostname !== "plex.fixture")
@@ -170,7 +172,7 @@ test("concurrent acquisitions reserve a media item exactly once", async () => {
   );
   expect(
     await database().acquisitionReservation.count({
-      where: { mediaId: data.media.id },
+      where: { mediaId: data.media.id, edition: "default" },
     }),
   ).toBe(1);
   expect(
@@ -218,7 +220,7 @@ test("request generation adoption keeps the original reservation and torrent ide
   const activities = createAcquisitionActivities(context());
   const first = await activities.reconcileMediaIntent(data.input);
   await database().mediaIntent.update({
-    where: { mediaId: data.media.id },
+    where: targetWhere(defaultScope(data.media.id)),
     data: { generation: 2 },
   });
   const joining = await database().operation.create({
@@ -235,7 +237,7 @@ test("request generation adoption keeps the original reservation and torrent ide
   });
   const reservation = await database().acquisitionReservation.findUniqueOrThrow(
     {
-      where: { mediaId: data.media.id },
+      where: targetWhere(defaultScope(data.media.id)),
     },
   );
   expect(reservation).toMatchObject({
@@ -376,7 +378,7 @@ test("last requester cancellation settles an unsubmitted reservation without cal
     data: { active: false },
   });
   await database().mediaIntent.update({
-    where: { mediaId: data.media.id },
+    where: targetWhere(defaultScope(data.media.id)),
     data: { monitoring: false },
   });
   expect(

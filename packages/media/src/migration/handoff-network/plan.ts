@@ -1,3 +1,4 @@
+import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { HandoffScopeSchema } from "#shared/handoff.ts";
 import {
@@ -47,7 +48,10 @@ export async function readHandoffPlan(
   if (!validMode) throw protectedEvidence("handoff_runtime_changed");
   const media = await db.mediaItem.findMany({
     where: { id: { in: scope.media.map((item) => item.mediaId) } },
-    include: { intent: true, parent: { include: { parent: true } } },
+    include: {
+      intents: { where: { edition: "default" } },
+      parent: { include: { parent: true } },
+    },
   });
   if (media.length !== scope.media.length)
     throw protectedEvidence("handoff_media_missing");
@@ -55,7 +59,8 @@ export async function readHandoffPlan(
     const current = media.find((item) => item.id === expected.mediaId);
     if (
       current?.version !== expected.version ||
-      (current.intent?.generation ?? null) !== expected.generation
+      (defaultIntent(current.intents)?.generation ?? null) !==
+        expected.generation
     )
       throw protectedEvidence("handoff_media_changed");
   }

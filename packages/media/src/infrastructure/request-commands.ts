@@ -9,14 +9,29 @@ import {
   lockEffectiveRequests,
 } from "./request-claims.ts";
 import { invalidateRetention } from "./action-guards.ts";
-import { lockMedia, needsRestore } from "./locks.ts";
+import { needsRestore } from "./locks.ts";
+import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
+import { targetWhere } from "./editions/targets.ts";
+import { lockDefaultScopes } from "./editions/locks.ts";
 import { commandAutomationEpoch } from "./handoff/authority.ts";
 import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
 
 export class MediaRequestCommands extends MediaCommandBase {
   createRequest(actor: MediaActor, key: string, input: CreateRequest) {
     return this.command(actor, key, { kind: "request", input }, async (db) => {
-      await lockMedia(db, [input.mediaId]);
+      const targets = await lockDefaultScopes(
+        db,
+        [defaultScope(input.mediaId)],
+        { createMissing: true },
+      );
+      const target = targets[0];
+      if (target === undefined) throw new Error("Request target missing");
+      if (target.target.lineage !== "resolved")
+        throw new MediaError(
+          "lineage_unresolved",
+          "Canonical media ancestry requires reconciliation",
+          409,
+        );
       await lockEffectiveRequests(db, [input.mediaId]);
       const automationEpoch = await commandAutomationEpoch(db);
       const media = await db.mediaItem.findUnique({
@@ -50,7 +65,9 @@ export class MediaRequestCommands extends MediaCommandBase {
           input.includeFutureEpisodes ?? media.kind === "series",
       };
       const request = await db.mediaRequest.upsert({
-        where: { userId_mediaId: { userId, mediaId: media.id } },
+        where: {
+          userId_mediaId_edition: { userId, ...defaultScope(media.id) },
+        },
         create: { userId, mediaId: media.id, ...options },
         update: {
           ...options,
@@ -65,11 +82,11 @@ export class MediaRequestCommands extends MediaCommandBase {
         where: { kind: media.kind === "movie" ? "movie" : "series" },
       });
       const prior = await db.mediaIntent.findUnique({
-        where: { mediaId: media.id },
+        where: targetWhere(defaultScope(media.id)),
       });
       const profileId = prior?.profileId ?? defaults?.profileId ?? null;
       const intent = await db.mediaIntent.upsert({
-        where: { mediaId: media.id },
+        where: targetWhere(defaultScope(media.id)),
         create: {
           mediaId: media.id,
           generation: 1,
@@ -83,7 +100,7 @@ export class MediaRequestCommands extends MediaCommandBase {
           intentionallyRemovedAt: null,
           profileId,
           generation: { increment: 1 },
-          version: { increment: 1 },
+          version: target.existed ? { increment: 1 } : 0,
         },
       });
       await db.mediaItem.update({
@@ -156,7 +173,10 @@ export class MediaRequestCommands extends MediaCommandBase {
             "You can only cancel your own requests",
             403,
           );
-        await lockMedia(db, [request.mediaId]);
+        assertDefaultEdition(request.edition);
+        await lockDefaultScopes(db, [defaultScope(request.mediaId)], {
+          createMissing: false,
+        });
         const changed = await db.mediaRequest.updateMany({
           where: { id: requestId, version: expectedVersion, active: true },
           data: {
@@ -180,7 +200,7 @@ export class MediaRequestCommands extends MediaCommandBase {
           data: { version: { increment: 1 } },
         });
         const intent = await db.mediaIntent.update({
-          where: { mediaId: request.mediaId },
+          where: targetWhere(defaultScope(request.mediaId)),
           data: {
             generation: { increment: 1 },
             version: { increment: 1 },

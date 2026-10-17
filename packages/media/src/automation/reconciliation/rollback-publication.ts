@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { requireActiveRuntime } from "#automation/runtime.ts";
 import { serializable } from "#automation/store.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type {
   MediaAttemptOperation,
@@ -40,6 +41,7 @@ export async function publishRollback(
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
+  assertDefaultEdition(attempt.edition);
   if (attempt.state !== "rolled_back")
     return { status: "not_applicable", reason: null };
   const receipt = ReceiptSchema.parse(attempt.failure).rollbackReceipt;
@@ -73,8 +75,15 @@ async function releaseCompensatedReservation(
   const snapshot = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  assertDefaultEdition(snapshot.edition);
   await serializable(context.db, async (tx) => {
-    await lockMedia(tx, snapshot.mediaIds);
+    await lockDefaultScopes(
+      tx,
+      snapshot.mediaIds.map((id) => defaultScope(id)),
+      {
+        createMissing: false,
+      },
+    );
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
@@ -88,6 +97,7 @@ async function releaseCompensatedReservation(
       !runtime.ownershipConfirmed ||
       runtime.recoveryEpoch !== attempt.recoveryEpoch ||
       attempt.state !== "rolled_back" ||
+      attempt.edition !== "default" ||
       receipt.recoveryEpoch !== attempt.recoveryEpoch ||
       receipt.mediaIds.length > 0 ||
       receipt.assets.length > 0
@@ -115,13 +125,19 @@ async function releaseCompensatedReservation(
             (asset) =>
               asset.id === entry.assetId &&
               asset.owned &&
+              asset.edition === "default" &&
               asset.state === "rejected" &&
               asset.checksum === entry.checksum &&
-              asset.coverage.every((coverage) => !coverage.current),
+              asset.coverage.every(
+                (coverage) =>
+                  coverage.edition === "default" && !coverage.current,
+              ),
           ),
       )
     )
       throw new Error("Rollback compensation evidence changed");
-    await tx.acquisitionReservation.deleteMany({ where: { attemptId } });
+    await tx.acquisitionReservation.deleteMany({
+      where: { attemptId, edition: "default" },
+    });
   });
 }

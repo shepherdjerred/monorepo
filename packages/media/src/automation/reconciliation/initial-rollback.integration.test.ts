@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { readFile, rm } from "node:fs/promises";
@@ -110,7 +112,7 @@ test("two actual Retries after initial rollback search and reserve new attempts 
       if (retry.operationId === undefined)
         throw new Error("Retry operation missing");
       const intent = await db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
       });
       const resumed = await createAcquisitionActivities(
         ctx,

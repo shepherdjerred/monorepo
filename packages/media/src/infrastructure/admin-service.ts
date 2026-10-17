@@ -355,6 +355,7 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
         const intents = await tx.mediaIntent.findMany({
           where: {
             mediaId: { in: asset.coverage.map((coverage) => coverage.mediaId) },
+            edition: "default",
           },
         });
         if (

@@ -1,4 +1,5 @@
 import { Prisma } from "#generated/prisma/client.ts";
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import type { SubtitleAsset } from "#generated/prisma/client.ts";
 import {
   ownedSubtitleSidecars,
@@ -53,7 +54,7 @@ export async function cleanupUpgrade(
   if (await reopenLegacyClaimProtection(initialContext.db, plan.mediaIds))
     throw new PendingLegacyClaimsError(plan.mediaIds);
   const intents = await initialContext.db.mediaIntent.findMany({
-    where: { mediaId: { in: plan.mediaIds } },
+    where: { mediaId: { in: plan.mediaIds }, edition: "default" },
   });
   const generations = new Map(
     intents.map((intent) => [intent.mediaId, intent.generation]),
@@ -76,6 +77,8 @@ export async function cleanupUpgrade(
       });
       if (current.state === "purged") return;
       const authorize = async () => {
+        await assertDefaultPhysicalAsset(tx, current.assetId);
+        await assertDefaultPhysicalAsset(tx, current.successorAssetId);
         if (!(await context.enabled.purge()))
           throw new FileGuardError("purge_disabled");
         await assertRuntime(tx, snapshot.recoveryEpoch);
@@ -94,7 +97,11 @@ export async function cleanupUpgrade(
           throw new FileGuardError("record_ownership_unconfirmed");
         if (
           await tx.recoveryHold.count({
-            where: { mediaId: { in: plan.mediaIds }, releasedAt: null },
+            where: {
+              mediaId: { in: plan.mediaIds },
+              edition: "default",
+              releasedAt: null,
+            },
           })
         )
           throw new FileGuardError("recovery_request_history_unconfirmed");
@@ -109,7 +116,7 @@ export async function cleanupUpgrade(
         await assertCleanupAssets({ tx, context, cleanup: current, plan });
         await assertCurrentPlayback(tx, context, playback);
         const latest = await tx.mediaIntent.findMany({
-          where: { mediaId: { in: plan.mediaIds } },
+          where: { mediaId: { in: plan.mediaIds }, edition: "default" },
         });
         if (
           latest.length !== plan.mediaIds.length ||
@@ -121,6 +128,7 @@ export async function cleanupUpgrade(
         const held = await tx.retentionHold.count({
           where: {
             mediaId: { in: plan.mediaIds },
+            edition: "default",
             OR: [
               { isPin: true },
               { until: null },

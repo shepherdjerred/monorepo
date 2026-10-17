@@ -56,6 +56,7 @@ async function managedSponsorActor(
 ): Promise<string | null> {
   const sources = await tx.requestCoverage.findMany({
     where: {
+      edition: "default",
       requestId: request.id,
       active: true,
       rootRequest: { ...effectiveRequestWhere },

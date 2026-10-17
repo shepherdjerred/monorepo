@@ -23,6 +23,7 @@ export async function assertQuarantineRestoreRows(
     );
     if (file === undefined)
       throw new Error("Quarantine restore binding omitted reviewed file");
+    await assertDefaultPhysicalAsset(tx, binding.assetId);
     const asset = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: binding.assetId },
       include: {
@@ -86,3 +87,4 @@ export async function writeNativeRestoreOperationReceipt(
   const restoreReceipt = NativeQuarantineRestorationSchema.parse(receipt);
   await tx.$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify({ restoreReceipt })}::jsonb WHERE id = ${operationId}`;
 }
+import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";

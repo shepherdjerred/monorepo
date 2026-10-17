@@ -119,7 +119,7 @@ test("requires owner access and prevents private trackers from using public clea
 
 async function uploadFixture(): Promise<ManualSubtitle> {
   const media = await cluster.database.mediaItem.create({
-    data: { title: "Upload fixture", kind: "movie", intent: { create: {} } },
+    data: { title: "Upload fixture", kind: "movie", intents: { create: {} } },
   });
   const asset = await cluster.database.libraryAsset.create({
     data: {

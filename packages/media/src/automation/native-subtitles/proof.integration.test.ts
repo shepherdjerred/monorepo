@@ -1,3 +1,5 @@
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { expect, test } from "vitest";
 import { writeFile, rename, readFile, mkdir, copyFile } from "node:fs/promises";
 import path from "node:path";
@@ -167,7 +169,7 @@ test.each(["accepted", "unverified", "rejected"] as const)(
       ).toEqual(before);
     expect(
       await f.db.mediaIntent.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
       }),
     ).toMatchObject({ automationEpoch: 0 });
     expect(
@@ -177,7 +179,7 @@ test.each(["accepted", "unverified", "rejected"] as const)(
     ).toMatchObject({ recoveryEpoch: 0 });
     expect(
       await f.db.recoveryHold.findUniqueOrThrow({
-        where: { mediaId: f.media.id },
+        where: targetWhere(defaultScope(f.media.id)),
       }),
     ).toMatchObject({ recoveryEpoch: 1, releasedAt: null });
     expect(await readFile(f.sidecarPath, "utf8")).toBe(f.text);
