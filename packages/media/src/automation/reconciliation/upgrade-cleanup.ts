@@ -70,9 +70,13 @@ export async function queueUpgradeCleanupPage(
     scanId: string;
   },
 ) {
+  const runtime = await context.db.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
   const records = await context.db.upgradeCleanup.findMany({
     where: {
       state: "pending",
+      recoveryEpoch: runtime.recoveryEpoch,
       expiresAt: { lte: new Date() },
       ...(input.cursor === null ? {} : { id: { gt: input.cursor } }),
     },
@@ -100,16 +104,19 @@ export async function queueUpgradeCleanupPage(
       )
         continue;
     }
-    await serializable(
-      context.db,
-      async (tx) =>
-        await queueOperation(tx, {
-          key: `upgrade-cleanup:${cleanup.id}:scan:${input.scanId}`,
-          kind: "cleanup_upgrade",
-          targetId: cleanup.id,
-          payload: { cleanupId: cleanup.id },
-        }),
-    );
+    await serializable(context.db, async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`;
+      const current = await tx.mediaRuntimeState.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
+      if (current.recoveryEpoch !== cleanup.recoveryEpoch) return;
+      await queueOperation(tx, {
+        key: `upgrade-cleanup:${cleanup.id}:scan:${input.scanId}`,
+        kind: "cleanup_upgrade",
+        targetId: cleanup.id,
+        payload: { cleanupId: cleanup.id },
+      });
+    });
   }
   return {
     processed: records.length,

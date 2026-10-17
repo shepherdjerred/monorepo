@@ -12,13 +12,15 @@ import {
   humanize,
 } from "#client/components.tsx";
 import { NativeRecoveryReview } from "./review.tsx";
+import { NativeArchiveIndex } from "./archive/index.tsx";
 
 export function NativeRecoveryPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
+  if (id === "archives") return <NativeArchiveIndex user={user} />;
   return id === undefined ? (
     <NativeRecoveryIndex user={user} />
   ) : (
-    <NativeRecoveryReview user={user} id={id} />
+    <NativeRecoveryReview key={id} user={user} id={id} />
   );
 }
 function NativeRecoveryIndex({ user }: { user: MediaUser }) {
@@ -79,6 +81,8 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
       </PageTitle>
       <p>
         <Link to="/recovery">Household recovery protection</Link>
+        {" · "}
+        <Link to="/recovery/native/archives">Review upgrade archives</Link>
       </p>
       {inventory.isPending && <Loading />}
       {inventory.error !== null && <ErrorNotice error={inventory.error} />}

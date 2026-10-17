@@ -165,8 +165,18 @@ test("inventory persists bounded Plex pages without adopting foreign files; abse
   ).toBe(1);
   expect(await sweepInventory(ctx, scanId)).toEqual({
     processed: 0,
+    nextCursor: "archives",
+  });
+  expect(
+    await db.reconciliationScan.findUniqueOrThrow({ where: { id: scanId } }),
+  ).toMatchObject({ state: "running", progress: { section: 4 } });
+  expect(await sweepInventory(ctx, scanId)).toEqual({
+    processed: 0,
     nextCursor: null,
   });
+  expect(
+    await db.reconciliationScan.findUniqueOrThrow({ where: { id: scanId } }),
+  ).toMatchObject({ state: "completed", completedAt: expect.any(Date) });
 });
 
 test("feed sweep records unsupported capability and never disguises title searches as a feed", async () => {

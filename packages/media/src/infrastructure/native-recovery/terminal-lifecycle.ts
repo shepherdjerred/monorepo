@@ -9,6 +9,8 @@ import { nativeSubtitleSnapshot } from "#automation/native-subtitles/snapshot.ts
 import { nativeJson } from "./snapshots.ts";
 import { terminalRebindingChain } from "./terminal-rebinding.ts";
 import { terminalSubtitleChain } from "./terminal-subtitles.ts";
+import { archiveTerminalDependency } from "#infrastructure/native-archive/terminal.ts";
+import { archiveClosure } from "#infrastructure/native-archive/closure.ts";
 import {
   NativeTerminalDependencySchema,
   type NativeTerminalDescriptor,
@@ -41,6 +43,21 @@ export async function nativeTerminalDependencies(
 ) {
   const result: NativeTerminalDescriptor[] = [];
   for (const cleanup of cleanups) {
+    if (
+      cleanup.state === "pending" &&
+      (await tx.nativeArchiveCleanupContinuation.count({
+        where: { originalCleanupId: cleanup.id, state: "cleaned" },
+      }))
+    ) {
+      const closure = await archiveClosure(tx, [cleanup.id]);
+      const terminal = await archiveTerminalDependency(
+        tx,
+        cleanup,
+        closure.assets,
+      );
+      result.push(terminal.dependency);
+      continue;
+    }
     const old = await tx.libraryAsset.findUniqueOrThrow({
       where: { id: cleanup.assetId },
       include: {

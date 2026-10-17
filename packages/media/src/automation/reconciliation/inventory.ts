@@ -2,11 +2,13 @@ import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
 import { queueUpgradeCleanupPage } from "./upgrade-cleanup.ts";
+import { queueNativeArchivePage } from "./native-archive.ts";
 
 const ProgressSchema = z.object({
-  section: z.number().int().min(0).max(3),
+  section: z.number().int().min(0).max(4),
   offset: z.number().int().nonnegative(),
   assetCursor: z.string().nullable().default(null),
+  archiveCursor: z.string().nullable().default(null),
 });
 
 /** Records unowned inventory as observations only. Missing paths require a complete scan. */
@@ -25,6 +27,8 @@ export async function sweepInventory(
   });
   if (scan.state === "completed") return { processed: 0, nextCursor: null };
   const progress = ProgressSchema.parse(scan.progress);
+  if (progress.section === 4)
+    return reconcileArchives(context, scanId, progress.archiveCursor);
   if (progress.section === 3)
     return reconcileCleanup(context, scanId, progress.assetCursor);
   if (progress.section === 2)
@@ -183,7 +187,32 @@ async function reconcileCleanup(
   await context.db.reconciliationScan.update({
     where: { id: scanId },
     data: {
-      progress: { section: 3, offset: 0, assetCursor: result.nextCursor },
+      progress: {
+        section: result.nextCursor === null ? 4 : 3,
+        offset: 0,
+        assetCursor: result.nextCursor,
+        archiveCursor: null,
+      },
+    },
+  });
+  return { ...result, nextCursor: result.nextCursor ?? "archives" };
+}
+
+async function reconcileArchives(
+  context: MediaAutomationContext,
+  scanId: string,
+  cursor: string | null,
+) {
+  const result = await queueNativeArchivePage(context, { scanId, cursor });
+  await context.db.reconciliationScan.update({
+    where: { id: scanId },
+    data: {
+      progress: {
+        section: 4,
+        offset: 0,
+        assetCursor: null,
+        archiveCursor: result.nextCursor,
+      },
       ...(result.nextCursor === null
         ? { state: "completed", completedAt: new Date() }
         : {}),

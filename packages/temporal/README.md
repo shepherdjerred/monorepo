@@ -742,6 +742,19 @@ heartbeats and bounded retries, and sanitizes failures before history encoding.
 Capability provisioning, proxy URL-log privacy and actual PMS delivery remain
 separate prerequisites before enabling hints.
 
+Native archive prepare/apply Workflows observe current Plex playback and archive
+exclusion on `media-network`, then prove or rebind exact files on `media-files`.
+Their separate expiry cleanup Workflow preserves the original deadline and
+refreshes network evidence during physical work. The existing inventory sweep
+pages ordinary current-epoch cleanups before a separate archive-continuation
+cursor; historical pending rows cannot replay old cleanup authority. No new
+schedule is added. Only explicitly selected archives receive cleanup commands;
+retained dependencies and current playback remain retained. Every new archive
+Activity obtains invocation-local cancellation and finite wall/monotonic SDK
+deadlines before runtime initialization, with checks around awaited work and
+physical effects. Current-version transitions lacking an immutable physical
+receipt remain protected rather than renewing authority through another review.
+
 The initially paused `media-capacity` schedule runs each minute with SKIP overlap.
 Its new Workflow first observes canonical mounts on `media-network`, then samples
 them on `media-files`; the API never mounts libraries. Each Activity checks the

@@ -22,6 +22,7 @@ export async function nativeStorageFixture(
   cipher: CredentialCipher,
   sourceState: "seeding" | "removed" = "seeding",
   options: {
+    fileFactory?: () => Promise<Awaited<ReturnType<typeof fileFixture>>>;
     settle?: (
       file: Awaited<ReturnType<typeof fileFixture>>,
       original: Awaited<
@@ -41,7 +42,7 @@ export async function nativeStorageFixture(
   } = {},
 ) {
   const prior = await nativeNetworkFixture(db, cipher);
-  const file = await fileFixture(db);
+  const file = await (options.fileFactory?.() ?? fileFixture(db));
   const original = await file.published();
   const published =
     options.settle === undefined
@@ -50,7 +51,10 @@ export async function nativeStorageFixture(
   const asset = await db.libraryAsset.findUniqueOrThrow({
     where: { id: published.entry.assetId },
   });
-  const canonicalPath = `/data/movies/${published.entry.libraryPath}`;
+  const libraryKind = published.entry.libraryKind;
+  const canonicalRoot = `/data/${libraryKind}`;
+  const sectionId = libraryKind === "movies" ? "1" : "2";
+  const canonicalPath = `${canonicalRoot}/${published.entry.libraryPath}`;
   await db.libraryAsset.update({
     where: { id: asset.id },
     data: { path: canonicalPath },
@@ -82,8 +86,8 @@ export async function nativeStorageFixture(
   const subtitleText = "1\n00:00:00,000 --> 00:00:01,000\nSynthetic subtitle\n";
   await writeFile(
     path.join(
-      file.context.roots.movies.library,
-      path.relative("/data/movies", sidecar),
+      file.context.roots[libraryKind].library,
+      path.relative(canonicalRoot, sidecar),
     ),
     subtitleText,
   );
@@ -143,14 +147,21 @@ export async function nativeStorageFixture(
   await db.mediaItem.update({
     where: { id: file.media.id },
     data: {
-      externalIds: { plexRatingKey: "native", plexSectionId: "1" },
+      externalIds: { plexRatingKey: "native", plexSectionId: sectionId },
       availability: "available",
     },
   });
   const item = {
     ratingKey: "native",
     title: file.media.title,
-    type: "movie",
+    type: file.media.kind,
+    ...(file.media.kind === "episode"
+      ? {
+          index: z.int().parse(file.media.episodeNumber),
+          parentIndex: z.int().parse(file.media.seasonNumber),
+          grandparentRatingKey: "native-series",
+        }
+      : {}),
     Guid: [{ id: `tmdb://${String(file.media.tmdbId)}` }],
     Media: [
       { Part: [{ id: 1, file: canonicalPath, size: Number(asset.sizeBytes) }] },
@@ -177,17 +188,20 @@ export async function nativeStorageFixture(
     where: { idempotencyKey: `restore-observe:${recoveryId}` },
   });
   const proofs = await grantTestExclusionProofs(db, prior.actor.id);
-  const tv = {
-    library: path.join(file.directory, "tv"),
-    control: path.join(file.directory, "tv-control"),
-    downloads: file.context.roots.movies.downloads,
+  const unusedKind = libraryKind === "movies" ? "tv" : "movies";
+  const unused = {
+    library: path.join(file.directory, unusedKind),
+    control: path.join(file.directory, `${unusedKind}-control`),
+    downloads: file.context.roots[libraryKind].downloads,
   };
-  await mkdir(tv.library);
-  await mkdir(tv.control);
-  file.context.roots.tv = tv;
+  await mkdir(unused.library);
+  await mkdir(unused.control);
+  file.context.roots[unusedKind] = unused;
   for (const proof of proofs) {
     const roots =
-      proof.libraryRoot === "/data/movies" ? file.context.roots.movies : tv;
+      proof.libraryRoot === "/data/movies"
+        ? file.context.roots.movies
+        : file.context.roots.tv;
     await writeFile(
       path.join(roots.library, ".plexignore"),
       proof.rootMarkerAfter,
@@ -201,7 +215,7 @@ export async function nativeStorageFixture(
     const library =
       roots.library === file.context.roots.movies.library
         ? "/data/movies"
-        : roots.library === tv.library
+        : roots.library === file.context.roots.tv.library
           ? "/data/tv"
           : null;
     if (library === null) throw new Error("Unknown fixture executor root");
