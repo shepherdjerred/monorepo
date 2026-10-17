@@ -44,6 +44,16 @@ public final class MapLifecycleFixtures implements BasicCommand {
     var found = plugin.getServer().getPluginManager().getPlugin("TheStorm");
     if (!(found instanceof TheStormPlugin storm))
       throw new IllegalStateException("TheStorm missing");
+    if (args.length == 2 && args[0].equals("candidate-ready")) {
+      source
+          .getSender()
+          .sendMessage(
+              Component.text(
+                  GSON.toJson(
+                      CandidateReadiness.ready(
+                          storm.service(MatchView.class).current(), args[1]))));
+      return;
+    }
     if (args.length == 1 && args[0].equals("chat-status")) {
       source.getSender().sendMessage(Component.text(GSON.toJson(ChatStateProbe.capture(storm))));
       return;
@@ -58,7 +68,7 @@ public final class MapLifecycleFixtures implements BasicCommand {
     }
     if (args.length != 1)
       throw new IllegalArgumentException(
-          "expected status, contents, prepare, start, stop or verify-contents id payload");
+          "expected status, contents, candidate-ready id, prepare, start, stop or verify-contents id payload");
     if (args[0].equals("contents")) {
       source.getSender().sendMessage(Component.text(GSON.toJson(contents(storm))));
       return;

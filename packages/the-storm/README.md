@@ -2986,7 +2986,19 @@ overhead out of capacity claims.
 `test:capacity-native` boots the same disposable capacity profile with an
 ordinary rendered Minecraft client. It joins a 256-combatant draft by default;
 `STORM_CAPACITY_NATIVE_TOTAL` selects 64, 100, 128 or 192 for tier acceptance.
-It moves through normal input, waits for normal combat and match completion, and requires
+Before connecting the client, its existing fifteen-minute preparation wait reads
+the fixture's `candidate-ready <mapId>` boolean: the empty Lobby must have exactly
+that unclosed candidate ballot and completed candidate terrain visits. This does
+not close the vote or activate navigation; navigation activates after ordinary
+voting. The first arrival still receives its ninety-second vote, and the native
+draft retains its 120-second admission bound. Timestamped status and candidate
+replies remain under `.cache/e2e/capacity-native-preparation/`; the acceptance
+receipt links their path and preparation timing. A connected client's failure
+captures its status and a screenshot before teardown without replacing the
+original failure.
+It proves twenty ticks of ordinary forward movement, then observes normal combat
+in place instead of holding blind forward input across floating terrain. It waits
+for ordinary match completion and requires
 the original recording to attribute the human's combat death to a bot, corroborated
 by health loss observed in the native client. A passive server observer binds
 to that same ordinary match and journals the human's health and absorption
@@ -2994,6 +3006,10 @@ before and after bot hits. Acceptance requires that killer's recorded attack
 intent, applied melee or projectile damage, and direct combat death; poison,
 environmental deaths and canceled hits that changed no health cannot satisfy
 it. The observer never moves or damages a fighter. It also checks bot movement.
+After the observer is armed, failures retain its raw timestamped sample and strict
+schema/match validation alongside the native failure capture. Empty bot-hit data
+alone does not establish an environmental cause of death; the original acceptance
+failure remains authoritative if secondary evidence collection fails.
 Screenshots, client commands, observations and the original recording remain
 under `.cache/e2e/capacity-native/`. Run this on a machine able to launch the
 client, separately from the load matrix so client rendering cannot affect its

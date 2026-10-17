@@ -1114,6 +1114,7 @@
             "tests/capacity/behavior.test.ts",
             "tests/capacity/features.test.ts",
             "tests/capacity/map-readiness.test.ts",
+            "tests/capacity/native-readiness.test.ts",
             "tools/capacity",
             "scripts/bots/mineskin.test.ts",
             "scripts/bots/expanded-kit-weights.test.ts"
