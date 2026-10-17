@@ -70,17 +70,9 @@ export const VersionMapSchema = z
     "shepherdjerred/scout-for-lol/beta": z.string(),
     "shepherdjerred/scout-for-lol/prod": z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": z.string(),
-    "shepherdjerred/scout-for-lol/beta/workflows/retained-0ca0966f0a35":
-      z.string(),
-    "shepherdjerred/scout-for-lol/beta/workflows/retained-2a5f0ef50956":
-      z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/retained-696d4c2fadb5":
       z.string(),
-    "shepherdjerred/scout-for-lol/beta/workflows/retained-869eb67f7730":
-      z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/retained-ced2f566dce4":
-      z.string(),
-    "shepherdjerred/scout-for-lol/beta/workflows/retained-d839b9435dda":
       z.string(),
     "shepherdjerred/scout-for-lol/beta/workflows/stable": z.string(),
     "shepherdjerred/scout-for-lol/prod/workflows/candidate": z.string(),

@@ -826,32 +826,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-0ca0966f0a35",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1009839@sha256:1bbed16e7d93342380ee0b5a8425b8baa6b77c69553540b4f90cf6ed3c12b19e",
-      "notes": [
-        "Retained Scout beta Workflow build 0ca0966f0a35ce1e80e21edf8b1b906fc4f85779; keep until it is neither current nor ramping and its pinned executions have drained",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-2a5f0ef50956",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1009046@sha256:203652ad0822a3cf46af6d5c586b6b7ff38d1a1e00887ebf1ef66e75bd4eb2f4",
-      "notes": [
-        "Retained Scout beta Workflow build 2a5f0ef5095608444d5e394c00793a083323e5a9; keep until it is neither current nor ramping and its pinned executions have drained",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
       "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-696d4c2fadb5",
       "category": "internal-image",
       "artifactType": "image",
@@ -865,19 +839,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-869eb67f7730",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1009613@sha256:a8d5f37f66df717d7c6cd5b763275a2387068623a14a49c7b20fce453ea53a4b",
-      "notes": [
-        "Retained Scout beta Workflow build 869eb67f7730e2f144d3e49ea3b6631586a3b061; keep until it is neither current nor ramping and its pinned executions have drained",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
       "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-ced2f566dce4",
       "category": "internal-image",
       "artifactType": "image",
@@ -887,19 +848,6 @@
       "value": "2.0.0-1010053@sha256:661b60608f4f2469e8a141e36ea1743cd0e25b31c8ad740056f3d9af3f2b323b",
       "notes": [
         "Retained Scout beta Workflow build ced2f566dce430dbda24551512cbb1818482db3a; preserve existing capacity while advancing the candidate to the generation cleanup build",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-d839b9435dda",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
-      "notes": [
-        "Retained Scout beta Workflow build d839b9435dda3c2efe032f1f43e5c495f9179a28; keep until it is neither current nor ramping and its pinned executions have drained",
         "not managed by renovate or image commit-back"
       ]
     },
