@@ -39,9 +39,12 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   compatibility escape hatches. CLI observations are compact by default;
   `observe --full` includes detailed readiness, collision, nearby-object,
   battler, party, inventory, and progression state for diagnostics.
-  The agent runs with full filesystem access in the pod, so goal mode is
-  limited to the trusted guilds in `GOAL_ALLOWED_GUILD_IDS`; other guilds play
-  without it.
+  The agent calls this fixed CLI through the Pokémon MCP adapter with literal
+  argument words. Native shell, browser, and image-file tools are disabled;
+  filesystem permissions deny the credential home and process filesystem.
+  Screenshots are attached only from the validated game output directory.
+  Goal mode remains limited to the trusted guilds in `GOAL_ALLOWED_GUILD_IDS`;
+  other guilds play without it.
 - **Notifications** — the bot polls the emulator's memory (~2×/sec) and posts
   Discord embeds for in-game events: faints, gym badges, evolutions, catches,
   level-ups, whiteouts, and new Pokédex entries. Configure under

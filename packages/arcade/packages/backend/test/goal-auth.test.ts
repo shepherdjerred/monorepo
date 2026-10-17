@@ -95,6 +95,26 @@ describe("Emerald subscription authentication", () => {
     );
   });
 
+  it("preserves refreshed credentials when only accepted base64 padding bits change", async () => {
+    const home = await authDirectory();
+    let contents = `${authentication()} `;
+    while (Buffer.byteLength(contents) % 3 !== 2) contents += " ";
+    const seed = encoded(contents);
+    await prepareGoalAuth(seed, home);
+    const refreshed = authentication("synthetic-refreshed-access");
+    await writeFile(path.join(home, "auth.json"), refreshed);
+    // Trailing ASCII space gives A=; B= changes only the unused padding bits.
+    expect(seed.CODEX_AUTH_JSON_B64.endsWith("A=")).toBe(true);
+    const paddingVariant = seed.CODEX_AUTH_JSON_B64.slice(0, -2) + "B=";
+    expect(Buffer.from(paddingVariant, "base64").toString("utf8")).toBe(
+      contents,
+    );
+    await prepareGoalAuth({ CODEX_AUTH_JSON_B64: paddingVariant }, home);
+    expect(await readFile(path.join(home, "auth.json"), "utf8")).toBe(
+      refreshed,
+    );
+  });
+
   it("rejects missing, malformed, and incomplete credentials without exposing them", async () => {
     const db = await authDirectory();
     await expect(prepareGoalAuth({}, db)).rejects.toThrow(

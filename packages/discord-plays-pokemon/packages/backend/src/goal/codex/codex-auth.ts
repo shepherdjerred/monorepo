@@ -84,7 +84,7 @@ export async function prepareGoalAuth(
   const seedFile = path.join(home, "seed.sha256");
   const cached = await readPrivateFile(authFile);
   const seed = await readPrivateFile(seedFile);
-  const digest = createHash("sha256").update(encoded.data).digest("hex");
+  const digest = createHash("sha256").update(contents).digest("hex");
   if (seed !== undefined && !/^[a-f0-9]{64}$/u.test(seed))
     throw new Error("Invalid Emerald authentication seed marker");
   if (cached !== undefined) {

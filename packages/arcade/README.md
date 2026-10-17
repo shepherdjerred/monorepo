@@ -79,6 +79,13 @@ authentication cache.
 The existing Pokémon Codex adapter owns credential validation and cache persistence;
 Arcade wires its bootstrap environment without another provider credential reader.
 Local goal-enabled processes must set `CODEX_HOME` to an absolute private directory.
+The native goal runtime disables shell, browser, and local-image tools and denies
+file-tool reads of the credential home and process filesystem. Its only game
+execution interface is the `pokemonctl` MCP adapter: it invokes a fixed CLI with
+literal argument words and forwards only the per-goal control credentials.
+Screenshots are attached by that adapter from its validated output directory.
+Native filesystem tools fail closed on hosts without the required sandbox;
+semantic game controls do not require Linux user namespaces.
 
 Private WASM builds use `runtimes/prepare-assets.py --help`. The script accepts
 a dedicated clean checkout of the pinned upstream, an Emscripten SDK, and an

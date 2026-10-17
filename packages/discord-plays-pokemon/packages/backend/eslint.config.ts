@@ -33,6 +33,8 @@ const config = [
         "src/emulator/emulator-symbols.integration.test.ts",
         "src/emulator/flash-persistence.test.ts",
         "src/goal/codex/codex-command.test.ts",
+        "src/goal/codex/goal-tool-policy.test.ts",
+        "src/goal/control/pokemonctl-mcp.test.ts",
         "src/goal/memory/catch-evidence.test.ts",
         "src/goal/benchmark/benchmark-evaluator.test.ts",
         "src/goal/benchmark/benchmark-harness.test.ts",
