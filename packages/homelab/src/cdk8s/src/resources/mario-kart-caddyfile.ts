@@ -31,7 +31,7 @@ http://:8082 {
   }
 }
 
-https://mariokart.sjer.red {
+https://mariokart.sjer.red, arcade.sjer.red {
   tls {
     issuer acme {
       disable_tlsalpn_challenge

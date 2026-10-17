@@ -174,6 +174,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_mariokart" {
   proxied = false
 }
 
+resource "cloudflare_dns_record" "sjer_red_cname_arcade" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "arcade"
+  type    = "CNAME"
+  content = "ipv4.ddns.sjer.red"
+  proxied = false
+}
+
 # Receives GitHub `pull_request` webhooks for the Temporal worker's
 # merge-conflict check and PR-closed Buildkite cancellation. TunnelBinding lives
 # in cdk8s; this DNS record completes the public path. See
