@@ -15,6 +15,7 @@
 import path from "node:path";
 import { run } from "../lib/run.ts";
 import { preparePrettierCache } from "./prettier-cache.ts";
+import { assertRootCheckInputs } from "./root-check-inputs.ts";
 import {
   matchShard,
   parseShardName,
@@ -251,5 +252,8 @@ if (import.meta.main) {
   if (checkArg === undefined || shardArg === undefined || rest.length > 0) {
     throw new Error("usage: run-shard-check.ts <check> <shard>");
   }
-  await runShardCheck(parseCheckName(checkArg), parseShardName(shardArg));
+  const shard = parseShardName(shardArg);
+  if (shard === "root") await assertRootCheckInputs();
+  await runShardCheck(parseCheckName(checkArg), shard);
+  if (shard === "root") await assertRootCheckInputs();
 }

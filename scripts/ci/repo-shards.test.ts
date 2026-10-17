@@ -3,6 +3,7 @@ import path from "node:path";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { z } from "zod";
+import { rootCheckEnvironment } from "./root-check-inputs.ts";
 import {
   matchShard,
   parseShardName,
@@ -51,24 +52,27 @@ describe("shard partition", () => {
   });
 });
 
+const ShardTaskSchema = z.object({
+  inputs: z.array(z.string()),
+  env: z.array(z.string()).optional(),
+});
+const TurboConfigSchema = z
+  .object({ tasks: z.record(z.string(), z.unknown()) })
+  .loose();
+const SHARDED_CHECKS = ["prettier", "line-endings", "large-files"] as const;
+
+async function turboTasks(): Promise<Record<string, unknown>> {
+  const config = TurboConfigSchema.parse(
+    Bun.JSONC.parse(
+      await Bun.file(
+        path.join(import.meta.dir, "..", "..", "turbo.json"),
+      ).text(),
+    ),
+  );
+  return config.tasks;
+}
+
 describe("turbo.json mirror", () => {
-  const ShardTaskSchema = z.object({ inputs: z.array(z.string()) });
-  const TurboConfigSchema = z
-    .object({ tasks: z.record(z.string(), z.unknown()) })
-    .loose();
-  const SHARDED_CHECKS = ["prettier", "line-endings", "large-files"] as const;
-
-  async function turboTasks(): Promise<Record<string, unknown>> {
-    const config = TurboConfigSchema.parse(
-      Bun.JSONC.parse(
-        await Bun.file(
-          path.join(import.meta.dir, "..", "..", "turbo.json"),
-        ).text(),
-      ),
-    );
-    return config.tasks;
-  }
-
   test("every check has one root task per shard whose inputs embed the shard globs", async () => {
     const tasks = await turboTasks();
     for (const check of SHARDED_CHECKS) {
@@ -122,9 +126,37 @@ describe("turbo.json mirror", () => {
       }
     }
   });
+});
 
-  test("root check hashes ignore object storage and CI scratch but retain staging and source changes", async () => {
-    const repository = path.join(import.meta.dir, "..", "..");
+async function runFixtureTasks(
+  fixture: string,
+  args: string[],
+  fingerprinted = true,
+) {
+  const environment = {
+    ...Bun.env,
+    CI_CHANGED_BASE: "",
+    TURBO_TELEMETRY_DISABLED: "1",
+    CI_ROOT_CHECK_INPUTS_SHA256: undefined,
+  };
+  return Bun.spawnSync(
+    [
+      path.join(import.meta.dir, "../../node_modules/.bin/turbo"),
+      "run",
+      ...SHARDED_CHECKS.map((check) => `${check}-root`),
+      ...args,
+    ],
+    {
+      cwd: fixture,
+      env: fingerprinted
+        ? await rootCheckEnvironment(environment, fixture)
+        : environment,
+    },
+  );
+}
+
+describe("root check Git input hashes", () => {
+  test("ignore checkout metadata but retain staging and source changes", async () => {
     const fixture = await mkdtemp(path.join(tmpdir(), "root-check-inputs-"));
     const tasks = await turboTasks();
     const names = SHARDED_CHECKS.map((check) => `${check}-root`);
@@ -141,19 +173,8 @@ describe("turbo.json mirror", () => {
       const result = Bun.spawnSync(["git", ...args], { cwd: fixture });
       expect(result.exitCode).toBe(0);
     };
-    const hashes = () => {
-      const result = Bun.spawnSync(
-        [
-          path.join(repository, "node_modules/.bin/turbo"),
-          "run",
-          ...names,
-          "--dry=json",
-        ],
-        {
-          cwd: fixture,
-          env: { ...Bun.env, TURBO_TELEMETRY_DISABLED: "1" },
-        },
-      );
+    const hashes = async () => {
+      const result = await runFixtureTasks(fixture, ["--dry=json"]);
       expect(result.exitCode).toBe(0);
       return SummarySchema.parse(JSON.parse(result.stdout.toString())).tasks;
     };
@@ -170,7 +191,9 @@ describe("turbo.json mirror", () => {
           private: true,
           packageManager: `bun@${Bun.version}`,
           workspaces: ["packages/*"],
-          scripts: Object.fromEntries(names.map((name) => [name, "true"])),
+          scripts: Object.fromEntries(
+            names.map((name) => [name, "bun check.ts"]),
+          ),
         }),
       );
       await Bun.write(
@@ -185,18 +208,28 @@ describe("turbo.json mirror", () => {
         }),
       );
       await Bun.write(path.join(fixture, ".gitignore"), ".turbo/\n");
+      for (const module of ["root-check-inputs.ts", "repo-shards.ts"]) {
+        await Bun.write(
+          path.join(fixture, "scripts/ci", module),
+          Bun.file(path.join(import.meta.dir, module)),
+        );
+      }
+      await Bun.write(
+        path.join(fixture, "check.ts"),
+        'import { assertRootCheckInputs } from "./scripts/ci/root-check-inputs.ts"; await assertRootCheckInputs(); console.log("checked");\n',
+      );
       await Bun.write(
         path.join(fixture, "source.ts"),
         "export const value = 1;\n",
       );
       git("init", "--quiet");
       git("add", ".");
-      const original = hashes();
+      const original = await hashes();
       await Bun.write(
         path.join(fixture, ".git/objects/info/input-probe"),
         "object storage changed\n",
       );
-      const objectsChanged = hashes();
+      const objectsChanged = await hashes();
       const scratchFiles = [
         ".git/ci-cold-source-cache/probe/objects/pack/probe.pack",
         ".git/ci-gradle-seed/modules-2/probe.jar",
@@ -204,22 +237,55 @@ describe("turbo.json mirror", () => {
       for (const file of scratchFiles) {
         await Bun.write(path.join(fixture, file), "private cache changed\n");
       }
-      const scratchChanged = hashes();
+      const scratchChanged = await hashes();
+      await Bun.write(
+        path.join(fixture, ".git/FETCH_HEAD"),
+        "checkout bookkeeping\n",
+      );
+      await Bun.write(
+        path.join(fixture, ".git/logs/probe"),
+        "reflog bookkeeping\n",
+      );
+      git("update-index", "--refresh");
+      const metadataChanged = await hashes();
       await Bun.write(path.join(fixture, "new-source.ts"), "const value=1\n");
-      const beforeStaging = hashes();
+      const beforeStaging = await hashes();
       git("add", "new-source.ts");
-      const afterStaging = hashes();
+      const afterStaging = await hashes();
       await Bun.write(
         path.join(fixture, "source.ts"),
         "export const value = 2;\n",
       );
-      const sourceChanged = hashes();
+      const sourceChanged = await hashes();
       await Bun.write(path.join(fixture, ".gitignore"), ".turbo/\nignored/\n");
-      const hiddenSourceChanged = hashes();
+      const hiddenSourceChanged = await hashes();
+      await Bun.write(
+        path.join(fixture, "ignored/probe.ts"),
+        "export const value = 1;\n",
+      );
+      git("add", "--force", "ignored/probe.ts");
+      const ignoredStaged = await hashes();
+      await Bun.write(
+        path.join(fixture, "ignored/probe.ts"),
+        "export const value = 2;\n",
+      );
+      const ignoredWorking = await hashes();
+      // Change only the staged blob, preserving the working file bytes.
+      await Bun.write(
+        path.join(fixture, "source.ts"),
+        "export const value = 3;\n",
+      );
+      git("add", "source.ts");
+      await Bun.write(
+        path.join(fixture, "source.ts"),
+        "export const value = 2;\n",
+      );
+      const stagedBlob = await hashes();
       for (const task of original) {
         const hashFor = (summary: z.infer<typeof SummarySchema>["tasks"]) =>
           summary.find((entry) => entry.task === task.task)?.hash;
-        expect(Object.keys(task.inputs)).toContain(".git/index");
+        expect(Object.keys(task.inputs)).not.toContain(".git/index");
+        expect(hashFor(metadataChanged)).toBe(task.hash);
         expect(
           Object.keys(
             objectsChanged.find((entry) => entry.task === task.task)?.inputs ??
@@ -237,6 +303,31 @@ describe("turbo.json mirror", () => {
         expect(hashFor(afterStaging)).not.toBe(hashFor(beforeStaging));
         expect(hashFor(sourceChanged)).not.toBe(hashFor(afterStaging));
         expect(hashFor(hiddenSourceChanged)).not.toBe(hashFor(sourceChanged));
+        expect(hashFor(ignoredStaged)).not.toBe(hashFor(hiddenSourceChanged));
+        expect(hashFor(ignoredWorking)).not.toBe(hashFor(ignoredStaged));
+        expect(hashFor(stagedBlob)).not.toBe(hashFor(ignoredWorking));
+      }
+      const firstRun = await runFixtureTasks(fixture, ["--cache=local:rw"]);
+      expect(firstRun.exitCode, firstRun.stderr.toString()).toBe(0);
+      await Bun.write(
+        path.join(fixture, ".git/FETCH_HEAD"),
+        "another checkout refresh\n",
+      );
+      const cached = await runFixtureTasks(fixture, ["--cache=local:rw"]);
+      expect(cached.exitCode, cached.stderr.toString()).toBe(0);
+      expect(cached.stdout.toString()).toContain("cache hit");
+      // The missing-key task has its own hash and must fail on every attempt,
+      // even after correctly fingerprinted tasks have populated the cache.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const missing = await runFixtureTasks(
+          fixture,
+          ["--cache=local:rw"],
+          false,
+        );
+        expect(missing.exitCode).not.toBe(0);
+        expect(missing.stdout.toString() + missing.stderr.toString()).toContain(
+          "freshly fingerprinted",
+        );
       }
     } finally {
       await rm(fixture, { recursive: true, force: true });

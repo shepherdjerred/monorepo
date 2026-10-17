@@ -1,6 +1,19 @@
 {
   "extends": ["//"],
   "tasks": {
+    "test": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/ts-mc-docs/src/content/docs/**"
+      ]
+    },
+    "test:ci": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/ts-mc-docs/src/content/docs/**"
+      ]
+    },
     "generate": {
       "outputs": ["catalog.json", "assets/logos/**", "assets/effects.css"]
     }

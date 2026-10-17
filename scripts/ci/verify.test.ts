@@ -16,6 +16,17 @@ describe("root scripts external inputs", () => {
 });
 
 describe("affected verification filters", () => {
+  test("selects the theme consistency tests when only player docs change", async () => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () =>
+          Promise.resolve(["packages/ts-mc-docs/src/content/docs/index.md"]),
+      ),
+    ).toContain("--filter=@shepherdjerred/storm-theme");
+  });
+
   test("unions the affected package graph with root invariants", async () => {
     const commands: string[][] = [];
     const filters = await affectedVerifyFilters(
