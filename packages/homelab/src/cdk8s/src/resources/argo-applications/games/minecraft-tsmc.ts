@@ -122,6 +122,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // Include mc.ts-mc.net because SRV record redirects there and some clients send that hostname
     serviceAnnotations: {
       "mc-router.itzg.me/externalServerName": "ts-mc.net,mc.ts-mc.net",
+      // Some directory pings send the resolved IP instead of the hostname.
+      "mc-router.itzg.me/defaultServer": "true",
       "mc-router.itzg.me/autoScaleDown": "false",
     },
     // The chart sets no command or args, so the image's storm-entrypoint runs.
