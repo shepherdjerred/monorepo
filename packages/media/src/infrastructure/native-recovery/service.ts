@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
@@ -9,9 +8,7 @@ import { queueOperation } from "#automation/store.ts";
 import {
   PrepareNativeRecoverySchema,
   ApplyNativeRecoverySchema,
-  NativeRecoveryDetailSchema,
   NativeRecoveryInventorySchema,
-  NativeRecoveryScopeSchema,
 } from "#shared/native-recovery.ts";
 import { buildNativeScope } from "./scope.ts";
 import {
@@ -21,27 +18,29 @@ import {
 } from "./guards.ts";
 import { resolveNativeStorageRoots } from "./storage-provenance.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
+import {
+  NativeLifecycleDetailSchema,
+  NativePublishedScopeSchema,
+} from "#shared/native-recovery/lifecycle.ts";
+import {
+  NativeQuarantineScopeSchema,
+  NativeQuarantineContinuationSchema,
+  type PrepareNativeQuarantineSchema,
+} from "#shared/native-recovery/quarantine.ts";
+import { PrismaNativeQuarantine } from "#infrastructure/native-quarantine/service.ts";
+import { assertNativeOwner } from "./owner.ts";
+import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
-export async function assertNativeOwner(
-  tx: Prisma.TransactionClient,
-  actorId: string,
-) {
-  await tx.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actorId} FOR SHARE`;
-  const actor = await tx.mediaUser.findUniqueOrThrow({
-    where: { id: actorId },
-  });
-  requireOwner(actor);
-  if (actor.restricted)
-    throw new MediaError(
-      "forbidden",
-      "Native recovery requires the current unrestricted owner",
-      403,
-    );
-  return actor;
-}
 export class PrismaNativeRecovery extends MediaCommandBase {
   constructor(private readonly db: Database) {
     super(db, { keepDays: 30 });
+  }
+  prepareQuarantine(
+    actor: MediaActor,
+    key: string,
+    input: z.input<typeof PrepareNativeQuarantineSchema>,
+  ) {
+    return new PrismaNativeQuarantine(this.db).prepare(actor, key, input);
   }
 
   async inventory(actor: MediaActor, cursor: string | null = null) {
@@ -105,7 +104,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
           titles: row.coverage.map((item) => item.media.title),
           state: row.state,
           reasons: [
-            ...(row.state === "published"
+            ...(["published", "quarantined"].includes(row.state)
               ? []
               : ["separate_lifecycle_reconciliation_required"]),
             ...(row.checksum === null ? ["recorded_checksum_missing"] : []),
@@ -202,7 +201,50 @@ export class PrismaNativeRecovery extends MediaCommandBase {
           "Native recovery plan does not exist",
           404,
         );
-      return NativeRecoveryDetailSchema.parse({
+      const continuations = await tx.nativeQuarantineContinuation.findMany({
+        where: { receipt: { planId: id } },
+        orderBy: { id: "asc" },
+      });
+      const continuationViews = [];
+      for (const continuation of continuations) {
+        const descriptor = NativeQuarantineContinuationSchema.parse(
+          continuation.descriptor,
+        );
+        const media = await tx.mediaItem.findMany({
+          where: { id: { in: descriptor.group.mediaIds } },
+          select: { id: true, title: true, availability: true, intent: true },
+          orderBy: { id: "asc" },
+        });
+        const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+          where: { id: "singleton" },
+        });
+        const claims = await tx.mediaRequest.findMany({
+          where: {
+            mediaId: { in: descriptor.group.mediaIds },
+            ...effectiveRequestWhere,
+          },
+          select: { mediaId: true },
+        });
+        const currentPositiveMediaIds = media
+          .filter(
+            ({ id: mediaId, intent }) =>
+              intent?.automationEpoch === runtime.recoveryEpoch &&
+              intent.desiredPresence &&
+              intent.monitoring &&
+              intent.intentionallyRemovedAt === null &&
+              claims.some((claim) => claim.mediaId === mediaId),
+          )
+          .map((item) => item.id);
+        continuationViews.push({
+          id: continuation.id,
+          groupHash: continuation.groupHash,
+          state: continuation.state,
+          version: continuation.version,
+          currentPositiveMediaIds,
+          media: media.map(({ intent: _intent, ...item }) => item),
+        });
+      }
+      return NativeLifecycleDetailSchema.parse({
         id: row.id,
         state: row.state,
         version: row.version,
@@ -211,6 +253,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
         planHash: row.planHash,
         expiresAt: row.expiresAt?.toISOString() ?? null,
         receiptId: row.receipt?.id ?? null,
+        continuations: continuationViews,
       });
     });
   }
@@ -222,6 +265,11 @@ export class PrismaNativeRecovery extends MediaCommandBase {
   ) {
     requireOwner(actor);
     const input = ApplyNativeRecoverySchema.parse(raw);
+    const selected = await this.db.nativeRecoveryPlan.findUniqueOrThrow({
+      where: { id },
+    });
+    if (NativeQuarantineScopeSchema.safeParse(selected.scope).success)
+      return new PrismaNativeQuarantine(this.db).apply(actor, key, id, input);
     return this.command(
       actor,
       key,
@@ -230,7 +278,7 @@ export class PrismaNativeRecovery extends MediaCommandBase {
         const initial = await tx.nativeRecoveryPlan.findUniqueOrThrow({
           where: { id },
         });
-        const scope = NativeRecoveryScopeSchema.parse(initial.scope);
+        const scope = NativePublishedScopeSchema.parse(initial.scope);
         await lockNativeScope(tx, scope);
         await tx.$queryRaw`SELECT id FROM "NativeRecoveryPlan" WHERE id = ${id} FOR UPDATE`;
         await assertNativeOwner(tx, actor.id);

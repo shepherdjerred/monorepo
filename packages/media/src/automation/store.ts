@@ -3,6 +3,7 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { isRetryableTransaction } from "#infrastructure/locks.ts";
 import { queueIntervention } from "./notifications/interventions.ts";
+import { routeNativeQuarantineOperation } from "#infrastructure/native-quarantine/continuation.ts";
 
 export type WorkflowStart = {
   workflowType: string;
@@ -26,30 +27,44 @@ export async function queueOperation(
   });
   if (existing !== null) return existing.id;
   const id = crypto.randomUUID();
+  const route = await routeNativeQuarantineOperation(db, input);
+  const kind = route?.kind ?? input.kind;
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
   const payload = {
     operationId: id,
-    kind: input.kind,
+    kind,
     recoveryEpoch: runtime.recoveryEpoch,
-    ...input.payload,
+    ...(route?.payload ?? input.payload),
   };
   await db.operation.create({
     data: {
       id,
       idempotencyKey: input.key,
-      kind: input.kind,
+      kind,
       targetId: input.targetId,
       ...(input.userId === undefined ? {} : { userId: input.userId }),
       payload,
-      outbox: { create: { kind: input.kind, payload } },
+      outbox: { create: { kind, payload } },
     },
   });
+  if (route !== null)
+    await db.nativeQuarantineContinuation.update({
+      where: { id: route.continuationId },
+      data: {
+        coordinatorOperationId: id,
+        state: route.state,
+        version: { increment: 1 },
+      },
+    });
   return id;
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  prepare_native_quarantine: "prepareNativeQuarantineWorkflow",
+  apply_native_quarantine: "applyNativeQuarantineWorkflow",
+  restore_native_quarantine: "restoreNativeQuarantineWorkflow",
   prepare_subtitle_replacement: "prepareSubtitleReplacementWorkflow",
   apply_subtitle_replacement: "applySubtitleReplacementWorkflow",
   reconcile_subtitle_replacement: "reconcileSubtitleReplacementWorkflow",

@@ -2,14 +2,8 @@ import { lstat, readFile } from "node:fs/promises";
 import { contentIO } from "./content-io.ts";
 import type { ContentProof } from "./content-proof.ts";
 import nodePath from "node:path";
-import { FileLockError } from "./advisory-lock.ts";
-import { OperationLocks } from "./operation-locks.ts";
-import {
-  verifyStableFile,
-  requireFileIdentity,
-  type VerifiedFile,
-  type VerifiedFileProof,
-} from "./verification.ts";
+import { OperationLocks, type ContentPath } from "./operation-locks.ts";
+import { type VerifiedFile, type VerifiedFileProof } from "./verification.ts";
 import {
   IdSchema,
   DigestSchema,
@@ -64,20 +58,9 @@ export class FileOperations {
     input: VerifiedFile,
     action: (proof: VerifiedFileProof) => Promise<T>,
   ): Promise<T> {
-    const target = await safePath(this.roots.library, input.libraryPath, false);
-    return await this.locks.withLock(target, async () => {
-      await this.verifyControlExclusion();
-      await safePath(this.roots.library, input.libraryPath, false);
-      const proof = await verifyStableFile(target, input, async () => {
-        await this.checkpoint("hashing");
-      });
-      await safePath(this.roots.library, input.libraryPath, false);
-      await this.verifyControlExclusion();
-      for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
-      const result = await action(proof);
-      for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
-      return result;
-    });
+    return await this.locks.withVerifiedFile(input, action, () =>
+      this.checkpoint("hashing"),
+    );
   }
 
   /** Recheck a prior hash proof under PG → filesystem lock order without hashing again. */
@@ -85,16 +68,7 @@ export class FileOperations {
     proof: VerifiedFileProof,
     action: () => Promise<T>,
   ): Promise<T> {
-    if (this.locks.isHeld(proof.target)) throw new FileLockError("busy");
-    const target = await safePath(this.roots.library, proof.libraryPath, false);
-    return await this.locks.withLock(target, async () => {
-      await this.verifyControlExclusion();
-      await requireFileIdentity(target, proof);
-      for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
-      const result = await action();
-      for (const assertHeld of this.locks.getStore() ?? []) assertHeld();
-      return result;
-    });
+    return await this.locks.withFileIdentity(proof, action);
   }
 
   /** Sorted operation→library locks, with exact same-instance mutation composition. */
@@ -104,6 +78,24 @@ export class FileOperations {
     operationIds: readonly string[] = [],
   ): Promise<T> {
     return await this.locks.withFileIdentities(proofs, action, operationIds);
+  }
+
+  /** Exact present/absent library and control paths from this instance's fresh content proof. */
+  async withContentPaths<T>(
+    paths: readonly ContentPath[],
+    action: () => Promise<T>,
+    operationIds: readonly string[] = [],
+  ): Promise<T> {
+    if (this.options.contentProof === undefined)
+      throw new FileOperationConflict(
+        "Content path scope requires a process-local proof",
+      );
+    return await this.locks.withContentPaths(
+      paths,
+      this.options.contentProof,
+      action,
+      operationIds,
+    );
   }
 
   async importFile(input: ImportFile): Promise<FileOperationManifest> {
@@ -170,7 +162,7 @@ export class FileOperations {
         return await this.locks.withLock(target, async () => {
           await this.authorize(manifest);
           if (await exists(target)) {
-            const digest = await this.digest(target);
+            const digest = await this.content.digest(target);
             if (digest === input.sha256) {
               if (await exists(staged)) await this.content.unlink(staged);
               return await this.complete(manifest);
@@ -274,7 +266,7 @@ export class FileOperations {
           });
           await this.requireDigest(source, input.previousSha256);
           await this.authorize(manifest);
-          const current = await this.digest(target);
+          const current = await this.content.digest(target);
           if (current === input.previousSha256) {
             await this.requireDigest(rejected, input.sha256);
             return await this.complete(manifest);
@@ -498,11 +490,8 @@ export class FileOperations {
     await verifyControlExclusion(this.roots, this.options.verifyPlexExclusion);
   }
 
-  private async digest(path: string): Promise<string> {
-    return await this.content.digest(path);
-  }
   private async requireDigest(path: string, digest: string): Promise<void> {
-    if (!(await exists(path)) || (await this.digest(path)) !== digest)
+    if (!(await exists(path)) || (await this.content.digest(path)) !== digest)
       throw new FileOperationConflict(
         "Media content does not match its operation manifest",
       );

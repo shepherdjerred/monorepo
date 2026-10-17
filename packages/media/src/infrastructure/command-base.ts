@@ -5,6 +5,7 @@ import { tokenHash } from "#application/security.ts";
 import type { Database } from "./database.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { isRetryableTransaction } from "./locks.ts";
+import { routeNativeQuarantineOperation } from "./native-quarantine/continuation.ts";
 type Transaction = Prisma.TransactionClient;
 type JsonResult = Prisma.InputJsonObject;
 function canonical(value: unknown): string {
@@ -82,7 +83,7 @@ export class MediaCommandBase {
     const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
     });
-    const payload = {
+    const initialPayload = {
       operationId,
       kind,
       mediaId,
@@ -90,16 +91,35 @@ export class MediaCommandBase {
       recoveryEpoch: runtime.recoveryEpoch,
       ...details,
     };
+    const route = await routeNativeQuarantineOperation(db, {
+      kind,
+      targetId: mediaId,
+      payload: initialPayload,
+    });
+    const selectedKind = route?.kind ?? kind;
+    const payload = {
+      ...(route?.payload ?? initialPayload),
+      kind: selectedKind,
+    };
     await db.operation.create({
       data: {
         id: operationId,
         userId: actor.id,
-        kind,
+        kind: selectedKind,
         targetId: mediaId,
         payload,
-        outbox: { create: { kind, payload } },
+        outbox: { create: { kind: selectedKind, payload } },
       },
     });
+    if (route !== null)
+      await db.nativeQuarantineContinuation.update({
+        where: { id: route.continuationId },
+        data: {
+          coordinatorOperationId: operationId,
+          state: route.state,
+          version: { increment: 1 },
+        },
+      });
     return operationId;
   }
 }

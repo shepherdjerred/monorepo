@@ -87,6 +87,9 @@ const recoveryFixture = {
 
 function nativeRecoveryFixture() {
   return {
+    async prepareQuarantine(): Promise<never> {
+      throw new MediaError("conflict", "No fixture quarantine recovery", 409);
+    },
     async inventory() {
       return {
         runtime: { mode: "observe", recoveryEpoch: 0, version: 0 },

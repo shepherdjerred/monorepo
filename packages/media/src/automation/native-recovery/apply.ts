@@ -11,6 +11,8 @@ import { FileOperations } from "#filesystem/operations.ts";
 import { verifyJournalProof } from "#automation/handoff/journals.ts";
 import { rebindNativeSubtitles } from "#automation/native-subtitles/apply.ts";
 import { appendNativeSubtitlePolicies } from "#automation/native-subtitles/policies.ts";
+import { terminalPaths, terminalDependencies } from "./terminal-proof.ts";
+import { settledJournals } from "./settled-proof.ts";
 import {
   FinishedNativeSchema,
   stableNativeFiles,
@@ -216,6 +218,8 @@ async function withNativeIdentities<T>(
   index: number,
   action: () => Promise<T>,
 ): Promise<T> {
+  if (prepared.scope.schemaVersion === 2)
+    return withTerminalIdentities(context, prepared, index, action);
   const entries = prepared.scope.files
     .flatMap((file) => [
       { libraryKind: file.libraryKind, canonicalPath: file.canonicalPath },
@@ -241,5 +245,54 @@ async function withNativeIdentities<T>(
   return operations.withFileIdentity(
     { ...proof, libraryPath: path.relative(roots.library, local) },
     () => withNativeIdentities(context, prepared, index + 1, action),
+  );
+}
+
+async function withTerminalIdentities<T>(
+  context: NativeFileContext,
+  prepared: PreparedNativeFiles,
+  index: number,
+  action: () => Promise<T>,
+): Promise<T> {
+  const kind = (["movies", "tv"] as const)[index];
+  if (kind === undefined) return action();
+  const roots = context.files.roots[kind];
+  const canonical = [
+    ...terminalPaths(prepared.scope),
+    ...prepared.scope.files.flatMap((file) => [
+      file.canonicalPath,
+      ...file.subtitles.flatMap((subtitle) =>
+        subtitle.path === null ? [] : [subtitle.path],
+      ),
+    ]),
+  ].filter((name) => name.startsWith(`/data/${kind}/`));
+  const paths = [...new Set(canonical)].map((name) => {
+    const local = nativeLocalPath(context, name);
+    const control = name.startsWith(`/data/${kind}/.media-control/`);
+    return {
+      root: control ? ("control" as const) : ("library" as const),
+      path: path.relative(control ? roots.control : roots.library, local),
+    };
+  });
+  if (paths.length === 0)
+    return withTerminalIdentities(context, prepared, index + 1, action);
+  const operationIds = [
+    ...terminalDependencies(prepared.scope).flatMap((item) => item.journals),
+    ...settledJournals(prepared.scope),
+  ]
+    .filter((journal) => journal.target.startsWith(`/data/${kind}/`))
+    .map((journal) => journal.operationId);
+  const operations = new FileOperations(roots, {
+    authorize: () =>
+      Promise.reject(new Error("Native rebaseline cannot mutate files")),
+    contentProof: prepared.content,
+    ...(context.files.verifyPlexExclusion === undefined
+      ? {}
+      : { verifyPlexExclusion: context.files.verifyPlexExclusion }),
+  });
+  return operations.withContentPaths(
+    paths,
+    () => withTerminalIdentities(context, prepared, index + 1, action),
+    operationIds,
   );
 }

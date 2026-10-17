@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
-import { NativeRecoveryDetailSchema } from "#shared/native-recovery.ts";
+import { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { readApi, writeApi } from "#client/api.ts";
+import { QuarantineContinuations } from "./continuations.tsx";
 import {
   PageTitle,
   Loading,
@@ -23,9 +24,15 @@ export function NativeRecoveryReview({
   const result = useQuery({
     queryKey: ["native-recovery-detail", id],
     queryFn: () =>
-      readApi(`/admin/native-recovery/${id}`, NativeRecoveryDetailSchema),
+      readApi(`/admin/native-recovery/${id}`, NativeLifecycleDetailSchema),
     refetchInterval: (query) =>
-      ["preparing", "applying"].includes(query.state.data?.state ?? "")
+      ["preparing", "applying"].includes(query.state.data?.state ?? "") ||
+      query.state.data?.continuations.some(
+        (item) =>
+          item.state === "restoring" ||
+          (item.state === "restored" &&
+            item.media.some((media) => media.availability === "importing")),
+      ) === true
         ? 5000
         : false,
   });
@@ -54,11 +61,18 @@ export function NativeRecoveryReview({
     },
   });
   const review = result.data;
+  const quarantined =
+    review?.scope.schemaVersion === 2 &&
+    review.scope.lifecycleKind === "committed_quarantine";
   return (
     <>
       <PageTitle
         eyebrow="Exact physical review"
-        title="Recover selected file ownership"
+        title={
+          quarantined
+            ? "Recover quarantined file ownership"
+            : "Recover selected file ownership"
+        }
       >
         <p>
           File checks prove these physical versions. They cannot recover
@@ -75,6 +89,14 @@ export function NativeRecoveryReview({
         <>
           <section className="panel">
             <h2>{humanize(review.state)}</h2>
+            {quarantined && (
+              <p>
+                Approval preserves quarantine, subtitle quality and existing
+                retention history. Files stay in quarantine until current
+                household intent authorizes restoration. This does not prove
+                anyone watched them or permit deletion.
+              </p>
+            )}
             {review.state === "preparing" && (
               <p>
                 Ownership remains unchanged while workers inspect files,
@@ -96,6 +118,7 @@ export function NativeRecoveryReview({
               </p>
             )}
           </section>
+          <QuarantineContinuations items={review.continuations} />
           <section className="panel">
             <h2>Affected titles</h2>
             {review.scope.files.map((file) => (
@@ -107,9 +130,10 @@ export function NativeRecoveryReview({
                     .join(" · ")}
                 </h3>
                 <p>
-                  {file.subtitles.length} installed subtitles included. Their
-                  accepted, unverified or rejected quality status will be
-                  preserved.
+                  {file.subtitles.length}{" "}
+                  {quarantined ? "quarantined" : "installed"} subtitles
+                  included. Their accepted, unverified or rejected quality
+                  status will be preserved.
                 </p>
                 {file.subtitles.length > 0 && (
                   <ul>
@@ -169,8 +193,8 @@ export function NativeRecoveryReview({
             <h2>What this approval changes</h2>
             <ul>
               <li>
-                Renews ownership only for the exact reviewed videos and
-                installed subtitle files.
+                Renews ownership only for the exact reviewed videos and{" "}
+                {quarantined ? "quarantined" : "installed"} subtitle files.
               </li>
               <li>
                 Creates selected-title subtitle policy versions with the
@@ -178,13 +202,20 @@ export function NativeRecoveryReview({
               </li>
               <li>
                 Keeps recovery holds and personal Keep choices and pins.
-                Existing attempts and deliveries remain in their original
-                recovery epoch.
+                Existing work and delivery history is preserved.
               </li>
               <li>
                 New acquisition needs a current authorized request or an
                 explicit positive household declaration.
               </li>
+              {quarantined && (
+                <li>
+                  Restoration requires current positive authority for every
+                  covered leaf. Mixed positive and negative demand on a shared
+                  file remains protected; a negative declaration never
+                  authorizes restoration or deletion.
+                </li>
+              )}
             </ul>
             {review.state === "awaiting_review" && (
               <>

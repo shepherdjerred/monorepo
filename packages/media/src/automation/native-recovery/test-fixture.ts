@@ -17,14 +17,36 @@ import protocol from "#integrations/fixtures/qbittorrent-5.2.4.json";
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
 import { createNativeFileActivities } from "./activities.ts";
 
-export async function nativeFileFixture(
+export async function nativeStorageFixture(
   db: Database,
   cipher: CredentialCipher,
   sourceState: "seeding" | "removed" = "seeding",
+  options: {
+    settle?: (
+      file: Awaited<ReturnType<typeof fileFixture>>,
+      original: Awaited<
+        ReturnType<Awaited<ReturnType<typeof fileFixture>>["published"]>
+      >,
+    ) => Promise<
+      Awaited<ReturnType<Awaited<ReturnType<typeof fileFixture>>["published"]>>
+    >;
+    beforeRestore?: (setup: {
+      file: Awaited<ReturnType<typeof fileFixture>>;
+      published: Awaited<
+        ReturnType<Awaited<ReturnType<typeof fileFixture>>["published"]>
+      >;
+      subtitleId: string;
+      canonicalPath: string;
+    }) => Promise<void>;
+  } = {},
 ) {
   const prior = await nativeNetworkFixture(db, cipher);
   const file = await fileFixture(db);
-  const published = await file.published();
+  const original = await file.published();
+  const published =
+    options.settle === undefined
+      ? original
+      : await options.settle(file, original);
   const asset = await db.libraryAsset.findUniqueOrThrow({
     where: { id: published.entry.assetId },
   });
@@ -139,6 +161,12 @@ export async function nativeFileFixture(
     Promise.resolve({ total: 1, items: [item] });
   prior.context.qbittorrent.listAll = () =>
     Promise.resolve(sourceState === "removed" ? [] : [observation]);
+  await options.beforeRestore?.({
+    file,
+    published,
+    subtitleId: subtitle.id,
+    canonicalPath,
+  });
   const recoveryId = crypto.randomUUID();
   await prepareMediaRestore(db, {
     recoveryId,
@@ -194,6 +222,50 @@ export async function nativeFileFixture(
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
+  const context = {
+    files: file.context,
+    workerPodUid: z.string().parse(prior.canonical.mounts[0]?.podUid),
+  };
+  return {
+    prior,
+    file,
+    published,
+    asset,
+    policy,
+    subtitle,
+    canonicalPath,
+    observation,
+    runtime,
+    restore,
+    context,
+  };
+}
+
+export async function nativeFileFixture(
+  db: Database,
+  cipher: CredentialCipher,
+  sourceState: "seeding" | "removed" = "seeding",
+  settle?: NonNullable<Parameters<typeof nativeStorageFixture>[3]>["settle"],
+) {
+  const setup = await nativeStorageFixture(
+    db,
+    cipher,
+    sourceState,
+    settle === undefined ? {} : { settle },
+  );
+  const {
+    prior,
+    file,
+    published,
+    asset,
+    policy,
+    subtitle,
+    canonicalPath,
+    observation,
+    runtime,
+    restore,
+    context,
+  } = setup;
   const service = new PrismaNativeRecovery(db);
   const prepared = await service.prepare(prior.actor, crypto.randomUUID(), {
     restoreOperationId: restore.id,
@@ -203,10 +275,6 @@ export async function nativeFileFixture(
     assetIds: [asset.id],
   });
   const planId = z.uuid().parse(prepared.nativeRecoveryId);
-  const context = {
-    files: file.context,
-    workerPodUid: z.string().parse(prior.canonical.mounts[0]?.podUid),
-  };
   const observe = () => createNativeRecoveryObserver(prior.context)(planId);
   const activities = createNativeFileActivities(context);
   async function review() {

@@ -711,6 +711,7 @@ model RetentionDecision {
 }
 
 model Operation {
+  nativeQuarantineCoordinators NativeQuarantineContinuation[]
   subtitleReplacementCoordinators SubtitleReplacement[]
   nativeRecoveryPlans NativeRecoveryPlan[]
   id             String          @id @default(uuid())
@@ -871,6 +872,7 @@ model NativeRecoveryObservation {
 }
 
 model NativeRecoveryReceipt {
+  quarantineContinuations NativeQuarantineContinuation[]
   id String @id @default(uuid())
   planId String @unique
   plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
@@ -882,6 +884,25 @@ model NativeRecoveryReceipt {
   actor MediaUser @relation(fields: [actorId], references: [id], onDelete: Restrict)
   selection Json
   createdAt DateTime @default(now())
+}
+
+model NativeQuarantineContinuation {
+  id String @id @default(uuid())
+  receiptId String
+  receipt NativeRecoveryReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  groupHash String
+  recoveryEpoch Int
+  descriptor Json
+  state String @default("pending")
+  version Int @default(0)
+  coordinatorOperationId String?
+  coordinatorOperation Operation? @relation(fields: [coordinatorOperationId], references: [id], onDelete: Restrict)
+  executionEvidence Json?
+  restoration Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([receiptId, groupHash])
+  @@index([state, recoveryEpoch])
 }
 
 model MediaHandoffPlan {

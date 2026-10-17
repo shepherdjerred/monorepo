@@ -1,7 +1,10 @@
 import path from "node:path";
 import { constants, lstat, opendir, open } from "node:fs/promises";
 import { z } from "zod";
-import { ManifestSchema } from "#filesystem/operations-types.ts";
+import {
+  ManifestSchema,
+  type FileOperationManifest,
+} from "#filesystem/operations-types.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { createHash } from "node:crypto";
 import {
@@ -60,9 +63,10 @@ async function directoryIdentity(
 export async function inspectHandoffJournals(
   control: string,
   targets: ReadonlySet<string>,
+  transitions: readonly FileOperationManifest[] = [],
 ): Promise<JournalProof> {
   const directory = await directoryIdentity(path.join(control, "journal"));
-  const manifests = [];
+  const manifests: FileOperationManifest[] = [];
   const files: VerifiedFileProof[] = [];
   if (!directory.absent) {
     const entries = await opendir(directory.path);
@@ -73,12 +77,12 @@ export async function inspectHandoffJournals(
       if (!entry.isFile() || !entry.name.endsWith(".json"))
         throw new Error("Handoff journal inventory contains unknown entry");
       const target = path.join(directory.path, entry.name);
-      const selected = await inspectSelectedJournal(target, targets);
-      if (selected === null) continue;
-      if (files.length >= 250)
-        throw new Error("Handoff selected journal history exceeds bound");
-      files.push(selected.proof);
-      manifests.push(selected.manifest);
+      const selected = await inspectSelectedJournal(
+        target,
+        targets,
+        transitions,
+      );
+      appendSelectedJournal(files, manifests, selected);
     }
   }
   await verifyJournalProof({ directory, digest: "", files });
@@ -91,9 +95,22 @@ export async function inspectHandoffJournals(
   };
 }
 
+function appendSelectedJournal(
+  files: VerifiedFileProof[],
+  manifests: FileOperationManifest[],
+  selected: Awaited<ReturnType<typeof inspectSelectedJournal>>,
+) {
+  if (selected === null) return;
+  if (files.length >= 250)
+    throw new Error("Handoff selected journal history exceeds bound");
+  files.push(selected.proof);
+  if (!selected.transition) manifests.push(selected.manifest);
+}
+
 async function inspectSelectedJournal(
   target: string,
   targets: ReadonlySet<string>,
+  transitions: readonly FileOperationManifest[],
 ) {
   const info = await lstat(target);
   if (info.size > 64 * 1024 || info.isSymbolicLink())
@@ -102,12 +119,23 @@ async function inspectSelectedJournal(
   const manifest = ManifestSchema.parse(JSON.parse(content));
   if (!targets.has(manifest.source) && !targets.has(manifest.target))
     return null;
-  if (manifest.phase !== "complete")
+  const expected = transitions.find(
+    (item) => item.operationId === manifest.operationId,
+  );
+  const transition = expected !== undefined;
+  if (
+    transition &&
+    (snapshotHash({ ...manifest, phase: "prepared" }) !==
+      snapshotHash({ ...expected, phase: "prepared" }) ||
+      !["prepared", "complete"].includes(manifest.phase))
+  )
+    throw new Error("Handoff exact transition descriptor changed");
+  if (!transition && manifest.phase !== "complete")
     throw new Error("Handoff selected path has unresolved filesystem effect");
   const proof = await hashStableFile(target, () => Promise.resolve());
   if (proof.sha256 !== createHash("sha256").update(content).digest("hex"))
     throw new Error("Handoff journal changed during observation");
-  return { proof, manifest };
+  return { proof, manifest, transition };
 }
 
 /** Atomic manifest replacement changes the directory identity timestamps; no large reads under PG. */

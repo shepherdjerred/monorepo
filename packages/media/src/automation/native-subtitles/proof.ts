@@ -76,7 +76,7 @@ export async function captureNativeSubtitles(input: {
     )
       throw new Error("Native subtitle video binding is inconsistent");
     if (subtitle.storageKind === "embedded") {
-      streams.set(subtitle.id, embeddedStream(input.probe, subtitle));
+      streams.set(subtitle.id, nativeEmbeddedStream(input.probe, subtitle));
       continue;
     }
     if (
@@ -196,9 +196,12 @@ export async function assertNativeSubtitleNeighbors(
   return expected;
 }
 
-function embeddedStream(
+export function nativeEmbeddedStream(
   probe: MediaProbe,
-  subtitle: NativeSubtitleSnapshot,
+  subtitle: Pick<
+    NativeSubtitleSnapshot,
+    "path" | "streamIndex" | "codec" | "language" | "forced" | "hearingImpaired"
+  >,
 ): NonNullable<Stream> {
   const matches = probe.streams.filter(
     (item) =>

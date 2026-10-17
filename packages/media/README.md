@@ -483,6 +483,11 @@ guessing. File inspection replaces advertised resolution and audio with
 measured values. Missing catalog runtime or original-language evidence remains
 unknown; no default English track or guessed runtime is introduced.
 
+Candidate absolute-number mapping does not yet reach physical file inspection:
+absolute-only filenames remain protected even with an approved numbering map.
+Yearless TV releases without sufficient identity evidence also remain protected;
+the current Select release command cannot supply missing identity approval.
+
 To produce a repeatable read-only import report from a saved nonsecret snapshot:
 
 ```sh
@@ -791,10 +796,29 @@ intent. A positive declaration backed by the exact native physical receipt, or a
 fresh authorized ordinary request, may authorize a new intent. Negative-only
 household declarations do not. Personal Keep choices and pins remain independent.
 
-This operator path supports published assets. Quarantined or superseded assets,
-uncertain filesystem journals, unproved storage replacements and unresolved
-subtitle neighbors remain protected and require their separate restore, rollback
-or ownership reconciliation paths. It does not override missing Plex watch
+Published files with settled upgrade history use a versioned terminal proof.
+An expired rollback copy must have the exact completed purge journal and remain
+absent; a cancelled cleanup must bind the completed rollback receipt, restored
+video, retained backup and rejected version. These secondary artifacts remain
+at their original ownership epoch. Later backup restores follow at most 100
+exact native receipt bindings; arbitrary version changes or incomplete journals
+remain protected. Historical version-1 plans retain their original meaning.
+If a restored caption was later replaced at the same path, the terminal proof
+follows at most 20 exact installed-replacement receipts to the current caption.
+Each retained artifact is checked, or its completed cleanup journal and absence
+are proved. This does not renew ownership or deletion authority for those archives.
+
+The **Committed quarantine** selection reviews complete committed video and
+subtitle groups separately from published files. Approval keeps files quarantined
+and creates a restore-only continuation. A fresh positive request or household
+declaration must authorize every covered leaf before restoration; mixed positive
+and negative demand remains protected. The review distinguishes files restored
+from playback verified by exact Plex readback. Existing quarantine dates and old
+retention decisions remain history, never new purge permission.
+
+Superseded candidates, uncertain filesystem journals, unproved storage replacements
+and unresolved subtitle neighbors remain protected and require their separate
+restore, rollback or ownership reconciliation paths. Recovery does not override missing Plex watch
 evidence or authorize legacy torrent source deletion. Further bounded batches
 can extend the current epoch; a later database restore must reprove the files
 again against its new epoch and the prior native or legacy storage receipt.

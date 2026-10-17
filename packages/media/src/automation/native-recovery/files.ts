@@ -1,15 +1,17 @@
 import path from "node:path";
+import { settledEvidence } from "./settled-proof.ts";
 import { z } from "zod";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { safePath } from "#filesystem/operations-io.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
 import type { FileContext } from "#automation/files/types.ts";
+import { NativeRecoveryNetworkEvidenceSchema } from "#shared/native-recovery.ts";
 import {
-  NativeRecoveryScopeSchema,
-  NativeRecoveryNetworkEvidenceSchema,
-  NativeRecoveryFileEvidenceSchema,
-  type NativeRecoveryScope,
-} from "#shared/native-recovery.ts";
+  NativePublishedScopeSchema,
+  NativePublishedFileEvidenceSchema,
+  type NativePublishedScope,
+} from "#shared/native-recovery/lifecycle.ts";
+import { terminalPaths, terminalEvidence } from "./terminal-proof.ts";
 import {
   captureNativeSubtitles,
   nativeSubtitleEvidence,
@@ -21,10 +23,10 @@ import {
 
 export type NativeFileContext = { files: FileContext; workerPodUid: string };
 export type PreparedNativeFiles = {
-  scope: NativeRecoveryScope;
+  scope: NativePublishedScope;
   content: ContentProof;
   journals: JournalProof[];
-  evidence: z.infer<typeof NativeRecoveryFileEvidenceSchema>;
+  evidence: z.infer<typeof NativePublishedFileEvidenceSchema>;
 };
 
 /** Canonical names remain stable; only trusted configured worker roots determine local IO. */
@@ -39,7 +41,12 @@ export function nativeLocalPath(
       !relative.startsWith("..") &&
       !path.isAbsolute(relative)
     )
-      return path.join(context.files.roots[kind].library, relative);
+      return relative.startsWith(".media-control/")
+        ? path.join(
+            context.files.roots[kind].control,
+            relative.slice(".media-control/".length),
+          )
+        : path.join(context.files.roots[kind].library, relative);
   }
   throw new Error("Native proof path escapes approved canonical roots");
 }
@@ -53,7 +60,7 @@ export async function prepareNativeFiles(
   });
   if (!["preparing", "applying"].includes(plan.state))
     throw new Error("Native proof requires a live owner command");
-  const scope = NativeRecoveryScopeSchema.parse(plan.scope);
+  const scope = NativePublishedScopeSchema.parse(plan.scope);
   const observation =
     await context.files.db.nativeRecoveryObservation.findFirstOrThrow({
       where: { planId, kind: "network" },
@@ -85,14 +92,7 @@ export async function prepareNativeFiles(
     const selected = scope.files.filter((file) => file.libraryKind === kind);
     const journal = await inspectHandoffJournals(
       roots.control,
-      new Set(
-        selected.flatMap((file) => [
-          resolvePath(file.canonicalPath),
-          ...file.subtitles.flatMap((subtitle) =>
-            subtitle.path === null ? [] : [resolvePath(subtitle.path)],
-          ),
-        ]),
-      ),
+      selectedJournalPaths(scope, kind, resolvePath),
     );
     journals.push(journal);
     for (const file of selected) {
@@ -126,7 +126,20 @@ export async function prepareNativeFiles(
       });
     }
   }
+  await captureTerminalPaths({ scope, content, resolvePath, context });
   content.seal();
+  const terminal = await terminalEvidence({
+    scope,
+    content,
+    journals,
+    resolvePath,
+  });
+  const settled = await settledEvidence({
+    scope,
+    content,
+    journals,
+    resolvePath,
+  });
   const files = [];
   for (const item of measured) {
     const local = resolvePath(item.file.canonicalPath);
@@ -154,8 +167,8 @@ export async function prepareNativeFiles(
     scope,
     content,
     journals,
-    evidence: NativeRecoveryFileEvidenceSchema.parse({
-      schemaVersion: 1,
+    evidence: NativePublishedFileEvidenceSchema.parse({
+      ...evidenceVersion(scope, terminal, settled),
       planId,
       recoveryEpoch: plan.recoveryEpoch,
       workerPodUid: context.workerPodUid,
@@ -163,6 +176,59 @@ export async function prepareNativeFiles(
       files,
     }),
   };
+}
+
+async function captureTerminalPaths({
+  scope,
+  content,
+  resolvePath,
+  context,
+}: {
+  scope: NativePublishedScope;
+  content: ContentProof;
+  resolvePath: (name: string) => string;
+  context: NativeFileContext;
+}) {
+  for (const name of terminalPaths(scope))
+    await content.capture(resolvePath(name), () =>
+      context.files.checkpoint("native-terminal-hashing"),
+    );
+}
+function evidenceVersion(
+  scope: NativePublishedScope,
+  terminal: Awaited<ReturnType<typeof terminalEvidence>>,
+  settled: Awaited<ReturnType<typeof settledEvidence>>,
+) {
+  return scope.schemaVersion === 1
+    ? { schemaVersion: 1 }
+    : {
+        schemaVersion: 2,
+        lifecycleKind: "published",
+        terminalEvidence: terminal,
+        ...(settled.length === 0 ? {} : { settledEvidence: settled }),
+      };
+}
+
+function selectedJournalPaths(
+  scope: NativePublishedScope,
+  kind: "movies" | "tv",
+  resolvePath: (canonical: string) => string,
+) {
+  return new Set([
+    ...terminalPaths(scope)
+      .filter((name) => name.startsWith(`/data/${kind}/`))
+      .map((name) => resolvePath(name)),
+    ...scope.files.flatMap((file) =>
+      file.libraryKind === kind
+        ? [
+            resolvePath(file.canonicalPath),
+            ...file.subtitles.flatMap((subtitle) =>
+              subtitle.path === null ? [] : [resolvePath(subtitle.path)],
+            ),
+          ]
+        : [],
+    ),
+  ]);
 }
 
 async function verifyNativeRoot(

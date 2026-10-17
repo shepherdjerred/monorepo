@@ -7,11 +7,14 @@ import type {
 import { NativeStorageAuthoritySchema } from "#shared/canonical-storage.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { assertNativeOwner } from "#infrastructure/native-recovery/service.ts";
+import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
 import type { NativeFileContext } from "./files.ts";
 
 export function assertNativeEvidenceFresh(
-  network: z.infer<typeof NativeRecoveryNetworkEvidenceSchema>,
+  network: Pick<
+    z.infer<typeof NativeRecoveryNetworkEvidenceSchema>,
+    "capturedAt" | "expiresAt" | "quiescence" | "mounts"
+  >,
 ): void {
   const now = Date.now();
   for (const evidence of [network, network.quiescence, network.mounts]) {
@@ -33,6 +36,9 @@ export async function nativeApprovingActor(
   tx: Prisma.TransactionClient,
   input: { planId: string; operationId: string },
   planHash: string,
+  expectedKind:
+    | "apply_native_recovery"
+    | "apply_native_quarantine" = "apply_native_recovery",
 ) {
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
@@ -49,7 +55,7 @@ export async function nativeApprovingActor(
     where: { id: "singleton" },
   });
   if (
-    operation.kind !== "apply_native_recovery" ||
+    operation.kind !== expectedKind ||
     operation.targetId !== input.planId ||
     payload.planId !== input.planId ||
     operation.userId !== payload.actorId ||
@@ -65,8 +71,11 @@ export async function installNativeAuthority(
   tx: Prisma.TransactionClient,
   context: NativeFileContext,
   input: {
-    scope: NativeRecoveryScope;
-    network: z.infer<typeof NativeRecoveryNetworkEvidenceSchema>;
+    scope: Pick<NativeRecoveryScope, "storageRoots">;
+    network: Pick<
+      z.infer<typeof NativeRecoveryNetworkEvidenceSchema>,
+      "capturedAt" | "expiresAt" | "quiescence" | "mounts" | "recoveryEpoch"
+    >;
   },
 ) {
   const { network, scope } = input;

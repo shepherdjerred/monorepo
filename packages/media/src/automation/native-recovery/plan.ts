@@ -1,9 +1,10 @@
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
+import { NativeRecoveryNetworkEvidenceSchema } from "#shared/native-recovery.ts";
 import {
-  NativeRecoveryFileEvidenceSchema,
-  NativeRecoveryNetworkEvidenceSchema,
-} from "#shared/native-recovery.ts";
+  NativePublishedFileEvidenceSchema,
+  FinishedNativeV2Schema,
+} from "#shared/native-recovery/lifecycle.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   lockNativeScope,
@@ -25,20 +26,33 @@ export function stableNativeNetwork(raw: unknown) {
   };
 }
 export function stableNativeFiles(raw: unknown) {
-  const files = NativeRecoveryFileEvidenceSchema.parse(raw);
+  const files = NativePublishedFileEvidenceSchema.parse(raw);
   return {
+    ...(files.schemaVersion === 1
+      ? {}
+      : {
+          schemaVersion: 2,
+          lifecycleKind: "published",
+          terminalEvidence: files.terminalEvidence,
+          ...(files.settledEvidence === undefined
+            ? {}
+            : { settledEvidence: files.settledEvidence }),
+        }),
     planId: files.planId,
     recoveryEpoch: files.recoveryEpoch,
     workerPodUid: files.workerPodUid,
     files: files.files,
   };
 }
-export const FinishedNativeSchema = z.strictObject({
-  schemaVersion: z.literal(1),
-  scopeHash: z.string(),
-  network: z.json(),
-  files: z.json(),
-});
+export const FinishedNativeSchema = z.union([
+  z.strictObject({
+    schemaVersion: z.literal(1),
+    scopeHash: z.string(),
+    network: z.json(),
+    files: z.json(),
+  }),
+  FinishedNativeV2Schema,
+]);
 
 export async function finishNativePreparation(
   db: Database,
@@ -60,7 +74,9 @@ export async function finishNativePreparation(
       if (network.expiresAt <= new Date())
         throw new Error("Native network observation expired during inspection");
       const finished = FinishedNativeSchema.parse({
-        schemaVersion: 1,
+        ...(prepared.scope.schemaVersion === 1
+          ? { schemaVersion: 1 }
+          : { schemaVersion: 2, lifecycleKind: "published" }),
         scopeHash: snapshotHash(z.json().parse(prepared.scope)),
         network: stableNativeNetwork(network.evidence),
         files: stableNativeFiles(prepared.evidence),

@@ -8,15 +8,26 @@ import {
   ApplyNativeRecoverySchema,
 } from "#shared/native-recovery.ts";
 import { parseInput, readJson } from "./validation.ts";
+import { PrepareNativeQuarantineSchema } from "#shared/native-recovery/quarantine.ts";
 
 export type NativeRecoveryAdministration = Pick<
   PrismaNativeRecovery,
-  "inventory" | "prepare" | "detail" | "apply"
+  "inventory" | "prepare" | "prepareQuarantine" | "detail" | "apply"
 >;
 export function registerNativeRecoveryRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   service: NativeRecoveryAdministration,
 ) {
+  app.post("/api/v1/admin/native-recovery/quarantine", async (c) =>
+    c.json(
+      await service.prepareQuarantine(
+        c.get("actor"),
+        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
+        parseInput(PrepareNativeQuarantineSchema, await readJson(c.req.raw)),
+      ),
+      202,
+    ),
+  );
   app.get("/api/v1/admin/native-recovery", async (c) =>
     c.json(
       await service.inventory(

@@ -59,19 +59,30 @@ export class ContentProof {
       inode: proof.ino.toString(),
       mtimeNs: proof.mtimeNs.toString(),
       ctimeNs: proof.ctimeNs.toString(),
-      ancestors: ancestors(path).map((parent) => {
-        const identity = this.parents.get(parent);
-        if (identity === undefined)
-          throw new FileOperationConflict(
-            "Media ancestor has no captured identity",
-          );
-        return {
-          path: parent,
-          device: identity.dev.toString(),
-          inode: identity.ino.toString(),
-        };
-      }),
+      ancestors: this.reviewAncestors(path),
     };
+  }
+
+  /** Audit only: an absent path is bound to its captured real ancestor identities. */
+  async reviewAbsence(path: string) {
+    if ((await this.assert(path)) !== null)
+      throw new FileOperationConflict("Reviewed absent media path exists");
+    return { ancestors: this.reviewAncestors(path) };
+  }
+
+  private reviewAncestors(path: string) {
+    return ancestors(path).map((parent) => {
+      const identity = this.parents.get(parent);
+      if (identity === undefined)
+        throw new FileOperationConflict(
+          "Media ancestor has no captured identity",
+        );
+      return {
+        path: parent,
+        device: identity.dev.toString(),
+        inode: identity.ino.toString(),
+      };
+    });
   }
 
   async link(source: string, target: string): Promise<void> {

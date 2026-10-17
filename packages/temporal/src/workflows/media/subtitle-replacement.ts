@@ -78,24 +78,16 @@ async function replace(
     if (!settled) throw error;
   }
 }
-export async function prepareSubtitleReplacementWorkflow(
-  input: SubtitleReplacementInput,
-) {
+export async function prepare(input: SubtitleReplacementInput) {
   await replace(input, "prepare");
 }
-export async function applySubtitleReplacementWorkflow(
-  input: SubtitleReplacementInput,
-) {
+export async function apply(input: SubtitleReplacementInput) {
   await replace(input, "apply");
 }
-export async function reconcileSubtitleReplacementWorkflow(
-  input: SubtitleReplacementInput,
-) {
+export async function reconcile(input: SubtitleReplacementInput) {
   await replace(input, "reconcile");
 }
-export async function cleanupSubtitleReplacementWorkflow(
-  input: SubtitleReplacementInput,
-) {
+export async function cleanup(input: SubtitleReplacementInput) {
   const state = await network.subtitleReplacementState(input);
   if (state.cleanupState === "cleaned") {
     await network.finishMediaOperation({

@@ -1,8 +1,6 @@
 import { z } from "zod";
-import {
-  NativeRecoveryNetworkEvidenceSchema,
-  NativeRecoveryScopeSchema,
-} from "#shared/native-recovery.ts";
+import { NativeRecoveryNetworkEvidenceSchema } from "#shared/native-recovery.ts";
+import { NativePublishedScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { CanonicalMountEvidenceSchema } from "#shared/canonical-storage.ts";
 import { QuiescenceEvidenceSchema } from "#shared/legacy-observer.ts";
 import {
@@ -36,7 +34,7 @@ export function createNativeRecoveryObserver(
     const plan = await context.db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id: planId },
     });
-    const scope = NativeRecoveryScopeSchema.parse(plan.scope);
+    const scope = NativePublishedScopeSchema.parse(plan.scope);
     await assertNativeSnapshot(context.db, planId, scope);
     const roots = await assertNativeStorageRoots(
       context.db,
