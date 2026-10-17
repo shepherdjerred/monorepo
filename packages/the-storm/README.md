@@ -1476,6 +1476,11 @@ are loaded asynchronously for the first map and at most one successor;
 the lobby remains available throughout. Chunk loading, pasting and snapshots
 are batched, and advancing releases the previous map's tickets and artifacts.
 Admission waits for preparation rather than blocking the main thread.
+An ordinary single-map reset verifies and repairs terrain before reopening the
+lobby. Permanent plugin shutdown instead restores tracked craters and player
+snapshots, clears bombs and releases bots and map resources without starting
+verification or opening another match; pending lobby flag callbacks cannot
+reopen admission after shutdown begins.
 `maps:verify-runtime` observes these production cache ports while ordinary
 eight-bot showcases rotate. It compares restored item slots and metadata and
 every sign face with the source payload, checks the two-map resource bound,
