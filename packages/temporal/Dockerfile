@@ -50,6 +50,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/media \
   packages/the-storm/maintenance-status.json \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
@@ -88,6 +89,8 @@ RUN cd packages/llm-models && bun run build
 # Glitter context also exports gitignored dist files. Its build validates and
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build
+# Media activities use the generated Prisma client, including on Node workers.
+RUN cd packages/media && bun run generate
 # Compile the in-tree toolkit CLI into a single static binary. The
 # homelab-audit runbook + preflight shell out through toolkit workflows and
 # native CLI passthroughs (`alerts`, `bugsink`, `prom`, `loki`, `grafana`);
@@ -166,8 +169,19 @@ ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps socat tini util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git iptables libxml2 procps socat tini util-linux xz-utils; \
     rm -rf /var/lib/apt/lists/*
+
+# Use the same upstream 7zz artifact as local and CI tests. Debian's 7zip
+# package exposes a different command and does not supply this runtime contract.
+# Keep the upstream license alongside the binary; the lockfile pins its digest.
+COPY mise.lock /tmp/media-tools.lock
+RUN bun -e 'const lock = Bun.TOML.parse(await Bun.file("/tmp/media-tools.lock").text()); const platform = process.arch === "arm64" ? "linux-arm64" : process.arch === "x64" ? "linux-x64" : null; if (platform === null) throw new Error("Unsupported archive tool architecture"); const artifact = lock.tools["aqua:ip7z/7zip"][0]["platforms." + platform]; if (typeof artifact?.url !== "string" || !/^sha256:[a-f0-9]{64}$/.test(artifact.checksum)) throw new Error("Archive tool lock entry is missing"); const response = await fetch(artifact.url); if (!response.ok) throw new Error("Archive tool download failed"); const bytes = await response.arrayBuffer(); if ("sha256:" + new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== artifact.checksum) throw new Error("Archive tool checksum mismatch"); await Bun.write("/tmp/media-7zip.tar.xz", bytes);' \
+    && mkdir -p /opt/media-7zip \
+    && tar -xJf /tmp/media-7zip.tar.xz -C /opt/media-7zip \
+    && ln -s /opt/media-7zip/7zz /usr/local/bin/7zz \
+    && 7zz i >/dev/null \
+    && rm /tmp/media-7zip.tar.xz /tmp/media-tools.lock
 
 # --- gh CLI (per-arch release tarball) ---
 RUN set -e; \
@@ -430,6 +444,7 @@ COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/media \
   packages/the-storm/maintenance-status.json \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
@@ -458,6 +473,7 @@ COPY --parents \
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
+COPY --from=build /app/packages/media/generated packages/media/generated
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker
@@ -466,7 +482,12 @@ COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 # into place if a generated schema isn't present. Idempotent, dependency-free —
 # runs here because it writes into the source tree.
 RUN toolkit --version \
-    && bun packages/temporal/scripts/homelab/ensure-ha-schema.ts
+    && bun packages/temporal/scripts/homelab/ensure-ha-schema.ts \
+    && ffprobe -version >/dev/null \
+    && ffmpeg -version >/dev/null \
+    && 7zz i >/dev/null \
+    && python3 -c 'import fcntl' \
+    && test -f packages/media/src/filesystem/lock-helper.py
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

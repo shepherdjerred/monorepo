@@ -2,6 +2,11 @@
   "version": 3,
   "namespaces": [
     {
+      "key": "media",
+      "name": "Media",
+      "description": "Unified household media automation controls."
+    },
+    {
       "key": "arcade",
       "name": "Arcade",
       "description": "Arcade game rollout controls."
@@ -68,6 +73,177 @@
     }
   ],
   "flags": [
+    {
+      "key": "media-requests-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Accept household requests after authentication and migration acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-acquisition-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow torrent submissions only after acquisition ownership transfers.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-source-cleanup-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow source cleanup after verified seeding obligations and ownership checks.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-quarantine-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow reversible library removal after fresh retention and notification checks.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-purge-enabled",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Allow final quarantine purge after expiry and revalidation; independently disabled during recovery.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "media-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-session-lifetime-ms",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Maximum session lifetime at login; Plex access is independently revalidated.",
+      "type": "variant",
+      "default": "604800000",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-email-sender",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Verified sending address for household media notifications.",
+      "type": "variant",
+      "default": "media@sjer.red",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "media-keep-days",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Days of retention protection granted by a household Keep action.",
+      "type": "variant",
+      "default": "30",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
     {
       "key": "arcade_enabled",
       "owner": "arcade",

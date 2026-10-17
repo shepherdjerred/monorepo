@@ -13,6 +13,7 @@ hold only scoped invariants that agents must keep in context.
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                                           |
 | [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                                              |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                                  |
+| [media](media/)                                                 | Unified media requests, acquisition policies, library lifecycle, and household retention                  |
 | [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports                       |
 | [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                                                |
 | [macos-ai-subscription-tracker](macos-ai-subscription-tracker/) | Brim (QuotaBar) — native macOS menu-bar tracker for AI subscription quotas                                |

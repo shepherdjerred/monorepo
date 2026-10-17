@@ -20,6 +20,10 @@ import {
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
 import type { WorkerRole } from "./shared/infra/worker-role.ts";
+import {
+  mediaNetworkWorkerActivities,
+  mediaFileWorkerActivities,
+} from "./activities/media.ts";
 
 export type QueueWorkerRole =
   | "agent"
@@ -31,6 +35,8 @@ export type QueueWorkerRole =
   | "home"
   | "infra"
   | "maintenance"
+  | "media-network"
+  | "media-files"
   | "repo"
   | "reports"
   | "scout"
@@ -55,6 +61,20 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "media-network",
+    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+    activities: mediaNetworkWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "media-files",
+    taskQueue: TASK_QUEUES.MEDIA_FILES,
+    activities: mediaFileWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
   {
     kind: "activity",
     role: "control",

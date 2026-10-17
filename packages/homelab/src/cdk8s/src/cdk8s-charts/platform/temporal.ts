@@ -293,6 +293,19 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         })),
         scoutBackendIngress(),
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: {
+                matchLabels: { "media.sjer.red/application": "true" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
         scoutWorkflowWorkerIngress(),
         ...scoutGatewayClientIngress(),
         ...scoutActivityWorkerIngress(),

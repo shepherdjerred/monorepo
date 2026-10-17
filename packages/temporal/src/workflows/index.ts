@@ -149,17 +149,14 @@ import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
-import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
-import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
-import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
-import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
+import * as agentChat from "./agent-chat.ts";
+import * as agentChatReceipt from "./agent-chat-turn-receipt.ts";
+import * as agentChatCatalog from "./agent-chat-catalog.ts";
 import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
 import { discordAgentChatWorkflow as _discordAgentChatWorkflow } from "./discord-agent-chat.ts";
 import { httpAgentChatWorkflow as _httpAgentChatWorkflow } from "./http-agent-chat.ts";
 import type {
-  AgentChatCatalogState,
   AgentChatTurnResult,
-  AgentChatWorkflowInput,
   ScheduledAgentChatTurnInput,
 } from "#shared/agent/agent-chat.ts";
 import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
@@ -463,23 +460,13 @@ export async function runOpsDigest(
   return _runOpsDigest(input);
 }
 
-export async function agentChatWorkflow(
-  input: AgentChatWorkflowInput,
-): Promise<never> {
-  return _agentChatWorkflow(input);
-}
+export const agentChatWorkflow = agentChat.agentChatWorkflow;
 
-export async function agentChatTurnReceiptWorkflow(
-  input: AgentChatReceiptInput,
-): Promise<AgentChatTurnResult> {
-  return _agentChatTurnReceiptWorkflow(input);
-}
+export const agentChatTurnReceiptWorkflow =
+  agentChatReceipt.agentChatTurnReceiptWorkflow;
 
-export async function agentChatCatalogWorkflow(
-  state?: AgentChatCatalogState,
-): Promise<never> {
-  return _agentChatCatalogWorkflow(state);
-}
+export const agentChatCatalogWorkflow =
+  agentChatCatalog.agentChatCatalogWorkflow;
 
 export async function scheduledAgentChatTurnWorkflow(
   input: ScheduledAgentChatTurnInput,
@@ -499,3 +486,16 @@ export async function httpAgentChatWorkflow(
 ): Promise<AgentChatTurnResult> {
   return _httpAgentChatWorkflow(input, options);
 }
+import * as media from "./media.ts";
+export const reconcileMediaWorkflow = media.reconcileMediaWorkflow;
+export const acquireMediaReleaseWorkflow = media.acquireMediaReleaseWorkflow;
+export const acquireMediaSubtitlesWorkflow =
+  media.acquireMediaSubtitlesWorkflow;
+export const installMediaSubtitleWorkflow = media.installMediaSubtitleWorkflow;
+export const maintainMediaTorrentWorkflow = media.maintainMediaTorrentWorkflow;
+export const retainMediaWorkflow = media.retainMediaWorkflow;
+export const restoreMediaWorkflow = media.restoreMediaWorkflow;
+export const deliverMediaNotificationWorkflow =
+  media.deliverMediaNotificationWorkflow;
+export const dispatchMediaOutboxWorkflow = media.dispatchMediaOutboxWorkflow;
+export const sweepMediaWorkflow = media.sweepMediaWorkflow;
