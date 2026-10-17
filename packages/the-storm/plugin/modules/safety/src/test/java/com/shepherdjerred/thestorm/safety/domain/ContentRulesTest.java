@@ -55,6 +55,24 @@ final class ContentRulesTest {
   }
 
   @Test
+  void nonProseGameplayCommandsRemainAvailableToMutedPlayers() {
+    for (var command :
+        List.of(
+            "/arena join rustworks",
+            "/thestorm:arena leave",
+            "/rtp plains",
+            "/rwf join",
+            "/survival classes",
+            "/kit starter")) {
+      var content = CommandContent.parse(command);
+      assertThat(content.surface()).isEqualTo("command");
+      assertThat(content.screen()).isFalse();
+    }
+    assertThat(CommandContent.parse("/nick new nickname").screen()).isTrue();
+    assertThat(CommandContent.parse("/unknown-plugin authored prose").screen()).isTrue();
+  }
+
+  @Test
   void recipientNamesAndAuthArgumentsAreNotModeratedAsAuthoredProse() {
     assertThat(CommandContent.parse("/minecraft:msg badname hello").text()).isEqualTo("hello");
     assertThat(CommandContent.parse("/minecraft:msg badname hello").surface()).isEqualTo("message");

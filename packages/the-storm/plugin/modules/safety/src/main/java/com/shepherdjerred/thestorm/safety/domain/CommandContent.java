@@ -21,6 +21,13 @@ public record CommandContent(String surface, String text, boolean screen, boolea
           "tpahere",
           "tpaccept",
           "tpdeny",
+          "arena",
+          "rwf",
+          "survival",
+          "rtp",
+          "kit",
+          "kits",
+          "suicide",
           "unmute",
           "unban",
           "op",
@@ -66,11 +73,10 @@ public record CommandContent(String surface, String text, boolean screen, boolea
     if (label.equals("ticket") || label.equals("tickets") || label.equals("safety")) {
       return ticket(label, arguments);
     }
+    if (IDENTIFIERS.contains(label) || arguments.isBlank())
+      return new CommandContent("command", arguments, false, false);
     return new CommandContent(
-        PROSE.contains(label) ? label : "command-content",
-        arguments,
-        !IDENTIFIERS.contains(label) && !arguments.isBlank(),
-        false);
+        PROSE.contains(label) ? label : "command-content", arguments, true, false);
   }
 
   private static CommandContent addressed(String arguments) {

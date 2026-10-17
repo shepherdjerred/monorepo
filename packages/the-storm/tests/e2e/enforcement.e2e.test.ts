@@ -169,4 +169,35 @@ describe.skipIf(external)("active enforcement", () => {
       await disconnectBot(legacyBot);
     }
   });
+
+  test("disabled screening does not punish an occasional long Global message", async () => {
+    if (brain === undefined || rcon === undefined)
+      throw new Error("Active fixture is missing");
+    const longBot = await connectBot({
+      host: info.host,
+      port: info.gamePort,
+      username: username("long"),
+    });
+    try {
+      await rcon.command(`op ${longBot.username}`);
+      await setBrainMode(brain.port, "screening-disabled");
+      const reviewed = waitForDecision(
+        longBot,
+        new RegExp(
+          String.raw`#(\d+) ${longBot.username} other allow .*fake-brain`,
+        ),
+      );
+      longBot.chat(`/g ${"a detailed explanation ".repeat(25).trimEnd()}`);
+      await reviewed;
+      const delivered = waitForMessage(
+        longBot,
+        /a long message leaves chat available/,
+      );
+      longBot.chat("a long message leaves chat available");
+      await delivered;
+    } finally {
+      await setBrainMode(brain.port, "ok");
+      await disconnectBot(longBot);
+    }
+  });
 });

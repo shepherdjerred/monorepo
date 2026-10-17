@@ -20,8 +20,9 @@ triageThreshold: 0.7
 # The confidence that resolves a ticket outright (above 0 through 1).
 resolveThreshold: 0.95
 
-# The deterministic layer-one checks: floods, invites, bursts, and repeats act
-# without a brain call, while caps, links, and shouting ask the brain.
+# The legacy Global flow keeps invite, burst and repeat checks during rollout.
+# maxLength is a contextual-review threshold; length alone never triggers a mute.
+# Length, caps, links and shouting ask the brain.
 prefilters:
   maxLines: 5
   windowSeconds: 10

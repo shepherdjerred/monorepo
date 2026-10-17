@@ -145,6 +145,18 @@ final class ChatFlowTest {
   }
 
   @Test
+  void aLongOrdinaryMessageIsNotAutomaticallyMutedDuringTheRollout() {
+    var chatFlow = flow(brain(verdict(Optional.empty(), 1)), spamLadder("active"));
+    chatFlow.onChatLine(chat("a detailed explanation ".repeat(25))).join();
+    assertThat(brainCalls).hasSize(1);
+    assertThat(chat.activeMute(ALICE)).isEmpty();
+    assertThat(log.recent(10).join())
+        .singleElement()
+        .extracting(decision -> decision.action())
+        .isEqualTo(DecisionAction.ALLOW);
+  }
+
+  @Test
   void rateBurstsMuteWithoutTheBrain() {
     var chatFlow = flow(brain(verdict(Optional.of("spam"), 1)), spamLadder("active"));
 
