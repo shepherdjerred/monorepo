@@ -49,7 +49,7 @@ The three root shard checks (`prettier-root`, `line-endings-root`, and
 Turbo calculates their cache keys. This preserves staged content, tracked file
 membership, effective line-ending attributes and changed-file selection without
 hashing checkout timestamps, refs or logs. Use `bun run verify` for cached
-verification; for an uncached individual check, use `bun run <task>` directly. Direct Turbo
+verification; for an uncached individual check, use `bun run <check>-root` directly. Direct Turbo
 execution without the generated fingerprint fails. Do not set or reuse
 `CI_ROOT_CHECK_INPUTS_SHA256` manually.
 
