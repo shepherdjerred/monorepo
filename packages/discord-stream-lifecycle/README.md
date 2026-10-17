@@ -41,9 +41,13 @@ import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userb
 import { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager";
 ```
 
+Game-backend tests share `encoderFixture` through the explicit
+`@shepherdjerred/discord-stream-lifecycle/test-fixtures/encoder` source export.
+It supplies in-memory encoder handles without a Discord connection or process.
+
 ## Build and test
 
-Subpath exports resolve against `dist/`, so the package must be built before
+Runtime subpath exports resolve against `dist/`, so the package must be built before
 anything imports it; `test`, `typecheck`, and `lint` all chain `bun run build`
 first. Run them per-package:
 

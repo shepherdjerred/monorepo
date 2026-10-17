@@ -10,13 +10,15 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./test-fixtures/encoder": "./test/fixtures/encoder.ts",
     "./*": {
       "types": "./dist/*.d.ts",
       "default": "./dist/*.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "test/fixtures/encoder.ts"
   ],
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
