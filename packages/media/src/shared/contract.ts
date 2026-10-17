@@ -101,6 +101,7 @@ export const MediaActionSchema = z.discriminatedUnion("action", [
       action: z.literal("select_release"),
       expectedVersion: VersionSchema,
       releaseId: IdentifierSchema,
+      identityConfirmation: IdentityConfirmationSchema.optional(),
     })
     .strict(),
 ]);
@@ -133,6 +134,7 @@ export type MediaUser = z.infer<typeof UserSchema>;
 export type MediaRequest = z.infer<typeof RequestSchema>;
 export type CreateRequest = z.infer<typeof CreateRequestSchema>;
 export type MediaAction = z.infer<typeof MediaActionSchema>;
+import { IdentityConfirmationSchema } from "./acquisition/preview.ts";
 
 export type ReleaseAttributes = {
   id: string;

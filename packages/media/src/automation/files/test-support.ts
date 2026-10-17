@@ -21,6 +21,7 @@ export async function fileFixture(db: Database) {
   let clock = new Date();
   const context: FileContext = {
     db,
+    serverMachineId: "fixture-server",
     roots: { movies: roots, tv: roots },
     now: () => clock,
     minimumFreeBytes: 0,
@@ -100,6 +101,19 @@ export async function fileFixture(db: Database) {
   });
 
   async function acquisition(content = "Fixture media contents") {
+    await db.plexIdentityMapping.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id,
+        serverMachineId: "fixture-server",
+        serverAccountId: user.plexAccountId,
+        kind: "account",
+        permittedSectionIds: ["1", "2"],
+        permittedMediaKinds: ["movie", "series"],
+        verifiedAt: new Date(),
+      },
+      update: {},
+    });
     const filename = `${crypto.randomUUID()}.mkv`;
     await writeFile(nodePath.join(roots.downloads, filename), content);
     const release = await db.releaseCandidate.create({
@@ -131,13 +145,32 @@ export async function fileFixture(db: Database) {
         observation: {
           torrent: { progress: 1, save_path: roots.downloads },
           files: [
-            { name: filename, size: Buffer.byteLength(content), progress: 1 },
+            {
+              index: 0,
+              name: filename,
+              size: Buffer.byteLength(content),
+              progress: 1,
+            },
           ],
         },
       },
     });
     const intent = await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId: media.id },
+    });
+    const operation = await db.operation.create({
+      data: {
+        idempotencyKey: crypto.randomUUID(),
+        kind: "reconcile_media",
+        targetId: media.id,
+        userId: user.id,
+        payload: {
+          mediaId: media.id,
+          generation: intent.generation,
+          requestId: request.id,
+          requestVersion: request.version,
+        },
+      },
     });
     const attempt = await db.acquisitionAttempt.create({
       data: {
@@ -146,7 +179,7 @@ export async function fileFixture(db: Database) {
         mediaIds: [media.id],
         generations: { [media.id]: intent.generation },
         state: "ready",
-        operationId: crypto.randomUUID(),
+        operationId: operation.id,
         torrentId: torrent.id,
         recoveryEpoch: 0,
         reservations: {

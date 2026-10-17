@@ -9,6 +9,14 @@ import { type FetchTransport } from "#integrations/http.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { grantTestLease } from "#testing/authority.ts";
+import type { Database } from "#infrastructure/database.ts";
+
+export async function ensureTestProvider(db: Database) {
+  await db.mediaProvider.createMany({
+    data: [{ id: "knaben", enabled: true, seedingPolicy: { kind: "public" } }],
+    skipDuplicates: true,
+  });
+}
 
 export function automationTestHarness() {
   let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
@@ -31,6 +39,7 @@ export function automationTestHarness() {
     };
     return {
       db: cluster.database,
+      serverMachineId: "fixture-server",
       tmdb: new TmdbClient({ kind: "api-key", apiKey: "fixture" }, transport),
       cipher,
       providers: {
@@ -76,6 +85,17 @@ export function automationTestHarness() {
     });
     const user = await db.mediaUser.create({
       data: { plexAccountId: crypto.randomUUID(), displayName: "Requester" },
+    });
+    await db.plexIdentityMapping.create({
+      data: {
+        userId: user.id,
+        serverMachineId: "fixture-server",
+        serverAccountId: user.plexAccountId,
+        kind: "account",
+        permittedSectionIds: ["1", "2"],
+        permittedMediaKinds: ["movie", "series"],
+        verifiedAt: new Date(),
+      },
     });
     const media = await db.mediaItem.create({
       data: {
@@ -125,15 +145,7 @@ export function automationTestHarness() {
       download: { kind: "magnet", value: "" },
     };
     source.download.value = `magnet:?xt=urn:btih:${source.infoHash}`;
-    await db.mediaProvider.upsert({
-      where: { id: "knaben" },
-      create: {
-        id: "knaben",
-        enabled: true,
-        seedingPolicy: { kind: "public" },
-      },
-      update: {},
-    });
+    await ensureTestProvider(db);
     const release = await db.releaseCandidate.create({
       data: {
         providerId: source.providerId,

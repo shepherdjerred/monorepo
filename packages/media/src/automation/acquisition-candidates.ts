@@ -11,6 +11,7 @@ import { ProviderIdSchema } from "./providers.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { EpisodeNumberingSchema } from "#shared/numbering.ts";
+import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { persistCandidateSnapshot } from "./candidate-evidence.ts";
 import {
   prepareResolvedEvidence,
@@ -113,6 +114,7 @@ async function searchTarget(context: MediaAutomationContext, mediaId: string) {
     title: media.title,
     year: media.year,
   };
+  applyCatalogIdentity(identity, series ?? media);
   if (series != null) {
     identity.seriesTitle = series.title;
     if (series.year !== null) identity.seriesYear = series.year;
@@ -145,8 +147,29 @@ async function storeCandidate(
     sizeBytes: candidate.sizeBytes,
     media: target.identity,
     knownEpisodes: target.knownEpisodes,
+    externalIds: Object.fromEntries(
+      (candidate.references ?? [])
+        .filter(
+          (reference) =>
+            reference.kind === (target.kind === "movie" ? "movie" : "series"),
+        )
+        .map((reference) => [reference.namespace, reference.value]),
+    ),
   });
   const attributes = parsed.attributes;
+  const references = candidate.references ?? [];
+  if (
+    references.some(
+      (reference) =>
+        reference.kind !== (target.kind === "movie" ? "movie" : "series") ||
+        references.some(
+          (other) =>
+            other.namespace === reference.namespace &&
+            other.value !== reference.value,
+        ),
+    )
+  )
+    attributes.identityConfidence = "mismatch";
   if (policy.profile.resolved !== undefined) {
     attributes.resolvedEvidence = await collectResolvedEvidence(
       policy.profile.resolved,
@@ -176,6 +199,7 @@ async function storeCandidate(
     source: candidate,
     attributes,
     evaluation: evaluation.evaluation,
+    searchedForMediaId: target.identity.id,
   });
   if (stored === null) return null;
   const authoritative = chooseUpgrade({
@@ -228,4 +252,17 @@ export async function searchCandidates(
         b.rank - a.rank || b.score - a.score || a.id.localeCompare(b.id),
     )
     .map((candidate) => candidate.id);
+}
+function applyCatalogIdentity(
+  identity: Parameters<typeof matchRelease>[0]["media"],
+  catalogRoot: { kind: string; tmdbId: number | null; externalIds: unknown },
+) {
+  const catalog = canonicalReferences(catalogRoot);
+  identity.aliases = catalog.aliases;
+  identity.externalIds = Object.fromEntries(
+    catalog.references.map((reference) => [
+      reference.namespace,
+      reference.value,
+    ]),
+  );
 }

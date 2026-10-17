@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  ProviderReferenceSchema,
+  ProviderEditionEvidenceSchema,
+} from "#shared/acquisition/catalog.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
@@ -21,6 +25,8 @@ export const ProviderIdSchema = z.enum([
   "animez",
 ]);
 export const StoredCandidateSchema = z.object({
+  references: z.array(ProviderReferenceSchema).max(20).optional(),
+  editionEvidence: z.array(ProviderEditionEvidenceSchema).max(20).optional(),
   providerId: ProviderIdSchema,
   providerReleaseId: z.string(),
   title: z.string(),

@@ -4,7 +4,8 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
-import { lockMedia, needsRestore } from "#infrastructure/locks.ts";
+import { needsRestore } from "#infrastructure/locks.ts";
+import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
 
@@ -77,7 +78,10 @@ export function createCoverageActivities(
           orderBy: { id: "asc" },
           take: 25,
         });
-        await lockMedia(tx, [root.mediaId, ...episodes.map((item) => item.id)]);
+        await lockAcquisitionMedia(tx, [
+          root.mediaId,
+          ...episodes.map((item) => item.id),
+        ]);
         const current = await tx.mediaRequest.findUniqueOrThrow({
           where: { id: root.id },
         });

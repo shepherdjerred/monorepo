@@ -9,10 +9,24 @@ import {
 } from "#shared/numbering.ts";
 import type { Database } from "./database.ts";
 import { MediaCommandBase } from "./command-base.ts";
-import { lockMedia } from "./locks.ts";
+import { lockAcquisitionMedia } from "./acquisition-identity/locks.ts";
+import { lockEffectiveRequests } from "./request-claims.ts";
+import {
+  assertNumberingOwner,
+  writeNumberingMapping,
+} from "./catalog-identity/numbering-write.ts";
+import { CatalogNumberingAdministration } from "./catalog-identity/numbering-service.ts";
+import type { TmdbClient } from "#integrations/tmdb.ts";
+import type {
+  PreviewNumberingGroup,
+  CommitNumberingGroup,
+} from "#shared/acquisition/numbering.ts";
 
 export class PrismaNumberingAdministration extends MediaCommandBase {
-  constructor(private readonly db: Database) {
+  constructor(
+    private readonly db: Database,
+    private readonly tmdb?: TmdbClient,
+  ) {
     super(db, { keepDays: 30 });
   }
   async series(actor: MediaActor, query: string) {
@@ -86,13 +100,23 @@ export class PrismaNumberingAdministration extends MediaCommandBase {
             "Select an episode in a canonical series",
             422,
           );
-        await lockMedia(tx, [seriesId, episodeId]);
+        await lockAcquisitionMedia(tx, [seriesId]);
         const siblings = await tx.mediaItem.findMany({
           where: {
             kind: "episode",
             OR: [{ parentId: seriesId }, { parent: { parentId: seriesId } }],
           },
         });
+        await lockAcquisitionMedia(
+          tx,
+          siblings.map((item) => item.id),
+        );
+        await lockEffectiveRequests(
+          tx,
+          siblings.map((item) => item.id),
+        );
+        await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+        await assertNumberingOwner(tx, actor.id);
         if (
           input.absoluteNumber !== null &&
           siblings.some(
@@ -114,42 +138,49 @@ export class PrismaNumberingAdministration extends MediaCommandBase {
             "Episode changed; refresh before mapping",
             409,
           );
-        const ids = z.record(z.string(), z.json()).parse(current.externalIds);
-        delete ids["absoluteNumber"];
-        if (input.absoluteNumber !== null)
-          ids["absoluteNumber"] = input.absoluteNumber;
-        ids["numberingEvidence"] = input.evidence;
+        await writeNumberingMapping(tx, {
+          actorId: actor.id,
+          episodeId,
+          absoluteNumber: input.absoluteNumber,
+          evidence: input.evidence,
+        });
         await tx.mediaItem.update({
-          where: { id: episodeId },
-          data: { externalIds: ids, version: { increment: 1 } },
-        });
-        const intent = await tx.mediaIntent.findUnique({
-          where: { mediaId: episodeId },
-        });
-        if (intent !== null) {
-          const updated = await tx.mediaIntent.update({
-            where: { mediaId: episodeId },
-            data: { generation: { increment: 1 }, version: { increment: 1 } },
-          });
-          await this.enqueue(tx, actor, {
-            kind: "reconcile_media",
-            mediaId: episodeId,
-            generation: updated.generation,
-          });
-        }
-        await tx.applicationEvent.create({
-          data: {
-            actorId: actor.id,
-            mediaId: episodeId,
-            kind: "episode_numbering_mapped",
-            payload: {
-              absoluteNumber: input.absoluteNumber,
-              evidence: input.evidence,
-            },
-          },
+          where: { id: seriesId },
+          data: { version: { increment: 1 } },
         });
         return { status: "completed", version: current.version + 1 };
       },
     );
+  }
+
+  groups(actor: MediaActor, seriesId: string) {
+    return this.groupService().groups(actor, seriesId);
+  }
+  group(actor: MediaActor, seriesId: string, groupId: string) {
+    return this.groupService().group(actor, seriesId, groupId);
+  }
+  previewGroup(
+    actor: MediaActor,
+    seriesId: string,
+    input: PreviewNumberingGroup,
+  ) {
+    return this.groupService().previewGroup(actor, seriesId, input);
+  }
+  commitGroup(
+    actor: MediaActor,
+    key: string,
+    seriesId: string,
+    input: CommitNumberingGroup,
+  ) {
+    return this.groupService().commitGroup(actor, key, seriesId, input);
+  }
+  private groupService() {
+    if (this.tmdb === undefined)
+      throw new MediaError(
+        "catalog_unconfigured",
+        "TMDB numbering is unavailable",
+        503,
+      );
+    return new CatalogNumberingAdministration(this.db, this.tmdb);
   }
 }

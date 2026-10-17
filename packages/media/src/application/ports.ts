@@ -16,6 +16,12 @@ import type { ReleaseList, SaveQualityProfile } from "#shared/api.ts";
 import type { ProfileDefaults } from "#shared/api.ts";
 
 export type MediaApplication = {
+  identityPreview: (
+    actor: MediaActor,
+    mediaId: string,
+    releaseId: string,
+    input: IdentityPreviewInput,
+  ) => Promise<IdentityPreview>;
   createRequest: (
     actor: MediaActor,
     key: string,
@@ -66,6 +72,10 @@ export type MediaApplication = {
     input: { expectedVersion: number; profileId: string },
   ) => Promise<CommandResult>;
 };
+import type {
+  IdentityPreview,
+  IdentityPreviewInput,
+} from "#shared/acquisition/preview.ts";
 
 export type CatalogApplication = {
   search: (query: string) => Promise<CatalogSearch>;

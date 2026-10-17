@@ -285,10 +285,47 @@ export class PrismaMediaApplication
     );
   }
 
-  async releases(_actor: MediaActor, mediaId: string) {
+  async identityPreview(
+    actor: MediaActor,
+    mediaId: string,
+    releaseId: string,
+    input: IdentityPreviewInput,
+  ) {
+    return this.db.$transaction(
+      async (tx) => {
+        await lockAcquisitionMedia(tx, input.mediaIds);
+        await lockEffectiveRequests(tx, input.mediaIds);
+        await commandAutomationEpoch(tx);
+        return buildIdentityPreview(tx, actor, {
+          ...input,
+          mediaId,
+          releaseId,
+          ...this.settings,
+        });
+      },
+      { isolationLevel: "Serializable" },
+    );
+  }
+
+  async releases(actor: MediaActor, mediaId: string) {
+    await this.db.$transaction(async (tx) => {
+      await lockAcquisitionMedia(tx, [mediaId]);
+      await lockEffectiveRequests(tx, [mediaId]);
+      await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+      await authorizeRenewal(tx, actor, {
+        mediaId,
+        action: "retry",
+        ...this.settings,
+      });
+    });
     return ReleaseListSchema.parse(
       await this.db.releaseCandidate.findMany({
-        where: { mediaIds: { has: mediaId } },
+        where: {
+          OR: [
+            { mediaIds: { has: mediaId } },
+            { searchedForMediaIds: { has: mediaId } },
+          ],
+        },
         orderBy: { createdAt: "desc" },
         take: 100,
         select: {
@@ -321,3 +358,9 @@ export class PrismaMediaApplication
   }
 }
 import { ProfileDefaultsSchema } from "#shared/api.ts";
+import type { IdentityPreviewInput } from "#shared/acquisition/preview.ts";
+import { buildIdentityPreview } from "./acquisition-identity/preview.ts";
+import { lockAcquisitionMedia } from "./acquisition-identity/locks.ts";
+import { lockEffectiveRequests } from "./request-claims.ts";
+import { commandAutomationEpoch } from "./handoff/authority.ts";
+import { authorizeRenewal } from "./action-guards.ts";

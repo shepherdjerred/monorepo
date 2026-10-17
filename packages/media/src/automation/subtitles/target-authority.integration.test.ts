@@ -281,7 +281,8 @@ test("a real new request skips stale staged evidence, acquires a current candida
   const oldRow = await f.db.subtitleAsset.findUniqueOrThrow({
     where: { id: old.subtitleId ?? "missing" },
   });
-  await f.db.plexIdentityMapping.create({
+  await f.db.plexIdentityMapping.update({
+    where: { userId: f.user.id },
     data: {
       userId: f.user.id,
       serverMachineId: "fixture",

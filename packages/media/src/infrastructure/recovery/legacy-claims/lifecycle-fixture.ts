@@ -40,6 +40,7 @@ export function legacyLifecycleHarness() {
     });
     for (const actor of [owner, user])
       await grantTestRequesterAccess(db, actor.id, "lifecycle-fixture");
+    f.context.serverMachineId = "lifecycle-fixture";
     await db.mediaItem.update({
       where: { id: f.media.id },
       data: { externalIds: { plexSectionId: "1" } },
@@ -179,7 +180,7 @@ export function legacyLifecycleHarness() {
       bind,
       release,
       refresh,
-      network: harness.context(),
+      network: { ...harness.context(), serverMachineId: "lifecycle-fixture" },
     };
   }
   return { fixture };

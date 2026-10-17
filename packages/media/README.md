@@ -363,6 +363,31 @@ configured libraries to finish enumeration. Current provider adapters have no
 verified recent-release feed; their durable feed status reports
 `unsupported_recent_feed`, while six-hour due searches remain separate.
 
+Catalog adoption and refresh store a versioned `externalIds.catalogIdentity`
+snapshot with namespace-qualified TMDB/IMDb/TVDB references, original titles and
+alternative titles. Writes preserve unrelated Plex and owner-numbering keys.
+Conflicting existing identities protect the record. Current tracker adapters
+omit structured catalog references and edition evidence because their verified
+wire contracts do not establish those fields; synthetic identity fixtures do
+not establish upstream support.
+
+The owner numbering API reads `GET /api/v1/admin/numbering/series/:id/groups`
+and `GET /api/v1/admin/numbering/series/:id/groups/:groupId`. Only a listed TMDB
+Absolute group can produce `POST .../series/:id/group-preview`. The owner chooses
+one subgroup and its first absolute number; raw subgroup and episode orders are
+retained, never flattened or treated as an implicit `order + 1` convention.
+Every group episode must join the complete catalog by exact TMDB episode ID,
+series identity and canonical season/episode coordinates.
+
+`POST .../series/:id/group-commit` binds the returned group, catalog and numbering
+digests, at most 100 exact episode/version/number pairs, and an explicit list of
+existing mappings approved for replacement. Further batches require a fresh
+preview of the same upstream group. Upstream reads occur before the transaction;
+changed responses, concurrent mappings and collisions with unselected siblings
+reject the batch. Canonical-root-first locks and a series version increment fence
+older serializable catalog snapshots. Canonical episode coordinates remain
+unchanged; each assigned absolute number retains its source and owner decision.
+
 ## Package boundaries
 
 | Directory            | Responsibility                                                                          |
@@ -434,7 +459,9 @@ The UI reads PostgreSQL projections rather than querying workflow histories.
 Provider credentials and candidate payloads stay in PostgreSQL and Activity
 processes. The network worker owns authenticated external calls. The file worker
 has read-only download access and writable library access, without provider
-credentials. Their [deployment](../homelab/src/cdk8s/src/resources/media/application/workers.ts)
+credentials. It receives the configured Plex machine ID to recheck each covered
+requester's current library scope; Plex authentication remains on the network
+worker. Their [deployment](../homelab/src/cdk8s/src/resources/media/application/workers.ts)
 keeps these mounts and credentials separate. NetworkPolicy declarations require
 an enforcing CNI; they alone do not establish packet isolation.
 
@@ -483,10 +510,28 @@ guessing. File inspection replaces advertised resolution and audio with
 measured values. Missing catalog runtime or original-language evidence remains
 unknown; no default English track or guessed runtime is introduced.
 
-Candidate absolute-number mapping does not yet reach physical file inspection:
-absolute-only filenames remain protected even with an approved numbering map.
-Yearless TV releases without sufficient identity evidence also remain protected;
-the current Select release command cannot supply missing identity approval.
+New acquisition attempts bind an immutable identity snapshot to the selected
+candidate, canonical media, sponsor and recovery epoch. The release review lets the current
+unrestricted owner confirm an ambiguous or yearless release against exact
+canonical episodes. Its server-generated preview binds the candidate, numbering
+and current versions. Confirmation resolves identity only: conflicting strong
+identifiers still reject, and audio, edition evidence, scores, size and upgrade
+requirements remain independent quality checks. A searched-media association
+makes unresolved candidates visible within the caller's current library scope;
+it grants no coverage, download or ownership authority.
+
+Candidate matching and physical inspection share coordinate resolution. Absolute
+filenames require an explicit canonical map, and every new file plan binds the
+observed torrent file index, name, size and exact episode coverage. Staging and
+publication recheck the source and numbering; remapping or revoked access
+protects the operation. Season packs require complete canonical coverage and
+recorded sponsorship before submission. Series revision fences keep numbering
+and catalog changes visible to waiting transactions. Historical attempts and
+file plans retain their original behavior and hashes; identity evidence cannot
+be added afterward to reinterpret an old acquisition.
+
+Requested-edition selection is unavailable; attributed edition text alone
+does not define an edition target or permit replacing a different edition.
 
 To produce a repeatable read-only import report from a saved nonsecret snapshot:
 

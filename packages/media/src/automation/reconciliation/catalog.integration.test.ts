@@ -8,6 +8,19 @@ const { database, context } = automationTestHarness();
 test("series adoption queues bounded refresh with exact runtime and language evidence", async () => {
   let seasonCalls = 0;
   const ctx = context(async (url) => {
+    if (url.pathname.endsWith("/alternative_titles"))
+      return Response.json({
+        id: 123,
+        results: [
+          {
+            title: "Original series alias",
+            iso_3166_1: "JP",
+            type: "original",
+          },
+        ],
+      });
+    if (url.pathname.endsWith("/external_ids"))
+      return Response.json({ id: 123, imdb_id: "tt0000123", tvdb_id: 456 });
     if (url.pathname.endsWith("/tv/123"))
       return Response.json({
         id: 123,

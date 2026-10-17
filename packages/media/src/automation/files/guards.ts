@@ -8,6 +8,9 @@ import {
   now,
 } from "./types.ts";
 import { assertOwnerRemoval } from "./owner-removal.ts";
+import { assertAcquisitionIdentity } from "./acquisition-identity/guard.ts";
+import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
+import { MediaError } from "#application/errors.ts";
 import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import {
   lockRuntimeAuthority,
@@ -54,6 +57,7 @@ export async function assertRuntime(
 export async function assertAcquisition(
   tx: Transaction,
   attemptId: string,
+  serverMachineId?: string,
 ): Promise<void> {
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
@@ -62,10 +66,18 @@ export async function assertAcquisition(
   const epoch = z
     .object({ recoveryEpoch: z.number().int() })
     .parse(attempt).recoveryEpoch;
+  await lockEffectiveRequests(tx, attempt.mediaIds);
   await assertRuntime(tx, epoch);
+  if (attempt.state !== "imported") {
+    try {
+      await assertLegacySubmissionSponsor(tx, attempt, serverMachineId);
+    } catch (error) {
+      if (error instanceof MediaError) throw new FileGuardError(error.code);
+      throw error;
+    }
+  }
   await assertNoMediaSubtitleReplacement(tx, attempt.mediaIds);
   const generations = GenerationsSchema.parse(attempt.generations);
-  await lockEffectiveRequests(tx, attempt.mediaIds);
   const intents = await tx.mediaIntent.findMany({
     where: { mediaId: { in: attempt.mediaIds } },
   });
@@ -99,6 +111,7 @@ export async function assertAcquisition(
     throw new FileGuardError("reservation_obsolete");
   if (["failed", "cancelled", "obsolete"].includes(attempt.state))
     throw new FileGuardError("attempt_obsolete");
+  await assertAcquisitionIdentity(tx, attempt, serverMachineId);
 }
 
 export async function assertRetention(input: {

@@ -5,6 +5,14 @@ import { z } from "zod";
 import { inspectMedia, type MediaProbe } from "#filesystem/media-tools.ts";
 import { sha256File } from "#filesystem/operations-io.ts";
 import { parseReleaseName } from "#domain/release-parser.ts";
+import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
+import { AcquisitionIdentitySnapshotSchema } from "#shared/acquisition/identity.ts";
+import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import {
+  fileIdentityEvidence,
+  IdentityTorrentFileSchema,
+  type IdentityTorrentFile,
+} from "./acquisition-identity/evidence.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import {
   FileGuardError,
@@ -13,7 +21,7 @@ import {
   type FileContext,
   type FilePlanEntry,
 } from "./types.ts";
-import { assertAcquisition, lockMedia } from "./guards.ts";
+import { assertAcquisition } from "./guards.ts";
 import { fileOperations } from "./file-operations.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { stageEmbedded } from "./embedded.ts";
@@ -24,13 +32,7 @@ import { measureResolvedEvidence } from "./resolved-measurement.ts";
 
 const ObservationSchema = z.object({
   torrent: z.object({ progress: z.literal(1), save_path: z.string() }),
-  files: z.array(
-    z.object({
-      name: z.string(),
-      size: z.number().int().positive(),
-      progress: z.number(),
-    }),
-  ),
+  files: z.array(IdentityTorrentFileSchema),
 });
 type MediaFileItem = {
   id: string;
@@ -192,8 +194,8 @@ export async function inspectAndStage(
       throw new FileGuardError("file_coverage_incomplete");
     const committed = plan;
     plan = await context.db.$transaction(async (tx) => {
-      await lockMedia(tx, attempt.mediaIds);
-      await assertAcquisition(tx, attemptId);
+      await lockAcquisitionMedia(tx, attempt.mediaIds);
+      await assertAcquisition(tx, attemptId, context.serverMachineId);
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
@@ -237,12 +239,12 @@ async function authorizeInspection(
   if (await resumeCommittedPublication({ context, attemptId })) return true;
   const committedWhileWaiting = await context.db.$transaction(
     async (tx) => {
-      await lockMedia(tx, mediaIds);
+      await lockAcquisitionMedia(tx, mediaIds);
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
       if (current.state === "imported") return true;
-      await assertAcquisition(tx, attemptId);
+      await assertAcquisition(tx, attemptId, context.serverMachineId);
       return false;
     },
     { timeout: 30_000, maxWait: 10_000 },
@@ -255,12 +257,18 @@ async function authorizeInspection(
 async function inspectEntry(input: {
   context: FileContext;
   attempt: AttemptWithRelease;
-  file: { name: string; size: number; progress: number };
+  file: IdentityTorrentFile;
   media: NamingItem[];
   savePath: string;
 }): Promise<FilePlanEntry> {
   const { context, attempt, file, media, savePath } = input;
-  const mediaIds = fileCoverage(file.name, media);
+  const identity =
+    attempt.identityEvidence === null
+      ? null
+      : AcquisitionIdentitySnapshotSchema.parse(attempt.identityEvidence);
+  const evidence =
+    identity === null ? undefined : fileIdentityEvidence(identity, file);
+  const mediaIds = evidence?.coverage ?? fileCoverage(file.name, media);
   if (mediaIds.length === 0 || file.progress !== 1)
     throw new FileGuardError("file_coverage_unconfirmed");
   const kind = media.some((item) => item.kind === "movie") ? "movies" : "tv";
@@ -276,12 +284,15 @@ async function inspectEntry(input: {
   const attributes = PublicReleaseAttributesSchema.parse(
     attempt.release.attributes,
   );
-  const measured = {
+  const original = {
     ...attributes,
-    ...probeAttributes(probe, attributes.quality),
     id: attempt.releaseId,
     providerId: attempt.release.providerId,
     title: attempt.release.title,
+  };
+  const measured = {
+    ...(identity === null ? original : effectiveCandidate(original, identity)),
+    ...probeAttributes(probe, attributes.quality),
     mediaIds,
     sizeBytes: file.size,
   };
@@ -336,6 +347,7 @@ async function inspectEntry(input: {
     assetId,
   });
   return {
+    ...(evidence === undefined ? {} : { identityEvidence: evidence }),
     assetId,
     mediaIds,
     generations: GenerationsSchema.parse(attempt.generations),

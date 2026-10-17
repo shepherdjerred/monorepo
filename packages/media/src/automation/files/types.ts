@@ -4,10 +4,12 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaFileRoots } from "#filesystem/operations-types.ts";
 import type { MediaProbe } from "#filesystem/media-tools.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
+import { FileIdentityEvidenceSchema } from "#shared/acquisition/identity.ts";
 
 export type Transaction = Prisma.TransactionClient;
 export type FileContext = {
   db: Database;
+  serverMachineId?: string;
   roots: { movies: MediaFileRoots; tv: MediaFileRoots };
   checkpoint: (phase: string) => Promise<void>;
   verifyStorageAuthority: (roots: MediaFileRoots) => Promise<void>;
@@ -35,6 +37,7 @@ export const EmbeddedSubtitleSchema = z.object({
   streamIndex: z.number().int(),
 });
 export const FilePlanEntrySchema = z.object({
+  identityEvidence: FileIdentityEvidenceSchema.optional(),
   assetId: z.string(),
   mediaIds: z.array(z.string()).min(1),
   generations: GenerationsSchema,

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { registerAcquisitionRoutes } from "./media/acquisition-routes.ts";
 import {
   registerLegacyRequesterBindingRoutes,
   type LegacyRequesterBindings,
@@ -45,7 +46,7 @@ import type {
   CatalogApplication,
   MediaApplication,
 } from "#application/ports.ts";
-import { CreateRequestSchema, MediaActionSchema } from "#shared/contract.ts";
+import { CreateRequestSchema } from "#shared/contract.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
 import { parseInput, readJson, readCookie } from "./validation.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
@@ -330,25 +331,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     );
     return c.json(detail.children);
   });
-  app.post("/api/v1/media/:id/actions", async (c) => {
-    const input = parseInput(MediaActionSchema, await readJson(c.req.raw));
-    if (input.action === "retry" || input.action === "select_release")
-      await requireRequestsEnabled();
-    return c.json(
-      await dependencies.media.act(
-        c.get("actor"),
-        parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
-        c.req.param("id"),
-        input,
-      ),
-      202,
-    );
-  });
-  app.get("/api/v1/media/:id/releases", async (c) =>
-    c.json(
-      await dependencies.media.releases(c.get("actor"), c.req.param("id")),
-    ),
-  );
+  registerAcquisitionRoutes(app, dependencies.media, requireRequestsEnabled);
   app.get("/api/v1/activity", async (c) =>
     c.json(await dependencies.media.activity(c.get("actor"))),
   );

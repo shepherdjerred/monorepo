@@ -1,4 +1,6 @@
 import { Prisma } from "#generated/prisma/client.ts";
+import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
+import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
 import type { ReleaseAttributes } from "#shared/contract.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
@@ -27,6 +29,12 @@ function sourceIdentity(source: ProviderCandidate): string {
     sizeBytes: source.sizeBytes,
     infoHash: source.infoHash.toLowerCase(),
     download: source.download,
+    ...(source.references === undefined
+      ? {}
+      : { references: source.references }),
+    ...(source.editionEvidence === undefined
+      ? {}
+      : { editionEvidence: source.editionEvidence }),
   });
 }
 /** Source, metadata and evidence form one snapshot. FK claims serialize against this row lock. */
@@ -36,6 +44,7 @@ export async function persistCandidateSnapshot(
     source: ProviderCandidate;
     attributes: ReleaseAttributes;
     evaluation: ReleaseEvaluation;
+    searchedForMediaId?: string;
   },
 ): Promise<ReleaseAttributes | null> {
   const { source, attributes: next, evaluation } = input;
@@ -60,6 +69,21 @@ export async function persistCandidateSnapshot(
         providerReleaseId: source.providerReleaseId,
         title: next.title,
         mediaIds: [...next.mediaIds],
+        searchedForMediaIds:
+          input.searchedForMediaId === undefined
+            ? []
+            : [input.searchedForMediaId],
+        sourceEvidence: z.record(z.string(), z.json()).parse(
+          CandidateSourceEvidenceSchema.parse({
+            infoHash: source.infoHash.toLowerCase(),
+            ...(source.references === undefined
+              ? {}
+              : { references: source.references }),
+            ...(source.editionEvidence === undefined
+              ? {}
+              : { editionEvidence: source.editionEvidence }),
+          }),
+        ),
         attributes: PublicReleaseAttributesSchema.parse(next),
         evaluation,
         encryptedSource: context.cipher.encrypt(JSON.stringify(source), aad),
@@ -97,6 +121,25 @@ export async function persistCandidateSnapshot(
         attributes,
         evaluation,
         encryptedSource: context.cipher.encrypt(JSON.stringify(source), aad),
+        searchedForMediaIds: [
+          ...new Set([
+            ...row.searchedForMediaIds,
+            ...(input.searchedForMediaId === undefined
+              ? []
+              : [input.searchedForMediaId]),
+          ]),
+        ].slice(0, 100),
+        sourceEvidence: z.record(z.string(), z.json()).parse(
+          CandidateSourceEvidenceSchema.parse({
+            infoHash: source.infoHash.toLowerCase(),
+            ...(source.references === undefined
+              ? {}
+              : { references: source.references }),
+            ...(source.editionEvidence === undefined
+              ? {}
+              : { editionEvidence: source.editionEvidence }),
+          }),
+        ),
       },
     });
     return { ...next, id: releaseId };

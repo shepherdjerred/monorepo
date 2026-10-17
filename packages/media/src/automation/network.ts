@@ -109,6 +109,7 @@ const NetworkBootstrapSchema = CommonBootstrapSchema.extend({
   "Exactly one TMDB credential is required",
 );
 const FilesBootstrapSchema = CommonBootstrapSchema.extend({
+  PLEX_SERVER_MACHINE_ID: z.string().min(1),
   MEDIA_FILE_WORKER_POD_UID: z.string().min(1),
   MEDIA_MOVIES_DOWNLOAD_ROOT: z.string().min(1),
   MEDIA_MOVIES_LIBRARY_ROOT: z.string().min(1),
@@ -162,6 +163,7 @@ export async function createMediaNetworkContext(
   };
   return {
     db,
+    serverMachineId: config.PLEX_SERVER_MACHINE_ID,
     refreshWriterLease: async () => {
       const observer = createLegacyObserver(environment);
       await refreshWriterLease(db, () => observer.observe());
@@ -234,6 +236,7 @@ export async function createMediaFileRuntime(
   };
   const fileContext: FileContext = {
     db,
+    serverMachineId: config.PLEX_SERVER_MACHINE_ID,
     roots,
     checkpoint,
     verifyStorageAuthority: (root) =>

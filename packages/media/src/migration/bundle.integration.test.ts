@@ -7,6 +7,59 @@ import { MigrationCatalogDiscovery } from "./catalog-discovery.ts";
 import { captureFixture, mediaFixture } from "./bundle-test-fixtures.ts";
 
 const { database, context } = automationTestHarness();
+async function catalogResponse(url: URL) {
+  if (url.pathname.endsWith("/movie/33/alternative_titles"))
+    return Response.json({ id: 33, titles: [] });
+  if (url.pathname.endsWith("/tv/44/alternative_titles"))
+    return Response.json({ id: 44, results: [] });
+  if (url.pathname.endsWith("/find/778")) {
+    expect(url.searchParams.get("external_source")).toBe("tvdb_id");
+    return Response.json({ movie_results: [], tv_results: [{ id: 44 }] });
+  }
+  if (url.pathname.endsWith("/tv/44/external_ids"))
+    return Response.json({ id: 44, tvdb_id: 778, imdb_id: null });
+  if (url.pathname.endsWith("/movie/33"))
+    return Response.json({
+      id: 33,
+      title: "Movie fixture",
+      original_title: "Movie fixture",
+      overview: "",
+      release_date: "2020-01-01",
+      poster_path: null,
+      original_language: "en",
+      imdb_id: null,
+      runtime: 90,
+    });
+  if (url.pathname.endsWith("/tv/44"))
+    return Response.json({
+      id: 44,
+      name: "Series fixture",
+      original_name: "Series fixture",
+      overview: "",
+      first_air_date: "2020-01-01",
+      poster_path: null,
+      original_language: "en",
+      seasons: [
+        { id: 45, season_number: 1, episode_count: 1, name: "Season 1" },
+      ],
+    });
+  if (url.pathname.endsWith("/tv/44/season/1"))
+    return Response.json({
+      episodes: [
+        {
+          id: 46,
+          name: "Episode fixture",
+          overview: "",
+          season_number: 1,
+          episode_number: 1,
+          air_date: "2020-01-02",
+          runtime: 30,
+        },
+      ],
+    });
+  throw new Error("Unexpected catalog endpoint");
+}
+
 test("empty catalog discovers exact movie and TVDB-only series, waits for projection and regenerates an immutable combined review", async () => {
   const db = database();
   const actor = await db.mediaUser.create({
@@ -16,54 +69,7 @@ test("empty catalog discovers exact movie and TVDB-only series, waits for projec
       displayName: "Owner fixture",
     },
   });
-  const ctx = context(async (url) => {
-    if (url.pathname.endsWith("/find/778")) {
-      expect(url.searchParams.get("external_source")).toBe("tvdb_id");
-      return Response.json({ movie_results: [], tv_results: [{ id: 44 }] });
-    }
-    if (url.pathname.endsWith("/tv/44/external_ids"))
-      return Response.json({ id: 44, tvdb_id: 778, imdb_id: null });
-    if (url.pathname.endsWith("/movie/33"))
-      return Response.json({
-        id: 33,
-        title: "Movie fixture",
-        original_title: "Movie fixture",
-        overview: "",
-        release_date: "2020-01-01",
-        poster_path: null,
-        original_language: "en",
-        imdb_id: null,
-        runtime: 90,
-      });
-    if (url.pathname.endsWith("/tv/44"))
-      return Response.json({
-        id: 44,
-        name: "Series fixture",
-        original_name: "Series fixture",
-        overview: "",
-        first_air_date: "2020-01-01",
-        poster_path: null,
-        original_language: "en",
-        seasons: [
-          { id: 45, season_number: 1, episode_count: 1, name: "Season 1" },
-        ],
-      });
-    if (url.pathname.endsWith("/tv/44/season/1"))
-      return Response.json({
-        episodes: [
-          {
-            id: 46,
-            name: "Episode fixture",
-            overview: "",
-            season_number: 1,
-            episode_number: 1,
-            air_date: "2020-01-02",
-            runtime: 30,
-          },
-        ],
-      });
-    throw new Error("Unexpected catalog endpoint");
-  });
+  const ctx = context(catalogResponse);
   const discovery = new MigrationCatalogDiscovery(
     db,
     ctx.tmdb,

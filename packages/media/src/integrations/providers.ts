@@ -1,4 +1,8 @@
 import { z } from "zod";
+import type {
+  ProviderReference,
+  ProviderEditionEvidence,
+} from "#shared/acquisition/catalog.ts";
 import {
   endpoint,
   IntegrationError,
@@ -38,6 +42,10 @@ export type ProviderCandidate = {
   infoHash: string;
   detailsUrl: string;
   download: { kind: "magnet" | "torrent"; value: string };
+  /** Absent unless a provider's actual wire semantics establish a catalog namespace. */
+  references?: readonly ProviderReference[] | undefined;
+  /** Attributed text is evidence for quality rules, never a requested-edition declaration. */
+  editionEvidence?: readonly ProviderEditionEvidence[] | undefined;
 };
 
 const KnabenResponseSchema = z.object({

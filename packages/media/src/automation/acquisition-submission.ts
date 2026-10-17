@@ -14,7 +14,10 @@ import type { ProviderCandidate } from "#integrations/providers.ts";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { loadProfile } from "./acquisition-candidates.ts";
 import { authorizedSubmission } from "./reconciliation/submission.ts";
-import { lockMedia } from "#infrastructure/locks.ts";
+import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
+import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
+import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
+import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
@@ -67,12 +70,21 @@ export async function validAttempt(
       });
     return false;
   }
-  const release = {
+  const identity = await serializable(context.db, async (tx) => {
+    await lockAcquisitionMedia(tx, attempt.mediaIds);
+    await lockEffectiveRequests(tx, attempt.mediaIds);
+    if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return null;
+    await assertLegacySubmissionSponsor(tx, attempt, context.serverMachineId);
+    return await assertAttemptIdentity(tx, attempt, context.serverMachineId);
+  });
+  const rawRelease = {
     id: attempt.release.id,
     providerId: attempt.release.providerId,
     title: attempt.release.title,
     ...PublicReleaseAttributesSchema.parse(attempt.release.attributes),
   };
+  const release =
+    identity === null ? rawRelease : effectiveCandidate(rawRelease, identity);
   for (const intent of intents) {
     const profile = await loadProfile(context.db, intent.mediaId);
     if (
@@ -82,6 +94,11 @@ export async function validAttempt(
       return false;
     if (intent.generation === generations[intent.mediaId]) continue;
     await serializable(context.db, async (tx) => {
+      await lockAcquisitionMedia(tx, attempt.mediaIds);
+      await lockEffectiveRequests(tx, attempt.mediaIds);
+      if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)))
+        throw new IntegrationError("media", "conflict");
+      await assertAttemptIdentity(tx, attempt, context.serverMachineId);
       await tx.mediaItem.update({
         where: { id: intent.mediaId },
         data: { version: { increment: 1 } },
@@ -207,7 +224,8 @@ async function registerObservedSubmission(
     where: { id: candidate.providerId },
   });
   const registered = await serializable(context.db, async (tx) => {
-    await lockMedia(tx, attempt.mediaIds);
+    await lockAcquisitionMedia(tx, attempt.mediaIds);
+    await lockEffectiveRequests(tx, attempt.mediaIds);
     if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return false;
     await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
     const currentRuntime = await tx.mediaRuntimeState.findUniqueOrThrow({
@@ -219,7 +237,6 @@ async function registerObservedSubmission(
       currentRuntime.recoveryEpoch !== attempt.recoveryEpoch
     )
       return false;
-    await lockEffectiveRequests(tx, attempt.mediaIds);
     const activeClaims = await tx.mediaRequest.findMany({
       where: { mediaId: { in: attempt.mediaIds }, ...effectiveRequestWhere },
       distinct: ["mediaId"],

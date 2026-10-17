@@ -113,6 +113,10 @@ export function createMediaActivityWorkers(
     envVariables: {
       ...shared,
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("media-files"),
+      PLEX_SERVER_MACHINE_ID: EnvValue.fromSecretValue({
+        secret: props.bootstrap,
+        key: "PLEX_SERVER_MACHINE_ID",
+      }),
       MEDIA_FILE_WORKER_POD_UID: EnvValue.fromFieldRef(EnvFieldPaths.POD_UID),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("media-files"),
       MEDIA_MOVIES_DOWNLOAD_ROOT: EnvValue.fromValue("/downloads"),
