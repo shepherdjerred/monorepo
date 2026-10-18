@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 type Props = {
   entry: CollectionEntry<"leetcode">;
@@ -9,8 +10,7 @@ const { id, body } = Astro.props.entry;
 const { title } = Astro.props.entry.data;
 const difficulty = id.replace(/\/.*/, "");
 
-const preview = (body ?? "")
-  .slice(0, 300)
+const preview = graphemePrefix(body ?? "", 300)
   .replace(/## Problem/, "")
   .replace(/Example[\s\S]*/, "")
   .trim()

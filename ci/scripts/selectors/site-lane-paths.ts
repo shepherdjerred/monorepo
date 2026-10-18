@@ -31,6 +31,7 @@ export const sitePaths = {
     "packages/sjer.red",
     "packages/astro-opengraph-images",
     "packages/webring",
+    "packages/text",
     // Registry corrections must rebuild every static tracker consumer.
     "config/analytics-sites.json",
     ...deployScripts,
