@@ -64,6 +64,16 @@ describe("browser command identity", () => {
     ).resolves.toEqual({ status: "ready" });
     expect(calls[3]?.url).toBe("/api/v2/media/film/targets/default");
     expect(calls[3]?.key).toBeNull();
+    await expect(writeApi({ ...input, version: 3 })).rejects.toThrow(
+      "Unacknowledged",
+    );
+    await expect(writeApi({ ...input, version: 3 })).rejects.toThrow(
+      "Unacknowledged",
+    );
+    expect(calls[4]?.url).toBe("/api/v3/media/film/commands");
+    expect(calls[4]?.key).not.toBe(calls[0]?.key);
+    expect(calls[4]?.key).not.toBe(calls[1]?.key);
+    expect(calls[4]?.key).toBe(calls[5]?.key);
   });
   it("keeps a command identity through retries but separates users and generations", async () => {
     const storage = memoryStorage();

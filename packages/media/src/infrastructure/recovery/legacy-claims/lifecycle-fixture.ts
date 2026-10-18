@@ -12,6 +12,7 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { RecoveryScopeV2Schema } from "#shared/recovery.ts";
 import type { MigrationRecord } from "#shared/migration.ts";
 import { PrismaLegacyRequesterBindings } from "./service.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 
 export function legacyLifecycleHarness() {
   const harness = automationTestHarness();
@@ -89,6 +90,10 @@ export function legacyLifecycleHarness() {
       );
     }
     await release();
+    await chooseCurrentTestMovieEdition(db, {
+      requestId: f.request.id,
+      access: { serverMachineId: "lifecycle-fixture", movieSectionId: "1" },
+    });
     const retention = await f.retention();
     async function bind(captureId: string) {
       const bindings = new PrismaLegacyRequesterBindings(

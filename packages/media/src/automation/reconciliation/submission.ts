@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { networkMovieAccess } from "#automation/editions/access.ts";
+import { assertAttemptMovieChoice } from "#automation/editions/choice.ts";
+import type { AcquisitionAccess } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { MediaError } from "#application/errors.ts";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { Prisma } from "#generated/prisma/client.ts";
@@ -17,8 +20,9 @@ import {
 export async function authorizedSubmission(
   context: MediaAutomationContext,
   attempt: AcquisitionAttempt,
-  effect: (signal: AbortSignal) => Promise<void>,
+  effect: (signal: AbortSignal, beforeMutation: () => void) => Promise<void>,
 ): Promise<boolean> {
+  const movieAccess = await networkMovieAccess(context, attempt.mediaIds);
   return context.db.$transaction(
     async (tx) => {
       await lockAcquisitionMedia(tx, attempt.mediaIds);
@@ -35,12 +39,16 @@ export async function authorizedSubmission(
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attempt.id },
       });
+      const choice = await assertAttemptMovieChoice(
+        tx,
+        current.id,
+        movieAccess,
+      );
       if (
-        !(await submissionIdentityAuthorized(
-          tx,
-          current,
-          context.serverMachineId,
-        ))
+        !(await submissionIdentityAuthorized(tx, current, {
+          serverMachineId: context.serverMachineId,
+          movieAccess,
+        }))
       )
         return false;
       if (
@@ -91,7 +99,13 @@ export async function authorizedSubmission(
         !(await context.gates.acquisition())
       )
         return false;
-      await effect(AbortSignal.timeout(10_000));
+      const signal = AbortSignal.timeout(10_000);
+      const beforeMutation = () => {
+        signal.throwIfAborted();
+        choice?.assertActive();
+      };
+      beforeMutation();
+      await effect(signal, beforeMutation);
       return true;
     },
     { timeout: 20_000 },
@@ -101,11 +115,11 @@ export async function authorizedSubmission(
 async function submissionIdentityAuthorized(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
-  serverMachineId?: string,
+  access: AcquisitionAccess,
 ) {
   try {
-    await assertAttemptIdentity(tx, attempt, serverMachineId);
-    await assertLegacySubmissionSponsor(tx, attempt, serverMachineId);
+    await assertAttemptIdentity(tx, attempt, access);
+    await assertLegacySubmissionSponsor(tx, attempt, access);
     return true;
   } catch (error) {
     if (

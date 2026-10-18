@@ -320,6 +320,7 @@ test("manual release selection uses current owner role and scoped access; protec
   const commands = new PrismaMediaCommands(f.db, {
     keepDays: 30,
     serverMachineId: "fixture",
+    movieSectionId: "1",
   });
   const candidate = await f.db.releaseCandidate.create({
     data: {

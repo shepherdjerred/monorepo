@@ -3,72 +3,74 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { visibilityFixture } from "./test-fixture.ts";
 import { recordCleanupEvaluation } from "./seeding.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
+import { withTvVisibility } from "./tv.test-support.ts";
 
 const h = automationTestHarness();
 
 test("current direct and root-covered co-requesters see shared progress; exclusion and root cancellation remove it", async () => {
-  const f = await visibilityFixture(h.database());
-  const joined = await f.db.mediaUser.create({
-    data: {
-      plexAccountId: crypto.randomUUID(),
-      displayName: "Second requester",
-    },
-  });
-  await grantTestRequesterAccess(f.db, joined.id, "visibility-fixture");
-  const request = await f.db.mediaRequest.create({
-    data: { userId: joined.id, mediaId: f.media.id },
-  });
-  const direct = await f.app.getMedia(joined, f.media.id);
-  expect(direct.visibility.attempts.map((row) => row.id)).toEqual([
-    f.attempt.id,
-  ]);
-  expect(direct.visibility.torrents.map((row) => row.id)).toEqual([
-    f.torrent.id,
-  ]);
-  expect(JSON.stringify(direct.visibility)).not.toContain(f.member.id);
-  expect(JSON.stringify(direct.visibility)).not.toContain(f.request.id);
-  const rootMedia = await f.db.mediaItem.create({
-    data: {
-      kind: "series",
-      title: "Requested series",
-      intents: { create: {} },
-    },
-  });
-  const root = await f.db.mediaRequest.create({
-    data: { mediaId: rootMedia.id, userId: joined.id },
-  });
-  await f.db.mediaRequest.update({
-    where: { id: request.id },
-    data: { direct: false },
-  });
-  await f.db.requestCoverage.create({
-    data: {
-      rootRequestId: root.id,
-      requestId: request.id,
+  await withTvVisibility(h.database(), false, async (f) => {
+    const joined = await f.db.mediaUser.create({
+      data: {
+        plexAccountId: crypto.randomUUID(),
+        displayName: "Second requester",
+      },
+    });
+    await grantTestRequesterAccess(f.db, joined.id, "fixture-server");
+    const request = await f.db.mediaRequest.create({
+      data: { userId: joined.id, mediaId: f.media.id },
+    });
+    const direct = await f.app.getMedia(joined, f.media.id);
+    expect(direct.visibility.attempts.map((row) => row.id)).toEqual([
+      f.attempt.id,
+    ]);
+    expect(direct.visibility.torrents.map((row) => row.id)).toEqual([
+      f.torrent.id,
+    ]);
+    expect(JSON.stringify(direct.visibility)).not.toContain(f.member.id);
+    expect(JSON.stringify(direct.visibility)).not.toContain(f.request.id);
+    const root = await f.cover(joined);
+    // Model the inherited TV leaf after testing its independent direct claim.
+    await f.db.mediaRequest.update({
+      where: { id: request.id },
+      data: { direct: false },
+    });
+    const covered = await f.app.getMedia(joined, f.media.id);
+    expect(covered.visibility.attempts).toHaveLength(1);
+    const current = await f.db.mediaRequest.findUniqueOrThrow({
+      where: { id: request.id },
+    });
+    await f.app.cancelRequest(
+      joined,
+      crypto.randomUUID(),
+      current.id,
+      current.version,
+    );
+    const excluded = await f.app.getMedia(joined, f.media.id);
+    expect(excluded.visibility.attempts).toEqual([]);
+    expect(excluded.visibility.torrents).toEqual([]);
+    await f.app.createRequest(joined, crypto.randomUUID(), {
       mediaId: f.media.id,
-      sourceVersion: root.version,
-    },
+      subtitleLanguages: [],
+      includeSpecials: false,
+    });
+    const renewedRoot = await f.cover(joined);
+    await f.db.mediaRequest.update({
+      where: { id: request.id },
+      data: { direct: false },
+    });
+    expect(renewedRoot.id).toBe(root.id);
+    const renewed = await f.app.getMedia(joined, f.media.id);
+    expect(renewed.visibility.attempts).toHaveLength(1);
+    await f.app.cancelRequest(
+      joined,
+      crypto.randomUUID(),
+      renewedRoot.id,
+      renewedRoot.version,
+    );
+    const cancelled = await f.app.getMedia(joined, f.media.id);
+    expect(cancelled.visibility.attempts).toEqual([]);
+    expect(cancelled.visibility.torrents).toEqual([]);
   });
-  const covered = await f.app.getMedia(joined, f.media.id);
-  expect(covered.visibility.attempts).toHaveLength(1);
-  await f.db.mediaRequest.update({
-    where: { id: request.id },
-    data: { excluded: true },
-  });
-  const excluded = await f.app.getMedia(joined, f.media.id);
-  expect(excluded.visibility.attempts).toEqual([]);
-  expect(excluded.visibility.torrents).toEqual([]);
-  await f.db.mediaRequest.update({
-    where: { id: request.id },
-    data: { excluded: false },
-  });
-  await f.db.mediaRequest.update({
-    where: { id: root.id },
-    data: { active: false },
-  });
-  const cancelled = await f.app.getMedia(joined, f.media.id);
-  expect(cancelled.visibility.attempts).toEqual([]);
-  expect(cancelled.visibility.torrents).toEqual([]);
 });
 
 test("persisted progress precedes assets; playable upgrade and independent cancelled seeding remain separate", async () => {
@@ -91,10 +93,15 @@ test("persisted progress precedes assets; playable upgrade and independent cance
     where: { id: f.attempt.id },
     data: { state: "cancelled" },
   });
-  await f.db.mediaRequest.update({
+  const currentRequest = await f.db.mediaRequest.findUniqueOrThrow({
     where: { id: f.request.id },
-    data: { active: false },
   });
+  await f.app.cancelRequest(
+    f.member,
+    crypto.randomUUID(),
+    currentRequest.id,
+    currentRequest.version,
+  );
   const torrent = await f.db.torrent.update({
     where: { id: f.torrent.id },
     data: {
@@ -185,51 +192,42 @@ test("current role and exact section govern all detail diagnostics and household
 });
 
 test("shared torrent deduplicates visible collection work and never reveals hidden sibling metadata", async () => {
-  const f = await visibilityFixture(h.database());
-  const series = await f.db.mediaItem.create({
-    data: {
-      kind: "series",
-      title: "Visible series",
-      externalIds: { plexSectionId: "1" },
-    },
+  await withTvVisibility(h.database(), true, async (f) => {
+    await f.publish();
+    const hidden = f.episodes.find((episode) => episode.id !== f.media.id);
+    if (hidden === undefined) throw new Error("Missing shared TV sibling");
+    expect([...f.attempt.mediaIds].sort()).toEqual(
+      f.episodes.map((episode) => episode.id).sort(),
+    );
+    const complete = await f.app.getMedia(f.member, f.series.id);
+    expect(complete.visibility.playback).toMatchObject({
+      playableItems: 2,
+      visibleItems: 2,
+    });
+    expect(complete.visibility.torrents).toHaveLength(1);
+    // The producer had full TV access. Revoke only the reader's hidden section.
+    await f.db.plexIdentityMapping.update({
+      where: { userId: f.member.id },
+      data: { permittedSectionIds: ["1", "2"] },
+    });
+    const detail = await f.app.getMedia(f.member, f.series.id);
+    expect(detail.visibility.playback).toMatchObject({
+      scope: "collection",
+      playable: true,
+      playableItems: 1,
+      visibleItems: 1,
+      currentAssetId: null,
+      currentVersion: null,
+    });
+    expect(detail.visibility.torrents).toHaveLength(1);
+    expect(JSON.stringify(detail)).not.toContain(hidden.id);
+    expect(JSON.stringify(detail)).not.toContain(hidden.title);
+    expect(
+      await f.db.acquisitionAttempt.findUniqueOrThrow({
+        where: { id: f.attempt.id },
+      }),
+    ).toMatchObject({ mediaIds: f.attempt.mediaIds });
   });
-  const season = await f.db.mediaItem.create({
-    data: {
-      kind: "season",
-      title: "Season",
-      parentId: series.id,
-      externalIds: { plexSectionId: "1" },
-    },
-  });
-  const visible = await f.db.mediaItem.update({
-    where: { id: f.media.id },
-    data: { kind: "episode", parentId: season.id },
-  });
-  const hidden = await f.db.mediaItem.create({
-    data: {
-      kind: "episode",
-      title: "HIDDEN sibling",
-      parentId: season.id,
-      externalIds: { plexSectionId: "9" },
-    },
-  });
-  await f.db.acquisitionAttempt.update({
-    where: { id: f.attempt.id },
-    data: { mediaIds: [visible.id, hidden.id] },
-  });
-  await f.publish();
-  const detail = await f.app.getMedia(f.member, series.id);
-  expect(detail.visibility.playback).toMatchObject({
-    scope: "collection",
-    playable: true,
-    playableItems: 1,
-    visibleItems: 1,
-    currentAssetId: null,
-    currentVersion: null,
-  });
-  expect(detail.visibility.torrents).toHaveLength(1);
-  expect(JSON.stringify(detail)).not.toContain(hidden.id);
-  expect(JSON.stringify(detail)).not.toContain(hidden.title);
 });
 
 test("stale, future, missing and old epoch observations stay explicit; policy arithmetic does not grant cleanup", async () => {

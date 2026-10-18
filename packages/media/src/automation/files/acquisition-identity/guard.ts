@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
+import type { AcquisitionAccess } from "#infrastructure/acquisition-identity/sponsor.ts";
 import { MediaError } from "#application/errors.ts";
 import {
   FileGuardError,
@@ -12,10 +13,10 @@ import { assertFileIdentity, IdentityTorrentFileSchema } from "./evidence.ts";
 export async function assertAcquisitionIdentity(
   tx: Transaction,
   attempt: AcquisitionAttempt,
-  serverMachineId?: string,
+  access?: AcquisitionAccess,
 ): Promise<void> {
   try {
-    const identity = await assertAttemptIdentity(tx, attempt, serverMachineId);
+    const identity = await assertAttemptIdentity(tx, attempt, access);
     if (identity === null) {
       if (
         attempt.filePlan !== null &&

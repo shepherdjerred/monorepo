@@ -11,7 +11,7 @@ import { readCommandVersions } from "./editions/command-cas.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { MediaAction } from "#shared/contract.ts";
-import type { SaveQualityProfile } from "#shared/api.ts";
+import { CommandResultSchema, type SaveQualityProfile } from "#shared/api.ts";
 import {
   invalidateRetention,
   validateAction,
@@ -28,8 +28,9 @@ import { targetWhere } from "./editions/targets.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { prepareActionAuthority } from "./acquisition-identity/action.ts";
 
-import { MediaRequestCommands } from "./request-commands.ts";
-export class PrismaMediaCommands extends MediaRequestCommands {
+import { MovieEditionCommands } from "./movie-editions/commands.ts";
+import type { MovieChoiceAccess } from "./movie-editions/access.ts";
+export class PrismaMediaCommands extends MovieEditionCommands {
   executeDefaultCommand(
     actor: MediaActor,
     key: string,
@@ -37,13 +38,24 @@ export class PrismaMediaCommands extends MediaRequestCommands {
     beforeNewCommand?: () => Promise<void>,
   ) {
     const input = DefaultCommandV2Schema.parse(raw);
+    let movieChoiceAccess: MovieChoiceAccess | undefined;
+    const prepare =
+      input.command.action === "select_release"
+        ? async () => {
+            await beforeNewCommand?.();
+            assertOwnerAction(actor, "select_release");
+            movieChoiceAccess = await this.movieChoiceAccessForMedia(
+              input.scope.mediaId,
+            );
+          }
+        : beforeNewCommand;
     return this.commandWithProtocol(
       actor,
       key,
       {
         command: input,
         decode: (value) => DefaultCommandResultV2Schema.parse(value),
-        beforeNewCommand,
+        beforeNewCommand: prepare,
       },
       async (db) => {
         const { command, expected, scope } = input;
@@ -75,6 +87,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
                     expectedVersion: expected.mediaVersion,
                   }),
                   expected,
+                  movieChoiceAccess,
                 });
         return DefaultCommandResultV2Schema.parse({
           schemaVersion: 2,
@@ -139,18 +152,35 @@ export class PrismaMediaCommands extends MediaRequestCommands {
     mediaId: string,
     input: MediaAction,
   ) {
-    return this.command(
+    let movieChoiceAccess: MovieChoiceAccess | undefined;
+    return this.commandWithProtocol(
       actor,
       key,
-      { kind: "media_action", input: { mediaId, ...input } },
-      (db) => this.actionWork(db, actor, { mediaId, input }),
+      {
+        command: { kind: "media_action", input: { mediaId, ...input } },
+        decode: (value) => CommandResultSchema.parse(value),
+        beforeNewCommand:
+          input.action === "select_release"
+            ? async () => {
+                assertOwnerAction(actor, input.action);
+                movieChoiceAccess =
+                  await this.movieChoiceAccessForMedia(mediaId);
+              }
+            : undefined,
+      },
+      (db) => this.actionWork(db, actor, { mediaId, input, movieChoiceAccess }),
     );
   }
 
   private async actionWork(
     db: Prisma.TransactionClient,
     actor: MediaActor,
-    options: { mediaId: string; input: MediaAction; expected?: ExpectedTarget },
+    options: {
+      mediaId: string;
+      input: MediaAction;
+      expected?: ExpectedTarget;
+      movieChoiceAccess?: MovieChoiceAccess | undefined;
+    },
   ) {
     const { mediaId, input, expected } = options;
     assertOwnerAction(actor, input.action);
@@ -164,6 +194,7 @@ export class PrismaMediaCommands extends MediaRequestCommands {
         input,
         settings: this.settings,
         expected,
+        movieChoiceAccess: options.movieChoiceAccess,
       });
     assertOwnerAction(currentActor, input.action);
     await validateAction(db, currentActor, mediaId, input);

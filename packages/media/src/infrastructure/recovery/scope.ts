@@ -1,5 +1,9 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
 import { historicalDefaultRow } from "#infrastructure/native-recovery/legacy-snapshot.ts";
+import {
+  historicalRequest,
+  historicalRequestSelect,
+} from "#infrastructure/native-recovery/historical-request.ts";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import { LegacyRecoveryScopeSchema } from "#shared/recovery.ts";
@@ -143,6 +147,7 @@ async function snapshotLegacyRecoveryScope(
   const rootIds = [...new Set(coverage.map((row) => row.rootRequestId))];
   const ancestorIds = media.flatMap((item) => recoveryAncestors(item));
   const requests = await db.mediaRequest.findMany({
+    select: historicalRequestSelect,
     where: {
       edition: "default",
       OR: [
@@ -316,7 +321,7 @@ async function snapshotLegacyRecoveryScope(
       owned: asset.owned,
       mediaIds: asset.coverage.map((row) => row.mediaId),
     })),
-    requests: requests.map((row) => json(historicalDefaultRow(row))),
+    requests: requests.map((row) => json(historicalRequest(row))),
     coverage: coverage.map((row) => json(historicalDefaultRow(row))),
     personalHolds: personalHolds.map((row) => json(historicalDefaultRow(row))),
     handoffReceipts: receipts,

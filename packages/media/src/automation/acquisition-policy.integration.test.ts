@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createAcquisitionActivities } from "./acquisition.ts";
 import { reconcileUnconfirmedSubmission } from "./acquisition-submission.ts";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 
 const { database, context, fixture } = automationTestHarness();
 
@@ -59,10 +60,21 @@ test("an uncertain add remains reconcilable after cancellation and never submits
       attemptId: reserved.attemptId,
     }),
   ).toMatchObject({ status: "blocked", reason: "outcome-unknown" });
-  await database().mediaRequest.updateMany({
-    where: { mediaId: f.media.id },
-    data: { active: false },
+  const request = await database().mediaRequest.findUniqueOrThrow({
+    where: {
+      userId_mediaId_edition: {
+        userId: f.user.id,
+        mediaId: f.media.id,
+        edition: "default",
+      },
+    },
   });
+  await new PrismaMediaApplication(database(), { keepDays: 7 }).cancelRequest(
+    { ...f.user, role: "member" },
+    crypto.randomUUID(),
+    request.id,
+    request.version,
+  );
   await reconcileUnconfirmedSubmission(ctx, reserved.attemptId);
   expect(
     await database().acquisitionAttempt.findUniqueOrThrow({

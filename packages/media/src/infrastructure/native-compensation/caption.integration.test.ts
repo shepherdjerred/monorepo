@@ -12,6 +12,7 @@ import { resolvePublicationTransitionAuthority } from "#infrastructure/publicati
 import { compensatedCaptionFixture } from "./caption.test-support.ts";
 import { resolveCompensationPhysicalReference } from "./receipts.ts";
 import { replaceCompensatedCaption } from "./caption-replacement.test-support.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -39,6 +40,10 @@ test("actual post-compensation caption retains its own install proof through the
   expect(
     reference.subtitleLineage?.installations.map((item) => item.subtitleId),
   ).toEqual([subtitle.id]);
+  await chooseCurrentTestMovieEdition(db, {
+    requestId: f.file.request.id,
+    access: { serverMachineId: "server", movieSectionId: "1" },
+  });
   const acquired = await f.file.acquisition(
     "Actual upgrade after new owned caption",
   );
@@ -83,6 +88,10 @@ test("same-byte installation journal substitution after hashing cannot grant a n
   if (fixture === undefined) throw new Error("Actual caption setup missing");
   const { f, operation } = fixture;
   const db = harness.database();
+  await chooseCurrentTestMovieEdition(db, {
+    requestId: f.file.request.id,
+    access: { serverMachineId: "server", movieSectionId: "1" },
+  });
   const acquired = await f.file.acquisition("Caption journal race successor");
   const activities = createMediaFileActivities(f.file.context);
   expect(await activities.inspectAndStageMedia(acquired.input)).toEqual({

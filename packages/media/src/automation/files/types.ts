@@ -11,6 +11,7 @@ export type Transaction = Prisma.TransactionClient;
 export type FileContext = {
   db: Database;
   serverMachineId?: string;
+  permittedMovieSection?: () => Promise<string>;
   roots: { movies: MediaFileRoots; tv: MediaFileRoots };
   pathMapping?: MediaPathMapping;
   checkpoint: (phase: string) => Promise<void>;

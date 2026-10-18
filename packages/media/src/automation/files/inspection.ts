@@ -23,7 +23,13 @@ import {
   type FilePlanEntry,
 } from "./types.ts";
 import { assertAcquisition } from "./guards.ts";
-import { fileOperations } from "./file-operations.ts";
+import { fileMovieAccess } from "#automation/editions/access.ts";
+import { stageAuthorizedPlan } from "./editions/staging.ts";
+import {
+  publicationInvocation,
+  requirePublicationExecution,
+} from "#automation/publication-proof/invocation.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { stageEmbedded } from "./embedded.ts";
 import { assertMeasuredUpgrade } from "./quality-guard.ts";
@@ -147,20 +153,28 @@ export async function safeDownloadPath(
 }
 
 export async function inspectAndStage(
-  context: FileContext,
+  initialContext: FileContext,
   attemptId: string,
 ): Promise<void> {
-  if (!(await context.enabled.acquisition()))
+  const execution = initialContext.publicationExecution?.();
+  execution?.assertActive();
+  if (!(await initialContext.enabled.acquisition()))
     throw new FileGuardError("acquisition_disabled");
-  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+  const attempt = await initialContext.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
     include: { release: true, torrent: true },
   });
-  const alreadyCommitted = await authorizeInspection(
-    context,
-    attemptId,
-    attempt.mediaIds,
+  if (await resumeCommittedPublication({ context: initialContext, attemptId }))
+    return;
+  const context = publicationInvocation(
+    initialContext,
+    requirePublicationExecution(execution),
   );
+  const movieAccess = await fileMovieAccess(context, attempt.mediaIds);
+  const alreadyCommitted = await authorizeInspection(context, attemptId, {
+    mediaIds: attempt.mediaIds,
+    movieAccess,
+  });
   if (alreadyCommitted) return;
   let plan =
     attempt.filePlan === null ? null : FilePlanSchema.parse(attempt.filePlan);
@@ -190,6 +204,7 @@ export async function inspectAndStage(
           file,
           media,
           savePath: observation.torrent.save_path,
+          movieAccess,
         }),
       );
     const coverage = plan.flatMap((entry) => entry.mediaIds);
@@ -201,7 +216,10 @@ export async function inspectAndStage(
     const committed = plan;
     plan = await context.db.$transaction(async (tx) => {
       await lockAcquisitionMedia(tx, attempt.mediaIds);
-      await assertAcquisition(tx, attemptId, context.serverMachineId);
+      await assertAcquisition(tx, attemptId, {
+        serverMachineId: context.serverMachineId,
+        movieAccess,
+      });
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
@@ -216,14 +234,12 @@ export async function inspectAndStage(
     });
   }
   await assertPlanEdition(context.db, attempt, plan);
-  for (const entry of plan) {
-    const files = fileOperations(
-      context,
-      context.roots[entry.libraryKind],
-      () => Promise.reject(new Error("Staging cannot publish")),
-    );
-    await files.importFile(importDescriptor(entry, true));
-  }
+  await stageAuthorizedPlan(context, {
+    attemptId,
+    mediaIds: attempt.mediaIds,
+    plan,
+    movieAccess,
+  });
 }
 
 type AttemptWithRelease = Prisma.AcquisitionAttemptGetPayload<{
@@ -242,17 +258,20 @@ function assertCandidateCount(
 async function authorizeInspection(
   context: FileContext,
   attemptId: string,
-  mediaIds: string[],
+  authority: { mediaIds: string[]; movieAccess: MovieChoiceAccess | undefined },
 ): Promise<boolean> {
   if (await resumeCommittedPublication({ context, attemptId })) return true;
   const committedWhileWaiting = await context.db.$transaction(
     async (tx) => {
-      await lockAcquisitionMedia(tx, mediaIds);
+      await lockAcquisitionMedia(tx, authority.mediaIds);
       const current = await tx.acquisitionAttempt.findUniqueOrThrow({
         where: { id: attemptId },
       });
       if (current.state === "imported") return true;
-      await assertAcquisition(tx, attemptId, context.serverMachineId);
+      await assertAcquisition(tx, attemptId, {
+        serverMachineId: context.serverMachineId,
+        movieAccess: authority.movieAccess,
+      });
       return false;
     },
     { timeout: 30_000, maxWait: 10_000 },
@@ -268,6 +287,7 @@ async function inspectEntry(input: {
   file: IdentityTorrentFile;
   media: NamingItem[];
   savePath: string;
+  movieAccess: MovieChoiceAccess | undefined;
 }): Promise<FilePlanEntry> {
   const { context, attempt, file, media, savePath } = input;
   const identity =
@@ -349,6 +369,12 @@ async function inspectEntry(input: {
     };
   });
   const assetId = crypto.randomUUID();
+  // Member probing and hashing may outlive the original authorization. Recheck
+  // the complete attempt before preparing extracted subtitle control bytes.
+  await authorizeInspection(context, attempt.id, {
+    mediaIds: attempt.mediaIds,
+    movieAccess: input.movieAccess,
+  });
   const embeddedSubtitles = await stageEmbedded({
     context,
     kind,

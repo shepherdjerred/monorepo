@@ -34,9 +34,9 @@ async function automaticFixture(
     where: { id: f.user.id },
     data: { role: "owner" },
   });
-  await db.plexIdentityMapping.create({
+  await db.plexIdentityMapping.update({
+    where: { userId: actor.id },
     data: {
-      userId: actor.id,
       serverMachineId: "fixture-server",
       serverAccountId: actor.plexAccountId,
       kind: "account",
@@ -116,6 +116,7 @@ async function automaticFixture(
   const service = new PrismaMediaApplication(db, {
     keepDays: 30,
     serverMachineId: "fixture-server",
+    movieSectionId: "1",
   });
   async function select() {
     const current = await db.mediaItem.findUniqueOrThrow({

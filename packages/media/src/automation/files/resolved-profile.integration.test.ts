@@ -7,6 +7,7 @@ import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import {
   storedMeasuredRelease,
   assertMeasuredUpgrade,
@@ -86,12 +87,17 @@ test("real inspection/promotion uses resolved quality and preserves measured evi
     where: { id: entry.assetId },
   });
   expect(asset.version).toBe(0);
-  await db.mediaRequest.update({
+  const request = await db.mediaRequest.findUniqueOrThrow({
     where: { id: f.request.id },
-    data: { excluded: true },
   });
+  await new PrismaMediaCommands(db, { keepDays: 30 }).cancelRequest(
+    { ...f.user, role: "member" },
+    crypto.randomUUID(),
+    request.id,
+    request.version,
+  );
   expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
     status: "obsolete",
-    reason: "request_obsolete",
+    reason: "intent_obsolete",
   });
 });

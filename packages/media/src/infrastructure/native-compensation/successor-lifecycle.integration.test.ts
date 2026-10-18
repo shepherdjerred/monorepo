@@ -9,6 +9,7 @@ import {
 } from "#infrastructure/publication-proof/lifecycle.ts";
 import { nativeAttempt } from "#infrastructure/native-recovery/snapshots.ts";
 import { compensatedCaptionFixture } from "./caption.test-support.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 
 const harness = automationTestHarness();
 let fixture: Awaited<ReturnType<typeof compensatedCaptionFixture>> | undefined;
@@ -30,6 +31,10 @@ test("a later interrupted publication preserves both attempts and consumes only 
   const db = harness.database();
   const original = await db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: f.interrupted.attempt.id },
+  });
+  await chooseCurrentTestMovieEdition(db, {
+    requestId: f.file.request.id,
+    access: { serverMachineId: "server", movieSectionId: "1" },
   });
   const acquired = await f.file.acquisition(
     "Later interrupted publication with settled predecessor history",

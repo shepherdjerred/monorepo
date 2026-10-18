@@ -19,8 +19,47 @@ import type {
 } from "#shared/api.ts";
 import type { ReleaseList, SaveQualityProfile } from "#shared/api.ts";
 import type { ProfileDefaults } from "#shared/api.ts";
+import type {
+  MovieEditionContextV3,
+  MovieEditionRequestListV3,
+} from "#shared/movie-editions/view.ts";
+import type {
+  MovieRequestV3,
+  MovieRequestResultV3,
+  CancelMovieRequestV3,
+  CancelMovieRequestResultV3,
+  RevokeMovieEditionChoiceV3,
+  RevokeMovieEditionChoiceResultV3,
+} from "#shared/movie-editions/commands.ts";
 
 export type MediaApplication = {
+  getMovieEditionContext: (
+    actor: MediaActor,
+    mediaId: string,
+    subjectUserId: string,
+  ) => Promise<MovieEditionContextV3>;
+  listMovieEditionRequests: (
+    actor: MediaActor,
+    input: { subjectUserId: string; cursor: string | null },
+  ) => Promise<MovieEditionRequestListV3>;
+  requestMovieEdition: (
+    actor: MediaActor,
+    key: string,
+    input: MovieRequestV3,
+    beforeNewCommand?: () => Promise<void>,
+  ) => Promise<MovieRequestResultV3>;
+  cancelMovieEditionRequest: (
+    actor: MediaActor,
+    key: string,
+    input: CancelMovieRequestV3,
+    beforeNewCommand?: () => Promise<void>,
+  ) => Promise<CancelMovieRequestResultV3>;
+  revokeMovieEditionChoice: (
+    actor: MediaActor,
+    key: string,
+    input: RevokeMovieEditionChoiceV3,
+    beforeNewCommand?: () => Promise<void>,
+  ) => Promise<RevokeMovieEditionChoiceResultV3>;
   getDefaultCommandContext: (
     actor: MediaActor,
     mediaId: string,

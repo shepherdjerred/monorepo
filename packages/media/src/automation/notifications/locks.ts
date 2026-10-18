@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { lockMovieChoiceIdentities } from "#infrastructure/movie-editions/access.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
@@ -23,7 +24,10 @@ export async function lockDelivery(tx: Prisma.TransactionClient, id: string) {
   await lockEffectiveRequests(tx, mediaIds);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
   if (snapshot.event.kind === "subtitles_ready") await lockSubtitlePolicies(tx);
-  await tx.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${snapshot.userId} FOR SHARE`;
+  await lockMovieChoiceIdentities(tx, {
+    mediaIds,
+    extraUserIds: [snapshot.userId],
+  });
   await tx.$queryRaw`SELECT "userId" FROM "NotificationPreference" WHERE "userId" = ${snapshot.userId} FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "NotificationDelivery" WHERE id = ${id} FOR UPDATE`;
   return await tx.notificationDelivery.findUniqueOrThrow({

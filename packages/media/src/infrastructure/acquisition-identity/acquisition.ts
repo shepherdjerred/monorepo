@@ -14,6 +14,7 @@ import {
 import { assertIdentityDecision } from "./authority.ts";
 import { assertAutomaticIdentity } from "./automatic.ts";
 import { captureSponsorAuthority } from "./sponsor.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 
 export async function operationCoverage(
   tx: Prisma.TransactionClient,
@@ -48,6 +49,7 @@ export async function acquisitionIdentity(
     epoch: number;
     mediaIds: string[];
     serverMachineId?: string;
+    movieAccess?: MovieChoiceAccess | undefined;
   },
 ) {
   await assertDefaultAcquisitionEdition(tx, {

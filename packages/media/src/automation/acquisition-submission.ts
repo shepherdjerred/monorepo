@@ -1,4 +1,7 @@
 import { defaultScope } from "#shared/editions/scope.ts";
+import { networkMovieAccess } from "./editions/access.ts";
+import { assertAttemptMovieChoice } from "./editions/choice.ts";
+import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
@@ -31,7 +34,10 @@ const ProfileSnapshotSchema = z.object({
 });
 
 export async function validAttempt(
-  context: MediaAutomationContext,
+  context: Pick<
+    MediaAutomationContext,
+    "db" | "serverMachineId" | "permittedSections"
+  >,
   attemptId: string,
 ): Promise<boolean> {
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
@@ -41,8 +47,14 @@ export async function validAttempt(
   const runtime = await requireActiveRuntime(context.db);
   if (attempt.edition !== "default") return false;
   if (!runtime.active || runtime.epoch !== attempt.recoveryEpoch) return false;
+  const movieAccess =
+    attempt.state === "imported"
+      ? undefined
+      : await networkMovieAccess(context, attempt.mediaIds);
+  const access = { serverMachineId: context.serverMachineId, movieAccess };
   const generations = GenerationsSchema.parse(attempt.generations);
-  ProfileSnapshotSchema.parse(attempt.failure);
+  if (attempt.state !== "imported")
+    ProfileSnapshotSchema.parse(attempt.failure);
   const intents = await context.db.mediaIntent.findMany({
     where: { edition: "default", mediaId: { in: attempt.mediaIds } },
     include: { profile: true },
@@ -82,8 +94,11 @@ export async function validAttempt(
     });
     await lockEffectiveRequests(tx, attempt.mediaIds);
     if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch))) return null;
-    await assertLegacySubmissionSponsor(tx, attempt, context.serverMachineId);
-    return await assertAttemptIdentity(tx, attempt, context.serverMachineId);
+    if (attempt.state !== "imported") {
+      await assertAttemptMovieChoice(tx, attempt.id, movieAccess);
+      await assertLegacySubmissionSponsor(tx, attempt, access);
+    }
+    return await assertAttemptIdentity(tx, attempt, access);
   });
   const rawRelease = {
     id: attempt.release.id,
@@ -109,7 +124,9 @@ export async function validAttempt(
       await lockEffectiveRequests(tx, attempt.mediaIds);
       if (!(await lockRuntimeAuthority(tx, attempt.recoveryEpoch)))
         throw new IntegrationError("media", "conflict");
-      await assertAttemptIdentity(tx, attempt, context.serverMachineId);
+      if (attempt.state !== "imported")
+        await assertAttemptMovieChoice(tx, attempt.id, movieAccess);
+      await assertAttemptIdentity(tx, attempt, access);
       await tx.mediaItem.update({
         where: { id: intent.mediaId },
         data: { version: { increment: 1 } },
@@ -406,7 +423,7 @@ async function submitNew(
     const authorized = await authorizedSubmission(
       context,
       attempt,
-      async (signal) => {
+      async (signal, beforeMutation) => {
         if (candidate.download.kind === "magnet")
           await context.qbittorrent.submit(
             {
@@ -417,6 +434,7 @@ async function submitNew(
               savePath,
             },
             signal,
+            beforeMutation,
           );
         else {
           if (bytes === null) throw new Error("Prepared torrent bytes missing");
@@ -429,6 +447,7 @@ async function submitNew(
               savePath,
             },
             signal,
+            beforeMutation,
           );
         }
       },
@@ -442,6 +461,13 @@ async function submitNew(
     }
     return null;
   } catch (error) {
+    if (error instanceof MovieChoiceProtection) {
+      await context.db.acquisitionAttempt.updateMany({
+        where: { id: attempt.id, state: "submitting" },
+        data: { state: "reserved" },
+      });
+      return error.code;
+    }
     await context.db.acquisitionAttempt.update({
       where: { id: attempt.id },
       data: { state: "submission_unknown" },

@@ -20,6 +20,8 @@ import {
   type FilePlanEntry,
 } from "./types.ts";
 import { assertAcquisition } from "./guards.ts";
+import { fileMovieAccess } from "#automation/editions/access.ts";
+import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import { recoverObsoletePublication } from "./recovery.ts";
 import { commitEmbedded } from "./embedded.ts";
@@ -54,6 +56,7 @@ export async function promote(
     where: { id: attemptId },
   });
   const rawFilePlanHash = snapshotHash(nativeJson(attempt.filePlan));
+  const movieAccess = await fileMovieAccess(initialContext, attempt.mediaIds);
   const plan = FilePlanSchema.parse(attempt.filePlan);
   const context = await prepareRecordedPublicationProof(
     publicationInvocation(
@@ -73,8 +76,12 @@ export async function promote(
         await context.checkpoint("publication-authorization");
         if (!(await context.enabled.acquisition()))
           throw new FileGuardError("acquisition_disabled");
-        await assertAcquisition(tx, attemptId, context.serverMachineId);
+        const choice = await assertAcquisition(tx, attemptId, {
+          serverMachineId: context.serverMachineId,
+          movieAccess,
+        });
         await assertPlanEdition(tx, current, plan);
+        return () => choice?.assertActive();
       },
       authorizeEntry: async (tx, current, entry) => {
         await context.checkpoint("publication-authorization");
@@ -107,8 +114,8 @@ export async function promote(
     });
   } catch (error) {
     if (
-      !(error instanceof FileGuardError) ||
-      !error.reason.includes("obsolete")
+      !(error instanceof MovieChoiceProtection) &&
+      (!(error instanceof FileGuardError) || !error.reason.includes("obsolete"))
     )
       throw error;
     if (await compensateRecordedPublication(context, attemptId, plan))

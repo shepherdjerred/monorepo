@@ -16,6 +16,8 @@ import { createSubtitleActivities } from "./subtitles.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
+import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const cipher = new CredentialCipher(randomBytes(32).toString("base64"));
@@ -121,6 +123,15 @@ async function fixture(episode = false) {
       data: { mediaId: media.id, userId: user.id },
     });
   });
+  if (!episode)
+    await chooseTestMovieEdition(db, {
+      actor: { ...user, role: "member" },
+      mediaId: media.id,
+      access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+    });
+  const target = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: defaultScope(media.id) },
+  });
   const asset = await db.libraryAsset.create({
     data: {
       path: `/data/movies/${media.id}.mkv`,
@@ -129,10 +140,16 @@ async function fixture(episode = false) {
       owned: true,
       ownershipEpoch: 0,
       editionRootId: parent?.id ?? media.id,
-      properties: {},
+      properties: { title: "Fixture.2026.WEB-1080p" },
       state: "published",
       coverage: { create: { mediaId: media.id, current: true } },
     },
+  });
+  // This watch/retention fixture starts after a synthetic exact Plex publication.
+  await db.$transaction((tx) => recordVerifiedPublication(tx, [asset.id], 0));
+  await db.mediaItem.update({
+    where: { id: media.id },
+    data: { availability: "available" },
   });
   await db.credential.create({
     data: {
@@ -223,7 +240,7 @@ async function fixture(episode = false) {
     input: {
       operationId: crypto.randomUUID(),
       mediaId: media.id,
-      generation: 0,
+      generation: target.generation,
     },
   };
 }
@@ -332,7 +349,14 @@ test("a late bounce revokes grace and explicit retry starts seven fresh days", a
     cluster.database,
     cipher,
     null,
-    { publicOrigin: item.context.publicOrigin },
+    {
+      publicOrigin: item.context.publicOrigin,
+      movieAccess: () =>
+        Promise.resolve({
+          serverMachineId: "fixture-server",
+          movieSectionId: "1",
+        }),
+    },
   );
   const now = Date.now();
   const clock = vi.spyOn(Date, "now").mockReturnValue(now + 61_000);
@@ -506,14 +530,20 @@ test("owner confirmation authorizes recoverable removal and rejects subsequent a
     where: { mediaId_edition: { mediaId: item.media.id, edition: "default" } },
     data: { desiredPresence: false },
   });
+  const confirmedMedia = await cluster.database.mediaItem.findUniqueOrThrow({
+    where: { id: item.media.id },
+  });
+  const confirmedIntent = await cluster.database.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: item.media.id, edition: "default" } },
+  });
   const ownerOverride = {
     ownerId: item.user.id,
     media: [
       {
         id: item.media.id,
         title: item.media.title,
-        version: item.media.version,
-        generation: 0,
+        version: confirmedMedia.version,
+        generation: confirmedIntent.generation,
       },
     ],
     assets: [

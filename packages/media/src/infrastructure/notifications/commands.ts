@@ -5,19 +5,34 @@ import { MediaError } from "#application/errors.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import { lockDelivery } from "#automation/notifications/locks.ts";
 import { deliveryAuthority } from "#automation/notifications/authority.ts";
-import { composeMessage } from "#automation/notifications/message.ts";
+import {
+  composeMessage,
+  deliveryInclude,
+  eventMediaIds,
+} from "#automation/notifications/message.ts";
 import { queueDelivery } from "#automation/notifications/events.ts";
+import { CommandResultSchema } from "#shared/api.ts";
+import {
+  requireMovieChoiceAccess,
+  type MovieChoiceAccess,
+} from "#infrastructure/movie-editions/access.ts";
+import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 
 export class NotificationDeliveryCommands extends MediaCommandBase {
   constructor(
-    db: Database,
+    private readonly deliveryDatabase: Database,
     private readonly deliveryCipher: CredentialCipher,
     private readonly publicOrigin: string,
-    private readonly personalDiscordAvailable: () => Promise<boolean> = () =>
-      Promise.resolve(false),
+    private readonly deliveryOptions: {
+      personalDiscordAvailable?: (() => Promise<boolean>) | undefined;
+      movieAccess?: (() => Promise<MovieChoiceAccess>) | undefined;
+    } = {},
   ) {
-    super(db, { keepDays: 30 });
+    super(deliveryDatabase, { keepDays: 30 });
   }
+
+  private readonly personalDiscordAvailable = () =>
+    this.deliveryOptions.personalDiscordAvailable?.() ?? Promise.resolve(false);
 
   retryDelivery(
     actor: MediaActor,
@@ -25,11 +40,49 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
     id: string,
     expectedVersion: number,
   ) {
-    return this.command(
+    let movieAccess: MovieChoiceAccess | undefined;
+    let guards: MovieChoiceFreshness[] = [];
+    return this.commandWithProtocol(
       actor,
       key,
-      { kind: "retry_notification", input: { id, expectedVersion } },
+      {
+        command: { kind: "retry_notification", input: { id, expectedVersion } },
+        decode: (value) => CommandResultSchema.parse(value),
+        beforeNewCommand: async () => {
+          const delivery =
+            await this.deliveryDatabase.notificationDelivery.findUniqueOrThrow({
+              where: { id },
+              include: deliveryInclude,
+            });
+          if (delivery.userId !== actor.id)
+            throw new MediaError(
+              "forbidden",
+              "Only the recipient can retry this delivery",
+              403,
+            );
+          if (
+            ![
+              "media_available",
+              "media_upgraded",
+              "subtitles_ready",
+              "retention_warning",
+            ].includes(delivery.event.kind)
+          )
+            return;
+          const movie = await this.deliveryDatabase.mediaItem.findFirst({
+            where: { id: { in: eventMediaIds(delivery) }, kind: "movie" },
+          });
+          if (movie !== null)
+            movieAccess = requireMovieChoiceAccess(
+              (await this.deliveryOptions.movieAccess?.()) ?? {},
+            );
+        },
+        assertCommit: () => {
+          for (const guard of guards) guard.assertActive();
+        },
+      },
       async (tx) => {
+        guards = [];
         const delivery = await lockDelivery(tx, id);
         if (delivery.userId !== actor.id)
           throw new MediaError(
@@ -83,6 +136,8 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
             cipher: this.deliveryCipher,
             publicOrigin: this.publicOrigin,
             personalDiscordAvailable: this.personalDiscordAvailable,
+            movieAccess,
+            captureFreshness: (guard) => guards.push(guard),
           },
           delivery,
         );

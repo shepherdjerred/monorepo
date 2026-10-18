@@ -1,12 +1,20 @@
 import { lstat } from "node:fs/promises";
 import { OperationJournal } from "./operations/journal.ts";
-import { completeDuplicateImport } from "./operations/import.ts";
-import { orderedMovePaths, assertSameMoveIdentity } from "./operations/move.ts";
 import {
-  recordedContentIO,
-  type PrimitiveRecorder,
-} from "./publication-proof/recorder.ts";
-import type { ContentProof } from "./content-proof.ts";
+  ImportStaging,
+  copyImportPartial,
+  type PreparedImport,
+} from "./operations/staging.ts";
+import { completeDuplicateImport } from "./operations/import.ts";
+import {
+  orderedMovePaths,
+  assertSameMoveIdentity,
+  validateRollbackFile,
+  type RollbackFile,
+  type ScopedMoveFile,
+} from "./operations/move.ts";
+import { recordedContentIO } from "./publication-proof/recorder.ts";
+import type { FileOperationOptions } from "./operations/options.ts";
 import nodePath from "node:path";
 import { OperationLocks, type ContentPath } from "./operation-locks.ts";
 import { type VerifiedFile, type VerifiedFileProof } from "./verification.ts";
@@ -24,9 +32,7 @@ import {
   validateMediaRoots,
   safePath,
   exists,
-  syncFile,
   syncDirectory,
-  copyExclusive,
   verifyControlExclusion,
   requireCapacity,
 } from "./operations-io.ts";
@@ -36,20 +42,10 @@ export class FileOperations {
   private readonly journal: OperationJournal;
   private readonly locks: OperationLocks;
   private readonly content: ReturnType<typeof recordedContentIO>;
+  private readonly staging: ImportStaging;
   constructor(
     private readonly roots: MediaFileRoots,
-    private readonly options: {
-      /** Rechecks committed intent/generation and operation ownership while the path lock is held. */
-      authorize: (manifest: FileOperationManifest) => Promise<void>;
-      verifyPlexExclusion?: (roots: MediaFileRoots) => Promise<void>;
-      minimumFreeBytes?: number;
-      /** Activity heartbeat/cancellation checkpoint. Throwing leaves a recoverable journal. */
-      checkpoint?: (phase: string) => Promise<void>;
-      contentProof?: ContentProof;
-      effectRecorder?: PrimitiveRecorder;
-      /** Invocation-local authority check immediately before a syscall or journal installation. */
-      beforeEffect?: () => void;
-    },
+    private readonly options: FileOperationOptions,
   ) {
     this.journal = new OperationJournal(
       (relative) => this.controlPath(relative),
@@ -79,6 +75,29 @@ export class FileOperations {
         await this.checkpoint("hashing");
       },
     );
+    this.staging = new ImportStaging({
+      roots,
+      locks: this.locks,
+      journal: this.journal,
+      controlPath: (relative) => this.controlPath(relative),
+      content: this.content,
+      checkpoint: (phase) => this.checkpoint(phase),
+      minimumFreeBytes: options.minimumFreeBytes,
+      beforeEffect: () => {
+        this.content.assertActive();
+      },
+    });
+  }
+
+  prepareImport(input: ImportFile): Promise<PreparedImport> {
+    return this.staging.prepare(input);
+  }
+
+  commitPreparedImport(
+    input: PreparedImport,
+    authority: { authorize: () => Promise<void>; beforeEffect: () => void },
+  ) {
+    return this.staging.commit(input, authority);
   }
 
   /** Return an in-process proof before taking PG locks; never acquire PG inside this callback. */
@@ -173,13 +192,14 @@ export class FileOperations {
           );
           if (!(await exists(staged))) {
             const partial = `${staged}.partial`;
-            // Only this operation's journal-owned incomplete copy can be removed.
-            if (await exists(partial)) await this.content.unlink(partial);
-            await copyExclusive(source, partial, async () => {
-              await this.checkpoint("copying");
+            await copyImportPartial({
+              source,
+              partial,
+              checksum: input.sha256,
+              content: this.content,
+              replaceExisting: true,
+              checkpoint: () => this.checkpoint("copying"),
             });
-            await this.requireDigest(partial, input.sha256);
-            await syncFile(partial);
             await this.content.rename(partial, staged);
             await syncDirectory(nodePath.dirname(staged));
           }
@@ -263,24 +283,8 @@ export class FileOperations {
   }
 
   /** Restore the exact previous version while retaining the failed publication for review. */
-  async rollbackImport(input: {
-    operationId: string;
-    rollbackOperationId: string;
-    libraryPath: string;
-    sha256: string;
-    previousSha256: string;
-  }): Promise<FileOperationManifest> {
-    IdSchema.parse(input.operationId);
-    IdSchema.parse(input.rollbackOperationId);
-    DigestSchema.parse(input.sha256);
-    DigestSchema.parse(input.previousSha256);
-    if (
-      input.operationId === input.rollbackOperationId ||
-      input.sha256 === input.previousSha256
-    )
-      throw new FileOperationConflict(
-        "Rollback must identify a distinct version and operation",
-      );
+  async rollbackImport(input: RollbackFile): Promise<FileOperationManifest> {
+    validateRollbackFile(input);
     const target = await safePath(this.roots.library, input.libraryPath, false);
     const source = await this.controlPath(`rollback/${input.operationId}`);
     const rejected = await this.controlPath(
@@ -418,13 +422,7 @@ export class FileOperations {
     return await this.journal.read(operationId);
   }
 
-  private async move(input: {
-    operationId: string;
-    kind: "quarantine" | "restore";
-    source: string;
-    target: string;
-    sha256: string;
-  }): Promise<FileOperationManifest> {
+  private async move(input: ScopedMoveFile): Promise<FileOperationManifest> {
     const { operationId, kind, source, target, sha256 } = input;
     IdSchema.parse(operationId);
     DigestSchema.parse(sha256);

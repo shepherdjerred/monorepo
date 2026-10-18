@@ -38,10 +38,7 @@ async function fixture(episode = false) {
   return result;
 }
 
-async function episodePack(
-  f: Awaited<ReturnType<typeof fixture>>,
-  acquired: Awaited<ReturnType<typeof f.acquisition>>,
-) {
+async function episodePack(f: Awaited<ReturnType<typeof fixture>>) {
   const db = cluster.database;
   const seriesId = f.media.parentId;
   if (seriesId === null) throw new Error("Episode fixture has no series");
@@ -75,6 +72,10 @@ async function episodePack(
       },
     });
   });
+  const acquired = await f.acquisition("Improved episode content", [
+    f.media.id,
+    second.id,
+  ]);
   const names = ["Coastlines.S01E01.mkv", "Coastlines.S01E02.mkv"];
   for (const name of names)
     await writeFile(nodePath.join(f.roots.downloads, name), acquired.content);
@@ -91,22 +92,13 @@ async function episodePack(
       },
     },
   });
-  await db.acquisitionAttempt.update({
-    where: { id: acquired.attempt.id },
-    data: {
-      mediaIds: [f.media.id, second.id],
-      generations: { [f.media.id]: 0, [second.id]: 0 },
-      reservations: { create: { mediaId: second.id, generation: 0 } },
-    },
-  });
-  return second;
+  return { second, acquired };
 }
 
 test("mixed pack rollback restores old playback and quarantines first publications across an interruption", async () => {
   const f = await fixture(true);
   const original = await f.published();
-  const acquired = await f.acquisition("Improved episode content");
-  const second = await episodePack(f, acquired);
+  const { second, acquired } = await episodePack(f);
   const inspect = f.context.inspect;
   if (inspect === undefined) throw new Error("Inspector missing");
   f.context.inspect = async (path) => {

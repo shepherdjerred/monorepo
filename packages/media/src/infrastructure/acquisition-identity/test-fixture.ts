@@ -47,17 +47,18 @@ export async function identityFixture(
     where: { id: files.user.id },
     data: { role: "owner" },
   });
-  await db.plexIdentityMapping.create({
-    data: {
-      userId: actor.id,
-      serverMachineId: "fixture-server",
-      serverAccountId: actor.plexAccountId,
-      kind: "account",
-      permittedSectionIds: ["1", "2"],
-      permittedMediaKinds: ["movie", "series"],
-      verifiedAt: new Date(),
-    },
+  const mapping = await db.plexIdentityMapping.findUniqueOrThrow({
+    where: { userId: actor.id },
   });
+  if (
+    mapping.serverMachineId !== "fixture-server" ||
+    mapping.serverAccountId !== actor.plexAccountId ||
+    mapping.kind !== "account" ||
+    !mapping.permittedSectionIds.includes("2") ||
+    !mapping.permittedMediaKinds.includes("series") ||
+    mapping.verifiedAt === null
+  )
+    throw new Error("Identity fixture requires its original exact TV mapping");
   await db.qualityProfileVersion.create({
     data: {
       profileId: files.profile.id,

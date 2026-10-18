@@ -1,12 +1,20 @@
 import { z } from "zod";
+import { MediaError } from "#application/errors.ts";
+import { networkMovieAccess } from "./editions/access.ts";
 import {
-  defaultIntent,
-  defaultScope,
-  assertDefaultEdition,
-} from "#shared/editions/scope.ts";
+  requestFulfillment,
+  currentFulfillmentAsset,
+} from "./editions/fulfillment.ts";
+import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
+import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
+import {
+  lockMovieChoiceIdentities,
+  type MovieChoiceAccess,
+} from "#infrastructure/movie-editions/access.ts";
+import { readMovieDemandFulfillment } from "#infrastructure/movie-editions/fulfillment.ts";
+import { defaultIntent, defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type {
   MediaNetworkActivities,
@@ -15,6 +23,13 @@ import type {
 import { evaluateRetention, RETENTION_DEFAULTS } from "#domain/retention.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { observeRequesterWatch, PlexIdentitySchema } from "./watch.ts";
+import {
+  mediaInclude,
+  lineageResolved,
+  coveredMedia,
+  currentPlayback,
+  type Media,
+} from "./retention/scope.ts";
 import { serializable } from "./store.ts";
 import { createWarning } from "./notifications/retention-warning.ts";
 import {
@@ -59,79 +74,42 @@ function incompleteWatchReason(observation: {
     : (observation.reason ?? "watch_unknown");
 }
 const EvidenceSchema = z.object({ warningEventId: z.string() });
-const mediaInclude = {
-  intents: { where: { edition: "default" } },
-  requests: {
-    where: { ...effectiveRequestWhere, edition: "default" },
-    include: { user: { include: { notificationPreference: true } } },
-  },
-  holds: { where: { edition: "default" } },
-  watchStates: { where: { edition: "default" } },
-  assets: {
-    where: { current: true, edition: "default" },
-    include: { asset: true },
-  },
-} satisfies Prisma.MediaItemInclude;
-type Media = Prisma.MediaItemGetPayload<{ include: typeof mediaInclude }>;
-function lineageResolved(item: Media): boolean {
-  const root = defaultIntent(item.intents)?.editionRootId;
-  return (
-    root != null &&
-    item.assets.every(({ asset }) => asset.editionRootId === root)
-  );
-}
-
-async function coveredMedia(
+async function pendingMovieDemand(
   context: MediaAutomationContext,
-  mediaId: string,
-): Promise<string[]> {
-  const assets = await context.db.assetCoverage.findMany({
-    where: { mediaId, current: true, edition: "default" },
-    include: { asset: { include: { coverage: { where: { current: true } } } } },
-  });
-  for (const { asset } of assets) {
-    assertDefaultEdition(asset.edition);
-    for (const coverage of asset.coverage)
-      assertDefaultEdition(coverage.edition);
+  ids: string[],
+) {
+  try {
+    const access = await networkMovieAccess(context, ids);
+    if (access === undefined) return null;
+    for (const mediaId of ids) {
+      const demands = await readMovieDemandFulfillment(context.db, {
+        mediaId,
+        access,
+        currentAsset: await currentFulfillmentAsset(context.db, mediaId),
+      });
+      const pending = demands.find(
+        (row) => row.fulfillment.status !== "fulfilled",
+      );
+      if (pending !== undefined) return pending.fulfillment.reason;
+    }
+    return null;
+  } catch (error) {
+    if (error instanceof MediaError && error.code === "plex_scope_unconfigured")
+      return error.code;
+    throw error;
   }
-  return [
-    ...new Set([
-      mediaId,
-      ...assets.flatMap((coverage) =>
-        coverage.asset.coverage.map((item) => item.mediaId),
-      ),
-    ]),
-  ].sort();
 }
-
-async function currentPlayback(
-  context: MediaAutomationContext,
-  items: Media[],
-): Promise<boolean> {
-  const keys = new Set(
-    items.map(
-      (item) => PlexIdentitySchema.parse(item.externalIds).plexRatingKey,
-    ),
-  );
-  const paths = new Set(
-    items.flatMap((item) => item.assets.map((coverage) => coverage.asset.path)),
-  );
-  const sessions = await context.plex.activeSessions();
-  return sessions.some(
-    (session) =>
-      keys.has(session.ratingKey) ||
-      session.Media?.some((media) =>
-        media.Part.some((part) => paths.has(part.file)),
-      ) === true,
-  );
-}
-
 async function evaluateItem(
   tx: Transaction,
   item: Media,
-  epoch: number,
-  timestamp: Date,
+  authority: {
+    epoch: number;
+    timestamp: Date;
+    movieAccess: MovieChoiceAccess | undefined;
+    captureFreshness: (freshness: MovieChoiceFreshness) => void;
+  },
 ): Promise<Result> {
+  const { epoch, timestamp } = authority;
   const generation = defaultIntent(item.intents)?.generation;
   if (generation === undefined) return protect("intent_missing");
   if (!lineageResolved(item)) return protect("lineage_unresolved");
@@ -171,6 +149,22 @@ async function evaluateItem(
   const reserved = await tx.acquisitionReservation.findUnique({
     where: targetWhere(defaultScope(item.id)),
   });
+  const currentAsset = await currentFulfillmentAsset(tx, item.id);
+  const fulfillment = new Map<
+    string,
+    Awaited<ReturnType<typeof requestFulfillment>>
+  >();
+  for (const request of item.requests)
+    fulfillment.set(
+      request.id,
+      await requestFulfillment(tx, {
+        kind: item.kind,
+        requestId: request.id,
+        currentAsset,
+        access: authority.movieAccess,
+        captureFreshness: authority.captureFreshness,
+      }),
+    );
   const evaluation = evaluateRetention({
     now: timestamp.getTime(),
     generation,
@@ -192,22 +186,28 @@ async function evaluateItem(
       until: hold.until?.getTime() ?? null,
       isPin: hold.isPin,
     })),
-    requesters: item.requests.map((claim) => {
-      const watch = item.watchStates.find(
-        (state) => state.userId === claim.userId,
-      );
-      const accepted = deliveries.find(
-        (delivery) => delivery.userId === claim.userId,
-      );
-      return {
-        userId: claim.userId,
-        owner: claim.user.role === "owner",
-        watched: watch?.watched ?? null,
-        observedAt: watch?.observedAt.getTime() ?? null,
-        warningAcceptedAt: accepted?.acceptedAt?.getTime() ?? null,
-        warningFailed: accepted === undefined,
-      };
-    }),
+    requesters: item.requests
+      .filter((claim) => item.kind === "movie" || claim.edition === "default")
+      .map((claim) => {
+        const fulfilled = fulfillment.get(claim.id);
+        if (fulfilled === undefined)
+          throw new Error("Retention request fulfillment missing");
+        const watch = item.watchStates.find(
+          (state) => state.userId === claim.userId,
+        );
+        const accepted = deliveries.find(
+          (delivery) => delivery.userId === claim.userId,
+        );
+        return {
+          userId: claim.userId,
+          owner: claim.user.role === "owner",
+          watched: watch?.watched ?? null,
+          observedAt: watch?.observedAt.getTime() ?? null,
+          warningAcceptedAt: accepted?.acceptedAt?.getTime() ?? null,
+          warningFailed: accepted === undefined,
+          fulfillment: fulfilled,
+        };
+      }),
   });
   if (evaluation.state === "protected") return protect(evaluation.reason);
   decision ??= await createWarning(tx, item, generation, epoch);
@@ -275,6 +275,7 @@ async function evaluateGroup(
   observation: { ids: string[]; snapshots: Media[]; observedAt: Date },
 ): Promise<Result> {
   const { ids, snapshots, observedAt } = observation;
+  const movieAccess = await networkMovieAccess(context, ids);
   return await serializable(context.db, async (tx) => {
     await lockDefaultScopes(
       tx,
@@ -289,6 +290,7 @@ async function evaluateGroup(
     });
     if (!(await lockRuntimeAuthority(tx, runtime.recoveryEpoch)))
       return protect("runtime_protected");
+    await lockMovieChoiceIdentities(tx, { mediaIds: ids });
     if (await hasPendingLegacyClaims(tx, ids)) {
       await persistLegacyClaimProtection(tx, ids);
       return protect(LEGACY_CLAIM_PROTECTION);
@@ -337,11 +339,18 @@ async function evaluateGroup(
     if (Date.now() - observedAt.getTime() > 30_000)
       return protect("playback_observation_stale");
     const results = new Map<string, Result>();
+    const freshness: MovieChoiceFreshness[] = [];
     for (const item of items)
       results.set(
         item.id,
-        await evaluateItem(tx, item, runtime.recoveryEpoch, observedAt),
+        await evaluateItem(tx, item, {
+          epoch: runtime.recoveryEpoch,
+          timestamp: observedAt,
+          movieAccess,
+          captureFreshness: (guard) => freshness.push(guard),
+        }),
       );
+    for (const guard of freshness) guard.assertActive();
     const result = results.get(input.mediaId);
     if (result === undefined) throw new Error("Retention target missing");
     const protectedResult = [...results.values()].find(
@@ -388,6 +397,23 @@ async function groupWatch(
       );
   }
   return null;
+}
+
+async function evaluateObservedGroup(
+  context: MediaAutomationContext,
+  input: MediaOperation,
+  observation: { ids: string[]; snapshots: Media[]; observedAt: Date },
+): Promise<Result> {
+  try {
+    return await evaluateGroup(context, input, observation);
+  } catch (error) {
+    if (
+      error instanceof MovieChoiceProtection ||
+      (error instanceof MediaError && error.code === "plex_scope_unconfigured")
+    )
+      return protect(error.code);
+    throw error;
+  }
 }
 
 export function createRetentionActivities(
@@ -442,6 +468,8 @@ export function createRetentionActivities(
               ownerOverride,
               new Date(),
             );
+      const pending = await pendingMovieDemand(context, ids);
+      if (pending !== null) return protect(pending);
       const watch = await groupWatch(
         context,
         ids,
@@ -450,13 +478,13 @@ export function createRetentionActivities(
       if (watch !== null) return watch;
       if (!(await refreshRetentionReceipts(context, ids)))
         return protect("warning_receipt_reconciliation_required");
-      return (await currentPlayback(context, snapshots))
-        ? protect("active_playback")
-        : await evaluateGroup(context, input, {
-            ids,
-            snapshots,
-            observedAt: new Date(),
-          });
+      if (await currentPlayback(context, snapshots))
+        return protect("active_playback");
+      return await evaluateObservedGroup(context, input, {
+        ids,
+        snapshots,
+        observedAt: new Date(),
+      });
     },
   };
 }

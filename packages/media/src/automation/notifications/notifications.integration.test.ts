@@ -13,10 +13,13 @@ import { reconcileDelivery } from "./reconcile.ts";
 import { deliveryInclude } from "./message.ts";
 import { setTimeout } from "node:timers/promises";
 import { z } from "zod";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 
 const { database, context, fixture, cipher } = automationTestHarness();
-async function setup() {
-  const data = await fixture();
+async function setup(kind: "movie" | "episode" = "movie") {
+  const data = await fixture("123", { kind });
   const db = database();
   await grantTestLease(db);
   await db.mediaIntent.update({
@@ -38,13 +41,14 @@ async function setup() {
   const asset = await db.libraryAsset.create({
     data: {
       path: `/library/${data.media.id}.mkv`,
+      editionRootId: data.series?.id ?? data.media.id,
       sizeBytes: 10,
       checksum: "a".repeat(64),
       owned: true,
       ownershipEpoch: 0,
       state: "published",
       plexPublishedAt: new Date(),
-      properties: {},
+      properties: { releaseId: data.release.id },
       coverage: { create: { mediaId: data.media.id, current: true } },
     },
   });
@@ -57,6 +61,11 @@ async function setup() {
   };
   const service = new PrismaNotificationApplication(db, cipher, null, {
     publicOrigin: "https://media.fixture",
+    movieAccess: () =>
+      Promise.resolve({
+        serverMachineId: "fixture-server",
+        movieSectionId: "1",
+      }),
   });
   return { ...data, user, asset, item, service };
 }
@@ -78,14 +87,17 @@ async function queue(
   });
 }
 
-test("a mixed acquisition groups new episodes, preserves upgrade opt-in, and never announces skipped coverage", async () => {
-  const data = await setup();
+test("a TV acquisition groups new episodes, preserves upgrade opt-in, and never announces skipped coverage", async () => {
+  const data = await setup("episode");
   const db = database();
+  if (data.series === null)
+    throw new Error("TV notification fixture lacks its canonical series");
   const items = [data.item];
   for (let index = 0; index < 3; index++) {
     const media = await db.mediaItem.create({
       data: {
         kind: "episode",
+        parentId: data.series.id,
         title: `Episode ${String(index)}`,
         availability: "available",
         intents: { create: { generation: 1, automationEpoch: 0 } },
@@ -192,58 +204,255 @@ test("a mixed acquisition groups new episodes, preserves upgrade opt-in, and nev
   ).toBe(2);
 });
 
-test("known rejection requires explicit bounded retry and preserves the original attempt", async () => {
+test.each(["movie", "episode"] as const)(
+  "known %s rejection requires explicit bounded retry and preserves the original attempt",
+  async (kind) => {
+    const data = await setup(kind);
+    const service =
+      kind === "movie"
+        ? data.service
+        : new PrismaNotificationApplication(database(), cipher, null, {
+            publicOrigin: "https://media.fixture",
+            movieAccess: () =>
+              Promise.reject(
+                new Error("TV retry must not resolve movie configuration"),
+              ),
+          });
+    const delivery = await queue(data);
+    let sends = 0;
+    const runtime = {
+      ...context(),
+      notify: async () => {
+        sends++;
+        if (sends === 1) throw new IntegrationError("postal", "authentication");
+        return { receipt: "fixture:42" };
+      },
+    };
+    const activities = createNotificationActivities(runtime);
+    const input = {
+      operationId: data.input.operationId,
+      notificationId: delivery.id,
+    };
+    expect(await activities.deliverMediaNotification(input)).toMatchObject({
+      status: "failed",
+    });
+    expect(await activities.deliverMediaNotification(input)).toMatchObject({
+      status: "failed",
+    });
+    expect(sends).toBe(1);
+    const rejected = await database().notificationDelivery.findUniqueOrThrow({
+      where: { id: delivery.id },
+    });
+    const time = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 61_000);
+    const retryKey = crypto.randomUUID();
+    let retried;
+    try {
+      retried = await service.retryDelivery(
+        data.user,
+        retryKey,
+        delivery.id,
+        rejected.version,
+      );
+    } finally {
+      time.mockRestore();
+    }
+    const saved = await database().idempotencyRecord.findUniqueOrThrow({
+      where: { userId_key: { userId: data.user.id, key: retryKey } },
+    });
+    const replay = new PrismaNotificationApplication(database(), cipher, null, {
+      publicOrigin: "https://media.fixture",
+      movieAccess: () =>
+        Promise.reject(
+          new Error("Exact retry replay must precede configuration"),
+        ),
+    });
+    expect(
+      await replay.retryDelivery(
+        data.user,
+        retryKey,
+        delivery.id,
+        rejected.version,
+      ),
+    ).toEqual(retried);
+    expect(
+      await database().idempotencyRecord.findUniqueOrThrow({
+        where: { userId_key: { userId: data.user.id, key: retryKey } },
+      }),
+    ).toEqual(saved);
+    expect(await activities.deliverMediaNotification(input)).toMatchObject({
+      status: "accepted",
+    });
+    expect(sends).toBe(2);
+    expect(
+      await database().notificationDeliveryAttempt.findMany({
+        where: { deliveryId: delivery.id },
+        orderBy: { attemptNumber: "asc" },
+        select: { state: true, recoveryEpoch: true },
+      }),
+    ).toEqual([
+      { state: "rejected", recoveryEpoch: 0 },
+      { state: "accepted", recoveryEpoch: 0 },
+    ]);
+  },
+);
+
+test("independent movie and TV acquisitions can deliver a mixed readiness batch to the same requester", async () => {
+  const movie = await setup();
+  const tv = await setup("episode");
+  const db = database();
+  await db.mediaRequest.create({
+    data: { userId: movie.user.id, mediaId: tv.media.id },
+  });
+  for (const data of [movie, tv]) {
+    const claim = await db.mediaRequest.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: data.user.id,
+          mediaId: data.media.id,
+          edition: "default",
+        },
+      },
+    });
+    const birth =
+      data.media.kind === "movie"
+        ? await captureMovieAttemptChoice(db, {
+            sponsorRequestId: claim.id,
+            scope: {
+              rootMediaId: data.media.id,
+              mediaId: data.media.id,
+              edition: "default",
+            },
+            access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+          })
+        : {};
+    const attempt = await db.acquisitionAttempt.create({
+      data: {
+        ...birth,
+        releaseId: data.release.id,
+        sponsorRequestId: claim.id,
+        mediaIds: [data.media.id],
+        generations: { [data.media.id]: data.item.generation },
+        state: "publishing",
+        operationId: data.input.operationId,
+        recoveryEpoch: 0,
+        filePlan: [
+          {
+            assetId: data.asset.id,
+            mediaIds: [data.media.id],
+            generations: { [data.media.id]: data.item.generation },
+            checksum: data.asset.checksum,
+            previousAssetId: null,
+          },
+        ],
+      },
+    });
+    await db.$transaction((tx) =>
+      queuePublicationNotifications(tx, attempt.id),
+    );
+  }
+  const key = `mixed-ready:${crypto.randomUUID()}`;
+  await db.$transaction((tx) =>
+    queueLifecycleNotifications(tx, {
+      key,
+      kind: "media_available",
+      epoch: 0,
+      items: [movie.item, tv.item],
+    }),
+  );
+  const delivery = await db.notificationDelivery.findFirstOrThrow({
+    where: { userId: movie.user.id, event: { dedupeKey: { startsWith: key } } },
+    include: { event: true },
+  });
+  expect(delivery.event.payload).toMatchObject({
+    items: [movie.item, tv.item].sort((a, b) =>
+      a.mediaId.localeCompare(b.mediaId),
+    ),
+  });
+  const messages: string[] = [];
+  expect(
+    await createNotificationActivities({
+      ...context(),
+      notify: (message) => {
+        messages.push(message.text);
+        return Promise.resolve({ receipt: "fixture:mixed" });
+      },
+    }).deliverMediaNotification({
+      operationId: movie.input.operationId,
+      notificationId: delivery.id,
+    }),
+  ).toMatchObject({ status: "accepted" });
+  expect(messages).toHaveLength(1);
+  expect(messages[0]).toContain("2 requested titles");
+});
+
+test("a rejected readiness delivery cannot be retried after actual revocation leaves pending movie demand", async () => {
   const data = await setup();
+  const db = database();
   const delivery = await queue(data);
-  let sends = 0;
-  const runtime = {
+  const activities = createNotificationActivities({
     ...context(),
-    notify: async () => {
-      sends++;
-      if (sends === 1) throw new IntegrationError("postal", "authentication");
-      return { receipt: "fixture:42" };
-    },
-  };
-  const activities = createNotificationActivities(runtime);
-  const input = {
-    operationId: data.input.operationId,
-    notificationId: delivery.id,
-  };
-  expect(await activities.deliverMediaNotification(input)).toMatchObject({
-    status: "failed",
+    notify: () =>
+      Promise.reject(new IntegrationError("postal", "authentication")),
   });
-  expect(await activities.deliverMediaNotification(input)).toMatchObject({
-    status: "failed",
-  });
-  expect(sends).toBe(1);
-  const rejected = await database().notificationDelivery.findUniqueOrThrow({
+  expect(
+    await activities.deliverMediaNotification({
+      operationId: data.input.operationId,
+      notificationId: delivery.id,
+    }),
+  ).toMatchObject({ status: "failed" });
+  const failed = await db.notificationDelivery.findUniqueOrThrow({
     where: { id: delivery.id },
   });
-  const time = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 61_000);
-  try {
-    await data.service.retryDelivery(
-      data.user,
-      crypto.randomUUID(),
-      delivery.id,
-      rejected.version,
-    );
-  } finally {
-    time.mockRestore();
-  }
-  expect(await activities.deliverMediaNotification(input)).toMatchObject({
-    status: "accepted",
+  const request = await db.mediaRequest.findUniqueOrThrow({
+    where: {
+      userId_mediaId_edition: {
+        userId: data.user.id,
+        mediaId: data.media.id,
+        edition: "default",
+      },
+    },
   });
-  expect(sends).toBe(2);
+  const target = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: data.media.id, edition: "default" } },
+  });
+  const app = new PrismaMediaApplication(db, {
+    keepDays: 7,
+    serverMachineId: "fixture-server",
+    movieSectionId: "1",
+  });
+  await app.revokeMovieEditionChoice(data.user, crypto.randomUUID(), {
+    schemaVersion: 3,
+    action: "revoke_choice",
+    subjectUserId: data.user.id,
+    scope: {
+      rootMediaId: data.media.id,
+      mediaId: data.media.id,
+      edition: "default",
+    },
+    requestId: request.id,
+    expected: {
+      requestVersion: request.version,
+      targetVersion: target.version,
+      choiceRevision: request.movieEditionChoiceRevision,
+    },
+  });
+  const key = crypto.randomUUID();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 61_000);
+  try {
+    await expect(
+      data.service.retryDelivery(data.user, key, delivery.id, failed.version),
+    ).rejects.toMatchObject({ code: "delivery_obsolete" });
+  } finally {
+    clock.mockRestore();
+  }
   expect(
-    await database().notificationDeliveryAttempt.findMany({
-      where: { deliveryId: delivery.id },
-      orderBy: { attemptNumber: "asc" },
-      select: { state: true, recoveryEpoch: true },
+    await db.idempotencyRecord.count({ where: { userId: data.user.id, key } }),
+  ).toBe(0);
+  expect(
+    await db.notificationDelivery.findUniqueOrThrow({
+      where: { id: delivery.id },
     }),
-  ).toEqual([
-    { state: "rejected", recoveryEpoch: 0 },
-    { state: "accepted", recoveryEpoch: 0 },
-  ]);
+  ).toEqual(failed);
 });
 
 test("unknown sends never retry; exact receipt reconciliation cannot cross a restore epoch", async () => {
@@ -314,10 +523,26 @@ test.each(["obsolete_version", "unverified_quality"])(
   async (reason) => {
     const data = await setup();
     const delivery = await queue(data);
-    await database().mediaRequest.updateMany({
-      where: { userId: data.user.id },
-      data: { active: false },
+    const app = new PrismaMediaApplication(database(), {
+      keepDays: 7,
+      serverMachineId: "fixture-server",
+      movieSectionId: "1",
     });
+    const request = await database().mediaRequest.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: data.user.id,
+          mediaId: data.media.id,
+          edition: "default",
+        },
+      },
+    });
+    await app.cancelRequest(
+      data.user,
+      crypto.randomUUID(),
+      request.id,
+      request.version,
+    );
     const activity = createNotificationActivities({
       ...context(),
       notify: async () => {
@@ -330,14 +555,18 @@ test.each(["obsolete_version", "unverified_quality"])(
         notificationId: delivery.id,
       }),
     ).toMatchObject({ status: "failed" });
-    await database().mediaRequest.updateMany({
-      where: { userId: data.user.id },
-      data: { active: true },
+    await chooseTestMovieEdition(database(), {
+      actor: data.user,
+      mediaId: data.media.id,
+      access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      subtitleLanguages: ["en"],
     });
-    await database().mediaRequest.updateMany({
-      where: { mediaId: data.media.id },
-      data: { subtitleLanguages: ["en"] },
+    const renewed = await database().mediaIntent.findUniqueOrThrow({
+      where: {
+        mediaId_edition: { mediaId: data.media.id, edition: "default" },
+      },
     });
+    data.item.generation = renewed.generation;
     const installed = await database().subtitleAsset.create({
       data: {
         assetId: data.asset.id,
@@ -400,6 +629,15 @@ test("shared announcements never use personal content or preferences", async () 
   });
   const attempt = await db.acquisitionAttempt.create({
     data: {
+      ...(await captureMovieAttemptChoice(db, {
+        sponsorRequestId: claim.id,
+        scope: {
+          rootMediaId: data.media.id,
+          mediaId: data.media.id,
+          edition: "default",
+        },
+        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      })),
       releaseId: data.release.id,
       sponsorRequestId: claim.id,
       mediaIds: [data.media.id],

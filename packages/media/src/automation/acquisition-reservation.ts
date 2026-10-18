@@ -3,6 +3,16 @@ import {
   lockDefaultScopes,
 } from "#infrastructure/editions/locks.ts";
 import { MediaError } from "#application/errors.ts";
+import { networkMovieAccess } from "./editions/access.ts";
+import {
+  requireMovieSponsor,
+  assertAttemptMovieChoice,
+} from "./editions/choice.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
+import {
+  requireMovieChoiceAccess,
+  type MovieChoiceAccess,
+} from "#infrastructure/movie-editions/access.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 import {
@@ -56,6 +66,7 @@ export async function reserveCandidate(
     input.operationId,
     proposed,
   );
+  const movieAccess = await networkMovieAccess(context, proposedIds);
   return serializable(context.db, async (tx) => {
     await lockCanonicalMedia(tx, proposedIds);
     await readDefaultTarget(tx, defaultScope(input.mediaId));
@@ -83,6 +94,7 @@ export async function reserveCandidate(
       proposed,
       proposedIds,
       newTargetIds,
+      movieAccess,
     });
     if (result === null) await removeUnclaimedTargets(tx, newTargetIds);
     return result;
@@ -122,6 +134,7 @@ async function reserveLockedCandidate(
     proposed: ReleaseCandidate;
     proposedIds: string[];
     newTargetIds: ReadonlySet<string>;
+    movieAccess: MovieChoiceAccess | undefined;
   },
 ): Promise<string | null> {
   const {
@@ -144,27 +157,35 @@ async function reserveLockedCandidate(
     where: targetWhere(defaultScope(input.mediaId)),
   });
   if (
-    intent.generation !== input.generation ||
-    intent.automationEpoch !== epoch ||
-    !intent.desiredPresence ||
-    !intent.monitoring ||
-    intent.profileId !== profile.id
+    !reservationTargetCurrent(intent, {
+      generation: input.generation,
+      epoch,
+      profileId: profile.id,
+    })
   )
     return null;
   const existing = await tx.acquisitionReservation.findUnique({
     where: targetWhere(defaultScope(input.mediaId)),
   });
   if (existing !== null) return null;
-  const sponsor = await tx.mediaRequest.findFirst({
-    where: { mediaId: input.mediaId, ...effectiveRequestWhere },
-    orderBy: { createdAt: "asc" },
-  });
+  const chosen = await requireMovieSponsor(
+    tx,
+    input.mediaId,
+    options.movieAccess,
+  );
+  const sponsor =
+    chosen?.request ??
+    (await tx.mediaRequest.findFirst({
+      where: { mediaId: input.mediaId, ...effectiveRequestWhere },
+      orderBy: { createdAt: "asc" },
+    }));
   if (sponsor === null) return null;
   const identity = await reservationIdentity(tx, context, proposed, {
     operationId: input.operationId,
     sponsorRequestId: sponsor.id,
     epoch,
     mediaIds: proposedIds,
+    movieAccess: options.movieAccess,
   });
   await tx.$queryRaw`SELECT id FROM "ReleaseCandidate" WHERE id = ${releaseId} FOR SHARE`;
   const release = await tx.releaseCandidate.findUniqueOrThrow({
@@ -207,8 +228,17 @@ async function reserveLockedCandidate(
     newTargetIds,
   });
   if (generations === null) return null;
+  const choice =
+    chosen === null
+      ? {}
+      : await captureMovieAttemptChoice(tx, {
+          sponsorRequestId: sponsor.id,
+          scope: chosen.scope,
+          access: requireMovieChoiceAccess(options.movieAccess ?? {}),
+        });
   const attempt = await tx.acquisitionAttempt.create({
     data: {
+      ...choice,
       releaseId,
       sponsorRequestId: sponsor.id,
       mediaIds,
@@ -243,6 +273,25 @@ async function reserveLockedCandidate(
   return attempt.id;
 }
 
+function reservationTargetCurrent(
+  intent: {
+    generation: number;
+    automationEpoch: number;
+    desiredPresence: boolean;
+    monitoring: boolean;
+    profileId: string | null;
+  },
+  expected: { generation: number; epoch: number; profileId: string },
+) {
+  return (
+    intent.generation === expected.generation &&
+    intent.automationEpoch === expected.epoch &&
+    intent.desiredPresence &&
+    intent.monitoring &&
+    intent.profileId === expected.profileId
+  );
+}
+
 async function reservationIdentity(
   tx: Prisma.TransactionClient,
   context: MediaAutomationContext,
@@ -272,6 +321,12 @@ export async function adoptReservation(
     include: { attempt: true },
   });
   if (snapshot === null) return null;
+  const recorded = ["imported", "submitting", "submission_unknown"].includes(
+    snapshot.attempt.state,
+  );
+  const movieAccess = recorded
+    ? undefined
+    : await networkMovieAccess(context, snapshot.attempt.mediaIds);
   return serializable(context.db, async (tx) => {
     await lockAcquisitionMedia(tx, snapshot.attempt.mediaIds);
     await assertNoPublicationCompensationFence(tx, {
@@ -306,10 +361,16 @@ export async function adoptReservation(
       attemptId: null,
       reason: "existing_acquisition",
     };
+    if (
+      !["imported", "submitting", "submission_unknown"].includes(
+        reservation.attempt.state,
+      )
+    )
+      await assertAttemptMovieChoice(tx, reservation.attemptId, movieAccess);
     const identity = await assertAttemptIdentity(
       tx,
       reservation.attempt,
-      context.serverMachineId,
+      { serverMachineId: context.serverMachineId, movieAccess },
       "resume_recorded_submission",
     );
     const rawAttributes = {

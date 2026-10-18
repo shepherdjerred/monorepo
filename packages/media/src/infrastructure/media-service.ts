@@ -28,6 +28,10 @@ import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { currentSubtitlePolicies, policyStatus } from "./subtitle-policy.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
 import { readDefaultCommandContext } from "./editions/command-context.ts";
+import {
+  readMovieEditionContext,
+  readMovieEditionRequests,
+} from "./movie-editions/view.ts";
 
 export class PrismaMediaApplication
   extends PrismaMediaCommands
@@ -39,10 +43,49 @@ export class PrismaMediaApplication
       visibilitySections?: VisibilitySections;
     },
   ) {
-    super(db, settings);
+    super(db, {
+      ...settings,
+      sections: settings.visibilitySections ?? settings.sections,
+      movieSectionId:
+        settings.movieSectionId ??
+        settings.visibilitySections?.movie ??
+        settings.sections?.movie,
+    });
     this.visibilitySections = settings.visibilitySections;
   }
   private readonly visibilitySections: VisibilitySections | undefined;
+
+  async getMovieEditionContext(
+    actor: MediaActor,
+    mediaId: string,
+    subjectUserId: string,
+  ) {
+    const access = await this.configuredMovieChoiceAccess();
+    return this.db.$transaction(
+      (tx) =>
+        readMovieEditionContext(tx, actor, {
+          mediaId,
+          subjectUserId,
+          access,
+        }),
+      { isolationLevel: "RepeatableRead" },
+    );
+  }
+
+  async listMovieEditionRequests(
+    actor: MediaActor,
+    input: { subjectUserId: string; cursor: string | null },
+  ) {
+    const access = await this.configuredMovieChoiceAccess();
+    return this.db.$transaction(
+      (tx) =>
+        readMovieEditionRequests(tx, actor, {
+          ...input,
+          access,
+        }),
+      { isolationLevel: "RepeatableRead" },
+    );
+  }
 
   getDefaultCommandContext(actor: MediaActor, mediaId: string) {
     return this.db.$transaction(
@@ -67,6 +110,10 @@ export class PrismaMediaApplication
   }
 
   async getMedia(actor: MediaActor, mediaId: string) {
+    const movieChoiceAccess =
+      this.settings.movieAccess === undefined
+        ? undefined
+        : await this.movieChoiceAccessForMedia(mediaId);
     return this.db.$transaction(async (tx) => {
       const reader = await visibilityReader(tx, actor, {
         serverMachineId: this.settings.serverMachineId,
@@ -183,6 +230,8 @@ export class PrismaMediaApplication
           owner: reader.owner,
           epoch: runtime.recoveryEpoch,
           serverMachineId: this.settings.serverMachineId,
+          movieSectionId: this.settings.movieSectionId,
+          movieChoiceAccess,
           visible: reader.visible,
         }),
         subtitlePolicies: policies,
@@ -364,6 +413,7 @@ export class PrismaMediaApplication
     releaseId: string,
     input: IdentityPreviewInput,
   ) {
+    const movieChoiceAccess = await this.movieChoiceAccessForMedia(mediaId);
     return this.db.$transaction(
       async (tx) => {
         await lockCanonicalMedia(tx, input.mediaIds);
@@ -375,6 +425,7 @@ export class PrismaMediaApplication
           mediaId,
           releaseId,
           ...this.settings,
+          movieChoiceAccess,
         });
       },
       { isolationLevel: "Serializable" },

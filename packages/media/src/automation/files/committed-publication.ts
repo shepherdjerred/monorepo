@@ -77,7 +77,9 @@ export async function resumeCommittedPublication(input: {
       if (!(await context.enabled.acquisition()))
         throw new FileGuardError("acquisition_disabled");
       // Checks adopted intent/reservation generations, never rewrites the physical-effect snapshot.
-      await assertAcquisition(tx, attemptId, context.serverMachineId);
+      await assertAcquisition(tx, attemptId, {
+        serverMachineId: context.serverMachineId,
+      });
       for (const entry of plan) {
         await assertCommittedAsset({
           tx,

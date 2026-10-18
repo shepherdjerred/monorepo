@@ -12,6 +12,10 @@ export async function verifyVisibilityHttp(
   try {
     const f = await visibilityFixture(cluster.database);
     await f.publish();
+    const before = {
+      outbox: await f.db.outboxCommand.findMany({ orderBy: { id: "asc" } }),
+      operations: await f.db.operation.findMany({ orderBy: { id: "asc" } }),
+    };
     dependencies.media = f.app;
     dependencies.auth.authenticate = () =>
       Promise.resolve({ actor: f.owner, csrfHash: "csrf-hash" });
@@ -52,7 +56,10 @@ export async function verifyVisibilityHttp(
     const denied = await app.request(url, { headers });
     expect(denied.status).toBe(403);
     expect(await denied.text()).not.toContain(f.media.title);
-    expect(await f.db.outboxCommand.count()).toBe(0);
+    expect({
+      outbox: await f.db.outboxCommand.findMany({ orderBy: { id: "asc" } }),
+      operations: await f.db.operation.findMany({ orderBy: { id: "asc" } }),
+    }).toEqual(before);
   } finally {
     await cluster.close();
   }

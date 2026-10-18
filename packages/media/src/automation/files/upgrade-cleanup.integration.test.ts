@@ -9,6 +9,8 @@ import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
+import { fileMovieAccess } from "#automation/editions/access.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const directories: string[] = [];
@@ -264,21 +266,44 @@ test.each(["epoch", "recovery", "ownership", "coverage"] as const)(
         },
         data: { current: false },
       });
-    if (change === "recovery")
+    if (change === "recovery") {
+      const movieAccess = await fileMovieAccess(f.context, [f.media.id]);
+      if (movieAccess === undefined)
+        throw new Error("Movie cleanup fixture access missing");
+      const authority = await captureMovieAttemptChoice(db, {
+        sponsorRequestId: f.request.id,
+        scope: {
+          rootMediaId: f.media.id,
+          mediaId: f.media.id,
+          edition: "default",
+        },
+        access: movieAccess,
+      });
       await db.acquisitionAttempt.create({
         data: {
+          ...authority,
           releaseId: f.acquired.attempt.releaseId,
           sponsorRequestId: f.request.id,
           operationId: crypto.randomUUID(),
           mediaIds: [f.media.id],
-          generations: { [f.media.id]: 0 },
+          generations: {
+            [f.media.id]:
+              authority.movieEditionAuthority.targetGenerationAtCapture,
+          },
+          recoveryEpoch: f.acquired.attempt.recoveryEpoch,
           state: "failed",
           filePlan: [{ previousAssetId: f.old.id }],
         },
       });
+    }
     expect(
       await f.activities.cleanupSupersededMediaFile(f.input),
-    ).toMatchObject({ status: "protected" });
+    ).toMatchObject({
+      status: "protected",
+      ...(change === "recovery"
+        ? { reason: "cleanup_recovery_dependency" }
+        : {}),
+    });
     expect(await readFile(f.old.path, "utf8")).toBe(f.original.content);
   },
 );

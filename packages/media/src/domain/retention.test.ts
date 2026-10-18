@@ -16,6 +16,7 @@ const requester: RetentionRequester = {
   observedAt: now,
   warningAcceptedAt: now - 7 * DAY_MS,
   warningFailed: false,
+  fulfillment: { status: "not_applicable", reason: null },
 };
 const input: RetentionInput = {
   now,
@@ -30,6 +31,31 @@ const input: RetentionInput = {
 };
 
 describe("watched retention", () => {
+  it.each([false, true])(
+    "protects pending movie demand before owner filtering (owner=%s)",
+    (owner) => {
+      expect(
+        evaluateRetention({
+          ...input,
+          requesters: [
+            requester,
+            {
+              ...requester,
+              userId: "pending",
+              owner,
+              fulfillment: {
+                status: "pending_choice",
+                reason: "movie_edition_choice_required",
+              },
+            },
+          ],
+        }),
+      ).toEqual({
+        state: "protected",
+        reason: "movie_edition_choice_required",
+      });
+    },
+  );
   it("protects owner-only and unclaimed media instead of using vacuous every", () => {
     expect(evaluateRetention({ ...input, requesters: [] })).toEqual({
       state: "protected",

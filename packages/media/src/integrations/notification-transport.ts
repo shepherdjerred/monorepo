@@ -16,6 +16,7 @@ type Message = {
   text: string;
   idempotencyKey: string;
 };
+export type NotificationMutation = { beforeMutation: () => void };
 export type NotificationTransportConfig = {
   postal?: {
     baseUrl: string;
@@ -29,11 +30,15 @@ export type NotificationTransportConfig = {
 export function createNotificationTransport(
   config: NotificationTransportConfig,
   transport?: FetchTransport,
-): (message: Message) => Promise<{ receipt: string }> {
-  return async (message) => {
+): (
+  message: Message,
+  mutation?: NotificationMutation,
+) => Promise<{ receipt: string }> {
+  return async (message, mutation) => {
     if (message.channel === "email") {
       if (config.postal === undefined)
         throw new IntegrationError("postal", "interaction-required");
+      mutation?.beforeMutation();
       const response = await request(
         transport ?? postalHttp,
         "postal",
@@ -81,6 +86,7 @@ export function createNotificationTransport(
       "Content-Type": "application/json",
       Authorization: `Bot ${config.discord.botToken}`,
     };
+    mutation?.beforeMutation();
     const channel =
       message.channel === "discord_shared"
         ? {
@@ -118,6 +124,7 @@ export function createNotificationTransport(
     const content = `${message.subject}\n${message.text}`;
     if (content.length > 2000)
       throw new IntegrationError("discord", "interaction-required");
+    mutation?.beforeMutation();
     const result = z.object({ id: z.string().regex(/^\d+$/u) }).parse(
       await json(
         await request(

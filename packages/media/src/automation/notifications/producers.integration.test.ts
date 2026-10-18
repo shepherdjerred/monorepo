@@ -11,6 +11,7 @@ import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { rm } from "node:fs/promises";
 import { FilePlanSchema } from "#automation/files/types.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 const { database, fixture, context } = automationTestHarness();
 
@@ -61,6 +62,9 @@ test("actual committed import Retry publishes once using adopted authority witho
     });
     if (retry.operationId === undefined)
       throw new Error("Retry operation missing");
+    const retryTarget = await db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: defaultScope(f.media.id) },
+    });
     const ctx = context(async (url) => {
       if (url.pathname.endsWith("/library/sections"))
         return Response.json({
@@ -90,7 +94,7 @@ test("actual committed import Retry publishes once using adopted authority witho
       await createAcquisitionActivities(ctx).reconcileMediaIntent({
         operationId: retry.operationId,
         mediaId: f.media.id,
-        generation: 1,
+        generation: retryTarget.generation,
       }),
     ).toMatchObject({ status: "acquire", attemptId: acquired.attempt.id });
     const input = { ...acquired.input, operationId: retry.operationId };
@@ -111,14 +115,22 @@ test("actual committed import Retry publishes once using adopted authority witho
       where: { id: acquired.attempt.id },
     });
     expect(attempt.filePlan).toEqual(imported.filePlan);
-    expect(attempt.generations).toEqual({ [f.media.id]: 1 });
+    expect(attempt.generations).toEqual({
+      [f.media.id]: retryTarget.generation,
+    });
     const deliveries = await db.notificationDelivery.findMany({
       where: { userId: f.user.id },
       include: { event: true },
     });
     expect(deliveries).toHaveLength(1);
     expect(deliveries[0]?.event.payload).toMatchObject({
-      items: [{ mediaId: f.media.id, generation: 1, assetId: asset.id }],
+      items: [
+        {
+          mediaId: f.media.id,
+          generation: retryTarget.generation,
+          assetId: asset.id,
+        },
+      ],
     });
   } finally {
     await rm(f.directory, { recursive: true, force: true });

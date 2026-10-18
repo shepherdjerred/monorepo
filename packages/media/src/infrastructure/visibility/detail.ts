@@ -5,6 +5,8 @@ import { torrentVisibility } from "./torrent.ts";
 import { visibilityAncestry, type VisibleMedia } from "./access.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
+import { visibleMovieRequests } from "./movie-requests.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 
 function hasPlayableBinding(item: MediaItem): boolean {
   if (["importing", "quarantined", "removed"].includes(item.availability))
@@ -28,6 +30,8 @@ export async function mediaVisibility(
     owner: boolean;
     epoch: number;
     serverMachineId?: string | undefined;
+    movieSectionId?: string | undefined;
+    movieChoiceAccess?: MovieChoiceAccess | undefined;
     visible: (item: VisibleMedia) => boolean;
   },
 ) {
@@ -146,7 +150,15 @@ export async function mediaVisibility(
     orderBy: { assetId: "asc" },
   });
   const current = collection ? null : playable[0]?.asset;
+  const movieRequests = await visibleMovieRequests(tx, {
+    media: input.media,
+    userId: input.userId,
+    serverMachineId: input.serverMachineId,
+    movieSectionId: input.movieSectionId,
+    movieChoiceAccess: input.movieChoiceAccess,
+  });
   return MediaVisibilitySchema.parse({
+    movieRequests,
     playback: {
       scope: collection ? "collection" : "title",
       playable: playable.length > 0,

@@ -8,30 +8,13 @@ import { createSeedingActivities } from "#automation/seeding.ts";
 import { queueLifecycleNotifications } from "./events.ts";
 import { renderMediaMetrics } from "#infrastructure/metrics.ts";
 import { currentSubtitleWork } from "#automation/subtitles/authority.ts";
+import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 
 const h = automationTestHarness();
 async function setup() {
   const f = await h.fixture();
   const db = h.database();
-  await db.mediaEditionDefinition.create({
-    data: {
-      rootMediaId: f.media.id,
-      key: "extended",
-      policy: "named",
-      pathLabel: "Extended",
-      plexLabel: "Extended",
-      displayLabel: "Extended",
-    },
-  });
-  await db.mediaIntent.create({
-    data: {
-      mediaId: f.media.id,
-      edition: "extended",
-      editionRootId: f.media.id,
-      generation: 77,
-      automationEpoch: 0,
-    },
-  });
   const namedUser = await db.mediaUser.create({
     data: {
       plexAccountId: crypto.randomUUID(),
@@ -41,8 +24,18 @@ async function setup() {
       notificationPreference: { create: { emailEnabled: true } },
     },
   });
-  await db.mediaRequest.create({
-    data: { mediaId: f.media.id, edition: "extended", userId: namedUser.id },
+  await grantTestRequesterAccess(db, namedUser.id, "fixture-server");
+  await chooseTestMovieEdition(db, {
+    actor: { ...namedUser, role: "member" },
+    mediaId: f.media.id,
+    edition: "extended_cut",
+    access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+  });
+  await db.mediaIntent.update({
+    where: {
+      mediaId_edition: { mediaId: f.media.id, edition: "extended_cut" },
+    },
+    data: { generation: 77 },
   });
   await db.mediaUser.update({
     where: { id: f.user.id },
@@ -69,19 +62,19 @@ async function setup() {
       ownershipEpoch: 0,
       state: "published",
       plexPublishedAt: new Date(),
-      properties: {},
+      properties: { releaseId: f.release.id },
       coverage: { create: { mediaId: f.media.id, current: true } },
     },
   });
   return { ...f, db, namedUser, asset };
 }
 
-test("default watch, retention and notification cohorts exclude named claims and preserve their state", async () => {
+test("default watch and notifications stay isolated while pending named demand protects automatic retention", async () => {
   const f = await setup();
   const namedWatch = await f.db.watchState.create({
     data: {
       mediaId: f.media.id,
-      edition: "extended",
+      edition: "extended_cut",
       userId: f.user.id,
       watched: false,
       observedAt: new Date("2000-01-01T00:00:00Z"),
@@ -91,7 +84,7 @@ test("default watch, retention and notification cohorts exclude named claims and
   await f.db.retentionHold.create({
     data: {
       mediaId: f.media.id,
-      edition: "extended",
+      edition: "extended_cut",
       userId: f.namedUser.id,
       isPin: true,
     },
@@ -99,7 +92,7 @@ test("default watch, retention and notification cohorts exclude named claims and
   const namedDecision = await f.db.retentionDecision.create({
     data: {
       mediaId: f.media.id,
-      edition: "extended",
+      edition: "extended_cut",
       generation: 77,
       state: "warning_pending",
       evidence: {},
@@ -138,13 +131,16 @@ test("default watch, retention and notification cohorts exclude named claims and
   });
   expect(
     await createRetentionActivities(ctx).evaluateMediaRetention(f.input),
-  ).toMatchObject({ status: "warning" });
+  ).toMatchObject({
+    status: "protected",
+    reason: "edition_acquisition_not_ready",
+  });
   expect(
     await f.db.watchState.findUnique({
       where: {
         userId_mediaId_edition: {
           mediaId: f.media.id,
-          edition: "extended",
+          edition: "extended_cut",
           userId: f.user.id,
         },
       },
@@ -203,17 +199,19 @@ test("default watch, retention and notification cohorts exclude named claims and
     }),
   ).toEqual(before);
   await f.db.mediaIntent.update({
-    where: { mediaId_edition: { mediaId: f.media.id, edition: "extended" } },
+    where: {
+      mediaId_edition: { mediaId: f.media.id, edition: "extended_cut" },
+    },
     data: { generation: { increment: 1 } },
   });
   const afterNamedChange = await currentSubtitleWork(f.db, f.asset.id, 0);
   expect(afterNamedChange.authority).toBe(subtitleWork.authority);
 });
 
-test("named attempts and sidecars reject before Plex or provider effects; shared source deletion sees terminal named dependencies", async () => {
+test("fresh named attempts are rejected and existing named artifacts protect shared source deletion even when terminal", async () => {
   const f = await setup();
   const request = await f.db.mediaRequest.findFirstOrThrow({
-    where: { mediaId: f.media.id, edition: "extended" },
+    where: { mediaId: f.media.id, edition: "extended_cut" },
   });
   const torrent = await f.db.torrent.create({
     data: {
@@ -225,23 +223,31 @@ test("named attempts and sidecars reject before Plex or provider effects; shared
       state: "seeding",
     },
   });
-  const attempt = await f.db.acquisitionAttempt.create({
-    data: {
-      edition: "extended",
-      operationId: f.input.operationId,
-      releaseId: f.release.id,
-      sponsorRequestId: request.id,
-      mediaIds: [f.media.id],
-      generations: { [f.media.id]: 77 },
-      state: "completed",
-      torrentId: torrent.id,
-      recoveryEpoch: 0,
-    },
-  });
+  await expect(
+    f.db.acquisitionAttempt.create({
+      data: {
+        edition: "extended_cut",
+        operationId: f.input.operationId,
+        releaseId: f.release.id,
+        sponsorRequestId: request.id,
+        mediaIds: [f.media.id],
+        generations: { [f.media.id]: 77 },
+        state: "completed",
+        torrentId: torrent.id,
+        recoveryEpoch: 0,
+      },
+    }),
+  ).rejects.toThrow(
+    "New movie acquisition requires exact birth choice authority",
+  );
+  expect(
+    await f.db.acquisitionAttempt.count({ where: { torrentId: torrent.id } }),
+  ).toBe(0);
   const asset = await f.db.libraryAsset.create({
     data: {
-      edition: "extended",
+      edition: "extended_cut",
       editionRootId: f.media.id,
+      torrentId: torrent.id,
       path: `/library/${f.media.id}-extended.mkv`,
       sizeBytes: 10,
       checksum: "b".repeat(64),
@@ -258,12 +264,6 @@ test("named attempts and sidecars reject before Plex or provider effects; shared
     throw new Error("Unexpected external effect");
   });
   await expect(
-    createPublicationActivities(ctx).publishMediaToPlex({
-      operationId: f.input.operationId,
-      attemptId: attempt.id,
-    }),
-  ).rejects.toThrow("edition_not_available");
-  await expect(
     createSubtitleActivities(ctx).findMediaSubtitles({
       operationId: f.input.operationId,
       assetId: asset.id,
@@ -273,7 +273,7 @@ test("named attempts and sidecars reject before Plex or provider effects; shared
   const decision = await f.db.retentionDecision.create({
     data: {
       mediaId: f.media.id,
-      edition: "extended",
+      edition: "extended_cut",
       generation: 77,
       state: "restored",
       evidence: {},
@@ -298,6 +298,10 @@ test("named attempts and sidecars reject before Plex or provider effects; shared
   await expect(
     createPublicationActivities(ctx).publishRestoredMedia(f.input),
   ).rejects.toThrow("edition_not_available");
+  await f.db.libraryAsset.update({
+    where: { id: asset.id },
+    data: { state: "purged" },
+  });
   expect(
     await createSeedingActivities(ctx).removeMediaTorrent({
       operationId: f.input.operationId,

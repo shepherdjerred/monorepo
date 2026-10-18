@@ -147,11 +147,17 @@ test.each(["keep", "unwatched", "cancelled"] as const)(
             where: { mediaId: f.media.id },
             data: { watched: false },
           });
-        if (change === "cancelled")
-          await db.mediaRequest.updateMany({
-            where: { mediaId: f.media.id },
-            data: { active: false },
+        if (change === "cancelled") {
+          const currentRequest = await db.mediaRequest.findUniqueOrThrow({
+            where: { id: f.request.id },
           });
+          await new PrismaMediaApplication(db, { keepDays: 30 }).cancelRequest(
+            { ...f.user, role: "member" },
+            crypto.randomUUID(),
+            currentRequest.id,
+            currentRequest.version,
+          );
+        }
         const timestamp = f.context.now?.();
         if (timestamp === undefined) throw new Error("Fixture clock missing");
         const evidence = z

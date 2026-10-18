@@ -26,7 +26,7 @@ export class ApiError extends Error {
 export async function readApi<T>(
   path: string,
   schema: z.ZodType<T>,
-  version: 1 | 2 = 1,
+  version: 1 | 2 | 3 = 1,
 ): Promise<T> {
   const response = await fetch(`/api/v${String(version)}${path}`, {
     credentials: "same-origin",
@@ -113,13 +113,17 @@ export async function writeApi<T>(input: {
   method?: "POST" | "PATCH" | "PUT" | "DELETE";
   /** Secret-bearing forms retain retry identity only in memory, never browser storage. */
   sensitive?: boolean;
-  version?: 1 | 2;
+  version?: 1 | 2 | 3;
 }): Promise<T> {
   const storage = input.sensitive === true ? transientStorage : sessionStorage;
   const command = await commandKey(
     storage,
     input.actorId,
-    input.version === 2 ? `/api/v2${input.path}` : input.path,
+    input.version === 3
+      ? `/api/v3${input.path}`
+      : input.version === 2
+        ? `/api/v2${input.path}`
+        : input.path,
     input.body,
   );
   const response = await fetch(

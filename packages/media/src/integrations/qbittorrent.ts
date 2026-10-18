@@ -280,6 +280,7 @@ export class QbittorrentClient {
       savePath: string;
     },
     signal?: AbortSignal,
+    beforeMutation?: () => void,
   ): Promise<"accepted" | "already-present"> {
     const tag = submissionTags(input);
     HashSchema.parse(input.hash);
@@ -293,6 +294,8 @@ export class QbittorrentClient {
       });
       return "already-present";
     }
+    signal?.throwIfAborted();
+    beforeMutation?.();
     const response = await this.call(
       "torrents/add",
       "POST",
@@ -323,6 +326,7 @@ export class QbittorrentClient {
       savePath: string;
     },
     signal?: AbortSignal,
+    beforeMutation?: () => void,
   ): Promise<"accepted" | "already-present"> {
     const tag = submissionTags(input);
     HashSchema.parse(input.hash);
@@ -355,6 +359,8 @@ export class QbittorrentClient {
     form.set("inactiveSeedingTimeLimit", "-1");
     form.set("shareLimitAction", "Stop");
     const url = endpoint(this.config.baseUrl, "api/v2/torrents/add");
+    signal?.throwIfAborted();
+    beforeMutation?.();
     const response = await request(this.transport, "qbittorrent", url, {
       method: "POST",
       headers: { Cookie: this.cookie, Origin: url.origin },

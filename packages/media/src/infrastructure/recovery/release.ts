@@ -99,6 +99,8 @@ async function applyRespondent(
     if (!scope.media.some((media) => media.id === mediaId))
       throw recoveryConflict("Response includes unreviewed media");
     const wants = declaration.intent !== "no_longer_request";
+    const item = scope.media.find((media) => media.id === mediaId);
+    const clearsMovieChoice = !wants && item?.kind === "movie";
     await db.mediaRequest.upsert({
       where: {
         userId_mediaId_edition: {
@@ -119,6 +121,12 @@ async function applyRespondent(
         direct: true,
         excluded: !wants,
         version: { increment: 1 },
+        ...(clearsMovieChoice
+          ? {
+              movieEditionChoiceId: null,
+              movieEditionChoiceRevision: { increment: 1 },
+            }
+          : {}),
       },
     });
     if (declaration.intent === "keep")

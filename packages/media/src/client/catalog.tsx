@@ -10,6 +10,7 @@ import { readTarget, writeTarget } from "./target-controls/api.ts";
 import type { TargetSubmission } from "./target-controls/mutation.ts";
 import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 import type { MediaUser } from "#shared/contract.ts";
+import { MovieRequestForm } from "./movie-editions/request.tsx";
 import { ApiError, queryClient, readApi, writeApi } from "./api.ts";
 import {
   EmptyState,
@@ -188,11 +189,19 @@ export function CatalogPage({ user }: { user: MediaUser }) {
           <p className="muted">
             We’ll notify you when it’s ready to watch in Plex.
           </p>
-          <RequestForm
-            key={`${item.kind}:${String(item.externalId)}`}
-            user={user}
-            item={item}
-          />
+          {item.kind === "movie" ? (
+            <MovieRequestForm
+              key={item.externalId}
+              user={user}
+              target={{ externalId: item.externalId }}
+            />
+          ) : (
+            <RequestForm
+              key={`${item.kind}:${String(item.externalId)}`}
+              user={user}
+              item={item}
+            />
+          )}
           {item.kind === "series" && <ChooseEpisodes user={user} item={item} />}
         </section>
         <section className="panel">

@@ -10,8 +10,28 @@ import type { DefaultTargetView } from "#shared/editions/target-view.ts";
 import { invalidateTarget } from "./target-controls/api.ts";
 import { useTargetCommand } from "./target-controls/mutation.ts";
 import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
+import { MovieRequestForm } from "./movie-editions/request.tsx";
 
 export function RequestTitle({
+  user,
+  context,
+  kind,
+}: {
+  user: MediaUser;
+  context: DefaultTargetView;
+  kind: string;
+}) {
+  if (kind === "movie")
+    return (
+      <MovieRequestForm
+        user={user}
+        target={{ mediaId: context.scope.mediaId }}
+      />
+    );
+  return <TelevisionRequestTitle user={user} context={context} kind={kind} />;
+}
+
+function TelevisionRequestTitle({
   user,
   context,
   kind,

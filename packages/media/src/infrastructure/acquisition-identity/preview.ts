@@ -23,6 +23,11 @@ import {
 } from "./snapshot.ts";
 import { authorizeRenewal } from "#infrastructure/action-guards.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
+import {
+  requireMovieChoiceAccess,
+  type MovieChoiceAccess,
+} from "#infrastructure/movie-editions/access.ts";
 
 export async function buildIdentityPreview(
   tx: Prisma.TransactionClient,
@@ -31,6 +36,8 @@ export async function buildIdentityPreview(
     mediaId: string;
     releaseId: string;
     serverMachineId?: string;
+    sections?: { movie: string; series: string } | undefined;
+    movieChoiceAccess?: MovieChoiceAccess | undefined;
   },
 ) {
   const ids = [...input.mediaIds].sort();
@@ -85,10 +92,7 @@ export async function buildIdentityPreview(
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
-  const sponsor = await tx.mediaRequest.findFirst({
-    where: { mediaId: input.mediaId, ...effectiveRequestWhere },
-    orderBy: { createdAt: "asc" },
-  });
+  const { chosen, sponsor } = await previewSponsor(tx, { ...input, canonical });
   const rows = await tx.mediaItem.findMany({
     where: { id: { in: ids } },
     include: {
@@ -110,12 +114,12 @@ export async function buildIdentityPreview(
     },
     canonical,
     coverage: ids,
-    sponsorRequestId: sponsor?.id ?? actor.id,
-    sponsorAuthority: {
-      userId: sponsor?.userId ?? actor.id,
+    ...previewSponsorIdentity({
+      sponsor,
+      chosen,
       actorId: actor.id,
-      serverMachineId: z.string().min(1).parse(input.serverMachineId),
-    },
+      serverMachineId: input.serverMachineId,
+    }),
     birthEpoch: runtime.recoveryEpoch,
   };
   const blockers = previewQuality(rows, input.mediaId, release, proposed);
@@ -124,6 +128,8 @@ export async function buildIdentityPreview(
     mediaIds: ids,
   });
   if (sponsor === null) blockers.add("request_required");
+  if (chosen === undefined && canonical.kind === "movie")
+    blockers.add("movie_edition_choice_required");
   const unsigned = {
     schemaVersion: 1 as const,
     releaseId: release.id,
@@ -168,6 +174,58 @@ export async function buildIdentityPreview(
       mappingVersion: mapping.version,
     }),
   });
+}
+
+function previewSponsorIdentity(input: {
+  sponsor: { id: string; userId: string } | null;
+  chosen: { actor: { id: string } } | undefined;
+  actorId: string;
+  serverMachineId: string | undefined;
+}) {
+  return {
+    sponsorRequestId: input.sponsor?.id ?? input.actorId,
+    sponsorAuthority: {
+      userId: input.sponsor?.userId ?? input.actorId,
+      actorId:
+        input.chosen === undefined ? input.actorId : input.chosen.actor.id,
+      serverMachineId: z.string().min(1).parse(input.serverMachineId),
+    },
+  };
+}
+
+async function previewSponsor(
+  tx: Prisma.TransactionClient,
+  input: {
+    canonical: AcquisitionIdentitySnapshot["canonical"];
+    mediaId: string;
+    movieChoiceAccess?: MovieChoiceAccess | undefined;
+    serverMachineId?: string;
+    sections?: { movie: string; series: string } | undefined;
+  },
+) {
+  if (input.canonical.kind !== "movie")
+    return {
+      chosen: undefined,
+      sponsor: await tx.mediaRequest.findFirst({
+        where: { mediaId: input.mediaId, ...effectiveRequestWhere },
+        orderBy: { createdAt: "asc" },
+      }),
+    };
+  const sponsors = await eligibleAcquisitionSponsors(tx, {
+    scope: {
+      rootMediaId: input.canonical.mediaId,
+      mediaId: input.canonical.mediaId,
+      edition: "default",
+    },
+    access: requireMovieChoiceAccess(
+      input.movieChoiceAccess ?? {
+        serverMachineId: input.serverMachineId,
+        movieSectionId: input.sections?.movie,
+      },
+    ),
+  });
+  const chosen = sponsors[0];
+  return { chosen, sponsor: chosen?.request ?? null };
 }
 function permitsConfirmation(
   identityReasons: readonly string[],

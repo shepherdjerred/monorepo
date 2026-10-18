@@ -9,6 +9,7 @@ import { type FetchTransport } from "#integrations/http.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { grantTestLease } from "#testing/authority.ts";
+import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
@@ -81,7 +82,10 @@ export function automationTestHarness() {
     };
   }
 
-  async function fixture(ratingKey = "123") {
+  async function fixture(
+    ratingKey = "123",
+    options: { chooseMovieEdition?: boolean; kind?: "movie" | "episode" } = {},
+  ) {
     const db = cluster.database;
     await grantTestLease(db);
     await db.mediaRuntimeState.update({
@@ -102,12 +106,24 @@ export function automationTestHarness() {
         verifiedAt: new Date(),
       },
     });
+    const series =
+      options.kind === "episode"
+        ? await db.mediaItem.create({
+            data: { kind: "series", title: "Example series" },
+          })
+        : null;
     const media = await db.mediaItem.create({
       data: {
-        kind: "movie",
+        kind: options.kind ?? "movie",
+        ...(series === null
+          ? {}
+          : { parentId: series.id, seasonNumber: 1, episodeNumber: 1 }),
         title: "Example",
         year: 2020,
-        externalIds: { plexRatingKey: ratingKey, plexSectionId: "1" },
+        externalIds: {
+          plexRatingKey: ratingKey,
+          plexSectionId: series === null ? "1" : "2",
+        },
       },
     });
     const rules = {
@@ -135,7 +151,10 @@ export function automationTestHarness() {
       await tx.mediaIntent.update({
         where: targetWhere(defaultScope(media.id)),
         data: {
-          generation: 1,
+          generation:
+            media.kind !== "movie" || options.chooseMovieEdition === false
+              ? 1
+              : 0,
           profileId: profile.id,
           automationEpoch: 0,
           desiredPresence: true,
@@ -145,6 +164,15 @@ export function automationTestHarness() {
     });
     await db.mediaRequest.create({
       data: { userId: user.id, mediaId: media.id },
+    });
+    if (media.kind === "movie" && options.chooseMovieEdition !== false)
+      await chooseTestMovieEdition(db, {
+        actor: { ...user, role: "member" },
+        mediaId: media.id,
+        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      });
+    const currentTarget = await db.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(media.id)),
     });
     const source = {
       providerId: "knaben",
@@ -185,16 +213,25 @@ export function automationTestHarness() {
         key: crypto.randomUUID(),
         kind: "acquire_release",
         targetId: media.id,
-        payload: { mediaId: media.id, generation: 1, releaseId: release.id },
+        payload: {
+          mediaId: media.id,
+          generation: currentTarget.generation,
+          releaseId: release.id,
+        },
       }),
     );
     return {
       user,
       profile,
       media,
+      series,
       release,
       source,
-      input: { operationId, mediaId: media.id, generation: 1 },
+      input: {
+        operationId,
+        mediaId: media.id,
+        generation: currentTarget.generation,
+      },
     };
   }
 

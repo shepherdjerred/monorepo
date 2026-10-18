@@ -1,5 +1,39 @@
 import { lstat } from "node:fs/promises";
-import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import {
+  FileOperationConflict,
+  IdSchema,
+  DigestSchema,
+} from "#filesystem/operations-types.ts";
+
+export type RollbackFile = {
+  operationId: string;
+  rollbackOperationId: string;
+  libraryPath: string;
+  sha256: string;
+  previousSha256: string;
+};
+
+export type ScopedMoveFile = {
+  operationId: string;
+  kind: "quarantine" | "restore";
+  source: string;
+  target: string;
+  sha256: string;
+};
+
+export function validateRollbackFile(input: RollbackFile) {
+  IdSchema.parse(input.operationId);
+  IdSchema.parse(input.rollbackOperationId);
+  DigestSchema.parse(input.sha256);
+  DigestSchema.parse(input.previousSha256);
+  if (
+    input.operationId === input.rollbackOperationId ||
+    input.sha256 === input.previousSha256
+  )
+    throw new FileOperationConflict(
+      "Rollback must identify a distinct version and operation",
+    );
+}
 
 export async function assertSameMoveIdentity(
   source: string,

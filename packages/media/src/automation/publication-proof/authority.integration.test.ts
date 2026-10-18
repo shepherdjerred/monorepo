@@ -8,6 +8,7 @@ import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { mappedPublicationFixture } from "./test-fixture.ts";
+import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const directories: string[] = [];
@@ -68,27 +69,32 @@ test.each(["generation", "claim"])(
         where: { attemptId: f.attempt.id },
       });
       expect(transition.outcome).toBeNull();
-      await db.$transaction(async (tx) => {
-        await lockDefaultScopes(tx, [defaultScope(f.media.id)], {
-          createMissing: false,
+      if (change === "claim") {
+        const request = await db.mediaRequest.findUniqueOrThrow({
+          where: { id: f.request.id },
         });
-        if (change === "generation")
+        await new PrismaMediaCommands(db, { keepDays: 30 }).cancelRequest(
+          { ...f.user, role: "member" },
+          crypto.randomUUID(),
+          request.id,
+          request.version,
+        );
+      } else
+        await db.$transaction(async (tx) => {
+          await lockDefaultScopes(tx, [defaultScope(f.media.id)], {
+            createMissing: false,
+          });
           await tx.mediaIntent.update({
             where: targetWhere(defaultScope(f.media.id)),
             data: { generation: { increment: 1 } },
           });
-        else
-          await tx.mediaRequest.update({
-            where: { id: f.request.id },
-            data: { active: false, version: { increment: 1 } },
-          });
-      });
+        });
       changed = true;
     };
     expect(await f.activities.promoteMediaFiles(f.acquired.input)).toEqual(
       change === "generation"
         ? { status: "obsolete", reason: "intent_obsolete" }
-        : { status: "blocked", reason: "acquisition_sponsor_changed" },
+        : { status: "blocked", reason: "movie_edition_choice_changed" },
     );
     expect(changed).toBe(true);
     await unpublished(f);

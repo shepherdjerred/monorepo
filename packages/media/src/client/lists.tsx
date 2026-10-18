@@ -36,6 +36,7 @@ import { DeliveryActions } from "./notification-actions.tsx";
 import { ProfileEditor } from "./profile-controls.tsx";
 import { PlexProfileAdministration } from "./plex-admin.tsx";
 import { NumberingAdministration } from "./numbering-admin.tsx";
+import { MovieRequests } from "./movie-editions/requests.tsx";
 
 export function RequestsPage({ user }: { user: MediaUser }) {
   const requests = useQuery({
@@ -52,42 +53,41 @@ export function RequestsPage({ user }: { user: MediaUser }) {
       </PageTitle>
       {requests.isPending && <Loading />}
       {requests.error !== null && <ErrorNotice error={requests.error} />}
-      {requests.data?.length === 0 && (
-        <EmptyState title="Your next favorite is waiting">
-          Search Discover to add your first film or series.{" "}
-          <Link to="/">Find something to watch →</Link>
-        </EmptyState>
-      )}
+      <MovieRequests user={user} />
       <div className="item-list">
-        {requests.data?.map((request) => (
-          <article className="request-row" key={request.id}>
-            <div className="item-symbol" aria-hidden="true">
-              {request.media.kind === "movie" ? "◈" : "▤"}
-            </div>
-            <div className="item-main">
-              <MediaLink id={request.mediaId} title={request.media.title} />
-              <p>
-                {humanize(request.media.kind)}
-                {request.media.year === null
-                  ? ""
-                  : ` · ${String(request.media.year)}`}
-                {request.subtitleLanguages.length > 0
-                  ? ` · ${request.subtitleLanguages.join(", ")} subtitles`
-                  : ""}
-              </p>
-              {request.media.catalogState === "pending" && (
-                <p className="helper">
-                  Episode details are loading; request coverage will update as
-                  they arrive.
+        {requests.data
+          ?.filter((request) => request.media.kind !== "movie")
+          .map((request) => (
+            <article className="request-row" key={request.id}>
+              <div className="item-symbol" aria-hidden="true">
+                {request.media.kind === "movie" ? "◈" : "▤"}
+              </div>
+              <div className="item-main">
+                <MediaLink id={request.mediaId} title={request.media.title} />
+                <p>
+                  {humanize(request.media.kind)}
+                  {request.media.year === null
+                    ? ""
+                    : ` · ${String(request.media.year)}`}
+                  {request.subtitleLanguages.length > 0
+                    ? ` · ${request.subtitleLanguages.join(", ")} subtitles`
+                    : ""}
                 </p>
-              )}
-            </div>
-            <Status
-              value={request.active ? request.media.availability : "cancelled"}
-            />
-            <RequestProtection user={user} request={request} />
-          </article>
-        ))}
+                {request.media.catalogState === "pending" && (
+                  <p className="helper">
+                    Episode details are loading; request coverage will update as
+                    they arrive.
+                  </p>
+                )}
+              </div>
+              <Status
+                value={
+                  request.active ? request.media.availability : "cancelled"
+                }
+              />
+              <RequestProtection user={user} request={request} />
+            </article>
+          ))}
       </div>
     </>
   );

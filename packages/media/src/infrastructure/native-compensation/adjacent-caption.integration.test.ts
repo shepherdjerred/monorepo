@@ -17,6 +17,7 @@ import {
 } from "./caption.test-support.ts";
 import { resolvePublicationTransitionAuthority } from "#infrastructure/publication-proof/authority.ts";
 import { PrismaNativeArchive } from "#infrastructure/native-archive/service.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 import {
   grantNativePredecessor,
   restoreNativeFixtureAgain,
@@ -54,6 +55,10 @@ test("a new caption after a native grant retains next-upgrade eligibility", asyn
     language: "zh-Hans",
   });
   const activities = createMediaFileActivities(f.file.context);
+  await chooseCurrentTestMovieEdition(db, {
+    requestId: f.file.request.id,
+    access: { serverMachineId: "server", movieSectionId: "1" },
+  });
   const acquired = await f.file.acquisition(
     "Actual native-granted caption successor",
   );
@@ -146,6 +151,10 @@ test("adjacent ordinary publication followed by a new installed caption remains 
   const { f } = fixture;
   const db = harness.database();
   const activities = createMediaFileActivities(f.file.context);
+  await chooseCurrentTestMovieEdition(db, {
+    requestId: f.file.request.id,
+    access: { serverMachineId: "server", movieSectionId: "1" },
+  });
   const d = await f.file.acquisition("Actual adjacent version D");
   expect(await activities.inspectAndStageMedia(d.input)).toEqual({
     status: "staged",

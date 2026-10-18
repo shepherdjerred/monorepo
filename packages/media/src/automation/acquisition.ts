@@ -23,6 +23,7 @@ import {
   adoptReservation,
 } from "./acquisition-reservation.ts";
 import { validAttempt, submit } from "./acquisition-submission.ts";
+import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 type AcquisitionActivities = Pick<
   MediaNetworkActivities,
   "reconcileMediaIntent" | "submitMediaTorrent" | "observeMediaAcquisition"
@@ -158,8 +159,14 @@ export function createAcquisitionActivities(
         where: { id: input.attemptId },
         include: { torrent: true },
       });
-      if (!(await validAttempt(context, attempt.id)))
-        return { status: "obsolete", reason: "intent_changed" };
+      try {
+        if (!(await validAttempt(context, attempt.id)))
+          return { status: "obsolete", reason: "intent_changed" };
+      } catch (error) {
+        if (error instanceof MovieChoiceProtection)
+          return { status: "blocked", reason: error.code };
+        throw error;
+      }
       if (attempt.state === "imported")
         return { status: "ready", reason: "resume_committed_publication" };
       if (attempt.torrent === null)

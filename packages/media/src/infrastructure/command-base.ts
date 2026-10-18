@@ -7,6 +7,10 @@ import { CommandResultSchema } from "#shared/api.ts";
 import { isRetryableTransaction } from "./locks.ts";
 import { routeNativeQuarantineOperation } from "./native-quarantine/continuation.ts";
 import { routeCompensationDemand } from "./native-compensation/routing.ts";
+import {
+  requireMovieChoiceAccess,
+  type MovieChoiceAccess,
+} from "./movie-editions/access.ts";
 type Transaction = Prisma.TransactionClient;
 type JsonResult = Prisma.InputJsonObject;
 function canonical(value: unknown): string {
@@ -22,6 +26,9 @@ function canonical(value: unknown): string {
 export type MediaCommandSettings = {
   keepDays: number;
   serverMachineId?: string;
+  movieSectionId?: string | undefined;
+  movieAccess?: (() => Promise<MovieChoiceAccess>) | undefined;
+  sections?: { movie: string; series: string } | undefined;
 };
 
 export class MediaCommandBase {
@@ -29,6 +36,24 @@ export class MediaCommandBase {
     private readonly database: Database,
     protected readonly settings: MediaCommandSettings,
   ) {}
+
+  protected async configuredMovieChoiceAccess(): Promise<MovieChoiceAccess> {
+    const configured =
+      this.settings.movieAccess === undefined
+        ? this.settings
+        : await this.settings.movieAccess();
+    return requireMovieChoiceAccess(configured);
+  }
+
+  protected async movieChoiceAccessForMedia(mediaId: string) {
+    const media = await this.database.mediaItem.findUnique({
+      where: { id: mediaId },
+      select: { kind: true },
+    });
+    return media?.kind === "movie"
+      ? this.configuredMovieChoiceAccess()
+      : undefined;
+  }
 
   protected async command(
     actor: MediaActor,
@@ -54,6 +79,7 @@ export class MediaCommandBase {
       command: unknown;
       decode: (value: unknown) => T;
       beforeNewCommand?: (() => Promise<void>) | undefined;
+      assertCommit?: (() => void) | undefined;
     },
     work: (db: Transaction) => Promise<JsonResult>,
   ): Promise<T> {
@@ -76,7 +102,9 @@ export class MediaCommandBase {
             await db.idempotencyRecord.create({
               data: { userId: actor.id, key, requestHash, response: result },
             });
-            return decode(result);
+            const decoded = decode(result);
+            protocol.assertCommit?.();
+            return decoded;
           },
           { isolationLevel: "Serializable", timeout: 15_000 },
         );

@@ -27,6 +27,7 @@ export async function killPublicationChild(
       databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
       roots: fixture.context.roots,
       serverMachineId: fixture.context.serverMachineId,
+      movieSectionId: await fixture.context.permittedMovieSection?.(),
       workerPodUid: mount.workerPodUid,
       input,
       phase,

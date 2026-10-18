@@ -13,6 +13,7 @@ export type RetentionRequester = {
   observedAt: number | null;
   warningAcceptedAt: number | null;
   warningFailed: boolean;
+  fulfillment: MovieEditionFulfillment;
 };
 
 export type RetentionInput = {
@@ -50,6 +51,8 @@ export function evaluateRetention(input: RetentionInput): RetentionEvaluation {
     )
   )
     return protect("keep_hold");
+  const unfulfilled = fulfillmentProtection(input.requesters);
+  if (unfulfilled !== null) return protect(unfulfilled);
   const requesters = input.requesters.filter((requester) => !requester.owner);
   if (requesters.length === 0) return protect("owner_only_or_unclaimed");
   for (const requester of requesters) {
@@ -77,6 +80,19 @@ export function evaluateRetention(input: RetentionInput): RetentionEvaluation {
         graceUntil,
         purgeAfter: input.now + RETENTION_DEFAULTS.quarantineMs,
       };
+}
+
+function fulfillmentProtection(
+  requesters: readonly RetentionRequester[],
+): string | null {
+  for (const requester of requesters) {
+    if (
+      requester.fulfillment.status !== "fulfilled" &&
+      requester.fulfillment.status !== "not_applicable"
+    )
+      return requester.fulfillment.reason;
+  }
+  return null;
 }
 
 function watchProtection(
@@ -117,3 +133,4 @@ export function canPurge(input: {
     input.now >= input.quarantinedAt + RETENTION_DEFAULTS.quarantineMs
   );
 }
+import type { MovieEditionFulfillment } from "#shared/movie-editions/fulfillment.ts";

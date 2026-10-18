@@ -114,11 +114,21 @@ const plexAdministration = new PrismaPlexAdministration(
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
   },
 );
+async function movieAccess() {
+  const section = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
+    "permittedMovieSectionId",
+  );
+  return {
+    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    movieSectionId: section.value,
+  };
+}
 const app = createMediaApp({
   auth,
   media: new PrismaMediaApplication(database, {
     keepDays: keepDays.value,
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    movieAccess,
     visibilitySections: {
       movie: permittedMovieSectionId.value,
       series: permittedTvSectionId.value,
@@ -126,6 +136,7 @@ const app = createMediaApp({
   }),
   notifications: new PrismaNotificationApplication(database, cipher, discord, {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
+    movieAccess,
     discordEnabled: async () => {
       const flag = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
         "personalDiscordEnabled",

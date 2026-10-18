@@ -1,4 +1,6 @@
 import { defaultScope } from "#shared/editions/scope.ts";
+import { networkMovieAccess } from "./editions/access.ts";
+import { requireMovieSponsor } from "./editions/choice.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import type { MediaAutomationContext } from "./context.ts";
@@ -230,6 +232,8 @@ export async function searchCandidates(
   mediaId: string,
   profile: QualityProfile,
 ): Promise<string[]> {
+  const movieAccess = await networkMovieAccess(context, [mediaId]);
+  await requireMovieSponsor(context.db, mediaId, movieAccess);
   const target = await searchTarget(context, mediaId);
   const providers = await context.db.mediaProvider.findMany({
     where: { enabled: true, id: { in: ProviderIdSchema.options } },
@@ -241,8 +245,19 @@ export async function searchCandidates(
     try {
       const candidates = await context.providers.withProvider(
         provider.id,
-        async (client) =>
-          client.search({ query: target.query, kind: target.kind, page: 1 }),
+        async (client) => {
+          const sponsor = await requireMovieSponsor(
+            context.db,
+            mediaId,
+            movieAccess,
+          );
+          sponsor?.freshness.assertActive();
+          return client.search({
+            query: target.query,
+            kind: target.kind,
+            page: 1,
+          });
+        },
       );
       for (const candidate of candidates) {
         const stored = await storeCandidate(context, candidate, target, {

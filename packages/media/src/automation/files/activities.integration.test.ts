@@ -97,7 +97,6 @@ test("a new generation after staging prevents publication", async () => {
 
 test("a partial season publication followed by Keep compensates every uncommitted file", async () => {
   const f = await fixture(true);
-  const acquired = await f.acquisition();
   const db = cluster.database;
   const seriesId = f.media.parentId;
   if (seriesId === null) throw new Error("Episode fixture has no series");
@@ -131,6 +130,7 @@ test("a partial season publication followed by Keep compensates every uncommitte
       },
     });
   });
+  const acquired = await f.acquisition(undefined, [f.media.id, second.id]);
   const files = ["Coastlines.S01E01.mkv", "Coastlines.S01E02.mkv"];
   for (const name of files)
     await writeFile(nodePath.join(f.roots.downloads, name), acquired.content);
@@ -145,14 +145,6 @@ test("a partial season publication followed by Keep compensates every uncommitte
           progress: 1,
         })),
       },
-    },
-  });
-  await db.acquisitionAttempt.update({
-    where: { id: acquired.attempt.id },
-    data: {
-      mediaIds: [f.media.id, second.id],
-      generations: { [f.media.id]: 0, [second.id]: 0 },
-      reservations: { create: { mediaId: second.id, generation: 0 } },
     },
   });
   const activities = createMediaFileActivities(f.context);
@@ -253,6 +245,9 @@ test("failed Plex upgrade verification restores the previous file and coverage",
   const f = await fixture();
   const original = await f.published();
   const upgraded = await f.acquisition("Upgraded fixture media contents");
+  const target = await cluster.database.mediaIntent.findUniqueOrThrow({
+    where: targetWhere(defaultScope(f.media.id)),
+  });
   const activities = createMediaFileActivities(f.context);
   const inspect = f.context.inspect;
   if (inspect === undefined) throw new Error("Fixture inspector missing");
@@ -293,7 +288,7 @@ test("failed Plex upgrade verification restores the previous file and coverage",
         exactMediaMatch: true,
         videoVersionMatch: true,
         recoveryEpoch: 0,
-        generations: { [f.media.id]: 0 },
+        generations: { [f.media.id]: target.generation },
       },
     },
   });

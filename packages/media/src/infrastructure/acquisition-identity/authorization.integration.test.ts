@@ -135,7 +135,7 @@ test("season pack cannot authorize one leaf of twelve through owner or automatic
   }
 });
 
-test("identity source and operation evidence are insert-only, including historical nulls", async () => {
+test("identity source and operation evidence are insert-only, including NULL identity", async () => {
   const db = database();
   const f = await identityFixture(db, context());
   try {
@@ -152,19 +152,24 @@ test("identity source and operation evidence are insert-only, including historic
         data: { payload: {} },
       }),
     ).rejects.toThrow("immutable");
-    const historical = await db.acquisitionAttempt.create({
+    const target = await db.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(f.files.media.id)),
+    });
+    const nullIdentity = await db.acquisitionAttempt.create({
       data: {
         releaseId: f.release.id,
         sponsorRequestId: acquired.attempt.sponsorRequestId,
-        mediaIds: [],
-        generations: {},
+        mediaIds: [f.files.media.id],
+        generations: { [f.files.media.id]: target.generation },
+        recoveryEpoch: acquired.attempt.recoveryEpoch,
         state: "cancelled",
         operationId: crypto.randomUUID(),
       },
     });
+    expect(nullIdentity.identityEvidence).toBeNull();
     await expect(
       db.acquisitionAttempt.update({
-        where: { id: historical.id },
+        where: { id: nullIdentity.id },
         data: { identityEvidence: {} },
       }),
     ).rejects.toThrow("immutable");

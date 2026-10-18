@@ -64,7 +64,7 @@ export async function sharedTvFileFixture(
     });
     const mediaIds = [f.media.id, second.id].sort();
     async function acquisition(content?: string) {
-      const acquired = await f.acquisition(content);
+      const acquired = await f.acquisition(content, mediaIds);
       const filename = sharedTvDownloadName(acquired.attempt.id);
       await writeFile(path.join(f.roots.downloads, filename), acquired.content);
       await db.releaseCandidate.update({
@@ -98,15 +98,7 @@ export async function sharedTvFileFixture(
           },
         },
       });
-      const attempt = await db.acquisitionAttempt.update({
-        where: { id: acquired.attempt.id },
-        data: {
-          mediaIds,
-          generations: { [f.media.id]: 0, [second.id]: 0 },
-          reservations: { create: { mediaId: second.id, generation: 0 } },
-        },
-      });
-      return { ...acquired, attempt };
+      return acquired;
     }
     async function published() {
       const acquired = await acquisition();

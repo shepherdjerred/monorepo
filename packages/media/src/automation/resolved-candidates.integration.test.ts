@@ -11,6 +11,7 @@ import {
 } from "#shared/api.ts";
 import { persistCandidateSnapshot } from "./candidate-evidence.ts";
 import { StoredCandidateSchema } from "./providers.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 
 const { database, context, fixture } = automationTestHarness();
 test("candidate selection persists source evidence and refreshes only unclaimed immutable identities", async () => {
@@ -85,10 +86,19 @@ test("candidate selection persists source evidence and refreshes only unclaimed 
   });
   await db.acquisitionAttempt.create({
     data: {
+      ...(await captureMovieAttemptChoice(db, {
+        sponsorRequestId: request.id,
+        scope: {
+          rootMediaId: f.media.id,
+          mediaId: f.media.id,
+          edition: "default",
+        },
+        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      })),
       releaseId: release.id,
       sponsorRequestId: request.id,
       mediaIds: [f.media.id],
-      generations: { [f.media.id]: 1 },
+      generations: { [f.media.id]: f.input.generation },
       operationId: crypto.randomUUID(),
       state: "reserved",
     },

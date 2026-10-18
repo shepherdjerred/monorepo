@@ -15,6 +15,7 @@ import {
 import { NotificationDeliveryCommands } from "./notifications/commands.ts";
 import { VerificationAuthoritySchema } from "#shared/notification-authority.ts";
 import type { Database } from "./database.ts";
+import type { MovieChoiceAccess } from "./movie-editions/access.ts";
 
 export class PrismaNotificationApplication
   extends NotificationDeliveryCommands
@@ -27,9 +28,13 @@ export class PrismaNotificationApplication
     private readonly options: {
       publicOrigin: string;
       discordEnabled?: () => Promise<boolean>;
+      movieAccess?: () => Promise<MovieChoiceAccess>;
     },
   ) {
-    super(db, cipher, options.publicOrigin, options.discordEnabled);
+    super(db, cipher, options.publicOrigin, {
+      personalDiscordAvailable: options.discordEnabled,
+      movieAccess: options.movieAccess,
+    });
   }
 
   private discordEnabled() {

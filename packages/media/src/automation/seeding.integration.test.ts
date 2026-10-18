@@ -7,6 +7,7 @@ import {
   recordCleanupEvaluation,
 } from "#infrastructure/visibility/seeding.ts";
 import type { SeedingPolicy } from "#domain/seeding.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 
 const { database, context, fixture } = automationTestHarness();
 
@@ -27,11 +28,20 @@ async function seededTorrent() {
   });
   const attempt = await database().acquisitionAttempt.create({
     data: {
+      ...(await captureMovieAttemptChoice(database(), {
+        sponsorRequestId: request.id,
+        scope: {
+          rootMediaId: data.media.id,
+          mediaId: data.media.id,
+          edition: "default",
+        },
+        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      })),
       operationId: data.input.operationId,
       releaseId: data.release.id,
       sponsorRequestId: request.id,
       mediaIds: [data.media.id],
-      generations: { [data.media.id]: 1 },
+      generations: { [data.media.id]: data.input.generation },
       state: "completed",
       torrentId: torrent.id,
     },

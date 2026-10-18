@@ -5,6 +5,7 @@ import { IdentityDecisionSchema } from "#shared/acquisition/identity.ts";
 import { MediaError } from "#application/errors.ts";
 import { buildIdentityPreview } from "./preview.ts";
 import { identityHash } from "./snapshot.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 
 export async function confirmIdentity(
   tx: Prisma.TransactionClient,
@@ -14,6 +15,8 @@ export async function confirmIdentity(
     releaseId: string;
     confirmation: IdentityConfirmation;
     serverMachineId?: string;
+    sections?: { movie: string; series: string } | undefined;
+    movieChoiceAccess?: MovieChoiceAccess | undefined;
   },
 ) {
   const preview = await buildIdentityPreview(tx, actor, {
