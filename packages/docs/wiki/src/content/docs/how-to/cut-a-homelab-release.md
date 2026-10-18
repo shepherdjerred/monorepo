@@ -78,6 +78,15 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    client is needed. Register actual output item IDs in reviewed source,
    never placeholder IDs or copied administrator credentials.
 
+   Before the first image publication, verify the existing separate Docker Hub
+   publisher and runtime-reader credentials and their handoffs. Reconcile
+   repositories and declared visibility through the operator-only `dockerhub`
+   stack. Adopt existing repositories through reviewed imports rather than
+   deleting and recreating them. Follow `packages/homelab/src/tofu/dockerhub/README.md`
+   for its management credential and encrypted-state prerequisites. Token
+   provisioning, when needed, remains in the separate operator-only
+   `dockerhub-tokens` stack; account authentication stays outside CI.
+
    ```bash
    toolkit ci source-proof PR --source REVIEWED_HEAD_SHA --json
    bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale plan
