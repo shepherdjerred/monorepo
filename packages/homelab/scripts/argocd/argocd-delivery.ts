@@ -38,7 +38,7 @@ export const DeliveryArgoSourceSchema = z
   })
   .loose();
 const ApplicationSchema = z.object({
-  kind: z.literal("Application"),
+  kind: z.literal("Application").default("Application"),
   operation: z.null().optional(),
   status: z
     .object({
@@ -86,7 +86,7 @@ export function deliverySelectionPatch(
       "Application operation is not settled; retain Delivery ownership",
     );
   if (
-    deliveryEnvironment(input) !== selection.environmentId ||
+    deliveryEnvironment(application) !== selection.environmentId ||
     application.metadata.name !== selection.application
   )
     throw new Error(
