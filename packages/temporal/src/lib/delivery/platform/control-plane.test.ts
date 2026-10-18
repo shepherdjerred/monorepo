@@ -9,10 +9,31 @@ import {
 } from "./control-plane.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { verifyControlPlaneImageCompatibility } from "./control-plane-image.ts";
+import { controlPlaneCommand } from "#scripts/jobs/control-plane.ts";
 import {
   CONTROL_PLANE_IMAGE_ABI,
   CONTROL_PLANE_IMAGE_LABEL,
 } from "@shepherdjerred/ops-model/delivery-control-plane.ts";
+
+test("control-plane child commands preserve writable Buildx state separately from read-only registry credentials", async () => {
+  vi.stubEnv("DOCKER_CONFIG", "/var/run/delivery/docker");
+  vi.stubEnv("BUILDX_CONFIG", "/workspace/buildx");
+  vi.stubEnv("ARGOCD_TOKEN", "synthetic-control-plane-credential");
+  try {
+    const result = await controlPlaneCommand([
+      process.execPath,
+      "-e",
+      "console.log(JSON.stringify({docker:process.env.DOCKER_CONFIG,buildx:process.env.BUILDX_CONFIG,argoPresent:process.env.ARGOCD_TOKEN !== undefined}))",
+    ]);
+    expect(JSON.parse(result.stdout)).toEqual({
+      docker: "/var/run/delivery/docker",
+      buildx: "/workspace/buildx",
+      argoPresent: false,
+    });
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
 
 function fixture() {
   const image = ArtifactVersionSchema.parse({

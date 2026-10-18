@@ -43,6 +43,7 @@ export async function controlPlaneCommand(argv: readonly string[]) {
       HOME: Bun.env["HOME"],
       TMPDIR: Bun.env["TMPDIR"],
       DOCKER_CONFIG: Bun.env["DOCKER_CONFIG"],
+      BUILDX_CONFIG: Bun.env["BUILDX_CONFIG"],
       ...(argv.includes("sync-managed")
         ? {
             ARGOCD_TOKEN: Bun.env["ARGOCD_TOKEN"],
