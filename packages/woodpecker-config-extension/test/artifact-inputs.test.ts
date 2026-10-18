@@ -160,6 +160,7 @@ test("the sites lane publishes active site archives when their paths change", ()
       "@shepherdjerred/statically-typed",
     ],
     ["site-ts-mc-docs", "ts-mc-docs", "@shepherdjerred/ts-mc-docs"],
+    ["site-glitter-boys", "glitter-boys", "@shepherdjerred/glitter-boys"],
   ] as const) {
     expect(commands).toContain(`ci/scripts/selectors/ci-changed.ts ${lane}`);
     expect(commands).toContain(`--filter '${workspace}'`);
@@ -174,15 +175,15 @@ test("the sites lane publishes active site archives when their paths change", ()
   expect(loop?.split(" ")).not.toContain("ts-mc");
 });
 
-test("Glitter Boys artifacts are excluded from shared CI", async () => {
+test("Glitter Boys site archives remain independent of native launcher publishing", async () => {
   const steps = allSteps();
-  for (const key of ["sites", "pr-dryrun"]) {
-    const commands = steps
-      .find((entry) => entry.key === key)
-      ?.commands.join("\n");
-    expect(commands).toBeDefined();
-    expect(commands).not.toContain("glitter-boys");
-  }
+  const sites = steps.find((entry) => entry.key === "sites");
+  if (sites === undefined) throw new Error("sites step missing");
+  expect(sites.commands.join("\n")).toContain(
+    "scripts/release/deploy-site.ts glitter-boys --archive",
+  );
+  expect(sites.commands.join("\n")).not.toContain("cargo");
+  expect(sites.commands.join("\n")).not.toContain("publish-launcher");
   for (const pipeline of [steps, credentiallessHostedAutomationSteps(IMAGES)]) {
     const verify = pipeline
       .find((entry) => entry.key === "verify")

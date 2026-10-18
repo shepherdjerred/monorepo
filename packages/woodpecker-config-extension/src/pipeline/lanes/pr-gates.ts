@@ -24,6 +24,7 @@ const DRY_RUN_SITES = [
   "wiki",
   "better-skill-capped",
   "glitter",
+  "glitter-boys",
   "ts-mc-docs",
   "scout-design-system",
 ];

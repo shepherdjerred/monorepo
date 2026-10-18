@@ -48,6 +48,11 @@ const SOURCE_BUILT_SITES = [
   // has to be selected so its production closure is installed.
   { lane: "site-glitter", site: "glitter", filter: "glitter" },
   {
+    lane: "site-glitter-boys",
+    site: "glitter-boys",
+    filter: "'@shepherdjerred/glitter-boys'",
+  },
+  {
     lane: "site-ts-mc-docs",
     site: "ts-mc-docs",
     filter: "'@shepherdjerred/ts-mc-docs'",

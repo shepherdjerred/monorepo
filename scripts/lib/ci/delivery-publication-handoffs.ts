@@ -82,8 +82,12 @@ export async function readPublicationHandoffs(
       chartPublication.charts.some((fresh) => {
         const expected = inventory.find((chart) => chart.name === fresh.name);
         return expected === undefined
-          ? index.byChart(fresh.name)?.rootReleaseExclusions?.[fresh.name] !==
-              "inactive"
+          ? !Object.hasOwn(
+              SERVICE_CATALOG.deliveryDelegations ?? {},
+              fresh.name,
+            ) &&
+              index.byChart(fresh.name)?.rootReleaseExclusions?.[fresh.name] !==
+                "inactive"
           : expected.revision !== fresh.revision;
       })
     )

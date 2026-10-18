@@ -291,6 +291,17 @@ test("release lanes include their complete imported helper closure", () => {
   }
 });
 
-test("Glitter Boys has no automatic site release selector", () => {
-  expect(selectorPathsForLane("site-glitter-boys")).toBeUndefined();
+test("Glitter Boys archives track the site and reviewed launcher publication inputs", () => {
+  const paths = selectorPathsForLane("site-glitter-boys");
+  expect(paths).toContain("packages/glitter-boys");
+  expect(paths).toContain(
+    "packages/glitter-boys-launcher/published-release.json",
+  );
+  expect(paths).toContain(
+    "packages/glitter-boys-launcher/scripts/public-release.ts",
+  );
+  expect(paths).toContain(
+    "packages/glitter-boys-launcher/scripts/release-manifest.ts",
+  );
+  expect(paths).not.toContain("packages/glitter-boys-launcher/crates");
 });
