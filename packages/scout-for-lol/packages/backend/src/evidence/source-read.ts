@@ -51,9 +51,11 @@ export async function optionalSourceRead<T>(
       error.message === `API request timed out after ${timeoutMs.toString()}ms`;
     if (!forbidden && !deadlineExpired && !isExpectedSourceReadError(error))
       throw error;
-    Sentry.captureException(error, {
-      tags: { source: "evidence-acquisition", evidenceSource: source },
-    });
+    // The Riot caller already reports forbidden responses before rethrowing.
+    if (!forbidden)
+      Sentry.captureException(error, {
+        tags: { source: "evidence-acquisition", evidenceSource: source },
+      });
     return undefined;
   }
 }

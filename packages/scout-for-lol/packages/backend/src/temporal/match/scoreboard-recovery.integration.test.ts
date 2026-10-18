@@ -228,6 +228,10 @@ test("a forbidden Riot read cannot block the real resolver from recovering a cli
   );
   await reconcileMatchHistory();
   expect(io.fetchMatch).toHaveBeenCalledTimes(1);
+  await expect(io.completeMatch.mock.results[0]?.value).resolves.toMatchObject({
+    kind: "unavailable",
+    reason: "No complete compatible match evidence",
+  });
   const snapshot = await readReportScoreboard(matchId);
   expect(snapshot?.result.participants).toHaveLength(10);
   expect(await prisma.matchNotificationIntent.count()).toBe(1);

@@ -24,14 +24,12 @@ function forbidden() {
   });
 }
 
-test("beta reports forbidden Riot reads while allowing independent evidence to resolve", async () => {
+test("beta allows independent evidence without duplicating Riot error reporting", async () => {
   const error = forbidden();
   await expect(
     optionalSourceRead("RIOT", () => Promise.reject(error)),
   ).resolves.toBeUndefined();
-  expect(io.capture).toHaveBeenCalledWith(error, {
-    tags: { source: "evidence-acquisition", evidenceSource: "RIOT" },
-  });
+  expect(io.capture).not.toHaveBeenCalled();
 });
 
 test("production retains its existing forbidden-read failure", async () => {
