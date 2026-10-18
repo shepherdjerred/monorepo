@@ -1,0 +1,10 @@
+{
+  "id": "tasknotes-server/prod",
+  "serviceId": "tasknotes-server",
+  "name": "prod",
+  "application": "tasknotes",
+  "pipelineRevisionId": "tasknotes-server/prod/1",
+  "configurationRevision": "tasknotes-server/prod/1",
+  "configuration": {},
+  "automatic": true
+}

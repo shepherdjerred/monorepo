@@ -241,13 +241,11 @@ test("site-scout excludes global CI inputs and uses exact release libraries", ()
   expect(paths).not.toContain("scripts/lib");
   expect(paths).toContain("config/analytics-sites.json");
   expect(paths?.filter((path) => path.startsWith("scripts/lib/"))).toEqual([
-    "scripts/lib/pin-candidates.ts",
     "scripts/lib/run.ts",
     "scripts/lib/scout/scout-release-entrypoints.ts",
     "scripts/lib/s3-static-site.ts",
     "scripts/lib/scout/scout-release-state.ts",
-    "scripts/lib/scout/scout-site-stage-bucket.ts",
-    "scripts/lib/scout/scout-site-storage.ts",
+    "scripts/lib/scout/scout-archive.ts",
   ]);
 });
 
@@ -276,6 +274,11 @@ test("release lanes include their complete imported helper closure", () => {
   expect(lanePaths["helm"]).toContain(
     "packages/homelab/scripts/helm/helm-release-core.ts",
   );
+  expect(lanePaths["helm"]).toContain(
+    "packages/homelab/scripts/helm/helm-delivery-publication.ts",
+  );
+  expect(lanePaths["helm"]).toContain("packages/ops-model");
+  expect(lanePaths["argocd"]).toContain("packages/ops-model");
   for (const lane of ["ci-base", "ci-playwright"]) {
     expect(lanePaths[lane]).toContain("ci/scripts/images/bake-retry.ts");
     expect(lanePaths[lane]).toContain(

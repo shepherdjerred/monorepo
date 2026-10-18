@@ -1,0 +1,17 @@
+{
+  "kind": "argocd",
+  "application": "temporal",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "temporal",
+  "chartComponent": "chart:temporal",
+  "namespace": "temporal",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.temporal-worker": "image:temporal-worker"
+  },
+  "workerRollout": {
+    "target": "central",
+    "imageComponent": "image:temporal-worker",
+    "runnerImage": "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50"
+  }
+}

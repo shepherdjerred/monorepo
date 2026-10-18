@@ -1,5 +1,10 @@
-import { parseArgs } from "node:util";
-import { z } from "zod";
+import { generation, required, seconds, type DeployOptions } from "./common.ts";
+import { runWorkerCommand, validateWorkerCommand } from "./workers.ts";
+import { runMinecraftCommand, validateMinecraftCommand } from "./minecraft.ts";
+import { runForumCommand, validateForumCommand } from "./forum.ts";
+import { runPlatformCommand, validatePlatformCommand } from "./platform.ts";
+import { runTrmnlCommand, validateTrmnlCommand } from "./trmnl.ts";
+import { runCatalogCommand, validateCatalogCommand } from "./catalog.ts";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import {
   IdentifierSchema,
@@ -14,10 +19,30 @@ export const DEPLOY_HELP = `toolkit deploy <COMMAND> [OPTIONS]
 whoami                                Show authenticated server identity
 versions [SERVICE]                    List immutable version sets
 inventory                             Inspect registered release destinations
+handover-context                      Inspect paused, identity-bound authority-transfer prerequisites
+artifact --file <PATH> --machine       Resolve an exact original qualified artifact
+qualify <BUILD_ID> --machine           Ask the independent verifier to check actual CI provenance
 pipeline register <ID> --file <PATH>   Register a reviewed pipeline definition
 environment register --file <PATH>     Register reviewed environment metadata
 import --file <PATH>                   Save an unverified migration snapshot
 imports                               List unverified migration snapshots
+workers list <ENVIRONMENT>             Inspect retained worker artifacts and hosts
+workers baseline --file <PATH> --machine  Request independent host-only baseline proof
+workers adopt --file <PATH> --machine  Adopt an original qualified worker artifact
+workers retire <ENVIRONMENT> <ID>      Request guarded scale-to-zero retirement
+workers recover <DEPLOYMENT_ID>        Request independent read-only recovery inspection
+workers recovery <INTENT_ID>           Inspect recovery state and frozen inputs
+minecraft recover <DEPLOYMENT_ID>      Recover the untouched original before candidate source selection
+minecraft recovery <INTENT_ID>         Inspect independent recovery and retained ownership
+forum publish --file <PATH> --machine Register private licensed bytes for independent qualification
+forum baseline --file <PATH> --machine Request read-only original runtime baseline
+forum inspect <INTENT_ID>              Inspect original provenance and native baseline proof
+trmnl repair <DEPLOYMENT_ID> --machine Repair the same frozen plugin bundle under held quarantine
+platform request --file <PATH>         Request exact root inventory, read-only plan, or saved-plan apply
+platform control-plane --file <PATH> --machine  Request isolated explicit controller upgrade
+platform recover <DEPLOYMENT_ID>       Request bounded infrastructure quarantine recovery
+platform recovery <INTENT_ID>          Inspect frozen recovery, native jobs and saved plan
+platform recovery-approve <INTENT_ID>  Human decision for exact reviewed recovery plan
 diff <FROM|none> <TO>                  Compare component artifacts
 start <ENVIRONMENT> <VERSION>          Request an exact release
 promote <SOURCE_ENV> <DEST_ENV>        Promote source's accepted release
@@ -35,6 +60,7 @@ Options:
   --machine                           Use brokered DELIVERY_API_TOKEN
   --request-id <ID>                    Idempotency key for start/promote/rollback/retry
   --expected-generation <N>            Require an exact environment generation
+  --expected-worker-generation <N>     Require an exact worker generation for retirement
   --reason <TEXT>                      Approval or rejection reason
   --operation-id <UUID>                Exact recorded Argo operation for recovery
   --timeout <SECONDS>                  Wait deadline (default 900)
@@ -44,26 +70,23 @@ Exit: 0 = command succeeded; 1 = error/failed/canceled; 2 = wait deadline reache
 Production approvals require trusted human identity; --machine cannot approve.
 `;
 
-export function parseDeployArgs(args: string[]) {
-  return parseArgs({
-    args,
-    allowPositionals: true,
-    options: {
-      json: { type: "boolean", default: false },
-      machine: { type: "boolean", default: false },
-      url: { type: "string" },
-      "request-id": { type: "string" },
-      "expected-generation": { type: "string" },
-      reason: { type: "string" },
-      "operation-id": { type: "string" },
-      timeout: { type: "string" },
-      interval: { type: "string" },
-      file: { type: "string" },
-    },
-  });
-}
-
-export type DeployOptions = ReturnType<typeof parseDeployArgs>["values"];
+const specializedCommands: Record<
+  string,
+  (
+    client: DeliveryClient,
+    positionals: string[],
+    options: DeployOptions & { requestNotice?: (id: string) => void },
+  ) => Promise<{ result: unknown; exitCode: number }>
+> = {
+  workers: runWorkerCommand,
+  minecraft: runMinecraftCommand,
+  forum: runForumCommand,
+  trmnl: runTrmnlCommand,
+  artifact: (client, positionals, options) =>
+    runCatalogCommand(client, "artifact", positionals, options),
+  qualify: (client, positionals, options) =>
+    runCatalogCommand(client, "qualify", positionals, options),
+};
 const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   whoami: 0,
   versions: [0, 1],
@@ -79,10 +102,18 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   retry: 1,
   recover: 1,
   inventory: 0,
+  "handover-context": 0,
+  artifact: 0,
+  qualify: 1,
   pipeline: 2,
   environment: 1,
   import: 0,
   imports: 0,
+  workers: [1, 2, 3],
+  minecraft: 2,
+  forum: [1, 2],
+  trmnl: 2,
+  platform: [1, 2],
 };
 
 export function validateDeployCommand(
@@ -109,6 +140,13 @@ export function validateDeployCommand(
   if (options.timeout !== undefined) seconds(options.timeout);
   if (options.interval !== undefined) seconds(options.interval);
   validateRegistration(command, positionals, options);
+  if (["artifact", "qualify"].includes(command))
+    validateCatalogCommand(command, positionals, options);
+  if (command === "workers") validateWorkerCommand(positionals, options);
+  if (command === "minecraft") validateMinecraftCommand(positionals, options);
+  if (command === "forum") validateForumCommand(positionals, options);
+  if (command === "trmnl") validateTrmnlCommand(positionals, options);
+  if (command === "platform") validatePlatformCommand(positionals, options);
 }
 
 function validateRecovery(options: DeployOptions) {
@@ -148,18 +186,6 @@ function validateApproval(options: DeployOptions) {
     );
   if (options.reason === undefined || options.reason.trim() === "")
     throw new Error("--reason is required");
-}
-
-function required(value: string | undefined): string {
-  if (value === undefined || value === "")
-    throw new Error("Explicit target is required");
-  return value;
-}
-function generation(value: string): number {
-  return z.coerce.number().int().nonnegative().parse(value);
-}
-function seconds(value: string): number {
-  return z.coerce.number().int().min(1).max(86_400).parse(value);
 }
 
 export async function waitForDeployment(
@@ -202,10 +228,21 @@ export async function runDeployCommand(
   options: DeployOptions & { requestNotice?: (id: string) => void },
 ): Promise<{ result: unknown; exitCode: number }> {
   validateDeployCommand(command, positionals, options);
+  const specialized = specializedCommands[command];
+  if (specialized !== undefined)
+    return specialized(client, positionals, options);
+  if (command === "platform")
+    return runPlatformCommand(client, positionals, options);
   if (
-    ["whoami", "versions", "diff", "status", "inventory", "imports"].includes(
-      command,
-    )
+    [
+      "whoami",
+      "versions",
+      "diff",
+      "status",
+      "inventory",
+      "imports",
+      "handover-context",
+    ].includes(command)
   )
     return readCommand(client, command, positionals);
   const target = positionals[0];
@@ -331,6 +368,9 @@ async function readCommand(
       result = overview.environments;
       break;
     }
+    case "handover-context":
+      result = await client.ownershipHandoverContext();
+      break;
     default:
       throw new Error(`Unknown read command: ${command}`);
   }

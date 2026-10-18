@@ -1,10 +1,17 @@
 import { DeliveryError } from "#domain/error.ts";
-import { DeploymentSchema, PipelineRevisionSchema } from "#shared/contract.ts";
+import {
+  DeploymentSchema,
+  PipelineRevisionSchema,
+  WorkerPoolSnapshotSchema,
+} from "#shared/contract.ts";
 import type {
   EvidenceInput,
   FinishDeployment,
   Principal,
   StageInput,
+  WorkerRetirementClaim,
+  TrmnlRepairClaim,
+  PipelineDefinition,
 } from "#shared/contract.ts";
 import {
   fingerprint,
@@ -22,11 +29,87 @@ import {
   evidence,
   type Transaction,
 } from "./delivery-data.ts";
+import { materializeWorkerSnapshot } from "./worker-pool/pool.ts";
+import {
+  acceptWorkerRetirement,
+  validateWorkerRetirementClaim,
+} from "./worker-pool/retirement.ts";
+import { acceptWorkerBaseline } from "./worker-pool/baseline.ts";
+import { validateSpecializedSuccess } from "./specialized-success.ts";
+import {
+  admitPlatformDeployment,
+  validatePlatformSuccess,
+} from "./platform/lifecycle.ts";
+import {
+  requireControlPlaneQuiescence,
+  admitControlPlaneUpgrade,
+  validateControlPlaneSuccess,
+} from "./control-plane/lifecycle.ts";
+import { requireStaticRootBoundary } from "./platform/static-prerequisite.ts";
+import { claimTrmnlRepair } from "./trmnl-repair/claim.ts";
+import { readmitDeployment } from "./deployment-readmission.ts";
 
+function observesApplication(row: {
+  kind: string;
+  platformSnapshot: unknown;
+  controlPlaneSnapshot: unknown;
+}) {
+  return (
+    row.kind !== "adopt-worker" &&
+    row.kind !== "repair-trmnl" &&
+    row.platformSnapshot === null &&
+    row.controlPlaneSnapshot === null
+  );
+}
+
+function acceptedPointers(
+  row: {
+    id: string;
+    kind: string;
+    versionSetRevisionId: string;
+    platformSnapshot: unknown;
+    controlPlaneSnapshot: unknown;
+  },
+  status: string,
+) {
+  if (status !== "succeeded") return {};
+  if (observesApplication(row))
+    return { acceptedVersionSetRevisionId: row.versionSetRevisionId };
+  return row.kind === "upgrade-control-plane"
+    ? { acceptedControlPlaneDeploymentId: row.id }
+    : ["root-release", "tofu-apply"].includes(row.kind)
+      ? { acceptedPlatformDeploymentId: row.id }
+      : {};
+}
+
+function deploymentTarget(
+  pipeline: PipelineDefinition,
+  application: string | null,
+) {
+  if (pipeline.kind === "static-site") return `static-site:${pipeline.bucket}`;
+  return pipeline.kind === "tofu" ? `tofu:${pipeline.stack}` : application;
+}
+
+function repairClaimProof(
+  proof: WorkerRetirementClaim | TrmnlRepairClaim | undefined,
+) {
+  return proof !== undefined && "sourceWorkflow" in proof ? proof : undefined;
+}
+function retirementClaimProof(
+  proof: WorkerRetirementClaim | TrmnlRepairClaim | undefined,
+) {
+  if (proof === undefined) return;
+  if ("proofs" in proof) return proof;
+  throw new DeliveryError(
+    "INVALID",
+    "Repair proof belongs only to a TRMNL repair deployment",
+  );
+}
 export async function claim(
   this: Delivery,
   deploymentId: string,
   actor: Principal,
+  claimProof?: WorkerRetirementClaim | TrmnlRepairClaim,
 ) {
   const admission = await this.database.$transaction(async (tx) => {
     await lock(tx, "delivery:claim");
@@ -35,7 +118,16 @@ export async function claim(
       await tx.deployment.findUnique({ where: { id: deploymentId } }),
       "Deployment",
     );
-    if (row.status === "running") return { status: "claimed" };
+    await requireControlPlaneQuiescence(tx, row);
+    if (row.kind === "repair-trmnl") {
+      await claimTrmnlRepair(tx, row, repairClaimProof(claimProof), actor);
+      return { status: "claimed" };
+    }
+    const retirementProof = retirementClaimProof(claimProof);
+    if (row.status === "running") {
+      await readmitDeployment.call(this, tx, row, { actor, retirementProof });
+      return { status: "claimed" };
+    }
     if (row.status !== "queued")
       throw new DeliveryError("CONFLICT", "Deployment is not queued");
     await lock(tx, `environment:${row.environmentId}`);
@@ -71,10 +163,7 @@ export async function claim(
         ),
       ),
     );
-    const target =
-      pipeline.definition.kind === "static-site"
-        ? `static-site:${pipeline.definition.bucket}`
-        : env.application;
+    const target = deploymentTarget(pipeline.definition, env.application);
     if (target === null)
       throw new DeliveryError("INVALID", "Pipeline has no deployment target");
     const held = await tx.applicationLock.findUnique({
@@ -85,17 +174,54 @@ export async function claim(
         "BUSY",
         "Deployment target is owned by another deployment",
       );
+    await admitPlatformDeployment(tx, row, this.catalog, { actor });
+    await requireStaticRootBoundary(tx, {
+      row,
+      catalog: this.catalog,
+      repositoryId: this.repositoryId,
+    });
+    await admitControlPlaneUpgrade(tx, row, this.catalog);
+    if (row.kind === "retire-worker") {
+      const proof = await validateWorkerRetirementClaim(tx, {
+        deployment: row,
+        proof: retirementProof,
+        running: false,
+      });
+      await audit(tx, actor, {
+        action: "worker.retirement_proved",
+        entityId: row.id,
+        requestId: id(),
+        metadata: proof,
+      });
+    } else if (retirementProof !== undefined)
+      throw new DeliveryError(
+        "INVALID",
+        "Retirement proof belongs only to a retirement deployment",
+      );
     await tx.applicationLock.create({
       data: { application: target, deploymentId },
     });
+    if (
+      row.workerSnapshot !== null &&
+      row.kind !== "retire-worker" &&
+      row.kind !== "adopt-worker"
+    )
+      await materializeWorkerSnapshot(
+        tx,
+        WorkerPoolSnapshotSchema.parse(row.workerSnapshot),
+      );
     await tx.environment.update({
       where: { id: env.id },
       data: {
         activeDeploymentId: deploymentId,
-        desiredVersionSetRevisionId: row.versionSetRevisionId,
-        pipelineRevisionId: row.pipelineRevisionId,
-        configurationRevision: row.configurationRevision,
-        configuration: DeploymentSchema.parse(wire(row)).configuration,
+        ...(observesApplication(row)
+          ? {
+              desiredVersionSetRevisionId: row.versionSetRevisionId,
+              pipelineRevisionId: row.pipelineRevisionId,
+              configurationRevision: row.configurationRevision,
+              configuration: DeploymentSchema.parse(wire(row)).configuration,
+            }
+          : {}),
         generation: { increment: 1 },
       },
     });
@@ -207,7 +333,23 @@ export async function finish(
         "CONFLICT",
         "Deployment no longer owns the environment",
       );
-    validateFinish(input, row.versionSetRevisionId);
+    validateFinish(input, row.versionSetRevisionId, !observesApplication(row));
+    if (
+      row.kind === "repair-trmnl" &&
+      input.status !== "succeeded" &&
+      !input.recoveryRequired
+    )
+      throw new DeliveryError(
+        "INVALID",
+        "An unsuccessful TRMNL repair must retain quarantine until independently settled",
+      );
+    if (input.status === "succeeded") {
+      await validatePlatformSuccess(tx, row, input);
+      await validateControlPlaneSuccess(tx, row);
+      await validateSpecializedSuccess(tx, row);
+      await acceptWorkerRetirement(tx, row);
+      await acceptWorkerBaseline(tx, row);
+    }
     await evidence(tx, deploymentId, input.evidence, "finish");
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
@@ -235,16 +377,16 @@ export async function finish(
               observedVersionSetRevisionId: input.observedRevisionId,
               observedAt: new Date(),
             }),
-        ...(input.status === "succeeded"
-          ? { acceptedVersionSetRevisionId: row.versionSetRevisionId }
-          : {}),
+        ...acceptedPointers(row, input.status),
         ...(suppressed === null
           ? {}
           : { automaticSuppressedThroughRevision: suppressed }),
       },
     });
-    if (!input.recoveryRequired)
+    if (!input.recoveryRequired) {
       await tx.applicationLock.deleteMany({ where: { deploymentId } });
+      await tx.platformLock.deleteMany({ where: { deploymentId } });
+    }
     await audit(tx, actor, {
       action: `deployment.${input.status}`,
       entityId: deploymentId,
@@ -257,10 +399,22 @@ export async function finish(
 export async function manualSelectionBaseline(
   this: Delivery,
   tx: Transaction,
-  row: { automatic: boolean; serviceId: string },
+  row: { automatic: boolean; serviceId: string; kind: string },
   status: string,
 ) {
-  if (status !== "succeeded" || row.automatic) return null;
+  if (
+    status !== "succeeded" ||
+    row.automatic ||
+    [
+      "adopt-worker",
+      "repair-trmnl",
+      "root-release",
+      "tofu-plan",
+      "tofu-apply",
+      "upgrade-control-plane",
+    ].includes(row.kind)
+  )
+    return null;
   await lock(tx, `qualification:${row.serviceId}`);
   const latest = await tx.versionSet.findFirst({
     where: { serviceId: row.serviceId, qualifiedBuildId: { not: null } },

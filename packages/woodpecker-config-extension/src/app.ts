@@ -6,10 +6,6 @@ import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
-import {
-  PlatformApplyStackSchema,
-  type PlatformOperation,
-} from "#src/pipeline/lanes/tofu-apply.ts";
 import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
@@ -20,7 +16,6 @@ import {
 } from "#src/pipeline/internal-image-pin-change.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
-import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
 import { limitedPrSteps } from "#src/pipeline/draft.ts";
@@ -40,7 +35,6 @@ import {
 
 export type AppOptions = {
   readonly deliveryPublicationEnabled?: (branch: string) => Promise<boolean>;
-  readonly deliveryStaticArchivesEnabled?: (branch: string) => Promise<boolean>;
   readonly maintenanceEnabled?: (manual: boolean) => Promise<boolean>;
   readonly sourceCacheEnabled?: (branch: string) => Promise<boolean>;
   readonly performanceOptions?: (branch: string) => Promise<PerformanceOptions>;
@@ -75,59 +69,6 @@ export type AppOptions = {
     pipeline: Pipeline,
   ) => Promise<unknown>;
 };
-
-function platformOperationRequest(
-  pipeline: Pipeline,
-  defaultBranch: string,
-):
-  | { readonly operation: PlatformOperation }
-  | { readonly invalid: true }
-  | undefined {
-  const prepare = pipeline.variables["TOFU_PLATFORM_PLAN"];
-  const apply = pipeline.variables["TOFU_PLATFORM_APPLY"];
-  const sourcePipeline = pipeline.variables["TOFU_PLATFORM_PLAN_PIPELINE"];
-  if (
-    prepare === undefined &&
-    apply === undefined &&
-    sourcePipeline === undefined
-  ) {
-    return undefined;
-  }
-  if (pipeline.event !== "manual" || pipeline.branch !== defaultBranch) {
-    return { invalid: true };
-  }
-  if (
-    prepare !== undefined &&
-    apply === undefined &&
-    sourcePipeline === undefined
-  ) {
-    const parsed = PlatformApplyStackSchema.safeParse(prepare);
-    return parsed.success
-      ? { operation: { stack: parsed.data, action: "prepare" } }
-      : { invalid: true };
-  }
-  if (
-    apply !== undefined &&
-    prepare === undefined &&
-    sourcePipeline !== undefined
-  ) {
-    const parsed = PlatformApplyStackSchema.safeParse(apply);
-    if (
-      parsed.success &&
-      /^[1-9]\d*$/u.test(sourcePipeline) &&
-      Number.isSafeInteger(Number(sourcePipeline))
-    ) {
-      return {
-        operation: {
-          stack: parsed.data,
-          action: "apply-saved",
-          sourcePipeline,
-        },
-      };
-    }
-  }
-  return { invalid: true };
-}
 
 async function stepsForMainChange({
   steps,
@@ -335,8 +276,6 @@ export function createApp(options: AppOptions): Hono {
     options.maintenanceEnabled ?? (() => Promise.resolve(false));
   const publishDelivery =
     options.deliveryPublicationEnabled ?? (() => Promise.resolve(false));
-  const publishStaticArchives =
-    options.deliveryStaticArchivesEnabled ?? (() => Promise.resolve(false));
   app.get("/healthz", (context) => context.text("ok"));
   app.post("/ciconfig", async (context) => {
     const request = await authenticatedRequest(context, options);
@@ -356,12 +295,18 @@ export function createApp(options: AppOptions): Hono {
     if ("error" in maintenance)
       return context.json({ error: maintenance.error }, maintenance.status);
 
-    const platformOperation = platformOperationRequest(
-      pipeline,
-      repo.default_branch,
-    );
-    if (platformOperation !== undefined && "invalid" in platformOperation) {
-      return context.json({ error: "invalid platform operation request" }, 400);
+    if (
+      Object.keys(pipeline.variables).some((key) =>
+        key.startsWith("TOFU_PLATFORM_"),
+      )
+    ) {
+      return context.json(
+        {
+          error:
+            "Infrastructure plan and apply operations run through Delivery",
+        },
+        400,
+      );
     }
 
     const prVerification = isPrVerificationEvent(pipeline);
@@ -418,24 +363,6 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ configs });
     }
 
-    if (platformOperation !== undefined && "operation" in platformOperation) {
-      const { operation } = platformOperation;
-      const steps = buildPipelineSteps({
-        images,
-        changedBase: undefined,
-        platformOperation: operation,
-      }).filter(
-        (step) =>
-          step.key === "homelab-release-admission" ||
-          step.key === `tofu-platform-${operation.stack}`,
-      );
-      const selected = selectSteps(steps, {
-        ...selectionContext,
-        changedFiles: [],
-      });
-      return context.json({ configs: emit(selected) });
-    }
-
     const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([
       options.changedBase(repo.id, repo.default_branch),
       options.verifyBase(repo.id, repo.default_branch),
@@ -457,28 +384,25 @@ export function createApp(options: AppOptions): Hono {
       images,
       trustedGateImage: options.trustedGateImage,
       deliveryPublication: await publishDelivery(pipeline.branch),
-      deliveryStaticArchives: await publishStaticArchives(pipeline.branch),
       changedBase,
       verifyBase,
       imageReleaseBase: imageReleaseBase?.commit,
       imageReleasePipeline: imageReleaseBase?.pipelineNumber,
     });
     const selected = groupSmallChecks(
-      groupTofuSteps(
-        signRemoteCacheSteps(
-          selectSteps(
-            await stepsForMainChange({
-              steps: maintenance.enabled ? separateMaintenance(steps) : steps,
-              pipeline,
-              defaultBranch: repo.default_branch,
-              changedFiles,
-              changedBase,
-              imageFetcher: options.imageFetcher,
-            }),
-            { ...selectionContext, changedFiles: changedFiles ?? [] },
-          ),
-          prVerification ? "pull-request" : "trusted",
+      signRemoteCacheSteps(
+        selectSteps(
+          await stepsForMainChange({
+            steps: maintenance.enabled ? separateMaintenance(steps) : steps,
+            pipeline,
+            defaultBranch: repo.default_branch,
+            changedFiles,
+            changedBase,
+            imageFetcher: options.imageFetcher,
+          }),
+          { ...selectionContext, changedFiles: changedFiles ?? [] },
         ),
+        prVerification ? "pull-request" : "trusted",
       ),
       emit.performance.grouping,
       prVerification,

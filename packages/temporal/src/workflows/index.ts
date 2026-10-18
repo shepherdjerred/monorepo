@@ -457,3 +457,11 @@ export const httpAgentChatWorkflow = agentChat.httpAgentChatWorkflow;
 import * as delivery from "./delivery.ts";
 export const deliveryDeploymentWorkflow = delivery.deliveryDeploymentWorkflow;
 export const deliveryDispatchWorkflow = delivery.deliveryDispatchWorkflow;
+export const deliveryWorkerRecoveryWorkflow =
+  delivery.deliveryWorkerRecoveryWorkflow;
+export const deliveryMinecraftRecoveryWorkflow =
+  delivery.deliveryMinecraftRecoveryWorkflow;
+export const deliveryForumBaselineWorkflow =
+  delivery.deliveryForumBaselineWorkflow;
+export const deliveryPlatformRecoveryWorkflow =
+  delivery.deliveryPlatformRecoveryWorkflow;

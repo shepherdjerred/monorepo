@@ -188,7 +188,6 @@ async function fixture() {
     "scripts/lib/run.ts",
     "scripts/run-temporal-node.ts",
     "scripts/temporal-replay.ts",
-    "scripts/pin-candidates-state.json",
     "packages/version-catalog/src/catalog.json",
     "packages/s3-signed-request/src/index.ts",
     "packages/delivery/src/shared/contract.ts",
@@ -232,10 +231,7 @@ function hashes(root: string) {
   );
 }
 
-test.each([
-  "scripts/pin-candidates-state.json",
-  "packages/version-catalog/src/catalog.json",
-])(
+test.each(["packages/version-catalog/src/catalog.json"])(
   "release metadata %s preserves consumer hashes while root validation still invalidates",
   async (file) => {
     const root = await fixture();
@@ -282,10 +278,6 @@ test("metadata-only changes produce an actual consumer cache hit and restore its
     const proof = path.join(root, "packages/consumer/results/proof.txt");
     expect(await Bun.file(proof).text()).toBe("executed");
     await rm(proof);
-    await Bun.write(
-      path.join(root, "scripts/pin-candidates-state.json"),
-      '{"version":2}\n',
-    );
     await Bun.write(
       path.join(root, "packages/version-catalog/src/catalog.json"),
       '{"version":2}\n',

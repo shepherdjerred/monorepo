@@ -14,7 +14,7 @@ $check = static function (bool $condition, string $message): void {
 $map = $app->registry()->get('stormForumMap');
 $check(count(array_filter(array_keys($map), fn($key) => str_starts_with($key, 'node:'))) === 22, 'Managed node count incorrect');
 $before = $app->db()->fetchOne('SELECT COUNT(*) FROM xf_node');
-$app->service('Storm\Forum:Configuration')->apply(json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR), 'beta');
+$app->service('Storm\Forum:Configuration')->apply((require '/opt/storm-forum/runtime/manifest.php')(), 'beta');
 $check($before == $app->db()->fetchOne('SELECT COUNT(*) FROM xf_node'), 'Repeat configuration created duplicate nodes');
 $check($map === $app->registry()->get('stormForumMap'), 'Repeat configuration changed stable IDs');
 $reactions = $app->finder('XF:Reaction')->where('active', true)->order('display_order')->fetch();

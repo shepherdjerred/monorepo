@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
-import { WORKFLOW_TASK_QUEUES } from "#worker-config";
+import { WORKFLOW_TASK_QUEUES } from "#shared/task-queues.ts";
 
 const PrometheusResponseSchema = z.object({
   status: z.literal("success"),
@@ -415,22 +415,6 @@ export async function requireHealthyRolloutWindow(
       }
     }
   }
-}
-
-export function rolloutAdvanceTransition(rampPercentage: number): {
-  minimumMilliseconds: number;
-  targetPercentage: number;
-} {
-  if (rampPercentage === 10) {
-    return { minimumMilliseconds: 30 * 60 * 1000, targetPercentage: 50 };
-  }
-  if (rampPercentage === 50) {
-    return {
-      minimumMilliseconds: 2 * 60 * 60 * 1000,
-      targetPercentage: 100,
-    };
-  }
-  throw new Error("Advance requires a 10% or 50% ramp");
 }
 
 export async function verifyCandidateImageBuildId(

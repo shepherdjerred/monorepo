@@ -1,129 +1,281 @@
 #!/usr/bin/env bun
-
-/** One-time exact-main chart release that creates Woodpecker's CI queue. */
-
-import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
+/** One-time pre-ownership bootstrap; all selected state and receipts stay outside Git. */
 import path from "node:path";
 import { z } from "zod";
 import { run } from "@shepherdjerred/root-scripts/lib/run.ts";
+import {
+  BootstrapDescriptorSchema,
+  BootstrapApplicationSchema,
+  assertBootstrapOwnershipOff,
+  assertBootstrapRootPaused,
+  assertBootstrapSnapshot,
+  bootstrapFingerprint,
+} from "./bootstrap-selection.ts";
+import {
+  assertBootstrapCheckout,
+  assertBootstrapRegistryEmpty,
+  bootstrapArgo,
+  bootstrapSourceCas,
+  bootstrapSourceProof,
+  bootstrapOperationReceipt,
+  captureBootstrapApplications,
+  captureParentArchive,
+  rereadBootstrapApplications,
+  verifyBootstrapImages,
+} from "./bootstrap-native.ts";
+import {
+  prepareBootstrapArchives,
+  publishBootstrapArchive,
+} from "./bootstrap-publication.ts";
+import {
+  assertExternalBootstrapPath,
+  createBootstrapDirectory,
+} from "./bootstrap-output.ts";
+import { bootstrapCredentials } from "./bootstrap-auth.ts";
+import {
+  verifyBootstrapControlPlane,
+  verifyBootstrapControlPlaneArchive,
+} from "./bootstrap-control-plane.ts";
 
-const ExpectedSchema = z.array(
-  z.object({ name: z.string(), revision: z.string() }),
-);
-
-async function captured(command: string[]): Promise<string> {
-  const result = await run(command, {
-    capture: true,
-    echoCapturedStdout: false,
-  });
-  return result.stdout.trim();
-}
-
-async function assertExactMain(commit: string): Promise<void> {
-  const head = await captured(["git", "rev-parse", "HEAD"]);
-  const remote = await captured([
-    "git",
-    "ls-remote",
-    "origin",
-    "refs/heads/main",
-  ]);
-  if (head !== commit || remote.split(/\s+/u)[0] !== commit) {
-    throw new Error(
-      "bootstrap checkout is not the exact current main revision",
-    );
-  }
-  const status = await captured(["git", "status", "--porcelain"]);
-  if (status.length > 0) {
-    throw new Error("bootstrap checkout must be clean");
-  }
-}
-
-async function main(): Promise<void> {
-  const [commit, number, ...flags] = Bun.argv.slice(2);
+function argumentsForBootstrap() {
+  const [descriptorFile, outputFlag, output, ...flags] = Bun.argv.slice(2);
   if (
-    number === undefined ||
-    commit === undefined ||
-    !/^[a-f0-9]{40}$/u.test(commit) ||
-    !/^[1-9]\d{0,11}$/u.test(number) ||
+    descriptorFile === undefined ||
+    outputFlag !== "--output" ||
+    output === undefined ||
     flags.some((flag) => flag !== "--dry-run")
-  ) {
+  )
     throw new Error(
-      "Usage: bootstrap-woodpecker.ts <exact-main-sha> <reserved-woodpecker-build-number> [--dry-run]",
+      "Usage: bootstrap-woodpecker.ts <descriptor.json> --output <NEW-private-directory> [--dry-run]",
     );
-  }
-  const dryRun = flags.includes("--dry-run");
-  if (!dryRun) {
-    for (const name of [
-      "ARGOCD_TOKEN",
-      "CHARTMUSEUM_USERNAME",
-      "CHARTMUSEUM_PASSWORD",
-    ]) {
-      const value = Bun.env[name];
-      if (value === undefined || value === "") {
-        throw new Error(`${name} is required`);
-      }
-    }
-  }
-  await assertExactMain(commit);
-  const artifacts = await mkdtemp(
-    path.join(tmpdir(), `woodpecker-bootstrap-${number}-`),
-  );
-  const releaseNumber = (1_000_000 + Number(number)).toString();
-  const version = `2.0.0-${releaseNumber}`;
-  const requestId = `00000000-0000-4000-8000-${number.padStart(12, "0")}`;
-  const argocd = path.resolve("packages/homelab/scripts/argocd/argocd.ts");
-  const helm = path.resolve("packages/homelab/scripts/helm/helm-push.ts");
-  const expectedPath = path.join(artifacts, "argocd-release-expected.json");
-  console.log(`Bootstrap artifacts: ${artifacts}`);
-
-  if (!dryRun) {
-    await run([
-      "bun",
-      "--no-install",
-      argocd,
-      "suspend-auto-sync",
-      "apps",
-      "--timeout",
-      "300",
-    ]);
-    await assertExactMain(commit);
-  }
-  await run(
-    [
-      "bun",
-      "--no-install",
-      helm,
-      releaseNumber,
-      ...(dryRun ? ["--dry-run"] : []),
-    ],
-    {
-      cwd: artifacts,
-      env: { HOMELAB_RELEASE_VERSION: version },
-      unsetEnv: ["HOMELAB_IMAGE_DIGESTS_JSON", "HOMELAB_VERSION_CATALOG_JSON"],
-    },
-  );
-  const expected = ExpectedSchema.parse(await Bun.file(expectedPath).json());
-  if (
-    expected.filter((item) => item.name === "apps").length !== 1 ||
-    expected.find((item) => item.name === "apps")?.revision !== version
-  ) {
-    throw new Error(`release inventory does not declare apps at ${version}`);
-  }
-  await assertExactMain(commit);
-  await run([
-    "bun",
-    "--no-install",
-    argocd,
-    "release-root",
-    "apps",
-    expectedPath,
-    "--revision",
-    version,
-    "--request-id",
-    requestId,
-    ...(dryRun ? ["--dry-run"] : []),
-  ]);
+  const directory = path.resolve(output);
+  const repository = new URL("../../../../", import.meta.url).pathname;
+  assertExternalBootstrapPath(repository, directory);
+  return {
+    descriptorFile,
+    directory,
+    repository,
+    dryRun: flags.includes("--dry-run"),
+  };
 }
 
+async function main() {
+  const { descriptorFile, directory, repository, dryRun } =
+    argumentsForBootstrap();
+  const descriptor = BootstrapDescriptorSchema.parse(
+    await Bun.file(descriptorFile).json(),
+  );
+  await assertBootstrapCheckout(descriptor.sourceRevision);
+  const sourceProof = await bootstrapSourceProof(descriptor);
+  await bootstrapCredentials();
+  const captured = await captureBootstrapApplications();
+  assertBootstrapOwnershipOff(captured.applications);
+  await assertBootstrapRegistryEmpty(
+    captured.applications,
+    descriptor.deliveryUrl,
+  );
+  assertBootstrapRootPaused(captured.root);
+  const parent = await captureParentArchive(captured.root);
+  await verifyBootstrapImages(descriptor);
+  await createBootstrapDirectory(repository, directory);
+  await verifyBootstrapControlPlane(descriptor.controlPlane, directory);
+  await verifyBootstrapControlPlaneArchive(descriptor.controlPlane);
+  type Receipt = {
+    schema: string;
+    descriptor: typeof descriptor;
+    sourceProof: typeof sourceProof;
+    parentRootArchive: typeof parent;
+    originalRoot: typeof captured.root;
+    originalApplications: typeof captured.applications;
+    prepared: Awaited<ReturnType<typeof prepareBootstrapArchives>> | null;
+    events: unknown[];
+    status: string;
+    eligibleForDelivery: boolean;
+    applicationAccepted: boolean;
+  };
+  const receipt: Receipt = {
+    schema: "delivery-bootstrap-receipt/v1",
+    descriptor,
+    sourceProof,
+    parentRootArchive: parent,
+    originalRoot: captured.root,
+    originalApplications: captured.applications,
+    prepared: null,
+    events: [],
+    status: "preparing",
+    eligibleForDelivery: false,
+    applicationAccepted: false,
+  };
+  const receiptPath = path.join(directory, "receipt.json");
+  const checkpoint = async (event: unknown) => {
+    receipt.events.push(event);
+    await Bun.write(receiptPath, JSON.stringify(receipt, null, 2) + "\n", {
+      mode: 0o600,
+    });
+  };
+  await checkpoint({ kind: "captured", at: new Date().toISOString() });
+  try {
+    receipt.prepared = await prepareBootstrapArchives(
+      descriptor,
+      captured,
+      directory,
+    );
+    const expectedPath = path.join(directory, "expected.json");
+    await Bun.write(
+      expectedPath,
+      JSON.stringify(receipt.prepared.expected) + "\n",
+      { mode: 0o600 },
+    );
+    receipt.status = "prepared";
+    await checkpoint({
+      kind: "archives-prepared",
+      at: new Date().toISOString(),
+    });
+    if (dryRun) {
+      console.log(
+        JSON.stringify({
+          receipt: receiptPath,
+          status: "prepared",
+          effects: false,
+        }),
+      );
+      return;
+    }
+    await assertBootstrapCheckout(descriptor.sourceRevision);
+    await bootstrapSourceProof(descriptor);
+    await verifyBootstrapControlPlane(descriptor.controlPlane, directory);
+    await verifyBootstrapControlPlaneArchive(descriptor.controlPlane);
+    assertBootstrapSnapshot(
+      captured.applications,
+      await rereadBootstrapApplications(captured.applications),
+    );
+    // Pin selected existing ranges to their already-running revision before publishing any newer leaf.
+    const pinned = [...captured.applications];
+    for (const target of descriptor.targets) {
+      const index = pinned.findIndex((app) => app.metadata.name === target),
+        prior = pinned[index];
+      if (prior === undefined) continue;
+      await assertBootstrapRegistryEmpty(
+        await rereadBootstrapApplications(pinned),
+        descriptor.deliveryUrl,
+      );
+      const source = z.record(z.string(), z.json()).parse(prior.spec["source"]);
+      await checkpoint({
+        kind: "source-freeze-intent",
+        application: target,
+        uid: prior.metadata.uid,
+        priorSourceFingerprint: bootstrapFingerprint(source),
+        requestId: descriptor.requestId,
+      });
+      pinned[index] = await bootstrapSourceCas(prior, {
+        ...source,
+        targetRevision: prior.status.sync.revision,
+      });
+      await checkpoint({
+        kind: "source-frozen",
+        application: target,
+        uid: pinned[index].metadata.uid,
+      });
+    }
+    for (const archive of receipt.prepared.archives) {
+      await assertBootstrapRegistryEmpty(
+        await rereadBootstrapApplications(pinned),
+        descriptor.deliveryUrl,
+      );
+      assertBootstrapSnapshot(
+        pinned,
+        await rereadBootstrapApplications(pinned),
+      );
+      await checkpoint({
+        kind: "publication-intent",
+        name: archive.name,
+        digest: archive.digest,
+      });
+      await publishBootstrapArchive(archive);
+      await checkpoint({
+        kind: "published",
+        name: archive.name,
+        digest: archive.digest,
+      });
+    }
+    await bootstrapSourceProof(descriptor);
+    await verifyBootstrapControlPlane(descriptor.controlPlane, directory);
+    await verifyBootstrapControlPlaneArchive(descriptor.controlPlane);
+    await assertBootstrapRegistryEmpty(
+      await rereadBootstrapApplications(pinned),
+      descriptor.deliveryUrl,
+    );
+    assertBootstrapSnapshot(pinned, await rereadBootstrapApplications(pinned));
+    const currentRoot = BootstrapApplicationSchema.parse(
+      await bootstrapArgo("/apps"),
+    );
+    if (
+      currentRoot.metadata.uid !== captured.root.metadata.uid ||
+      bootstrapFingerprint(currentRoot.spec) !==
+        bootstrapFingerprint(captured.root.spec)
+    )
+      throw new Error(
+        "Root identity/source changed before owned bootstrap release",
+      );
+    await checkpoint({
+      kind: "root-release-intent",
+      requestId: descriptor.requestId,
+      revision: descriptor.revision,
+    });
+    const rootCredentials = await bootstrapCredentials();
+    await run(
+      [
+        "bun",
+        "--no-install",
+        path.join(repository, "packages/homelab/scripts/argocd/argocd.ts"),
+        "release-root",
+        "apps",
+        expectedPath,
+        "--revision",
+        descriptor.revision,
+        "--request-id",
+        descriptor.requestId,
+      ],
+      {
+        cwd: directory,
+        env: rootCredentials,
+        unsetEnv: [
+          "OP_SERVICE_ACCOUNT_TOKEN",
+          "ROOT_ARGOCD_TOKEN",
+          "ARGOCD_AUTH_TOKEN",
+        ],
+      },
+    );
+    const operations = [];
+    for (const name of ["apps", ...descriptor.targets])
+      operations.push(
+        bootstrapOperationReceipt(
+          await bootstrapArgo(`/${encodeURIComponent(name)}`),
+          descriptor.requestId,
+        ),
+      );
+    receipt.status = "completed";
+    await checkpoint({
+      kind: "native-operation-readback",
+      operations,
+      at: new Date().toISOString(),
+    });
+    console.log(
+      JSON.stringify({
+        receipt: receiptPath,
+        status: "completed",
+        applicationAccepted: false,
+      }),
+    );
+  } catch (error) {
+    receipt.status = "interrupted";
+    await checkpoint({
+      kind: "interrupted",
+      at: new Date().toISOString(),
+      instruction:
+        "Inspect exact receipt and owned root request before resuming release-root; no PG lock or acceptance exists",
+    });
+    throw error;
+  }
+}
 if (import.meta.main) await main();

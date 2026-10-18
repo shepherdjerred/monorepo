@@ -432,6 +432,7 @@ time {
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
+  overflow-wrap: anywhere;
 }
 .page-footer {
   font-size: 10px;
@@ -540,6 +541,13 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 35px;
+}
+.detail-grid > div {
+  min-width: 0;
+}
+.stages p,
+.stages small {
+  overflow-wrap: anywhere;
 }
 .detail-grid h3,
 .approval-form h3,

@@ -22,17 +22,89 @@ import {
   verifyStaticSite,
 } from "./static-site.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
+import { workerRetirementClaim } from "./workers/worker-claim.ts";
+import { bootstrapDeliveryWorkerHosts } from "./workers/worker-bootstrap.ts";
+import { verifyWorkerHosts } from "./workers/worker-hosts.ts";
+import { acceptWorkerBaseline } from "./workers/worker-baseline.ts";
+import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
+import { prepareMinecraftDelivery } from "./minecraft.ts";
+import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
+import { trmnlRepairClaim } from "./trmnl-repair.ts";
 
 const path = (id: string) => `deployments/${encodeURIComponent(id)}`;
 const detail = async (id: string) =>
   await deliveryRequest(path(id), DeploymentDetailSchema);
 
+async function capturePriorWorkerSource(current: DeploymentDetail) {
+  if (
+    current.deployment.workerSnapshot === null ||
+    current.stages.some((item) => item.key === "worker-prior-source")
+  )
+    return;
+  if (current.pipeline.definition.kind !== "argocd")
+    throw new Error("Worker snapshot lacks Argo definition");
+  const observed = await argoRequest(
+    encodeURIComponent(current.pipeline.definition.application),
+  );
+  const fingerprint = workerSourceFingerprint(observed);
+  const revision = z
+    .object({ metadata: z.object({ resourceVersion: z.string().min(1) }) })
+    .parse(observed).metadata.resourceVersion;
+  await stage(current, "worker-prior-source", "succeeded", {
+    operationId: fingerprint,
+    evidence: [
+      {
+        kind: "preflight",
+        operationId: fingerprint,
+        summary: `Exact Application UID, source, destination and owner captured before worker effects; observed resourceVersion ${revision}`,
+      },
+    ],
+  });
+}
+
+async function minecraftEligible(current: DeploymentDetail): Promise<boolean> {
+  const pipeline = current.pipeline.definition;
+  if (pipeline.kind !== "argocd" || pipeline.minecraftUpgrade === undefined)
+    return true;
+  const result = await prepareMinecraftDelivery(current);
+  return result.status === "ready";
+}
+function adapterFlags(current: DeploymentDetail) {
+  const pipeline = current.pipeline.definition;
+  return {
+    trmnlRepair: current.deployment.kind === "repair-trmnl",
+    controlPlane: current.deployment.controlPlaneSnapshot !== null,
+    platform: current.deployment.platformSnapshot !== null,
+    workerHosts: current.deployment.workerSnapshot !== null,
+    minecraftUpgrade:
+      pipeline.kind === "argocd" && pipeline.minecraftUpgrade !== undefined,
+    scoutSite:
+      pipeline.kind === "argocd" &&
+      pipeline.scoutSite !== undefined &&
+      current.deployment.workerSnapshot?.workerOperation === "rollout",
+    trmnlPlugins:
+      pipeline.kind === "argocd" && pipeline.trmnlPlugins !== undefined,
+    workerRollout:
+      pipeline.kind === "argocd" &&
+      pipeline.workerRollout !== undefined &&
+      current.deployment.workerSnapshot?.workerOperation === "rollout",
+  };
+}
+
 export async function prepareDelivery(id: string) {
   const current = await detail(id);
   if (["succeeded", "failed", "canceled"].includes(current.deployment.status))
     return { status: "terminal" } as const;
+  if (!(await minecraftEligible(current)))
+    return { status: "waiting" } as const;
   try {
-    await deliveryRequest(`${path(id)}/claim`, DeploymentDetailSchema, {});
+    await deliveryRequest(
+      `${path(id)}/claim`,
+      DeploymentDetailSchema,
+      (await trmnlRepairClaim(current)) ??
+        (await workerRetirementClaim(current)),
+    );
   } catch (error) {
     if (
       error instanceof ApplicationFailure &&
@@ -51,11 +123,10 @@ export async function prepareDelivery(id: string) {
     }
     throw error;
   }
+  await capturePriorWorkerSource(current);
   return {
     status: "ready",
-    workerRollout:
-      current.pipeline.definition.kind === "argocd" &&
-      current.pipeline.definition.workerRollout !== undefined,
+    ...adapterFlags(current),
   } as const;
 }
 
@@ -76,6 +147,11 @@ async function stage(
 
 export async function applyDelivery(id: string): Promise<void> {
   const current = await detail(id);
+  if (
+    current.pipeline.definition.kind === "argocd" &&
+    current.pipeline.definition.minecraftUpgrade !== undefined
+  )
+    requireMinecraftPreservation(current);
   if (current.deployment.cancelRequested)
     throw new Error("Delivery cancellation requested before mutation");
   if (current.pipeline.definition.kind === "static-site") {
@@ -116,10 +192,30 @@ export async function applyDelivery(id: string): Promise<void> {
       },
     ],
   });
+  if (current.deployment.kind === "adopt-worker") return;
   // Persist intent before either external mutation. A crash leaves a visible,
   // locked recovery case rather than allowing another release to overwrite it.
-  await stage(current, "reconcile", "running", { operationId });
   Context.current().heartbeat({ operationId });
+  await withBackupActivityHeartbeat(
+    Context.current(),
+    async () => {
+      await bootstrapDeliveryWorkerHosts(current);
+    },
+    { stage: "worker-host-bootstrap" },
+  );
+  if (current.deployment.workerSnapshot?.workerOperation === "retire")
+    await deliveryRequest(
+      `${path(id)}/claim`,
+      DeploymentDetailSchema,
+      await workerRetirementClaim(current),
+    );
+  if (current.deployment.forumBaselineSnapshot !== null)
+    await deliveryRequest(
+      `${path(id)}/forum-baseline-check`,
+      z.object({ verified: z.literal(true) }),
+      {},
+    );
+  await stage(current, "reconcile", "running", { operationId });
   await selectArgoRelease(selection);
   await syncArgoRelease(selection, operationId);
   await stage(current, "reconcile", "succeeded", {
@@ -142,6 +238,8 @@ export async function verifyDelivery(id: string): Promise<EvidenceInput[]> {
     );
   if (current.pipeline.definition.kind === "static-site")
     return await verifyStaticSite(current);
+  if (current.deployment.kind === "adopt-worker")
+    return await acceptWorkerBaseline(current);
   const { selection, operationId } = deliverySelection(current);
   const receipt = verifyArgoRelease(
     await argoRequest(encodeURIComponent(selection.application)),
@@ -149,6 +247,7 @@ export async function verifyDelivery(id: string): Promise<EvidenceInput[]> {
     operationId,
   );
   await observeDeliveryPods(current);
+  await verifyWorkerHosts(current);
   const pipeline = current.pipeline.definition;
   if (pipeline.kind !== "argocd")
     throw new Error("Unsupported pipeline acceptance");
@@ -184,6 +283,19 @@ export async function verifyDelivery(id: string): Promise<EvidenceInput[]> {
     summary: "All configured release acceptance checks passed",
     operationId,
   });
+  if (
+    pipeline.scoutSite !== undefined &&
+    current.deployment.workerSnapshot?.workerOperation === "rollout"
+  )
+    await stage(current, "scout-backend", "succeeded", {
+      operationId,
+      evidence,
+    });
+  if (pipeline.trmnlPlugins !== undefined)
+    await stage(current, "trmnl-backend", "succeeded", {
+      operationId,
+      evidence,
+    });
   return evidence;
 }
 
@@ -197,7 +309,8 @@ export async function finishDelivery(
   const current = await detail(id);
   const recoveryRequired =
     result.status !== "succeeded" &&
-    current.stages.some((item) => item.status === "running");
+    (current.deployment.kind === "repair-trmnl" ||
+      current.stages.some((item) => item.status === "running"));
   await deliveryRequest(`${path(id)}/finish`, z.unknown(), {
     ...result,
     status:
@@ -211,7 +324,11 @@ export async function finishDelivery(
           ? "External operation may still be active; inspect its recorded identity before releasing ownership"
           : "Deployment stopped; inspect Workflow history and recorded evidence",
     recoveryRequired,
-    ...(result.status === "succeeded"
+    ...(result.status === "succeeded" &&
+    current.deployment.kind !== "adopt-worker" &&
+    current.deployment.kind !== "repair-trmnl" &&
+    current.deployment.platformSnapshot === null &&
+    current.deployment.controlPlaneSnapshot === null
       ? { observedRevisionId: current.deployment.versionSetRevisionId }
       : {}),
   });

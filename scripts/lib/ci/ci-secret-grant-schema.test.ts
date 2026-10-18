@@ -35,6 +35,15 @@ describe("CI grant catalog", () => {
     );
   });
 
+  test("never borrows the next credential's item when a declaration is unresolved", () => {
+    expect(
+      declaredSecretItems(`[
+        { secretName: "unresolved", itemId: SHARED.publisher },
+        { secretName: "publisher", itemId: "publish-only" },
+      ]`),
+    ).toEqual(new Map([["publisher", "publish-only"]]));
+  });
+
   test("rejects blank manifest fields", () => {
     expect(() =>
       parseSecretGrantManifest({

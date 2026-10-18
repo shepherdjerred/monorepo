@@ -1,0 +1,42 @@
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "players"],
+      "properties": {
+        "status": {
+          "const": "eligible"
+        },
+        "players": {
+          "const": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": {
+          "const": "waiting"
+        },
+        "reason": {
+          "enum": [
+            "players-online",
+            "maintenance-owner",
+            "admission-owner",
+            "argocd-operation",
+            "server-starting",
+            "server-stopping",
+            "validation-copy-retained"
+          ]
+        },
+        "players": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  ]
+}

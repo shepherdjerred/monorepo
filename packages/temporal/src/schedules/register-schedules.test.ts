@@ -140,6 +140,15 @@ describe("central Workflow schedule routing", () => {
 });
 
 describe("central schedule routing", () => {
+  test("Delivery bootstrap installs an explicitly paused dedicated dispatch Schedule", () => {
+    const schedule = findScheduleById("delivery-dispatch");
+    expect(schedule.namespace).toBe("prod");
+    expect(schedule.taskQueue).toBe(TASK_QUEUES.DELIVERY_WORKFLOWS);
+    expect(buildScheduleState(schedule, {}, undefined, false)).toEqual({
+      paused: true,
+      note: "Awaiting Delivery service activation, executor credentials and compatible Workflow workers",
+    });
+  });
   it.each([
     "vacuum-9am",
     "vacuum-12pm",
@@ -165,6 +174,7 @@ describe("central schedule routing", () => {
     const centralSchedules = SCHEDULES.filter(
       (schedule) =>
         schedule.taskQueue !== TASK_QUEUES.SCOUT_BETA &&
+        schedule.taskQueue !== TASK_QUEUES.DELIVERY_WORKFLOWS &&
         schedule.taskQueue !== TASK_QUEUES.SCOUT_PROD,
     );
     expect(

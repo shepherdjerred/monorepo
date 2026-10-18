@@ -6,9 +6,9 @@ import { z } from "zod";
 import { parseScoutReleaseState } from "../lib/scout/scout-release-state.ts";
 import {
   hashSiteArchive,
-  materializeScoutArchive,
-} from "../lib/scout/scout-site-storage.ts";
-import { DELIVERY_SCOUT_RELEASE_WORK_DIR } from "../lib/scout/scout-storage-runtime.ts";
+  assertScoutArchiveSource,
+  DELIVERY_SCOUT_RELEASE_WORK_DIR,
+} from "../lib/scout/scout-archive.ts";
 import { publishStaticSiteArchive } from "../lib/static-site-publication.ts";
 import { readRequiredHandoff, writeJsonHandoff } from "../lib/ci/ci-handoff.ts";
 import { scoutArchiveRequirements } from "../lib/scout/scout-delivery-backend.ts";
@@ -40,13 +40,12 @@ try {
   const artifacts = [];
   for (const flavor of ["beta", "prod"] as const) {
     const bucket = flavor === "beta" ? "scout-frontend-beta" : "scout-frontend";
-    let source = path.join(DELIVERY_SCOUT_RELEASE_WORK_DIR, flavor);
-    if (!(await Bun.file(path.join(source, "index.html")).exists())) {
-      source = path.join(scratch, flavor);
-      await materializeScoutArchive(state, flavor, source);
-    }
+    const source = path.join(DELIVERY_SCOUT_RELEASE_WORK_DIR, flavor);
+    if (!(await Bun.file(path.join(source, "index.html")).exists()))
+      throw new Error(`Prepared Scout ${flavor} source is missing`);
     const expected =
       flavor === "beta" ? state.betaSiteArchiveDigest : state.siteArchiveDigest;
+    await assertScoutArchiveSource(source, flavor);
     if ((await hashSiteArchive(source)) !== expected)
       throw new Error(
         `Scout ${flavor} archive differs from its qualified release state`,

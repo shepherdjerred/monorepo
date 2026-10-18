@@ -269,9 +269,9 @@ describe("signed workflow routing", () => {
     expect(ready.configs.map((entry) => entry.name)).toEqual(
       normal.configs.map((entry) => entry.name),
     );
-    expect(ready.configs.some((entry) => entry.name.includes("tofu-pr"))).toBe(
-      true,
-    );
+    expect(
+      ready.configs.some((entry) => entry.name.includes("tofu-validate")),
+    ).toBe(true);
     expect(
       ready.configs.some((entry) => entry.name.includes("playwright-e2e")),
     ).toBe(true);

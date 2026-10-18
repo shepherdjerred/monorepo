@@ -1,14 +1,29 @@
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
+import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import {
   buildPublications,
   downloadChartArtifact,
-  imageRuntimeDigests,
   parsePublicationOptions,
-  readPublicationHandoffs,
 } from "./publish-delivery.ts";
+import { readPublicationHandoffs as readProducerHandoffs } from "../lib/ci/delivery-publication-handoffs.ts";
+import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 
 const absentChartHandoffs = new Map<string, string>();
+
+/** These fixtures exercise image/chart/site handoffs; TRMNL has its own required-input suite. */
+function readPublicationHandoffs(
+  staticArchives: boolean,
+  read: NonNullable<Parameters<typeof readProducerHandoffs>[1]>,
+) {
+  return readProducerHandoffs(staticArchives, {
+    ...read,
+    required: (key) =>
+      key === "trmnl-plugin-artifacts"
+        ? Promise.resolve("[]")
+        : read.required(key),
+  });
+}
 
 const childDigest = `sha256:${"a".repeat(64)}`;
 const index = JSON.stringify({
@@ -50,6 +65,8 @@ describe("explicit static archive publication", () => {
     const result = await readPublicationHandoffs(false, {
       required: async (key) => {
         reads.push(key);
+        if (key === "delivery-chart-publications")
+          return JSON.stringify(freshCharts);
         if (key !== "delivery-image-digests")
           throw new Error("Unexpected static producer dependency");
         return JSON.stringify({ "shepherdjerred/arcade": indexDigest });
@@ -62,6 +79,7 @@ describe("explicit static archive publication", () => {
     expect(reads).toEqual([
       "delivery-image-digests",
       "argocd-release-expected",
+      "delivery-chart-publications",
     ]);
     expect(result.siteArtifacts).toEqual([]);
   });
@@ -122,9 +140,187 @@ const ci = {
   repositoryId: 1,
   capturedAt: "2026-10-16T00:00:00.000Z",
 };
+const freshCharts = {
+  schema: "delivery-chart-publications/v1",
+  sourceRevision: ci.sourceRevision,
+  pipelineNumber: ci.pipelineNumber,
+  repositoryId: ci.repositoryId,
+  charts: [{ name: "arcade", revision: "2.0.0-42", digest: childDigest }],
+};
+
+test("retained release inventory is never republished as a fresh CI chart", async () => {
+  const result = await readPublicationHandoffs(false, {
+    required: async (key) =>
+      key === "delivery-image-digests"
+        ? "{}"
+        : JSON.stringify({ ...freshCharts, charts: [] }),
+    optional: async () =>
+      JSON.stringify([{ name: "arcade", revision: "2.0.0-41" }]),
+  });
+  expect(result.charts).toEqual([]);
+  expect(result.chartPublication?.charts).toEqual([]);
+});
+
+test("a release inventory without its real chart producer receipt fails loudly", async () => {
+  await expect(
+    readPublicationHandoffs(false, {
+      required: async (key) => {
+        if (key === "delivery-image-digests") return "{}";
+        throw new Error("missing actual chart publication");
+      },
+      optional: async () =>
+        JSON.stringify([{ name: "arcade", revision: "2.0.0-41" }]),
+    }),
+  ).rejects.toThrow("missing actual chart publication");
+});
+
+test("a fresh chart must match the coordinated root inventory", async () => {
+  await expect(
+    readPublicationHandoffs(false, {
+      required: async (key) =>
+        key === "delivery-image-digests" ? "{}" : JSON.stringify(freshCharts),
+      optional: async () =>
+        JSON.stringify([{ name: "arcade", revision: "2.0.0-41" }]),
+    }),
+  ).rejects.toThrow("coordinated release inventory");
+});
+
+test("chart provenance cannot be moved to a later CI execution", async () => {
+  await expect(
+    buildPublications(
+      {
+        ...ci,
+        pipelineNumber: 500,
+        digests: {},
+        charts: freshCharts.charts,
+        chartPublication: freshCharts,
+      },
+      {
+        inspectImage: async () => {
+          throw new Error("unexpected image read");
+        },
+        chartArtifact: async () => {
+          throw new Error("unexpected chart read");
+        },
+      },
+    ),
+  ).rejects.toThrow("another source or CI execution");
+});
+
+function coordinatedHandoffs(chart: string, revision: string) {
+  return {
+    required: async (key: string) =>
+      key === "delivery-image-digests"
+        ? "{}"
+        : JSON.stringify({
+            ...freshCharts,
+            charts: [{ name: chart, revision, digest: childDigest }],
+          }),
+    optional: async () =>
+      JSON.stringify([{ name: "apps", revision: "2.0.0-1000042" }]),
+  };
+}
+
+test("full chart production may include explicitly inactive charts without adding them to root ownership", async () => {
+  const result = await readPublicationHandoffs(
+    false,
+    coordinatedHandoffs("delivery", "2.0.0-1000042"),
+  );
+  expect(result.charts?.map((chart) => chart.name)).toEqual(["delivery"]);
+  expect(result.rootInventory?.map((chart) => chart.name)).toEqual(["apps"]);
+  await expect(
+    readPublicationHandoffs(
+      false,
+      coordinatedHandoffs("arcade", "2.0.0-1000042"),
+    ),
+  ).rejects.toThrow("coordinated release inventory");
+  await expect(
+    readPublicationHandoffs(
+      false,
+      coordinatedHandoffs("apps", "2.0.0-1000043"),
+    ),
+  ).rejects.toThrow("coordinated release inventory");
+});
+
+test.each([false, true])(
+  "genuine CI retains the original acquired upstream chart without cloning it (new image: %s)",
+  async (newImage) => {
+    const original = ArtifactVersionSchema.parse({
+      id: "upstream/minecraft/original",
+      buildId: "upstream/minecraft/build",
+      serviceId: "minecraft",
+      component: "chart:minecraft",
+      kind: "chart",
+      uri: "https://chartmuseum.sjer.red/charts/minecraft-5.2.0.tgz",
+      digest: childDigest,
+      version: "5.2.0",
+      sourceRevision: "a".repeat(40),
+      createdAt: ci.capturedAt,
+      origin: {
+        kind: "upstream",
+        repository: "https://itzg.github.io/minecraft-server-charts/",
+        name: "minecraft",
+        version: "5.2.0",
+        checksum: childDigest,
+      },
+    });
+    const [publication] = await buildPublications(
+      {
+        ...ci,
+        digests: newImage
+          ? { "shepherdjerred/the-storm-server": indexDigest }
+          : {},
+        charts: [],
+        retainedArtifacts: [original],
+      },
+      {
+        inspectImage: async () => index,
+        chartArtifact: async () => {
+          throw new Error("Retained archive is not republished");
+        },
+      },
+    );
+    expect(publication?.sourceRevision).toBe(ci.sourceRevision);
+    expect(publication?.retainedArtifactIds).toEqual([original.id]);
+    expect(
+      publication?.artifacts.map((artifact) => artifact.component),
+    ).toEqual(newImage ? ["image:the-storm-server"] : []);
+    expect(original.sourceRevision).toBe("a".repeat(40));
+    expect(original.buildId).toBe("upstream/minecraft/build");
+  },
+);
 function requestUrl(input: string | URL | Request) {
   return input instanceof Request ? input.url : String(input);
 }
+
+test("new TaskNotes API and Obsidian publications share the application release owner", async () => {
+  const publications = await buildPublications(
+    {
+      ...ci,
+      digests: {
+        "shepherdjerred/tasknotes-server": indexDigest,
+        "shepherdjerred/obsidian-headless": indexDigest,
+      },
+      charts: undefined,
+    },
+    {
+      inspectImage: async () => index,
+      chartArtifact: async () => {
+        throw new Error("Unexpected chart publication");
+      },
+    },
+  );
+  expect(publications).toHaveLength(1);
+  expect(publications[0]?.serviceId).toBe("tasknotes-server");
+  expect(
+    publications[0]?.artifacts.map((artifact) => artifact.component),
+  ).toEqual(["image:tasknotes-server", "image:obsidian-headless"]);
+  expect(
+    publications[0]?.artifacts.every((artifact) =>
+      artifact.id.startsWith("ci/1/42/image/"),
+    ),
+  ).toBe(true);
+});
 
 describe("immutable CI artifact publication", () => {
   test("content-verifies OCI index and retains runtime child manifests", () => {
@@ -168,6 +364,10 @@ describe("immutable CI artifact publication", () => {
     );
     expect(publications).toHaveLength(1);
     expect(publications[0]?.serviceId).toBe("arcade");
+    expect(
+      publications[0]?.artifacts.find((entry) => entry.kind === "image")
+        ?.version,
+    ).toBe("2.0.0-1000042");
     expect(publications[0]?.artifacts.map((entry) => entry.component)).toEqual([
       "image:arcade",
       "chart:arcade",

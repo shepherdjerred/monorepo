@@ -1,0 +1,9 @@
+{
+  "id": "static-sites/webring",
+  "serviceId": "static-sites",
+  "name": "webring",
+  "pipelineRevisionId": "static-sites/webring/1",
+  "configurationRevision": "static-sites/webring/1",
+  "configuration": {},
+  "automatic": true
+}

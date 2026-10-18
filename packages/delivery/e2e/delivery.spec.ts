@@ -1,5 +1,39 @@
 import { expect, test } from "@playwright/test";
 
+test("quarantined Minecraft release shows independent recovery identity and keeps retry blocked", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const environment = page
+    .locator(".environment-card")
+    .filter({ hasText: "minecraft" });
+  await environment
+    .getByRole("button", { name: "failed", exact: true })
+    .click();
+  const detail = page.getByRole("region", { name: "minecraft/tsmc" });
+  await expect(
+    detail.getByRole("heading", { name: "Original server recovery" }),
+  ).toBeVisible();
+  await expect(detail).toContainText("toolkit deploy minecraft recover");
+  await expect(detail).toContainText("--expected-generation 1");
+  await expect(detail).toContainText("browser/minecraft/recovery");
+  await expect(detail.getByText("pending", { exact: true })).toBeVisible();
+  await detail.getByText("Frozen recovery identity", { exact: true }).click();
+  await expect(detail).toContainText(
+    "delivery-minecraft-recovery/browser/minecraft/recovery",
+  );
+  await expect(
+    detail.getByRole("button", { name: "Retry as a new deployment" }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(
+      () =>
+        globalThis.document.documentElement.scrollWidth <=
+        globalThis.innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("select an immutable release, inspect queued execution, and cancel safely", async ({
   page,
 }) => {

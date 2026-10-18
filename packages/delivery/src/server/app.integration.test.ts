@@ -52,6 +52,16 @@ describe("Delivery API authorization and kill switch", () => {
     Origin: "http://delivery.test",
     "Content-Type": "application/json",
   };
+  test("Prometheus can scrape bounded operational gauges without a deployment credential", async () => {
+    const response = await app.request("/metrics");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain(
+      "text/plain; version=0.0.4",
+    );
+    expect(await response.text()).toContain(
+      "# TYPE delivery_outbox_pending gauge",
+    );
+  });
   test("publisher cannot deploy or execute even when spoofing operator identity", async () => {
     const response = await app.request("/api/v1/deployments", {
       method: "POST",

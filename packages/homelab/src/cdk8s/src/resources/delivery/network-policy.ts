@@ -32,6 +32,22 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
               podSelector: { matchLabels: { component: "delivery-worker" } },
             },
             {
+              ...ns("temporal"),
+              podSelector: {
+                matchLabels: { component: "delivery-platform-worker" },
+              },
+            },
+            {
+              ...ns("delivery-platform-jobs"),
+              podSelector: { matchLabels: { app: "delivery-stage" } },
+            },
+            {
+              ...ns("delivery-tsmc-controller"),
+              podSelector: {
+                matchLabels: { component: "delivery-tsmc-controller" },
+              },
+            },
+            {
               ...ns(WOODPECKER_CI_NAMESPACE),
               podSelector: {
                 matchExpressions: [
@@ -51,6 +67,10 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
         dnsEgressRule(),
         externalHttpsEgressRule(),
         {
+          to: [{ ipBlock: { cidr: "192.168.1.81/32" } }],
+          ports: [tcp(6443)],
+        },
+        {
           to: [
             {
               podSelector: {
@@ -62,6 +82,26 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
         },
         { to: [ns("flipt")], ports: [tcp(8080)] },
         { to: [ns("woodpecker")], ports: [tcp(8000)] },
+        {
+          to: ["storm-forum", "storm-forum-beta"].map((name) => ({
+            ...ns(name),
+            podSelector: {
+              matchLabels: { app: "storm-forum", component: "web" },
+            },
+          })),
+          ports: [tcp(8082)],
+        },
+        {
+          to: [
+            {
+              ...ns("delivery-tsmc-controller"),
+              podSelector: {
+                matchLabels: { component: "delivery-tsmc-controller" },
+              },
+            },
+          ],
+          ports: [tcp(7356)],
+        },
       ],
     },
   });

@@ -1,29 +1,9 @@
 import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker, type WorkerOptions } from "@temporalio/worker";
+import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { ApplicationFailure } from "@temporalio/common";
-
-async function createDeliveryWorkers(
-  environment: TestWorkflowEnvironment,
-  definitions: NonNullable<WorkerOptions["activities"]>,
-) {
-  const connection = {
-    connection: environment.nativeConnection,
-    namespace: "default",
-  };
-  const workflows = await Worker.create({
-    ...connection,
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    workflowsPath: new URL("delivery.ts", import.meta.url).pathname,
-  });
-  const activities = await Worker.create({
-    ...connection,
-    taskQueue: TASK_QUEUES.DELIVERY,
-    activities: definitions,
-  });
-  return { workflows, activities };
-}
+import { createDeliveryWorkers } from "#workflows/testing/delivery-workers.ts";
 
 async function execute(failApply: boolean, waits = 0) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -36,7 +16,7 @@ async function execute(failApply: boolean, waits = 0) {
         waits -= 1;
         return { status: "waiting" };
       }
-      return { status: "ready", workerRollout: false };
+      return { status: "ready", workerRollout: false, workerHosts: false };
     },
     applyDelivery: () => {
       calls.push("apply");
@@ -55,7 +35,7 @@ async function execute(failApply: boolean, waits = 0) {
     const run = () =>
       environment.client.workflow.execute("deliveryDeploymentWorkflow", {
         workflowId: `delivery-test-${crypto.randomUUID()}`,
-        taskQueue: TASK_QUEUES.WORKFLOWS,
+        taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
         args: [{ deploymentId: "deployment-42" }],
       });
     if (failApply)
@@ -70,9 +50,104 @@ async function execute(failApply: boolean, waits = 0) {
 }
 
 describe("Delivery Workflow", () => {
+  it("durably preserves worker observation windows and replays the frozen multi-namespace plan", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const actions: string[] = [];
+    const times: number[] = [];
+    const plan = {
+      target: "central",
+      namespace: "prod",
+      deploymentName: "monorepo-central-workflows",
+      taskQueue: "delivery-workflows",
+      candidateBuildId: "b".repeat(40),
+      candidateImage: `docker.io/shepherdjerred/temporal-worker@sha256:${"b".repeat(64)}`,
+      expectedCurrentBuildId: "a".repeat(40),
+      deploymentId: "worker-test",
+      routes: ["prod", "beta"].map((namespace) => ({
+        namespace,
+        expectedCurrentBuildId: "a".repeat(40),
+      })),
+    };
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      prepareDelivery: () => ({
+        status: "ready",
+        workerRollout: true,
+        workerHosts: true,
+      }),
+      inspectDeliveryWorkerImages: () => {
+        actions.push("image-provenance");
+      },
+      applyDelivery: () => {
+        actions.push("hosts");
+      },
+      prepareDeliveryWorker: () => {
+        actions.push("preflight");
+        return plan;
+      },
+      stepDeliveryWorker: async (
+        _id: string,
+        frozen: unknown,
+        action: string,
+      ) => {
+        expect(frozen).toEqual(plan);
+        actions.push(action);
+        times.push(await environment.currentTimeMs());
+      },
+      verifyDelivery: () => {
+        actions.push("acceptance");
+        return [];
+      },
+      finishDelivery: () => {
+        actions.push("finish");
+      },
+    });
+    try {
+      const workflowId = `worker-delivery-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ deploymentId: "worker-test" }],
+          }),
+        ),
+      );
+      expect(actions).toEqual([
+        "image-provenance",
+        "hosts",
+        "preflight",
+        "start",
+        "advance-50",
+        "advance-100",
+        "promote",
+        "verify",
+        "acceptance",
+        "finish",
+      ]);
+      expect((times[1] ?? 0) - (times[0] ?? 0)).toBeGreaterThanOrEqual(
+        30 * 60 * 1000,
+      );
+      expect((times[2] ?? 0) - (times[1] ?? 0)).toBeGreaterThanOrEqual(
+        2 * 60 * 60 * 1000,
+      );
+      expect((times[3] ?? 0) - (times[2] ?? 0)).toBeGreaterThanOrEqual(
+        2 * 60 * 60 * 1000,
+      );
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
   it("dispatches qualified requests even when CI qualification is unavailable", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     let dispatched = false;
+    let recovered = false;
+    let forumQualified = false,
+      forumObserved = false,
+      minecraftRecovered = false;
     const { workflows, activities } = await createDeliveryWorkers(environment, {
       qualifyDeliveryBuilds: () => {
         throw ApplicationFailure.nonRetryable(
@@ -84,6 +159,19 @@ describe("Delivery Workflow", () => {
         dispatched = true;
         return { submitted: 1 };
       },
+      dispatchDeliveryWorkerRecoveries: () => {
+        recovered = true;
+      },
+      dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+      dispatchDeliveryMinecraftRecoveries: () => {
+        minecraftRecovered = true;
+      },
+      qualifyDeliveryForumBundles: () => {
+        forumQualified = true;
+      },
+      dispatchDeliveryForumBaselines: () => {
+        forumObserved = true;
+      },
     });
     try {
       await expect(
@@ -91,12 +179,47 @@ describe("Delivery Workflow", () => {
           activities.runUntil(
             environment.client.workflow.execute("deliveryDispatchWorkflow", {
               workflowId: `dispatch-${crypto.randomUUID()}`,
-              taskQueue: TASK_QUEUES.WORKFLOWS,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
             }),
           ),
         ),
       ).rejects.toThrow("Workflow execution failed");
       expect(dispatched).toBe(true);
+      expect(recovered).toBe(true);
+      expect(forumQualified).toBe(true);
+      expect(forumObserved).toBe(true);
+      expect(minecraftRecovered).toBe(true);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+  it("forum baseline observes once, replays and never applies a release", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping(),
+      calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      observeDeliveryForumBaseline: (id: string) => {
+        calls.push(`observe:${id}`);
+      },
+      failDeliveryForumBaseline: () => {
+        calls.push("failed");
+      },
+    });
+    try {
+      const workflowId = `forum-baseline-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryForumBaselineWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ intentId: "forum/original" }],
+          }),
+        ),
+      );
+      expect(calls).toEqual(["observe:forum/original"]);
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
     } finally {
       await environment.teardown();
     }
@@ -121,5 +244,196 @@ describe("Delivery Workflow", () => {
       "verify",
       "finish",
     ]);
+  }, 60_000);
+});
+
+describe("Delivery preservation and quarantine", () => {
+  it.each([false, true])(
+    "Minecraft recovery retains terminal release status and does not repeat ambiguous cleanup (fails=%s)",
+    async (fail) => {
+      const environment = await TestWorkflowEnvironment.createTimeSkipping();
+      const calls: string[] = [];
+      const { workflows, activities } = await createDeliveryWorkers(
+        environment,
+        {
+          recoverDeliveryMinecraft: () => {
+            calls.push("recover-original");
+            if (fail) throw new Error("Original-volume native proof missing");
+          },
+          failDeliveryMinecraftRecovery: () => {
+            calls.push("retain-lock");
+          },
+        },
+      );
+      try {
+        const workflowId = `minecraft-recovery-${crypto.randomUUID()}`;
+        const run = workflows.runUntil(
+          activities.runUntil(
+            environment.client.workflow.execute(
+              "deliveryMinecraftRecoveryWorkflow",
+              {
+                workflowId,
+                taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+                args: [{ intentId: "minecraft/recovery" }],
+              },
+            ),
+          ),
+        );
+        if (fail)
+          await expect(run).rejects.toThrow("Workflow execution failed");
+        else await run;
+        expect(calls).toEqual(
+          fail ? ["recover-original", "retain-lock"] : ["recover-original"],
+        );
+        await Worker.runReplayHistory(
+          { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+          await environment.client.workflow
+            .getHandle(workflowId)
+            .fetchHistory(),
+        );
+      } finally {
+        await environment.teardown();
+      }
+    },
+    60_000,
+  );
+  it("accepts the Scout backend before publishing its exact compatible frontend under the same release", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const evidence = [{ kind: "acceptance", summary: "backend" }];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      prepareDelivery: () => ({ status: "ready", scoutSite: true }),
+      applyDelivery: () => {
+        calls.push("backend-apply");
+      },
+      verifyDelivery: () => {
+        calls.push("backend-verify");
+        return evidence;
+      },
+      applyDeliveryScoutSite: () => {
+        calls.push("frontend-apply-verify");
+        return [{ kind: "acceptance", summary: "frontend" }];
+      },
+      finishDelivery: (_id: string, result: unknown) => {
+        calls.push("whole-release-accept");
+        expect(result).toEqual({
+          status: "succeeded",
+          evidence: [...evidence, { kind: "acceptance", summary: "frontend" }],
+        });
+      },
+    });
+    try {
+      const workflowId = `scout-release-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ deploymentId: "scout-release" }],
+          }),
+        ),
+      );
+      expect(calls).toEqual([
+        "backend-apply",
+        "backend-verify",
+        "frontend-apply-verify",
+        "whole-release-accept",
+      ]);
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+  it("durably waits after a safely reopened late join and never selects the candidate before preservation", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    let preserved = false;
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      prepareDelivery: () => ({
+        status: "ready",
+        workerHosts: false,
+        workerRollout: false,
+        minecraftUpgrade: true,
+      }),
+      preserveDeliveryMinecraft: () => {
+        calls.push("preserve");
+        const status = preserved ? "ready" : "waiting";
+        preserved = true;
+        return { status };
+      },
+      applyDelivery: () => {
+        calls.push("apply");
+      },
+      verifyDelivery: () => {
+        calls.push("verify");
+        return [];
+      },
+      finishDelivery: () => {
+        calls.push("finish");
+      },
+    });
+    try {
+      const workflowId = `minecraft-delivery-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ deploymentId: "minecraft-request" }],
+          }),
+        ),
+      );
+      expect(calls).toEqual([
+        "preserve",
+        "preserve",
+        "apply",
+        "verify",
+        "finish",
+      ]);
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+  it("a failed independent recovery records failure without restarting or accepting the failed release", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      inspectDeliveryWorkerRecovery: () => {
+        calls.push("inspect");
+        throw ApplicationFailure.nonRetryable(
+          "Native Job remains active",
+          "RecoveryNotSettled",
+        );
+      },
+      failDeliveryWorkerRecovery: () => {
+        calls.push("retain-lock");
+      },
+    });
+    try {
+      await expect(
+        workflows.runUntil(
+          activities.runUntil(
+            environment.client.workflow.execute(
+              "deliveryWorkerRecoveryWorkflow",
+              {
+                workflowId: `recover-${crypto.randomUUID()}`,
+                taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+                args: [{ intentId: "quarantine-request" }],
+              },
+            ),
+          ),
+        ),
+      ).rejects.toThrow("Workflow execution failed");
+      expect(calls).toEqual(["inspect", "retain-lock"]);
+    } finally {
+      await environment.teardown();
+    }
   }, 60_000);
 });

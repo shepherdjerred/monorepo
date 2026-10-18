@@ -323,7 +323,7 @@ describe("selection recovery and qualification fairness", () => {
       ),
     ).rejects.toMatchObject({ code: "CONFLICT" });
   });
-  test("Scout production approval follows its canonical bucket rather than display name", async () => {
+  test("Scout refuses an independent frontend environment that could bypass backend ordering", async () => {
     await context.delivery.registerPipeline(
       "scout-site/prod",
       {
@@ -337,24 +337,20 @@ describe("selection recovery and qualification fairness", () => {
       },
       testOperator,
     );
-    const env = await context.delivery.registerEnvironment(
-      {
-        id: "scout/site",
-        serviceId: "scout-for-lol",
-        name: "beta",
-        pipelineRevisionId: "scout-site/prod",
-        configurationRevision: "config/1",
-        configuration: {},
-        automatic: true,
-      },
-      testOperator,
-    );
-    expect(env.approvalRequired).toBe(true);
-    const overview = await context.delivery.overview();
-    expect(
-      overview.environments.find((entry) => entry.id === env.id)
-        ?.approvalRequired,
-    ).toBe(true);
+    await expect(
+      context.delivery.registerEnvironment(
+        {
+          id: "scout/site",
+          serviceId: "scout-for-lol",
+          name: "beta",
+          pipelineRevisionId: "scout-site/prod",
+          configurationRevision: "config/1",
+          configuration: {},
+          automatic: true,
+        },
+        testOperator,
+      ),
+    ).rejects.toThrow("combined backend environment");
     await context.delivery.registerPipeline(
       "scout-site/unknown",
       {

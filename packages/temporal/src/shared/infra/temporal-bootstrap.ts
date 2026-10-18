@@ -18,6 +18,17 @@ const TemporalBootstrapEnvironmentSchema = z
   })
   .loose()
   .superRefine((value, context) => {
+    if (
+      value.GIT_SHA !== undefined &&
+      value.GIT_SHA !== "unknown" &&
+      value.TEMPORAL_WORKER_BUILD_ID !== undefined &&
+      value.GIT_SHA !== value.TEMPORAL_WORKER_BUILD_ID
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Worker Build ID must match the image's baked GIT_SHA",
+        path: ["TEMPORAL_WORKER_BUILD_ID"],
+      });
     const hasDeployment = value.TEMPORAL_WORKER_DEPLOYMENT_NAME !== undefined;
     const hasBuild =
       value.TEMPORAL_WORKER_BUILD_ID !== undefined ||

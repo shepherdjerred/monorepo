@@ -11,14 +11,10 @@ import {
 } from "../../../scripts/lib/ci/ci-handoff.ts";
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 import { UNPUBLISHED_IMAGE_DIGEST } from "../../../scripts/lib/image-pin-catalog.ts";
-import {
-  parsePinCandidatesState,
-  parsePinCandidates,
-  validateStateAgainstVersions,
-} from "../../../scripts/lib/pin-candidates-schema.ts";
+import { parsePinCandidates } from "../../../scripts/lib/pin-candidates-schema.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
-const OPERATOR_OWNED_SCOUT_PROD_WORKFLOW_PINS = new Set([
+const SOURCE_OWNED_BOOTSTRAP_SLOTS = new Set([
   "shepherdjerred/scout-for-lol/prod/workflows/stable",
   "shepherdjerred/scout-for-lol/prod/workflows/candidate",
 ]);
@@ -37,10 +33,10 @@ function releaseNumber(value: string): bigint {
 
 /**
  * Reconstruct a completed release, then retain its published pins in current
- * the build catalog. Commit-back may still be pending in a PR. Build catalog
- * metadata, upstream versions and newer image pins remain authoritative.
- * Operator-owned Scout Prod Workflow pins stay authoritative regardless of
- * build ordering: promotion selects an accepted artifact, not a newer build.
+ * the build catalog. Deployment selections live in Delivery PostgreSQL;
+ * this catalog is producer metadata for unchanged-image reuse only.
+ * Historical Scout production slots are source bootstrap inputs only.
+ * They never select or override the runtime worker pool retained in PostgreSQL.
  * A no-target release writes this catalog back to the handoff, so retention
  * survives any number of consecutive no-target or partial-image builds.
  * Locally published entries remain owned by current source, including their
@@ -50,7 +46,6 @@ export function retainPublishedImagePins(
   currentSource: string,
   previousSource: string,
   candidatesSource: string,
-  withdrawnCandidates: Readonly<Record<string, number>> = {},
 ): string {
   const current = parseVersionCatalogText(currentSource);
   const previous = parseVersionCatalogText(previousSource);
@@ -71,9 +66,9 @@ export function retainPublishedImagePins(
       .map((entry) => [entry.name, entry.value]),
   );
   for (const [key, candidate] of Object.entries(batch.candidates)) {
-    if (OPERATOR_OWNED_SCOUT_PROD_WORKFLOW_PINS.has(key)) {
+    if (SOURCE_OWNED_BOOTSTRAP_SLOTS.has(key)) {
       throw new Error(
-        `CI candidate contains operator-owned Scout Prod Workflow image key ${key}`,
+        `CI candidate contains source-owned bootstrap image key ${key}`,
       );
     }
     if (localKeys.has(key)) {
@@ -113,19 +108,14 @@ export function retainPublishedImagePins(
       // Their marker cannot replace an already published pin in current main.
       if (value === `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`) return entry;
       const publishedBuild = releaseNumber(value);
-      const withdrawn = withdrawnCandidates[entry.name];
-      if (withdrawn !== undefined && publishedBuild <= BigInt(withdrawn)) {
-        return entry;
-      }
       if (currentBuild === publishedBuild && entry.value !== value) {
         throw new Error(
           `Conflicting published image pins for ${entry.name} at release ${currentBuild.toString()}`,
         );
       }
-      // Prod Workflow routing promotes a replayed, accepted image, not the
-      // numerically newest build. Unlike Beta/bootstrap pins, CI never mints
-      // these keys; an older publication cannot undo their declared promotion.
-      if (OPERATOR_OWNED_SCOUT_PROD_WORKFLOW_PINS.has(entry.name)) return entry;
+      // CI does not mint these historical source bootstrap slots. They are
+      // unrelated to Delivery's accepted version set or current native routing.
+      if (SOURCE_OWNED_BOOTSTRAP_SLOTS.has(entry.name)) return entry;
       return publishedBuild > currentBuild ? { ...entry, value } : entry;
     }),
   });
@@ -142,7 +132,6 @@ export async function readPublishedVersionCatalogSource(
       ...ciHandoffConfigFromEnv(),
       pipelineNumber: number,
     }),
-  withdrawnCandidates: Readonly<Record<string, number>> = {},
 ): Promise<string> {
   if (
     !/^[1-9]\d*$/.test(pipelineNumber) ||
@@ -154,12 +143,7 @@ export async function readPublishedVersionCatalogSource(
     readHandoff("version-catalog", pipelineNumber),
     readHandoff("pin-candidates", pipelineNumber),
   ]);
-  return retainPublishedImagePins(
-    currentSource,
-    catalog,
-    candidates,
-    withdrawnCandidates,
-  );
+  return retainPublishedImagePins(currentSource, catalog, candidates);
 }
 
 async function imageReleaseBase(
@@ -240,23 +224,6 @@ export async function resolveImageReleaseCatalog(
     }),
   });
   const base = await imageReleaseBase(currentCommit, executor, environment);
-  let withdrawnCandidates: Readonly<Record<string, number>> = {};
-  if (base !== undefined) {
-    const state = await executor([
-      "git",
-      "show",
-      "origin/main:scripts/pin-candidates-state.json",
-    ]);
-    if (state.exitCode !== 0) {
-      throw new TransientError("Unable to read live image pin state");
-    }
-    const parsed = parsePinCandidatesState(state.stdout);
-    validateStateAgainstVersions(
-      parsed,
-      new Map(liveCatalog.entries.map((entry) => [entry.name, entry.value])),
-    );
-    withdrawnCandidates = parsed.withdrawnCandidates ?? {};
-  }
   return {
     baseCommit: base?.commit,
     catalog:
@@ -266,7 +233,6 @@ export async function resolveImageReleaseCatalog(
             current,
             base.pipelineNumber,
             readHandoff,
-            withdrawnCandidates,
           ),
   };
 }
@@ -276,8 +242,8 @@ export async function resolveImageReleaseCatalog(
  * as build metadata and derives Temporal Workflow candidate pins from it.
  *
  * Published pins from the completed baseline are retained before selection
- * and candidate derivation. Main alone may lag a pending version-bump PR and
- * incorrectly report that stable and candidate are still converged.
+ * and candidate derivation. This producer inventory does not choose deployed
+ * versions or write release selections back to Git.
  */
 export async function readLiveVersionCatalogSource(
   executor: LiveCatalogExecutor,

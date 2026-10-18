@@ -1,0 +1,9 @@
+{
+  "id": "static-sites/scout-design-system",
+  "serviceId": "static-sites",
+  "name": "scout-design-system",
+  "pipelineRevisionId": "static-sites/scout-design-system/1",
+  "configurationRevision": "static-sites/scout-design-system/1",
+  "configuration": {},
+  "automatic": true
+}

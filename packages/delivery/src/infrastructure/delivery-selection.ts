@@ -1,8 +1,9 @@
 import { DeliveryError } from "#domain/error.ts";
-import type { Principal } from "#shared/contract.ts";
+import { PipelineDefinitionSchema, type Principal } from "#shared/contract.ts";
 import { lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import { id, environment, automaticTarget } from "./delivery-data.ts";
+import { reconcilePlatform } from "./platform/selection.ts";
 
 export async function reconcile(
   this: Delivery,
@@ -13,9 +14,25 @@ export async function reconcile(
   for (const row of await this.database.environment.findMany({
     where: { automatic: true, id: { in: enabledEnvironments } },
   })) {
+    const pipeline = await this.database.pipeline.findUniqueOrThrow({
+      where: { id: row.pipelineRevisionId },
+    });
+    const definition = PipelineDefinitionSchema.parse(pipeline.definition);
+    if (
+      definition.kind === "root-release" ||
+      definition.kind === "tofu" ||
+      definition.kind === "control-plane"
+    )
+      continue;
     if (row.activeDeploymentId !== null) continue;
     const last = await this.database.deployment.findFirst({
-      where: { environmentId: row.id },
+      where: {
+        environmentId: row.id,
+        OR: [
+          { kind: { notIn: ["adopt-worker", "repair-trmnl"] } },
+          { status: { in: ["queued", "awaiting_approval", "running"] } },
+        ],
+      },
       orderBy: { createdAt: "desc" },
     });
     if (
@@ -35,7 +52,15 @@ export async function reconcile(
     const deployment = await requestAutomatic.call(this, row, target.id, actor);
     if (deployment !== null) selected.push(deployment.id);
   }
-  return { deployments: selected };
+  const platform = await reconcilePlatform.call(
+    this,
+    enabledEnvironments,
+    actor,
+  );
+  return {
+    deployments: [...selected, ...platform.deployments],
+    ...(platform.waiting.length === 0 ? {} : { waiting: platform.waiting }),
+  };
 }
 
 export async function automaticSelectionBlocked(

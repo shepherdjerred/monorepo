@@ -1,0 +1,10 @@
+{
+  "id": "streambot/prod",
+  "serviceId": "streambot",
+  "name": "prod",
+  "application": "media",
+  "pipelineRevisionId": "streambot/prod/1",
+  "configurationRevision": "streambot/prod/1",
+  "configuration": {},
+  "automatic": true
+}

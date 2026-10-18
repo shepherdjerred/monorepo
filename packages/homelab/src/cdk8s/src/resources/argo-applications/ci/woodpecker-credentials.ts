@@ -46,14 +46,23 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  * `secretKeyRef`, and the reason credentials never enter Woodpecker's own
  * secret store or database.
  *
- * Most item IDs are unchanged from the Buildkite stack. The ArgoCD token uses
- * the OpenTofu-owned Woodpecker account item so removing the Buildkite account
- * does not invalidate release and infrastructure workflows.
+ * CI has build/publication and repository automation authority only. Handoff
+ * and Delivery publication use dedicated minimal items: per-key grants do not
+ * prevent an operator from mirroring every field of the backing item. Rotate
+ * the publisher token at its issuer/API registration and scoped copy together.
  */
 const CI_CREDENTIAL_ITEMS = [
   {
+    secretName: "ci-delivery-archive-credentials",
+    itemId: "abfkcnjps6pydr4x7gzs76h62i",
+  },
+  {
     secretName: "ci-delivery-credentials",
-    itemId: "ahbp4izt7fibvwdjwd4ffhiime",
+    itemId: "mrvxxnlx3rk6dlfmkxgdfqio5e",
+  },
+  {
+    secretName: "ci-seaweedfs-credentials",
+    itemId: "quqpki5jgjf4pc5lotdbxxkep4",
   },
   {
     secretName: "dockerhub-pull-woodpecker-ci",
@@ -74,68 +83,9 @@ const CI_CREDENTIAL_ITEMS = [
     secretName: "ci-release-openai-credentials",
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
   },
-  { secretName: "ci-trmnl-credentials", itemId: "p7th6tqeel7k2sm47mrrto7oca" },
   {
     secretName: "ci-chartmuseum-credentials",
     itemId: "cnutkdwa7uka5hk3wx5gimyfom",
-  },
-  { secretName: "ci-argocd-credentials", itemId: "ga3ma76q6vw2bxeyvkqj4xaucy" },
-  {
-    secretName: "ci-seaweedfs-credentials",
-    itemId: "eyfsbfkxojth6ymr65l47yyfxy",
-  },
-  {
-    secretName: "ci-cloudflare-credentials",
-    itemId: "djl2blalora2unjogqnsadlokq",
-  },
-  {
-    secretName: "ci-tailscale-credentials",
-    itemId: "eoqdhvwgu7rjfqe6dknexihitu",
-  },
-  { secretName: "ci-arr-credentials", itemId: "vkzv5jm2euzb7727x6uxdpwu5y" },
-  {
-    secretName: "openai-tofu-credentials",
-    itemId: "jkqhgshctzikhed3vwgogtkmuy",
-  },
-  {
-    secretName: "anthropic-tofu-credentials",
-    itemId: "a3limlclcej76wmf3kftiqex4u",
-  },
-  {
-    secretName: "discord-tofu-credentials",
-    itemId: "z2tt5eswusadzfsztg4uwr6vay",
-  },
-  {
-    secretName: "cloudflare-tokens-tofu-credentials",
-    itemId: "rzxdklctncniksfcywoypt3fs4",
-  },
-  {
-    secretName: "posthog-tofu-credentials",
-    itemId: "yh3xvqemmr4ic2up5zluo2rkcq",
-  },
-  {
-    secretName: "discord-birmel-credentials",
-    itemId: "w5c27dzybxor3j6dzl7lub2soe",
-  },
-  {
-    secretName: "discord-starlight-beta-credentials",
-    itemId: "tdxe6cq7ozhv7cesfvnlkl5gh4",
-  },
-  {
-    secretName: "discord-starlight-prod-credentials",
-    itemId: "cmp6si6n5syhr4smxew3qfcmfi",
-  },
-  {
-    secretName: "discord-scout-beta-credentials",
-    itemId: "rtu44pohnp5ixdp2njuv5f6t2e",
-  },
-  {
-    secretName: "discord-scout-prod-credentials",
-    itemId: "pacrc4wfbtct4y3qazkvazop5a",
-  },
-  {
-    secretName: "discord-minecraft-credentials",
-    itemId: "q37vet77dfggoqbvu4bqle3gje",
   },
 ] as const;
 

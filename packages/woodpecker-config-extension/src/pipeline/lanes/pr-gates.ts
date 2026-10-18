@@ -7,26 +7,11 @@ import {
 } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
-import {
-  GITHUB_DOWNLOAD,
-  STATE_BACKEND,
-  grant,
-} from "#src/pipeline/lanes/tofu.ts";
+import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
 
 /**
  * Pull-request-only gates: the release rehearsal and the automated review.
  */
-
-/**
- * Per-build request UUID, which Woodpecker does not provide.
- *
- * ArgoCD's release-root wants a UUID-shaped request id to attribute an
- * operation to one build. The pipeline number is unique per build, so it is
- * formatted into a valid UUID rather than invented randomly -- a random id
- * would make a retried dry run look like a different requester.
- */
-const SYNTHETIC_REQUEST_ID =
-  'request_id="00000000-0000-4000-8000-$(printf \'%012d\' "$CI_PIPELINE_NUMBER")"';
 
 const DRY_RUN_SITES = [
   "statically-typed",
@@ -63,25 +48,13 @@ export function prGateSteps(
         "if bun --no-install ci/scripts/selectors/ci-changed.ts helm-types; then",
         "  bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check",
         "fi",
-        // Print-only rehearsals, seconds each: the site catalog, the whole
-        // versioned Scout release path, the chart push, and release-please.
+        // Print-only artifact publication rehearsals have no deployment authority.
         `for site in ${DRY_RUN_SITES.join(" ")}; do`,
-        '  bun --no-install scripts/release/deploy-site.ts "$site" --dry-run',
+        '  bun --no-install scripts/release/check-site-build.ts "$site"',
         "done",
         'scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest --version-catalog-file packages/version-catalog/src/catalog.json)"',
         'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output /tmp/scout-release-state.json --dry-run',
-        'scout_state="$(cat /tmp/scout-release-state.json)"',
-        'bun --no-install scripts/release/scout-site-release.ts archive --state "$scout_state" --dry-run',
-        'bun --no-install scripts/release/scout-site-release.ts deploy-beta --state "$scout_state" --dry-run',
-        'bun --no-install scripts/release/scout-site-release.ts reconcile-prod --state "$scout_state" --dry-run',
-        'bun --no-install scripts/release/scout-site-release.ts tag-release --state "$scout_state" --dry-run',
-        "bun --no-install scripts/release/scout-site-release.ts resolve-prod-pin",
-        'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --dry-run',
-        'apps_revision="$(jq -er \'.[] | select(.name == "apps") | .revision\' argocd-release-expected.json)"',
-        SYNTHETIC_REQUEST_ID,
-        'bun --no-install packages/homelab/scripts/argocd/argocd.ts release-root apps argocd-release-expected.json --revision "$apps_revision" --request-id "$request_id" --dry-run',
-        'pin_candidates="$(jq -cn --arg build "$CI_RELEASE_NUMBER" \'{schema:"pin-candidates/v1",buildNumber:($build|tonumber),candidates:{}}\')"',
-        'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$pin_candidates" --dry-run',
+        'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog --dry-run',
         "bun --no-install scripts/release/release.ts --dry-run",
       ],
       // No dependsOn: the dry run installs and builds its own filtered
@@ -109,7 +82,7 @@ export function prGateSteps(
           "packages/scout-for-lol/**",
         ],
       },
-      secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND],
+      secrets: [GITHUB_DOWNLOAD],
       volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
     },
     {

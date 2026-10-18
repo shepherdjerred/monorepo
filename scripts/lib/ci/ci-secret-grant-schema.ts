@@ -75,7 +75,7 @@ export function hash(value: string): string {
 
 export function declaredSecretItems(source: string): Map<string, string> {
   const declarations = new Map<string, string>();
-  const catalogEntry = /secretName:\s*"([^"]+)"[\s\S]*?itemId:\s*"([^"]+)"/gu;
+  const catalogEntry = /secretName:\s*"([^"]+)"\s*,\s*itemId:\s*"([^"]+)"/gu;
   for (const match of source.matchAll(catalogEntry)) {
     const secret = match[1];
     const itemId = match[2];

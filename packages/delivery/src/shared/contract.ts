@@ -1,41 +1,166 @@
 import { z } from "zod";
+import * as staticSites from "./static-site-contract.ts";
+import * as platform from "./platform-contract.ts";
+import * as workers from "./worker-contract.ts";
+import * as artifacts from "./artifact-contract.ts";
+import * as recovery from "./worker-recovery-contract.ts";
+import * as evidenceContracts from "./evidence-contract.ts";
+import * as minecraftRecovery from "./minecraft-recovery-contract.ts";
+import * as minecraftReport from "./minecraft-recovery-report.ts";
+import * as controlPlane from "./control-plane-contract.ts";
+import { compareVersions } from "./version-diff.ts";
+import * as rollout from "./worker-rollout-contract.ts";
+import * as forum from "./forum-contract.ts";
+import * as platformRecovery from "./platform-recovery-contract.ts";
+import * as pipelines from "./pipeline-contract.ts";
+import * as trmnlRepair from "./trmnl-repair-contract.ts";
+import * as ownership from "./ownership-contract.ts";
+export const OwnershipHandoverContextSchema =
+  ownership.OwnershipHandoverContextSchema;
+export const OwnershipHandoverTargetSchema =
+  ownership.OwnershipHandoverTargetSchema;
+export type OwnershipHandoverContext = ownership.OwnershipHandoverContext;
+export type OwnershipHandoverTarget = ownership.OwnershipHandoverTarget;
+export const RequestTrmnlRepairSchema = trmnlRepair.RequestTrmnlRepairSchema;
+export const TrmnlRepairClaimSchema = trmnlRepair.TrmnlRepairClaimSchema;
+export type RequestTrmnlRepair = trmnlRepair.RequestTrmnlRepair;
+export type TrmnlRepairClaim = trmnlRepair.TrmnlRepairClaim;
+export const RequestPlatformRecoverySchema =
+  platformRecovery.RequestPlatformRecoverySchema;
+export const PlatformRecoveryIntentSchema =
+  platformRecovery.PlatformRecoveryIntentSchema;
+export const CompletePlatformRecoverySchema =
+  platformRecovery.CompletePlatformRecoverySchema;
+export const FailPlatformRecoverySchema =
+  platformRecovery.FailPlatformRecoverySchema;
+export const PlatformRecoveryPlanReceiptSchema =
+  platformRecovery.PlatformRecoveryPlanReceiptSchema;
+export const RecordPlatformRecoveryPlanSchema =
+  platformRecovery.RecordPlatformRecoveryPlanSchema;
+export const PlatformRecoveryNativeReceiptSchema =
+  platformRecovery.PlatformRecoveryNativeReceiptSchema;
+export const ApprovePlatformRecoveryPlanSchema =
+  platformRecovery.ApprovePlatformRecoveryPlanSchema;
+export const AdmitPlatformRecoveryApplySchema =
+  platformRecovery.AdmitPlatformRecoveryApplySchema;
+export type PlatformRecoveryPlanReceipt =
+  platformRecovery.PlatformRecoveryPlanReceipt;
+export type RecordPlatformRecoveryPlan =
+  platformRecovery.RecordPlatformRecoveryPlan;
+export type PlatformRecoveryNativeReceipt =
+  platformRecovery.PlatformRecoveryNativeReceipt;
+export type ApprovePlatformRecoveryPlan =
+  platformRecovery.ApprovePlatformRecoveryPlan;
+export type AdmitPlatformRecoveryApply =
+  platformRecovery.AdmitPlatformRecoveryApply;
+export type RequestPlatformRecovery = platformRecovery.RequestPlatformRecovery;
+export type PlatformRecoveryIntent = platformRecovery.PlatformRecoveryIntent;
+export type CompletePlatformRecovery =
+  platformRecovery.CompletePlatformRecovery;
+export const PublishForumBundleSchema = forum.PublishForumBundleSchema;
+export const QualifiedForumBundleQuerySchema =
+  forum.QualifiedForumBundleQuerySchema;
+export type QualifiedForumBundleQuery = forum.QualifiedForumBundleQuery;
+export const ForumRuntimeStatusSchema = forum.ForumRuntimeStatusSchema;
+export const ForumBaselineProofSchema = forum.ForumBaselineProofSchema;
+export const RequestForumBaselineSchema = forum.RequestForumBaselineSchema;
+export const ForumBaselineIntentSchema = forum.ForumBaselineIntentSchema;
+export const ForumBaselineSnapshotSchema = forum.ForumBaselineSnapshotSchema;
+export const CompleteForumBaselineSchema = forum.CompleteForumBaselineSchema;
+export const FailForumBaselineSchema = forum.FailForumBaselineSchema;
+export type PublishForumBundle = forum.PublishForumBundle;
+export type ForumBaselineProof = forum.ForumBaselineProof;
+export type RequestForumBaseline = forum.RequestForumBaseline;
+export type ForumBaselineIntent = forum.ForumBaselineIntent;
+export type ForumBaselineSnapshot = forum.ForumBaselineSnapshot;
+export type CompleteForumBaseline = forum.CompleteForumBaseline;
+export const RequestControlPlaneUpgradeSchema =
+  controlPlane.RequestControlPlaneUpgradeSchema;
+export const ControlPlaneUpgradeSnapshotSchema =
+  controlPlane.ControlPlaneUpgradeSnapshotSchema;
+export const ControlPlaneAcceptanceSchema =
+  controlPlane.ControlPlaneAcceptanceSchema;
+export type RequestControlPlaneUpgrade =
+  controlPlane.RequestControlPlaneUpgrade;
+export type ControlPlaneUpgradeSnapshot =
+  controlPlane.ControlPlaneUpgradeSnapshot;
+export const MinecraftRecoveryReportEnvelopeSchema =
+  minecraftReport.MinecraftRecoveryReportEnvelopeSchema;
+export function parseMinecraftRecoveryReport(input: unknown) {
+  return minecraftReport.parseMinecraftRecoveryReport(input);
+}
+export const RequestMinecraftRecoverySchema =
+  minecraftRecovery.RequestMinecraftRecoverySchema;
+export const MinecraftRecoveryIntentSchema =
+  minecraftRecovery.MinecraftRecoveryIntentSchema;
+export const CompleteMinecraftRecoverySchema =
+  minecraftRecovery.CompleteMinecraftRecoverySchema;
+export const FailMinecraftRecoverySchema =
+  minecraftRecovery.FailMinecraftRecoverySchema;
+export type RequestMinecraftRecovery =
+  minecraftRecovery.RequestMinecraftRecovery;
+export type MinecraftRecoveryIntent = minecraftRecovery.MinecraftRecoveryIntent;
+export type CompleteMinecraftRecovery =
+  minecraftRecovery.CompleteMinecraftRecovery;
+export const MinecraftControllerReceiptSchema =
+  minecraftRecovery.MinecraftControllerReceiptSchema;
+export type MinecraftControllerReceipt =
+  minecraftRecovery.MinecraftControllerReceipt;
+export const RequestWorkerRecoverySchema = recovery.RequestWorkerRecoverySchema;
+export const WorkerRecoveryIntentSchema = recovery.WorkerRecoveryIntentSchema;
+export const CompleteWorkerRecoverySchema =
+  recovery.CompleteWorkerRecoverySchema;
+export const FailWorkerRecoverySchema = recovery.FailWorkerRecoverySchema;
+export type RequestWorkerRecovery = recovery.RequestWorkerRecovery;
+export type WorkerRecoveryIntent = recovery.WorkerRecoveryIntent;
+export type CompleteWorkerRecovery = recovery.CompleteWorkerRecovery;
+export const WorkerPoolTargetSchema = workers.WorkerPoolTargetSchema;
+export const WorkerHostSpecificationSchema =
+  workers.WorkerHostSpecificationSchema;
+export const WorkerVersionSchema = workers.WorkerVersionSchema;
+export const WorkerPoolStateSchema = workers.WorkerPoolStateSchema;
+export const WorkerPoolSnapshotSchema = workers.WorkerPoolSnapshotSchema;
+export const RegisterWorkerVersionSchema = workers.RegisterWorkerVersionSchema;
+export const RetireWorkerVersionSchema = workers.RetireWorkerVersionSchema;
+export const WorkerRetirementClaimSchema = workers.WorkerRetirementClaimSchema;
+export type WorkerPoolTarget = workers.WorkerPoolTarget;
+export type WorkerHostSpecification = workers.WorkerHostSpecification;
+export type WorkerVersion = workers.WorkerVersion;
+export type WorkerPoolSnapshot = workers.WorkerPoolSnapshot;
+export type RegisterWorkerVersion = workers.RegisterWorkerVersion;
+export type RetireWorkerVersion = workers.RetireWorkerVersion;
+export type WorkerRetirementClaim = workers.WorkerRetirementClaim;
+export function workerHostSpecification(target: WorkerPoolTarget) {
+  return workers.workerHostSpecification(target);
+}
 
-export const IdentifierSchema = z
-  .string()
-  .min(1)
-  .max(160)
-  .regex(/^[a-z0-9][\w.:/-]*$/i);
+export const IdentifierSchema = artifacts.IdentifierSchema;
+export const ArtifactOriginSchema = artifacts.ArtifactOriginSchema;
+export const PlatformChangesSchema = artifacts.PlatformChangesSchema;
+export const PlatformReleaseSnapshotSchema =
+  platform.PlatformReleaseSnapshotSchema;
+export const CreatePlatformDeploymentSchema =
+  platform.CreatePlatformDeploymentSchema;
+export const TofuPlanReceiptSchema = platform.TofuPlanReceiptSchema;
+export const RecordTofuPlanSchema = platform.RecordTofuPlanSchema;
+export const EncryptedTofuPlanSchema = platform.EncryptedTofuPlanSchema;
+export type PlatformReleaseSnapshot = platform.PlatformReleaseSnapshot;
+export type CreatePlatformDeployment = platform.CreatePlatformDeployment;
+export type TofuPlanReceipt = platform.TofuPlanReceipt;
+export type RecordTofuPlan = platform.RecordTofuPlan;
+export type ArtifactOrigin = artifacts.ArtifactOrigin;
+export const FindQualifiedArtifactSchema =
+  artifacts.FindQualifiedArtifactSchema;
+export type FindQualifiedArtifact = artifacts.FindQualifiedArtifact;
+export const AcquireUpstreamArtifactSchema =
+  artifacts.AcquireUpstreamArtifactSchema;
+export const ArtifactAcquisitionSchema = artifacts.ArtifactAcquisitionSchema;
+export type AcquireUpstreamArtifact = artifacts.AcquireUpstreamArtifact;
 const TimestampSchema = z.iso.datetime();
 const DigestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/);
-const SourceRevisionSchema = z.string().regex(/^[a-f0-9]{40}$/);
-export const ArtifactInputSchema = z
-  .object({
-    id: IdentifierSchema,
-    component: IdentifierSchema,
-    kind: z.enum(["image", "chart", "archive"]),
-    uri: z.string().min(1).max(2048),
-    digest: DigestSchema,
-    runtimeDigests: z.array(DigestSchema).max(32).default([]),
-    requires: z.record(IdentifierSchema, DigestSchema).default({}),
-    version: z.string().min(1).max(160),
-  })
-  .strict();
-export const PublishBuildSchema = z
-  .object({
-    requestId: IdentifierSchema,
-    serviceId: IdentifierSchema,
-    sourceRevision: SourceRevisionSchema,
-    ciUrl: z.url(),
-    verifiedAt: TimestampSchema,
-    artifacts: z.array(ArtifactInputSchema).min(1).max(100),
-  })
-  .strict();
-export const ArtifactVersionSchema = ArtifactInputSchema.extend({
-  serviceId: IdentifierSchema,
-  buildId: IdentifierSchema,
-  sourceRevision: SourceRevisionSchema,
-  createdAt: TimestampSchema,
-});
+export const ArtifactInputSchema = artifacts.ArtifactInputSchema;
+export const PublishBuildSchema = artifacts.PublishBuildSchema;
+export const ArtifactVersionSchema = artifacts.ArtifactVersionSchema;
 export const LatestQualifiedArtifactQuerySchema = z
   .object({
     serviceId: IdentifierSchema,
@@ -46,15 +171,7 @@ export const LatestQualifiedArtifactQuerySchema = z
 export type LatestQualifiedArtifactQuery = z.infer<
   typeof LatestQualifiedArtifactQuerySchema
 >;
-export const BuildSummarySchema = z.object({
-  id: IdentifierSchema,
-  serviceId: IdentifierSchema,
-  sourceRevision: SourceRevisionSchema,
-  ciUrl: z.url(),
-  status: z.enum(["pending", "verified", "failed"]),
-  qualificationReason: z.string().nullable(),
-  createdAt: TimestampSchema,
-});
+export const BuildSummarySchema = artifacts.BuildSummarySchema;
 export const ComposeVersionSetSchema = z
   .object({
     requestId: IdentifierSchema,
@@ -75,62 +192,9 @@ export const VersionSetRevisionSchema = z.object({
   components: z.record(z.string(), ArtifactVersionSchema),
   createdAt: TimestampSchema,
 });
-export const PipelineDefinitionSchema = z.discriminatedUnion("kind", [
-  z
-    .object({
-      kind: z.literal("argocd"),
-      application: IdentifierSchema,
-      chartRepository: z.url(),
-      chartName: IdentifierSchema,
-      chartComponent: IdentifierSchema,
-      namespace: IdentifierSchema.optional(),
-      parameters: z.record(z.string(), z.string()),
-      artifactParameters: z.record(z.string(), IdentifierSchema).default({}),
-      verification: z
-        .object({
-          url: z.url(),
-          expectedStatus: z.number().int().min(200).max(299),
-        })
-        .optional(),
-      workerRollout: z
-        .object({
-          target: z.enum(["central", "scout-beta", "scout-prod"]),
-          imageComponent: IdentifierSchema,
-          runnerImage: z
-            .string()
-            .regex(/^docker\.io\/shepherdjerred\/ci-base@sha256:[a-f0-9]{64}$/),
-        })
-        .strict()
-        .optional(),
-      forumRelease: z
-        .object({
-          imageComponent: IdentifierSchema,
-          bundleComponent: IdentifierSchema,
-        })
-        .strict()
-        .optional(),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("static-site"),
-      archiveComponent: IdentifierSchema,
-      bucket: z.string().regex(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/),
-      immutablePrefixes: z.array(z.string()).default([]),
-      extraExcludes: z.array(z.string()).default([]),
-      entrypoints: z.array(z.string().min(1)).min(1).default(["index.html"]),
-      verification: z.object({
-        url: z.url(),
-        expectedStatus: z.number().int().min(200).max(299),
-      }),
-      cloudflareZoneId: z
-        .string()
-        .regex(/^[a-f0-9]{32}$/)
-        .optional(),
-    })
-    .strict(),
-  z.object({ kind: z.literal("manual"), reason: z.string().min(1) }).strict(),
-]);
+export const StaticSitePolicySchema = staticSites.StaticSitePolicySchema;
+export type StaticSitePolicy = staticSites.StaticSitePolicy;
+export const PipelineDefinitionSchema = pipelines.PipelineDefinitionSchema;
 export const PipelineRevisionSchema = z.object({
   id: IdentifierSchema,
   definition: PipelineDefinitionSchema,
@@ -158,6 +222,9 @@ export const EnvironmentSchema = RegisterEnvironmentSchema.extend({
   desiredVersionSetRevisionId: IdentifierSchema.nullable(),
   observedVersionSetRevisionId: IdentifierSchema.nullable(),
   acceptedVersionSetRevisionId: IdentifierSchema.nullable(),
+  acceptedPlatformDeploymentId: IdentifierSchema.nullable().default(null),
+  acceptedControlPlaneDeploymentId: IdentifierSchema.nullable().default(null),
+  acceptedForumBaselineIntentId: IdentifierSchema.nullable().default(null),
   observedAt: TimestampSchema.nullable(),
   activeDeploymentId: IdentifierSchema.nullable(),
   createdAt: TimestampSchema,
@@ -176,11 +243,43 @@ export const CreateDeploymentSchema = z
     environmentId: IdentifierSchema,
     versionSetRevisionId: IdentifierSchema,
     expectedGeneration: z.number().int().nonnegative(),
-    kind: z.enum(["deploy", "promote", "rollback"]).default("deploy"),
+    kind: z
+      .enum(["deploy", "promote", "rollback", "adopt-worker"])
+      .default("deploy"),
     sourceEnvironmentId: IdentifierSchema.optional(),
+    workerBaseline: z
+      .object({
+        artifactIds: z.array(IdentifierSchema).min(1).max(100),
+        candidateArtifactId: IdentifierSchema,
+      })
+      .strict()
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, ctx) => {
+    if (
+      (input.kind === "adopt-worker") !==
+      (input.workerBaseline !== undefined)
+    )
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Host-only worker adoption requires its explicit original artifact selection",
+      });
+    const baseline = input.workerBaseline;
+    if (
+      baseline !== undefined &&
+      (new Set(baseline.artifactIds).size !== baseline.artifactIds.length ||
+        !baseline.artifactIds.includes(baseline.candidateArtifactId))
+    )
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Baseline artifacts must be unique and include the routed candidate",
+      });
+  });
 export const DeploymentSchema = z.object({
+  repairOfDeploymentId: IdentifierSchema.nullable().default(null),
   id: IdentifierSchema,
   requestId: IdentifierSchema,
   environmentId: IdentifierSchema,
@@ -189,6 +288,11 @@ export const DeploymentSchema = z.object({
   pipelineRevisionId: IdentifierSchema,
   configurationRevision: z.string(),
   configuration: z.record(z.string(), z.string()),
+  workerSnapshot: WorkerPoolSnapshotSchema.nullable().default(null),
+  platformSnapshot: PlatformReleaseSnapshotSchema.nullable().default(null),
+  controlPlaneSnapshot:
+    ControlPlaneUpgradeSnapshotSchema.nullable().default(null),
+  forumBaselineSnapshot: ForumBaselineSnapshotSchema.nullable().default(null),
   previousAcceptedVersionSetRevisionId:
     IdentifierSchema.nullable().default(null),
   sourceEnvironmentId: IdentifierSchema.nullable().default(null),
@@ -197,7 +301,18 @@ export const DeploymentSchema = z.object({
     .nullable()
     .default(null),
   expectedGeneration: z.number().int().nonnegative(),
-  kind: z.enum(["deploy", "promote", "rollback"]),
+  kind: z.enum([
+    "deploy",
+    "promote",
+    "rollback",
+    "retire-worker",
+    "upgrade-control-plane",
+    "adopt-worker",
+    "root-release",
+    "tofu-plan",
+    "tofu-apply",
+    "repair-trmnl",
+  ]),
   status: DeploymentStatusSchema,
   automatic: z.boolean().default(false),
   requestedBy: z.string(),
@@ -208,27 +323,8 @@ export const DeploymentSchema = z.object({
   startedAt: TimestampSchema.nullable(),
   finishedAt: TimestampSchema.nullable(),
 });
-export const EvidenceInputSchema = z
-  .object({
-    kind: z.enum([
-      "ci",
-      "preflight",
-      "backup",
-      "migration",
-      "reconciliation",
-      "runtime",
-      "acceptance",
-    ]),
-    summary: z.string().min(1).max(4000),
-    url: z.url().optional(),
-    operationId: z.string().min(1).optional(),
-  })
-  .strict();
-export const EvidenceSchema = EvidenceInputSchema.extend({
-  id: IdentifierSchema,
-  deploymentId: IdentifierSchema,
-  createdAt: TimestampSchema,
-});
+export const EvidenceInputSchema = evidenceContracts.EvidenceInputSchema;
+export const EvidenceSchema = evidenceContracts.EvidenceSchema;
 export const ApprovalInputSchema = z
   .object({
     decision: z.enum(["approve", "reject"]),
@@ -276,13 +372,47 @@ export const DeploymentDetailSchema = z.object({
   evidence: z.array(EvidenceSchema),
   approvals: z.array(ApprovalSchema),
   stages: z.array(StageSchema),
+  minecraftRecoveries: z.array(MinecraftRecoveryIntentSchema).default([]),
+  platformRecoveries: z.array(PlatformRecoveryIntentSchema).default([]),
 });
+export const WorkerRecoveryContextSchema = z.object({
+  intent: WorkerRecoveryIntentSchema,
+  deployment: DeploymentDetailSchema,
+  pool: WorkerPoolStateSchema,
+});
+export const MinecraftRecoveryDetailSchema = z.object({
+  intent: MinecraftRecoveryIntentSchema,
+  deployment: DeploymentDetailSchema,
+});
+export const ForumBaselineContextSchema = z.object({
+  intent: ForumBaselineIntentSchema,
+  environment: EnvironmentSchema,
+  pipeline: PipelineRevisionSchema,
+  image: ArtifactVersionSchema,
+  bundle: ArtifactVersionSchema,
+});
+export type ForumBaselineContext = z.infer<typeof ForumBaselineContextSchema>;
+export const PlatformRecoveryContextSchema = z.object({
+  intent: PlatformRecoveryIntentSchema,
+  deployment: DeploymentDetailSchema,
+  expectedSettlements: platformRecovery.PlatformSettlementFingerprintsSchema,
+  priorDeployment: DeploymentDetailSchema.nullable(),
+  recoveryHistory: z.array(PlatformRecoveryIntentSchema).default([]),
+});
+export type PlatformRecoveryContext = z.infer<
+  typeof PlatformRecoveryContextSchema
+>;
+export type MinecraftRecoveryDetail = z.infer<
+  typeof MinecraftRecoveryDetailSchema
+>;
+export type WorkerRecoveryContext = z.infer<typeof WorkerRecoveryContextSchema>;
 export const OverviewSchema = z.object({
   environments: z.array(EnvironmentSchema),
   deployments: z.array(DeploymentSchema),
   versionSets: z.array(VersionSetRevisionSchema),
   artifacts: z.array(ArtifactVersionSchema),
   builds: z.array(BuildSummarySchema).default([]),
+  forumBaselines: z.array(ForumBaselineIntentSchema).default([]),
 });
 export const ApiErrorSchema = z.object({
   error: z.object({
@@ -344,31 +474,15 @@ export type ImportSnapshot = z.infer<typeof ImportSnapshotSchema>;
 export function deliveryWorkflowId(deploymentId: string) {
   return `delivery/${deploymentId}`;
 }
-export const WorkerRolloutPlanSchema = z
-  .object({
-    target: z.enum(["central", "scout-beta", "scout-prod"]),
-    namespace: z.enum(["beta", "prod"]),
-    deploymentName: IdentifierSchema,
-    taskQueue: IdentifierSchema,
-    candidateBuildId: SourceRevisionSchema,
-    candidateImage: z
-      .string()
-      .regex(/^docker\.io\/shepherdjerred\/[\w-]+@sha256:[a-f0-9]{64}$/),
-    expectedCurrentBuildId: SourceRevisionSchema,
-    deploymentId: IdentifierSchema,
-  })
-  .strict();
+export const WorkerRolloutPlanSchema = rollout.WorkerRolloutPlanSchema;
 export type WorkerRolloutPlan = z.infer<typeof WorkerRolloutPlanSchema>;
-export const WorkerRolloutActionSchema = z.enum([
-  "start",
-  "advance-50",
-  "advance-100",
-  "promote",
-  "verify",
-]);
+export const WorkerRolloutActionSchema = rollout.WorkerRolloutActionSchema;
 export type WorkerRolloutAction = z.infer<typeof WorkerRolloutActionSchema>;
 export const WorkerRolloutSnapshotSchema = z.object({
-  deployment: z.object({ id: IdentifierSchema }),
+  deployment: z.object({
+    id: IdentifierSchema,
+    workerSnapshot: WorkerPoolSnapshotSchema.nullable().default(null),
+  }),
   pipeline: PipelineRevisionSchema,
   versionSet: VersionSetRevisionSchema,
 });
@@ -378,15 +492,5 @@ export function diffVersionSets(
   from: VersionSetRevision | null,
   to: VersionSetRevision,
 ) {
-  const components = [
-    ...new Set([
-      ...Object.keys(from?.components ?? {}),
-      ...Object.keys(to.components),
-    ]),
-  ].sort();
-  return components.flatMap((component) => {
-    const before = from?.components[component] ?? null;
-    const after = to.components[component] ?? null;
-    return before?.id === after?.id ? [] : [{ component, before, after }];
-  });
+  return compareVersions(from, to);
 }

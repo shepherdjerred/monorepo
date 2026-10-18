@@ -3,6 +3,7 @@ import { Glob } from "bun";
 import { parse as parseYaml, parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { canonicalJson } from "#scripts/canonical-json.ts";
+import { deliveryEnvironment } from "#delivery-ownership";
 
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
 const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
@@ -99,6 +100,7 @@ export type ChartInput = {
 export type PublishedChart = {
   readonly version: string;
   readonly fingerprint: string;
+  readonly digest?: string;
 };
 
 export type ChartPlanEntry = {
@@ -206,6 +208,7 @@ export function activeArgoRepositoryChartNames(
 ): ReadonlySet<string> {
   return new Set(
     parsedApplications(manifest).flatMap((application) => {
+      if (deliveryEnvironment(application) !== undefined) return [];
       const { repoURL, chart } = application.spec.source;
       return chart !== undefined && REPOSITORY_CHART_URLS.has(repoURL)
         ? [chart]

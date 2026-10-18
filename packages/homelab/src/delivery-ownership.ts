@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  ORDINARY_DELIVERY_ENVIRONMENTS,
+  SPECIALIZED_DELIVERY_ENVIRONMENTS,
+} from "./delivery-target-policy.ts";
 
 /** Registration is declarative; selected release fields belong to Delivery. */
 export const DELIVERY_ENVIRONMENT_ANNOTATION =
@@ -6,12 +11,11 @@ export const DELIVERY_ENVIRONMENT_ANNOTATION =
 
 /** Allowed registrations, not activation or selected-version state. */
 export const DELIVERY_DELEGATION_DEFINITIONS: Readonly<Record<string, string>> =
-  {
-    arcade: "arcade/prod",
-  };
+  { ...ORDINARY_DELIVERY_ENVIRONMENTS, ...SPECIALIZED_DELIVERY_ENVIRONMENTS };
 
 /** Cut over after importing observed state and validating the target pipeline. */
-export const DELIVERY_ACTIVE_DELEGATIONS: Readonly<Record<string, string>> = {};
+export const DELIVERY_ACTIVE_DELEGATIONS: Readonly<Record<string, string>> =
+  SERVICE_CATALOG.deliveryDelegations ?? {};
 
 const OwnershipSchema = z.object({
   kind: z.string(),

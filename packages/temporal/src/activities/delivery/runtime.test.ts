@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
-import { verifyDeliveryPods } from "./runtime.ts";
+import {
+  verifyDeliveryPods,
+  verifyCentralChartDependencies,
+} from "./runtime.ts";
 
 const digest = `sha256:${"a".repeat(64)}`;
 const child = `sha256:${"b".repeat(64)}`;
@@ -38,6 +41,30 @@ function pod() {
 }
 
 describe("Delivery runtime evidence", () => {
+  it("checks the explicit shared Caddy dependency against selected chart manifests", () => {
+    const image = `docker.io/shepherdjerred/caddy-s3proxy@${digest}`;
+    const current = pod();
+    current.spec.containers[0]!.image = image;
+    const desired = [
+      JSON.stringify({
+        kind: "Deployment",
+        spec: { template: { spec: { containers: [{ image }] } } },
+      }),
+    ];
+    expect(() =>
+      verifyCentralChartDependencies([current], desired),
+    ).not.toThrow();
+    current.spec.containers[0]!.image = `docker.io/shepherdjerred/caddy-s3proxy@sha256:${"c".repeat(64)}`;
+    expect(() => verifyCentralChartDependencies([current], desired)).toThrow(
+      "selected chart",
+    );
+    expect(() => verifyCentralChartDependencies([], desired)).toThrow(
+      "no ready",
+    );
+    expect(() => verifyCentralChartDependencies([current], [])).toThrow(
+      "reviewed Caddy",
+    );
+  });
   it("accepts ready Pods with selected index and verified platform digest", () => {
     expect(() => verifyDeliveryPods([pod()], [artifact])).not.toThrow();
   });

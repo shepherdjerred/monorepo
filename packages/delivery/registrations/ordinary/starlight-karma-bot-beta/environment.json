@@ -1,0 +1,10 @@
+{
+  "id": "starlight-karma-bot/beta",
+  "serviceId": "starlight-karma-bot",
+  "name": "beta",
+  "application": "starlight-karma-bot-beta",
+  "pipelineRevisionId": "starlight-karma-bot/beta/1",
+  "configurationRevision": "starlight-karma-bot/beta/1",
+  "configuration": {},
+  "automatic": true
+}

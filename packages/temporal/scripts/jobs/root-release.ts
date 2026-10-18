@@ -5,6 +5,9 @@ import path from "node:path";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import { releasePrunesChart } from "homelab/scripts/helm/helm-release-core.ts";
 import { z } from "zod";
+import { HOMELAB_RELEASE_RESULT_FILE } from "homelab/scripts/argocd/argocd-release-result.ts";
+import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
+import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
 
 export const RootReleaseInputSchema = z
   .object({
@@ -23,6 +26,17 @@ export const RootReleaseInputSchema = z
   })
   .strict()
   .superRefine((input, context) => {
+    if (
+      input.charts.some((chart) =>
+        ["temporal", "delivery-control-plane"].includes(chart.name),
+      )
+    )
+      context.addIssue({
+        code: "custom",
+        message:
+          "Root platform cutover requires central worker Application delegation first; root cannot mutate protected Delivery control-plane templates",
+      });
+
     if (
       new Set(input.charts.map((chart) => chart.name)).size !==
         input.charts.length ||
@@ -51,6 +65,41 @@ export const RootReleaseInputSchema = z
     }
   });
 
+export function verifyRootJobResult(
+  raw: unknown,
+  input: z.infer<typeof RootReleaseInputSchema>,
+) {
+  const root = input.charts.find(({ name }) => name === "apps");
+  if (root === undefined)
+    throw new Error("Root receipt lacks its exact apps chart");
+  const result = z
+    .object({
+      schema: z.literal("homelab-release-result/v1"),
+      outcome: z.literal("applied-verified"),
+      rootApplication: z.literal("apps"),
+      requestId: z.literal(input.requestId),
+      revision: z.literal(root.artifact.version),
+      terminalOperationState: z.literal("terminated-after-applied"),
+      finalHealth: z.literal("all-expected-child-applications-synced-healthy"),
+      resourceIdentities: z.array(z.string()).min(1),
+      applications: z.array(
+        z.object({ name: z.string(), revision: z.string() }),
+      ),
+    })
+    .strict()
+    .parse(raw);
+  const actual = result.applications
+    .map(({ name, revision }) => `${name}@${revision}`)
+    .sort();
+  const expected = input.charts
+    .map(({ name, artifact }) => `${name}@${artifact.version}`)
+    .sort();
+  if (JSON.stringify(actual) !== JSON.stringify(expected))
+    throw new Error(
+      "Root release native receipt differs from the frozen exact inventory",
+    );
+}
+
 export function rootReleaseCommand(
   raw: unknown,
   inventoryPath: string,
@@ -73,8 +122,12 @@ export function rootReleaseCommand(
   ];
 }
 
-export async function run(raw: unknown): Promise<unknown> {
-  const input = RootReleaseInputSchema.parse(raw);
+export async function run(
+  request: DeliveryJobRequest,
+  admit: () => Promise<unknown> = async () =>
+    await admitPlatformNativeJob(request),
+): Promise<unknown> {
+  const input = RootReleaseInputSchema.parse(request.input);
   // Verify every referenced archive before invoking the existing exact-revision,
   // lifecycle, prune, immutable-field and request-ownership preflight.
   for (const { artifact } of input.charts) {
@@ -98,6 +151,12 @@ export async function run(raw: unknown): Promise<unknown> {
     path.join(tmpdir(), "delivery-root-release-"),
   );
   try {
+    const root = path.resolve(import.meta.dirname, "../../../..");
+    const resultFile = Bun.file(path.join(root, HOMELAB_RELEASE_RESULT_FILE));
+    if (await resultFile.exists())
+      throw new Error(
+        "Fresh root Job checkout already contains an unowned release receipt",
+      );
     const inventoryPath = path.join(directory, "expected.json");
     await writeFile(
       inventoryPath,
@@ -109,8 +168,9 @@ export async function run(raw: unknown): Promise<unknown> {
         })),
       ),
     );
+    await admit();
     const child = Bun.spawn(rootReleaseCommand(input, inventoryPath), {
-      cwd: path.resolve(import.meta.dirname, "../../../.."),
+      cwd: root,
       env: {
         PATH: Bun.env["PATH"],
         HOME: Bun.env["HOME"],
@@ -127,6 +187,7 @@ export async function run(raw: unknown): Promise<unknown> {
       throw new Error(
         `Guarded root release failed with exit ${code.toString()}; inspect its recorded request before retrying`,
       );
+    verifyRootJobResult(await resultFile.json(), input);
     return {
       requestId: input.requestId,
       charts: input.charts.map(({ name, artifact }) => ({

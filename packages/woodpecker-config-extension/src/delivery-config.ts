@@ -13,16 +13,6 @@ export async function deliveryPublicationEnabled(
   ).value("enabled");
 }
 
-export async function deliveryStaticArchivesEnabled(
-  branch: string,
-): Promise<boolean> {
-  return deliveryFlagConfig(
-    branch,
-    "woodpecker-delivery-static-archives-enabled",
-    branch.startsWith("ci-canary/") ? "beta" : "prod",
-  ).value("enabled");
-}
-
 function deliveryFlagConfig(
   branch: string,
   flag: WoodpeckerBooleanFlagKey,

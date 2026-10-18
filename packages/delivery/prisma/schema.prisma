@@ -10,38 +10,60 @@ datasource db {
 }
 
 model Build {
-  id                     String     @id
-  requestId              String     @unique
+  id                     String                   @id
+  requestId              String                   @unique
   serviceId              String
   sourceRevision         String
-  ciUrl                  String
+  sourceKind             String                   @default("ci")
+  ciUrl                  String?
   verifiedAt             DateTime
-  status                 String     @default("pending")
+  status                 String                   @default("pending")
   qualificationReason    String?
   qualificationCheckedAt DateTime?
-  repositoryId           Int
-  pipelineNumber         Int
-  createdAt              DateTime   @default(now())
+  platformChanges        Json?
+  repositoryId           Int?
+  pipelineNumber         Int?
+  createdAt              DateTime                 @default(now())
   artifacts              Artifact[]
+  selections             BuildArtifactSelection[]
+  platformDeployments    Deployment[]             @relation("PlatformSource")
 
   @@index([serviceId, createdAt])
 }
 
 model Artifact {
-  id             String            @id
-  buildId        String
-  build          Build             @relation(fields: [buildId], references: [id])
-  component      String
-  kind           String
-  uri            String
-  digest         String
-  runtimeDigests String[]          @default([])
-  requires       Json              @default("{}")
-  version        String
-  createdAt      DateTime          @default(now())
-  entries        VersionSetEntry[]
+  id                   String                      @id
+  buildId              String
+  build                Build                       @relation(fields: [buildId], references: [id])
+  component            String
+  kind                 String
+  uri                  String
+  digest               String
+  runtimeDigests       String[]                    @default([])
+  requires             Json                        @default("{}")
+  version              String
+  origin               Json                        @default("{\"kind\":\"first-party\"}")
+  originKey            String?                     @unique
+  createdAt            DateTime                    @default(now())
+  entries              VersionSetEntry[]
+  workerVersions       WorkerVersion[]
+  forumBaselineImages  ForumBaselineIntent[]       @relation("ForumBaselineImage")
+  forumBaselineBundles ForumBaselineIntent[]       @relation("ForumBaselineBundle")
+  selections           BuildArtifactSelection[]
+  platformReferences   PlatformArtifactReference[]
 
   @@unique([buildId, component])
+}
+
+model BuildArtifactSelection {
+  buildId    String
+  build      Build    @relation(fields: [buildId], references: [id])
+  component  String
+  artifactId String
+  artifact   Artifact @relation(fields: [artifactId], references: [id])
+
+  @@id([buildId, component])
+  @@index([artifactId])
 }
 
 model VersionSet {
@@ -67,69 +89,243 @@ model VersionSetEntry {
 }
 
 model Pipeline {
-  id           String        @id
-  definition   Json
-  createdAt    DateTime      @default(now())
-  environments Environment[]
+  id             String                @id
+  definition     Json
+  createdAt      DateTime              @default(now())
+  environments   Environment[]
+  forumBaselines ForumBaselineIntent[]
 }
 
 model Environment {
-  id                                 String       @id
+  id                                 String                @id
   serviceId                          String
   name                               String
-  application                        String?      @unique
+  application                        String?               @unique
   pipelineRevisionId                 String
-  pipeline                           Pipeline     @relation(fields: [pipelineRevisionId], references: [id])
+  pipeline                           Pipeline              @relation(fields: [pipelineRevisionId], references: [id])
   configurationRevision              String
   configuration                      Json
-  automatic                          Boolean      @default(false)
-  automaticSuppressedThroughRevision Int          @default(0)
+  automatic                          Boolean               @default(false)
+  automaticSuppressedThroughRevision Int                   @default(0)
   promotionSourceEnvironmentId       String?
-  generation                         Int          @default(0)
+  generation                         Int                   @default(0)
   desiredVersionSetRevisionId        String?
   observedVersionSetRevisionId       String?
   acceptedVersionSetRevisionId       String?
+  acceptedPlatformDeploymentId       String?
+  acceptedPlatformDeployment         Deployment?           @relation("AcceptedPlatform", fields: [acceptedPlatformDeploymentId], references: [id])
+  acceptedControlPlaneDeploymentId   String?
+  acceptedControlPlaneDeployment     Deployment?           @relation("AcceptedControlPlane", fields: [acceptedControlPlaneDeploymentId], references: [id])
+  acceptedForumBaselineIntentId      String?
+  acceptedForumBaselineIntent        ForumBaselineIntent?  @relation("AcceptedForumBaseline", fields: [acceptedForumBaselineIntentId], references: [id])
   observedAt                         DateTime?
   activeDeploymentId                 String?
-  createdAt                          DateTime     @default(now())
+  createdAt                          DateTime              @default(now())
   deployments                        Deployment[]
+  workerVersions                     WorkerVersion[]
+  forumBaselines                     ForumBaselineIntent[] @relation("ForumEnvironmentBaseline")
 
   @@index([serviceId])
 }
 
 model Deployment {
-  id                                   String           @id
-  requestId                            String           @unique
+  id                                   String                      @id
+  requestId                            String                      @unique
   environmentId                        String
-  environment                          Environment      @relation(fields: [environmentId], references: [id])
+  environment                          Environment                 @relation(fields: [environmentId], references: [id])
   serviceId                            String
   versionSetRevisionId                 String
   sourceEnvironmentId                  String?
+  repairOfDeploymentId                 String?
+  repairOfDeployment                   Deployment? @relation("TrmnlRepairSource",fields:[repairOfDeploymentId],references:[id])
+  trmnlRepairs                         Deployment[] @relation("TrmnlRepairSource")
   previousAcceptedVersionSetRevisionId String?
   previousAcceptedConfiguration        Json?
   pipelineRevisionId                   String
   configurationRevision                String
   configuration                        Json
+  workerSnapshot                       Json?
+  platformSnapshot                     Json?
+  controlPlaneSnapshot                 Json?
+  forumBaselineSnapshot                Json?
+  platformSourceBuildId                String?
+  platformSourceBuild                  Build?                      @relation("PlatformSource", fields: [platformSourceBuildId], references: [id])
+  platformArtifacts                    PlatformArtifactReference[]
+  preparedPlatformPlan                 PlatformPlan?               @relation("PreparedPlatformPlan")
+  appliedPlatformPlan                  PlatformPlan?               @relation("AppliedPlatformPlan")
+  platformLock                         PlatformLock?
+  platformAcceptedBy                   Environment[]               @relation("AcceptedPlatform")
+  controlPlaneAcceptedBy               Environment[]               @relation("AcceptedControlPlane")
+  workerRecoveries                     WorkerRecoveryIntent[]
+  minecraftRecoveries                  MinecraftRecoveryIntent[]
+  platformRecoveries                   PlatformRecoveryIntent[]
   expectedGeneration                   Int
   kind                                 String
-  automatic                            Boolean          @default(false)
+  automatic                            Boolean                     @default(false)
   status                               String
   requestedBy                          String
   message                              String?
-  cancelRequested                      Boolean          @default(false)
-  createdAt                            DateTime         @default(now())
+  cancelRequested                      Boolean                     @default(false)
+  createdAt                            DateTime                    @default(now())
   startedAt                            DateTime?
   finishedAt                           DateTime?
-  recoveryRequired                     Boolean          @default(false)
+  recoveryRequired                     Boolean                     @default(false)
   resultFingerprint                    String?
   evidence                             Evidence[]
   approvals                            Approval[]
   stages                               Stage[]
   outbox                               Outbox?
   lock                                 ApplicationLock?
+  introducedWorkers                    WorkerVersion[]
 
   @@index([environmentId, createdAt])
   @@index([status, createdAt])
+}
+
+model ForumBaselineIntent {
+  id                            String        @id
+  environmentId                 String
+  environment                   Environment   @relation("ForumEnvironmentBaseline", fields: [environmentId], references: [id])
+  imageArtifactId               String
+  imageArtifact                 Artifact      @relation("ForumBaselineImage", fields: [imageArtifactId], references: [id])
+  bundleArtifactId              String
+  bundleArtifact                Artifact      @relation("ForumBaselineBundle", fields: [bundleArtifactId], references: [id])
+  requestedBy                   String
+  reason                        String
+  expectedEnvironmentGeneration Int
+  pipelineRevisionId            String
+  pipeline                      Pipeline      @relation(fields: [pipelineRevisionId], references: [id])
+  configurationRevision         String
+  snapshotFingerprint           String
+  status                        String        @default("pending")
+  workflowId                    String        @unique
+  submittedAt                   DateTime?
+  proof                         Json?
+  message                       String?
+  resultFingerprint             String?
+  createdAt                     DateTime      @default(now())
+  finishedAt                    DateTime?
+  acceptedBy                    Environment[] @relation("AcceptedForumBaseline")
+
+  @@index([status, createdAt])
+  @@index([environmentId, createdAt])
+}
+
+model PlatformRecoveryIntent {
+  id                            String     @id
+  deploymentId                  String
+  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
+  requestedBy                   String
+  reason                        String
+  expectedEnvironmentGeneration Int
+  snapshotFingerprint           String
+  status                        String     @default("pending")
+  workflowId                    String     @unique
+  submittedAt                   DateTime?
+  message                       String?
+  resultFingerprint             String?
+  nativeReceipts                Json       @default("[]")
+  planReceipt                   Json?
+  encryptedPlan                 Json?
+  planFingerprint               String?
+  planApproval                  Json?
+  createdAt                     DateTime   @default(now())
+  finishedAt                    DateTime?
+
+  @@index([status, createdAt])
+  @@index([deploymentId, createdAt])
+}
+
+model WorkerVersion {
+  id                       String      @id
+  environmentId            String
+  environment              Environment @relation(fields: [environmentId], references: [id])
+  buildId                  String
+  artifactId               String
+  artifact                 Artifact    @relation(fields: [artifactId], references: [id])
+  introducedByDeploymentId String
+  introducedByDeployment   Deployment  @relation(fields: [introducedByDeploymentId], references: [id])
+  host                     Json
+  replicas                 Int         @default(1)
+  generation               Int         @default(0)
+  retiredAt                DateTime?
+  retirementProof          Json?
+  createdAt                DateTime    @default(now())
+
+  @@unique([environmentId, buildId])
+  @@index([environmentId, replicas])
+}
+
+model WorkerRecoveryIntent {
+  id                            String     @id
+  deploymentId                  String
+  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
+  requestedBy                   String
+  reason                        String
+  expectedEnvironmentGeneration Int
+  snapshotFingerprint           String
+  poolFingerprint               String
+  status                        String     @default("pending")
+  workflowId                    String     @unique
+  submittedAt                   DateTime?
+  message                       String?
+  resultFingerprint             String?
+  createdAt                     DateTime   @default(now())
+  finishedAt                    DateTime?
+
+  @@index([status, createdAt])
+  @@index([deploymentId, createdAt])
+}
+
+model MinecraftRecoveryIntent {
+  id                            String     @id
+  deploymentId                  String
+  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
+  requestedBy                   String
+  reason                        String
+  expectedEnvironmentGeneration Int
+  snapshotFingerprint           String
+  controllerReceipt             Json?
+  status                        String     @default("pending")
+  workflowId                    String     @unique
+  submittedAt                   DateTime?
+  message                       String?
+  resultFingerprint             String?
+  createdAt                     DateTime   @default(now())
+  finishedAt                    DateTime?
+
+  @@index([status, createdAt])
+  @@index([deploymentId, createdAt])
+}
+
+model PlatformArtifactReference {
+  deploymentId String
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  kind         String
+  selector     String
+  artifactId   String
+  artifact     Artifact   @relation(fields: [artifactId], references: [id])
+
+  @@id([deploymentId, kind, selector])
+  @@index([artifactId])
+}
+
+model PlatformPlan {
+  deploymentId      String      @id
+  deployment        Deployment  @relation("PreparedPlatformPlan", fields: [deploymentId], references: [id])
+  receipt           Json
+  encryptedPlan     Json
+  fingerprint       String
+  applyDeploymentId String?     @unique
+  applyDeployment   Deployment? @relation("AppliedPlatformPlan", fields: [applyDeploymentId], references: [id])
+  createdAt         DateTime    @default(now())
+}
+
+model PlatformLock {
+  id           String     @id
+  deploymentId String     @unique
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  createdAt    DateTime   @default(now())
 }
 
 model Evidence {

@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "alert-dashboard",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "alert-dashboard",
+  "chartComponent": "chart:alert-dashboard",
+  "namespace": "alert-dashboard",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.alert-dashboard": "image:alert-dashboard"
+  },
+  "verification": {
+    "url": "https://alerts.tailnet-1a49.ts.net/healthz",
+    "expectedStatus": 200
+  }
+}

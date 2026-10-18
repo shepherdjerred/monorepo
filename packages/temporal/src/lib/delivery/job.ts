@@ -21,35 +21,78 @@ function statusCode(error: unknown) {
   return z.object({ code: z.number() }).safeParse(error).data?.code;
 }
 
-async function getOrCreateJob(
-  jobs: BatchV1Api,
+export type DeliveryJobContinuation = {
+  createIfAbsent: boolean;
+  expectedReceipt?: DeliveryJobReceipt;
+};
+function assertContinuation(
+  observed: V1Job,
   expected: V1Job,
-  namespace: string,
-  name: string,
+  prior?: DeliveryJobReceipt,
+) {
+  if (prior === undefined) return;
+  const metadata = z
+    .object({
+      namespace: z.string(),
+      name: z.string(),
+      annotations: z.record(z.string(), z.string()),
+    })
+    .parse(expected.metadata);
+  if (
+    prior.namespace !== metadata.namespace ||
+    prior.name !== metadata.name ||
+    prior.requestId !==
+      metadata.annotations["delivery.shepherdjerred.com/request"] ||
+    prior.uid !== observed.metadata?.uid ||
+    prior.specFingerprint !==
+      metadata.annotations["delivery.shepherdjerred.com/fingerprint"]
+  )
+    throw new Error(
+      "Recorded Delivery Job incarnation changed; retain ownership",
+    );
+}
+export async function getOrCreateDeliveryJob(
+  jobs: Pick<BatchV1Api, "readNamespacedJob" | "createNamespacedJob">,
+  expected: V1Job,
+  target: { namespace: string; name: string },
+  continuation?: DeliveryJobContinuation,
 ): Promise<V1Job> {
+  const { namespace, name } = target;
+  let observed: V1Job;
   try {
-    return await jobs.readNamespacedJob({ namespace, name });
+    observed = await jobs.readNamespacedJob({ namespace, name });
   } catch (error) {
     if (statusCode(error) !== 404) throw error;
+    if (
+      continuation?.createIfAbsent === false ||
+      continuation?.expectedReceipt !== undefined
+    )
+      throw new Error(
+        "Recorded Delivery Job is absent; retain ownership rather than repeat its external effects",
+        { cause: error },
+      );
     try {
-      return await jobs.createNamespacedJob({ namespace, body: expected });
+      observed = await jobs.createNamespacedJob({ namespace, body: expected });
     } catch (createError) {
       if (statusCode(createError) !== 409) throw createError;
-      return await jobs.readNamespacedJob({ namespace, name });
+      observed = await jobs.readNamespacedJob({ namespace, name });
     }
   }
+  assertMatchingDeliveryJob(observed, expected);
+  assertContinuation(observed, expected, continuation?.expectedReceipt);
+  return observed;
 }
 
 async function waitForJob(
   jobs: BatchV1Api,
   expected: V1Job,
   receipt: DeliveryJobReceipt,
+  runtime: DeliveryJobRuntime,
 ): Promise<void> {
-  const context = Context.current();
   const deadline = Date.now() + 2 * 60 * 60 * 1000;
   for (;;) {
-    context.heartbeat(receipt);
-    if (context.cancellationSignal.aborted)
+    runtime.heartbeat(receipt);
+    if (runtime.cancellationSignal.aborted)
       throw new Error(
         "Delivery Job canceled; inspect its recorded UID before recovery",
       );
@@ -87,18 +130,41 @@ async function waitForJob(
 }
 
 /** A lost create response never creates another name or retries a terminal Job. */
+export type DeliveryJobRuntime = {
+  kubernetes: KubeConfig;
+  heartbeat: (receipt: DeliveryJobReceipt) => void;
+  cancellationSignal: AbortSignal;
+};
+function activityRuntime(): DeliveryJobRuntime {
+  const kubernetes = new KubeConfig();
+  kubernetes.loadFromCluster();
+  const context = Context.current();
+  return {
+    kubernetes,
+    heartbeat: (receipt) => {
+      context.heartbeat(receipt);
+    },
+    cancellationSignal: context.cancellationSignal,
+  };
+}
 export async function runDeliveryJob(
   input: DeliveryJobRequest,
   onReceipt: (receipt: DeliveryJobReceipt) => Promise<void>,
+  continuation?: DeliveryJobContinuation,
+  runtime: DeliveryJobRuntime = activityRuntime(),
 ): Promise<unknown> {
-  const config = new KubeConfig();
-  config.loadFromCluster();
+  const config = runtime.kubernetes;
   const jobs = config.makeApiClient(BatchV1Api);
   const pods = config.makeApiClient(CoreV1Api);
   const expected = deliveryJobManifest(input);
-  const namespace = "delivery-jobs";
+  const namespace = z.string().parse(expected.metadata?.namespace);
   const name = z.string().parse(expected.metadata?.name);
-  const job = await getOrCreateJob(jobs, expected, namespace, name);
+  const job = await getOrCreateDeliveryJob(
+    jobs,
+    expected,
+    { namespace, name },
+    continuation,
+  );
   assertMatchingDeliveryJob(job, expected);
   const receipt = DeliveryJobReceiptSchema.parse({
     namespace,
@@ -111,7 +177,7 @@ export async function runDeliveryJob(
     requestId: input.deploymentId,
   });
   await onReceipt(receipt);
-  await waitForJob(jobs, expected, receipt);
+  await waitForJob(jobs, expected, receipt, runtime);
   const listed = await pods.listNamespacedPod({
     namespace,
     labelSelector: `job-name=${name}`,
@@ -128,7 +194,9 @@ export async function runDeliveryJob(
     namespace,
     name: owned[0].metadata.name,
     container: "stage",
-    limitBytes: 1_000_000,
+    limitBytes: ["tofu-plan", "platform-recovery"].includes(input.recipe)
+      ? 16 * 1024 * 1024
+      : 1_000_000,
   });
   const results = logs
     .split("\n")

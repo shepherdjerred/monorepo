@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { DELIVERY_ACTIVE_DELEGATIONS } from "homelab/src/delivery-ownership.ts";
 import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 import { createMinecraftProxyTrust } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/proxy-trust.ts";
 import { createMinecraftPublicStatus } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/public-status.ts";
@@ -42,6 +43,20 @@ const MC_BRIDGE_PORT = 25_580;
  * the other servers.
  */
 export const THE_STORM_PAPER_VERSION = "26.2";
+
+/** The mirror is qualified by CI; source ownership switches only at explicit cutover. */
+export function minecraftChartRepository(
+  delegations: Readonly<Record<string, string>> = DELIVERY_ACTIVE_DELEGATIONS,
+): string {
+  const owner = delegations["minecraft-tsmc"];
+  if (owner === undefined)
+    return "https://itzg.github.io/minecraft-server-charts/";
+  if (owner !== "minecraft/tsmc")
+    throw new Error(
+      "TSMC chart mirror requires its reviewed Delivery environment",
+    );
+  return "https://chartmuseum.sjer.red";
+}
 
 /**
  * minecraft-tsmc runs The Storm's own image (packages/the-storm/server): Paper
@@ -286,7 +301,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       revisionHistoryLimit: 2,
       project: "default",
       source: {
-        repoUrl: "https://itzg.github.io/minecraft-server-charts/",
+        repoUrl: minecraftChartRepository(),
         targetRevision: versions.minecraft,
         chart: "minecraft",
         helm: {

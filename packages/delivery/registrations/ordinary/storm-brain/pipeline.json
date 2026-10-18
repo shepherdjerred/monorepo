@@ -1,0 +1,12 @@
+{
+  "kind": "argocd",
+  "application": "storm-brain",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "storm-brain",
+  "chartComponent": "chart:storm-brain",
+  "namespace": "storm-brain",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.storm-brain": "image:storm-brain"
+  }
+}

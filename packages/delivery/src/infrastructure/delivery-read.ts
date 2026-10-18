@@ -1,10 +1,10 @@
 import {
-  ArtifactVersionSchema,
   IdentifierSchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   BuildSummarySchema,
   LatestQualifiedArtifactQuerySchema,
+  ForumBaselineIntentSchema,
 } from "#shared/contract.ts";
 import { z } from "zod";
 import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
@@ -14,6 +14,7 @@ import {
   version as readVersion,
   environment,
   ensureService,
+  artifactView,
 } from "./delivery-data.ts";
 
 /** Resolve an exact component from the newest coherent automatic version set. */
@@ -32,6 +33,7 @@ export async function latestQualifiedArtifact(
         AND build."serviceId" = ${input.serviceId}
         AND build."repositoryId" = ${repositoryId}
         AND build."status" = 'verified'
+        AND build."sourceKind" = 'ci'
       ORDER BY build."pipelineNumber" DESC, version."revision" DESC LIMIT 1
     `,
   );
@@ -48,8 +50,14 @@ export async function latestQualifiedArtifact(
           kind: input.kind,
           build: {
             serviceId: input.serviceId,
-            repositoryId,
             status: "verified",
+            OR: [
+              { sourceKind: "ci", repositoryId },
+              {
+                sourceKind: { in: ["upstream", "licensed-bundle"] },
+                repositoryId: null,
+              },
+            ],
           },
         },
       },
@@ -57,21 +65,20 @@ export async function latestQualifiedArtifact(
     }),
     `Qualified ${input.kind} artifact ${input.serviceId}/${input.component}`,
   );
-  const { build, ...entry } = row.artifact;
-  return ArtifactVersionSchema.parse(
-    wire({
-      ...entry,
-      serviceId: build.serviceId,
-      sourceRevision: build.sourceRevision,
-    }),
-  );
+  return artifactView(row.artifact);
 }
 
 export async function detail(this: Delivery, deploymentId: string) {
   const row = required(
     await this.database.deployment.findUnique({
       where: { id: deploymentId },
-      include: { evidence: true, approvals: true, stages: true },
+      include: {
+        evidence: true,
+        approvals: true,
+        stages: true,
+        minecraftRecoveries: { orderBy: { createdAt: "desc" } },
+        platformRecoveries: { orderBy: { createdAt: "desc" } },
+      },
     }),
     "Deployment",
   );
@@ -100,6 +107,8 @@ export async function detail(this: Delivery, deploymentId: string) {
       })),
       approvals: row.approvals,
       stages: row.stages,
+      minecraftRecoveries: row.minecraftRecoveries,
+      platformRecoveries: row.platformRecoveries,
     }),
   );
 }
@@ -118,25 +127,35 @@ export function version(this: Delivery, revisionId: string) {
 }
 
 export async function overview(this: Delivery) {
-  const [environments, deployments, versionSets, artifacts, builds] =
-    await Promise.all([
-      this.database.environment.findMany({ orderBy: { id: "asc" } }),
-      this.database.deployment.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 100,
-      }),
-      this.versions(),
-      this.database.artifact.findMany({
-        where: { build: { status: "verified" } },
-        orderBy: { createdAt: "desc" },
-        take: 100,
-        include: { build: true },
-      }),
-      this.database.build.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 100,
-      }),
-    ]);
+  const [
+    environments,
+    deployments,
+    versionSets,
+    artifacts,
+    builds,
+    forumBaselines,
+  ] = await Promise.all([
+    this.database.environment.findMany({ orderBy: { id: "asc" } }),
+    this.database.deployment.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    this.versions(),
+    this.database.artifact.findMany({
+      where: { build: { status: "verified" } },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: { build: true },
+    }),
+    this.database.build.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    this.database.forumBaselineIntent.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+  ]);
   return {
     environments: await Promise.all(
       environments.map((entry) => environment(this.database, entry.id)),
@@ -145,15 +164,10 @@ export async function overview(this: Delivery) {
       DeploymentSchema.parse(wire(entry)),
     ),
     versionSets,
-    artifacts: artifacts.map(({ build, ...entry }) =>
-      ArtifactVersionSchema.parse(
-        wire({
-          ...entry,
-          serviceId: build.serviceId,
-          sourceRevision: build.sourceRevision,
-        }),
-      ),
-    ),
+    artifacts: artifacts.map((entry) => artifactView(entry)),
     builds: builds.map((entry) => BuildSummarySchema.parse(wire(entry))),
+    forumBaselines: forumBaselines.map((entry) =>
+      ForumBaselineIntentSchema.parse(wire(entry)),
+    ),
   };
 }

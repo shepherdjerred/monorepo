@@ -15,7 +15,6 @@ const turboTasks = [
   "check-patched-deps",
   "check-ci-env",
   "check-ci-admission-budget",
-  "check-worker-image-pins",
   "check-script-migrations",
   "check-test-standardization",
   "script-coverage",
@@ -99,7 +98,6 @@ export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
 
 const IMAGE_PIN_STATE_INPUTS = new Set([
   "packages/version-catalog/src/catalog.json",
-  "scripts/pin-candidates-state.json",
 ]);
 
 const CATALOG_PATH = "packages/version-catalog/src/catalog.json";

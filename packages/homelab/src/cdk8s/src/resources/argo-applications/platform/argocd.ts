@@ -1,4 +1,9 @@
 import type { Chart } from "cdk8s";
+import {
+  deliveryArgoPolicy,
+  DELIVERY_ARGO_ACCOUNTS,
+  DELIVERY_ARGO_SERVER_SETTINGS,
+} from "./delivery-rbac.ts";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -310,6 +315,7 @@ export function createArgoCdApp(chart: Chart) {
     },
     configs: {
       cm: {
+        ...DELIVERY_ARGO_SERVER_SETTINGS,
         // exec.enabled toggles the ArgoCD UI pod-terminal (kubectl exec). Kept
         // off: argocd-server is internet-reachable via the Cloudflare tunnel and
         // an enabled terminal turns an admin-credential compromise into in-pod
@@ -319,11 +325,8 @@ export function createArgoCdApp(chart: Chart) {
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
         "accounts.woodpecker": "apiKey",
-        "accounts.woodpecker.enabled": true,
-        "accounts.delivery": "apiKey",
-        "accounts.delivery.enabled": true,
-        "accounts.delivery-observer": "apiKey",
-        "accounts.delivery-observer.enabled": true,
+        "accounts.woodpecker.enabled": false,
+        ...DELIVERY_ARGO_ACCOUNTS,
         // ArgoCD removed built-in Application CR health in 1.8. Restore the
         // documented app-of-apps check so the root app inherits child app and
         // workload health without widening the Woodpecker account's RBAC.
@@ -396,8 +399,8 @@ return hs`,
         // repository-backed child auto-sync uses a manifest override only on
         // the root app-of-apps Application. Receipt publication updates only
         // that root Application after independent release verification.
-        "policy.csv":
-          "p, woodpecker, applications, sync, default/*, allow\np, woodpecker, applications, get, default/*, allow\np, woodpecker, applications, override, default/apps, allow\np, woodpecker, applications, update, default/apps, allow\np, delivery, applications, get, default/apps, allow\np, delivery, applications, get, default/arcade, allow\np, delivery, applications, update, default/arcade, allow\np, delivery, applications, sync, default/arcade, allow\np, delivery-observer, applications, get, default/apps, allow\np, delivery-observer, applications, get, default/arcade, allow",
+        "policy.default": "",
+        "policy.csv": deliveryArgoPolicy(),
       },
     },
   };

@@ -35,9 +35,6 @@ import {
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
-import { createDeliveryWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/worker.ts";
-import { deliveryExecutorActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -47,11 +44,6 @@ export function createTemporalWorkerDeployment(
   chart: Chart,
   props: CreateTemporalWorkerDeploymentProps,
 ) {
-  const delivery = deliveryExecutorActivation(
-    versions["shepherdjerred/delivery"],
-  );
-  if (delivery !== undefined)
-    createDeliveryWorker(chart, delivery, props.serverServiceName);
   const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
     spec: {
       itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),

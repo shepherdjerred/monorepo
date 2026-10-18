@@ -34,6 +34,14 @@ import {
   environment,
   validateRequirements,
 } from "./delivery-data.ts";
+import { validateWorkerPipeline } from "./worker-pool/baseline.ts";
+import { publicationSelections } from "./artifact-publication.ts";
+import { validatePlatformEnvironment } from "./platform/policy.ts";
+import { validateControlPlaneEnvironment } from "./control-plane/policy.ts";
+import {
+  validateScoutSitePipeline,
+  validateScoutSiteEnvironment,
+} from "./scout-site-policy.ts";
 
 export async function importSnapshot(
   this: Delivery,
@@ -117,6 +125,11 @@ export async function publish(
   // clock does not change the identity of an otherwise identical publication.
   const requestInput = { ...input, verifiedAt: "pending" };
   ensureService(input.serviceId);
+  if (input.platformChanges !== undefined && input.serviceId !== "gitops")
+    throw new DeliveryError(
+      "INVALID",
+      "Platform source publication must use the canonical gitops service",
+    );
   if (
     new Set(input.artifacts.map((entry) => entry.id)).size !==
       input.artifacts.length ||
@@ -136,9 +149,13 @@ export async function publish(
     if (previous !== null)
       return {
         buildId: previous.resultId,
-        artifacts: input.artifacts.map((entry) => entry.id),
+        artifacts: [
+          ...input.artifacts.map((entry) => entry.id),
+          ...input.retainedArtifactIds,
+        ],
       };
     const buildId = id();
+    const selections = await publicationSelections(tx, input, ci.repositoryId);
     await tx.build.create({
       data: {
         id: buildId,
@@ -148,8 +165,14 @@ export async function publish(
         ciUrl: input.ciUrl,
         verifiedAt: new Date(input.verifiedAt),
         ...ci,
+        ...(input.platformChanges === undefined
+          ? {}
+          : { platformChanges: input.platformChanges }),
         artifacts: { create: input.artifacts },
       },
+    });
+    await tx.buildArtifactSelection.createMany({
+      data: selections.map((entry) => ({ buildId, ...entry })),
     });
     await remember(tx, actor, {
       requestId: input.requestId,
@@ -166,7 +189,7 @@ export async function publish(
         sourceRevision: input.sourceRevision,
       },
     });
-    return { buildId, artifacts: input.artifacts.map((entry) => entry.id) };
+    return { buildId, artifacts: selections.map((entry) => entry.artifactId) };
   });
 }
 
@@ -252,11 +275,22 @@ export async function registerPipeline(
   definition: PipelineDefinition,
   actor: Principal,
 ) {
-  if (definition.kind === "argocd" && definition.workerRollout !== undefined)
+  if (
+    definition.kind === "argocd" &&
+    definition.minecraftUpgrade !== undefined &&
+    (definition.application !== "minecraft-tsmc" ||
+      definition.namespace !== "minecraft-tsmc" ||
+      definition.chartName !== "minecraft" ||
+      definition.chartComponent !== "chart:minecraft" ||
+      definition.workerRollout !== undefined ||
+      definition.forumRelease !== undefined)
+  )
     throw new DeliveryError(
       "INVALID",
-      "Worker rollout activation requires a PostgreSQL retained-version pool, frozen environment worker snapshot, chart host management, and Temporal drain proofs; retain the existing deployment owner",
+      "Minecraft upgrade policy requires the fixed TSMC application, namespace, chart and image binding",
     );
+  validateWorkerPipeline(definition);
+  validateScoutSitePipeline(definition);
   if (
     definition.kind === "argocd" &&
     ["apps", "argocd"].includes(definition.application)
@@ -318,6 +352,9 @@ export async function registerEnvironment(
         "Pipeline application differs from environment application",
       );
     validateStaticTarget(input, parsed.definition);
+    validateScoutSiteEnvironment(input, parsed.definition);
+    validatePlatformEnvironment(input, parsed.definition);
+    validateControlPlaneEnvironment(input, parsed.definition);
     const existing = await tx.environment.findUnique({
       where: { id: input.id },
     });

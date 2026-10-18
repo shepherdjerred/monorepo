@@ -15,7 +15,7 @@ final class Listener
 
     public static function mailTransport(\XF\Container $container, ?\Symfony\Component\Mailer\Transport\TransportInterface &$transport): void
     {
-        $settings = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);
+        $settings = (require '/opt/storm-forum/runtime/manifest.php')();
         $transport = new \Storm\Forum\Mail\RequiredStartTlsTransport($settings['smtpHost'], $settings['smtpPort'], false);
         $transport->setUsername(self::credential('POSTAL_SMTP_USERNAME'));
         $transport->setPassword(self::credential('POSTAL_SMTP_PASSWORD'));
@@ -23,7 +23,7 @@ final class Listener
 
     public static function appSetup(\XF\App $app): void
     {
-        $settings = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);
+        $settings = (require '/opt/storm-forum/runtime/manifest.php')();
         $options = $app->options();
         $options->emailTransport = [
             'emailTransport' => 'smtp',

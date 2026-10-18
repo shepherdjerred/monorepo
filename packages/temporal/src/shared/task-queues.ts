@@ -3,8 +3,12 @@ import { z } from "zod";
 export const TASK_QUEUES = {
   /** Every new central Workflow execution starts on this deterministic queue. */
   WORKFLOWS: "monorepo-workflows",
+  /** Delivery orchestration is owned by its independently released control plane. */
+  DELIVERY_WORKFLOWS: "delivery-workflows",
   /** Delivery external effects, isolated from build and infrastructure workers. */
   DELIVERY: "delivery",
+  /** Provider and root-release effects with separate namespace/credential authority. */
+  DELIVERY_PLATFORM: "delivery-platform",
   /** Latency-sensitive Home Assistant workflows and activities. */
   HOME: "home",
   /** Shared report delivery, freshness, and failure-notification work. */
@@ -65,7 +69,9 @@ export type TaskQueue = (typeof TASK_QUEUES)[keyof typeof TASK_QUEUES];
 
 export const TaskQueueSchema = z.enum([
   TASK_QUEUES.WORKFLOWS,
+  TASK_QUEUES.DELIVERY_WORKFLOWS,
   TASK_QUEUES.DELIVERY,
+  TASK_QUEUES.DELIVERY_PLATFORM,
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,
@@ -89,3 +95,4 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.GLITTER_CORPUS,
   TASK_QUEUES.GLITTER_CONTEXT,
 ]);
+export const WORKFLOW_TASK_QUEUES = [TASK_QUEUES.WORKFLOWS] as const;

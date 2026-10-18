@@ -32,5 +32,6 @@ export default defineConfig({
     url: "http://127.0.0.1:17353/readyz",
     timeout: 120_000,
     reuseExistingServer: false,
+    gracefulShutdown: { signal: "SIGTERM", timeout: 10_000 },
   },
 });

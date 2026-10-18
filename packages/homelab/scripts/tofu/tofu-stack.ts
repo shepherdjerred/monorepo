@@ -22,8 +22,8 @@ import {
   STACK_MANIFEST,
   STATE_CREDENTIALS,
   type StackDefinition,
-  type TofuStack,
 } from "./tofu-stack-manifest.ts";
+import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
   loadReviewedPlatformPlan,
   publishPlatformPlan,

@@ -79,6 +79,7 @@ export async function orphan(
     });
     if (!recoveryRequired) {
       await tx.applicationLock.deleteMany({ where: { deploymentId } });
+      await tx.platformLock.deleteMany({ where: { deploymentId } });
       await tx.environment.updateMany({
         where: { id: row.environmentId, activeDeploymentId: deploymentId },
         data: { activeDeploymentId: null },

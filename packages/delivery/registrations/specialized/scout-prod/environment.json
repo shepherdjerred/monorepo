@@ -1,0 +1,11 @@
+{
+  "id": "scout-for-lol/prod",
+  "serviceId": "scout-for-lol",
+  "name": "prod",
+  "application": "scout-prod",
+  "pipelineRevisionId": "scout-prod/1",
+  "configurationRevision": "scout-prod/1",
+  "configuration": {},
+  "automatic": true,
+  "promotionSourceEnvironmentId": "scout-for-lol/beta"
+}

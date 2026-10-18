@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   PipelineRevisionSchema,
   VersionSetRevisionSchema,
+  ForumBaselineSnapshotSchema,
 } from "@shepherdjerred/delivery/contract";
 import { forumReleaseParameters } from "./forum.ts";
 
@@ -34,7 +35,14 @@ function version(digit: string) {
         id: `bundle/${digit}`,
         component: "bundle",
         kind: "archive",
-        uri: `s3://storm-forum-releases/releases/${digit}.zip`,
+        uri: `s3://storm-forum-releases/releases/${digit.repeat(64)}.zip`,
+        version: digit === "a" ? "2.3.12" : "2.3.13",
+        origin: {
+          kind: "licensed-bundle",
+          manifestDigest: `sha256:${"f".repeat(64)}`,
+          xenforoVersion: digit === "a" ? "2.3.12" : "2.3.13",
+          producerSourceRevision: digit.repeat(40),
+        },
       },
     },
   });
@@ -66,13 +74,78 @@ function fixture() {
   };
 }
 describe("forum immutable release selection", () => {
+  test("first upgrade uses the frozen independently observed original instead of inventing an accepted version set", () => {
+    const detail = fixture(),
+      original = detail.previousAcceptedVersionSet;
+    const baseline = ForumBaselineSnapshotSchema.parse({
+      intentId: "baseline/original",
+      image: original.components["image"],
+      bundle: original.components["bundle"],
+      proof: {
+        environmentId: "storm-forum/prod",
+        observedAt: createdAt,
+        application: {
+          name: "storm-forum",
+          uid: "app",
+          resourceVersion: "1",
+          sourceFingerprint: "a".repeat(64),
+        },
+        runtimeImage: `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
+        imageArtifactId: "image/a",
+        bundleArtifactId: "bundle/a",
+        bundleDigest: `sha256:${"a".repeat(64)}`,
+        runtime: {
+          schemaVersion: 1,
+          state: "installed",
+          xenforoVersion: "2.3.12",
+          bundleSha256: "a".repeat(64),
+          maintenance: false,
+          releaseLock: false,
+        },
+        pods: [
+          {
+            name: "pod",
+            uid: "pod-uid",
+            resourceVersion: "2",
+            imageId: `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
+            workloadUid: "web-uid",
+          },
+        ],
+        releaseJob: {
+          name: "storm-forum-release-a",
+          uid: "job-uid",
+          resourceVersion: "3",
+          specFingerprint: "a".repeat(64),
+          completedAt: createdAt,
+        },
+      },
+    });
+    const result = forumReleaseParameters({
+      ...detail,
+      previousAcceptedVersionSet: null,
+      deployment: {
+        ...detail.deployment,
+        previousAcceptedConfiguration: null,
+        forumBaselineSnapshot: baseline,
+      },
+    });
+    expect(result["delivery.previousXenforoVersion"]).toBe("2.3.12");
+    expect(result["delivery.previousBundleSha256"]).toBe("a".repeat(64));
+    expect(result["delivery.image"]).toContain("b".repeat(64));
+    expect(() =>
+      forumReleaseParameters({
+        ...detail,
+        deployment: { ...detail.deployment, kind: "rollback" },
+      }),
+    ).toThrow(/restoration procedure/u);
+  });
   test("selects candidate bytes while backing up the frozen previously accepted runtime", () => {
     const detail = fixture();
     const result = forumReleaseParameters(detail);
     expect(result["delivery.image"]).toBe(
       `docker.io/shepherdjerred/storm-forum@sha256:${"b".repeat(64)}`,
     );
-    expect(result["delivery.bundleKey"]).toBe("releases/b.zip");
+    expect(result["delivery.bundleKey"]).toBe(`releases/${"b".repeat(64)}.zip`);
     expect(result["delivery.previousRuntimeImage"]).toBe(
       `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`,
     );
@@ -101,7 +174,7 @@ describe("forum immutable release selection", () => {
           previousAcceptedConfiguration: null,
         },
       }),
-    ).toThrow("verified accepted baseline");
+    ).toThrow("accepted XenForo version");
     expect(() =>
       forumReleaseParameters({
         ...detail,

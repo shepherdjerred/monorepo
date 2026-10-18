@@ -1,4 +1,6 @@
 import type { PlatformStack } from "#scripts/platform-desired-state.ts";
+import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
+import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 
 export type CredentialMapping = {
   source: string;
@@ -17,26 +19,6 @@ export type StackDefinition = {
   localProvider?: "asuswrt";
   operatorOnly?: true;
 };
-
-export type TofuStack =
-  | "application-secrets"
-  | "anthropic"
-  | "anthropic-federation"
-  | "argocd"
-  | "arr"
-  | "asuswrt"
-  | "cloudflare"
-  | "cloudflare-tokens"
-  | "discord"
-  | "dockerhub"
-  | "dockerhub-tokens"
-  | "github"
-  | "google"
-  | "openai"
-  | "posthog"
-  | "seaweedfs"
-  | "tailscale"
-  | "tailscale-delivery";
 
 export const STATE_CREDENTIALS: readonly CredentialMapping[] = [
   {
@@ -276,29 +258,8 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   },
 };
 
-const TOFU_STACKS: readonly TofuStack[] = [
-  "application-secrets",
-  "anthropic",
-  "anthropic-federation",
-  "argocd",
-  "arr",
-  "asuswrt",
-  "cloudflare",
-  "cloudflare-tokens",
-  "discord",
-  "dockerhub",
-  "dockerhub-tokens",
-  "github",
-  "google",
-  "openai",
-  "posthog",
-  "seaweedfs",
-  "tailscale",
-  "tailscale-delivery",
-];
-
 export function parseTofuStack(value: string): TofuStack {
-  const stack = TOFU_STACKS.find((candidate) => candidate === value);
-  if (stack === undefined) throw new Error(`Unknown OpenTofu stack: ${value}`);
-  return stack;
+  const stack = TofuStackSchema.safeParse(value);
+  if (!stack.success) throw new Error(`Unknown OpenTofu stack: ${value}`);
+  return stack.data;
 }

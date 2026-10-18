@@ -17,3 +17,21 @@ export function upgradeBackupEnvironment(
     { name: "BACKUP_SOURCE_RUNTIME_IMAGE", value: source.runtimeImage },
   ];
 }
+
+export function forumBootstrapEnvironment(
+  release: Pick<ForumRelease, "stage" | "bundleKey" | "bundleSha256">,
+): EnvVar[] {
+  return [
+    { name: "STORM_FORUM_STAGE", value: release.stage },
+    { name: "DB_HOST", value: "storm-forum-database" },
+    { name: "DB_NAME", value: "storm" },
+    { name: "DB_USER", value: "storm" },
+    {
+      name: "BUNDLE_ENDPOINT",
+      value: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    },
+    { name: "BUNDLE_BUCKET", value: "storm-forum-releases" },
+    { name: "BUNDLE_KEY", value: release.bundleKey },
+    { name: "BUNDLE_SHA256", value: release.bundleSha256 },
+  ];
+}

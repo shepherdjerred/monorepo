@@ -3,7 +3,8 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { run } from "@shepherdjerred/root-scripts/lib/run.ts";
-import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
+import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
+import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 
 const STACKS_REL = "src/tofu";
 

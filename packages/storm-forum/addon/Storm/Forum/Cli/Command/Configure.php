@@ -15,7 +15,7 @@ final class Configure extends \XF\Cli\Command\AbstractCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $manifest = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);
+        $manifest = (require '/opt/storm-forum/runtime/manifest.php')();
         $stage = $input->getOption('stage');
         if (!isset($manifest['stages'][$stage]) || \XF::$version !== $manifest['xenforoVersion']) {
             throw new \RuntimeException('Stage or XenForo version does not match the release manifest.');

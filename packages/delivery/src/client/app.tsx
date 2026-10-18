@@ -10,6 +10,9 @@ import {
 } from "./deployment-detail.tsx";
 import { canDeploy } from "./presentation.ts";
 import { BuildCatalog } from "./artifacts.tsx";
+import { WorkerPoolPanel } from "./worker-pool.tsx";
+import { PlatformReleaseForm } from "./platform-release-form.tsx";
+import { ForumBaselinePanel } from "./forum-baseline.tsx";
 
 const client = createDeliveryClient({ baseUrl: globalThis.location.origin });
 type Page = "environments" | "deployments" | "versions" | "approvals";
@@ -67,6 +70,13 @@ function useDeliveryState() {
         throw new Error("Deployment details unavailable");
       const id = detail.data.deployment.id;
       switch (input.kind) {
+        case "recovery-decision":
+          await client.approvePlatformRecoveryPlan(input.intentId, {
+            planFingerprint: input.planFingerprint,
+            decision: input.decision,
+            reason: input.reason,
+          });
+          return detail.data.deployment;
         case "approve":
         case "reject":
           return client.approve(id, {
@@ -364,7 +374,16 @@ export function App() {
                                 {artifact.version}
                                 <small>{artifact.digest}</small>
                               </td>
-                              <td>{artifact.kind}</td>
+                              <td>
+                                {artifact.kind}
+                                <small>{artifact.origin.kind}</small>
+                                {artifact.origin.kind === "licensed-bundle" && (
+                                  <small>
+                                    Licensed XenForo{" "}
+                                    {artifact.origin.xenforoVersion}
+                                  </small>
+                                )}
+                              </td>
                               <td className="mono">
                                 {artifact.sourceRevision.slice(0, 12)}
                                 <small>{artifact.buildId}</small>
@@ -409,20 +428,48 @@ function SelectedPanels({
   return (
     <>
       {environment !== undefined && (
-        <ReleaseForm
-          key={environment.id}
-          environment={environment}
-          overview={data}
-          client={client}
-          permitted={canDeploy(identity.data)}
-          pending={request.isPending}
-          onSubmit={(input) => {
-            request.mutate(input);
-          }}
-          onClose={() => {
-            setEnvironmentId(null);
-          }}
-        />
+        <>
+          {environment.id === "gitops/root" ||
+          environment.id.startsWith("gitops/tofu:") ? (
+            <PlatformReleaseForm
+              environment={environment}
+              overview={data}
+              principal={identity.data}
+              client={client}
+              onDeployment={state.selectDeployment}
+              onClose={() => {
+                setEnvironmentId(null);
+              }}
+            />
+          ) : (
+            <ReleaseForm
+              key={environment.id}
+              environment={environment}
+              overview={data}
+              client={client}
+              permitted={canDeploy(identity.data)}
+              pending={request.isPending}
+              onSubmit={(input) => {
+                request.mutate(input);
+              }}
+              onClose={() => {
+                setEnvironmentId(null);
+              }}
+            />
+          )}
+          <WorkerPoolPanel
+            key={`workers:${environment.id}`}
+            client={client}
+            environment={environment}
+            deployments={data.deployments}
+            permitted={canDeploy(identity.data)}
+            onDeployment={state.selectDeployment}
+          />
+          <ForumBaselinePanel
+            environment={environment}
+            intents={data.forumBaselines}
+          />
+        </>
       )}
       {deploymentId !== null && (
         <>

@@ -2,11 +2,14 @@ import { createHash } from "node:crypto";
 import type { V1Job } from "@kubernetes/client-node";
 import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import { deliveryTofuGrants } from "homelab/src/delivery-platform-grants.ts";
 import {
   DELIVERY_JOB_BOOTSTRAP,
   DeliveryJobRequestSchema,
+  deliveryJobNamespace,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
+import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
 
 const PREFIX = "delivery.shepherdjerred.com/";
 export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
@@ -14,12 +17,14 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
   const hash = createHash("sha256").update(canonicalJson(input)).digest("hex");
   const name = `delivery-${hash.slice(0, 40)}`;
   const grants = jobGrants(input);
+  const namespace = deliveryJobNamespace(input.recipe);
+  const pullSecret = `dockerhub-pull-${namespace}`;
   return {
     apiVersion: "batch/v1",
     kind: "Job",
     metadata: {
       name,
-      namespace: "delivery-jobs",
+      namespace,
       labels: { app: "delivery-stage", "kueue.x-k8s.io/queue-name": "default" },
       annotations: {
         [`${PREFIX}request`]: input.deploymentId,
@@ -36,7 +41,10 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
         metadata: { labels: { app: "delivery-stage" } },
         spec: {
           restartPolicy: "Never",
-          serviceAccountName: "delivery-stage",
+          serviceAccountName:
+            input.recipe === "platform-recovery"
+              ? "delivery-recovery-inspector"
+              : "delivery-stage",
           automountServiceAccountToken: false,
           priorityClassName: "batch-low",
           nodeSelector: { "kubernetes.io/hostname": "liskov" },
@@ -48,7 +56,7 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
               effect: "NoSchedule",
             },
           ],
-          imagePullSecrets: [{ name: "dockerhub-pull-delivery-jobs" }],
+          imagePullSecrets: [{ name: pullSecret }],
           securityContext: {
             runAsUser: 1000,
             runAsGroup: 1000,
@@ -61,10 +69,11 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
             {
               name: "docker",
               secret: {
-                secretName: "dockerhub-pull-delivery-jobs",
+                secretName: pullSecret,
                 items: [{ key: ".dockerconfigjson", path: "config.json" }],
               },
             },
+            ...recoveryVolumes(input),
           ],
           containers: [
             {
@@ -84,6 +93,16 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                   mountPath: "/var/run/delivery/docker",
                   readOnly: true,
                 },
+                ...(input.recipe === "platform-recovery"
+                  ? [
+                      {
+                        name: "kubernetes",
+                        mountPath:
+                          "/var/run/secrets/kubernetes.io/serviceaccount",
+                        readOnly: true,
+                      },
+                    ]
+                  : []),
               ],
               env: [
                 { name: "HOME", value: "/workspace/home" },
@@ -96,9 +115,50 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                 },
                 {
                   name: "TEMPORAL_ADDRESS",
-                  value: "temporal-server.temporal.svc.cluster.local:7233",
+                  value:
+                    "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
                 },
                 { name: "TEMPORAL_NAMESPACE", value: "prod" },
+                ...(["control-plane", "platform-recovery"].includes(
+                  input.recipe,
+                )
+                  ? [
+                      {
+                        name: "ARGOCD_SERVER_URL",
+                        value: "https://argocd.sjer.red",
+                      },
+                    ]
+                  : []),
+                ...([
+                  "tofu-apply",
+                  "control-plane",
+                  "root-release",
+                  "platform-recovery",
+                ].includes(input.recipe)
+                  ? [
+                      {
+                        name: "DELIVERY_API_URL",
+                        value:
+                          "http://delivery.delivery.svc.cluster.local:7353",
+                      },
+                    ]
+                  : []),
+                ...(namespace === "delivery-platform-jobs"
+                  ? [
+                      {
+                        name: "DELIVERY_JOB_UID",
+                        valueFrom: {
+                          fieldRef: {
+                            fieldPath:
+                              "metadata.labels['batch.kubernetes.io/controller-uid']",
+                          },
+                        },
+                      },
+                      { name: "DELIVERY_JOB_NAME", value: name },
+                      { name: "DELIVERY_JOB_NAMESPACE", value: namespace },
+                      { name: "DELIVERY_JOB_FINGERPRINT", value: hash },
+                    ]
+                  : []),
                 ...grants.map(({ env, secret, key }) => ({
                   name: env,
                   valueFrom: { secretKeyRef: { name: secret, key } },
@@ -126,69 +186,91 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
 
 type Grant = { env: string; secret: string; key: string };
 function jobGrants(input: DeliveryJobRequest): Grant[] {
-  if (input.recipe === "worker-preflight" || input.recipe === "worker-step")
+  if (input.recipe === "platform-recovery") {
+    const frozen = RecoveryJobInputSchema.parse(input.input);
     return [
       {
-        env: "GRAFANA_API_KEY",
-        secret: "delivery-worker-proofs",
-        key: "password",
+        env: "DELIVERY_EXECUTOR_TOKEN",
+        secret: "delivery-platform-api",
+        key: "DELIVERY_EXECUTOR_TOKEN",
       },
+      ...(frozen.target === "tofu"
+        ? deliveryTofuGrants(z.string().parse(frozen.stack))
+        : [
+            {
+              env: "ARGOCD_TOKEN",
+              secret: "delivery-platform-argocd",
+              key: "ARGOCD_TOKEN",
+            },
+          ]),
     ];
-  if (input.recipe === "root-release")
+  }
+  if (input.recipe === "worker-images") return [];
+  if (input.recipe === "worker-preflight" || input.recipe === "worker-step")
+    return [];
+  if (input.recipe === "root-release" || input.recipe === "control-plane")
     return [
       {
         env: "ARGOCD_TOKEN",
-        secret: "delivery-root-release",
+        secret: "delivery-platform-argocd",
         key: "ARGOCD_TOKEN",
       },
+      ...(["control-plane", "root-release"].includes(input.recipe)
+        ? [
+            {
+              env: "DELIVERY_EXECUTOR_TOKEN",
+              secret: "delivery-platform-api",
+              key: "DELIVERY_EXECUTOR_TOKEN",
+            },
+          ]
+        : []),
     ];
   const stack = z.object({ stack: z.string() }).parse(input.input).stack;
-  return tofuJobGrants(stack);
+  return [
+    ...deliveryTofuGrants(stack),
+    ...(input.recipe === "tofu-apply"
+      ? [
+          {
+            env: "DELIVERY_EXECUTOR_TOKEN",
+            secret: "delivery-platform-api",
+            key: "DELIVERY_EXECUTOR_TOKEN",
+          },
+        ]
+      : []),
+  ];
 }
 
-/** Exact per-stack grants; operator-only stacks have no execution recipe. */
-function tofuJobGrants(stack: string): Grant[] {
-  const state = [
-    "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
-    "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
-  ].map((key) => ({ env: key, secret: "ci-seaweedfs-credentials", key }));
-  const definitions: Readonly<
-    Record<string, readonly [string, readonly string[]][]>
-  > = {
-    seaweedfs: [
-      [
-        "ci-seaweedfs-credentials",
-        [
-          "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",
-          "SEAWEEDFS_TOFU_ADMIN_SECRET_ACCESS_KEY",
-        ],
-      ],
-    ],
-    tailscale: [
-      [
-        "ci-tailscale-credentials",
-        ["TAILSCALE_OAUTH_CLIENT_ID", "TAILSCALE_OAUTH_CLIENT_SECRET"],
-      ],
-    ],
-    github: [["ci-github-credentials", ["TOFU_GITHUB_TOKEN"]]],
-    cloudflare: [
-      [
-        "ci-cloudflare-credentials",
-        ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-      ],
-    ],
-  };
-  const grants = definitions[stack];
-  if (grants === undefined)
-    throw new Error(
-      `No reviewed Delivery Job credential recipe for OpenTofu stack ${stack}`,
-    );
-  return [
-    ...state,
-    ...grants.flatMap(([secret, keys]) =>
-      keys.map((key) => ({ env: key, secret, key })),
-    ),
-  ];
+function recoveryVolumes(input: DeliveryJobRequest) {
+  return input.recipe === "platform-recovery"
+    ? [
+        {
+          name: "kubernetes",
+          projected: {
+            sources: [
+              {
+                serviceAccountToken: { path: "token", expirationSeconds: 3600 },
+              },
+              {
+                configMap: {
+                  name: "kube-root-ca.crt",
+                  items: [{ key: "ca.crt", path: "ca.crt" }],
+                },
+              },
+              {
+                downwardAPI: {
+                  items: [
+                    {
+                      path: "namespace",
+                      fieldRef: { fieldPath: "metadata.namespace" },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]
+    : [];
 }
 
 /** Kubernetes defaults are ignored; every execution-controlling input is compared. */
@@ -217,7 +299,7 @@ function jobIdentityMatches(actual: V1Job, expected: V1Job): boolean {
       expected.metadata?.annotations?.[`${PREFIX}request`] &&
     metadata.annotations?.[`${PREFIX}fingerprint`] ===
       expected.metadata?.annotations?.[`${PREFIX}fingerprint`] &&
-    metadata.namespace === "delivery-jobs" &&
+    metadata.namespace === expected.metadata?.namespace &&
     metadata.labels?.["kueue.x-k8s.io/queue-name"] === "default" &&
     actual.spec?.template.metadata?.labels?.["app"] === "delivery-stage"
   );
@@ -257,6 +339,8 @@ function normalizePod(input: unknown): unknown {
     enableServiceLinks: true,
     serviceAccount: "delivery-stage",
   });
+  if (pod["serviceAccount"] === pod["serviceAccountName"])
+    delete pod["serviceAccount"];
   pod["containers"] = z
     .array(z.record(z.string(), z.unknown()))
     .parse(pod["containers"])
@@ -271,14 +355,31 @@ function normalizePod(input: unknown): unknown {
     .array(z.record(z.string(), z.unknown()))
     .parse(pod["volumes"])
     .map((volume) => {
-      if (volume["secret"] !== undefined) {
-        const secret = z
-          .record(z.string(), z.unknown())
-          .parse(volume["secret"]);
-        if (secret["defaultMode"] === 420) delete secret["defaultMode"];
-        volume["secret"] = secret;
+      for (const field of ["secret", "projected"]) {
+        if (volume[field] === undefined) continue;
+        const source = z.record(z.string(), z.unknown()).parse(volume[field]);
+        if (source["defaultMode"] === 420) delete source["defaultMode"];
+        volume[field] = source;
       }
       return volume;
     });
-  return pod;
+  return normalizeFieldReferences(pod);
+}
+
+function normalizeFieldReferences(input: unknown): unknown {
+  if (Array.isArray(input))
+    return input.map((item: unknown) => normalizeFieldReferences(item));
+  if (input === null || typeof input !== "object") return input;
+  return Object.fromEntries(
+    Object.entries(input).map(([key, value]: [string, unknown]) => {
+      if (key === "fieldRef")
+        return [
+          key,
+          withoutDefaults(z.record(z.string(), z.unknown()).parse(value), {
+            apiVersion: "v1",
+          }),
+        ];
+      return [key, normalizeFieldReferences(value)];
+    }),
+  );
 }

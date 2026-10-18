@@ -1,0 +1,10 @@
+{
+  "id": "delivery/prod",
+  "serviceId": "delivery",
+  "name": "prod",
+  "application": "delivery",
+  "pipelineRevisionId": "delivery/1",
+  "configurationRevision": "delivery/1",
+  "configuration": {},
+  "automatic": true
+}

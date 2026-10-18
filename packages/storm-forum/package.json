@@ -20,6 +20,7 @@
     "start": "bun src/cli.ts"
   },
   "dependencies": {
+    "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/the-storm": "workspace:*",
     "@shepherdjerred/storm-theme": "workspace:*",
     "@shepherdjerred/config": "workspace:*",

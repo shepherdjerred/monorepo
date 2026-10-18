@@ -1,0 +1,12 @@
+{
+  "kind": "argocd",
+  "application": "birmel",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "birmel",
+  "chartComponent": "chart:birmel",
+  "namespace": "birmel",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.birmel": "image:birmel"
+  }
+}

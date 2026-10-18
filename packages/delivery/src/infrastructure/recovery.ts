@@ -83,6 +83,7 @@ function requireSettled(
 export function createRecoveryInspector(options: {
   origin: string;
   token: string | undefined;
+  inspectTrmnl?: (detail: DeploymentDetail) => Promise<EvidenceInput[]>;
   fetch?: (
     input: string | URL | Request,
     init?: RequestInit,
@@ -95,7 +96,8 @@ export function createRecoveryInspector(options: {
     if (
       detail.pipeline.definition.kind !== "argocd" ||
       detail.pipeline.definition.workerRollout !== undefined ||
-      detail.pipeline.definition.forumRelease !== undefined
+      detail.pipeline.definition.forumRelease !== undefined ||
+      detail.pipeline.definition.minecraftUpgrade !== undefined
     )
       throw new DeliveryError(
         "INVALID",
@@ -105,6 +107,14 @@ export function createRecoveryInspector(options: {
       throw new DeliveryError(
         "PAUSED",
         "Argo recovery read credential is not configured",
+      );
+    if (
+      detail.pipeline.definition.trmnlPlugins !== undefined &&
+      options.inspectTrmnl === undefined
+    )
+      throw new DeliveryError(
+        "PAUSED",
+        "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
       );
     const recorded = detail.stages.find((entry) => entry.key === "reconcile");
     if (recorded === undefined)
@@ -140,12 +150,18 @@ export function createRecoveryInspector(options: {
       input,
       recorded.operationId,
     );
+    const pluginEvidence =
+      detail.pipeline.definition.trmnlPlugins !== undefined &&
+      options.inspectTrmnl !== undefined
+        ? await options.inspectTrmnl(detail)
+        : [];
     return [
       {
         kind: "reconciliation",
         operationId: input.operationId,
         summary: `Independent Argo readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${recorded.operationId}, operation ${input.operationId}, phase ${operation.phase}, finished ${finishedAt}. ${input.reason}`,
       },
+      ...pluginEvidence,
     ];
   };
 }

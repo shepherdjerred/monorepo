@@ -88,6 +88,49 @@ describe("independent Argo recovery", () => {
       code: "PAUSED",
     });
   });
+  test("dependency-configured Argo targets cannot unlock without independent exact plugin readback", async () => {
+    const selected: DeploymentDetail = {
+      ...detail,
+      pipeline: {
+        ...detail.pipeline,
+        definition: {
+          kind: "argocd",
+          application: "arcade",
+          chartRepository: "https://chartmuseum.tailnet-1a49.ts.net",
+          chartName: "arcade",
+          chartComponent: "chart",
+          namespace: "arcade",
+          parameters: {},
+          artifactParameters: {},
+          trmnlPlugins: { archiveComponent: "archive:trmnl-plugins" },
+        },
+      },
+    };
+    const options = {
+      origin: "https://argocd.sjer.red",
+      token: "test-read-only-token",
+      fetch: () => Promise.resolve(Response.json(observation())),
+    };
+    await expect(
+      createRecoveryInspector(options)(selected, recovery),
+    ).rejects.toMatchObject({ code: "PAUSED" });
+    await expect(
+      createRecoveryInspector({
+        ...options,
+        inspectTrmnl: () => Promise.reject(new Error("Plugin bytes differ")),
+      })(selected, recovery),
+    ).rejects.toThrow("Plugin bytes differ");
+    const pluginEvidence = {
+      kind: "runtime" as const,
+      summary: "Exact fixed three-plugin archive independently observed",
+    };
+    expect(
+      await createRecoveryInspector({
+        ...options,
+        inspectTrmnl: () => Promise.resolve([pluginEvidence]),
+      })(selected, recovery),
+    ).toContainEqual(pluginEvidence);
+  });
   test.each(["Running", "Terminating"])(
     "keeps ownership for %s operations",
     async (phase) => {

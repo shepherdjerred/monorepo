@@ -143,7 +143,7 @@ export async function dispatchPendingDeliveries() {
     const workflowId = deliveryWorkflowId(deployment.id);
     try {
       await client.workflow.start("deliveryDeploymentWorkflow", {
-        taskQueue: TASK_QUEUES.WORKFLOWS,
+        taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
         workflowId,
         workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
         args: [{ deploymentId: deployment.id }],

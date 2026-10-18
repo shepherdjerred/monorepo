@@ -1,12 +1,13 @@
 import {
   DEPLOY_HELP,
-  parseDeployArgs,
   runDeployCommand,
   validateDeployCommand,
 } from "#commands/deploy/deploy.ts";
+import { parseDeployArgs } from "#commands/deploy/common.ts";
 import { deliveryClient, deliveryUrl } from "#lib/delivery/client.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { deployMachineCredential } from "#commands/deploy/forum.ts";
 
 export async function handleDeployCommand(
   subcommand: string | undefined,
@@ -24,10 +25,11 @@ export async function handleDeployCommand(
   validateDeployCommand(subcommand, positionals, values);
   const config = await loadToolkitConfig();
   const url = deliveryUrl(values.url ?? (await config.value("deliveryUrl")));
-  if (values.machine) await resolveCredentials(["DELIVERY_API_TOKEN"]);
+  const credential = deployMachineCredential(subcommand, positionals);
+  if (values.machine) await resolveCredentials([credential]);
   const client = deliveryClient(
     url,
-    values.machine ? Bun.env["DELIVERY_API_TOKEN"] : undefined,
+    values.machine ? Bun.env[credential] : undefined,
   );
   const { result, exitCode } = await runDeployCommand(
     client,

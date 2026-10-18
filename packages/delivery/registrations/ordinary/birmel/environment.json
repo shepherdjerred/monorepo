@@ -1,0 +1,10 @@
+{
+  "id": "birmel/prod",
+  "serviceId": "birmel",
+  "name": "prod",
+  "application": "birmel",
+  "pipelineRevisionId": "birmel/prod/1",
+  "configurationRevision": "birmel/prod/1",
+  "configuration": {},
+  "automatic": true
+}

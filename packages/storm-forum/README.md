@@ -9,7 +9,9 @@ Reviewed public historical discussions retain original names and dates, with new
 The runtime image contains PHP, Bun, the Storm add-on, community-owned
 artwork, and the authored Flexile adaptation source. It contains no XenForo
 distribution, generated native style exports, or vendor add-on code.
-`config/forum.json` is the dependency and topology contract. A private release
+`config/forum.json` owns product content and topology. The language-neutral
+`packages/ops-model/src/forum-bundle-policy.json` owns XenForo and licensed
+style versions/checksums; PHP and TypeScript validate that same policy. A private release
 bundle contains a fresh licensed XenForo `upload/` tree and the two Flexile style
 archives under `vendor/`; no third-party add-ons are required for launch.
 
@@ -37,6 +39,31 @@ bundle into an ephemeral application volume. It does not install or migrate the
 database. Never put licensed archives in the repository, image context, CI cache,
 public artifacts, or PR attachments. Licensed inputs must comply with each vendor's
 production and password-protected test installation terms.
+
+`prepare-production.ts --publish-only` writes `delivery-bundle.json` beside the
+private archive. Register that descriptor with
+`toolkit deploy forum publish --file <private-output>/delivery-bundle.json --machine`.
+Publication stays pending until the API independently reads the exact private
+bytes, verifies the outer digest and every ZIP entry, and matches the XF/version
+and style checksums to the producer's immutable repository policy. Licensed
+acquisition has no invented CI pipeline; later genuine CI publications retain
+the original qualified artifact identity.
+
+Before the first upgrade, `toolkit deploy forum baseline --file <descriptor> --machine`
+requests a read-only original baseline with environment ID, expected generation,
+qualified original image/bundle artifact IDs, request ID and reason. Inspect it
+with `toolkit deploy forum inspect <intent-id>`. Independent inspection reads the
+actual completed release Job, ready Pod digests and installed database version
+twice. It records original provenance without accepting a deployment. The first
+upgrade freezes that baseline for its pre-upgrade backup and checks it again
+before candidate source selection. Later upgrades use the actually accepted release.
+
+The fixed `/_delivery/status` endpoint listens only on the internal observer port
+8082 and requires a dedicated read-only bearer capability. Public and admin
+listeners deny that path. Missing observer credentials, unknown original source
+policy, unsettled maintenance or missing native provenance block adoption.
+Ordinary image rollback is refused: database restoration uses the independent
+backup/restore procedure.
 
 ## Entrypoints
 
@@ -284,8 +311,11 @@ sharing the preview's licensed application and data volumes for the backup.
 Rebuild that image after dependency changes. This proves the payload and restore implementation; SeaweedFS/R2 and
 Postal delivery still require deployment acceptance.
 
-Homelab charts and ArgoCD applications consume the validated release inventory at
-`packages/homelab/src/cdk8s/src/resources/storm-forum/releases.json`. Entries require
-published image digests, private bundle checksums, and provisioned 1Password item
-IDs. An empty inventory publishes inactive charts and creates no forum application.
+Homelab charts and ArgoCD applications consume static stage policy at
+`packages/homelab/src/cdk8s/src/resources/storm-forum/releases.json`: storage,
+ingress and provisioned credential item IDs. PostgreSQL freezes the selected
+original image, licensed bundle and previous backup tuple. The chart requires
+those exact Helm inputs; source generation neither reads PostgreSQL nor embeds
+selected release pins. Initial bootstrap uses an explicit validated descriptor
+outside Git, followed by independent runtime baseline verification.
 Temporal schedules begin paused and are enabled only after stage acceptance.
