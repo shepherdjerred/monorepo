@@ -6,6 +6,7 @@ import { policyDescription } from "./presentation.ts";
 
 function fixture(): MediaVisibility {
   return {
+    movieRequests: [],
     playback: {
       scope: "title",
       playableItems: 0,

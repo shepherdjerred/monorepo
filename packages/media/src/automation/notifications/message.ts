@@ -1,4 +1,10 @@
 import { z } from "zod";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
+import { currentFulfillmentAsset } from "#automation/editions/fulfillment.ts";
+import { eligibleRequester, isReadiness } from "./readiness.ts";
+import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfillment.ts";
+import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
+import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { CredentialCipher } from "#application/security.ts";
@@ -44,7 +50,12 @@ export type Message = {
   subject: string;
   text: string;
 };
-type Context = { cipher: CredentialCipher; publicOrigin: string } & Pick<
+type Context = {
+  cipher: CredentialCipher;
+  publicOrigin: string;
+  movieAccess?: MovieChoiceAccess | undefined;
+  captureFreshness?: ((guard: MovieChoiceFreshness) => void) | undefined;
+} & Pick<
   MediaAutomationContext,
   "sharedAnnouncements" | "personalDiscordAvailable"
 >;
@@ -120,8 +131,16 @@ async function batchMessage(
     (batch.ownerOnly && delivery.user.role !== "owner")
   )
     return null;
-  const titles = await eligibleTitles(tx, delivery, batch);
-  if (titles.length === 0 && !batch.ownerOnly) return null;
+  const titles = await eligibleTitles(tx, delivery, {
+    batch,
+    movieAccess: context.movieAccess,
+    captureFreshness: context.captureFreshness,
+  });
+  if (
+    titles.length === 0 &&
+    (!batch.ownerOnly || isReadiness(delivery.event.kind))
+  )
+    return null;
   const description = descriptions[delivery.event.kind];
   if (description === undefined) throw new Error("Unknown notification kind");
   const title =
@@ -147,8 +166,13 @@ async function batchMessage(
 async function eligibleTitles(
   tx: Prisma.TransactionClient,
   delivery: Delivery,
-  batch: z.infer<typeof BatchSchema>,
+  input: {
+    batch: z.infer<typeof BatchSchema>;
+    movieAccess: MovieChoiceAccess | undefined;
+    captureFreshness: Context["captureFreshness"];
+  },
 ): Promise<string[]> {
+  const { batch } = input;
   const titles: string[] = [];
   for (const item of batch.items) {
     const media = await tx.mediaItem.findUniqueOrThrow({
@@ -160,23 +184,19 @@ async function eligibleTitles(
       defaultIntent(media.intents)?.automationEpoch !== delivery.recoveryEpoch
     )
       continue;
-    if (!batch.ownerOnly) {
-      const claim = await tx.mediaRequest.findFirst({
-        where: {
-          userId: delivery.userId,
-          mediaId: item.mediaId,
-          ...effectiveRequestWhere,
-          edition: "default",
-        },
-      });
-      if (
-        claim === null ||
-        (item.language !== undefined &&
-          delivery.event.kind !== "subtitles_ready" &&
-          !claim.subtitleLanguages.includes(item.language))
-      )
-        continue;
-    }
+    if (
+      !(await eligibleRequester(tx, {
+        ownerOnly: batch.ownerOnly,
+        userId: delivery.userId,
+        mediaId: item.mediaId,
+        mediaKind: media.kind,
+        eventKind: delivery.event.kind,
+        item,
+        movieAccess: input.movieAccess,
+        captureFreshness: input.captureFreshness,
+      }))
+    )
+      continue;
     if (
       !(await itemCurrent(
         tx,
@@ -371,7 +391,7 @@ async function warning(
   if (
     claim === null ||
     delivery.user.role === "owner" ||
-    !(await allRequestersWatched(tx, decision.mediaId))
+    !(await allRequestersWatched(tx, decision.mediaId, context))
   )
     return null;
   return {
@@ -384,7 +404,21 @@ async function warning(
 async function allRequestersWatched(
   tx: Prisma.TransactionClient,
   mediaId: string,
+  context: Pick<Context, "movieAccess" | "captureFreshness">,
 ): Promise<boolean> {
+  const media = await tx.mediaItem.findUniqueOrThrow({
+    where: { id: mediaId },
+  });
+  if (media.kind === "movie") {
+    const { demands, freshness } = await readMovieDemandAuthority(tx, {
+      mediaId,
+      currentAsset: await currentFulfillmentAsset(tx, mediaId),
+      access: requireMovieChoiceAccess(context.movieAccess ?? {}),
+    });
+    if (demands.some((demand) => demand.fulfillment.status !== "fulfilled"))
+      return false;
+    if (freshness !== null) context.captureFreshness?.(freshness);
+  }
   const claims = await tx.mediaRequest.findMany({
     where: {
       mediaId,

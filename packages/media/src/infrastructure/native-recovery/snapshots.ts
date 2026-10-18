@@ -1,6 +1,10 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { historicalDefaultRow } from "./legacy-snapshot.ts";
+import {
+  historicalRequest,
+  historicalRequestSelect,
+} from "./historical-request.ts";
 
 export function nativeJson(value: unknown) {
   const encoded = JSON.stringify(value);
@@ -111,6 +115,7 @@ export async function nativeHousehold(
     take: 1001,
   });
   const requests = await tx.mediaRequest.findMany({
+    select: historicalRequestSelect,
     where: {
       edition: "default",
       OR: [
@@ -132,7 +137,7 @@ export async function nativeHousehold(
   });
   return NativeHouseholdSchema.parse(
     nativeJson({
-      requests: requests.map((row) => historicalDefaultRow(row)),
+      requests: requests.map((row) => historicalRequest(row)),
       coverage: coverage.map((row) => historicalDefaultRow(row)),
       personalHolds: personalHolds.map((row) => historicalDefaultRow(row)),
       recoveryHolds: recoveryHolds.map((row) => historicalDefaultRow(row)),

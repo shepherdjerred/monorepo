@@ -159,15 +159,7 @@ test.each([
         data: { mediaId: second.id, userId: f.user.id },
       });
     });
-    const acquired = await f.acquisition();
-    await f.db.acquisitionAttempt.update({
-      where: { id: acquired.attempt.id },
-      data: {
-        mediaIds: [f.media.id, second.id],
-        generations: { [f.media.id]: 0, [second.id]: 0 },
-        reservations: { create: { mediaId: second.id, generation: 0 } },
-      },
-    });
+    const acquired = await f.acquisition(undefined, [f.media.id, second.id]);
     for (const name of names)
       await writeFile(path.join(f.roots.downloads, name), acquired.content);
     await f.db.torrent.update({

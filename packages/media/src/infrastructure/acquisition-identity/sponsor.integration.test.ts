@@ -50,12 +50,14 @@ test("configured worker server must match immutable sponsor authority", async ()
 });
 
 test.each(["stage", "promote", "missing_history"])(
-  "historical pending file acquisition rechecks sponsor authority at %s",
+  "identity-NULL pending movie acquisition rechecks its original choice and sponsor at %s",
   async (phase) => {
     const db = database();
     const f = await fileFixture(db);
     try {
       const acquired = await f.acquisition();
+      expect(acquired.attempt.identityEvidence).toBeNull();
+      expect(acquired.attempt.movieEditionAuthority).not.toBeNull();
       const activities = createMediaFileActivities(f.context);
       if (phase === "promote")
         expect(await activities.inspectAndStageMedia(acquired.input)).toEqual({
@@ -79,12 +81,21 @@ test.each(["stage", "promote", "missing_history"])(
         reason:
           phase === "missing_history"
             ? "acquisition_sponsor_unproven"
-            : "plex_library_access_required",
+            : "movie_edition_choice_changed",
       });
       const current = await db.acquisitionAttempt.findUniqueOrThrow({
         where: { id: acquired.attempt.id },
       });
       expect(current.identityEvidence).toBeNull();
+      expect(current.movieEditionAuthority).toEqual(
+        acquired.attempt.movieEditionAuthority,
+      );
+      expect(current.movieEditionChoiceId).toBe(
+        acquired.attempt.movieEditionChoiceId,
+      );
+      expect(current.movieEditionChoiceRevision).toBe(
+        acquired.attempt.movieEditionChoiceRevision,
+      );
       expect(
         await db.libraryAsset.count({
           where: { coverage: { some: { mediaId: f.media.id } } },

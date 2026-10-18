@@ -20,6 +20,7 @@ import { ReleaseCandidates } from "./releases.tsx";
 import { AssignProfile } from "./profile-controls.tsx";
 import { RequestTitle } from "./request-controls.tsx";
 import { MediaProgress } from "./media-progress/panel.tsx";
+import { MovieFulfillment } from "./movie-editions/fulfillment.tsx";
 import { useTarget } from "./target-controls/api.ts";
 import {
   ProtectionControls,
@@ -110,6 +111,7 @@ function MediaDetails({
         </Notice>
       )}
       <MediaProgress visibility={media.visibility} />
+      <MovieFulfillment requests={media.visibility.movieRequests} />
       {!paired && (
         <Notice>
           <p>
@@ -148,15 +150,15 @@ function MediaDetails({
           </dl>
           {profiles.error !== null && <ErrorNotice error={profiles.error} />}
           <MediaControls
-            key={media.id}
+            key={`controls:${media.id}`}
             media={media}
             user={user}
             claimed={claimed}
             context={context}
           />
-          {!claimed && (
+          {(!claimed || media.kind === "movie") && (
             <RequestTitle
-              key={media.id}
+              key={`request:${media.id}`}
               user={user}
               context={context}
               kind={media.kind}

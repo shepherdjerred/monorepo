@@ -7,7 +7,9 @@ import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { mappedPublicationFixture } from "./test-fixture.ts";
 
-export async function seasonPublicationFixture(db: Database) {
+export async function seasonPublicationFixture(db: Database, count = 26) {
+  if (!Number.isInteger(count) || count < 1 || count > 100)
+    throw new Error("Invalid bounded season fixture count");
   const series = await db.mediaItem.create({
     data: {
       kind: "series",
@@ -18,7 +20,7 @@ export async function seasonPublicationFixture(db: Database) {
   });
   const f = await mappedPublicationFixture(db, { seriesId: series.id });
   const siblings = await db.mediaItem.createManyAndReturn({
-    data: Array.from({ length: 25 }, (_, index) => ({
+    data: Array.from({ length: count - 1 }, (_, index) => ({
       kind: "episode",
       title: `Episode ${String(index + 2)}`,
       parentId: series.id,
@@ -51,17 +53,16 @@ export async function seasonPublicationFixture(db: Database) {
       data: siblings.map((item) => ({ mediaId: item.id, userId: f.user.id })),
     });
   });
-  await db.plexIdentityMapping.create({
-    data: {
-      userId: f.user.id,
-      serverMachineId: "fixture-server",
-      serverAccountId: f.user.plexAccountId,
-      kind: "account",
-      permittedSectionIds: ["2"],
-      permittedMediaKinds: ["series"],
-      verifiedAt: new Date(),
-    },
+  // The shared file fixture establishes its requester mapping before any work.
+  const mapping = await db.plexIdentityMapping.findUniqueOrThrow({
+    where: { userId: f.user.id },
   });
+  if (
+    mapping.serverMachineId !== "fixture-server" ||
+    !mapping.permittedSectionIds.includes("2") ||
+    !mapping.permittedMediaKinds.includes("series")
+  )
+    throw new Error("Season fixture requester lacks exact TV access");
   async function acquisition(content = "Actual season fixture bytes") {
     const intents = await db.mediaIntent.findMany({
       where: { mediaId: { in: mediaIds }, edition: "default" },
@@ -168,8 +169,8 @@ export async function seasonPublicationFixture(db: Database) {
     });
     const plan = FilePlanSchema.parse(current.filePlan);
     if (
-      plan.length !== 26 ||
-      new Set(plan.flatMap((entry) => entry.mediaIds)).size !== 26
+      plan.length !== count ||
+      new Set(plan.flatMap((entry) => entry.mediaIds)).size !== count
     )
       throw new Error("Season publication lost full episode coverage");
     const entry = plan[0];

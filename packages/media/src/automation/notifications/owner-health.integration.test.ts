@@ -24,9 +24,12 @@ test("actual explicit email verification can send in observe mode before the add
     where: { userId: data.user.id, event: { kind: "email_verification" } },
   });
   const ctx = context();
-  const notify = vi.fn(async () => ({
-    receipt: "fixture-verification-receipt",
-  }));
+  const notify = vi.fn<typeof ctx.notify>(async (_message, mutation) => {
+    if (mutation === undefined)
+      throw new Error("Notification mutation guard missing");
+    mutation.beforeMutation();
+    return { receipt: "fixture-verification-receipt" };
+  });
   ctx.notify = notify;
   expect(
     await createNotificationActivities(ctx).deliverMediaNotification({
@@ -40,6 +43,7 @@ test("actual explicit email verification can send in observe mode before the add
       recipient: "verify@example.test",
       channel: "email",
     }),
+    { beforeMutation: expect.any(Function) },
   );
   const user = await db.mediaUser.findUniqueOrThrow({
     where: { id: data.user.id },

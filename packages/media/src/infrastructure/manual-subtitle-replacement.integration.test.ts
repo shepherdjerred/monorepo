@@ -209,6 +209,10 @@ test("a prepared manual replacement reserves the video against quarantine and an
   });
   expect(prepared.subtitleReplacementId).toBeDefined();
   const retention = await f.file.retention();
+  const verified = await f.db.libraryAsset.findUniqueOrThrow({
+    where: { id: f.asset.id },
+  });
+  expect(verified).toEqual({ ...f.asset, plexPublishedAt: expect.any(Date) });
   expect(
     await createMediaFileActivities(f.file.context).quarantineMediaFiles(
       retention.input,
@@ -220,5 +224,5 @@ test("a prepared manual replacement reserves the video against quarantine and an
   expect(await readFile(f.old.path ?? "missing", "utf8")).toBe(f.oldText);
   expect(
     await f.db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
-  ).toEqual(f.asset);
+  ).toEqual(verified);
 });

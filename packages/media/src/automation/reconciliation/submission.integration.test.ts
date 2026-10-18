@@ -144,16 +144,40 @@ test("cancellation during qBit lookup revokes the final submission authority", a
   const activities = createAcquisitionActivities(ctx);
   const reservation = await activities.reconcileMediaIntent(f.input);
   if (reservation.attemptId === null) throw new Error("Reservation absent");
+  const original = await db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: reservation.attemptId },
+  });
+  expect(original.movieEditionChoiceId).not.toBeNull();
+  expect(original.movieEditionAuthority).not.toBeNull();
   expect(
     await activities.submitMediaTorrent({
       operationId: f.input.operationId,
       attemptId: reservation.attemptId,
     }),
-  ).toEqual({ status: "blocked", reason: "submission_authority_changed" });
+  ).toEqual({ status: "blocked", reason: "movie_edition_choice_changed" });
   expect(adds).toBe(0);
   expect(
     await db.torrent.count({ where: { infoHash: f.source.infoHash } }),
   ).toBe(0);
+  expect(
+    await db.mediaRequest.findUniqueOrThrow({ where: { id: claim.id } }),
+  ).toMatchObject({
+    active: false,
+    direct: false,
+    excluded: true,
+    version: claim.version + 1,
+    movieEditionChoiceId: null,
+    movieEditionChoiceRevision: claim.movieEditionChoiceRevision + 1,
+  });
+  const current = await db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: original.id },
+  });
+  expect(current.state).toBe("reserved");
+  expect(current.movieEditionChoiceId).toBe(original.movieEditionChoiceId);
+  expect(current.movieEditionChoiceRevision).toBe(
+    original.movieEditionChoiceRevision,
+  );
+  expect(current.movieEditionAuthority).toEqual(original.movieEditionAuthority);
 });
 
 test("a restore epoch fences old publication before Plex network effects and finalization", async () => {

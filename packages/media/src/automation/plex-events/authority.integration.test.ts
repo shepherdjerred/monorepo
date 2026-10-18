@@ -1,11 +1,56 @@
 import { describe, expect, test } from "vitest";
 import { observeRequesterWatch } from "#automation/watch.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import {
   watchHarness,
   pausedTransport,
   watchedTransport,
 } from "./test-support.ts";
+
+async function inheritedWatchRequest(h: ReturnType<typeof watchHarness>) {
+  const f = await h.fixture();
+  const db = h.database();
+  const rootMedia = await h.fixture();
+  const root = await db.mediaRequest.create({
+    data: { userId: f.user.id, mediaId: rootMedia.media.id },
+  });
+  const commands = new PrismaMediaApplication(db, {
+    keepDays: 30,
+    serverMachineId: "fixture-server",
+  });
+  const direct = await db.mediaRequest.findUniqueOrThrow({
+    where: { userId_mediaId_edition: f.key },
+  });
+  await commands.cancelRequest(
+    f.user,
+    crypto.randomUUID(),
+    direct.id,
+    direct.version,
+  );
+  await db.mediaRequest.update({
+    where: { userId_mediaId_edition: f.key },
+    data: { active: true, excluded: false },
+  });
+  const leaf = await db.mediaRequest.findUniqueOrThrow({
+    where: { userId_mediaId_edition: f.key },
+  });
+  expect(leaf).toMatchObject({
+    active: true,
+    direct: false,
+    excluded: false,
+    movieEditionChoiceId: null,
+  });
+  await db.requestCoverage.create({
+    data: {
+      rootRequestId: root.id,
+      requestId: leaf.id,
+      mediaId: f.media.id,
+      sourceVersion: root.version,
+    },
+  });
+  return { f, db, root, commands };
+}
 
 describe("watch authority across external reads", () => {
   const h = watchHarness();
@@ -49,11 +94,20 @@ describe("watch authority across external reads", () => {
             ),
           },
         });
-      if (change === "claim")
-        await db.mediaRequest.update({
+      if (change === "claim") {
+        const request = await db.mediaRequest.findUniqueOrThrow({
           where: { userId_mediaId_edition: f.key },
-          data: { active: false, version: { increment: 1 } },
         });
+        await new PrismaMediaApplication(db, {
+          keepDays: 30,
+          serverMachineId: "fixture-server",
+        }).cancelRequest(
+          f.user,
+          crypto.randomUUID(),
+          request.id,
+          request.version,
+        );
+      }
       if (change === "cohort") await h.requester(f.media.id);
       if (change === "binding")
         await db.mediaItem.update({
@@ -84,27 +138,7 @@ describe("watch authority across external reads", () => {
     ).toMatchObject({ watched: true, observedAt: new Date(0) });
   });
   test("root exclusion changes the complete effective cohort", async () => {
-    const f = await h.fixture();
-    const db = h.database();
-    const rootMedia = await h.fixture();
-    const root = await db.mediaRequest.create({
-      data: { userId: f.user.id, mediaId: rootMedia.media.id },
-    });
-    await db.mediaRequest.update({
-      where: { userId_mediaId_edition: f.key },
-      data: { direct: false },
-    });
-    const leaf = await db.mediaRequest.findUniqueOrThrow({
-      where: { userId_mediaId_edition: f.key },
-    });
-    await db.requestCoverage.create({
-      data: {
-        rootRequestId: root.id,
-        requestId: leaf.id,
-        mediaId: f.media.id,
-        sourceVersion: root.version,
-      },
-    });
+    const { f, db, root, commands } = await inheritedWatchRequest(h);
     const paused = pausedTransport(watchedTransport(true));
     const result = observeRequesterWatch(
       h.context(paused.transport),
@@ -112,14 +146,19 @@ describe("watch authority across external reads", () => {
     );
     await paused.entered;
     try {
-      await db.mediaRequest.update({
-        where: { id: root.id },
-        data: { excluded: true, version: { increment: 1 } },
-      });
+      await commands.cancelRequest(
+        f.user,
+        crypto.randomUUID(),
+        root.id,
+        root.version,
+      );
     } finally {
       paused.resume();
     }
     expect(await result).toMatchObject({ complete: false });
+    expect(
+      await db.mediaRequest.findUniqueOrThrow({ where: { id: root.id } }),
+    ).toMatchObject({ active: false, excluded: true });
     expect(
       await db.watchState.findUnique({
         where: { userId_mediaId_edition: f.key },

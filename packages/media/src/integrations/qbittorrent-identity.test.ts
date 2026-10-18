@@ -18,6 +18,57 @@ const login = () =>
     headers: { "set-cookie": "QBT_SID_8080=fixture" },
   });
 
+test.each(["magnet", "torrent"])(
+  "%s refuses an expired guard after observe without wrapping it as an uncertain add",
+  async (kind) => {
+    const identity = fixture.uploads[0];
+    if (identity === undefined)
+      throw new Error("Actual torrent fixture missing");
+    let observed = false;
+    let adds = 0;
+    const client = new QbittorrentClient(config, async (url, init) => {
+      if (url.pathname.endsWith("/login")) return login();
+      expect(init.signal).toBeDefined();
+      if (url.pathname.endsWith("/info")) {
+        observed = true;
+        return Response.json([]);
+      }
+      adds++;
+      throw new Error("Unexpected add POST");
+    });
+    await client.login();
+    const refused = new Error("Trusted authority expired during observation");
+    const beforeMutation = () => {
+      expect(observed).toBe(true);
+      throw refused;
+    };
+    const signal = new AbortController().signal;
+    const common = {
+      operationId,
+      attemptId,
+      savePath,
+      hash: identity.infohash_v1,
+    };
+    const result =
+      kind === "magnet"
+        ? client.submit(
+            {
+              ...common,
+              magnet: `magnet:?xt=urn:btih:${identity.infohash_v1}`,
+            },
+            signal,
+            beforeMutation,
+          )
+        : client.submitTorrent(
+            { ...common, bytes: Buffer.from(identity.torrentBase64, "base64") },
+            signal,
+            beforeMutation,
+          );
+    await expect(result).rejects.toBe(refused);
+    expect(adds).toBe(0);
+  },
+);
+
 test("reads the authenticated application version and rejects unrecognized responses", async () => {
   let body = "v5.2.4";
   const client = new QbittorrentClient(config, async (url, init) => {

@@ -7,9 +7,31 @@ import type { Database } from "#infrastructure/database.ts";
 import type { FileContext } from "./types.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
-import { grantTestLease } from "#testing/authority.ts";
+import {
+  grantTestLease,
+  grantTestRequesterAccess,
+} from "#testing/authority.ts";
+import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
+import type { MediaUser } from "#generated/prisma/client.ts";
+import { fileMovieAccess } from "#automation/editions/access.ts";
+import { fixtureAcquisitionScope } from "./fixtures/acquisition.ts";
+
+async function chooseFixtureMovie(
+  db: Database,
+  media: { id: string; kind: string },
+  user: MediaUser,
+) {
+  if (media.kind !== "movie") return;
+  await chooseTestMovieEdition(db, {
+    actor: { ...user, role: "member" },
+    mediaId: media.id,
+    access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+  });
+}
 
 export async function fileFixture(
   db: Database,
@@ -50,6 +72,7 @@ export async function fileFixture(
   const context: FileContext = {
     db,
     serverMachineId: "fixture-server",
+    permittedMovieSection: () => Promise.resolve("1"),
     roots: { movies: roots, tv: roots },
     now: () => clock,
     minimumFreeBytes: 0,
@@ -166,8 +189,13 @@ export async function fileFixture(
     create: { id: "singleton", mode: "active", ownershipConfirmed: true },
     update: { mode: "active", ownershipConfirmed: true, recoveryEpoch: 0 },
   });
+  await grantTestRequesterAccess(db, user.id, "fixture-server");
+  await chooseFixtureMovie(db, media, user);
 
-  async function acquisition(content = "Fixture media contents") {
+  async function acquisition(
+    content = "Fixture media contents",
+    mediaIds: readonly string[] = [media.id],
+  ) {
     const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
     });
@@ -187,18 +215,11 @@ export async function fileFixture(
       throw new Error(
         "Fixture acquisition requires current positive target authority",
       );
-    await db.plexIdentityMapping.upsert({
-      where: { userId: user.id },
-      create: {
-        userId: user.id,
-        serverMachineId: "fixture-server",
-        serverAccountId: user.plexAccountId,
-        kind: "account",
-        permittedSectionIds: ["1", "2"],
-        permittedMediaKinds: ["movie", "series"],
-        verifiedAt: new Date(),
-      },
-      update: {},
+    const scope = await fixtureAcquisitionScope(db, {
+      mediaId: media.id,
+      mediaIds,
+      userId: user.id,
+      epoch: runtime.recoveryEpoch,
     });
     const filename = `${media.kind === "episode" ? "Coastlines.S01E01." : ""}fixture-${crypto.randomUUID()}.mkv`;
     await writeFile(nodePath.join(roots.downloads, filename), content);
@@ -207,9 +228,9 @@ export async function fileFixture(
         providerId: "fixture",
         providerReleaseId: crypto.randomUUID(),
         title: "Test.Film.2026.1080p.WEB-DL.H264.ENG",
-        mediaIds: [media.id],
+        mediaIds: scope.mediaIds,
         attributes: {
-          mediaIds: [media.id],
+          mediaIds: scope.mediaIds,
           identityConfidence: "exact",
           quality: "WEB-1080p",
           codec: "H264",
@@ -223,7 +244,7 @@ export async function fileFixture(
     const torrent = await db.torrent.create({
       data: {
         providerId: "fixture",
-        infoHash: crypto.randomUUID(),
+        infoHash: `${crypto.randomUUID().replaceAll("-", "")}00000000`,
         owned: true,
         ownershipEpoch: runtime.recoveryEpoch,
         state: "ready",
@@ -255,18 +276,32 @@ export async function fileFixture(
         },
       },
     });
+    const movieAccess = await fileMovieAccess(context, scope.mediaIds);
+    const choice =
+      movieAccess === undefined
+        ? {}
+        : await captureMovieAttemptChoice(db, {
+            sponsorRequestId: request.id,
+            scope: {
+              rootMediaId: media.id,
+              mediaId: media.id,
+              edition: "default",
+            },
+            access: movieAccess,
+          });
     const attempt = await db.acquisitionAttempt.create({
       data: {
+        ...choice,
         releaseId: release.id,
         sponsorRequestId: request.id,
-        mediaIds: [media.id],
-        generations: { [media.id]: intent.generation },
+        mediaIds: scope.mediaIds,
+        generations: scope.generations,
         state: "ready",
         operationId: operation.id,
         torrentId: torrent.id,
         recoveryEpoch: runtime.recoveryEpoch,
         reservations: {
-          create: { mediaId: media.id, generation: intent.generation },
+          create: scope.reservations,
         },
       },
     });
@@ -300,15 +335,46 @@ export async function fileFixture(
   }
 
   async function retention() {
+    // Explicit synthetic Plex readback precondition for retention fixtures only.
+    // published() deliberately remains physical-only for unverified-publication tests.
+    const coverage = await db.assetCoverage.findMany({
+      where: { mediaId: media.id, edition: "default", current: true },
+      include: { asset: true },
+    });
+    if (coverage.length !== 1 || coverage[0]?.asset.state !== "published")
+      throw new Error(
+        "Retention fixture requires one published physical asset",
+      );
+    const asset = coverage[0].asset;
+    await db.$transaction(async (tx) => {
+      await recordVerifiedPublication(tx, [asset.id], asset.ownershipEpoch);
+      await tx.mediaItem.update({
+        where: { id: media.id },
+        data: {
+          externalIds: {
+            plexRatingKey: media.id,
+            plexSectionId: episode === undefined ? "1" : "2",
+          },
+        },
+      });
+    });
     const acceptedAt = new Date(clock.getTime() - 8 * 86_400_000);
-    await db.watchState.create({
-      data: {
+    await db.watchState.upsert({
+      where: {
+        userId_mediaId_edition: {
+          mediaId: media.id,
+          userId: user.id,
+          edition: "default",
+        },
+      },
+      create: {
         mediaId: media.id,
         userId: user.id,
         watched: true,
         observedAt: clock,
         source: "fixture",
       },
+      update: { watched: true, observedAt: clock, source: "fixture" },
     });
     const event = await db.applicationEvent.create({
       data: {
@@ -354,9 +420,11 @@ export async function fileFixture(
     roots,
     context,
     profile,
-    media,
+    media: await db.mediaItem.findUniqueOrThrow({ where: { id: media.id } }),
     user,
-    request,
+    request: await db.mediaRequest.findUniqueOrThrow({
+      where: { id: request.id },
+    }),
     acquisition,
     published,
     retention,

@@ -127,7 +127,10 @@ describe("default scope populated migration", () => {
         }),
       ).toBe(2);
       expect(
-        await db.mediaRequest.findUniqueOrThrow({ where: { id: request } }),
+        await db.mediaRequest.findUniqueOrThrow({
+          where: { id: request },
+          select: { version: true, edition: true },
+        }),
       ).toMatchObject({ version: 4, edition: "default" });
       expect(
         await db.$queryRaw`SELECT to_jsonb(r) AS row FROM "RecoveryReleaseReceipt" r WHERE id = ${receipt}`,
@@ -147,9 +150,7 @@ describe("default scope populated migration", () => {
         });
       }
       expect(await sparseSnapshot(db)).toEqual(sparse.before);
-      const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
-        where: { id: sparse.attemptId },
-      });
+      const attempt = await migratedAttempt(db, sparse.attemptId);
       expect(attempt).toMatchObject({
         filePlan: sparse.filePlan,
         identityEvidence: sparse.identity,
@@ -164,6 +165,7 @@ describe("default scope populated migration", () => {
         db.acquisitionAttempt.update({
           where: { id: attempt.id },
           data: { edition: "named" },
+          select: { id: true },
         }),
       ).rejects.toThrow("immutable");
       await expect(
@@ -205,6 +207,19 @@ describe("default scope populated migration", () => {
     }
   });
 });
+
+function migratedAttempt(db: Prisma.TransactionClient, id: string) {
+  return db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id },
+    select: {
+      id: true,
+      filePlan: true,
+      identityEvidence: true,
+      recoveryEpoch: true,
+      edition: true,
+    },
+  });
+}
 
 /** Read the actual pre017 columns, independently of the new Prisma schema. */
 async function originalHousehold(db: Prisma.TransactionClient, ids: string[]) {

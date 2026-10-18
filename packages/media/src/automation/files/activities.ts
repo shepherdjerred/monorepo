@@ -1,4 +1,5 @@
 import { MediaError } from "#application/errors.ts";
+import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import type { MediaFileActivities } from "#shared/automation.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { inspectAndStage } from "./inspection.ts";
@@ -9,6 +10,7 @@ import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { rollbackPromotion } from "./rollback.ts";
 import { cleanupUpgrade } from "./upgrade-cleanup.ts";
 import { compensateRejectedCut } from "./editions/recovery.ts";
+import { compensateRejectedChoice } from "./editions/choice-recovery.ts";
 import {
   LEGACY_CLAIM_PROTECTION,
   PendingLegacyClaimsError,
@@ -60,6 +62,7 @@ export function createMediaFileActivities(
         await inspectAndStage(context, attemptId);
         return { status: "staged" };
       } catch (error_) {
+        await compensateRejectedChoice(context, attemptId, error_);
         const error = physicalError(error_);
         await compensateRejectedCut(context, attemptId, error);
         if (error instanceof FileGuardError)
@@ -141,6 +144,8 @@ export function createMediaFileActivities(
 }
 
 function physicalError(error: unknown): unknown {
+  if (error instanceof MovieChoiceProtection)
+    return new FileGuardError(error.code);
   return error instanceof MediaError &&
     ["lineage_unresolved", "edition_not_available"].includes(error.code)
     ? new FileGuardError(error.code)

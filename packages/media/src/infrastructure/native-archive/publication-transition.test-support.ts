@@ -19,6 +19,7 @@ import { queueNativeArchiveCleanup } from "./continuation.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
 import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 
 /** Real household declarations; the only injected authority is the fixture's scoped Plex identity mapping. */
 export async function releaseTransitionHousehold(
@@ -154,6 +155,10 @@ export async function archivePublicationTransitionFixture(
       },
     });
     f.file.context.serverMachineId = "server";
+    await chooseCurrentTestMovieEdition(db, {
+      requestId: f.file.request.id,
+      access: { serverMachineId: "server", movieSectionId: "1" },
+    });
     const acquired = await f.file.acquisition(
       "Actual adjacent serving version D",
     );
