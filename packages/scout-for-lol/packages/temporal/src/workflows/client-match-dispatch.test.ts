@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { Client, WorkflowStartOptions } from "@temporalio/client";
+import type { WorkflowStartOptions } from "@temporalio/client";
 import { ApplicationFailure } from "@temporalio/common";
-import { Worker } from "@temporalio/worker";
 import { z } from "zod";
 import {
   IsoInstantSchema,
@@ -29,7 +28,19 @@ import {
   scoutPostMatchDiscoveryWorkflow,
 } from "./index.ts";
 import { SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH } from "./client-match-dispatch.ts";
-import { SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH } from "./shared-match-dispatch.ts";
+import {
+  SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH,
+  SCOUT_DISPATCH_EXPLICIT_ORDERING_PATCH,
+} from "./shared-match-dispatch.ts";
+import {
+  SCOUT_DISCOVERED_HISTORY_ANCHOR_PATCH,
+  SCOUT_HISTORY_DISPATCH_BACKGROUND_PATCH,
+} from "./evidence/dispatch.ts";
+import { SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH } from "./evidence/match.ts";
+import {
+  expectRetiredGatesReplay,
+  recordedPatchMarkers,
+} from "./retired-patches.test-fixtures.ts";
 import {
   createScoutMatchStore,
   MATCH_ID,
@@ -900,19 +911,43 @@ test("chunks a 108-match discovery and waits for every acknowledgement before ma
     fresh.calls.filter((call) => call === "commitMatchObservation"),
   ).toHaveLength(1);
 
-  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
-  await Worker.runReplayHistory(
-    { workflowsPath },
+  // Every dispatched item states its ordering assurance.
+  expect(
+    (dispatcherHistory.events ?? []).flatMap((event) => {
+      const signal = event.workflowExecutionSignaledEventAttributes;
+      return signal?.signalName === dispatchScoutClientMatchesSignal.name
+        ? (signal.input?.payloads ?? []).flatMap((payload) =>
+            z
+              .array(z.object({ orderingAssured: z.boolean().optional() }))
+              .parse(
+                JSON.parse(
+                  new TextDecoder().decode(payload.data ?? new Uint8Array()),
+                ),
+              )
+              .map((item) => item.orderingAssured),
+          )
+        : [];
+    }),
+  ).toEqual(matches.map(() => true));
+  // A non-beta dispatcher never evaluated the beta-only gates.
+  expect(
+    recordedPatchMarkers(dispatcherHistory, [
+      SCOUT_HISTORY_DISPATCH_BACKGROUND_PATCH,
+      SCOUT_DISCOVERED_HISTORY_ANCHOR_PATCH,
+      SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH,
+    ]),
+  ).toEqual({});
+
+  // The retired gates' markers are still recorded, deprecated, and a history
+  // the gated release recorded replays through them.
+  await expectRetiredGatesReplay(
     discoveryHistory,
+    [
+      SCOUT_DISPATCH_EXPLICIT_ORDERING_PATCH,
+      SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH,
+    ],
     discoveryId,
   );
-  const withoutGate = structuredClone(discoveryHistory);
-  expect(
-    unrecordPatch(withoutGate, SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH),
-  ).toBe(1);
-  await expect(
-    Worker.runReplayHistory({ workflowsPath }, withoutGate, discoveryId),
-  ).rejects.toMatchObject({ name: "DeterminismViolationError" });
 }, 120_000);
 
 test("a rediscovered, already-processed match does not hold back the matches after it", async () => {
@@ -963,50 +998,6 @@ test("a rediscovered, already-processed match does not hold back the matches aft
   expect(log).toContain(`${SECOND_MATCH_ID}:fan-out`);
   expect(log.filter((entry) => entry === "maintenance")).toHaveLength(2);
 }, 90_000);
-
-type DispatcherHistory = Awaited<
-  ReturnType<ReturnType<Client["workflow"]["getHandle"]>["fetchHistory"]>
->;
-
-/** The marker name the TypeScript SDK records `patched` calls under. */
-const PATCH_MARKER = "core_patch";
-
-const PatchMarkerDataSchema = z.strictObject({
-  id: z.string(),
-  deprecated: z.boolean(),
-});
-
-/**
- * Turn this patch's markers into a history that never recorded the patch.
- *
- * Core refuses a non-deprecated marker no command claims, so a plain rename
- * would fail replay on the marker itself and prove nothing about the gated
- * branch. Renamed AND deprecated, the marker is one core may skip, `patched`
- * answers false as it does for an execution that predates the gate, and any
- * nondeterminism left is the gated routing disagreeing with the history.
- */
-function unrecordPatch(history: DispatcherHistory, patchId: string): number {
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  let rewritten = 0;
-  for (const event of history.events ?? []) {
-    const marker = event.markerRecordedEventAttributes;
-    if (marker?.markerName !== PATCH_MARKER) continue;
-    for (const payloads of Object.values(marker.details ?? {})) {
-      for (const payload of payloads.payloads ?? []) {
-        const data = PatchMarkerDataSchema.parse(
-          JSON.parse(decoder.decode(payload.data ?? new Uint8Array())),
-        );
-        if (data.id !== patchId) continue;
-        payload.data = encoder.encode(
-          JSON.stringify({ id: `${patchId}-unrecorded`, deprecated: true }),
-        );
-        rewritten += 1;
-      }
-    }
-  }
-  return rewritten;
-}
 
 test("processes an older Riot match another account's poll delivered after a newer one", async () => {
   // The prod shape: discovery polls a rotating subset of accounts, and each
@@ -1082,26 +1073,14 @@ test("processes an older Riot match another account's poll delivered after a new
     "maintenance:settle=true",
   ]);
 
-  // Replay safety. The recorded history carries the gate's marker and replays
-  // cleanly. With that marker renamed it is what an execution predating the
-  // gate would hold here, so the code takes the old review path and disagrees
-  // with the recorded child start. That disagreement proves the gate, not the
-  // new routing alone, decides what an open history replays.
-  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
-  await Worker.runReplayHistory({ workflowsPath }, history, dispatcherId);
-  const withoutGate = structuredClone(history);
-  expect(
-    unrecordPatch(withoutGate, SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH),
-  ).toBe(1);
-  const replayed = Worker.runReplayHistory(
-    { workflowsPath },
-    withoutGate,
+  // Replay safety. The recorded history carries the retired gate's marker,
+  // deprecated, exactly where the gate recorded it, and a history the gated
+  // release recorded replays through it.
+  await expectRetiredGatesReplay(
+    history,
+    [SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH],
     dispatcherId,
   );
-  await expect(replayed).rejects.toMatchObject({
-    name: "DeterminismViolationError",
-  });
-  await expect(replayed).rejects.not.toThrow(/patch marker/u);
 }, 120_000);
 
 test("processes a queued client late arrival once Riot discovers it too", async () => {

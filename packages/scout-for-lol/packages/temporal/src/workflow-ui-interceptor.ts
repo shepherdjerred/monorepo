@@ -6,12 +6,17 @@ import type {
   WorkflowInterceptorsFactory,
   WorkflowOutboundCallsInterceptor,
 } from "@temporalio/workflow";
-import { patched, setCurrentDetails } from "@temporalio/workflow";
+import { deprecatePatch, setCurrentDetails } from "@temporalio/workflow";
 import {
   TemporalUiDetailsSchema,
   TemporalUiSummarySchema,
 } from "./execution-metadata.ts";
 
+/**
+ * Retired: every retained history recorded it. `deprecatePatch` still records
+ * the marker where the gate stood, so a rollback to a bundle that gates on it
+ * replays histories this bundle records. Drop it in a later release.
+ */
 const CURRENT_DETAILS_PATCH = "temporal-ui-current-details-v1";
 
 function humanizeTemporalType(value: string): string {
@@ -40,9 +45,8 @@ export function timerSummary(durationMs: number): string {
 }
 
 export function setWorkflowPhase(details: string): void {
-  if (patched(CURRENT_DETAILS_PATCH)) {
-    setCurrentDetails(TemporalUiDetailsSchema.parse(details));
-  }
+  deprecatePatch(CURRENT_DETAILS_PATCH);
+  setCurrentDetails(TemporalUiDetailsSchema.parse(details));
 }
 
 export class WorkflowUiOutboundInterceptor implements WorkflowOutboundCallsInterceptor {

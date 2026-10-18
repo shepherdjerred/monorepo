@@ -1,6 +1,6 @@
 import {
+  deprecatePatch,
   makeContinueAsNewFunc,
-  patched,
   proxyActivities,
   type ActivityInterfaceFor,
   type ActivityOptions,
@@ -8,50 +8,34 @@ import {
 } from "@temporalio/workflow";
 import type { ScoutPipelineActivities } from "#src/activities.ts";
 import {
-  SCOUT_PRE_RENAME_WORKFLOW_TYPES,
   scoutPreRenameActivityType,
   type ScoutRenamedWorkflowName,
 } from "#src/identifiers.ts";
 
 /**
- * Replay gate for issuing the renamed Workflow and Activity types from inside a
- * Workflow.
+ * The retired replay gate for issuing the renamed Workflow and Activity types
+ * from inside a Workflow.
  *
- * sdk-core checks every replayed command against the history by type: an
- * Activity scheduled, or a child started, under a different name from the one
- * recorded is a nondeterminism error. A history recorded before this patch
- * named the pre-rename types, so replaying it without a marker keeps issuing
- * them. Everything recorded with this patch, including an open execution that
- * reaches its first live Workflow Task after the deploy, issues the renamed
- * types from then on, and a long-lived Workflow continues as new under its
- * renamed type.
- *
- * Nothing registers the pre-rename types any more, so the unpatched branches
- * below exist only to replay a history recorded before the patch. An
- * execution still running without the marker would schedule Activities and
- * start children that no worker accepts. Retire with `deprecatePatch` once
- * no history predating the patch is retained for replay.
+ * Every retained history recorded it, so nothing replays the pre-rename
+ * branch any more and the renamed types are issued unconditionally.
+ * `deprecatePatch` still records the marker at each point the gate stood, so
+ * a rollback to a bundle that gates on it replays histories this bundle
+ * records instead of issuing the pre-rename types no worker accepts. Remove
+ * the `deprecatePatch` calls in a release after this one.
  */
 export const SCOUT_GENERATION_RENAME_PATCH = "scout-generation-rename";
 
-/**
- * The Workflow type a child start or a Continue-As-New issues: the renamed
- * type, or the pre-rename one for a history recorded before the patch.
- */
-export function issuedWorkflowType(name: ScoutRenamedWorkflowName): string {
-  return patched(SCOUT_GENERATION_RENAME_PATCH)
-    ? name
-    : SCOUT_PRE_RENAME_WORKFLOW_TYPES[name];
+/** The Workflow type a child start or a Continue-As-New issues. */
+export function issuedWorkflowType(
+  name: ScoutRenamedWorkflowName,
+): ScoutRenamedWorkflowName {
+  deprecatePatch(SCOUT_GENERATION_RENAME_PATCH);
+  return name;
 }
 
 /**
- * Continue as new under the renamed Workflow type.
- *
- * A plain `continueAsNew` keeps the current run's type, so an execution
- * started under its pre-rename type would carry that type into every later
- * run. Naming the type here is what moves the long-lived Workflows — the
- * client-match dispatcher singleton above all — onto the renamed type, which
- * is what lets the aliases go.
+ * Continue as new under the renamed Workflow type, naming it explicitly as the
+ * retired gate did.
  */
 export async function continueAsNewAsRenamed<F extends Workflow>(
   name: ScoutRenamedWorkflowName,
@@ -63,13 +47,11 @@ export async function continueAsNewAsRenamed<F extends Workflow>(
 }
 
 /**
- * Proxy the pipeline Activities under their renamed surface, scheduling each
- * under the name the Workflow's history calls for.
+ * Proxy the pipeline Activities under their renamed surface.
  *
- * The patch is consulted when an Activity is called, which is when it is
- * scheduled, rather than when it is looked up, so a proxy destructured early
- * still decides at the command it gates; and only for an Activity whose name
- * changed, so an unrenamed one never needs a marker.
+ * The retired gate was consulted when a renamed Activity was called, which is
+ * when it is scheduled, so the deprecated marker is recorded at that same
+ * command; an Activity whose name never changed records none.
  */
 export function renamedPipelineActivities<
   Activities extends Partial<ScoutPipelineActivities>,
@@ -82,23 +64,16 @@ export function renamedPipelineActivities<
         return value;
       }
       return (...args: unknown[]): unknown => {
-        const activity: unknown = Reflect.get(
-          target,
-          issuedActivityType(property),
-          receiver,
-        );
+        const activity: unknown = Reflect.get(target, property, receiver);
         if (typeof activity !== "function") {
           throw new TypeError(`No Activity proxy for ${property}`);
+        }
+        if (scoutPreRenameActivityType(property) !== property) {
+          deprecatePatch(SCOUT_GENERATION_RENAME_PATCH);
         }
         const scheduled: unknown = Reflect.apply(activity, undefined, args);
         return scheduled;
       };
     },
   });
-}
-
-function issuedActivityType(name: string): string {
-  const preRename = scoutPreRenameActivityType(name);
-  if (preRename === name) return name;
-  return patched(SCOUT_GENERATION_RENAME_PATCH) ? name : preRename;
 }

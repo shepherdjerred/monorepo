@@ -1,6 +1,6 @@
 ---
 title: Roll out Scout's Temporal workers
-description: Replay histories, canary every queue, soak beta, and promote Workflow Deployments to production.
+description: Replay histories, canary every queue, accept beta, and promote Workflow Deployments to production.
 sidebar:
   order: 6
 ---
@@ -34,12 +34,17 @@ TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true TEMPORAL_NAMESPACE=beta \
   bun run replay:scout-histories <weekly-or-bryan-workflow-id>...
 ```
 
-Protect every open Scout execution regardless of age, plus closed executions
-within the one-day compatibility window. Keep a replay patch until every
-affected execution has closed and another 24 hours have elapsed. Shared
-namespace retention can remain longer for other applications. Inspect older
-Scout histories with an archived compatible bundle; do not reset them onto a
-bundle that has retired their types or patch branches.
+Protect every open Scout execution regardless of age. A patch can be retired
+as soon as every execution that could take its old branch has closed and the
+open executions replay against the candidate. There is no waiting period after
+the last close. Inspect closed Scout histories with an archived compatible
+bundle; do not reset them onto a bundle that has retired their types or patch
+branches.
+
+Retire a drained patch in two releases. First replace `patched` with
+`deprecatePatch` at the same call site and keep only the new branch, so a
+rollback to the previous bundle still reads the marker. Remove the
+`deprecatePatch` call in a later release.
 
 For compatibility removal, enumerate executions with their run IDs and replay
 each protected run explicitly. A Workflow ID alone selects its latest run and
@@ -180,15 +185,15 @@ While the beta ramp is active:
 
 ## Advance and accept beta
 
-Delivery advances the ramp only after its recorded alert and health windows
-are clean. Follow the same request:
+Delivery promotes directly once replay, the pinned canaries and pollers pass.
+It has no timed observation windows. Follow the same request:
 
 ```bash
 toolkit deploy wait DEPLOYMENT_ID --timeout 86400 --json
 ```
 
-Record the beta image digest, deployed commit, and routing state. Observe the
-candidate at 100% traffic. Promote when:
+Record the beta image digest, deployed commit, and routing state. Promote as
+soon as these checks pass:
 
 - every fixed and per-report Schedule has the expected ownership and policy;
 - all five Activity queues retain pollers and acceptable schedule-to-start
@@ -198,10 +203,10 @@ candidate at 100% traffic. Promote when:
 - interrupted provider attempts are explained and no ambiguous attempt caused
   a second LLM call;
 - duplicate-effect claim failures remain zero; and
-- representative daily and weekly triggers complete with their expected
-  Discord and report-lake effects.
+- representative triggers complete with their expected Discord and
+  report-lake effects. Start a Schedule's action manually rather than waiting
+  for its next occurrence.
 
-The final routing stage verifies its health window again before acceptance.
 A successful candidate retains older hosts until native execution visibility
 proves they are drained.
 
@@ -250,11 +255,11 @@ proves they are drained.
    beta guild.
    Interrupt an Activity after a persisted checkpoint and verify resumption.
    Confirm frozen content, stable IDs, S3 attachments, and delivery bookkeeping.
-6. Observe beta for a day, then repeat the checks and cutover in production.
+6. Once the beta checks pass, repeat them and the cutover in production.
    Preserve production's existing feature availability. A migration flag does
    not enable betting, Dares, or other beta features in production.
 7. Retire compatibility code only after old-name starts have stopped, affected
-   open executions have drained, and the one-day window has elapsed. Roll an
+   open executions have drained, and open-run replay passes. Roll an
    idle dispatcher with its rollover Signal; let its active child finish.
    Record the last affected close time and exact deployed builds in the PR.
 
@@ -266,8 +271,8 @@ sends. Keep compatible consumers running so committed work can complete.
 
 Promote the accepted beta version set to `scout-for-lol/prod` through Delivery
 and approve its exact frozen request as a signed-in human. Production replays
-its retained histories, runs its own canary and verifies the observation
-windows. The production queue canary uses `--stage prod --namespace prod --gateway`.
+its retained histories, runs its own canary and verifies pollers and routing.
+The production queue canary uses `--stage prod --namespace prod --gateway`.
 
 Do not infer production acceptance from beta. Reconfirm Argo health, queue
 pollers, Schedules, representative effects, and alert history in production.

@@ -79,13 +79,8 @@ export type ScoutPipelineWorkflowName =
  * Nothing registers these names any more: the bundle exports only the renamed
  * Workflows, so an execution still running under one of these types could not
  * make progress, and the release that dropped them waited for none to be left.
- * They remain for two readers that outlive the rename. `ScoutWorkflowStart`
+ * They remain for one reader that outlives the rename: `ScoutWorkflowStart`
  * rows keep the type they were requested under (`scoutRenamedWorkflowType`).
- * And a history recorded before the `scout-generation-rename` patch named
- * these types for its children, so replaying one has to issue them again
- * (`workflows/generation-rename.ts`).
- *
- * The same holds for Activities (`scoutPreRenameActivityType`).
  */
 export const SCOUT_PRE_RENAME_WORKFLOW_TYPES = {
   [SCOUT_WORKFLOW_NAMES.postMatchDiscovery]:
@@ -141,9 +136,9 @@ const UNRENAMED_PIPELINE_ACTIVITIES: ReadonlySet<string> = new Set([
 /**
  * The name an Activity was registered under before the rename: the
  * `V2`-suffixed name for a renamed pipeline Activity, and the name itself for
- * anything else. A history recorded before the `scout-generation-rename` patch
- * scheduled pipeline Activities under this name, so replaying one issues it
- * again. No Activity worker registers it any more.
+ * anything else. No Activity worker registers it, and no Workflow issues it;
+ * it tells the deprecated `scout-generation-rename` marker which Activities
+ * the retired gate covered (`workflows/generation-rename.ts`).
  */
 export function scoutPreRenameActivityType(name: string): string {
   return Object.hasOwn(SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES, name) &&

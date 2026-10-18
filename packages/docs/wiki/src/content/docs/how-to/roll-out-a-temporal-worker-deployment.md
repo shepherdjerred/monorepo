@@ -105,5 +105,5 @@ toolkit loki query '{service_name="temporal-central-workflows"}' --since 1h --li
 toolkit tempo --help
 ```
 
-Record the deployed digest, execution IDs, soak times, and live screenshots in
+Record the deployed digest, execution IDs, and live screenshots in
 the pull request or Tracker. Do not create a repository rollout journal.

@@ -184,11 +184,12 @@ talosctl -n liskov -e <control-plane-endpoint> get kernelparamstatuses | grep -E
 Expected: `6000 1500`, `zfs_dirty_data_max=8589934592`, `zfs_txg_timeout=30`,
 and each `KernelParamStatus` row reporting the new value as current.
 
-Then watch 24 h of `increase(nvme_data_units_written_total{node="liskov"}[1d]) * 512000`
-per device; the targets are under 0.3 TB/day on `nvme0n1` and under 2.5 TB/day
-on `nvme1n1`.
+Then check the projected daily write rate per device with
+`rate(nvme_data_units_written_total{node="liskov"}[1h]) * 512000 * 86400`
+under normal CI load; the targets are under 0.3 TB/day on `nvme0n1` and under
+2.5 TB/day on `nvme1n1`.
 
-## After the soak
+## Memory budget
 
 Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Kubernetes
 currently reports approximately 91.5Gi of allocatable memory on liskov. CI pods

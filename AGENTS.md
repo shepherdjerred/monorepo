@@ -70,6 +70,9 @@ or in-process timers.
   per-language validation.
 - After roughly two failed attempts at the same workaround, step back and
   reconsider the design instead of layering more exceptions.
+- Never add a fixed waiting, soak, or bake period to a rollout, migration, or
+  cleanup. Gate on evidence such as replay, canaries, drainage, and live checks,
+  and proceed as soon as it passes.
 
 Every newly added or rewritten URL must return HTTP 200 before commit.
 
@@ -179,3 +182,14 @@ homelab, Scout, Temporal, TaskNotes, Minecraft harness and building, docs,
 Tracker, PostHog, Discord, or report rendering work. Package-local runtime
 skills remain application assets and do not replace repository workflow
 guidance.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->

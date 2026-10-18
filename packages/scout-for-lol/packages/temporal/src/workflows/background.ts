@@ -1,9 +1,9 @@
 import {
   condition,
   continueAsNew,
+  deprecatePatch,
   getExternalWorkflowHandle,
   isCancellation,
-  patched,
   setHandler,
   sleep,
   startChild,
@@ -78,9 +78,9 @@ export async function scoutInitialHistoryWorkflow(
     }
     const next = nextHistoryInput(input, page);
     input = next.input;
-    runRequested = patched("scout-initial-history-preserve-pending-request-v1")
-      ? requestSequence !== requestSequenceAtStart || !next.complete
-      : !next.complete;
+    // Retired gate: the marker still records here so a rollback replays.
+    deprecatePatch("scout-initial-history-preserve-pending-request-v1");
+    runRequested = requestSequence !== requestSequenceAtStart || !next.complete;
     if (
       next.input.pagesInCurrentRun >= 100 ||
       workflowInfo().continueAsNewSuggested
