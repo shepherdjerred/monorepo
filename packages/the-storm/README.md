@@ -1021,8 +1021,9 @@ cannot damage each other throughout the full twelve active hours, including the
 six-to-twelve-hour ramp. These cancelled hits create no warnings, wanted state,
 or guard retaliation; dialogue, quests, trainers and shops still work. The NPC
 module reads the mobs module's cached `BeginnerStatus` on the main thread, without
-waiting for storage or flag evaluation. While that initial snapshot loads, spawn
-NPC combat stays blocked. NPCs outside spawn and ordinary mob combat retain their
+waiting for storage or flag evaluation. While that initial snapshot loads, or a
+flag refresh fails, spawn NPC combat stays blocked. An explicit disabled decision
+restores ordinary NPC combat. NPCs outside spawn and ordinary mob combat retain their
 existing rules. Travel pricing, cooldowns and death consequences are unchanged.
 
 ## Command travel

@@ -157,7 +157,8 @@ final class BeginnerProtection implements BeginnerStatus {
         failure == null && Boolean.TRUE.equals(enabled) && owns && player.isOnline() && !stopped;
     if (failure != null) context.logger().warn("Could not evaluate beginner's luck", failure);
     if (!stopped && owns) {
-      evaluated.add(id);
+      if (failure == null) evaluated.add(id);
+      else evaluated.remove(id);
       var was = clock.enabled(id);
       clock.enabled(id, on, on && !afk.isAfk(id));
       if (was != on) changed(id);

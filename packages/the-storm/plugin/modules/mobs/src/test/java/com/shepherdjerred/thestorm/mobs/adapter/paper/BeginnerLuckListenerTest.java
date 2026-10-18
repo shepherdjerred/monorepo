@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.core.expansion.FlagProviderUnavailableException;
 import com.shepherdjerred.thestorm.core.expansion.ManagedGameplay;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -22,8 +23,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -58,6 +61,7 @@ final class BeginnerLuckListenerTest {
   AfkTracker afk;
   final AtomicReference<Instant> now = new AtomicReference<>(Instant.parse("2026-10-16T00:00:00Z"));
   final Map<UUID, Boolean> flags = new HashMap<>();
+  final Set<UUID> unavailable = new HashSet<>();
   final Map<UUID, Long> saved = new HashMap<>();
   final SealedWorlds sealed = new SealedWorlds();
 
@@ -75,7 +79,12 @@ final class BeginnerLuckListenerTest {
     services.provide(
         ManagedGameplay.class,
         new ManagedGameplay(
-            (key, id) -> CompletableFuture.completedFuture(flags.getOrDefault(id, false)),
+            (key, id) ->
+                unavailable.contains(id)
+                    ? CompletableFuture.failedFuture(
+                        new FlagProviderUnavailableException(
+                            new java.io.IOException("fixture flag outage")))
+                    : CompletableFuture.completedFuture(flags.getOrDefault(id, false)),
             () -> {},
             true,
             now::get));
@@ -148,6 +157,38 @@ final class BeginnerLuckListenerTest {
     assertThat(protection.current(id).orElseThrow().protectsFromNpcs()).isFalse();
     protection.left(player);
     assertThat(protection.current(id)).isEmpty();
+  }
+
+  @Test
+  void aFailedFlagRefreshKeepsNpcStatusUnknownUntilARealDecisionArrives() {
+    var player = player("Newcomer", true);
+    var id = player.getUniqueId();
+    assertThat(protection.current(id).orElseThrow().protectsFromNpcs()).isTrue();
+    unavailable.add(id);
+    now.updateAndGet(time -> time.plusSeconds(31));
+    var failed = protection.status(id);
+    server.getScheduler().performTicks(10);
+    assertThat(failed.join().enabled()).isFalse();
+    assertThat(protection.current(id)).isEmpty();
+    assertThat(protection.active(player)).isEmpty();
+
+    unavailable.remove(id);
+    flags.put(id, false);
+    now.updateAndGet(time -> time.plusSeconds(31));
+    var disabled = protection.status(id);
+    server.getScheduler().performTicks(10);
+    assertThat(disabled.join().enabled()).isFalse();
+    assertThat(protection.current(id).orElseThrow().protectsFromNpcs()).isFalse();
+  }
+
+  @Test
+  void anInitialFlagOutageDoesNotPublishADisabledNpcStatus() {
+    var player = server.addPlayer("Newcomer");
+    unavailable.add(player.getUniqueId());
+    afk.joined(player.getUniqueId());
+    server.getScheduler().performTicks(10);
+    assertThat(protection.current(player.getUniqueId())).isEmpty();
+    assertThat(protection.active(player)).isEmpty();
   }
 
   Zombie mob() {
