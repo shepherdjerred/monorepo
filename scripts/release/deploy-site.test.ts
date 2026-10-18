@@ -28,7 +28,7 @@ async function runSiteCommand(
     const git = path.join(directory, "git");
     await Bun.write(
       git,
-      '#!/bin/sh\nif [ "$1" = diff ]; then\n  for path in "$@"; do\n    if [ "$path" = "$SELECTOR_CHANGED_PATH" ]; then printf "%s\\n" "$path"; break; fi\n  done\nfi\nexit 0\n',
+      '#!/bin/sh\nif [ "$1" = diff ]; then\n  for path in "$@"; do\n    case "$SELECTOR_CHANGED_PATH" in "$path"|"$path"/*) printf "%s\\n" "$SELECTOR_CHANGED_PATH"; break;; esac\n  done\nfi\nexit 0\n',
     );
     await chmod(git, 0o755);
     const child = Bun.spawn([process.execPath, script, ...args], {
@@ -47,7 +47,7 @@ async function runSiteCommand(
     await rm(directory, { recursive: true });
   }
 }
-test.each(["ts-mc", "sjer.red"])(
+test.each(["ts-mc", "sjer.red", "glitter-boys"])(
   "%s publication rehearsal never invokes activation or needs credentials",
   async (site) => {
     const result = await runSiteCommand("scripts/release/deploy-site.ts", [
@@ -61,6 +61,24 @@ test.each(["ts-mc", "sjer.red"])(
     expect(result.stdout).not.toContain("purge");
   },
 );
+test.each([
+  "packages/glitter-boys/src/pages/index.astro",
+  "packages/glitter-boys-launcher/published-release.json",
+  "packages/glitter-boys-launcher/scripts/public-release.ts",
+  "packages/glitter-boys-launcher/scripts/release-manifest.ts",
+])("Glitter Boys archive selection includes %s", async (changed) => {
+  const result = await runSiteCommand(
+    "ci/scripts/selectors/ci-changed.ts",
+    ["site-glitter-boys"],
+    {
+      CI_CHANGED_BASE: "a".repeat(40),
+      CI_PIPELINE_EVENT: "push",
+      SELECTOR_CHANGED_PATH: changed,
+    },
+  );
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout).toContain("1 matching change(s)");
+});
 test("credential-free validation selects the same reviewed source and rejects unknown targets", async () => {
   const valid = await runSiteCommand("scripts/release/check-site-build.ts", [
     "ts-mc",

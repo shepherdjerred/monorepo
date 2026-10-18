@@ -53,23 +53,24 @@ game acceptance test, and label older UI layouts in their captions.
 
 ## Hosting
 
-Build, test, and deploy this package manually; it is excluded from shared CI.
-The deployment command publishes the locally built `dist/` to the `glitter-boys`
-SeaweedFS bucket. The existing homelab static-site service serves it through
+CI builds this site and publishes its immutable `dist/` archive when the site or
+reviewed launcher publication inputs change. Delivery selects the qualified
+archive and controls activation in the `glitter-boys` SeaweedFS bucket.
+The existing homelab static-site service serves it through
 Cloudflare Tunnel and Caddy. DNS and bucket lifecycle are owned by OpenTofu;
 the host binding and HTTP probes are owned by CDK8s.
 
 The root and `/docs/` have HTTP probes. The deployment catalog preserves hashed
 `_astro/` assets for open browser tabs; the bucket lifecycle expires old hashes.
 
-The site uses the existing static-site identities. Before its first deployment,
-the `ci-sites` identity in the `seaweedfs-s3-credentials` 1Password item needs
-`Read:glitter-boys`, `Write:glitter-boys`, `List:glitter-boys`, and
-`Tagging:glitter-boys` actions. Keep its existing credential and other grants.
-The serving identity must also have read access to this bucket.
+CI uses the existing archive publisher identity. Delivery uses its scoped
+static-site activator and cache-purge credentials; the serving identity reads
+the destination bucket. The site's `launcher/*` exclusion preserves independently
+published native installers and manifests. Site publication does not build or
+publish the native launcher.
 
-For an operator-triggered release, use the repository-owned static-site command
-with its registered credentials:
+For an operator-triggered archive publication, use the repository-owned command
+with its registered credentials. Activation still belongs to Delivery:
 
 ```sh
 bun run --cwd packages/glitter-boys deploy

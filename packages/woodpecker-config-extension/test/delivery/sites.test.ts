@@ -21,7 +21,7 @@ test("every static producer publishes immutable archives with no activation cred
   const builds = step.commands.filter((command) =>
     command.includes("scripts/release/deploy-site.ts"),
   );
-  expect(builds).toHaveLength(12);
+  expect(builds).toHaveLength(13);
   for (const command of builds) expect(command).toContain(" --archive");
   expect(step.commands).toContain(
     "bun --no-install scripts/ci/write-site-archive-handoff.ts",

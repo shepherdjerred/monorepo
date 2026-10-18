@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import {
+  SERVICE_CATALOG,
+  ServiceIndex,
+} from "@shepherdjerred/ops-model/catalog.ts";
+import {
   buildPublications,
   downloadChartArtifact,
   parsePublicationOptions,
@@ -222,7 +226,31 @@ function coordinatedHandoffs(chart: string, revision: string) {
   };
 }
 
-test("full chart production may include explicitly inactive charts without adding them to root ownership", async () => {
+test("the full catalog publication preserves the smaller coordinated root inventory", async () => {
+  const revision = "2.0.0-1000042";
+  const charts = SERVICE_CATALOG.services.flatMap((service) =>
+    [...new Set([...service.argoApps, ...service.charts])]
+      .filter((name) => service.rootReleaseExclusions?.[name] !== "upstream")
+      .map((name) => ({ name, revision, digest: childDigest })),
+  );
+  const rootInventory = new ServiceIndex(SERVICE_CATALOG)
+    .rootReleaseCharts()
+    .map(({ name }) => ({ name, revision }));
+  const result = await readPublicationHandoffs(false, {
+    required: async (key) =>
+      key === "delivery-image-digests"
+        ? "{}"
+        : JSON.stringify({ ...freshCharts, charts }),
+    optional: async () => JSON.stringify(rootInventory),
+  });
+  // Actual full publication includes delegated and inactive charts, not root selections.
+  expect(charts).toHaveLength(43);
+  expect(rootInventory).toHaveLength(23);
+  expect(result.charts).toEqual(charts);
+  expect(result.rootInventory).toEqual(rootInventory);
+});
+
+test("explicitly inactive chart publication does not add root ownership", async () => {
   const result = await readPublicationHandoffs(
     false,
     coordinatedHandoffs("delivery", "2.0.0-1000042"),
@@ -232,7 +260,7 @@ test("full chart production may include explicitly inactive charts without addin
   await expect(
     readPublicationHandoffs(
       false,
-      coordinatedHandoffs("arcade", "2.0.0-1000042"),
+      coordinatedHandoffs("woodpecker", "2.0.0-1000042"),
     ),
   ).rejects.toThrow("coordinated release inventory");
   await expect(
@@ -242,6 +270,18 @@ test("full chart production may include explicitly inactive charts without addin
     ),
   ).rejects.toThrow("coordinated release inventory");
 });
+
+test.each(["unknown-chart", "kueue", "constructor"])(
+  "a missing %s chart is not a delegated or inactive publication",
+  async (chart) => {
+    await expect(
+      readPublicationHandoffs(
+        false,
+        coordinatedHandoffs(chart, "2.0.0-1000042"),
+      ),
+    ).rejects.toThrow("coordinated release inventory");
+  },
+);
 
 test.each([false, true])(
   "genuine CI retains the original acquired upstream chart without cloning it (new image: %s)",

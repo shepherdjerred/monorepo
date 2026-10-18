@@ -77,6 +77,16 @@ export const sitePaths = {
     "packages/glitter-context",
     ...deployScripts,
   ],
+  "site-glitter-boys": [
+    ...workspacePaths,
+    "packages/glitter-boys",
+    // The site consumes only the native launcher's reviewed publication metadata.
+    "packages/glitter-boys-launcher/scripts/public-release.ts",
+    "packages/glitter-boys-launcher/scripts/release-manifest.ts",
+    "packages/glitter-boys-launcher/published-release.json",
+    "packages/glitter-boys-launcher/package.json",
+    ...deployScripts,
+  ],
   "site-ts-mc-docs": [
     ...workspacePaths,
     "packages/ts-mc-docs",

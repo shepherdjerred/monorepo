@@ -7,6 +7,7 @@ import {
   SERVICE_CATALOG,
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
+import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 import {
   attachPlatformPublication,
   changedPlatformStacks,
@@ -254,4 +255,45 @@ test("a newer root freezes unchanged original site archives so an older queued s
         }),
     ),
   ).rejects.toThrow("original qualified bucket archive");
+});
+
+test("a first full root publication needs no retained sites when every active site archive is fresh", async () => {
+  const { builds, inventory } = fullRootPublication();
+  const artifacts = Object.entries(STATIC_SITE_DESTINATIONS)
+    .filter(([, environment]) => environment.startsWith("static-sites/"))
+    .map(([bucket]) => ({
+      id: `ci/1/42/site/${bucket}`,
+      component: `site:${bucket}`,
+      kind: "archive",
+      uri: `s3://delivery-artifacts/sites/${bucket}/${"c".repeat(64)}.tar`,
+      digest: `sha256:${"c".repeat(64)}`,
+      version: "build-42",
+    }));
+  const result = await attachPlatformPublication(
+    [
+      ...builds,
+      PublishBuildSchema.parse({
+        requestId: "ci/1/42/static-sites",
+        serviceId: "static-sites",
+        sourceRevision: metadata.sourceRevision,
+        ciUrl: metadata.ciUrl,
+        verifiedAt: metadata.capturedAt,
+        artifacts,
+      }),
+    ],
+    { ...metadata, rootInventory: inventory },
+    anchor,
+    async () => {
+      throw new Error(
+        "No qualified predecessor exists before first publication",
+      );
+    },
+  );
+  const sites = result.find((build) => build.serviceId === "gitops")
+    ?.platformChanges?.sites;
+  expect(sites).toHaveLength(13);
+  expect(sites).toContainEqual({
+    environmentId: "static-sites/glitter-boys",
+    artifactId: "ci/1/42/site/glitter-boys",
+  });
 });
