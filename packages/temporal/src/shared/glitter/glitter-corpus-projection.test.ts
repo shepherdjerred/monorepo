@@ -25,6 +25,10 @@ function observation(input: {
   authorUsername?: string;
   authorAvatar?: string | null;
   attachments?: DiscordAttachment[];
+  flags?: string;
+  tts?: boolean;
+  type?: number;
+  referencedMessageId?: string | null;
 }): CorpusObservation {
   return CorpusObservationSchema.parse({
     schemaVersion: 1,
@@ -46,12 +50,12 @@ function observation(input: {
     content: input.content,
     timestamp: input.timestamp ?? "2025-01-01T00:00:00.000Z",
     editedTimestamp: input.editedTimestamp ?? null,
-    type: 0,
-    flags: "0",
+    type: input.type ?? 0,
+    flags: input.flags ?? "0",
     pinned: input.pinned ?? false,
-    tts: false,
+    tts: input.tts ?? false,
     attachments: input.attachments ?? [],
-    referencedMessageId: null,
+    referencedMessageId: input.referencedMessageId ?? null,
     raw: { sourceKey: input.sourceKey },
   });
 }
@@ -147,6 +151,120 @@ describe("Glitter corpus current projection", () => {
     ).toThrow("conflicting payloads");
   });
 
+  test("a later observation without an edit cannot change content", () => {
+    const first = observation({
+      sourceKey: "page-1",
+      content: "before",
+      observedAt: "2026-01-01T00:00:00.000Z",
+    });
+    const later = observation({
+      sourceKey: "page-2",
+      content: "after",
+      observedAt: "2026-01-02T00:00:00.000Z",
+      flags: "4",
+    });
+
+    expect(() => buildCurrentProjection([first, later])).toThrow(
+      "conflicting payloads for message 789 at version 2025-01-01T00:00:00.000Z (differing fields: content)",
+    );
+    expect(() =>
+      mergeCurrentProjection(buildCurrentProjection([first]), [later]),
+    ).toThrow(
+      "projection has conflicting payloads for message 789 at 2025-01-01T00:00:00.000Z (differing fields: content)",
+    );
+  });
+
+  test("conflict errors name every differing field without values", () => {
+    const left = observation({
+      sourceKey: "page/a",
+      content: "secret-left",
+      type: 0,
+      referencedMessageId: null,
+    });
+    const right = observation({
+      sourceKey: "page/b",
+      content: "secret-right",
+      type: 19,
+      referencedMessageId: "555",
+      tts: true,
+    });
+
+    let message = "";
+    try {
+      selectCurrentObservation([left, right]);
+    } catch (error: unknown) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).toContain(
+      "(differing fields: content, type, tts, referencedMessageId)",
+    );
+    expect(message).not.toContain("secret");
+    expect(message).not.toContain("555");
+  });
+
+  test.each([
+    { name: "SUPPRESS_EMBEDS", flags: "4" },
+    { name: "HAS_THREAD", flags: "32" },
+  ])(
+    "a later observation captures $name without an edit timestamp",
+    ({ flags }) => {
+      const first = observation({
+        sourceKey: "page-1",
+        content: "same",
+        observedAt: "2026-01-01T00:00:00.000Z",
+        flags: "0",
+      });
+      const later = observation({
+        sourceKey: "page-2",
+        content: "same",
+        observedAt: "2026-01-02T00:00:00.000Z",
+        flags,
+      });
+
+      expect(buildCurrentProjection([later, first])[0]?.flags).toBe(flags);
+      expect(buildCurrentProjection([first, later])[0]?.flags).toBe(flags);
+      expect(
+        mergeCurrentProjection(buildCurrentProjection([first]), [later])[0]
+          ?.flags,
+      ).toBe(flags);
+      expect(
+        mergeCurrentProjection(buildCurrentProjection([later]), [first])[0]
+          ?.flags,
+      ).toBe(flags);
+    },
+  );
+
+  test("creation-time flag differences at the same version fail loudly", () => {
+    const first = observation({
+      sourceKey: "page-1",
+      content: "same",
+      observedAt: "2026-01-01T00:00:00.000Z",
+      flags: "0",
+    });
+    const later = observation({
+      sourceKey: "page-2",
+      content: "same",
+      observedAt: "2026-01-02T00:00:00.000Z",
+      flags: String(1 << 12),
+    });
+
+    expect(() => buildCurrentProjection([first, later])).toThrow(
+      "(differing fields: flags)",
+    );
+    expect(() =>
+      mergeCurrentProjection(buildCurrentProjection([first]), [later]),
+    ).toThrow("(differing fields: flags)");
+  });
+
+  test("malformed message flags fail loudly", () => {
+    expect(() =>
+      selectCurrentObservation([
+        observation({ sourceKey: "page/a", content: "same", flags: "0" }),
+        observation({ sourceKey: "page/b", content: "same", flags: "-4" }),
+      ]),
+    ).toThrow("invalid Discord message flags");
+  });
+
   test("a later observation captures pin changes without an edit timestamp", () => {
     const first = observation({
       source: "discord-rest",
@@ -240,7 +358,7 @@ describe("Glitter corpus observation metadata", () => {
           attachments: [attachment(43)],
         }),
       ]),
-    ).toThrow("conflicting payloads");
+    ).toThrow("(differing fields: attachments)");
   });
 
   test("source authority does not hide non-content seed conflicts", () => {

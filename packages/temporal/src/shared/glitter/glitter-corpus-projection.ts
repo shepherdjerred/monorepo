@@ -87,53 +87,109 @@ function hasSeedAndDiscordSources(
   );
 }
 
-function equivalentImmutableMessageVersionExceptContent(
-  left: ImmutableMessageVersion,
-  right: ImmutableMessageVersion,
-): boolean {
-  return (
-    (left.guildId === right.guildId ||
-      left.guildId === null ||
-      right.guildId === null) &&
-    left.guildSlug === right.guildSlug &&
-    left.channelId === right.channelId &&
-    left.messageId === right.messageId &&
-    left.author.id === right.author.id &&
-    left.author.bot === right.author.bot &&
-    instantMilliseconds(left.timestamp) ===
-      instantMilliseconds(right.timestamp) &&
-    (left.editedTimestamp === null
-      ? right.editedTimestamp === null
-      : right.editedTimestamp !== null &&
-        instantMilliseconds(left.editedTimestamp) ===
-          instantMilliseconds(right.editedTimestamp)) &&
-    left.type === right.type &&
-    left.flags === right.flags &&
-    left.tts === right.tts &&
-    JSON.stringify(stableAttachments(left.attachments)) ===
-      JSON.stringify(stableAttachments(right.attachments)) &&
-    left.referencedMessageId === right.referencedMessageId
-  );
+/**
+ * Discord message flags that record later events on an existing message, so
+ * they change without Discord updating `edited_timestamp`
+ * (https://docs.discord.com/developers/resources/message#message-object-message-flags):
+ *
+ * - CROSSPOSTED (1 << 0): the message was published to following channels.
+ * - SUPPRESS_EMBEDS (1 << 2): set and unset after sending by anyone who hides
+ *   or restores the embeds.
+ * - SOURCE_MESSAGE_DELETED (1 << 3): the source of this crosspost was deleted.
+ * - HAS_THREAD (1 << 5): a thread was started from the message.
+ *
+ * The remaining flags describe how the message was created, so a difference
+ * in any other bit at the same version is still a conflict.
+ */
+const EDIT_FREE_MESSAGE_FLAGS =
+  (1n << 0n) | (1n << 2n) | (1n << 3n) | (1n << 5n);
+
+function creationMessageFlags(flags: string): bigint {
+  if (!/^\d+$/u.test(flags)) {
+    throw new TypeError(`invalid Discord message flags: ${flags}`);
+  }
+  return BigInt(flags) & ~EDIT_FREE_MESSAGE_FLAGS;
 }
 
-function equivalentImmutableMessageVersion(
-  left: ImmutableMessageVersion,
-  right: ImmutableMessageVersion,
-): boolean {
-  return (
-    left.content === right.content &&
-    equivalentImmutableMessageVersionExceptContent(left, right)
-  );
+function sameInstant(left: string | null, right: string | null): boolean {
+  return left === null || right === null
+    ? left === right
+    : instantMilliseconds(left) === instantMilliseconds(right);
 }
 
-function isSeedContentDrift(
+/**
+ * Names the identity and edit-versioned fields that differ between two
+ * observations of the same message version. Discord changes `pinned`, the
+ * author profile, signed attachment URLs and the edit-free flag bits without
+ * an edit, so those resolve by observation preference instead of appearing
+ * here. Only field names are returned, never values.
+ */
+function versionFieldDifferences(
   left: ImmutableMessageVersion,
   right: ImmutableMessageVersion,
-): boolean {
-  return (
-    left.content !== right.content &&
-    hasSeedAndDiscordSources(left, right) &&
-    equivalentImmutableMessageVersionExceptContent(left, right)
+): string[] {
+  const checks: [string, boolean][] = [
+    [
+      "guildId",
+      left.guildId === right.guildId ||
+        left.guildId === null ||
+        right.guildId === null,
+    ],
+    ["guildSlug", left.guildSlug === right.guildSlug],
+    ["channelId", left.channelId === right.channelId],
+    ["messageId", left.messageId === right.messageId],
+    ["author.id", left.author.id === right.author.id],
+    ["author.bot", left.author.bot === right.author.bot],
+    ["content", left.content === right.content],
+    ["timestamp", sameInstant(left.timestamp, right.timestamp)],
+    [
+      "editedTimestamp",
+      sameInstant(left.editedTimestamp, right.editedTimestamp),
+    ],
+    ["type", left.type === right.type],
+    [
+      "flags",
+      creationMessageFlags(left.flags) === creationMessageFlags(right.flags),
+    ],
+    ["tts", left.tts === right.tts],
+    [
+      "attachments",
+      JSON.stringify(stableAttachments(left.attachments)) ===
+        JSON.stringify(stableAttachments(right.attachments)),
+    ],
+    [
+      "referencedMessageId",
+      left.referencedMessageId === right.referencedMessageId,
+    ],
+  ];
+  return checks.filter(([, equal]) => !equal).map(([field]) => field);
+}
+
+type SameVersionResolution = "equivalent" | "seed-content-drift";
+
+/**
+ * Classifies two observations of the same message version. Content drift
+ * between a trusted seed row and Discord is the only tolerated content
+ * difference; every other identity or edit-versioned difference throws.
+ */
+function resolveSameVersion(
+  left: ImmutableMessageVersion,
+  right: ImmutableMessageVersion,
+  conflictMessage: string,
+): SameVersionResolution {
+  const differences = versionFieldDifferences(left, right);
+  if (differences.length === 0) {
+    return "equivalent";
+  }
+  if (
+    differences.length === 1 &&
+    differences[0] === "content" &&
+    hasSeedAndDiscordSources(left, right)
+  ) {
+    return "seed-content-drift";
+  }
+  throw new Error(
+    `${conflictMessage} (differing fields: ${differences.join(", ")})`,
   );
 }
 
@@ -202,16 +258,16 @@ export function selectCurrentObservation(
       continue;
     }
 
-    if (!equivalentImmutableMessageVersion(candidate, selected)) {
-      if (isSeedContentDrift(candidate, selected)) {
-        if (candidate.source === "discord-rest") {
-          selected = candidate;
-        }
-        continue;
+    const resolution = resolveSameVersion(
+      candidate,
+      selected,
+      `conflicting payloads for message ${first.messageId} at version ${candidate.editedTimestamp ?? candidate.timestamp}`,
+    );
+    if (resolution === "seed-content-drift") {
+      if (candidate.source === "discord-rest") {
+        selected = candidate;
       }
-      throw new Error(
-        `conflicting payloads for message ${first.messageId} at version ${candidate.editedTimestamp ?? candidate.timestamp}`,
-      );
+      continue;
     }
 
     if (observationPreference(candidate, selected) > 0) {
@@ -347,21 +403,21 @@ export function mergeCurrentProjection(
       byId.set(message.messageId, message);
       continue;
     }
-    if (
-      comparison === 0 &&
-      !equivalentImmutableMessageVersion(message, existing)
-    ) {
-      if (isSeedContentDrift(message, existing)) {
-        if (message.source === "discord-rest") {
-          byId.set(message.messageId, message);
-        }
-        continue;
-      }
-      throw new Error(
-        `projection has conflicting payloads for message ${message.messageId} at ${message.editedTimestamp ?? message.timestamp}`,
-      );
+    if (comparison < 0) {
+      continue;
     }
-    if (comparison === 0 && currentMessagePreference(message, existing) > 0) {
+    const resolution = resolveSameVersion(
+      message,
+      existing,
+      `projection has conflicting payloads for message ${message.messageId} at ${message.editedTimestamp ?? message.timestamp}`,
+    );
+    if (resolution === "seed-content-drift") {
+      if (message.source === "discord-rest") {
+        byId.set(message.messageId, message);
+      }
+      continue;
+    }
+    if (currentMessagePreference(message, existing) > 0) {
       byId.set(message.messageId, message);
     }
   }
