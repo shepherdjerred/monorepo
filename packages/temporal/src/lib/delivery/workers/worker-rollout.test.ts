@@ -12,7 +12,6 @@ import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 
 const CANDIDATE = "b".repeat(40);
 const STABLE = "a".repeat(40);
-const NOW = new Date("2026-10-16T12:00:00.000Z");
 const timestamp = "2026-10-16T00:00:00.000Z";
 const connection = { address: "temporal.test:7233" };
 const detail = () =>
@@ -127,7 +126,7 @@ type State = {
   changedAt: string;
   candidateFailures: number;
   checkout: string;
-  lostRampResponse: boolean;
+  lostCurrentResponse: boolean;
 };
 const json = (value: unknown) => ({
   stdout: JSON.stringify(value),
@@ -147,14 +146,14 @@ function mutateRouting(command: string[], state: State) {
       ? 0
       : Number(command[offset + 1]);
     state.ramping = command.includes("--delete") ? "" : CANDIDATE;
-    if (state.lostRampResponse) {
-      state.lostRampResponse = false;
-      throw new Error("Lost routing response");
-    }
     return json({});
   }
   if (command.includes("set-current-version")) {
     state.current = CANDIDATE;
+    if (state.lostCurrentResponse) {
+      state.lostCurrentResponse = false;
+      throw new Error("Lost routing response");
+    }
     return json({});
   }
   throw new Error(`Unexpected command: ${command.join(" ")}`);
@@ -167,7 +166,7 @@ function fixture(overrides: Partial<State> = {}) {
     changedAt: timestamp,
     candidateFailures: 0,
     checkout: CANDIDATE,
-    lostRampResponse: false,
+    lostCurrentResponse: false,
     ...overrides,
   };
   const commands: string[][] = [];
@@ -240,9 +239,9 @@ function plan(): WorkerRolloutPlan {
   };
 }
 describe("PostgreSQL-owned worker rollout routing", () => {
-  test("central routing prepares and ramps both namespaces, inspecting a partial lost response safely", async () => {
+  test("central directly promotes both namespaces and safely inspects a lost response", async () => {
     const prod = fixture();
-    const beta = fixture({ lostRampResponse: true });
+    const beta = fixture({ lostCurrentResponse: true });
     const run: RolloutCommandRunner = async (command) => {
       const namespace = command[command.indexOf("--namespace") + 1];
       return await (namespace === "beta" ? beta.run : prod.run)(command);
@@ -252,14 +251,11 @@ describe("PostgreSQL-owned worker rollout routing", () => {
       connection,
       run,
     );
-    expect(prepared.routes.map((route) => route.namespace)).toEqual([
-      "prod",
-      "beta",
-    ]);
+    expect(prepared).toEqual(plan());
     const input = {
       detail: detail(),
       plan: prepared,
-      action: "start" as const,
+      action: "promote" as const,
       connection,
     };
     await expect(stepDeliveryWorkerRollout(input, run)).rejects.toThrow(
@@ -267,13 +263,25 @@ describe("PostgreSQL-owned worker rollout routing", () => {
     );
     const receipt = await stepDeliveryWorkerRollout(input, run);
     expect(receipt.evidence).toHaveLength(2);
+    await stepDeliveryWorkerRollout({ ...input, action: "verify" }, run);
     for (const worker of [prod, beta]) {
-      expect(worker.state.percentage).toBe(10);
+      expect(worker.state.current).toBe(CANDIDATE);
       expect(
         worker.commands.filter((command) =>
-          command.includes("set-ramping-version"),
+          command.includes("set-current-version"),
         ),
       ).toHaveLength(1);
+      expect(
+        worker.commands.some((command) =>
+          command.includes("set-ramping-version"),
+        ),
+      ).toBe(false);
+      expect(
+        worker.commands.some(
+          (command) =>
+            command.includes("--routing") && command.includes("normal"),
+        ),
+      ).toBe(true);
     }
   });
   test("central cannot route with a frozen plan omitting beta", async () => {
@@ -286,7 +294,7 @@ describe("PostgreSQL-owned worker rollout routing", () => {
             ...plan(),
             routes: [{ namespace: "prod", expectedCurrentBuildId: STABLE }],
           },
-          action: "start",
+          action: "promote",
           connection,
         },
         run,
@@ -294,7 +302,7 @@ describe("PostgreSQL-owned worker rollout routing", () => {
     ).rejects.toThrow("every served namespace");
     expect(commands).toHaveLength(0);
   });
-  test("prepares exact candidate using replay, canary and live stable pollers", async () => {
+  test("prepares exact candidate using replay, pinned canary and live stable pollers", async () => {
     const { run, commands } = fixture();
     expect(
       await prepareDeliveryWorkerRollout(detail(), connection, run),
@@ -303,8 +311,10 @@ describe("PostgreSQL-owned worker rollout routing", () => {
       commands.some((argv) => argv.includes("replay:candidate-histories")),
     ).toBe(true);
     expect(
-      commands.some((argv) =>
-        argv.includes("scripts/rollout/worker-deployment-canary.ts"),
+      commands.some(
+        (argv) =>
+          argv.includes("scripts/rollout/worker-deployment-canary.ts") &&
+          argv.includes("--build-id"),
       ),
     ).toBe(true);
     expect(
@@ -321,111 +331,72 @@ describe("PostgreSQL-owned worker rollout routing", () => {
       prepareDeliveryWorkerRollout(detail(), connection, run),
     ).rejects.toThrow("does not match candidate");
   });
-  test("lost start response can be inspected without repeating the routing mutation", async () => {
-    const { run, commands } = fixture({ lostRampResponse: true });
-    const input = {
-      detail: detail(),
-      plan: plan(),
-      action: "start" as const,
-      connection,
-      now: NOW,
-    };
-    await expect(stepDeliveryWorkerRollout(input, run)).rejects.toThrow(
-      "Lost routing response",
-    );
-    const result = await stepDeliveryWorkerRollout(input, run);
-    expect(result.rampPercentage).toBe(10);
-    expect(
-      commands.filter((argv) => argv.includes("set-ramping-version")),
-    ).toHaveLength(1);
-  });
-  test("explicit advance target prevents a duplicate call skipping an observation window", async () => {
-    const { run, commands } = fixture({ ramping: CANDIDATE, percentage: 10 });
-    const input = {
-      detail: detail(),
-      plan: plan(),
-      action: "advance-50" as const,
-      connection,
-      now: NOW,
-    };
-    const first = await stepDeliveryWorkerRollout(input, run);
-    const duplicate = await stepDeliveryWorkerRollout(input, run);
-    expect(first.rampPercentage).toBe(50);
-    expect(duplicate.rampPercentage).toBe(50);
-    expect(
-      commands.filter((argv) => argv.includes("set-ramping-version")),
-    ).toHaveLength(1);
-  });
-  test("insufficient duration or candidate failures block ramp advancement", async () => {
-    const fresh = fixture({
-      ramping: CANDIDATE,
-      percentage: 10,
-      changedAt: NOW.toISOString(),
-    });
-    const input = {
-      detail: detail(),
-      plan: plan(),
-      action: "advance-50" as const,
-      connection,
-      now: NOW,
-    };
-    await expect(stepDeliveryWorkerRollout(input, fresh.run)).rejects.toThrow(
-      "observation period",
-    );
-    const unhealthy = fixture({
-      ramping: CANDIDATE,
-      percentage: 10,
-      candidateFailures: 1,
-    });
-    await expect(
-      stepDeliveryWorkerRollout(input, unhealthy.run),
-    ).rejects.toThrow("failures");
-    expect(
-      unhealthy.commands.some((argv) => argv.includes("set-ramping-version")),
-    ).toBe(false);
-  });
-  test("promotion sets current and clears ramp without touching a Git catalog", async () => {
-    const { run, commands } = fixture({ ramping: CANDIDATE, percentage: 100 });
-    const input = {
-      detail: detail(),
-      plan: plan(),
-      action: "promote" as const,
-      connection,
-      now: NOW,
-    };
-    const first = await stepDeliveryWorkerRollout(input, run);
-    const duplicate = await stepDeliveryWorkerRollout(input, run);
-    expect(first.currentBuildId).toBe(CANDIDATE);
-    expect(duplicate.rampPercentage).toBe(0);
-    expect(
-      commands.filter((argv) => argv.includes("set-current-version")),
-    ).toHaveLength(1);
-    expect(commands.filter((argv) => argv.includes("--delete"))).toHaveLength(
-      1,
-    );
-    expect(commands.some((argv) => argv[0] === "git")).toBe(false);
-  });
-  test("changed current version or a forged plan cannot mutate routing", async () => {
-    const changed = fixture({ current: "c".repeat(40) });
-    await expect(
-      stepDeliveryWorkerRollout(
-        { detail: detail(), plan: plan(), action: "start", connection },
-        changed.run,
-      ),
-    ).rejects.toThrow("outside this deployment");
+  test("foreign current, existing ramp and a forged plan cannot mutate routing", async () => {
+    for (const overrides of [
+      { current: "c".repeat(40) },
+      { ramping: CANDIDATE, percentage: 10 },
+    ]) {
+      const { run, commands } = fixture(overrides);
+      await expect(
+        stepDeliveryWorkerRollout(
+          { detail: detail(), plan: plan(), action: "promote", connection },
+          run,
+        ),
+      ).rejects.toThrow();
+      expect(
+        commands.some((argv) => argv.includes("set-current-version")),
+      ).toBe(false);
+    }
+    const { run, commands } = fixture();
     await expect(
       stepDeliveryWorkerRollout(
         {
           detail: detail(),
           plan: { ...plan(), deploymentId: "other" },
-          action: "start",
+          action: "promote",
           connection,
         },
-        changed.run,
+        run,
       ),
     ).rejects.toThrow("frozen deployment");
+    expect(commands).toHaveLength(0);
+  });
+  test("a failed pinned candidate canary prevents any routing mutation", async () => {
+    const base = fixture();
+    const run: RolloutCommandRunner = async (command) => {
+      if (command[0] === "bun") throw new Error("Candidate canary failed");
+      return await base.run(command);
+    };
+    await expect(
+      stepDeliveryWorkerRollout(
+        { detail: detail(), plan: plan(), action: "promote", connection },
+        run,
+      ),
+    ).rejects.toThrow("Candidate canary failed");
     expect(
-      changed.commands.some((argv) => argv.includes("set-ramping-version")),
+      base.commands.some((argv) => argv.includes("set-current-version")),
     ).toBe(false);
+  });
+  test("normal canary failure or route change prevents verification", async () => {
+    for (const failure of ["canary", "route"]) {
+      const base = fixture({ current: CANDIDATE });
+      const run: RolloutCommandRunner = async (command) => {
+        if (command.includes("--routing")) {
+          if (failure === "canary")
+            throw new Error("Normally routed canary failed");
+          base.state.current = STABLE;
+        }
+        return await base.run(command);
+      };
+      await expect(
+        stepDeliveryWorkerRollout(
+          { detail: detail(), plan: plan(), action: "verify", connection },
+          run,
+        ),
+      ).rejects.toThrow();
+      expect(
+        base.commands.some((argv) => argv.includes("set-current-version")),
+      ).toBe(false);
+    }
   });
 });

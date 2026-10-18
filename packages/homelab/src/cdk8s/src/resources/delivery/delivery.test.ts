@@ -339,7 +339,7 @@ describe("Delivery execution and service bootstrap", () => {
       "pods/log": ["get"],
     });
   });
-  it("keeps unpublished and credential-incomplete executors inactive without requiring per-app tailnet credentials", () => {
+  it("keeps unpublished images inactive and activates only the issued scoped capability registrations", () => {
     expect(
       deliveryImageReference(`0.0.0@sha256:${"0".repeat(64)}`),
     ).toBeUndefined();
@@ -351,7 +351,20 @@ describe("Delivery execution and service bootstrap", () => {
     });
     expect(
       deliveryExecutorActivation(`2.0.0-42@sha256:${"a".repeat(64)}`),
-    ).toBeUndefined();
+    ).toMatchObject({
+      argocdItemId: "w7rrmm6v2agx7jk4qjsaybxaau",
+      observerItemId: "irdujpdyylkem65wnr4ibw2ggq",
+      platformArgocdItemId: "orpriiyv36sxmybxe3fg4szdxq",
+      staticStorageItemId: "l5c76kuxgqckt3xc7pmman6l4u",
+      staticCacheItemId: "la7gkfl5eqtxiiv2hq3qujx2gi",
+      workerRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
+      minecraftRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
+      platformRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
+      forumReaderItemId: "6x57e27b4jb7fxgyx2nmhhcldq",
+      forumObserverItemId: "es5ddbihz4qeylhjt2x2iemvzi",
+      trmnlArchiveReaderItemId: "542onhpijguqgaukmyvbujbu74",
+      trmnlKeyItemId: "p7th6tqeel7k2sm47mrrto7oca",
+    });
     expect(createDeliveryChart(new App(), undefined).toJson()).toMatchObject([
       { kind: "ConfigMap", data: { active: "false" } },
     ]);

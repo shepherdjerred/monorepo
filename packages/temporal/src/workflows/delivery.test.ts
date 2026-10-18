@@ -50,7 +50,7 @@ async function execute(failApply: boolean, waits = 0) {
 }
 
 describe("Delivery Workflow", () => {
-  it("durably preserves worker observation windows and replays the frozen multi-namespace plan", async () => {
+  it("directly promotes the verified frozen multi-namespace plan and replays its history", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const actions: string[] = [];
     const times: number[] = [];
@@ -116,23 +116,13 @@ describe("Delivery Workflow", () => {
         "image-provenance",
         "hosts",
         "preflight",
-        "start",
-        "advance-50",
-        "advance-100",
         "promote",
         "verify",
         "acceptance",
         "finish",
       ]);
-      expect((times[1] ?? 0) - (times[0] ?? 0)).toBeGreaterThanOrEqual(
-        30 * 60 * 1000,
-      );
-      expect((times[2] ?? 0) - (times[1] ?? 0)).toBeGreaterThanOrEqual(
-        2 * 60 * 60 * 1000,
-      );
-      expect((times[3] ?? 0) - (times[2] ?? 0)).toBeGreaterThanOrEqual(
-        2 * 60 * 60 * 1000,
-      );
+      expect(times).toHaveLength(2);
+      expect((times[1] ?? 0) - (times[0] ?? 0)).toBeLessThan(30 * 60 * 1000);
       await Worker.runReplayHistory(
         { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
         await environment.client.workflow.getHandle(workflowId).fetchHistory(),

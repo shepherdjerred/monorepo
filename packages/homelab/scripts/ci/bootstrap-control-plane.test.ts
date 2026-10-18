@@ -11,6 +11,92 @@ import {
 } from "./bootstrap-selection.ts";
 import { bootstrapArchiveNames } from "./bootstrap-publication.ts";
 import { parseBootstrapSourceProof } from "./bootstrap-native.ts";
+import { assertBootstrapImageSource } from "./bootstrap-image-proof.ts";
+
+test("CP-only bootstrap retains unselected operator images' original baked source", () => {
+  const { descriptor } = fixture();
+  const originalSource = "a".repeat(40);
+  const images = {
+    woodpecker: {
+      ...descriptor.images.woodpecker,
+      sourceRevision: originalSource,
+    },
+    delivery: { ...descriptor.images.delivery, sourceRevision: originalSource },
+  };
+  const retained = BootstrapDescriptorSchema.parse({ ...descriptor, images });
+  expect(retained.images).toEqual(images);
+  expect(bootstrapArchiveNames(retained)).toEqual(["apps"]);
+  expect(retained.controlPlane).toEqual(descriptor.controlPlane);
+  for (const image of Object.values(retained.images)) {
+    const originalConfiguration = {
+      os: "linux",
+      architecture: "amd64",
+      config: {
+        Env: [`GIT_SHA=${originalSource}`, `VERSION=${image.version}`],
+      },
+    };
+    expect(() =>
+      assertBootstrapImageSource(
+        originalConfiguration,
+        image.sourceRevision,
+        image.version,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertBootstrapImageSource(
+        originalConfiguration,
+        descriptor.sourceRevision,
+        image.version,
+      ),
+    ).toThrow("original baked source");
+    expect(() =>
+      assertBootstrapImageSource(
+        originalConfiguration,
+        image.sourceRevision,
+        "2.0.0-999",
+      ),
+    ).toThrow("original baked source");
+  }
+  expect(() =>
+    BootstrapDescriptorSchema.parse({
+      ...retained,
+      images: {
+        ...images,
+        delivery: {
+          ...images.delivery,
+          repository: "docker.io/shepherdjerred/foreign",
+        },
+      },
+    }),
+  ).toThrow("fixed repository");
+});
+
+test.each(["woodpecker", "delivery"] as const)(
+  "selected %s image still requires the exact reviewed procedure source",
+  (target) => {
+    const { descriptor } = fixture();
+    const selected = {
+      ...descriptor,
+      targets: ["delivery-control-plane", target],
+      images: {
+        ...descriptor.images,
+        [target]: {
+          ...descriptor.images[target],
+          sourceRevision: "a".repeat(40),
+        },
+      },
+    };
+    expect(() => BootstrapDescriptorSchema.parse(selected)).toThrow(
+      "reviewed source",
+    );
+    expect(() =>
+      BootstrapDescriptorSchema.parse({
+        ...selected,
+        images: { ...selected.images, [target]: descriptor.images[target] },
+      }),
+    ).not.toThrow();
+  },
+);
 
 test("bootstrap requires fresh bound v2 source integration proof while preserving original artifact sources", () => {
   const { descriptor } = fixture();

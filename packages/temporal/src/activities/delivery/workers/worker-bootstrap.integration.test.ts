@@ -289,7 +289,7 @@ test("missing replacement Pod proof leaves the bootstrap intent running and the 
   ).toBe(1);
 });
 
-test("independent original-A host adoption with app-C chart leaves full-app acceptance untouched", async () => {
+test("independent original-A hosts and captured older chart leave qualified app-C acceptance untouched", async () => {
   await cluster.database.$executeRawUnsafe(
     'TRUNCATE "Environment", "Pipeline", "Build", "VersionSet", "Request", "Audit" CASCADE',
   );
@@ -353,6 +353,7 @@ test("independent original-A host adoption with app-C chart leaves full-app acce
   if (original === undefined) throw new Error("Missing original worker");
   const reads: string[] = [];
   const observedAt = new Date().toISOString();
+  let reportedRevision = "1.0.1";
   const effects: WorkerBaselineEffects = {
     async application() {
       reads.push("argo");
@@ -362,11 +363,11 @@ test("independent original-A host adoption with app-C chart leaves full-app acce
           source: {
             repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
             chart: "temporal",
-            targetRevision: "1.0.3",
+            targetRevision: "1.0.1",
           },
         },
         status: {
-          sync: { status: "Synced", revision: "1.0.3" },
+          sync: { status: "Synced", revision: reportedRevision },
           health: { status: "Healthy" },
           operationState: { phase: "Succeeded", finishedAt: observedAt },
         },
@@ -442,6 +443,11 @@ test("independent original-A host adoption with app-C chart leaves full-app acce
     "poller:beta",
     "argo",
   ]);
+  reportedRevision = "1.0.2";
+  await expect(observeWorkerBaseline(detail, effects)).rejects.toThrow(
+    "exact settled captured chart",
+  );
+  reportedRevision = "1.0.1";
   const app = await effects.application("temporal");
   await expect(
     observeWorkerBaseline(detail, {

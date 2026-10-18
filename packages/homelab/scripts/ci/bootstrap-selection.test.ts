@@ -441,10 +441,13 @@ test("both prerequisites require paused root automation", () => {
   assertBootstrapRootPaused(root);
 });
 
-test("the immutable packaged root keeps Forum on its native source in the restored chart", async () => {
+test("the immutable packaged root preserves native sources and nonempty lifecycle metadata, omitting empty metadata collections", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "bootstrap-chart-"));
   try {
     const forum = native("storm-forum");
+    forum.metadata.labels = { "ci.sjer.red/managed-application": "true" };
+    forum.metadata.annotations["ops.sjer.red/verified-root-release"] =
+      "unrelated-annotation-must-stay";
     forum.spec["literalConfig"] = {
       exporter: `lines.append(f'bytes{{bucket="{bucket_name}"}} {cache["storage_bytes"]}')`,
       multiline: "{{\n literal }}\n{{ unclosed",
@@ -453,11 +456,17 @@ test("the immutable packaged root keeps Forum on its native source in the restor
       shared: "yes",
     };
     const root = native("apps");
+    root.metadata.finalizers = [];
+    root.metadata.annotations["ops.sjer.red/verified-root-release"] =
+      "captured-operational-receipt";
+    const argocd = native("argocd");
+    argocd.metadata.finalizers = [];
+    argocd.metadata.labels = { "ci.sjer.red/managed-application": "true" };
     const raw = bootstrapRootManifest(
-      source([root, forum, native("delivery")]),
-      [root, forum],
+      source([root, argocd, forum, native("delivery")]),
+      [root, argocd, forum],
       { ...descriptor(), targets: ["delivery"] },
-      source([root, forum]),
+      source([root, argocd, forum]),
     );
     const manifestPath = path.join(directory, "apps.yaml");
     await Bun.write(manifestPath, bootstrapRootTemplate(raw, "apps"));
@@ -481,7 +490,12 @@ test("the immutable packaged root keeps Forum on its native source in the restor
     }).map((doc) =>
       z
         .object({
-          metadata: z.object({ name: z.string() }),
+          metadata: z.object({
+            name: z.string(),
+            labels: z.record(z.string(), z.string()).optional(),
+            finalizers: z.array(z.string()).optional(),
+            annotations: z.record(z.string(), z.string()).optional(),
+          }),
           spec: z.record(z.string(), z.json()),
         })
         .parse(doc.toJSON()),
@@ -489,6 +503,20 @@ test("the immutable packaged root keeps Forum on its native source in the restor
     expect(
       applications.find((app) => app.metadata.name === "storm-forum")?.spec,
     ).toEqual(forum.spec);
+    const metadata = (name: string) =>
+      applications.find((app) => app.metadata.name === name)?.metadata;
+    expect(metadata("apps")).not.toHaveProperty("labels");
+    expect(metadata("apps")).not.toHaveProperty("finalizers");
+    expect(metadata("apps")?.annotations).toEqual({
+      "ci.sjer.red/application-lifecycle": "retain",
+    });
+    expect(metadata("argocd")).not.toHaveProperty("finalizers");
+    expect(metadata("argocd")?.labels).toEqual(argocd.metadata.labels);
+    expect(metadata("storm-forum")).toMatchObject({
+      labels: forum.metadata.labels,
+      finalizers: forum.metadata.finalizers,
+      annotations: forum.metadata.annotations,
+    });
     expect(
       applications.find((app) => app.metadata.name === "delivery")?.spec[
         "source"

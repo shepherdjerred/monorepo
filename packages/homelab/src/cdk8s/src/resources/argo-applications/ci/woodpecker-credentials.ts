@@ -50,6 +50,9 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  * and Delivery publication use dedicated minimal items: per-key grants do not
  * prevent an operator from mirroring every field of the backing item. Rotate
  * the publisher token at its issuer/API registration and scoped copy together.
+ * GitHub CI and extension mirrors share a six-field CI-only copy. Rotate those
+ * fields in the owning GitHub item and this copy together; TOFU_GITHUB_TOKEN
+ * remains only in the original item used by platform provider Jobs.
  */
 const CI_CREDENTIAL_ITEMS = [
   {
@@ -73,7 +76,7 @@ const CI_CREDENTIAL_ITEMS = [
     secretName: "ci-dockerhub-publisher-credentials",
     itemId: "mqgjqj7xmludkliupnmm2aic6y",
   },
-  { secretName: "ci-github-credentials", itemId: "34gzcrhwdm34lpadyly3rcsu44" },
+  { secretName: "ci-github-credentials", itemId: "3kwpfoyzu6a7icnm7jg7dn7scy" },
   {
     secretName: "ci-turbo-cache-credentials",
     itemId: "mzvcz4pqqbda75ufu7l5myd4ey",
@@ -99,7 +102,7 @@ export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
   });
 
   new OnePasswordItem(chart, "woodpecker-extension-github-credentials", {
-    spec: { itemPath: vaultItemPath("34gzcrhwdm34lpadyly3rcsu44") },
+    spec: { itemPath: vaultItemPath("3kwpfoyzu6a7icnm7jg7dn7scy") },
     metadata: {
       name: "woodpecker-extension-github-credentials",
       namespace: WOODPECKER_NAMESPACE,

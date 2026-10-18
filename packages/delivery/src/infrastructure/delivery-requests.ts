@@ -95,7 +95,7 @@ export async function createDeployment(
       );
     validateScoutSiteSelection(pipeline.definition, selected);
     validateTrmnlSelection(pipeline.definition, selected);
-    requireWorkerAdmission(pipeline.definition, input.kind);
+    await requireWorkerAdmission(tx, env, pipeline.definition, input.kind);
     if (env.generation !== input.expectedGeneration)
       throw new DeliveryError(
         "CONFLICT",

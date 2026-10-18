@@ -118,12 +118,6 @@ export async function deliveryDeploymentWorkflow(input: {
     await mutation.applyDelivery(input.deploymentId);
     if (ready.workerRollout) {
       const plan = await jobs.prepareDeliveryWorker(input.deploymentId);
-      await jobs.stepDeliveryWorker(input.deploymentId, plan, "start");
-      await sleep("30 minutes");
-      await jobs.stepDeliveryWorker(input.deploymentId, plan, "advance-50");
-      await sleep("2 hours");
-      await jobs.stepDeliveryWorker(input.deploymentId, plan, "advance-100");
-      await sleep("2 hours");
       await jobs.stepDeliveryWorker(input.deploymentId, plan, "promote");
       await jobs.stepDeliveryWorker(input.deploymentId, plan, "verify");
     }

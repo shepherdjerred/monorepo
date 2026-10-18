@@ -84,12 +84,7 @@ export async function observeWorkerBaseline(
     )
   )
     throw new Error("Baseline lacks original image Build ID inspection");
-  const { selection, chart } = deliverySelection(detail);
-  const expected = {
-    repoURL: selection.repository,
-    chart: selection.chart,
-    targetRevision: chart.version,
-  };
+  const { selection } = deliverySelection(detail);
   const observation = z.object({
     operation: z.null().optional(),
     spec: z.object({
@@ -116,10 +111,11 @@ export async function observeWorkerBaseline(
     );
   const stable = observation.parse(observed);
   if (
-    JSON.stringify(stable.spec.source) !== JSON.stringify(expected) ||
-    stable.status.sync.revision !== chart.version
+    stable.spec.source.repoURL !== selection.repository ||
+    stable.spec.source.chart !== selection.chart ||
+    stable.status.sync.revision !== stable.spec.source.targetRevision
   )
-    throw new Error("Baseline source is not the exact qualified chart");
+    throw new Error("Baseline source is not the exact settled captured chart");
   const before = await effects.routing(pool);
   requireLegacyWorkerCoverage(
     await effects.resources(selection.application, "Deployment"),
@@ -144,12 +140,12 @@ export async function observeWorkerBaseline(
     {
       kind: "reconciliation",
       operationId,
-      summary: `Host-only baseline observed immutable chart ${chart.id}; no Application source or routing mutation`,
+      summary: `Host-only baseline observed captured source ${fingerprint}; no Application source or routing mutation`,
     },
     {
       kind: "acceptance",
       operationId,
-      summary: `Original qualified hosts, runtime digests and all route pollers independently observed: ${JSON.stringify(after)}`,
+      summary: `Original observed hosts, runtime digests and all route pollers independently observed: ${JSON.stringify(after)}`,
     },
   ];
 }

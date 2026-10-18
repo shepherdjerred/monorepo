@@ -4,7 +4,7 @@ import { createDeliveryClient } from "#shared/client.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { workerFixture, freshWorkerProof } from "#testing/worker-fixture.ts";
 import type { Principal } from "#shared/contract.ts";
-import { testOperator } from "#testing/seed.ts";
+import { testExecutor, testOperator } from "#testing/seed.ts";
 
 const context = useDeliveryFixture();
 let workers: Awaited<ReturnType<typeof workerFixture>>;
@@ -195,6 +195,19 @@ test("host-only baseline intent requires admin authority and preserves source ar
       candidateArtifactId: release.artifactId,
     },
   };
+  const rollout = {
+    requestId: "api-worker-rollout",
+    environmentId: workers.environmentId,
+    versionSetRevisionId: release.version.id,
+    expectedGeneration: state.generation,
+    kind: "deploy" as const,
+  };
+  await expect(
+    client("deployer").createDeployment(rollout),
+  ).rejects.toMatchObject({
+    status: 400,
+    code: "INVALID",
+  });
   await expect(
     client("deployer").createDeployment(input),
   ).rejects.toMatchObject({ status: 403 });
@@ -211,4 +224,54 @@ test("host-only baseline intent requires admin authority and preserves source ar
   expect(await context.cluster.database.workerVersion.count()).toBe(0);
   const detail = await context.delivery.detail(selected.id);
   expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
+  await context.delivery.claim(selected.id, testExecutor);
+  const evidence = [
+    {
+      kind: "reconciliation" as const,
+      summary: "Exact independent native host observations",
+    },
+    {
+      kind: "acceptance" as const,
+      summary: "Exact original host image, poller and routing observations",
+    },
+  ];
+  await expect(
+    client("deployer").createDeployment({
+      ...rollout,
+      requestId: "api-unverified-baseline",
+    }),
+  ).rejects.toMatchObject({
+    status: 400,
+    code: "INVALID",
+  });
+  await context.delivery.stage(
+    selected.id,
+    {
+      key: "worker-baseline",
+      status: "succeeded",
+      operationId: "observed-host-baseline",
+      message: "Independent original host readback fixture",
+      evidence,
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(
+    selected.id,
+    {
+      status: "succeeded",
+      message: "Independently verified baseline",
+      recoveryRequired: false,
+      evidence,
+    },
+    testExecutor,
+  );
+  const accepted = await client("deployer").workers(workers.environmentId);
+  const next = await client("deployer").createDeployment({
+    ...rollout,
+    expectedGeneration: accepted.generation,
+  });
+  expect(next.workerSnapshot).toMatchObject({
+    workerOperation: "rollout",
+    versions: accepted.versions,
+  });
 });

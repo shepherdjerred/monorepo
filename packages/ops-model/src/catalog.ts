@@ -94,7 +94,7 @@ export const CatalogSchema = z
     )) {
       if (
         !applications.has(application) ||
-        ["apps", "argocd", "delivery"].includes(application)
+        ["apps", "argocd"].includes(application)
       )
         context.addIssue({
           code: "custom",

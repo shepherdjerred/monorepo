@@ -20,6 +20,7 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
+import { retainedObservedWorkerArtifact } from "./observed.ts";
 
 export async function readWorkerVersions(
   database: Transaction | Database,
@@ -30,13 +31,9 @@ export async function readWorkerVersions(
     orderBy: { buildId: "asc" },
     include: { artifact: { include: { build: true } } },
   });
-  return rows.map((row) => {
-    if (row.artifact.build.status !== "verified")
-      throw new DeliveryError(
-        "CONFLICT",
-        "Retained worker artifact is not qualified",
-      );
-    return WorkerVersionSchema.parse(
+  const versions = [];
+  for (const row of rows) {
+    const version = WorkerVersionSchema.parse(
       wire({
         id: row.id,
         environmentId: row.environmentId,
@@ -54,7 +51,11 @@ export async function readWorkerVersions(
         retiredAt: row.retiredAt,
       }),
     );
-  });
+    if (row.artifact.build.status !== "verified")
+      await retainedObservedWorkerArtifact(database, version);
+    versions.push(version);
+  }
+  return versions;
 }
 
 export function workerArtifactIdentity(input: {
@@ -230,7 +231,10 @@ export async function materializeWorkerSnapshot(
         });
       continue;
     }
-    const original = await artifact(tx, frozen.artifactId);
+    const original =
+      snapshot.workerOperation === "baseline"
+        ? await retainedObservedWorkerArtifact(tx, frozen, true)
+        : await artifact(tx, frozen.artifactId);
     if (
       original.buildId !== frozen.artifactBuildId ||
       original.sourceRevision !== frozen.buildId ||

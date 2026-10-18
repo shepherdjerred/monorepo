@@ -15,6 +15,7 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import { ServiceMonitorSpecEndpointsMetricRelabelingsAction } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
@@ -154,6 +155,17 @@ export function createTemporalDomainWorker(
   createServiceMonitor(chart, {
     name: `${props.name}-metrics`,
     matchLabels: { component: sdkMetricsComponent },
+    // One process can poll multiple Temporal namespaces. The SDK's per-metric
+    // namespace survives the Kubernetes scrape-label collision under this name.
+    metricRelabelings: [
+      {
+        action: ServiceMonitorSpecEndpointsMetricRelabelingsAction.REPLACE,
+        sourceLabels: ["exported_namespace"],
+        regex: "(.+)",
+        targetLabel: "temporal_namespace",
+        replacement: "$1",
+      },
+    ],
   });
 
   const appMetricsComponent = `${props.component}-app-metrics`;

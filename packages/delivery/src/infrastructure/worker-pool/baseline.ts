@@ -10,32 +10,65 @@ import type {
   PipelineRevision,
 } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
-import {
-  artifact,
-  id,
-  type Transaction,
-} from "#infrastructure/delivery-data.ts";
+import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { required } from "#infrastructure/delivery-records.ts";
 import {
   materializeWorkerSnapshot,
   readWorkerVersions,
   workerArtifactIdentity,
   freezeWorkerSnapshot,
+  requireSameWorkerIdentity,
 } from "./pool.ts";
+import { workerObservationArtifact } from "./observed.ts";
 
-export function requireWorkerAdmission(
+export async function requireWorkerAdmission(
+  tx: Transaction,
+  environment: Environment,
   definition: PipelineDefinition,
   kind: CreateDeployment["kind"],
 ) {
   if (
-    kind !== "adopt-worker" &&
-    definition.kind === "argocd" &&
-    definition.workerRollout !== undefined
+    kind === "adopt-worker" ||
+    definition.kind !== "argocd" ||
+    definition.workerRollout === undefined
   )
+    return;
+  const baseline = await tx.deployment.findFirst({
+    where: {
+      environmentId: environment.id,
+      kind: "adopt-worker",
+      status: "succeeded",
+      stages: { some: { key: "worker-baseline", status: "succeeded" } },
+    },
+    orderBy: { finishedAt: "desc" },
+  });
+  if (baseline === null)
     throw new DeliveryError(
       "INVALID",
-      "Worker rollout activation requires verified retained-version baseline and bounded recovery; keep the existing deployment owner",
+      "Adopt and independently verify the retained worker baseline before requesting a worker rollout",
     );
+  const snapshot = WorkerPoolSnapshotSchema.parse(baseline.workerSnapshot);
+  if (
+    snapshot.workerOperation !== "baseline" ||
+    snapshot.environmentId !== environment.id ||
+    snapshot.target !== definition.workerRollout.target
+  )
+    throw new DeliveryError(
+      "CONFLICT",
+      "Accepted worker baseline target differs",
+    );
+  const current = await readWorkerVersions(tx, environment.id);
+  // Original identities remain retained after retirement; later releases may add
+  // hosts and change desired replicas without invalidating the initial proof.
+  for (const original of snapshot.versions) {
+    const retained = current.find((worker) => worker.id === original.id);
+    if (retained === undefined)
+      throw new DeliveryError(
+        "CONFLICT",
+        "Accepted baseline worker identity is missing",
+      );
+    requireSameWorkerIdentity(original, retained);
+  }
 }
 
 export function freezeWorkerDeployment(
@@ -99,7 +132,11 @@ export async function freezeWorkerBaseline(
     );
   const versions = [];
   for (const artifactId of input.baseline.artifactIds) {
-    const selected = await artifact(tx, artifactId);
+    const selected = await workerObservationArtifact(
+      tx,
+      artifactId,
+      input.repositoryId,
+    );
     versions.push(
       WorkerVersionSchema.parse({
         ...workerArtifactIdentity({
