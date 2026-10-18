@@ -204,6 +204,7 @@
     },
     {
       "id": "minecraft",
+      "package": "the-storm",
       "rootReleaseExclusions": {
         "mc-router": "upstream",
         "minecraft": "upstream",
@@ -374,6 +375,7 @@
     },
     {
       "id": "self-hosted-apps",
+      "package": "homelab",
       "images": ["redlib"],
       "title": "Self-hosted apps",
       "kind": "workload",

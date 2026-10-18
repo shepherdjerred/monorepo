@@ -17,6 +17,7 @@ import { Glob } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { workerPoolTemplate } from "./delivery/worker-pool-template.ts";
 
 const HELM_DIR = path.join(import.meta.dir, "../helm");
 const DIST_DIR = path.join(import.meta.dir, "../dist");
@@ -85,7 +86,7 @@ for (const chartName of chartNames) {
     // Copy manifest into templates/
     await Bun.write(
       path.join(tempDir, "templates", `${chartName}.k8s.yaml`),
-      manifestFile,
+      workerPoolTemplate(await manifestFile.text(), chartName),
     );
 
     // Copy values.yaml if it exists

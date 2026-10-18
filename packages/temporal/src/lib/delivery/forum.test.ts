@@ -102,6 +102,13 @@ describe("forum immutable release selection", () => {
           maintenance: false,
           releaseLock: false,
         },
+        storage: ["storm-forum-files", "storm-forum-database"].map((name) => ({
+          name,
+          uid: `${name}-original-uid`,
+          resourceVersion: "4",
+          volumeName: `${name}-original-volume`,
+          specFingerprint: "a".repeat(64),
+        })),
         pods: [
           {
             name: "pod",

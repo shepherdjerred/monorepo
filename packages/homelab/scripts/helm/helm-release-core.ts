@@ -4,6 +4,7 @@ import { parse as parseYaml, parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { canonicalJson } from "#scripts/canonical-json.ts";
 import { deliveryEnvironment } from "#delivery-ownership";
+import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
 const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
@@ -276,6 +277,7 @@ function normalizedChartYaml(source: string): string {
 export async function fingerprintChart(
   chartDirectory: string,
   manifestPath: string,
+  generatedManifest?: string,
 ): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
   const generatedTemplatePath = path.join(
@@ -298,7 +300,7 @@ export async function fingerprintChart(
   }
   hasher.update(generatedTemplatePath);
   hasher.update("\0");
-  hasher.update(await Bun.file(manifestPath).arrayBuffer());
+  hasher.update(generatedManifest ?? (await Bun.file(manifestPath).text()));
   return `sha256:${hasher.digest("hex")}`;
 }
 
@@ -384,7 +386,11 @@ export async function discoverChartInputs(
         name,
         chartDirectory,
         manifestPath,
-        fingerprint: await fingerprintChart(chartDirectory, manifestPath),
+        fingerprint: await fingerprintChart(
+          chartDirectory,
+          manifestPath,
+          workerPoolTemplate(manifest, name),
+        ),
       };
     }),
   );

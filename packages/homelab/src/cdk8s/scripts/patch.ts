@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 
-import { workerPoolTemplate } from "./delivery/worker-pool-template.ts";
-
 // Files that may contain Intel GPU resources
 const filesToPatch = [
   "dist/arcade.k8s.yaml",
@@ -27,8 +25,3 @@ for (const file of filesToPatch) {
 }
 
 console.log("🎉 Intel GPU resource patches applied successfully!");
-
-for (const chart of ["temporal", "scout-beta", "scout-prod"]) {
-  const file = `dist/${chart}.k8s.yaml`;
-  await Bun.write(file, workerPoolTemplate(await Bun.file(file).text(), chart));
-}

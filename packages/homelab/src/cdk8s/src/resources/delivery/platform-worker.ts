@@ -44,6 +44,7 @@ export function createDeliveryPlatformWorker(
   );
   const deployment = createTemporalDomainWorker(chart, {
     name: "temporal-delivery-platform-worker",
+    deploymentName: "temporal-delivery-platform-worker",
     component: "delivery-platform-worker",
     serviceAccount: account,
     automountServiceAccountToken: true,

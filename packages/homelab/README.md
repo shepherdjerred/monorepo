@@ -132,6 +132,15 @@ explains its change selection and release ordering:
 Never apply manifests directly with `kubectl apply` — all changes go through
 ArgoCD, which reverts direct mutations.
 
+## Manifest validation
+
+CDK8s `dist/` contains native Kubernetes manifests for kubeconform validation.
+Helm publication stages retained-worker expansion separately, fingerprints the
+generated template bytes, and validates them through real Helm rendering.
+The local Helm render and lint commands use that same expansion. Keep
+PostgreSQL-selected worker pools and images in release parameters rather than
+writing them into native synth output or chart defaults.
+
 ## Installation
 
 ### Talos

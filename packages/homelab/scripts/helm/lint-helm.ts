@@ -3,6 +3,7 @@ import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { chartName, setChartVersion } from "#scripts/migration-core.ts";
+import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 
 if (import.meta.main) {
   const root = path.resolve(import.meta.dir, "../..");
@@ -31,7 +32,7 @@ if (import.meta.main) {
       await mkdir(`${temporaryDirectory}/templates`, { recursive: true });
       await Bun.write(
         `${temporaryDirectory}/templates/${name}.k8s.yaml`,
-        Bun.file(manifest),
+        workerPoolTemplate(await Bun.file(manifest).text(), name),
       );
       await $`helm lint ${temporaryDirectory}`;
     } finally {

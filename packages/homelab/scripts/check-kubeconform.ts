@@ -1,9 +1,9 @@
 // Validates the cdk8s synth output against the cluster's Kubernetes API
 // schemas with kubeconform.
 //
-// Consumes the FINAL dist/ manifests (turbo orders this after
-// `@homelab/cdk8s#build`, which runs scripts/patch.ts post-synth), so what is
-// validated is exactly what ArgoCD applies.
+// Consumes native dist/ manifests after GPU resource normalization. Retained
+// worker expansion belongs to Helm chart staging, where real Helm rendering
+// validates the fixed host recipe separately; raw CDK output stays native YAML.
 //
 // Schemas are fetched from kubeconform's default upstream location at
 // validation time, so this task needs network access in CI. Vendoring is not

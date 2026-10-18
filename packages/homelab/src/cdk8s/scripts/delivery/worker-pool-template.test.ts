@@ -1,5 +1,5 @@
 import { App, Chart } from "cdk8s";
-import { mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseAllDocuments, stringify } from "yaml";
@@ -8,6 +8,11 @@ import { z } from "zod";
 import { createTemporalWorkflowWorkers } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/workflow-worker.ts";
 import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
 import { workerPoolTemplate } from "./worker-pool-template.ts";
+import {
+  discoverChartInputs,
+  fingerprintChart,
+} from "homelab/scripts/helm/helm-release-core.ts";
+import { stageChart } from "homelab/scripts/helm/helm-push.ts";
 
 const FIRST = "a".repeat(40);
 const SECOND = "b".repeat(40);
@@ -113,6 +118,47 @@ function synth(chartName: string, stage?: "beta" | "prod") {
 }
 
 describe("Delivery fixed worker host rendering", () => {
+  it("keeps native synth valid while chart staging and published fingerprints use the real Helm template", async () => {
+    const directory = await mkdtemp(
+      path.join(tmpdir(), "native-worker-chart-"),
+    );
+    try {
+      const source = synth("temporal");
+      const native = path.join(directory, "dist/temporal.k8s.yaml");
+      await Bun.write(native, source.manifest);
+      await cp(
+        new URL("../../helm/temporal", import.meta.url).pathname,
+        path.join(directory, "helm/temporal"),
+        { recursive: true },
+      );
+      const [input] = await discoverChartInputs(
+        path.join(directory, "helm"),
+        path.join(directory, "dist"),
+      );
+      if (input === undefined)
+        throw new Error("Native chart is absent from publication inventory");
+      const stage = path.join(directory, "staged");
+      await stageChart(input, "2.0.0-42", stage);
+      expect(await Bun.file(native).text()).toBe(source.manifest);
+      expect(
+        parseAllDocuments(await Bun.file(native).text()).every(
+          (doc) => doc.errors.length === 0,
+        ),
+      ).toBe(true);
+      const stagedTemplate = path.join(
+        stage,
+        "temporal/templates/temporal.k8s.yaml",
+      );
+      expect(await Bun.file(stagedTemplate).text()).toContain(
+        "replicas: {{ $worker.replicas }}",
+      );
+      expect(
+        await fingerprintChart(path.join(stage, "temporal"), stagedTemplate),
+      ).toBe(input.fingerprint);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
   it.each(["temporal", "scout-beta", "scout-prod"])(
     "preserves %s legacy manifests exactly when no pool is selected",
     async (name) => {

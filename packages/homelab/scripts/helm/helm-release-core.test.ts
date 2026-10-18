@@ -159,6 +159,23 @@ async function fixture(): Promise<string> {
 }
 
 describe("discoverChartInputs", () => {
+  test("rejects an orphan synthesized manifest instead of inventing an undeclared chart", async () => {
+    const directory = await fixture();
+    try {
+      await Bun.write(
+        path.join(directory, "dist/undeclared.k8s.yaml"),
+        "kind: ConfigMap\n",
+      );
+      await expect(
+        discoverChartInputs(
+          path.join(directory, "helm"),
+          path.join(directory, "dist"),
+        ),
+      ).rejects.toThrow("Synthesized manifests missing charts: undeclared");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
   test("rejects empty synthesized manifests", async () => {
     const directory = await fixture();
     try {

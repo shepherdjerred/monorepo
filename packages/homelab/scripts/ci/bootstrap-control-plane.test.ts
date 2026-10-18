@@ -163,10 +163,12 @@ test("qualified catalog lookup cannot be replaced by a descriptor or relabeled p
 
 test("original archive content digest is independently inspected before selection", async () => {
   const { bytes, selected } = fixture();
-  await verifyBootstrapControlPlaneArchive(
-    selected,
-    async () => new Response(bytes),
-  );
+  await expect(
+    verifyBootstrapControlPlaneArchive(
+      selected,
+      async () => new Response(bytes),
+    ),
+  ).rejects.toThrow("Cannot render original qualified");
   await expect(
     verifyBootstrapControlPlaneArchive(
       selected,

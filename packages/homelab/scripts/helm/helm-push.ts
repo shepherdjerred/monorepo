@@ -12,6 +12,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
+import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
   deliveryPlanningBase,
   retainCurrentProducerArchives,
@@ -153,7 +154,7 @@ export async function stageChart(
   await runCommand(["mkdir", "-p", templatesDirectory]);
   await Bun.write(
     path.join(templatesDirectory, `${input.name}.k8s.yaml`),
-    Bun.file(input.manifestPath),
+    workerPoolTemplate(await Bun.file(input.manifestPath).text(), input.name),
   );
 
   const chartYamlPath = path.join(chartDirectory, "Chart.yaml");

@@ -1,4 +1,5 @@
-import { App } from "cdk8s";
+import { App, Chart } from "cdk8s";
+import { ConfigMap } from "cdk8s-plus-31";
 import { expect, test, vi } from "vitest";
 import { z } from "zod";
 import { mkdtemp, mkdir, symlink, rm } from "node:fs/promises";
@@ -20,6 +21,15 @@ import {
 } from "@shepherdjerred/ops-model/delivery-control-plane.ts";
 import { bootstrapOperationReceipt } from "homelab/scripts/ci/bootstrap-native.ts";
 import { bootstrapCredentials } from "homelab/scripts/ci/bootstrap-auth.ts";
+import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import {
+  discoverChartInputs,
+  fingerprintChart,
+} from "homelab/scripts/helm/helm-release-core.ts";
+import { stageChart } from "homelab/scripts/helm/helm-push.ts";
+import { createDeliveryControlPlaneChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery-control-plane.ts";
+import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
+import { renderBootstrapControlPlane } from "homelab/scripts/ci/bootstrap-control-plane-render.ts";
 import verifiedRoot from "@shepherdjerred/ops-model/fixtures/verified-root-release.json" with { type: "json" };
 import {
   assertExternalBootstrapPath,
@@ -30,6 +40,117 @@ import {
   BootstrapDescriptorSchema,
   bootstrapRootManifest,
 } from "homelab/scripts/ci/bootstrap-selection.ts";
+
+test("normal all-chart publication discovers and packages the actual control-plane synthesis", async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "delivery-chart-publication-"),
+  );
+  try {
+    const output = path.join(directory, "dist");
+    const app = new App({ outdir: output });
+    await setupCharts(app);
+    app.synth();
+    const inputs = await discoverChartInputs(
+      new URL("../../helm", import.meta.url).pathname,
+      output,
+    );
+    const controller = inputs.find(
+      (input) => input.name === "delivery-control-plane",
+    );
+    if (controller === undefined)
+      throw new Error(
+        "Actual control-plane chart is absent from publication inventory",
+      );
+    expect(inputs.map((input) => input.name)).toEqual(
+      app.charts.map((chart) => chart.node.id).sort(),
+    );
+    const archive = await stageChart(
+      controller,
+      "2.0.0-1010825",
+      path.join(directory, "staged"),
+    );
+    const rendered = Bun.spawnSync([
+      "helm",
+      "template",
+      "delivery-control-plane",
+      archive,
+    ]);
+    expect(rendered.exitCode).toBe(0);
+    expect(
+      parseAllDocuments(rendered.stdout.toString()).some(
+        (doc) => doc.toJSON() !== null,
+      ),
+    ).toBe(true);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("original archive bootstrap renders the fixed active hosts and rejects a real inactive ConfigMap archive", async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "delivery-bootstrap-hosts-"),
+  );
+  const image = {
+    uri: "docker.io/shepherdjerred/temporal-worker",
+    version: "2.0.0-800",
+    digest: `sha256:${"a".repeat(64)}`,
+  };
+  try {
+    for (const active of [true, false]) {
+      const output = path.join(directory, active ? "active" : "inactive");
+      const app = new App({ outdir: output });
+      if (active)
+        createDeliveryControlPlaneChart(app, {
+          image: `docker.io/shepherdjerred/delivery@sha256:${"b".repeat(64)}`,
+          serviceItemId: "test-service",
+          tailscaleItemId: "test-tailnet",
+          executorItemId: "test-executor",
+          argocdItemId: "test-workload-argocd",
+          platformRegistryItemId: "test-registry",
+          platformArgocdItemId: "test-platform-argocd",
+        });
+      else
+        new ConfigMap(
+          new Chart(app, "delivery-control-plane", {
+            namespace: "temporal",
+            disableResourceNameHashes: true,
+          }),
+          "activation",
+          { data: { active: "false" } },
+        );
+      applyOrdinaryDeliveryImageBindings(app);
+      app.synth();
+      const chartDirectory = new URL(
+        "../../helm/delivery-control-plane",
+        import.meta.url,
+      ).pathname;
+      const manifestPath = path.join(output, "delivery-control-plane.k8s.yaml");
+      const archive = await stageChart(
+        {
+          name: "delivery-control-plane",
+          chartDirectory,
+          manifestPath,
+          fingerprint: await fingerprintChart(chartDirectory, manifestPath),
+        },
+        "2.0.0-801",
+        path.join(directory, active ? "active-stage" : "inactive-stage"),
+      );
+      const verifiedBytes = new Uint8Array(
+        await Bun.file(archive).arrayBuffer(),
+      );
+      if (active)
+        await expect(
+          renderBootstrapControlPlane(verifiedBytes, image),
+        ).resolves.toBeUndefined();
+      else
+        await expect(
+          renderBootstrapControlPlane(verifiedBytes, image),
+        ).rejects.toThrow("unique delivery host");
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 test("actual root self-reference survives paused account prerequisite then selected API bootstrap", async () => {
   const app = new App();

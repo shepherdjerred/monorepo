@@ -1,0 +1,6 @@
+apiVersion: v2
+name: delivery-control-plane
+description: Isolated Delivery orchestration and execution workers
+type: application
+version: "$version"
+appVersion: "$appVersion"

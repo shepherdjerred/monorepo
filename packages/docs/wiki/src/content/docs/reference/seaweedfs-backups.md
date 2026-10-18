@@ -15,6 +15,7 @@ payloads are stored once.
 | Source                                                                            | Cadence                   | Notes                                       |
 | --------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------- |
 | `homelab-tofu-state`, `relay-docs`                                                | Every six hours and daily | Critical state                              |
+| `delivery-artifacts`                                                              | Daily                     | Original deployment and rollback archives   |
 | `agent-chat-sessions`, `glitter-discord-corpus`, `llm-archive`, `temporal-worker` | Daily                     | All objects                                 |
 | `scout-prod`, `scout-beta`                                                        | Daily                     | `.png` and `.svg` are excluded derived data |
 

@@ -108,6 +108,7 @@ export function createDeliveryWorker(
   }
   const deployment = createTemporalDomainWorker(chart, {
     name: "temporal-delivery-worker",
+    deploymentName: "temporal-delivery-worker",
     component: "delivery-worker",
     cpuRequest: Cpu.millis(100),
     cpuLimit: Cpu.millis(1000),

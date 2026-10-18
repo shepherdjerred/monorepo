@@ -119,6 +119,8 @@ async function permits(
     ],
     {
       env: { PATH: Bun.env["PATH"] ?? "", HOME: directory },
+      timeout: 4000,
+      killSignal: "SIGKILL",
       stdout: "pipe",
       stderr: "pipe",
     },
@@ -137,109 +139,155 @@ async function permits(
     );
   return result.data === "Yes";
 }
-test("every reviewed workload can execute with its ordinary capability, while root and controller mutations are denied", async () => {
-  for (const application of DELIVERY_WORKLOAD_APPLICATIONS)
-    for (const action of ["get", "update", "sync"])
-      expect(
-        await permits("delivery", action, application),
-        `${application}:${action}`,
-      ).toBe(true);
-  for (const application of [
-    "apps",
-    "argocd",
-    "delivery-control-plane",
-    "unregistered",
-  ])
-    for (const action of ["sync", "update", "override", "delete"])
-      expect(
-        await permits("delivery", action, application),
-        `${application}:${action}`,
-      ).toBe(false);
-});
-test("observer reads each exact workload and controller but cannot mutate, stream logs or exec", async () => {
-  for (const application of [
-    "apps",
-    "delivery-control-plane",
-    ...DELIVERY_WORKLOAD_APPLICATIONS,
-  ])
-    expect(await permits("delivery-observer", "get", application)).toBe(true);
-  for (const action of ["update", "sync", "override", "delete"])
-    expect(await permits("delivery-observer", action, "storm-forum")).toBe(
-      false,
-    );
-  expect(await permits("delivery-observer", "get", "argocd")).toBe(false);
-  expect(await permits("delivery-observer", "get", "storm-forum", "logs")).toBe(
-    false,
-  );
-  expect(
-    await permits("delivery-observer", "create", "storm-forum", "exec"),
-  ).toBe(false);
-});
-test("platform owns root's guarded overrides and isolated controller, with only sync on root children", async () => {
-  const scale = "update/apps/Deployment/temporal/temporal-delivery-worker";
-  expect(
-    await permits("delivery-platform", scale, "delivery-control-plane"),
-  ).toBe(true);
-  for (const account of ["delivery", "delivery-observer", "woodpecker"])
-    expect(await permits(account, scale, "delivery-control-plane")).toBe(false);
-  for (const action of [
-    "update/apps/Deployment/temporal/temporal-delivery-platform-worker",
-    "update/apps/Deployment/temporal/temporal-delivery-workflows",
-    "delete/apps/Deployment/temporal/temporal-delivery-worker",
-    "update//Pod/temporal/temporal-delivery-worker",
-  ])
-    expect(
-      await permits("delivery-platform", action, "delivery-control-plane"),
-    ).toBe(false);
-  expect(await permits("delivery-platform", scale, "temporal")).toBe(false);
-  for (const action of ["get", "update", "sync", "override"])
-    expect(await permits("delivery-platform", action, "apps")).toBe(true);
-  for (const application of DELIVERY_ROOT_APPLICATIONS)
-    expect(
-      await permits("delivery-platform", "sync", application),
+type PolicyCase = {
+  subject: string;
+  action: string;
+  application: string;
+  resource: string;
+  allowed: boolean;
+};
+function cases(
+  subject: string,
+  applications: readonly string[],
+  actions: readonly string[],
+  allowed: boolean,
+): PolicyCase[] {
+  return applications.flatMap((application) =>
+    actions.map((action) => ({
+      subject,
+      action,
       application,
-    ).toBe(true);
-  for (const action of ["get", "update", "sync"])
-    expect(
-      await permits("delivery-platform", action, "delivery-control-plane"),
-    ).toBe(true);
-  for (const application of ["arcade", "scout-prod", "temporal", "storm-forum"])
-    for (const action of ["update", "sync", "override", "delete"])
-      expect(await permits("delivery-platform", action, application)).toBe(
-        false,
-      );
-  expect(
-    await permits("delivery-platform", "override", "delivery-control-plane"),
-  ).toBe(false);
-  expect(await permits("delivery-platform", "update", "argocd")).toBe(false);
-  expect(await permits("woodpecker", "sync", "apps")).toBe(false);
-});
-test("registered Argo and controller destinations are covered by the reviewed account split", async () => {
-  const root = new URL(
-    "../../../../../../../delivery/registrations/",
-    import.meta.url,
+      resource: "applications",
+      allowed,
+    })),
   );
-  const files = [
-    ...new Bun.Glob("**/pipeline.json").scanSync({ cwd: root.pathname }),
-  ];
-  expect(files.length).toBeGreaterThan(20);
-  for (const file of files) {
-    const raw: unknown = await Bun.file(new URL(file, root)).json();
-    const definition = z
+}
+const scale = "update/apps/Deployment/temporal/temporal-delivery-worker";
+const permissions: PolicyCase[] = [
+  ...cases(
+    "delivery",
+    DELIVERY_WORKLOAD_APPLICATIONS,
+    ["get", "update", "sync"],
+    true,
+  ),
+  ...cases(
+    "delivery",
+    ["apps", "argocd", "delivery-control-plane", "unregistered"],
+    ["sync", "update", "override", "delete"],
+    false,
+  ),
+  ...cases(
+    "delivery-observer",
+    ["apps", "delivery-control-plane", ...DELIVERY_WORKLOAD_APPLICATIONS],
+    ["get"],
+    true,
+  ),
+  ...cases(
+    "delivery-observer",
+    ["storm-forum"],
+    ["update", "sync", "override", "delete"],
+    false,
+  ),
+  ...cases("delivery-observer", ["argocd"], ["get"], false),
+  {
+    subject: "delivery-observer",
+    application: "storm-forum",
+    action: "get",
+    resource: "logs",
+    allowed: false,
+  },
+  {
+    subject: "delivery-observer",
+    application: "storm-forum",
+    action: "create",
+    resource: "exec",
+    allowed: false,
+  },
+  ...cases("delivery-platform", ["delivery-control-plane"], [scale], true),
+  ...["delivery", "delivery-observer", "woodpecker"].flatMap((subject) =>
+    cases(subject, ["delivery-control-plane"], [scale], false),
+  ),
+  ...cases(
+    "delivery-platform",
+    ["delivery-control-plane"],
+    [
+      "update/apps/Deployment/temporal/temporal-delivery-platform-worker",
+      "update/apps/Deployment/temporal/temporal-delivery-workflows",
+      "delete/apps/Deployment/temporal/temporal-delivery-worker",
+      "update//Pod/temporal/temporal-delivery-worker",
+    ],
+    false,
+  ),
+  ...cases("delivery-platform", ["temporal"], [scale], false),
+  ...cases(
+    "delivery-platform",
+    ["apps"],
+    ["get", "update", "sync", "override"],
+    true,
+  ),
+  ...cases("delivery-platform", DELIVERY_ROOT_APPLICATIONS, ["sync"], true),
+  ...cases(
+    "delivery-platform",
+    ["delivery-control-plane"],
+    ["get", "update", "sync"],
+    true,
+  ),
+  ...cases(
+    "delivery-platform",
+    ["arcade", "scout-prod", "temporal", "storm-forum"],
+    ["update", "sync", "override", "delete"],
+    false,
+  ),
+  ...cases(
+    "delivery-platform",
+    ["delivery-control-plane"],
+    ["override"],
+    false,
+  ),
+  ...cases("delivery-platform", ["argocd"], ["update"], false),
+  ...cases("woodpecker", ["apps"], ["sync"], false),
+];
+
+test.each(permissions)(
+  "$subject $action $resource on $application: allowed=$allowed",
+  async ({ subject, action, resource, application, allowed }) => {
+    expect(await permits(subject, action, application, resource)).toBe(allowed);
+  },
+);
+
+const registrationRoot = new URL(
+  "../../../../../../../delivery/registrations/",
+  import.meta.url,
+);
+const registrationFiles = [
+  ...new Bun.Glob("**/pipeline.json").scanSync({
+    cwd: registrationRoot.pathname,
+  }),
+];
+const registrations = await Promise.all(
+  registrationFiles.map(async (file) => ({
+    file,
+    definition: z
       .object({ kind: z.string(), application: z.string().optional() })
-      .parse(raw);
-    if (definition.kind !== "argocd" && definition.kind !== "control-plane")
-      continue;
-    const application = z.string().parse(definition.application);
-    expect(
-      await permits(
-        application === "delivery-control-plane"
-          ? "delivery-platform"
-          : "delivery",
-        "update",
-        application,
-      ),
-      file,
-    ).toBe(true);
-  }
+      .parse(await Bun.file(new URL(file, registrationRoot)).json()),
+  })),
+);
+test("registered release inventory includes all reviewed application/controller destinations", () => {
+  expect(registrationFiles.length).toBeGreaterThan(20);
+});
+test.each(
+  registrations.filter(({ definition }) =>
+    ["argocd", "control-plane"].includes(definition.kind),
+  ),
+)("$file has its exact native update capability", async ({ definition }) => {
+  const application = z.string().parse(definition.application);
+  expect(
+    await permits(
+      application === "delivery-control-plane"
+        ? "delivery-platform"
+        : "delivery",
+      "update",
+      application,
+    ),
+  ).toBe(true);
 });

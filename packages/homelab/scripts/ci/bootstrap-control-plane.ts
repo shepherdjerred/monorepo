@@ -2,6 +2,7 @@ import path from "node:path";
 import { z } from "zod";
 import { run } from "@shepherdjerred/root-scripts/lib/run.ts";
 import { canonicalJson } from "#scripts/canonical-json.ts";
+import { renderBootstrapControlPlane } from "./bootstrap-control-plane-render.ts";
 
 const Digest = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 const Artifact = z.strictObject({
@@ -118,6 +119,7 @@ export async function verifyBootstrapControlPlaneArchive(
     );
   const hasher = new Bun.CryptoHasher("sha256");
   const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
   let size = 0;
   try {
     for (;;) {
@@ -128,6 +130,7 @@ export async function verifyBootstrapControlPlaneArchive(
       if (size > 32 * 1024 * 1024)
         throw new Error("Original control-plane chart exceeds bootstrap bound");
       hasher.update(value);
+      chunks.push(value);
     }
   } finally {
     await reader.cancel();
@@ -136,4 +139,5 @@ export async function verifyBootstrapControlPlaneArchive(
     throw new Error(
       "Original control-plane chart differs from its qualified digest",
     );
+  await renderBootstrapControlPlane(Buffer.concat(chunks), selection.image);
 }

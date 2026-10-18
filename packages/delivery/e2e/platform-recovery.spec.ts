@@ -1,15 +1,31 @@
 import { expect, test } from "@playwright/test";
+import { DeploymentDetailSchema } from "#shared/contract.ts";
 
 test("controller upgrade shows original cross-owner image and independent chart inputs", async ({
   page,
 }, info) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Deployments", exact: true }).click();
+  const selected = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" &&
+      /\/api\/v1\/deployments\/[^/]+$/u.test(new URL(response.url()).pathname),
+  );
   await page
     .getByRole("row")
     .filter({ hasText: "delivery-control-plane/prod" })
     .getByRole("button", { name: /Inspect deployment/ })
     .click();
+  const response = await selected;
+  const frozen = DeploymentDetailSchema.parse(await response.json());
+  expect(frozen.environment.acceptedControlPlaneDeploymentId).toBeNull();
+  expect(frozen.deployment.controlPlaneSnapshot).toMatchObject({
+    priorSelectionManaged: true,
+    previousArtifact: { id: "controller/image/101" },
+    nextArtifact: { id: "controller/image/102" },
+    priorChartArtifact: { id: "controller/chart/103" },
+    chartArtifact: { id: "controller/chart/104" },
+  });
   const detail = page.getByRole("region", {
     name: "delivery-control-plane/prod",
     exact: true,
@@ -21,7 +37,12 @@ test("controller upgrade shows original cross-owner image and independent chart 
   await expect(detail).toContainText("controller/image/102");
   await expect(detail).toContainText("Owner temporal");
   await expect(detail).toContainText("controller/chart/104");
-  await expect(detail).toContainText("Initial adoption independently observes");
+  await expect(detail).toContainText(
+    "Prior source includes the exact Helm image parameter.",
+  );
+  await expect(detail).toContainText(
+    "Independent native verification must prove the frozen original selection before replacement.",
+  );
   await page.screenshot({
     path: info.outputPath("control-plane.png"),
     fullPage: true,

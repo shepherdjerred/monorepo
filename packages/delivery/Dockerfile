@@ -6,13 +6,19 @@ FROM base AS native-tools
 # renovate: datasource=github-releases depName=kubernetes/kubectl
 ARG KUBECTL_VERSION=v1.37.1
 ARG TARGETARCH
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
-RUN set -eu; case "$TARGETARCH" in amd64|arm64) ;; *) exit 1 ;; esac; \
-    base="https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl"; \
-    curl -fsSL "$base" -o /usr/local/bin/kubectl; \
-    curl -fsSL "$base.sha256" -o /tmp/kubectl.sha256; \
-    echo "$(cat /tmp/kubectl.sha256)  /usr/local/bin/kubectl" | sha256sum -c -; \
-    chmod +x /usr/local/bin/kubectl; kubectl version --client
+# Bun's HTTPS client and SHA-256 implementation avoid extra unpinned build tools.
+RUN bun -e '\
+    const arch = process.env.TARGETARCH; \
+    if (!["amd64", "arm64"].includes(arch)) throw new Error("Unsupported kubectl architecture"); \
+    const base = "https://dl.k8s.io/release/" + process.env.KUBECTL_VERSION + "/bin/linux/" + arch + "/kubectl"; \
+    const [binary, checksum] = await Promise.all([fetch(base), fetch(base + ".sha256")]); \
+    if (!binary.ok || !checksum.ok) throw new Error("Pinned kubectl download failed"); \
+    const bytes = new Uint8Array(await binary.arrayBuffer()); \
+    const expected = (await checksum.text()).trim(); \
+    if (!/^[a-f0-9]{64}$/.test(expected) || new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== expected) throw new Error("Pinned kubectl checksum mismatch"); \
+    await Bun.write("/usr/local/bin/kubectl", bytes); \
+    await (await import("node:fs/promises")).chmod("/usr/local/bin/kubectl", 0o755); \
+    ' && kubectl version --client
 
 FROM base AS deps
 COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./

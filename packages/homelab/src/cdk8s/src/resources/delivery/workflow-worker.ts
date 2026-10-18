@@ -14,6 +14,7 @@ export function createDeliveryWorkflowWorker(
 ) {
   const deployment = createTemporalDomainWorker(chart, {
     name: "temporal-delivery-workflows",
+    deploymentName: "temporal-delivery-workflows",
     component: "delivery-workflows",
     featureFlagsEnabled: false,
     cpuRequest: Cpu.millis(100),

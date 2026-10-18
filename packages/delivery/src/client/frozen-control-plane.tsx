@@ -27,8 +27,10 @@ export function FrozenControlPlane({
       </p>
       <p>
         {snapshot.priorSelectionManaged
-          ? "Prior source is established by controller acceptance or independent recovery."
-          : "Initial adoption independently observes the original bootstrap source."}
+          ? "Prior source includes the exact Helm image parameter."
+          : "Prior source has no managed Helm image parameter."}{" "}
+        Independent native verification must prove the frozen original selection
+        before replacement.
       </p>
       <dl className="component-list">
         {selections.map(({ role, artifact }) => (
