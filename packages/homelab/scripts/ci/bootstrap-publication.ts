@@ -10,6 +10,7 @@ import {
 import { stageChart } from "#scripts/helm/helm-push.ts";
 import {
   bootstrapRootManifest,
+  bootstrapRootTemplate,
   bootstrapImageManifest,
   bootstrapFingerprint,
   bootstrapTargetSelection,
@@ -80,7 +81,9 @@ export async function prepareBootstrapArchives(
             descriptor,
           );
     const manifestPath = path.join(directory, `${name}.yaml`);
-    await Bun.write(manifestPath, prepared, { mode: 0o600 });
+    await Bun.write(manifestPath, bootstrapRootTemplate(prepared, name), {
+      mode: 0o600,
+    });
     const staging = path.join(directory, name);
     await mkdir(staging, { mode: 0o700 });
     const archive = await stageChart(

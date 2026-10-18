@@ -10,6 +10,7 @@ import {
   BootstrapDescriptorSchema,
   BootstrapApplicationSchema,
   bootstrapRootManifest,
+  bootstrapRootTemplate,
   bootstrapImageManifest,
   assertBootstrapSnapshot,
   assertBootstrapRootPaused,
@@ -446,6 +447,11 @@ test("the immutable packaged root keeps Forum on its native source in the restor
   );
   try {
     const forum = native("storm-forum");
+    forum.spec["literalConfig"] = {
+      exporter: `lines.append(f'bytes{{bucket="{bucket_name}"}} {cache["storage_bytes"]}')`,
+      multiline: "{{\n literal }}\n{{ unclosed",
+      template: "{{ $labels.instance }} and {{ .Values.mustNotExecute }}",
+    };
     const root = native("apps");
     const raw = bootstrapRootManifest(
       source([root, forum, native("delivery")]),
@@ -454,7 +460,7 @@ test("the immutable packaged root keeps Forum on its native source in the restor
       source([root, forum]),
     );
     const manifestPath = path.join(directory, "apps.yaml");
-    await Bun.write(manifestPath, raw);
+    await Bun.write(manifestPath, bootstrapRootTemplate(raw, "apps"));
     const archive = await stageChart(
       {
         name: "apps",

@@ -193,6 +193,11 @@ function selectedMetadata(
   return selected;
 }
 
+/** Captured native values are literal data, not executable Helm templates. */
+export function bootstrapRootTemplate(manifest: string, chart: string): string {
+  return chart === "apps" ? manifest.replaceAll("{{", "{{ `{{` }}") : manifest;
+}
+
 export function bootstrapRootManifest(
   raw: string,
   captured: BootstrapApplication[],

@@ -3,6 +3,7 @@ import type { PublishedChart, HelmReleasePlan } from "./helm-release-core.ts";
 
 /** Required selection inputs used only by producer lint/render, outside the packaged chart. */
 export function chartValidationValues(name: string) {
+  if (name === "delivery") return { delivery: {} };
   if (name !== "storm-forum" && name !== "storm-forum-beta") return;
   return {
     delivery: {
