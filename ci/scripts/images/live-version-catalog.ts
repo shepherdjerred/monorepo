@@ -1,7 +1,4 @@
-import {
-  createDeliveryClient,
-  DeliveryClientError,
-} from "../../../packages/delivery/src/shared/client.ts";
+import { DeliveryClientError } from "../../../packages/delivery/src/shared/client-error.ts";
 import type { LatestQualifiedArtifactQuery } from "../../../packages/delivery/src/shared/contract.ts";
 import {
   CANONICAL_IMAGE_TARGETS,
@@ -24,12 +21,15 @@ type QualifiedImageReader = (
 export async function readQualifiedImages(
   read?: QualifiedImageReader,
 ): Promise<QualifiedImageInventory> {
-  const reader =
-    read ??
-    createDeliveryClient({
+  let reader = read;
+  if (reader === undefined) {
+    const { createDeliveryClient } =
+      await import("../../../packages/delivery/src/shared/client.ts");
+    reader = createDeliveryClient({
       baseUrl: requireEnv("DELIVERY_URL"),
       headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
     }).latestQualifiedArtifact;
+  }
   const entries = await Promise.all(
     CANONICAL_IMAGE_TARGETS.map(async (name) => {
       const { serviceId, component, kind } = imageIdentity(name);

@@ -336,7 +336,7 @@ test("old automation proof requires the exact disabled webhook and no native pen
       {
         id: 7,
         active: false,
-        config: { url: "https://woodpecker.sjer.red/hook?private=value" },
+        config: { url: "https://woodpecker.sjer.red/api/hook?private=value" },
       },
     ],
   ];
@@ -344,9 +344,22 @@ test("old automation proof requires the exact disabled webhook and no native pen
     id: 7,
     active: false,
     origin: "https://woodpecker.sjer.red",
-    path: "/hook",
+    path: "/api/hook",
   });
   expect(() => assertHandoverWebhook(raw, 8)).toThrow("exact Woodpecker");
+  expect(() =>
+    assertHandoverWebhook(
+      [
+        [
+          {
+            ...raw[0]![0]!,
+            config: { url: "https://woodpecker.sjer.red/hook" },
+          },
+        ],
+      ],
+      7,
+    ),
+  ).toThrow("exact Woodpecker");
   expect(() =>
     assertHandoverWebhook(
       [
@@ -355,7 +368,7 @@ test("old automation proof requires the exact disabled webhook and no native pen
           {
             id: 8,
             active: true,
-            config: { url: "https://woodpecker.sjer.red/hook" },
+            config: { url: "https://woodpecker.sjer.red/api/hook" },
           },
         ],
       ],
@@ -388,7 +401,7 @@ test("default handover transport reads the exact native API for every active sta
       {
         id: 7,
         active: false,
-        config: { url: "https://woodpecker.sjer.red/hook" },
+        config: { url: "https://woodpecker.sjer.red/api/hook" },
       },
     ],
   ];

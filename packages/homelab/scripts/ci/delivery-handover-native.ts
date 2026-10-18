@@ -82,7 +82,7 @@ export function assertHandoverWebhook(raw: unknown, expectedId: number) {
     return (
       url.protocol === "https:" &&
       url.hostname === "woodpecker.sjer.red" &&
-      url.pathname === "/hook"
+      url.pathname === "/api/hook"
     );
   });
   const selected = matching.find((hook) => hook.id === expectedId);
@@ -95,7 +95,7 @@ export function assertHandoverWebhook(raw: unknown, expectedId: number) {
     id: selected.id,
     active: false as const,
     origin: "https://woodpecker.sjer.red",
-    path: "/hook",
+    path: "/api/hook",
   };
 }
 

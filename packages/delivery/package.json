@@ -6,6 +6,8 @@
   "exports": {
     "./contract": "./src/shared/contract.ts",
     "./client": "./src/shared/client.ts",
+    "./client-error": "./src/shared/client-error.ts",
+    "./artifact-contract": "./src/shared/artifact-contract.ts",
     "./operation-id": "./src/shared/operation-id.ts",
     "./testing": "./src/testing/index.ts"
   },

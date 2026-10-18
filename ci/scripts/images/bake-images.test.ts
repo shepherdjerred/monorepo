@@ -31,7 +31,7 @@ import {
   parseStringArray,
 } from "../migration-core.ts";
 import { imageIdentity } from "../../../scripts/lib/image-pin-catalog.ts";
-import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/contract.ts";
+import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 function commandResult(
   exitCode = 0,
   stdout = "",

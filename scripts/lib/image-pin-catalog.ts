@@ -2,19 +2,14 @@ import {
   ServiceIndex,
   SERVICE_CATALOG,
 } from "@shepherdjerred/ops-model/catalog.ts";
-import {
-  ArtifactVersionSchema,
-  type ArtifactVersion,
-} from "@shepherdjerred/delivery/contract";
+import { ArtifactVersionSchema } from "@shepherdjerred/delivery/artifact-contract";
+import type { ArtifactVersion } from "@shepherdjerred/delivery/contract";
 import {
   APPLICATION_IMAGE_TARGETS,
   INFRASTRUCTURE_IMAGE_TARGETS,
 } from "../../ci/scripts/images/image-targets.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
-import {
-  createDeliveryClient,
-  type DeliveryClient,
-} from "@shepherdjerred/delivery/client";
+import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import { readRequiredHandoff } from "./ci/ci-handoff.ts";
 import { z } from "zod";
 import { requireEnv } from "./run.ts";
@@ -70,7 +65,7 @@ export function unbuiltImageOriginals(
 /** Transient immutable chart inputs; these never choose an application deployment. */
 export async function chartPublicationImages(
   read = readRequiredHandoff,
-  client: Pick<DeliveryClient, "latestQualifiedArtifact"> & {
+  injectedClient?: Pick<DeliveryClient, "latestQualifiedArtifact"> & {
     overview: () => Promise<{
       environments: {
         id: string;
@@ -81,11 +76,17 @@ export async function chartPublicationImages(
       serviceId: string;
       components: Record<string, ArtifactVersion>;
     }>;
-  } = createDeliveryClient({
-    baseUrl: requireEnv("DELIVERY_URL"),
-    headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
-  }),
+  },
 ) {
+  let client = injectedClient;
+  if (client === undefined) {
+    const { createDeliveryClient } =
+      await import("@shepherdjerred/delivery/client");
+    client = createDeliveryClient({
+      baseUrl: requireEnv("DELIVERY_URL"),
+      headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+    });
+  }
   const [rawFresh, rawRetained] = await Promise.all([
     read("delivery-image-digests"),
     read("delivery-retained-image-artifacts"),

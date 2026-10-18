@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { DeliveryClientError } from "../../../packages/delivery/src/shared/client.ts";
-import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/contract.ts";
+import { DeliveryClientError } from "../../../packages/delivery/src/shared/client-error.ts";
+import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 import {
   CANONICAL_IMAGE_TARGETS,
   imageIdentity,
@@ -10,7 +10,10 @@ import {
 } from "../../../scripts/lib/image-pin-catalog.ts";
 import { readQualifiedImages } from "./live-version-catalog.ts";
 import { includeMissingQualifiedImages } from "../selectors/select-image-targets-pins.ts";
-import { buildPublications } from "../../../scripts/ci/publish-delivery.ts";
+import {
+  ServiceIndex,
+  SERVICE_CATALOG,
+} from "../../../packages/ops-model/src/catalog.ts";
 
 test("full fresh publication works before environment registration without inventing accepted state", async () => {
   const fresh = Object.fromEntries(
@@ -143,6 +146,20 @@ test("all21 canonical recipes have a fixed component/repository/owner without Gi
   );
 });
 
+test("root chart publication owns only its canonical undelegated charts", () => {
+  const index = new ServiceIndex(SERVICE_CATALOG);
+  const charts = index.rootReleaseCharts();
+  expect(charts.length).toBeGreaterThan(0);
+  expect(new Set(charts.map((chart) => chart.name)).size).toBe(charts.length);
+  for (const chart of charts) {
+    expect(index.byChart(chart.name)?.id).toBe(chart.serviceId);
+    expect(SERVICE_CATALOG.deliveryDelegations?.[chart.name]).toBeUndefined();
+  }
+  expect(charts.map((chart) => chart.name)).not.toContain(
+    "delivery-control-plane",
+  );
+});
+
 test("qualified inventory preserves each original artifact/build/source through no-target and partial publications", async () => {
   const originals = new Map(
     CANONICAL_IMAGE_TARGETS.map((name) => [name, original(name)]),
@@ -214,57 +231,4 @@ test("malformed or foreign qualified identities are refused", async () => {
       throw new Error("network unavailable");
     }),
   ).rejects.toThrow("network unavailable");
-});
-
-test("a new sourceCI retains original image IDs without manufacturing new produced artifacts", async () => {
-  const delivery = original("delivery");
-  const tracker = original("tracker");
-  const inventory = new Map([
-    ["delivery", delivery],
-    ["tracker", tracker],
-  ]);
-  const builds = await buildPublications(
-    {
-      digests: {},
-      charts: [],
-      retainedArtifacts: unbuiltImageOriginals(inventory, []),
-      sourceRevision: "c".repeat(40),
-      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/43",
-      pipelineNumber: 43,
-      repositoryId: 1,
-      capturedAt: "2026-10-18T00:00:00.000Z",
-    },
-    {
-      inspectImage: async () => {
-        throw new Error("No new image");
-      },
-      chartArtifact: async () => {
-        throw new Error("No new chart");
-      },
-    },
-  );
-  expect(
-    builds.map((build) => ({
-      serviceId: build.serviceId,
-      sourceRevision: build.sourceRevision,
-      artifacts: build.artifacts,
-      retainedArtifactIds: build.retainedArtifactIds,
-    })),
-  ).toEqual([
-    {
-      serviceId: "delivery",
-      sourceRevision: "c".repeat(40),
-      artifacts: [],
-      retainedArtifactIds: [delivery.id],
-    },
-    {
-      serviceId: "tracker",
-      sourceRevision: "c".repeat(40),
-      artifacts: [],
-      retainedArtifactIds: [tracker.id],
-    },
-  ]);
-  expect(unbuiltImageOriginals(inventory, ["delivery"])).toEqual([tracker]);
-  expect(delivery.buildId).toBe("ci/1/42/delivery");
-  expect(delivery.sourceRevision).toBe("a".repeat(40));
 });

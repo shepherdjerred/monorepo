@@ -1,4 +1,9 @@
 import { z } from "zod";
+import * as errors from "./client-error.ts";
+export const DeliveryClientError = errors.DeliveryClientError;
+export type DeliveryClientError = InstanceType<
+  typeof errors.DeliveryClientError
+>;
 import {
   ApiErrorSchema,
   ArtifactVersionSchema,
@@ -69,17 +74,6 @@ import type {
   DispatchBarrier,
   ContentBarrierRestoration,
 } from "./contract.ts";
-
-export class DeliveryClientError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-  ) {
-    super(message);
-    this.name = "DeliveryClientError";
-  }
-}
 
 export function createDeliveryClient(options: {
   baseUrl: string;

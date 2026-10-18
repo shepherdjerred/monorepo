@@ -7,6 +7,7 @@ import {
 import { newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
+import { publishedStorm } from "#test/fixtures/published-storm.ts";
 
 const secrets = { bridgeToken: "b".repeat(48), rconPassword: "c".repeat(48) };
 
@@ -36,10 +37,8 @@ describe("docker sandbox argv", () => {
   });
 
   it("mounts storm image overlays as individual files in Docker", () => {
-    const profile = resolveProfile(
-      { profile: "storm-candidate", world: "flat" },
-      secrets,
-    );
+    const request = publishedStorm("storm-candidate");
+    const profile = resolveProfile(request, secrets);
     const args = dockerCreateArgs({
       id: "sbx-def456",
       profileName: "storm-candidate",
@@ -57,6 +56,9 @@ describe("docker sandbox argv", () => {
       "/tmp/storm-staging/plugins/TheStormFixtures.jar:/plugins/TheStormFixtures.jar:ro",
     );
     expect(args).not.toContain("/tmp/storm-staging/plugins:/plugins:ro");
+    expect(args.at(-1)).toBe(
+      `${request.publishedArtifact.uri}@${request.publishedArtifact.digest}`,
+    );
   });
 
   it("parses docker ps rows", () => {

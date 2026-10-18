@@ -1,8 +1,17 @@
 import { createHash } from "node:crypto";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { pushImages } from "../../ci/scripts/images/bake-images.ts";
 import { buildPublications } from "./publish-delivery.ts";
 import { ArtifactVersionSchema } from "../../packages/delivery/src/shared/contract.ts";
+import {
+  CANONICAL_IMAGE_TARGETS,
+  chartPublicationImages,
+  imageIdentity,
+  unbuiltImageOriginals,
+} from "../lib/image-pin-catalog.ts";
+import { readQualifiedImages } from "../../ci/scripts/images/live-version-catalog.ts";
+import { DeliveryClientError } from "@shepherdjerred/delivery/client";
+import { DeliveryClientError as FocusedClientError } from "@shepherdjerred/delivery/client-error";
 
 const sourceRevision = "c".repeat(40);
 const pinnedDigest = `sha256:${"a".repeat(64)}`;
@@ -14,6 +23,131 @@ const manifest = JSON.stringify({
 });
 const candidateDigest = `sha256:${createHash("sha256").update(manifest).digest("hex")}`;
 const reference = `docker.io/shepherdjerred/arcade@${candidateDigest}`;
+
+test("production metadata readers use the existing authenticated client and its same public error identity", async () => {
+  expect(FocusedClientError).toBe(DeliveryClientError);
+  vi.stubEnv("DELIVERY_URL", "https://delivery.example.invalid");
+  vi.stubEnv("DELIVERY_API_TOKEN", "synthetic-test-only");
+  const paths: string[] = [];
+  vi.stubGlobal("fetch", (input: string, init: RequestInit) => {
+    const url = new URL(input);
+    expect(url.origin).toBe("https://delivery.example.invalid");
+    expect(new Headers(init.headers).get("Authorization")).toBe(
+      "Bearer synthetic-test-only",
+    );
+    paths.push(url.pathname);
+    return Promise.resolve(
+      url.pathname === "/api/v1/overview"
+        ? Response.json({
+            environments: [],
+            deployments: [],
+            versionSets: [],
+            artifacts: [],
+          })
+        : Response.json(
+            {
+              error: {
+                code: "NOT_FOUND",
+                message: "No qualified original",
+                requestId: "test",
+              },
+            },
+            { status: 404 },
+          ),
+    );
+  });
+  try {
+    expect(await readQualifiedImages()).toEqual(new Map());
+    expect(paths).toHaveLength(CANONICAL_IMAGE_TARGETS.length);
+    expect(new Set(paths)).toEqual(
+      new Set(["/api/v1/artifacts/latest-qualified"]),
+    );
+    const fresh = Object.fromEntries(
+      CANONICAL_IMAGE_TARGETS.map((name) => [
+        `shepherdjerred/${name}`,
+        pinnedDigest,
+      ]),
+    );
+    expect(
+      await chartPublicationImages((key) =>
+        Promise.resolve(
+          JSON.stringify(key === "delivery-image-digests" ? fresh : []),
+        ),
+      ),
+    ).toEqual({
+      ...fresh,
+      "shepherdjerred/the-storm-server/candidate": pinnedDigest,
+    });
+    expect(paths.at(-1)).toBe("/api/v1/overview");
+  } finally {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  }
+});
+
+test("a new sourceCI retains original image IDs without manufacturing new produced artifacts", async () => {
+  const inventory = new Map(
+    ["delivery", "tracker"].map((name) => [
+      name,
+      ArtifactVersionSchema.parse({
+        ...imageIdentity(name),
+        id: `ci/1/42/image/${name}`,
+        buildId: `ci/1/42/${name}`,
+        sourceRevision: "a".repeat(40),
+        createdAt: "2026-10-17T12:00:00.000Z",
+        digest: pinnedDigest,
+        version: "2.0.0-1000042",
+        origin: { kind: "first-party" },
+      }),
+    ]),
+  );
+  const delivery = inventory.get("delivery")!;
+  const tracker = inventory.get("tracker")!;
+  const builds = await buildPublications(
+    {
+      digests: {},
+      charts: [],
+      retainedArtifacts: unbuiltImageOriginals(inventory, []),
+      sourceRevision: "c".repeat(40),
+      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/43",
+      pipelineNumber: 43,
+      repositoryId: 1,
+      capturedAt: "2026-10-18T00:00:00.000Z",
+    },
+    {
+      inspectImage: async () => {
+        throw new Error("No new image");
+      },
+      chartArtifact: async () => {
+        throw new Error("No new chart");
+      },
+    },
+  );
+  expect(
+    builds.map((build) => ({
+      serviceId: build.serviceId,
+      sourceRevision: build.sourceRevision,
+      artifacts: build.artifacts,
+      retainedArtifactIds: build.retainedArtifactIds,
+    })),
+  ).toEqual([
+    {
+      serviceId: "delivery",
+      sourceRevision: "c".repeat(40),
+      artifacts: [],
+      retainedArtifactIds: [delivery.id],
+    },
+    {
+      serviceId: "tracker",
+      sourceRevision: "c".repeat(40),
+      artifacts: [],
+      retainedArtifactIds: [tracker.id],
+    },
+  ]);
+  expect(unbuiltImageOriginals(inventory, ["delivery"])).toEqual([tracker]);
+  expect(delivery.buildId).toBe("ci/1/42/delivery");
+  expect(delivery.sourceRevision).toBe("a".repeat(40));
+});
 
 async function publishCandidate(smokeFails = false) {
   const legacy: Readonly<Record<string, string>>[] = [];
