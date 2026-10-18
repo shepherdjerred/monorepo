@@ -16,7 +16,7 @@ export function getDiscordPlaysGoalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PokemonGoalStuck",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max(pokemon_goal_active) > 0",
+            'max(pokemon_goal_active{namespace="arcade"}) > 0',
           ),
           // max_runtime_minutes is capped at 30 in the config schema; a goal gauge held
           // past that plus slack means the timeout/teardown path failed to fire.
@@ -26,14 +26,14 @@ export function getDiscordPlaysGoalRuleGroups(): PrometheusRuleSpecGroups[] {
             summary:
               "Pokemon goal has been active longer than the hard runtime cap",
             description: escapePrometheusTemplate(
-              "pokemon_goal_active has been non-zero for over 40 minutes, but max_runtime_minutes is capped at 30 — the timeout/teardown path (timeoutGoal → claimActive) failed, the gauge leaked, or the process is unkillable. Check the pokemon pod's goal-manager logs and the pokemon.goal.run trace in Tempo.",
+              "pokemon_goal_active has been non-zero for over 40 minutes, but max_runtime_minutes is capped at 30 — the timeout/teardown path (timeoutGoal → claimActive) failed, the gauge leaked, or the process is unkillable. Check the Arcade controller's goal-manager logs and the pokemon.goal.run trace in Tempo.",
             ),
           },
         },
         {
           alert: "PokemonGoalStreamDownMidGoal",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max(pokemon_goal_active) > 0 and on() max(stream_active{namespace="pokemon"}) == 0',
+            'max(pokemon_goal_active{namespace="arcade"}) > 0 and on() max(stream_active{namespace="arcade"}) == 0',
           ),
           for: "3m",
           labels: { severity: "warning", category: "discord-plays" },

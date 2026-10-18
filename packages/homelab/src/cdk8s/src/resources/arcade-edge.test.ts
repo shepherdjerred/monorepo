@@ -22,24 +22,23 @@ function resources() {
   return Testing.synth(chart).map((resource) => Resource.parse(resource));
 }
 
-test("the prepared edge cannot take live ports or hostname ownership", () => {
+test("only the direct edge service exposes public NodePorts", () => {
   const manifests = resources();
   const services = manifests.filter((resource) => resource.kind === "Service");
   expect(services).toHaveLength(3);
   expect(
-    services.every((service) => service.spec?.["type"] === "ClusterIP"),
-  ).toBe(true);
-  expect(JSON.stringify(services)).not.toContain('"nodePort"');
+    services
+      .filter((service) => service.spec?.["type"] === "NodePort")
+      .map((service) => service.metadata.name),
+  ).toEqual(["arcade-edge-direct"]);
   expect(
     manifests.filter((resource) =>
-      ["Ingress", "TunnelBinding", "OnePasswordItem", "Secret"].includes(
-        resource.kind,
-      ),
+      ["OnePasswordItem", "Secret"].includes(resource.kind),
     ),
   ).toEqual([]);
 });
 
-test("TLS migration gates Caddy startup while preserving its security and RWO ownership", () => {
+test("the final edge preserves TLS security and RWO ownership without a migration gate", () => {
   const manifests = resources();
   const deployment = manifests.find(
     (resource) => resource.kind === "Deployment",
@@ -53,15 +52,6 @@ test("TLS migration gates Caddy startup while preserving its security and RWO ow
         automountServiceAccountToken: false,
         containers: [
           expect.objectContaining({
-            command: ["/bin/sh", "-ec"],
-            args: [
-              expect.stringContaining("/data/.arcade-edge-migration-ready"),
-            ],
-            startupProbe: {
-              httpGet: { path: "/healthz", port: 8082, scheme: "HTTP" },
-              failureThreshold: 120,
-              periodSeconds: 10,
-            },
             securityContext: expect.objectContaining({
               runAsUser: 1000,
               runAsGroup: 1000,
@@ -83,6 +73,7 @@ test("TLS migration gates Caddy startup while preserving its security and RWO ow
       },
     },
   });
+  expect(JSON.stringify(deployment)).not.toContain("migration-ready");
   const pvc = manifests.find(
     (resource) => resource.kind === "PersistentVolumeClaim",
   );

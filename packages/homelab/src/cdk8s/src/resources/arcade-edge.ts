@@ -1,4 +1,4 @@
-import { Duration, Size, type Chart } from "cdk8s";
+import { ApiObject, JsonPatch, Size, type Chart } from "cdk8s";
 import {
   ConfigMap,
   Deployment,
@@ -6,6 +6,7 @@ import {
   Probe,
   SeccompProfileType,
   Service,
+  ServiceType,
   Volume,
 } from "cdk8s-plus-31";
 import {
@@ -16,8 +17,13 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { arcadeCaddyfile } from "./arcade-caddyfile.ts";
 import { caddyEdgeContainerDefaults } from "./caddy-edge-container.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
-/** Prepare the replacement edge without claiming live ports or hostnames. */
+export const ARCADE_HTTP_NODE_PORT = 30_080;
+export const ARCADE_HTTPS_NODE_PORT = 30_443;
+
+/** Serve Arcade and legacy bookmarks from one namespace-owned edge. */
 export function createArcadeEdge(chart: Chart) {
   const defaults = caddyEdgeContainerDefaults();
   const caddyfile = arcadeCaddyfile(
@@ -44,12 +50,6 @@ export function createArcadeEdge(chart: Chart) {
       name: "caddy",
       // Publication freezes this shared infrastructure dependency into chart bytes.
       image: firstPartyImageRecipe("caddy-s3proxy"),
-      // The operator copies and verifies the existing ACME state before releasing
-      // this temporary gate. No certificate management runs against an empty PVC.
-      command: ["/bin/sh", "-ec"],
-      args: [
-        "until test -f /data/.arcade-edge-migration-ready; do sleep 1; done; exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile",
-      ],
       ports: [
         { name: "http", number: 8080 },
         { name: "https", number: 8443 },
@@ -61,11 +61,6 @@ export function createArcadeEdge(chart: Chart) {
         ...defaults.securityContext,
         seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
-      startup: Probe.fromHttpGet("/healthz", {
-        port: 8082,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 120,
-      }),
       readiness: Probe.fromHttpGet("/healthz", { port: 8082 }),
       liveness: Probe.fromHttpGet("/healthz", { port: 8082 }),
       volumeMounts: [
@@ -88,20 +83,64 @@ export function createArcadeEdge(chart: Chart) {
       ],
     }),
   );
-  new Service(chart, "edge-bootstrap", {
+  const bootstrap = new Service(chart, "edge-bootstrap", {
     selector: deployment,
     ports: [{ name: "http", port: 8082, targetPort: 8082 }],
   });
-  // Internal HTTPS makes certificate validation possible before NodePort handover.
-  new Service(chart, "edge-direct", {
+  const direct = new Service(chart, "edge-direct", {
+    type: ServiceType.NODE_PORT,
     selector: deployment,
     ports: [
-      { name: "http", port: 80, targetPort: 8080 },
-      { name: "https", port: 443, targetPort: 8443 },
+      {
+        name: "http",
+        port: 80,
+        targetPort: 8080,
+        nodePort: ARCADE_HTTP_NODE_PORT,
+      },
+      {
+        name: "https",
+        port: 443,
+        targetPort: 8443,
+        nodePort: ARCADE_HTTPS_NODE_PORT,
+      },
     ],
   });
-  new Service(chart, "legacy-redirects", {
+  ApiObject.of(direct).addJsonPatch(
+    JsonPatch.add("/spec/externalTrafficPolicy", "Local"),
+  );
+  const redirects = new Service(chart, "legacy-redirects", {
     selector: deployment,
     ports: [{ name: "http", port: 8081, targetPort: 8081 }],
+  });
+  new TailscaleIngress(chart, "mariokart-tailscale", {
+    service: bootstrap,
+    host: "mariokart",
+    probePath: "/healthz",
+  });
+  new TailscaleIngress(chart, "pokebot-tailscale", {
+    service: redirects,
+    host: "pokebot",
+    probePath: "/health",
+  });
+  createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
+    serviceName: bootstrap.name,
+    subdomain: "mariokart",
+    port: 8082,
+    // The canonical binding below probes this shared backend and public origin.
+    disableProbe: true,
+  });
+  // OpenTofu retains public DNS ownership; these bindings provide tunnel recovery.
+  createCloudflareTunnelBinding(chart, "arcade-cf-tunnel", {
+    serviceName: bootstrap.name,
+    subdomain: "arcade",
+    port: 8082,
+    probePath: "/healthz",
+    publicProbePath: "/health",
+  });
+  createCloudflareTunnelBinding(chart, "pokebot-cf-tunnel", {
+    serviceName: redirects.name,
+    subdomain: "pokebot",
+    port: 8081,
+    probePath: "/health",
   });
 }

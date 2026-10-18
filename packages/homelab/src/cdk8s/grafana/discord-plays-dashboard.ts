@@ -4,9 +4,9 @@ import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 
 /**
- * Stream-health dashboard for the discord-plays bots (pokemon + mario-kart).
- * Both expose the same `emulator_*` / `stream_*` instruments (see each backend's
- * observability/metrics.ts), distinguished by the `namespace` label. The panels
+ * Stream-health dashboard for Arcade's shared game runtimes.
+ * The runtimes retain the `emulator_*` / `stream_*` instruments from their
+ * backend libraries, exported under the Arcade namespace. The panels
  * are built to tell apart the candidate causes of choppy video:
  *   - achieved fps below target / high emulate_ms ⇒ emulation-bound
  *   - rising sink-buffer bytes ⇒ encode/send-bound
@@ -18,8 +18,7 @@ export function createDiscordPlaysDashboard() {
     uid: "Prometheus",
   };
 
-  // All series are scoped to the two bot namespaces.
-  const SCOPE = `namespace=~"pokemon|mario-kart"`;
+  const SCOPE = `namespace="arcade"`;
 
   const timeSeriesPanel = (options: {
     title: string;

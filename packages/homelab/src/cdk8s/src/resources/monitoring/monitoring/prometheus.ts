@@ -348,12 +348,12 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
-  // Discord Plays Pokemon goal-agent harness alerts (stuck goal past the hard
+  // Arcade's Emerald goal-agent harness alerts (stuck goal past the hard
   // runtime cap, paid goal running with the Go-Live stream down).
-  new PrometheusRule(chart, "prometheus-discord-plays-goal-rules", {
+  new PrometheusRule(chart, "prometheus-arcade-goal-rules", {
     metadata: {
-      name: "prometheus-discord-plays-goal-rules",
-      namespace: "pokemon",
+      name: "prometheus-arcade-goal-rules",
+      namespace: "arcade",
       labels: { release: "prometheus" },
     },
     spec: {
