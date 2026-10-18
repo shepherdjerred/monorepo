@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ociImageConfigurations } from "@shepherdjerred/ops-model/oci-image-configurations.ts";
 import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
 import { WORKFLOW_TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -13,7 +14,6 @@ const PrometheusResponseSchema = z.object({
     ),
   }),
 });
-const ImageEnvironmentSchema = z.array(z.string());
 const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
   "30m": 60,
   "2h": 240,
@@ -429,12 +429,17 @@ export async function verifyCandidateImageBuildId(
     "inspect",
     image,
     "--format",
-    "{{json .Image.Config.Env}}",
+    "{{json .Image}}",
   ]);
-  const environment = ImageEnvironmentSchema.parse(
+  const configurations = ociImageConfigurations(
     parseJson(result.stdout, "candidate image inspection"),
   );
-  if (!environment.includes(`GIT_SHA=${buildId}`)) {
+  if (
+    configurations.some(
+      (configuration) =>
+        !configuration.config.Env.includes(`GIT_SHA=${buildId}`),
+    )
+  ) {
     throw new Error(`Candidate image ${image} was not built from ${buildId}`);
   }
 }
