@@ -91,7 +91,7 @@ export const Tree = z.object({
     z.object({
       kind: z.string(),
       name: z.string(),
-      namespace: z.string(),
+      namespace: z.string().optional(),
       uid: z.string(),
       parentRefs: z.array(z.object({ uid: z.string() })).default([]),
     }),

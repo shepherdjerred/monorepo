@@ -56,6 +56,9 @@ export function createDeliveryPlatformWorker(
     memoryRequest: Size.mebibytes(256),
     memoryLimit: Size.gibibytes(1),
     envVariables: {
+      NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
+        "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+      ),
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${serverServiceName}:7233`),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("delivery-platform"),

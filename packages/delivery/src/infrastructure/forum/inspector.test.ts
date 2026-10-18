@@ -83,6 +83,17 @@ function nativeTransport(
         return Response.json({
           nodes: [
             {
+              kind: "Namespace",
+              name: "storm-forum",
+              uid: "namespace-uid",
+            },
+            {
+              kind: "Pod",
+              name: "out-of-scope-pod",
+              uid: "out-of-scope-pod-uid",
+              parentRefs: [{ uid: "rs-uid" }],
+            },
+            {
               kind: "ReplicaSet",
               name: "storm-forum-web-rs",
               namespace: "storm-forum",
@@ -201,7 +212,7 @@ function nativeTransport(
   };
 }
 
-test("reads exact native completed Job and actual ready runtime twice using separate fixed read capabilities", async () => {
+test("accepts cluster-scoped tree nodes while proving the exact namespaced Job and ready runtime twice", async () => {
   const input = await context(),
     transport = nativeTransport(input);
   const inspect = createForumBaselineInspector({
