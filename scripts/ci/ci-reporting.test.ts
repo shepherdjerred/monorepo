@@ -428,6 +428,7 @@ describe("CI reporting manifest", () => {
           "scripts/ci/bootstrap-maintenance.test.ts",
           "scripts/ci/bootstrap-control-plane.test.ts",
           "scripts/ci/delivery-handover.test.ts",
+          "scripts/ci/delivery-handover-root.test.ts",
           "scripts/tofu/credential-handoff.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
         ],
