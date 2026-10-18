@@ -21,7 +21,9 @@ check the current rules and dashboard before taking that action.
 | After a server change       | Correct affected connection details, compatibility claims, features, rules, copy, and screenshots. Preserve user-edited copy and historical website posts.                                                                                            |
 
 No scheduled jobs, posting scripts, paid promotion, or video production are configured by this manifest.
-Reddit remains paused. Owner-hosted play sessions and constant owner presence are not part of the offer.
+Reddit is handled separately from routine bumps: inspect the previous posts, moderation state,
+and community rules before publishing. Owner-hosted play sessions and constant owner presence
+are not part of the offer.
 
 ## Server directories
 
@@ -100,10 +102,19 @@ replace each state when the external service confirms a change.
 | `minecraft-menu`         | `minecraft.menu` account / Add Server                                                      | Account created and login verified. Required version picker lacked **26.2**. Query-port mapping also unconfirmed. Recheck compatibility before submitting; do not select an inaccurate version.                                                                         |
 | `best-minecraft-servers` | `best-minecraft-servers.co` account / Add Server                                           | Account ready; no listing submitted. Required version picker lacked **26.2**; banner requires GIF, which this pack does not include.                                                                                                                                    |
 | —                        | `findmcserver.com`                                                                         | Deferred. Stable-three-month eligibility and disclosure/image requirements were not established. No submission made.                                                                                                                                                    |
-| `reddit`                 | Reddit advertising                                                                         | **Paused by the user after filter removals.** Do not include in daily or weekly reposting. Four filtered attempts were reported in the session; only two exact links were retained below.                                                                               |
+| `reddit`                 | Reddit advertising                                                                         | User approved returning to Reddit after newcomer acceptance. Four earlier post references are retained below. Recheck moderation before acting; do not use fresh duplicate posts to work around filtering. No daily reposting.                                          |
 
-Retained Reddit post references: [r/MinecraftServer](https://www.reddit.com/r/MinecraftServer/comments/1x72qhv/the_storm_is_rebuilding_its_survival_community/)
-and [r/MinecraftServerFinder](https://www.reddit.com/r/MinecraftServerFinder/comments/1x72z1f/the_storm_is_rebuilding_its_survival_community/).
+Retained Reddit post references: [r/mcservers](https://www.reddit.com/r/mcservers/comments/1x72o9e/the_storm_smp_java_bedrock_towns_land_claims/),
+[r/MinecraftServer](https://www.reddit.com/r/MinecraftServer/comments/1x72qhv/the_storm_is_rebuilding_its_survival_community/),
+[r/MinecraftServerFinder](https://www.reddit.com/r/MinecraftServerFinder/comments/1x72z1f/the_storm_is_rebuilding_its_survival_community/),
+and [r/MinecraftServers](https://www.reddit.com/r/MinecraftServers/comments/1x733w3/the_storm_smp_java_bedrock_towns_land_claims/).
+The signed-in `the-storm-mc` profile showed all four on October 18; owner visibility
+does not establish public approval. Cached public content showed an r/mcservers
+filter removal, while the current owner view displayed its body. Recheck live
+moderation state before editing or requesting review. Its creation timestamp is
+**2026-10-16 00:53:43 UTC**. The current sidebar permits one post every seven days,
+so this post alone prevents a fresh submission before **2026-10-23 00:53:43 UTC**
+(October 22 at 5:53 PM in Los Angeles); also check for any newer server advertisement.
 A review request to r/MinecraftServer moderators was verified sent. The Finder
 request was approved by the user, but completion is not established in this handoff.
 
@@ -136,7 +147,7 @@ but browser tab IDs and local ports are intentionally not durable account refere
 | `builtbybit`             | ShepherdJerred                           | Private vault · **MC Market**, item `oz33qew44wylg4rrxlbmm4sj2a`; user completed the security-unlock/reset.                                                                |
 | `discord`                | the.storm.mc                             | Private vault · `cajum4hu3zrd3hxzuyp5qgwhw4`                                                                                                                               |
 | `disboard`               | sjerred, The Storm's Discord owner       | Owner sign-in verified. Keep using the owner account; the outreach account remains an ordinary server member.                                                              |
-| `reddit`                 | Storm outreach account                   | Paused. Confirm the exact username and saved login if the user explicitly resumes this channel.                                                                            |
+| `reddit`                 | `the-storm-mc`                           | Signed-in public identity verified October 18. Use the existing account; credentials stay in the password manager.                                                         |
 
 Directory signup addresses use a site-specific `@ts-mc.net` alias saved with the
 login. Use the stored account email when checking approval or ownership replies.
@@ -153,7 +164,7 @@ They replace reliance on the ignored `.cache/the-storm-promotion/` directory or 
 | [short-descriptions.txt](copy/short-descriptions.txt)                                                                                             | Existing short variants for constrained fields.                                                            |
 | [profile-bio.txt](copy/profile-bio.txt)                                                                                                           | Prepared bio; this is not a claim that every profile uses it.                                              |
 | [image-captions.txt](copy/image-captions.txt)                                                                                                     | Captions and alt text for the prepared images.                                                             |
-| [Reddit titles](copy/reddit-titles.txt), [r/mcservers draft](copy/reddit-mcservers.md), [r/MinecraftServer draft](copy/reddit-minecraftserver.md) | Retained drafts only; Reddit posting is paused. Recheck rules before any future use.                       |
+| [Reddit titles](copy/reddit-titles.txt), [r/mcservers draft](copy/reddit-mcservers.md), [r/MinecraftServer draft](copy/reddit-minecraftserver.md) | Retained drafts only. Recheck previous posts, moderation, current rules and cooldowns before use.          |
 | [avatar-512.png](images/avatar-512.png)                                                                                                           | 512 × 512 TS profile mark.                                                                                 |
 | [logo-transparent.png](images/logo-transparent.png)                                                                                               | 1300 × 310 transparent wordmark.                                                                           |
 | [cover-1200x630.png](images/cover-1200x630.png)                                                                                                   | 1200 × 630 promotional cover.                                                                              |
