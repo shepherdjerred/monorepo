@@ -22,10 +22,6 @@ const LEGACY_SELECTORS: Record<string, readonly string[]> = {
     "shepherdjerred/scout-for-lol/beta",
     "shepherdjerred/scout-for-lol/prod",
   ],
-  "discord-plays-pokemon": ["shepherdjerred/discord-plays-pokemon"],
-  pokemon: ["shepherdjerred/discord-plays-pokemon"],
-  "discord-plays-mario-kart": ["shepherdjerred/discord-plays-mario-kart"],
-  "mario-kart": ["shepherdjerred/discord-plays-mario-kart"],
   "starlight-karma-bot": [
     "shepherdjerred/starlight-karma-bot/beta",
     "shepherdjerred/starlight-karma-bot/prod",
@@ -81,8 +77,6 @@ describe("deployed registry derived from the service catalog", () => {
         "alert-dashboard default shepherdjerred/alert-dashboard alert-dashboard",
         "arcade default shepherdjerred/arcade arcade",
         "birmel default shepherdjerred/birmel birmel",
-        "discord-plays-mario-kart default shepherdjerred/discord-plays-mario-kart mario-kart",
-        "discord-plays-pokemon default shepherdjerred/discord-plays-pokemon pokemon",
         "homelab default shepherdjerred/caddy-s3proxy s3-static-sites",
         "homelab redlib shepherdjerred/redlib redlib",
         "scout-for-lol beta shepherdjerred/scout-for-lol/beta scout-beta",
@@ -98,6 +92,15 @@ describe("deployed registry derived from the service catalog", () => {
         "trmnl-dashboard default shepherdjerred/trmnl-dashboard trmnl-dashboard",
       ].toSorted(),
     );
+  });
+
+  test.each([
+    "pokemon",
+    "mario-kart",
+    "discord-plays-pokemon",
+    "discord-plays-mario-kart",
+  ])("does not advertise retired workload %s", (selector) => {
+    expect(resolveServiceSelector(selector)).toBeNull();
   });
 
   test("variant and hyphenated selectors still work", () => {
