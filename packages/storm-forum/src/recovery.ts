@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { open, unlink } from "node:fs/promises";
 import { S3Client } from "bun";
 import { z } from "zod";
-import { ForumReleaseIdSchema } from "@shepherdjerred/ops-model/forum-recovery.ts";
+import {
+  ForumReleaseIdSchema,
+  parseForumRecoveryAction,
+} from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { forumManifest, StageSchema } from "./config.ts";
 import {
   beginStormForumBackup,
@@ -23,8 +26,10 @@ import {
   forumResumeStep,
   runForumReleaseSteps,
   writeForumReleaseJournal,
+  acknowledgeForumReleaseStep,
   type ForumReleaseJournal,
 } from "./release-journal.ts";
+import { runPhp } from "./process.ts";
 
 const Lock = z.strictObject({
   stage: StageSchema,
@@ -120,7 +125,7 @@ async function requireCleanupOwner(
     throw new Error("Forum cleanup maintenance belongs to another execution");
 }
 
-/** Invoked only by an admission-constrained copy of the original terminal Job.
+/** Invoked only by an operator-created exact copy of the original terminal Job.
  * No source, command, snapshot, owner or candidate can be supplied by the caller.
  */
 export async function recoverForumRelease(): Promise<void> {
@@ -131,7 +136,7 @@ export async function recoverForumRelease(): Promise<void> {
         .min(1)
         .max(160)
         .regex(/^[a-z0-9][\w.:/-]*$/iu),
-      FORUM_RECOVERY_ACTION: z.enum(["inspect", "repair"]),
+      FORUM_RECOVERY_ACTION: z.string().transform(parseForumRecoveryAction),
       FORUM_RELEASE_ID: ForumReleaseIdSchema,
       STORM_FORUM_STAGE: StageSchema,
       RUNTIME_IMAGE: SnapshotSourceSchema.shape.runtimeImage,
@@ -153,8 +158,29 @@ export async function recoverForumRelease(): Promise<void> {
     throw new Error(
       "Forum recovery candidate differs from the exact original native release",
     );
-  if (env.FORUM_RECOVERY_ACTION === "inspect")
-    await inspectForumJournal(journal);
+  const { action, acknowledgement } = env.FORUM_RECOVERY_ACTION;
+  if (acknowledgement !== undefined) {
+    await requireOwner(journal);
+    await validateVendorBundle();
+    await verifyOriginalForumBackup(journal);
+    await acknowledgeForumReleaseStep(
+      file,
+      journal,
+      acknowledgement,
+      async (step) => {
+        const result = await runPhp([
+          "/opt/storm-forum/runtime/recovery-step-verify.php",
+          step,
+        ]);
+        if (result.trim() !== "verified")
+          throw new Error(
+            "Forum interrupted step has no exact native completion proof",
+          );
+        await requireOwner(journal);
+      },
+    );
+  }
+  if (action === "inspect") await inspectForumJournal(journal);
   else await repairForumJournal(file, journal);
   let safe = true;
   try {
@@ -168,6 +194,10 @@ export async function recoverForumRelease(): Promise<void> {
       intentId: env.FORUM_RECOVERY_INTENT_ID,
       owner: journal.owner,
       phase: journal.phase,
+      step: journal.step,
+      journalSha256: createHash("sha256")
+        .update(await Bun.file(file).text())
+        .digest("hex"),
       safeToResume: safe,
       settled: journal.phase === "complete",
       observedAt: new Date().toISOString(),

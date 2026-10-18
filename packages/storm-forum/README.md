@@ -76,10 +76,39 @@ backup/restore procedure.
 
 Release jobs are explicit and versioned. A failed migration leaves its release
 lock and maintenance marker for inspection; restarting a pod never retries a
-migration. The lock records the owning execution. Remove only that exact lock
-and marker after diagnosing the failure and verifying the database state.
+migration. Keep the owning lock and maintenance marker until same-owner recovery
+independently verifies completion.
 Release code rejects an incomplete installation rather than overwriting tables.
 An upgrade to a different XenForo version requires an explicit migration change.
+
+For an interrupted `install`, `addons`, `seed`, `history` or `accounts` step,
+the operator recovery command reports the exact journal hash. It does not retry
+that step. Keep dispatch paused and the original executor stopped. Inspect the
+original Job, PVC, candidate and committed backup before repairing native state.
+An operator can copy its terminal Pod with existing Kubernetes tooling:
+
+```bash
+kubectl --context admin@torvalds -n FORUM_NAMESPACE debug ORIGINAL_POD --copy-to=MANUAL_REPAIR_POD --container=release --keep-init-containers=true --keep-labels=true --profile=restricted --share-processes=false -- php NATIVE_COMMAND
+```
+
+Use only the original image and mounted data. For reviewed content repair the
+native command arguments are `/opt/storm-forum/runtime/command.php storm:seed`,
+`/opt/storm-forum/runtime/command.php storm:history --migrate`, and
+`/opt/storm-forum/runtime/command.php storm:accounts --stage STAGE`; inspect their native checkpoints and
+pending merge first. For installation or add-on failures, diagnose the native
+installer/add-on state before using XenForo's installation or add-on recovery
+tools. An incomplete installation is never overwritten by `runtime/install.php`.
+Do not replace the original snapshot with already-mutated data or delete a
+pending merge marker to make a command pass.
+
+Wait for the exact manual Pod to terminate, retain its result, and remove that
+Pod with its recorded UID before rerunning recovery. The existing foreground
+recovery command accepts `--action repair --acknowledge-step STEP
+--expected-journal-sha256 HASH`. Its fixed `runtime/recovery-step-verify.php`
+must prove that one step complete using native installation, add-on, content or
+account checkpoints. Only then does it append that checkpoint and continue;
+it never reruns the acknowledged step. Failed inspection leaves the original
+owner, journal, backup and maintenance intact.
 
 Managed nodes, groups, permissions, navigation, widgets, and styles retain stable
 IDs. `storm:seed` soft-deletes only the three mapped, unreplied generated launch

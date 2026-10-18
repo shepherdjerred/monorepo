@@ -9,4 +9,3 @@ export const DispatchBarrierSchema = z.strictObject({
   podUIDs: z.array(z.string()).min(1),
   replicaSetUIDs: z.array(z.string()).min(1),
 });
-export type DispatchBarrier = z.infer<typeof DispatchBarrierSchema>;

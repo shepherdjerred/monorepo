@@ -325,14 +325,10 @@ try {
     "/opt/storm-forum/test/smtp-fixture.ts",
   ]);
   process.stdout.write(
-    await run([
-      "exec",
-      "-w",
-      "/app/forum",
-      app,
-      "php",
-      "/opt/storm-forum/test/accounts.php",
-    ]),
+    await runNativePhp("/opt/storm-forum/test/accounts.php"),
+  );
+  process.stdout.write(
+    await runNativePhp("/opt/storm-forum/test/recovery-step.php"),
   );
   process.stdout.write(
     await run([

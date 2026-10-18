@@ -284,6 +284,20 @@ the web wave pending, the command prints the exact selective-sync instruction
 for the already selected web Deployment and requires the same intent to be
 rerun. It never changes an Argo source or restores a production database.
 
+For an interrupted non-repeatable Forum step, `inspect` reports its step and
+exact journal SHA256. Follow the Forum package's manual repair procedure while
+the same maintenance owner and original backup remain held. After the native
+operation is independently complete and its operator Pod has terminated, use:
+
+```bash
+bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action repair --acknowledge-step STEP --expected-journal-sha256 EXACT_JOURNAL_SHA256
+```
+
+The fixed read-only verifier must prove that exact step complete. The command
+appends only that checkpoint, never replays it, and then continues the original
+approved candidate. A changed journal, incomplete native migration or foreign
+owner refuses without removing maintenance or replacing the original backup.
+
 `--action inspect` verifies an already settled target without replaying its
 repair. Fresh native/target readback and the original PostgreSQL generation/lock
 CAS release quarantine without accepting the failed release. The same command

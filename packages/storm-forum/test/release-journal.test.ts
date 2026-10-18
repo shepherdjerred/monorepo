@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,6 +9,7 @@ import {
   runForumReleaseSteps,
   reuseCompletedForumRelease,
   writeForumReleaseJournal,
+  acknowledgeForumReleaseStep,
   type ForumReleaseJournal,
 } from "#src/release-journal.ts";
 
@@ -29,6 +31,118 @@ function journal(): ForumReleaseJournal {
     completed: [],
   };
 }
+
+describe("operator acknowledgement of a completed interrupted Forum step", () => {
+  it.each(["install", "addons", "seed", "history", "accounts"] as const)(
+    "acknowledges only independently completed %s, preserving the original identity and never replaying it",
+    async (step) => {
+      const directory = await mkdtemp(path.join(tmpdir(), "forum-ack-"));
+      try {
+        const value = journal();
+        value.phase = "mutating";
+        value.step = step;
+        value.completed = FORUM_RELEASE_STEPS.slice(
+          0,
+          FORUM_RELEASE_STEPS.indexOf(step),
+        );
+        value.original = value.candidate;
+        value.originalSnapshot = `snapshots/prod/${value.owner}/manifest.json`;
+        const file = path.join(directory, "journal.json");
+        await writeForumReleaseJournal(file, value);
+        const before = await Bun.file(file).text();
+        const input = {
+          step,
+          journalSha256: createHash("sha256").update(before).digest("hex"),
+        };
+        await expect(
+          acknowledgeForumReleaseStep(
+            file,
+            value,
+            { ...input, journalSha256: "0".repeat(64) },
+            async () => {
+              throw new Error("must not inspect stale journal");
+            },
+          ),
+        ).rejects.toThrow("bytes or identity");
+        await expect(
+          acknowledgeForumReleaseStep(file, value, input, async () => {
+            throw new Error("native migration is incomplete");
+          }),
+        ).rejects.toThrow("incomplete");
+        expect(await Bun.file(file).text()).toBe(before);
+        const verified: string[] = [];
+        await acknowledgeForumReleaseStep(
+          file,
+          value,
+          input,
+          async (checked) => {
+            verified.push(checked);
+          },
+        );
+        expect(verified).toEqual([step]);
+        expect(value.completed).toEqual(
+          FORUM_RELEASE_STEPS.slice(0, FORUM_RELEASE_STEPS.indexOf(step) + 1),
+        );
+        expect(value).toMatchObject({
+          owner: JSON.parse(before).owner,
+          originalSnapshot: JSON.parse(before).originalSnapshot,
+          phase: "ready",
+          step: null,
+        });
+        const effects: string[] = [];
+        await runForumReleaseSteps(
+          value,
+          async (next) => {
+            effects.push(next);
+          },
+          () => Promise.resolve(),
+        );
+        expect(effects).toEqual(
+          FORUM_RELEASE_STEPS.slice(FORUM_RELEASE_STEPS.indexOf(step) + 1),
+        );
+        expect(effects).not.toContain(step);
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+  it("refuses a different interrupted step and a journal changed during readonly inspection", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "forum-ack-race-"));
+    try {
+      const value = journal();
+      value.phase = "mutating";
+      value.step = "install";
+      const file = path.join(directory, "journal.json");
+      await writeForumReleaseJournal(file, value);
+      const before = await Bun.file(file).text();
+      const journalSha256 = createHash("sha256").update(before).digest("hex");
+      await expect(
+        acknowledgeForumReleaseStep(
+          file,
+          value,
+          { step: "addons", journalSha256 },
+          async () => {
+            throw new Error("must not inspect foreign step");
+          },
+        ),
+      ).rejects.toThrow("exact interrupted step");
+      await expect(
+        acknowledgeForumReleaseStep(
+          file,
+          value,
+          { step: "install", journalSha256 },
+          async () => {
+            await Bun.write(file, before + "\n");
+          },
+        ),
+      ).rejects.toThrow("changed during");
+      expect(value.phase).toBe("mutating");
+      expect(value.completed).toEqual([]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("original Forum native phase journal", () => {
   it("recreated completed Job verifies the same candidate without changing owner, journal or replaying steps", async () => {

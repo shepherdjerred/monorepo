@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ForumStepAcknowledgementSchema } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import { deliveryUrl } from "@shepherdjerred/toolkit/lib/delivery/client.ts";
 import {
@@ -21,12 +22,33 @@ import { openOperatorRecovery } from "./temporal-operator-credentials.ts";
 async function main() {
   const flags = parseFlagArguments(
     process.argv.slice(2),
-    new Set(["--intent", "--url", "--context", "--action"]),
+    new Set([
+      "--intent",
+      "--url",
+      "--context",
+      "--action",
+      "--acknowledge-step",
+      "--expected-journal-sha256",
+    ]),
   );
   const id = requiredParsedArgument(flags, "--intent");
   const action = ContentActionSchema.parse(
     requiredParsedArgument(flags, "--action"),
   );
+  const acknowledgement =
+    flags.has("--acknowledge-step") || flags.has("--expected-journal-sha256")
+      ? ForumStepAcknowledgementSchema.parse({
+          step: requiredParsedArgument(flags, "--acknowledge-step"),
+          journalSha256: requiredParsedArgument(
+            flags,
+            "--expected-journal-sha256",
+          ),
+        })
+      : undefined;
+  if (acknowledgement !== undefined && action !== "repair")
+    throw new ContentOperatorError(
+      "Step acknowledgement requires --action repair",
+    );
   const context = z
     .literal("admin@torvalds")
     .parse(requiredParsedArgument(flags, "--context"));
@@ -54,6 +76,7 @@ async function main() {
     const result = await recoverContentWithOperator(id, action, {
       kubernetes,
       connection,
+      ...(acknowledgement === undefined ? {} : { acknowledgement }),
       signal: AbortSignal.timeout(135 * 60_000),
       command: async (argv) => {
         const child = Bun.spawn([...argv], {

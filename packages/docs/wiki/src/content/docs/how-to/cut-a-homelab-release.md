@@ -523,6 +523,40 @@ accepting the failed deployment or changing its accepted release.
    and native Jobs, verifies the result, then restores that exact host. It does
    not create an automatic recovery Workflow or controller.
 
+   If an interrupted forum `install`, `addons`, `seed`, `history` or `accounts`
+   step cannot be retried safely, retain the reported step and journal SHA-256.
+   Keep maintenance active. Check the terminal original Pod's UID, image and
+   owning Job UID against the frozen receipt before copying it for native repair.
+   Preserve its original image, environment, PVCs and init containers. For
+   example, after reviewing the native history checkpoints:
+
+   ```bash
+   kubectl --context admin@torvalds -n FORUM_NAMESPACE debug ORIGINAL_POD --copy-to=MANUAL_REPAIR_POD --container=release --keep-init-containers=true --keep-labels=true --profile=restricted --share-processes=false -- php /opt/storm-forum/runtime/command.php storm:history --migrate
+   ```
+
+   Use the corresponding native command for reviewed seed or account repair.
+   Diagnose installation and add-on state with XenForo's native recovery tools;
+   do not blindly rerun a migration or delete a pending merge marker.
+   Wait for the exact manual Pod to terminate and retain its result. Read its
+   current UID and resource version, then remove only that Pod:
+
+   ```bash
+   kubectl --context admin@torvalds -n FORUM_NAMESPACE get pod MANUAL_REPAIR_POD -o jsonpath='{.metadata.uid}{" "}{.metadata.resourceVersion}{" "}{.status.phase}{"\n"}'
+   kubectl --context admin@torvalds delete --raw /api/v1/namespaces/FORUM_NAMESPACE/pods/MANUAL_REPAIR_POD -f - <<'JSON'
+   {"apiVersion":"v1","kind":"DeleteOptions","preconditions":{"uid":"MANUAL_POD_UID","resourceVersion":"MANUAL_POD_RESOURCE_VERSION"},"propagationPolicy":"Foreground"}
+   JSON
+   ```
+
+   Require its deletion before acknowledging the same interrupted step and
+   exact journal hash:
+
+   ```bash
+   bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent INTENT_ID --action repair --acknowledge-step STEP --expected-journal-sha256 JOURNAL_SHA256 --context admin@torvalds --url https://delivery.tailnet-1a49.ts.net
+   ```
+
+   Fixed read-only native checks must prove completion before that one
+   checkpoint is appended. A failed check keeps the owner, backup and journal.
+
 5. Confirm independent settlement succeeded and the original failed result and
    accepted pointers remain unchanged. A failed or refused recovery retains
    ownership; inspect its exact reason before requesting another attempt.

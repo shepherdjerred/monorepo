@@ -1,5 +1,10 @@
 import { rename } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { z } from "zod";
+import {
+  ForumStepAcknowledgementSchema,
+  type ForumStepAcknowledgement,
+} from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { SnapshotSourceSchema } from "./storage.ts";
 
 const Step = z.enum([
@@ -41,6 +46,45 @@ const REPEATABLE = new Set<string>([
   "manual-jobs",
   "jobs",
 ]);
+
+/** Operator acknowledgement proves one completed effect; it never retries it. */
+export async function acknowledgeForumReleaseStep(
+  file: string,
+  journal: ForumReleaseJournal,
+  raw: ForumStepAcknowledgement,
+  verify: (step: ForumStepAcknowledgement["step"]) => Promise<void>,
+): Promise<void> {
+  const input = ForumStepAcknowledgementSchema.parse(raw);
+  const before = await Bun.file(file).text();
+  if (
+    createHash("sha256").update(before).digest("hex") !== input.journalSha256 ||
+    JSON.stringify(ForumReleaseJournalSchema.parse(JSON.parse(before))) !==
+      JSON.stringify(ForumReleaseJournalSchema.parse(journal))
+  )
+    throw new Error("Forum acknowledgement journal bytes or identity changed");
+  forumResumeStep({ ...journal, phase: "ready", step: null });
+  if (
+    journal.phase !== "mutating" ||
+    journal.step !== input.step ||
+    FORUM_RELEASE_STEPS[journal.completed.length] !== input.step
+  )
+    throw new Error(
+      "Forum acknowledgement must name the exact interrupted step",
+    );
+  await verify(input.step);
+  if ((await Bun.file(file).text()) !== before)
+    throw new Error(
+      "Forum journal changed during native completion inspection",
+    );
+  const completed: ForumReleaseJournal = {
+    ...journal,
+    completed: [...journal.completed, input.step],
+    phase: "ready",
+    step: null,
+  };
+  await writeForumReleaseJournal(file, completed);
+  Object.assign(journal, completed);
+}
 
 /** Recreating the exact completed source Job is a read-only acknowledgement,
  * never a new owner or a replay of a database migration.

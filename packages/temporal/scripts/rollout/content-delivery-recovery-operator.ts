@@ -1,4 +1,5 @@
 import { Client, type Connection } from "@temporalio/client";
+import type { ForumStepAcknowledgement } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import type { KubeConfig } from "@kubernetes/client-node";
 import { z } from "zod";
 import {
@@ -56,6 +57,7 @@ export async function recoverContentWithOperator(
     connection: Connection;
     command: RolloutCommandRunner;
     signal: AbortSignal;
+    acknowledgement?: ForumStepAcknowledgement;
   },
 ) {
   const base = `content-recovery/${encodeURIComponent(id)}`;
@@ -203,12 +205,20 @@ export async function recoverContentWithOperator(
         safeToResume: z.boolean(),
         owner: z.uuid(),
         observedAt: z.iso.datetime(),
+        step: z.string().nullable().optional(),
+        journalSha256: z
+          .string()
+          .regex(/^[a-f0-9]{64}$/u)
+          .optional(),
       })
       .parse(
         await runForumRecoveryChild({
           ...original,
           intentId: id,
           action: requested,
+          ...(requested === "repair" && runtime.acknowledgement !== undefined
+            ? { acknowledgement: runtime.acknowledgement }
+            : {}),
           attempt,
           config: runtime.kubernetes,
           checkpoint: async (receipt) => {
@@ -234,7 +244,7 @@ export async function recoverContentWithOperator(
       (!result.settled || Date.now() - Date.parse(result.observedAt) > 60_000)
     )
       throw new ContentOperatorError(
-        `Forum journal is ${result.phase}; ${result.safeToResume ? "use repair for the same approved candidate" : "retain original backup/owner for reviewed native migration inspection"}`,
+        `Forum journal is ${result.phase}, step ${result.step ?? "none"}, SHA256 ${result.journalSha256 ?? "unavailable"}; ${result.safeToResume ? "use repair for the same approved candidate" : "retain original backup/owner for reviewed native migration inspection; acknowledge only independently completed steps"}`,
       );
   };
   return await executeContentRecovery(id, action, {
@@ -278,6 +288,11 @@ export async function recoverContentWithOperator(
       ),
     ownership: async (context) => await ownership(context),
     repair: async (context) => {
+      if (
+        runtime.acknowledgement !== undefined &&
+        context.intent.targetKind !== "forum"
+      )
+        throw new Error("Step acknowledgement is only supported for Forum");
       await backend(context, false);
       if (context.intent.targetKind === "forum") await forum(context, "repair");
       else {

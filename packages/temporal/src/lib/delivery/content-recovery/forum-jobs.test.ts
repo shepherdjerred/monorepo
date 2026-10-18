@@ -4,8 +4,13 @@ import { ContentRecoveryNativeReceiptSchema } from "@shepherdjerred/delivery/con
 import {
   FORUM_RECOVERY_ANNOTATIONS as annotations,
   ForumReleaseIdSchema,
+  parseForumRecoveryAction,
 } from "@shepherdjerred/ops-model/forum-recovery.ts";
-import { forumJobFingerprint, forumRecoveryChild } from "./forum-jobs.ts";
+import {
+  forumJobFingerprint,
+  forumRecoveryChild,
+  assertNoOtherForumWriter,
+} from "./forum-jobs.ts";
 
 function original() {
   const job = {
@@ -122,6 +127,31 @@ test("manual child is a suspended exact original PodSpec with only fixed intent/
   ).toThrow("changed");
 });
 
+test("a live manual copy or foreign release cannot coexist with native acknowledgement", () => {
+  const uid = crypto.randomUUID();
+  const owned = {
+    metadata: {
+      ownerReferences: [
+        { apiVersion: "batch/v1", kind: "Job", name: "exact-child", uid },
+      ],
+    },
+    status: { phase: "Running" },
+  };
+  expect(() =>
+    assertNoOtherForumWriter([owned, { status: { phase: "Failed" } }], uid),
+  ).not.toThrow();
+  for (const phase of ["Running", "Pending", "Unknown"])
+    expect(() =>
+      assertNoOtherForumWriter(
+        [owned, { metadata: { name: "operator-copy" }, status: { phase } }],
+        uid,
+      ),
+    ).toThrow("remains live");
+  expect(() => assertNoOtherForumWriter([owned], crypto.randomUUID())).toThrow(
+    "remains live",
+  );
+});
+
 test("execution-policy defaults are normalized but extra parallel writers and altered original Pod bytes change fingerprint", () => {
   const { job } = original();
   expect(
@@ -193,4 +223,43 @@ test("native producer accepts existing operator12 and Delivery32 release identif
     "G".repeat(32),
   ])
     expect(ForumReleaseIdSchema.safeParse(invalid).success).toBe(false);
+});
+
+test("explicit operator acknowledgement is bound into the exact child fingerprint and accepts only one fixed step and journal hash", () => {
+  const { job, receipt } = original();
+  const input = {
+    original: job,
+    receipt,
+    intentId: "operator/manual",
+    action: "repair" as const,
+    attempt: 1,
+  };
+  const child = forumRecoveryChild({
+    ...input,
+    acknowledgement: { step: "accounts", journalSha256: "d".repeat(64) },
+  });
+  const action =
+    child.spec?.template.metadata?.annotations?.[annotations.action];
+  expect(parseForumRecoveryAction(action ?? "")).toEqual({
+    action: "repair",
+    acknowledgement: { step: "accounts", journalSha256: "d".repeat(64) },
+  });
+  expect(child.spec?.template.spec).toEqual(job.spec?.template.spec);
+  expect(forumJobFingerprint(child)).not.toBe(
+    forumJobFingerprint(forumRecoveryChild(input)),
+  );
+  expect(() =>
+    forumRecoveryChild({
+      ...input,
+      action: "inspect",
+      acknowledgement: { step: "accounts", journalSha256: "d".repeat(64) },
+    }),
+  ).toThrow("explicit Forum repair");
+  for (const invalid of [
+    "repair:jobs:" + "d".repeat(64),
+    "inspect:accounts:" + "d".repeat(64),
+    "repair:accounts:bad",
+    "repair:accounts:" + "d".repeat(64) + ":extra",
+  ])
+    expect(() => parseForumRecoveryAction(invalid)).toThrow();
 });

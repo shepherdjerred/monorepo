@@ -7,6 +7,7 @@ import {
   setHeaderOptions,
   type KubeConfig,
   type V1Job,
+  type V1Pod,
 } from "@kubernetes/client-node";
 import {
   ContentRecoveryNativeReceiptSchema,
@@ -17,6 +18,8 @@ import {
   FORUM_RECOVERY_ANNOTATIONS as annotations,
   FORUM_RECOVERY_IMAGE_ABI,
   FORUM_RECOVERY_IMAGE_LABEL,
+  ForumStepAcknowledgementSchema,
+  type ForumStepAcknowledgement,
 } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { ociImageConfigurations } from "@shepherdjerred/ops-model/oci-image-configurations.ts";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
@@ -28,6 +31,24 @@ import { normalizePod } from "#lib/delivery/job-manifest.ts";
 import { renderWorkerChart } from "#lib/delivery/workers/worker-control-plane.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import type { ContentAction } from "./request.ts";
+
+export function assertNoOtherForumWriter(
+  pods: V1Pod[],
+  activeChildUID: string,
+): void {
+  if (
+    pods.some(
+      (pod) =>
+        !["Succeeded", "Failed"].includes(pod.status?.phase ?? "") &&
+        pod.metadata?.ownerReferences?.some(
+          (owner) => owner.kind === "Job" && owner.uid === activeChildUID,
+        ) !== true,
+    )
+  )
+    throw new Error(
+      "Another Forum release or operator repair Pod remains live; stop and settle that exact writer before recovery",
+    );
+}
 
 export function forumJobFingerprint(raw: unknown): string {
   const job = z
@@ -148,9 +169,16 @@ export function forumRecoveryChild(input: {
   receipt: ContentRecoveryNativeReceipt["receipt"];
   intentId: string;
   action: ContentAction;
+  acknowledgement?: ForumStepAcknowledgement;
   attempt: number;
 }): V1Job {
   const { original, receipt, intentId, action, attempt } = input;
+  const acknowledgement =
+    input.acknowledgement === undefined
+      ? undefined
+      : ForumStepAcknowledgementSchema.parse(input.acknowledgement);
+  if (acknowledgement !== undefined && action !== "repair")
+    throw new Error("Only explicit Forum repair can acknowledge a step");
   if (
     !original.spec?.template.spec ||
     original.metadata?.uid !== receipt.uid ||
@@ -202,7 +230,10 @@ export function forumRecoveryChild(input: {
           labels: { app: "storm-forum", component: "release" },
           annotations: {
             [annotations.intent]: intentId,
-            [annotations.action]: action,
+            [annotations.action]:
+              acknowledgement === undefined
+                ? action
+                : `repair:${acknowledgement.step}:${acknowledgement.journalSha256}`,
           },
         },
         spec: structuredClone(original.spec.template.spec),
@@ -216,6 +247,7 @@ export async function runForumRecoveryChild(input: {
   receipt: ContentRecoveryNativeReceipt["receipt"];
   intentId: string;
   action: ContentAction;
+  acknowledgement?: ForumStepAcknowledgement;
   attempt: number;
   config: KubeConfig;
   checkpoint: (
@@ -256,6 +288,11 @@ export async function runForumRecoveryChild(input: {
   });
   await input.checkpoint(receipt);
   await input.fence(receipt.uid);
+  const writers = await pods.listNamespacedPod({
+    namespace,
+    labelSelector: "app=storm-forum,component=release",
+  });
+  assertNoOtherForumWriter(writers.items, receipt.uid);
   if (actual.spec?.suspend === true) {
     await jobs.patchNamespacedJob(
       {
