@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import jdk.jfr.Event;
 import jdk.jfr.FlightRecorder;
+import jdk.jfr.FlightRecorderListener;
 import jdk.jfr.Name;
 import jdk.jfr.Recording;
 import jdk.jfr.RecordingState;
@@ -302,6 +303,51 @@ final class DiagnosticJfrTest {
       assertEquals(DiagnosticJfr.State.FAILED, failed.state());
       assertNotNull(failed.detail().export());
       assertTrue(failed.failure().contains("without validated explicit stop"));
+    }
+  }
+
+  @Test
+  void durationExpiryWaitsForNativeDestinationCloseBeforeInspectingExport() throws Exception {
+    var stopping = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var listener =
+        new FlightRecorderListener() {
+          @Override
+          public void recordingStateChanged(Recording recording) {
+            if (!recording.getName().equals("storm-fixture-" + binding.attempt())
+                || recording.getState() != RecordingState.STOPPED) return;
+            stopping.countDown();
+            try {
+              release.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException failure) {
+              Thread.currentThread().interrupt();
+            }
+          }
+        };
+    FlightRecorder.addListener(listener);
+    try (var controller =
+        new DiagnosticJfr(
+            root(),
+            DiagnosticJfrTest::settings,
+            new DiagnosticJfr.Limits(
+                Duration.ofMillis(500), 8 * 1024 * 1024, Duration.ofSeconds(5)))) {
+      activate(controller);
+      assertTrue(stopping.await(5, TimeUnit.SECONDS));
+      var exporting =
+          await(
+              controller,
+              status -> status.state() == DiagnosticJfr.State.EXPORTING || !status.workerAlive());
+      assertEquals(DiagnosticJfr.State.EXPORTING, exporting.state());
+      assertTrue(exporting.workerAlive());
+      release.countDown();
+      var failed = terminal(controller);
+      assertEquals(DiagnosticJfr.State.FAILED, failed.state());
+      assertNotNull(failed.detail().export());
+      assertTrue(failed.failure().contains("without validated explicit stop"));
+      assertOwnedRecordingClosed(failed);
+    } finally {
+      release.countDown();
+      FlightRecorder.removeListener(listener);
     }
   }
 
