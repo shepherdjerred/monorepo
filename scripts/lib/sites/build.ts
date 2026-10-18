@@ -1,5 +1,6 @@
 import { run } from "../run.ts";
 import { fileURLToPath } from "node:url";
+import { copyFile, lstat, mkdir, rm } from "node:fs/promises";
 
 type DeploySiteBase = {
   bucket: string;
@@ -73,7 +74,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     // xelatex compiles the gitignored resume.pdf; CI deploys --prebuilt (the
     // resume-build step's artifact) because only the texlive container has TeX.
     buildCmd: "bun --no-install run build",
-    distDir: "packages/resume",
+    distDir: "packages/resume/dist",
     target: "s3",
     immutablePrefixes: [],
   },
@@ -303,6 +304,7 @@ async function assertPrebuiltSite(
 export async function prepareStaticSite(
   args: string[],
   dryRun: boolean,
+  root = repoRoot(),
 ): Promise<{ bucket: string; source: string; root: string } | null> {
   const allowed = new Set([
     "--archive",
@@ -329,13 +331,30 @@ export async function prepareStaticSite(
   const prebuilt = args.includes("--prebuilt");
   const site = selectSite(args);
 
-  const root = repoRoot();
   const buildDir = `${root}/${site.buildDir}`;
   const distDir = `${root}/${site.distDir}`;
 
   console.log(`--- Deploy ${site.name} -> ${site.bucket} (${site.url})`);
   console.log(dryRun ? "(dry run)" : "(live)");
 
+  if (!prebuilt) await runBuild(site, buildDir, dryRun);
+  if (!dryRun && site.name === "resume") {
+    // The cross-workflow handoff is the PDF only. Package the fixed public
+    // entrypoints with it, never the checkout's TeX sources or guidance links.
+    const files = ["index.html", "404.html", "resume.pdf"];
+    for (const file of files) {
+      const stats = await lstat(`${buildDir}/${file}`);
+      if (!stats.isFile())
+        throw new Error(`Resume site requires a regular file: ${file}`);
+    }
+    await rm(distDir, { recursive: true, force: true });
+    await mkdir(distDir, { recursive: true });
+    await Promise.all(
+      files.map((file) =>
+        copyFile(`${buildDir}/${file}`, `${distDir}/${file}`),
+      ),
+    );
+  }
   if (prebuilt) {
     // The dist was produced elsewhere (e.g. a CI artifact from a container
     // with build-only tooling like playwright browsers). Refuse to sync a
@@ -344,8 +363,6 @@ export async function prepareStaticSite(
     console.log(
       `build: skipped (--prebuilt; syncing existing ${site.distDir})`,
     );
-  } else {
-    await runBuild(site, buildDir, dryRun);
   }
 
   // Every site in the catalog ships a root index.html. Refuse a live sync
