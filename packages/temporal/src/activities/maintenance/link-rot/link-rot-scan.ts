@@ -16,6 +16,7 @@ const ROOT_RELATIVE_LINK_OWNER_PREFIXES = [
   "packages/sjer.red/src/pages/",
   "packages/webring/example/src/content/",
   "packages/ts-mc-docs/src/content/docs/",
+  "packages/glitter-boys/src/content/docs/",
 ] as const;
 /** lychee reserves exit 2 for "broken links found" — a finding, not a crash. */
 const LYCHEE_FINDINGS_EXIT_CODE = 2;
@@ -113,9 +114,9 @@ export type ParsedLycheeReport = {
  *
  * lychee cannot resolve site-root-relative URLs from a repository containing
  * multiple sites, so it emits these as synthetic `error:` records. The wiki,
- * Scout docs, Storm docs, sjer.red, and webring example builds validate their links
- * against their actual roots; root-relative diagnostics elsewhere remain
- * actionable findings.
+ * Scout docs, Storm docs, Glitter Boys, sjer.red, and webring example builds
+ * validate their links against their actual roots; root-relative diagnostics
+ * elsewhere remain actionable findings.
  */
 export function parseLycheeReport(json: string): ParsedLycheeReport {
   const report = LycheeReportSchema.parse(JSON.parse(json));
