@@ -9,6 +9,10 @@ import {
   type Principal,
 } from "#shared/contract.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
+import {
+  reviewedOwnershipDefinitions,
+  requireReviewedOwnershipDefinition,
+} from "./definitions.ts";
 
 const context = useDeliveryFixture({
   registration: {
@@ -155,6 +159,57 @@ test("quarantine and ownership counts come from all PG rows, independently of th
   expect(observed.targets[0]?.generation).toBe(
     context.fixture.environment.generation + 1,
   );
+});
+
+test("root handover uses its canonical registration and rejects different runner or application identities", async () => {
+  const definitions = await reviewedOwnershipDefinitions();
+  const root = definitions.get("gitops/root");
+  if (root === undefined)
+    throw new Error("Canonical root registration missing");
+  expect(root.environment).toMatchObject({
+    application: "apps",
+    pipelineRevisionId: "platform/root/1",
+  });
+  expect(root.pipeline.kind).toBe("root-release");
+  const pipeline = await context.delivery.registerPipeline(
+    root.environment.pipelineRevisionId,
+    root.pipeline,
+    testOperator,
+  );
+  const environment = await context.delivery.registerEnvironment(
+    root.environment,
+    testOperator,
+  );
+  const response = await app().request("/api/v1/ownership-handover-context", {
+    headers: admin,
+  });
+  expect(response.status).toBe(200);
+  expect(
+    OwnershipHandoverContextSchema.parse(await response.json()).targets,
+  ).toContainEqual(
+    expect.objectContaining({
+      environmentId: "gitops/root",
+      application: "apps",
+      pipelineRevisionId: "platform/root/1",
+      pipeline: root.pipeline,
+    }),
+  );
+  expect(() =>
+    requireReviewedOwnershipDefinition(definitions, environment, {
+      ...pipeline,
+      definition: {
+        kind: "root-release",
+        runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"f".repeat(64)}`,
+      },
+    }),
+  ).toThrow("exact code-reviewed registered pipeline");
+  expect(() =>
+    requireReviewedOwnershipDefinition(
+      definitions,
+      { ...environment, application: "unreviewed-root" },
+      pipeline,
+    ),
+  ).toThrow("exact code-reviewed registered pipeline");
 });
 
 test("fresh admission changes during the same PG observation fail closed", async () => {

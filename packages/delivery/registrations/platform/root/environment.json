@@ -1,0 +1,10 @@
+{
+  "id": "gitops/root",
+  "serviceId": "gitops",
+  "name": "root",
+  "application": "apps",
+  "pipelineRevisionId": "platform/root/1",
+  "configurationRevision": "platform/1",
+  "configuration": {},
+  "automatic": true
+}
