@@ -90,18 +90,20 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
             "Temporal Activity {{ $labels.activityType }} exhausted retries",
           ),
           description: escapePrometheusTemplate(
-            "Activity {{ $labels.activityType }} in {{ $labels.workflowType }} reached a terminal failure on {{ $labels.taskqueue }}. Inspect its execution, trace, and Activity logs.",
+            "Activity {{ $labels.activityType }} in {{ $labels.workflowType }} failed with no retries left on {{ $labels.taskqueue }}: its retry policy was exhausted or the failure was non-retryable. Inspect its execution, trace, and Activity logs.",
           ),
         },
-        // activity_task_fail (not activity_fail) is the series every other
-        // Temporal/Scout failure rule in this repo queries (temporal.ts,
-        // scout.ts). It comes from the Temporal server, so `namespace` is the
-        // *Kubernetes* namespace it was scraped in ("temporal") and the
-        // Temporal namespace is `exported_namespace` — the same shape as
-        // approximate_backlog_count. Select the active Temporal namespaces,
-        // not the Kubernetes namespace label.
+        // The Temporal server counts every failed attempt in
+        // activity_task_fail ("includes retries") and only the failures that
+        // will not be retried in activity_fail. RecordActivityCompletionMetrics
+        // in service/history/workflow/metrics.go (v1.32.1) increments
+        // activity_fail only when the activity closed. Counting attempts
+        // fired this alert on every transient retry that later succeeded.
+        // Both come from the server, so `namespace` is the *Kubernetes*
+        // namespace it was scraped in ("temporal") and the Temporal namespace
+        // is `exported_namespace`.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(activity_task_fail{exported_namespace=~"prod|beta"}[15m]) > 0',
+          'increase(activity_fail{exported_namespace=~"prod|beta"}[15m]) > 0',
         ),
         for: "1m",
         labels: { severity: "warning" },

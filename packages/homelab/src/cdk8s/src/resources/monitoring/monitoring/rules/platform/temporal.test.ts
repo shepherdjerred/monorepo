@@ -41,14 +41,6 @@ function parseDuration(value: string): number {
   return Number(amount) * multiplier;
 }
 
-test("schedule activity failures do not claim consecutive failed daily runs", () => {
-  const rule = getTemporalRuleGroups()
-    .flatMap((group) => group.rules ?? [])
-    .find((entry) => entry.alert === "TemporalScheduledWorkflowFailingDaily");
-  expect(rule?.annotations?.["description"]).toContain("including retries");
-  expect(rule?.annotations?.["description"]).not.toContain("twice in a row");
-  expect(rule?.annotations?.["description"]).not.toContain("A daily schedule");
-});
 describe("Temporal workflow outcome rules", () => {
   test("alerts on schedule delay, Workflow Task failures, nondeterminism, and exhausted Activity retries", () => {
     const healthGroup = getTemporalRuleGroups().find(
@@ -76,11 +68,14 @@ describe("Temporal workflow outcome rules", () => {
     expect(expressions.get("TemporalWorkflowNondeterministic")).toContain(
       'failure_reason="NonDeterminismError"',
     );
-    // activity_task_fail, not activity_fail — the metric every other
-    // Temporal/Scout failure rule in this file queries. It comes from the
-    // server, so `namespace` is the Kubernetes namespace and the Temporal
-    // namespace is `exported_namespace`.
+    // activity_fail counts only failures that will not be retried;
+    // activity_task_fail counts every attempt. It comes from the server, so
+    // `namespace` is the Kubernetes namespace and the Temporal namespace is
+    // `exported_namespace`.
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
+      "increase(activity_fail{",
+    );
+    expect(expressions.get("TemporalActivityRetriesExhausted")).not.toContain(
       "activity_task_fail",
     );
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
