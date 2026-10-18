@@ -15,12 +15,15 @@ import {
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import fixture from "#src/scout-client/canonical/testdata/classic-end-of-game.json";
 import type { resolveCompleteMatch } from "#src/evidence/matches.ts";
+import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
+import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
 const { prisma } = createTestDatabase("terminal-scoreboard-recovery");
 const io = vi.hoisted(() => ({
   hardDisabled: vi.fn(() => false),
   render: vi.fn(async () => "rendered"),
   completeMatch: vi.fn<typeof resolveCompleteMatch>(),
+  fetchMatch: vi.fn<typeof fetchMatchData>(),
 }));
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 vi.mock("#src/configuration/flags.ts", async (original) => ({
@@ -29,6 +32,9 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
 }));
 vi.mock("#src/evidence/matches.ts", () => ({
   resolveCompleteMatch: io.completeMatch,
+}));
+vi.mock("#src/league/tasks/postmatch/match-data-fetcher.ts", () => ({
+  fetchMatchData: io.fetchMatch,
 }));
 vi.mock("#src/temporal/notification-lane/notification-render.ts", () => ({
   renderMatchNotificationArtifact: io.render,
@@ -62,6 +68,7 @@ beforeEach(async () => {
   io.render.mockReset();
   io.render.mockResolvedValue("rendered");
   io.completeMatch.mockReset();
+  io.fetchMatch.mockReset();
   io.completeMatch.mockResolvedValue({
     kind: "unavailable",
     reason: "No full match coverage",
@@ -202,6 +209,33 @@ test("accepted Classic scoreboard reaches an ordinary pending report intent with
   await expect(matchMayAnnounce(prisma, matchId, "settlement")).rejects.toThrow(
     "no observation",
   );
+});
+
+test("a forbidden Riot read cannot block the real resolver from recovering a client scoreboard", async () => {
+  await upload();
+  const actual = await vi.importActual<{
+    resolveCompleteMatch: typeof resolveCompleteMatch;
+  }>("#src/evidence/matches.ts");
+  io.completeMatch.mockImplementation(actual.resolveCompleteMatch);
+  io.fetchMatch.mockRejectedValue(
+    new RiotHttpError({
+      status: 403,
+      statusText: "Forbidden",
+      body: { status: { status_code: 403, message: "Forbidden" } },
+      url: "match-evidence",
+      headers: new Headers(),
+    }),
+  );
+  await reconcileMatchHistory();
+  expect(io.fetchMatch).toHaveBeenCalledTimes(1);
+  await expect(io.completeMatch.mock.results[0]?.value).resolves.toMatchObject({
+    kind: "unavailable",
+    reason: "No complete compatible match evidence",
+  });
+  const snapshot = await readReportScoreboard(matchId);
+  expect(snapshot?.result.participants).toHaveLength(10);
+  expect(await prisma.matchNotificationIntent.count()).toBe(1);
+  expect(await prisma.matchObservation.count()).toBe(0);
 });
 
 test("available full evidence does not send an unobserved result through observed-only recovery", async () => {

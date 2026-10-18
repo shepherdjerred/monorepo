@@ -7,6 +7,7 @@ import {
   RiotTransportError,
 } from "#src/league/api/client/errors.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
+import { evidenceRecoveryEnabled } from "./admission.ts";
 
 const OperationalErrorSchema = z.object({
   code: z.enum([
@@ -40,14 +41,21 @@ export async function optionalSourceRead<T>(
       ? read()
       : withTimeout(read(), timeoutMs));
   } catch (error) {
+    const forbidden =
+      source === "RIOT" &&
+      extractHttpStatus(error) === 403 &&
+      evidenceRecoveryEnabled();
     const deadlineExpired =
       timeoutMs !== undefined &&
       error instanceof Error &&
       error.message === `API request timed out after ${timeoutMs.toString()}ms`;
-    if (!deadlineExpired && !isExpectedSourceReadError(error)) throw error;
-    Sentry.captureException(error, {
-      tags: { source: "evidence-acquisition", evidenceSource: source },
-    });
+    if (!forbidden && !deadlineExpired && !isExpectedSourceReadError(error))
+      throw error;
+    // The Riot caller already reports forbidden responses before rethrowing.
+    if (!forbidden)
+      Sentry.captureException(error, {
+        tags: { source: "evidence-acquisition", evidenceSource: source },
+      });
     return undefined;
   }
 }
