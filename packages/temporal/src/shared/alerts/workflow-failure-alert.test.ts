@@ -120,6 +120,20 @@ describe("buildWorkflowFailureAlert", () => {
     expect(description).toContain(`message ${longMessage}`);
   });
 
+  it("keeps an emoji whole when the summary cut lands inside it", () => {
+    const message = `${"x".repeat(199)}🔥${"y".repeat(50)}`;
+    const alert = buildWorkflowFailureAlert(
+      makeExecution(),
+      makeFailure({ message }),
+      NOW,
+      TTL_MS,
+    );
+
+    const summary = alert.annotations["summary"] ?? "";
+    expect(summary.isWellFormed()).toBe(true);
+    expect(summary.endsWith(`${"x".repeat(199)}…`)).toBe(true);
+  });
+
   it("truncates an overlong stack trace in the description", () => {
     const longStack = `Error: boom\n${"    at frame()\n".repeat(200)}`;
     const alert = buildWorkflowFailureAlert(

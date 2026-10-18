@@ -85,6 +85,7 @@
     "@shepherdjerred/seaweedfs-backup": "workspace:*",
     "@shepherdjerred/storm-forum": "workspace:*",
     "@shepherdjerred/temporal-observability": "workspace:*",
+    "@shepherdjerred/text": "workspace:*",
     "@spectrum-ts/core": "12.10.1",
     "@spectrum-ts/imessage": "12.10.1",
     "@temporalio/activity": "1.24.0",

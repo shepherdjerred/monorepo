@@ -10,7 +10,10 @@ import {
   PreparedImessageCommandSchema,
   type ImessageCommand,
 } from "#shared/agent/agent-chat-imessage.ts";
-import { validateAgentChatIngressTimestamp } from "#shared/agent/agent-chat-ingress.ts";
+import {
+  agentChatTitleFromPrompt,
+  validateAgentChatIngressTimestamp,
+} from "#shared/agent/agent-chat-ingress.ts";
 
 export const IMESSAGE_HELP =
   "Use /new claude <prompt> or /new codex <prompt>; /chats lists recent chats; /use <chat-id> selects any previous chat; /continue <chat-id> <prompt> continues it directly. Ordinary text continues the selected chat. Text prompts must be 1–4000 characters.";
@@ -89,7 +92,7 @@ export async function prepareImessageChatCommand(
         request,
         config: {
           chatId: `chat-${identityPrefix}-${digest}`,
-          title: action.prompt.slice(0, 80),
+          title: agentChatTitleFromPrompt(action.prompt),
           provider: action.provider,
           model:
             action.provider === "claude"

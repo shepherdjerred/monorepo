@@ -256,3 +256,32 @@ describe("dependency summary checkpoint failure reporting", () => {
     ]);
   }, 30_000);
 });
+
+describe("dependency summary release-note details", () => {
+  test("cuts release notes on grapheme boundaries inside the workflow sandbox", async () => {
+    const reports: ActivityReportInput[] = [];
+    const notes = `${"x".repeat(999)}🚀 Features`;
+    await runDependencySummaryScenario("dependency-summary-grapheme-notes", {
+      fetchDependencyReleaseNotes: () => ({
+        notes: [{ ...COMPLETE_RELEASE_NOTES.notes[0], notes }],
+        missing: [],
+      }),
+      deliverActivityReport: (report: ActivityReportInput) => {
+        reports.push(report);
+        return {
+          accepted: true,
+          duplicate: false,
+          reportRunId: "dependency-summary:run-grapheme",
+          acceptedAt: "2026-08-10T16:01:00.000Z",
+        };
+      },
+      advanceDependencySummaryCheckpoint: (): undefined => undefined,
+    });
+
+    const detail = reports[0]?.findings[0]?.detail;
+    expect(detail).toBe(
+      `${"x".repeat(999)} (https://github.com/owner/tool/releases/tag/2.0.0)`,
+    );
+    expect(detail?.isWellFormed()).toBe(true);
+  }, 30_000);
+});
