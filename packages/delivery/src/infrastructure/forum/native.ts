@@ -91,7 +91,7 @@ export const Tree = z.object({
     z.object({
       kind: z.string(),
       name: z.string(),
-      namespace: z.string(),
+      namespace: z.string().optional(),
       uid: z.string(),
       parentRefs: z.array(z.object({ uid: z.string() })).default([]),
     }),
@@ -178,7 +178,7 @@ export function nativePod(
     runtime.length !== 2 ||
     runtime.some(
       (container) =>
-        !context.image.runtimeDigests.some(
+        ![context.image.digest, ...context.image.runtimeDigests].some(
           (digest) =>
             container.imageID.replace(/^docker-pullable:\/\//u, "") ===
             `${context.image.uri}@${digest}`,

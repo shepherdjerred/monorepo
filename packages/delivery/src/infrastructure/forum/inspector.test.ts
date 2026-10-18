@@ -37,10 +37,11 @@ const metadata = (name: string, uid: string) => ({
 function nativeTransport(
   input: ForumBaselineContext,
   mutate?: (kind: string, resource: Record<string, unknown>) => void,
+  runtimeDigest = input.image.runtimeDigests[0] ?? "missing",
 ) {
   const requests: string[] = [],
     runtime = `${input.image.uri}@${input.image.digest}`,
-    imageID = `${input.image.uri}@${input.image.runtimeDigests[0] ?? "missing"}`;
+    imageID = `${input.image.uri}@${runtimeDigest}`;
   const container = (name: string) => ({
     name,
     image: runtime,
@@ -82,6 +83,17 @@ function nativeTransport(
       if (url.pathname.endsWith("/resource-tree"))
         return Response.json({
           nodes: [
+            {
+              kind: "Namespace",
+              name: "storm-forum",
+              uid: "namespace-uid",
+            },
+            {
+              kind: "Pod",
+              name: "out-of-scope-pod",
+              uid: "out-of-scope-pod-uid",
+              parentRefs: [{ uid: "rs-uid" }],
+            },
             {
               kind: "ReplicaSet",
               name: "storm-forum-web-rs",
@@ -201,23 +213,56 @@ function nativeTransport(
   };
 }
 
-test("reads exact native completed Job and actual ready runtime twice using separate fixed read capabilities", async () => {
+test.each(["index", "child"])(
+  "accepts cluster-scoped tree nodes and settles the qualified %s runtime identity",
+  async (identity) => {
+    const input = await context(),
+      transport = nativeTransport(
+        input,
+        undefined,
+        identity === "index"
+          ? input.image.digest
+          : input.image.runtimeDigests[0],
+      );
+    const inspect = createForumBaselineInspector({
+      argoOrigin: "https://argo.test",
+      argoToken: "argo-test-capability",
+      observationToken: "observer-test-capability",
+      policyReader: () => Promise.resolve(forumBundlePolicy),
+      fetch: transport.fetch,
+    });
+    const proof = await inspect(input);
+    expect(proof.releaseJob.uid).toBe("job-uid");
+    expect(proof.pods[0]?.uid).toBe("pod-uid");
+    expect(
+      transport.requests.filter((url) => url.endsWith("/_delivery/status")),
+    ).toHaveLength(2);
+    expect(transport.requests).toHaveLength(22);
+    const settled = await fixture.delivery.completeForumBaseline(
+      input.intent.id,
+      {
+        expectedEnvironmentGeneration: 0,
+        snapshotFingerprint: input.intent.snapshotFingerprint,
+      },
+      testExecutor,
+      inspect,
+    );
+    expect(settled.status).toBe("succeeded");
+  },
+);
+
+test("unknown runtime digests cannot establish a Forum baseline", async () => {
   const input = await context(),
-    transport = nativeTransport(input);
-  const inspect = createForumBaselineInspector({
-    argoOrigin: "https://argo.test",
-    argoToken: "argo-test-capability",
-    observationToken: "observer-test-capability",
-    policyReader: () => Promise.resolve(forumBundlePolicy),
-    fetch: transport.fetch,
-  });
-  const proof = await inspect(input);
-  expect(proof.releaseJob.uid).toBe("job-uid");
-  expect(proof.pods[0]?.uid).toBe("pod-uid");
-  expect(
-    transport.requests.filter((url) => url.endsWith("/_delivery/status")),
-  ).toHaveLength(2);
-  expect(transport.requests).toHaveLength(22);
+    transport = nativeTransport(input, undefined, `sha256:${"f".repeat(64)}`);
+  await expect(
+    createForumBaselineInspector({
+      argoOrigin: "https://argo.test",
+      argoToken: "argo-test-capability",
+      observationToken: "observer-test-capability",
+      policyReader: () => Promise.resolve(forumBundlePolicy),
+      fetch: transport.fetch,
+    })(input),
+  ).rejects.toThrow("original qualified platform digests");
 });
 test("rejects changed native source between observations and never falls back to unauthenticated health", async () => {
   const input = await context();

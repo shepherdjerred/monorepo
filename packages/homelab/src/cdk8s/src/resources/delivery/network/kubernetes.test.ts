@@ -39,7 +39,19 @@ test("actual Job creators and platform recovery admit only the reviewed post-DNA
         spec: z.object({
           template: z.object({
             metadata: z.object({ labels: z.record(z.string(), z.string()) }),
-            spec: z.object({ automountServiceAccountToken: z.boolean() }),
+            spec: z.object({
+              automountServiceAccountToken: z.boolean(),
+              containers: z.array(
+                z.object({
+                  env: z.array(
+                    z.object({
+                      name: z.string(),
+                      value: z.string().optional(),
+                    }),
+                  ),
+                }),
+              ),
+            }),
           }),
         }),
       })
@@ -58,6 +70,16 @@ test("actual Job creators and platform recovery admit only the reviewed post-DNA
     expect(workload?.spec.template.spec.automountServiceAccountToken).toBe(
       true,
     );
+    expect(
+      workload?.spec.template.spec.containers[0]?.env.filter(
+        (entry) => entry.name === "NODE_EXTRA_CA_CERTS",
+      ),
+    ).toEqual([
+      {
+        name: "NODE_EXTRA_CA_CERTS",
+        value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+      },
+    ]);
   }
   const granted = policies.filter((policy) =>
     policy.spec.egress.some((rule) =>

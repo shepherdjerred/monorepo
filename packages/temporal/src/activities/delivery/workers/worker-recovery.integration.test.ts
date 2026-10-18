@@ -25,7 +25,7 @@ let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let store: Delivery;
 let context: WorkerRecoveryContext;
 let job: V1Job;
-let prior: unknown;
+let prior: Record<string, unknown>;
 beforeAll(async () => {
   cluster = await createTestDatabase();
   store = new Delivery(cluster.database);
@@ -234,6 +234,35 @@ test("pre-PATCH readonly failure releases exact held ownership with original hos
     }),
   );
 });
+test("read-only pre-effect recovery can settle healthy comparison drift without accepting a deployment", async () => {
+  const proof = await proveSettledWorkerRecovery(context, {
+    ...boundary(),
+    readArgo: async () => ({
+      ...prior,
+      status: {
+        sync: { status: "OutOfSync" },
+        health: { status: "Healthy" },
+        operationState: { phase: "Succeeded" },
+      },
+    }),
+  });
+  await store.completeWorkerRecovery(context.intent.id, proof, testExecutor);
+  const result = await store.detail(context.deployment.deployment.id);
+  expect(result.deployment).toMatchObject({
+    status: "failed",
+    recoveryRequired: false,
+  });
+  expect(result.environment.activeDeploymentId).toBeNull();
+  expect(result.environment.acceptedVersionSetRevisionId).toBe(
+    context.deployment.environment.acceptedVersionSetRevisionId,
+  );
+  expect(
+    proof.evidence.some((entry) =>
+      entry.summary.includes("OutOfSync/OutOfSync"),
+    ),
+  ).toBe(true);
+});
+
 test("unknown Job incarnation, live executor and candidate references retain the lock", async () => {
   const external = boundary();
   job.metadata!.uid = "replaced-job";
@@ -256,6 +285,71 @@ test("unknown Job incarnation, live executor and candidate references retain the
   ).rejects.toThrow("candidate pinned");
   expect(await cluster.database.applicationLock.count()).toBe(1);
 });
+
+function beforeJobCreation() {
+  const pending = structuredClone(context);
+  const stage = pending.deployment.stages.find(
+    (entry) => entry.key === "worker-image-provenance",
+  );
+  if (stage === undefined) throw new Error("Missing provenance intent");
+  stage.message = "Waiting for an identity-bound revision-pinned Job";
+  return { pending, stage };
+}
+
+test("authenticated absence before read-only provenance Job creation requires no receipt and zero executor Pods", async () => {
+  const { pending, stage } = beforeJobCreation();
+  const podReads: string[] = [];
+  const evidence = await proveTerminalWorkerJobs(pending, {
+    job: () =>
+      Promise.reject(Object.assign(new Error("Native Job GET"), { code: 404 })),
+    pods: (name) => {
+      podReads.push(name);
+      return Promise.resolve([]);
+    },
+  });
+  expect(podReads).toEqual([stage.operationId]);
+  expect(evidence).toEqual([
+    {
+      kind: "reconciliation",
+      operationId: stage.operationId,
+      summary: expect.stringContaining("authenticated GET 404"),
+    },
+  ]);
+});
+
+test.each(["receipt", "pods", "effectful", "name", "evidence", "status"])(
+  "missing Job with %s ambiguity cannot prove recovery",
+  async (ambiguity) => {
+    const { pending, stage } = beforeJobCreation();
+    if (ambiguity === "receipt")
+      stage.message = context.deployment.stages.find(
+        (entry) => entry.key === "worker-image-provenance",
+      )!.message;
+    if (ambiguity === "effectful") stage.key = "worker-promote";
+    if (ambiguity === "name") stage.operationId = "foreign-job";
+    if (ambiguity === "evidence")
+      pending.deployment.evidence.push({
+        id: "recorded-job-evidence",
+        deploymentId: stage.deploymentId,
+        createdAt: new Date().toISOString(),
+        kind: "preflight",
+        operationId: "recorded-native-uid",
+        summary: `Pinned Job delivery-worker-jobs/${stage.operationId}, UID recorded-native-uid`,
+      });
+    await expect(
+      proveTerminalWorkerJobs(pending, {
+        job: () =>
+          Promise.reject(
+            Object.assign(new Error("Native Job GET"), {
+              code: ambiguity === "status" ? 403 : 404,
+            }),
+          ),
+        pods: () => Promise.resolve(ambiguity === "pods" ? [{}] : []),
+      }),
+    ).rejects.toMatchObject({ code: ambiguity === "status" ? 403 : 404 });
+    expect(await cluster.database.applicationLock.count()).toBe(1);
+  },
+);
 test("source ownership changes, beta routing changes and stale completion cannot unlock", async () => {
   const external = boundary();
   const proof = await proveSettledWorkerRecovery(context, external);
@@ -376,6 +470,15 @@ test("post-PATCH bootstrap recovery requires its exact finished native operation
       readArgo: async () => ({ ...application, operation: { sync: {} } }),
     }),
   ).rejects.toThrow();
+  await expect(
+    proveSettledWorkerRecovery(context, {
+      ...effects,
+      readArgo: async () => ({
+        ...application,
+        status: { ...application.status, sync: { status: "OutOfSync" } },
+      }),
+    }),
+  ).rejects.toThrow("requires a Synced Application");
   await store.completeWorkerRecovery(context.intent.id, proof, testExecutor);
   const result = await store.detail(detail.deployment.id);
   expect(result.deployment.status).toBe("failed");

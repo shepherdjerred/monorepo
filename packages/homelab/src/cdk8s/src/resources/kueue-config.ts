@@ -143,11 +143,26 @@ function createClusterQueue(
   new ClusterQueueV1Beta2(chart, id, {
     metadata: { name, annotations: SYNC_WAVE },
     spec: {
-      namespaceSelector: {
-        matchLabels: {
-          "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
-        },
-      },
+      namespaceSelector:
+        name === CI_CLUSTER_QUEUE
+          ? {
+              matchExpressions: [
+                {
+                  key: "kubernetes.io/metadata.name",
+                  operator: "In",
+                  values: [
+                    WOODPECKER_CI_NAMESPACE,
+                    "delivery-worker-jobs",
+                    "delivery-platform-jobs",
+                  ],
+                },
+              ],
+            }
+          : {
+              matchLabels: {
+                "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
+              },
+            },
       preemption: {
         withinClusterQueue:
           ClusterQueueV1Beta2SpecPreemptionWithinClusterQueue.NEVER,
