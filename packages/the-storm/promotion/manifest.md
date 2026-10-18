@@ -2,7 +2,7 @@
 
 This is the inventory and maintenance reference for The Storm's free, manual advertising.
 
-Last reconciled: **2026-10-18** (October 17 evening in Los Angeles). Dates and times below use UTC unless marked otherwise.
+Last reconciled: **2026-10-18** (October 18 morning in Los Angeles). Dates and times below use UTC unless marked otherwise.
 Listing states record setup and targeted follow-up checks, not continuous monitoring.
 Update the existing rows after each maintenance pass; do not append a session journal.
 
@@ -108,15 +108,27 @@ Retained Reddit post references: [r/mcservers](https://www.reddit.com/r/mcserver
 [r/MinecraftServer](https://www.reddit.com/r/MinecraftServer/comments/1x72qhv/the_storm_is_rebuilding_its_survival_community/),
 [r/MinecraftServerFinder](https://www.reddit.com/r/MinecraftServerFinder/comments/1x72z1f/the_storm_is_rebuilding_its_survival_community/),
 and [r/MinecraftServers](https://www.reddit.com/r/MinecraftServers/comments/1x733w3/the_storm_smp_java_bedrock_towns_land_claims/).
-The signed-in `the-storm-mc` profile showed all four on October 18; owner visibility
-does not establish public approval. Cached public content showed an r/mcservers
-filter removal, while the current owner view displayed its body. Recheck live
-moderation state before editing or requesting review. Its creation timestamp is
+These four posts belong to the old **`the-storm-mc`** account. Use **`the_storm_mc`**
+(underscores) for promotion; its email was checked in Reddit's account settings
+against the user's requested login on October 18. The old account was signed out.
+Its posts remain part of the server's advertising history and cooldowns.
+
+Fresh owner views on October 18 still showed Reddit filter removals on the
+r/MinecraftServer and r/MinecraftServerFinder posts. Owner-visible post bodies do
+not establish public approval. Recheck live moderation state before editing or
+requesting review. The r/mcservers post's creation timestamp is
 **2026-10-16 00:53:43 UTC**. The current sidebar permits one post every seven days,
 so this post alone prevents a fresh submission before **2026-10-23 00:53:43 UTC**
-(October 22 at 5:53 PM in Los Angeles); also check for any newer server advertisement.
+(October 22 at 5:53 PM in Los Angeles), including from another account; also check
+for any newer server advertisement.
 A review request to r/MinecraftServer moderators was verified sent. The Finder
 request was approved by the user, but completion is not established in this handoff.
+Those requests concern the old account's posts.
+
+r/SMP's pinned moderator guidance excludes accounts younger than 30 days or with
+zero karma and removes posts containing Discord links. The current promotion
+account showed two days of age and zero karma on October 18, so it is not eligible.
+Do not post there until the account meets the current requirements.
 
 Spigot, Bukkit, Paper, and admincraft were research sources, not completed promotion
 placements in this inventory. No ad should be assumed to exist there.
@@ -147,7 +159,7 @@ but browser tab IDs and local ports are intentionally not durable account refere
 | `builtbybit`             | ShepherdJerred                           | Private vault · **MC Market**, item `oz33qew44wylg4rrxlbmm4sj2a`; user completed the security-unlock/reset.                                                                |
 | `discord`                | the.storm.mc                             | Private vault · `cajum4hu3zrd3hxzuyp5qgwhw4`                                                                                                                               |
 | `disboard`               | sjerred, The Storm's Discord owner       | Owner sign-in verified. Keep using the owner account; the outreach account remains an ordinary server member.                                                              |
-| `reddit`                 | `the-storm-mc`                           | Signed-in public identity verified October 18. Use the existing account; credentials stay in the password manager.                                                         |
+| `reddit`                 | `the_storm_mc` (underscores)             | The Storm vault · `u56dwnekle2uq7xoukxq4asgzy`. Account email and public username verified October 18. Do not use the old `the-storm-mc` account.                          |
 
 Directory signup addresses use a site-specific `@ts-mc.net` alias saved with the
 login. Use the stored account email when checking approval or ownership replies.
