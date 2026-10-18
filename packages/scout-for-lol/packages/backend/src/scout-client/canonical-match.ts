@@ -3,7 +3,6 @@ import {
   RawInfoSchema,
   RawMatchSchema,
   SCOUT_CLIENT_DATA_VERSION,
-  riotWithholdsMatchResult,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
@@ -26,7 +25,7 @@ import {
   translatePayloadIdentities,
 } from "./identity-alias.ts";
 
-export const LOCAL_CANONICAL_DELAY_MS = 2 * 60 * 1000;
+import { clientEvidenceReadyAt } from "#src/evidence/source-grace.ts";
 
 type Candidate = {
   readonly observationId: string;
@@ -340,12 +339,7 @@ export async function readLocalCanonicalCandidates(riotMatchId: RiotMatchId) {
           {
             candidate,
             match,
-            eligibleAt: new Date(
-              candidate.receivedAt.getTime() +
-                (riotWithholdsMatchResult(match.info)
-                  ? 0
-                  : LOCAL_CANONICAL_DELAY_MS),
-            ),
+            eligibleAt: clientEvidenceReadyAt(match.info, candidate.receivedAt),
           },
         ];
   });

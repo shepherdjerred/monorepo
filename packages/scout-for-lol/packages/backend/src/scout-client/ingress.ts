@@ -26,10 +26,8 @@ import {
   type ScoutClientMatchDispatchItem,
 } from "@scout-for-lol/temporal/workflow-contracts";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
-import {
-  LOCAL_CANONICAL_DELAY_MS,
-  parseLocalCanonicalMatch,
-} from "./canonical-match.ts";
+import { parseLocalCanonicalMatch } from "./canonical-match.ts";
+import { LOCAL_CANONICAL_DELAY_MS } from "#src/evidence/source-grace.ts";
 import {
   type IdentityMap,
   isLcuUuid,

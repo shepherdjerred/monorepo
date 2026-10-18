@@ -47,6 +47,10 @@ const { readReportScoreboard } =
   await import("#src/evidence/report-scoreboard.ts");
 const { matchMayAnnounce } =
   await import("#src/temporal/notification/match-intents.ts");
+const { reconcileScoreboardReport } = await import("./scoreboard-recovery.ts");
+const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
+const { gameResultFromMatch } =
+  await import("#src/scout-client/canonical/riot-result.ts");
 
 const owner = DiscordAccountIdSchema.parse("160509172704739328");
 const guild = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -105,7 +109,11 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-async function upload(completedAt = Date.now() - 5000, wrongGame = false) {
+async function upload(
+  completedAt = Date.now() - 5000,
+  wrongGame = false,
+  mayhem = false,
+) {
   const now = new Date();
   const gameflow = {
     resource: "gameflow_session",
@@ -118,6 +126,15 @@ async function upload(completedAt = Date.now() - 5000, wrongGame = false) {
   };
   const payload = structuredClone(fixture);
   payload.data.endOfGameTimestamp = completedAt;
+  if (mayhem) {
+    gameflow.data.gameData.queue = {
+      id: 2450,
+      type: "KIWI_JADE_MATCHED",
+      gameMode: "KIWI_JADE",
+    };
+    payload.data.gameMode = "KIWI_JADE";
+    payload.data.queueType = "KIWI_JADE_MATCHED";
+  }
   let final;
   for (const [index, body] of [gameflow, payload].entries()) {
     const observation = ScoutClientObservationSchema.parse({
@@ -189,6 +206,12 @@ test("accepted Classic scoreboard reaches an ordinary pending report intent with
 
 test("available full evidence does not send an unobserved result through observed-only recovery", async () => {
   await upload();
+  io.render.mockRejectedValueOnce(new Error("Render interrupted"));
+  await expect(reconcileMatchHistory()).rejects.toThrow("remains retryable");
+  await prisma.matchEvidenceAdmission.update({
+    where: { riotMatchId: matchId },
+    data: { recoveryNextAttemptAt: new Date(0) },
+  });
   const complete = RawMatchSchema.parse(
     await Bun.file(
       new URL("../../../../../testdata/rift.json", import.meta.url),
@@ -215,6 +238,50 @@ test("available full evidence does not send an unobserved result through observe
     historyReportComplete: true,
     recoveryError: null,
   });
+});
+
+test("API-supported scoreboards remain unfrozen during grace, then recover without full evidence", async () => {
+  await upload(Date.now() - 5000, false, true);
+  await reconcileMatchHistory();
+  expect(await prisma.matchReportSnapshot.count()).toBe(0);
+  expect(await prisma.matchNotificationIntent.count()).toBe(0);
+  expect(io.render).not.toHaveBeenCalled();
+  await prisma.matchEvidenceAdmission.update({
+    where: { riotMatchId: matchId },
+    data: {
+      firstDiscoveredAt: new Date(Date.now() - 3 * 60_000),
+      recoveryNextAttemptAt: new Date(0),
+    },
+  });
+  await reconcileMatchHistory();
+  expect(await prisma.matchReportSnapshot.count()).toBe(1);
+  expect(await prisma.matchNotificationIntent.count()).toBe(1);
+});
+
+test("available Riot result evidence can freeze immediately without waiting for its archive projection", async () => {
+  const complete = RawMatchSchema.parse(
+    await Bun.file(
+      new URL(
+        "../../league/tasks/postmatch/testdata/match-classic-aram-mayhem-s3.json",
+        import.meta.url,
+      ),
+    ).json(),
+  );
+  complete.metadata.matchId = matchId;
+  const player = complete.info.participants[0];
+  if (player === undefined) throw new Error("Fixture has no participants");
+  player.puuid = observer;
+  await admitMatchEvidence({
+    matchId,
+    completedAt: Date.now(),
+    historical: false,
+  });
+  await expect(
+    reconcileScoreboardReport(matchId, [gameResultFromMatch(complete)]),
+  ).resolves.toBe(true);
+  const snapshot = await readReportScoreboard(matchId);
+  expect(snapshot?.result.source).toBe("RIOT");
+  expect(await prisma.matchNotificationIntent.count()).toBe(1);
 });
 
 test("late scoreboards render historical reports without notification, settlement or progression", async () => {

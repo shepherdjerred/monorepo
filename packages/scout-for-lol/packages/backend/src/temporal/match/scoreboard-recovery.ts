@@ -1,4 +1,5 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { GameResult } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { prisma } from "#src/database/index.ts";
@@ -11,15 +12,29 @@ import {
 import { buildScoreboardReport } from "#src/league/tasks/postmatch/scoreboard-report.ts";
 import { renderMatchNotificationArtifact } from "#src/temporal/notification-lane/notification-render.ts";
 import { mintPostmatchIntents } from "#src/temporal/notification/match-intents.ts";
+import { clientEvidenceReadyAt } from "#src/evidence/source-grace.ts";
 
 /** Report-ready evidence uses the ordinary durable render/mint lane, without full-match effects. */
 export async function reconcileScoreboardReport(
   matchId: RiotMatchId,
+  candidates: readonly GameResult[] = [],
 ): Promise<boolean> {
   let snapshot = await readReportScoreboard(matchId);
   if (snapshot === null) {
-    const resolution = await resolveResultEvidence(matchId, []);
+    const resolution = await resolveResultEvidence(matchId, candidates);
     if (resolution.kind !== "available") return false;
+    const admission = await prisma.matchEvidenceAdmission.findUniqueOrThrow({
+      where: { riotMatchId: matchId },
+    });
+    if (
+      resolution.value.source === "SCOUT_CLIENT" &&
+      Date.now() <
+        clientEvidenceReadyAt(
+          resolution.value,
+          admission.firstDiscoveredAt,
+        ).getTime()
+    )
+      return false;
     const puuids = resolution.value.participants.flatMap((player) =>
       player.identity.kind === "riot"
         ? [LeaguePuuidSchema.parse(player.identity.puuid)]

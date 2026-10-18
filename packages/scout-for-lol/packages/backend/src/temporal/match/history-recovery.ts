@@ -14,6 +14,9 @@ import {
 import { renderMatchNotificationArtifact } from "#src/temporal/notification-lane/notification-render.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { reconcileScoreboardReport } from "./scoreboard-recovery.ts";
+import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolution.ts";
+import type { RawMatch } from "@scout-for-lol/data";
+import { gameResultFromMatch } from "#src/scout-client/canonical/riot-result.ts";
 
 async function ensureHistoryReport(
   matchId: RiotMatchId,
@@ -34,11 +37,16 @@ async function ensureHistoryReport(
 
 async function recoverReportOnly(
   matchId: RiotMatchId,
-  kind: "available" | "pending" | "unavailable" | "conflict",
+  match: ArtifactResolution<RawMatch>,
 ): Promise<boolean> {
-  if (kind === "conflict")
+  if (match.kind === "conflict")
     throw new Error(`Conflicting match evidence for ${matchId}`);
-  return kind === "pending" ? false : await reconcileScoreboardReport(matchId);
+  return match.kind === "pending"
+    ? false
+    : await reconcileScoreboardReport(
+        matchId,
+        match.kind === "available" ? [gameResultFromMatch(match.value)] : [],
+      );
 }
 
 /** Reconcile missing artifacts; live report eligibility never implies full-match effect coverage. */
@@ -100,12 +108,13 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
       ) {
         // A result admission does not establish the full pipeline's observed
         // roster. Recover its report without entering observed-only readers.
-        const reportComplete = await recoverReportOnly(matchId, match.kind);
+        const reportComplete = await recoverReportOnly(matchId, match);
         await prisma.matchEvidenceAdmission.updateMany({
           where: { riotMatchId: matchId, recoveryClaimId: claim },
           data: {
             recoveryClaimId: null,
             historyReportComplete: reportComplete,
+            recoveryError: null,
           },
         });
         continue;

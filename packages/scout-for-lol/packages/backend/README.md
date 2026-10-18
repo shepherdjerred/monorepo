@@ -789,8 +789,12 @@ time decides admission before reconciliation delays; observed completion time
 is used when lobby creation is unavailable.
 
 Ingestion reconciliation resolves report-ready evidence through the same
-Riot-priority result policy. `MatchReportSnapshot` freezes the normalized result
-and registered audience before rendering. The existing fenced report renderer,
+Riot-priority result policy. API-supported games retain the same two-minute
+source grace as complete client matches, measured from original discovery;
+games known to withhold results do not wait. Freshly resolved full evidence
+participates immediately, before its independent archive projection completes.
+`MatchReportSnapshot` freezes the normalized result and registered audience
+before rendering. The existing fenced report renderer,
 S3 image receipts, idempotent postmatch intents and notification reconciliation
 handle delivery. The current scoreboard renderer requires the facts displayed
 by the existing Classic report, including loadout and both sides' statistics.
