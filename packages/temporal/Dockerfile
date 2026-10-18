@@ -80,7 +80,7 @@ COPY --parents \
   packages/ops-model \
   packages/ops-clients \
   packages/version-catalog/package.json \
-  packages/version-catalog/src/index.ts \
+  packages/version-catalog/src \
   ./
 # Home Assistant is published with a dist-based export. Build it in the
 # artifact stage so the runtime image does not resolve the workspace link to a
@@ -447,6 +447,7 @@ COPY --parents \
   scripts/lib \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
   packages/homelab/src/delivery-ownership.ts \
+  packages/homelab/src/delivery-target-policy.ts \
   packages/homelab/src/static-site-delivery-ownership.ts \
   packages/homelab/src/delivery-platform-grants.ts \
   packages/homelab/scripts/tofu/tofu-stack-manifest.ts \
