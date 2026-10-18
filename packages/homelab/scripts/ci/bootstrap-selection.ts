@@ -91,7 +91,7 @@ export function bootstrapTargetSelection(
     reference: `${image.repository}@${image.digest}`,
   };
 }
-const Metadata = z.object({
+export const BootstrapMetadataSchema = z.object({
   name: z.string(),
   namespace: z.string().optional(),
   uid: z.string().min(1),
@@ -104,7 +104,7 @@ export const BootstrapApplicationSchema = z
   .object({
     apiVersion: z.string().default("argoproj.io/v1alpha1"),
     kind: z.literal("Application").default("Application"),
-    metadata: Metadata,
+    metadata: BootstrapMetadataSchema,
     spec: z.record(z.string(), z.json()),
     operation: z.null().optional(),
     status: z.object({

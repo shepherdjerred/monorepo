@@ -21,6 +21,7 @@
     "scripts/ci/bootstrap-woodpecker.ts",
     "scripts/ci/bootstrap-argocd-accounts.ts",
     "scripts/ci/bootstrap-selection.test.ts",
+    "scripts/ci/bootstrap-maintenance.test.ts",
     "scripts/ci/bootstrap-control-plane.test.ts",
     "scripts/ci/delivery-handover*.ts",
     "scripts/argocd/argocd.ts",
