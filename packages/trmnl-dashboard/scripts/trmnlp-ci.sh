@@ -13,12 +13,12 @@ build_log=
 trmnlp_command=${TRMNLP_COMMAND:-trmnlp}
 
 check_plugin_ids() {
-  ruby -ryaml -e '
-    expected = {
-      "home-assistant" => 303046,
-      "homelab" => 303047,
-      "pets" => 464652,
-    }
+  ruby -rjson -ryaml -e '
+    policy = JSON.parse(File.read(ARGV.fetch(1)))
+    abort "invalid plugin policy" unless policy.fetch("schemaVersion") == 1
+    targets = policy.fetch("plugins")
+    abort "invalid plugin inventory" unless targets.length == 3 && targets.map { |target| target.fetch("slug") }.uniq.length == 3 && targets.map { |target| target.fetch("id") }.uniq.length == 3
+    expected = targets.to_h { |target| [target.fetch("slug"), target.fetch("id")] }
     settings = expected.to_h do |slug, _expected_id|
       path = File.join(ARGV.fetch(0), slug, "src", "settings.yml")
       [slug, YAML.safe_load_file(path)]
@@ -34,7 +34,7 @@ check_plugin_ids() {
       expected_id = expected.fetch(slug)
       abort "#{slug}: expected plugin id #{expected_id}, found #{id}" unless id == expected_id
     end
-  ' "$trmnl_root"
+  ' "$trmnl_root" "$repo_root/packages/ops-model/src/trmnl/plugin-policy.json"
 }
 
 cleanup() {
@@ -230,9 +230,8 @@ SCRIPT
     TRMNLP_COMMAND="$fake_trmnlp" \
     TRMNLP_TEST_LOG="$publish_log" \
     TRMNLP_TEST_FAIL_HOMELAB=1 \
-    TRMNL_API_KEY=self-test \
-    "$0" publish; then
-    echo "publication continued after a plugin validation failure" >&2
+    "$0" validate; then
+    echo "validation continued after a plugin validation failure" >&2
     exit 1
   fi
   if [ -s "$publish_log" ]; then
@@ -250,20 +249,8 @@ SCRIPT
     exit 1
   fi
 
-  : >"$publish_log"
-  TRMNL_ROOT="$self_test_dir/trmnl" \
-    TRMNLP_COMMAND="$fake_trmnlp" \
-    TRMNLP_TEST_LOG="$publish_log" \
-    TRMNL_API_KEY=self-test \
-    "$0" publish
-  expected_publish_log="$self_test_dir/expected-push.log"
-  printf '%s\n' \
-    "$self_test_dir/trmnl/home-assistant" \
-    "$self_test_dir/trmnl/homelab" \
-    "$self_test_dir/trmnl/pets" >"$expected_publish_log"
-  if ! cmp -s "$expected_publish_log" "$publish_log"; then
-    echo "plugins were not published exactly once in deterministic order" >&2
-    diff -u "$expected_publish_log" "$publish_log"
+  if [ -s "$publish_log" ]; then
+    echo "validation invoked an external publication" >&2
     exit 1
   fi
 }
@@ -279,20 +266,6 @@ case "$mode" in
   validate)
     validate_all
     ;;
-  publish)
-    if [ -z "${TRMNL_API_KEY:-}" ]; then
-      echo "TRMNL_API_KEY is required for publication" >&2
-      exit 1
-    fi
-    validate_all
-    "$trmnlp_command" push --force --dir "$trmnl_root/home-assistant"
-    "$trmnlp_command" push --force --dir "$trmnl_root/homelab"
-    "$trmnlp_command" push --force --dir "$trmnl_root/pets"
-    git -C "$repo_root" diff --exit-code -- \
-      packages/trmnl-dashboard/trmnl/home-assistant \
-      packages/trmnl-dashboard/trmnl/homelab \
-      packages/trmnl-dashboard/trmnl/pets
-    ;;
   serve)
     case "$plugin_slug" in
       home-assistant | homelab | pets)
@@ -306,7 +279,7 @@ case "$mode" in
     "$trmnlp_command" serve --bind 0.0.0.0 --dir "$trmnl_root/$plugin_slug"
     ;;
   *)
-    echo "usage: $0 {check-ids|self-test|validate|publish|serve <home-assistant|homelab|pets>}" >&2
+    echo "usage: $0 {check-ids|self-test|validate|serve <home-assistant|homelab|pets>}" >&2
     exit 1
     ;;
 esac

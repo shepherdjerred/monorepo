@@ -22,6 +22,59 @@ sending their Java status handshake; the default lets those IP-based checks
 reach The Storm. Explicit hostname routes still select their own servers.
 UDP Query remains private to the forum's status service.
 
+## Delivery preservation interface
+
+The reviewed Delivery registration uses a separate routine-upgrade path when
+the Application is explicitly delegated. Until that cutover, the accepted
+production pin above remains authoritative. Delivery automatically waits for an
+empty server before its preservation controller closes admission; a late join
+reopens the unchanged server and defers the request without disconnecting players.
+
+`delivery_validation.py` exposes `eligibility`, `snapshot`, `verify`, `recover`,
+and read-only `report` for the
+source-owned controller. Its immutable request, exact candidate digest and
+private journal are supplied by that controller. The interface never accepts
+world installation, historical restoration, or an image-only rollback operation.
+`restoration-control.py` remains the independent operator restoration mechanism.
+
+The snapshot captures original server, template, native volume, route and Argo
+source identities before maintenance. Recovery reports use the neutral contract
+in `packages/ops-model/src/minecraft-delivery-recovery.schema.json`; they reread
+native resource versions, reject retained helpers/copy claims, and never infer
+the original source from current health. Delivery independently verifies this
+report before settling a separate admin recovery intent. Routine recovery refuses
+candidate source selection or production write authorization.
+
+Verification creates a real Velero backup and restores it into the fixed,
+source-owned `minecraft-tsmc-delivery-validation` namespace. It compares the
+complete source and restored file streams before starting the candidate only
+on the restored PVC. Both native volume identities and the original server
+incarnation remain fenced throughout the check.
+
+The candidate runs without a ServiceAccount token or production process
+credentials. Its image-derived overlay enables only economy, mail, chat,
+tracks, towns and tickets, uses local plugin databases, and binds game and
+MCBridge listeners to loopback. These are application isolation controls;
+the cluster's Flannel networking does not enforce NetworkPolicy egress isolation.
+Real MCBridge/Citizens observations must confirm inventory mutation and denied
+protected placement, followed by a graceful candidate exit. A dispatched command
+alone is insufficient evidence.
+
+The receipt and eligibility formats are defined by
+`packages/homelab/src/minecraft-delivery-{receipt,eligibility}.schema.json`.
+Python validates those neutral contracts before writing a receipt; Temporal
+validates the same source before recording preservation evidence. Private
+startup evidence retains allowlisted startup facts rather than raw player logs.
+Successful verification reopens the unchanged original and deletes only the
+exact restored claim after owned candidate/readers are gone. The backup and
+private journal remain available for independent restoration. Interrupted or
+ambiguous operations retain their journal and ownership for explicit recovery.
+
+This receipt proves restore-copy compatibility. Production reconciliation and
+runtime acceptance remain separate requirements after applying the candidate.
+Lightweight Python boundary tests run in `test:server`; Paper/gameplay checks
+remain local extended acceptance.
+
 ## Plugin and configuration ownership
 
 `owned/plugins/TheStorm/config.yml` registers and enables all 26 Storm modules,

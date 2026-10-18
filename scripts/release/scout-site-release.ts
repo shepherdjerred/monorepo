@@ -3,42 +3,27 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { staticSiteDeliveryOwner } from "../../packages/homelab/src/static-site-delivery-ownership.ts";
 
-import { optionalEnv, requireEnv, run } from "../lib/run.ts";
-import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
+import { optionalEnv, run } from "../lib/run.ts";
+import { rehearseRetiredScoutCommand } from "../lib/ci/retired-release-rehearsal.ts";
 import {
   readScoutPostHogSite,
   requireMarketingIdentifiers,
 } from "../lib/scout/scout-analytics-config.ts";
 import {
   CANONICAL_DIGEST_PATTERN,
-  parseScoutReleaseState,
-  retagScoutReleaseState,
   resolveBackendDigest,
-  resolveProdPin,
-  SCOUT_VERSION_PATTERN,
   ScoutReleaseStateSchema,
   siteReleaseIdentity,
-  validateProdPinState,
   type ScoutReleaseState,
 } from "../lib/scout/scout-release-state.ts";
-import { reconcileLegacyScoutProd } from "../lib/scout/scout-legacy-site-storage.ts";
-import { DELIVERY_SCOUT_RELEASE_WORK_DIR } from "../lib/scout/scout-storage-runtime.ts";
 import {
-  archiveScout,
-  assertScoutArchiveBytes,
-  deployScoutBeta,
+  DELIVERY_SCOUT_RELEASE_WORK_DIR,
   hashSiteArchive,
-  readScoutStateByVersion,
-  reconcileScoutProd,
-  readScoutStateByInput,
-  SCOUT_RELEASE_WORK_DIR,
-} from "../lib/scout/scout-site-storage.ts";
+} from "../lib/scout/scout-archive.ts";
 
 const SITE_PACKAGE_DIR = "packages/scout-for-lol";
 const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
-const IMAGE_REPO = "docker.io/shepherdjerred/scout-for-lol";
 const PLACEHOLDER_DIGEST =
   "sha256:0000000000000000000000000000000000000000000000000000000000000000";
 const MARKETING_ENV_NAMES = [
@@ -236,10 +221,6 @@ function requiredArg(args: string[], name: string): string {
   return value;
 }
 
-function stateArg(args: string[]): ScoutReleaseState {
-  return parseScoutReleaseState(requiredArg(args, "--state"));
-}
-
 export function parseScoutPreparationArgs(args: string[]) {
   const { values } = parseArgs({
     args: args.slice(1),
@@ -268,9 +249,7 @@ export function parseScoutPreparationArgs(args: string[]) {
     output,
     buildNumber,
     backendImageDigest,
-    workDirectory: values["delivery-archive"]
-      ? DELIVERY_SCOUT_RELEASE_WORK_DIR
-      : SCOUT_RELEASE_WORK_DIR,
+    workDirectory: DELIVERY_SCOUT_RELEASE_WORK_DIR,
   };
 }
 
@@ -302,19 +281,6 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
     betaSiteArchiveDigest: PLACEHOLDER_DIGEST,
     releaseInputDigest,
   });
-  if (!dryRun) {
-    const existing = await readScoutStateByInput(
-      provisional.releaseInputDigest,
-    );
-    if (existing !== null) {
-      const alias = retagScoutReleaseState(existing, buildNumber);
-      await writeScoutReleaseState(output, alias);
-      console.log(
-        `--- Reusing Scout release inputs from ${existing.version} as ${alias.version}`,
-      );
-      return;
-    }
-  }
   const releaseDir = `${repoRoot()}/${workDirectory}`;
   if (dryRun) {
     await buildSite("prod", provisional, true);
@@ -341,160 +307,26 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
   await writeScoutReleaseState(output, state);
 }
 
-async function resolveProdState(prodPin: string): Promise<ScoutReleaseState> {
-  const [version] = prodPin.split("@");
-  if (version === undefined || !SCOUT_VERSION_PATTERN.test(version)) {
-    throw new Error("production pin has no canonical Scout release version");
-  }
-  const state = await readScoutStateByVersion(version);
-  if (state === null) {
-    throw new Error(`no content-addressed Scout release state for ${version}`);
-  }
-  validateProdPinState(prodPin, state);
-  return state;
-}
-
-async function reconcileProdPin(
-  prodPin: string,
-  dryRun: boolean,
-): Promise<void> {
-  const [version, digest, ...extra] = prodPin.split("@");
-  if (
-    version === undefined ||
-    digest === undefined ||
-    !SCOUT_VERSION_PATTERN.test(version) ||
-    !CANONICAL_DIGEST_PATTERN.test(digest) ||
-    extra.length > 0
-  ) {
-    throw new Error("production pin is not canonical");
-  }
-  if (dryRun) {
-    console.log(
-      `DRYRUN: would resolve production release ${version} and reconcile its verified archive`,
-    );
-    return;
-  }
-  const state = await readScoutStateByVersion(version);
-  if (state === null) {
-    await reconcileLegacyScoutProd(version, digest, false);
-    return;
-  }
-  validateProdPinState(prodPin, state);
-  await reconcileScoutProd(state, false);
-}
-
-async function tagRelease(
-  state: ScoutReleaseState,
-  dryRun: boolean,
-): Promise<void> {
-  if (dryRun) {
-    console.log(`DRYRUN: would tag ${IMAGE_REPO}:${state.version}`);
-    return;
-  }
-  requireEnv("AWS_ACCESS_KEY_ID");
-  requireEnv("AWS_SECRET_ACCESS_KEY");
-  await assertScoutArchiveBytes(state, "prod");
-  await assertScoutArchiveBytes(state, "beta");
-  await run([
-    "docker",
-    "buildx",
-    "imagetools",
-    "create",
-    "--tag",
-    `${IMAGE_REPO}:${state.version}`,
-    `${IMAGE_REPO}@${state.backendImageDigest}`,
-  ]);
-}
-
-function usage(): never {
-  console.error(
-    "Usage: scout-site-release.ts <resolve-backend-digest|resolve-prod-pin|resolve-prod-state|prepare-state|archive|deploy-beta|reconcile-prod|reconcile-prod-pin|tag-release> [options]",
-  );
-  process.exit(1);
-}
-
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
-  const command = args[0];
-  const dryRun = args.includes("--dry-run");
-  if (command === undefined) {
-    usage();
+  if (rehearseRetiredScoutCommand(args, Bun.env["CI_PIPELINE_EVENT"])) return;
+  if (args[0] === "prepare-state") {
+    await prepareState(args, args.includes("--dry-run"));
+    return;
   }
-  const bucket =
-    command === "deploy-beta"
-      ? "scout-frontend-beta"
-      : ["reconcile-prod", "reconcile-prod-pin"].includes(command)
-        ? "scout-frontend"
-        : undefined;
-  if (
-    !dryRun &&
-    bucket !== undefined &&
-    staticSiteDeliveryOwner(bucket) !== undefined
-  )
-    throw new Error(
-      `Static bucket ${bucket} is delegated to Delivery; legacy activation is disabled`,
-    );
-  switch (command) {
-    case "resolve-backend-digest": {
-      const index = args.indexOf("--candidate-digest");
-      const candidate = index === -1 ? null : (args[index + 1] ?? "");
-      const source = await readBackendCatalogSource(args);
-      process.stdout.write(`${resolveBackendDigest(candidate, source)}\n`);
-      break;
-    }
-    case "resolve-prod-pin": {
-      const source = await Bun.file(
-        `${repoRoot()}/packages/version-catalog/src/catalog.json`,
-      ).text();
-      process.stdout.write(`${resolveProdPin(source)}\n`);
-      break;
-    }
-    case "resolve-prod-state": {
-      const state = await resolveProdState(requiredArg(args, "--prod-pin"));
-      process.stdout.write(`${JSON.stringify(state)}\n`);
-      break;
-    }
-    case "prepare-state":
-      await prepareState(args, dryRun);
-      break;
-    case "archive":
-      await archiveScout(stateArg(args), dryRun);
-      break;
-    case "deploy-beta":
-      await deployScoutBeta(stateArg(args), dryRun);
-      break;
-    case "reconcile-prod":
-      await reconcileScoutProd(stateArg(args), dryRun);
-      break;
-    case "reconcile-prod-pin":
-      await reconcileProdPin(requiredArg(args, "--prod-pin"), dryRun);
-      break;
-    case "tag-release":
-      await tagRelease(stateArg(args), dryRun);
-      break;
-    default:
-      usage();
+  if (args[0] === "resolve-backend-digest") {
+    const source = await readBackendCatalogSource(args);
+    process.stdout.write(`${resolveBackendDigest(null, source)}\n`);
+    return;
   }
+  throw new Error(
+    "Use prepare-state or resolve-backend-digest --version-catalog-file PATH; activation is owned by Delivery",
+  );
 }
-
-/** Older deployed CI generators also receive the published catalog contract. */
+/** Read-only rehearsal input; live publication resolves original qualified artifacts separately. */
 export async function readBackendCatalogSource(
   args: string[],
-  pipelineNumber: string | null = optionalEnv("CI_PIPELINE_NUMBER"),
-  readPublished: () => Promise<string> = () =>
-    readRequiredHandoff("version-catalog"),
-  pipelineEvent: string | null = optionalEnv("CI_PIPELINE_EVENT"),
 ): Promise<string> {
-  if (args.includes("--version-catalog-file")) {
-    return Bun.file(requiredArg(args, "--version-catalog-file")).text();
-  }
-  // PR rehearsals publish no images or catalog handoff. This also supports
-  // commands emitted by the currently deployed generator before this change.
-  return pipelineNumber === null || pipelineEvent === "pull_request"
-    ? Bun.file(`${repoRoot()}/packages/version-catalog/src/catalog.json`).text()
-    : readPublished();
+  return Bun.file(requiredArg(args, "--version-catalog-file")).text();
 }
-
-if (import.meta.main) {
-  await main();
-}
+if (import.meta.main) await main();

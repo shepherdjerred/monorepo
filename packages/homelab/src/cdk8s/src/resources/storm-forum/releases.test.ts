@@ -14,7 +14,6 @@ it("preserves only each versioned release Job template while keeping health and 
           .object({
             group: z.string(),
             kind: z.string(),
-            name: z.string(),
             namespace: z.string(),
             jsonPointers: z.array(z.string()),
           })
@@ -34,7 +33,6 @@ it("preserves only each versioned release Job template while keeping health and 
         group: "batch",
         kind: "Job",
         namespace,
-        name: `storm-forum-${release.restore ? "restore" : "release"}-${release.releaseId}`,
         jsonPointers: ["/spec/template"],
       },
     ]);
@@ -42,4 +40,14 @@ it("preserves only each versioned release Job template while keeping health and 
       "RespectIgnoreDifferences=true",
     );
   }
+});
+
+it("keeps only infrastructure policy in production inventory", () => {
+  for (const release of forumReleases)
+    expect(Object.keys(release).sort()).toEqual([
+      "observationItemId",
+      "secretItemId",
+      "stage",
+      "trustedConnectorCidr",
+    ]);
 });

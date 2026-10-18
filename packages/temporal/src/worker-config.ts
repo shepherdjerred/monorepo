@@ -21,11 +21,14 @@ import {
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
 import type { WorkerRole } from "./shared/infra/worker-role.ts";
 import { deliveryActivities } from "./activities/delivery/index.ts";
+import { platformDeliveryActivities } from "./activities/delivery/platform/index.ts";
 
 export type QueueWorkerRole =
   | "agent"
   | "control"
   | "delivery"
+  | "delivery-platform"
+  | "delivery-workflows"
   | "backup"
   | "billing"
   | "glitter-context"
@@ -40,7 +43,7 @@ export type QueueWorkerRole =
 
 type ActivityWorkerDefinition = {
   kind: "activity";
-  role: Exclude<QueueWorkerRole, "workflows">;
+  role: Exclude<QueueWorkerRole, "workflows" | "delivery-workflows">;
   taskQueue: TaskQueue;
   activities: object;
   maxConcurrentActivityTaskExecutions?: number;
@@ -48,7 +51,7 @@ type ActivityWorkerDefinition = {
 
 type WorkflowWorkerDefinition = {
   kind: "workflow";
-  role: "workflows";
+  role: "workflows" | "delivery-workflows";
   taskQueue: TaskQueue;
   maxConcurrentWorkflowTaskExecutions?: number;
 };
@@ -57,6 +60,13 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "delivery-platform",
+    taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
+    activities: platformDeliveryActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
   {
     kind: "activity",
     role: "delivery",
@@ -195,13 +205,17 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
 const WORKFLOW_WORKER_DEFINITIONS: readonly WorkflowWorkerDefinition[] = [
   {
     kind: "workflow",
+    role: "delivery-workflows",
+    taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+    maxConcurrentWorkflowTaskExecutions: 4,
+  },
+  {
+    kind: "workflow",
     role: "workflows",
     taskQueue: TASK_QUEUES.WORKFLOWS,
     maxConcurrentWorkflowTaskExecutions: 8,
   },
 ];
-
-export const WORKFLOW_TASK_QUEUES = [TASK_QUEUES.WORKFLOWS] as const;
 
 export const QUEUE_WORKER_DEFINITIONS: readonly QueueWorkerDefinition[] = [
   ...ACTIVITY_WORKER_DEFINITIONS,
@@ -219,11 +233,8 @@ function roleOwnsDefinition(
   if (role === "all") {
     return true;
   }
-  if (role === "workflows") {
-    return definition.kind === "workflow";
-  }
   if (definition.kind === "workflow") {
-    return false;
+    return role === definition.role;
   }
   return role === "glitter"
     ? definition.role === "glitter-corpus" ||

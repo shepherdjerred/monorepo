@@ -210,18 +210,6 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
       "inference, GitHub App authentication, and the OpenAI credential " +
       "preflight. The release-please step supplies them and is checked normally.",
   },
-  {
-    step: "pr-dryrun",
-    script: "scripts/release/update-versions.ts",
-    names: [
-      "GITHUB_APP_ID",
-      "GITHUB_APP_INSTALLATION_ID",
-      "GITHUB_APP_PRIVATE_KEY",
-    ],
-    reason:
-      "The step passes --dry-run, so update-versions validates candidates " +
-      "without authenticating as the GitHub App or writing a commit.",
-  },
 ];
 
 export function hash(value: string): string {

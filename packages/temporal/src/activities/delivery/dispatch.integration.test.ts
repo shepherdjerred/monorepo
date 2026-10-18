@@ -10,6 +10,7 @@ import {
   seedDelivery,
   testOperator,
   testExecutor,
+  workerFixture,
 } from "@shepherdjerred/delivery/testing";
 import { deliveryWorkflowId } from "@shepherdjerred/delivery/contract";
 
@@ -31,6 +32,49 @@ vi.mock("#client", () => ({
   }),
 }));
 import { dispatchPendingDeliveries } from "./dispatch.ts";
+import { dispatchDeliveryWorkerRecoveries } from "./workers/worker-recovery-dispatch.ts";
+
+async function quarantinedRecovery(store: Delivery) {
+  const fixture = await workerFixture(store);
+  const old = await fixture.acceptedRelease(1);
+  await fixture.adopt(old);
+  await fixture.freeze(old);
+  const detail = await fixture.requestedFrozenRelease(2);
+  await store.claim(detail.deployment.id, testExecutor);
+  await store.stage(
+    detail.deployment.id,
+    {
+      key: "reconcile",
+      status: "running",
+      operationId: "ambiguous-native-operation",
+      message: "Receipt lost; quarantine retained",
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await store.finish(
+    detail.deployment.id,
+    {
+      status: "failed",
+      message: "Native operation must be inspected",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const failed = await store.detail(detail.deployment.id);
+  const intent = await store.requestWorkerRecovery(
+    detail.deployment.id,
+    {
+      requestId: crypto.randomUUID(),
+      expectedEnvironmentGeneration: failed.environment.generation,
+      reason:
+        "Independent native receipt inspection while ordinary writes are paused",
+    },
+    testOperator,
+  );
+  return { detail, intent };
+}
 
 describe("Delivery outbox dispatch over real PostgreSQL and HTTP", () => {
   let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
@@ -165,5 +209,44 @@ describe("Delivery outbox dispatch over real PostgreSQL and HTTP", () => {
     });
     expect(untouched.submittedAt).toBeNull();
     expect(temporal.start).not.toHaveBeenCalled();
+  }, 60_000);
+  it("repairs a recovery Workflow's lost start response while paused without starting another attempt", async () => {
+    writesEnabled = false;
+    const { detail, intent } = await quarantinedRecovery(store);
+    temporal.describe.mockResolvedValue({
+      type: "deliveryWorkerRecoveryWorkflow",
+      status: { name: "RUNNING" },
+    });
+    temporal.describe.mockRejectedValueOnce(
+      new WorkflowNotFoundError(
+        "Not observed before lost start",
+        intent.workflowId,
+        undefined,
+      ),
+    );
+    temporal.start.mockRejectedValueOnce(
+      new WorkflowExecutionAlreadyStartedError(
+        "Start response lost",
+        intent.workflowId,
+        "deliveryWorkerRecoveryWorkflow",
+      ),
+    );
+    await dispatchDeliveryWorkerRecoveries();
+    expect(temporal.start).toHaveBeenCalledOnce();
+    expect(temporal.start).toHaveBeenCalledWith(
+      "deliveryWorkerRecoveryWorkflow",
+      expect.objectContaining({
+        workflowId: intent.workflowId,
+        args: [{ intentId: intent.id }],
+      }),
+    );
+    const acknowledged = await store.workerRecovery(intent.id, testExecutor);
+    expect(acknowledged.intent.submittedAt).not.toBeNull();
+    await dispatchDeliveryWorkerRecoveries();
+    expect(temporal.start).toHaveBeenCalledOnce();
+    const preserved = await store.detail(detail.deployment.id);
+    expect(preserved.deployment.status).toBe("failed");
+    expect(preserved.deployment.recoveryRequired).toBe(true);
+    expect(preserved.environment.activeDeploymentId).toBe(detail.deployment.id);
   }, 60_000);
 });

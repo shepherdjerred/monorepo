@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "minecraft-tsmc",
+  "chartRepository": "https://chartmuseum.sjer.red",
+  "chartName": "minecraft",
+  "chartComponent": "chart:minecraft",
+  "namespace": "minecraft-tsmc",
+  "parameters": {},
+  "artifactParameters": {
+    "image.tag": "image:the-storm-server"
+  },
+  "minecraftUpgrade": {
+    "imageComponent": "image:the-storm-server",
+    "runnerImage": "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50"
+  }
+}

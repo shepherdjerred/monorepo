@@ -21,6 +21,7 @@ COPY --from=bun /app/node_modules /app/node_modules
 COPY --from=bun /app/packages /app/packages
 COPY packages/config/src /app/packages/config/src
 COPY packages/feature-flags/src /app/packages/feature-flags/src
+COPY packages/ops-model/src /app/packages/ops-model/src
 COPY packages/storm-forum /opt/storm-forum
 RUN ln -s /app/packages/storm-forum/node_modules /opt/storm-forum/node_modules \
     && ln -s /app/packages/storm-theme /opt/storm-theme

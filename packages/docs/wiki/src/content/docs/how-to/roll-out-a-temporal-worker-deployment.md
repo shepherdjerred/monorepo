@@ -5,187 +5,69 @@ sidebar:
   order: 7
 ---
 
-Run this procedure from `packages/temporal`. The commands change live Temporal
-routing. They do not deploy images or commit the promoted pin.
+Use Delivery to change worker hosts and routing. The
+[worker execution contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md)
+defines the retained hosts, rollout proofs, and independent recovery boundary.
 
-Choose a target and keep it on every command. Omit `--target` only for central:
+## Release an environment
 
-| Target     | Flag                       | Deployment                   |
-| ---------- | -------------------------- | ---------------------------- |
-| central    | none or `--target central` | `monorepo-central-workflows` |
-| Scout beta | `--target scout-beta`      | `scout-beta-workflows`       |
-| Scout prod | `--target scout-prod`      | `scout-prod-workflows`       |
+1. Inspect its retained hosts and the available immutable releases:
 
-Complete Scout beta acceptance before starting Scout production.
+   ```bash
+   toolkit deploy workers list ENVIRONMENT --json
+   toolkit deploy versions SERVICE --json
+   ```
 
-Scout's initial extraction requires two workflow-capable image releases. The
-checked-in pre-entrypoint pin creates no pod. After the prerequisite code lands,
-copy the first capable candidate pin to stable through a reviewed pin PR; this
-creates only the stable pod. Let the next image release advance candidate to a
-distinct Build ID; that creates the ramp target. The embedded backend poller
-drains old histories but is not the versioned stable fallback. Repeat the same
-sequence for production only after beta acceptance.
+   Use `temporal/prod`, `scout-for-lol/beta`, or `scout-for-lol/prod` as the
+   environment. A host baseline proves existing pollers; it does not accept a
+   new application release. Complete baseline verification before a rollout.
 
-## Before starting
+2. Request the selected version set, or inspect the automatic deployment:
 
-Confirm that the candidate image pin is deployed and copy the exact 40-character
-Git SHA baked into that image. Keep the [stable and candidate Kubernetes
-Deployments](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/homelab/src/cdk8s/src/resources/temporal/workflow-worker.ts)
-healthy. Do not remove legacy queue pollers while visibility still shows open
-executions on those queues; the [rollout preflight](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/temporal/src/lib/worker-deployment-proofs.ts)
-checks the candidate poller before changing routing.
+   ```bash
+   toolkit deploy start ENVIRONMENT VERSION --json
+   toolkit deploy status DEPLOYMENT_ID --json
+   ```
 
-Before replacing either Scout image track, confirm the current Build ID still
-has a poller on another Deployment. If it lives only on the track being
-replaced, add an unmanaged catalog image pin named
-`shepherdjerred/scout-for-lol/<stage>/workflows/retained-<first-12-build-id-characters>`.
-Use that build's exact published digest and record its full `gitSha` in
-`scripts/pin-candidates-state.json`. The
-[Scout chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
-starts its separate retained poller in an earlier sync wave.
-The stable track becomes ready before the candidate track changes.
-Readiness requires a nonsticky Workflow poller before either mutable track changes.
-The [retained-worker alert](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/temporal-worker-health.ts)
-checks each retained Deployment, scrape, and build's pollers independently.
-Keep the pin unchanged until the build is neither current nor ramping and
-Temporal reports its pinned executions drained. Then remove it through the
-normal reviewed GitOps release and pruning procedure.
+   Scout production requires human approval of the exact frozen release. Its
+   backend, Workflow hosts, and frontend archive share one deployment and lock.
 
-Set `TEMPORAL_ADDRESS` (and `TEMPORAL_TLS=true` for the private TLS endpoint) in
-the operator shell. The package command uses the existing `toolkit temporal`
-passthrough and never falls back to Kubernetes-only service DNS.
+3. Follow the deployment through replay, canary, ramp, and promotion:
 
-The SDK replay and canary subprocesses also require `TEMPORAL_API_KEY` at the
-external endpoint. When it is unset and `TEMPORAL_TLS=true`, the command
-resolves it once through toolkit's
-[credential broker](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/credentials.ts),
-which reads the Keychain-enrolled 1Password service account, and passes it to
-its subprocesses. No `op run` wrapper or desktop approval is needed. Set
-`TEMPORAL_REPLAY_WORKFLOW_IDS` to comma-separated representative retained
-execution IDs before `start`. For central production, from `packages/temporal`:
+   ```bash
+   toolkit deploy wait DEPLOYMENT_ID --timeout 86400 --json
+   ```
 
-```bash
-TEMPORAL_NAMESPACE=prod \
-TEMPORAL_TLS=true \
-  bun run worker-deployment start --build-id <candidate-image-git-sha>
-```
+   Success requires the selected runtime and routing proofs. Keep every older
+   host that still serves current, ramping, canary, or pinned executions.
 
-An explicit `TEMPORAL_API_KEY` still wins. SDK commands reject empty
-credentials and credentials supplied without `TEMPORAL_TLS=true`. In-cluster
-workers continue to use their private endpoint without this external
-credential.
+4. Request retirement of a drained host through Delivery:
 
-During Scout bootstrap, verify that stable and candidate are both capable,
-distinct images and both exact versions have registered pollers. Pass the
-stable image SHA with `--stable-build-id` on the first `start` command.
+   ```bash
+   toolkit deploy workers retire ENVIRONMENT WORKER_ID --json
+   ```
 
-For a scheduled workflow, pause the exact schedule before changing the bundle.
-After the candidate canary succeeds, trigger one bounded run and confirm the
-workflow completes before resuming the schedule. This is especially important
-for the billed LLM cost reconciliation: its Activity runs on the isolated
-`billing` queue, while the schedule starts on `monorepo-workflows`. A new
-schedule whose Workflow type only exists in the candidate should register with
-`initialPauseNote`, as `llm-billed-cost-hourly` does, and remain paused until the
-candidate receives 100% of Workflow traffic. Otherwise, a run can reach a stable
-Worker that does not register the Workflow and fail.
+   Retirement independently rechecks native drainage and execution visibility.
+   It sets the retained host's desired replicas to zero and preserves its record.
 
-Inspect the candidate without changing routing:
+5. For a failed deployment that retains ownership, stop its prior executor and
+   request independent recovery inspection:
 
-```bash
-TEMPORAL_NAMESPACE=prod bun run worker-deployment status --build-id <candidate-image-git-sha>
-```
+   ```bash
+   toolkit deploy workers recover DEPLOYMENT_ID --machine \
+     --expected-generation GENERATION \
+     --reason "Prior executor stopped; inspect retained hosts and native routing" --json
+   toolkit deploy workers recovery INTENT_ID --machine --json
+   ```
 
-The command fails when the Build ID is stale, the candidate has not registered
-the target-selected Workflow queue (`monorepo-workflows` for central,
-`scout-beta` for Scout beta, or `scout-prod` for Scout prod), the
-version-specific poller metric is zero, or a native diagnostic returns invalid
-data.
+   Use the environment generation from the deployment details. The independent
+   runner remains usable while Temporal is unavailable. Recovery clears ownership
+   only after fresh source, host, routing, execution, and generation checks. It
+   preserves the failed deployment's outcome. Retain the lock if inspection fails.
 
-## Start the ramp
-
-```bash
-TEMPORAL_NAMESPACE=prod bun run worker-deployment start --build-id <candidate-image-git-sha>
-```
-
-`start` refuses an existing ramp. It verifies that the checkout SHA equals the
-candidate Build ID, requires a clean tracked checkout, replays the real
-Workflow suite and the retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS`,
-starts a canary pinned to the candidate version, and waits for that Workflow to
-complete. Firing Temporal alerts remain visible in monitoring but do not block
-routing changes. For an empty Worker Deployment, pass the already registered
-stable Build ID so the deployment has a rollback target before candidate
-traffic:
-
-```bash
-TEMPORAL_NAMESPACE=prod bun run worker-deployment start \
-  --build-id <candidate-image-git-sha> \
-  --stable-build-id <stable-image-git-sha>
-```
-
-The command makes that stable version current, then opens the 10% candidate
-ramp. Later releases need only `--build-id`.
-
-## Advance to 50% and 100%
-
-After at least 30 minutes at 10%:
-
-```bash
-TEMPORAL_NAMESPACE=prod bun run worker-deployment advance --build-id <candidate-image-git-sha>
-```
-
-After at least two hours at 50%, run the same command again. It advances to
-100%. Each transition rechecks candidate and stable poller history, Prometheus
-rule-evaluation health, and candidate Build ID Workflow failure counters over
-the entire required window. Poller history requires a Workflow poller at every
-sample and a nonsticky poller within every minute; brief nonsticky handoffs
-while sticky pollers remain active do not count as a worker outage. Temporal
-alerts from other workers remain visible in monitoring but do not block these
-transitions.
-An early, repeated, or out-of-order command fails without changing routing.
-
-## Promote at 100% traffic
-
-After the candidate reaches 100%, confirm representative live Workflows have
-completed and run:
-
-```bash
-TEMPORAL_NAMESPACE=prod bun run worker-deployment promote --build-id <candidate-image-git-sha>
-```
-
-Promotion rechecks the two-hour poller, rule-evaluation, and candidate failure
-history. It verifies that the candidate catalog image contains the requested
-Build ID as its baked `GIT_SHA`, copies that exact value into the stable pin,
-makes the candidate current, and removes the ramp. Catalog-first ordering makes
-an interrupted promotion safe to retry. Review and commit both the catalog and
-`scripts/pin-candidates-state.json` changes through the normal pull-request
-flow. Do not claim
-promotion complete until GitOps has deployed the resulting stable pin and both
-poller tracks are healthy.
-
-## Roll back a ramp
-
-```bash
-TEMPORAL_NAMESPACE=prod bun run worker-deployment rollback --build-id <candidate-image-git-sha>
-```
-
-Rollback removes only an active ramp for that exact candidate, including when a
-newer candidate registered after the ramp began. The prior
-current version remains current. Keep the rejected candidate available while
-any executions pinned to it drain. Only after that drain is verified, rerun the
-command with the same Build ID to reset a divergent rejected candidate pin to
-the stable catalog value; it refuses to reset a candidate that is already
-current.
-
-After rollback, verify schedule health, Workflow task failures, queue latency,
-and representative executions. Keep the rejected candidate pod available until
-executions pinned by the canary or operator override have closed. Then copy the
-stable catalog value back to candidate by rerunning `rollback` with the same
-Build ID while no ramp is active, then review and commit both the resulting
-catalog and `scripts/pin-candidates-state.json` changes through the normal
-pull-request flow.
-Image commit-back retains a Workflow candidate whenever stable and candidate
-differ, so a new build cannot replace an in-flight candidate and will not
-advance the track again until this post-rollback reset lands.
+Delivery retains its exact host pool and selected artifacts in
+PostgreSQL. The central control-plane image is retained separately from the
+application candidate and requires its own upgrade procedure.
 
 ## Verify the billed LLM cost reconciliation
 
@@ -208,8 +90,7 @@ for how to read billed against live cost.
 
 ## Native diagnostics
 
-Use the existing passthroughs for deeper inspection; there is no rollout
-toolkit subcommand:
+Use the existing passthroughs for read-only native inspection:
 
 ```bash
 toolkit temporal --namespace prod worker deployment describe --name monorepo-central-workflows

@@ -7,12 +7,7 @@ import type {
   DeploymentDetail,
   EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
-import { assertStaticSiteDeliveryOwner } from "homelab/src/static-site-delivery-ownership.ts";
-import {
-  restoreStaticArchive,
-  staticArchivePath,
-} from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
-import { validateStaticArchiveUri } from "@shepherdjerred/root-scripts/lib/static-site-publication.ts";
+import { restoreStaticArchive } from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
 import {
   firstS3ObjectMismatch,
   s3SyncStaticSite,
@@ -36,37 +31,16 @@ import {
 import type { StaticActivationReceipt } from "./static-site-effects.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { verifyPublicStaticEntrypoint } from "./static-site-public.ts";
+import { staticSiteSelection as selection } from "./static-site-selection.ts";
 
 const MARKER = ".delivery-release.json";
-function selection(detail: DeploymentDetail) {
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "static-site")
-    throw new Error("Expected a static-site pipeline");
-  assertStaticSiteDeliveryOwner(pipeline.bucket, detail.environment.id);
-  const archive = detail.versionSet.components[pipeline.archiveComponent];
-  if (archive?.kind !== "archive")
-    throw new Error("Selected static-site archive is missing");
-  validateStaticArchiveUri(archive.uri, archive.digest);
-  for (const prefix of pipeline.immutablePrefixes) {
-    if (!prefix.endsWith("/"))
-      throw new Error("Static immutable prefixes must end in a slash");
-    staticArchivePath(prefix.slice(0, -1));
-  }
-  for (const entrypoint of pipeline.entrypoints) staticArchivePath(entrypoint);
-  const receipt: StaticActivationReceipt = {
-    deploymentId: detail.deployment.id,
-    versionSetRevisionId: detail.versionSet.id,
-    archiveDigest: archive.digest,
-    bucket: pipeline.bucket,
-  };
-  return { pipeline, archive, receipt };
-}
-
 function awsEnvironment() {
   return {
     ...SEAWEEDFS_AWS_ENV,
-    AWS_ACCESS_KEY_ID: requireEnv("SEAWEEDFS_SITES_ACCESS_KEY_ID"),
-    AWS_SECRET_ACCESS_KEY: requireEnv("SEAWEEDFS_SITES_SECRET_ACCESS_KEY"),
+    AWS_ACCESS_KEY_ID: requireEnv("DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID"),
+    AWS_SECRET_ACCESS_KEY: requireEnv(
+      "DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY",
+    ),
   };
 }
 

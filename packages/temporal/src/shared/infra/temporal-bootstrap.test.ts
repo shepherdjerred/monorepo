@@ -39,6 +39,16 @@ describe("Temporal bootstrap configuration", () => {
       buildId: SHA,
     });
   });
+  test("rejects an explicit Build ID that disagrees with baked image provenance", () => {
+    expect(() =>
+      parseTemporalBootstrap({
+        TEMPORAL_NAMESPACE: "prod",
+        TEMPORAL_WORKER_DEPLOYMENT_NAME: "central",
+        GIT_SHA: SHA,
+        TEMPORAL_WORKER_BUILD_ID: "b".repeat(40),
+      }),
+    ).toThrow("baked GIT_SHA");
+  });
 
   test("does not opt Activity workers into versioning from image provenance", () => {
     expect(

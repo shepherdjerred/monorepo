@@ -1,0 +1,12 @@
+{
+  "kind": "argocd",
+  "application": "glitter-boys-launcher",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "glitter-boys-launcher",
+  "chartComponent": "chart:glitter-boys-launcher",
+  "namespace": "glitter-boys-launcher",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.glitter-boys-launcher": "image:glitter-boys-launcher"
+  }
+}

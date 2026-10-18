@@ -43,7 +43,8 @@ export function prepareDockerHubPullSecrets(app: App): void {
   for (const construct of app.node.findAll()) {
     if (!ApiObject.isApiObject(construct)) continue;
     const manifest: unknown = construct.toJson();
-    if (!containsPrivateImage(manifest)) continue;
+    if (!containsPrivateImage(manifest) && !hasTemplatedPodImage(construct))
+      continue;
     const chart = Chart.of(construct);
     const namespace =
       construct.kind === "Application"
@@ -81,6 +82,18 @@ const PodSpecSchema = z.object({
   imagePullSecrets: z.array(z.object({ name: z.string().min(1) })).optional(),
 });
 
+function hasTemplatedPodImage(resource: ApiObject): boolean {
+  const path = podSpecPaths[resource.kind];
+  if (path === undefined) return false;
+  let value: unknown = resource.toJson();
+  for (const field of path)
+    value = z.record(z.string(), z.unknown()).parse(value)[field];
+  const spec = PodSpecSchema.parse(value);
+  return [...spec.containers, ...(spec.initContainers ?? [])].some(
+    ({ image }) => image.includes("{{"),
+  );
+}
+
 /** Attach the namespace's reader secret to repo-owned private Pod templates. */
 export function attachDockerHubPullSecrets(app: App): void {
   for (const construct of app.node.findAll()) {
@@ -95,8 +108,7 @@ export function attachDockerHubPullSecrets(app: App): void {
     const images = [...spec.containers, ...(spec.initContainers ?? [])];
     if (
       !images.some(
-        ({ image }) =>
-          image.startsWith("docker.io/") && containsPrivateImage(image),
+        ({ image }) => containsPrivateImage(image) || image.includes("{{"),
       )
     )
       continue;
@@ -108,6 +120,8 @@ export function attachDockerHubPullSecrets(app: App): void {
       );
     const name = dockerHubPullSecretName(namespace);
     const secrets = spec.imagePullSecrets ?? [];
+    // Unknown image templates receive the same reader: dynamic syntax cannot
+    // hide a private runtime image from namespace credential preparation.
     if (secrets.some((secret) => secret.name === name)) continue;
     construct.addJsonPatch(
       JsonPatch.add(`/${path.join("/")}/imagePullSecrets`, [

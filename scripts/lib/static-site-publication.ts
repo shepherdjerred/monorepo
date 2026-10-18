@@ -2,12 +2,9 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
-import {
-  createStaticArchive,
-  staticArchiveDigest,
-} from "./static-site-archive.ts";
-import { run, runAllowExit, requireEnv } from "./run.ts";
-import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "./seaweedfs.ts";
+import { createStaticArchive } from "./static-site-archive.ts";
+import { requireEnv } from "./run.ts";
+import { publishImmutableArchive } from "./artifacts/immutable-archive.ts";
 
 export const STATIC_ARCHIVE_BUCKET = "delivery-artifacts";
 const DigestPattern = /^sha256:[a-f\d]{64}$/u;
@@ -28,11 +25,6 @@ export function validateStaticArchiveUri(uri: string, digest: string): void {
     throw new Error("Static archive URI does not match its immutable digest");
 }
 
-const commandOptions = {
-  env: SEAWEEDFS_AWS_ENV,
-  unsetEnv: ["OP_SERVICE_ACCOUNT_TOKEN"],
-};
-
 export async function publishStaticSiteArchive(input: {
   bucket: string;
   source: string;
@@ -44,63 +36,12 @@ export async function publishStaticSiteArchive(input: {
     const archive = path.join(scratch, "site.tar");
     const { digest } = await createStaticArchive(input.source, archive);
     const uri = staticArchiveUri(input.bucket, digest);
-    const key = uri.slice(`s3://${STATIC_ARCHIVE_BUCKET}/`.length);
-    await run(
-      [
-        "aws",
-        "s3api",
-        "head-bucket",
-        "--bucket",
-        STATIC_ARCHIVE_BUCKET,
-        "--endpoint-url",
-        SEAWEEDFS_ENDPOINT,
-      ],
-      commandOptions,
-    );
-    const publication = await runAllowExit(
-      [
-        "aws",
-        "s3api",
-        "put-object",
-        "--bucket",
-        STATIC_ARCHIVE_BUCKET,
-        "--key",
-        key,
-        "--body",
-        archive,
-        "--if-none-match",
-        "*",
-        "--endpoint-url",
-        SEAWEEDFS_ENDPOINT,
-        "--no-cli-pager",
-      ],
-      commandOptions,
-    );
-    // Read back even after a lost response or precondition failure. Identical
-    // bytes are the only acceptable result at this content-addressed location.
-    const readback = path.join(scratch, "readback.tar");
-    try {
-      await run(
-        [
-          "aws",
-          "s3",
-          "cp",
-          uri,
-          readback,
-          "--endpoint-url",
-          SEAWEEDFS_ENDPOINT,
-        ],
-        commandOptions,
-      );
-    } catch {
-      throw new Error(
-        `Static archive publication is unconfirmed (upload exit ${String(publication.exitCode)})`,
-      );
-    }
-    if ((await staticArchiveDigest(readback)) !== digest)
-      throw new Error(
-        "Published static archive failed immutable byte readback",
-      );
+    await publishImmutableArchive({
+      uri,
+      digest,
+      file: archive,
+      readback: path.join(scratch, "readback.tar"),
+    });
     const artifact = ArtifactInputSchema.parse({
       id: `ci/${requireEnv("CI_REPO_ID")}/${requireEnv("CI_PIPELINE_NUMBER")}/site/${input.bucket}`,
       component: `site:${input.bucket}`,

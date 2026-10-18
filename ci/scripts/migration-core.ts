@@ -142,6 +142,10 @@ export const globalPaths = [
   "scripts/lib/ci/ci-artifact.ts",
   "scripts/lib/ci/ci-environment.ts",
   "scripts/lib/json.ts",
+  "scripts/ci/publish-delivery.ts",
+  "scripts/lib/ci/delivery-platform-publication.ts",
+  "scripts/lib/ci/delivery-forum-publication.ts",
+  "scripts/lib/ci/delivery-publication-handoffs.ts",
 ] as const;
 
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {
@@ -204,7 +208,11 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ...deployScripts,
   ],
   resume: ["packages/resume", ...deployScripts],
-  trmnl: ["packages/trmnl-dashboard", "packages/version-catalog"],
+  trmnl: [
+    "packages/trmnl-dashboard",
+    "packages/version-catalog",
+    "packages/ops-model/src/trmnl",
+  ],
   "docker-e2e": [
     ...workspacePaths,
     "packages/llm-observability",
@@ -248,14 +256,17 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   helm: [
     ...workspacePaths,
     "packages/version-catalog",
+    "packages/ops-model",
     "packages/homelab/src/cdk8s",
     "packages/homelab/scripts/helm/helm-release-core.ts",
+    "packages/homelab/scripts/helm/helm-delivery-publication.ts",
     "packages/homelab/scripts/helm/helm-push.ts",
     "scripts/lib/run.ts",
   ],
   argocd: [
     ...workspacePaths,
     "packages/version-catalog",
+    "packages/ops-model",
     "packages/homelab/src/cdk8s",
     "packages/homelab/scripts/argocd/argocd.ts",
     "scripts/lib/run.ts",

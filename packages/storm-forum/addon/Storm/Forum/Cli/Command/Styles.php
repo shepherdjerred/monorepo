@@ -11,7 +11,7 @@ final class Styles extends \XF\Cli\Command\AbstractCommand
     {
         $app = \XF::app();
         require_once '/opt/storm-forum/runtime/style-archive.php';
-        $manifest = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);
+        $manifest = (require '/opt/storm-forum/runtime/manifest.php')();
         $dependencies = array_values(array_filter($manifest['vendorDependencies'], fn($dependency) => $dependency['kind'] === 'style'));
         if (count($dependencies) !== 2 || count(array_unique(array_column($dependencies, 'mode'))) !== 2) {
             throw new \RuntimeException('Exactly one light and dark Flexile parent is required');

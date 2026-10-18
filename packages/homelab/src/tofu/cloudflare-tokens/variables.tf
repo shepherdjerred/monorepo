@@ -2,7 +2,8 @@ variable "cloudflare_api_tokens" {
   description = "Scoped Cloudflare child tokens and their existing rotation units"
   type = map(object({
     managed       = optional(bool, true)
-    supersedes_id = string
+    supersedes_id = optional(string)
+    account_id    = optional(string)
     name          = string
     policies = list(object({
       effect = string

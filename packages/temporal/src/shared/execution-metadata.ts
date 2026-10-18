@@ -21,6 +21,8 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
 > = {
   [TASK_QUEUES.WORKFLOWS]: "platform",
   [TASK_QUEUES.DELIVERY]: "platform",
+  [TASK_QUEUES.DELIVERY_PLATFORM]: "platform",
+  [TASK_QUEUES.DELIVERY_WORKFLOWS]: "platform",
   [TASK_QUEUES.HOME]: "home",
   [TASK_QUEUES.REPORTS]: "reports",
   [TASK_QUEUES.INFRA]: "infra",

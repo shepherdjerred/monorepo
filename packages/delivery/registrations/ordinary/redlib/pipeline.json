@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "redlib",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "redlib",
+  "chartComponent": "chart:redlib",
+  "namespace": "redlib",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.redlib": "image:redlib"
+  },
+  "verification": {
+    "url": "https://redlib.tailnet-1a49.ts.net/",
+    "expectedStatus": 200
+  }
+}

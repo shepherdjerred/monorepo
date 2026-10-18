@@ -76,6 +76,19 @@ export function EnvironmentCard({
           </dd>
         </div>
       </dl>
+      {environment.acceptedPlatformDeploymentId !== null && (
+        <p className="notice">
+          Accepted infrastructure{" "}
+          <button
+            className="text-button mono"
+            onClick={() => {
+              onDeployment(environment.acceptedPlatformDeploymentId ?? "");
+            }}
+          >
+            {environment.acceptedPlatformDeploymentId}
+          </button>
+        </p>
+      )}
       <p className={`freshness ${observed.fresh ? "fresh" : "stale"}`}>
         <span className="dot" />
         {observed.label}
@@ -137,7 +150,10 @@ export function DeploymentList({
                 <strong>{deployment.environmentId}</strong>
                 <small>{deployment.kind}</small>
               </td>
-              <td className="mono">{deployment.versionSetRevisionId}</td>
+              <td className="mono">
+                {deployment.platformSnapshot?.source.id ??
+                  deployment.versionSetRevisionId}
+              </td>
               <td>
                 <Status value={deployment.status} />
               </td>
@@ -150,6 +166,7 @@ export function DeploymentList({
               <td>
                 <button
                   className="text-button"
+                  aria-label={`Inspect deployment ${deployment.id}`}
                   onClick={() => {
                     onSelect(deployment.id);
                   }}

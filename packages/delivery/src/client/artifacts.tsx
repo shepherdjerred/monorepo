@@ -49,9 +49,17 @@ export function BuildCatalog({ builds }: { builds: Overview["builds"] }) {
                     </div>
                   </td>
                   <td data-label="Evidence">
-                    <a href={build.ciUrl} rel="noreferrer" target="_blank">
-                      View CI ↗
-                    </a>
+                    {build.ciUrl === null ? (
+                      <span>
+                        {build.sourceKind === "upstream"
+                          ? "Original upstream bytes verified"
+                          : "Licensed bundle verification"}
+                      </span>
+                    ) : (
+                      <a href={build.ciUrl} rel="noreferrer" target="_blank">
+                        View CI ↗
+                      </a>
+                    )}
                   </td>
                 </tr>
               ))}

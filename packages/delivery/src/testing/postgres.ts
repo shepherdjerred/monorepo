@@ -98,18 +98,26 @@ export async function createTestDatabase() {
   const url = `postgres://delivery@127.0.0.1:${String(port)}/postgres`;
   const database = createDatabase(url);
   try {
-    const migration = await Bun.file(
-      new URL(
-        "../../prisma/migrations/20261016000000_delivery/migration.sql",
-        import.meta.url,
-      ),
-    ).text();
-    // This source-owned baseline has no procedural bodies containing semicolons.
-    for (const statement of migration
-      .split(";")
-      .map((entry) => entry.trim())
-      .filter(Boolean))
-      await database.$executeRawUnsafe(statement);
+    const migrations = new URL("../../prisma/migrations/", import.meta.url);
+    const files = [
+      ...new Bun.Glob("*/migration.sql").scanSync({
+        cwd: migrations.pathname,
+        onlyFiles: true,
+      }),
+    ].sort();
+    if (files.length === 0)
+      throw new Error("Delivery database migrations are missing");
+    for (const file of files) {
+      await run([
+        "psql",
+        "--no-psqlrc",
+        "--set=ON_ERROR_STOP=1",
+        "--dbname",
+        url,
+        "--file",
+        new URL(file, migrations).pathname,
+      ]);
+    }
   } catch (error) {
     await database.$disconnect();
     await run(

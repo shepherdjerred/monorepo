@@ -1,0 +1,10 @@
+{
+  "id": "self-hosted-apps/redlib",
+  "serviceId": "self-hosted-apps",
+  "name": "redlib",
+  "application": "redlib",
+  "pipelineRevisionId": "self-hosted-apps/redlib/1",
+  "configurationRevision": "self-hosted-apps/redlib/1",
+  "configuration": {},
+  "automatic": true
+}

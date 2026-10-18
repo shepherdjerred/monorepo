@@ -151,10 +151,13 @@ async function initializeTemporalTracing(
   bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>,
 ) {
   const taskQueues = roleContract.workers.map((worker) => worker.taskQueue);
-  const callGraphTracing = await initializeCallGraphTracing({
-    environment: bootstrapMetadata.environment,
-    workerRole: role,
-  });
+  const callGraphTracing =
+    role === "delivery-workflows"
+      ? false
+      : await initializeCallGraphTracing({
+          environment: bootstrapMetadata.environment,
+          workerRole: role,
+        });
   const tracingRuntime = initializeTracing({
     domain: executionDomainForTaskQueues(taskQueues),
     environment: bootstrapMetadata.environment,

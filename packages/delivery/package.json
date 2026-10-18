@@ -6,6 +6,7 @@
   "exports": {
     "./contract": "./src/shared/contract.ts",
     "./client": "./src/shared/client.ts",
+    "./operation-id": "./src/shared/operation-id.ts",
     "./testing": "./src/testing/index.ts"
   },
   "imports": {
@@ -32,8 +33,10 @@
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",
+    "@shepherdjerred/ops-clients": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "hono": "^4.12.18",
+    "fflate": "^0.8.3",
     "prisma": "^7.10.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

@@ -11,15 +11,35 @@ import {
 import {
   prepareDeliveryWorkerRollout,
   stepDeliveryWorkerRollout,
-} from "#lib/delivery/worker-rollout.ts";
+} from "#lib/delivery/workers/worker-rollout.ts";
 import { run as runRootRelease } from "./root-release.ts";
 import { run as runTofuApply } from "./tofu-apply.ts";
+import { run as runTofuPlan } from "./tofu-plan.ts";
+import { run as runControlPlane } from "./control-plane.ts";
+import { run as runPlatformRecovery } from "./platform-recovery.ts";
+import {
+  verifyDeliveryWorkerImages,
+  WorkerImageProofInputSchema,
+} from "#lib/delivery/workers/worker-image-proof.ts";
+import { renderControlPlaneTemplates } from "#lib/delivery/workers/worker-control-plane.ts";
 
 const ConnectionSchema = z.object({
-  address: z.literal("temporal-server.temporal.svc.cluster.local:7233"),
+  address: z.literal(
+    "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+  ),
 });
 
 async function command(argv: readonly string[]) {
+  if (argv[0] === "toolkit" && argv[1] === "prom" && argv[2] === "query") {
+    const expression = z.string().min(1).parse(argv[3]);
+    const url = new URL(
+      "http://prometheus-kube-prometheus-prometheus.prometheus:9090/api/v1/query",
+    );
+    url.searchParams.set("query", expression);
+    const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    if (!response.ok) throw new Error("Worker metrics query failed");
+    return { stdout: await response.text(), stderr: "" };
+  }
   const child = Bun.spawn([...argv], {
     stdout: "pipe",
     stderr: "pipe",
@@ -50,6 +70,18 @@ async function main() {
     );
   let result: unknown;
   switch (request.recipe) {
+    case "worker-images": {
+      const input = WorkerImageProofInputSchema.parse(request.input);
+      await verifyDeliveryWorkerImages(input.detail, command);
+      result = {
+        verified: true,
+        controlPlaneTemplates:
+          input.controlPlane === null
+            ? []
+            : await renderControlPlaneTemplates(input.controlPlane, command),
+      };
+      break;
+    }
     case "worker-preflight": {
       const input = z
         .object({
@@ -79,10 +111,19 @@ async function main() {
       break;
     }
     case "root-release":
-      result = await runRootRelease(request.input);
+      result = await runRootRelease(request);
       break;
     case "tofu-apply":
-      result = await runTofuApply(request.input);
+      result = await runTofuApply(request);
+      break;
+    case "tofu-plan":
+      result = await runTofuPlan(request);
+      break;
+    case "control-plane":
+      result = await runControlPlane(request);
+      break;
+    case "platform-recovery":
+      result = await runPlatformRecovery(request);
       break;
   }
   await Bun.write(

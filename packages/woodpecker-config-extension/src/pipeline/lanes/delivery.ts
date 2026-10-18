@@ -35,7 +35,8 @@ export function deliveryPublicationSteps(
         "verify",
         "images",
         "helm-push",
-        ...(staticArchives ? ["sites", "scout-beta-release"] : []),
+        "trmnl-plugin-archives",
+        ...(staticArchives ? ["sites", "scout-site-archives"] : []),
       ],
       defaultBranchOnly: true,
       timeoutMinutes: 5,
@@ -44,6 +45,8 @@ export function deliveryPublicationSteps(
         GITHUB_DOWNLOAD,
         ...HANDOFF_KEYS,
         DOCKERHUB_READ,
+        grant("ci-chartmuseum-credentials", "CHARTMUSEUM_USERNAME"),
+        grant("ci-chartmuseum-credentials", "CHARTMUSEUM_PASSWORD"),
         grant(
           "ci-delivery-credentials",
           "DELIVERY_PUBLISHER_TOKEN",

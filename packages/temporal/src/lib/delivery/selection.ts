@@ -1,14 +1,13 @@
-import { createHash } from "node:crypto";
+import { deliveryOperationId as sharedOperationId } from "@shepherdjerred/delivery/operation-id";
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { DeliverySelectionSchema } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { forumReleaseParameters } from "./forum.ts";
+import { workerPoolParameters } from "./workers/worker-pool.ts";
+import { minecraftImageParameters } from "./minecraft.ts";
 
 /** Stable UUID accepted by the existing identity-bound Argo sync command. */
 export function deliveryOperationId(deploymentId: string): string {
-  const hash = createHash("sha256")
-    .update(`delivery:${deploymentId}:reconcile`)
-    .digest("hex");
-  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+  return sharedOperationId(deploymentId);
 }
 
 export function deliverySelection(detail: DeploymentDetail) {
@@ -37,6 +36,9 @@ export function deliverySelection(detail: DeploymentDetail) {
     parameters[parameter] = `${artifact.uri}@${artifact.digest}`;
   }
   Object.assign(parameters, forumReleaseParameters(detail));
+  Object.assign(parameters, workerPoolParameters(detail));
+  if (pipeline.minecraftUpgrade !== undefined)
+    Object.assign(parameters, minecraftImageParameters(detail));
   const selection = DeliverySelectionSchema.parse({
     application: pipeline.application,
     environmentId: detail.deployment.environmentId,

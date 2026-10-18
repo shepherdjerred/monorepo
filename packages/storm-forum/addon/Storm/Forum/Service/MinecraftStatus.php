@@ -41,7 +41,7 @@ final class MinecraftStatus
     public static function read(string $path = '/var/lib/storm-forum/status.json', ?int $now = null): array
     {
         $now ??= time();
-        $manifest = json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true, 512, JSON_THROW_ON_ERROR);
+        $manifest = (require '/opt/storm-forum/runtime/manifest.php')();
         $mc = $manifest['minecraft'];
         $stateCombinations = self::stateCombinations();
         $result = ['schemaVersion'=>3, 'state'=>'unavailable', 'checkedAt'=>null, 'staleAfterSeconds'=>$mc['staleAfterSeconds'],

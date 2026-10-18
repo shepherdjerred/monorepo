@@ -13,11 +13,8 @@ import {
   ComposeVersionSetSchema,
   CreateDeploymentSchema,
   FinishDeploymentSchema,
-  IdentifierSchema,
   LatestQualifiedArtifactQuerySchema,
-  PipelineDefinitionSchema,
   PublishBuildSchema,
-  RegisterEnvironmentSchema,
   StageInputSchema,
   ImportSnapshotSchema,
 } from "#shared/contract.ts";
@@ -25,14 +22,38 @@ import type { Principal, PublishBuild } from "#shared/contract.ts";
 import { ciIdentity } from "#infrastructure/qualification.ts";
 import { RecoveryRequestSchema } from "#infrastructure/recovery.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
+import { registerWorkerRoutes } from "./worker-routes.ts";
+import { registerPlatformRoutes } from "./platform-routes.ts";
+import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
+import { registerClaimRoute } from "./claim-route.ts";
+import { registerTrmnlRepairRoute } from "./trmnl-repair-route.ts";
+import { registerControlPlaneRoutes } from "./control-plane-routes.ts";
+import { registerForumRoutes } from "./forum-routes.ts";
+import { registerDefinitionRoutes } from "./registration-routes.ts";
+import type { VerifyForumBundle } from "#infrastructure/forum/bundles.ts";
+import type { InspectForumBaseline } from "#infrastructure/forum/baseline-settlement.ts";
+import { settlesExistingStage } from "./stage-settlement.ts";
+import { registerWorkerRecoveryRoutes } from "./worker-recovery-routes.ts";
+import { registerMinecraftRecoveryRoutes } from "./minecraft-recovery-routes.ts";
+import type { InspectMinecraftRecovery } from "#infrastructure/minecraft-recovery/inspector.ts";
+import { deliveryMetrics } from "./metrics.ts";
+import { registerArtifactRoutes } from "./artifact-routes.ts";
+import { registerQualificationRoutes } from "./qualification-routes.ts";
+import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
+import { registerOwnershipRoute } from "./ownership-route.ts";
 
 type Options = {
+  sourceRevision?: string;
   delivery: Delivery;
   config: RuntimeConfig;
   peerAddress: (request: Request) => string | null;
   ciOrigin: string;
   ciRepositoryId: number;
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
+  inspectMinecraftRecovery?: InspectMinecraftRecovery;
+  verifyForumBundle?: VerifyForumBundle;
+  inspectForumBaseline?: InspectForumBaseline;
+  upstreamFetch?: UpstreamFetch;
   qualifyBuild: (
     input: Pick<PublishBuild, "ciUrl" | "sourceRevision">,
   ) => Promise<"pending" | "verified" | "failed">;
@@ -43,7 +64,26 @@ export function createApp(options: Options) {
   }>();
   const clientRoot = `${import.meta.dir}/../../dist/client`;
   app.use(secureHeaders());
-  app.use(bodyLimit({ maxSize: 1024 * 1024 }));
+  app.use((c, next) =>
+    bodyLimit({
+      onError: () =>
+        c.json(
+          {
+            error: {
+              code: "INVALID",
+              message: "Request exceeds its bounded payload size",
+              requestId: crypto.randomUUID(),
+            },
+          },
+          413,
+        ),
+      maxSize:
+        c.req.path === "/api/v1/platform/plans" ||
+        /^\/api\/v1\/platform-recovery\/[^/]+\/plan$/.test(c.req.path)
+          ? 16 * 1024 * 1024
+          : 1024 * 1024,
+    })(c, next),
+  );
   app.use(async (c, next) => {
     const requestId = crypto.randomUUID();
     c.set("requestId", requestId);
@@ -51,6 +91,10 @@ export function createApp(options: Options) {
     await next();
   });
   app.get("/healthz", (c) => c.json({ status: "ok" }));
+  app.get("/metrics", async (c) => {
+    c.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
+    return c.body(await deliveryMetrics(options.delivery.database));
+  });
   app.get("/readyz", async (c) => {
     try {
       await options.delivery.database.$queryRaw`SELECT 1`;
@@ -66,18 +110,27 @@ export function createApp(options: Options) {
       options.config,
     );
     c.set("principal", principal);
-    if (c.req.method === "GET") requireScope(principal, "read");
-    else if (!(await options.config.writesEnabled())) {
+    if (c.req.method === "GET") {
+      if (c.req.path !== "/api/v1/forum/bundles/qualified")
+        requireScope(principal, "read");
+    } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
         /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan)$/.test(
           c.req.path,
-        ) || /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path);
-      let settlesStage = false;
-      if (/\/deployments\/[^/]+\/stages$/.test(c.req.path)) {
-        const body: unknown = await c.req.raw.clone().json();
-        const stage = StageInputSchema.safeParse(body);
-        settlesStage = stage.success && stage.data.status !== "running";
-      }
+        ) ||
+        /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
+        /\/worker-recovery(?:\/|$)/.test(c.req.path) ||
+        /\/minecraft-recovery(?:\/|$)/.test(c.req.path) ||
+        (/\/platform-recovery(?:\/|$)/.test(c.req.path) &&
+          !c.req.path.endsWith("/admit-apply")) ||
+        /^\/api\/v1\/forum\/baselines\/[^/]+\/(?:submitted|complete|fail)$/.test(
+          c.req.path,
+        ) ||
+        /^\/api\/v1\/platform\/plans$/.test(c.req.path);
+      const settlesStage = await settlesExistingStage(
+        options.delivery,
+        c.req.raw,
+      );
       if (!resultOnly && !settlesStage)
         throw new DeliveryError("PAUSED", "Delivery mutations are paused");
     }
@@ -92,6 +145,21 @@ export function createApp(options: Options) {
       );
   }
   const delivery = options.delivery;
+  registerOwnershipRoute(app, options);
+  registerPlatformRecoveryRoutes(app, delivery, enabled);
+  registerWorkerRecoveryRoutes(app, delivery);
+  registerMinecraftRecoveryRoutes(
+    app,
+    delivery,
+    options.inspectMinecraftRecovery,
+  );
+  registerQualificationRoutes(app, delivery, options.qualifyBuild);
+  registerArtifactRoutes(app, delivery, {
+    repositoryId: options.ciRepositoryId,
+    ...(options.upstreamFetch === undefined
+      ? {}
+      : { transport: options.upstreamFetch }),
+  });
   app.get("/api/v1/identity", (c) => c.json(c.get("principal")));
   app.get("/api/v1/imports", async (c) =>
     c.json(await delivery.importedSnapshots()),
@@ -146,34 +214,24 @@ export function createApp(options: Options) {
       201,
     );
   });
-  app.post("/api/v1/pipelines", async (c) => {
-    requireScope(c.get("principal"), "admin");
-    const input = z
-      .object({ id: IdentifierSchema, definition: PipelineDefinitionSchema })
-      .strict()
-      .parse(await c.req.json());
-    return c.json(
-      await delivery.registerPipeline(
-        input.id,
-        input.definition,
-        c.get("principal"),
-      ),
-      201,
-    );
-  });
-  app.post("/api/v1/environments", async (c) => {
-    requireScope(c.get("principal"), "admin");
-    return c.json(
-      await delivery.registerEnvironment(
-        RegisterEnvironmentSchema.parse(await c.req.json()),
-        c.get("principal"),
-      ),
-      201,
-    );
+  registerDefinitionRoutes(app, delivery);
+  registerWorkerRoutes(app, { delivery, enabled });
+  registerPlatformRoutes(app, { delivery, enabled });
+  registerClaimRoute(app, delivery, enabled);
+  registerTrmnlRepairRoute(app, delivery, enabled);
+  registerControlPlaneRoutes(app, delivery, enabled);
+  registerForumRoutes(app, delivery, {
+    ...(options.verifyForumBundle === undefined
+      ? {}
+      : { verifyBundle: options.verifyForumBundle }),
+    ...(options.inspectForumBaseline === undefined
+      ? {}
+      : { inspectBaseline: options.inspectForumBaseline }),
   });
   app.post("/api/v1/deployments", async (c) => {
-    requireScope(c.get("principal"), "deploy");
-    const input = CreateDeploymentSchema.parse(await c.req.json());
+    const input = await authorizedDeploymentInput(c.get("principal"), () =>
+      c.req.json(),
+    );
     await enabled(input.environmentId);
     return c.json(
       await delivery.createDeployment(input, c.get("principal")),
@@ -207,6 +265,15 @@ export function createApp(options: Options) {
       throw new DeliveryError(
         "CONFLICT",
         "Only failed or canceled deployments can be retried",
+      );
+    if (
+      detail.deployment.kind !== "deploy" &&
+      detail.deployment.kind !== "promote" &&
+      detail.deployment.kind !== "rollback"
+    )
+      throw new DeliveryError(
+        "INVALID",
+        "Request a new specialized deployment with exact fresh inputs",
       );
     return c.json(
       await delivery.createDeployment(
@@ -260,32 +327,6 @@ export function createApp(options: Options) {
       await delivery.orphan(c.req.param("id"), input, c.get("principal")),
     );
   });
-  app.get("/api/v1/qualification/pending", async (c) => {
-    requireScope(c.get("principal"), "execute");
-    return c.json(await delivery.pendingQualification());
-  });
-  app.post("/api/v1/builds/:id/qualify", async (c) => {
-    requireScope(c.get("principal"), "execute");
-    const build = await delivery.build(c.req.param("id"));
-    await delivery.markQualificationAttempt(build.id);
-    try {
-      const status = await options.qualifyBuild(build);
-      return c.json(
-        await delivery.qualify(build.id, status, c.get("principal")),
-      );
-    } catch (error) {
-      if (error instanceof DeliveryError && error.code === "INVALID")
-        return c.json(
-          await delivery.qualify(
-            build.id,
-            "failed",
-            c.get("principal"),
-            error.message,
-          ),
-        );
-      throw error;
-    }
-  });
   app.post("/api/v1/reconcile", async (c) => {
     requireScope(c.get("principal"), "execute");
     return c.json(
@@ -303,14 +344,6 @@ export function createApp(options: Options) {
       .parse(await c.req.json());
     return c.json(
       await delivery.submitted(c.req.param("id"), input.workflowId),
-    );
-  });
-  app.post("/api/v1/deployments/:id/claim", async (c) => {
-    requireScope(c.get("principal"), "execute");
-    const detail = await delivery.detail(c.req.param("id"));
-    await enabled(detail.environment.id);
-    return c.json(
-      await delivery.claim(detail.deployment.id, c.get("principal")),
     );
   });
   app.post("/api/v1/deployments/:id/stages", async (c) => {
@@ -343,6 +376,11 @@ export function createApp(options: Options) {
         "Independent recovery inspection is unavailable",
       );
     const detail = await delivery.detail(c.req.param("id"));
+    if (detail.deployment.workerSnapshot !== null)
+      throw new DeliveryError(
+        "INVALID",
+        "Retained workers require independently verified worker recovery intent and routing proof",
+      );
     const settled = await options.inspectRecovery(detail, input);
     return c.json(
       await delivery.releaseLock(
@@ -419,4 +457,14 @@ export function createApp(options: Options) {
     );
   });
   return app;
+}
+
+async function authorizedDeploymentInput(
+  principal: Principal,
+  read: () => Promise<unknown>,
+) {
+  if (!principal.scopes.includes("admin")) requireScope(principal, "deploy");
+  const input = CreateDeploymentSchema.parse(await read());
+  requireScope(principal, input.kind === "adopt-worker" ? "admin" : "deploy");
+  return input;
 }

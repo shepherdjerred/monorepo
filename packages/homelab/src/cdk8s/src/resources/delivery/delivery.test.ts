@@ -12,6 +12,7 @@ import { createAppsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-
 import { assertDeliveryRootPreservesSelection } from "@shepherdjerred/homelab/scripts/argocd/argocd-delivery.ts";
 import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/arcade.ts";
 import { createDeliveryJobs } from "./jobs.ts";
+import { createDeliveryWorker } from "./worker.ts";
 import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 
 beforeEach(resetProbeRegistry);
@@ -25,11 +26,25 @@ const Resources = z.array(
   z
     .object({
       kind: z.string(),
-      metadata: z.object({ name: z.string() }),
+      metadata: z.object({
+        name: z.string(),
+        labels: z.record(z.string(), z.string()).optional(),
+      }),
       spec: z.unknown().optional(),
     })
     .loose(),
 );
+const SecretEnvironmentEntry = z.object({
+  name: z.string(),
+  valueFrom: z
+    .object({ secretKeyRef: z.object({ name: z.string(), key: z.string() }) })
+    .optional(),
+});
+function platformCapabilityChart() {
+  return new Chart(new App(), "issued-platform-capability", {
+    namespace: "temporal",
+  });
+}
 
 it("root applies preserve delegated fields and the pilot image has an explicit Helm binding", () => {
   const root = createAppsApp(new Chart(new App(), "apps"));
@@ -44,7 +59,172 @@ it("root applies preserve delegated fields and the pilot image has an explicit H
   expect(resources).toContain(".Values.delivery.image");
 });
 
+describe("Delivery worker capability isolation", () => {
+  it("requires the genuinely issued platform account locator before projecting platform capability", () => {
+    expect(() =>
+      createDeliveryWorker(
+        platformCapabilityChart(),
+        {
+          ...activation,
+          argocdItemId: "ordinary-argo",
+          platformRegistryItemId: "registry",
+        },
+        "temporal-server",
+      ),
+    ).toThrow("issued dedicated");
+    const chart = platformCapabilityChart();
+    createDeliveryWorker(
+      chart,
+      {
+        ...activation,
+        argocdItemId: "ordinary-argo",
+        platformRegistryItemId: "registry",
+        platformArgocdItemId: "issued-platform-argocd",
+      },
+      "temporal-server",
+    );
+    const items = z
+      .array(
+        z.object({
+          kind: z.string(),
+          metadata: z.object({
+            name: z.string(),
+            namespace: z.string().optional(),
+          }),
+          spec: z.object({ itemPath: z.string().optional() }).optional(),
+        }),
+      )
+      .parse(chart.toJson())
+      .filter((item) => item.kind === "OnePasswordItem");
+    expect(
+      items.find((item) => item.metadata.name === "delivery-platform-argocd"),
+    ).toMatchObject({
+      metadata: { namespace: "delivery-platform-jobs" },
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/issued-platform-argocd",
+      },
+    });
+    expect(JSON.stringify(items)).not.toContain("ga3ma76q6vw2bxeyvkqj4xaucy");
+  });
+  it("keeps the pilot tokenless and gives enabled worker proof only its restricted registry-only namespace", () => {
+    for (const enabled of [false, true]) {
+      resetProbeRegistry();
+      const chart = new Chart(new App(), "worker-capability", {
+        namespace: "temporal",
+      });
+      createDeliveryWorker(
+        chart,
+        {
+          ...activation,
+          argocdItemId: "argo-item",
+          ...(enabled
+            ? { workerRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi" }
+            : {}),
+        },
+        "temporal-server",
+      );
+      const resources = Resources.parse(chart.toJson());
+      const deployment = resources.find(
+        (resource) => resource.kind === "Deployment",
+      );
+      const pod = z
+        .object({
+          template: z.object({
+            spec: z.object({
+              automountServiceAccountToken: z.boolean(),
+              serviceAccountName: z.string(),
+            }),
+          }),
+        })
+        .parse(deployment?.spec).template.spec;
+      expect(pod.automountServiceAccountToken).toBe(enabled);
+      const namespaces = resources.filter(
+        (resource) => resource.kind === "Namespace",
+      );
+      expect(namespaces.map((namespace) => namespace.metadata.name)).toEqual(
+        enabled ? ["delivery-worker-jobs"] : [],
+      );
+      const text = JSON.stringify(resources);
+      expect(text).not.toContain("delivery-platform-jobs");
+      expect(text).not.toContain("ci-seaweedfs-credentials");
+      expect(text).not.toContain("delivery-root-release");
+      if (enabled) {
+        expect(text).toContain(
+          '"pod-security.kubernetes.io/enforce":"restricted"',
+        );
+        const items = resources.filter(
+          (resource) => resource.kind === "OnePasswordItem",
+        );
+        expect(
+          items
+            .map((item) => item.metadata.name)
+            .filter((name) => name.startsWith("dockerhub-pull-")),
+        ).toEqual(["dockerhub-pull-delivery-worker-jobs"]);
+        expect(pod.serviceAccountName).toBe("delivery-worker-job-controller");
+      }
+    }
+  });
+});
+
 describe("Delivery infrastructure", () => {
+  it("grants dedicated static activation keys only after storage bootstrap", () => {
+    for (const storageReady of [false, true]) {
+      resetProbeRegistry();
+      const chart = new Chart(new App(), "worker");
+      createDeliveryWorker(
+        chart,
+        {
+          ...activation,
+          argocdItemId: "argo-item",
+          ...(storageReady ? { staticStorageItemId: "static-item" } : {}),
+        },
+        "temporal-server",
+      );
+      const resources = Resources.parse(chart.toJson());
+      const worker = resources.find(
+        (resource) => resource.kind === "Deployment",
+      );
+      const env = z
+        .object({
+          template: z.object({
+            spec: z.object({
+              containers: z.array(
+                z.object({
+                  env: z.array(SecretEnvironmentEntry),
+                }),
+              ),
+            }),
+          }),
+        })
+        .parse(worker?.spec)
+        .template.spec.containers.flatMap((container) => container.env);
+      const staticKeys = env.filter((entry) =>
+        entry.name.startsWith("DELIVERY_SITE_ACTIVATOR_"),
+      );
+      expect(staticKeys.map((entry) => entry.name).sort()).toEqual(
+        storageReady
+          ? [
+              "DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID",
+              "DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY",
+            ]
+          : [],
+      );
+      expect(
+        staticKeys.every(
+          (entry) => entry.valueFrom?.secretKeyRef.key === entry.name,
+        ),
+      ).toBe(true);
+      expect(
+        env.some((entry) => entry.name.startsWith("SEAWEEDFS_SITES_")),
+      ).toBe(false);
+      expect(
+        env.some((entry) =>
+          entry.name.startsWith("DELIVERY_ARCHIVE_PUBLISHER_"),
+        ),
+      ).toBe(false);
+    }
+  });
   it("confines Delivery API egress to publication and the gated Scout archive producer", () => {
     const chart = new Chart(new App(), "ci-network");
     createWoodpeckerStepNetworkPolicy(chart);
@@ -98,11 +278,14 @@ describe("Delivery infrastructure", () => {
       },
     ]);
   });
+});
+
+describe("Delivery execution and service bootstrap", () => {
   it("keeps disposable stage Pods tokenless and controller grants confined to their own namespace", () => {
     const chart = new Chart(new App(), "job-contract", {
       namespace: "temporal",
     });
-    createDeliveryJobs(chart);
+    createDeliveryJobs(chart, "worker", "ngzmppq52zm7sii6ato2mv3sbi");
     const resources = z
       .array(
         z.object({
@@ -123,11 +306,11 @@ describe("Delivery infrastructure", () => {
           item.metadata.name === "delivery-stage",
       ),
     ).toMatchObject({
-      metadata: { namespace: "delivery-jobs" },
+      metadata: { namespace: "delivery-worker-jobs" },
       automountServiceAccountToken: false,
     });
     const role = resources.find((item) => item.kind === "Role");
-    expect(role?.metadata.namespace).toBe("delivery-jobs");
+    expect(role?.metadata.namespace).toBe("delivery-worker-jobs");
     const rules = z
       .array(
         z.object({
@@ -175,6 +358,16 @@ describe("Delivery infrastructure", () => {
       (resource) => resource.kind === "postgresql",
     );
     expect(database).toBeDefined();
+    const monitor = resources.find(
+      (resource) => resource.kind === "ServiceMonitor",
+    );
+    expect(monitor?.spec).toMatchObject({
+      endpoints: [{ port: "http", path: "/metrics" }],
+      selector: { matchLabels: { app: "delivery" } },
+    });
+    expect(
+      resources.some((resource) => resource.kind === "PrometheusRule"),
+    ).toBe(true);
     const services = resources.filter(
       (resource) => resource.kind === "Service",
     );
@@ -182,7 +375,15 @@ describe("Delivery infrastructure", () => {
       "delivery",
     ]);
     const policy = resources.find(
-      (resource) => resource.kind === "NetworkPolicy",
+      (resource) =>
+        resource.kind === "NetworkPolicy" &&
+        z
+          .object({
+            podSelector: z.object({
+              matchLabels: z.object({ app: z.literal("delivery") }),
+            }),
+          })
+          .safeParse(resource.spec).success,
     );
     const spec = z
       .object({

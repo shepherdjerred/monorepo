@@ -1,5 +1,9 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
-import type { Principal } from "#shared/contract.ts";
+import type {
+  Principal,
+  PipelineDefinition,
+  RegisterEnvironment,
+} from "#shared/contract.ts";
 
 export const testOperator: Principal = {
   id: "operator@example.com",
@@ -17,7 +21,14 @@ export const testExecutor: Principal = {
   scopes: ["read", "execute"],
 };
 
-export async function seedDelivery(delivery: Delivery) {
+export type TestRegistration = {
+  pipeline: PipelineDefinition;
+  environment: RegisterEnvironment;
+};
+export async function seedDelivery(
+  delivery: Delivery,
+  registration?: TestRegistration,
+) {
   const publication = await delivery.publish(
     {
       requestId: "test-build",
@@ -28,7 +39,7 @@ export async function seedDelivery(delivery: Delivery) {
       artifacts: [
         {
           id: "arcade-image",
-          component: "server",
+          component: registration === undefined ? "server" : "image:arcade",
           kind: "image",
           uri: "docker.io/shepherdjerred/arcade",
           digest: `sha256:${"a".repeat(64)}`,
@@ -36,7 +47,7 @@ export async function seedDelivery(delivery: Delivery) {
         },
         {
           id: "arcade-chart",
-          component: "chart",
+          component: registration === undefined ? "chart" : "chart:arcade",
           kind: "chart",
           uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-1.0.0.tgz",
           digest: `sha256:${"b".repeat(64)}`,
@@ -53,7 +64,7 @@ export async function seedDelivery(delivery: Delivery) {
     throw new Error("Seed version set was not created");
   await delivery.registerPipeline(
     "arcade/1",
-    {
+    registration?.pipeline ?? {
       kind: "argocd",
       application: "arcade",
       chartRepository: "https://chartmuseum.tailnet-1a49.ts.net",
@@ -66,7 +77,7 @@ export async function seedDelivery(delivery: Delivery) {
     testOperator,
   );
   const environment = await delivery.registerEnvironment(
-    {
+    registration?.environment ?? {
       id: "arcade/prod",
       serviceId: "arcade",
       name: "prod",

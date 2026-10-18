@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { packTar } from "modern-tar";
 import type { TarEntry } from "modern-tar";
 import {
@@ -171,3 +172,95 @@ describe("one static-site writer", () => {
     ).toThrow("not delegated");
   });
 });
+
+test.each([true, false])(
+  "archive publication requires its dedicated credential (present=%s)",
+  async (present) => {
+    const root = await scratch();
+    const source = path.join(root, "site");
+    const bin = path.join(root, "bin");
+    await mkdir(source);
+    await mkdir(bin);
+    await Bun.write(path.join(source, "index.html"), "archive fixture");
+    const executable = path.join(bin, "aws");
+    await Bun.write(
+      executable,
+      String.raw`#!${process.execPath}
+import { appendFile, copyFile } from 'node:fs/promises';
+const args = process.argv.slice(2);
+await appendFile(process.env.FIXTURE_CALLS, JSON.stringify({
+  args,
+  access: process.env.AWS_ACCESS_KEY_ID,
+  secret: process.env.AWS_SECRET_ACCESS_KEY,
+  vault: process.env.OP_SERVICE_ACCOUNT_TOKEN ?? null,
+  session: process.env.AWS_SESSION_TOKEN ?? null,
+}) + '\n');
+if (args[1] === 'put-object') {
+  await copyFile(args[args.indexOf('--body') + 1], process.env.FIXTURE_OBJECT);
+  process.exitCode = 75; // Lost upload response: exact readback still proves creation.
+}
+else if (args[0] === 's3') await copyFile(process.env.FIXTURE_OBJECT, args[3]);
+`,
+    );
+    await chmod(executable, 0o755);
+    const env = {
+      ...Bun.env,
+      PATH: `${bin}:${Bun.env["PATH"] ?? ""}`,
+      FIXTURE_CALLS: path.join(root, "calls.jsonl"),
+      FIXTURE_OBJECT: path.join(root, "object.tar"),
+      FIXTURE_PUBLICATION: JSON.stringify({
+        bucket: "wiki-sjer-red",
+        source,
+        metadataDirectory: path.join(root, "metadata"),
+      }),
+      CI_REPO_ID: "1",
+      CI_PIPELINE_NUMBER: "123",
+      AWS_ACCESS_KEY_ID: "legacy-site-access",
+      AWS_SECRET_ACCESS_KEY: "legacy-site-secret",
+      OP_SERVICE_ACCOUNT_TOKEN: "parent-vault-only",
+      AWS_SESSION_TOKEN: "parent-session-only",
+      DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID: present
+        ? "publisher-access"
+        : "",
+      DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY: present
+        ? "publisher-secret"
+        : "",
+    };
+    const moduleUrl = new URL("static-site-publication.ts", import.meta.url);
+    const child =
+      await Bun.$`${process.execPath} --eval ${`import { publishStaticSiteArchive } from ${JSON.stringify(moduleUrl.href)}; await publishStaticSiteArchive(JSON.parse(process.env.FIXTURE_PUBLICATION));`}`
+        .env(env)
+        .quiet()
+        .nothrow();
+    if (!present) {
+      expect(child.exitCode).not.toBe(0);
+      expect(child.stderr.toString()).toContain(
+        "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
+      );
+      expect(await Bun.file(env.FIXTURE_CALLS).exists()).toBe(false);
+      return;
+    }
+    expect(child.exitCode, child.stderr.toString()).toBe(0);
+    const callText = await Bun.file(env.FIXTURE_CALLS).text();
+    const calls = callText
+      .trim()
+      .split("\n")
+      .map((line) =>
+        z
+          .object({
+            args: z.array(z.string()),
+            access: z.literal("publisher-access"),
+            secret: z.literal("publisher-secret"),
+            vault: z.null(),
+            session: z.null(),
+          })
+          .parse(JSON.parse(line)),
+      );
+    expect(calls.map((call) => call.args.slice(0, 2))).toEqual([
+      ["s3api", "put-object"],
+      ["s3", "cp"],
+    ]);
+    expect(calls[0]?.args).toContain("--if-none-match");
+    expect(calls[0]?.args).toContain("*");
+  },
+);

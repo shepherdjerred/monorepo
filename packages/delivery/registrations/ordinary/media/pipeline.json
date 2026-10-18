@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "media",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "media",
+  "chartComponent": "chart:media",
+  "namespace": "media",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.streambot": "image:streambot"
+  },
+  "verification": {
+    "url": "https://streambot.sjer.red/readyz",
+    "expectedStatus": 200
+  }
+}

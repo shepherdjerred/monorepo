@@ -186,7 +186,7 @@ test("CI cannot overwrite local ownership declared by either catalog", () => {
   }
 });
 
-test("retains a new image's first publication before commit-back", () => {
+test("retains a new image's first publication in producer metadata", () => {
   const name = "shepherdjerred/velero-plugin";
   const bootstrap = catalog([[name, `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`]]);
   const published = retainPublishedImagePins(
@@ -299,201 +299,40 @@ test("current main owns newer pins, upstream versions, metadata and retired keys
 test.each([
   "shepherdjerred/scout-for-lol/prod/workflows/stable",
   "shepherdjerred/scout-for-lol/prod/workflows/candidate",
-])("current main owns operator-promoted %s even at an earlier build", (key) => {
-  const main = catalog([
-    [key, pin(100, "c")],
-    ["worker", pin(100)],
-  ]);
-  const previous = catalog([
-    [key, pin(200)],
-    ["worker", pin(200)],
-  ]);
-  const released = retainPublishedImagePins(main, previous, candidates(300));
-  expect(entries(released).map((entry) => [entry.name, entry.value])).toEqual([
-    [key, pin(100, "c")],
-    ["worker", pin(200)],
-    ["upstream/chart", "1.0"],
-  ]);
-  expect(retainPublishedImagePins(main, released, candidates(301))).toBe(
-    released,
-  );
-});
-
-test.each([
-  "shepherdjerred/scout-for-lol/prod/workflows/stable",
-  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
-])("CI publication cannot mint the operator-owned %s pin", (key) => {
-  const main = catalog([[key, pin(100)]]);
-  expect(() =>
-    retainPublishedImagePins(main, main, candidates(200, [key])),
-  ).toThrow(
-    "CI candidate contains operator-owned Scout Prod Workflow image key",
-  );
-});
-
-test("a withdrawn Workflow candidate cannot return through a retained release", () => {
-  const candidate = "worker/workflows/candidate";
-  const main = catalog([
-    ["worker", pin(100)],
-    [candidate, pin(100)],
-  ]);
-  const previous = catalog([
-    ["worker", pin(200)],
-    [candidate, pin(200)],
-  ]);
-  const result = retainPublishedImagePins(main, previous, candidates(300), {
-    [candidate]: 200,
-  });
-  expect(
-    entries(result).map((entry) => [entry.name, entry.value]),
-  ).toContainEqual([candidate, pin(100)]);
-  expect(
-    entries(result).map((entry) => [entry.name, entry.value]),
-  ).toContainEqual(["worker", pin(200)]);
-  expect(
-    retainPublishedImagePins(main, result, candidates(301), {
-      [candidate]: 200,
-    }),
-  ).toBe(result);
-});
-
-test("a newer candidate survives the withdrawal cutoff across pending commit-back", () => {
-  const candidate = "worker/workflows/candidate";
-  const main = catalog([[candidate, pin(100)]]);
-  const published = retainPublishedImagePins(
-    main,
-    main,
-    candidates(300, [candidate]),
-    { [candidate]: 200 },
-  );
-  const next = retainPublishedImagePins(main, published, candidates(301), {
-    [candidate]: 200,
-  });
-  expect(entries(next)[0]?.value).toBe(pin(300, "b"));
-});
-
-test("release resolution reads the committed withdrawal before retaining artifacts", async () => {
-  const candidate = "worker/workflows/candidate";
-  const main = catalog([[candidate, pin(100)]]);
-  const previous = catalog([[candidate, pin(200)]]);
-  const state = JSON.stringify({
-    schema: "pin-candidates-state/v1",
-    pins: {},
-    withdrawnCandidates: { [candidate]: 200 },
-  });
-  const release = await resolveImageReleaseCatalog(
-    "current",
-    async (command) => {
-      if (command[2] === "origin/main:scripts/pin-candidates-state.json")
-        return commandResult(0, state);
-      return commandResult(0, command[1] === "show" ? main : "");
-    },
-    {
-      CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
-      CI_LAST_IMAGE_RELEASE_PIPELINE: "300",
-    },
-    async (key) => (key === "version-catalog" ? previous : candidates(300)),
-  );
-  expect(entries(release.catalog)[0]?.value).toBe(pin(100));
-});
-
-test.each(["missing", "invalid"])(
-  "release resolution refuses %s withdrawal state",
-  async (mode) => {
-    const main = catalog([["worker", pin(100)]]);
-    await expect(
-      resolveImageReleaseCatalog(
-        "current",
-        async (command) => {
-          if (command[2] === "origin/main:scripts/pin-candidates-state.json")
-            return commandResult(mode === "missing" ? 1 : 0, "{}");
-          return commandResult(0, command[1] === "show" ? main : "");
-        },
-        {
-          CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
-          CI_LAST_IMAGE_RELEASE_PIPELINE: "300",
-        },
-        async () => {
-          throw new Error("Must validate state before handoff reads");
-        },
-      ),
-    ).rejects.toThrow(
-      mode === "missing"
-        ? "Unable to read live image pin state"
-        : "Invalid input",
+])(
+  "source bootstrap slots %s remain independent of newer producer metadata",
+  (key) => {
+    const main = catalog([
+      [key, pin(100, "c")],
+      ["worker", pin(100)],
+    ]);
+    const previous = catalog([
+      [key, pin(200)],
+      ["worker", pin(200)],
+    ]);
+    const released = retainPublishedImagePins(main, previous, candidates(300));
+    expect(entries(released).map((entry) => [entry.name, entry.value])).toEqual(
+      [
+        [key, pin(100, "c")],
+        ["worker", pin(200)],
+        ["upstream/chart", "1.0"],
+      ],
+    );
+    expect(retainPublishedImagePins(main, released, candidates(301))).toBe(
+      released,
     );
   },
 );
 
 test.each([
-  ["{", "pin candidate state is not valid JSON"],
-  [
-    JSON.stringify({
-      schema: "pin-candidates-state/v1",
-      pins: {},
-      withdrawnCandidates: { "unknown/workflows/candidate": 200 },
-    }),
-    "withdrawn candidate contains unknown image key",
-  ],
-  ...["unknown", "upstream/chart", "worker"].map((key) => [
-    JSON.stringify({
-      schema: "pin-candidates-state/v1",
-      pins: {
-        [key]: {
-          version: "2.0.0-200",
-          digest: `sha256:${"a".repeat(64)}`,
-          buildNumber: 200,
-        },
-      },
-    }),
-    key === "worker"
-      ? "pin state drift"
-      : "pin state contains unknown image key",
-  ]),
-  [
-    JSON.stringify({
-      schema: "pin-candidates-state/v1",
-      pins: {
-        "worker/workflows/candidate": {
-          version: "2.0.0-100",
-          digest: `sha256:${"a".repeat(64)}`,
-          buildNumber: 100,
-        },
-      },
-      withdrawnCandidates: { "worker/workflows/candidate": 200 },
-    }),
-    "withdrawn candidate remains in pin state",
-  ],
-])(
-  "refuses corrupt live pin state before reading artifacts: %s",
-  async (state, error) => {
-    const main = catalog([
-      ["worker", pin(100)],
-      ["worker/workflows/candidate", pin(100)],
-    ]);
-    const readHandoff = vi.fn(async () => main);
-    await expect(
-      resolveImageReleaseCatalog(
-        "current",
-        async (command) =>
-          commandResult(
-            0,
-            command[2] === "origin/main:scripts/pin-candidates-state.json"
-              ? state
-              : command[1] === "show"
-                ? main
-                : "",
-          ),
-        {
-          CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
-          CI_LAST_IMAGE_RELEASE_PIPELINE: "300",
-        },
-        readHandoff,
-      ),
-    ).rejects.toThrow(error);
-    expect(readHandoff).not.toHaveBeenCalled();
-  },
-);
+  "shepherdjerred/scout-for-lol/prod/workflows/stable",
+  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
+])("CI publication cannot mint source-owned bootstrap slot %s", (key) => {
+  const main = catalog([[key, pin(100)]]);
+  expect(() =>
+    retainPublishedImagePins(main, main, candidates(200, [key])),
+  ).toThrow("CI candidate contains source-owned bootstrap image key");
+});
 
 test("rejects conflicting digests at the same release rather than choosing one", () => {
   const main = catalog([["worker", pin(200)]]);
@@ -553,7 +392,7 @@ test("requires both handoffs from the same completed pipeline", async () => {
   ).rejects.toThrow("Image release pipeline");
 });
 
-test("uses the validated baseline for both target selection and retained pins", async () => {
+test("reuses immutable publication handoffs without reading Git deployment state", async () => {
   const main = catalog([["worker", pin(100)]]);
   const commands: string[] = [];
   const reads: string[] = [];
@@ -561,21 +400,6 @@ test("uses the validated baseline for both target selection and retained pins", 
     "current",
     async (command) => {
       commands.push(command.join(" "));
-      if (command[2] === "origin/main:scripts/pin-candidates-state.json") {
-        return commandResult(
-          0,
-          JSON.stringify({
-            schema: "pin-candidates-state/v1",
-            pins: {
-              worker: {
-                version: "2.0.0-100",
-                digest: `sha256:${"a".repeat(64)}`,
-                buildNumber: 100,
-              },
-            },
-          }),
-        );
-      }
       return commandResult(0, command[1] === "show" ? main : "");
     },
     {
@@ -595,7 +419,6 @@ test("uses the validated baseline for both target selection and retained pins", 
     "git show current:packages/version-catalog/src/catalog.json",
     "git cat-file -e published-source^{commit}",
     "git merge-base --is-ancestor published-source current",
-    "git show origin/main:scripts/pin-candidates-state.json",
   ]);
   expect(reads).toEqual(["6485/version-catalog", "6485/pin-candidates"]);
 });
@@ -648,48 +471,6 @@ test("keeps upstream versions and metadata tied to the build while advancing ima
   );
 });
 
-test("validates withdrawals against live main even when the build predates a new key", async () => {
-  const source = catalog([["worker", pin(100)]], "1.11.9");
-  const live = catalog(
-    [
-      ["worker", pin(200)],
-      ["future/workflows/candidate", pin(100)],
-    ],
-    "1.11.10",
-  );
-  const release = await resolveImageReleaseCatalog(
-    "current",
-    async (command) => {
-      if (command[2] === "origin/main:scripts/pin-candidates-state.json")
-        return commandResult(
-          0,
-          JSON.stringify({
-            schema: "pin-candidates-state/v1",
-            pins: {},
-            withdrawnCandidates: { "future/workflows/candidate": 200 },
-          }),
-        );
-      return commandResult(
-        0,
-        command[1] === "show"
-          ? command[2]?.startsWith("current:")
-            ? source
-            : live
-          : "",
-      );
-    },
-    {
-      CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
-      CI_LAST_IMAGE_RELEASE_PIPELINE: "300",
-    },
-    async (key) =>
-      key === "version-catalog" ? live : candidates(300, ["worker"]),
-  );
-  expect(entries(release.catalog)).toEqual(
-    entries(catalog([["worker", pin(300, "b")]], "1.11.9")),
-  );
-});
-
 test.each(["missing", "invalid"])(
   "rejects a %s build source catalog",
   async (mode) => {
@@ -729,15 +510,7 @@ test("reads the required published artifacts through the configured S3 handoff s
   try {
     const release = await resolveImageReleaseCatalog(
       "current",
-      async (command) =>
-        commandResult(
-          0,
-          command[2] === "origin/main:scripts/pin-candidates-state.json"
-            ? JSON.stringify({ schema: "pin-candidates-state/v1", pins: {} })
-            : command[1] === "show"
-              ? main
-              : "",
-        ),
+      async (command) => commandResult(0, command[1] === "show" ? main : ""),
       {
         CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
         CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",

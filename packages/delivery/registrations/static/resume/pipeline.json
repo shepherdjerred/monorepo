@@ -1,0 +1,13 @@
+{
+  "kind": "static-site",
+  "archiveComponent": "site:resume",
+  "bucket": "resume",
+  "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+  "immutablePrefixes": [],
+  "extraExcludes": [],
+  "entrypoints": ["index.html"],
+  "verification": {
+    "url": "https://resume.sjer.red/",
+    "expectedStatus": 200
+  }
+}

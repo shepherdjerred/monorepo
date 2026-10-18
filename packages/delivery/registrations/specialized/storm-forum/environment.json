@@ -1,0 +1,10 @@
+{
+  "id": "storm-forum/prod",
+  "serviceId": "storm-forum",
+  "name": "prod",
+  "application": "storm-forum",
+  "pipelineRevisionId": "storm-forum/1",
+  "configurationRevision": "storm-forum/1",
+  "configuration": { "forum.xenforoVersion": "2.3.13" },
+  "automatic": true
+}

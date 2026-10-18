@@ -534,68 +534,55 @@ describe("selected lane contracts", () => {
     );
   });
 
-  /** Publishing mutates one external dashboard, so it must not race itself. */
-  test("trmnl publish is serialized and main-only", () => {
+  test("TRMNL archive publication is main-only with validated sources", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    const publish = steps.find((s) => s.key === "trmnl-publish");
-    expect(publish?.concurrency).toEqual({ limit: 1, group: "trmnl-publish" });
+    const publish = steps.find((s) => s.key === "trmnl-plugin-archives");
+    expect(publish?.dependsOn).toEqual(["images", "trmnl-validate"]);
     expect(publish?.defaultBranchOnly).toBe(true);
     const keys = keysFor(["packages/trmnl-dashboard/views/index.liquid"]);
     expect(keys).toContain("trmnl-validate");
-    expect(keys).not.toContain("trmnl-publish");
+    expect(keys).not.toContain("trmnl-plugin-archives");
   });
 
-  /** Only the publishing lane may hold the API key. */
-  test("only trmnl publish carries the credential", () => {
+  test("TRMNL CI has immutable publication credentials without external mutation authority", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     expect(
       steps.find((s) => s.key === "trmnl-validate")?.secrets,
     ).toBeUndefined();
-    expect(steps.find((s) => s.key === "trmnl-publish")?.secrets).toEqual([
-      {
-        secret: "ci-trmnl-credentials",
-        key: "TRMNL_API_KEY",
-        env: "TRMNL_API_KEY",
-      },
-    ]);
+    const producer = steps.find((s) => s.key === "trmnl-plugin-archives");
+    expect(producer?.secrets?.map((secret) => secret.key)).toContain(
+      "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
+    );
+    expect(
+      steps
+        .flatMap((entry) => entry.secrets ?? [])
+        .some((secret) => secret.key === "TRMNL_API_KEY"),
+    ).toBe(false);
+    expect(producer?.commands.join("\n")).not.toMatch(
+      /trmnlp-ci\.sh publish|push --force/u,
+    );
   });
 
-  test("tofu plan lanes are chained and pull-request only", () => {
+  test("offline infrastructure validation is pull-request only", () => {
     const keys = keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf"]);
-    expect(keys).toEqual(
-      expect.arrayContaining([
-        "tofu-plan-seaweedfs",
-        "tofu-plan-tailscale",
-        "tofu-plan-arr",
-        "tofu-plan-github",
-        "tofu-plan-cloudflare",
-      ]),
-    );
+    expect(keys).toContain("tofu-validate");
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     expect(
-      steps.find((s) => s.key === "tofu-plan-tailscale")?.dependsOn,
-    ).toEqual(["tofu-plan-seaweedfs"]);
-    expect(
-      steps.find((s) => s.key === "tofu-plan-seaweedfs")?.dependsOn,
+      steps.find((s) => s.key === "tofu-validate")?.dependsOn,
     ).toBeUndefined();
     expect(
       keysFor(["packages/homelab/src/tofu/seaweedfs/main.tf"], "main"),
-    ).not.toContain("tofu-plan-seaweedfs");
+    ).not.toContain("tofu-validate");
   });
 
-  /** Each stack gets only its own provider credentials. */
-  test("tofu lanes receive only their own provider grants", () => {
+  test("configuration validation receives no provider or remote-state authority", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const envs = (key: string) =>
       (steps.find((s) => s.key === key)?.secrets ?? []).map((g) => g.env);
-    expect(envs("tofu-plan-tailscale")).toContain("TAILSCALE_OAUTH_CLIENT_ID");
-    expect(envs("tofu-plan-tailscale")).not.toContain("RADARR_API_KEY");
-    expect(envs("tofu-plan-github")).toContain("TOFU_GITHUB_TOKEN");
-    expect(envs("tofu-plan-github")).not.toContain("CLOUDFLARE_API_TOKEN");
-    // Every stack reads remote state from SeaweedFS.
-    expect(envs("tofu-plan-arr")).toContain(
-      "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
-    );
+    expect(envs("tofu-validate")).toEqual(["GITHUB_DOWNLOAD_TOKEN"]);
+    expect(
+      steps.find((s) => s.key === "tofu-validate")?.commands.join("\n"),
+    ).toContain('"$stack" validate');
   });
 
   test("playwright can start alongside verify and uses the browser image", () => {
@@ -615,7 +602,7 @@ describe("selected lane contracts", () => {
   test("tofu validate lanes carry no provider credentials", () => {
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     const envs = (
-      steps.find((s) => s.key === "tofu-platforms-validate")?.secrets ?? []
+      steps.find((s) => s.key === "tofu-validate")?.secrets ?? []
     ).map((g) => g.env);
     expect(envs).toEqual(["GITHUB_DOWNLOAD_TOKEN"]);
   });

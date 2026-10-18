@@ -1,5 +1,29 @@
 [
   {
+    "namespace": "delivery-catalog-recovery",
+    "name": "pgdata-delivery-postgresql-0",
+    "backup": "disabled",
+    "reason": "Isolated Delivery catalog recovery copy; original offsite backup and production volume remain protected"
+  },
+  {
+    "namespace": "delivery",
+    "name": "pgdata-delivery-postgresql-0",
+    "backup": "enabled",
+    "reason": "Authoritative Delivery release catalog, audit history and native recovery ownership"
+  },
+  {
+    "namespace": "delivery-tsmc-controller",
+    "name": "delivery-tsmc-journal",
+    "backup": "enabled",
+    "reason": "Durable maintenance ownership and native resource identity receipts for Storm delivery and recovery"
+  },
+  {
+    "namespace": "minecraft-tsmc-delivery-validation",
+    "name": "datadir-minecraft-tsmc-0",
+    "backup": "disabled",
+    "reason": "Disposable independent validation restore; original offsite backup remains protected"
+  },
+  {
     "namespace": "delivery",
     "name": "delivery-tailnet-state",
     "backup": "enabled",

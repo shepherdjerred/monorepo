@@ -28,7 +28,68 @@ async function analyticsSiteKeys(): Promise<Set<string>> {
   );
 }
 
+test("separate CP chart ownership does not alias its original Temporal image producer", () => {
+  const index = new ServiceIndex();
+  expect(index.byChart("delivery-control-plane")?.id).toBe(
+    "delivery-control-plane",
+  );
+  expect(index.byImage("temporal-worker")?.id).toBe("temporal");
+  expect(index.requireById("delivery-control-plane").bootstrapImages).toEqual([
+    "temporal-worker",
+  ]);
+  expect(() =>
+    parseCatalog({
+      ...SERVICE_CATALOG,
+      services: SERVICE_CATALOG.services.map((service) =>
+        service.id === "delivery-control-plane"
+          ? { ...service, bootstrapImages: ["unowned-image"] }
+          : service,
+      ),
+    }),
+  ).toThrow("requires its canonical image owner");
+});
+
 describe("service catalog", () => {
+  test.each(["unknown", "apps", "argocd", "delivery"])(
+    "rejects a delegation to %s",
+    (application) => {
+      expect(() =>
+        parseCatalog({
+          services: [
+            {
+              id: "platform",
+              title: "Platform",
+              kind: "platform",
+              namespaces: [],
+              argoApps: ["apps", "argocd", "delivery"],
+            },
+          ],
+          deliveryDelegations: { [application]: "service/prod" },
+        }),
+      ).toThrow(/registered non-control-plane Application/);
+    },
+  );
+
+  test("rejects two Applications delegated to the same environment", () => {
+    expect(() =>
+      parseCatalog({
+        services: [
+          {
+            id: "service",
+            title: "Service",
+            kind: "workload",
+            namespaces: [],
+            argoApps: ["service-a", "service-b"],
+          },
+        ],
+        deliveryDelegations: {
+          "service-a": "service/prod",
+          "service-b": "service/prod",
+        },
+      }),
+    ).toThrow(/cannot own two Applications/);
+  });
+
   test("parses the committed catalog", () => {
     expect(SERVICE_CATALOG.services.length).toBeGreaterThan(10);
   });
@@ -79,7 +140,7 @@ describe("service catalog", () => {
       expect(index.byChart(chart), chart).toBeDefined();
     }
     expect(index.byChart("delivery")?.id).toBe("delivery");
-    expect(index.byArgoApp("delivery")).toBeUndefined();
+    expect(index.byArgoApp("delivery")?.id).toBe("delivery");
     expect(index.byChart("unknown-chart")).toBeUndefined();
   });
 
@@ -184,6 +245,9 @@ describe("ServiceIndex", () => {
     );
     expect(index.byAnalyticsSite("resume")?.id).toBe("static-sites");
     expect(index.byId("Scout")?.id).toBe("scout-for-lol");
+    expect(index.byImage("obsidian-headless")?.id).toBe("tasknotes-server");
+    expect(index.byId("obsidian-headless")?.images).toEqual([]);
+    expect(index.byId("obsidian-headless")?.deploy).toEqual([]);
   });
 
   test("owns the prepared launcher inventory without a deployable image", () => {

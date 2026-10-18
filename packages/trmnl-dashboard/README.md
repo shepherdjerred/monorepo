@@ -113,12 +113,20 @@ docker run --rm --entrypoint sh -p 4567:4567 \
   packages/trmnl-dashboard/scripts/trmnlp-ci.sh serve pets
 ```
 
-Woodpecker runs the same validation without secrets on pull requests. On main,
-the path-selected `trmnl` lane validates all three projects before publishing
-any of them, then pushes plugin `303046`, `303047`, and `464652` in that order.
-The publisher uses the dedicated account-level `TRMNL_API_KEY` from
-`ci-trmnl-credentials`; this is intentionally separate from the
-dashboard service's polling key.
+Woodpecker validates all three projects without a TRMNL API credential. Main
+publishes a deterministic package of the six reviewed source files for each
+plugin to `delivery-artifacts/trmnl-plugins/<content-sha256>.json`, then hands
+its immutable artifact identity to Delivery. The neutral target inventory in
+`packages/ops-model/src/trmnl/plugin-policy.json` is validated by Ruby, the
+package producer, and the release worker.
+
+The package requires the exact backend image digest selected from the same
+build or an original qualified artifact. A backend build also rebuilds the
+small template package so payload and template changes remain one release.
+After the backend is healthy, Delivery updates the three fixed remote plugins
+under the application release lock and verifies their downloaded source bytes
+and settings. The dedicated account credential belongs only to the release
+worker; the dashboard service uses its separate polling key.
 
 For an intentional remote-to-repository refresh, provide the account key
 through the environment and pull each existing ID explicitly:
@@ -141,4 +149,4 @@ values and is never uploaded.
 Playlist membership and ordering, schedules, mashups, and device settings
 remain managed in the TRMNL UI because the hosted API does not expose their
 complete composition. Manual edits in TRMNL's markup editor are drift and will
-be overwritten by the next successful main publication.
+be overwritten by the next successful Delivery release.

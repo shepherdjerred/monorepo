@@ -2,6 +2,7 @@ import { defineConfig } from "@shepherdjerred/config";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { z } from "zod";
 import manifest from "#config/forum.json";
+import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import { SeasonChoiceSchema } from "@shepherdjerred/storm-theme";
 
 const NodeSchema = z
@@ -26,7 +27,7 @@ export type Stage = z.infer<typeof StageSchema>;
 export const ManifestSchema = z
   .object({
     schemaVersion: z.literal(1),
-    xenforoVersion: z.literal("2.3.13"),
+    xenforoVersion: z.string().regex(/^\d+\.\d+\.\d+$/),
     title: z.string(),
     joinAddress: z.string(),
     smtpHost: z.string(),
@@ -162,7 +163,12 @@ export const ManifestSchema = z
       });
     }
   });
-export const forumManifest = ManifestSchema.parse(manifest);
+if ("xenforoVersion" in manifest || "vendorDependencies" in manifest)
+  throw new Error("Licensed dependency policy must come only from ops-model");
+export const forumManifest = ManifestSchema.parse({
+  ...manifest,
+  ...forumBundlePolicy,
+});
 
 export function createForumConfig(flagSource?: ConfigSource) {
   return defineConfig({

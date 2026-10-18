@@ -85,7 +85,7 @@ $check($darkFollower->parent_id === $map['dark:thanksgiving'] && $app->options()
 $app->registry()->set('stormForumStyles', $map);
 $applyPolicy('christmas', false);
 $author->style_id = $map['dark:halloween']; $author->save();
-$dependencies = array_values(array_filter(json_decode(file_get_contents('/opt/storm-forum/config/forum.json'), true)['vendorDependencies'], fn($dependency) => $dependency['kind'] === 'style'));
+$dependencies = array_values(array_filter((require '/opt/storm-forum/runtime/manifest.php')()['vendorDependencies'], fn($dependency) => $dependency['kind'] === 'style'));
 $darkFile = '/app/forum/' . $dependencies[1]['path'];
 $original = file_get_contents($darkFile);
 try {

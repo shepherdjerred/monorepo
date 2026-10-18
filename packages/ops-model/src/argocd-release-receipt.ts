@@ -74,6 +74,10 @@ type OperationState = NonNullable<
   z.infer<typeof RootReleaseApplicationSchema>["status"]["operationState"]
 >;
 
+// Retain historical/bootstrap receipts while the dedicated platform account
+// becomes the sole runtime owner. Ordinary and observer accounts cannot seal root releases.
+const ROOT_RELEASE_PRINCIPALS = new Set(["woodpecker", "delivery-platform"]);
+
 function matchesOwnedPrune(
   state: OperationState,
   receipt: VerifiedRootReleaseReceipt,
@@ -87,7 +91,7 @@ function matchesOwnedPrune(
     return entries.length === 1 && entries[0]?.value === expected;
   };
   return (
-    operation.initiatedBy?.username === "woodpecker" &&
+    ROOT_RELEASE_PRINCIPALS.has(operation.initiatedBy?.username ?? "") &&
     operation.sync?.revision === receipt.revision &&
     operation.sync.prune === true &&
     owns("ci.sjer.red/request-id", receipt.requestId) &&

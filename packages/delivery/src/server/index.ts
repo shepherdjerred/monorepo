@@ -7,7 +7,16 @@ import { createDatabase } from "#infrastructure/database.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
+import { createMinecraftRecoveryInspector } from "#infrastructure/minecraft-recovery/inspector.ts";
+import {
+  createForumBundleReader,
+  createForumBundleVerifier,
+} from "#infrastructure/forum/bundle-verifier.ts";
+import { createForumBaselineInspector } from "#infrastructure/forum/baseline-inspector.ts";
 import { createApp } from "./app.ts";
+import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
+import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
+import { createTrmnlRecoveryInspector } from "#infrastructure/trmnl-recovery.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags({
@@ -16,9 +25,38 @@ await initFeatureFlags({
   },
 });
 const database = createDatabase(bootstrap.DATABASE_URL);
-const delivery = new Delivery(database);
+const delivery = new Delivery(database, bootstrap.WOODPECKER_REPO_ID);
+const inspectTrmnl =
+  bootstrap.DELIVERY_TRMNL_S3_ACCESS_KEY_ID === undefined ||
+  bootstrap.DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY === undefined ||
+  bootstrap.TRMNL_API_KEY === undefined
+    ? undefined
+    : createTrmnlRecoveryInspector({
+        readArchive: createTrmnlArchiveReader({
+          accessKeyId: bootstrap.DELIVERY_TRMNL_S3_ACCESS_KEY_ID,
+          secretAccessKey: bootstrap.DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY,
+        }),
+        client: createTrmnlPluginClient({ token: bootstrap.TRMNL_API_KEY }),
+      });
+const forumBundleReader =
+  bootstrap.DELIVERY_FORUM_S3_ACCESS_KEY_ID === undefined ||
+  bootstrap.DELIVERY_FORUM_S3_SECRET_ACCESS_KEY === undefined
+    ? undefined
+    : createForumBundleReader({
+        endpoint: "https://seaweedfs-s3.tailnet-1a49.ts.net",
+        accessKeyId: bootstrap.DELIVERY_FORUM_S3_ACCESS_KEY_ID,
+        secretAccessKey: bootstrap.DELIVERY_FORUM_S3_SECRET_ACCESS_KEY,
+      });
 const app = createApp({
   delivery,
+  ...(forumBundleReader === undefined
+    ? {}
+    : { verifyForumBundle: createForumBundleVerifier(forumBundleReader) }),
+  inspectForumBaseline: createForumBaselineInspector({
+    argoOrigin: bootstrap.ARGOCD_SERVER_URL,
+    argoToken: bootstrap.ARGOCD_RECOVERY_TOKEN,
+    observationToken: bootstrap.DELIVERY_FORUM_OBSERVATION_TOKEN,
+  }),
   ciOrigin: bootstrap.WOODPECKER_URL,
   ciRepositoryId: bootstrap.WOODPECKER_REPO_ID,
   qualifyBuild: createQualifier({
@@ -29,6 +67,16 @@ const app = createApp({
   inspectRecovery: createRecoveryInspector({
     origin: bootstrap.ARGOCD_SERVER_URL,
     token: bootstrap.ARGOCD_RECOVERY_TOKEN,
+    ...(inspectTrmnl === undefined ? {} : { inspectTrmnl }),
+  }),
+  inspectMinecraftRecovery: createMinecraftRecoveryInspector({
+    controllerOrigin:
+      "http://delivery-tsmc-controller.delivery-tsmc-controller.svc.cluster.local:7356",
+    executorToken: bootstrap.DELIVERY_MACHINE_CREDENTIALS.find((credential) =>
+      credential.principal.scopes.includes("execute"),
+    )?.token,
+    argoOrigin: bootstrap.ARGOCD_SERVER_URL,
+    argoToken: bootstrap.ARGOCD_RECOVERY_TOKEN,
   }),
   config: {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,

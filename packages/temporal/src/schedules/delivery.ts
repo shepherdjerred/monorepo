@@ -8,7 +8,7 @@ export const DELIVERY_DISPATCH_SCHEDULE: ScheduleDefinition = {
   workflowType: "deliveryDispatchWorkflow",
   args: [],
   timing: { kind: "interval", every: "1 minute" },
-  taskQueue: TASK_QUEUES.WORKFLOWS,
+  taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
   overlap: ScheduleOverlapPolicy.SKIP,
   workflowExecutionTimeout: "5 minutes",
   catchupWindow: "5 minutes",

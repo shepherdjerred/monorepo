@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
+import { DeploymentSchema, deliveryWorkflowId } from "#shared/contract.ts";
 import type {
   FinishDeployment,
   PipelineDefinition,
@@ -9,6 +10,39 @@ import type {
 } from "#shared/contract.ts";
 
 type Transaction = Prisma.TransactionClient;
+export async function replayDeployment(tx: Transaction, resultId: string) {
+  return DeploymentSchema.parse(
+    wire(
+      required(
+        await tx.deployment.findUnique({ where: { id: resultId } }),
+        "Requested deployment",
+      ),
+    ),
+  );
+}
+export async function persistDeploymentRequest(
+  tx: Transaction,
+  actor: Principal,
+  options: {
+    deployment: { id: string; status: string };
+    requestId: string;
+    input: unknown;
+  },
+) {
+  const { deployment, ...requestInput } = options;
+  if (deployment.status === "queued")
+    await tx.outbox.create({
+      data: {
+        deploymentId: deployment.id,
+        workflowId: deliveryWorkflowId(deployment.id),
+      },
+    });
+  await remember(tx, actor, {
+    ...requestInput,
+    resultType: "deployment",
+    resultId: deployment.id,
+  });
+}
 function canonical(value: unknown): string {
   if (Array.isArray(value))
     return `[${value.map((entry) => canonical(entry)).join(",")}]`;
@@ -101,10 +135,21 @@ export async function remember(
     },
   });
 }
-export function validateFinish(input: FinishDeployment, target: string) {
+export function validateFinish(
+  input: FinishDeployment,
+  target: string,
+  hostOnly = false,
+) {
+  if (hostOnly && input.observedRevisionId !== undefined)
+    throw new DeliveryError(
+      "INVALID",
+      "Host-only and platform operations cannot report application observation",
+    );
   if (
     input.status === "succeeded" &&
-    (input.observedRevisionId !== target ||
+    ((hostOnly
+      ? input.observedRevisionId !== undefined
+      : input.observedRevisionId !== target) ||
       !input.evidence.some((entry) => entry.kind === "acceptance") ||
       !input.evidence.some((entry) => entry.kind === "reconciliation"))
   )
@@ -136,13 +181,9 @@ export function validateStaticTarget(
       "INVALID",
       "Static site releases use their bucket target; omit the Argo application",
     );
-  if (
-    input.serviceId === "scout-for-lol" &&
-    (!["scout-frontend", "scout-frontend-beta"].includes(pipeline.bucket) ||
-      pipeline.archiveComponent !== `site:${pipeline.bucket}`)
-  )
+  if (input.serviceId === "scout-for-lol")
     throw new DeliveryError(
       "INVALID",
-      "Scout static releases require their canonical beta or production bucket and matching archive component",
+      "Scout frontend activation belongs to its combined backend environment release and approval",
     );
 }

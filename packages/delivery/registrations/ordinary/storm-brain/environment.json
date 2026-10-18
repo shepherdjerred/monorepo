@@ -1,0 +1,10 @@
+{
+  "id": "storm-brain/prod",
+  "serviceId": "storm-brain",
+  "name": "prod",
+  "application": "storm-brain",
+  "pipelineRevisionId": "storm-brain/prod/1",
+  "configurationRevision": "storm-brain/prod/1",
+  "configuration": {},
+  "automatic": true
+}

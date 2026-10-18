@@ -86,8 +86,8 @@ test.each([
         "#!/bin/sh\nexit 0\n",
       );
       await chmod(path.join(directory, "ci/scripts/bun-install.sh"), 0o755);
-      const step = scoutSteps(images, true).find(
-        (entry) => entry.key === "scout-beta-release",
+      const step = scoutSteps(images).find(
+        (entry) => entry.key === "scout-site-archives",
       );
       if (step === undefined) throw new Error("Missing Scout release step");
       const child = Bun.spawn(
@@ -123,16 +123,20 @@ test.each([
       );
       expect(actions).toContain(`publish:{"backend":"${imageB}"}`);
       const legacy = Bun.file(path.join(directory, "scout-release-state.json"));
-      expect(await legacy.exists()).toBe(sourceChanged);
-      if (sourceChanged) {
-        expect(await legacy.json()).toEqual({ backend: imageA });
-        expect(actions).toContain("archive\n");
-        expect(actions).toContain("deploy-beta\n");
-      } else {
-        expect(actions).not.toContain("archive\n");
-        expect(actions).not.toContain("deploy-beta\n");
-        expect(actions).not.toContain("prepare:.scout-release/");
-      }
+      expect(await legacy.exists()).toBe(false);
+      expect(actions).not.toContain("archive\n");
+      expect(actions).not.toContain("deploy-beta\n");
+      expect(actions).not.toContain("prepare:.scout-release/");
+      expect(step.dependsOn).toEqual(["images"]);
+      expect(
+        step.secrets?.some((secret) =>
+          /SEAWEEDFS_SITES|CLOUDFLARE|ARGOCD|TOFU/u.test(secret.key),
+        ),
+      ).toBe(false);
+      expect(scoutSteps(images).map((entry) => entry.key)).toEqual([
+        "scout-site-archives",
+        "release-please",
+      ]);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

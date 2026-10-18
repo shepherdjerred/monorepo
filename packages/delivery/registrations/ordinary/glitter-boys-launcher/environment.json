@@ -1,0 +1,10 @@
+{
+  "id": "glitter-boys-launcher/prod",
+  "serviceId": "glitter-boys-launcher",
+  "name": "prod",
+  "application": "glitter-boys-launcher",
+  "pipelineRevisionId": "glitter-boys-launcher/prod/1",
+  "configurationRevision": "glitter-boys-launcher/prod/1",
+  "configuration": {},
+  "automatic": true
+}

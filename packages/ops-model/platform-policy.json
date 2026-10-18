@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "rootPrerequisites": ["tofu:seaweedfs", "tofu:tailscale", "tofu:arr"],
+  "stacks": {
+    "application-secrets": { "mode": "validate-only", "prerequisites": [] },
+    "anthropic": { "mode": "reviewed-plan", "prerequisites": [] },
+    "anthropic-federation": { "mode": "operator-only", "prerequisites": [] },
+    "argocd": { "mode": "operator-only", "prerequisites": [] },
+    "arr": { "mode": "automatic", "prerequisites": ["tofu:tailscale"] },
+    "asuswrt": { "mode": "operator-only", "prerequisites": [] },
+    "cloudflare": {
+      "mode": "automatic",
+      "prerequisites": ["root", "static-sites"]
+    },
+    "cloudflare-tokens": { "mode": "reviewed-plan", "prerequisites": [] },
+    "discord": { "mode": "reviewed-plan", "prerequisites": [] },
+    "dockerhub": { "mode": "operator-only", "prerequisites": [] },
+    "dockerhub-tokens": { "mode": "operator-only", "prerequisites": [] },
+    "github": { "mode": "automatic", "prerequisites": [] },
+    "google": { "mode": "operator-only", "prerequisites": [] },
+    "openai": { "mode": "reviewed-plan", "prerequisites": [] },
+    "posthog": { "mode": "automatic", "prerequisites": [] },
+    "seaweedfs": { "mode": "automatic", "prerequisites": [] },
+    "tailscale": { "mode": "automatic", "prerequisites": ["tofu:seaweedfs"] },
+    "tailscale-delivery": { "mode": "operator-only", "prerequisites": [] }
+  }
+}

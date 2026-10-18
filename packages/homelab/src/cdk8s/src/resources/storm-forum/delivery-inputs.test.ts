@@ -5,7 +5,6 @@ import { App, Testing } from "cdk8s";
 import { describe, expect, it } from "vitest";
 import { parseAllDocuments, stringify } from "yaml";
 import { createStormForumChart } from "./index.ts";
-import { parameterizeForumDelivery } from "./delivery-inputs.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 
 const release = {
@@ -27,8 +26,11 @@ async function render(values: Record<string, unknown>) {
   const directory = await mkdtemp(path.join(tmpdir(), "forum-delivery-helm-"));
   try {
     resetProbeRegistry();
-    const chart = createStormForumChart(new App(), release);
-    parameterizeForumDelivery(chart, release);
+    const chart = createStormForumChart(new App(), {
+      stage: release.stage,
+      secretItemId: release.secretItemId,
+      trustedConnectorCidr: release.trustedConnectorCidr,
+    });
     await mkdir(path.join(directory, "templates"));
     await writeFile(
       path.join(directory, "Chart.yaml"),
@@ -68,16 +70,13 @@ async function render(values: Record<string, unknown>) {
 }
 
 describe("forum selected release rendering", () => {
-  it("retains the legacy release until explicit delegation", async () => {
-    const result = await render({ enabled: false });
-    expect(result.exitCode, result.stderr).toBe(0);
-    expect(result.stdout).toContain(`storm-forum-release-${release.releaseId}`);
-    expect(result.json).toContain(release.image);
-    expect(result.stdout).toContain("releases/legacy.zip");
+  it("has no legacy selected-release fallback in a production chart", async () => {
+    const result = await render({});
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("Delivery requires");
   });
   it("renders exact selected artifacts and the previous accepted backup source while retaining safety gates", async () => {
     const result = await render({
-      enabled: true,
       image: `docker.io/shepherdjerred/storm-forum@sha256:${"f".repeat(64)}`,
       releaseId: "0123456789abcdef",
       bundleKey: "releases/selected.zip",
@@ -99,8 +98,8 @@ describe("forum selected release rendering", () => {
     expect(result.stdout).toContain("activeDeadlineSeconds: 3600");
     expect(result.stdout).toContain("ADMIN_PASSWORD");
   });
-  it("refuses an enabled release with missing exact inputs", async () => {
-    const result = await render({ enabled: true });
+  it("refuses partial input even when a valid image is selected", async () => {
+    const result = await render({ image: release.image });
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain("Delivery requires");
   });

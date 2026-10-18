@@ -22,6 +22,17 @@ export type Transaction = Prisma.TransactionClient;
 export const index = new ServiceIndex();
 export const terminal = new Set(["succeeded", "failed", "canceled"]);
 export const id = () => crypto.randomUUID();
+/** Strong uncapped identities cover executions which Temporal Visibility has not indexed yet. */
+export async function pendingDeliveryObservations(tx: Transaction) {
+  const active = { status: { in: ["pending", "running"] } };
+  const counts = await Promise.all([
+    tx.workerRecoveryIntent.count({ where: active }),
+    tx.minecraftRecoveryIntent.count({ where: active }),
+    tx.platformRecoveryIntent.count({ where: active }),
+    tx.forumBaselineIntent.count({ where: active }),
+  ]);
+  return counts.reduce((sum, count) => sum + count, 0);
+}
 export function ensureService(serviceId: string) {
   if (index.byId(serviceId)?.id !== serviceId)
     throw new DeliveryError(
@@ -60,7 +71,12 @@ export async function artifact(tx: Transaction | Database, artifactId: string) {
       "CONFLICT",
       "Artifact build has not passed CI qualification",
     );
-  const { build, ...fields } = row;
+  return artifactView(row);
+}
+export function artifactView(
+  row: Prisma.ArtifactGetPayload<{ include: { build: true } }>,
+) {
+  const { build, originKey: _originKey, ...fields } = row;
   return ArtifactVersionSchema.parse(
     wire({
       ...fields,
@@ -172,7 +188,8 @@ export async function validateSelection(
       );
   } else if (
     env.promotionSourceEnvironmentId !== null &&
-    input.kind !== "rollback"
+    input.kind !== "rollback" &&
+    input.kind !== "adopt-worker"
   )
     throw new DeliveryError(
       "INVALID",
@@ -184,6 +201,7 @@ export async function validateSelection(
         environmentId: env.id,
         versionSetRevisionId: selected.id,
         status: "succeeded",
+        kind: { notIn: ["adopt-worker", "repair-trmnl"] },
       },
     });
     if (accepted === null)

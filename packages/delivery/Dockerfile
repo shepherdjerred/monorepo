@@ -2,12 +2,24 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
+FROM base AS native-tools
+# renovate: datasource=github-releases depName=kubernetes/kubectl
+ARG KUBECTL_VERSION=v1.37.1
+ARG TARGETARCH
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN set -eu; case "$TARGETARCH" in amd64|arm64) ;; *) exit 1 ;; esac; \
+    base="https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl"; \
+    curl -fsSL "$base" -o /usr/local/bin/kubectl; \
+    curl -fsSL "$base.sha256" -o /tmp/kubectl.sha256; \
+    echo "$(cat /tmp/kubectl.sha256)  /usr/local/bin/kubectl" | sha256sum -c -; \
+    chmod +x /usr/local/bin/kubectl; kubectl version --client
+
 FROM base AS deps
 COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/delivery'
 
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/delivery packages/config packages/feature-flags packages/ops-model packages/eslint-config ./
+COPY --parents tsconfig.base.json packages/delivery packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/eslint-config ./
 RUN cd packages/delivery && bun run generate && bun run build
 
 FROM base AS prod-deps
@@ -15,11 +27,15 @@ COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json p
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/delivery'
 
 FROM base AS runtime
+COPY --from=native-tools /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=prod-deps /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/delivery /app/packages/delivery
-COPY --parents packages/config packages/feature-flags packages/ops-model ./
+COPY --parents packages/config packages/feature-flags packages/ops-model packages/ops-clients ./
 RUN cd packages/delivery && bunx --no-install --trust prisma generate
 WORKDIR /app/packages/delivery
+ARG VERSION=dev
+ARG GIT_SHA=unknown
+ENV VERSION=${VERSION} GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7353

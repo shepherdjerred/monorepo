@@ -6,9 +6,13 @@ export const DeliveryJobRequestSchema = z
     stageKey: z.string().regex(/^[a-z0-9-]{1,64}$/u),
     recipe: z.enum([
       "worker-preflight",
+      "worker-images",
       "worker-step",
       "root-release",
+      "tofu-plan",
       "tofu-apply",
+      "control-plane",
+      "platform-recovery",
     ]),
     runnerImage: z
       .string()
@@ -18,8 +22,15 @@ export const DeliveryJobRequestSchema = z
   })
   .strict();
 export type DeliveryJobRequest = z.infer<typeof DeliveryJobRequestSchema>;
+export function deliveryJobNamespace(
+  recipe: DeliveryJobRequest["recipe"],
+): "delivery-worker-jobs" | "delivery-platform-jobs" {
+  return ["worker-preflight", "worker-images", "worker-step"].includes(recipe)
+    ? "delivery-worker-jobs"
+    : "delivery-platform-jobs";
+}
 export const DeliveryJobReceiptSchema = z.object({
-  namespace: z.literal("delivery-jobs"),
+  namespace: z.enum(["delivery-worker-jobs", "delivery-platform-jobs"]),
   name: z.string(),
   uid: z.string().min(1),
   specFingerprint: z.string(),

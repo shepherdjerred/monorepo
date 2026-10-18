@@ -4,13 +4,12 @@ import { KubeConfigMap } from "@shepherdjerred/homelab/cdk8s/generated/imports/k
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import inventory from "./releases.json";
 import { createStormForumChart } from "./index.ts";
-import { ReleaseSchema } from "./release-schema.ts";
-import { parameterizeForumDelivery } from "./delivery-inputs.ts";
+import { ForumStageSchema } from "./release-schema.ts";
 
 const InventorySchema = z
   .object({
     schemaVersion: z.literal(1),
-    releases: z.array(ReleaseSchema).max(2),
+    releases: z.array(ForumStageSchema).max(2),
   })
   .strict()
   .refine(
@@ -27,7 +26,7 @@ export function createStormForumCharts(app: App): void {
       (candidate) => candidate.stage === stage,
     );
     if (release) {
-      parameterizeForumDelivery(createStormForumChart(app, release), release);
+      createStormForumChart(app, release);
     } else {
       // Publish a valid inactive chart without provisioning a forum or inventing pins.
       const chart = new Chart(app, name, {
@@ -61,7 +60,6 @@ export function createStormForumApplications(chart: Chart): void {
           {
             group: "batch",
             kind: "Job",
-            name: `storm-forum-${release.restore ? "restore" : "release"}-${release.releaseId}`,
             namespace: name,
             jsonPointers: ["/spec/template"],
           },

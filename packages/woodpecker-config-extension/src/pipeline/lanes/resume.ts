@@ -42,7 +42,7 @@ export function resumeSteps(images: CiImages): CiStep[] {
         include: [
           ...GLOBAL_SELECTOR_INPUTS,
           "packages/resume/**",
-          "scripts/release/deploy-site.ts",
+          "scripts/release/check-site-build.ts",
           "scripts/lib/s3-static-site.ts",
           "scripts/lib/run.ts",
         ],

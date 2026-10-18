@@ -1,5 +1,5 @@
 variable "argocd_auth_token" {
-  description = "ArgoCD administrator authentication token for managing the Woodpecker and Delivery service accounts"
+  description = "Operator ArgoCD administrator credential for issuing dedicated Delivery account tokens; never projected into Delivery or CI"
   type        = string
   sensitive   = true
 }

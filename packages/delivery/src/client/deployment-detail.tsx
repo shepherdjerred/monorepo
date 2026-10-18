@@ -6,9 +6,52 @@ import type {
 import { canApprove, canDeploy, isTerminal } from "./presentation.ts";
 import { Status } from "./components.tsx";
 import { SelectedArtifacts } from "./artifacts.tsx";
+import { FrozenWorkerPool } from "./worker-pool.tsx";
+import { FrozenPlatform } from "./frozen-platform.tsx";
+import { FrozenControlPlane } from "./frozen-control-plane.tsx";
+import {
+  PlatformRecovery,
+  type RecoveryDecision,
+} from "./platform-recovery.tsx";
+import { MinecraftRecovery } from "./minecraft-recovery.tsx";
+import { FrozenForumBaseline } from "./forum-baseline.tsx";
 
 export type DeploymentAction =
-  { kind: "cancel" | "retry" } | { kind: "approve" | "reject"; reason: string };
+  | { kind: "cancel" | "retry" }
+  | { kind: "approve" | "reject"; reason: string }
+  | ({ kind: "recovery-decision" } & RecoveryDecision);
+
+function sourceLabel(detail: Detail) {
+  const deployment = detail.deployment;
+  if (deployment.controlPlaneSnapshot !== null)
+    return deployment.controlPlaneSnapshot.source.id;
+  return deployment.platformSnapshot === null
+    ? deployment.versionSetRevisionId
+    : deployment.platformSnapshot.source.id;
+}
+
+function FrozenInputs({ detail }: { detail: Detail }) {
+  const { deployment } = detail;
+  return (
+    <>
+      {deployment.controlPlaneSnapshot === null ? (
+        deployment.platformSnapshot === null ? (
+          <SelectedArtifacts version={detail.versionSet} />
+        ) : (
+          <FrozenPlatform snapshot={deployment.platformSnapshot} />
+        )
+      ) : (
+        <FrozenControlPlane snapshot={deployment.controlPlaneSnapshot} />
+      )}
+      {deployment.workerSnapshot !== null && (
+        <FrozenWorkerPool
+          snapshot={deployment.workerSnapshot}
+          kind={deployment.kind}
+        />
+      )}
+    </>
+  );
+}
 
 export function DeploymentDetail({
   detail,
@@ -43,7 +86,7 @@ export function DeploymentDetail({
       </div>
       <div className="detail-summary">
         <Status value={deployment.status} />
-        <span>{deployment.versionSetRevisionId}</span>
+        <span>{sourceLabel(detail)}</span>
         <span>{deployment.kind}</span>
       </div>
       {deployment.message !== null && (
@@ -64,6 +107,16 @@ export function DeploymentDetail({
           the external operation has been inspected.
         </p>
       )}
+      <PlatformRecovery
+        detail={detail}
+        principal={principal}
+        pending={pending}
+        onDecision={(decision) => {
+          onAction({ kind: "recovery-decision", ...decision });
+        }}
+      />
+      <MinecraftRecovery detail={detail} />
+      <FrozenForumBaseline detail={detail} />
       <div className="detail-grid">
         <div>
           <h3>Pipeline progress</h3>
@@ -120,7 +173,7 @@ export function DeploymentDetail({
           )}
         </pre>
       </details>
-      <SelectedArtifacts version={detail.versionSet} />
+      <FrozenInputs detail={detail} />
       {detail.approvals.length > 0 && (
         <div className="approval-history">
           <h3>Approval history</h3>
@@ -137,7 +190,8 @@ export function DeploymentDetail({
         <div className="approval-form">
           <h3>Production approval</h3>
           <p>
-            Approval applies to this exact release, configuration, and pipeline.
+            Approval applies to this exact release, configuration, pipeline, and
+            frozen worker pool or saved platform plan when present.
           </p>
           {canApprove(principal) ? (
             <>
@@ -193,17 +247,18 @@ export function DeploymentDetail({
               Request cancellation
             </button>
           )}
-          {["failed", "canceled"].includes(deployment.status) && (
-            <button
-              className="primary-button"
-              disabled={pending || deployment.recoveryRequired}
-              onClick={() => {
-                onAction({ kind: "retry" });
-              }}
-            >
-              Retry as a new deployment
-            </button>
-          )}
+          {["deploy", "promote", "rollback"].includes(deployment.kind) &&
+            ["failed", "canceled"].includes(deployment.status) && (
+              <button
+                className="primary-button"
+                disabled={pending || deployment.recoveryRequired}
+                onClick={() => {
+                  onAction({ kind: "retry" });
+                }}
+              >
+                Retry as a new deployment
+              </button>
+            )}
         </div>
       )}
     </section>

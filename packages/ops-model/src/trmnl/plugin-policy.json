@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "plugins": [
+    { "slug": "home-assistant", "id": 303046 },
+    { "slug": "homelab", "id": 303047 },
+    { "slug": "pets", "id": 464652 }
+  ],
+  "files": [
+    "settings.yml",
+    "full.liquid",
+    "half_horizontal.liquid",
+    "half_vertical.liquid",
+    "quadrant.liquid",
+    "shared.liquid"
+  ]
+}

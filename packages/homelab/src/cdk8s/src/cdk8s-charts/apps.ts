@@ -83,6 +83,8 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { trackerImageReference } from "@shepherdjerred/homelab/cdk8s/src/resources/tracker/image.ts";
 import { createDeliveryApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/delivery.ts";
 import { deliveryActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
+import { createDeliveryControlPlaneApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/delivery-control-plane.ts";
+import { deliveryExecutorActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -208,6 +210,11 @@ export async function createAppsChart(app: App) {
   createTasknotesApp(chart);
   createRelayApp(chart);
   createTemporalApp(chart);
+  if (
+    deliveryExecutorActivation(versions["shepherdjerred/delivery"]) !==
+    undefined
+  )
+    createDeliveryControlPlaneApp(chart);
   createServiceProbesApp(chart);
   createTrmnlDashboardApp(chart);
   createTurboCacheApp(chart);

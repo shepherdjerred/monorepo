@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
-import { isDeepStrictEqual, parseArgs } from "node:util";
+import { parseArgs } from "node:util";
 import { z } from "zod";
 import { createDeliveryClient } from "@shepherdjerred/delivery/client";
 import {
   PublishBuildSchema,
   ArtifactInputSchema,
+  ArtifactVersionSchema,
 } from "@shepherdjerred/delivery/contract";
 import type { PublishBuild } from "@shepherdjerred/delivery/contract";
 import {
@@ -13,56 +14,32 @@ import {
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Catalog, Service } from "@shepherdjerred/ops-model/catalog.ts";
+import { ChartPublicationSchema } from "@shepherdjerred/ops-model/chart-publication.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import {
-  readOptionalHandoff,
-  readRequiredHandoff,
-} from "../lib/ci/ci-handoff.ts";
+  readPublicationHandoffs,
+  SitePublicationSchema,
+  ChartInventorySchema,
+} from "../lib/ci/delivery-publication-handoffs.ts";
 import { requireEnv, run } from "../lib/run.ts";
-import { DELIVERY_IMAGE_DIGESTS_HANDOFF } from "../lib/ci/image-publication-handoff.ts";
+import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
+import {
+  parseVersionCatalog,
+  versionCatalogMap,
+} from "@shepherdjerred/version-catalog";
+import { minecraftChartForPublication } from "../lib/ci/delivery-upstream-artifacts.ts";
+import { attachForumPublication } from "../lib/ci/delivery-forum-publication.ts";
+import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
+import {
+  attachPlatformPublication,
+  platformSourceFiles,
+} from "../lib/ci/delivery-platform-publication.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/u);
 const DigestsSchema = z.record(
   z.string().regex(/^shepherdjerred\/[\w-]+(?:\/[\w-]+)*$/u),
   DigestSchema,
 );
-const ChartInventorySchema = z.array(
-  z.object({
-    name: z.string().regex(/^[\w-]+$/u),
-    revision: z.string().min(1),
-    prune: z.boolean().optional(),
-  }),
-);
-const SitePublicationSchema = z.object({
-  serviceId: z.string().min(1),
-  artifact: ArtifactInputSchema,
-});
-const IndexSchema = z.object({
-  schemaVersion: z.literal(2),
-  mediaType: z.enum([
-    "application/vnd.oci.image.index.v1+json",
-    "application/vnd.docker.distribution.manifest.list.v2+json",
-  ]),
-  manifests: z
-    .array(
-      z.object({
-        digest: DigestSchema,
-        platform: z
-          .object({ architecture: z.string(), os: z.string() })
-          .optional(),
-      }),
-    )
-    .min(1),
-});
-const ImageManifestSchema = z.object({
-  schemaVersion: z.literal(2),
-  mediaType: z.enum([
-    "application/vnd.oci.image.manifest.v1+json",
-    "application/vnd.docker.distribution.manifest.v2+json",
-  ]),
-  config: z.object({ digest: DigestSchema }),
-  layers: z.array(z.object({ digest: DigestSchema })),
-});
 
 type Artifact = z.output<typeof PublishBuildSchema>["artifacts"][number];
 type Fetch = (
@@ -79,6 +56,8 @@ type PublicationInput = {
   repositoryId: number;
   capturedAt: string;
   catalog?: Catalog;
+  chartPublication?: unknown;
+  retainedArtifacts?: unknown;
 };
 type PublicationDependencies = {
   inspectImage: (reference: string) => Promise<string>;
@@ -95,36 +74,6 @@ function imageService(name: string, catalog: Catalog): Service {
       `Image shepherdjerred/${name} requires a service catalog owner`,
     );
   return owner;
-}
-
-/** Verify raw registry bytes before accepting platform manifest digests. */
-export function imageRuntimeDigests(
-  raw: string,
-  expectedDigest: string,
-): string[] {
-  const matches = (source: string) =>
-    `sha256:${createHash("sha256").update(source).digest("hex")}` ===
-    expectedDigest;
-  if (!matches(raw) && !(raw.endsWith("\n") && matches(raw.slice(0, -1))))
-    throw new Error(
-      "Registry manifest bytes do not match the published digest",
-    );
-  const manifest: unknown = JSON.parse(raw);
-  const index = IndexSchema.safeParse(manifest);
-  if (index.success)
-    return [
-      ...new Set(
-        index.data.manifests
-          .filter(
-            (entry) =>
-              entry.platform?.architecture !== "unknown" &&
-              entry.platform?.os !== "unknown",
-          )
-          .map((entry) => entry.digest),
-      ),
-    ];
-  ImageManifestSchema.parse(manifest);
-  return [];
 }
 
 export async function downloadChartArtifact(
@@ -178,13 +127,68 @@ export async function downloadChartArtifact(
   return { uri: uri.href, digest: `sha256:${digest}` };
 }
 
+function retainedArtifactReferences(
+  raw: unknown,
+  publications: Map<string, Artifact[]>,
+  catalog: Catalog,
+) {
+  const retained = new Map<string, z.output<typeof ArtifactVersionSchema>[]>();
+  for (const artifact of z.array(ArtifactVersionSchema).parse(raw ?? [])) {
+    if (!catalog.services.some((service) => service.id === artifact.serviceId))
+      throw new Error("Retained artifact requires a canonical service owner");
+    if (
+      (publications.get(artifact.serviceId) ?? []).some(
+        (entry) => entry.component === artifact.component,
+      )
+    )
+      throw new Error(
+        "A publication cannot replace and retain the same component",
+      );
+    const references = retained.get(artifact.serviceId) ?? [];
+    if (
+      references.some(
+        (entry) =>
+          entry.component === artifact.component && entry.id !== artifact.id,
+      )
+    )
+      throw new Error(
+        "A publication cannot retain conflicting artifacts for one component",
+      );
+    if (!references.some((entry) => entry.id === artifact.id))
+      references.push(artifact);
+    retained.set(artifact.serviceId, references);
+    if (!publications.has(artifact.serviceId))
+      publications.set(artifact.serviceId, []);
+  }
+  return retained;
+}
+
+function verifyChartProducer(input: PublicationInput) {
+  if (input.chartPublication !== undefined) {
+    const receipt = ChartPublicationSchema.parse(input.chartPublication);
+    if (
+      receipt.sourceRevision !== input.sourceRevision ||
+      receipt.pipelineNumber !== input.pipelineNumber ||
+      receipt.repositoryId !== input.repositoryId
+    )
+      throw new Error(
+        "Fresh chart publication belongs to another source or CI execution",
+      );
+  }
+}
+
 export async function buildPublications(
   input: PublicationInput,
   dependencies: PublicationDependencies,
 ): Promise<PublishBuild[]> {
   const catalog = input.catalog ?? SERVICE_CATALOG;
+  verifyChartProducer(input);
   const publications = new Map<string, Artifact[]>();
-  function add(serviceId: string, artifact: Artifact) {
+  function add(
+    serviceId: string,
+    rawArtifact: z.input<typeof ArtifactInputSchema>,
+  ) {
+    const artifact = ArtifactInputSchema.parse(rawArtifact);
     const entries = publications.get(serviceId) ?? [];
     if (entries.some((entry) => entry.component === artifact.component)) {
       const existing = entries.find(
@@ -216,7 +220,7 @@ export async function buildPublications(
       digest,
       runtimeDigests: imageRuntimeDigests(raw, digest),
       requires: {},
-      version: `build-${String(input.pipelineNumber)}`,
+      version: `2.0.0-${String(1_000_000 + input.pipelineNumber)}`,
     });
   }
   const charts =
@@ -229,6 +233,10 @@ export async function buildPublications(
       chart.name,
       chart.revision,
     );
+    if (chart.digest !== undefined && chart.digest !== artifact.digest)
+      throw new Error(
+        "Published chart digest differs from its original producer receipt",
+      );
     add(owner.id, {
       id: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/chart/${chart.name}`,
       component: `chart:${chart.name}`,
@@ -253,6 +261,11 @@ export async function buildPublications(
       );
     add(site.serviceId, site.artifact);
   }
+  const retained = retainedArtifactReferences(
+    input.retainedArtifacts,
+    publications,
+    catalog,
+  );
   return [...publications].map(([serviceId, artifacts]) =>
     PublishBuildSchema.parse({
       requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${serviceId}`,
@@ -261,6 +274,9 @@ export async function buildPublications(
       ciUrl: input.ciUrl,
       verifiedAt: input.capturedAt,
       artifacts,
+      retainedArtifactIds: (retained.get(serviceId) ?? []).map(
+        (entry) => entry.id,
+      ),
     }),
   );
 }
@@ -275,70 +291,46 @@ export function parsePublicationOptions(args: string[]) {
   return { staticArchives: values["static-archives"] };
 }
 
-const HANDOFF_READERS = {
-  required: readRequiredHandoff,
-  optional: readOptionalHandoff,
-};
-
-export async function readPublicationHandoffs(
-  staticArchives: boolean,
-  read: {
-    required: typeof readRequiredHandoff;
-    optional: typeof readOptionalHandoff;
-  } = HANDOFF_READERS,
-) {
-  const digests: unknown = JSON.parse(
-    await read.required(DELIVERY_IMAGE_DIGESTS_HANDOFF),
-  );
-  const rawCharts = await read.optional("argocd-release-expected");
-  const charts: unknown =
-    rawCharts === undefined ? undefined : JSON.parse(rawCharts);
-  if (!staticArchives) return { digests, charts, siteArtifacts: [] };
-  const [rawSites, rawScout] = await Promise.all([
-    read.required("site-artifacts"),
-    read.required("scout-site-artifacts"),
-  ]);
-  const siteArtifacts = z
-    .array(SitePublicationSchema.strict())
-    .parse(JSON.parse(rawSites));
-  const scout = z
-    .array(
-      SitePublicationSchema.extend({
-        serviceId: z.literal("scout-for-lol"),
-      }).strict(),
-    )
-    .parse(JSON.parse(rawScout));
-  for (const entry of [...siteArtifacts, ...scout])
-    if (entry.artifact.kind !== "archive")
-      throw new Error(
-        "Static publication requires an immutable archive artifact",
-      );
-  for (const entry of scout)
-    if (!siteArtifacts.some((aggregate) => isDeepStrictEqual(aggregate, entry)))
-      throw new Error(
-        "Static aggregate omitted or changed a Scout producer artifact",
-      );
-  return { digests, charts, siteArtifacts };
-}
-
 async function main() {
   const options = parsePublicationOptions(Bun.argv.slice(2));
+  const sourceRevision = requireEnv("CI_COMMIT_SHA");
+  const pipelineNumber = z.coerce
+    .number()
+    .int()
+    .positive()
+    .parse(requireEnv("CI_PIPELINE_NUMBER"));
+  const repositoryId = z.coerce
+    .number()
+    .int()
+    .positive()
+    .parse(requireEnv("CI_REPO_ID"));
+  const client = createDeliveryClient({
+    baseUrl: requireEnv("DELIVERY_URL"),
+    headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+  });
   const handoffs = await readPublicationHandoffs(options.staticArchives);
+  const upstreamVersion = z
+    .string()
+    .parse(versionCatalogMap(parseVersionCatalog(rawCatalog))["minecraft"]);
+  const acquired = await minecraftChartForPublication(
+    client,
+    upstreamVersion,
+    { repositoryId, pipelineNumber, sourceRevision },
+    {
+      credentials: () => ({
+        username: requireEnv("CHARTMUSEUM_USERNAME"),
+        password: requireEnv("CHARTMUSEUM_PASSWORD"),
+      }),
+    },
+  );
   const publications = await buildPublications(
     {
       ...handoffs,
-      sourceRevision: requireEnv("CI_COMMIT_SHA"),
+      retainedArtifacts: [acquired],
+      sourceRevision,
       ciUrl: requireEnv("CI_PIPELINE_URL"),
-      pipelineNumber: z.coerce
-        .number()
-        .int()
-        .positive()
-        .parse(requireEnv("CI_PIPELINE_NUMBER")),
-      repositoryId: z.coerce
-        .number()
-        .int()
-        .positive()
-        .parse(requireEnv("CI_REPO_ID")),
+      pipelineNumber,
+      repositoryId,
       capturedAt: new Date().toISOString(),
     },
     {
@@ -359,11 +351,42 @@ async function main() {
         }),
     },
   );
-  const client = createDeliveryClient({
-    baseUrl: requireEnv("DELIVERY_URL"),
-    headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
-  });
-  for (const publication of publications) {
+  const forumPublications = await attachForumPublication(
+    publications,
+    (query) => client.qualifiedForumBundle(query),
+  );
+  const platformPublications = await attachPlatformPublication(
+    forumPublications,
+    {
+      sourceRevision,
+      pipelineNumber,
+      repositoryId,
+      ciUrl: requireEnv("CI_PIPELINE_URL"),
+      capturedAt: new Date().toISOString(),
+      rootInventory: handoffs.rootInventory,
+      files: await platformSourceFiles(
+        sourceRevision,
+        Bun.env["CI_CHANGED_BASE"],
+      ),
+    },
+    async () => {
+      const artifact = await client.latestQualifiedArtifact({
+        serviceId: "gitops",
+        component: "chart:apps",
+        kind: "chart",
+      });
+      return artifact.id;
+    },
+    options.staticArchives
+      ? (bucket) =>
+          client.latestQualifiedArtifact({
+            serviceId: "static-sites",
+            component: `site:${bucket}`,
+            kind: "archive",
+          })
+      : undefined,
+  );
+  for (const publication of platformPublications) {
     const result = await client.publish(publication);
     console.log(
       `Registered pending Delivery build ${result.buildId} for ${publication.serviceId}`,

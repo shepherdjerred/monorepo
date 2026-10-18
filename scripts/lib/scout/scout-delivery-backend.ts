@@ -5,7 +5,7 @@ import type { ScoutReleaseState } from "./scout-release-state.ts";
 
 const Digest = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 const Source = z.string().regex(/^[a-f0-9]{40}$/u);
-const QualifiedScoutImage = ArtifactVersionSchema.extend({
+const QualifiedScoutImage = ArtifactVersionSchema.safeExtend({
   serviceId: z.literal("scout-for-lol"),
   component: z.literal("image:scout-for-lol"),
   kind: z.literal("image"),

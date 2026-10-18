@@ -12,35 +12,64 @@ export const MachineCredentialSchema = z
     ),
   })
   .strict();
-export const BootstrapSchema = z.object({
-  DATABASE_URL: z.url(),
-  HOST: z.string().default("0.0.0.0"),
-  PORT: z.coerce.number().int().min(1).max(65_535).default(7353),
-  PUBLIC_ORIGIN: z.url().default("http://localhost:7353"),
-  WOODPECKER_URL: z.url().default("https://woodpecker.sjer.red"),
-  WOODPECKER_REPO_ID: z.coerce.number().int().positive().default(1),
-  WOODPECKER_TOKEN: z.string().min(1).optional(),
-  ARGOCD_SERVER_URL: z.url().default("https://argocd.sjer.red"),
-  ARGOCD_RECOVERY_TOKEN: z.string().min(1).optional(),
-  DELIVERY_MACHINE_CREDENTIALS: z
-    .string()
-    .transform((value, context) => {
-      try {
-        const raw: unknown = JSON.parse(value);
-        return z.array(MachineCredentialSchema).parse(raw);
-      } catch {
-        context.addIssue({
-          code: "custom",
-          message: "Invalid machine credential configuration",
-        });
-        return z.NEVER;
-      }
-    })
-    .default([]),
-  ENVIRONMENT: z
-    .enum(["production", "beta", "development", "test"])
-    .default("production"),
-});
+export const BootstrapSchema = z
+  .object({
+    DATABASE_URL: z.url(),
+    HOST: z.string().default("0.0.0.0"),
+    PORT: z.coerce.number().int().min(1).max(65_535).default(7353),
+    PUBLIC_ORIGIN: z.url().default("http://localhost:7353"),
+    WOODPECKER_URL: z.url().default("https://woodpecker.sjer.red"),
+    WOODPECKER_REPO_ID: z.coerce.number().int().positive().default(1),
+    WOODPECKER_TOKEN: z.string().min(1).optional(),
+    ARGOCD_SERVER_URL: z.url().default("https://argocd.sjer.red"),
+    ARGOCD_RECOVERY_TOKEN: z.string().min(1).optional(),
+    DELIVERY_FORUM_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+    DELIVERY_FORUM_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    DELIVERY_FORUM_OBSERVATION_TOKEN: z.string().min(1).optional(),
+    DELIVERY_TRMNL_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+    DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    TRMNL_API_KEY: z.string().min(1).optional(),
+    DELIVERY_MACHINE_CREDENTIALS: z
+      .string()
+      .transform((value, context) => {
+        try {
+          const raw: unknown = JSON.parse(value);
+          return z.array(MachineCredentialSchema).parse(raw);
+        } catch {
+          context.addIssue({
+            code: "custom",
+            message: "Invalid machine credential configuration",
+          });
+          return z.NEVER;
+        }
+      })
+      .default([]),
+    ENVIRONMENT: z
+      .enum(["production", "beta", "development", "test"])
+      .default("production"),
+  })
+  .superRefine((value, context) => {
+    const trmnl = [
+      value.DELIVERY_TRMNL_S3_ACCESS_KEY_ID,
+      value.DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY,
+      value.TRMNL_API_KEY,
+    ];
+    if (trmnl.some((field) => field !== undefined) && trmnl.includes(undefined))
+      context.addIssue({
+        code: "custom",
+        message:
+          "TRMNL archive reader and fixed plugin API key must be provisioned together",
+      });
+    if (
+      (value.DELIVERY_FORUM_S3_ACCESS_KEY_ID === undefined) !==
+      (value.DELIVERY_FORUM_S3_SECRET_ACCESS_KEY === undefined)
+    )
+      context.addIssue({
+        code: "custom",
+        message:
+          "Forum archive reader credentials must be provisioned together",
+      });
+  });
 const StringListSchema = z.string().transform((value, context) => {
   try {
     const raw: unknown = JSON.parse(value);

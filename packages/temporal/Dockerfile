@@ -53,6 +53,8 @@ COPY --parents \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
   packages/the-storm/maintenance-status.json \
+  packages/the-storm/server/*.py \
+  packages/the-storm/server/restoration-guards.json \
   packages/delivery/src/shared \
   packages/homelab \
   scripts/lib \
@@ -439,11 +441,18 @@ COPY --parents \
   tsconfig.base.json \
   packages/temporal \
   packages/the-storm/maintenance-status.json \
+  packages/the-storm/server/*.py \
+  packages/the-storm/server/restoration-guards.json \
   packages/delivery/src/shared \
   scripts/lib \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
   packages/homelab/src/delivery-ownership.ts \
   packages/homelab/src/static-site-delivery-ownership.ts \
+  packages/homelab/src/delivery-platform-grants.ts \
+  packages/homelab/scripts/tofu/tofu-stack-manifest.ts \
+  packages/homelab/src/minecraft-delivery-receipt.schema.json \
+  packages/homelab/src/minecraft-delivery-eligibility.schema.json \
+  packages/homelab/src/minecraft-delivery-sandbox.json \
   packages/homelab/scripts/canonical-json.ts \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
@@ -489,6 +498,7 @@ ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
+LABEL red.sjer.delivery.control-plane="delivery-control-plane/v2"
 
 # Point Bun's runtime install cache at a writable path — the runtime user may
 # not be able to write the default root-owned cache location.

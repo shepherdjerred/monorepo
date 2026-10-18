@@ -245,6 +245,7 @@ function applyResourceReleasePolicy(
   ) {
     return;
   }
+  if (deliveryEnvironment(construct.toJson()) !== undefined) return;
   const revision = revisions[chartName];
   if (revision === undefined) {
     throw new Error(
@@ -252,7 +253,6 @@ function applyResourceReleasePolicy(
     );
   }
   seenRepositoryCharts.add(chartName);
-  if (deliveryEnvironment(construct.toJson()) !== undefined) return;
   construct.addJsonPatch(
     JsonPatch.replace("/spec/source/targetRevision", revision),
   );

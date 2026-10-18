@@ -13,7 +13,7 @@ import {
 
 async function qualifiedBase(
   tx: Transaction,
-  source: { serviceId: string; repositoryId: number },
+  source: { serviceId: string; repositoryId: number | null },
 ) {
   const matches = z.array(z.object({ id: IdentifierSchema })).parse(
     await tx.$queryRaw`
@@ -23,6 +23,7 @@ async function qualifiedBase(
       AND build."serviceId" = ${source.serviceId}
       AND build."repositoryId" = ${source.repositoryId}
       AND build."status" = 'verified'
+      AND build."sourceKind" = 'ci'
     ORDER BY version."revision" DESC LIMIT 1
   `,
   );
@@ -38,7 +39,7 @@ async function qualifiedBase(
 export async function pendingQualification(this: Delivery) {
   return {
     builds: await this.database.build.findMany({
-      where: { status: "pending" },
+      where: { status: "pending", sourceKind: "ci" },
       select: { id: true, serviceId: true, sourceRevision: true, ciUrl: true },
       orderBy: [
         { qualificationCheckedAt: { sort: "asc", nulls: "first" } },
@@ -101,18 +102,21 @@ export async function qualify(
         entityId: buildId,
         requestId: id(),
       });
-      if (status === "verified") {
+      if (status === "verified" && build.sourceKind === "ci") {
         const latest = await tx.build.findFirst({
           where: {
             serviceId: build.serviceId,
             repositoryId: build.repositoryId,
             status: "verified",
+            sourceKind: "ci",
           },
           orderBy: { pipelineNumber: "desc" },
         });
         if (latest?.id !== buildId) return;
         await lock(tx, `versionSet:${build.serviceId}`);
-        const outputs = await tx.artifact.findMany({ where: { buildId } });
+        const outputs = await tx.buildArtifactSelection.findMany({
+          where: { buildId },
+        });
         const base = await qualifiedBase(tx, build);
         const highest = await tx.versionSet.aggregate({
           where: { serviceId: build.serviceId },
@@ -126,13 +130,21 @@ export async function qualify(
             ]),
           ),
           ...Object.fromEntries(
-            outputs.map((entry) => [entry.component, entry.id]),
+            outputs.map((entry) => [entry.component, entry.artifactId]),
           ),
         };
         const selectedComponents: Record<string, ArtifactVersion> = {};
         for (const [component, artifactId] of Object.entries(components))
           selectedComponents[component] = await artifact(tx, artifactId);
         validateRequirements(selectedComponents);
+        if (
+          base !== null &&
+          base.entries.length === Object.keys(components).length &&
+          base.entries.every(
+            (entry) => components[entry.component] === entry.artifactId,
+          )
+        )
+          return;
         await tx.versionSet.create({
           data: {
             id: id(),

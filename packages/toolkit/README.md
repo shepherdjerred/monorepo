@@ -39,6 +39,22 @@ toolkit deploy promote <SOURCE_ENVIRONMENT_ID> <DESTINATION_ENVIRONMENT_ID>
 toolkit deploy approve <DEPLOYMENT_ID> --reason "Reviewed release and checks"
 toolkit deploy wait <DEPLOYMENT_ID> --timeout 900 --json
 toolkit deploy rollback <ENVIRONMENT_ID> <VERSION_SET_ID>
+toolkit deploy workers list <ENVIRONMENT_ID> --json
+toolkit deploy workers baseline --file <REVIEWED_BASELINE_JSON> --machine
+toolkit deploy workers adopt --file <REVIEWED_ADOPTION_JSON> --machine
+toolkit deploy workers retire <ENVIRONMENT_ID> <WORKER_ID> --request-id <REQUEST_ID>
+toolkit deploy workers recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Inspect the exact quarantined operation independently"
+toolkit deploy workers recovery <INTENT_ID> --json
+toolkit deploy minecraft recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Inspect the original before selecting another candidate"
+toolkit deploy minecraft recovery <INTENT_ID> --json
+toolkit deploy forum publish --file <PRIVATE_BUNDLE_DESCRIPTOR> --machine
+toolkit deploy forum baseline --file <ORIGINAL_BASELINE_DESCRIPTOR> --machine
+toolkit deploy forum inspect <INTENT_ID> --json
+toolkit deploy platform request --file <REVIEWED_INTENT_JSON>
+toolkit deploy platform control-plane --file <REVIEWED_CONTROLLER_JSON> --machine
+toolkit deploy platform recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Independently settle the original native infrastructure operation"
+toolkit deploy platform recovery <INTENT_ID> --json
+toolkit deploy platform recovery-approve <INTENT_ID> --plan-fingerprint <HASH> --decision approved --reason "Reviewed exact saved recovery plan and state"
 ```
 
 The default endpoint is `https://delivery.tailnet-1a49.ts.net`; override bootstrap
@@ -54,12 +70,73 @@ different provisioned credential. The token must have the necessary server-side
 scopes. Machine tokens cannot approve production releases, including admin tokens.
 There is no token command-line option and credentials are never printed.
 
+Platform recovery keeps the original failed result and held ownership while a
+bounded independent runner inspects the native targets. A partial OpenTofu
+recovery records an encrypted saved plan; the human approval above binds its
+public fingerprint and never accepts replacement bytes. Routine stack policies
+remain automatic. `recovery-approve` rejects `--machine`, including admin tokens.
+Control-plane upgrade requests are admin-only and always target the separately
+owned `delivery-control-plane/prod` environment.
+
+`deploy trmnl repair <failed-deployment> --machine --expected-generation <N>
+--reason <explanation>` requests a fixed same-bundle dependency repair. It transfers
+the failed release's quarantine only after fresh executor proof that the source
+Workflow stopped; it cannot choose plugins, replace the bundle, mutate Argo, or
+accept an application release. Inspect it with the ordinary `deploy status` and
+`deploy wait` commands.
+
 Mutations use the currently read environment generation unless
 `--expected-generation` is supplied. Concurrent changes are rejected by the
 service. Use `--request-id` to repeat a request after a lost response; generated
 request IDs are printed to stderr before submission. Cancellation waits for a
 safe boundary. Retry creates a new attempt and reevaluates required approval.
 Rollback selects an exact previous release and does not restore persistent data.
+
+`workers baseline` submits an admin-only `adopt-worker` intent containing an
+exact full-app version set, environment generation, request ID, and
+`workerBaseline: { artifactIds, candidateArtifactId }`. It verifies existing hosts
+independently, including a routed worker older than the current Activity image.
+It establishes retained host identities without changing or accepting the full
+application release. Its completion requires executor observations, and it cannot
+be selected as an application rollback target.
+
+Worker adoption is admin-only and references an original qualified artifact and
+its accepted introducing deployment, an exact environment generation, a request
+ID, and a fixed `central`, `scout-beta`, or `scout-prod` target. It accepts no pod
+specifications or secret values. `workers list` preserves original artifact/build
+identity and distinguishes desired hosted workers from retained zero-host rows.
+Retirement reads both environment and worker generations; override the latter
+with `--expected-worker-generation` for an explicit compare-and-swap. The request
+freezes a normal deployment and requires production approval where applicable.
+Only executor-side fresh routing and drainage proof may authorize scale-to-zero;
+requesting or approving retirement does not stop a host. A canceled or failed
+retirement requires a new retirement request rather than the generic retry command.
+
+Worker recovery creates an admin-authorized inspection intent bound to the reviewed
+environment generation and immutable deployment/pool identities. Its independent
+executor verifier must observe all operations settled, exact original hosts and
+stable routing before completing the intent. Completion releases quarantine while
+preserving the original failed result; it does not accept a release or change
+worker replicas. The same verifier has an operator entrypoint for a Workflow-worker
+outage and uses a separate scoped executor credential, never the admin intent as proof.
+
+Minecraft recovery is admin-only and applies before candidate Argo source
+selection. Its controller reopens only the untouched original and removes only
+the exact request-owned validation copy. The API independently rereads original
+volume, Pod, routes and settled Argo bindings before releasing quarantine through
+an environment-generation CAS. Missing source journals, changed identities or
+post-selection operations retain the lock and require the independent restoration
+procedure. Recovery never accepts or retries the failed release. The UI shows
+recovery history; `minecraft recovery` returns the same frozen inputs and status.
+
+Forum publication uses the separately brokered `DELIVERY_PUBLISHER_TOKEN`;
+baseline requests use the admin credential. Publication registers immutable private
+licensed bytes for independent qualification and cannot adopt a runtime or approve
+a release. The read-only baseline descriptor includes request ID, environment ID,
+expected environment generation, qualified original image/bundle artifact IDs and
+a reason. Native completed Job, Pod digests, installed XF and bundle observations
+come from the API's independent authenticated inspector. `forum inspect` reads the
+same immutable proof shown in the UI; the baseline never invents deployment acceptance.
 
 All commands support `--json`. `wait` polls in the foreground and returns 0 for
 success, 1 for a failed/canceled deployment, and 2 when its deadline expires.
@@ -282,6 +359,17 @@ only when the effective branch rules require it, or a human requests changes.
 A branch behind main is acceptable when the branch rules do not require it
 to be current.
 
+`toolkit ci source-proof <PR> --source <40SHA> --json` performs a bounded
+post-merge bootstrap read. The source must equal the actual reviewed PR head
+and the successful completed full Woodpecker pipeline, including the native
+review and completion gates and all current required checks. GitHub must show
+the PR merged and independently prove that exact head is an ancestor of current
+main. A second fresh snapshot fences source/main changes during collection.
+The result preserves both source and main revisions; it never assigns head
+checks to a different merge commit. Bootstrap descriptors, builds and effects
+must use that exact source, and refresh this proof immediately before effects.
+Normal `ci wait` readiness and its closed-PR behavior remain unchanged.
+
 Long queues and builds are normal. Keep awaiting the same foreground process;
 do not restart polls or diagnose an outage from elapsed time alone. A sparse
 heartbeat appears every five minutes. Disconnects reconnect with backoff and a
@@ -394,7 +482,7 @@ a root `index.html`, and asciinema `.cast` files get a self-contained player.
 ### Deployment and browser acceptance
 
 `toolkit deployed [SELECTOR]` traces a commit through merge, image publication,
-GitOps pinning, ArgoCD sync, and the running pod digest. Selectors include a
+release selection, ArgoCD sync, and the running pod digest. Selectors include a
 service (`scout`), variant (`scout/prod`), or commit. Use `--json`,
 `--no-github`, or `--no-cluster` when needed. Deployable services, their
 aliases, and variants come from the `@shepherdjerred/ops-model` service catalog,

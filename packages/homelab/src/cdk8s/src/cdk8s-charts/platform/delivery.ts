@@ -23,6 +23,11 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import type { DeliveryActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
 import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/network-policy.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createDeliveryMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/monitoring.ts";
+import { deliveryForumEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum-bootstrap.ts";
+import { deliveryTrmnlEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/trmnl-bootstrap.ts";
+import { createDeliveryCatalogRecovery } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/catalog-recovery.ts";
+import { attachNativeForumReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum/native-reader.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -49,7 +54,9 @@ export function createDeliveryChart(
     )
   )
     throw new Error("Delivery requires a published image digest");
+  const selectedImage = `{{ .Values.delivery.image | default "${activation.image}" }}`;
   new Namespace(chart, "namespace", { metadata: { name: "delivery" } });
+  createDeliveryCatalogRecovery(chart);
   createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
   const database = Secret.fromSecretName(
     chart,
@@ -112,7 +119,7 @@ export function createDeliveryChart(
   deployment.addInitContainer(
     withCommonProps({
       name: "migrate",
-      image: activation.image,
+      image: selectedImage,
       command: ["bun", "run", "migrate:deploy"],
       envVariables: { ...dbEnv, HOME: EnvValue.fromValue("/tmp") },
       securityContext,
@@ -126,7 +133,7 @@ export function createDeliveryChart(
   deployment.addContainer(
     withCommonProps({
       name: "delivery",
-      image: activation.image,
+      image: selectedImage,
       command: ["bun", "src/server/index.ts"],
       securityContext,
       volumeMounts: mounts,
@@ -144,6 +151,8 @@ export function createDeliveryChart(
       liveness: Probe.fromHttpGet("/healthz", { port: 7353 }),
       envVariables: {
         ...dbEnv,
+        ...deliveryForumEnvironment(chart, activation),
+        ...deliveryTrmnlEnvironment(chart, activation),
         HOST: EnvValue.fromValue("0.0.0.0"),
         PORT: EnvValue.fromValue("7353"),
         HOME: EnvValue.fromValue("/tmp"),
@@ -184,6 +193,11 @@ export function createDeliveryChart(
     }),
   );
   setRevisionHistoryLimit(deployment);
+  if (
+    activation.forumReaderItemId !== undefined &&
+    activation.forumObserverItemId !== undefined
+  )
+    attachNativeForumReader(deployment);
   const serveConfig = new ConfigMap(chart, "tailnet-serve", {
     data: {
       "serve.json": JSON.stringify({
@@ -264,5 +278,6 @@ export function createDeliveryChart(
     ports: [{ name: "http", port: 7353 }],
   });
   createDeliveryNetworkPolicy(chart);
+  createDeliveryMonitoring(chart);
   return chart;
 }
