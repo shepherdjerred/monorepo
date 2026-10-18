@@ -1,7 +1,7 @@
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 
 const logger = loggers.scheduler.child("job-runner");
 
@@ -9,7 +9,7 @@ const logger = loggers.scheduler.child("job-runner");
  * Number of consecutive failures we tolerate at warn level before escalating
  * to error. Most failures we observe in the wild are transient DNS/abort
  * blips against the Discord API; promoting every blip to `error` clutters
- * Sentry and Loki alerts. After this many in a row we assume the issue is
+ * Bugsink and Loki alerts. After this many in a row we assume the issue is
  * persistent and want to be paged.
  */
 const CONSECUTIVE_FAILURE_ESCALATION_THRESHOLD = 3;
@@ -94,7 +94,7 @@ export type ScheduledJobOptions = {
  * - Tracks consecutive failures per job. Transient failures (DNS, abort,
  *   timeout) log at `warn` until they hit
  *   {@link CONSECUTIVE_FAILURE_ESCALATION_THRESHOLD} in a row, at which
- *   point they escalate to `error` + Sentry capture. Non-transient errors
+ *   point they escalate to `error` + Bugsink capture. Non-transient errors
  *   always escalate immediately.
  * - Resets the consecutive-failure counter on success.
  */

@@ -43,7 +43,7 @@ describe("classifyLlmProviderIssue", () => {
   });
 
   test("no longer treats a router weekly key limit as a quota", () => {
-    // OpenRouter's per-key weekly limit was the old cap. A 403 now means an
+    // A per-key weekly limit was the old gateway cap. A 403 now means an
     // authorization problem, which retrying or waiting does not fix either,
     // but it is not a spend cap and must not be reported as one.
     expect(

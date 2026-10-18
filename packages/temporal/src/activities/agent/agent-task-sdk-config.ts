@@ -37,7 +37,7 @@ export type AgentTaskSdkConfig = {
 function outputSchema(input: AgentTaskInput): Record<string, unknown> {
   if (input.provider === "claude") {
     throw new Error(
-      "Legacy Claude agent tasks can be decoded for replay but cannot execute after the OpenRouter migration",
+      "Legacy Claude agent tasks can be decoded for replay but cannot execute; resubmit with provider codex",
     );
   }
   return input.contractVersion === 2

@@ -98,7 +98,7 @@ const logger = createLogger("scout-v2-notification-delivery");
  * and no guild, so a V2 send resolves one through a REST channel lookup and
  * passes it to `send` when it is there — but a gatewayless role can legitimately
  * resolve a channel with no guild attached, and then nothing is escalated and
- * the failure is captured to Sentry instead. That degradation is deliberate and
+ * the failure is captured to Bugsink instead. That degradation is deliberate and
  * matches what gatewayless roles already do on the v1 path.
  *
  * What V2 keeps instead is better than the DM: the intent transitions to

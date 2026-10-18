@@ -167,7 +167,7 @@ export async function deliverReportDispatch(
 
   // Isolate each delivery: one failed report must not abort the rest of the
   // batch. Permission errors are already recorded (DB + owner notify) and other
-  // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
+  // errors captured to Bugsink inside `send`, so a ChannelSendError just gets a
   // warning here; anything unexpected is reported and we move on.
   try {
     await deliverChunks(dispatch, database);

@@ -157,7 +157,7 @@ async function handlePushEvent(args: PushHandlerArgs): Promise<Response> {
 
 /**
  * Merge-conflict check — runs on opened/synchronize/reopened/edited. Failure
- * logs to Sentry but does NOT fail the webhook delivery.
+ * logs to Bugsink but does NOT fail the webhook delivery.
  */
 async function maybeStartConflictCheckPr(
   startConflictCheckPr: ConflictCheckPrStartFn,

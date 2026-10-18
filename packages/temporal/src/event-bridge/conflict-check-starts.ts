@@ -91,7 +91,7 @@ export async function startCheckPrMergeConflictsForPr(
 
 /**
  * Centralized error capture so the webhook handler can hand off without
- * inlining its own try/catch + Sentry boilerplate per trigger.
+ * inlining its own try/catch + Bugsink boilerplate per trigger.
  */
 export function captureConflictCheckStartError(
   error: unknown,

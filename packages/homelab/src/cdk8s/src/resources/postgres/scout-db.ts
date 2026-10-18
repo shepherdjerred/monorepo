@@ -80,7 +80,7 @@ export function createScoutPostgreSQLDatabase(chart: Chart, stage: Stage) {
           "hostssl scout scout all scram-sha-256",
           // The backend's node-postgres adapter connects without TLS
           // in-namespace; spilo's self-signed cert has no service-hostname
-          // SAN (same reason tracker-tracker carries a plain host line).
+          // SAN.
           "host scout scout all scram-sha-256",
           "hostssl replication standby all scram-sha-256",
           // psql runbooks (pg_dump snapshots, evals sync-beta) via

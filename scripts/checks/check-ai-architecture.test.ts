@@ -53,32 +53,23 @@ describe("AI architecture guard", () => {
     ).toEqual(["openrouter", "openrouter", "openrouter", "openrouter"]);
   });
 
-  test("allows the retired credential only in its denylist and test fixtures", () => {
+  test("exempts no sanitizer or test from the OpenRouter rule", () => {
     expect(
       findAiArchitectureViolations([
         {
           path: "packages/temporal/src/shared/agent/provider-credentials.ts",
-          contents:
-            'const RETIRED_PROVIDER_CREDENTIAL_KEYS = ["OPENROUTER_API_KEY"] as const;',
+          contents: '"OPENROUTER_API_KEY",',
+        },
+        {
+          path: "packages/llm-observability/src/redact.ts",
+          contents: '"OPENROUTER_API_KEY",',
         },
         {
           path: "packages/temporal/src/lib/agent-runner/codex.test.ts",
           contents: 'env: { OPENROUTER_API_KEY: "must-not-forward" }',
         },
-      ]),
-    ).toEqual([]);
-
-    expect(
-      findAiArchitectureViolations([
-        {
-          path: "packages/temporal/src/shared/agent/provider-credentials.ts",
-          contents: [
-            'const RETIRED_PROVIDER_CREDENTIAL_KEYS = ["OPENROUTER_API_KEY"] as const;',
-            'const endpoint = "https://openrouter.ai/api/v1";',
-          ].join("\n"),
-        },
       ]).map(({ rule }) => rule),
-    ).toEqual(["openrouter"]);
+    ).toEqual(["openrouter", "openrouter", "openrouter"]);
   });
 
   test("constructs provider SDKs only in llm-runtime and the Scout workbench", () => {
@@ -201,31 +192,6 @@ describe("AI architecture guard", () => {
         },
       ]).map(({ rule }) => rule),
     ).toEqual(["provider-api-key"]);
-  });
-});
-
-describe("AI architecture sanitizer exception", () => {
-  test("allows retired-key literal redaction only in the observability sanitizer", () => {
-    expect(
-      findAiArchitectureViolations([
-        {
-          path: "packages/llm-observability/src/redact.ts",
-          contents: '"OPENROUTER_API_KEY",',
-        },
-      ]),
-    ).toEqual([]);
-
-    expect(
-      findAiArchitectureViolations([
-        {
-          path: "packages/llm-observability/src/redact.ts",
-          contents: [
-            '"OPENROUTER_API_KEY",',
-            'const endpoint = "https://openrouter.ai/api/v1";',
-          ].join("\n"),
-        },
-      ]).map(({ rule }) => rule),
-    ).toEqual(["openrouter"]);
   });
 });
 

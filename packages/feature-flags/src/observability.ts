@@ -48,7 +48,7 @@ export type FlagMetricsRecorder = {
    * Seconds since the snapshot last refreshed successfully.
    *
    * This is the signal that a flag backend is unreachable — deliberately, in
-   * place of per-evaluation logging or Sentry reporting. During an outage the
+   * place of per-evaluation logging or Bugsink reporting. During an outage the
    * provider keeps serving its last good snapshot, so evaluations still succeed;
    * a rising snapshot age is what tells an operator the values are frozen.
    * Reporting each evaluation instead would emit one Bugsink event per flag

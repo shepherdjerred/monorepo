@@ -36,8 +36,8 @@ vi.mock("#src/storage/s3-report-run.ts", () => ({
 // report-lake rows → parse → compiled SQL on DuckDB → render. This is the
 // only suite that actually exercises chart rendering (echarts → SVG → PNG).
 //
-// Chart rendering (echarts → SVG → resvg PNG) is heavy and, on a cold Dagger
-// CI engine, a single render can exceed Bun's 5s default per-test timeout.
+// Chart rendering (echarts → SVG → resvg PNG) is heavy and, on a cold CI
+// node, a single render can exceed Bun's 5s default per-test timeout.
 // Give the whole suite generous headroom so a slow-but-successful render is
 // never flagged as a failure.
 vi.setConfig({ testTimeout: 30_000 });

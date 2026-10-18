@@ -67,7 +67,7 @@ const withTrpcMetrics = t.middleware(async ({ path, type, next }) => {
   const privateSupport =
     path.startsWith("feedback.") || path.startsWith("operations.inbox.");
   // A driver failure can embed query parameters. Support contents never belong
-  // in the HTTP error, logs, or Sentry; preserve the failure code, not its payload.
+  // in the HTTP error, logs, or Bugsink; preserve the failure code, not its payload.
   const result =
     privateSupport &&
     !rawResult.ok &&

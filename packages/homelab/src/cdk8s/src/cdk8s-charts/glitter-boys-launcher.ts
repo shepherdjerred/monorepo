@@ -76,7 +76,7 @@ export function createGlitterBoysLauncherChart(
         { number: 9091, name: "metrics" },
       ],
       envVariables: {
-        SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
+        BUGSINK_DSN: EnvValue.fromSecretValue({ secret, key: "BUGSINK_DSN" }),
       },
       securityContext: {
         user: 1000,

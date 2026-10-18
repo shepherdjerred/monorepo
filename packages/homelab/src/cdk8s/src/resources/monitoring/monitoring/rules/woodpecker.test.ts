@@ -192,9 +192,8 @@ describe("Woodpecker CI I/O informational alerts", () => {
     expect(rule.labels?.["severity"]).toBe("info");
   });
 
-  // An available agent Deployment that the server does not see is the
-  // Woodpecker-shaped version of the old agent-stack-k8s controller alert:
-  // workflows queue forever with nothing obviously broken.
+  // An available agent Deployment that the server does not see leaves
+  // workflows queued forever with nothing obviously broken.
   it("detects running agents that the server has no connection from", () => {
     const rule = alertRule("WoodpeckerAgentDisconnected");
     const expression = ruleExpression(rule);

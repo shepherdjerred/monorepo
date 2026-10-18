@@ -27,7 +27,7 @@ function errorDetail(error: unknown): string | null {
  * Expected client-side failures — a malformed detail URL, or a link to a
  * deleted report/competition/player (a tRPC NOT_FOUND / 4xx). These are routine
  * boundary input, not actionable exceptions, so they show the friendly panel
- * without a Sentry incident. Only unexpected (5xx / unclassified) errors report.
+ * without a Bugsink incident. Only unexpected (5xx / unclassified) errors report.
  */
 export function isExpectedRouteError(error: unknown): boolean {
   // Only Zod failures explicitly wrapped by the route-param boundary are
@@ -99,7 +99,7 @@ export function ErrorPanel(props: {
 }
 
 /**
- * `errorElement` for data-router routes. Reports the caught error to Sentry
+ * `errorElement` for data-router routes. Reports the caught error to Bugsink
  * once, shows a friendly panel, and offers a "Try again" that clears every
  * errored query from the cache and re-navigates to the current URL so the
  * route's loader + components re-run against a clean slate.

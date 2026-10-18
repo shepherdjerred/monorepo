@@ -224,7 +224,7 @@ describe("IdempotencyStore", () => {
   });
 
   // 510 puts = 510 sequential ack-after-persist file writes; exceeds bun's 5s
-  // default timeout under CI disk load (observed 5.18s in Buildkite).
+  // default timeout under CI disk load (observed 5.18s in CI).
   test("caps stored records, evicting oldest first", async () => {
     const store = new IdempotencyStore(storePath, () => 1);
     await store.init();

@@ -6,7 +6,7 @@ The Scout for LoL backend service. One Bun image that runs:
 - Temporal Workflows and Schedules for recurring ingestion and maintenance, with raw match JSON archived to S3
 - The tRPC/HTTP server that the web app SPA (`@scout-for-lol/app`) calls
 - The DuckDB "report lake" (Parquet, derived from S3) that executes ScoutQL report queries
-- Server-side product analytics (PostHog) and metrics (Prometheus) / error tracking (Sentry)
+- Server-side product analytics (PostHog) and metrics (Prometheus) / error tracking (Bugsink)
 
 One image, but not necessarily one process: see [Runtime roles](#runtime-roles).
 
@@ -409,7 +409,7 @@ than at the first `inc()`:
 - `scout_durable_dualwrite_failures_total{write_kind}` — writes that failed and
   were swallowed. Non-zero means the durable record is behind what the system
   actually did. The `dualwrite` word is the name the metrics were introduced
-  under, kept so dashboards and alerts keep reading them. These failures deliberately do not reach Sentry: an outage
+  under, kept so dashboards and alerts keep reading them. These failures deliberately do not reach Bugsink: an outage
   would raise one event per write per channel per match and bury the errors
   that actually stop work.
 

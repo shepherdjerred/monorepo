@@ -32,7 +32,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.223.0",
     "@opentelemetry/core": "^2.12.0",

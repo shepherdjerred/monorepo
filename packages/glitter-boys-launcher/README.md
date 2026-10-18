@@ -200,7 +200,7 @@ HTTP ingestion on 8080 and private Prometheus metrics on 9091, limits request si
 and aggregate request rate, and bounds release-label cardinality. Metrics use
 at-least-once delivery, so a retried accepted batch can be counted twice. Failed
 operations and sanitized panic events forward to Bugsink using its bootstrap
-`SENTRY_DSN`. Native crash dumps and symbolicated stacks are not implemented.
+`BUGSINK_DSN`. Native crash dumps and symbolicated stacks are not implemented.
 Edge/proxy access logs have their own retention outside this event contract.
 
 Its Dockerfile belongs to this package; build, smoke-test, and publish the image

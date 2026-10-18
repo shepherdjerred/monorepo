@@ -24,8 +24,7 @@ resource "github_repository_ruleset" "monorepo_main" {
     required_status_checks {
       strict_required_status_checks_policy = false
 
-      # ci/merge-conflict is posted by the Temporal worker rather than by CI,
-      # which is why it survived the move off Buildkite untouched.
+      # ci/merge-conflict is posted by the Temporal worker rather than by CI.
       #
       # ci/merge-conflict: locally-computed merge-tree result against main,
       # posted by packages/temporal/src/activities/maintenance/check-pr-merge-conflicts.ts

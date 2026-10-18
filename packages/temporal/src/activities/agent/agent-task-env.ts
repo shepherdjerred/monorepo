@@ -285,7 +285,7 @@ export function envForProvider(
   env["HOME"] = workdir;
   if (provider === "claude") {
     throw new Error(
-      "Legacy Claude agent tasks can be decoded for replay but cannot execute after the OpenRouter migration",
+      "Legacy Claude agent tasks can be decoded for replay but cannot execute; resubmit with provider codex",
     );
   }
   const credentialKey = PROVIDER_CREDENTIAL_KEYS[provider];

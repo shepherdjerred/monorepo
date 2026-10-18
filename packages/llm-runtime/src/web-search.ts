@@ -4,11 +4,8 @@ import type { LlmRuntime } from "./runtime.ts";
  * The provider's own server-side web search, for whichever provider serves the
  * given model.
  *
- * Under the gateway this needed a workaround: OpenRouter marked its web-search
- * tool non-executable, so the SDK demanded a local `execute` callback that had
- * to hand back server-supplied results and throw when they were missing. The
- * first-party tools are genuinely provider-executed, so that whole seam is
- * gone — each provider runs the search and returns results itself.
+ * The first-party tools are provider-executed: each provider runs the search
+ * and returns results itself, so no local `execute` callback is needed.
  *
  * `maxUses` is honoured only by Anthropic, which is the only one of the three
  * that accepts a cap. OpenAI and Google decide how many searches to run

@@ -103,14 +103,6 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password",
     },
   },
-  LINEAR_MIGRATION_API_KEY: {
-    description: "Read-only Linear history migration credential",
-    source: {
-      kind: "op",
-      // eslint-disable-next-line no-secrets/no-secrets -- op:// vault/item locator, not a secret value
-      ref: "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/Section_2asirbjrrxc5apqr4s7qqfm4f4/puqwftbxah4ys746ahp6jjrxpq",
-    },
-  },
   POSTHOG_CLI_API_KEY: {
     description: "PostHog CLI API key",
     source: {

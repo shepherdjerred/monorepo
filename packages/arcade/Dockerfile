@@ -26,7 +26,7 @@ COPY --parents tsconfig.base.json \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-stream-lifecycle packages/discord-video-stream \
   packages/llm-models packages/llm-observability packages/s3-signed-request \
-  packages/sentry-config packages/text ./
+  packages/bugsink-config packages/text ./
 RUN cd packages/discord-stream-lifecycle && bun run build
 RUN cd packages/llm-models && bun run build
 RUN cd packages/discord-plays-mario-kart/packages/common && bun run build
@@ -74,7 +74,7 @@ COPY --parents tsconfig.base.json \
   packages/discord-plays-pokemon/.agents \
   packages/discord-stream-lifecycle packages/discord-video-stream \
   packages/llm-models packages/llm-observability packages/s3-signed-request \
-  packages/sentry-config packages/text ./
+  packages/bugsink-config packages/text ./
 RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma generate
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist

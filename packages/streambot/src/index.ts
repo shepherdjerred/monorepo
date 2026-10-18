@@ -24,7 +24,7 @@ import {
   stopMetricsServer,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-collector.ts";
-import { initializeSentry } from "@shepherdjerred/streambot/observability/sentry.ts";
+import { initializeBugsink } from "@shepherdjerred/streambot/observability/bugsink.ts";
 import { assertIncomingAudioSupported } from "@shepherdjerred/discord-video-stream";
 import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import { loadSpokenFeedbackClips } from "@shepherdjerred/voice-assistant/spoken-feedback.ts";
@@ -56,7 +56,7 @@ const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
 async function main(): Promise<void> {
   // Initialize before anything else so early failures are captured.
-  initializeSentry();
+  initializeBugsink();
   const config = loadConfig();
   await initializeDynamicConfig({
     seed: {

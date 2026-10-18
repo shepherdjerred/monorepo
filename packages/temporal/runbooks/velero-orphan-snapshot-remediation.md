@@ -7,11 +7,12 @@ to delete.
 
 ## When to use this runbook
 
-Trigger any of these:
+Trigger any of these. Alertmanager sends these warning alerts to the alert
+dashboard ledger and the operator email.
 
-- PagerDuty fires `VeleroOrphanLocalSnapshots` (orphan ZFS snapshots present > 24h)
-- PagerDuty fires `VeleroOrphanLocalBytesExcessive` (orphan ZFS snapshot bytes over threshold)
-- PagerDuty fires `ZFSDatasetSnapshotCountExcessive` (any PVC dataset > ~26 snapshots — backstop alert)
+- The alert dashboard records `VeleroOrphanLocalSnapshots` (orphan ZFS snapshots present > 24h)
+- The alert dashboard records `VeleroOrphanLocalBytesExcessive` (orphan ZFS snapshot bytes over threshold)
+- The alert dashboard records `ZFSDatasetSnapshotCountExcessive` (any PVC dataset > ~26 snapshots — backstop alert)
 - The independent `velero-r2-orphan-audit` detects unreferenced R2 prefixes
 - A PVC reads `100%` full unexpectedly and `zfs list` shows large `USED` vs small `REFER` (snapshot bloat — same root cause)
 - Velero was just re-deployed (helm uninstall + reinstall, ArgoCD app re-creation, etc.)
@@ -286,7 +287,7 @@ Wait a few minutes, then re-query the metrics:
 toolkit prom query 'velero_orphan_local_snapshots_total'
 ```
 
-The PagerDuty alerts auto-resolve once the metrics stay at 0 for the alert's `for:` window (default 24h, but the underlying alert clears as soon as Prometheus sees the new value).
+The alerts auto-resolve in Alertmanager and the alert dashboard once the metrics stay at 0 for the alert's `for:` window (default 24h, but the underlying alert clears as soon as Prometheus sees the new value).
 
 ## Common pitfalls
 

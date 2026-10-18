@@ -27,10 +27,24 @@
 
 set -euo pipefail
 
-# Historical name — an already-provisioned Mac has the saved profile at this
-# exact path and restore-power.sh reads it there. Renaming it for tidiness
-# would strand the only copy of the pre-bootstrap power profile.
-POWER_BACKUP_FILE="/var/db/buildkite-mac-ci-pmset-before"
+# Hosts provisioned before the rename saved the profile at the legacy path.
+# Move it to the current path when only the legacy file exists, so a
+# provisioned Mac keeps the only copy of its pre-bootstrap power profile.
+LEGACY_POWER_BACKUP_FILE="${LEGACY_POWER_BACKUP_FILE:-/var/db/buildkite-mac-ci-pmset-before}"
+POWER_BACKUP_FILE="${POWER_BACKUP_FILE:-/var/db/mac-ci-pmset-before}"
+
+migrate_legacy_power_backup() {
+  if ! sudo test -e "$LEGACY_POWER_BACKUP_FILE"; then
+    return 0
+  fi
+  if sudo test -e "$POWER_BACKUP_FILE"; then
+    echo "error: saved power profiles exist at both $LEGACY_POWER_BACKUP_FILE and $POWER_BACKUP_FILE" >&2
+    echo "Keep the pre-bootstrap profile at $POWER_BACKUP_FILE, remove the other, then re-run." >&2
+    exit 1
+  fi
+  sudo mv "$LEGACY_POWER_BACKUP_FILE" "$POWER_BACKUP_FILE"
+  echo "    Moved the saved power profile to $POWER_BACKUP_FILE"
+}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
@@ -211,6 +225,7 @@ umask 022
 #   womp 1          wake on network access (magic packet)
 #   autorestart 1   power back on automatically after a power loss
 echo "==> Configuring power management (never sleep) — needs sudo"
+migrate_legacy_power_backup
 if sudo test -e "$POWER_BACKUP_FILE" && ! sudo test -f "$POWER_BACKUP_FILE"; then
   echo "error: $POWER_BACKUP_FILE exists but is not a regular file" >&2
   echo "restore-power.sh reads it with 'test -f', so teardown could not restore" >&2

@@ -1,6 +1,6 @@
 import { Client, Connection } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import { sanitizeHttpCredentialBreadcrumb } from "./observability/http-credentials.ts";
 import { DefaultLogger, NativeConnection, Runtime } from "@temporalio/worker";
 import type { Worker } from "@temporalio/worker";
@@ -122,26 +122,26 @@ function installRuntime(role: WorkerRole, bootstrap: TemporalBootstrap): void {
   jsonLog("info", "Temporal runtime metrics enabled", { metricsAddress });
 }
 
-function initSentry(): void {
-  const dsn = Bun.env["SENTRY_DSN"];
+function initializeBugsink(): void {
+  const dsn = Bun.env["BUGSINK_DSN"];
   if (dsn === undefined || dsn === "") {
     return;
   }
 
   Sentry.init({
-    dataCollection: sentryDataCollection(),
+    dataCollection: bugsinkDataCollection(),
     beforeBreadcrumb: sanitizeHttpCredentialBreadcrumb,
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
     release: Bun.env["VERSION"],
-    // Sentry would otherwise call setGlobalTracerProvider/Propagator/ContextManager
+    // The Sentry SDK would otherwise call setGlobalTracerProvider/Propagator/ContextManager
     // before initializeTracing() runs, which makes our NodeSDK.start() collide
     // with the duplicate-registration check and silently fall back to a no-op
-    // tracer — no spans reach Tempo. Sentry stays for errors via captureException;
+    // tracer — no spans reach Tempo. The Sentry SDK stays for errors via captureException;
     // performance traces go to Tempo only.
     enableOpenTelemetrySetup: false,
   });
-  jsonLog("info", "Sentry initialized");
+  jsonLog("info", "Bugsink initialized");
 }
 
 async function initializeTemporalTracing(
@@ -305,7 +305,7 @@ async function main(): Promise<void> {
     localReleaseCommit(Bun.env["GIT_SHA"]),
   );
   installRuntime(role, bootstrap);
-  initSentry();
+  initializeBugsink();
   const { callGraphTracing, temporalTracing } = await initializeTemporalTracing(
     role,
     roleContract,

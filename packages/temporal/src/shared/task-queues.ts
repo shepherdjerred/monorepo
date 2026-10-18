@@ -26,7 +26,7 @@ export const TASK_QUEUES = {
   REPO_AUTOMATION: "repo-automation",
   /** Scout refresh and competition workflows. */
   SCOUT: "scout",
-  /** Serial direct subprocess maintenance against the Buildkite PVCs. */
+  /** Serial direct subprocess maintenance against the CI cache PVCs. */
   MAINTENANCE: "maintenance",
   /** Serial object-level SeaweedFS backup and retention work. */
   BACKUP: "backup",

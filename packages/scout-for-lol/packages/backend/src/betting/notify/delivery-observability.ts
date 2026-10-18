@@ -75,7 +75,7 @@ function classify(
 /**
  * Time and count one Discord operation, then **rethrow unchanged**.
  *
- * Never swallows: every caller already owns its own catch and Sentry
+ * Never swallows: every caller already owns its own catch and Bugsink
  * semantics, and `announce.ts`'s per-channel isolation in particular is
  * load-bearing. Swallowing here would silently change product behaviour.
  */

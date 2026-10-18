@@ -9,7 +9,7 @@
 //
 //  1. **It can never run in CI.** Every step needs Xcode, a Developer ID
 //     certificate in a keychain, and App Store Connect credentials. This
-//     repository's CI is Buildkite on Linux; the plan's testing strategy puts
+//     repository's CI graph runs on Linux; the plan's testing strategy puts
 //     everything Mac-shaped behind a local operator command, exactly as
 //     `packages/tasks-for-obsidian` does for iOS e2e. Root `scripts/` is the
 //     home of things the Linux graph runs.

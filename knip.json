@@ -269,7 +269,7 @@
       "entry": [
         "src/**/*.astro",
         "src/**/*.tsx",
-        "src/lib/sentry.ts",
+        "src/lib/bugsink.ts",
         "src/*-stub.ts"
       ],
       "project": ["src/**/*.{ts,tsx,astro,css,mdx}"]

@@ -1,12 +1,12 @@
 import * as Sentry from "@sentry/react";
-import { sentryBrowserOptions } from "@shepherdjerred/sentry-config";
+import { bugsinkBrowserOptions } from "@shepherdjerred/bugsink-config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
 export type MountGameAppOptions = {
   /** The game's Bugsink project DSN. */
-  readonly sentryDsn: string;
+  readonly bugsinkDsn: string;
   readonly app: React.ReactNode;
 };
 
@@ -14,13 +14,13 @@ export type MountGameAppOptions = {
  * Boot a game's web UI: error reporting, the react-query client, and the
  * React root on `#root`.
  */
-export function mountGameApp({ sentryDsn, app }: MountGameAppOptions): void {
+export function mountGameApp({ bugsinkDsn, app }: MountGameAppOptions): void {
   // Vite substitutes these in the game's own build; the release is unset
   // locally, so it is passed through as whatever the build provided.
-  const release: unknown = import.meta.env["VITE_SENTRY_RELEASE"];
+  const release: unknown = import.meta.env["VITE_BUGSINK_RELEASE"];
   Sentry.init(
-    sentryBrowserOptions({
-      dsn: sentryDsn,
+    bugsinkBrowserOptions({
+      dsn: bugsinkDsn,
       release,
       environment: import.meta.env.MODE,
     }),

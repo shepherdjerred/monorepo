@@ -6,7 +6,6 @@ config*.toml
 !config.example.toml
 !config.dev.toml
 error.png
-.tmp-earthly-out
 *.gba
 # The image stages the SpaghettiKart build here; locally it lives in .cache/.
 packages/backend/assets/spaghettikart/

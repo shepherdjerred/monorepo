@@ -326,33 +326,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "tracker-imports-enabled",
-      "owner": "tracker",
-      "namespace": "tracker",
-      "source": "tracker",
-      "purpose": "Authorize migration writes only during an explicit import window.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "tracker-imports-beta",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "stage",
-              "operator": "eq",
-              "value": "beta"
-            }
-          ],
-          "result": true
-        }
-      ],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "tracker-telemetry-enabled",
       "owner": "tracker",
       "namespace": "tracker",
@@ -2822,7 +2795,7 @@
     },
     {
       "category": "observability",
-      "controls": ["telemetry", "Sentry", "LLM archive"],
+      "controls": ["telemetry", "Bugsink", "LLM archive"],
       "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
     },
     {

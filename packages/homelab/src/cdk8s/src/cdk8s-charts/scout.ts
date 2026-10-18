@@ -86,7 +86,8 @@ function scoutRuntimeEgressRules() {
       ],
       ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
     },
-    // External HTTPS (Riot API, Discord, Sentry, OpenAI, Gemini, ElevenLabs)
+    // External HTTPS (Riot API, Discord, OpenAI, Gemini, and Bugsink via its
+    // public bugsink.sjer.red DSN host)
     externalHttpsEgressRule(),
   ];
 }

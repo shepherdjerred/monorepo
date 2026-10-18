@@ -1,12 +1,9 @@
 /**
  * Map an AI SDK call result onto the repository's token and cost shapes.
  *
- * This replaces the OpenRouter metadata parser. The gateway handed back a
- * dollar figure and its own routing story; first-party providers hand back
- * token counts and nothing else, so cost becomes arithmetic we do here against
- * the catalog. The inputs are richer than the gateway's were, which is why the
- * catalog grew per-TTL cache prices, service tiers, and per-request tool
- * charges to consume them.
+ * First-party providers hand back token counts and no dollar figure, so cost
+ * is arithmetic done here against the catalog. That is why the catalog carries
+ * per-TTL cache prices, service tiers, and per-request tool charges.
  */
 import {
   costForTextUsage,

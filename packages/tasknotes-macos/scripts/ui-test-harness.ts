@@ -65,7 +65,7 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
       AUTH_TOKEN: authToken,
       HOST: "127.0.0.1",
       PORT: String(port),
-      SENTRY_DSN: "",
+      BUGSINK_DSN: "",
       TASKS_DIR: "TaskNotes",
       VAULT_PATH: vault,
     },

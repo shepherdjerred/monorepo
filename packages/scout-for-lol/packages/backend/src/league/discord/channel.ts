@@ -195,21 +195,21 @@ async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
 /**
  * Build (and side-effect on) a pre-send "can't reach this channel" failure: a
  * deleted / non-text / inaccessible channel. Escalates to the owner when we know
- * the guild; otherwise captures to Sentry. Returns the error for the caller to
+ * the guild; otherwise captures to Bugsink. Returns the error for the caller to
  * throw (marked permissionError=true so callers treat it as handled).
  */
 function failChannelMissing(
   message: string,
   channelId: DiscordChannelId,
   serverId: DiscordGuildId | undefined,
-  sentryReason: string,
+  bugsinkReason: string,
 ): ChannelSendError {
   logger.warn(`[ChannelSend] ${message} - channel: ${channelId}`);
   if (serverId) {
     escalateDeliveryFailure({ kind: "channel_missing", serverId, channelId });
   } else {
     Sentry.captureException(new ChannelSendError(message, channelId, true), {
-      tags: { source: "channel-send", channelId, reason: sentryReason },
+      tags: { source: "channel-send", channelId, reason: bugsinkReason },
     });
   }
   return new ChannelSendError(message, channelId, true);

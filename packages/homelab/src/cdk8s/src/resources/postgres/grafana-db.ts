@@ -16,8 +16,7 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
       namespace: "prometheus", // Same namespace as Grafana
       labels: {
         // Velero selects PVCs to back up by this label. The postgres-operator copies
-        // it onto the pgdata PVC via inherited_labels (postgres-operator.ts); this
-        // replaces the removed Kyverno velero-label mutation.
+        // it onto the pgdata PVC via inherited_labels (postgres-operator.ts).
         "velero.io/backup": "enabled",
         "velero.io/exclude-from-backup": "false",
       },

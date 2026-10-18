@@ -128,7 +128,7 @@ function spectatorFailure(
   }
 
   // 502/503/504 = Riot upstream outage — expected during maintenance windows.
-  // Do NOT report to Sentry here; the caller's circuit breaker handles
+  // Do NOT report to Bugsink here; the caller's circuit breaker handles
   // rate-limited reporting. Just log at warn level and signal upstreamError.
   if (httpStatus !== undefined && isExpectedUpstreamError(httpStatus)) {
     riotApiRequestsTotal.inc({

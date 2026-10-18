@@ -184,7 +184,7 @@ resource "cloudflare_dns_record" "sjer_red_cname_arcade" {
 }
 
 # Receives GitHub `pull_request` webhooks for the Temporal worker's
-# merge-conflict check and PR-closed Buildkite cancellation. TunnelBinding lives
+# merge-conflict check and PR-closed CI cancellation. TunnelBinding lives
 # in cdk8s; this DNS record completes the public path. See
 # packages/temporal/AGENTS.md.
 resource "cloudflare_dns_record" "sjer_red_cname_pr_bot" {

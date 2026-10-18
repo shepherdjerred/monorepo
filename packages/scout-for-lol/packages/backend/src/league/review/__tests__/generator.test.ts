@@ -326,7 +326,7 @@ describe("generateMatchReview", () => {
   });
 
   describe("when provider operational errors occur", () => {
-    test("records budget-exceeded provider issues without capturing to Sentry", async () => {
+    test("records budget-exceeded provider issues without capturing to Bugsink", async () => {
       const error = new Error(
         "LLM hourly token budget exceeded: 2000000 / 2000000",
       );
@@ -350,7 +350,7 @@ describe("generateMatchReview", () => {
       expect(captureException).not.toHaveBeenCalled();
     });
 
-    test("records context-limit provider issues without capturing to Sentry", async () => {
+    test("records context-limit provider issues without capturing to Bugsink", async () => {
       textClient = buildThrowingTextClient({
         status: 400,
         url: "https://api.openai.com/v1/responses",

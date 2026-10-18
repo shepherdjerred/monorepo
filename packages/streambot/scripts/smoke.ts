@@ -2,7 +2,7 @@
 /**
  * Smoke test for the streambot image.
  *
- * Translated from the old Dagger `smokeTestStreambotHelper`:
+ * Checks:
  *  1. ffmpeg + the baked yt-dlp are runnable.
  *  2. The real-ffmpeg subtitle integration suite passes — it needs the image's
  *     ffmpeg + libass + fonts (absent from a plain test container), so this is

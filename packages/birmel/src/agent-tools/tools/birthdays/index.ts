@@ -1,7 +1,7 @@
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import {
   handleSetBirthday,

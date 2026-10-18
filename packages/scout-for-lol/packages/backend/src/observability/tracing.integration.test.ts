@@ -1,8 +1,8 @@
-// Integration regression: Sentry must not claim OpenTelemetry's globals
+// Integration regression: the Sentry SDK must not claim OpenTelemetry's globals
 // before Scout's NodeSDK starts, and Scout must still export a real OTLP span.
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import * as Sentry from "@sentry/bun";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { diag, DiagLogLevel } from "@opentelemetry/api";
 import { getTracer, initializeTracing, shutdownTracing } from "./tracing.ts";
@@ -37,8 +37,8 @@ describe("Scout OpenTelemetry startup and export", () => {
     Bun.env["OTLP_ENDPOINT"] = `http://127.0.0.1:${server.url.port}`;
     Bun.env["TELEMETRY_SERVICE_NAME"] = "scout-backend-test";
 
-    // Match Scout's production order: NodeSDK first, then Sentry. If the
-    // Sentry provider setting regresses, this captures its duplicate-registration
+    // Match Scout's production order: NodeSDK first, then Bugsink. If the
+    // The Sentry SDK provider setting regresses, this captures its duplicate-registration
     // diagnostic instead of letting the test pass on OTLP export alone.
     initializeTracing();
     diag.setLogger(
@@ -54,7 +54,7 @@ describe("Scout OpenTelemetry startup and export", () => {
       DiagLogLevel.ERROR,
     );
     Sentry.init({
-      dataCollection: sentryDataCollection(),
+      dataCollection: bugsinkDataCollection(),
       dsn: "https://public@127.0.0.1:1/0",
       environment: "test",
       enableOpenTelemetrySetup: false,
@@ -66,7 +66,7 @@ describe("Scout OpenTelemetry startup and export", () => {
     resetOtelGlobals();
   });
 
-  test("starts before Sentry without collisions and exports an OTLP span", async () => {
+  test("starts before the Sentry SDK without collisions and exports an OTLP span", async () => {
     expect(
       diagnosticErrors.filter((message) =>
         message.includes("Attempted duplicate registration"),

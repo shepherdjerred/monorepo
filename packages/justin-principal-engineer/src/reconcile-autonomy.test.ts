@@ -28,7 +28,7 @@ const issue = {
   identifier: "AI-104",
   title: "CLI help",
   description: null,
-  url: "https://linear.app/example/issue/AI-104",
+  url: "https://tracker.tailnet-1a49.ts.net/issues/AI-104",
   priority: 1,
   team: { key: "AI" },
   project: {

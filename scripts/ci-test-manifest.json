@@ -704,8 +704,8 @@
       ]
     },
     {
-      "package": "@shepherdjerred/sentry-config",
-      "directory": "packages/sentry-config",
+      "package": "@shepherdjerred/bugsink-config",
+      "directory": "packages/bugsink-config",
       "steps": [
         {
           "runner": "vitest",

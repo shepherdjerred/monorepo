@@ -16,7 +16,7 @@
  * - NO raw JSON goes to the personality reviewer (Stage 2)
  * - All JSON is minified to reduce token usage
  * - Each stage produces a trace for observability
- * - Platform-agnostic: no filesystem, S3, or Sentry dependencies
+ * - Platform-agnostic: no filesystem, S3, or Bugsink dependencies
  */
 
 import type {

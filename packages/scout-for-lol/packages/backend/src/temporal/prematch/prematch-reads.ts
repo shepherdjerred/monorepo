@@ -55,7 +55,7 @@ const logger = createLogger("scout-v2-prematch-reads");
  * The spectator API's own breaker, kept apart from v1's by name so the two
  * pipelines' outage signals stay distinguishable on the same dashboard.
  *
- * `getActiveGame` deliberately reports upstream 5xx without touching Sentry
+ * `getActiveGame` deliberately reports upstream 5xx without touching Bugsink
  * and leaves the judgement to its caller, so without a breaker a spectator
  * outage would be invisible here. It also stops a poll from spending its whole
  * budget on fifty reads that are already failing.

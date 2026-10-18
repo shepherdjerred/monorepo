@@ -2,7 +2,7 @@
 # Repository webhooks for shepherdjerred/monorepo.
 #
 # Two hooks pre-existed in the repo settings before tofu adopted them:
-#   * the Buildkite webhook that drives CI builds, and
+#   * the previous CI provider's webhook (now removed; see below), and
 #   * the temporal worker's pr-bot webhook (the receiver in
 #     packages/temporal/src/event-bridge/github-webhook.ts).
 #

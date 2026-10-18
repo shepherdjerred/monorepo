@@ -37,7 +37,7 @@ logger.info("🌐 Initializing HTTP server");
 /**
  * tRPC error codes that represent expected client/user faults (bad input,
  * auth, not-found, rate limits) rather than server bugs. These are surfaced to
- * the caller as 4xx responses but must NOT be shipped to Sentry/Bugsink — they
+ * the caller as 4xx responses but must NOT be shipped to Bugsink — they
  * are noise (e.g. a stale guild that the user just left → FORBIDDEN, a
  * malformed channelId or unparseable report query → BAD_REQUEST). Only genuine
  * server faults (INTERNAL_SERVER_ERROR and other 5xx codes) are real bugs.
@@ -307,7 +307,7 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
           // Log expected client faults at info: they are normal traffic (an
           // anonymous page load, a stale guild) and logging them at error
           // buried the genuine faults in noise. Only real server bugs are
-          // logged at error and shipped to Sentry.
+          // logged at error and shipped to Bugsink.
           const expected = EXPECTED_CLIENT_ERROR_CODES.has(error.code);
           const description = `tRPC ${error.code} on ${path ?? "unknown"}:`;
           if (expected) {

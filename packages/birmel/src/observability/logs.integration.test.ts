@@ -13,10 +13,10 @@ Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
 Bun.env["OPENAI_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";
-Bun.env["SENTRY_ENABLED"] = "true";
-Bun.env["SENTRY_DSN"] = "https://public@127.0.0.1:1/0";
-Bun.env["SENTRY_ENVIRONMENT"] = "development";
-Bun.env["SENTRY_TRACES_SAMPLE_RATE"] = "0";
+Bun.env["BUGSINK_ENABLED"] = "true";
+Bun.env["BUGSINK_DSN"] = "https://public@127.0.0.1:1/0";
+Bun.env["BUGSINK_ENVIRONMENT"] = "development";
+Bun.env["BUGSINK_TRACES_SAMPLE_RATE"] = "0";
 
 import { describe, expect, test, beforeAll, afterAll } from "vitest";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";

@@ -18,7 +18,7 @@ const GCX_TOKEN_ENV = "GRAFANA_TOKEN";
 const GCX_LOGIN_TIMEOUT_MS = 15_000;
 
 // The child gets an explicit environment rather than a copy of the worker's.
-// This process holds unrelated credentials — Cloudflare, Buildkite, the GitHub
+// This process holds unrelated credentials — Cloudflare, Woodpecker, the GitHub
 // App key, S3, provider tokens — and handing gcx the whole environment would
 // undo the point of taking the credential out of argv: the secret would simply
 // be reachable one level down instead.

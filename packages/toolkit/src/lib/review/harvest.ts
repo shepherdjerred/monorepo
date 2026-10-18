@@ -45,10 +45,9 @@ export type GateStatus = {
 /**
  * The pipeline a gate status points at.
  *
- * Buildkite wrote the failed JOB into the URL fragment, so a retry could
- * target that one job. Woodpecker links a status at `…/pipeline/<number>` and
- * restarts at pipeline granularity, so this returns the pipeline number and
- * the retry re-runs the gate rather than one job inside it.
+ * Woodpecker links a status at `…/pipeline/<number>` and restarts at pipeline
+ * granularity, so this returns the pipeline number and the retry re-runs the
+ * gate rather than one job inside it.
  */
 export function pipelineNumberFromTargetUrl(
   targetUrl: string | null,

@@ -4,7 +4,7 @@ import {
   materializeManagedNamespaceEnvironment,
 } from "./managed-flag-inventory.ts";
 
-test("production cutover enables native writes while imports and the global fallback stay closed", () => {
+test("production cutover enables native writes while the global fallback stays closed", () => {
   const prod = materializeManagedNamespaceEnvironment(
     managedFlagInventory,
     "prod",
@@ -13,9 +13,6 @@ test("production cutover enables native writes while imports and the global fall
   expect(
     prod.find((flag) => flag.key === "tracker-writes-enabled"),
   ).toMatchObject({ default: true, rollouts: [] });
-  expect(
-    prod.find((flag) => flag.key === "tracker-imports-enabled")?.default,
-  ).toBe(false);
   expect(
     managedFlagInventory.flags.find(
       (flag) => flag.key === "tracker-writes-enabled",

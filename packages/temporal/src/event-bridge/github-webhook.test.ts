@@ -273,7 +273,7 @@ describe("buildWebhookApp per-PR conflict check", () => {
     });
     const app = buildWebhookApp(SECRET, { startConflictCheckPr: startPr });
     const res = await postWebhook(app, makeBaseEvent({ action: "opened" }));
-    // The failure is captured to Sentry, not surfaced to GitHub.
+    // The failure is captured to Bugsink, not surfaced to GitHub.
     expect(res.status).toBe(200);
     expect(startPr).toHaveBeenCalledTimes(1);
   });

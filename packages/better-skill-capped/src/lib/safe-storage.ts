@@ -46,7 +46,7 @@ function resolveBackingStore(): StringStore {
  * happening at any time) are held in an in-memory overlay that reads shadow the
  * backing store with, so a failed write is still visible to this tab. Nothing
  * is silently dropped without a report — the first degradation is reported to
- * Sentry once per session, since a full disk would otherwise emit an event on
+ * Bugsink once per session, since a full disk would otherwise emit an event on
  * every keystroke-driven write.
  */
 export function createSafeStorage(backing: StringStore): StringStore {

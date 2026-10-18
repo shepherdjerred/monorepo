@@ -275,10 +275,10 @@ vi.doMock("@shepherdjerred/birmel/sessions/service.ts", () => ({
 vi.doMock("@shepherdjerred/birmel/sessions/summarization.ts", () => ({
   summarizeSessionIfNeeded: () => Promise.resolve(),
 }));
-vi.doMock("@shepherdjerred/birmel/observability/sentry.ts", () => ({
+vi.doMock("@shepherdjerred/birmel/observability/bugsink.ts", () => ({
   captureException: () => null,
-  clearSentryContext: () => null,
-  setSentryContext: () => null,
+  clearBugsinkContext: () => null,
+  setBugsinkContext: () => null,
 }));
 vi.doMock("@shepherdjerred/birmel/observability/tracing.ts", () => ({
   withSpan: async (

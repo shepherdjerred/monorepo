@@ -227,8 +227,8 @@ export function createQBitTorrentDeployment(
       // spawn, so no probe window could ever have been long enough. The 15min
       // runway is kept purely as storm insurance: under CI-storm IO starvation
       // every start is slow, and a startup-probe SIGKILL mid-recovery is a
-      // dirty shutdown that makes the next attempt slower (the same
-      // kill-during-recovery loop the dagger engine liveness probe had).
+      // dirty shutdown that makes the next attempt slower (a
+      // kill-during-recovery loop).
       startup: Probe.fromTcpSocket({
         port: 8080,
         periodSeconds: Duration.seconds(10),

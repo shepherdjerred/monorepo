@@ -6,7 +6,7 @@
  *
  * 1. Boot: the worker's first real action is `NativeConnection.connect({ address })`
  *    against TEMPORAL_ADDRESS (default localhost:7233). No Temporal server runs in
- *    the smoke, so the worker boots (installs runtime, inits Sentry/tracing/metrics,
+ *    the smoke, so the worker boots (installs runtime, inits Bugsink/tracing/metrics,
  *    logs "Connecting to Temporal server") and then fails to connect. Success =
  *    the worker reached the connect attempt and failed with a connection error
  *    (proves the image boots and the worker bundle loads).
@@ -80,7 +80,7 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "createdb", args: ["createdb", "--version"] },
 ];
 // Reaching this log line proves the worker booted through runtime install,
-// Sentry, tracing, and the metrics server, and is attempting the connection.
+// Bugsink, tracing, and the metrics server, and is attempting the connection.
 const BOOT_LOG = "Connecting to Temporal server";
 const EXPECTED_FAILURE = [
   "connection refused",
@@ -172,7 +172,7 @@ async function main(): Promise<void> {
     "-e",
     "FEATURE_FLAGS_MODE=disabled",
     "-e",
-    "SENTRY_DSN=",
+    "BUGSINK_DSN=",
     IMAGE,
   ]);
   if (run.code !== 0) {

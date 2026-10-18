@@ -10,7 +10,6 @@ import { Collaboration } from "#infrastructure/collaboration.ts";
 import { Catalog } from "#infrastructure/catalog.ts";
 import { Attachments } from "#infrastructure/attachments.ts";
 import { createObjectStore } from "#infrastructure/object-store.ts";
-import { Importer } from "#infrastructure/importer.ts";
 import {
   initializeObservability,
   shutdownObservability,
@@ -33,14 +32,13 @@ const app = createApp({
   collaboration: new Collaboration(database, unit),
   catalog: new Catalog(unit),
   attachments: new Attachments(database, unit, store),
-  importer: new Importer(database, store),
-  importsEnabled: () => behavior.value("importsEnabled"),
   writesEnabled: () => behavior.value("writesEnabled"),
   attachmentMaxBytes: () => behavior.value("attachmentMaxBytes"),
 });
 const server = Bun.serve({
-  // The import contract accepts 100 MiB files encoded as base64 plus JSON.
-  maxRequestBodySize: 150 * 1024 * 1024,
+  // Matches the attachment upload route, which accepts 100 MiB files plus
+  // multipart framing.
+  maxRequestBodySize: 101 * 1024 * 1024,
   hostname: config.HOST,
   port: config.PORT,
   fetch: app.fetch,

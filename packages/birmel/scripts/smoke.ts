@@ -2,9 +2,8 @@
 /**
  * Smoke test for the birmel image.
  *
- * Translated from the old Dagger `smokeTestBirmelHelper`. Boots the bot inside
- * the image with dummy creds and asserts the Discord login fails with the
- * expected auth error:
+ * Boots the bot inside the image with dummy creds and asserts the Discord login
+ * fails with the expected auth error:
  *   - the credential-free code sandbox executes its three languages without
  *     network, Birmel files, or ambient credentials
  *   - the bot boots and Discord login fails with TokenInvalid/401/etc.

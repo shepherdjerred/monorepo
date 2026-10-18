@@ -108,18 +108,18 @@ export function createTasknotesDeployment(chart: Chart) {
           key: "AUTH_TOKEN",
         }),
 
-        // Sentry / Bugsink error reporting
-        SENTRY_ENABLED: EnvValue.fromValue("true"),
-        SENTRY_DSN: EnvValue.fromSecretValue({
+        // Bugsink error reporting
+        BUGSINK_ENABLED: EnvValue.fromValue("true"),
+        BUGSINK_DSN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "tasknotes-sentry-dsn-secret",
+            "tasknotes-bugsink-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "SENTRY_DSN",
+          key: "BUGSINK_DSN",
         }),
-        SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
-        SENTRY_RELEASE: EnvValue.fromValue(
+        BUGSINK_ENVIRONMENT: EnvValue.fromValue("production"),
+        BUGSINK_RELEASE: EnvValue.fromValue(
           firstPartyImageRecipe("tasknotes-server"),
         ),
       },

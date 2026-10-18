@@ -4,8 +4,6 @@
     "esbenp.prettier-vscode",
     "vitest.explorer",
     "astro-build.astro-vscode",
-    "unifiedjs.vscode-mdx",
-    "earthly.earthfile-syntax-highlighting",
-    "glehmann.earthlyls"
+    "unifiedjs.vscode-mdx"
   ]
 }

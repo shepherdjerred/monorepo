@@ -13,7 +13,6 @@ type RunFn = CredentialRun;
 
 const MANAGED_VARS = [
   "GRAFANA_API_KEY",
-  "LINEAR_MIGRATION_API_KEY",
   "POSTHOG_CLI_API_KEY",
   "CF_API_TOKEN",
   "ARGOCD_AUTH_TOKEN",
@@ -142,22 +141,20 @@ describe("credential resolver precedence", () => {
     await withIsolatedEnv(async () => {
       Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "ambient-sa-token";
       const file = await configPath(
-        '[credentials]\nLINEAR_MIGRATION_API_KEY = "op://Custom/Item/field"\n',
+        '[credentials]\nCF_API_TOKEN = "op://Custom/Item/field"\n',
       );
       const calls: string[][] = [];
       const run = stubRun((argv) => {
         expect(argv).toEqual(["op", "read", "op://Custom/Item/field"]);
         return { exit: 0, stdout: "config-sa-secret", stderr: "" };
       }, calls);
-      await resolveCredentials(["LINEAR_MIGRATION_API_KEY"], {
+      await resolveCredentials(["CF_API_TOKEN"], {
         run,
         configPath: file,
       });
-      expect(Bun.env["LINEAR_MIGRATION_API_KEY"]).toBe("config-sa-secret");
+      expect(Bun.env["CF_API_TOKEN"]).toBe("config-sa-secret");
       expect(calls).toHaveLength(1);
-      expect(stderrLines).toContain(
-        "toolkit: LINEAR_MIGRATION_API_KEY via config",
-      );
+      expect(stderrLines).toContain("toolkit: CF_API_TOKEN via config");
     });
   });
 

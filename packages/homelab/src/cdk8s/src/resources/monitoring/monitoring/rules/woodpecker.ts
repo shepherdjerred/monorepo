@@ -157,8 +157,8 @@ ${maintenanceWorkerStaleExpression(TURBO_CACHE_CLEAN_ACTIVITY, 129_600)}`;
  * which of them are exported at all. All three must agree or these joins
  * silently produce nothing.
  *
- * Commit plus step key replaces Buildkite's job UUID. It is very slightly
- * weaker -- a retry of the same step on the same commit shares it -- and the
+ * Commit plus step key identifies one CI step run. It is not quite unique
+ * -- a retry of the same step on the same commit shares it -- and the
  * reporter's integrity check is what turns that into a loud failure rather
  * than misattributed bytes.
  */
@@ -401,11 +401,9 @@ unless on (namespace, pod)
           },
         },
         {
-          // Successor to BuildkiteControllerMetricsMissing, which watched
-          // agent-stack-k8s and its monitor health metric. Woodpecker has
-          // neither: the agent is a plain Deployment holding a gRPC stream to
-          // the server, so the equivalent question is whether an available
-          // agent is actually being scraped by the server.
+          // The agent is a plain Deployment holding a gRPC stream to the
+          // server, so the health question is whether an available agent is
+          // actually connected to the server.
           alert: "WoodpeckerAgentDisconnected",
           annotations: {
             summary: "Woodpecker agents are running but none is connected",

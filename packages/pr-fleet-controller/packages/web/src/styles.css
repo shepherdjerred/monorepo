@@ -415,10 +415,10 @@ body {
   color: var(--warn);
   border-color: var(--warn);
 }
-.bk-failure {
+.ci-failure {
   margin-top: 10px;
 }
-.bk-failure a {
+.ci-failure a {
   color: var(--accent);
 }
 

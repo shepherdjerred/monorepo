@@ -293,8 +293,6 @@ export async function reviewHarvestCommand(
 /**
  * Restart a whole pipeline.
  *
- * Coarser than the Buildkite retry it replaces: that targeted the one failed
- * job, because Buildkite wrote the job id into the status URL fragment.
  * Woodpecker links a status at the pipeline and restarts at that granularity,
  * so this re-runs the gate rather than one step inside it.
  */

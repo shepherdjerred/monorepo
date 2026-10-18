@@ -43,7 +43,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/tasknotes-server \
   packages/tasknotes-types \
-  packages/sentry-config \
+  packages/bugsink-config \
   ./
 
 ENV NODE_ENV=production
@@ -56,7 +56,7 @@ CMD ["bun", "packages/tasknotes-server/src/index.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=tasknotes-server

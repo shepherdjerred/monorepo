@@ -146,7 +146,7 @@ export type AgentSigkillEscalation = {
  * The terminal observation set produced by
  * {@link runTrackedAgentSubprocess}. Activity callers use these fields to
  * decide success/failure, emit per-activity metrics, and choose what to
- * attach to their span / Sentry capture.
+ * attach to their span / Bugsink capture.
  */
 export type TrackedAgentResult = {
   /** Full raw (UN-redacted) stdout, for result parsing. */

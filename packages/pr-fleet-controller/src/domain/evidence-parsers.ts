@@ -118,12 +118,9 @@ export function parseChecks(text: string): RawCheck[] {
 /**
  * Normalise raw GitHub checks into evidence.
  *
- * There is no soft-failure correlation any more. Buildkite reported advisory
- * scanner findings as a failed job flagged `soft_failed`, so this had to fetch
- * the whole build and match each check to its job to avoid counting a Trivy
- * finding as blocking. The advisory lanes now decide inside their own command
- * and exit 0 when findings are not fatal, so a failed check is simply a
- * failure.
+ * There is no soft-failure correlation. Advisory scanner lanes decide inside
+ * their own command and exit 0 when findings are not fatal, so a failed check
+ * is simply a failure.
  */
 export function checksAsEvidence(checks: RawCheck[]): CheckEvidence[] {
   return checks.map((check) => CheckEvidenceSchema.parse(check));

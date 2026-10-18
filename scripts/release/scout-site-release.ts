@@ -158,12 +158,12 @@ async function buildSite(
   const identity = siteReleaseIdentity(state);
   const posthogSite = await readScoutPostHogSite(repoRoot(), flavor);
   const env: Record<string, string> = {
-    // Sentry and the archive keep `identity` (scout-site@sha256:…), the
+    // Bugsink and the archive keep `identity` (scout-site@sha256:…), the
     // content-addressed id. No build number or commit is baked in: the
     // deployed backend reports both through GET /api/version, so unchanged
     // inputs rebuild to identical bytes.
-    VITE_SENTRY_RELEASE: identity,
-    PUBLIC_SENTRY_RELEASE: identity,
+    VITE_BUGSINK_RELEASE: identity,
+    PUBLIC_BUGSINK_RELEASE: identity,
     VITE_CONTRACT_HASH: await contractHash(),
     VITE_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
     VITE_POSTHOG_API_HOST: posthogSite.proxyHost,

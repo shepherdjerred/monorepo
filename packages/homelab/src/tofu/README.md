@@ -244,8 +244,7 @@ because that resource returns the newly created key. The sensitive output pairs
 that key with one or more existing 1Password rotation units for the
 operator-controlled handoff. Existing projects carry their permanent import IDs;
 every inference workload and environment has its own project and service
-account, with a hard spend limit, a spend alert, and a model allowlist. The
-retired OpenRouter project is archived in OpenAI and no longer managed here.
+account, with a hard spend limit, a spend alert, and a model allowlist.
 OpenAI subscription/Codex authentication is a separate boundary.
 
 OpenAI rejects reads of a service account in an archived project, and OpenTofu
@@ -271,7 +270,9 @@ manual bootstrap steps. The committed key metadata records the existing
 1Password rotation unit, including a JSON path when needed, that receives a
 manually created replacement. Archived keys retain their ID, name, and status
 without a vault rotation target. Destruction protection keeps this metadata
-managed even after the credential has been retired.
+managed even after the credential has been retired. To stop managing a key,
+remove it from desired state and forget it with a `moved` plus `removed` block
+in `migrations.tf`; destroying it is blocked.
 
 ### Anthropic workload identity federation
 
@@ -374,9 +375,8 @@ enforce client-side
 AES-GCM encryption for state and saved plans from their first write. They have
 no plaintext fallback because no prior remote object exists.
 
-The eight established plaintext states are deliberately unchanged. Their
-backup, migration, restore proof, and enforcement are tracked in
-[SJ-171](https://linear.app/sjerred/issue/SJ-171/enforce-encryption-for-eight-legacy-opentofu-states);
+The eight established plaintext states are deliberately unchanged. Migrating
+one needs its own backup, migration, restore proof, and enforcement change;
 do not add a fallback or flip enforcement casually in an unrelated provider
 change.
 

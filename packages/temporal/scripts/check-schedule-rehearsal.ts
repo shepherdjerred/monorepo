@@ -131,7 +131,7 @@ async function main(): Promise<void> {
     // Point every install the rehearsal performs (its scratch-clone plain
     // `bun install`, plus any nested install) at a scratch-local Bun cache. In
     // CI the pipeline sets BUN_INSTALL_CACHE_DIR to the shared PVC
-    // (/buildkite/bun-cache/data), but the rehearsal's installs bypass
+    // (/woodpecker/bun-cache/data), but the rehearsal's installs bypass
     // bun-install.sh and never take the collector's shared lock — writing to the
     // shared cache would let the five-minute collector delete entries
     // mid-install. This scratch cache lives under workDir and is removed with it.

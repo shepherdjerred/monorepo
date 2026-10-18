@@ -104,7 +104,7 @@ for prerequisites, artifact definitions, verification evidence, versioning,
 and troubleshooting.
 
 The Linux repository gate runs the portable `lint:swift` task. A changed-path,
-hard Buildkite lane named `quotabar-macos` waits for Linux `verify` and then
+hard Woodpecker lane named `quotabar-macos` waits for Linux `verify` and then
 runs the complete `verify:macos` suite on the serial native `macos` queue for
 both PRs and `main`. Developer ID export, notarization, installation, and
 release remain explicit operator-only workflows.

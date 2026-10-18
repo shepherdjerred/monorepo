@@ -1,23 +1,16 @@
 /**
  * Kueue capacity and admission panels for CI.
  *
- * Kept when the Buildkite dashboard was removed: Kueue still admits CI work --
- * now Woodpecker's pods, through the pod integration -- and still enforces the
- * node's CPU, memory and ephemeral-storage quotas. The agent-health panels DID go: they read
- * the agent stack's own metrics, which have no Woodpecker counterpart.
+ * Kueue admits Woodpecker's pods through the pod integration and enforces the
+ * node's CPU, memory and ephemeral-storage quotas.
  *
- * The I/O panels are rebuilt at the bottom of this file. They are the same
- * charts, re-pointed at the `woodpecker:` recording rules and at the step-key
- * label the configuration extension stamps.
+ * The I/O panels at the bottom of this file read the `woodpecker:` recording
+ * rules and the step-key label the configuration extension stamps.
  */
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import { createTimeseriesPanel } from "./dashboard-panels.ts";
 /**
  * Physical block devices, excluding partitions and virtual devices.
- *
- * Inlined when the Buildkite dashboard was removed -- it lived in that
- * directory's I/O query module, but it describes the node's disks rather than
- * anything CI-provider specific.
  */
 const PHYSICAL_DISK_PATTERN = "nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|xvd[a-z]+";
 

@@ -257,7 +257,7 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
       traces: [
         {
           traceId: "t-slow",
-          rootServiceName: "openrouter",
+          rootServiceName: "openai",
           rootTraceName: "LLM Generation",
           startedAt: new Date(ago(5)),
           durationMs: 9000,

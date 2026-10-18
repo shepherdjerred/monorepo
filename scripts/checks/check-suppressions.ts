@@ -59,9 +59,9 @@ const EXCLUDED_FILES = [
   "packages/delivery/src/client/router.tsx",
   // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
   "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
-  // Intentional: Sentry ErrorBoundary class types incompatible with React 19
+  // Intentional: Sentry SDK ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
-  // Intentional: Sentry ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
+  // Intentional: Sentry SDK ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
   "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
   "packages/temporal/src/activities/fetcher.ts",
@@ -81,7 +81,7 @@ const EXCLUDED_FILES = [
   "CLAUDE.md",
   "packages/docs/wiki/",
   // Package-local documentation moved out of packages/docs/ (the working-document
-  // system retired in favor of Linear): operator runbooks and setup guides are prose,
+  // system retired in favor of Tracker): operator runbooks and setup guides are prose,
   // not automation code, and legitimately show example shell commands containing
   // banned-pattern text (e.g. the Velero runbook's `zfs list ... 2>/dev/null`).
   "packages/temporal/runbooks/",

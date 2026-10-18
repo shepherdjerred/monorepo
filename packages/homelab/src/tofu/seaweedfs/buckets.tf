@@ -473,8 +473,7 @@ resource "terraform_data" "scout_site_releases_lifecycle" {
 
 # Build-scoped CI handoff and artifact store. Steps pass values to later steps
 # in the same pipeline as `<pipeline number>/<key>.json`, and directory trees
-# under `artifacts/` — scripts/lib/ci/ci-handoff.ts and ci-artifact.ts, which
-# together replace Buildkite's meta-data and artifact stores.
+# under `artifacts/` — see scripts/lib/ci/ci-handoff.ts and ci-artifact.ts.
 #
 # Declared so the handoff S3 identity has a bucket named in IaC to be scoped
 # against. That identity is not repo-managed: SeaweedFS reads its identities

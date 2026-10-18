@@ -23,7 +23,7 @@ function activityInfoOrUndefined(): Record<string, unknown> | undefined {
 
 export function createActivityObservability(
   component: string,
-  sentryContextName: string,
+  bugsinkContextName: string,
 ): {
   jsonLog: (
     level: LogLevel,
@@ -57,7 +57,7 @@ export function createActivityObservability(
           scope.setTag("workflow", String(info["workflow"]));
           scope.setTag("activity", String(info["activity"]));
         }
-        scope.setContext(sentryContextName, { ...info, ...extra });
+        scope.setContext(bugsinkContextName, { ...info, ...extra });
         Sentry.captureException(error);
       });
     },

@@ -53,7 +53,7 @@ namespace TaskNotes.Windows.Tests
                 System.Globalization.CultureInfo.InvariantCulture
             );
             startInfo.Environment["AUTH_TOKEN"] = authToken;
-            startInfo.Environment["SENTRY_DSN"] = string.Empty;
+            startInfo.Environment["BUGSINK_DSN"] = string.Empty;
 
             _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             _process.OutputDataReceived += CaptureOutput;

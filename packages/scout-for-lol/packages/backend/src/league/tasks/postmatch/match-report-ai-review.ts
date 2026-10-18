@@ -210,7 +210,7 @@ export async function generateAiReviewIfEnabled(
   } catch (error) {
     if (error instanceof LlmBudgetExceeded) {
       // Expected outcome of the circuit breaker, not a bug — log as info,
-      // skip Sentry to avoid alert noise. The breaker has already
+      // skip Bugsink to avoid alert noise. The breaker has already
       // incremented its Prometheus counter.
       logger.info(
         `[generateMatchReport] Skipping AI review - ${error.message}`,

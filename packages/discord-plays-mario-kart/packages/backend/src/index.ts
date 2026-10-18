@@ -107,7 +107,7 @@ driverFeed?.setAdmission(
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-mario-kart",
-  sentryDsn: "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
+  bugsinkDsn: "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
   logger,
   wiring: {
     botToken: config.bot.discord_token,

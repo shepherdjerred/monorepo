@@ -35,7 +35,7 @@ function isEventBridgeSupervisorClosed(
   return state.closed;
 }
 
-/** Consecutive start failures before escalating the outage to Sentry. */
+/** Consecutive start failures before escalating the outage to Bugsink. */
 const EVENT_BRIDGE_ESCALATION_ATTEMPTS = 10;
 
 async function runEventBridgeSupervisor(
@@ -64,7 +64,7 @@ async function runEventBridgeSupervisor(
         // which previously meant a permanently-down bridge (no HA presence
         // signals, no webhooks) only ever showed up as stderr lines and a
         // gauge nobody was alerting on. Ten consecutive failures ≈ 9 minutes
-        // of outage — loud enough for Sentry, once (attempt only grows
+        // of outage — loud enough for Bugsink, once (attempt only grows
         // within a single outage; success exits the loop).
         if (attempt === EVENT_BRIDGE_ESCALATION_ATTEMPTS) {
           Sentry.captureMessage(

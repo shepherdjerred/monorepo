@@ -6,7 +6,7 @@ import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-to
 import { z } from "zod";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";

@@ -47,7 +47,7 @@ describe("observeBucksDelivery", () => {
     expect(await countOf(labels)).toBe(before + 1);
   });
 
-  // Rethrowing is load-bearing: every caller owns its own catch and Sentry
+  // Rethrowing is load-bearing: every caller owns its own catch and Bugsink
   // semantics, and announce.ts's per-channel isolation depends on seeing the
   // error. Swallowing here would silently change product behaviour.
   test("classifies a permission failure and rethrows it unchanged", async () => {

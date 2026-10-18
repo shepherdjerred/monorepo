@@ -1,5 +1,5 @@
 // Pure report assembly for the weekly link-rot scan — no I/O, no
-// Sentry/observability imports, so the workflow bundle can import it directly
+// Bugsink/observability imports, so the workflow bundle can import it directly
 // (same pattern as main-vuln-scan-report.ts).
 import type { DeadLink, LinkRotScanResult } from "./link-rot-scan.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";

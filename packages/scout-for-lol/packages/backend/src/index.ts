@@ -1,8 +1,8 @@
 import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import { createLogger } from "#src/logger.ts";
-import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
+import { filterScoutBugsinkEvent } from "#src/bugsink-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
 import { temporalCallGraphTracing } from "#src/config/dynamic.ts";
 import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
@@ -31,28 +31,28 @@ if (
 }
 
 if (
-  configuration.sentryDsn !== undefined &&
-  configuration.sentryDsn.length > 0
+  configuration.bugsinkDsn !== undefined &&
+  configuration.bugsinkDsn.length > 0
 ) {
-  logger.info("🔍 Initializing Sentry error tracking");
+  logger.info("🔍 Initializing Bugsink error tracking");
   Sentry.init({
-    dataCollection: sentryDataCollection(),
-    dsn: configuration.sentryDsn,
+    dataCollection: bugsinkDataCollection(),
+    dsn: configuration.bugsinkDsn,
     environment: configuration.environment,
-    // Scout's NodeSDK owns the global OpenTelemetry providers. Sentry remains
+    // Scout's NodeSDK owns the global OpenTelemetry providers. The Sentry SDK remains
     // responsible for error tracking without attempting a second registration.
     enableOpenTelemetrySetup: false,
     // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
     // events per deploy and matches what ArgoCD reports.
     release: configuration.version,
     // Drop expected noise (Riot upstream 5xx, boundary Riot-ID validation)
-    // before it leaves the SDK. See packages/backend/src/sentry-filters.ts
+    // before it leaves the SDK. See packages/backend/src/bugsink-filters.ts
     // for the rationale.
-    beforeSend: filterScoutSentryEvent,
+    beforeSend: filterScoutBugsinkEvent,
   });
-  logger.info("✅ Sentry initialized successfully");
+  logger.info("✅ Bugsink initialized successfully");
 } else {
-  logger.info("⚠️  Sentry DSN not configured, error tracking disabled");
+  logger.info("⚠️  Bugsink DSN not configured, error tracking disabled");
 }
 
 // Initialize metrics (must be imported early to set up metrics collection)

@@ -59,7 +59,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/starlight-karma-bot \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/feature-flags \
   ./
 # Bake Prisma's engines into the production dependency tree. Bun's production
@@ -103,7 +103,7 @@ CMD ["bun", "scripts/start.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=starlight-karma-bot

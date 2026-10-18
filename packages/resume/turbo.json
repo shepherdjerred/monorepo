@@ -6,8 +6,8 @@
       // resume.pdf is this task's OUTPUT — gitignored (xelatex output is
       // nondeterministic: it embeds CreationDate, so it must never be hashed
       // as an input) and restored from the turbo cache. CI builds it in the
-      // resume-build step's texlive container and ships it as a Buildkite
-      // artifact for the deploy-sites step.
+      // resume-build step's texlive container and ships it through the CI
+      // handoff store for the site deploy step.
       "outputs": ["*.pdf"]
     }
   }

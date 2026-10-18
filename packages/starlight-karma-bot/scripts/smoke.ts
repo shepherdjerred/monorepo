@@ -2,11 +2,11 @@
 /**
  * Smoke test for the starlight-karma-bot image.
  *
- * Translated from the old Dagger `smokeTestStarlightKarmaBotHelper`: boot with
- * dummy Discord creds and a writable DATA_DIR; the bot loads config, starts, and
- * attempts a Discord login that must fail with the expected auth error. Success
- * = the container's logs contain one of the expected auth-failure patterns (the
- * app got far enough to attempt login with the invalid token).
+ * Boot with dummy Discord creds and a writable DATA_DIR; the bot loads config,
+ * starts, and attempts a Discord login that must fail with the expected auth
+ * error. Success = the container's logs contain one of the expected
+ * auth-failure patterns (the app got far enough to attempt login with the
+ * invalid token).
  *
  * Dependency-free: Bun.spawn only. Always removes the container, exits non-zero
  * on failure.

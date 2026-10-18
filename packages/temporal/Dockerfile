@@ -76,7 +76,7 @@ COPY --parents \
   packages/mc-harness/src/protocol \
   packages/mc-build/src/registry/lighting.ts \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/ops-model \
   packages/ops-clients \
@@ -273,8 +273,8 @@ RUN set -e; \
     velero version --client-only
 
 # --- Woodpecker CLI (per-arch tarball, SHA256-verified) ---
-# Replaces the Buildkite CLI. `toolkit woodpecker` shells out to this binary,
-# and the homelab audit's CI preflight runs through it.
+# `toolkit woodpecker` shells out to this binary, and the homelab audit's CI
+# preflight runs through it.
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in amd64) wparch=amd64 ;; arm64) wparch=arm64 ;; \
@@ -478,7 +478,7 @@ COPY --parents \
   packages/homelab/src/domain-registry.json \
   packages/temporal-observability \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/feature-flags \
   packages/code-review \

@@ -76,7 +76,7 @@ describe("ContractMismatchBanner", () => {
 
   test("names the archive identity and the backend version, never a baked app version", async () => {
     const markup = await renderBanner(
-      { VITE_CONTRACT_HASH: "app-hash", VITE_SENTRY_RELEASE: ARCHIVE },
+      { VITE_CONTRACT_HASH: "app-hash", VITE_BUGSINK_RELEASE: ARCHIVE },
       backendVersion(),
     );
     expect(markup).toContain(

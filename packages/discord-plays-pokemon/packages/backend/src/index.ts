@@ -81,7 +81,7 @@ const driver = new PokemonGameDriver({ config, goalGuildIds, driverFeed });
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-pokemon",
-  sentryDsn: "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
+  bugsinkDsn: "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   logger,
   // Wrap the batch span processor with the LLM archive layer: spans carrying
   // gen_ai.* body attributes get a copy of their bodies gzipped to SeaweedFS;

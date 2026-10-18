@@ -33,11 +33,9 @@ is required. Mutations identify the runner as `justin:<issue identifier>` and
 record the configured model with the toolkit's host/git metadata. Autonomous
 authorization uses the Developer Experience project slug. Existing task-state
 snapshots still parse, and issue refreshes replace their service data by identifier.
-Replace the former `linear` configuration block before running this version,
-then build and install the matching toolkit with
+Build and install the matching toolkit with
 `bun run --cwd packages/toolkit build` and
 `bun run --cwd packages/toolkit install:local` before restarting the runner.
-Reinstall the LaunchAgent to remove its obsolete Linear credential reference.
 
 New task checkouts live in `tasks.noindex` so macOS Spotlight excludes their
 source files and build output. Existing tasks retain their saved checkout paths

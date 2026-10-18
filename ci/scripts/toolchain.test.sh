@@ -126,9 +126,8 @@ if rg -Fq 'BUN_INSTALL_LOCK_MODE=shared' "$REVIEW_GATE" ||
   exit 1
 fi
 
-# The bash guarantee moved from the agent to the pipeline: Buildkite took a
-# `shell` setting in the agent config, while Woodpecker's local backend reads
-# the step's `image` field as the interpreter. The native steps source
+# Woodpecker's local backend reads the step's `image` field as the
+# interpreter. The native steps source
 # macos-native-env.sh, so that field must stay `bash`.
 if ! rg -Fq 'image: "bash"' "$MACOS_LANES"; then
   echo "macOS lanes must pin bash as the local-backend interpreter for macos-native-env.sh" >&2

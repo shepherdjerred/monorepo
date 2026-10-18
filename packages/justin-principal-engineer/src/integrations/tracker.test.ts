@@ -26,7 +26,7 @@ function issue(input: {
     identifier: input.identifier,
     title: input.identifier,
     description: null,
-    url: `https://linear.app/example/issue/${input.identifier}`,
+    url: `https://tracker.tailnet-1a49.ts.net/issues/${input.identifier}`,
     priority: input.priority ?? 0,
     ...(input.teamKey === null
       ? {}

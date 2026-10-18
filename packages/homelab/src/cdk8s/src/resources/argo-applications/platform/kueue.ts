@@ -24,10 +24,10 @@ manageJobsWithoutQueueName: true
 managedJobsNamespaceSelector:
   matchLabels:
     kueue.x-k8s.io/managed-namespace: "true"
-# Buildkite runs checkout as a regular container that exits after cloning.
-# Its pod stays NotReady while the command container runs, so Kueue 0.19's
-# default 30m PodsReady timeout evicts healthy long-running CI jobs. Keep
-# quota admission; disable only the incompatible readiness eviction.
+# Kueue's PodsReady timeout (30m) evicts and requeues a workload whose pods
+# are not Ready in time. Woodpecker step pods can legitimately sit unready
+# behind slow image pulls on the CI node, and a requeue only discards that
+# progress. Keep quota admission; disable only the readiness eviction.
 featureGates:
   DisableWaitForPodsReady: true
 health:

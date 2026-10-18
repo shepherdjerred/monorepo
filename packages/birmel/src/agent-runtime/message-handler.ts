@@ -30,10 +30,10 @@ import { markEngaged } from "@shepherdjerred/birmel/discord/engagement-tracker.t
 import { getConversationTranscriptResult } from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
 import {
   captureException,
-  clearSentryContext,
-  setSentryContext,
+  clearBugsinkContext,
+  setBugsinkContext,
   type DiscordContext,
-} from "@shepherdjerred/birmel/observability/sentry.ts";
+} from "@shepherdjerred/birmel/observability/bugsink.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { memoryExtractionTotal } from "@shepherdjerred/birmel/observability/metrics.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
@@ -211,7 +211,7 @@ async function processAdmittedTurn(
     username: context.turn.username,
     messageId: context.turn.discordMessageId,
   };
-  setSentryContext(discordContext);
+  setBugsinkContext(discordContext);
   try {
     responseMessage = await withDiscordDelivery({
       context,
@@ -424,7 +424,7 @@ async function processAdmittedTurn(
       extra: { runId, incidentId: reference },
     });
   } finally {
-    clearSentryContext();
+    clearBugsinkContext();
   }
 }
 

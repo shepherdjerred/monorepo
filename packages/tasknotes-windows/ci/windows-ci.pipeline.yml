@@ -1,6 +1,6 @@
 # Prepared only. Nothing generates or runs this file: the pipeline graph comes
 # from the configuration extension in packages/woodpecker-config-extension, and
-# no lane there emits these steps. Activation is blocked by Linear issue SJ-134
+# no lane there emits these steps. Activation is blocked by Tracker issue AI-148
 # on a real unlocked Windows desktop session.
 #
 # Kept in Woodpecker's own shape rather than as prose so the contract it

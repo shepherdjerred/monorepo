@@ -260,10 +260,10 @@ exits with status 42, and the step treats that status alone as advisory.
 Findings, unresolved threads, timeouts, and every other error exit with
 another status and still fail the required gate.
 
-There is one path rather than two. Buildkite offered build metadata for small
-values and artifacts for large ones, so every handoff had to choose, and image
-digests spilled from one to the other as they grew. Woodpecker has neither, and
-one storage path with no size threshold is simpler than reimplementing both.
+There is one path rather than two. Woodpecker has no build metadata store or
+artifact store. One storage path with no size threshold is simpler than
+separate small-value and large-value stores. No handoff has to choose between
+them, and a value that grows never moves from one to the other.
 
 Reads fail loudly by design. A defaulted `{}` would let a release step deploy
 nothing and report success.
@@ -367,10 +367,9 @@ service account without a RoleBinding and disables service-account token
 mounting, so a step cannot use Kubernetes RBAC to discover another Secret.
 
 :::caution
-Step logs are **not** redacted. Buildkite masked values matching configured
-globs and accepted runtime registrations from a `pre-command` hook; Woodpecker
-masks only secrets from its own store, and native Kubernetes secrets are
-external to it. Keeping credentials in 1Password costs the redactor. Do not echo
+Step logs are **not** redacted. Woodpecker masks only secrets from its own
+store, and native Kubernetes secrets are external to it. Keeping credentials in
+1Password costs the redactor. Do not echo
 a credential in a step command.
 :::
 

@@ -32,7 +32,7 @@ pub type ReportingGuard = ClientInitGuard;
 /// is why this is a literal rather than a secret, matching
 /// `packages/tasks-for-obsidian/App.tsx`. While it is empty the reporter is
 /// simply not installed, the same way the server-side initialisers treat an
-/// unset `SENTRY_DSN`.
+/// unset `BUGSINK_DSN`.
 const BUGSINK_DSN: &str = "";
 
 /// How long shutdown waits for queued reports before giving up.

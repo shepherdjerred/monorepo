@@ -1,4 +1,4 @@
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 import { DeliveryResultSchema } from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
 import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
 import { appendSessionEvent } from "@shepherdjerred/birmel/sessions/service.ts";

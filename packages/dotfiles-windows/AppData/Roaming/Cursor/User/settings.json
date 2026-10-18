@@ -50,9 +50,7 @@
   "explorer.confirmDragAndDrop": false,
   "explorer.fileNesting.enabled": true,
   "files.associations": {
-    "*.mdx": "mdx",
-    ".earthlyignore": "ignore",
-    "Earthfile": "earthfile"
+    "*.mdx": "mdx"
   },
   "files.autoSave": "afterDelay",
   "files.insertFinalNewline": true,

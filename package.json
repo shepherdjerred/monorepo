@@ -158,7 +158,7 @@
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/temporal",
     "packages/s3-signed-request",
-    "packages/sentry-config",
+    "packages/bugsink-config",
     "packages/sjer.red",
     "packages/starlight-karma-bot",
     "packages/statically-typed",

@@ -115,10 +115,7 @@ const ZFS_DASHBOARD: DashboardConfig = {
   exportFn: exportZfsDashboardJson,
 };
 
-// Successor to the Buildkite dashboard, reduced to the Kueue capacity and
-// admission panels. The agent-health and per-job I/O panels keyed off
-// Buildkite-specific metrics and pod labels and have to be rebuilt against
-// Woodpecker's once the new CI has produced data.
+// Kueue capacity and admission panels plus the Woodpecker CI I/O panels.
 const CI_CAPACITY_DASHBOARD: DashboardConfig = {
   id: "ci-capacity-dashboard-configmap",
   name: "ci-capacity-dashboard",

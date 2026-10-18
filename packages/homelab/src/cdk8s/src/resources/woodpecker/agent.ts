@@ -158,8 +158,7 @@ function createAgentDeployment(
         WOODPECKER_BACKEND_K8S_NAMESPACE: EnvValue.fromValue(
           WOODPECKER_CI_NAMESPACE,
         ),
-        // Cluster-wide concurrency bound; successor to the agent stack's
-        // count-based max-in-flight cap.
+        // Cluster-wide, count-based concurrency bound.
         WOODPECKER_MAX_WORKFLOWS: EnvValue.fromValue(
           (config?.maxWorkflows ?? WOODPECKER_MAX_WORKFLOWS).toString(),
         ),
@@ -178,9 +177,8 @@ function createAgentDeployment(
             }),
 
         // Steps reference existing Kubernetes Secrets by exact key through
-        // `backend_options.kubernetes.secrets`. This preserves the per-step
-        // grant boundary the Buildkite pipeline enforced with `secretKeyRef`,
-        // and keeps credentials in 1Password-synced Secrets instead of
+        // `backend_options.kubernetes.secrets`. This keeps a per-step
+        // `secretKeyRef` grant boundary, and keeps credentials in 1Password-synced Secrets instead of
         // Woodpecker's own secret store.
         //
         // SECURITY: this lets anyone who can push a branch reference any

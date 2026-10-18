@@ -16,13 +16,13 @@ export async function writeCodexFixture(
     "CREATE TABLE thread_items (thread_id TEXT, turn_id TEXT, item_id TEXT, rollout_ordinal INTEGER, created_at_ms INTEGER, item_json TEXT, item_type TEXT, updated_at_ordinal INTEGER, PRIMARY KEY (thread_id, turn_id, item_id));",
     (database) => {
       database.run(
-        "INSERT INTO thread_items VALUES ('t1', 'turn', 'item', 1, 1786406400000, '{\"type\":\"userMessage\",\"text\":\"Repair Buildkite pipeline\"}', 'userMessage', 0)",
+        "INSERT INTO thread_items VALUES ('t1', 'turn', 'item', 1, 1786406400000, '{\"type\":\"userMessage\",\"text\":\"Repair Woodpecker pipeline\"}', 'userMessage', 0)",
       );
       database.run(
         "INSERT INTO thread_items VALUES ('t1', 'turn', 'reasoning', 2, 1786406401000, '{\"text\":\"omit-codex-reasoning\"}', 'reasoning', 0)",
       );
       database.run(
-        "INSERT INTO thread_items VALUES ('t1', 'turn', 'tool', 3, 1786406402000, '{\"command\":\"bk build view\"}', 'commandExecution', 0)",
+        "INSERT INTO thread_items VALUES ('t1', 'turn', 'tool', 3, 1786406402000, '{\"command\":\"toolkit woodpecker pipeline view\"}', 'commandExecution', 0)",
       );
     },
   );

@@ -2,10 +2,9 @@
 /**
  * Smoke test for the trmnl-dashboard image.
  *
- * Translated from the old Dagger `smokeTestTrmnlDashboardHelper`: Zod config
- * parses with the required env vars present and Bun.serve binds to port 3000.
- * Success = the "listening on :3000" boot log line (the old test's expected
- * pattern). No external auth is attempted at boot.
+ * Zod config parses with the required env vars present and Bun.serve binds to
+ * port 3000. Success = the "listening on :3000" boot log line. No external
+ * auth is attempted at boot.
  *
  * Dependency-free: Bun.spawn only. Always removes the container, exits non-zero
  * on failure.

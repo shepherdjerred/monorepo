@@ -101,7 +101,7 @@ export const LoggingConfigSchema = z.object({
   level: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
-export const SentryConfigSchema = z.object({
+export const BugsinkConfigSchema = z.object({
   enabled: z.boolean().default(false),
   dsn: z.string().optional(),
   environment: z
@@ -109,7 +109,6 @@ export const SentryConfigSchema = z.object({
     .default("development"),
   release: z.string().optional(),
   sampleRate: z.number().min(0).max(1).default(1),
-  // Bugsink does not support performance monitoring; keep traces off.
   // Bugsink accepts errors only; OpenTelemetry owns performance traces.
   tracesSampleRate: z.literal(0).default(0),
   // When true, the SDK prints its internal transport/queue activity to stderr
@@ -209,7 +208,7 @@ export const ConfigSchema = z.object({
   dailyPosts: DailyPostsConfigSchema,
   externalApis: ExternalApisSchema,
   logging: LoggingConfigSchema,
-  sentry: SentryConfigSchema,
+  bugsink: BugsinkConfigSchema,
   persona: PersonaConfigSchema,
   responder: ResponderConfigSchema,
   scheduler: SchedulerConfigSchema,
@@ -229,7 +228,7 @@ export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;
 export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
-export type SentryConfig = z.infer<typeof SentryConfigSchema>;
+export type BugsinkConfig = z.infer<typeof BugsinkConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
 export type ResponderConfig = z.infer<typeof ResponderConfigSchema>;
 export type SchedulerConfig = z.infer<typeof SchedulerConfigSchema>;

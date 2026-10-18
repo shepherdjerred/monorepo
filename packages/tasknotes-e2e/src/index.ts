@@ -154,7 +154,7 @@ export class ScenarioEnvironment {
             TASKS_DIR: options.tasksDirectory ?? "TaskNotes",
             AUTH_TOKEN: authToken,
             PORT: String(serverPort),
-            SENTRY_ENABLED: "false",
+            BUGSINK_ENABLED: "false",
           },
           artifactDirectory,
           secrets: [authToken],

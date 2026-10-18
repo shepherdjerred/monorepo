@@ -378,9 +378,9 @@ toolkit prom query 'up{namespace="temporal",service=~".*temporal.*worker.*metric
 
 The corresponding warning alerts use a five-minute window. Do not change
 replicas or concurrency until the poller, schedule-to-start, and scrape data
-show starvation. The one-time post-deploy canary is an operator action tracked
-in Linear, not part of this recurring report-only audit. Keep that issue open
-until the canary and seven consecutive daily audits pass.
+show starvation. The one-time post-deploy canary is a separate operator action,
+not part of this recurring report-only audit. It is complete once the canary
+and seven consecutive daily audits pass.
 
 ## Section 11: CI on `main`
 

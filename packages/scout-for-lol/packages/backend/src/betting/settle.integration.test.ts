@@ -40,7 +40,7 @@ import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { BucksCorruptIdentityError } from "#src/betting/settlement/corrupt-identity.ts";
 import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting/betting.ts";
 
-// Sentry is spied so the corrupt-row classification can be asserted; every
+// Bugsink is spied so the corrupt-row classification can be asserted; every
 // other export on the module stays real.
 const { captureException } = vi.hoisted(() => ({
   captureException: vi.fn((..._args: unknown[]): string => ""),
@@ -860,7 +860,7 @@ describe("corrupt stored identity", () => {
       }),
     ).toEqual({ betOutcome: "pending" });
     // The failure is classified, not swallowed: the dedicated corrupt-row
-    // metric and Sentry event identify the pool, bet, and field so an
+    // metric and Bugsink event identify the pool, bet, and field so an
     // operator can repair the row.
     expect(await corruptRowsObserved("subject_puuid")).toBe(observedBefore + 1);
     expect(captureException).toHaveBeenCalledWith(

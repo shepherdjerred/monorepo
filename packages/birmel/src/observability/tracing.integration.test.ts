@@ -2,7 +2,7 @@
 // OTLP HTTP POST to /v1/traces. Embeds an ephemeral Bun.serve receiver on a
 // dynamically-allocated port (port: 0) so concurrent CI runs don't collide.
 //
-// This guards against Sentry registering OTel globals before Birmel's explicit
+// This guards against the Sentry SDK registering OTel globals before Birmel's explicit
 // provider, which would route spans to a no-OTLP provider.
 
 // Env must be set before the observability module loads — getConfig() runs a
@@ -13,12 +13,12 @@ Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
 Bun.env["OPENAI_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";
-// Sentry stays enabled with an unreachable DSN so we actually exercise the
+// The Sentry SDK stays enabled with an unreachable DSN so we actually exercise the
 // enableOpenTelemetrySetup: false path. tracesSampleRate=0 keeps the SDK quiet.
-Bun.env["SENTRY_ENABLED"] = "true";
-Bun.env["SENTRY_DSN"] = "https://public@127.0.0.1:1/0";
-Bun.env["SENTRY_ENVIRONMENT"] = "development";
-Bun.env["SENTRY_TRACES_SAMPLE_RATE"] = "0";
+Bun.env["BUGSINK_ENABLED"] = "true";
+Bun.env["BUGSINK_DSN"] = "https://public@127.0.0.1:1/0";
+Bun.env["BUGSINK_ENVIRONMENT"] = "development";
+Bun.env["BUGSINK_TRACES_SAMPLE_RATE"] = "0";
 
 import { describe, expect, test, beforeAll, afterAll } from "vitest";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";

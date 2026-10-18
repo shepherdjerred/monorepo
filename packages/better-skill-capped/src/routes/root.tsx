@@ -23,7 +23,7 @@ export function NotFound(): React.ReactElement {
   );
 }
 
-// Sentry reporting happens in the router-level defaultOnCatch
+// Bugsink reporting happens in the router-level defaultOnCatch
 // (src/router.tsx); this component only renders the failure state.
 function RootError({
   error,

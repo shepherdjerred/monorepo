@@ -20,14 +20,14 @@ lifecycle, operation ownership, and prune checks.
 sequenceDiagram
   accTitle: Homelab release sequence
   accDescr: CI publishes immutable artifacts. Delivery qualifies and selects their exact versions, then executes guarded root reconciliation with owned operations and safe pruning.
-  participant BK as CI
+  participant CI
   participant CM as ChartMuseum
   participant D as Delivery and Temporal
   participant Root as apps Application
   participant Child as child Applications
 
-  BK->>CM: publish 2.0.0-build charts
-  BK->>D: register original artifact provenance
+  CI->>CM: publish 2.0.0-build charts
+  CI->>D: register original artifact provenance
   D->>D: qualify complete producing pipeline and freeze selection
   D->>Root: suspend current repository auto-sync
   D->>Root: stage child specs and prerequisites, still suspended

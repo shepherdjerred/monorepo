@@ -153,7 +153,7 @@ const MACOS_TIMEOUT = "/opt/homebrew/bin/gtimeout";
  */
 export function wrapCommands(step: CiStep): string[] {
   const seconds = step.timeoutMinutes * 60;
-  // Buildkite already published 2.0.0-17xxx charts and images. Woodpecker's
+  // Historical 2.0.0-17xxx charts and images already exist. Woodpecker's
   // pipeline counter starts near zero, so release versions need a new range.
   const body = [
     'export CI_RELEASE_NUMBER="$((1000000 + CI_PIPELINE_NUMBER))"',

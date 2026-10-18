@@ -25,12 +25,11 @@ function buildImageIfNeeded(): void {
   if (Bun.env["BIRMEL_DOCKER_IMAGE"] != null) {
     return;
   }
-  // The auto-build fallback used the repo's Dagger module (`dagger call
-  // build-image`), which was removed 2026-07 with the CI pipeline. Build the
-  // birmel image yourself and point BIRMEL_DOCKER_IMAGE at it.
+  // There is no auto-build: build the birmel image yourself and point
+  // BIRMEL_DOCKER_IMAGE at it.
   throw new Error(
-    "BIRMEL_DOCKER_IMAGE is required: the Dagger auto-build was removed 2026-07. " +
-      "Build a birmel image manually and set BIRMEL_DOCKER_IMAGE=<tag>.",
+    "BIRMEL_DOCKER_IMAGE is required: " +
+      "build a birmel image manually and set BIRMEL_DOCKER_IMAGE=<tag>.",
   );
 }
 

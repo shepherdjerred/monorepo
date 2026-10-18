@@ -26,6 +26,6 @@ export function temporalRuntimeEnv(
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),
     OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     TELEMETRY_SERVICE_NAME: EnvValue.fromValue(serviceName),
-    SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
+    BUGSINK_DSN: EnvValue.fromSecretValue({ secret, key: "BUGSINK_DSN" }),
   };
 }

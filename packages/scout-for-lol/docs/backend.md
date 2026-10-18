@@ -14,7 +14,7 @@ flowchart TB
         CONFIG["Configuration"]
         PRISMA["Prisma Client"]
         DISCORD["Discord Client"]
-        SENTRY_INIT["Sentry"]
+        BUGSINK_INIT["Bugsink"]
         TEMPORAL["Temporal Workers"]
         HTTP["HTTP Server"]
     end
@@ -34,8 +34,8 @@ flowchart TB
     INDEX --> CONFIG
     CONFIG --> PRISMA
     PRISMA --> DISCORD
-    DISCORD --> SENTRY_INIT
-    SENTRY_INIT --> TEMPORAL
+    DISCORD --> BUGSINK_INIT
+    BUGSINK_INIT --> TEMPORAL
     TEMPORAL --> HTTP
 
     DISCORD --> COMMANDS
@@ -196,7 +196,7 @@ flowchart LR
     API --> PARSE["Zod safeParse"]
     PARSE --> SUCCESS{Valid?}
     SUCCESS -->|Yes| USE["Use typed data"]
-    SUCCESS -->|No| ERROR["Log to Sentry"]
+    SUCCESS -->|No| ERROR["Log to Bugsink"]
 ```
 
 Schemas defined in `@scout-for-lol/data`:
@@ -293,10 +293,10 @@ The backend exposes two HTTP endpoints:
 | ------------------ | --------------------------------------- |
 | API 404            | Retry later (match still processing)    |
 | API 429            | Shared `Retry-After` cooldown and retry |
-| Validation failure | Log to Sentry, skip processing          |
+| Validation failure | Log to Bugsink, skip processing         |
 | AI failure         | Continue without AI features            |
 | S3 failure         | Log and continue to Discord             |
-| Discord failure    | Log to Sentry, track permission errors  |
+| Discord failure    | Log to Bugsink, track permission errors |
 
 ### Permission Error Tracking
 
@@ -335,7 +335,8 @@ packages/backend/
 │   ├── temporal/             # Activity workers and durable starts
 │   └── league/tasks/         # Workflow activity implementations
 │   ├── metrics/             # Prometheus metrics
-│   └── sentry/              # Error tracking
+│   ├── observability/       # OpenTelemetry tracing
+│   └── bugsink-filters.ts   # Bugsink event filters
 └── package.json
 ```
 

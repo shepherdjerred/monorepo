@@ -518,9 +518,8 @@ describe("selected lane contracts", () => {
   });
 
   /**
-   * Buildkite needed a -pr and a -main step because the main variant carried a
-   * precomputed metadata gate. Selection now happens before generation, so one
-   * step covers both events.
+   * Selection happens before generation, so one step covers both PR and main
+   * events.
    */
   test("the resume lane is one step covering both events", () => {
     expect(keysFor(["packages/resume/resume.tex"])).toContain("resume-build");

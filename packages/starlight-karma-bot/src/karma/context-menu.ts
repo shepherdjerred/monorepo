@@ -110,7 +110,7 @@ export async function handleGiveKarmaModal(
   } catch (error) {
     if (error instanceof InvalidKarmaAmountError) {
       // Boundary input, not a broken contract: answer the user rather than
-      // reporting it to Sentry.
+      // reporting it to Bugsink.
       await interaction.reply({
         content: `Karma amount must be one of ${ALLOWED_KARMA_AMOUNTS.join(", ")}.`,
         flags: MessageFlags.Ephemeral,

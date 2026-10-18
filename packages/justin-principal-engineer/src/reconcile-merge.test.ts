@@ -24,7 +24,7 @@ function state(): TaskState {
     identifier: "SJ-1",
     title: "XX-1",
     description: null,
-    url: "https://linear.app/example/issue/XX-1",
+    url: "https://tracker.tailnet-1a49.ts.net/issues/XX-1",
     priority: 0,
     team: { key: "SJ" },
     createdAt: "2026-01-01T00:00:00.000Z",

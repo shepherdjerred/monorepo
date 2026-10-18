@@ -2,11 +2,10 @@
 /**
  * Run release-please to create release PRs and cut GitHub releases.
  *
- * Ported from the old CI's `releasePleaseHelper` (.dagger/src/release.ts).
  * Runs the package-owned release-please CLI, authed by the GitHub App token
  * minted from env creds.
  *
- * Pipeline order (matches the old helper): release-pr → refine → github-release.
+ * Pipeline order: release-pr → refine → github-release.
  * The refine step runs Codex SDK with GPT-5.6 Luna on OpenAI using
  * scripts/prompts/refine-release-please.md. It
  * rewrites the just-generated CHANGELOG entries into a consumer-focused view

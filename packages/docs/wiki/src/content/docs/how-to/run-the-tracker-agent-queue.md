@@ -76,9 +76,6 @@ bun run --cwd packages/toolkit install:local
 toolkit tracker whoami --json
 ```
 
-When upgrading, replace the former `linear` configuration block with `tracker`,
-then reinstall the LaunchAgent to remove its obsolete credential reference.
-
 ```bash
 bun packages/justin-principal-engineer/src/cli.ts doctor
 bun packages/justin-principal-engineer/src/cli.ts daemon install

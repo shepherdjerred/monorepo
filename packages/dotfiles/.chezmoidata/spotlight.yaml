@@ -49,7 +49,6 @@ spotlight:
     - .gemini
     - .copilot
     - .kimi-code
-    - .voltagent
     - .agents
     - .claude-extra
     - .pinchtab

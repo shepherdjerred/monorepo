@@ -2,10 +2,10 @@
 /**
  * Smoke test for the tasknotes-server image.
  *
- * Translated from the old Dagger `smokeTestTasknotesServerHelper`: the server
- * starts fully with defaults (no external auth), so success is a clean boot —
- * the server reaching its "listening" log line. We run the container detached
- * and poll its logs for that line, then tear the container down.
+ * The server starts fully with defaults (no external auth), so success is a
+ * clean boot — the server reaching its "listening" log line. We run the
+ * container detached and poll its logs for that line, then tear the container
+ * down.
  *
  * Dependency-free: Bun.spawn only. Exits non-zero on failure and always removes
  * the container (even on failure).
@@ -30,9 +30,8 @@ async function removeContainer(): Promise<void> {
 async function main(): Promise<void> {
   await removeContainer();
 
-  // The old Dagger smoke `mkdir -p /tmp/smoke-vault` before boot; the server
-  // scans VAULT_PATH on startup and crashes if it's missing. Override the
-  // command to create it first, then exec the real entrypoint.
+  // The server scans VAULT_PATH on startup and crashes if it's missing.
+  // Override the command to create it first, then exec the real entrypoint.
   const run = await sh([
     "docker",
     "run",

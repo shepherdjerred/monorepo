@@ -322,8 +322,8 @@ test("site builds bake no commit or build number into the bytes", async () => {
   expect(source).not.toMatch(
     /VITE_APP_VERSION|PUBLIC_APP_VERSION|VITE_GIT_SHA|PUBLIC_GIT_SHA/u,
   );
-  expect(source).toContain("VITE_SENTRY_RELEASE: identity");
-  expect(source).toContain("PUBLIC_SENTRY_RELEASE: identity");
+  expect(source).toContain("VITE_BUGSINK_RELEASE: identity");
+  expect(source).toContain("PUBLIC_BUGSINK_RELEASE: identity");
   expect(source).toContain("VITE_CONTRACT_HASH: await contractHash()");
   expect(source).toContain('schema: "scout-release-input/v5"');
 });

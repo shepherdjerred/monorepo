@@ -18,7 +18,7 @@ import { destroyDiscordClient, getDiscordClient } from "./discord/client.ts";
 import { registerEventHandlers } from "./discord/events/index.ts";
 import { setMessageHandler } from "./discord/events/message-create.ts";
 import { startHealthServer, stopHealthServer } from "./health/server.ts";
-import { captureException } from "./observability/sentry.ts";
+import { captureException } from "./observability/bugsink.ts";
 import {
   isSchedulerStarted,
   startScheduler,

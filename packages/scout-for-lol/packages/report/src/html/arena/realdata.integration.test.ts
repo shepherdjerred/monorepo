@@ -5,7 +5,7 @@ import { ArenaMatchSchema } from "@scout-for-lol/data";
 import { svgToPng } from "#src/html/index.tsx";
 
 // The Arena render is the heaviest satori render (18 players / 6 teams) and
-// fetches + decodes champion assets on first run. On a cold Dagger CI engine
+// fetches + decodes champion assets on first run. On a cold CI node
 // it can exceed Bun's 5s default per-test timeout, so give it headroom — the
 // render succeeds, it just needs more than 5s when caches are cold.
 vi.setConfig({ testTimeout: 30_000 });

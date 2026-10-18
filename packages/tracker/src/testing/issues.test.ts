@@ -14,9 +14,7 @@ import {
 import { ActorSchema } from "#shared/actor.ts";
 import { appRouter } from "#server/router.ts";
 import { createApp } from "#server/app.ts";
-import { Importer } from "#infrastructure/importer.ts";
 import { memoryObjectStore } from "#testing/memory-object-store.ts";
-import { importFixture } from "#testing/import-fixture.ts";
 
 const actor = ActorSchema.parse({
   key: "codex:test-session",
@@ -385,35 +383,8 @@ it("rejects actorless mutations, pauses writes, and round-trips safe attachments
     catalog: new Catalog(unit),
     requestId: "test",
     writesEnabled: async () => false,
-    importsEnabled: async () => false,
-    importer: new Importer(suite.database, memoryObjectStore()),
   };
   const caller = appRouter.createCaller(context);
-  const historical = importFixture().find(
-    (record) => record.entityType === "issue",
-  );
-  if (historical?.entityType !== "issue")
-    throw new Error("Missing import fixture");
-  await expect(caller.import.record(historical)).rejects.toThrow(
-    "imports are paused",
-  );
-  await expect(
-    caller.import.reconcileRecord({ previous: historical, next: historical }),
-  ).rejects.toThrow("imports are paused");
-  const conflictingGates = appRouter.createCaller({
-    ...context,
-    importsEnabled: async () => true,
-    writesEnabled: async () => true,
-  });
-  await expect(conflictingGates.import.record(historical)).rejects.toThrow(
-    "Pause normal writes",
-  );
-  await expect(
-    conflictingGates.import.reconcileRecord({
-      previous: historical,
-      next: historical,
-    }),
-  ).rejects.toThrow("Pause normal writes");
   await expect(
     caller.issues.create(
       CreateIssueSchema.parse({ actor, teamKey: "AI", title: "Paused" }),

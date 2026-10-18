@@ -241,7 +241,7 @@ time from sending an input to the first frame that latched it.
 
 Runs on the homelab Kubernetes cluster via ArgoCD
 (`packages/homelab/src/cdk8s/src/resources/mario-kart.ts`). Image builds and
-smokes run in Buildkite; main builds push the deployable image. Configuration
+smokes run in Woodpecker CI; main builds push the deployable image. Configuration
 is a mounted `config.toml` — see
 [`config.example.toml`](./config.example.toml). The web UI is reachable at
 `mariokart.sjer.red` (and via Tailscale as `mariokart`); the Go-Live stream is

@@ -5,10 +5,8 @@
 # this pipeline) mise bootstraps itself and installs the missing tools at
 # runtime, so a toolchain change never waits for the main-only image refresh.
 set -eu
-# pipefail is not POSIX (dash lacks it) and the agent may run steps under
-# /bin/sh (build 5651/5654 — the agent-stack registration env forces the
-# agent image's default shell until the step-shell controller fix is
-# deployed). Enable it when the shell is bash; plain sh proceeds without.
+# pipefail is not POSIX (dash lacks it) and a step may run under /bin/sh.
+# Enable it when the shell is bash; plain sh proceeds without.
 case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
 CI_TOOLCHAIN_STARTED=$(date +%s)
 

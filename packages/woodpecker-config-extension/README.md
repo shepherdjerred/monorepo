@@ -360,7 +360,7 @@ Adding a command to a lane also requires checking its toolchain profile.
 ## Pipeline authorization
 
 `src/authorization.ts` admits only the owner's named accounts and bots. Justin
-publishes owner-requested Linear work as `justin-principal-engineer[bot]`; both
+publishes owner-requested Tracker work as `justin-principal-engineer[bot]`; both
 the PR author and the event sender must be trusted, and fork PRs are refused.
 Signed requests from other actors receive HTTP 403 before any forge reads or
 workflow generation.

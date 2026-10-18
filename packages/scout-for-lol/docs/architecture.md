@@ -11,7 +11,7 @@ flowchart TB
         DISCORD_API["Discord API<br/>(discord.js)"]
         OPENAI["OpenAI API<br/>(GPT-4o-mini, GPT-5.1)"]
         S3["AWS S3<br/>(Match data, images)"]
-        SENTRY["Sentry<br/>(Error tracking)"]
+        BUGSINK["Bugsink<br/>(Error tracking)"]
     end
 
     subgraph Backend["Backend Service"]
@@ -43,7 +43,7 @@ flowchart TB
     BOT <--> DISCORD_API
     AI_REVIEW --> OPENAI
     REPORT_GEN --> S3
-    Backend --> SENTRY
+    Backend --> BUGSINK
 
     %% Internal backend connections
     TEMPORAL --> MATCH_POLLER
@@ -265,10 +265,10 @@ flowchart TD
 
     TYPE -->|API 404| RETRY[Retry Later<br/>Match still processing]
     TYPE -->|API 429| BACKOFF[Exponential Backoff<br/>Rate limit]
-    TYPE -->|Validation| SENTRY_VAL[Log to Sentry<br/>Schema drift detected]
+    TYPE -->|Validation| BUGSINK_VAL[Log to Bugsink<br/>Schema drift detected]
     TYPE -->|AI Failure| SKIP[Skip AI features<br/>Continue with report]
     TYPE -->|S3 Failure| LOG[Log error<br/>Continue to Discord]
-    TYPE -->|Discord Failure| SENTRY_DISC[Log to Sentry<br/>Check permissions]
+    TYPE -->|Discord Failure| BUGSINK_DISC[Log to Bugsink<br/>Check permissions]
 
     RETRY --> CONTINUE[Continue Processing]
     BACKOFF --> CONTINUE
@@ -280,10 +280,10 @@ flowchart TD
 
 ```mermaid
 flowchart TB
-    subgraph CI["CI/CD (Dagger)"]
+    subgraph CI["CI/CD (Woodpecker)"]
         CHECK[Lint + Typecheck + Test]
-        BUILD[Build Docker Image]
-        DEPLOY[Deploy to Stage]
+        BUILD[Build and publish image]
+        DEPLOY[Record release in Delivery]
     end
 
     subgraph Stages
@@ -293,8 +293,8 @@ flowchart TB
 
     CHECK --> BUILD
     BUILD --> DEPLOY
-    DEPLOY --> BETA
-    BETA -->|Manual promotion| PROD
+    DEPLOY -->|ArgoCD| BETA
+    BETA -->|Delivery promotion| PROD
 ```
 
 ## Environment Configuration
@@ -311,7 +311,7 @@ Required environment variables by component:
 | `GEMINI_API_KEY`          | Backend   | No (images fail)       |
 | `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-sol`)     |
 | `S3_BUCKET_NAME`          | Backend   | No (disables storage)  |
-| `SENTRY_DSN`              | Backend   | No (disables tracking) |
+| `BUGSINK_DSN`             | Backend   | No (disables tracking) |
 
 ### Bryan Bucks parlays
 

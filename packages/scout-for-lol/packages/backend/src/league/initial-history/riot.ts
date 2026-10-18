@@ -34,7 +34,7 @@ export async function fetchInitialMatchIds(input: {
       source: "initial-history-list",
       schema: z.array(RiotMatchIdSchema).max(INITIAL_HISTORY_MATCH_COUNT),
       context: { region: input.region },
-      sentry: true,
+      bugsink: true,
     },
     () =>
       riotClient.match.list(
@@ -65,7 +65,7 @@ export async function fetchInitialMatch(input: {
           assetType: "match",
           id: input.matchId,
         },
-        sentry: true,
+        bugsink: true,
       },
       () =>
         riotClient.match.get(
@@ -118,7 +118,7 @@ export async function fetchCurrentRanks(input: {
       schema: RawSummonerLeagueListSchema,
       schemaLabel: "summoner-league",
       context: { region: input.region },
-      sentry: true,
+      bugsink: true,
     },
     () =>
       riotClient.league.byPuuid(puuid, regionToPlatformRoute(input.region), {

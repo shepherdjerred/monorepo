@@ -24,10 +24,9 @@ test("keeps LLM recording and runtime alert coverage together", () => {
   expect(serialized).toContain("birmel_admission_classifier_total");
   expect(serialized).toContain("birmel_memory_extraction_total");
 
-  // Every OpenRouter-era signal is gone with the router: its metrics are no
+  // Every gateway-era signal is gone with the gateway: its metrics are no
   // longer emitted, so a surviving rule would sit silently at zero.
   for (const retired of [
-    "openrouter",
     "byok",
     'type="actual"',
     "upstream",

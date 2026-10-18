@@ -10,7 +10,7 @@ This is a bare React Native iOS/Android client for TaskNotes. `README.md` and
   idempotency, and optimistic rollback. Do not hide durable failures.
 - Native bridges validate availability. A deliberately unsupported platform may
   no-op, but malformed bridge data is not an availability condition.
-- Production errors surface through UI or Sentry. Do not add ad-hoc console
+- Production errors surface through UI or Bugsink. Do not add ad-hoc console
   logging that can expose task content.
 - Widgets and Live Activities share only the configured app-group data. Tokens
   stay in secure storage.

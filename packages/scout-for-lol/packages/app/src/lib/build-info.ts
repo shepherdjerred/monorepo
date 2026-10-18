@@ -6,7 +6,7 @@ import {
 
 /**
  * Build identity stamped into this bundle at site-release build time
- * (scripts/release/scout-site-release.ts → VITE_SENTRY_RELEASE is the
+ * (scripts/release/scout-site-release.ts → VITE_BUGSINK_RELEASE is the
  * content-addressed archive identity `scout-site@sha256:…`, VITE_CONTRACT_HASH
  * the tRPC contract hash). No build number or commit is baked in: the bytes
  * depend only on content, so an unchanged rebuild on a later commit reproduces
@@ -16,7 +16,7 @@ import {
  * contract hash also disables the contract-mismatch chip.
  */
 const EnvSchema = z.object({
-  VITE_SENTRY_RELEASE: z.string().min(1).optional(),
+  VITE_BUGSINK_RELEASE: z.string().min(1).optional(),
   VITE_CONTRACT_HASH: z.string().min(1).optional(),
 });
 
@@ -30,7 +30,7 @@ function readBuildInfo(): BuildInfo {
   const parsed = EnvSchema.safeParse(import.meta.env);
   const env = parsed.success ? parsed.data : {};
   return {
-    release: env.VITE_SENTRY_RELEASE,
+    release: env.VITE_BUGSINK_RELEASE,
     contractHash: env.VITE_CONTRACT_HASH ?? DEV_PLACEHOLDER,
   };
 }

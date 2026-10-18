@@ -126,12 +126,12 @@ describe("agent-task secret token state", () => {
 });
 
 describe("envForTrustedAgent", () => {
-  it("does not forward the retired OpenRouter credential", () => {
+  it("does not forward a direct provider credential", () => {
     const environment = envForTrustedAgent(
       {},
       {
         PATH: "/usr/bin",
-        OPENROUTER_API_KEY: "retired-secret",
+        XAI_API_KEY: "provider-secret",
       },
     );
 

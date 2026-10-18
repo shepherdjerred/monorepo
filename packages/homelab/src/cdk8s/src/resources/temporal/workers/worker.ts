@@ -320,7 +320,7 @@ export function createTemporalWorkerDeployment(
     ENVIRONMENT: EnvValue.fromValue("production"),
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),
     OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
-    SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
+    BUGSINK_DSN: EnvValue.fromSecretValue({ secret, key: "BUGSINK_DSN" }),
   };
   const { corpusDeployment, contextDeployment } = createTemporalGlitterWorkers(
     chart,

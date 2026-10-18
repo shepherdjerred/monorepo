@@ -36,7 +36,7 @@ suite (`e2e/`) needs a simulator and stays a local pre-merge gate.
 
 ## Release builds
 
-Archive/TestFlight builds run on Xcode Cloud, not Buildkite.
+Archive/TestFlight builds run on Xcode Cloud, not Woodpecker.
 `bun run check:release-bundle` reproduces the release bundle locally when a
 cloud build fails.
 

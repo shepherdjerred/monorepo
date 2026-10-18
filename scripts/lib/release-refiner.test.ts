@@ -340,7 +340,7 @@ describe("refinerSdkEnv", () => {
       {
         PATH: "/usr/bin",
         GITHUB_APP_PRIVATE_KEY: "private-key",
-        BUILDKITE_AGENT_ACCESS_TOKEN: "agent-token",
+        WOODPECKER_AGENT_SECRET: "agent-token",
         CLAUDE_CODE_OAUTH_TOKEN: "claude-token",
         OPENAI_API_KEY: "openai-key",
       },

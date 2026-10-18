@@ -389,7 +389,7 @@ async function fetchSnapshotByKey(
  * Returns `[]` when:
  * - `S3_BUCKET_NAME` env is not configured (matches `loadCachedLeaderboard`)
  * - the snapshots prefix has no objects yet
- * - listing or fetching fails entirely (logged + Sentry)
+ * - listing or fetching fails entirely (logged + Bugsink)
  */
 export async function loadHistoricalLeaderboardSnapshots(
   competitionId: CompetitionId,

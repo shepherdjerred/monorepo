@@ -18,10 +18,10 @@
 # ---------------------------------------------------------------------------
 # Stage 1 — build pokeemerald.wasm from source.
 # ottohg/pokeemerald-wasm at a pinned commit + our checked-in export patch.
-# The committed asset is gitignored, so it MUST be produced here (mirrors the
-# removed Dagger `buildPokeemeraldWasm` and scripts/build-wasm.ts). The build
-# uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
-# clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
+# The committed asset is gitignored, so it MUST be produced here (mirrors
+# scripts/build-wasm.ts). The build uses clang wasm32-unknown-unknown + wasm-ld
+# (LLVM, NOT emscripten): trixie's clang-19 produces a Bun-loadable binary
+# (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
 FROM debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f AS wasm-builder
 
@@ -113,7 +113,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/frontend \
   packages/discord-plays-core \
   packages/discord-plays-web \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
@@ -128,8 +128,8 @@ COPY --parents \
 RUN cd packages/discord-stream-lifecycle && bun run build \
   && cd /app/packages/llm-models && bun run build
 # Build the web UI served by the backend (web.assets). Expose the release to
-# Vite BEFORE the build so the SPA's Sentry.init tags events with `release`.
-ENV VITE_SENTRY_RELEASE=dev
+# Vite BEFORE the build so the SPA's Bugsink client tags events with `release`.
+ENV VITE_BUGSINK_RELEASE=dev
 RUN cd packages/discord-plays-pokemon/packages/frontend && bun run build
 
 # ── wasm-abi-test: prove the patched engine bridge against the real artifact ─
@@ -198,7 +198,7 @@ COPY --parents \
   packages/discord-plays-pokemon/packages/backend \
   packages/discord-plays-pokemon/packages/common \
   packages/discord-plays-core \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
@@ -253,7 +253,7 @@ CMD ["bun", "packages/backend/src/index.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=discord-plays-pokemon
