@@ -9,6 +9,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
+import { stringify } from "yaml";
+import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
 
 const CDK8S_DIR = import.meta.dir.replace(/\/src\/resources\/monitoring$/u, "");
 const DIST_DIR = `${CDK8S_DIR}/dist`;
@@ -49,9 +51,13 @@ async function renderApps(): Promise<string> {
     `${chartDir}/templates/apps.k8s.yaml`,
     Bun.file(manifestPath),
   );
-  const result = await Bun.$`helm template test-release ${chartDir}`.text();
-  await Bun.$`rm -rf ${chartDir}`;
-  return result;
+  const validationPath = `${chartDir}/validation.yaml`;
+  await Bun.write(validationPath, stringify(chartValidationValues("apps")));
+  try {
+    return await Bun.$`helm template test-release ${chartDir} --values ${validationPath}`.text();
+  } finally {
+    await Bun.$`rm -rf ${chartDir}`;
+  }
 }
 
 /** Every mapping in the rendered documents that the predicate accepts. */

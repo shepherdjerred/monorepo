@@ -8,14 +8,17 @@
     "build": {
       "dependsOn": [
         "@shepherdjerred/s3-signed-request#build",
-        "@shepherdjerred/delivery#build"
+        "@shepherdjerred/delivery#build",
+        "@shepherdjerred/ops-model#build",
+        "@shepherdjerred/version-catalog#build"
       ],
       "inputs": [
         "package.json",
         "run-temporal-node.ts",
         "temporal-replay.ts",
         "types/**",
-        "lib/**"
+        "lib/**",
+        "$TURBO_ROOT$/ci/scripts/images/image-targets.ts"
       ]
     },
     "typecheck": {

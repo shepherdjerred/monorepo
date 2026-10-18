@@ -49,13 +49,8 @@ export function createDeliveryChart(
     new ConfigMap(chart, "activation", { data: { active: "false" } });
     return chart;
   }
-  if (
-    !/^docker\.io\/shepherdjerred\/delivery@sha256:[a-f0-9]{64}$/u.test(
-      activation.image,
-    )
-  )
-    throw new Error("Delivery requires a published image digest");
-  const selectedImage = `{{ .Values.delivery.image | default "${activation.image}" }}`;
+  const selectedImage =
+    '{{ required `Delivery requires image` (get (.Values.delivery | default dict) "image") }}';
   new Namespace(chart, "namespace", { metadata: { name: "delivery" } });
   createDeliveryCatalogRecovery(chart);
   createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });

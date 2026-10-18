@@ -6,6 +6,8 @@ import {
   prepareDockerHubPullSecrets,
 } from "./dockerhub-pull-secrets.ts";
 import { createWoodpeckerCredentialBoundaries } from "./resources/argo-applications/ci/woodpecker-credentials.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "./misc/onepassword-vault.ts";
 
 function fixtures() {
   const app = new App();
@@ -95,6 +97,31 @@ describe("Docker Hub templated image readers", () => {
 });
 
 describe("Docker Hub credential preparation", () => {
+  it.each(["ngzmppq52zm7sii6ato2mv3sbi", "different-item"])(
+    "reuses only the exact declared namespace reader (%s)",
+    (itemId) => {
+      const { app, chart } = fixtures();
+      new OnePasswordItem(chart, "declared-reader", {
+        metadata: {
+          name: "dockerhub-pull-woodpecker",
+          namespace: "woodpecker",
+        },
+        type: "kubernetes.io/dockerconfigjson",
+        spec: { itemPath: vaultItemPath(itemId) },
+      });
+      if (itemId === "different-item") {
+        expect(() => prepareDockerHubPullSecrets(app)).toThrow();
+      } else {
+        prepareDockerHubPullSecrets(app);
+        prepareDockerHubPullSecrets(app);
+        expect(
+          secrets(app)
+            .map((secret) => secret.metadata.namespace)
+            .sort(),
+        ).toEqual(["woodpecker", "woodpecker-ci"]);
+      }
+    },
+  );
   it.each([
     "Pod",
     "Deployment",

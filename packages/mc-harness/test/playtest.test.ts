@@ -8,7 +8,7 @@ import { playtestExitCode, RunIdSchema } from "#protocol/playtest.ts";
 import { blockMatches, eventMatches } from "#playtest/context.ts";
 import { missingRequirements } from "#playtest/run.ts";
 import { loadScenario, scenarioMeta } from "#playtest/scenario.ts";
-import { stormServerImages } from "#src/pins.ts";
+import { publishedStorm } from "#test/fixtures/published-storm.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
 import { requireStagedSources, stageEntries } from "#sandbox/staging.ts";
 import {
@@ -136,17 +136,22 @@ describe("run ids and exit codes", () => {
 
 describe("published Storm image profiles", () => {
   it.each(["prod", "candidate"] as const)(
-    "uses the module schema snapshot pinned to the %s image digest",
+    "uses the original source configuration for a future %s image without a Git snapshot update",
     (channel) => {
-      const config = stormImageConfig(stormServerImages[channel]);
+      const input = publishedStorm(
+        channel === "prod" ? "storm-prod" : "storm-candidate",
+      );
+      const config = stormImageConfig(
+        `${input.publishedArtifact?.uri}@${input.publishedArtifact?.digest}`,
+        input.publishedConfig,
+      );
       expect(config.moduleKeys).toContain("rwfbots");
       expect(config.enabledModules).toContain("companions");
       expect(config.enabledModules).not.toContain("rwf");
 
       const profile = resolveProfile(
         {
-          profile: channel === "prod" ? "storm-prod" : "storm-candidate",
-          world: "flat",
+          ...input,
         },
         { bridgeToken: "token", rconPassword: "password" },
       );
@@ -207,7 +212,7 @@ describe("profiles and staging", () => {
   it.each(["storm-prod", "storm-candidate"] as const)(
     "gives %s the inert Flipt bootstrap companions need to enable",
     (profile) => {
-      const image = resolveProfile({ profile, world: "flat" }, secrets);
+      const image = resolveProfile(publishedStorm(profile), secrets);
       expect(image.env).toMatchObject({
         FLIPT_URL: "http://127.0.0.1:9",
         FLIPT_ENVIRONMENT: "beta",

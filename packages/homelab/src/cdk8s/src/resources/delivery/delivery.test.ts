@@ -5,7 +5,6 @@ import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probe
 import {
   deliveryActivation,
   deliveryExecutorActivation,
-  deliveryImageReference,
 } from "./activation.ts";
 import { z } from "zod";
 import { createAppsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/apps.ts";
@@ -56,7 +55,11 @@ it("root applies preserve delegated fields and the pilot image has an explicit H
   const chart = app.node.findChild("arcade");
   if (!(chart instanceof Chart)) throw new TypeError("Arcade chart is missing");
   const resources = JSON.stringify(chart.toJson());
-  expect(resources).toContain(".Values.delivery.image");
+  expect(resources).toContain(
+    JSON.stringify(
+      '{{ required `Delivery requires image` (get (.Values.delivery | default dict) "image") }}',
+    ),
+  );
 });
 
 describe("Delivery worker capability isolation", () => {
@@ -262,6 +265,8 @@ describe("Delivery infrastructure", () => {
         key: "ci.sjer.red/step-key",
         operator: "In",
         values: [
+          "images",
+          "helm-push",
           "delivery-publish",
           "scout-site-archives",
           "trmnl-plugin-archives",
@@ -339,19 +344,12 @@ describe("Delivery execution and service bootstrap", () => {
       "pods/log": ["get"],
     });
   });
-  it("keeps unpublished images inactive and activates only the issued scoped capability registrations", () => {
-    expect(
-      deliveryImageReference(`0.0.0@sha256:${"0".repeat(64)}`),
-    ).toBeUndefined();
-    expect(
-      deliveryActivation(`2.0.0-42@sha256:${"a".repeat(64)}`),
-    ).toMatchObject({
-      image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
+  it("requires a PG image while retaining every issued scoped capability registration", () => {
+    expect(deliveryActivation()).toMatchObject({
+      image: "docker.io/shepherdjerred/delivery:delivery-recipe",
       serviceItemId: "ahbp4izt7fibvwdjwd4ffhiime",
     });
-    expect(
-      deliveryExecutorActivation(`2.0.0-42@sha256:${"a".repeat(64)}`),
-    ).toMatchObject({
+    expect(deliveryExecutorActivation()).toMatchObject({
       argocdItemId: "w7rrmm6v2agx7jk4qjsaybxaau",
       observerItemId: "irdujpdyylkem65wnr4ibw2ggq",
       platformArgocdItemId: "orpriiyv36sxmybxe3fg4szdxq",
@@ -368,7 +366,6 @@ describe("Delivery execution and service bootstrap", () => {
     expect(createDeliveryChart(new App(), undefined).toJson()).toMatchObject([
       { kind: "ConfigMap", data: { active: "false" } },
     ]);
-    expect(() => deliveryImageReference("latest")).toThrow();
   });
   it("uses the existing HTTPS operator ingress and keeps machine API traffic separately authenticated", () => {
     const resources = Resources.parse(
@@ -421,7 +418,7 @@ describe("Delivery execution and service bootstrap", () => {
         .every((port) => port.port === 7353),
     ).toBe(true);
     expect(JSON.stringify(spec.ingress)).toContain(
-      '"values":["delivery-publish","scout-site-archives","trmnl-plugin-archives"]',
+      '"values":["images","helm-push","delivery-publish","scout-site-archives","trmnl-plugin-archives"]',
     );
     expect(JSON.stringify(spec.ingress)).toContain(
       '"kubernetes.io/metadata.name":"woodpecker-ci"',

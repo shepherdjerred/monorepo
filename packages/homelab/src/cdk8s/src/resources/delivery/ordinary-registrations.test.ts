@@ -19,6 +19,11 @@ import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probe
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createDeliveryControlPlaneChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery-control-plane.ts";
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
+import {
+  bindChartImageDependencies,
+  chartValidationValues,
+} from "homelab/scripts/helm/helm-delivery-publication.ts";
+import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 
 const pipelines = new URL(
   "../../../../../../delivery/registrations/",
@@ -96,14 +101,28 @@ async function render(chart: Chart, values: readonly string[]) {
       path.join(directory, "Chart.yaml"),
       `apiVersion: v2\nname: ${chart.node.id}\nversion: 1.0.0\n`,
     );
-    await Bun.write(path.join(directory, "values.yaml"), "delivery: {}\n");
+    const workerPool = z
+      .object({ delivery: z.object({ workerPool: z.string().optional() }) })
+      .parse(chartValidationValues(chart.node.id)).delivery.workerPool;
+    await Bun.write(
+      path.join(directory, "values.yaml"),
+      stringify({ delivery: { workerPool } }),
+    );
     await Bun.write(
       path.join(directory, "templates/workloads.yaml"),
-      z
-        .array(z.unknown())
-        .parse(chart.toJson())
-        .map((object) => stringify(object))
-        .join("---\n"),
+      bindChartImageDependencies(
+        z
+          .array(z.unknown())
+          .parse(chart.toJson())
+          .map((object) => stringify(object))
+          .join("---\n"),
+        Object.fromEntries(
+          imageRegistry.images.map((image) => [
+            `shepherdjerred/${image.name}`,
+            `sha256:${"f".repeat(64)}`,
+          ]),
+        ),
+      ),
     );
     const child = Bun.spawn(
       [
@@ -120,7 +139,7 @@ async function render(chart: Chart, values: readonly string[]) {
       new Response(child.stdout).text(),
       new Response(child.stderr).text(),
     ]);
-    expect(status, stderr).toBe(0);
+    if (status !== 0) throw new Error(stderr);
     return parseAllDocuments(stdout).map((document) => {
       const object: unknown = document.toJSON();
       return object;
@@ -183,14 +202,11 @@ test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
     }
     for (const binding of selected.values())
       expect(containers).toContain(binding.image);
-    // The default branch still renders catalog pins while cutover is inactive.
-    const defaults = await render(chart, []);
-    expect(defaults.length).toBe(manifests.length);
-    expect(JSON.stringify(defaults)).not.toContain("{{");
+    await expect(render(chart, [])).rejects.toThrow("Delivery requires image");
   },
 );
 
-test("central shared Activity roles and init containers use the selected image while Workflow hosts keep their original versions", async () => {
+test("central shared Activity roles and init containers use the selected image; retained hosts use the separate pool", async () => {
   const chart = activeChart("temporal");
   const image = `docker.io/shepherdjerred/temporal-worker@sha256:${"a".repeat(64)}`;
   const manifests = await render(chart, [
@@ -224,8 +240,7 @@ test("central shared Activity roles and init containers use the selected image w
         !container.image.startsWith("docker.io/shepherdjerred/temporal-worker")
       )
         continue;
-      if (workflow) expect(container.image).not.toBe(image);
-      else {
+      if (!workflow) {
         expect(container.image).toBe(image);
         observed.add(role.metadata.name);
       }

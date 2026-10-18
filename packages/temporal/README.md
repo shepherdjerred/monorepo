@@ -643,12 +643,11 @@ queue, whose worker alone holds `OPENAI_ADMIN_KEY` and
 use `container="temporal-billing-worker"` for worker freshness, which is stable
 across pod recreations. The retired `openai-complimentary-usage-hourly` schedule
 is deleted at registration.
-Scout extraction uses two capable image releases. The pre-entrypoint pin creates
-no pod. Copy the first capable candidate pin to stable; that creates only the
-credentialless stable poller. A later distinct candidate pin creates the ramp
-target, and `start --stable-build-id` establishes stable before sending 10% to
-candidate. The embedded poller remains only to drain old unversioned histories.
-Production remains embedded until beta acceptance completes.
+Scout pollers are materialized from the frozen PostgreSQL worker pool. Native
+baseline adoption retains exact observed host identities without qualifying an
+old failed build as a new candidate. A new release selects a genuinely qualified
+image and preserves every host still required by routing or open histories;
+Git supplies no stable, candidate, or historical deployment image slot.
 
 ## Photon iMessage ingress
 

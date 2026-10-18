@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseAllDocuments, stringify } from "yaml";
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
 import { createTemporalWorkflowWorkers } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/workflow-worker.ts";
 import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
 import { workerPoolTemplate } from "./worker-pool-template.ts";
@@ -17,15 +16,6 @@ import { stageChart } from "homelab/scripts/helm/helm-push.ts";
 const FIRST = "a".repeat(40);
 const SECOND = "b".repeat(40);
 const THIRD = "c".repeat(40);
-function identity(resource: unknown) {
-  const parsed = z
-    .object({ kind: z.string(), metadata: z.object({ name: z.string() }) })
-    .parse(resource);
-  return `${parsed.kind}/${parsed.metadata.name}`;
-}
-function sorted(resources: unknown[]) {
-  return resources.toSorted((a, b) => identity(a).localeCompare(identity(b)));
-}
 function pool(target: string, repository: string) {
   const profile =
     target === "central" ? "central-workflows" : `${target}-workflows`;
@@ -43,12 +33,7 @@ function pool(target: string, repository: string) {
     })),
   };
 }
-async function render(
-  chartName: string,
-  manifest: string,
-  selected: unknown,
-  legacyWorkers = "stopped",
-) {
+async function render(chartName: string, manifest: string, selected: unknown) {
   const directory = await mkdtemp(path.join(tmpdir(), "worker-host-render-"));
   try {
     await Bun.write(
@@ -60,7 +45,6 @@ async function render(
       stringify({
         delivery: {
           workerPool: selected === "" ? "" : JSON.stringify(selected),
-          legacyWorkers,
         },
       }),
     );
@@ -96,18 +80,7 @@ function synth(chartName: string, stage?: "beta" | "prod") {
     createTemporalWorkflowWorkers(chart, {
       serverServiceName: "temporal-server",
     });
-  else
-    for (const track of [
-      "stable",
-      "candidate",
-      "retained-dddddddddddd",
-    ] as const)
-      createScoutWorkflowWorker(
-        chart,
-        stage,
-        track,
-        `2.0.0-20000@sha256:${"e".repeat(64)}`,
-      );
+  else createScoutWorkflowWorker(chart, stage);
   return {
     manifest: chart
       .toJson()
@@ -160,7 +133,7 @@ describe("Delivery fixed worker host rendering", () => {
     }
   });
   it.each(["temporal", "scout-beta", "scout-prod"])(
-    "preserves %s legacy manifests exactly when no pool is selected",
+    "refuses %s without a frozen pool",
     async (name) => {
       const stage =
         name === "temporal"
@@ -169,8 +142,8 @@ describe("Delivery fixed worker host rendering", () => {
             ? "beta"
             : "prod";
       const source = synth(name, stage);
-      expect(sorted(await render(name, source.manifest, ""))).toEqual(
-        sorted(source.resources),
+      await expect(render(name, source.manifest, "")).rejects.toThrow(
+        "Delivery requires workerPool",
       );
     },
   );
@@ -220,11 +193,7 @@ describe("Delivery fixed worker host rendering", () => {
           JSON.stringify(resource).includes('"kind":"Deployment"') &&
           !JSON.stringify(resource).includes("delivery-wf-"),
       );
-      for (const old of oldDeployments)
-        expect(old).toMatchObject({
-          spec: { replicas: 0 },
-          metadata: { annotations: { "argocd.argoproj.io/sync-wave": "-1" } },
-        });
+      expect(oldDeployments).toHaveLength(0);
       expect(
         new Set(resources.map((resource) => JSON.stringify(resource))).size,
       ).toBe(resources.length);
@@ -244,22 +213,5 @@ describe("Delivery fixed worker host rendering", () => {
     await expect(render("temporal", source.manifest, selected)).rejects.toThrow(
       "input invalid",
     );
-  });
-  it("keeps every legacy replica through initial pool bootstrap", async () => {
-    const source = synth("temporal");
-    const resources = await render(
-      "temporal",
-      source.manifest,
-      pool("central", "temporal-worker"),
-      "keep",
-    );
-    const legacy = resources.filter(
-      (resource) =>
-        JSON.stringify(resource).includes('"kind":"Deployment"') &&
-        !JSON.stringify(resource).includes("delivery-wf-"),
-    );
-    expect(legacy).toHaveLength(2);
-    for (const deployment of legacy)
-      expect(deployment).toMatchObject({ spec: { replicas: 1 } });
   });
 });

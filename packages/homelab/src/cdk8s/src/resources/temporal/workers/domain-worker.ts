@@ -16,7 +16,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { ServiceMonitorSpecEndpointsMetricRelabelingsAction } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 
@@ -27,7 +26,6 @@ export type TemporalDomainWorkerProps = {
   component: string;
   syncWave?: number;
   podLabels?: Record<string, string>;
-  imageKey?: string;
   envVariables: Record<string, EnvValue>;
   ports?: { number: number; name: string }[];
   cpuRequest: Cpu;
@@ -57,11 +55,13 @@ export function createTemporalDomainWorker(
   chart: Chart,
   props: TemporalDomainWorkerProps,
 ): Deployment {
-  const imageKey = props.imageKey ?? "shepherdjerred/temporal-worker";
-  const imageVersion = versions[imageKey];
-  if (imageVersion === undefined) {
-    throw new Error(`Missing Temporal worker image pin ${imageKey}`);
-  }
+  const selection =
+    chart.node.id === "delivery-control-plane"
+      ? "delivery-control-plane"
+      : "temporal-worker";
+  const field = ["temporal", "delivery-control-plane"].includes(chart.node.id)
+    ? "images"
+    : "dependencies";
   const serviceAccount =
     props.serviceAccount ??
     new ServiceAccount(chart, `${props.name}-service-account`, {
@@ -103,7 +103,7 @@ export function createTemporalDomainWorker(
   const container = deployment.addContainer(
     withCommonProps({
       name: props.name,
-      image: `docker.io/shepherdjerred/temporal-worker:${imageVersion}`,
+      image: `{{ required \`Delivery requires image:${selection}\` (get (get (.Values.delivery | default dict) "${field}" | default dict) "${selection}") }}`,
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },

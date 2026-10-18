@@ -9,6 +9,8 @@
     "#tofu/*": "./src/tofu/*"
   },
   "dependencies": {
+    "@shepherdjerred/toolkit": "workspace:*",
+    "@shepherdjerred/version-catalog": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
     "yaml": "^2.8.3",

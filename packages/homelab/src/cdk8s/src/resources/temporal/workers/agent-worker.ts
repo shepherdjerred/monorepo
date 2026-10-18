@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
@@ -18,7 +19,6 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import {
   NET_ADMIN_FIREWALL_RESOURCES,
@@ -87,7 +87,7 @@ export function createTemporalAgentWorker(
   deployment.addInitContainer(
     withCommonProps({
       name: "install-provider-firewall",
-      image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: firstPartyImageRecipe("temporal-worker"),
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu
@@ -130,7 +130,7 @@ ip6tables -L OUTPUT -n`,
   const container = deployment.addContainer(
     withCommonProps({
       name: "temporal-agent-worker",
-      image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: firstPartyImageRecipe("temporal-worker"),
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },

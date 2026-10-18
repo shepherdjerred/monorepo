@@ -1,9 +1,11 @@
 import { writeJsonHandoff } from "./ci-handoff.ts";
+import type { ArtifactVersion } from "../../../packages/delivery/src/shared/contract.ts";
 
 export const DELIVERY_IMAGE_DIGESTS_HANDOFF = "delivery-image-digests";
 
 type DigestWriter = (
   digests: Readonly<Record<string, string>>,
+  retained?: readonly ArtifactVersion[],
 ) => Promise<void>;
 
 export function imageDigestWriters(overrides: {
@@ -27,18 +29,8 @@ export async function setDigestMetadata(
 /** Every entry is a candidate built, pushed, and verified by this pipeline. */
 export async function setDeliveryDigestMetadata(
   digests: Readonly<Record<string, string>>,
+  retained: readonly ArtifactVersion[] = [],
 ): Promise<void> {
   await writeJsonHandoff(DELIVERY_IMAGE_DIGESTS_HANDOFF, digests);
-}
-
-export async function setVersionCatalogMetadata(source: string): Promise<void> {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(source);
-  } catch (error) {
-    throw new Error("Version catalog handoff is not valid JSON", {
-      cause: error,
-    });
-  }
-  await writeJsonHandoff("version-catalog", parsed);
+  await writeJsonHandoff("delivery-retained-image-artifacts", retained);
 }

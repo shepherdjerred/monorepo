@@ -27,7 +27,6 @@ import {
   workspaceSourceChanges,
 } from "./select-image-targets-workspaces.ts";
 import type { WorkspacePackage } from "./select-image-targets-workspaces.ts";
-import { unpublishedImagePinInspectionFailure } from "./select-image-targets-pins.ts";
 import {
   ALL_IMAGE_TARGETS,
   APPLICATION_IMAGE_TARGETS,
@@ -88,11 +87,7 @@ export type SelectorInputs = {
   lockfiles?: LockfilePair;
   rootPackageJson?: FilePair;
   scriptsPackageJson?: FilePair;
-  /** Version-catalog contents for deterministic tests. */
-  versionCatalogSource?: string;
 };
-
-const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 
 function lockfileChangedTargets(
   lockfiles: LockfilePair,
@@ -360,33 +355,11 @@ export async function selectImageTargetsWithReasons(
     return allTargetsResult(changedPaths, manifestReason);
   }
 
-  // catalog.json is deployment state. No production Dockerfile copies it:
-  // Toolkit uses the catalog parser, while rollout commands read a checkout.
-  // Treating this file as source for Scout and Temporal creates an endless
-  // image → pin PR → image loop without changing either running application.
-  const imageChangedPaths = changedPaths.filter(
-    (path) => path !== VERSION_CATALOG_PATH,
-  );
   const packages = await loadWorkspaces(repoRoot);
   const reasons = new Map<string, string[]>();
-  addClosureReasons(imageChangedPaths, packages, reasons);
-  addPrefixReasons(imageChangedPaths, reasons);
-  addSharedApplicationReasons(imageChangedPaths, reasons);
-
-  const unpublishedPinFailure = await unpublishedImagePinInspectionFailure({
-    repoRoot,
-    versionCatalogSource: inputs?.versionCatalogSource,
-    reasons,
-  });
-  if (unpublishedPinFailure !== undefined) {
-    console.error(
-      `select-image-targets: unpublished pin inspection failed (${unpublishedPinFailure}); selecting ALL targets`,
-    );
-    return allTargetsResult(
-      changedPaths,
-      `unpublished pin inspection failed (${unpublishedPinFailure}); fail-open`,
-    );
-  }
+  addClosureReasons(changedPaths, packages, reasons);
+  addPrefixReasons(changedPaths, reasons);
+  addSharedApplicationReasons(changedPaths, reasons);
 
   const patchPaths = changedPaths.filter((path) => path.startsWith("patches/"));
   if (patchPaths.length > 0) {

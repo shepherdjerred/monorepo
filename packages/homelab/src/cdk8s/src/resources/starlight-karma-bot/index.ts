@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   Deployment,
   DeploymentStrategy,
@@ -12,7 +13,6 @@ import { Duration, Size } from "cdk8s";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
@@ -40,14 +40,14 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
   const { path, image, applicationId } = match(stage)
     .with("beta", () => {
       return {
-        image: `docker.io/shepherdjerred/starlight-karma-bot:${versions["shepherdjerred/starlight-karma-bot/beta"]}`,
+        image: firstPartyImageRecipe("starlight-karma-bot"),
         path: vaultItemPath("tdxe6cq7ozhv7cesfvnlkl5gh4"),
         applicationId: "1092616671388254248",
       };
     })
     .with("prod", () => {
       return {
-        image: `docker.io/shepherdjerred/starlight-karma-bot:${versions["shepherdjerred/starlight-karma-bot/prod"]}`,
+        image: firstPartyImageRecipe("starlight-karma-bot"),
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/cmp6si6n5syhr4smxew3qfcmfi",
         applicationId: "716834761418735638",
       };

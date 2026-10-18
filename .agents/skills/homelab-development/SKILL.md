@@ -16,7 +16,9 @@ before editing. Preserve these boundaries:
 - Reuse shared helpers for containers, ingress, storage, and LinuxServer images.
 - Internal-only ingress uses Tailscale. Public exposure uses the existing
   Cloudflare/Tailscale patterns; do not invent a parallel edge path.
-- Image and chart versions come from the language-neutral version catalog.
+- Upstream and toolchain versions come from the language-neutral version catalog.
+  First-party workloads require PostgreSQL-frozen Delivery image and worker-pool
+  parameters; publication freezes original image artifacts for root dependencies.
   Regenerate committed Helm types whenever a chart input changes.
 - Recurring work is a Temporal Schedule, never a Kubernetes CronJob.
 - Secrets come from 1Password through declared grants. No optional secret refs,

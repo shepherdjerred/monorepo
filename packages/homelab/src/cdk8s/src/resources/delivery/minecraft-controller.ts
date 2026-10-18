@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject, type Chart } from "cdk8s";
 import {
   IntOrString,
@@ -11,7 +12,6 @@ import {
   getPvcBackupPolicy,
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createMinecraftControllerPermissions } from "./minecraft-controller-permissions.ts";
 import { createMinecraftControllerGuards } from "./minecraft-controller-guards.ts";
 
@@ -110,7 +110,7 @@ export function createDeliveryMinecraftController(
           containers: [
             {
               name: "controller",
-              image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+              image: firstPartyImageRecipe("temporal-worker"),
               command: ["bun", "scripts/jobs/minecraft-controller.ts"],
               ports: [{ name: "http", containerPort: 7356 }],
               securityContext: {

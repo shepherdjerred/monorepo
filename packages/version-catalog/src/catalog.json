@@ -3,41 +3,6 @@
   "schemaVersion": 1,
   "entries": [
     {
-      "name": "shepherdjerred/delivery",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": { "managed": false },
-      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      "notes": [
-        "Unpublished bootstrap marker. Activate only after the Delivery image is published and its database, credentials, and release ownership are verified."
-      ]
-    },
-    {
-      "name": "shepherdjerred/arcade",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:da36e424c6a1eb89a8d5a78c3f6044c254f119c93de84a4d2c7937715f8f6520",
-      "notes": [
-        "Headless Arcade backends use private game assets on separate persistent storage"
-      ]
-    },
-    {
-      "name": "shepherdjerred/tracker",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:b7c7bc7f4c9cedf2120f0c3057f1dff79dd58e35aa5fdc3a4a92d9817000192c",
-      "notes": [
-        "Tracker application image - updated by CI pipeline",
-        "not managed by renovate"
-      ]
-    },
-    {
       "name": "bluemap/archive-cli",
       "category": "upstream",
       "artifactType": "package",
@@ -227,35 +192,6 @@
         "versioning": "semver"
       },
       "value": "v0.13.1"
-    },
-    {
-      "name": "shepherdjerred/streambot",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:a6ec510913967df7bacbe7cf06edd5db377ae56b74ae1f437db4fe0773211763",
-      "notes": [
-        "not managed by renovate — built from packages/streambot and updated by CI version commit-back."
-      ]
-    },
-    {
-      "name": "shepherdjerred/redlib",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1006677@sha256:70c405620a9d16032e4af1c1eef97fb4fb7a11e14f3bc0f603b65db2910d6d46",
-      "notes": [
-        "not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu",
-        "at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is",
-        "musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —",
-        "\"Failed to create OAuth client: 401 Unauthorized\"); the glibc build works.",
-        "CI's version commit-back fills the real tag@digest after the first image",
-        "push; the seed digest below is a placeholder until then."
-      ]
     },
     {
       "name": "itzg/minecraft-server",
@@ -779,196 +715,6 @@
       "value": "4.6.2"
     },
     {
-      "name": "shepherdjerred/storm-forum",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:7d18b41527756634d9384988af7d25770a8de80c09f534716744fafbd3554992",
-      "notes": [
-        "CI-published Storm forum image; publication alone does not activate public production."
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/beta",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:3219c7825d0269463eb9af3815d477de1bb22a77358b53020d1dfca3bae9f88c",
-      "notes": ["not managed by renovate — beta updated by version-commit-back"]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/prod",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver",
-        "packageName": "shepherdjerred/scout-for-lol"
-      },
-      "value": "2.0.0-1010826@sha256:6fb3a730330929dc026549bc928d4532a7fe9cd45d0e4e4796330c46c9ec2212",
-      "notes": [
-        "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
-        "tag is minted by the scout-tag-release CI step only after site version",
-        "<n> is archived, pointing at the backend digest beta serves it against —",
-        "so every tag Renovate can offer is a complete backend+site pair. The",
-        "scout-prod-reconcile step derives the prod site version from this pin's",
-        "tag portion. Only ever pin a minted tag (semver caveat: if the release",
-        "base moves off 2.0.0-, this pin needs one manual edit)."
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/candidate",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010387@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
-      "notes": [
-        "Candidate Scout beta Workflow Worker image - updated by version commit-back",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/stable",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010387@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
-      "notes": [
-        "Stable Scout beta Workflow Worker image - bootstrapped from the accepted beta backend image; later pins are promoted after a healthy 100% ramp",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/prod/workflows/candidate",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010387@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
-      "notes": [
-        "Candidate Scout prod Workflow Worker image - advanced explicitly after beta acceptance",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/prod/workflows/stable",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010387@sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
-      "notes": [
-        "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/starlight-karma-bot/beta",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:ccc1b5c667d8356dedbeb2a93614d74834505ca27568c96d9281e00f159b043f",
-      "notes": ["not managed by renovate — beta updated by version-commit-back"]
-    },
-    {
-      "name": "shepherdjerred/starlight-karma-bot/prod",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver",
-        "packageName": "shepherdjerred/starlight-karma-bot"
-      },
-      "value": "2.0.0-1007344@sha256:ee7862a0f9652cec406e518db41ce328a8334831c9d89f111265761e60be7460"
-    },
-    {
-      "name": "shepherdjerred/birmel",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:e64aaa4936b8f08d16d694be0cd8e31a1793ef6a3a05c6abf3498b0bee535c57",
-      "notes": ["not managed by renovate"]
-    },
-    {
-      "name": "shepherdjerred/woodpecker-config-extension",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:1043f62c59366676add4834dc95561143b07e0ac62256e8a1d5df73c829c757d",
-      "notes": [
-        "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
-        "needs this service to generate the pipeline that would otherwise build",
-        "it. The main image release replaces the pin through version commit-back."
-      ]
-    },
-    {
-      "name": "shepherdjerred/alert-dashboard",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:5cb27902b021e5c2d6c3e9277ab1e038169ea39ae945b61e29124d3a6103f0ea",
-      "notes": [
-        "not managed by renovate — CI version-commit-back replaces this after each",
-        "image push."
-      ]
-    },
-    {
-      "name": "shepherdjerred/storm-brain",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:6cd8ef739231f3fa0bc930e20be7e9a8b7958f4e51ea82801f8e88d284293b82",
-      "notes": [
-        "not managed by renovate — main image releases update this pin through version commit-back."
-      ]
-    },
-    {
-      "name": "shepherdjerred/discord-plays-pokemon",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010568@sha256:da1e9936fe60861fdfa7b2cbce4c90e475d3b2746633c2ddb4f14e5b9c9375eb",
-      "notes": ["not managed by renovate"]
-    },
-    {
-      "name": "shepherdjerred/discord-plays-mario-kart",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:2806c26235ad472592b91a471138a324c16f80268f9947ae7440e9dbf3ccc4be",
-      "notes": [
-        "not managed by renovate — CI version commit-back updates the image digest."
-      ]
-    },
-    {
       "name": "freshrss/freshrss",
       "category": "upstream",
       "artifactType": "image",
@@ -1181,7 +927,7 @@
       "value": "v0.34.0@sha256:b059f8d7226d0b326bc871af489a5dddf65e36af4d20d14251b072974d9ee87c",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
-        "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
+        "compressed ZFS PVC, replacing the per-run throwaway builder inside dind \u2014",
         "moves the build-layer write storm off the xfs /var system disk)."
       ]
     },
@@ -1649,84 +1395,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/velero-plugin",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1007972@sha256:eab187b9e23ad8351e4fc7871ad9fd30e27559d643c449a98be703ad48cf076c",
-      "notes": [
-        "First-publication marker; must be replaced by the CI-built digest before deployment. OpenEBS 3.6.0 with tested GUID ancestry and full rotation fixes."
-      ]
-    },
-    {
-      "name": "shepherdjerred/caddy-s3proxy",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1007972@sha256:e5b0fa6a202d7029e614e7df1983a216bcd45e71fb59c13494bb1c5858950527",
-      "notes": [
-        "Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/the-storm-server",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:bfdd2f32ac6093b792956ddfdd21366a072abeb9af8ba27a9829be223857f08c",
-      "notes": [
-        "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
-        "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
-      ]
-    },
-    {
-      "name": "shepherdjerred/the-storm-server/prod",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:bfdd2f32ac6093b792956ddfdd21366a072abeb9af8ba27a9829be223857f08c",
-      "notes": [
-        "Accepted minecraft-tsmc production image. Promote explicitly after the selected stopped-server progression archive and release checks.",
-        "This production pin advances only through explicit promotion of a verified published candidate.",
-        "CI publishes and updates shepherdjerred/the-storm-server separately; candidate publication never activates production."
-      ]
-    },
-    {
-      "name": "shepherdjerred/tasknotes-server",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:baefe9cf524943d9eebb26da68e6fda69749c32259752e8ac7ea4365d4af3da1",
-      "notes": [
-        "Custom tasknotes-server image - TaskNotes API server for mobile app",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/obsidian-headless",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1006677@sha256:c6bdc852849cad9029086d305723870342110637d6a7cf760d636c28ca897188",
-      "notes": [
-        "Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync",
-        "not managed by renovate"
-      ]
-    },
-    {
       "name": "temporalio/server",
       "category": "upstream",
       "artifactType": "image",
@@ -1763,58 +1431,6 @@
       "value": "1.32.1@sha256:9ef0dc5b063bf4ffd5c1512de72e0e73e225bd2c7006a18ce69bd592a8862a83"
     },
     {
-      "name": "shepherdjerred/temporal-worker",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:5b7b0bd7d128762049224f08cbb2ed4d32819cf2c5a8111e90d02f377f70958a",
-      "notes": [
-        "Custom temporal-worker image - updated by CI pipeline",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/temporal-worker/workflows/candidate",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1009749@sha256:e7a5a23cda6d993f489b05aab708ec0c365c39cb1dbdfec4c62aba2dbfc3bd66",
-      "notes": [
-        "Candidate central Workflow Worker image - updated by CI pipeline",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/temporal-worker/workflows/stable",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1009510@sha256:5f7768a553c8adc12e8180945a4d687b36ca249f6442fc99e9417f84b927ccf8",
-      "notes": [
-        "Stable central Workflow Worker image - promoted after a healthy 100% ramp",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/trmnl-dashboard",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010653@sha256:c89ea8d4fc6529fd652db4209969216955b7c2a2370d60f2eeeaefd881d5167f",
-      "notes": [
-        "Custom TRMNL dashboard image - updated by CI pipeline",
-        "not managed by renovate"
-      ]
-    },
-    {
       "name": "flipt-io/flipt",
       "category": "upstream",
       "artifactType": "image",
@@ -1830,19 +1446,6 @@
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
         "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
-      ]
-    },
-    {
-      "name": "shepherdjerred/glitter-boys-launcher",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      "imagePublisher": "local",
-      "notes": [
-        "Unpublished bootstrap marker; publish a locally verified service image and commit its immutable digest before activation."
       ]
     }
   ]

@@ -89,12 +89,12 @@ and total helper time; object bytes exclude network protocol overhead.
 
 Registry access uses explicit per-lane grants. Image and toolchain publishers
 and Scout tag publication receive the scoped Docker Hub publisher identity.
-Scout site extraction and image-pin metadata verification receive only the reader Docker configuration from
+Scout site extraction and immutable image metadata verification receive only the reader Docker configuration from
 `dockerhub-pull-woodpecker-ci`. The login helper validates the account and sends
 the token through standard input. These grants are main-only; pull-request
 commands receive neither registry identity. Publishing and CI toolchain images
 use Docker Hub. The publisher verifies the registry catalog's visibility policy
-before recording image pins. The review-image parser accepts existing GHCR
+before recording original artifacts. The review-image parser accepts existing GHCR
 extension digests during deployment transitions.
 
 Shared download caches are paired with explicit tool paths: Bun uses
@@ -396,35 +396,25 @@ empty plugin directory or unreadable shared file is a fixture failure.
 
 The config extension is an application image in `docker-bake.hcl` and
 `ci/scripts/images/image-targets.ts`. A main image release builds and smokes its
-candidate, then `version-commit-back` promotes the digest through the version
-catalog. ArgoCD must reconcile that new pin before Woodpecker generates
-pipelines with changed extension code. The original bootstrap image is not a
-substitute for this release path.
+candidate and registers its immutable artifact. Delivery independently qualifies
+the producing pipeline and selects the version in PostgreSQL. Changed extension
+code takes effect after that selected image is reconciled and running.
 
 The `image-push` concurrency group serializes image selection and publication.
-Before selecting targets, the image lane reads the latest publication from
-`ci-handoff/published-images/main.json`. A successful push, including a
-no-target run, atomically records its commit, pipeline number and both catalog
-and candidate handoffs there. Queued pipelines therefore see images published
-while they were waiting, even while pin commit-back remains pending.
+The image lane enumerates the canonical image recipes and service owners, then
+reads their original qualified artifacts from Delivery with the existing CI
+publisher identity. Missing originals select fresh builds; authentication,
+transport, schema and ownership failures stop the build. Source change selection
+uses the extension's whole-successful-pipeline baseline. A completed image step
+from a failed pipeline cannot replace that baseline.
 
-The publication reader starts with the build's exact source catalog. Upstream
-versions, entry membership and metadata stay paired with that checkout's
-checksums and configuration. Only internal image values advance from live main
-and completed publications; reviewed candidate withdrawals are validated against
-live main before retention. Equal release numbers with different digests fail.
-An older or conflicting publication cannot overwrite a newer record.
-Recover an already published image pipeline with a new full manual main run;
-do not reuse its release number for different artifacts.
-
-Both the no-target path and a partial image build publish the retained catalog
-for Helm and the next image baseline. Runtime comparison and Temporal candidate
-selection use that same catalog, preserving an active candidate while stable
-and candidate differ. Before the first publication record exists, the lane
-bootstraps from the extension's commit and pipeline baseline, which requires
-successful `images` and `version-commit-back` workflows. A legacy commit without
-a pipeline number provides no addressable baseline and selects all targets.
-Invalid publication records and missing required handoffs fail the build.
+No-target and partial builds carry unbuilt artifacts unchanged in the existing
+per-pipeline handoff store. Their artifact IDs, producing builds and source
+revisions are retained through Delivery's existing `retainedArtifactIds` field.
+Fresh candidates identify only outputs built and verified by the current
+pipeline. Runtime comparison uses the qualified original digest; Workflow host
+versions and routing remain PostgreSQL selections. Git image values and the
+retired mutable publication head do not choose reused artifacts.
 
 When a graph change retires a failing lane, the deployed image can still select
 that lane for the PR carrying its replacement. Changes under this package are
@@ -444,28 +434,26 @@ must rebuild intermediate stages. Registry imports remain enabled.
 Build progress streams immediately. Only a bounded output tail remains in
 memory for transport-failure classification; selectors and manifest queries
 retain their complete machine-readable output. Image digest validation,
-candidate smoke checks and pin promotion still gate publication.
+candidate smoke checks and immutable publication receipts still gate publication.
 
 ## Static-site delivery
 
 Browser checks can start alongside verification. Their workflow installs and
 builds its own selected Turbo prerequisites with concurrency two in its own
-workspace. The required completion verdict and site deployment both wait for
-verification and browser success. Site deployment consumes the exact tested
-artifact from the pipeline handoff bucket.
+workspace. The required completion verdict and artifact qualification both wait
+for verification and browser success. Delivery activates exact qualified
+archives from the immutable artifact bucket.
 
-The sites lane builds selected packages through the repository deploy catalog
-after OpenTofu creates their SeaweedFS buckets. Cloudflare DNS apply waits for
-both site publication and ArgoCD reconciliation, so a new hostname has content
-and a tunnel route before DNS exposes it. Each site declares its workspace
+The sites lane builds selected packages through the repository site catalog
+and publishes immutable archives without live storage activation, cache purge,
+OpenTofu apply, or ArgoCD synchronization. Each site declares its workspace
 filter, changed-path inputs, and deploy target; build inputs outside its package
 must also be included in those selectors.
 
-Scout live releases resolve the backend digest from the required published
-version-catalog handoff, including retained publications from earlier builds.
-PR release rehearsals use their checked-out catalog: PR builds publish no
-images or version-catalog handoff. This applies to commands from older deployed
-generators too; a missing handoff in a live release remains a hard failure.
+Scout publication resolves its backend from actual fresh outputs or original
+qualified artifacts retained from Delivery. PR rehearsals use synthetic
+print-only input and publish no archive or selected state. A missing real
+publication handoff remains a hard failure.
 
 For a new site lane, promote and reconcile the configuration extension image
 before enabling its hostname. A pipeline generated by the older image cannot
@@ -485,7 +473,7 @@ read it back after changing it through the repository API.
 
 The production inventory enables `woodpecker-maintenance-lanes-enabled`. Main still
 waits for exhaustive verification, GitHub releases, npm publication, application
-images, charts, and deployment. Release-note refinement and CI image refreshes
+images and charts. Delivery owns deployment. Release-note refinement and CI image refreshes
 move to explicit manual workflows. Their failures cannot satisfy or replace
 main's verification verdict.
 
@@ -516,10 +504,9 @@ The dispatcher retains later candidates and selects the newest verified main
 revision after the ready PR closes. Automated review remains required; bot
 seat provisioning is independent of lane separation.
 
-Scout release and image pin commit-back steps consume the same release
-admission verdict as their artifact producers. Superseded releases exit before
-reading absent handoffs or mutating state. An admitted release still fails on
-a missing required handoff.
+Artifact producers consume the release admission verdict before publication.
+Superseded releases exit before reading absent handoffs. An admitted producer
+still fails on a missing required handoff; there is no deployment pin commit-back.
 
 ## Port status
 

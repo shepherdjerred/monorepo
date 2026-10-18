@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 import { pushImages } from "../../ci/scripts/images/bake-images.ts";
 import { buildPublications } from "./publish-delivery.ts";
+import { ArtifactVersionSchema } from "../../packages/delivery/src/shared/contract.ts";
 
 const sourceRevision = "c".repeat(40);
 const pinnedDigest = `sha256:${"a".repeat(64)}`;
@@ -33,19 +34,24 @@ async function publishCandidate(smokeFails = false) {
         return { exitCode: 0, stdout: "", stderr: "" };
       },
       environment: {},
-      readVersionCatalog: async () =>
-        JSON.stringify({
-          schemaVersion: 1,
-          entries: [
-            {
-              name: "shepherdjerred/arcade",
-              category: "internal-image",
-              artifactType: "image",
-              management: { managed: false },
-              value: `2.0.0-1@${pinnedDigest}`,
-            },
+      readQualifiedImages: async () =>
+        new Map([
+          [
+            "arcade",
+            ArtifactVersionSchema.parse({
+              id: "ci/1/41/image/arcade",
+              buildId: "original-arcade-build",
+              serviceId: "arcade",
+              component: "image:arcade",
+              kind: "image",
+              uri: "docker.io/shepherdjerred/arcade",
+              digest: pinnedDigest,
+              version: "2.0.0-1000041",
+              sourceRevision: "a".repeat(40),
+              createdAt: "2026-10-17T00:00:00.000Z",
+            }),
           ],
-        }),
+        ]),
       getManifestDigest: async (candidate) => {
         expect(candidate).toBe(
           `docker.io/shepherdjerred/arcade:candidate-${sourceRevision}`,
@@ -89,7 +95,9 @@ test("publishes a freshly verified runtime-unchanged Arcade candidate with its o
   const output = await publishCandidate();
   await output.operation;
   expect(output.legacy).toEqual([{}]);
-  expect(output.candidates).toEqual([{}]);
+  expect(output.candidates).toEqual([
+    { "shepherdjerred/arcade": candidateDigest },
+  ]);
   expect(output.delivery).toEqual([
     { "shepherdjerred/arcade": candidateDigest },
   ]);

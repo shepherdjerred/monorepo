@@ -20,6 +20,7 @@ function chartOwnsDependency(
   if (image !== "caddy-s3proxy" || Chart.of(resource).node.id !== "temporal")
     return false;
   if (
+    reference !== "docker.io/shepherdjerred/caddy-s3proxy:delivery-recipe" &&
     !/^docker\.io\/shepherdjerred\/caddy-s3proxy(?::[\w.-]+)?@sha256:[a-f0-9]{64}$/u.test(
       reference,
     )
@@ -55,7 +56,7 @@ function bindContainers(
     resource.addJsonPatch(
       JsonPatch.replace(
         `/${containerPath.join("/")}/${String(index)}/image`,
-        `{{ get (get (.Values.delivery | default dict) "images" | default dict) "${profile.controlPlane ? "delivery-control-plane" : image}" | default "${container.image}" }}`,
+        `{{ required \`Delivery requires image:${profile.controlPlane ? "delivery-control-plane" : image}\` (get (get (.Values.delivery | default dict) "images" | default dict) "${profile.controlPlane ? "delivery-control-plane" : image}") }}`,
       ),
     );
   }
@@ -113,11 +114,48 @@ function bindResource(resource: ApiObject, catalog: ServiceIndex) {
     });
 }
 
-/** Keep today's rendered pins unless Delivery supplies an exact reviewed image parameter. */
+/** Every workload image comes from its frozen Delivery selection. */
 export function applyOrdinaryDeliveryImageBindings(app: App): void {
   const catalog = new ServiceIndex();
   for (const resource of app.node.findAll()) {
     if (!ApiObject.isApiObject(resource)) continue;
     bindResource(resource, catalog);
+    bindRecipes(resource, resource.toJson(), [], catalog);
+  }
+}
+
+function bindRecipes(
+  resource: ApiObject,
+  value: unknown,
+  path: string[],
+  catalog: ServiceIndex,
+): void {
+  if (typeof value === "string") {
+    const image =
+      /^docker\.io\/shepherdjerred\/([a-z0-9-]+):delivery-recipe$/u.exec(
+        value,
+      )?.[1];
+    if (image === undefined) return;
+    const chart = Chart.of(resource).node.id;
+    const runtime =
+      (ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined &&
+        catalog.byChart(chart)?.images.includes(image) === true) ||
+      (chart === "temporal" && image === "temporal-worker");
+    const field = runtime ? "images" : "dependencies";
+    resource.addJsonPatch(
+      JsonPatch.replace(
+        "/" +
+          path
+            .map((key) => key.replaceAll("~", "~0").replaceAll("/", "~1"))
+            .join("/"),
+        `{{ required \`Delivery requires image:${image}\` (get (get (.Values.delivery | default dict) "${field}" | default dict) "${image}") }}`,
+      ),
+    );
+  } else if (Array.isArray(value)) {
+    for (const [index, child] of value.entries())
+      bindRecipes(resource, child, [...path, String(index)], catalog);
+  } else if (value !== null && typeof value === "object") {
+    for (const [key, child] of Object.entries(value))
+      bindRecipes(resource, child, [...path, key], catalog);
   }
 }

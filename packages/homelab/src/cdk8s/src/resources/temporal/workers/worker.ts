@@ -414,7 +414,6 @@ export function createTemporalWorkerDeployment(
     gatewayDeployment,
     homeDeployment,
     reportsDeployment,
-    workflowDeployment: workflowDeployments.stable,
     workflowCandidateDeployment: workflowDeployments.candidate,
     infraDeployment,
     repoDeployment,

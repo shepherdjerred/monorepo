@@ -17,6 +17,27 @@ const applicationDestination = z.object({
   spec: z.object({ destination: z.object({ namespace: z.string().min(1) }) }),
 });
 
+function existingPullSecret(app: App, namespace: string): boolean {
+  const matches = app.node
+    .findAll()
+    .filter(
+      (resource) =>
+        ApiObject.isApiObject(resource) &&
+        resource.kind === "OnePasswordItem" &&
+        resource.metadata.name === dockerHubPullSecretName(namespace) &&
+        resource.metadata.namespace === namespace,
+    );
+  const [existing] = matches;
+  if (existing === undefined) return false;
+  if (matches.length !== 1)
+    throw new Error(`Duplicate registry reader in ${namespace}`);
+  z.object({
+    type: z.literal("kubernetes.io/dockerconfigjson"),
+    spec: z.object({ itemPath: z.literal(vaultItemPath(PULL_ITEM_ID)) }),
+  }).parse(ApiObject.of(existing).toJson());
+  return true;
+}
+
 function containsPrivateImage(value: unknown): boolean {
   if (typeof value === "string") {
     // Runtime-created pods can appear only in serialized admission allowlists.
@@ -60,6 +81,7 @@ export function prepareDockerHubPullSecrets(app: App): void {
   // Woodpecker owns its CI namespace credential declaration alongside grants.
   namespaces.delete("woodpecker-ci");
   for (const [namespace, chart] of namespaces) {
+    if (existingPullSecret(app, namespace)) continue;
     new OnePasswordItem(chart, `dockerhub-pull-${namespace}`, {
       metadata: { name: dockerHubPullSecretName(namespace), namespace },
       type: "kubernetes.io/dockerconfigjson",

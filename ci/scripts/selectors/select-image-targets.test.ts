@@ -22,33 +22,10 @@ import {
   patchedDependencyKey,
   type LockfilePair,
 } from "./select-image-targets-lockfile.ts";
-import { UNPUBLISHED_IMAGE_DIGEST } from "../../../scripts/lib/image-pin-catalog.ts";
 
 const REPO_ROOT = new URL("../../..", import.meta.url).pathname;
-const PUBLISHED_IMAGE_DIGEST = `sha256:${"f".repeat(64)}`;
-const REAL_VERSION_CATALOG = await Bun.file(
-  `${REPO_ROOT}/packages/version-catalog/src/catalog.json`,
-).text();
-const PUBLISHED_VERSION_CATALOG = REAL_VERSION_CATALOG.replaceAll(
-  UNPUBLISHED_IMAGE_DIGEST,
-  PUBLISHED_IMAGE_DIGEST,
-);
-const BIRMEL_IMAGE_PIN_PATTERN =
-  /("name": "shepherdjerred\/birmel",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/;
-
-function unpublishedBirmelVersionCatalog(source: string): string {
-  if (!BIRMEL_IMAGE_PIN_PATTERN.test(source)) {
-    throw new Error("Birmel image pin is missing from the version catalog");
-  }
-
-  return source.replace(
-    BIRMEL_IMAGE_PIN_PATTERN,
-    `$1${UNPUBLISHED_IMAGE_DIGEST}`,
-  );
-}
-
 function selectorInputs(inputs?: SelectorInputs): SelectorInputs {
-  return { versionCatalogSource: PUBLISHED_VERSION_CATALOG, ...inputs };
+  return { ...inputs };
 }
 
 function select(
@@ -77,20 +54,6 @@ test("rebuilds the bundled review policy when its source or library changes", as
   ]) {
     expect(await select([path])).toContain("woodpecker-config-extension");
   }
-});
-
-test("selects infra for an unpublished maintained plugin", async () => {
-  const catalog = PUBLISHED_VERSION_CATALOG.replace(
-    /("name": "shepherdjerred\/velero-plugin",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/,
-    `$1${UNPUBLISHED_IMAGE_DIGEST}`,
-  );
-  const result = await selectImageTargetsWithReasons(["README.md"], REPO_ROOT, {
-    versionCatalogSource: catalog,
-  });
-  expect(result.targets).toEqual(["infra"]);
-  expect(result.report.targets["infra"]).toContain(
-    "unpublished image pin shepherdjerred/velero-plugin requires its first release",
-  );
 });
 
 test("rebuilds both consumers of The Storm's public status contract", async () => {
@@ -306,39 +269,6 @@ describe("selectImageTargets", () => {
 
   test("selects nothing for unrelated documentation", async () => {
     expect(await select(["README.md"])).toEqual([]);
-  });
-
-  test("keeps an unpublished image target selected until it has a real digest", async () => {
-    const result = await selectImageTargetsWithReasons(
-      ["README.md"],
-      REPO_ROOT,
-      {
-        versionCatalogSource: unpublishedBirmelVersionCatalog(
-          PUBLISHED_VERSION_CATALOG,
-        ),
-      },
-    );
-
-    expect(result.targets).toEqual(["birmel"]);
-    expect(result.report.targets["birmel"]).toEqual([
-      "unpublished image pin shepherdjerred/birmel requires its first release",
-    ]);
-  });
-
-  test("fails open when unpublished-pin inspection cannot read the catalog", async () => {
-    const result = await selectImageTargetsWithReasons(
-      ["README.md"],
-      REPO_ROOT,
-      {
-        versionCatalogSource: "{",
-      },
-    );
-
-    expect(result.targets).toEqual(ALL_IMAGE_TARGETS);
-    expect(result.report.mode).toBe("all");
-    expect(result.report.globalReason).toContain(
-      "unpublished pin inspection failed",
-    );
   });
 });
 

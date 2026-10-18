@@ -71,6 +71,5 @@ export function workerPoolParameters(
     ? {}
     : {
         "delivery.workerPool": JSON.stringify(pool),
-        "delivery.legacyWorkers": "stopped",
       };
 }

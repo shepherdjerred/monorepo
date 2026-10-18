@@ -38,8 +38,7 @@ import { createServiceProbesChart } from "./resources/monitoring/service-probes-
 import { resetProbeRegistry } from "./misc/probes/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
 import { createStormForumCharts } from "./resources/storm-forum/releases.ts";
-import versions from "./versions.ts";
-import { trackerImageReference } from "./resources/tracker/image.ts";
+import { firstPartyImageRecipe } from "./versions.ts";
 import { createTrackerChart } from "./cdk8s-charts/platform/tracker.ts";
 import { createDeliveryChart } from "./cdk8s-charts/platform/delivery.ts";
 import { createDeliveryControlPlaneChart } from "./cdk8s-charts/platform/delivery-control-plane.ts";
@@ -60,14 +59,9 @@ export async function setupCharts(app: App): Promise<void> {
   resetProbeRegistry();
 
   await createAppsChart(app);
-  const trackerImage = trackerImageReference(
-    versions["shepherdjerred/tracker"],
-  );
+  const trackerImage = firstPartyImageRecipe("tracker");
   createTrackerChart(app, trackerImage);
-  createDeliveryChart(
-    app,
-    deliveryActivation(versions["shepherdjerred/delivery"]),
-  );
+  createDeliveryChart(app, deliveryActivation());
   createScoutChart(app, "beta");
   createScoutChart(app, "prod");
   createStarlightKarmaBotChart(app, "beta");

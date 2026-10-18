@@ -664,7 +664,7 @@ describe("Hosted Scout roles", () => {
       ).toBe(false);
     },
   );
-  test("keeps five mutable roles and PostgreSQL replicas in both stages", () => {
+  test("keeps stage runtime roles, one frozen Workflow recipe and PostgreSQL replicas", () => {
     const prod = scoutResources("prod");
     const deployments = prod.filter(
       (resource) => resource.kind === "Deployment",
@@ -679,7 +679,6 @@ describe("Hosted Scout roles", () => {
       "scout-prod-scout-backend",
       "scout-prod-scout-gateway",
       "scout-prod-scout-workflow-worker-candidate",
-      "scout-prod-scout-workflow-worker-stable",
     ]);
     for (const resource of deployments) {
       expect(
@@ -704,7 +703,6 @@ describe("Hosted Scout roles", () => {
       "scout-beta-scout-backend",
       "scout-beta-scout-gateway",
       "scout-beta-scout-workflow-worker-candidate",
-      "scout-beta-scout-workflow-worker-stable",
     ]);
     for (const resource of beta) {
       expect(

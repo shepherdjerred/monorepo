@@ -1,88 +1,30 @@
-import { requireCatalogImageValue } from "../../../scripts/lib/image-pin-catalog.ts";
+import { imageIdentity } from "../../../scripts/lib/image-pin-catalog.ts";
 
-const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
-const CENTRAL_WORKFLOW_STABLE =
-  "shepherdjerred/temporal-worker/workflows/stable";
-const CENTRAL_WORKFLOW_CANDIDATE =
-  "shepherdjerred/temporal-worker/workflows/candidate";
-const SCOUT_BETA_WORKFLOW_STABLE =
-  "shepherdjerred/scout-for-lol/beta/workflows/stable";
-const SCOUT_BETA_WORKFLOW_CANDIDATE =
-  "shepherdjerred/scout-for-lol/beta/workflows/candidate";
-
-function isLegacyWorkflowPin(value: string): boolean {
-  const match = /^2\.0\.0-(\d+)@sha256:[a-f\d]{64}$/.exec(value);
-  if (match === null) return false;
-  const build = Number(match[1]);
-  return Number.isInteger(build) && build <= LAST_IMAGE_WITHOUT_WORKFLOW_WORKER;
-}
-
-function centralWorkflowPinTargets(
-  versionCatalogSource: string,
-): readonly string[] {
-  const stable = requireCatalogImageValue(
-    versionCatalogSource,
-    CENTRAL_WORKFLOW_STABLE,
-  );
-  const candidate = requireCatalogImageValue(
-    versionCatalogSource,
-    CENTRAL_WORKFLOW_CANDIDATE,
-  );
-  if (stable === candidate && isLegacyWorkflowPin(stable)) {
-    return [CENTRAL_WORKFLOW_STABLE, CENTRAL_WORKFLOW_CANDIDATE];
-  }
-  return stable === candidate ||
-    (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
-    ? [CENTRAL_WORKFLOW_CANDIDATE]
-    : [];
-}
-
-function scoutBetaWorkflowPinTargets(
-  versionCatalogSource: string,
-): readonly string[] {
-  const stable = requireCatalogImageValue(
-    versionCatalogSource,
-    SCOUT_BETA_WORKFLOW_STABLE,
-  );
-  const candidate = requireCatalogImageValue(
-    versionCatalogSource,
-    SCOUT_BETA_WORKFLOW_CANDIDATE,
-  );
-  if (stable === candidate && isLegacyWorkflowPin(stable)) {
-    return [SCOUT_BETA_WORKFLOW_STABLE, SCOUT_BETA_WORKFLOW_CANDIDATE];
-  }
-  return stable === candidate ||
-    (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
-    ? [SCOUT_BETA_WORKFLOW_CANDIDATE]
-    : [];
-}
-
+/** Immutable receipt of this producer's outputs; Workflow routing belongs only to PG. */
 export function pinCandidatesForDigests(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
   gitSha: string,
-  versionCatalogSource: string,
-): Record<string, { version: string; digest: string; gitSha?: string }> {
-  if (!/^[0-9a-f]{40}$/.test(gitSha)) {
+) {
+  if (!/^[0-9a-f]{40}$/.test(gitSha))
     throw new Error("Image source commit must be a 40-character lowercase SHA");
-  }
-  const candidates: Record<
-    string,
-    { version: string; digest: string; gitSha?: string }
-  > = {};
-  for (const [key, digest] of Object.entries(digests)) {
-    const candidate = { version: `2.0.0-${buildNumber}`, digest };
-    candidates[key] = candidate;
-    if (key === "shepherdjerred/temporal-worker") {
-      for (const target of centralWorkflowPinTargets(versionCatalogSource)) {
-        candidates[target] = { ...candidate, gitSha };
-      }
-    }
-    if (key === "shepherdjerred/scout-for-lol/beta") {
-      for (const target of scoutBetaWorkflowPinTargets(versionCatalogSource)) {
-        candidates[target] = { ...candidate, gitSha };
-      }
-    }
-  }
-  return candidates;
+  if (
+    !/^[1-9]\d*$/.test(buildNumber) ||
+    !Number.isSafeInteger(Number(buildNumber))
+  )
+    throw new Error("Image build number must be a positive safe integer");
+  return Object.fromEntries(
+    Object.entries(digests).map(([key, digest]) => {
+      const name = key.replace(/^shepherdjerred\//u, "");
+      imageIdentity(name);
+      if (
+        key !== `shepherdjerred/${name}` ||
+        !/^sha256:[a-f0-9]{64}$/.test(digest)
+      )
+        throw new Error(
+          "Fresh image receipt requires canonical image identity and digest",
+        );
+      return [key, { version: `2.0.0-${buildNumber}`, digest, gitSha }];
+    }),
+  );
 }

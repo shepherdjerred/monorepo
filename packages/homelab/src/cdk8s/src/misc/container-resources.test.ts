@@ -361,13 +361,6 @@ describe("Container resource requests backstop", () => {
         },
       ],
       [
-        "temporal-temporal-workflows-stable/temporal-workflows-stable",
-        {
-          requests: { cpu: "250m", memory: "1536Mi" },
-          limits: { cpu: "1000m", memory: "2048Mi" },
-        },
-      ],
-      [
         "temporal-temporal-workflows-candidate/temporal-workflows-candidate",
         {
           requests: { cpu: "250m", memory: "1536Mi" },
@@ -491,7 +484,6 @@ describe("Burst-memory sharing policy", () => {
       }
     }
     for (const name of [
-      "temporal-temporal-workflows-stable",
       "temporal-temporal-workflows-candidate",
       "temporal-temporal-infra-worker",
       "temporal-temporal-backup-worker",

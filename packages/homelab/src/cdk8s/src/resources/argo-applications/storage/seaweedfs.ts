@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
@@ -337,7 +338,7 @@ export function createSeaweedfsApp(chart: Chart) {
       sidecars: [
         {
           name: "authenticated-gateway",
-          image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+          image: firstPartyImageRecipe("caddy-s3proxy"),
           imagePullPolicy: "IfNotPresent",
           command: ["/bin/sh", "-c"],
           args: [

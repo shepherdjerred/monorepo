@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -22,7 +23,6 @@ import {
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { Node, NodeLabelQuery } from "cdk8s-plus-31";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { WOODPECKER_PUBLIC_HOST } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import {
   CONFIG_EXTENSION_APP_LABEL,
@@ -69,7 +69,7 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
   deployment.addContainer(
     withCommonProps({
       name: "woodpecker-config-extension",
-      image: `docker.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
+      image: firstPartyImageRecipe("woodpecker-config-extension"),
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
@@ -79,7 +79,7 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         FLIPT_NAMESPACE: EnvValue.fromValue("woodpecker"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         CI_GATE_IMAGE: EnvValue.fromValue(
-          `docker.io/shepherdjerred/woodpecker-config-extension:${versions["shepherdjerred/woodpecker-config-extension"]}`,
+          firstPartyImageRecipe("woodpecker-config-extension"),
         ),
         WOODPECKER_URL: EnvValue.fromValue(WOODPECKER_PUBLIC_HOST),
         CI_REPO_SLUG: EnvValue.fromValue("shepherdjerred/monorepo"),

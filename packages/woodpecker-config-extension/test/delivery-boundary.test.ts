@@ -1,7 +1,6 @@
 import { expect, test } from "vitest";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import { selectSteps } from "#src/pipeline/select.ts";
-import { internalImagePinSteps } from "#src/pipeline/internal-image-pin-change.ts";
 import { TEST_IMAGES } from "./identity.ts";
 
 const steps = () =>
@@ -104,6 +103,22 @@ test("static and Scout producers always publish immutable archives, independentl
 
 test("artifact publication preserves build gates and has no deployment-acceptance dependency", () => {
   const graph = steps();
+  const imageProducer = graph.find((step) => step.key === "images");
+  expect(imageProducer?.defaultBranchOnly).toBe(true);
+  expect(imageProducer?.environment?.["DELIVERY_URL"]).toBe(
+    "http://delivery.delivery.svc.cluster.local:7353",
+  );
+  expect(
+    imageProducer?.secrets?.filter(
+      (grant) => grant.secret === "ci-delivery-credentials",
+    ),
+  ).toEqual([
+    {
+      secret: "ci-delivery-credentials",
+      key: "DELIVERY_PUBLISHER_TOKEN",
+      env: "DELIVERY_API_TOKEN",
+    },
+  ]);
   expect(graph.find((step) => step.key === "images")?.dependsOn).toEqual([
     "verify",
   ]);
@@ -158,7 +173,7 @@ test("every emitted dependency exists and the full graph is acyclic", () => {
 });
 
 test("toolchain pin builds retain all real artifact producer dependencies and register provenance", () => {
-  const graph = internalImagePinSteps(steps());
+  const graph = steps();
   expect(graph.map((step) => step.key)).toEqual(
     expect.arrayContaining([
       "verify",
@@ -173,9 +188,6 @@ test("toolchain pin builds retain all real artifact producer dependencies and re
   for (const step of graph)
     for (const dependency of step.dependsOn ?? [])
       expect(keys.has(dependency), `${step.key}/${dependency}`).toBe(true);
-  expect(() =>
-    internalImagePinSteps(steps().filter((step) => step.key !== "images")),
-  ).toThrow("Missing artifact producer dependency");
 });
 
 test("PR verification cannot select any artifact publisher", () => {

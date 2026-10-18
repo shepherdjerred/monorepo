@@ -27,7 +27,7 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   launcherRelease,
   LauncherReleaseSchema,
@@ -36,7 +36,7 @@ import {
 export function createGlitterBoysLauncherChart(
   app: App,
   releaseState: unknown = launcherRelease,
-  image = versions["shepherdjerred/glitter-boys-launcher"],
+  image = firstPartyImageRecipe("glitter-boys-launcher"),
 ) {
   const name = "glitter-boys-launcher";
   const chart = new Chart(app, name, {
@@ -51,8 +51,9 @@ export function createGlitterBoysLauncherChart(
     return chart;
   }
   if (
-    !/^[\w.-]+@sha256:[a-f0-9]{64}$/.test(image) ||
-    image.endsWith("0".repeat(64))
+    image !== firstPartyImageRecipe("glitter-boys-launcher") &&
+    (!/^[\w.-]+@sha256:[a-f0-9]{64}$/.test(image) ||
+      image.endsWith("0".repeat(64)))
   )
     throw new Error("Publish the launcher service image before activation");
   new Namespace(chart, "namespace", { metadata: { name } });
@@ -67,7 +68,9 @@ export function createGlitterBoysLauncherChart(
   deployment.addContainer(
     withCommonProps({
       name,
-      image: `docker.io/shepherdjerred/glitter-boys-launcher:${image}`,
+      image: image.startsWith("docker.io/")
+        ? image
+        : `docker.io/shepherdjerred/glitter-boys-launcher:${image}`,
       ports: [
         { number: 8080, name: "http" },
         { number: 9091, name: "metrics" },

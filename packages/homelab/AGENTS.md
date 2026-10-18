@@ -13,7 +13,10 @@ homelab repository skill before changing or operating it.
   ArgoCD Application. Reuse the established deployment, ingress, storage,
   observability, and LinuxServer helpers.
 - Recurring work belongs in Temporal. Kubernetes CronJobs are prohibited.
-- Versions come from the language-neutral catalog. A chart bump that changes a
+- Upstream and toolchain versions come from the language-neutral catalog.
+  First-party workload selections and retained worker pools come from Delivery
+  PostgreSQL; chart publication freezes original image artifacts for dependencies.
+  A chart bump that changes a
   Helm generator input must regenerate and commit the matching types.
 - OpenTofu owns external control planes and remote state. Inspect the owning
   stack before changing a provider dashboard or API directly.

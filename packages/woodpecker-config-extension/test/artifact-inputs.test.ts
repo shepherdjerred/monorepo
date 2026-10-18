@@ -148,6 +148,10 @@ test("the sites lane publishes active site archives when their paths change", ()
   if (sites === undefined || dryRun === undefined) {
     throw new Error("site deploy or dry-run step missing");
   }
+  expect(dryRun.commands.join("\n")).not.toContain("--version-catalog-file");
+  expect(dryRun.commands.join("\n")).toContain(
+    `--backend-digest sha256:${"f".repeat(64)}`,
+  );
   const commands = sites.commands.join("\n");
   for (const [lane, site, workspace] of [
     [

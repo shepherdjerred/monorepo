@@ -17,6 +17,8 @@ import {
   BOOTSTRAP_DELIVERY_ORIGIN,
 } from "./bootstrap-selection.ts";
 import { reviewedAccountSource } from "./bootstrap-account-policy.ts";
+import { bootstrapCredentials } from "./bootstrap-auth.ts";
+import { releaseBootstrapRoot } from "./bootstrap-woodpecker.ts";
 import {
   bootstrapOperationReceipt,
   bootstrapSourceCas,
@@ -45,6 +47,95 @@ function descriptor() {
     },
   });
 }
+
+test("Delivery bootstrap separates operator, root and workload principals", async () => {
+  vi.stubEnv("ARGOCD_TOKEN", "operator");
+  vi.stubEnv("ROOT_ARGOCD_TOKEN", "root");
+  vi.stubEnv("ARGOCD_WORKLOAD_TOKEN", "workload");
+  const principals: Record<string, string> = {
+    operator: "admin",
+    root: "delivery-platform",
+    workload: "delivery",
+  };
+  const inspect = vi.fn((token: string) =>
+    Promise.resolve({
+      loggedIn: true,
+      username: principals[token],
+    }),
+  );
+  try {
+    expect(await bootstrapCredentials(inspect, true)).toEqual({
+      ARGOCD_TOKEN: "root",
+      ARGOCD_WORKLOAD_TOKEN: "workload",
+    });
+    expect(await bootstrapCredentials(inspect)).toEqual({
+      ARGOCD_TOKEN: "root",
+    });
+    principals["workload"] = "admin";
+    await expect(bootstrapCredentials(inspect, true)).rejects.toThrow();
+    vi.stubEnv("ARGOCD_WORKLOAD_TOKEN", undefined);
+    await expect(bootstrapCredentials(inspect, true)).rejects.toThrow();
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+
+test.each([
+  { targets: ["woodpecker"] },
+  { targets: ["delivery-control-plane"] },
+  { targets: ["delivery"] },
+])(
+  "bootstrap $targets keeps child authority separate from root finalization",
+  async ({ targets }) => {
+    const selected = { ...descriptor(), targets };
+    const invoke = vi.fn(() => Promise.resolve());
+    const credentials = {
+      ARGOCD_TOKEN: "root",
+      ARGOCD_WORKLOAD_TOKEN: "workload",
+    };
+    await releaseBootstrapRoot({
+      descriptor: selected,
+      expectedPath: "/private/expected.json",
+      credentials,
+      run: invoke,
+    });
+    const identity = [
+      "--revision",
+      selected.revision,
+      "--request-id",
+      selected.requestId,
+    ];
+    const root = { ARGOCD_TOKEN: "root" };
+    const final = [
+      ["release-root", "apps", "/private/expected.json", ...identity],
+      root,
+    ];
+    expect(invoke.mock.calls).toEqual(
+      targets.includes("delivery")
+        ? [
+            [["stage-root-release", "apps", ...identity], root],
+            [
+              ["sync-managed", "delivery", ...identity],
+              { ARGOCD_TOKEN: "workload" },
+            ],
+            final,
+          ]
+        : [final],
+    );
+    if (targets.includes("delivery")) {
+      invoke.mockClear();
+      await expect(
+        releaseBootstrapRoot({
+          descriptor: selected,
+          expectedPath: "/private/expected.json",
+          credentials: root,
+          run: invoke,
+        }),
+      ).rejects.toThrow();
+      expect(invoke).not.toHaveBeenCalled();
+    }
+  },
+);
 function native(name: string) {
   return BootstrapApplicationSchema.parse({
     metadata: {

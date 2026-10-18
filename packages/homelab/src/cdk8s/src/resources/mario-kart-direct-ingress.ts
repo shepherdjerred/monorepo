@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject, JsonPatch, Size, type Chart } from "cdk8s";
 import {
   Capability,
@@ -15,7 +16,6 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { marioKartCaddyfile } from "./mario-kart-caddyfile.ts";
 
 export const MARIO_KART_HTTP_NODE_PORT = 30_080;
@@ -46,7 +46,7 @@ export function createMarioKartDirectIngress(
   const container = deployment.addContainer(
     withCommonProps({
       name: "caddy",
-      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: firstPartyImageRecipe("caddy-s3proxy"),
       ports: [
         { name: "http", number: 8080 },
         { name: "https", number: 8443 },

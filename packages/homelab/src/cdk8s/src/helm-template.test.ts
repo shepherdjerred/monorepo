@@ -6,6 +6,7 @@ import path from "node:path";
 import { workerPoolExpressions } from "@shepherdjerred/homelab/cdk8s/scripts/delivery/worker-pool-template.ts";
 import { ORDINARY_DELIVERY_ENVIRONMENTS } from "homelab/src/delivery-target-policy.ts";
 import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
+import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 
@@ -146,17 +147,25 @@ function implicitAutoSyncApplications(content: string, entry: string) {
 
 function stripDeliveryImageBindings(line: string, chart: string): string {
   let stripped = line;
-  if (
-    ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined ||
-    ["temporal", "scout-beta", "scout-prod"].includes(chart)
-  )
+  for (const image of imageRegistry.images) {
     stripped = stripped.replaceAll(
-      /\{\{ get \(get \(\.Values\.delivery \| default dict\) "images" \| default dict\) "([a-z0-9-]+)" \| default "docker\.io\/shepherdjerred\/\1(?::[\w.-]+)?@sha256:[a-f0-9]{64}" \}\}/gu,
+      `{{ required \`Delivery requires image:${image.name}\` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "${image.name}") }}`,
       "",
     );
-  if (chart === "temporal")
+  }
+  if (
+    ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined ||
+    ["temporal", "scout-beta", "scout-prod", "delivery-control-plane"].includes(
+      chart,
+    )
+  )
     stripped = stripped.replaceAll(
-      /\{\{ get \(get \(\.Values\.delivery \| default dict\) "images" \| default dict\) "delivery-control-plane" \| default "docker\.io\/shepherdjerred\/temporal-worker(?::[\w.-]+)?@sha256:[a-f0-9]{64}" \}\}/gu,
+      /\{\{ required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "images" \| default dict\) "\1"\) \}\}/gu,
+      "",
+    );
+  if (["arcade", "delivery"].includes(chart))
+    stripped = stripped.replaceAll(
+      '{{ required `Delivery requires image` (get (.Values.delivery | default dict) "image") }}',
       "",
     );
   return stripped;
@@ -188,12 +197,6 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
 
     // First-party release inputs are intentional Helm, scoped to their chart
     // and exact reviewed expression grammar. Consumer templates still escape.
-    if (fileName === "arcade.k8s.yaml") {
-      stripped = stripped.replaceAll(
-        /\{\{ \.Values\.delivery\.image \| default "docker\.io\/shepherdjerred\/arcade:[\w.@:-]+" \}\}/gu,
-        "",
-      );
-    }
     if (
       ["storm-forum.k8s.yaml", "storm-forum-beta.k8s.yaml"].includes(fileName)
     ) {

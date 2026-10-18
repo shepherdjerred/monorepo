@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
@@ -19,7 +20,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 
 export const BRAIN_PORT = 3000;
@@ -53,7 +53,7 @@ export function createStormBrainDeployment(chart: Chart) {
   const container = deployment.addContainer(
     withCommonProps({
       name: "storm-brain",
-      image: `docker.io/shepherdjerred/storm-brain:${versions["shepherdjerred/storm-brain"]}`,
+      image: firstPartyImageRecipe("storm-brain"),
       ports: [
         { name: "http", number: BRAIN_PORT },
         { name: "metrics", number: BRAIN_METRICS_PORT },

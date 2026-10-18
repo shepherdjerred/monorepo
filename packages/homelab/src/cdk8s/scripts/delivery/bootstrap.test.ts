@@ -7,8 +7,6 @@ import os from "node:os";
 import path from "node:path";
 import { stringify, parseAllDocuments } from "yaml";
 import { createAppsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/apps.ts";
-import { createDeliveryApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/delivery.ts";
-import { createDeliveryControlPlaneApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/delivery-control-plane.ts";
 import { reviewedAccountSource } from "homelab/scripts/ci/bootstrap-account-policy.ts";
 import { assertBootstrapMaintenance } from "homelab/scripts/ci/bootstrap-maintenance.ts";
 import {
@@ -27,6 +25,7 @@ import {
   fingerprintChart,
 } from "homelab/scripts/helm/helm-release-core.ts";
 import { stageChart } from "homelab/scripts/helm/helm-push.ts";
+import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
 import { createDeliveryControlPlaneChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery-control-plane.ts";
 import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 import { renderBootstrapControlPlane } from "homelab/scripts/ci/bootstrap-control-plane-render.ts";
@@ -69,11 +68,18 @@ test("normal all-chart publication discovers and packages the actual control-pla
       "2.0.0-1010825",
       path.join(directory, "staged"),
     );
+    const validationPath = path.join(directory, "validation.yaml");
+    await Bun.write(
+      validationPath,
+      stringify(chartValidationValues(controller.name)),
+    );
     const rendered = Bun.spawnSync([
       "helm",
       "template",
       "delivery-control-plane",
       archive,
+      "--values",
+      validationPath,
     ]);
     expect(rendered.exitCode).toBe(0);
     expect(
@@ -156,8 +162,6 @@ test("actual root self-reference survives paused account prerequisite then selec
   await createAppsChart(app);
   const chart = app.charts.find((candidate) => candidate.node.id === "apps");
   if (chart === undefined) throw new Error("Missing actual apps chart");
-  createDeliveryApp(chart);
-  createDeliveryControlPlaneApp(chart);
   const documents = z
     .array(
       z

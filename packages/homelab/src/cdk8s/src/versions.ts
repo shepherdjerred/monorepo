@@ -1,22 +1,17 @@
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import {
   parseVersionCatalog,
-  parseVersionCatalogText,
   versionCatalogMap,
 } from "@shepherdjerred/version-catalog";
+import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import { VersionMapSchema } from "./version-map.generated.ts";
-import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
-
-const catalogOverride = Bun.env["HOMELAB_VERSION_CATALOG_JSON"];
-export const versionCatalog =
-  catalogOverride === undefined
-    ? parseVersionCatalog(rawCatalog)
-    : parseVersionCatalogText(catalogOverride);
+export const versionCatalog = parseVersionCatalog(rawCatalog);
 const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
-// Overlays the current build's image digests onto the catalog pins in place.
-// Scout is PostgreSQL-only, so no per-image database contract is derived here.
-applyCurrentBuildImageOverrides(versions);
+/** Synthesis recipe only: the final binding pass replaces it with a required selection. */
+export function firstPartyImageRecipe(name: string): string {
+  return `${firstPartyImageRepository(name)}:delivery-recipe`;
+}
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned

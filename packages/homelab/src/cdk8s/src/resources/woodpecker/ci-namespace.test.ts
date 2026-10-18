@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
+import { bindChartImageDependencies } from "homelab/scripts/helm/helm-delivery-publication.ts";
+import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
+import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
 import {
@@ -41,7 +44,14 @@ type Manifest = z.infer<typeof ManifestSchema>;
 function woodpeckerManifests(): Manifest[] {
   const app = new App({ outdir: ".test-synth-woodpecker-ci-namespace" });
   createWoodpeckerChart(app);
-  return documents(app.synthYaml())
+  applyOrdinaryDeliveryImageBindings(app);
+  const images = Object.fromEntries(
+    imageRegistry.images.map((image) => [
+      `shepherdjerred/${image.name}`,
+      `sha256:${"f".repeat(64)}`,
+    ]),
+  );
+  return documents(bindChartImageDependencies(app.synthYaml(), images))
     .map((document) => ManifestSchema.safeParse(document))
     .filter((parsed) => parsed.success)
     .map((parsed) => parsed.data);

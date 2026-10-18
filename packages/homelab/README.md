@@ -12,6 +12,12 @@ See the [homelab overview](../docs/wiki/src/content/docs/explanation/homelab/ove
 for topology and the wiki how-to guides for operator workflows.
 [AGENTS.md](AGENTS.md) contains only always-on package constraints.
 
+The version catalog pins upstream dependencies and toolchains. Delivery
+PostgreSQL selects first-party application images and retained worker pools.
+Charts require those frozen parameters; publication binds root-owned image
+dependencies to original immutable artifact records. Producer validation values
+are external fixtures and never packaged deployment defaults.
+
 ## Release scheduling
 
 The root release workflow reconciles at most three child Applications at once

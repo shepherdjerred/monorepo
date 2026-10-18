@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import {
   Capability,
@@ -21,10 +22,9 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/pro
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
-const IMAGE = `docker.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred/alert-dashboard"]}`;
+const IMAGE = firstPartyImageRecipe("alert-dashboard");
 
 export function createAlertDashboardDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "alert-dashboard", {

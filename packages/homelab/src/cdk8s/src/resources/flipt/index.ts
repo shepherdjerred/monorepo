@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
@@ -441,7 +442,7 @@ export function createFliptDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "authenticated-gateway",
-      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: firstPartyImageRecipe("caddy-s3proxy"),
       ports: [{ name: "http", number: FLIPT_PORT }],
       ...authenticatedGatewayContainerDefaults(),
       ...createFliptHealthProbes(),

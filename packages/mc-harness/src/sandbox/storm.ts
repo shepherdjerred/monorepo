@@ -80,7 +80,10 @@ const STORM_IMAGE_CONFIGS = z
   )
   .parse(imageConfigs);
 
-export function stormImageConfig(image: string): {
+export function stormImageConfig(
+  image: string,
+  frozenConfig?: { yaml: string; sha256: string },
+): {
   moduleKeys: readonly string[];
   enabledModules: readonly string[];
 } {
@@ -88,7 +91,24 @@ export function stormImageConfig(image: string): {
   if (digest === undefined) {
     throw new Error(`Storm sandbox image must be digest-pinned: ${image}`);
   }
-  const config = STORM_IMAGE_CONFIGS[digest];
+  const config =
+    frozenConfig === undefined
+      ? STORM_IMAGE_CONFIGS[digest]
+      : {
+          configSha256: frozenConfig.sha256,
+          moduleKeys: Object.keys(
+            z
+              .object({ modules: z.record(z.string().min(1), z.boolean()) })
+              .strict()
+              .parse(Bun.YAML.parse(frozenConfig.yaml)).modules,
+          ),
+        };
+  if (
+    frozenConfig !== undefined &&
+    new Bun.CryptoHasher("sha256").update(frozenConfig.yaml).digest("hex") !==
+      frozenConfig.sha256
+  )
+    throw new Error("Frozen Storm image configuration digest differs");
   if (config === undefined) {
     throw new Error(
       `No Storm module config snapshot for image digest ${digest}`,

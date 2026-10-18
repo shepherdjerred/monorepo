@@ -1,3 +1,4 @@
+import { publicationImageDigests } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 /**
@@ -22,15 +23,22 @@ export const MC_LIVE_POD = "minecraft-tsmc-0";
 /**
  * The only images a sandbox pod may run: the itzg catalog pin the harness
  * uses for its `paper` and `storm-dev` profiles, and the Storm server image at
- * its candidate and production pins. The harness writes images in the
- * `<repo>:<tag>@sha256:<digest>` form these pins already have.
+ * original candidate and accepted artifact digests frozen into the chart.
+ * An empty accepted catalog never grants an invented production image.
  */
-export function mcSandboxImageAllowlist(): string[] {
+export function mcSandboxImageAllowlist(
+  inputs: Readonly<Record<string, string>> = publicationImageDigests(),
+): string[] {
   const itzg = `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`;
   return [
     itzg,
     `docker.io/${itzg}`,
-    `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server"]}`,
-    `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server/prod"]}`,
+    ...["candidate", "accepted"].flatMap((kind) => {
+      const digest = inputs[`shepherdjerred/the-storm-server/${kind}`];
+      if (digest === undefined) return [];
+      if (!/^sha256:[a-f0-9]{64}$/u.test(digest))
+        throw new Error("Frozen Minecraft image digest is invalid");
+      return [`docker.io/shepherdjerred/the-storm-server@${digest}`];
+    }),
   ];
 }

@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
@@ -214,7 +215,7 @@ export function createVeleroApp(chart: Chart) {
       },
       {
         name: "velero-plugin-openebs",
-        image: `docker.io/shepherdjerred/velero-plugin:${versions["shepherdjerred/velero-plugin"]}`,
+        image: firstPartyImageRecipe("velero-plugin"),
         securityContext: {
           runAsNonRoot: true,
           runAsUser: 65_532,

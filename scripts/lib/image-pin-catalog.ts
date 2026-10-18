@@ -1,136 +1,147 @@
-import { asRecord } from "./json.ts";
+import {
+  ServiceIndex,
+  SERVICE_CATALOG,
+} from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  ArtifactVersionSchema,
+  type ArtifactVersion,
+} from "@shepherdjerred/delivery/contract";
+import {
+  APPLICATION_IMAGE_TARGETS,
+  INFRASTRUCTURE_IMAGE_TARGETS,
+} from "../../ci/scripts/images/image-targets.ts";
+import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
+import {
+  createDeliveryClient,
+  type DeliveryClient,
+} from "@shepherdjerred/delivery/client";
+import { readRequiredHandoff } from "./ci/ci-handoff.ts";
+import { z } from "zod";
+import { requireEnv } from "./run.ts";
 
-export const UNPUBLISHED_IMAGE_DIGEST = `sha256:${"0".repeat(64)}`;
+export const CANONICAL_IMAGE_TARGETS = [
+  ...APPLICATION_IMAGE_TARGETS,
+  ...INFRASTRUCTURE_IMAGE_TARGETS,
+];
+export type QualifiedImageInventory = ReadonlyMap<string, ArtifactVersion>;
 
-type ManagedImagePin = {
-  readonly key: string;
-  readonly digest: string;
-};
+export function imageIdentity(name: string) {
+  if (!CANONICAL_IMAGE_TARGETS.includes(name))
+    throw new Error(`Unknown CI image recipe ${name}`);
+  const owner = new ServiceIndex(SERVICE_CATALOG).byImage(name);
+  if (owner === undefined)
+    throw new Error(`Image ${name} has no canonical service owner`);
+  return {
+    serviceId: owner.id,
+    component: `image:${name}`,
+    kind: "image" as const,
+    uri: firstPartyImageRepository(name),
+  };
+}
 
-type CatalogImageEntry = {
-  readonly name: string;
-  readonly value: string;
-  readonly category: string;
-  readonly artifactType: string;
-};
-
-function requiredString(
-  entry: Record<string, unknown> | null,
-  field: string,
-  index: number,
-): string {
-  const value = entry?.[field];
-  if (typeof value !== "string") {
-    throw new TypeError(
-      `version catalog entry ${String(index)} has a non-string ${field}`,
+/** A reuse record is the original qualified artifact, never a new producer output. */
+export function qualifiedImage(name: string, raw: unknown): ArtifactVersion {
+  const identity = imageIdentity(name);
+  const artifact = ArtifactVersionSchema.parse(raw);
+  if (
+    artifact.serviceId !== identity.serviceId ||
+    artifact.component !== identity.component ||
+    artifact.uri !== identity.uri ||
+    artifact.kind !== identity.kind ||
+    artifact.origin.kind !== "first-party"
+  ) {
+    throw new Error(
+      `Qualified image ${name} differs from its canonical owner/component/repository`,
     );
   }
-  return value;
+  return artifact;
 }
 
-/**
- * The bake lanes run `bun --no-install ci/scripts/images/bake-images.ts` in a
- * pod that never installs the workspace, so this reader must stay on platform
- * primitives. A Zod-backed schema here makes every bake pod fail at module load
- * with "Cannot find package 'zod'" — moving the module between workspaces does
- * not help, because the lane has no `node_modules` at all. The installed lanes
- * keep their fully validated catalog read in `@shepherdjerred/version-catalog`.
- */
-function readCatalogImageEntries(
-  versionCatalogSource: string,
-): readonly CatalogImageEntry[] {
-  let raw: unknown;
-  try {
-    raw = JSON.parse(versionCatalogSource);
-  } catch (error) {
-    throw new Error("version catalog is not valid JSON", { cause: error });
-  }
-  const entries = asRecord(raw)?.["entries"];
-  if (!Array.isArray(entries)) {
-    throw new TypeError("version catalog has no entries array");
-  }
-  return entries.map((candidate: unknown, index) => {
-    const entry = asRecord(candidate);
-    return {
-      name: requiredString(entry, "name", index),
-      value: requiredString(entry, "value", index),
-      category: requiredString(entry, "category", index),
-      artifactType: requiredString(entry, "artifactType", index),
-    };
-  });
+export function unbuiltImageOriginals(
+  inventory: QualifiedImageInventory,
+  built: readonly string[],
+) {
+  const produced = new Set(built);
+  return [...inventory]
+    .filter(([name]) => !produced.has(name))
+    .map(([, artifact]) => artifact);
 }
 
-function entriesByName(
-  versionCatalogSource: string,
-): ReadonlyMap<string, CatalogImageEntry> {
-  const byName = new Map<string, CatalogImageEntry>();
-  for (const entry of readCatalogImageEntries(versionCatalogSource)) {
-    if (byName.has(entry.name)) {
-      throw new Error(
-        `version catalog names must be unique; ${entry.name} is duplicated`,
-      );
-    }
-    byName.set(entry.name, entry);
+/** Transient immutable chart inputs; these never choose an application deployment. */
+export async function chartPublicationImages(
+  read = readRequiredHandoff,
+  client: Pick<DeliveryClient, "latestQualifiedArtifact"> & {
+    overview: () => Promise<{
+      environments: {
+        id: string;
+        acceptedVersionSetRevisionId: string | null;
+      }[];
+    }>;
+    version: (id: string) => Promise<{
+      serviceId: string;
+      components: Record<string, ArtifactVersion>;
+    }>;
+  } = createDeliveryClient({
+    baseUrl: requireEnv("DELIVERY_URL"),
+    headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+  }),
+) {
+  const [rawFresh, rawRetained] = await Promise.all([
+    read("delivery-image-digests"),
+    read("delivery-retained-image-artifacts"),
+  ]);
+  const fresh = z
+    .record(z.string(), z.string().regex(/^sha256:[a-f0-9]{64}$/u))
+    .parse(JSON.parse(rawFresh));
+  const retained = z
+    .array(ArtifactVersionSchema)
+    .parse(JSON.parse(rawRetained));
+  const images: Record<string, string> = {};
+  for (const original of retained) {
+    const name = original.component.slice("image:".length);
+    qualifiedImage(name, original);
+    const key = `shepherdjerred/${name}`;
+    if (images[key] !== undefined || fresh[key] !== undefined)
+      throw new Error("Fresh and retained chart image originals overlap");
+    images[key] = original.digest;
   }
-  return byName;
-}
-
-export function findManagedImagePin(
-  versionCatalogSource: string,
-  imageName: string,
-): ManagedImagePin | undefined {
-  const entries = entriesByName(versionCatalogSource);
-  for (const key of [
-    `shepherdjerred/${imageName}`,
-    `shepherdjerred/${imageName}/beta`,
-  ]) {
-    const entry = entries.get(key);
-    if (
-      entry?.category !== "internal-image" ||
-      entry.artifactType !== "image"
-    ) {
-      continue;
-    }
-    const match = /@(sha256:[a-f\d]{64})$/.exec(entry.value);
-    const digest = match?.[1];
-    if (digest !== undefined) return { key, digest };
+  for (const [key, digest] of Object.entries(fresh)) {
+    const name = key.replace(/^shepherdjerred\//u, "");
+    imageIdentity(name);
+    if (key !== `shepherdjerred/${name}`)
+      throw new Error("Chart image key is not canonical");
+    images[key] = digest;
   }
-  return undefined;
-}
-
-export function requireCatalogImageValue(
-  versionCatalogSource: string,
-  key: string,
-): string {
-  const entry = entriesByName(versionCatalogSource).get(key);
-  if (entry?.category !== "internal-image" || entry.artifactType !== "image") {
-    throw new Error(`No internal image pin exists for ${key}`);
-  }
-  return entry.value;
-}
-
-export function catalogImagePinsMatch(
-  versionCatalogSource: string,
-  leftKey: string,
-  rightKey: string,
-): boolean {
-  return (
-    requireCatalogImageValue(versionCatalogSource, leftKey) ===
-    requireCatalogImageValue(versionCatalogSource, rightKey)
+  // A fresh publication is immutable chart input, never a claim of qualification.
+  // An unchanged candidate retains the exact already-qualified original.
+  images["shepherdjerred/the-storm-server/candidate"] =
+    images["shepherdjerred/the-storm-server"] ??
+    qualifiedImage(
+      "the-storm-server",
+      await client.latestQualifiedArtifact({
+        serviceId: "minecraft",
+        component: "image:the-storm-server",
+        kind: "image",
+      }),
+    ).digest;
+  const overview = await client.overview();
+  const environment = overview.environments.find(
+    (entry) => entry.id === "minecraft/tsmc",
   );
-}
-
-export function resolveManagedImagePins(
-  versionCatalogSource: string,
-  imageNames: readonly string[],
-): readonly { readonly name: string; readonly pin: ManagedImagePin }[] {
-  return imageNames.map((name) => {
-    const pin = findManagedImagePin(versionCatalogSource, name);
-    if (pin === undefined) {
-      throw new Error(
-        `No managed image pin exists for docker.io/shepherdjerred/${name}`,
-      );
-    }
-    return { name, pin };
-  });
+  if (
+    environment !== undefined &&
+    environment.acceptedVersionSetRevisionId !== null
+  ) {
+    const accepted = await client.version(
+      environment.acceptedVersionSetRevisionId,
+    );
+    const original = qualifiedImage(
+      "the-storm-server",
+      accepted.components["image:the-storm-server"],
+    );
+    if (accepted.serviceId !== "minecraft")
+      throw new Error("Accepted Minecraft release owner differs");
+    images["shepherdjerred/the-storm-server/accepted"] = original.digest;
+  }
+  return images;
 }

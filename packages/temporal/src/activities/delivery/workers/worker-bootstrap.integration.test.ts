@@ -229,15 +229,17 @@ function boundary(
   return { effects, selections, receipts };
 }
 
-test("genuine PostgreSQL pool bootstraps exact retained images before allowing the final legacy-stop selection", async () => {
+test("genuine PostgreSQL pool bootstraps only exact retained images without a Git legacy selector", async () => {
   const external = boundary();
   await bootstrapDeliveryWorkerHosts(detail, external.effects);
   expect(external.selections).toHaveLength(1);
-  expect(external.selections[0]?.parameters["delivery.legacyWorkers"]).toBe(
-    "keep",
+  expect(external.selections[0]?.parameters).not.toHaveProperty(
+    "delivery.legacyWorkers",
   );
   const final = deliverySelection(await store.detail(detail.deployment.id));
-  expect(final.selection.parameters["delivery.legacyWorkers"]).toBe("stopped");
+  expect(final.selection.parameters).not.toHaveProperty(
+    "delivery.legacyWorkers",
+  );
   expect(final.selection.parameters["delivery.workerPool"]).toBe(
     external.selections[0]?.parameters["delivery.workerPool"],
   );
@@ -273,11 +275,10 @@ test("missing replacement Pod proof leaves the bootstrap intent running and the 
   await expect(
     bootstrapDeliveryWorkerHosts(detail, external.effects),
   ).rejects.toThrow("ready Pod");
-  expect(
-    external.selections.map(
-      (selection) => selection.parameters["delivery.legacyWorkers"],
-    ),
-  ).toEqual(["keep"]);
+  expect(external.selections).toHaveLength(1);
+  expect(external.selections[0]?.parameters["delivery.workerPool"]).toBe(
+    deliverySelection(detail).selection.parameters["delivery.workerPool"],
+  );
   const stored = await store.detail(detail.deployment.id);
   expect(stored.stages).toContainEqual(
     expect.objectContaining({

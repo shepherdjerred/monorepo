@@ -38,7 +38,6 @@ export const SCOUT_ACTIVITY_WORKER_APP_LABEL = "scout-activity-worker";
 export const SCOUT_ACTIVITY_WORKER_SYNC_WAVE = "1";
 
 export type ScoutActivityWorkerDeploymentOptions = {
-  readonly imageVersion: string;
   readonly envVariables: Record<string, EnvValue>;
   readonly claim: IPersistentVolumeClaim;
   readonly selinuxLevel: ZfsVolumeSelinuxLevel;
@@ -82,7 +81,7 @@ export function createScoutActivityWorkerDeployment(
   // scheduling constraint rather than an accident of current node placement.
   deployment.scheduling.colocate(options.colocateWith);
 
-  const containerBase = scoutAdminRoleContainerBase(options.imageVersion);
+  const containerBase = scoutAdminRoleContainerBase();
   deployment.addContainer(
     withCommonProps({
       ...containerBase,

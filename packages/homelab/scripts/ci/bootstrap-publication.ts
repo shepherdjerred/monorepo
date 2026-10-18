@@ -9,6 +9,8 @@ import {
 } from "#scripts/helm/helm-release-core.ts";
 import { stageChart } from "#scripts/helm/helm-push.ts";
 import { bootstrapArgo } from "./bootstrap-native.ts";
+import { bindChartImageDependencies } from "#scripts/helm/helm-delivery-publication.ts";
+import { publicationImageDigests } from "#cdk8s/src/release-configuration.ts";
 import {
   bootstrapRootManifest,
   bootstrapRootTemplate,
@@ -178,16 +180,18 @@ export async function prepareBootstrapArchives(
 ) {
   const homelab = new URL("../../", import.meta.url).pathname;
   const maintenance = await capturedMaintenanceImage(descriptor, captured);
+  const images = {
+    ...publicationImageDigests(),
+    "shepherdjerred/delivery": descriptor.images.delivery.digest,
+    "shepherdjerred/woodpecker-config-extension":
+      descriptor.images.woodpecker.digest,
+  };
   await run(["bun", "--no-install", "run", "build"], {
     cwd: path.join(homelab, "src/cdk8s"),
     env: {
-      HOMELAB_IMAGE_DIGESTS_JSON: JSON.stringify({
-        "shepherdjerred/delivery": descriptor.images.delivery.digest,
-      }),
-      HOMELAB_RELEASE_VERSION: descriptor.images.delivery.version,
+      HOMELAB_IMAGE_DIGESTS_JSON: JSON.stringify(images),
     },
     unsetEnv: [
-      "HOMELAB_VERSION_CATALOG_JSON",
       "HOMELAB_CHART_REVISIONS_JSON",
       "OP_SERVICE_ACCOUNT_TOKEN",
       "ARGOCD_TOKEN",
@@ -205,7 +209,10 @@ export async function prepareBootstrapArchives(
     const input = inputs.find((candidate) => candidate.name === name);
     if (input === undefined)
       throw new Error(`Bootstrap source does not build ${name}`);
-    const original = await Bun.file(input.manifestPath).text();
+    const original = bindChartImageDependencies(
+      await Bun.file(input.manifestPath).text(),
+      images,
+    );
     const prepared = prepareBootstrapManifest(original, name, {
       descriptor,
       captured,

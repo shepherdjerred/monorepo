@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   Deployment,
   DeploymentStrategy,
@@ -10,7 +11,6 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export function createRedlibDeployment(chart: Chart) {
   const redlibDeployment = new Deployment(chart, "redlib", {
@@ -23,7 +23,7 @@ export function createRedlibDeployment(chart: Chart) {
       // Deliberately BestEffort (no requests/limits) — negligible or
       // non-critical usage; see the 2026-06-12 right-sizing plan.
       resources: {},
-      image: `docker.io/shepherdjerred/redlib:${versions["shepherdjerred/redlib"]}`,
+      image: firstPartyImageRecipe("redlib"),
       envVariables: {
         REDLIB_DEFAULT_THEME: EnvValue.fromValue("system"),
         REDLIB_DEFAULT_LAYOUT: EnvValue.fromValue("card"),

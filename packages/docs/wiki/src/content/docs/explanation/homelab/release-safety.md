@@ -487,8 +487,10 @@ Delivery independently qualifies the complete producing pipeline before those
 artifacts become eligible for selection. A successful build can therefore remain
 undeployed, and deploying an older retained version does not change build metadata.
 
-The language-neutral version catalog holds dependency and bootstrap inputs.
-Its parser and CDK8s projection validate those contracts. Selected application
+The language-neutral version catalog holds upstream and toolchain dependencies.
+Its parser and CDK8s projection validate those contracts. First-party charts
+require frozen Delivery parameters; root-owned dependencies are bound to original
+published artifacts in immutable chart bytes. Selected application
 versions, worker routing, rollback history, and approvals belong to PostgreSQL.
 Image publication performs no deployment commit-back and maintains no Git queue.
 

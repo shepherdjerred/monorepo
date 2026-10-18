@@ -10,14 +10,13 @@ function createWorkflowWorker(
   chart: Chart,
   props: {
     serverServiceName: string;
-    track: "stable" | "candidate";
+    track: "candidate";
   },
 ): Deployment {
   return createTemporalDomainWorker(chart, {
     name: `temporal-workflows-${props.track}`,
     component: `central-workflows-${props.track}`,
     podLabels: { "worker-family": "central-workflows" },
-    imageKey: `shepherdjerred/temporal-worker/workflows/${props.track}`,
     cpuRequest: Cpu.millis(250),
     cpuLimit: Cpu.millis(1000),
     memoryRequest: Size.mebibytes(1536),
@@ -47,9 +46,8 @@ function createWorkflowWorker(
 export function createTemporalWorkflowWorkers(
   chart: Chart,
   props: { serverServiceName: string },
-): { stable: Deployment; candidate: Deployment } {
+): { candidate: Deployment } {
   return {
-    stable: createWorkflowWorker(chart, { ...props, track: "stable" }),
     candidate: createWorkflowWorker(chart, { ...props, track: "candidate" }),
   };
 }

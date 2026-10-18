@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { publishedStorm } from "#test/fixtures/published-storm.ts";
 import {
   parseBlockPos,
   SandboxCreateRequestSchema,
@@ -6,6 +7,35 @@ import {
 } from "#protocol/ipc.ts";
 
 describe("ipc helpers", () => {
+  it("binds future published images to their exact original source configuration without a Git pin", () => {
+    const input = publishedStorm();
+    expect(input.publishedArtifact?.digest).toBe(`sha256:${"c".repeat(64)}`);
+    expect(
+      SandboxCreateRequestSchema.safeParse({
+        ...input,
+        publishedArtifact: undefined,
+      }).success,
+    ).toBe(false);
+    expect(
+      SandboxCreateRequestSchema.safeParse({
+        ...input,
+        publishedConfig: {
+          ...input.publishedConfig,
+          sourceRevision: "d".repeat(40),
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      SandboxCreateRequestSchema.safeParse({
+        ...input,
+        publishedConfig: { ...input.publishedConfig, yaml: "modules: {}" },
+      }).success,
+    ).toBe(false);
+    expect(
+      SandboxCreateRequestSchema.safeParse({ ...input, profile: "paper" })
+        .success,
+    ).toBe(false);
+  });
   it("parses block positions", () => {
     expect(parseBlockPos("1,-60,3")).toEqual({ x: 1, y: -60, z: 3 });
     expect(() => parseBlockPos("1,2")).toThrow(/x,y,z/u);

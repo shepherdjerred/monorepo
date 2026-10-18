@@ -1,6 +1,9 @@
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
-import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
+import {
+  ArtifactInputSchema,
+  ArtifactVersionSchema,
+} from "@shepherdjerred/delivery/contract";
 import { ChartPublicationSchema } from "@shepherdjerred/ops-model/chart-publication.ts";
 import {
   SERVICE_CATALOG,
@@ -54,6 +57,11 @@ export async function readPublicationHandoffs(
   const digests: unknown = JSON.parse(
     await read.required(DELIVERY_IMAGE_DIGESTS_HANDOFF),
   );
+  const retainedArtifacts = z
+    .array(ArtifactVersionSchema)
+    .parse(
+      JSON.parse(await read.required("delivery-retained-image-artifacts")),
+    );
   const rawCharts = await read.optional("argocd-release-expected");
   const chartPublication =
     rawCharts === undefined
@@ -91,6 +99,7 @@ export async function readPublicationHandoffs(
   if (!staticArchives)
     return {
       digests,
+      retainedArtifacts,
       charts,
       chartPublication,
       rootInventory,
@@ -122,6 +131,7 @@ export async function readPublicationHandoffs(
       );
   return {
     digests,
+    retainedArtifacts,
     charts,
     chartPublication,
     rootInventory,

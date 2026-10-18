@@ -1,4 +1,5 @@
 import type { ParseArgsOptionsConfig } from "node:util";
+import { publishedProfileInputs } from "#lib/mc/published-profile.ts";
 import { mcBuildCommand } from "#commands/mc/build.ts";
 import {
   mcDaemonStartCommand,
@@ -153,6 +154,7 @@ async function handleSandbox(args: string[]): Promise<void> {
   const [action = "", ...rest] = args;
   const { values, positionals } = parse(rest, {
     profile: { type: "string", default: "paper" },
+    "artifact-file": { type: "string" },
     world: { type: "string", default: "flat" },
     ttl: { type: "string" },
     keep: { type: "boolean", default: false },
@@ -161,8 +163,10 @@ async function handleSandbox(args: string[]): Promise<void> {
   });
   switch (action) {
     case "up": {
+      const profile = ProfileSchema.parse(values.profile);
       const request = SandboxCreateRequestSchema.parse({
-        profile: ProfileSchema.parse(values.profile),
+        profile,
+        ...(await publishedProfileInputs(profile, values["artifact-file"])),
         world: WorldKindSchema.parse(values.world),
         ttlSeconds:
           values.ttl === undefined
