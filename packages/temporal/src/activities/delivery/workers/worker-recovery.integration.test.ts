@@ -210,9 +210,9 @@ function boundary(): WorkerRecoveryEffects {
   };
 }
 
-test("pre-PATCH readonly failure releases exact held ownership with original hosts and unchanged semantic source, without accepting failed release", async () => {
-  const external = boundary();
-  const proof = await proveSettledWorkerRecovery(context, external);
+async function settleWithoutAcceptance(
+  proof: Awaited<ReturnType<typeof proveSettledWorkerRecovery>>,
+) {
   await store.completeWorkerRecovery(context.intent.id, proof, testExecutor);
   const result = await store.detail(context.deployment.deployment.id);
   expect(result.deployment).toMatchObject({
@@ -223,6 +223,12 @@ test("pre-PATCH readonly failure releases exact held ownership with original hos
   expect(result.environment.acceptedVersionSetRevisionId).toBe(
     context.deployment.environment.acceptedVersionSetRevisionId,
   );
+}
+
+test("pre-PATCH readonly failure releases exact held ownership with original hosts and unchanged semantic source, without accepting failed release", async () => {
+  const external = boundary();
+  const proof = await proveSettledWorkerRecovery(context, external);
+  await settleWithoutAcceptance(proof);
   expect(proof.routes.map((route) => route.namespace)).toEqual([
     "prod",
     "beta",
@@ -246,16 +252,7 @@ test("read-only pre-effect recovery can settle healthy comparison drift without 
       },
     }),
   });
-  await store.completeWorkerRecovery(context.intent.id, proof, testExecutor);
-  const result = await store.detail(context.deployment.deployment.id);
-  expect(result.deployment).toMatchObject({
-    status: "failed",
-    recoveryRequired: false,
-  });
-  expect(result.environment.activeDeploymentId).toBeNull();
-  expect(result.environment.acceptedVersionSetRevisionId).toBe(
-    context.deployment.environment.acceptedVersionSetRevisionId,
-  );
+  await settleWithoutAcceptance(proof);
   expect(
     proof.evidence.some((entry) =>
       entry.summary.includes("OutOfSync/OutOfSync"),
