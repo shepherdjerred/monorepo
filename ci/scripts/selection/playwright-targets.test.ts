@@ -22,16 +22,6 @@ const workspaces = new Map<string, WorkspacePackage>([
     { dir: "packages/alert-dashboard/", workspaceDependencies: [] },
   ],
   [
-    "@scout-for-lol/activity",
-    {
-      dir: "packages/scout-for-lol/packages/activity/",
-      workspaceDependencies: [
-        "@scout-for-lol/backend",
-        "@scout-for-lol/design-system",
-      ],
-    },
-  ],
-  [
     "@scout-for-lol/app",
     {
       dir: "packages/scout-for-lol/packages/app/",
@@ -93,7 +83,7 @@ describe("Playwright target selection", () => {
           workspaces,
         ),
       ),
-    ).toEqual(["@scout-for-lol/activity", "@scout-for-lol/app"]);
+    ).toEqual(["@scout-for-lol/app"]);
     expect(
       packages(
         await selectPlaywrightTargets(
@@ -102,11 +92,7 @@ describe("Playwright target selection", () => {
           workspaces,
         ),
       ),
-    ).toEqual([
-      "@scout-for-lol/activity",
-      "@scout-for-lol/app",
-      "@scout-for-lol/design-system",
-    ]);
+    ).toEqual(["@scout-for-lol/app", "@scout-for-lol/design-system"]);
   });
 
   test("selects the app catalog for its own components", async () => {
@@ -126,7 +112,7 @@ describe("Playwright target selection", () => {
     ]);
   });
 
-  test("selects Activity when its synthetic Prisma prerequisite changes", async () => {
+  test("selects the app when its synthetic Prisma prerequisite changes", async () => {
     expect(
       packages(
         await selectPlaywrightTargets(
@@ -135,10 +121,7 @@ describe("Playwright target selection", () => {
           workspaces,
         ),
       ),
-    ).toEqual(["@scout-for-lol/activity", "@scout-for-lol/app"]);
-    expect(
-      additionalPlaywrightInstallFilters(["@scout-for-lol/activity"]),
-    ).toEqual(["@shepherdjerred/birmel"]);
+    ).toEqual(["@scout-for-lol/app"]);
     expect(additionalPlaywrightInstallFilters(["sjer.red"])).toEqual([]);
   });
 

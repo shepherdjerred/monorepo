@@ -58,11 +58,6 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     dependency: "@playwright/test",
   },
   {
-    path: "packages/scout-for-lol/packages/activity/package.json",
-    section: "devDependencies",
-    dependency: "@playwright/test",
-  },
-  {
     path: "packages/tracker/package.json",
     section: "devDependencies",
     dependency: "@playwright/test",

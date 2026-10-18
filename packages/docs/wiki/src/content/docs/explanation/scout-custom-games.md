@@ -15,9 +15,10 @@ and Scout recognizes the game from what paired clients observe.
 
 ## Observation follows the players
 
-Custom nights begin with teams assigned in Scout. Either duel participant can
-create a lobby. Other customs can begin through the normal social flow in the
-League client.
+Either duel participant can create a lobby. Other customs begin through the
+normal social flow in the League client. Scout-hosted custom nights, which
+assigned teams through a Discord Activity, are retired; their history remains
+readable, and a Custom game that was already pending still binds the same way.
 
 The backend binds an observed lobby only when its exact PUUID roster matches
 one pending Custom or duel game. An ambiguous roster fails instead of being

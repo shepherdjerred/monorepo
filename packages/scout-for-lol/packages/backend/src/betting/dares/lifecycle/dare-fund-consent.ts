@@ -22,7 +22,7 @@ import {
   parseDareTargets,
 } from "#src/betting/dares/dare-common.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { mintDareStatusIntents } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import { buildDareContract } from "#src/betting/dares/evaluation/dare-contract-build.ts";
 
 /**
@@ -142,7 +142,7 @@ export async function fundDareInTransaction(
     discordId: input.actorDiscordId,
     amount: openingStake,
   });
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: dare.id,
     revision: input.revision,
     category: "lifecycle",
@@ -209,7 +209,7 @@ export async function acceptDareInTransaction(
     where: { dareId: input.dareId },
   });
   if (unaccepted > 0) {
-    await enqueueDareNotificationInTransaction(tx, {
+    await mintDareStatusIntents(tx, {
       dareId: input.dareId,
       revision: input.revision,
       category: "lifecycle",
@@ -264,7 +264,7 @@ export async function acceptDareInTransaction(
       resolution: "expired",
       withCut: false,
     });
-    await enqueueDareNotificationInTransaction(tx, {
+    await mintDareStatusIntents(tx, {
       dareId: input.dareId,
       revision: input.revision,
       category: "lifecycle",
@@ -303,7 +303,7 @@ export async function acceptDareInTransaction(
         nextAttemptAt: input.now,
       },
     });
-    await enqueueDareNotificationInTransaction(tx, {
+    await mintDareStatusIntents(tx, {
       dareId: input.dareId,
       revision: input.revision,
       category: "lifecycle",
@@ -341,7 +341,7 @@ export async function acceptDareInTransaction(
       `Dare ${input.dareId.toString()} lost its activation claim.`,
     );
   }
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: input.dareId,
     revision: input.revision,
     category: "lifecycle",
@@ -351,7 +351,7 @@ export async function acceptDareInTransaction(
     deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:accepted:${input.actorDiscordId}`,
     occurredAt: input.now,
   });
-  await enqueueDareNotificationInTransaction(tx, {
+  await mintDareStatusIntents(tx, {
     dareId: input.dareId,
     revision: input.revision,
     category: "lifecycle",

@@ -243,9 +243,6 @@
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
     },
-    "packages/scout-for-lol/packages/activity": {
-      "entry": ["playwright.config.ts"]
-    },
     "packages/scout-for-lol/packages/data": {
       "entry": ["scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]

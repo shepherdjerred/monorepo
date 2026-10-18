@@ -33,7 +33,7 @@ import { fullPrematchRosterFixture } from "#src/testing/raw-capture-fixtures.ts"
  *
  * What is under test is once-only: per match and guild, across retries of
  * the Activity AND across the two pipelines during an ownership flip. The
- * fence, the claim row, the receipt, `BucksMatchPool`'s unique (match, guild)
+ * fence, the receipt, `BucksMatchPool`'s unique (match, guild)
  * and the Classic marker's guarded claim are all real here; only the archived
  * snapshot read (S3) is replaced by the context it would return.
  *
@@ -158,7 +158,6 @@ async function capture(
 }
 
 beforeEach(async () => {
-  await prisma.scoutEffectClaim.deleteMany();
   await prisma.matchProcessingReceipt.deleteMany();
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.bucksLedgerEntry.deleteMany();
@@ -197,11 +196,11 @@ describe("openPrematchMarkets — betting pools", () => {
       fact: { outcome: "applied" },
       effects: 1,
     });
-    // The completed claim skips the effect outright.
+    // The standing receipt skips the effect outright and reports its fact.
     expect(second).toEqual({
       guard: { outcome: "already-applied" },
       fact: { outcome: "already-applied" },
-      effects: 0,
+      effects: 1,
     });
     // Two channels in GUILD, one guild pool; OTHER_GUILD has Bucks off.
     const pools = await prisma.bucksMatchPool.findMany({
@@ -217,15 +216,14 @@ describe("openPrematchMarkets — betting pools", () => {
     });
   });
 
-  test("mutation: a takeover after a lost claim does not open a second pool", async () => {
-    // Guard under proof: BucksMatchPool's unique (match, guild). The claim is
-    // wiped as if the attempt that opened the pool died before completing
+  test("mutation: a retry after a lost receipt does not open a second pool", async () => {
+    // Guard under proof: BucksMatchPool's unique (match, guild). The receipt
+    // is wiped as if the attempt that opened the pool died before recording
     // it; with the unique constraint or its catch removed, the re-run creates
     // a second pool or throws.
     await register(GUILD, CHANNELS);
     await capture(SOLO_MATCH, 420, CHANNELS);
     await openPrematchMarkets({ riotMatchId: SOLO_MATCH });
-    await prisma.scoutEffectClaim.deleteMany();
     await prisma.matchProcessingReceipt.deleteMany();
 
     const retaken = await openPrematchMarkets({ riotMatchId: SOLO_MATCH });
@@ -311,14 +309,13 @@ describe("openPrematchMarkets — Classic participation", () => {
     ).toBe(1);
   });
 
-  test("mutation: neither a lost V2 claim nor v1 after a flip pays twice", async () => {
+  test("mutation: neither a lost V2 receipt nor v1 after a flip pays twice", async () => {
     // Guard under proof: the BucksMatchEarning marker's guarded
-    // pending → processing claim. Remove it and the takeover or v1 pays a
+    // pending → processing claim. Remove it and the retry or v1 pays a
     // second point.
     await register(GUILD, CHANNELS);
     const gameInfo = await capture(CLASSIC_MATCH, 4310, CHANNELS);
     await openPrematchMarkets({ riotMatchId: CLASSIC_MATCH });
-    await prisma.scoutEffectClaim.deleteMany();
     await prisma.matchProcessingReceipt.deleteMany();
 
     await openPrematchMarkets({ riotMatchId: CLASSIC_MATCH });

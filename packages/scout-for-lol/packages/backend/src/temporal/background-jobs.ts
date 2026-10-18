@@ -82,12 +82,6 @@ export async function runBackgroundJobByKind(
       await backfillFromExisting();
       break;
     }
-    case "custom-nights-expiry": {
-      const { expireCustomNights } =
-        await import("#src/customs/game/expiry.ts");
-      await expireCustomNights();
-      break;
-    }
     case "notification-intent-expiry": {
       const { runNotificationIntentExpiry } =
         await import("#src/durable/match/intent-expiry.ts");

@@ -13,11 +13,6 @@ import { createLogger } from "#src/logger.ts";
 import { webSessionRejectedTotal } from "#src/metrics/platform/web.ts";
 import type { User } from "#generated/prisma/client/index.js";
 import { verifySession } from "#src/trpc/jwt.ts";
-import {
-  isCustomActivityTokenCandidate,
-  verifyCustomActivityToken,
-} from "#src/customs/activity/activity-auth.ts";
-import type { CustomActivityClaims } from "@scout-for-lol/data";
 
 const logger = createLogger("trpc-context");
 
@@ -41,12 +36,10 @@ export type WebSession = {
 };
 
 export type Context = {
-  /** The authenticated user (from a Customs activity or web cookie) */
+  /** The authenticated user, from the web session cookie */
   user: User | null;
   /** The web session, if the request carried a valid scout_session cookie */
   webSession: WebSession | null;
-  /** Dedicated, short-lived Discord Activity bearer session. */
-  activitySession: CustomActivityClaims | null;
   /**
    * Forwarded client IP, when the edge supplied one. Present for anonymous
    * callers too, so public endpoints can rate-limit per caller. NEVER used for
@@ -70,15 +63,6 @@ function parseCookies(header: string | null): Map<string, string> {
     map.set(name, decodeURIComponent(value));
   }
   return map;
-}
-
-/**
- * Extract and validate bearer token from Authorization header
- */
-function extractBearerToken(authHeader: string | null): string | null {
-  return authHeader?.startsWith("Bearer ") === true
-    ? authHeader.slice(7)
-    : null;
 }
 
 /**
@@ -127,18 +111,8 @@ export async function recordUserSeen(
 export async function createContext(request: Request): Promise<Context> {
   const requestId = globalThis.crypto.randomUUID();
 
-  const authHeader = request.headers.get("Authorization");
-  const bearerToken = extractBearerToken(authHeader);
-
   let user: User | null = null;
   let webSession: WebSession | null = null;
-  let activitySession: CustomActivityClaims | null = null;
-
-  if (bearerToken !== null && bearerToken.length > 0) {
-    activitySession = isCustomActivityTokenCandidate(bearerToken)
-      ? await verifyCustomActivityToken(bearerToken)
-      : null;
-  }
 
   // Web session via signed cookie.
   //
@@ -190,7 +164,6 @@ export async function createContext(request: Request): Promise<Context> {
   return {
     user,
     webSession,
-    activitySession,
     clientIp:
       request.headers.get("CF-Connecting-IP") ??
       request.headers.get("X-Forwarded-For"),

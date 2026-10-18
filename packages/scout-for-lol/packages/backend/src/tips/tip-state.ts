@@ -89,9 +89,13 @@ export async function claimTip(
   return count > 0;
 }
 
-/** Mark a claimed row as a delivered impression without changing its timestamp. */
+/**
+ * Mark a claimed row as a delivered impression without changing its timestamp.
+ * Settlement accepts retired keys: a claim frozen before its tip retired still
+ * resolves exactly once.
+ */
 export async function confirmTipClaim(
-  input: TipAudience & { tipKey: FeatureTipKey },
+  input: TipAudience & { tipKey: PersistedFeatureTipKey },
   db: Db = prisma,
 ): Promise<void> {
   await db.featureTipImpression.updateMany({
@@ -111,7 +115,7 @@ export async function confirmTipClaim(
  * only the caller that won the claim ever calls it.
  */
 export async function releaseTipClaim(
-  input: TipAudience & { tipKey: FeatureTipKey },
+  input: TipAudience & { tipKey: PersistedFeatureTipKey },
   db: Db = prisma,
 ): Promise<void> {
   await db.featureTipImpression.deleteMany({

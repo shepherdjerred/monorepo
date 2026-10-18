@@ -83,9 +83,9 @@ import {
  * sequence runs under `runGuardedEffect`, keyed on the artifact identity
  * `(match, kind)`: the leader renders with the PUT bounded by the fence's
  * signal and the receipt recorded before the fence releases; a follower that
- * acquires the fence afterwards finds the claim completed (or, on a takeover,
- * the receipt standing) and reports `reused` without rendering. The read
- * before the fence is only the cheap replay short-circuit.
+ * acquires the fence afterwards finds the receipt standing and reports
+ * `reused` without rendering. The read before the fence is only the cheap
+ * replay short-circuit.
  *
  * ## Why there is no bucketless path
  *
@@ -154,8 +154,8 @@ async function commitNotificationImage(
  * A `conflict` is a different statement entirely: the bytes under this match's
  * render receipt are NOT the bytes this run just committed. It is returned as
  * the effect's fact rather than thrown, because the fence is what decides what
- * a conflicting fact means — it fails the Activity non-retryably and leaves
- * the claim open so the drift stays visible, exactly as it does for settlement.
+ * a conflicting fact means — it fails the Activity non-retryably so the drift
+ * stays visible, exactly as it does for settlement.
  */
 async function attestNotificationArtifact(
   riotMatchId: RiotMatchId,
@@ -309,7 +309,7 @@ async function renderByKind(
   }
 }
 
-/** The claim one (match, kind) render is guarded under; see the module doc. */
+/** The lock one (match, kind) render is guarded under; see the module doc. */
 export function notificationRenderEffectKey(
   riotMatchId: RiotMatchId,
   kind: MatchNotificationIntentKind,
@@ -318,9 +318,7 @@ export function notificationRenderEffectKey(
   return `v2-notification-render:${kind}:${riotMatchId}${presentation === undefined ? "" : `:guild:${presentation.guildId}:${presentation.clashEnabled ? "clash" : "ordinary"}`}`;
 }
 
-const NOTIFICATION_RENDER_EFFECT_KIND = "v2-notification-render";
-
-/** The standing receipt as the fence's takeover probe reports it. */
+/** The standing receipt as the fence's fact probe reports it. */
 async function standingArtifact(
   riotMatchId: RiotMatchId,
   kind: MatchNotificationIntentKind,
@@ -398,7 +396,6 @@ export async function renderMatchNotificationArtifact(args: {
   }
   const guarded = await runGuardedEffect({
     key: notificationRenderEffectKey(riotMatchId, kind, args.presentation),
-    kind: NOTIFICATION_RENDER_EFFECT_KIND,
     alreadyApplied: async () =>
       await standingArtifact(riotMatchId, kind, args.presentation),
     apply: async (fence) => {
@@ -407,7 +404,7 @@ export async function renderMatchNotificationArtifact(args: {
         presentation: args.presentation,
       });
       // The receipt is the last write and lands before the fence releases; a
-      // follower that acquires the fence after this sees the completed claim.
+      // follower that acquires the fence after this sees the standing receipt.
       await fence.assertHeld();
       const fact = await attestNotificationArtifact(
         riotMatchId,

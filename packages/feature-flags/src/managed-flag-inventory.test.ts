@@ -249,18 +249,6 @@ describe("Managed flag inventory validation", () => {
     }
   });
 
-  test("keeps Custom nights beta-only", () => {
-    expect(
-      scoutPolicyFlag("beta", "custom_nights_enabled").rollouts,
-    ).toHaveLength(1);
-    expect(scoutPolicyFlag("prod", "custom_nights_enabled")).toMatchObject({
-      default: false,
-      rollouts: [],
-      rules: [],
-      thresholdRollouts: [],
-    });
-  });
-
   test("materializes a full-state environment override", () => {
     const parsed = ManagedFlagInventorySchema.parse(inventory([fullOverride]));
     expect(

@@ -109,9 +109,9 @@ export type ScoutGatewayDeploymentOptions = {
  * Deployment without this volume is a crash loop.
  *
  * Sharing the volume is sound specifically because of what this role does NOT
- * do. Its gateway Temporal worker only moves Customs voice members and
- * checkpoints Postgres progress. It does not fold the lake, so it never
- * writes a staging directory and never moves the `CURRENT` pointer. That
+ * do. Its gateway Temporal worker only answers queue probes. It does not fold
+ * the lake, so it never writes a staging directory and never moves the
+ * `CURRENT` pointer. That
  * leaves exactly one publisher — the `application` role — and N readers, which
  * is what an atomic build-pointer layout is for. The container's read-only
  * `/data` mount is the enforcement rather than the assumption.

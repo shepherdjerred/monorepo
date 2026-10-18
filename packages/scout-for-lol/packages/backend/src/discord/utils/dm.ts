@@ -10,11 +10,14 @@ import {
   type Client,
   DiscordAPIError,
   type EmbedBuilder,
-  type User,
+  RESTJSONErrorCodes,
+  type RESTPostAPIChannelMessageJSONBody,
+  Routes,
 } from "discord.js";
 import { z } from "zod";
 import type { DmKind, DmBudget } from "#src/discord/utils/dm-contracts.ts";
 import {
+  DiscordChannelIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
@@ -29,9 +32,18 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-dm");
 
-// Discord API error code: "Cannot send messages to this user" (DMs disabled or
-// the bot is blocked).
-const CANNOT_DM_USER_CODE = 50_007;
+/**
+ * Discord's definitive "this user cannot receive a DM from Scout" answers: DMs
+ * disabled or the bot blocked (50007), and no mutual guild left (50278, the
+ * usual answer once Scout has been removed). Both are a rejection Discord
+ * returned, so the message was never created and nothing stays charged.
+ */
+const CANNOT_DM_USER_CODES: ReadonlySet<unknown> = new Set([
+  RESTJSONErrorCodes.CannotSendMessagesToThisUser,
+  RESTJSONErrorCodes.CannotSendMessagesToThisUserDueToHavingNoMutualGuilds,
+]);
+
+const DmChannelSchema = z.object({ id: DiscordChannelIdSchema });
 
 /**
  * Outcome of a DM attempt, persisted to `DmAuditLog.status`.
@@ -90,7 +102,11 @@ export type SendDmOptions = {
   reservationId?: number;
   /** Keep rendered mentions informational instead of notifying other users. */
   suppressMentions?: boolean;
-  /** Called synchronously immediately before a Discord DM request may leave. */
+  /**
+   * Called synchronously immediately before the Discord request that can
+   * create the message may leave. Opening the DM channel creates no message,
+   * so a failure up to and including that request is a definite non-send.
+   */
   onSendAttempt?: () => void;
   /**
    * Rich embeds to send alongside (or instead of) plain content. `message`
@@ -206,30 +222,50 @@ export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
 }
 
 /** The one place a DM's wire shape is decided: embeds, content, mentions. */
-async function deliverToUser(
-  user: { send: (payload: Parameters<User["send"]>[0]) => Promise<unknown> },
+function dmMessageBody(
+  options: SendDmOptions,
+  message: string,
+): RESTPostAPIChannelMessageJSONBody {
+  const mentions =
+    options.suppressMentions === true
+      ? { allowed_mentions: { parse: [] } }
+      : {};
+  if (options.embeds === undefined) return { content: message, ...mentions };
+  return {
+    ...(options.contentWithEmbeds === undefined
+      ? {}
+      : { content: options.contentWithEmbeds }),
+    embeds: options.embeds.map((embed) => embed.toJSON()),
+    ...mentions,
+  };
+}
+
+/**
+ * Deliver over the bot's REST client: open the DM channel, then post into it.
+ *
+ * Deliberately not `User#send`. discord.js finds a cached DM channel through
+ * `client.user.id`, which only the gateway's READY payload populates, so on a
+ * role that never logs in (the activity worker, where every scheduled and
+ * durable DM runs) `user.send` threw `null is not an object (evaluating
+ * 'this.client.user.id')` before any request left. Two plain REST calls need
+ * only the token `authorizeDiscordRest` puts on every role, and they make the
+ * ambiguity boundary exact: the marker fires only once the channel exists and
+ * the message request is about to leave.
+ */
+async function deliverOverRest(
+  rest: Pick<Client["rest"], "post">,
+  userId: DiscordAccountId,
   options: SendDmOptions,
   message: string,
 ): Promise<void> {
-  if (options.embeds !== undefined) {
-    options.onSendAttempt?.();
-    await user.send({
-      ...(options.contentWithEmbeds === undefined
-        ? {}
-        : { content: options.contentWithEmbeds }),
-      embeds: [...options.embeds],
-      ...(options.suppressMentions === true
-        ? { allowedMentions: { parse: [] } }
-        : {}),
-    });
-    return;
-  }
-  options.onSendAttempt?.();
-  await user.send(
-    options.suppressMentions === true
-      ? { content: message, allowedMentions: { parse: [] } }
-      : message,
+  const body = dmMessageBody(options, message);
+  const channel = DmChannelSchema.parse(
+    await rest.post(Routes.userChannels(), {
+      body: { recipient_id: userId },
+    }),
   );
+  options.onSendAttempt?.();
+  await rest.post(Routes.channelMessages(channel.id), { body });
 }
 
 /**
@@ -409,7 +445,12 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
       recipientTag = recipientTag ?? user.tag;
       if (reservedRowId !== null && !(await beginReservedDm(db, reservedRowId)))
         return "unknown";
-      await deliverToUser(user, deliveryOptions, message);
+      await deliverOverRest(
+        options.client.rest,
+        userId,
+        deliveryOptions,
+        message,
+      );
     }
     logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
     await recordSendOutcome(db, {
@@ -424,7 +465,7 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
     return "sent";
   } catch (error) {
     const dmDisabled =
-      error instanceof DiscordAPIError && error.code === CANNOT_DM_USER_CODE;
+      error instanceof DiscordAPIError && CANNOT_DM_USER_CODES.has(error.code);
     const errorMsg = kind.startsWith("support_")
       ? "Support delivery failed (details redacted)"
       : getErrorMessage(error);

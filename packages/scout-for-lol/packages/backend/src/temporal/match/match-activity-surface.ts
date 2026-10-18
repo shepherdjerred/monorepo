@@ -11,7 +11,7 @@ import type { ScoutPipelineActivities } from "@scout-for-lol/temporal/activities
  * the factory's `await import(...)` calls are type edges even though they are
  * not runtime edges: the whole V2 implementation, the post-match slice
  * behind it, and the betting and Discord presentation code behind THAT all
- * entered `@scout-for-lol/app`'s and `@scout-for-lol/activity`'s type programs.
+ * entered `@scout-for-lol/app`'s type program.
  *
  * That is not merely wasteful. Backend sources are typechecked under the
  * backend's own tsconfig, whose `src/reset.d.ts` loads `@total-typescript/ts-reset`;

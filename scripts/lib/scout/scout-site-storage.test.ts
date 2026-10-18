@@ -151,22 +151,21 @@ test("beta deployment checks the complete static archive before an exact-marker 
   );
 });
 
-test("archive capability discovery verifies Customs only when present", async () => {
+test("archive capability discovery verifies docs only when present", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "scout-entrypoints-"));
   temporaryDirectories.push(directory);
   await mkdir(path.join(directory, "app"));
-  await mkdir(path.join(directory, "docs"));
   await Bun.write(path.join(directory, "index.html"), "root");
   await Bun.write(path.join(directory, "app/index.html"), "app");
-  await Bun.write(path.join(directory, "docs/index.html"), "docs");
 
-  await expect(archiveEntrypoints(directory)).resolves.not.toContain(
-    "customs/index.html",
-  );
-  await mkdir(path.join(directory, "customs"));
-  await Bun.write(path.join(directory, "customs/index.html"), "customs");
+  await expect(archiveEntrypoints(directory)).resolves.toEqual([
+    "index.html",
+    "app/index.html",
+  ]);
+  await mkdir(path.join(directory, "docs"));
+  await Bun.write(path.join(directory, "docs/index.html"), "docs");
   await expect(archiveEntrypoints(directory)).resolves.toContain(
-    "customs/index.html",
+    "docs/index.html",
   );
 });
 

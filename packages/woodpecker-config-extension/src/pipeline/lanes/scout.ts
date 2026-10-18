@@ -41,7 +41,6 @@ const SCOUT_WORKSPACE_FILTERS = [
   "--filter '@shepherdjerred/root-scripts'",
   "--filter '@scout-for-lol/frontend'",
   "--filter '@scout-for-lol/app'",
-  "--filter '@scout-for-lol/activity'",
   "--filter '@scout-for-lol/docs-site'",
   "--filter '@scout-for-lol/design-system'",
   "--filter scout-for-lol",

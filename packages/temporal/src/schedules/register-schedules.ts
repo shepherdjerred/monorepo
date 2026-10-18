@@ -122,6 +122,9 @@ const DELETED_BETA_SCHEDULE_IDS = [
   "scout-beta-tournament-lobby-poll",
   // The executor moved to prod; its Scout Activity still targets beta data.
   "scout-bryan-bucks-analytics",
+  // Customs live nights were retired with the Discord Activity, so nothing
+  // remains to expire and the background-job kind left the Scout contract.
+  "scout-beta-custom-nights-expiry",
 ] as const;
 
 // Schedule deletion prevents future starts but does not stop an execution that

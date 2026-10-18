@@ -2,9 +2,9 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { withholdDareCallout } from "#src/betting/dares/presentation/dare-callout-refresh-state.ts";
 import { enqueueTerminalDareNotification } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
 import {
-  enqueueDareResultPostInTransaction,
+  mintDareResultIntent,
   type DareNotificationDisposition,
-} from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+} from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import type { DareResultAnnouncement } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 import type {
   DareContributorRefund,
@@ -81,7 +81,7 @@ export async function recordTerminalDareAnnouncement(
         ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
         now: input.now,
       });
-      await enqueueDareResultPostInTransaction(tx, {
+      await mintDareResultIntent(tx, {
         dareId: input.dare.id,
         revision: input.contract.revision,
         result: dareResultAnnouncementOf({

@@ -225,6 +225,5 @@ test("direct effect Activities reject history before fetching inputs or entering
     finalizeTournamentResult({ riotMatchId: history }),
   ).rejects.toThrow("cannot finalize operational results");
   expect(forbiddenEffect).not.toHaveBeenCalled();
-  expect(await prisma.scoutEffectClaim.count()).toBe(0);
   expect(await prisma.matchProcessingReceipt.count()).toBe(0);
 });

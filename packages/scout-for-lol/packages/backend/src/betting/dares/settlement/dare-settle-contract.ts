@@ -28,7 +28,7 @@ import {
   executeDareSql,
 } from "#src/betting/dares/sql/dare-sql.ts";
 import { enqueueMaterialDareProgressNotification } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
-import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-status-intent.ts";
 import type {
   DareFinality,
   DareProof,

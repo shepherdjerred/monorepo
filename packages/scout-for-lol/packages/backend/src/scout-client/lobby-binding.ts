@@ -1,7 +1,6 @@
 import type { ScoutClientObservation } from "@scout-for-lol/data";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { prisma } from "#src/database/index.ts";
-import { publishCustomNightSnapshot } from "#src/customs/socket.ts";
 import {
   lobbyParticipantPuuids,
   observedGameState,
@@ -411,13 +410,13 @@ export async function projectObservedGameState(
   const { custom, duel } = resolution;
 
   if (custom !== undefined) {
-    const nightId = await prisma.$transaction(async (transaction) => {
+    await prisma.$transaction(async (transaction) => {
       const current = await transaction.customGame.findUniqueOrThrow({
         where: { id: custom.id },
         include: { night: true },
       });
-      if (current.state === projection) return current.nightId;
-      if (current.state === "RESULT_PENDING") return current.nightId;
+      if (current.state === projection) return;
+      if (current.state === "RESULT_PENDING") return;
       if (
         !["LOBBY_READY", "PLAYING"].includes(current.state) ||
         !["LOBBY_READY", "PLAYING"].includes(current.night.state)
@@ -479,9 +478,7 @@ export async function projectObservedGameState(
           createdAt: new Date(observation.capturedAt),
         },
       });
-      return current.nightId;
     });
-    await publishCustomNightSnapshot(nightId);
     return "projected";
   }
 

@@ -18,8 +18,7 @@ import {
   siteReleaseIdentity,
   type ScoutReleaseState,
 } from "./scout-release-state.ts";
-import { assertScoutCustomsArtifactPolicy } from "./scout-customs-artifact.ts";
-import { requiredReleaseEntrypoints } from "./scout-release-entrypoints.ts";
+import { RELEASE_ENTRYPOINTS } from "./scout-release-entrypoints.ts";
 import {
   requireScoutStorageCredentials as requireCreds,
   scoutStorageRoot as root,
@@ -249,9 +248,6 @@ async function downloadAndVerifyArchiveBytes(
   // fidelity of whatever the archive does contain is still guaranteed by the
   // digest comparison below.
   await assertStaticSiteComplete(destination, `verify-${flavor}-archive`);
-  if (flavor === "prod") {
-    await assertScoutCustomsArtifactPolicy(destination, flavor);
-  }
   const actual = await hashSiteArchive(destination);
   if (actual !== expected) {
     throw new Error(
@@ -299,9 +295,8 @@ async function archiveFlavor(
   await assertStaticSiteComplete(
     source,
     `archive-${flavor}`,
-    requiredReleaseEntrypoints(flavor),
+    RELEASE_ENTRYPOINTS,
   );
-  await assertScoutCustomsArtifactPolicy(source, flavor);
   const actual = await hashSiteArchive(source);
   if (actual !== expected) {
     throw new Error(

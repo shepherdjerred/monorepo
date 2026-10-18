@@ -4,7 +4,6 @@ import { hardDisabledFeatureForTemporalWork } from "./work-features.ts";
 
 describe("Scout Temporal production policy", () => {
   test.each([
-    ["custom-nights-expiry", "custom_nights_enabled"],
     ["progression-reconciliation", null],
     ["notification-intent-expiry", null],
     ["bucks-reconciliation", "betting_enabled"],

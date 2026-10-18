@@ -65,7 +65,7 @@ const seedCompetitionPermissions: StorySeed = (trpc, queryClient) => {
       icon: null,
       isOwner: true,
       isDiscordAdmin: true,
-      customNightsEnabled: false,
+      customsHistoryAvailable: false,
       hallOfFameEnabled: false,
       mvpVotesEnabled: false,
       permissions: [

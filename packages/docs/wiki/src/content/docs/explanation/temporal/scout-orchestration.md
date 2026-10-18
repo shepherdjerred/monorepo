@@ -66,12 +66,11 @@ Activities use separate realtime, interactive, background, lake, and gateway que
 The separation preserves responsive polling under slow model work. It also
 serializes every mutation of the report-lake volume.
 
-The gateway queue owns Customs voice operations because Discord exposes live
-voice membership through its gateway connection. It starts after `clientReady`.
-The application queue publishes persisted Customs revisions to its own socket
-clients. A gateway process cannot publish into another process's socket map.
+The gateway queue belongs to the process that holds the Discord shard and
+starts after `clientReady`. Since Customs live nights were retired with the
+Discord Activity, it carries only queue probes.
 The [runtime capability table](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/configuration/runtime-role.ts)
-keeps both responsibilities explicit.
+keeps that ownership explicit.
 
 The Activity Workers share one Temporal connection inside the
 [`scout-for-lol`](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
@@ -196,8 +195,8 @@ the public event store.
 
 ## Delivery records distinguish uncertainty from failure
 
-Competition announcements, weekly standings, outreach, and Customs recruitment
-use the notification intent ledger. Producers freeze each occurrence and commit
+Competition announcements, weekly standings, and outreach use the
+notification intent ledger. Producers freeze each occurrence and commit
 its intent and Workflow start request in one Postgres transaction. Competition
 charts live under content-addressed S3 keys. The image collector only prunes
 generated match-image prefixes, so it cannot remove these referenced objects.
@@ -210,12 +209,9 @@ repair pass. These boundaries survive a process loss after Discord acknowledges
 delivery. The [backend notification adapters](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/temporal/notification)
 connect those product records to the shared delivery state machine.
 
-Customs mutations freeze an operation before any voice effect. Each created
-channel, moved participant, and deleted channel has a committed checkpoint.
-Uncertain creation pauses for a manager's evidence instead of creating another
-channel. Revision watermarks repair client publication independently of voice
-execution. The [Customs implementation](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/customs)
-retains the operation and audit history.
+Retired Customs recruitment intents still parse, but delivery suppresses
+them. The [Customs history](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/customs)
+keeps the retained nights, operations, and audit events readable.
 
 Cutover waits for in-flight legacy producers behind a Postgres fence. Its
 activation marker is monotonic: disabling the rollout flag pauses new work

@@ -78,8 +78,8 @@ const EMPTY_POOL_TOTAL = sumToPoolTotal([]);
  * observation stands. The settlement recap carries the summaries settlement
  * itself produced, which exist only inside the fenced settlement effect, so it
  * is minted there. A Dare's resolution is announced by the Dare itself: its
- * settling transaction writes the channel result post and the DMs (see
- * `dare-notification-outbox.ts`).
+ * settling transaction mints the channel result post and the DMs as
+ * `dare-status` intents (see `dare-status-intent.ts`).
  *
  * ## Silence is enforced here, and nowhere else
  *

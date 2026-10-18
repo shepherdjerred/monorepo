@@ -32,8 +32,7 @@ export type FeatureTipKey =
   | "hall-of-fame"
   | "duels"
   | "dares"
-  | "transfers"
-  | "custom-nights";
+  | "transfers";
 /** Where a feature tip was appended. */
 export type FeatureTipSurface = "postmatch" | "prematch" | "bucks_dm";
 export type CoreOutputKind =

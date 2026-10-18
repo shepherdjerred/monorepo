@@ -1003,6 +1003,19 @@ describe("orphan schedule detection", () => {
     }
   });
 
+  test("the retired beta Customs expiry schedule is deleted in beta", () => {
+    expect(
+      DELETED_SCHEDULES.filter(
+        (schedule) => schedule.id === "scout-beta-custom-nights-expiry",
+      ),
+    ).toEqual([{ id: "scout-beta-custom-nights-expiry", namespace: "beta" }]);
+    expect(
+      SCHEDULES.some((schedule) =>
+        schedule.id.endsWith("custom-nights-expiry"),
+      ),
+    ).toBe(false);
+  });
+
   test("declared schedules are never flagged as orphans", () => {
     for (const schedule of SCHEDULES) {
       expect(

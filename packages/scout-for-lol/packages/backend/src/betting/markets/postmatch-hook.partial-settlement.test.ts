@@ -44,7 +44,6 @@ const stubs = vi.hoisted(() => ({
       _options?: { notify?: string },
     ): Promise<DareSettlementSummary[]> => Promise.resolve([]),
   ),
-  deliverPendingDareNotifications: vi.fn(() => Promise.resolve(undefined)),
   refreshPendingDareCallouts: vi.fn(
     (_dependencies?: { mayPost?: () => boolean }): Promise<number[]> =>
       Promise.resolve([]),
@@ -69,12 +68,6 @@ vi.mock("#src/betting/accounts/earnings.ts", () => ({
 vi.mock("#src/betting/dares/settlement/dare-settle.ts", () => ({
   settleDaresForMatch: stubs.settleDaresForMatch,
 }));
-vi.mock(
-  "#src/betting/dares/presentation/notify/dare-notification-delivery.ts",
-  () => ({
-    deliverPendingDareNotifications: stubs.deliverPendingDareNotifications,
-  }),
-);
 vi.mock("#src/betting/dares/presentation/dare-callout.ts", () => ({
   refreshPendingDareCallouts: stubs.refreshPendingDareCallouts,
   defaultDareCalloutDependencies: {},
@@ -148,7 +141,6 @@ describe("the Dare path", () => {
     );
 
     expect(stubs.refreshPendingDareCallouts).toHaveBeenCalledTimes(1);
-    expect(stubs.deliverPendingDareNotifications).not.toHaveBeenCalled();
   });
 
   test("returns the Dares this match resolved", async () => {
@@ -160,10 +152,14 @@ describe("the Dare path", () => {
     expect(result.dareSettlements).toEqual([summary(1)]);
   });
 
-  test("drains the Dare notification outbox on every settled match", async () => {
+  test("lets an announcing match mint its Dare notification intents", async () => {
+    // The intents minted in the settling transaction are the whole hand-off;
+    // nothing drains or sends a Dare DM from this call stack.
     await settleAndAwardBucks(MATCH);
 
-    expect(stubs.deliverPendingDareNotifications).toHaveBeenCalledTimes(1);
+    expect(stubs.settleDaresForMatch.mock.calls[0]?.[2]).toEqual({
+      notify: "enqueue",
+    });
   });
 
   test("refreshes pending Dare callouts on every settled match", async () => {
@@ -187,7 +183,6 @@ describe("a sink for a match owed no public delivery", () => {
     expect(stubs.settleDaresForMatch.mock.calls[0]?.[2]).toEqual({
       notify: "withhold",
     });
-    expect(stubs.deliverPendingDareNotifications).not.toHaveBeenCalled();
     // Settlement ran in full: the money paths were still called.
     expect(stubs.closeAndSettleBettingForMatch).toHaveBeenCalledTimes(1);
     expect(stubs.awardBucksForMatch).toHaveBeenCalledTimes(1);

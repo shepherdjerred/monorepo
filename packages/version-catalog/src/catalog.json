@@ -826,32 +826,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-696d4c2fadb5",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010085@sha256:b73cc0f6ab45ba896df4fcd3f513e9f7082972d3d5ca9fbaa1f53b2041003295",
-      "notes": [
-        "Retained Scout beta Workflow build 696d4c2fadb553037b6f08d7edeeda809c8ca7c0; preserve currently serving capacity before advancing the candidate to the compatible dispatch-signal consumer",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/beta/workflows/retained-ced2f566dce4",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010053@sha256:661b60608f4f2469e8a141e36ea1743cd0e25b31c8ad740056f3d9af3f2b323b",
-      "notes": [
-        "Retained Scout beta Workflow build ced2f566dce430dbda24551512cbb1818482db3a; preserve existing capacity while advancing the candidate to the generation cleanup build",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
       "name": "shepherdjerred/scout-for-lol/beta/workflows/stable",
       "category": "internal-image",
       "artifactType": "image",
@@ -875,32 +849,6 @@
       "notes": [
         "Candidate Scout prod Workflow Worker image - advanced explicitly after beta acceptance",
         "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/prod/workflows/retained-1d266e3903e2",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
-      "notes": [
-        "Retained Scout prod Workflow build 1d266e3903e228d13d40fa4f28b116981829bb37; keep until it is neither current nor ramping and its pinned executions have drained",
-        "not managed by renovate or image commit-back"
-      ]
-    },
-    {
-      "name": "shepherdjerred/scout-for-lol/prod/workflows/retained-d839b9435dda",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-1010005@sha256:6af95f51d12965f397282a7e489a68dd31bd7a10c1e6eb3f1c1efaa04a817d82",
-      "notes": [
-        "Retained Scout prod Workflow build d839b9435dda3c2efe032f1f43e5c495f9179a28; keep until it is neither current nor ramping and its pinned executions have drained",
-        "not managed by renovate or image commit-back"
       ]
     },
     {

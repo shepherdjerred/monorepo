@@ -83,11 +83,11 @@ export async function recordMatchReceipt(args: {
  * `null` when no such receipt stands. Typed `unknown` because the evidence is
  * opaque JSON here — the caller owns the codec that gives it a shape.
  *
- * The read a TAKEOVER needs. A worker that committed its durable fact and died
- * before completing its claim leaves a standing receipt and a CLAIMED row; the
- * next attempt has to see that receipt before it decides to re-execute, or it
+ * The read a guarded effect's fence makes first. A worker that committed its
+ * durable fact and died before returning leaves a standing receipt; the next
+ * attempt has to see that receipt before it decides to re-execute, or it
  * re-runs a state-gated effect that now finds nothing to do, records empty
- * evidence against the standing claim, and conflicts with it.
+ * evidence against the standing receipt, and conflicts with it.
  */
 export async function readMatchReceiptEvidence(
   matchId: RiotMatchId,

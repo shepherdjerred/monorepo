@@ -275,7 +275,6 @@ export async function createOfflineTrpcHarness(
   ) =>
     appRouter.createCaller({
       user: makeUser(discordId, userOverrides),
-      activitySession: null,
       webSession: {
         discordId,
         csrfToken: "csrf",
@@ -292,7 +291,6 @@ export async function createOfflineTrpcHarness(
   const anonCaller = () =>
     appRouter.createCaller({
       user: null,
-      activitySession: null,
       webSession: null,
       clientIp: null,
       requestId: "offline-trpc-harness-anon",

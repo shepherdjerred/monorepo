@@ -149,7 +149,8 @@ export async function settleAndAwardBucks(
   let dareSettlements: DareSettlementSummary[];
   try {
     dareSettlements = await settleDaresForMatch(matchData, prismaClient, {
-      // Whether the ROW may exist, not merely whether this run drains it.
+      // Whether the durable intent may exist at all; once minted, the
+      // notification lane delivers it.
       notify: sink.mayEnqueueDareNotification() ? "enqueue" : "withhold",
     });
   } catch (error) {
@@ -167,7 +168,6 @@ export async function settleAndAwardBucks(
     prismaClient,
     mayPost: sink.mayPostDareCallout,
   });
-  await sink.drainDareNotifications(prismaClient);
   return {
     closures,
     settlements: retry.settlements,

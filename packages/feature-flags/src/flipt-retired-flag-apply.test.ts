@@ -207,6 +207,8 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
     "prod/trmnl-dashboard/pet-dashboard-enabled",
     "beta/alert-dashboard/ops-digest-email-enabled",
     "prod/alert-dashboard/ops-digest-email-enabled",
+    "beta/scout/custom_nights_enabled",
+    "prod/scout/custom_nights_enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(

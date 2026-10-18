@@ -1,13 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
-  CustomAuthExchangeInputSchema,
   CustomAuditEventSchema,
-  CustomCreateNightInputSchema,
   CustomGameSnapshotSchema,
   CustomGameStateSchema,
   CustomNightSnapshotSchema,
-  CustomJoinNightInputSchema,
-  CustomRevisionInputSchema,
 } from "#src/customs/customs.schema.ts";
 
 describe("Customs contracts", () => {
@@ -45,7 +41,7 @@ describe("Customs contracts", () => {
     expect(CustomGameStateSchema.safeParse("MANUAL").success).toBe(false);
   });
 
-  test("scheduled expiry is an explicit audit source", () => {
+  test("retained scheduled-expiry events keep their audit source", () => {
     expect(
       CustomAuditEventSchema.parse({
         id: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
@@ -59,41 +55,6 @@ describe("Customs contracts", () => {
         createdAt: "2026-08-30T01:00:00.000Z",
       }).source,
     ).toBe("TEMPORAL");
-  });
-
-  test("mutations always carry an expected revision", () => {
-    expect(
-      CustomRevisionInputSchema.safeParse({
-        nightId: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
-      }).success,
-    ).toBe(false);
-  });
-
-  test("clients cannot select the Customs disclosure version", () => {
-    expect(
-      CustomCreateNightInputSchema.safeParse({
-        disclosureVersion: "obsolete",
-      }).success,
-    ).toBe(false);
-    expect(
-      CustomJoinNightInputSchema.safeParse({
-        nightId: "018f173a-6f4a-7d19-b731-963d62a2e1bd",
-        expectedRevision: 1,
-        disclosureVersion: "obsolete",
-      }).success,
-    ).toBe(false);
-  });
-
-  test("Activity exchange rejects extra identity claims", () => {
-    expect(
-      CustomAuthExchangeInputSchema.safeParse({
-        code: "code",
-        guildId: "guild",
-        channelId: "channel",
-        instanceId: "instance",
-        userId: "untrusted-client-claim",
-      }).success,
-    ).toBe(false);
   });
 
   test("night snapshots reject stored-provider duplication", () => {

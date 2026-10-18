@@ -27,13 +27,6 @@ import {
   httpRequestsTotal,
 } from "#src/metrics/platform/web.ts";
 import { handleBryanBucksControl } from "#src/http/bryan-bucks-control.ts";
-import { handleCustomAuthRoutes } from "#src/customs/activity/activity-auth-http.ts";
-import {
-  CUSTOMS_SOCKET_PATH,
-  customSocketHandlers,
-  upgradeCustomSocket,
-  type CustomSocketData,
-} from "#src/customs/socket.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 import { handleSupportScreenshot } from "#src/support/http.ts";
 
@@ -139,7 +132,7 @@ async function withHttpMetrics(
 /**
  * HTTP server for health checks, metrics, and tRPC API using Bun's native server
  */
-const server = Bun.serve<CustomSocketData>({
+const server = Bun.serve({
   port: configuration.port,
   // Bind to loopback whenever dev login is enabled so the unauthenticated
   // /api/dev/login route (which mints a session for any Discord ID) is only
@@ -149,9 +142,6 @@ const server = Bun.serve<CustomSocketData>({
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request, bunServer) {
     const url = new URL(request.url);
-    if (url.pathname === CUSTOMS_SOCKET_PATH) {
-      return await upgradeCustomSocket(request, bunServer);
-    }
     const response = await withHttpMetrics(request, url, () =>
       dispatch(request, url),
     );
@@ -168,7 +158,6 @@ const server = Bun.serve<CustomSocketData>({
     }
     return response;
   },
-  websocket: customSocketHandlers,
   error(error) {
     logger.error("❌ HTTP server error:", error);
     Sentry.captureException(error, { tags: { source: "http-server" } });
@@ -188,9 +177,6 @@ const server = Bun.serve<CustomSocketData>({
 async function dispatch(request: Request, url: URL): Promise<Response> {
   const scoutClientResponse = await handleScoutClientRoute(request, url);
   if (scoutClientResponse !== null) return scoutClientResponse;
-
-  const customsAuthResponse = await handleCustomAuthRoutes(request, url);
-  if (customsAuthResponse !== null) return customsAuthResponse;
 
   // Handle CORS preflight requests
   if (request.method === "OPTIONS") {

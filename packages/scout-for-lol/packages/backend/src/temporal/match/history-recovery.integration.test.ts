@@ -139,7 +139,6 @@ test("missing postgames and failed reports stay retryable without live effects",
   await due();
   await reconcileMatchHistory();
   expect(io.render).toHaveBeenCalledTimes(2);
-  expect(await prisma.scoutEffectClaim.count()).toBe(0);
   expect(await prisma.matchNotificationIntent.count()).toBe(0);
 });
 

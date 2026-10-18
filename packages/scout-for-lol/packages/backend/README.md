@@ -22,10 +22,9 @@ Application state (subscriptions, competitions, guilds) is PostgreSQL 18
 managed by Prisma (`@prisma/adapter-pg`). Report images are rendered by
 `@scout-for-lol/report`.
 
-Product announcements and Customs operations commit their intent and recoverable
-Workflow start in PostgreSQL. Announcements freeze their content and chart
-artifacts in S3 before delivery; Customs checkpoints voice effects through the
-gateway worker. Ambiguous external effects require operator reconciliation.
+Product announcements commit their intent and recoverable Workflow start in
+PostgreSQL. Announcements freeze their content and chart artifacts in S3 before
+delivery. Ambiguous external effects require operator reconciliation.
 
 ## Support messages
 
@@ -368,9 +367,11 @@ boundary in `durable-facts.ts`: the `ScoutWorkflowStart` request rows and the
 receipted lake staging. A recorder outage
 can never throw into the effect it describes. Writes the pipeline decides from
 are strict instead; see [The per-match core](#the-per-match-core).
-`ScoutEffectClaim` is the at-most-once guard for an effect, and a notification
-intent is keyed by the same string as its send's claim, so the two describe
-the same send.
+An effect's at-most-once guard is its own durable record: a guarded match
+effect's evidence-bearing receipt, a send's notification intent, a report
+chunk's delivery row. There is no separate claim table beside them; see
+[The per-match core](#the-per-match-core) for how the effect fence reads the
+receipt under an advisory lock.
 
 Receipt evidence names things by durable identity — Discord message ids, ledger
 row ids, object key plus content digest — never by a count or a local path, so
@@ -587,13 +588,28 @@ tampered-command negative control. Retiring the patch is a separate
 compatibility release using `deprecatePatch` after no retained history needs
 the old branch.
 
-`ScoutEffectClaim` keeps taking the top-level Prisma client, and
-`src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
-insert that expects to fail and then READS the existing row back, and in
-Postgres a constraint violation aborts the surrounding transaction, so the
-read-back could not run inside one. The guard and the fact are therefore two
-commits by construction, which is why every guarded-effect result reports
-them as separate outcomes and names the reconcile.
+### The effect fence
+
+Settlement, progression, prematch markets and the notification render run
+behind `runGuardedEffect` (`src/temporal/effect-fence.ts`). Under a Postgres
+advisory transaction lock keyed by the effect, it first reads the effect's own
+evidence-bearing receipt through a caller-supplied probe: a standing receipt
+means an earlier attempt applied the effect, and the run reports
+`guard: already-applied` with that fact instead of re-running a state-gated
+effect into a receipt conflict. No receipt means the effect is owed; the lock
+keeps a start-to-close retry out while the original attempt still runs, and
+`fence.assertHeld()` refuses the receipt write once the lock may have lapsed.
+A conflicting receipt fails the Activity non-retryably and increments
+`scout_durable_receipts_recorded_total{outcome="conflict"}`, which raises
+`ScoutDurableReceiptConflicts`. The retired `ScoutEffectClaim` row once
+recorded the same thing as the receipt, and nothing reads or writes it now;
+lock keys keep its strings, so a rolling deploy still serializes old and new
+attempts on one lock.
+
+Two analytics events are fenced by a durable transition rather than a claim,
+and both are at-most-once: a post-match report's per-guild core output by the
+guild-scoped `postmatch-core-output` receipt, and a scheduled or manual
+report's by the run's single `PENDING | UNKNOWN → DELIVERED` update.
 
 ### Renamed pipeline types
 
@@ -1292,9 +1308,20 @@ which is how a resumed settlement receipt still names a Dare an earlier attempt
 resolved. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
-tables continue draining pre-cutover rows; a standing legacy event owns its
-deduplication key and prevents the notification lane from announcing the same
-event again.
+outbox and its post-match drain are retired; settlement sinks only decide
+whether the intents may be minted. Until its tables are dropped, a standing
+legacy event still owns its deduplication key and prevents the notification
+lane from announcing the same event again.
+
+The offline recovery notice is a `product-announcement` intent with the
+`offline-recovery` effect, one per subscribed channel and outage, minted with
+its Workflow start request by ingestion reconciliation. It expires an hour
+after the outage is detected.
+
+A report delivery chunk whose send outcome is unknown stays `UNKNOWN` for the
+operations console, like an intent in `unknown-delivery`.
+`scout_report_delivery_unknown_chunks` counts them and
+`ScoutReportDeliveryUnknown` warns while any wait.
 
 ### An intent says what it announces and where it came from
 
@@ -1561,22 +1588,24 @@ intent of the match, so a minted hall intent is driven by the same run with no
 extra wiring. An intent the fan-out misses stays `pending` until a
 `scoutPipelineReconciliationWorkflow` run drives it.
 
-## Beta Customs operations
+## Beta Customs history
 
-Scout Customs reuses this process's Discord gateway client, OAuth client
-secret, JWT signing secret, Match-V5 cursor, Scout Client ingress, and S3
-ingest boundary. It has no second bot or manual winner endpoint.
+Customs no longer has a live surface. The Discord Activity, its
+`/api/customs` auth and socket routes, night lifecycle, recruitment, voice
+operations, the `custom_nights_enabled` flag, and the `custom-nights-expiry`
+schedule are retired. No code path creates a night or moves voice members.
 
-Before enabling `custom_nights_enabled`, configure the existing beta Discord
-Activity at `/customs/`, grant the beta install Manage Channels and Move
-Members, and enable `scout_client_ingestion` for participating users. A player
-creates the normal custom lobby in League. A paired client then binds the exact
-observed roster to the pending Customs game. Production hard-disables the
-Customs flag and its site archive rejects any `/customs/index.html` artifact.
+The retained `CustomNight`, `CustomGame`, and `CustomAuditEvent` rows stay
+readable. `trpc/router/customs-history.router.ts` serves the read-only
+`/app/g/<guild-id>/customs` page, and the server navigation shows it only for
+guilds that have retained nights. Match finalization and Scout Client lobby
+binding still project a result onto a custom game that was already bound, but
+no snapshot is broadcast anywhere.
 
-The beta `custom-nights-expiry` Temporal schedule closes unfinished nights
-after their 12-hour database deadline, writes an audit event, and releases the
-active-night pointer. It does not verify a game or synthesize a Riot result.
+The `scoutCustomOperationWorkflow` and `scoutCustomPublicationWorkflow` types
+stay registered because the ingestion-reconciliation Workflow still references
+them. The backend no longer produces either child or registers their
+Activities, so neither can start.
 
 The scoped privacy command refuses an active night or pending voice work:
 
@@ -1652,8 +1681,7 @@ Discord): `bun scripts/smoke/voice-probe.ts --list-devices`, then
 
 ## How web requests read Discord
 
-No HTTP, tRPC, or Discord Activity request reads the gateway client's guild
-cache. That cache cannot answer honestly on a request path — an unconnected or
+No HTTP or tRPC request reads the gateway client's guild cache. That cache cannot answer honestly on a request path — an unconnected or
 still-backfilling client looks exactly like "Scout is not installed there" —
 so web-serving code goes through two application ports instead, and a pod that
 never connects a gateway serves the same answers as one that did:
@@ -1672,10 +1700,9 @@ never connects a gateway serves the same answers as one that did:
   rather than read from a cached `GuildMember`.
 
 Three outcomes stay distinct on every path: Discord unreachable
-(`SERVICE_UNAVAILABLE`, or 503 on the Activity surface), Scout not installed
-(`NOT_FOUND` / 403), and the caller not authorized (`FORBIDDEN`). Failing to
-reach Discord must never be reported as either of the other two;
-`trpc/discord-upstream.ts` and `customs/activity-auth.ts` enforce that.
+(`SERVICE_UNAVAILABLE`), Scout not installed (`NOT_FOUND` / 403), and the
+caller not authorized (`FORBIDDEN`). Failing to reach Discord must never be
+reported as either of the other two; `trpc/discord-upstream.ts` enforces that.
 
 Parallel web procedures share one in-flight guild membership read per user
 before its five-minute success cache is populated. Failures remain errors and
@@ -1727,10 +1754,9 @@ directly. Two rules come with it:
 
 `tips/tip-catalog.ts` separates active `FeatureTipKey` values from
 `PersistedFeatureTipKey`, which also recognizes explicitly retired keys.
-Impression reads use `parsePersistedTipKey`: a retired `tournament-lobbies`
-impression keeps its original key, audience, and timestamp, still contributes
-to cooldown, and is not relabeled as the distinct `custom-nights` feature.
-Retired keys are never selection candidates. New presentations and claims
+Impression reads use `parsePersistedTipKey`: a retired `tournament-lobbies` or
+`custom-nights` impression keeps its original key, audience, and timestamp and
+still contributes to cooldown. Retired keys are never selection candidates. New presentations and claims
 remain active-only; unknown persisted keys still fail loudly.
 
 When removing a tip from the active catalog, retain its key in the explicit
@@ -1807,9 +1833,9 @@ Notes that are easy to get wrong:
   acknowledged a heartbeat once the five-minute startup grace period ends — so
   skipping the login without saying so is a crash loop, not a missing feature.
 - **`gateway` owns the gateway Activity queue.** Its Temporal client connects
-  before Discord; the worker starts after shard readiness so Customs uses
-  authoritative voice state. Adding that worker wakes and rebuilds the initial
-  client-only runtime. Commands start Workflows on their existing queues.
+  before Discord; the worker starts after shard readiness and answers queue
+  probes. Adding that worker wakes and rebuilds the initial client-only
+  runtime. Commands start Workflows on their existing queues.
 - **Recovered Explore activities register with the application run manager.**
   A voice or Discord turn starts on the gateway but executes on the
   `interactive` worker; rehydrating it there holds the same per-conversation

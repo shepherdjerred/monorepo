@@ -30,7 +30,6 @@ const PRODUCTION_DENIED_FLAGS = [
   "bucks_transfers_enabled",
   "bucks_dares_enabled",
   "dare_notifications_enabled",
-  "custom_nights_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
   "scout_client_ingestion",
@@ -98,7 +97,6 @@ describe("production hard-disable policy", () => {
         bucks_transfers_enabled: true,
         bucks_dares_enabled: true,
         dare_notifications_enabled: true,
-        custom_nights_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
         scout_client_ingestion: true,
@@ -162,7 +160,6 @@ describe("production hard-disable policy", () => {
     expect(getFlag("mvp_votes_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("challenge_runs_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("clash_surface", { server: MY_SERVER })).toBe(true);
-    expect(getFlag("custom_nights_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("ai_reports_unlimited", { user: ME })).toBe(true);
     expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
       MY_SERVER,

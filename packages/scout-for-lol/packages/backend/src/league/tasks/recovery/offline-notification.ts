@@ -1,22 +1,54 @@
-import { prisma } from "#src/database/index.ts";
-import { send } from "#src/league/discord/channel.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
-import * as Sentry from "@sentry/bun";
 import {
-  claimScoutEffect,
-  completeScoutEffect,
-  recordScoutEffectFailure,
-} from "#src/temporal/effect-claims.ts";
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index.ts";
+import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import * as Sentry from "@sentry/bun";
+import { mintProductAnnouncement } from "#src/temporal/notification/product/announcement.ts";
+import {
+  orchestrationMode,
+  type OrchestrationMode,
+} from "#src/temporal/orchestration-cutover.ts";
 
 const logger = createLogger("offline-notification");
 
+const OFFLINE_NOTICE =
+  "Scout was offline for a bit. Sorry about that! I'm back now and catching up on missed matches.";
+
+/** "I'm back now" is worthless once the catch-up it announces is long over. */
+const OFFLINE_NOTICE_FRESHNESS_MS = 60 * 60 * 1000;
+
+/**
+ * Tell every subscribed channel that Scout recovered from an outage, once per
+ * outage and channel.
+ *
+ * Each channel gets a `product-announcement` notification intent keyed by the
+ * outage and the channel, minted with its Workflow start request in one
+ * transaction. The notification lane owns the send: one stable nonce per
+ * intent, an ambiguous send parked in `unknown-delivery` for an operator, and
+ * a repeat recovery pass for the same outage finding the standing intent
+ * instead of posting again.
+ */
 export async function sendOfflineNotification(
   outageStartedAt: Date = new Date(0),
+  database: ExtendedPrismaClient = prisma,
+  mode: () => Promise<OrchestrationMode> = () => orchestrationMode(database),
 ): Promise<void> {
-  logger.info("Sending offline recovery notification to subscribed channels");
+  // The notice is a durable product announcement only. A paused cutover must
+  // not produce, and the legacy direct-send path that preceded it is retired.
+  const current = await mode();
+  if (current !== "durable") {
+    logger.info(
+      `Skipping offline recovery notification: orchestration is ${current}`,
+    );
+    return;
+  }
 
-  const subscriptions = await prisma.subscription.findMany({
+  logger.info("Queueing offline recovery notification to subscribed channels");
+
+  const subscriptions = await database.subscription.findMany({
     select: { channelId: true, serverId: true },
     distinct: ["channelId"],
   });
@@ -26,45 +58,41 @@ export async function sendOfflineNotification(
     return;
   }
 
-  logger.info(
-    `Notifying ${subscriptions.length.toString()} channel(s) about downtime recovery`,
-  );
-
-  const message =
-    "Scout was offline for a bit. Sorry about that! I'm back now and catching up on missed matches.";
-
-  let successCount = 0;
-  let failCount = 0;
+  const occurredAt = new Date();
+  const announcementId = `offline-recovery:${outageStartedAt.toISOString()}`;
+  const effect = {
+    kind: "offline-recovery" as const,
+    outageStartedAt: IsoInstantSchema.parse(outageStartedAt.toISOString()),
+  };
+  let queued = 0;
+  let existing = 0;
+  let failed = 0;
 
   for (const { channelId, serverId } of subscriptions) {
-    const effectKey = `offline-notification:${outageStartedAt.toISOString()}:${channelId}`;
-    let claimed = false;
     try {
-      const claim = await claimScoutEffect({
-        key: effectKey,
-        kind: "offline-notification",
-      });
-      if (claim === "completed") {
-        successCount += 1;
-        continue;
-      }
-      claimed = true;
-      await send(
-        {
-          content: message,
-          nonce: `sof:${outageStartedAt.getTime().toString(36)}:${channelId.slice(-6)}`,
-          enforceNonce: true,
-        },
-        channelId,
-        DiscordGuildIdSchema.parse(serverId),
+      const outcome = await database.$transaction(
+        async (tx) =>
+          await mintProductAnnouncement(tx, {
+            announcementId,
+            guildId: DiscordGuildIdSchema.parse(serverId),
+            target: {
+              kind: "channel",
+              channelId: DiscordChannelIdSchema.parse(channelId),
+            },
+            message: { content: OFFLINE_NOTICE },
+            effect,
+            occurredAt,
+            freshnessDeadline: new Date(
+              occurredAt.getTime() + OFFLINE_NOTICE_FRESHNESS_MS,
+            ),
+          }),
       );
-      await completeScoutEffect(effectKey);
-      successCount += 1;
+      if (outcome === "minted") queued += 1;
+      else existing += 1;
     } catch (error) {
-      if (claimed) await recordScoutEffectFailure(effectKey, error);
-      failCount += 1;
+      failed += 1;
       logger.warn(
-        `Failed to send offline notification to channel ${channelId}:`,
+        `Failed to queue offline notification for channel ${channelId}:`,
         error,
       );
       Sentry.captureException(error, {
@@ -74,6 +102,6 @@ export async function sendOfflineNotification(
   }
 
   logger.info(
-    `Offline notification sent: ${successCount.toString()} succeeded, ${failCount.toString()} failed`,
+    `Offline notification: ${queued.toString()} queued, ${existing.toString()} already standing, ${failed.toString()} failed`,
   );
 }

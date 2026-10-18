@@ -8,7 +8,6 @@ import { voidStaleAndAnnounce } from "#src/league/tasks/postmatch/void-stale-ann
 import { voidStaleParlayMarkets } from "#src/betting/parlays/runtime/parlay-sweep.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
-import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 import {
   markPostMatchPollCompleted,
   markPostMatchPollFailed,
@@ -70,12 +69,6 @@ export async function runPostMatchMaintenance(options: {
           }
           throw error;
         }
-      },
-    },
-    {
-      name: "dare notification delivery",
-      run: async () => {
-        await deliverPendingDareNotifications();
       },
     },
   ];
