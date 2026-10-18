@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { DELIVERY_ROOT_IGNORE_EXPRESSIONS } from "homelab/src/delivery-ownership.ts";
 
 export function createAppsApp(chart: Chart) {
   return new Application(chart, "apps-app", {
@@ -23,6 +24,11 @@ export function createAppsApp(chart: Chart) {
       },
       ignoreDifferences: [
         {
+          group: "argoproj.io",
+          kind: "Application",
+          jqPathExpressions: DELIVERY_ROOT_IGNORE_EXPRESSIONS,
+        },
+        {
           group: "networking.cfargotunnel.com",
           kind: "TunnelBinding",
           jqPathExpressions: [
@@ -38,7 +44,11 @@ export function createAppsApp(chart: Chart) {
       ],
       syncPolicy: {
         automated: { enabled: true },
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
     },
   });

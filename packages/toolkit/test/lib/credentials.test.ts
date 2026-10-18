@@ -286,6 +286,46 @@ describe("credential resolver backends", () => {
     });
   });
 
+  test("delivery resolves its provisioned admin credential through the broker", () => {
+    const vaultRef = "op://v64ocnykdqju4ui6j6pua56xw4";
+    const itemId = "ahbp4izt7fibvwdjwd4ffhiime";
+    expect(CREDENTIAL_REGISTRY["DELIVERY_EXECUTOR_TOKEN"]).toMatchObject({
+      source: {
+        kind: "op",
+        ref: `${vaultRef}/${itemId}/DELIVERY_EXECUTOR_TOKEN`,
+      },
+    });
+    expect(CREDENTIAL_REGISTRY["DELIVERY_EXECUTOR_TOKEN"]?.source).not.toEqual(
+      CREDENTIAL_REGISTRY["DELIVERY_API_TOKEN"]?.source,
+    );
+    expect(CREDENTIAL_REGISTRY["DELIVERY_API_TOKEN"]).toEqual({
+      description:
+        "Delivery machine API token (cannot approve production releases)",
+      source: {
+        kind: "op",
+        ref: `${vaultRef}/${itemId}/DELIVERY_ADMIN_TOKEN`,
+      },
+    });
+  });
+
+  test("TRMNL recovery resolves only the dedicated plugin key and prefix-only reader", () => {
+    const vaultRef = "op://v64ocnykdqju4ui6j6pua56xw4";
+    const readerItem = "542onhpijguqgaukmyvbujbu74";
+    const pluginItem = "p7th6tqeel7k2sm47mrrto7oca";
+    for (const key of [
+      "DELIVERY_TRMNL_S3_ACCESS_KEY_ID",
+      "DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY",
+    ])
+      expect(CREDENTIAL_REGISTRY[key]?.source).toEqual({
+        kind: "op",
+        ref: `${vaultRef}/${readerItem}/${key}`,
+      });
+    expect(CREDENTIAL_REGISTRY["TRMNL_API_KEY"]?.source).toEqual({
+      kind: "op",
+      ref: `${vaultRef}/${pluginItem}/TRMNL_API_KEY`,
+    });
+  });
+
   test("woodpecker resolves from the service account, not the keychain", () => {
     // The API token lives as WOODPECKER_API_TOKEN on the Woodpecker Server
     // item, which the homelab service account can read (probed 2026-10-04).

@@ -7,6 +7,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
   Record<string, ImageTargetRegistration>
 > = {
   arcade: { owner: "@arcade/backend" },
+  delivery: { owner: "@shepherdjerred/delivery" },
   tracker: {
     owner: "@shepherdjerred/tracker",
   },

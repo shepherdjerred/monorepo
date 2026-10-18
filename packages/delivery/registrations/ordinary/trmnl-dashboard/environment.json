@@ -1,0 +1,10 @@
+{
+  "id": "trmnl-dashboard/prod",
+  "serviceId": "trmnl-dashboard",
+  "name": "prod",
+  "application": "trmnl-dashboard",
+  "pipelineRevisionId": "trmnl-dashboard/prod/1",
+  "configurationRevision": "trmnl-dashboard/prod/1",
+  "configuration": {},
+  "automatic": true
+}

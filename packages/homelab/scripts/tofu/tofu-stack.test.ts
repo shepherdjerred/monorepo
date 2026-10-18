@@ -12,7 +12,8 @@ import {
   assertStackExecutionContext,
   dockerTokenPlanSummary,
 } from "./dockerhub-tokens.ts";
-import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
+import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
+import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
   collectOnePasswordTargets,
   loadPlatformDesiredState,
@@ -58,6 +59,7 @@ const STACKS: readonly TofuStack[] = [
   "posthog",
   "seaweedfs",
   "tailscale",
+  "tailscale-delivery",
 ];
 
 describe("OpenTofu credential contracts", () => {
@@ -159,6 +161,21 @@ describe("OpenTofu credential contracts", () => {
     ).not.toThrow();
   });
 
+  test("Delivery Tailscale identity provisioning is operator-only while CI can validate its source", () => {
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "validate", "true"),
+    ).not.toThrow();
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "plan", "true"),
+    ).toThrow("operator-only");
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "apply", "true"),
+    ).toThrow("operator-only");
+    expect(() =>
+      assertStackExecutionContext("tailscale-delivery", "apply", undefined),
+    ).not.toThrow();
+  });
+
   test.each(STACKS)("%s requests only its declared credentials", (stack) => {
     const requested: string[] = [];
     buildTofuEnvironment(stack, (environmentName) => {
@@ -232,6 +249,39 @@ const PLATFORM_STACKS: readonly PlatformStack[] = [
   "discord",
   "cloudflare-tokens",
 ];
+
+test("new account-scoped tokens have no fabricated rotation predecessor", async () => {
+  const stackDir = new URL("../../src/tofu/cloudflare-tokens/", import.meta.url)
+    .pathname;
+  const desired = await loadPlatformDesiredState(stackDir, "cloudflare-tokens");
+  const token = z
+    .object({
+      cloudflare_api_tokens: z.object({
+        "delivery-static-cache": z.object({
+          account_id: z.literal("48948ed6cd40d73e34d27f0cc10e595f"),
+          supersedes_id: z.string().optional(),
+          policies: z.array(
+            z.object({
+              permission_groups: z.array(z.object({ name: z.string() })),
+              resources: z.record(z.string(), z.string()),
+            }),
+          ),
+        }),
+      }),
+    })
+    .parse(desired).cloudflare_api_tokens["delivery-static-cache"];
+  expect(token.supersedes_id).toBeUndefined();
+  expect(token.policies).toHaveLength(1);
+  expect(
+    token.policies[0]?.permission_groups.map((entry) => entry.name),
+  ).toEqual(["Cache Purge"]);
+  expect(Object.keys(token.policies[0]?.resources ?? {})).toHaveLength(6);
+  expect(
+    Object.keys(token.policies[0]?.resources ?? {}).every((key) =>
+      /^com\.cloudflare\.api\.account\.zone\.[a-f0-9]{32}$/u.test(key),
+    ),
+  ).toBe(true);
+});
 
 describe("committed platform desired state", () => {
   test("rejects a nonboolean Cloudflare token management flag", async () => {

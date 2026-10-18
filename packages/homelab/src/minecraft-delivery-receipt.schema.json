@@ -1,0 +1,205 @@
+{
+  "title": "Storm independent restore validation receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "requestId",
+    "completedAt",
+    "candidateImage",
+    "sourceImage",
+    "serverUid",
+    "source",
+    "restored",
+    "backupUid",
+    "restoreUid",
+    "wholeVolumeProofSha256",
+    "originalUntouchedProofSha256",
+    "files",
+    "candidate",
+    "originalUntouched",
+    "originalReopened",
+    "scope"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "storm-independent-restore"
+    },
+    "status": {
+      "const": "VERIFIED"
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "candidateImage": {
+      "type": "string",
+      "pattern": "^(docker\\.io|ghcr\\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}$"
+    },
+    "sourceImage": {
+      "type": "string",
+      "pattern": "^(docker\\.io|ghcr\\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}$"
+    },
+    "serverUid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claimUid", "volumeUid", "volumeSource"],
+      "properties": {
+        "claimUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["driver", "volumeHandle"],
+          "properties": {
+            "driver": {
+              "type": "string",
+              "minLength": 1
+            },
+            "volumeHandle": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "restored": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claimUid", "volumeUid", "volumeSource", "namespace"],
+      "properties": {
+        "claimUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["driver", "volumeHandle"],
+          "properties": {
+            "driver": {
+              "type": "string",
+              "minLength": 1
+            },
+            "volumeHandle": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "namespace": {
+          "const": "minecraft-tsmc-delivery-validation"
+        }
+      }
+    },
+    "backupUid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "restoreUid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wholeVolumeProofSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "originalUntouchedProofSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "files": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "podUid",
+        "imageId",
+        "containerId",
+        "restartCount",
+        "gracefulStop",
+        "safeModules",
+        "gameplaySha256",
+        "startupLogSha256"
+      ],
+      "properties": {
+        "podUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "imageId": {
+          "type": "string",
+          "pattern": "sha256:[a-f0-9]{64}$"
+        },
+        "containerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "restartCount": {
+          "const": 0
+        },
+        "gracefulStop": {
+          "const": true
+        },
+        "safeModules": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "economy" },
+            { "const": "mail" },
+            { "const": "chat" },
+            { "const": "tracks" },
+            { "const": "towns" },
+            { "const": "tickets" }
+          ],
+          "items": false,
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "gameplaySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "startupLogSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "originalUntouched": {
+      "const": true
+    },
+    "originalReopened": {
+      "const": true
+    },
+    "scope": {
+      "const": "restored-copy-startup-and-citizens-gameplay; production acceptance is separate"
+    }
+  }
+}

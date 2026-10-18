@@ -1,0 +1,9 @@
+{
+  "id": "static-sites/glitter-boys",
+  "serviceId": "static-sites",
+  "name": "glitter-boys",
+  "pipelineRevisionId": "static-sites/glitter-boys/1",
+  "configurationRevision": "static-sites/glitter-boys/1",
+  "configuration": {},
+  "automatic": true
+}

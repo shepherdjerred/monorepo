@@ -4,6 +4,8 @@ import path from "node:path";
 import { S3Client } from "bun";
 import { z } from "zod";
 import { forumManifest } from "#src/config.ts";
+import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import { forumBundlePolicyDigest } from "@shepherdjerred/ops-model/forum-bundle-digest.ts";
 
 // Run through scripts/onepassword/with-service-account.sh. All credential
 // transfers use subprocess pipes or memory; the output contains release pins only.
@@ -369,6 +371,15 @@ async function main(): Promise<void> {
     );
   }
   const destination = path.resolve(destinationArg);
+  if (
+    apply === "--apply" &&
+    Object.values(SERVICE_CATALOG.deliveryDelegations ?? {}).some((owner) =>
+      owner.startsWith("storm-forum/"),
+    )
+  )
+    throw new Error(
+      "Forum is owned by Delivery; use publication and the independent baseline/release procedures instead of the legacy mutating bootstrap",
+    );
   const bundle = await packageBundle(
     path.resolve(uploadArg),
     path.resolve(stylesArg),
@@ -380,12 +391,40 @@ async function main(): Promise<void> {
       s3(gateway, "storm-forum-releases", "SEAWEEDFS"),
       bundle,
     );
-    process.stdout.write(
-      JSON.stringify({
-        bundleSha256: bundle.bundleSha256,
-        bundleKey: bundle.bundleKey,
-      }) + "\n",
+    const child = Bun.spawn(["git", "rev-parse", "HEAD"], {
+      cwd: import.meta.dirname,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const output = await new Response(child.stdout).text(),
+      revision = output.trim();
+    if ((await child.exited) !== 0 || !/^[a-f0-9]{40}$/u.test(revision))
+      throw new Error(
+        "Licensed publication requires the genuine producer source revision",
+      );
+    const descriptor = {
+      requestId: crypto.randomUUID(),
+      serviceId: "storm-forum",
+      artifact: {
+        id: `forum-bundle/${bundle.bundleSha256}`,
+        component: "archive:forum-bundle",
+        kind: "archive",
+        uri: `s3://storm-forum-releases/${bundle.bundleKey}`,
+        digest: `sha256:${bundle.bundleSha256}`,
+        version: forumManifest.xenforoVersion,
+        origin: {
+          kind: "licensed-bundle",
+          manifestDigest: forumBundlePolicyDigest(),
+          xenforoVersion: forumManifest.xenforoVersion,
+          producerSourceRevision: revision,
+        },
+      },
+    };
+    await Bun.write(
+      path.join(destination, "delivery-bundle.json"),
+      JSON.stringify(descriptor, null, 2) + "\n",
     );
+    process.stdout.write(JSON.stringify(descriptor) + "\n");
     return;
   }
   const { gateway, releases, siteKey, captchaKey } = await loadStorage();

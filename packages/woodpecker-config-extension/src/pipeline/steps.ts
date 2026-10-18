@@ -13,15 +13,11 @@ import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
 import { trmnlSteps } from "#src/pipeline/lanes/trmnl.ts";
-import { HANDOFF_KEYS, tofuPlanSteps } from "#src/pipeline/lanes/tofu.ts";
+import { HANDOFF_KEYS, tofuValidationSteps } from "#src/pipeline/lanes/tofu.ts";
 import { playwrightSteps } from "#src/pipeline/lanes/playwright.ts";
-import {
-  releaseAdmissionStep,
-  tofuApplySteps,
-} from "#src/pipeline/lanes/tofu-apply.ts";
-import type { PlatformOperation } from "#src/pipeline/lanes/tofu-apply.ts";
-import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
+import { artifactPublicationSteps } from "#src/pipeline/lanes/artifacts.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
+import { deliveryPublicationSteps } from "#src/pipeline/lanes/delivery.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
@@ -111,6 +107,7 @@ export function verifyCommands(options: {
 }
 
 export type PipelineInputs = {
+  readonly deliveryPublication?: boolean;
   readonly images: CiImages;
   /** Image of the deployed policy service, supplied by trusted bootstrap. */
   readonly trustedGateImage?: string | undefined;
@@ -128,18 +125,16 @@ export type PipelineInputs = {
   readonly imageReleaseBase?: string | undefined;
   /** Handoff coordinates belonging to exactly that image-release commit. */
   readonly imageReleasePipeline?: number | undefined;
-  /** One operator-requested platform plan or saved-plan apply. */
-  readonly platformOperation?: PlatformOperation;
 };
 
 export function buildPipelineSteps({
+  deliveryPublication = false,
   images,
   trustedGateImage,
   changedBase = "",
   verifyBase,
   imageReleaseBase = "",
   imageReleasePipeline,
-  platformOperation,
 }: PipelineInputs): CiStep[] {
   const sharedEnvironment = {
     CI_CHANGED_BASE: changedBase,
@@ -179,11 +174,10 @@ export function buildPipelineSteps({
     ...alertDashboardSteps(images),
     ...resumeSteps(images),
     ...trmnlSteps(images),
-    ...tofuPlanSteps(images),
+    ...tofuValidationSteps(images),
     ...playwrightSteps(images, changedBase),
-    releaseAdmissionStep(images),
-    ...tofuApplySteps(images, platformOperation),
-    ...releaseChainSteps(images, sharedEnvironment),
+    ...artifactPublicationSteps(images, sharedEnvironment),
+    ...deliveryPublicationSteps(images, deliveryPublication, true),
     ...ciImageSteps(images),
     ...scoutSteps(images),
     ...siteSteps(images),

@@ -1,15 +1,15 @@
 import type { CiImages } from "#src/images.ts";
-import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
+import type { CiStep } from "#src/pipeline/model.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import {
-  DEPLOY_KEYS,
+  DELIVERY_ARCHIVE_KEYS,
   HANDOFF_KEYS,
   GITHUB_DOWNLOAD,
   grant,
 } from "#src/pipeline/lanes/tofu.ts";
 
 /**
- * Static site deploys and package publishing.
+ * Immutable static site archives and package publishing.
  *
  * Both lanes select per-target inside the step rather than at pipeline level,
  * because one lane covers many sites (or two publish groups) and each has its
@@ -17,22 +17,7 @@ import {
  * targets within it do.
  */
 
-const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;
-
-/**
- * Site syncs use the deployment identity; the OpenTofu lanes use a separate
- * state identity, and the two are deliberately not interchangeable.
- */
-/** deploy-site purges the Cloudflare cache after a successful sync. */
-const CLOUDFLARE_PURGE: readonly SecretGrant[] = [
-  grant("ci-cloudflare-credentials", "CLOUDFLARE_ACCOUNT_ID"),
-  grant("ci-cloudflare-credentials", "CLOUDFLARE_API_TOKEN"),
-];
-
-const AWS_ALIASES = [
-  'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_SITES_ACCESS_KEY_ID"',
-  'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SITES_SECRET_ACCESS_KEY"',
-];
+const SITE_ARCHIVE_GROUP = { limit: 1, group: "site-archives" } as const;
 
 /** Sites built from source in this step, with the workspace each needs. */
 const SOURCE_BUILT_SITES = [
@@ -99,8 +84,8 @@ const PREBUILT_SITES = [
 ] as const;
 
 function siteCommands(): string[] {
+  const archiveFlag = " --archive";
   const lines: string[] = [
-    "if ! bun --no-install ci/scripts/selectors/ci-changed.ts sites; then exit 0; fi",
     ". ci/scripts/toolchain.sh",
     // Prebuilt-only deploys still call ci-artifact from the root scripts.
     "filters=(--filter '@shepherdjerred/root-scripts')",
@@ -133,7 +118,7 @@ function siteCommands(): string[] {
 
   lines.push(
     'ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
-    ...AWS_ALIASES,
+    "mkdir -p .delivery-artifacts",
   );
 
   for (const { lane, site, artifact } of PREBUILT_SITES) {
@@ -141,22 +126,24 @@ function siteCommands(): string[] {
     lines.push(
       `if [ "$${flag}" = "true" ]; then`,
       `  bun --no-install scripts/ci/ci-artifact.ts get ${artifact}`,
-      `  bun --no-install scripts/release/deploy-site.ts ${site} --prebuilt`,
+      `  bun --no-install scripts/release/deploy-site.ts ${site} --prebuilt${archiveFlag}`,
       "fi",
     );
   }
   for (const { lane, site } of SOURCE_BUILT_SITES) {
     const flag = lane.replaceAll("-", "_");
     lines.push(
-      `if [ "$${flag}" = "true" ]; then bun --no-install scripts/release/deploy-site.ts ${site}; fi`,
+      `if [ "$${flag}" = "true" ]; then bun --no-install scripts/release/deploy-site.ts ${site}${archiveFlag}; fi`,
     );
   }
   lines.push(
     `if [ "$${storybookFlag}" = "true" ]; then`,
     ...STORYBOOK_SITE.prebuild.map((command) => `  ${command}`),
-    `  bun --no-install scripts/release/deploy-site.ts ${STORYBOOK_SITE.site}`,
+    `  bun --no-install scripts/release/deploy-site.ts ${STORYBOOK_SITE.site}${archiveFlag}`,
     "fi",
   );
+
+  lines.push("bun --no-install scripts/ci/write-site-archive-handoff.ts");
 
   return lines;
 }
@@ -165,25 +152,20 @@ export function siteSteps(images: CiImages): CiStep[] {
   return [
     {
       key: "sites",
-      label: "deploy sites",
+      label: "publish site archives",
       image: images.base,
       commands: siteCommands(),
       dependsOn: [
         "verify",
         "playwright-e2e",
         "resume-build",
-        "tofu-apply-seaweedfs",
+        "scout-site-archives",
       ],
       timeoutMinutes: 30,
       resources: VERIFY_TIER,
       defaultBranchOnly: true,
-      concurrency: SITE_DEPLOY_GROUP,
-      secrets: [
-        GITHUB_DOWNLOAD,
-        ...DEPLOY_KEYS,
-        ...HANDOFF_KEYS,
-        ...CLOUDFLARE_PURGE,
-      ],
+      concurrency: SITE_ARCHIVE_GROUP,
+      secrets: [GITHUB_DOWNLOAD, ...DELIVERY_ARCHIVE_KEYS, ...HANDOFF_KEYS],
     },
     {
       key: "publish",

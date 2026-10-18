@@ -43,7 +43,14 @@ POLICIES = (
     ("minecraft-tsmc-world-restoration-service-write.sjer.red", "services", "UPDATE"),
     ("minecraft-tsmc-world-restoration-service-delete.sjer.red", "services", "DELETE"),
 )
-RESTORED_NAMESPACE = "minecraft-tsmc-restore"
+RESTORED_NAMESPACE: str = "minecraft-tsmc-restore"
+DELIVERY_VALIDATION_NAMESPACE = "minecraft-tsmc-delivery-validation"
+DELIVERY_VALIDATION_LABEL = "delivery.shepherdjerred.com/validation-target"
+
+
+class MaintenanceBusy(ValueError):
+    """An occupied server must remain running until a later eligible window."""
+
 
 backup_spec = importlib.util.spec_from_file_location(
     "restoration_backup", Path(__file__).with_name("restoration_backup.py")
@@ -233,7 +240,7 @@ def assert_empty() -> None:
     output = run(["-n", NAMESPACE, "exec", SERVER + "-0", "-c", SERVER, "--", "rcon-cli", "minecraft:list"])
     players = re.search(r"There are (\d+) of a max of \d+ players online", output)
     if players is None or int(players[1]) != 0:
-        raise ValueError("Maintenance requires a verified empty server")
+        raise MaintenanceBusy("Maintenance requires a verified empty server")
 
 
 def assert_denied(arguments: list[str], message: str) -> None:
@@ -589,17 +596,33 @@ def backup(path: Path, journal: JsonObject) -> JsonObject:
     return resource
 
 
+def assert_managed_restore_namespace(journal: JsonObject) -> bool:
+    if journal.get("managedRestoreNamespace") is not True:
+        return False
+    if RESTORED_NAMESPACE != DELIVERY_VALIDATION_NAMESPACE:
+        raise ValueError("Managed restore namespace differs from the reviewed Delivery target")
+    namespace = read("namespace", RESTORED_NAMESPACE, "")
+    expected = journal.object("deliveryValidation")
+    if (
+        namespace.object("metadata").string("uid") != expected.string("restoreNamespaceUid")
+        or namespace.object("metadata").strings("labels", {}).get(DELIVERY_VALIDATION_LABEL) != SERVER
+    ):
+        raise ValueError("Source-owned validation namespace was replaced or has a different owner")
+    return True
+
+
 def restore_backup(path: Path, journal: JsonObject) -> None:
     resource = backup(path, journal)
     if resource.object("status", {}).get("phase") != "Completed":
         raise ValueError("Wait for the owned backup to complete before restoring it")
-    ensure_resource(
-        {
-            "apiVersion": "v1",
-            "kind": "Namespace",
-            "metadata": {"name": RESTORED_NAMESPACE, "labels": {LEASE: journal.string("requestId")}},
-        }
-    )
+    if not assert_managed_restore_namespace(journal):
+        ensure_resource(
+            {
+                "apiVersion": "v1",
+                "kind": "Namespace",
+                "metadata": {"name": RESTORED_NAMESPACE, "labels": {LEASE: journal.string("requestId")}},
+            }
+        )
     name = "storm-verify-" + journal.string("requestId")
     restored = ensure_resource(
         {
@@ -639,6 +662,11 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
         raise ValueError("Independent restore failed; admission remains closed")
     if status.get("phase") == "Completed":
         claim = read("pvc", CLAIM, RESTORED_NAMESPACE)
+        if (
+            journal.get("managedRestoreNamespace") is True
+            and claim.object("metadata").strings("labels", {}).get("velero.io/restore-name") != name
+        ):
+            raise ValueError("Validation claim belongs to another restore request")
         if (
             claim.object("status").get("phase") != "Bound"
             or claim.object("metadata")["uid"] == journal.string("claimUid")
@@ -681,6 +709,10 @@ def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
                 "automountServiceAccountToken": False,
                 "enableServiceLinks": False,
                 "terminationGracePeriodSeconds": 10,
+                "securityContext": {
+                    "runAsNonRoot": True,
+                    "seccompProfile": {"type": "RuntimeDefault"},
+                },
                 "imagePullSecrets": [{"name": "dockerhub-pull-" + namespace}],
                 "containers": [
                     {
@@ -716,19 +748,23 @@ def ensure_reader(journal: JsonObject, namespace: str) -> JsonObject:
         if source.get("type") != "kubernetes.io/dockerconfigjson":
             raise ValueError("Storm registry reader must be a Docker config Secret")
         name = "dockerhub-pull-" + namespace
-        item = ensure_resource(
-            {
-                "apiVersion": "onepassword.com/v1",
-                "kind": "OnePasswordItem",
-                "metadata": {
-                    "name": name,
-                    "namespace": namespace,
-                    "labels": {LEASE: journal.string("requestId")},
-                },
-                "type": "kubernetes.io/dockerconfigjson",
-                "spec": {"itemPath": source.object("spec").string("itemPath")},
-            }
-        )
+        item_manifest = {
+            "apiVersion": "onepassword.com/v1",
+            "kind": "OnePasswordItem",
+            "metadata": {
+                "name": name,
+                "namespace": namespace,
+                "labels": {LEASE: journal.string("requestId")},
+            },
+            "type": "kubernetes.io/dockerconfigjson",
+            "spec": {"itemPath": source.object("spec").string("itemPath")},
+        }
+        if assert_managed_restore_namespace(journal):
+            item = read("onepassworditem", name, namespace)
+            if item.object("spec").get("itemPath") != source.object("spec").string("itemPath"):
+                raise ValueError("Source-owned validation registry reader differs from production's reader")
+        else:
+            item = ensure_resource(item_manifest)
         if item.get("type") != "kubernetes.io/dockerconfigjson":
             raise ValueError("Restored namespace registry reader has changed type")
         run(["-n", namespace, "wait", "--for=condition=Ready", "onepassworditem/" + name, "--timeout=120s"], 125)
@@ -777,6 +813,9 @@ def writer_manifest(journal: JsonObject) -> JsonObject:
     manifest = reader_manifest(journal, NAMESPACE)
     manifest.object("metadata")["name"] = "storm-install-writer-" + journal.string("requestId")
     spec = manifest.object("spec")
+    # Explicit operator restoration can require historical root-owned file
+    # metadata; this writer is never part of the Delivery validation path.
+    spec.object("securityContext")["runAsNonRoot"] = False
     container = spec.objects("containers")[0]
     container["name"] = "writer"
     container["image"] = journal.string("candidateImage")

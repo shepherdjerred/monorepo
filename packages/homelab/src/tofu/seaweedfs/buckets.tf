@@ -1,5 +1,10 @@
 # Static site buckets (served via Caddy s3proxy)
 # Private buckets are intentionally absent from the Caddy public bucket inventory.
+resource "aws_s3_bucket" "delivery_artifacts" {
+  bucket = "delivery-artifacts"
+  lifecycle { prevent_destroy = true }
+}
+
 resource "aws_s3_bucket" "storm_forum_releases" {
   bucket = "storm-forum-releases"
   lifecycle { prevent_destroy = true }
@@ -499,6 +504,18 @@ import {
 
 resource "aws_s3_bucket" "ci_handoff" {
   bucket = "ci-handoff"
+}
+
+# Immutable deployment artifacts outlive the producing CI pipeline. No age-based
+# lifecycle: active environment pins and retained rollback revisions own retention.
+# Provision this bucket before enabling archive publication; never rely on S3's
+# implicit bucket creation from the first PutObject.
+resource "aws_s3_bucket" "delivery_artifacts" {
+  bucket = "delivery-artifacts"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # OpenTofu state backend for all modules

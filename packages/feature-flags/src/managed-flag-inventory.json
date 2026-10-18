@@ -2,6 +2,11 @@
   "version": 3,
   "namespaces": [
     {
+      "key": "delivery",
+      "name": "Delivery",
+      "description": "Deployment control plane activation and access policy."
+    },
+    {
       "key": "arcade",
       "name": "Arcade",
       "description": "Arcade game rollout controls."
@@ -68,6 +73,96 @@
     }
   ],
   "flags": [
+    {
+      "key": "woodpecker-delivery-publication-enabled",
+      "owner": "woodpecker",
+      "namespace": "woodpecker",
+      "source": "code",
+      "purpose": "Register immutable build artifacts with Delivery after its publisher credential and API are accepted.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "woodpecker-delivery-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "delivery-writes-enabled",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Enable Delivery state mutations after database and identity acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "delivery-writes-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "delivery-enabled-environments",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Exact environment IDs admitted to Delivery deployment execution.",
+      "type": "variant",
+      "default": "[]",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "delivery-operator-logins",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Tailscale human logins authorized to operate Delivery and approve protected production releases.",
+      "type": "variant",
+      "default": "[]",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "delivery-trusted-proxy-addresses",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Exact ingress proxy peer addresses allowed to assert Tailscale human identity.",
+      "type": "variant",
+      "default": "[]",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
     {
       "key": "arcade_enabled",
       "owner": "arcade",

@@ -1,14 +1,13 @@
+import { createForumCredentials } from "./credentials.ts";
 import fs from "node:fs";
 import path from "node:path";
 import { Chart, type App } from "cdk8s";
 import { Pods, Service } from "cdk8s-plus-31";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   IntOrString,
   KubeConfigMap,
   KubeDeployment,
   KubeJob,
-  KubeNamespace,
   KubeServiceAccount,
   Quantity,
   type Container,
@@ -17,35 +16,38 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createHomelabIssuedCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createForumDatabase } from "./database.ts";
 import { createForumNetwork } from "./network.ts";
 import { createForumStorage } from "./storage.ts";
 import { applyForumSyncWaves } from "./sync-waves.ts";
-import { upgradeBackupEnvironment } from "./upgrade-environment.ts";
-import { ReleaseSchema, type ForumRelease } from "./release-schema.ts";
+import {
+  upgradeBackupEnvironment,
+  forumBootstrapEnvironment,
+} from "./upgrade-environment.ts";
+import type { ForumRelease, ForumStage } from "./release-schema.ts";
+import { forumTemplateInputs } from "./delivery-inputs.ts";
 
 // The caller supplies verified published artifacts and provisioned secret IDs.
 // No placeholder image digest, empty secret item, or automatic install on restart.
-export function createStormForumChart(app: App, input: ForumRelease): Chart {
-  const release = ReleaseSchema.parse(input);
+export function createStormForumChart(
+  app: App,
+  input: ForumRelease | ForumStage,
+): Chart {
+  const release = forumTemplateInputs(input);
   const namespace =
     release.stage === "beta" ? "storm-forum-beta" : "storm-forum";
   const chart = new Chart(app, namespace, {
     namespace,
     disableResourceNameHashes: true,
   });
-  new KubeNamespace(chart, "namespace", {
-    metadata: {
-      name: namespace,
-      labels: { "pod-security.kubernetes.io/enforce": "restricted" },
-    },
-  });
-  const secret = new OnePasswordItem(chart, "credentials", {
-    metadata: { name: "storm-forum-secrets" },
-    spec: { itemPath: vaultItemPath(release.secretItemId) },
+  const { secret, observer } = createForumCredentials(chart, {
+    namespace,
+    secretItemId: release.secretItemId,
+    ...(release.observationItemId === undefined
+      ? {}
+      : { observationItemId: release.observationItemId }),
   });
   const storage = createForumStorage(
     chart,
@@ -72,19 +74,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
       name,
       valueFrom: { secretKeyRef: { name: secret.name, key: name } },
     }));
-  const bootstrap: EnvVar[] = [
-    { name: "STORM_FORUM_STAGE", value: release.stage },
-    { name: "DB_HOST", value: "storm-forum-database" },
-    { name: "DB_NAME", value: "storm" },
-    { name: "DB_USER", value: "storm" },
-    {
-      name: "BUNDLE_ENDPOINT",
-      value: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
-    },
-    { name: "BUNDLE_BUCKET", value: "storm-forum-releases" },
-    { name: "BUNDLE_KEY", value: release.bundleKey },
-    { name: "BUNDLE_SHA256", value: release.bundleSha256 },
-  ];
+  const bootstrap = forumBootstrapEnvironment(release);
   const sharedMounts = [
     { name: "application", mountPath: "/app/forum" },
     { name: "files", mountPath: "/var/lib/storm-forum" },
@@ -204,6 +194,22 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
           containers: [
             {
               ...base,
+              env: [
+                ...(base.env ?? []),
+                ...(observer === undefined
+                  ? []
+                  : [
+                      {
+                        name: "DELIVERY_FORUM_OBSERVATION_TOKEN",
+                        valueFrom: {
+                          secretKeyRef: {
+                            name: observer.name,
+                            key: "DELIVERY_FORUM_OBSERVATION_TOKEN",
+                          },
+                        },
+                      },
+                    ]),
+              ],
               volumeMounts: sharedMounts.map((mount) =>
                 mount.name === "application"
                   ? { ...mount, readOnly: true }
@@ -219,6 +225,7 @@ export function createStormForumChart(app: App, input: ForumRelease): Chart {
               ports: [
                 { name: "http", containerPort: 8080 },
                 { name: "admin", containerPort: 8081 },
+                { name: "delivery-read", containerPort: 8082 },
               ],
               volumeMounts: [
                 ...sharedMounts.map((mount) =>

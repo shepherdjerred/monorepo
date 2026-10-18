@@ -103,7 +103,7 @@ describe("changed base injection", () => {
 });
 
 function server(
-  pipelines: { number: number; commit: string }[],
+  pipelines: { number: number; commit: string; status?: string }[],
   workflows: Record<number, { name: string; state: string }[]>,
 ) {
   return async (input: string | URL | Request) => {
@@ -114,7 +114,7 @@ function server(
     const parsed = Number(number);
     return jsonResponse({
       commit: pipelines.find((p) => p.number === parsed)?.commit ?? "unknown",
-      status: "success",
+      status: pipelines.find((p) => p.number === parsed)?.status ?? "success",
       workflows: workflows[parsed] ?? [],
     });
   };
@@ -125,6 +125,38 @@ describe("last commit with successful workflows", () => {
     baseUrl: "https://woodpecker.example.com",
     token: "t",
   };
+
+  test("artifact reuse requires the complete producing pipeline to succeed", async () => {
+    const fetchImpl = server(
+      [
+        { number: 101, commit: "failed-review", status: "failure" },
+        { number: 100, commit: "qualified" },
+      ],
+      {
+        101: [
+          { name: "images", state: "success" },
+          { name: "helm-push", state: "success" },
+        ],
+        100: [
+          { name: "images", state: "success" },
+          { name: "helm-push", state: "success" },
+        ],
+      },
+    );
+    await expect(
+      lastPipelineWithSuccessfulWorkflows(7, "main", ["images", "helm-push"], {
+        ...options,
+        fetchImpl,
+        requirePipelineSuccess: true,
+      }),
+    ).resolves.toEqual({ commit: "qualified", pipelineNumber: 100 });
+    await expect(
+      lastPipelineWithSuccessfulWorkflows(7, "main", ["images", "helm-push"], {
+        ...options,
+        fetchImpl,
+      }),
+    ).resolves.toEqual({ commit: "failed-review", pipelineNumber: 101 });
+  });
 
   test("keeps the qualifying commit paired with its pipeline's handoffs", async () => {
     await expect(

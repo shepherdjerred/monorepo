@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "safeModules": ["economy", "mail", "chat", "tracks", "towns", "tickets"],
+  "podTemplate": {
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+      "name": "storm-candidate-{{requestId}}",
+      "namespace": "minecraft-tsmc-delivery-validation",
+      "labels": {
+        "sjer.red/world-restore-lease": "{{requestId}}",
+        "sjer.red/delivery-validation": "{{requestId}}"
+      }
+    },
+    "spec": {
+      "restartPolicy": "Never",
+      "automountServiceAccountToken": false,
+      "enableServiceLinks": false,
+      "activeDeadlineSeconds": 1200,
+      "terminationGracePeriodSeconds": 120,
+      "securityContext": {
+        "fsGroup": 2000,
+        "runAsNonRoot": true,
+        "seccompProfile": {
+          "type": "RuntimeDefault"
+        }
+      },
+      "imagePullSecrets": [
+        {
+          "name": "dockerhub-pull-minecraft-tsmc-delivery-validation"
+        }
+      ],
+      "initContainers": [
+        {
+          "image": "{{candidateImage}}",
+          "securityContext": {
+            "runAsUser": 1000,
+            "runAsGroup": 3000,
+            "readOnlyRootFilesystem": true,
+            "allowPrivilegeEscalation": false,
+            "capabilities": {
+              "drop": ["ALL"]
+            }
+          },
+          "resources": {
+            "requests": {
+              "cpu": "100m",
+              "memory": "256Mi"
+            },
+            "limits": {
+              "cpu": "2",
+              "memory": "4608Mi"
+            }
+          },
+          "name": "sandbox-config",
+          "command": [
+            "bash",
+            "-c",
+            "set -eu\nmkdir -p /overlay/TheStorm\nawk '\n  BEGIN { print \"modules:\" }\n  /^  [a-z][a-z0-9]*: (true|false)[[:space:]]*$/ {\n    key=$1; sub(/:$/, \"\", key)\n    on=(key==\"economy\" || key==\"mail\" || key==\"chat\" || key==\"tracks\" || key==\"towns\" || key==\"tickets\")\n    print \"  \" key \": \" (on ? \"true\" : \"false\"); count++\n  }\n  END { if (count==0) exit 1 }\n' /plugins/TheStorm/config.yml > /overlay/TheStorm/config.yml\n# No restored plugin configuration can select a remote credential backend.\n# The image-owned config is synchronized by the normal entrypoint afterwards.\nprintf 'storage-method: h2\n' > /overlay/luckperms.yml\nprintf 'use-mysql: false\n' > /overlay/coreprotect.yml\n# Other baked listeners cannot expose a copy of production identities/data.\nsed 's/^  address: 0.0.0.0$/  address: 127.0.0.1/' /plugins/Geyser-Spigot/config.yml > /overlay/geyser.yml\nprintf 'enabled: false\n' > /overlay/bluemap-webserver.conf\n"
+          ],
+          "volumeMounts": [
+            {
+              "name": "overlay",
+              "mountPath": "/overlay"
+            }
+          ]
+        }
+      ],
+      "containers": [
+        {
+          "image": "{{candidateImage}}",
+          "securityContext": {
+            "runAsUser": 1000,
+            "runAsGroup": 3000,
+            "readOnlyRootFilesystem": true,
+            "allowPrivilegeEscalation": false,
+            "capabilities": {
+              "drop": ["ALL"]
+            }
+          },
+          "resources": {
+            "requests": {
+              "cpu": "100m",
+              "memory": "256Mi"
+            },
+            "limits": {
+              "cpu": "2",
+              "memory": "4608Mi"
+            }
+          },
+          "name": "candidate",
+          "env": [
+            {
+              "name": "EULA",
+              "value": "TRUE"
+            },
+            {
+              "name": "ONLINE_MODE",
+              "value": "FALSE"
+            },
+            {
+              "name": "SERVER_IP",
+              "value": "127.0.0.1"
+            },
+            {
+              "name": "ENABLE_QUERY",
+              "value": "FALSE"
+            },
+            {
+              "name": "ENABLE_RCON",
+              "value": "FALSE"
+            },
+            {
+              "name": "SPAWN_PROTECTION",
+              "value": "0"
+            },
+            {
+              "name": "MEMORY",
+              "value": "3G"
+            },
+            {
+              "name": "CFG_PROXY_PROTOCOL",
+              "value": "false"
+            },
+            {
+              "name": "MC_BRIDGE_BIND",
+              "value": "127.0.0.1"
+            },
+            {
+              "name": "MC_BRIDGE_TOKEN",
+              "value": "{{requestId}}"
+            },
+            {
+              "name": "FLIPT_URL",
+              "value": "http://127.0.0.1:9"
+            },
+            {
+              "name": "FLIPT_ENVIRONMENT",
+              "value": "beta"
+            }
+          ],
+          "volumeMounts": [
+            {
+              "name": "data",
+              "mountPath": "/data"
+            },
+            {
+              "name": "temporary",
+              "mountPath": "/tmp"
+            },
+            {
+              "name": "overlay",
+              "mountPath": "/plugins/TheStorm/config.yml",
+              "subPath": "TheStorm/config.yml",
+              "readOnly": true
+            },
+            {
+              "name": "overlay",
+              "mountPath": "/plugins/LuckPerms/config.yml",
+              "subPath": "luckperms.yml",
+              "readOnly": true
+            },
+            {
+              "name": "overlay",
+              "mountPath": "/plugins/CoreProtect/config.yml",
+              "subPath": "coreprotect.yml",
+              "readOnly": true
+            },
+            {
+              "name": "overlay",
+              "mountPath": "/plugins/Geyser-Spigot/config.yml",
+              "subPath": "geyser.yml",
+              "readOnly": true
+            },
+            {
+              "name": "overlay",
+              "mountPath": "/plugins/BlueMap/webserver.conf",
+              "subPath": "bluemap-webserver.conf",
+              "readOnly": true
+            }
+          ]
+        }
+      ],
+      "volumes": [
+        {
+          "name": "data",
+          "persistentVolumeClaim": {
+            "claimName": "datadir-minecraft-tsmc-0"
+          }
+        },
+        {
+          "name": "overlay",
+          "emptyDir": {
+            "sizeLimit": "16Mi"
+          }
+        },
+        {
+          "name": "temporary",
+          "emptyDir": {
+            "sizeLimit": "1Gi"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -6,6 +6,18 @@ import {
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 describe("workerNamespaces", () => {
+  test("Delivery orchestration polls only production and never the business queues", () => {
+    expect(
+      workerNamespaces({
+        queueRole: "delivery-workflows",
+        taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+        activeNamespace: "prod",
+      }),
+    ).toEqual(["prod"]);
+    expect(() =>
+      assertCentralWorkerNamespace("delivery-workflows", "beta"),
+    ).toThrow();
+  });
   test("binds local all-in-one workers to dev and deployed roles to prod", () => {
     expect(() => assertCentralWorkerNamespace("all", "dev")).not.toThrow();
     expect(() => assertCentralWorkerNamespace("reports", "prod")).not.toThrow();

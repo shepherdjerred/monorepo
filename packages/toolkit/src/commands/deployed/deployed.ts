@@ -35,6 +35,10 @@ import { getArgoApp } from "#lib/deployed/argocd.ts";
 import { scanPods, podsForVersionKey } from "#lib/deployed/kubectl.ts";
 import { prForCommit, openBumpPrs } from "#lib/deployed/github.ts";
 import { formatReport } from "#lib/deployed/format.ts";
+import type { Overview } from "@shepherdjerred/delivery/contract";
+import { deliveryClient } from "#lib/delivery/client.ts";
+import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { deliveryEvidence, deliveryVerdict } from "#lib/deployed/delivery.ts";
 
 export type DeployedOptions = {
   selector?: string | undefined;
@@ -42,6 +46,7 @@ export type DeployedOptions = {
   json?: boolean | undefined;
   noCluster?: boolean | undefined;
   noGithub?: boolean | undefined;
+  delivery?: boolean | undefined;
 };
 
 type Target = { service: Service; variant: Variant };
@@ -146,6 +151,7 @@ type PrInfo = { number: number; state: string; url: string };
 
 /** Shared per-command context, constant across all variants. */
 type EvalContext = {
+  deliveryOverview: () => Promise<Overview | null>;
   commit: CommitMeta;
   merged: boolean;
   pinsText: string | null;
@@ -305,7 +311,7 @@ async function evaluateTarget(
   const digestMatch =
     git.pin != null && pods.some((p) => p.digest === git.pin?.digest);
 
-  const verdict = computeVerdict({
+  let verdict = computeVerdict({
     pinExists: git.pin != null,
     writingIsBump: git.writingIsBump,
     merged: ctx.merged,
@@ -315,16 +321,49 @@ async function evaluateTarget(
     digestMatch,
   });
 
-  const detail = [
+  let detail = [
     ...gitDetail(git, variant, verdict, ctx.openBumps),
     ...clusterDetail({ git, verdict, argo, pods, digestMatch }),
   ];
+  const deliveryRequested =
+    ctx.opts.delivery === true || argo?.deliveryEnvironmentId !== undefined;
+  const deliveryOverview = deliveryRequested
+    ? await ctx.deliveryOverview()
+    : undefined;
+  const releaseEvidence =
+    deliveryOverview == null
+      ? null
+      : await deliveryEvidence(
+          deliveryOverview,
+          variant.argoApp,
+          ctx.commit.sha,
+          isAncestor,
+        );
+  if (
+    deliveryRequested &&
+    (deliveryOverview === null ||
+      (argo?.deliveryEnvironmentId !== undefined &&
+        releaseEvidence?.environmentId !== argo.deliveryEnvironmentId))
+  ) {
+    verdict = "UNKNOWN";
+    detail = [
+      "Delivery is unavailable; release ownership and selection could not be verified.",
+    ];
+  } else if (releaseEvidence !== null) {
+    verdict = deliveryVerdict(releaseEvidence, ctx.merged, pods);
+    detail = [
+      "Release selection comes from PostgreSQL. Git catalog evidence is retained separately.",
+      `ArgoCD: ${argo === null ? "unavailable" : `${argo.syncStatus} / ${argo.healthStatus}`}.`,
+      "Runtime digest matching and release acceptance are separate evidence.",
+    ];
+  }
 
   return {
     service: service.alias,
     variant: variant.name,
     versionKey: variant.versionKey,
     verdict,
+    ...(deliveryRequested ? { delivery: releaseEvidence } : {}),
     git: {
       pin: git.pin,
       writingCommit: git.writingCommit,
@@ -380,8 +419,26 @@ export async function deployedCommand(
     opts.noGithub !== true && targets.length > 0
       ? await prForCommit(commit.sha)
       : null;
+  let deliveryRequest: Promise<Overview | null> | undefined;
+  function deliveryOverview(): Promise<Overview | null> {
+    deliveryRequest ??= (async () => {
+      try {
+        const config = await loadToolkitConfig();
+        return await deliveryClient(
+          await config.value("deliveryUrl"),
+        ).overview();
+      } catch (error) {
+        notes.push(
+          `Delivery evidence unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        return null;
+      }
+    })();
+    return deliveryRequest;
+  }
 
   const ctx: EvalContext = {
+    deliveryOverview,
     commit,
     merged,
     pinsText,

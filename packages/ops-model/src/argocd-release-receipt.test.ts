@@ -19,6 +19,29 @@ test("recognizes only a verified receipt for the exact owned prune termination",
   ).toBe(false);
 });
 
+test.each(["woodpecker", "delivery-platform"])(
+  "recognizes exact root receipts initiated by %s without exempting another request",
+  (principal) => {
+    const app = structuredClone(fixture);
+    app.status.operationState.operation.initiatedBy.username = principal;
+    expect(isVerifiedRootReleaseTermination(app)).toBe(true);
+    app.status.operationState.operation.info =
+      app.status.operationState.operation.info.filter(
+        (entry) => entry.name !== "ci.sjer.red/request-id",
+      );
+    expect(isVerifiedRootReleaseTermination(app)).toBe(false);
+  },
+);
+
+test.each(["admin", "delivery", "delivery-observer", "unregistered"])(
+  "rejects the unrelated principal %s despite otherwise exact root evidence",
+  (principal) => {
+    const app = structuredClone(fixture);
+    app.status.operationState.operation.initiatedBy.username = principal;
+    expect(isVerifiedRootReleaseTermination(app)).toBe(false);
+  },
+);
+
 test.each([
   "name",
   "sync",

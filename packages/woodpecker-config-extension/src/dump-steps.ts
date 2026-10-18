@@ -15,7 +15,6 @@ import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import type { CiImages } from "#src/images.ts";
 import { completionStep } from "#src/pipeline/completion.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
-import { groupTofuSteps } from "#src/pipeline/group-tofu.ts";
 import { draftPreflightStep } from "#src/pipeline/draft.ts";
 import { benchmarkSteps } from "#src/pipeline/benchmark.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
@@ -38,14 +37,13 @@ const PLACEHOLDER_IMAGES: CiImages = {
 };
 
 const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@${PLACEHOLDER_DIGEST}`;
-const steps = groupTofuSteps(
-  buildPipelineSteps({
-    images: PLACEHOLDER_IMAGES,
-    trustedGateImage: gateImage,
-    changedBase: "",
-    imageReleaseBase: "",
-  }),
-);
+const steps = buildPipelineSteps({
+  deliveryPublication: true,
+  images: PLACEHOLDER_IMAGES,
+  trustedGateImage: gateImage,
+  changedBase: "",
+  imageReleaseBase: "",
+});
 
 // Include the dynamically appended verdict in admission and grant checks.
 const routed = routeSteps(

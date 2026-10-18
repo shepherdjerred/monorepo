@@ -1,0 +1,10 @@
+{
+  "id": "scout-for-lol/beta",
+  "serviceId": "scout-for-lol",
+  "name": "beta",
+  "application": "scout-beta",
+  "pipelineRevisionId": "scout-beta/1",
+  "configurationRevision": "scout-beta/1",
+  "configuration": {},
+  "automatic": true
+}

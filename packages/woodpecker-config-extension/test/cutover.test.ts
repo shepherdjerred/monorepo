@@ -79,6 +79,23 @@ describe("cutover event selection", () => {
 });
 
 describe("complete PR status", () => {
+  test.each([
+    "packages/delivery/src/client/app.tsx",
+    "packages/delivery/e2e/delivery.spec.ts",
+    "packages/delivery/prisma/schema.prisma",
+  ])("requires browser acceptance for Delivery-only change %s", (path) => {
+    const selected = selectSteps(testPipelineSteps(), {
+      event: "pull_request",
+      branch: "feature/delivery",
+      defaultBranch: "main",
+      changedFiles: [path],
+    });
+    expect(selected.some((step) => step.key === "playwright-e2e")).toBe(true);
+    expect(completionStep(selected, TEST_IMAGES.base).dependsOn).toContain(
+      "playwright-e2e",
+    );
+  });
+
   test("browser work runs independently but completion and sites wait for both gates", () => {
     const steps = testPipelineSteps();
     const selected = selectSteps(steps, {

@@ -3,7 +3,7 @@ import type { CiStep } from "#src/pipeline/model.ts";
 import { onlyInternalImagePinsChanged } from "@shepherdjerred/version-catalog/internal-image-pins";
 
 const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
-const PIN_PATHS = new Set([CATALOG_PATH, "scripts/pin-candidates-state.json"]);
+const PIN_PATHS = new Set([CATALOG_PATH]);
 
 /** A missing or unexpected catalog comparison keeps the complete main graph. */
 export async function isInternalImagePinChange(
@@ -36,24 +36,19 @@ export async function isInternalImagePinChange(
   }
 }
 
-/** Keep image publication and every consumer of its release handoffs. */
-const PIN_ONLY_DEPENDENCIES: Readonly<Record<string, readonly string[]>> = {
-  verify: [],
-  "homelab-release-admission": [],
-  images: ["verify", "homelab-release-admission"],
-  "helm-push": ["homelab-release-admission", "images"],
-  "argocd-sync": ["homelab-release-admission", "images", "helm-push"],
-  "version-commit-back": ["images", "argocd-sync"],
-  "scout-beta-release": ["images", "argocd-sync"],
-  "scout-tag-release": ["scout-beta-release"],
-  "scout-prod-reconcile": ["argocd-sync", "scout-beta-release"],
-};
-
 export function internalImagePinSteps(steps: readonly CiStep[]): CiStep[] {
   const byKey = new Map(steps.map((step) => [step.key, step]));
-  return Object.entries(PIN_ONLY_DEPENDENCIES).map(([key, dependsOn]) => {
+  const required = new Set<string>();
+  function include(key: string) {
+    if (required.has(key)) return;
     const step = byKey.get(key);
-    if (step === undefined) throw new Error(`missing pin release step: ${key}`);
-    return { ...step, dependsOn };
-  });
+    if (step === undefined)
+      throw new Error(`Missing artifact producer dependency: ${key}`);
+    required.add(key);
+    for (const dependency of step.dependsOn ?? []) include(dependency);
+  }
+  for (const key of ["images", "helm-push", "scout-site-archives", "sites"])
+    include(key);
+  if (byKey.has("delivery-publish")) include("delivery-publish");
+  return steps.filter((step) => required.has(step.key));
 }

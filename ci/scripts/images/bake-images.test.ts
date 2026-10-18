@@ -358,6 +358,7 @@ test("runs the default application candidate smoke check", async () => {
       verifySourceLabel: () => Promise.resolve(),
       getRuntimeFingerprint: async () => "new",
       writeMetadata: () => Promise.resolve(),
+      writeDeliveryMetadata: () => Promise.resolve(),
       writeCandidates: () => Promise.resolve(),
       writeText: () => Promise.resolve(),
     },
@@ -947,6 +948,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       writeMetadata: async (value) => {
         metadata.push(value);
       },
+      writeDeliveryMetadata: () => Promise.resolve(),
       writeCandidates: async (digests, buildNumber) => {
         candidateMetadata.push({ digests, buildNumber });
       },
@@ -1117,6 +1119,7 @@ test("keeps upstream provenance for infrastructure images", async () => {
       writeMetadata: async () => {
         events.push("metadata");
       },
+      writeDeliveryMetadata: () => Promise.resolve(),
       writeCandidates: async () => {
         events.push("candidates");
       },

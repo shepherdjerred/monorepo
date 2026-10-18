@@ -33,6 +33,7 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "talosctl", args: ["talosctl", "version", "--client"] },
   { name: "tofu", args: ["tofu", "version"] },
   { name: "argocd", args: ["argocd", "version", "--client"] },
+  { name: "aws", args: ["aws", "--version"] },
   { name: "velero", args: ["velero", "version", "--client-only"] },
   { name: "woodpecker-cli", args: ["woodpecker-cli", "--version"] },
   { name: "temporal", args: ["temporal", "--version"] },

@@ -58,6 +58,58 @@ function application(chart: Chart, name: string): Application {
 }
 
 describe("applyApplicationReleasePolicy", () => {
+  test("delegated upstream charts need no root-owned build revision", () => {
+    const previous = Bun.env["HOMELAB_CHART_REVISIONS_JSON"];
+    try {
+      Bun.env["HOMELAB_CHART_REVISIONS_JSON"] = "{}";
+      const app = new App();
+      const chart = new Chart(app, "apps");
+      const delegated = new Application(chart, "minecraft", {
+        metadata: {
+          name: "minecraft-tsmc",
+          annotations: {
+            "delivery.shepherdjerred.com/environment": "minecraft/tsmc",
+          },
+        },
+        spec: {
+          project: "default",
+          source: {
+            repoUrl: "https://chartmuseum.sjer.red",
+            chart: "minecraft",
+            targetRevision: "5.2.0",
+            helm: {
+              parameters: [
+                {
+                  name: "image.tag",
+                  value: "selected@sha256:" + "a".repeat(64),
+                },
+              ],
+            },
+          },
+          destination: {
+            server: "https://kubernetes.default.svc",
+            namespace: "minecraft-tsmc",
+          },
+          syncPolicy: { automated: {} },
+        },
+      });
+      expect(() => applyApplicationReleasePolicy(app)).not.toThrow();
+      expect(
+        z
+          .object({
+            spec: z.object({
+              source: z.object({ targetRevision: z.string() }),
+            }),
+          })
+          .parse(delegated.toJson()).spec.source.targetRevision,
+      ).toBe("5.2.0");
+    } finally {
+      if (previous === undefined)
+        Reflect.deleteProperty(Bun.env, "HOMELAB_CHART_REVISIONS_JSON");
+      else Bun.env["HOMELAB_CHART_REVISIONS_JSON"] = previous;
+    }
+  });
+
   test("adds cascading finalizers and explicit retain exceptions", () => {
     const app = new App();
     const chart = new Chart(app, "apps");

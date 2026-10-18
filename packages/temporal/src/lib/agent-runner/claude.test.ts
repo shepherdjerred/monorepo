@@ -1,5 +1,4 @@
 import { chmod, mkdtemp, rm, stat } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -462,8 +461,18 @@ describe("Claude provider home isolation", () => {
   test("uses the worker provider uid for workspace and subprocess isolation", async () => {
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
 
+    // Match the Linux worker's shared temp layout. macOS os.tmpdir() is a
+    // protected per-user directory that a different uid cannot traverse.
+    // Only this test-owned lifecycle parent may need its execute bits changed.
+    const sharedParent = "/tmp";
+    const ancestorModes = await Promise.all(
+      [sharedParent, path.parse(sharedParent).root].map(async (directory) => {
+        const directoryStat = await stat(directory);
+        return { directory, mode: directoryStat.mode };
+      }),
+    );
     const lifecycleDirectory = await mkdtemp(
-      path.join(os.tmpdir(), "claude-runner-home-"),
+      path.join(sharedParent, "claude-runner-home-"),
     );
     await chmod(lifecycleDirectory, 0o700);
     const home = path.join(lifecycleDirectory, "home");
@@ -490,6 +499,10 @@ describe("Claude provider home isolation", () => {
       );
       const restoredLifecycle = await stat(lifecycleDirectory);
       expect(restoredLifecycle.mode & 0o777).toBe(0o700);
+      for (const ancestor of ancestorModes) {
+        const ancestorStat = await stat(ancestor.directory);
+        expect(ancestorStat.mode).toBe(ancestor.mode);
+      }
     } finally {
       await rm(lifecycleDirectory, { recursive: true, force: true });
     }

@@ -1,5 +1,360 @@
 # @shepherdjerred/temporal
 
+### Delivery execution
+
+Delivery stores release selections, immutable version sets, and audit evidence
+in PostgreSQL. `deliveryDeploymentWorkflow` executes on `delivery-workflows`;
+ordinary deployment Activities use the isolated `delivery` queue and worker role.
+Platform and control-plane effects use the separate `delivery-platform` role.
+Delivery orchestration uses the credentialless `delivery-workflows` role and
+`delivery-workflows` queue in the independent control-plane Application. The
+central/business `monorepo-workflows` and Scout queues remain separate.
+The API and executor share the Delivery contract. Workflow IDs use the shared
+`deliveryWorkflowId` helper so an acknowledged outbox row always identifies the
+execution actually submitted.
+
+The `delivery-dispatch` Schedule qualifies published builds against their exact
+terminal CI execution, reconciles automatic environment selections, and submits
+unacknowledged outbox rows. It starts paused until the service, executor
+credentials, and compatible Workflow workers are available. A lost start
+response is inspected by stable Workflow identity before acknowledging the row.
+Paused or occupied environments remain in a durable Workflow admission wait.
+
+TRMNL plugin configuration is a fixed dependency stage of the
+`trmnl-dashboard` release, after its backend image and health are verified.
+CI publishes the original qualified `archive:trmnl-plugins` JSON bundle; it
+does not publish plugins to TRMNL. The executor verifies its content hash,
+original source revision, six source basenames, settings IDs and the three
+reviewed plugin targets. Each POST has a persisted per-plugin intent and a
+fresh held claim. GET readback before retry and after publication compares
+all source-owned settings and exact Liquid bytes; API-managed settings may
+remain. An ambiguous response retains the failed result and ownership.
+
+The ordinary worker and API observer receive only the dedicated plugin key
+and prefix-only `delivery-artifacts/trmnl-plugins/*` archive reader. Although
+the observer sends GET requests only, the upstream plugin key itself permits
+writes. It is separate from the dashboard's runtime credentials and grants
+no Home Assistant access. No TRMNL key is projected into CI.
+
+For a partial plugin publication, request an explicit repair of the failed
+owner. This freezes the same version set and bundle, transfers its held lock
+only after independently proving the original Workflow is closed, and
+rechecks that proof before every POST. Repair inspects the original owned
+Argo operation, ready backend image and health before and after effects. It
+does not select or synchronize Argo, change application acceptance, or rewrite
+the original failed result. All three readbacks must match before unlocking:
+
+```bash
+toolkit deploy trmnl repair FAILED_DEPLOYMENT_ID --machine --expected-generation CURRENT_GENERATION --request-id UNIQUE_REQUEST_ID --reason 'Repair the exact frozen plugin bundle after interrupted publication'
+```
+
+When the Workflow/Activity worker is unavailable, the same effect engine can
+run in the foreground. Delivery API/PostgreSQL, Temporal server, Argo and the
+two external APIs must remain reachable. First pause `delivery-dispatch` and
+wait until its current action has completed; inspect or terminate a running
+repair Workflow before taking its work. The command refuses an active repair
+Workflow or an unpaused/undrained dispatcher. Create the repair above after
+pausing, then run:
+
+```bash
+toolkit temporal --namespace prod schedule pause --schedule-id delivery-dispatch --reason 'Independent fixed TRMNL repair under held quarantine'
+toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
+bun packages/temporal/scripts/rollout/trmnl-delivery-repair.ts --deployment REPAIR_DEPLOYMENT_ID --url DELIVERY_URL
+toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Fixed plugin readbacks verified and repair completed'
+```
+
+The operator command brokers the existing executor, Argo, Temporal and narrow
+TRMNL credentials without printing values. A failed repair retains quarantine;
+inspect it and request another explicit repair rather than releasing its lock.
+This path has local protocol and Workflow evidence; no live plugin POST or
+production outage exercise has been performed as part of implementation.
+Dispatch repair also inspects submitted requests and records a failed request
+when its Workflow closed before settlement; ambiguous external stages retain
+their target lock.
+
+Licensed forum acquisition is qualified independently of CI availability. The API
+reads exact private bytes against the neutral dependency policy at the original
+producer commit; genuine CI later retains that qualified artifact. The dispatcher
+also starts `deliveryForumBaselineWorkflow` for explicit admin intents. It only
+requests API-owned native observations and records an immutable failure or original
+baseline. The first upgrade freezes that baseline and rechecks the original before
+candidate source selection; subsequent upgrades use accepted application provenance.
+Neither baseline nor ordinary rollback can reverse database migrations.
+
+The Argo adapter verifies published chart bytes, selects exact source fields
+with optimistic concurrency, and invokes the existing guarded `sync-managed`
+command. Acceptance requires the owned operation receipt, exact deployment
+history, ready running image digests, and configured runtime checks. Release
+mutations have one Activity attempt. An ambiguous failure retains the
+environment lock until an operator inspects the recorded external operation and
+explicitly releases it with evidence through Delivery.
+
+The production image bundles the guarded Argo command. A missing bundle fails
+instead of selecting another implementation. Development runs the source
+command. PostgreSQL, Temporal and ArgoCD recovery remain available through their
+existing operator tools without requiring a healthy Delivery executor.
+
+The bounded worker proof Job runner targets `delivery-worker-jobs`
+and CI compute admission on Liskov. A source-owned recipe controls the command,
+credential keys, resources, and checkout. The executor records the exact Job
+UID and canonical request fingerprint before waiting, and inspects an existing
+Job before creating one. Ordinary stage Pods have no Kubernetes or vault token.
+Worker proof Jobs project only registry-read credentials and fixed
+Temporal/metrics access. The separate `delivery-platform` Activity role uses
+`delivery-platform-jobs`. Its Job-create authority intentionally includes every
+managed provider credential projected in that namespace: fixed child recipes
+limit normal execution, but do not isolate those credentials from a compromised
+platform worker. The ordinary Delivery worker cannot create Jobs there.
+Platform capability registration remains inactive until reviewed provisioning.
+Only fixed platform recovery recipes mount `delivery-recovery-inspector`:
+that account can read Jobs and list/read Pods in `delivery-platform-jobs` only.
+It cannot create resources, execute commands in Pods, read Secrets or use cluster
+permissions. Its projected token lets the independent native verifier repeat
+terminal-executor observations immediately before a recovery mutation.
+
+Platform releases freeze qualified source builds and the complete original
+chart inventory. Root mutations reuse `release-root`; central must first be
+delegated so root cannot change its protected control-plane templates.
+OpenTofu planning and applying are separate Deployments. Plans capture state
+lineage and serial, action counts, native Job UID, and the exact source build.
+The bounded saved plan is encrypted with the dedicated
+`DELIVERY_PLAN_ENCRYPTION_PASSPHRASE` credential and stored behind execute-only
+API endpoints. Apply checks the frozen metadata, authentication tag, expiry and
+current state, then applies that saved file without replanning. Existing
+sensitive stack policies require approval of the exact plan; routine stacks
+retain automatic execution after their prerequisites. Provider subprocesses
+receive their declared stack credentials, excluding the Delivery API token.
+
+Worker releases freeze an environment-owned PostgreSQL pool into each
+Deployment. Only the reviewed central and Scout host profiles are allowed;
+pool entries select immutable original image artifacts and zero or one replica.
+Central hosts serve both `prod` and `beta`. Their rollout plan records both
+namespaces, and each explicit routing step checks both. Replay, pinned canaries,
+healthy pollers, beta prerequisites, and the existing observation windows still
+apply. A partial routing response is inspected before repeating the same step.
+
+First ownership transfer uses a separate owned Argo bootstrap operation. It
+keeps every legacy replica while creating retained hosts, and refuses any
+legacy digest without qualified original-artifact coverage. Exact replacement
+Pod images and healthy pollers on every served route must pass before the
+final owned operation can scale legacy hosts to zero. Shared application roles
+use the selected candidate image. The Delivery executor, Minecraft controller
+and isolated platform worker belong to the separate `delivery-control-plane`
+chart and Application. Application rollbacks never render those resources.
+Their original Temporal image artifact remains an explicit cross-service
+reference selected in PostgreSQL. Ordinary central releases render the exact
+chart and reject historical archives that contain protected control-plane
+workloads. Image equality alone could not protect commands, probes, credentials
+or other template fields across application rollback.
+
+An admin control-plane intent freezes the controller chart and original Temporal
+image independently, including chart-only upgrades that retain older image
+provenance. Its claim waits for every other Delivery execution and recovery to
+settle, then blocks new claims while the independent platform Job runs. That
+Job verifies the prior source, templates and ready Pods, applies the owned
+selection with `sync-managed`, and independently observes the finished operation
+and every new controller Pod. A different image must carry the immutable
+`red.sjer.delivery.control-plane=delivery-control-plane/v2` OCI capability label
+on every runnable platform, including the original baked image source SHA.
+Pause the dispatch Schedule and drain other pending releases, baselines and
+recoveries before requesting this upgrade. Inspect the returned deployment ID
+and start its exact stable Workflow while dispatch remains paused:
+
+```bash
+toolkit temporal --namespace prod workflow start --workflow-id delivery/ACTUAL_DEPLOYMENT_ID --type deliveryDeploymentWorkflow --task-queue delivery-workflows --input '{"deploymentId":"ACTUAL_DEPLOYMENT_ID"}'
+```
+
+Read back that run before retrying; never substitute a new Workflow ID.
+The independent Job journals the
+ordinary Activity Deployment UID, template fingerprint and owned Pod UIDs,
+stops that exact host with a resource-version/replica CAS, and waits for its
+processes to disappear. Platform execution and the Workflow poller remain alive.
+It verifies the dedicated queue has only its own exact open run, builds the
+qualified candidate image's immutable original source with frozen dependencies,
+and runs the real Node SDK replay against that run's complete history. Chart
+source and retained image source may differ. A fresh history fingerprint,
+paused Schedule, native templates, replica counts and stopped-process proof
+must still match immediately before selection. A mismatch leaves source
+unselected and restores only the same prior UID/template to one replica;
+crash recovery uses the durable journal. No success can retain a stopped host.
+The three steady roles request 300m CPU and 768 MiB total, with combined limits
+of 3 CPU and 3 GiB; the optional Minecraft controller has its separate budget.
+Activity replacement resumes only the same persisted native Job UID and frozen
+fingerprint; a missing or replaced Job retains quarantine. Success advances
+the control-plane acceptance pointer without accepting an application release.
+The source bootstrap and platform ownership registries remain inactive pending
+reviewed provisioning and live acceptance.
+
+Platform recovery preserves the failed Deployment and its held quarantine. A
+separate admin intent freezes that identity. Its independent native recipe
+rechecks the closed original Workflow, every recorded Job UID/spec fingerprint,
+and terminal owned executor Pods, including earlier recovery attempts. An absent
+Job never proves absence of effects. Completion requires a fresh complete target
+inspection and the original generation/snapshot/lock CAS. Root recovery verifies
+the durable owned root termination and every frozen child source and health;
+controller recovery verifies the exact prior or desired chart, full Pod templates
+and original runtime image digests. Desired controller settlement also requires
+the original owned finished Argo operation. No failed release becomes accepted.
+
+The same verifier runs without a healthy Workflow or Activity worker, while
+Delivery API, PostgreSQL, Kubernetes and the Temporal server remain reachable.
+From the repository root, create and inspect the intent using the brokered admin
+identity, then run the bounded operator command:
+
+```bash
+toolkit deploy platform recover DEPLOYMENT_ID --machine --expected-generation GENERATION --reason 'Independently settle this exact failed platform operation'
+toolkit deploy platform recovery RECOVERY_INTENT_ID
+bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action inspect
+```
+
+If a root release is partial, `--action apply` reruns the existing guarded
+`release-root` with its original request UUID and frozen inventory. For a
+controller release it can synchronize only the already selected exact desired
+source; it cannot select another chart or image. A pre-selection failure can be
+settled by observing the unchanged healthy prior source instead.
+
+Before manual settlement, pause the existing `delivery-dispatch` Schedule and
+wait for its running dispatch Workflow to close. Create a fresh recovery intent
+only after dispatch is quiet, so automatic read-only inspection cannot close it
+while a human reviews the plan. An automated inspection that finds a partial
+target fails its intent and preserves quarantine; it never applies changes.
+
+```bash
+toolkit temporal --namespace prod schedule pause --schedule-id delivery-dispatch --reason 'Manual platform recovery under held quarantine'
+toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
+toolkit temporal --namespace prod workflow list --query 'WorkflowType = "deliveryDispatchWorkflow" AND ExecutionStatus = "Running"'
+```
+
+A partial OpenTofu apply remains quarantined until a new recovery plan is saved
+from the original source/stack and current native state. The plan has its own
+honest recovery-intent identity and native Job receipt, encrypted bytes, expiry,
+digest and state lineage/serial. For an existing reviewed-plan stack, a trusted
+human must approve the displayed exact plan fingerprint; a machine admin cannot
+approve it. Routine stacks retain their existing automatic policy.
+
+```bash
+bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action plan
+toolkit deploy platform recovery RECOVERY_INTENT_ID
+toolkit deploy platform recovery-approve RECOVERY_INTENT_ID --plan-fingerprint EXACT_PLAN_FINGERPRINT --decision approved --reason 'Reviewed exact recovery plan and native state'
+bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action apply
+bun packages/temporal/scripts/rollout/platform-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action inspect
+```
+
+Apply authenticates the saved bytes and current state, checkpoints its own native
+UID, renews admission, and excludes the API credential from the provider child.
+The final inspection requires a no-change plan at the frozen source and stable
+state. It alone releases quarantine. A missing/replaced apply Job is never
+recreated; inspect its exact receipt and use a new admin intent if needed.
+
+```bash
+toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Independent platform recovery verified and quarantine settled'
+```
+
+If Delivery API or PostgreSQL is unavailable, restore availability before these
+commands. Keep dispatch paused and stop new release authority. Inspect the
+already selected sources and database without selecting another release:
+
+```bash
+kubectl --context admin@torvalds -n argocd get applications delivery delivery-control-plane -o custom-columns='NAME:.metadata.name,CHART:.spec.source.chart,REVISION:.spec.source.targetRevision'
+kubectl --context admin@torvalds -n delivery get postgresql delivery-postgresql
+kubectl --context admin@torvalds -n delivery get pods,persistentvolumeclaims
+kubectl --context admin@torvalds -n velero get backups -o custom-columns='NAME:.metadata.name,PHASE:.status.phase,ERRORS:.status.errors,WARNINGS:.status.warnings'
+```
+
+For an intact catalog, the existing guarded infrastructure command can reconcile
+only its already selected source. Use the recorded operation request UUID when
+one exists. Broker only the registered root Argo credential through the existing
+service-account wrapper, and strip vault access from the child:
+
+```bash
+ARGOCD_TOKEN=op://v64ocnykdqju4ui6j6pua56xw4/ga3ma76q6vw2bxeyvkqj4xaucy/ARGOCD_TOKEN scripts/onepassword/with-service-account.sh op run -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/homelab/scripts/argocd/argocd.ts sync-managed delivery --revision ALREADY_SELECTED_REVISION --request-id RECORDED_OR_NEW_REQUEST_UUID
+```
+
+Use the same command with `delivery-control-plane` only after catalog integrity
+is established. It restores the already selected native resources; it neither
+changes PostgreSQL selection nor releases a lock. The root release and guarded
+sync commands remain independent infrastructure recovery tools after CI stops
+deploying workloads.
+
+For damaged or missing data, first follow the existing independent Velero/Spilo
+restore procedure in the PostgreSQL operator how-to. The protected source is
+`delivery/pgdata-delivery-postgresql-0`; the inert, restricted destination is
+`delivery-catalog-recovery/pgdata-delivery-postgresql-0`. Restore only the reviewed
+PV/PVC backup and its complete snapshot chain into that destination, never
+application controllers, Secrets or service accounts. The destination has no
+network access or application writer and is excluded from new backups. Inspect
+the exact reviewed Restore and its independent volume before starting a
+tokenless local-socket-only PostgreSQL verification Pod:
+
+```bash
+kubectl --context admin@torvalds apply --dry-run=server -f APPROVED_DELIVERY_CATALOG_RESTORE.yaml
+kubectl --context admin@torvalds create -f APPROVED_DELIVERY_CATALOG_RESTORE.yaml
+kubectl --context admin@torvalds -n velero get restore EXACT_RESTORE_NAME -o yaml
+kubectl --context admin@torvalds -n delivery-catalog-recovery get persistentvolumeclaim pgdata-delivery-postgresql-0 -o yaml
+kubectl --context admin@torvalds -n delivery get persistentvolumeclaim pgdata-delivery-postgresql-0 -o yaml
+```
+
+Require completed snapshots, distinct PV/CSI handles, matching server major
+version, successful crash recovery/checksums and catalog/audit/lock/outbox
+integrity. Restore the verified catalog with all API writers stopped using the
+existing PostgreSQL recovery procedure, preserving the original volume. Then
+reconcile the API at its captured source and inspect actual Temporal, native Job
+and Argo identities against restored records before resuming submissions. A
+stale backup cannot justify accepting releases or clearing quarantine. This
+source procedure has not been exercised by disrupting healthy production.
+
+Central's explicitly reviewed `caddy-s3proxy` sidecar stays an immutable chart
+dependency; acceptance checks its ready Pods against the selected chart's
+manifests. Unknown first-party dependencies fail source generation.
+
+Retirement is another locked Deployment, with a frozen zero-replica snapshot.
+Admission and source selection recheck PostgreSQL references and every served
+namespace: the build must be neither current nor ramping, drainage must follow
+its last deactivation, and exact visibility must report zero open executions.
+Routing conflict tokens are read twice. Retirement keeps image provenance and
+historical snapshots, and acceptance waits for retired Pods to disappear.
+Resource deletion remains a separate guarded pruning operation. Prepared
+definitions do not activate source delegation or live worker credentials.
+
+Host-only `adopt-worker` requests independently observe original image build IDs,
+ready Pods and every served route before materializing a baseline pool. They
+never advance application acceptance pointers. Worker recovery uses a separate
+immutable intent: the read-only verifier checks closed source execution, exact
+terminal native Jobs, stable routing, captured source identity and live hosts,
+then releases the held lock through a fresh generation CAS. The original failed
+result and pool remain unchanged. `scripts/rollout/worker-delivery-recovery.ts`
+runs the same verifier through brokered operator credentials when Activity
+workers are unavailable; it never resumes effects or accepts the failed release.
+
+TSMC preservation records an original-source snapshot in the controller's private
+durable journal before returning its native Pod receipt. A failed pre-selection
+deployment can request a separate admin Minecraft recovery intent, including
+after preservation completed or the receipt callback was lost. Recovery may
+reopen the untouched original and clean the exact validation copy. The API then
+independently reads the journal report and Argo source, checks native volume,
+Pod and route identities, and releases only the same quarantined generation.
+Missing original evidence or an admitted `reconcile` stage blocks this path.
+
+`scripts/rollout/minecraft-delivery-recovery.ts` invokes that same controller and
+independent API verification during a Workflow-worker outage. First inspect the
+intent with `toolkit deploy minecraft recovery <INTENT_ID> --json`, then keep an
+explicit `kubectl --context admin@torvalds -n delivery-tsmc-controller
+port-forward pod/delivery-tsmc-controller-0 17356:7356 --address 127.0.0.1` in a
+separate terminal. Run `bun scripts/rollout/minecraft-delivery-recovery.ts --intent
+<INTENT_ID> --url <DELIVERY_URL> --controller-url http://127.0.0.1:17356` from this
+package. The command brokers only the registered executor credential, requires a
+loopback transport, and reports structured settlement without changing the failed
+deployment result. Stop that exact port-forward after readback.
+
+The cutover uses one coordinated maintenance window: stop legacy CI release
+authority, bootstrap the API and independent control-plane chart, register the
+actual qualified current state, and transfer reviewed ownership before resuming
+submissions. Empty source registries leave the existing live owners unchanged
+until that window. Woodpecker's final role is verification, builds, immutable
+artifact publication and provenance; release selection and execution belong to
+Delivery. Remove pending deployment pin updates and legacy deployment flows as
+part of that cutover, rather than leaving two permanent release owners.
+
 Temporal workflow worker for the monorepo. It consolidates what used to be K8s
 CronJobs, in-process cron, and custom job queues into one durable, observable
 scheduler: declarative schedules (home automation, reports, maintenance),
@@ -204,46 +559,19 @@ TEMPORAL_NAMESPACE=dev TEMPORAL_WORKER_ROLE=all bun run start # start the local 
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
-TEMPORAL_NAMESPACE=prod bun run worker-deployment inspect --build-id <image-git-sha>
-TEMPORAL_NAMESPACE=prod bun run worker-deployment status --build-id <image-git-sha>
-TEMPORAL_NAMESPACE=beta bun run worker-deployment status --target scout-beta --build-id <image-git-sha>
+toolkit deploy workers list temporal/prod --json
+toolkit deploy status DEPLOYMENT_ID --json
 ```
 
-Worker Deployment rollouts use the package-local `worker-deployment` command;
-no toolkit wrapper is added. `start` runs the real workflow replay suite,
-replays retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS` against the
-candidate bundle, and runs an exact-version canary before opening a 10% ramp.
-Set `TEMPORAL_ADDRESS` to an
-operator-reachable endpoint; native calls use the existing `toolkit temporal`
-passthrough. Toolkit resolves the external API token through its credential
-broker and passes it only through the Temporal process environment. In-cluster
-calls to the namespace-local frontend skip that credential lookup. The first ramp also requires
-`--stable-build-id <sha>` so an empty
-deployment has a rollback target. `advance` checks candidate and stable poller
-history, Prometheus rule-evaluation health, and candidate Build ID Workflow
-failure counters across each ramp window. Alerts from other workers remain
-visible in monitoring but do not block routing.
-New recording archive schedules start paused until compatible Workflow workers
-receive all traffic and a recording archive canary completes. Existing schedules
-retain their operator-selected pause state during reconciliation.
-`promote` checks the two-hour health history, verifies the candidate pin's baked
-`GIT_SHA`, and writes the stable pin before changing routing so an interrupted
-command is safe to retry. `rollback` removes the exact active ramp,
-even if a newer build registered. CI retains a Workflow candidate whenever its
-pin differs from stable, so a later image release cannot evict an in-flight
-ramp. After rollback and candidate-history drain, rerun `rollback` with no
-active ramp to reset the rejected candidate to the stable catalog value, then
-review and commit both the catalog and `scripts/pin-candidates-state.json`
-changes through the normal pull-request flow before the next candidate.
-The reset records the rejected release number in `withdrawnCandidates`.
-Published handoffs and pending pin branches cannot restore that candidate or an
-older one; a newer candidate can still be retained while its commit-back waits.
-If an operator host dies, use `inspect` before removing a stale lease: it is a
-read-only routing and lease query that remains usable when candidate health
-checks or alert windows are failing.
-The target defaults to `central`; `--target scout-beta` and `--target
-scout-prod` select the stage-local Scout deployment, queue, replay bundle,
-pinned canary, image repository, and catalog pins.
+Delivery owns worker release selection, replay, exact-version canaries,
+progressive routing and retained-host retirement under a PostgreSQL environment
+lock. Use `temporal/prod`, `scout-for-lol/beta`, or `scout-for-lol/prod` explicitly.
+A rollback selects a previously accepted version set and preserves hosts still
+serving current, ramping, canary or pinned executions. Git holds no promoted
+worker pin, rejected-candidate queue or routing lease. Independent worker
+recovery proves exact source, host, routing and execution state before releasing
+ownership; it never rewrites a failed release as accepted. The control-plane
+worker has its own frozen upgrade intent and original image provenance.
 
 The hourly `llm-billed-cost-hourly` schedule starts
 `runLlmBilledCostReconciliation` on `monorepo-workflows`. Pause it before

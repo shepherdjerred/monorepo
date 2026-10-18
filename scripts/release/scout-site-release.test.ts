@@ -10,8 +10,8 @@ import path from "node:path";
 import {
   computeReleaseInputDigest,
   hashReleaseInputFiles,
-  readBackendCatalogSource,
   writeScoutReleaseState,
+  parseScoutPreparationArgs,
 } from "./scout-site-release.ts";
 import { selectPostHogSite } from "../lib/scout/scout-analytics-config.ts";
 import {
@@ -23,10 +23,42 @@ import {
   siteReleaseIdentity,
   validateProdPinState,
 } from "../lib/scout/scout-release-state.ts";
-import { hashSiteArchive } from "../lib/scout/scout-site-storage.ts";
+import { hashSiteArchive } from "../lib/scout/scout-archive.ts";
 
 const DIGEST =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+test("Scout archive preparation freezes its exact backend and dedicated scratch", () => {
+  const input = [
+    "prepare-state",
+    "--build-number",
+    "42",
+    "--backend-digest",
+    DIGEST,
+    "--output",
+    ".scout-release/state.json",
+  ];
+  const legacy = parseScoutPreparationArgs(input);
+  expect(legacy.workDirectory).toBe(".delivery-artifacts/scout-release");
+  const fresh = `sha256:${"b".repeat(64)}`;
+  const delivery = parseScoutPreparationArgs([
+    "prepare-state",
+    "--delivery-archive",
+    "--build-number",
+    "42",
+    "--backend-digest",
+    fresh,
+    "--output",
+    ".delivery-artifacts/scout-release/state.json",
+  ]);
+  expect(delivery.workDirectory).toBe(".delivery-artifacts/scout-release");
+  expect(delivery.backendImageDigest).toBe(fresh);
+  expect(legacy.backendImageDigest).toBe(DIGEST);
+  expect(() => parseScoutPreparationArgs([...input, "--unknown"])).toThrow();
+  expect(() =>
+    parseScoutPreparationArgs([...input, "--delivery-archive=false"]),
+  ).toThrow();
+});
 
 const POSTHOG_REGISTRY = {
   provider: "posthog",
@@ -193,55 +225,6 @@ test("backend CLI resolves a retained publication instead of the checkout pin", 
   }
 });
 
-test.each(["push", "manual", null])(
-  "older live CI commands require the retained catalog (%s)",
-  async (event) => {
-    const source = versionCatalogSource(
-      "shepherdjerred/scout-for-lol/beta",
-      `2.0.0-8864@${DIGEST}`,
-    );
-    expect(
-      await readBackendCatalogSource(
-        [],
-        "8872",
-        () => Promise.resolve(source),
-        event,
-      ),
-    ).toBe(source);
-    await expect(
-      readBackendCatalogSource(
-        [],
-        "8872",
-        () => Promise.reject(new Error("required handoff absent")),
-        event,
-      ),
-    ).rejects.toThrow("required handoff absent");
-  },
-);
-
-test("older PR commands resolve the checkout catalog without a publication handoff", async () => {
-  const checkout = await Bun.file(
-    new URL("../../packages/version-catalog/src/catalog.json", import.meta.url),
-  ).text();
-  expect(
-    await readBackendCatalogSource(
-      [],
-      "8872",
-      () => {
-        throw new Error("PR rehearsal must not access publication storage");
-      },
-      "pull_request",
-    ),
-  ).toBe(checkout);
-  const dryrun = findGeneratedStep(
-    await readGeneratedSteps(new URL("../..", import.meta.url).pathname),
-    "pr-dryrun",
-  );
-  expect(dryrun?.commands.join("\n")).toContain(
-    "resolve-backend-digest --version-catalog-file packages/version-catalog/src/catalog.json",
-  );
-});
-
 test("production pin resolution returns only the exact canonical pin", () => {
   const source = versionCatalogSource(
     "shepherdjerred/scout-for-lol/prod",
@@ -369,51 +352,18 @@ test("release state output creates its parent directory", async () => {
   }
 });
 
-test("the Scout release lane selects on a source change or an exact beta candidate", async () => {
+test("Scout CI publishes exact archives without legacy activation or registry retagging", async () => {
   const steps = await readGeneratedSteps(
     new URL("../..", import.meta.url).pathname,
   );
-  const beta = findGeneratedStep(steps, "scout-beta-release");
-  expect(beta).toBeDefined();
-  const commands = (beta?.commands ?? []).join("\n");
-  expect(commands).toContain('."shepherdjerred/scout-for-lol/beta" // empty');
+  const producer = findGeneratedStep(steps, "scout-site-archives");
+  expect(producer).toBeDefined();
+  const commands = (producer?.commands ?? []).join("\n");
+  expect(commands).toContain("delivery-image-digests");
   expect(commands).toContain("ci-changed.ts site-scout");
-  expect(commands).toContain(
-    "read-ci-handoff.ts version-catalog > .scout-release/version-catalog.json",
+  expect(commands).toContain("resolve-scout-delivery-backend.ts");
+  expect(commands).toContain("publish-scout-site-archives.ts");
+  expect(commands).not.toMatch(
+    /deploy-beta|reconcile-prod|tag-release|imagetools/u,
   );
-  expect(commands).toContain(
-    "resolve-backend-digest --version-catalog-file .scout-release/version-catalog.json",
-  );
-  // Nothing to release: no pushed backend image and no site source change.
-  expect(commands).toContain(
-    'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
-  );
-});
-
-test("production pin dry runs return before remote release lookup", async () => {
-  const source = await Bun.file(
-    new URL("scout-site-release.ts", import.meta.url),
-  ).text();
-  const reconcileStart = source.indexOf("async function reconcileProdPin");
-  const usageStart = source.indexOf("function usage", reconcileStart);
-  const reconcile = source.slice(reconcileStart, usageStart);
-  const dryRun = reconcile.indexOf("if (dryRun)");
-  const remoteLookup = reconcile.indexOf("await readScoutStateByVersion");
-  expect(dryRun).toBeGreaterThan(0);
-  expect(remoteLookup).toBeGreaterThan(dryRun);
-});
-
-test("tag creation verifies both immutable archive byte sets first", async () => {
-  const source = await Bun.file(
-    new URL("scout-site-release.ts", import.meta.url),
-  ).text();
-  const tagStart = source.indexOf("async function tagRelease");
-  const usageStart = source.indexOf("function usage", tagStart);
-  const tag = source.slice(tagStart, usageStart);
-  const prod = tag.indexOf('await assertScoutArchiveBytes(state, "prod")');
-  const beta = tag.indexOf('await assertScoutArchiveBytes(state, "beta")');
-  const publish = tag.indexOf('"imagetools"');
-  expect(prod).toBeGreaterThan(0);
-  expect(beta).toBeGreaterThan(prod);
-  expect(publish).toBeGreaterThan(beta);
 });

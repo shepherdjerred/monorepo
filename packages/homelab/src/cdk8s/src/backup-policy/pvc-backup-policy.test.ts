@@ -103,18 +103,18 @@ it("includes Tracker's operator-managed database in backups before activation", 
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 57 included and 50 excluded PVCs without duplicates", () => {
+  it("classifies 60 included and 52 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(107);
-    expect(new Set(keys).size).toBe(107);
+    expect(keys).toHaveLength(112);
+    expect(new Set(keys).size).toBe(112);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(57);
+    ).toHaveLength(60);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(50);
+    ).toHaveLength(52);
     expect(
       getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
         .backup,

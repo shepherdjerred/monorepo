@@ -22,8 +22,57 @@ export type CredentialSpec = {
 };
 
 const PRIVATE_VAULT_REF = "op://63lcesgoblzbpkdr4koye66rei";
+const HOMELAB_VAULT_REF = "op://v64ocnykdqju4ui6j6pua56xw4";
+const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
+const DELIVERY_TRMNL_READER_ITEM_ID = "542onhpijguqgaukmyvbujbu74";
+const DELIVERY_TRMNL_ACCOUNT_ITEM_ID = "p7th6tqeel7k2sm47mrrto7oca";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
+  TRMNL_API_KEY: {
+    description: "Fixed TRMNL plugin configuration key (read/write authority)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_TRMNL_ACCOUNT_ITEM_ID}/TRMNL_API_KEY`,
+    },
+  },
+  DELIVERY_TRMNL_S3_ACCESS_KEY_ID: {
+    description: "Read-only Delivery TRMNL archive access key",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_TRMNL_READER_ITEM_ID}/DELIVERY_TRMNL_S3_ACCESS_KEY_ID`,
+    },
+  },
+  DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY: {
+    description: "Read-only Delivery TRMNL archive secret key",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_TRMNL_READER_ITEM_ID}/DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY`,
+    },
+  },
+  DELIVERY_PUBLISHER_TOKEN: {
+    description:
+      "Delivery publisher token for immutable licensed archive descriptors",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_PUBLISHER_TOKEN`,
+    },
+  },
+  DELIVERY_EXECUTOR_TOKEN: {
+    description:
+      "Delivery scoped executor token for independent recovery proof completion",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_EXECUTOR_TOKEN`,
+    },
+  },
+  DELIVERY_API_TOKEN: {
+    description:
+      "Delivery machine API token (cannot approve production releases)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_ADMIN_TOKEN`,
+    },
+  },
   GRAFANA_API_KEY: {
     description: "Grafana API key",
     source: {

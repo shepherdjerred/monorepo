@@ -136,7 +136,7 @@ function humanChanges(snapshot: Snapshot): string[] {
     );
 }
 
-function humanBlockers(snapshot: Snapshot): string[] {
+export function reviewBlockers(snapshot: Snapshot): string[] {
   const reasons = humanChanges(snapshot);
   if (snapshot.pr.draft) reasons.push("PR is a draft");
   if (snapshot.rules.approvals > 0 && snapshot.reviewDecision !== "APPROVED")
@@ -189,7 +189,7 @@ function structuralVerdict(
       reasons: ["PR has merge conflicts"],
       commands: ["toolkit git-spice repo sync --restack=aboves"],
     };
-  const human = humanBlockers(snapshot);
+  const human = reviewBlockers(snapshot);
   if (human.length > 0)
     return {
       outcome: "human_action",

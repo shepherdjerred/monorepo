@@ -144,44 +144,20 @@ An optional field in the new contract can still fail an old strict reader.
 
 ## Start the beta Workflow Deployment ramp
 
-For Activity-only changes, keep the accepted Workflow Deployment pins and
-routing. Check queue canaries and the changed effects after the backend release.
-A new Workflow ramp is needed when the Workflow bundle changes.
-
-Pin a workflow-capable candidate image through the catalog and release path.
-Retain the accepted stable image and inspect current routing before starting
-another ramp.
-
-Configure the private Temporal endpoint for every rollout command in this
-shell:
+Inspect the retained hosts and qualified release, then request the exact beta
+version set if automatic release has not already queued it:
 
 ```bash
-export TEMPORAL_ADDRESS=<beta-address>
-export TEMPORAL_TLS=true
+toolkit deploy workers list scout-for-lol/beta --json
+toolkit deploy versions scout-for-lol --json
+toolkit deploy start scout-for-lol/beta VERSION_SET --json
+toolkit deploy status DEPLOYMENT_ID --json
 ```
 
-Inspect the current routing and candidate registration before mutating it:
-
-```bash
-cd packages/temporal
-TEMPORAL_NAMESPACE=beta bun run worker-deployment inspect \
-  --target scout-beta \
-  --build-id <candidate-image-git-sha>
-```
-
-For the first ramp, provide the accepted stable build explicitly. Later ramps
-can use the routing already recorded by Temporal:
-
-```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment start \
-  --target scout-beta \
-  --build-id <candidate-image-git-sha> \
-  --stable-build-id <stable-image-git-sha>
-```
-
-`start` replays the candidate histories, runs an exact-version canary, and then
-opens the initial 10% ramp. Do not manually change Worker Deployment routing in
-the Temporal UI while this command owns the rollout.
+Delivery freezes the backend, retained Workflow pool and both frontend flavors
+under one application lock. It replays candidate histories and runs the
+exact-version canary before opening the initial ramp. Use the recorded stage
+and routing evidence; do not separately mutate routing in the Temporal UI.
 
 ## Exercise restart and outage recovery
 
@@ -204,17 +180,11 @@ While the beta ramp is active:
 
 ## Advance and accept beta
 
-Use the rollout command to advance only after its alert and health windows are
-clean:
+Delivery advances the ramp only after its recorded alert and health windows
+are clean. Follow the same request:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment status \
-  --target scout-beta \
-  --build-id <candidate-image-git-sha>
-
-TEMPORAL_NAMESPACE=beta bun run worker-deployment advance \
-  --target scout-beta \
-  --build-id <candidate-image-git-sha>
+toolkit deploy wait DEPLOYMENT_ID --timeout 86400 --json
 ```
 
 Record the beta image digest, deployed commit, and routing state. Observe the
@@ -231,19 +201,15 @@ candidate at 100% traffic. Promote when:
 - representative daily and weekly triggers complete with their expected
   Discord and report-lake effects.
 
-The promotion command verifies the two-hour health window again:
-
-```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
-  --target scout-beta \
-  --build-id <candidate-image-git-sha>
-```
+The final routing stage verifies its health window again before acceptance.
+A successful candidate retains older hosts until native execution visibility
+proves they are drained.
 
 ## Accept the beta application release
 
 1. Confirm ArgoCD reconciled the intended revision and all ordinary roles run
-   the published image digest. Preserve the accepted Workflow pins and routing
-   when the Workflow bundle did not change.
+   the published image digest. Confirm the exact retained Workflow pool and native routing match the
+   frozen release.
 2. Verify fixed Schedules and queue ownership using the checks above. Inspect
    match, prematch, progression, Explore, report, and competition receipts for
    one external-effect owner each.
@@ -298,31 +264,29 @@ sends. Keep compatible consumers running so committed work can complete.
 
 ## Repeat in production
 
-Deploy the same accepted image to production, replay retained production
-histories, and repeat `inspect`, `start`, canaries, `advance`, the observation
-window, and `promote` with `TEMPORAL_NAMESPACE=prod` and `--target scout-prod`.
-Set `TEMPORAL_ADDRESS` to the production endpoint before those commands. The
-production queue canary uses `--stage prod --namespace prod --gateway`.
+Promote the accepted beta version set to `scout-for-lol/prod` through Delivery
+and approve its exact frozen request as a signed-in human. Production replays
+its retained histories, runs its own canary and verifies the observation
+windows. The production queue canary uses `--stage prod --namespace prod --gateway`.
 
 Do not infer production acceptance from beta. Reconfirm Argo health, queue
 pollers, Schedules, representative effects, and alert history in production.
 
 ## Roll back a candidate
 
-If replay, canaries, alerts, or runtime evidence fail, stop routing new Workflow
-tasks to the candidate:
+If replay, canaries, alerts or runtime evidence fail, inspect the deployment
+and request an exact previously accepted version set:
 
 ```bash
-TEMPORAL_NAMESPACE=<beta-or-prod> bun run worker-deployment rollback \
-  --target <scout-beta-or-scout-prod> \
-  --build-id <candidate-image-git-sha>
+toolkit deploy status DEPLOYMENT_ID --json
+toolkit deploy rollback scout-for-lol/beta ACCEPTED_VERSION_SET --json
 ```
 
-The command removes the exact active ramp without cancelling Workflow
-executions or replaying effects. After candidate-bound histories drain, rerun
-`rollback` with no active ramp to reset the candidate pin to the stable image,
-then commit the catalog and rollout-state changes through the normal pull
-request flow.
+Use `scout-for-lol/prod` for production. Delivery preserves hosts serving pinned
+executions, proves the routing change and records the selected artifacts in
+PostgreSQL. If the failed request retains its lock, use the independent worker
+recovery procedure before requesting another release. Do not reset image pins
+or routing through a Git commit.
 
 ## Related
 

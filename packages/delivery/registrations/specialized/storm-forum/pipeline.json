@@ -1,0 +1,15 @@
+{
+  "kind": "argocd",
+  "application": "storm-forum",
+  "namespace": "storm-forum",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "storm-forum",
+  "chartComponent": "chart:storm-forum",
+  "parameters": {},
+  "artifactParameters": { "delivery.image": "image:storm-forum" },
+  "forumRelease": {
+    "imageComponent": "image:storm-forum",
+    "bundleComponent": "archive:forum-bundle"
+  },
+  "verification": { "url": "https://ts-mc.net/readyz", "expectedStatus": 200 }
+}

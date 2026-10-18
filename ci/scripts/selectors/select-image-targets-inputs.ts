@@ -16,6 +16,9 @@ export const GLOBAL_IMAGE_INPUTS = [
   "ci/scripts/reporting/dockerhub-env.ts",
   "scripts/lib/dockerhub-credentials.ts",
   "packages/version-catalog/src/image-registry.json",
+  // Catalog ownership determines which service receives published artifacts.
+  // Rebuild after ownership changes so new owners receive genuine CI outputs.
+  "packages/ops-model/services.json",
   // The image lane writes the digest handoff every downstream release step
   // reads, so a change to the producer must rebuild every target once.
   "scripts/lib/ci/ci-handoff.ts",

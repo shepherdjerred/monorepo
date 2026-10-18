@@ -122,6 +122,22 @@ spec:
 `),
     ).toThrow("missing metadata.name");
   });
+
+  test("root publication does not claim the delegated upstream Minecraft chart", () => {
+    expect(
+      activeArgoRepositoryChartNames(`
+kind: Application
+metadata:
+  name: minecraft-tsmc
+  annotations:
+    delivery.shepherdjerred.com/environment: minecraft/tsmc
+spec:
+  source:
+    repoURL: https://chartmuseum.sjer.red
+    chart: minecraft
+`),
+    ).toEqual(new Set());
+  });
 });
 
 async function fixture(): Promise<string> {

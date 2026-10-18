@@ -11,7 +11,7 @@ operator review without adding CI vault-write access or changing live values.
 
 ```text
 tofu/
-├── argocd/              # ArgoCD account token for Woodpecker, stored in 1Password
+├── argocd/              # ArgoCD account tokens for Woodpecker and Delivery, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
@@ -322,13 +322,34 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
 
+The separate operator-only `tailscale-delivery` stack provisions Delivery's
+browser identity proxy. Its OAuth client has only `auth_keys` scope and can
+assign only `tag:delivery`. The stack writes a concealed `TS_AUTHKEY` field to
+the `delivery-tailscale-oauth` 1Password item and outputs only that item's UUID.
+Its new S3 state key and saved plans require enforced encryption with
+`TAILSCALE_DELIVERY_TOFU_STATE_PASSPHRASE`; no existing plaintext state is adopted.
+The provisioning identity must manage OAuth clients, while the existing
+`tailscale` CI identity remains restricted to ACL policy and has no vault-write
+access. Apply the ACL tag registration before provisioning the OAuth client,
+then use the output UUID to activate the reviewed sidecar secret reference.
+
+The sidecar consumes the [official container OAuth mechanism](https://tailscale.com/docs/features/containers/docker/docker-params):
+the stored `TS_AUTHKEY` includes `?ephemeral=false`, and the container advertises
+`tag:delivery`. Persisted state and `TS_AUTH_ONCE=true` retain the node identity
+across restarts. Serving the browser through Tailscale supplies authenticated
+human identity; machine API credentials remain separate.
+
 ### \*arr
 
 Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality profiles and custom formats are owned by Recyclarr, and Radarr/Sonarr indexers by Prowlarr's application sync — neither is in this stack.
 
 ### ArgoCD
 
-Mints the `woodpecker` ArgoCD account token and writes it to 1Password for the CI sync steps.
+Mints the `woodpecker`, `delivery`, and read-only `delivery-observer` ArgoCD account tokens and writes each to
+its own 1Password item. ArgoCD's chart owns the account registrations and RBAC;
+reconcile that chart before applying a newly registered account's token. Delivery
+consumes its token separately from its API machine credentials so OpenTofu
+remains the token lifecycle owner.
 
 ### Asus routers
 

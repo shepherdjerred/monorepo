@@ -7,6 +7,8 @@
  */
 
 export type RunOptions = {
+  /** Abort external I/O when its owning Activity is canceled or expires. */
+  signal?: AbortSignal;
   cwd?: string;
   /** Extra env vars layered on top of the current process env. */
   env?: Record<string, string>;
@@ -81,6 +83,7 @@ export async function runAllowExit(
   cmd: string[],
   opts: RunOptions = {},
 ): Promise<RunResult> {
+  opts.signal?.throwIfAborted();
   const [bin, ...args] = cmd;
   if (bin === undefined) {
     throw new Error("run: empty command");
@@ -108,10 +111,23 @@ export async function runAllowExit(
     // is drained concurrently, so the child never blocks on a full buffer.
     stderr: "pipe",
   });
+  const abort = () => {
+    proc.kill("SIGTERM");
+  };
+  opts.signal?.addEventListener("abort", abort, { once: true });
   const stderrTail = teeStderr(proc.stderr);
-  const stdout = capture ? await new Response(proc.stdout).text() : "";
-  const exitCode = await proc.exited;
-  const stderr = await stderrTail;
+  let stdout: string;
+  let exitCode: number;
+  let stderr: string;
+  try {
+    if (opts.signal?.aborted === true) abort();
+    stdout = capture ? await new Response(proc.stdout).text() : "";
+    exitCode = await proc.exited;
+    stderr = await stderrTail;
+    opts.signal?.throwIfAborted();
+  } finally {
+    opts.signal?.removeEventListener("abort", abort);
+  }
   if (capture && opts.secret !== true && opts.echoCapturedStdout !== false) {
     // Echo captured stdout so the operator still sees it in the terminal.
     // Suppressed when `secret` is set — used for secret-bearing output that

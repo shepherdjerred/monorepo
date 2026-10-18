@@ -13,7 +13,9 @@ reference; the Temporal wiki explains workflow families and boundaries. Load
   only and must never become a production fallback.
 - Namespaces are explicit: local `dev`, Scout beta `beta`, and shared production
   `prod`. Do not export a production address globally.
-- Central Workflow tasks use `monorepo-workflows`; domain Activity queues keep
+- Central/business Workflow tasks use `monorepo-workflows`; Delivery orchestration
+  uses its own `delivery-workflows` queue and independently released poller.
+  Domain Activity queues keep
   separate credentials, service accounts, concurrency, and health.
 - Existing executions stay on their recorded task queue and Workflow history.
   Use compatible pollers, replay, and Worker Versioning for changes.

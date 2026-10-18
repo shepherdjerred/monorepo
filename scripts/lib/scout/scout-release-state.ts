@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { parseVersionCatalogSource } from "../pin-candidates.ts";
+import { parseVersionCatalogText } from "@shepherdjerred/version-catalog";
 
 export const SCOUT_VERSION_PATTERN = /^2\.0\.0-\d+$/;
 export const CANONICAL_DIGEST_PATTERN = /^sha256:[a-f0-9]{64}$/;
@@ -31,27 +31,6 @@ const LegacyScoutReleaseManifestSchema = z
 export type LegacyScoutReleaseManifest = z.infer<
   typeof LegacyScoutReleaseManifestSchema
 >;
-
-export const ScoutReleaseContentSchema = ScoutReleaseStateSchema.pick({
-  sourceCommit: true,
-  backendImageDigest: true,
-  siteArchiveDigest: true,
-  betaSiteArchiveDigest: true,
-  releaseInputDigest: true,
-});
-
-export type ScoutReleaseContent = z.infer<typeof ScoutReleaseContentSchema>;
-
-const ScoutArchiveFlavorSchema = z.enum(["prod", "beta"]);
-const ScoutArchiveRecordSchema = z.union([
-  ScoutReleaseContentSchema.extend({
-    schema: z.literal("scout-site-archive/v1"),
-    flavor: ScoutArchiveFlavorSchema,
-  }).strict(),
-  ScoutReleaseStateSchema.extend({
-    flavor: ScoutArchiveFlavorSchema,
-  }).strict(),
-]);
 
 export function parseScoutReleaseState(text: string): ScoutReleaseState {
   let parsed: unknown;
@@ -95,70 +74,6 @@ export function retagScoutReleaseState(
   });
 }
 
-export function scoutReleaseContent(
-  state: ScoutReleaseState,
-): ScoutReleaseContent {
-  return ScoutReleaseContentSchema.parse({
-    sourceCommit: state.sourceCommit,
-    backendImageDigest: state.backendImageDigest,
-    siteArchiveDigest: state.siteArchiveDigest,
-    betaSiteArchiveDigest: state.betaSiteArchiveDigest,
-    releaseInputDigest: state.releaseInputDigest,
-  });
-}
-
-export function sameScoutReleaseContent(
-  left: ScoutReleaseContent,
-  right: ScoutReleaseContent,
-): boolean {
-  return (
-    left.sourceCommit === right.sourceCommit &&
-    left.backendImageDigest === right.backendImageDigest &&
-    left.siteArchiveDigest === right.siteArchiveDigest &&
-    left.betaSiteArchiveDigest === right.betaSiteArchiveDigest &&
-    left.releaseInputDigest === right.releaseInputDigest
-  );
-}
-
-export function archiveRecord(
-  state: ScoutReleaseState,
-  flavor: "prod" | "beta",
-): string {
-  return `${JSON.stringify(
-    {
-      schema: "scout-site-archive/v1",
-      flavor,
-      ...scoutReleaseContent(state),
-    },
-    null,
-    2,
-  )}\n`;
-}
-
-export function assertArchiveRecordMatchesState(
-  content: string,
-  state: ScoutReleaseState,
-  flavor: "prod" | "beta",
-): void {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch (error) {
-    throw new Error("Scout archive record is not valid JSON", { cause: error });
-  }
-  const record = ScoutArchiveRecordSchema.parse(parsed);
-  if (record.flavor !== flavor || !sameScoutReleaseContent(record, state)) {
-    throw new Error(`immutable ${flavor} archive record does not match state`);
-  }
-}
-
-export function inputRecordMatchesState(
-  content: string,
-  state: ScoutReleaseState,
-): boolean {
-  return sameScoutReleaseContent(parseScoutReleaseState(content), state);
-}
-
 export function siteReleaseIdentity(state: ScoutReleaseState): string {
   return `scout-site@${state.releaseInputDigest}`;
 }
@@ -173,9 +88,9 @@ export function resolveBackendDigest(
     }
     return candidateDigest;
   }
-  const pin = parseVersionCatalogSource(versionsSource).get(
-    "shepherdjerred/scout-for-lol/beta",
-  );
+  const pin = parseVersionCatalogText(versionsSource).entries.find(
+    (entry) => entry.name === "shepherdjerred/scout-for-lol/beta",
+  )?.value;
   const digest = pin?.split("@")[1];
   if (digest === undefined || !CANONICAL_DIGEST_PATTERN.test(digest)) {
     throw new Error("Scout beta pin has no canonical digest");
@@ -184,9 +99,9 @@ export function resolveBackendDigest(
 }
 
 export function resolveProdPin(versionsSource: string): string {
-  const pin = parseVersionCatalogSource(versionsSource).get(
-    "shepherdjerred/scout-for-lol/prod",
-  );
+  const pin = parseVersionCatalogText(versionsSource).entries.find(
+    (entry) => entry.name === "shepherdjerred/scout-for-lol/prod",
+  )?.value;
   if (pin === undefined) {
     throw new Error("Scout prod pin is missing");
   }

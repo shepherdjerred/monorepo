@@ -69,14 +69,13 @@ deployment name, the worker resolves a missing explicit Build ID from that
 immutable SHA. Non-image runtimes can set `TEMPORAL_WORKER_BUILD_ID` directly.
 A partial or non-SHA identity fails before the Workflow Worker starts.
 
-The operator interface is `bun run worker-deployment
-<status|start|advance|promote|rollback> [--target
-<central|scout-beta|scout-prod>] --build-id <image-git-sha>` from
-`packages/temporal`. `TEMPORAL_ADDRESS` is required. The initial start also
-accepts `--stable-build-id <image-git-sha>` to establish current routing before
-opening the candidate ramp. It calls the native Temporal CLI through the
-existing `toolkit temporal` passthrough plus the existing Prometheus passthrough
-and does not add a toolkit command.
+Use `toolkit deploy workers list ENVIRONMENT --json` to inspect retained hosts,
+and `toolkit deploy start ENVIRONMENT VERSION_SET --json` to request a release.
+Delivery freezes host and artifact identities in PostgreSQL, then verifies
+replay, canaries, native routing and observation windows before acceptance.
+Use `temporal/prod`, `scout-for-lol/beta`, or `scout-for-lol/prod` explicitly.
+Independent worker recovery and retirement use the same toolkit command family.
+Native diagnostics remain available through `toolkit temporal` and Prometheus.
 
 ## Repo upkeep
 

@@ -20,7 +20,28 @@ stores it. The web UI, the TRMNL screen, the email digest, and
 `services.json` is language-neutral and validated by `services.schema.json`
 and `CatalogSchema`. A name may belong to only one service. The homelab
 drift test requires every ArgoCD Application to belong to exactly one service,
-and this package's test requires the same of every analytics site.
+and this package's tests require the same of every analytics site and registered
+first-party image. The `images` entries use image registry base names;
+`charts` adds ownership for packaged charts without an active Application.
+Charts sharing an existing `argoApps` name inherit that service owner.
+`ServiceIndex.byImage` resolves build outputs without guessing from package or
+Application names. Delivery records release selections separately in PostgreSQL.
+
+`bootstrapImages` references another service's canonical image without taking
+ownership of its artifacts. Legacy shared image pins remain owned until every
+consumer Application transfers. The Delivery execution control plane owns its
+separate chart/Application while its runtime image remains a Temporal output.
+`static-release-targets.ts` gives CI and homelab registration the same reviewed
+bucket-to-environment ownership, with no selected archive versions.
+
+`ServiceIndex.rootReleaseCharts()` derives the active first-party root inventory
+from these owners. `rootReleaseExclusions` identifies upstream and inactive
+charts explicitly; current Delivery delegations are excluded as well. A rendered
+homelab check compares this inventory with actual repository-chart Applications.
+The language-neutral `platform-policy.json` preserves automatic, reviewed-plan,
+operator-only and validation-only OpenTofu boundaries and their release ordering.
+Its policy is shared by Delivery and the existing infrastructure tooling; it
+contains no selected artifact, environment version or deployment result.
 
 Prepared services still own their declared inventory. The launcher has no
 `deploy` variant while its chart renders no workload and its image pin is an

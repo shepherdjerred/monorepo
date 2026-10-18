@@ -15,6 +15,7 @@
         "*.ts",
         "checks/**/*.ts",
         "ci/*.ts",
+        "ci/trmnl/publish-plugins.ts",
         "release/*.ts",
         "tools/*.ts",
         "review/*.ts",
@@ -33,6 +34,9 @@
     },
     "packages/birmel": {
       "project": ["src/**/*.ts", "prisma/**/*.prisma"]
+    },
+    "packages/delivery": {
+      "entry": ["playwright.config.ts", "e2e/**/*.ts"]
     },
     "packages/alert-dashboard": {
       "entry": [

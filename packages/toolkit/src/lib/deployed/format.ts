@@ -4,6 +4,7 @@
 import type { DeployedReport, VariantReport, Verdict } from "./types.ts";
 
 const VERDICT_LABEL: Record<Verdict, string> = {
+  SELECTED: "🟡 SELECTED",
   RUNNING: "✅ RUNNING",
   SYNCED: "🟢 SYNCED",
   PINNED: "🟡 PINNED",
@@ -29,6 +30,14 @@ function formatVariant(v: VariantReport): string[] {
   lines.push(`## ${heading}    ${VERDICT_LABEL[v.verdict]}${build}`);
   for (const d of v.detail) {
     lines.push(`  • ${d}`);
+  }
+  if (v.delivery !== undefined && v.delivery !== null) {
+    lines.push(
+      `  • Delivery desired: ${v.delivery.desired ?? "unknown"}; observed: ${v.delivery.observed ?? "unknown"}; accepted: ${v.delivery.accepted ?? "unknown"}.`,
+    );
+    lines.push(
+      `  • Observation: ${v.delivery.observedAt ?? "unavailable"}; active deployment: ${v.delivery.activeDeploymentId ?? "none"}.`,
+    );
   }
   lines.push("");
   return lines;

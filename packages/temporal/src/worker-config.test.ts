@@ -18,6 +18,7 @@ import {
 const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
   (taskQueue) =>
     taskQueue !== TASK_QUEUES.WORKFLOWS &&
+    taskQueue !== TASK_QUEUES.DELIVERY_WORKFLOWS &&
     taskQueue !== TASK_QUEUES.AGENT_CHAT_IMESSAGE &&
     taskQueue !== TASK_QUEUES.SCOUT_BETA &&
     taskQueue !== TASK_QUEUES.SCOUT_PROD &&
@@ -26,7 +27,7 @@ const ACTIVITY_TASK_QUEUES = Object.values(TASK_QUEUES).filter(
 );
 
 function activityNamesFor(
-  role: Exclude<QueueWorkerRole, "workflows">,
+  role: Exclude<QueueWorkerRole, "workflows" | "delivery-workflows">,
 ): string[] {
   const definition = QUEUE_WORKER_DEFINITIONS.find(
     (candidate) => candidate.role === role,
@@ -38,6 +39,36 @@ function activityNamesFor(
 }
 
 describe("Temporal worker role contracts", () => {
+  it("isolates Delivery orchestration from central pollers and all effect capabilities", () => {
+    expect(getWorkerRoleContract("delivery-workflows")).toMatchObject({
+      workers: [
+        {
+          kind: "workflow",
+          role: "delivery-workflows",
+          taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+        },
+      ],
+      runsGateway: false,
+      runsEventBridge: false,
+      restoresGlitterCorpusMetrics: false,
+      restoresSeaweedFsBackupMetrics: false,
+    });
+    expect(
+      getWorkerRoleContract("workflows").workers.map(
+        (worker) => worker.taskQueue,
+      ),
+    ).toEqual([TASK_QUEUES.WORKFLOWS]);
+  });
+  it("keeps all provider-bearing platform effects out of the ordinary Delivery capability", () => {
+    expect(activityNamesFor("delivery-platform").sort()).toEqual([
+      "executeDeliveryControlPlane",
+      "executeDeliveryPlatform",
+      "inspectDeliveryPlatformRecovery",
+    ]);
+    expect(activityNamesFor("delivery")).not.toContain(
+      "executeDeliveryPlatform",
+    );
+  });
   it("leaves forum activities with the workers that mount each forum's files", () => {
     for (const taskQueue of [
       TASK_QUEUES.STORM_FORUM_BETA,
@@ -124,7 +155,7 @@ describe("Temporal worker role contracts", () => {
 
   it("runs every canonical queue and control surface locally", () => {
     const contract = getWorkerRoleContract("all");
-    expect(contract.workers).toHaveLength(ACTIVITY_TASK_QUEUES.length + 1);
+    expect(contract.workers).toHaveLength(ACTIVITY_TASK_QUEUES.length + 2);
     expect(contract.runsGateway).toBe(true);
     expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
@@ -144,7 +175,10 @@ describe("Temporal worker role contracts", () => {
     expect(concurrency.get("home")).toBe(4);
     expect(concurrency.get("reports")).toBe(4);
     expect(concurrency.get("control")).toBe(4);
-    const serialRoles: Exclude<QueueWorkerRole, "workflows">[] = [
+    const serialRoles: Exclude<
+      QueueWorkerRole,
+      "workflows" | "delivery-workflows"
+    >[] = [
       "agent",
       "backup",
       "billing",

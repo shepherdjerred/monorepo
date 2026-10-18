@@ -78,6 +78,7 @@ group "app" {
   targets = [
     "alert-dashboard",
     "tracker",
+    "delivery",
     "birmel",
     "tasknotes-server",
     "starlight-karma-bot",
@@ -136,6 +137,14 @@ target "tracker" {
   tags       = imagetags("tracker")
   cache-from = cachefrom("tracker")
   cache-to   = cacheto("tracker")
+}
+
+target "delivery" {
+  inherits   = ["_app"]
+  dockerfile = "packages/delivery/Dockerfile"
+  tags       = imagetags("delivery")
+  cache-from = cachefrom("delivery")
+  cache-to   = cacheto("delivery")
 }
 
 target "tasknotes-server" {

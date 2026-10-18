@@ -1,0 +1,22 @@
+{
+  "archiveBucket": "delivery-artifacts",
+  "publisherIdentity": "delivery-archive-publisher",
+  "activatorIdentity": "delivery-static-activator",
+  "siteBuckets": [
+    "better-skill-capped",
+    "cook",
+    "cross-compilers",
+    "glitter-boys",
+    "glitter-boys-ppl",
+    "resume",
+    "scout-design-system",
+    "scout-frontend",
+    "scout-frontend-beta",
+    "sjer-red",
+    "statically-typed",
+    "stocks-sjer-red",
+    "ts-mc-docs",
+    "webring",
+    "wiki-sjer-red"
+  ]
+}

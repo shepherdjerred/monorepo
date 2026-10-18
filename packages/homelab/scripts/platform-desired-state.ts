@@ -332,7 +332,11 @@ const cloudflareTokenCondition = z.strictObject({
 });
 const cloudflareToken = z.strictObject({
   managed: z.boolean().optional(),
-  supersedes_id: nonEmptyString,
+  supersedes_id: nonEmptyString.optional(),
+  account_id: z
+    .string()
+    .regex(/^[a-f0-9]{32}$/u)
+    .optional(),
   name: nonEmptyString,
   policies: z.array(cloudflareTokenPolicy),
   condition: cloudflareTokenCondition.optional(),

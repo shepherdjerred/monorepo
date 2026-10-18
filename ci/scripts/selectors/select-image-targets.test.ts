@@ -100,6 +100,24 @@ test("rebuilds both consumers of The Storm's public status contract", async () =
   ]);
 });
 
+test("service ownership changes qualify fresh candidates for every image owner", async () => {
+  expect(await select(["packages/ops-model/services.json"])).toEqual(
+    ALL_IMAGE_TARGETS,
+  );
+});
+
+test.each(["json", "ts"])(
+  "licensed forum %s policy rebuilds both producer and independent verifier images",
+  async (extension) => {
+    const targets = await select([
+      `packages/ops-model/src/forum-bundle-policy.${extension}`,
+    ]);
+    expect(targets).toContain("storm-forum");
+    expect(targets).toContain("delivery");
+    expect(targets).toContain("temporal-worker");
+  },
+);
+
 describe("selectImageTargets", () => {
   test("selects a standalone application image", async () => {
     expect(await select(["packages/tasknotes-server/src/index.ts"])).toEqual([
