@@ -788,6 +788,12 @@ Unknown lobby creation and participant numbers remain null. Original receipt
 time decides admission before reconciliation delays; observed completion time
 is used when lobby creation is unavailable.
 
+Converter upgrades advance the recovery version so previously completed
+observations are revisited through the same validation and admission gates,
+preserving their raw payloads and permanent discovery decisions. Every selected
+observation runs its applicable projections before match-level completion is
+rechecked; a standing sibling result cannot skip the new projection pass.
+
 Ingestion reconciliation resolves report-ready evidence through the same
 Riot-priority result policy. API-supported games retain the same two-minute
 source grace as complete client matches, measured from original discovery;

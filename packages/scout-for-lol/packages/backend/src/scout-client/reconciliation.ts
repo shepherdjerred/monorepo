@@ -13,7 +13,7 @@ import { startAcceptedClientMatches } from "./ingress.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 
-const RECOVERY_VERSION = 2;
+const RECOVERY_VERSION = 3;
 
 /** One bounded page, driven by the existing Temporal reconciliation activity. */
 export async function reconcileAcceptedClientEvidence(

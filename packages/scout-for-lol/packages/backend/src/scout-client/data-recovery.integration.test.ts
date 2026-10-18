@@ -358,6 +358,40 @@ test("reprojects an accepted full history without EOG, timing, timeline or oppon
   });
 });
 
+test("converter upgrades reproject completed observations even when a sibling already has a result", async () => {
+  const payload = {
+    resource: "match_history_game:7101",
+    data: { matchHistory: historyGame() },
+  };
+  const skipped = await observe("post_game", payload, { platformId: "NA1" });
+  const sibling = await observe("post_game", payload, { platformId: "NA1" });
+  await projectClientGameResult(sibling);
+  const admission = await prisma.matchEvidenceAdmission.findUniqueOrThrow({
+    where: { riotMatchId: RiotMatchIdSchema.parse("NA1_7101") },
+  });
+  await prisma.scoutClientObservation.updateMany({
+    data: { recoveryVersion: 2, recoveryComplete: true },
+  });
+  expect(await reconcileAcceptedClientEvidence()).toBe(2);
+  expect(await prisma.scoutClientGameResult.count()).toBe(2);
+  expect(
+    await prisma.scoutClientObservation.findUnique({
+      where: { observationId: skipped.observationId },
+    }),
+  ).toMatchObject({
+    recoveryVersion: 3,
+    recoveryComplete: true,
+    bodyDigest: "immutable-digest",
+    payload,
+  });
+  expect(
+    await prisma.matchEvidenceAdmission.findUnique({
+      where: { riotMatchId: RiotMatchIdSchema.parse("NA1_7101") },
+    }),
+  ).toEqual(admission);
+  expect(await reconcileAcceptedClientEvidence()).toBe(0);
+});
+
 test("Riot result precedence holds under concurrent writes and late prematch", async () => {
   const base = {
     platform: "NA1",
