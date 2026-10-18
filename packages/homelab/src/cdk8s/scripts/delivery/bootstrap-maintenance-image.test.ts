@@ -6,104 +6,172 @@ import os from "node:os";
 import path from "node:path";
 import { parseAllDocuments } from "yaml";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
+import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 import { fingerprintChart } from "homelab/scripts/helm/helm-release-core.ts";
 import { stageChart } from "homelab/scripts/helm/helm-push.ts";
-import { BootstrapApplicationSchema } from "homelab/scripts/ci/bootstrap-selection.ts";
+import { bindChartImageDependencies } from "homelab/scripts/helm/helm-delivery-publication.ts";
 import {
-  bootstrapMaintenanceImage,
-  preserveBootstrapMaintenanceImage,
+  BootstrapApplicationSchema,
+  BootstrapDescriptorSchema,
+  bootstrapImageManifest,
+} from "homelab/scripts/ci/bootstrap-selection.ts";
+import {
+  bootstrapImages,
+  prepareBootstrapManifest,
 } from "homelab/scripts/ci/bootstrap-publication.ts";
 
-test("actual catalog-based Woodpecker bootstrap preserves immutable original maintenance images through Helm", async () => {
+const digest = (value: string) => `sha256:${value.repeat(64)}`;
+const documents = (raw: string) =>
+  parseAllDocuments(raw).map((doc) => doc.toJSON());
+const indexed = (docs: unknown[]) =>
+  Object.fromEntries(
+    docs.map((doc) => {
+      const identity = z
+        .object({
+          kind: z.string(),
+          metadata: z.object({
+            name: z.string(),
+            namespace: z.string().optional(),
+          }),
+        })
+        .parse(doc);
+      return [
+        `${identity.kind}/${identity.metadata.namespace ?? ""}/${identity.metadata.name}`,
+        doc,
+      ];
+    }),
+  );
+
+const native = (name: string) =>
+  BootstrapApplicationSchema.parse({
+    metadata: {
+      name,
+      namespace: "argocd",
+      uid: `fixture-${name}`,
+      resourceVersion: "1",
+    },
+    spec: {
+      source: {
+        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+        chart: name,
+        targetRevision: "2.0.0-1010900",
+      },
+    },
+    status: {
+      sync: { status: "Synced", revision: "2.0.0-1010900" },
+      health: { status: "Healthy" },
+    },
+  });
+
+async function fixture(directory: string) {
+  const app = new App({ outdir: path.join(directory, "dist") });
+  createWoodpeckerChart(app);
+  applyOrdinaryDeliveryImageBindings(app);
+  app.synth();
+  const chartDirectory = new URL("../../helm/woodpecker", import.meta.url)
+    .pathname;
+  const manifestPath = path.join(app.outdir, "woodpecker.k8s.yaml");
+  const input = {
+    name: "woodpecker",
+    chartDirectory,
+    manifestPath,
+    fingerprint: await fingerprintChart(chartDirectory, manifestPath),
+  };
+  const raw = await Bun.file(manifestPath).text();
+  const recipeImage = z
+    .string()
+    .parse(
+      documents(raw).find(
+        (doc) =>
+          doc.kind === "Deployment" &&
+          doc.metadata.name === "temporal-maintenance-worker",
+      ).spec.template.spec.containers[0].image,
+    );
+  const original = `docker.io/shepherdjerred/temporal-worker:2.0.0-1010880@${digest("f")}`;
+  const baseline = bindChartImageDependencies(raw, {
+    "shepherdjerred/temporal-worker": digest("f"),
+    "shepherdjerred/woodpecker-config-extension": digest("d"),
+  }).replaceAll(
+    `docker.io/shepherdjerred/temporal-worker@${digest("f")}`,
+    original,
+  );
+  const nativeDocuments = documents(baseline);
+  const root = native("apps");
+  const captured = {
+    root,
+    applications: [native("woodpecker")],
+    priorRoot: JSON.stringify(root),
+  };
+  const sourceRevision = "a".repeat(40);
+  const descriptor = BootstrapDescriptorSchema.parse({
+    schema: "delivery-bootstrap/v1",
+    sourceRevision,
+    pullRequest: 1,
+    revision: "2.0.0-1010907",
+    requestId: "11111111-1111-4111-8111-111111111111",
+    targets: ["woodpecker"],
+    images: {
+      woodpecker: {
+        repository: "docker.io/shepherdjerred/woodpecker-config-extension",
+        sourceRevision,
+        version: "2.0.0-1010907",
+        digest: digest("b"),
+      },
+      delivery: {
+        repository: "docker.io/shepherdjerred/delivery",
+        sourceRevision,
+        version: "2.0.0-1010907",
+        digest: digest("c"),
+      },
+    },
+  });
+  const manifests = nativeDocuments.map((doc) => JSON.stringify(doc));
+  return {
+    input,
+    raw,
+    recipeImage,
+    original,
+    baseline,
+    nativeDocuments,
+    captured,
+    descriptor,
+    manifests,
+  };
+}
+
+test("actual frozen-input Woodpecker bootstrap preserves original maintenance images through Helm", async () => {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), "bootstrap-maintenance-"),
   );
   try {
-    const app = new App({ outdir: path.join(directory, "dist") });
-    createWoodpeckerChart(app);
-    app.synth();
-    const chartDirectory = new URL("../../helm/woodpecker", import.meta.url)
-      .pathname;
-    const input = {
-      name: "woodpecker",
-      chartDirectory,
-      manifestPath: path.join(app.outdir, "woodpecker.k8s.yaml"),
-      fingerprint: await fingerprintChart(
-        chartDirectory,
-        path.join(app.outdir, "woodpecker.k8s.yaml"),
-      ),
-    };
-    const raw = await Bun.file(input.manifestPath).text();
-    const documents = parseAllDocuments(raw).map((doc) => doc.toJSON());
-    const maintenance = documents.find(
-      (doc) =>
-        doc.kind === "Deployment" &&
-        doc.metadata.name === "temporal-maintenance-worker",
+    const data = await fixture(directory);
+    const { input, raw, original, baseline, captured, descriptor, manifests } =
+      data;
+    expect(data.recipeImage).toContain(
+      "Delivery requires image:temporal-worker",
     );
-    const original = `docker.io/shepherdjerred/temporal-worker:2.0.0-1010880@sha256:${"f".repeat(64)}`;
-    const catalogImage = z
-      .string()
-      .parse(maintenance.spec.template.spec.containers[0].image);
-    expect(catalogImage).not.toBe(original);
-    const prior = structuredClone(maintenance);
-    prior.spec.template.spec.containers[0].image = original;
-    prior.spec.template.spec.initContainers[0].image = original;
-    const read = vi.fn(() =>
-      Promise.resolve({ manifests: [JSON.stringify(prior)] }),
-    );
-    const captured = BootstrapApplicationSchema.parse({
-      metadata: {
-        name: "woodpecker",
-        namespace: "argocd",
-        uid: "original-uid",
-        resourceVersion: "1",
-      },
-      spec: {
-        source: {
-          repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-          chart: "woodpecker",
-          targetRevision: "2.0.0-1010900",
-        },
-      },
-      status: {
-        sync: { status: "Synced", revision: "2.0.0-1010900" },
-        health: { status: "Healthy" },
-      },
-    });
-    const observed = await bootstrapMaintenanceImage(captured, read);
+    const read = vi.fn(() => Promise.resolve({ manifests }));
+    const bindings = await bootstrapImages(descriptor, captured, read);
     expect(read).toHaveBeenCalledWith(
       "/woodpecker/manifests?revision=2.0.0-1010900",
     );
-    expect(observed).toBe(original);
-    const prepared = preserveBootstrapMaintenanceImage(raw, observed);
-    const indexed = (docs: unknown[]) =>
-      Object.fromEntries(
-        docs.map((doc) => {
-          const identity = z
-            .object({
-              kind: z.string(),
-              metadata: z.object({
-                name: z.string(),
-                namespace: z.string().optional(),
-              }),
-            })
-            .parse(doc);
-          return [
-            `${identity.kind}/${identity.metadata.namespace ?? ""}/${identity.metadata.name}`,
-            doc,
-          ];
-        }),
-      );
-    const expected = indexed(
-      documents.map((doc) => (doc === maintenance ? prior : doc)),
+    expect(bindings.maintenanceImage).toBe(original);
+    const prepared = prepareBootstrapManifest(raw, "woodpecker", {
+      descriptor,
+      captured,
+      bindings,
+    });
+    expect(indexed(documents(prepared))).toEqual(
+      indexed(
+        documents(bootstrapImageManifest(baseline, "woodpecker", descriptor)),
+      ),
     );
-    expect(
-      indexed(parseAllDocuments(prepared).map((doc) => doc.toJSON())),
-    ).toEqual(expected);
     const manifestPath = path.join(directory, "prepared.yaml");
     await Bun.write(manifestPath, prepared);
-    const baseline = await stageChart(
-      input,
+    const baselinePath = path.join(directory, "baseline.yaml");
+    await Bun.write(baselinePath, baseline);
+    const priorArchive = await stageChart(
+      { ...input, manifestPath: baselinePath },
       "2.0.0-1010900",
       path.join(directory, "baseline"),
     );
@@ -111,52 +179,66 @@ test("actual catalog-based Woodpecker bootstrap preserves immutable original mai
       "helm",
       "template",
       "woodpecker",
-      baseline,
+      priorArchive,
     ]);
     expect(priorRender.exitCode).toBe(0);
-    const priorRendered = parseAllDocuments(priorRender.stdout.toString()).map(
-      (doc) => doc.toJSON(),
-    );
     const archive = await stageChart(
       { ...input, manifestPath },
-      "2.0.0-1010907",
+      descriptor.revision,
       path.join(directory, "staged"),
     );
     const rendered = Bun.spawnSync(["helm", "template", "woodpecker", archive]);
     expect(rendered.exitCode).toBe(0);
-    expect(
+    expect(indexed(documents(rendered.stdout.toString()))).toEqual(
       indexed(
-        parseAllDocuments(rendered.stdout.toString()).map((doc) =>
-          doc.toJSON(),
-        ),
-      ),
-    ).toEqual(
-      indexed(
-        priorRendered.map((doc) =>
-          doc.kind === "Deployment" &&
-          doc.metadata.name === "temporal-maintenance-worker"
-            ? prior
-            : doc,
+        documents(
+          bootstrapImageManifest(
+            priorRender.stdout.toString(),
+            "woodpecker",
+            descriptor,
+          ),
         ),
       ),
     );
-    const conflicting = structuredClone(prior);
-    conflicting.spec.template.spec.initContainers[0].image =
-      maintenance.spec.template.spec.initContainers[0].image;
+    const maintenance = documents(rendered.stdout.toString()).find(
+      (doc) =>
+        doc.kind === "Deployment" &&
+        doc.metadata.name === "temporal-maintenance-worker",
+    );
+    expect(maintenance.spec.template.spec.containers[0].image).toBe(original);
+    expect(maintenance.spec.template.spec.initContainers[0].image).toBe(
+      original,
+    );
+    const originalMaintenance = data.nativeDocuments.find(
+      (doc) =>
+        doc.kind === "Deployment" &&
+        doc.metadata.name === "temporal-maintenance-worker",
+    );
+    const conflicting = structuredClone(originalMaintenance);
+    conflicting.spec.template.spec.initContainers[0].image = `docker.io/shepherdjerred/temporal-worker@${digest("e")}`;
     await expect(
-      bootstrapMaintenanceImage(captured, () =>
+      bootstrapImages(descriptor, captured, () =>
         Promise.resolve({ manifests: [JSON.stringify(conflicting)] }),
       ),
     ).rejects.toThrow("init/runtime image differs");
     await expect(
-      bootstrapMaintenanceImage(captured, () =>
+      bootstrapImages(descriptor, captured, () =>
         Promise.resolve({
-          manifests: [JSON.stringify(prior), JSON.stringify(prior)],
+          manifests: [...manifests, JSON.stringify(originalMaintenance)],
         }),
       ),
     ).rejects.toThrow(z.ZodError);
+    const extra = {
+      kind: "ConfigMap",
+      metadata: { name: "unexpected-image" },
+      data: { image: data.recipeImage },
+    };
     expect(() =>
-      preserveBootstrapMaintenanceImage(`${raw}\n# ${catalogImage}`, original),
+      prepareBootstrapManifest(
+        `${raw}\n---\n${JSON.stringify(extra)}`,
+        "woodpecker",
+        { descriptor, captured, bindings },
+      ),
     ).toThrow("exactly its original maintenance");
   } finally {
     await rm(directory, { recursive: true, force: true });
