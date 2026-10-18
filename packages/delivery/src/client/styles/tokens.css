@@ -1,0 +1,42 @@
+/* Design tokens. Every color resolves for both schemes via light-dark(). */
+:root {
+  color-scheme: light dark;
+  --font-sans:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+
+  --canvas: light-dark(#f3f4f6, #0e1116);
+  --surface: light-dark(#ffffff, #161b22);
+  --surface-raised: light-dark(#ffffff, #1c222b);
+  --surface-sunken: light-dark(#eceef2, #0b0e13);
+  --border: light-dark(#d5d9e0, #2d3440);
+  --border-strong: light-dark(#a9b0bc, #4a5363);
+  --text: light-dark(#1b1f24, #e6e9ee);
+  --text-muted: light-dark(#5a6270, #9aa3b2);
+  --link: light-dark(#0b5cad, #6cb2ff);
+  --focus: light-dark(#0b5cad, #8cc4ff);
+  --masthead: light-dark(#ffffff, #10141a);
+
+  --succeeded: light-dark(#116329, #4ac26b);
+  --succeeded-soft: light-dark(#e6f4ea, #12261a);
+  --failed: light-dark(#b31d28, #ff7b72);
+  --failed-soft: light-dark(#fdebec, #2d1517);
+  --running: light-dark(#0550ae, #58a6ff);
+  --running-soft: light-dark(#e7f0fd, #0f2036);
+  --waiting: light-dark(#7d4e00, #e3b341);
+  --waiting-soft: light-dark(#fff6dc, #2a2312);
+  --neutral: light-dark(#57606a, #8b949e);
+  --neutral-soft: light-dark(#eef0f3, #1d232c);
+
+  --radius: 8px;
+  --radius-small: 5px;
+  --shadow: 0 1px 2px light-dark(rgb(15 23 42 / 8%), rgb(0 0 0 / 40%));
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --content-width: 1440px;
+}

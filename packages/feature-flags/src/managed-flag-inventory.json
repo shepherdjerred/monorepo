@@ -140,6 +140,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "delivery-enrichment-sources",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Read-only integrations (woodpecker, github, argocd) Delivery queries to enrich its hub pages.",
+      "type": "variant",
+      "default": "[]",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "delivery-operator-logins",
       "owner": "delivery",
       "namespace": "delivery",

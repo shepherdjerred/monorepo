@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { expectNoHorizontalOverflow, openDeployment } from "./helpers.ts";
 
 test("content quarantine exposes immutable refusal and native receipts while retry stays blocked", async ({
   page,
 }, info) => {
-  await page.goto("/");
   const response = await page.request.get(
     "/api/v1/content-recovery/browser%2Fcontent%2Frefused",
   );
@@ -16,14 +16,9 @@ test("content quarantine exposes immutable refusal and native receipts while ret
     },
     deployment: { deployment: { status: "failed", recoveryRequired: true } },
   });
-  await page.getByRole("button", { name: "Deployments", exact: true }).click();
-  await page
-    .getByRole("row")
-    .filter({ hasText: "storm-forum/prod" })
-    .getByRole("button", { name: /Inspect/u })
-    .click();
-  const detail = page.getByRole("region", { name: "storm-forum/prod" });
-  const recovery = detail.locator("section").filter({
+  await openDeployment(page, "storm-forum/prod");
+  const main = page.getByRole("main");
+  const recovery = main.locator("section").filter({
     has: page.getByRole("heading", {
       name: "Independent forum recovery",
       exact: true,
@@ -46,14 +41,8 @@ test("content quarantine exposes immutable refusal and native receipts while ret
   await expect(recovery).toContainText("storm-forum-release-");
   await expect(recovery).toContainText("81716b2a-415d-49bc-adbd-aadf761050aa");
   await expect(
-    detail.getByRole("button", { name: "Retry as a new deployment" }),
+    main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toBeDisabled();
-  expect(
-    await page.evaluate(
-      () =>
-        globalThis.document.documentElement.scrollWidth <=
-        globalThis.innerWidth,
-    ),
-  ).toBe(true);
+  await expectNoHorizontalOverflow(page);
   await recovery.screenshot({ path: info.outputPath("content-recovery.png") });
 });

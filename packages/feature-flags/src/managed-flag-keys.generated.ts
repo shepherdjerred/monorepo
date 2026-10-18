@@ -28,6 +28,7 @@ export type DeliveryBooleanFlagKey =
 
 export const DELIVERY_VARIANT_FLAG_KEYS = [
   "delivery-enabled-environments",
+  "delivery-enrichment-sources",
   "delivery-operator-logins",
 ] as const;
 

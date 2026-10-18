@@ -55,6 +55,8 @@ const EXCLUDED_FILES = [
   // Intentional: TanStack Router's Register declaration merging requires
   // `interface`; a type alias cannot merge across modules.
   "packages/better-skill-capped/src/router.tsx",
+  // Same TanStack Router Register declaration merge in Delivery's client.
+  "packages/delivery/src/client/router.tsx",
   // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
   "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19

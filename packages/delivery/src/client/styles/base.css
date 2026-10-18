@@ -1,0 +1,160 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  scroll-padding-top: 72px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--canvas);
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+}
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0;
+}
+h1 {
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.15rem;
+}
+h3 {
+  font-size: 1rem;
+}
+p {
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+a {
+  color: var(--link);
+  text-underline-offset: 2px;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+input,
+select,
+textarea {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  padding: 6px 10px;
+  min-height: 34px;
+  max-width: 100%;
+}
+textarea {
+  width: 100%;
+  resize: vertical;
+}
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  border-color: var(--failed);
+}
+label {
+  display: grid;
+  gap: var(--space-1);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+thead th {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+td small,
+th small {
+  display: block;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-small);
+  padding: var(--space-3);
+  overflow: auto;
+  max-width: 100%;
+}
+details > summary {
+  cursor: pointer;
+}
+abbr[title] {
+  text-decoration: none;
+}
+dialog {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  color: var(--text);
+  padding: var(--space-5);
+  width: min(480px, calc(100vw - 32px));
+  box-shadow: 0 16px 48px rgb(0 0 0 / 30%);
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+dialog h2 {
+  margin-bottom: var(--space-3);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+.muted {
+  color: var(--text-muted);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -66,6 +66,8 @@ export const LINK_KINDS = [
   "bugsink",
   "posthog",
   "woodpecker",
+  "temporal",
+  "registry",
 ] as const;
 
 export const LinkSchema = z.strictObject({

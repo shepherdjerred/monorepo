@@ -1,6 +1,7 @@
-import { approveAndCancel } from "./approval.ts";
+import { approveAndCancel, expectReasonRequired } from "./approval.ts";
 import { expect, test } from "@playwright/test";
 import { OverviewSchema, DeploymentSchema } from "#shared/contract.ts";
+import { openDeployment } from "./helpers.ts";
 
 test("saved-plan approval exposes exact public identity without encrypted provider data", async ({
   page,
@@ -44,19 +45,15 @@ test("saved-plan approval exposes exact public identity without encrypted provid
   });
   expect(created.status()).toBe(201);
   const deployment = DeploymentSchema.parse(await created.json());
-  await page.goto("/");
-  await page.getByRole("button", { name: "Deployments", exact: true }).click();
-  await page
-    .getByRole("button", {
-      name: `Inspect deployment ${deployment.id}`,
-      exact: true,
-    })
-    .click();
-  const detail = page.getByRole("region", {
-    name: "gitops/tofu:openai",
-    exact: true,
-  });
-  const frozen = detail.getByRole("region", {
+  await page.goto(`/deployments/${deployment.id}`);
+  const main = page.getByRole("main");
+  await expect(
+    main.getByRole("heading", {
+      level: 1,
+      name: "Deployment to gitops/tofu:openai",
+    }),
+  ).toBeVisible();
+  const frozen = main.getByRole("region", {
     name: "Frozen platform release",
   });
   await expect(frozen).toContainText("Exact saved OpenTofu plan");
@@ -66,36 +63,27 @@ test("saved-plan approval exposes exact public identity without encrypted provid
   await expect(frozen).toContainText(
     "Create 1 · update 2 · delete 0 · replace 0",
   );
-  await expect(detail).not.toContainText("ciphertext");
-  await expect(
-    detail.getByRole("button", { name: "Approve release" }),
-  ).toBeDisabled();
-  await detail
+  await expect(main).not.toContainText("ciphertext");
+  await expectReasonRequired(page);
+  await main
     .getByRole("textbox", { name: "Reason" })
     .fill("Reviewed exact plan hash, native producer and state serial");
-  await approveAndCancel(detail);
+  await approveAndCancel(page);
 });
 
 test("root review retains original chart provenance and platform destination uses a dedicated request form", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Deployments", exact: true }).click();
-  await page
-    .locator("tr")
-    .filter({ hasText: /gitops\/root.*root-release/s })
-    .getByRole("button", { name: "Inspect" })
-    .click();
+  await openDeployment(page, "gitops/root", { kind: "root-release" });
   const frozen = page.getByRole("region", { name: "Frozen platform release" });
   await expect(frozen).toContainText("Exact root chart inventory");
   await expect(frozen).toContainText("platform/chart/apps/1");
   await expect(frozen).toContainText("apps-2.0.0-900.tgz");
-  await page.getByRole("button", { name: "Environments", exact: true }).click();
   await page
-    .locator(".environment-card")
-    .filter({ hasText: "Root" })
-    .getByRole("button", { name: "Select release" })
+    .getByRole("main")
+    .getByRole("link", { name: "gitops/root", exact: true })
     .click();
+  await expect(page).toHaveURL(/\/environments\/gitops\/root$/u);
   const form = page.getByRole("region", { name: "Platform release request" });
   await expect(
     form.getByRole("combobox", { name: "Qualified source build" }),

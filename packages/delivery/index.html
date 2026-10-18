@@ -3,10 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111921" />
-    <title>Delivery</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#10141a"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="description"
+      content="Homelab CI/CD: builds, artifacts, deployments, and approvals."
+    />
   </head>
   <body>
+    <noscript>Delivery needs JavaScript to show live release state.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/client/main.tsx"></script>
   </body>

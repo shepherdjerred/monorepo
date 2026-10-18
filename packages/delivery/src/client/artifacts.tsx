@@ -1,11 +1,15 @@
-import type { Overview, VersionSetRevision } from "#shared/contract.ts";
-import { Status } from "./components.tsx";
+import { Link } from "@tanstack/react-router";
+import type { VersionSetRevision } from "#shared/contract.ts";
+import type { BuildWithArtifacts } from "#shared/hub/hub-contract.ts";
+import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
+import { Status } from "#client/components/status.tsx";
+import { ShortSha, ToolLinks } from "#client/components/links.tsx";
 
-export function BuildCatalog({ builds }: { builds: Overview["builds"] }) {
+export function BuildCatalog({ builds }: { builds: BuildWithArtifacts[] }) {
   return (
-    <section className="panel">
+    <section className="panel" aria-labelledby="builds-heading">
       <div className="section-heading">
-        <h2>Build qualification</h2>
+        <h2 id="builds-heading">Build qualification</h2>
         <span className="muted">
           CI verification determines release eligibility
         </span>
@@ -17,10 +21,11 @@ export function BuildCatalog({ builds }: { builds: Overview["builds"] }) {
           <table className="build-catalog">
             <thead>
               <tr>
-                <th>Service</th>
-                <th>Source</th>
-                <th>Qualification</th>
-                <th>Evidence</th>
+                <th scope="col">Service</th>
+                <th scope="col">Source</th>
+                <th scope="col">Qualification</th>
+                <th scope="col">Artifacts</th>
+                <th scope="col">Evidence</th>
               </tr>
             </thead>
             <tbody>
@@ -33,9 +38,9 @@ export function BuildCatalog({ builds }: { builds: Overview["builds"] }) {
                     </div>
                   </td>
                   <td data-label="Source">
-                    <span className="mono">
-                      {build.sourceRevision.slice(0, 12)}
-                    </span>
+                    <Link to="/builds/$" params={{ _splat: build.id }}>
+                      <ShortSha sha={build.sourceRevision} />
+                    </Link>
                   </td>
                   <td data-label="Qualification">
                     <div>
@@ -48,6 +53,18 @@ export function BuildCatalog({ builds }: { builds: Overview["builds"] }) {
                       </small>
                     </div>
                   </td>
+                  <td data-label="Artifacts">
+                    <ul className="artifact-list">
+                      {build.artifacts.map((artifact) => (
+                        <li key={artifact.id}>
+                          <span className="mono">
+                            {artifact.component}@{artifact.version}
+                          </span>
+                          <ToolLinks links={artifactToolLinks(artifact)} />
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
                   <td data-label="Evidence">
                     {build.ciUrl === null ? (
                       <span>
@@ -56,8 +73,8 @@ export function BuildCatalog({ builds }: { builds: Overview["builds"] }) {
                           : "Licensed bundle verification"}
                       </span>
                     ) : (
-                      <a href={build.ciUrl} rel="noreferrer" target="_blank">
-                        View CI ↗
+                      <a href={build.ciUrl}>
+                        View CI<span aria-hidden="true"> ↗</span>
                       </a>
                     )}
                   </td>

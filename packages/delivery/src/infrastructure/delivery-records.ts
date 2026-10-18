@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
+import type { AuditAction } from "#shared/hub/change-contract.ts";
 import { DeploymentSchema, deliveryWorkflowId } from "#shared/contract.ts";
 import type {
   FinishDeployment,
@@ -77,7 +78,7 @@ export async function audit(
   tx: Transaction,
   actor: Principal,
   event: {
-    action: string;
+    action: AuditAction;
     entityId: string;
     requestId: string;
     metadata?: Prisma.InputJsonObject;

@@ -4,8 +4,8 @@ export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
   typeof errors.DeliveryClientError
 >;
+import { createRequester, type RequestOptions } from "./http-request.ts";
 import {
-  ApiErrorSchema,
   ArtifactVersionSchema,
   LatestQualifiedArtifactQuerySchema,
   DeploymentDetailSchema,
@@ -75,47 +75,8 @@ import type {
   ContentBarrierRestoration,
 } from "./contract.ts";
 
-export function createDeliveryClient(options: {
-  baseUrl: string;
-  fetch?: (
-    input: string | URL | Request,
-    init?: RequestInit,
-  ) => Promise<Response>;
-  headers?: ConstructorParameters<typeof Headers>[0];
-}) {
-  const transport = options.fetch ?? fetch;
-  async function request<T>(
-    path: string,
-    schema: z.ZodType<T>,
-    body?: unknown,
-  ): Promise<T> {
-    const headers = new Headers(options.headers);
-    headers.set("Accept", "application/json");
-    if (!headers.has("Authorization") && options.baseUrl.startsWith("http"))
-      headers.set("Origin", new URL(options.baseUrl).origin);
-    if (body !== undefined) headers.set("Content-Type", "application/json");
-    const response = await transport(
-      `${options.baseUrl.replace(/\/$/, "")}/api/v1${path}`,
-      {
-        method: body === undefined ? "GET" : "POST",
-        headers,
-        credentials: "same-origin",
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      },
-    );
-    const raw: unknown = await response.json();
-    if (!response.ok) {
-      const error = ApiErrorSchema.safeParse(raw);
-      throw new DeliveryClientError(
-        response.status,
-        error.success ? error.data.error.code : "HTTP_ERROR",
-        error.success
-          ? error.data.error.message
-          : `Delivery request failed (${String(response.status)})`,
-      );
-    }
-    return schema.parse(raw);
-  }
+export function createDeliveryClient(options: RequestOptions) {
+  const request = createRequester(options);
   const version = (id: string) =>
     request(`/versions/${encodeURIComponent(id)}`, VersionSetRevisionSchema);
   return {

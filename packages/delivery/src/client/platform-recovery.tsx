@@ -5,7 +5,7 @@ import type {
   Principal,
   PlatformRecoveryIntent,
 } from "#shared/contract.ts";
-import { Status } from "./components.tsx";
+import { Status } from "#client/components/status.tsx";
 import { canApprove } from "./presentation.ts";
 
 export type RecoveryDecision = {

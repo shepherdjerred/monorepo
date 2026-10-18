@@ -18,6 +18,8 @@ import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-arch
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import { createTrmnlRecoveryInspector } from "#infrastructure/trmnl-recovery.ts";
 import { createTrustedProxyAddresses } from "#infrastructure/ingress/proxy.ts";
+import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
+import { createEnrichment } from "#infrastructure/enrichment/enrichment.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags({
@@ -27,6 +29,27 @@ await initFeatureFlags({
 });
 const database = createDatabase(bootstrap.DATABASE_URL);
 const delivery = new Delivery(database, bootstrap.WOODPECKER_REPO_ID);
+const changeFeed = createChangeListener(bootstrap.DATABASE_URL);
+await changeFeed.start();
+const enrichment = createEnrichment({
+  database,
+  enabledSources: () =>
+    behaviorConfig(bootstrap.ENVIRONMENT).value("enrichmentSources"),
+  woodpecker: {
+    origin: bootstrap.WOODPECKER_URL,
+    repositoryId: bootstrap.WOODPECKER_REPO_ID,
+    token: bootstrap.WOODPECKER_TOKEN,
+  },
+  github: {
+    owner: "shepherdjerred",
+    name: "monorepo",
+    token: bootstrap.DELIVERY_GH_TOKEN,
+  },
+  argocd: {
+    origin: bootstrap.ARGOCD_SERVER_URL,
+    token: bootstrap.ARGOCD_RECOVERY_TOKEN,
+  },
+});
 const inspectTrmnl =
   bootstrap.DELIVERY_TRMNL_S3_ACCESS_KEY_ID === undefined ||
   bootstrap.DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY === undefined ||
@@ -50,6 +73,8 @@ const forumBundleReader =
       });
 const app = createApp({
   delivery,
+  changeFeed,
+  enrichment,
   ...(forumBundleReader === undefined
     ? {}
     : { verifyForumBundle: createForumBundleVerifier(forumBundleReader) }),
@@ -100,6 +125,7 @@ const server = Bun.serve({
 console.warn(`Delivery listening on ${String(server.port)}`);
 async function shutdown() {
   await server.stop();
+  await changeFeed.stop();
   await database.$disconnect();
   await shutdownFeatureFlags();
 }

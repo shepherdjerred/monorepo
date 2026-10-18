@@ -1,184 +1,49 @@
-import { useState, type SubmitEvent } from "react";
+import { useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
-import type {
-  CreateDeployment,
-  Environment,
-  Overview,
-} from "#shared/contract.ts";
-import type { createDeliveryClient } from "#shared/client.ts";
-import { versionLabel } from "./presentation.ts";
-import { ErrorNotice } from "./components.tsx";
+import { z } from "zod";
+import type { CreateDeployment, Deployment } from "#shared/contract.ts";
+import type { EnvironmentDetail } from "#shared/hub/hub-contract.ts";
+import { delivery } from "./api.ts";
+import { ErrorNotice, errorMessage } from "#client/components/notices.tsx";
 
-export type DeliveryClient = ReturnType<typeof createDeliveryClient>;
+type Kind = "deploy" | "promote" | "rollback";
+const KindSchema = z.enum(["deploy", "promote", "rollback"]);
 
-export function ReleaseForm({
-  environment,
-  overview,
-  client,
-  permitted,
-  pending,
-  onSubmit,
-  onClose,
-}: {
-  environment: Environment;
-  overview: Overview;
-  client: DeliveryClient;
-  permitted: boolean;
-  pending: boolean;
-  onSubmit: (input: CreateDeployment) => void;
-  onClose: () => void;
-}) {
-  const versions = overview.versionSets.filter(
-    (version) => version.serviceId === environment.serviceId,
-  );
-  const [versionId, setVersionId] = useState("");
-  const [kind, setKind] = useState<CreateDeployment["kind"]>("deploy");
-  const source = overview.environments.find(
-    (candidate) => candidate.id === environment.promotionSourceEnvironmentId,
-  );
-  const selectedId =
-    kind === "promote"
-      ? (source?.acceptedVersionSetRevisionId ?? "")
-      : versionId;
-  const diff = useQuery({
-    queryKey: ["diff", environment.desiredVersionSetRevisionId, selectedId],
-    queryFn: () =>
-      client.diff(environment.desiredVersionSetRevisionId, selectedId),
-    enabled: selectedId !== "",
-  });
-  function submit(event: SubmitEvent) {
-    event.preventDefault();
-    if (!permitted || selectedId === "") return;
-    onSubmit({
-      requestId: crypto.randomUUID(),
-      environmentId: environment.id,
-      versionSetRevisionId: selectedId,
-      expectedGeneration: environment.generation,
-      kind,
-      ...(kind === "promote" && source !== undefined
-        ? { sourceEnvironmentId: source.id }
-        : {}),
-    });
-  }
+function SubmitButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
   return (
-    <section className="panel release-panel" aria-labelledby="release-heading">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Select an immutable release</p>
-          <h2 id="release-heading">{environment.id}</h2>
-        </div>
-        <button
-          className="icon-button"
-          aria-label="Close release selection"
-          onClick={onClose}
-        >
-          ×
-        </button>
-      </div>
-      <form onSubmit={submit}>
-        <div className="form-grid">
-          <label>
-            Action
-            <select
-              value={kind}
-              onChange={(event) => {
-                const value = event.target.value;
-                if (
-                  value === "deploy" ||
-                  value === "promote" ||
-                  value === "rollback"
-                )
-                  setKind(value);
-              }}
-            >
-              <option value="deploy">Deploy a version</option>
-              <option
-                value="promote"
-                disabled={source?.acceptedVersionSetRevisionId == null}
-              >
-                Promote accepted release
-              </option>
-              <option value="rollback">Rollback to a version</option>
-            </select>
-          </label>
-          <label>
-            Version set
-            {kind === "promote" ? (
-              <div className="input-readonly">
-                {versionLabel(selectedId || null, overview.versionSets)} from{" "}
-                {source?.id}
-              </div>
-            ) : (
-              <select
-                value={versionId}
-                onChange={(event) => {
-                  setVersionId(event.target.value);
-                }}
-                required
-              >
-                <option value="">Choose a version set</option>
-                {versions.map((version) => (
-                  <option key={version.id} value={version.id}>
-                    {version.serviceId} @ {version.revision} · {version.id}
-                  </option>
-                ))}
-              </select>
-            )}
-          </label>
-        </div>
-        {selectedId !== "" && <ComponentDiff query={diff} />}
-        <div className="form-footer">
-          <p>
-            {environment.approvalRequired
-              ? "This request will wait for a human approval."
-              : "The pipeline will begin after its gates pass."}{" "}
-            {kind === "rollback" &&
-              "Data restoration remains a separate recovery operation."}
-          </p>
-          <button
-            type="submit"
-            className="primary-button"
-            disabled={
-              !permitted ||
-              pending ||
-              selectedId === "" ||
-              diff.isPending ||
-              diff.error !== null
-            }
-          >
-            {pending ? "Submitting…" : "Request deployment"}
-          </button>
-        </div>
-        {!permitted && (
-          <p className="notice">Your identity has read-only access.</p>
-        )}
-      </form>
-    </section>
+    <button
+      type="submit"
+      className="primary-button"
+      disabled={disabled || pending}
+    >
+      {pending ? "Submitting…" : "Request deployment"}
+    </button>
   );
 }
 
-function ComponentDiff({
-  query,
-}: {
-  query: ReturnType<
-    typeof useQuery<Awaited<ReturnType<DeliveryClient["diff"]>>>
-  >;
-}) {
-  if (query.isPending) return <p>Loading comparison…</p>;
-  if (query.error !== null) return <ErrorNotice error={query.error} />;
+function ComponentDiff({ from, to }: { from: string | null; to: string }) {
+  const diff = useQuery({
+    queryKey: ["diff", from, to],
+    queryFn: () => delivery.diff(from, to),
+  });
+  if (diff.isPending) return <p role="status">Loading comparison…</p>;
+  if (diff.error !== null) return <ErrorNotice error={diff.error} />;
   return (
     <div className="diff">
       <h3>Component changes</h3>
-      {query.data.length === 0 ? (
+      {diff.data.length === 0 ? (
         <p>No artifact changes.</p>
       ) : (
         <ul>
-          {query.data.map((change) => (
+          {diff.data.map((change) => (
             <li key={change.component}>
               <strong>{change.component}</strong>
               <span className="mono">
                 {change.before?.version ?? "Absent"}{" "}
-                <span aria-hidden="true">→</span>{" "}
+                <span aria-hidden="true">→</span>
+                <span className="visually-hidden"> to </span>{" "}
                 {change.after?.version ?? "Removed"}
               </span>
               <small className="mono">
@@ -189,5 +54,136 @@ function ComponentDiff({
         </ul>
       )}
     </div>
+  );
+}
+
+/** Request an exact release; the form is native and works with the keyboard. */
+export function ReleaseForm({
+  detail,
+  permitted,
+  initialKind,
+  initialVersion = "",
+  onRequested,
+}: {
+  detail: EnvironmentDetail;
+  permitted: boolean;
+  initialKind: Kind | undefined;
+  initialVersion?: string;
+  onRequested: (deployment: Deployment) => Promise<void>;
+}) {
+  const { environment, sourceEnvironment } = detail;
+  const promotable = sourceEnvironment?.acceptedVersionSetRevisionId ?? null;
+  const [kind, setKind] = useState<Kind>(
+    initialKind === "promote" && promotable === null
+      ? "deploy"
+      : (initialKind ?? (promotable === null ? "deploy" : "promote")),
+  );
+  const [versionId, setVersionId] = useState(initialVersion);
+  const selectedId = kind === "promote" ? (promotable ?? "") : versionId;
+  const [state, submit] = useActionState(
+    async (_previous: { error: string | null }, form: FormData) => {
+      const action = KindSchema.parse(form.get("kind"));
+      const chosen = form.get("version");
+      const version =
+        action === "promote"
+          ? promotable
+          : typeof chosen === "string"
+            ? chosen
+            : null;
+      if (version === null || version === "")
+        return { error: "Choose a version set" };
+      const input: CreateDeployment = {
+        requestId: crypto.randomUUID(),
+        environmentId: environment.id,
+        versionSetRevisionId: version,
+        expectedGeneration: environment.generation,
+        kind: action,
+        ...(action === "promote" && sourceEnvironment !== null
+          ? { sourceEnvironmentId: sourceEnvironment.id }
+          : {}),
+      };
+      try {
+        await onRequested(await delivery.createDeployment(input));
+        return { error: null };
+      } catch (error) {
+        return { error: errorMessage(error) };
+      }
+    },
+    { error: null },
+  );
+  const label = (id: string | null) =>
+    detail.versionSets.find((version) => version.id === id)?.revision;
+  return (
+    <section className="panel release-panel" aria-labelledby="release-heading">
+      <h2 id="release-heading">Request a release</h2>
+      <form action={submit}>
+        <div className="form-grid">
+          <label>
+            Action
+            <select
+              name="kind"
+              value={kind}
+              onChange={(event) => {
+                setKind(KindSchema.parse(event.target.value));
+              }}
+            >
+              <option value="deploy">Deploy a version</option>
+              <option value="promote" disabled={promotable === null}>
+                Promote accepted release
+              </option>
+              <option value="rollback">Rollback to a version</option>
+            </select>
+          </label>
+          {kind === "promote" ? (
+            <p className="input-readonly">
+              r{label(promotable)} accepted in {sourceEnvironment?.id}
+            </p>
+          ) : (
+            <label>
+              Version set
+              <select
+                name="version"
+                value={versionId}
+                required
+                onChange={(event) => {
+                  setVersionId(event.target.value);
+                }}
+              >
+                <option value="">Choose a version set</option>
+                {detail.versionSets.map((version) => (
+                  <option key={version.id} value={version.id}>
+                    r{version.revision} · {version.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        {selectedId !== "" && (
+          <ComponentDiff
+            from={environment.desiredVersionSetRevisionId}
+            to={selectedId}
+          />
+        )}
+        {state.error !== null && (
+          <p className="notice error" role="alert">
+            {state.error}
+          </p>
+        )}
+        <div className="form-footer">
+          <p>
+            {environment.approvalRequired
+              ? "This request will wait for a human approval."
+              : "The pipeline will begin after its gates pass."}{" "}
+            {kind === "rollback" &&
+              "Data restoration remains a separate recovery operation."}
+          </p>
+          <SubmitButton disabled={!permitted} />
+        </div>
+        {!permitted && (
+          <p className="notice">Your identity has read-only access.</p>
+        )}
+      </form>
+    </section>
   );
 }

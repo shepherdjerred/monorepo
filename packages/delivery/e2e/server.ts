@@ -17,6 +17,8 @@ import {
   finishTestPlatform,
   testApply,
 } from "#testing/platform-execution.ts";
+import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
+import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
 
 // This executable is an isolated acceptance harness, never a production entrypoint.
 const cluster = await createTestDatabase();
@@ -103,9 +105,13 @@ async function startHarness() {
     platform.delivery,
     platform.sourceBuildId,
   );
+  const changeFeed = createChangeListener(cluster.url);
+  await changeFeed.start();
   const app = createApp({
     // Every row is persisted through genuine publication, intent and evidence APIs.
     delivery: platform.delivery,
+    changeFeed,
+    enrichment: fixtureEnrichment(cluster.database),
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
     qualifyBuild: () => Promise.resolve("verified"),
@@ -164,6 +170,7 @@ async function startHarness() {
   async function close() {
     if (closing) return;
     closing = true;
+    await changeFeed.stop();
     await cluster.close();
     await proxy.stop(true);
     await backend.stop(true);
