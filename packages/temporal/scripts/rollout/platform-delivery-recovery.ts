@@ -1,14 +1,10 @@
-import { Connection } from "@temporalio/client";
-import { KubeConfig } from "@kubernetes/client-node";
 import { z } from "zod";
 import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import { deliveryUrl } from "@shepherdjerred/toolkit/lib/delivery/client.ts";
 import {
   parseFlagArguments,
   requiredParsedArgument,
-  requiredEnvironment,
 } from "#scripts/cli-arguments.ts";
-import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { runDeliveryJob } from "#lib/delivery/job.ts";
 import { RecoveryActionSchema } from "#lib/delivery/platform/recovery/request.ts";
 import { executePlatformRecoveryAction } from "#lib/delivery/platform/recovery/execute.ts";
@@ -17,7 +13,7 @@ import {
   provePlatformNativeJobs,
 } from "#lib/delivery/platform/recovery/native-proof.ts";
 import { recoveryJobReader } from "#lib/delivery/workers/worker-recovery-jobs.ts";
-import { resolveOperatorTemporalApiKey } from "./temporal-operator-credentials.ts";
+import { openOperatorRecovery } from "./temporal-operator-credentials.ts";
 
 /** The same fixed native recipes work during a Delivery worker outage; no arbitrary source/stack/command input exists. */
 async function main() {
@@ -36,17 +32,7 @@ async function main() {
     requiredParsedArgument(flags, "--url"),
   );
   await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN"]);
-  await resolveOperatorTemporalApiKey();
-  Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
-  const kubernetes = new KubeConfig();
-  kubernetes.loadFromDefault();
-  kubernetes.setCurrentContext(context);
-  const connection = await Connection.connect(
-    temporalConnectionOptions({
-      environment: Bun.env,
-      defaultAddress: requiredEnvironment(Bun.env, "TEMPORAL_ADDRESS"),
-    }),
-  );
+  const { kubernetes, connection } = await openOperatorRecovery(context);
   try {
     const result = await executePlatformRecoveryAction(id, action, {
       runJob: async (request, onReceipt, continuation) =>

@@ -328,7 +328,7 @@ function withoutDefaults(
   );
 }
 
-function normalizePod(input: unknown): unknown {
+export function normalizePod(input: unknown): unknown {
   const parsed = z
     .record(z.string(), z.unknown())
     .parse(structuredClone(input));
@@ -341,21 +341,24 @@ function normalizePod(input: unknown): unknown {
   });
   if (pod["serviceAccount"] === pod["serviceAccountName"])
     delete pod["serviceAccount"];
-  pod["containers"] = z
-    .array(z.record(z.string(), z.unknown()))
-    .parse(pod["containers"])
-    .map((container) => {
-      return withoutDefaults(container, {
-        imagePullPolicy: "IfNotPresent",
-        terminationMessagePath: "/dev/termination-log",
-        terminationMessagePolicy: "File",
+  for (const field of ["containers", "initContainers"]) {
+    if (pod[field] === undefined) continue;
+    pod[field] = z
+      .array(z.record(z.string(), z.unknown()))
+      .parse(pod[field])
+      .map((container) => {
+        return withoutDefaults(container, {
+          imagePullPolicy: "IfNotPresent",
+          terminationMessagePath: "/dev/termination-log",
+          terminationMessagePolicy: "File",
+        });
       });
-    });
+  }
   pod["volumes"] = z
     .array(z.record(z.string(), z.unknown()))
     .parse(pod["volumes"])
     .map((volume) => {
-      for (const field of ["secret", "projected"]) {
+      for (const field of ["secret", "projected", "configMap"]) {
         if (volume[field] === undefined) continue;
         const source = z.record(z.string(), z.unknown()).parse(volume[field]);
         if (source["defaultMode"] === 420) delete source["defaultMode"];

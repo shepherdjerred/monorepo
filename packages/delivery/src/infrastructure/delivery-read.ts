@@ -10,6 +10,7 @@ import { z } from "zod";
 import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
+import { readRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
 import {
   version as readVersion,
   environment,
@@ -78,6 +79,7 @@ export async function detail(this: Delivery, deploymentId: string) {
         stages: true,
         minecraftRecoveries: { orderBy: { createdAt: "desc" } },
         platformRecoveries: { orderBy: { createdAt: "desc" } },
+        contentRecoveries: { orderBy: { createdAt: "desc" } },
       },
     }),
     "Deployment",
@@ -96,6 +98,10 @@ export async function detail(this: Delivery, deploymentId: string) {
   return DeploymentDetailSchema.parse(
     wire({
       deployment: row,
+      forumRecoveredRuntime: await readRecoveredForumRuntime(
+        this.database,
+        row.id,
+      ),
       environment: env,
       versionSet: selected,
       previousAcceptedVersionSet,
@@ -109,6 +115,7 @@ export async function detail(this: Delivery, deploymentId: string) {
       stages: row.stages,
       minecraftRecoveries: row.minecraftRecoveries,
       platformRecoveries: row.platformRecoveries,
+      contentRecoveries: row.contentRecoveries,
     }),
   );
 }

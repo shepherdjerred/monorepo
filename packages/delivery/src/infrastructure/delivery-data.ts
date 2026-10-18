@@ -1,5 +1,5 @@
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
-import type { Prisma } from "#generated/prisma/client.ts";
+import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   ArtifactVersionSchema,
@@ -29,6 +29,14 @@ export async function pendingDeliveryObservations(tx: Transaction) {
     tx.workerRecoveryIntent.count({ where: active }),
     tx.minecraftRecoveryIntent.count({ where: active }),
     tx.platformRecoveryIntent.count({ where: active }),
+    tx.contentRecoveryIntent.count({
+      where: {
+        OR: [
+          { status: "pending" },
+          { dispatchBarrier: { not: Prisma.DbNull }, barrierRestoredAt: null },
+        ],
+      },
+    }),
     tx.forumBaselineIntent.count({ where: active }),
   ]);
   return counts.reduce((sum, count) => sum + count, 0);

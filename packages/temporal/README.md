@@ -250,6 +250,47 @@ recreated; inspect its exact receipt and use a new admin intent if needed.
 toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Independent platform recovery verified and quarantine settled'
 ```
 
+Static archives and Forum releases use a foreground maintenance command rather
+than an automatic recovery worker. Pause `delivery-dispatch`, wait for every open
+Delivery Workflow and original native Job/Pod to finish, and request a content
+recovery intent with `toolkit deploy sites recover` or `toolkit deploy forum
+recover`. The command checkpoints and stops the exact ordinary Activity host;
+do not scale it down before the first invocation. API/PostgreSQL, ArgoCD,
+Kubernetes and the Temporal server must remain reachable. A loopback-only
+Temporal port-forward supports a worker outage without exporting a server key:
+
+```bash
+kubectl --context admin@torvalds -n temporal port-forward service/temporal-temporal-server-service 17233:7233 --address 127.0.0.1
+```
+
+In a second terminal:
+
+```bash
+env -u TEMPORAL_API_KEY TEMPORAL_ADDRESS=127.0.0.1:17233 TEMPORAL_TLS=false bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action repair
+```
+
+The existing credential broker resolves the scoped executor, local operator
+Argo identity and, only for static targets, the registered static activator and
+cache-purge fields. It never substitutes the broad Cloudflare operator token.
+Static repair reapplies the frozen archive then independently checks bucket and
+public bytes; Scout also requires its exact healthy backend and settled worker
+routes. Forum repair copies the original Job under the operator's existing
+Kubernetes authority, preserves its image/environment/volumes, and checkpoints
+the suspended child before admission. No new service account or delegated
+cluster authority is installed. Only journaled idempotent steps may repeat;
+uncertain installation, add-on or content/account migration remains locked for
+native inspection with the original backup. If the failed historical Job keeps
+the web wave pending, the command prints the exact selective-sync instruction
+for the already selected web Deployment and requires the same intent to be
+rerun. It never changes an Argo source or restores a production database.
+
+`--action inspect` verifies an already settled target without replaying its
+repair. Fresh native/target readback and the original PostgreSQL generation/lock
+CAS release quarantine without accepting the failed release. The same command
+resumes a settled intent whose exact host restoration acknowledgement was lost.
+It restores only that host's UID/template and new Ready Pods. Stop the exact
+port-forward and resume dispatch after the restoration receipt is recorded.
+
 If Delivery API or PostgreSQL is unavailable, restore availability before these
 commands. Keep dispatch paused and stop new release authority. Inspect the
 already selected sources and database without selecting another release:

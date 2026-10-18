@@ -9,6 +9,7 @@ import {
   required,
 } from "#infrastructure/delivery-records.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
+import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
 
 const NativeEvidence = MinecraftControllerReceiptSchema.extend({
   adapter: z.literal("minecraft-preservation-controller"),
@@ -48,6 +49,7 @@ export async function minecraftRecoveryOwnership(
   expectedGeneration: number,
 ) {
   await lock(tx, "delivery:claim");
+  await requireNoContentBarrier(tx);
   await lock(tx, `deployment:${deploymentId}`);
   const deployment = required(
     await tx.deployment.findUnique({ where: { id: deploymentId } }),

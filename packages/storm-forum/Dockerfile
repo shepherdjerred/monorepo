@@ -31,7 +31,8 @@ COPY packages/storm-forum/runtime/fpm.conf /usr/local/etc/php-fpm.conf
 ARG VERSION=dev
 ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" \
-      org.opencontainers.image.version=$VERSION org.opencontainers.image.revision=$GIT_SHA
+      org.opencontainers.image.version=$VERSION org.opencontainers.image.revision=$GIT_SHA \
+      red.sjer.delivery.forum-recovery="storm-forum-recovery/v1"
 WORKDIR /opt/storm-forum
 USER 1000:1000
 CMD ["php-fpm", "--nodaemonize", "--force-stderr", "--fpm-config", "/usr/local/etc/php-fpm.conf"]

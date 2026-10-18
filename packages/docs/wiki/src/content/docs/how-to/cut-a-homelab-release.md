@@ -415,7 +415,9 @@ publishing and qualifying its actual image before requesting its deployment.
 Use this procedure for a failed or canceled delegated application deployment
 whose Delivery details show `recoveryRequired`. It also covers a stopped worker
 that recorded intent before selecting the chart or submitting an Argo operation.
-Specialized worker, forum, and static-site recovery retain their separate owners.
+For a site, Scout frontend, or forum release, use
+[content recovery](#recover-a-site-or-forum-release) instead. Specialized worker
+recovery retains its separate native proof. The generic helper refuses these targets.
 
 1. Pause Delivery mutations. Confirm the old Workflow is closed and its mutation
    executor is stopped through the repository-owned worker deployment path.
@@ -469,6 +471,70 @@ Specialized worker, forum, and static-site recovery retain their separate owners
 
 If any check fails, retain the lock and inspect that exact external operation.
 Do not delete database locks or replace a foreign active operation.
+
+## Recover a site or forum release
+
+Use a separate recovery intent when a failed or canceled site, Scout frontend,
+or forum release retains its lock. Recovery settles native effects without
+accepting the failed deployment or changing its accepted release.
+
+1. Pause the Delivery dispatcher Schedule and drain other running releases and
+   recovery operations. Inspect the held deployment:
+
+   ```bash
+   toolkit deploy status DEPLOYMENT_ID --machine --json
+   ```
+
+   Keep its exact environment generation, selected artifacts, pipeline and
+   recorded operations. Leave the ordinary Activity host at one replica: the
+   maintenance command journals its exact identity before stopping it. A closed
+   Workflow alone does not prove its executor stopped.
+
+2. Request inspection with the admin credential and that exact generation:
+
+   ```bash
+   toolkit deploy sites recover DEPLOYMENT_ID --machine --expected-generation GENERATION --reason "Inspect and settle the exact frozen site release under retained ownership"
+   ```
+
+   For a forum release, replace `sites` with `forum`. Retain the returned intent
+   ID and request ID. The caller supplies no native proof or replacement artifacts.
+
+3. Inspect the intent and its native receipts:
+
+   ```bash
+   toolkit deploy sites recovery INTENT_ID --machine --json
+   ```
+
+   Use `forum recovery` for the forum. The UI shows the same frozen operation,
+   native Job identities and refusal reasons. Repair uses the frozen archive or
+   forum release inputs. It cannot reverse a database upgrade or remove another
+   execution's maintenance lock.
+
+4. Run the one-shot maintenance command with the existing operator context:
+
+   ```bash
+   bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent INTENT_ID --action inspect --context admin@torvalds --url https://delivery.tailnet-1a49.ts.net
+   ```
+
+   `inspect` settles only an already verified desired release. If repair is
+   needed, review the refusal and rerun with `--action repair`. Repair uses the
+   frozen archive or same forum candidate; it retains the original backup.
+   The command stops the journaled Activity host, checks the original executor
+   and native Jobs, verifies the result, then restores that exact host. It does
+   not create an automatic recovery Workflow or controller.
+
+5. Confirm independent settlement succeeded and the original failed result and
+   accepted pointers remain unchanged. A failed or refused recovery retains
+   ownership; inspect its exact reason before requesting another attempt.
+
+   If `dispatchBarrier` is present, also require `barrierRestoredAt` before
+   resuming dispatch. A terminal recovery status alone does not prove that its
+   journaled producer host has been restored.
+
+   If interrupted, rerun the same command and intent. Do not create a new
+   journal or manually scale the producer to bypass its identity checks.
+
+Do not use generic `deploy recover` or delete PostgreSQL locks for these targets.
 
 ## Where it lives
 

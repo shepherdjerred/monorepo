@@ -31,6 +31,7 @@ import {
   freezeForumBaseline,
   validateForumCandidate,
 } from "./forum/freezer.ts";
+import { freezeRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
 
 export async function createDeployment(
   this: Delivery,
@@ -133,9 +134,15 @@ export async function createDeployment(
             "Accepted deployment snapshot",
           );
     validateForumCandidate(pipeline, selected, selectedInputs.configuration);
+    const forumRecoveredRuntime = await freezeRecoveredForumRuntime(tx, {
+      environmentId: env.id,
+      pipeline,
+      acceptedAt: previousAccepted?.finishedAt ?? null,
+    });
     const forumBaselineSnapshot = await freezeForumBaseline(tx, {
       environment: env,
       pipeline,
+      recoveredRuntime: forumRecoveredRuntime !== null,
     });
     const previousConfiguration =
       previousAccepted === null
@@ -194,7 +201,11 @@ export async function createDeployment(
       action: "deployment.requested",
       entityId: row.id,
       requestId: input.requestId,
-      metadata: { versionSetRevisionId: selected.id, environmentId: env.id },
+      metadata: {
+        versionSetRevisionId: selected.id,
+        environmentId: env.id,
+        ...(forumRecoveredRuntime === null ? {} : { forumRecoveredRuntime }),
+      },
     });
     return DeploymentSchema.parse(wire(row));
   });

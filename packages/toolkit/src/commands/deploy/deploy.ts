@@ -5,6 +5,10 @@ import { runForumCommand, validateForumCommand } from "./forum.ts";
 import { runPlatformCommand, validatePlatformCommand } from "./platform.ts";
 import { runTrmnlCommand, validateTrmnlCommand } from "./trmnl.ts";
 import { runCatalogCommand, validateCatalogCommand } from "./catalog.ts";
+import {
+  runContentRecovery,
+  validateContentRecovery,
+} from "./content-recovery.ts";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import {
   IdentifierSchema,
@@ -37,6 +41,10 @@ minecraft recovery <INTENT_ID>         Inspect independent recovery and retained
 forum publish --file <PATH> --machine Register private licensed bytes for independent qualification
 forum baseline --file <PATH> --machine Request read-only original runtime baseline
 forum inspect <INTENT_ID>              Inspect original provenance and native baseline proof
+forum recover <DEPLOYMENT_ID>          Request exact native repair under the retained forum lock
+forum recovery <INTENT_ID>             Inspect frozen forum recovery and native evidence
+sites recover <DEPLOYMENT_ID>          Request exact archive repair under the retained site lock
+sites recovery <INTENT_ID>             Inspect frozen site recovery and native evidence
 trmnl repair <DEPLOYMENT_ID> --machine Repair the same frozen plugin bundle under held quarantine
 platform request --file <PATH>         Request exact root inventory, read-only plan, or saved-plan apply
 platform control-plane --file <PATH> --machine  Request isolated explicit controller upgrade
@@ -52,16 +60,16 @@ wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required
 cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
-recover <DEPLOYMENT_ID>                Inspect and release an ambiguous Argo operation
+recover <DEPLOYMENT_ID>                Inspect an ordinary Argo operation; specialized targets use their own recovery
 
 Options:
   --json                              Structured output
   --url <URL>                         Override Delivery bootstrap endpoint
   --machine                           Use brokered DELIVERY_API_TOKEN
-  --request-id <ID>                    Idempotency key for start/promote/rollback/retry
+  --request-id <ID>                    Idempotency key for deployment or recovery requests
   --expected-generation <N>            Require an exact environment generation
   --expected-worker-generation <N>     Require an exact worker generation for retirement
-  --reason <TEXT>                      Approval or rejection reason
+  --reason <TEXT>                      Approval, rejection, or recovery reason
   --operation-id <UUID>                Exact recorded Argo operation for recovery
   --timeout <SECONDS>                  Wait deadline (default 900)
   --interval <SECONDS>                 Poll interval (default 5)
@@ -81,6 +89,7 @@ const specializedCommands: Record<
   workers: runWorkerCommand,
   minecraft: runMinecraftCommand,
   forum: runForumCommand,
+  sites: runContentRecovery,
   trmnl: runTrmnlCommand,
   artifact: (client, positionals, options) =>
     runCatalogCommand(client, "artifact", positionals, options),
@@ -112,6 +121,7 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   workers: [1, 2, 3],
   minecraft: 2,
   forum: [1, 2],
+  sites: 2,
   trmnl: 2,
   platform: [1, 2],
 };
@@ -145,6 +155,8 @@ export function validateDeployCommand(
   if (command === "workers") validateWorkerCommand(positionals, options);
   if (command === "minecraft") validateMinecraftCommand(positionals, options);
   if (command === "forum") validateForumCommand(positionals, options);
+  if (command === "sites")
+    validateContentRecovery("sites", positionals, options);
   if (command === "trmnl") validateTrmnlCommand(positionals, options);
   if (command === "platform") validatePlatformCommand(positionals, options);
 }

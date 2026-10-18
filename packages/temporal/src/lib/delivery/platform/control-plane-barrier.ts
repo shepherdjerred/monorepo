@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import {
+  DispatchBarrierSchema,
+  type DispatchBarrier,
+} from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 
 const identity = z.object({
@@ -31,15 +35,6 @@ const pod = z.object({
     ),
   }),
 });
-export const DispatchBarrierSchema = z.strictObject({
-  adapter: z.literal("control-plane-dispatch-barrier/v1"),
-  deploymentUID: z.string().min(1),
-  templateFingerprint: z.string().regex(/^[a-f0-9]{64}$/u),
-  priorReplicas: z.literal(1),
-  podUIDs: z.array(z.string()).min(1),
-  replicaSetUIDs: z.array(z.string()).min(1),
-});
-export type DispatchBarrier = z.infer<typeof DispatchBarrierSchema>;
 const fingerprint = (template: unknown) =>
   createHash("sha256").update(canonicalJson(template)).digest("hex");
 export type BarrierEffects = {
@@ -107,8 +102,19 @@ export async function pauseDeliveryDispatch(effects: BarrierEffects) {
     ],
   });
   await effects.checkpoint(journal);
+  return await pauseRecordedDeliveryDispatch(effects, journal);
+}
+
+/** Resume only the exact checkpointed host after a lost replica-patch response. */
+export async function pauseRecordedDeliveryDispatch(
+  effects: BarrierEffects,
+  journal: DispatchBarrier,
+) {
   await effects.fence();
-  await setReplicas(effects, journal, 1, 0);
+  const initial = requireSameHost(await effects.read(), journal);
+  if (initial.spec.replicas === 1) await setReplicas(effects, journal, 1, 0);
+  else if (initial.spec.replicas !== 0)
+    throw new Error("Journaled dispatch host has unexpected replicas");
   for (let attempt = 0; attempt < 120; attempt++) {
     await effects.fence();
     const current = requireSameHost(await effects.read(), journal);

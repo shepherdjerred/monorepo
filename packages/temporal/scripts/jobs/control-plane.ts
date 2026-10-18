@@ -15,13 +15,13 @@ import { createTemporalReadClient } from "#client";
 import {
   deliveryWorkflowId,
   DeploymentDetailSchema,
+  type DispatchBarrier,
 } from "@shepherdjerred/delivery/contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import {
   pauseDeliveryDispatch,
   restoreDeliveryDispatch,
   assertDeliveryDispatchPaused,
-  type DispatchBarrier,
 } from "#lib/delivery/platform/control-plane-barrier.ts";
 import {
   deliveryDispatchBarrierEffects,

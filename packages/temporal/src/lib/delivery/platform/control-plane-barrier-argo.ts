@@ -1,14 +1,14 @@
 import { z } from "zod";
-import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
+import {
+  DispatchBarrierSchema,
+  type DeploymentDetail,
+} from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { argoApplicationRequest } from "#lib/delivery/argo-client.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { workerApplicationResources } from "#lib/delivery/workers/worker-hosts.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
-import {
-  DispatchBarrierSchema,
-  type BarrierEffects,
-} from "./control-plane-barrier.ts";
+import { type BarrierEffects } from "./control-plane-barrier.ts";
 
 export const DISPATCH_RESOURCE_QUERY = new URLSearchParams({
   resourceName: "temporal-delivery-worker",
@@ -50,8 +50,9 @@ export async function patchDeliveryDispatchResource(
 
 export function deliveryDispatchBarrierEffects(
   deploymentId: string,
-  native: DeliveryJobReceipt,
+  native: DeliveryJobReceipt | undefined,
   fence: () => Promise<void>,
+  checkpoint?: BarrierEffects["checkpoint"],
 ): BarrierEffects {
   return {
     read: async () => {
@@ -83,25 +84,31 @@ export function deliveryDispatchBarrierEffects(
       );
     },
     patch: patchDeliveryDispatchResource,
-    checkpoint: async (journal) => {
-      await deliveryRequest(
-        `deployments/${encodeURIComponent(deploymentId)}/stages`,
-        z.unknown(),
-        {
-          key: "control-plane",
-          status: "running",
-          operationId: native.name,
-          message: JSON.stringify(native),
-          evidence: [
-            {
-              kind: "preflight",
-              operationId: native.uid,
-              summary: JSON.stringify(journal),
-            },
-          ],
-        },
-      );
-    },
+    checkpoint:
+      checkpoint ??
+      (async (journal) => {
+        if (native === undefined)
+          throw new Error(
+            "Native barrier requires an explicit checkpoint callback",
+          );
+        await deliveryRequest(
+          `deployments/${encodeURIComponent(deploymentId)}/stages`,
+          z.unknown(),
+          {
+            key: "control-plane",
+            status: "running",
+            operationId: native.name,
+            message: JSON.stringify(native),
+            evidence: [
+              {
+                kind: "preflight",
+                operationId: native.uid,
+                summary: JSON.stringify(journal),
+              },
+            ],
+          },
+        );
+      }),
     fence,
     wait: async () => {
       await Bun.sleep(5000);

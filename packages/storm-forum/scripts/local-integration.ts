@@ -78,6 +78,8 @@ const run = async (args: string[]) => {
   }
   return out;
 };
+const runNativePhp = (script: string) =>
+  run(["exec", "-w", "/app/forum", app, "php", script]);
 await run(["network", "create", network]);
 try {
   process.stdout.write(
@@ -383,14 +385,10 @@ try {
       ]),
     );
     process.stdout.write(
-      await run([
-        "exec",
-        "-w",
-        "/app/forum",
-        app,
-        "php",
-        "/opt/storm-forum/test/styles.php",
-      ]),
+      await runNativePhp("/opt/storm-forum/test/styles.php"),
+    );
+    process.stdout.write(
+      await runNativePhp("/opt/storm-forum/runtime/recovery-verify.php"),
     );
     process.stdout.write(
       await run([

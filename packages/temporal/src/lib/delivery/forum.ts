@@ -20,6 +20,12 @@ function image(set: VersionSetRevision, component: string): string {
 
 function bundle(set: VersionSetRevision, component: string): ArtifactVersion {
   const artifact = set.components[component];
+  return licensedBundle(artifact);
+}
+
+function licensedBundle(
+  artifact: ArtifactVersion | undefined,
+): ArtifactVersion {
   if (
     artifact?.kind !== "archive" ||
     artifact.origin.kind !== "licensed-bundle" ||
@@ -38,6 +44,7 @@ type ForumDetail = Pick<
   DeploymentDetail,
   "pipeline" | "versionSet" | "previousAcceptedVersionSet"
 > & {
+  forumRecoveredRuntime?: DeploymentDetail["forumRecoveredRuntime"];
   deployment: Pick<
     DeploymentDetail["deployment"],
     "id" | "serviceId" | "configuration" | "previousAcceptedConfiguration"
@@ -50,6 +57,26 @@ function previousRelease(
   detail: ForumDetail,
   policy: { imageComponent: string; bundleComponent: string },
 ) {
+  const recovered = detail.forumRecoveredRuntime;
+  if (recovered !== null && recovered !== undefined) {
+    const original = recovered.image;
+    const originalBundle = licensedBundle(recovered.bundle);
+    if (
+      original.kind !== "image" ||
+      original.uri !== "docker.io/shepherdjerred/storm-forum" ||
+      original.component !== policy.imageComponent ||
+      originalBundle.component !== policy.bundleComponent ||
+      originalBundle.version !== recovered.xenforoVersion
+    )
+      throw new Error(
+        "Recovered Forum runtime differs from its original image, bundle or installed version",
+      );
+    return {
+      bundle: originalBundle,
+      image: `${original.uri}@${original.digest}`,
+      version: recovered.xenforoVersion,
+    };
+  }
   const previous = detail.previousAcceptedVersionSet;
   if (previous !== null) {
     const version =

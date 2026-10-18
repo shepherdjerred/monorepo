@@ -96,6 +96,7 @@ export function createRecoveryInspector(options: {
     if (
       detail.pipeline.definition.kind !== "argocd" ||
       detail.pipeline.definition.workerRollout !== undefined ||
+      detail.pipeline.definition.scoutSite !== undefined ||
       detail.pipeline.definition.forumRelease !== undefined ||
       detail.pipeline.definition.minecraftUpgrade !== undefined
     )

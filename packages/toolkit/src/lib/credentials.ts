@@ -26,8 +26,31 @@ const HOMELAB_VAULT_REF = "op://v64ocnykdqju4ui6j6pua56xw4";
 const DELIVERY_SERVICE_ITEM_ID = "ahbp4izt7fibvwdjwd4ffhiime";
 const DELIVERY_TRMNL_READER_ITEM_ID = "542onhpijguqgaukmyvbujbu74";
 const DELIVERY_TRMNL_ACCOUNT_ITEM_ID = "p7th6tqeel7k2sm47mrrto7oca";
+const DELIVERY_SITE_ACTIVATOR_ITEM_ID = "l5c76kuxgqckt3xc7pmman6l4u";
+const DELIVERY_CACHE_PURGE_ITEM_ID = "la7gkfl5eqtxiiv2hq3qujx2gi";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
+  DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID: {
+    description: "Delivery static-site activator access key",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SITE_ACTIVATOR_ITEM_ID}/DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID`,
+    },
+  },
+  DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY: {
+    description: "Delivery static-site activator secret key",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SITE_ACTIVATOR_ITEM_ID}/DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY`,
+    },
+  },
+  CLOUDFLARE_API_TOKEN: {
+    description: "Delivery six-zone cache-purge token",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_CACHE_PURGE_ITEM_ID}/credential`,
+    },
+  },
   TRMNL_API_KEY: {
     description: "Fixed TRMNL plugin configuration key (read/write authority)",
     source: {

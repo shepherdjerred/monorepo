@@ -48,6 +48,7 @@ import {
 import { requireStaticRootBoundary } from "./platform/static-prerequisite.ts";
 import { claimTrmnlRepair } from "./trmnl-repair/claim.ts";
 import { readmitDeployment } from "./deployment-readmission.ts";
+import { requireNoContentBarrier } from "./content-recovery/ownership.ts";
 
 function observesApplication(row: {
   kind: string;
@@ -113,6 +114,7 @@ export async function claim(
 ) {
   const admission = await this.database.$transaction(async (tx) => {
     await lock(tx, "delivery:claim");
+    await requireNoContentBarrier(tx);
     await lock(tx, `deployment:${deploymentId}`);
     const row = required(
       await tx.deployment.findUnique({ where: { id: deploymentId } }),

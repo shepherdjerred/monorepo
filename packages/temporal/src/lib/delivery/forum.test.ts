@@ -3,6 +3,7 @@ import {
   PipelineRevisionSchema,
   VersionSetRevisionSchema,
   ForumBaselineSnapshotSchema,
+  ForumRecoveredRuntimeSchema,
 } from "@shepherdjerred/delivery/contract";
 import { forumReleaseParameters } from "./forum.ts";
 
@@ -74,6 +75,36 @@ function fixture() {
   };
 }
 describe("forum immutable release selection", () => {
+  test("next release backs up the original recovered desired runtime without changing old acceptance", () => {
+    const detail = fixture();
+    const repaired = version("b");
+    const recovered = ForumRecoveredRuntimeSchema.parse({
+      recoveryIntentId: "operator/recovered-b",
+      deploymentId: "failed/b",
+      image: repaired.components["image"],
+      bundle: repaired.components["bundle"],
+      xenforoVersion: "2.3.13",
+    });
+    const result = forumReleaseParameters({
+      ...detail,
+      versionSet: version("c"),
+      forumRecoveredRuntime: recovered,
+    });
+    expect(result["delivery.previousRuntimeImage"]).toBe(
+      `docker.io/shepherdjerred/storm-forum@sha256:${"b".repeat(64)}`,
+    );
+    expect(result["delivery.previousBundleSha256"]).toBe("b".repeat(64));
+    expect(result["delivery.previousXenforoVersion"]).toBe("2.3.13");
+    expect(detail.previousAcceptedVersionSet.id).toBe("set/a");
+    expect(recovered.image.id).toBe("image/b");
+    expect(recovered.bundle.id).toBe("bundle/b");
+    expect(() =>
+      forumReleaseParameters({
+        ...detail,
+        forumRecoveredRuntime: { ...recovered, xenforoVersion: "2.3.99" },
+      }),
+    ).toThrow("Recovered Forum runtime");
+  });
   test("first upgrade uses the frozen independently observed original instead of inventing an accepted version set", () => {
     const detail = fixture(),
       original = detail.previousAcceptedVersionSet;

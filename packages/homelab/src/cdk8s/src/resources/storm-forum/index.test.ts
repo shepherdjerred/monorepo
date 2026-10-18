@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { createStormForumChart } from "./index.ts";
 import { ReleaseSchema } from "./release-schema.ts";
+import {
+  ForumReleaseIdSchema,
+  FORUM_RECOVERY_ANNOTATIONS,
+} from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { createServiceProbesChart } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/service-probes-chart.ts";
 
@@ -60,8 +64,54 @@ describe("forum upgrade snapshot contract", () => {
     ).not.toContain("BACKUP_");
     expect(
       JSON.stringify(rendered.find((resource) => resource.kind === "Job")),
-    ).not.toContain('"name":"RUNTIME_IMAGE"');
+    ).toContain(
+      JSON.stringify({ name: "RUNTIME_IMAGE", value: fixture.image }),
+    );
   });
+  it.each([12, 32])(
+    "renders a native-journal identity accepted by the producer for %i-character release IDs",
+    (length) => {
+      resetProbeRegistry();
+      const releaseId = "c".repeat(length);
+      const resources = Testing.synth(
+        createStormForumChart(new App(), { ...fixture, releaseId }),
+      );
+      const releaseContainer = z.object({
+        env: z.array(
+          z.object({
+            name: z.string(),
+            value: z.string().optional(),
+            valueFrom: z.unknown().optional(),
+          }),
+        ),
+      });
+      const job = z
+        .object({
+          spec: z.object({
+            template: z.object({
+              spec: z.object({
+                containers: z.array(releaseContainer).length(1),
+              }),
+            }),
+          }),
+        })
+        .parse(resources.find((resource) => resource.kind === "Job"));
+      const env = job.spec.template.spec.containers[0]?.env;
+      expect(
+        ForumReleaseIdSchema.parse(
+          env?.find((value) => value.name === "FORUM_RELEASE_ID")?.value,
+        ),
+      ).toBe(releaseId);
+      expect(
+        env?.find((value) => value.name === "FORUM_RECOVERY_INTENT_ID")
+          ?.valueFrom,
+      ).toEqual({
+        fieldRef: {
+          fieldPath: `metadata.annotations['${FORUM_RECOVERY_ANNOTATIONS.intent}']`,
+        },
+      });
+    },
+  );
 });
 
 describe("forum isolation and release resources", () => {

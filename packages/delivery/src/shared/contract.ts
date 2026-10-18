@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { compareVersions } from "./version-diff.ts";
 import * as staticSites from "./static-site-contract.ts";
 import * as platform from "./platform-contract.ts";
 import * as workers from "./worker-contract.ts";
@@ -8,13 +9,40 @@ import * as evidenceContracts from "./evidence-contract.ts";
 import * as minecraftRecovery from "./minecraft-recovery-contract.ts";
 import * as minecraftReport from "./minecraft-recovery-report.ts";
 import * as controlPlane from "./control-plane-contract.ts";
-import { compareVersions } from "./version-diff.ts";
+import * as deploymentRequests from "./deployment-request-contract.ts";
+import * as contentRecovery from "./content-recovery-contract.ts";
 import * as rollout from "./worker-rollout-contract.ts";
 import * as forum from "./forum-contract.ts";
 import * as platformRecovery from "./platform-recovery-contract.ts";
 import * as pipelines from "./pipeline-contract.ts";
 import * as trmnlRepair from "./trmnl-repair-contract.ts";
 import * as ownership from "./ownership-contract.ts";
+export const RequestContentRecoverySchema =
+  contentRecovery.RequestContentRecoverySchema;
+export const ContentRecoveryIntentSchema =
+  contentRecovery.ContentRecoveryIntentSchema;
+export const ContentRecoveryNativeReceiptSchema =
+  contentRecovery.ContentRecoveryNativeReceiptSchema;
+export const ContentRecoveryOwnershipSchema =
+  contentRecovery.ContentRecoveryOwnershipSchema;
+export const AdmitContentRecoveryRepairSchema =
+  contentRecovery.AdmitContentRecoveryRepairSchema;
+export const CompleteContentRecoverySchema =
+  contentRecovery.CompleteContentRecoverySchema;
+export const ContentBarrierRestorationSchema =
+  contentRecovery.ContentBarrierRestorationSchema;
+export const DispatchBarrierSchema = contentRecovery.DispatchBarrierSchema;
+export type RequestContentRecovery = contentRecovery.RequestContentRecovery;
+export type ContentRecoveryIntent = contentRecovery.ContentRecoveryIntent;
+export type ContentRecoveryNativeReceipt =
+  contentRecovery.ContentRecoveryNativeReceipt;
+export type ContentRecoveryOwnership = contentRecovery.ContentRecoveryOwnership;
+export type AdmitContentRecoveryRepair =
+  contentRecovery.AdmitContentRecoveryRepair;
+export type CompleteContentRecovery = contentRecovery.CompleteContentRecovery;
+export type ContentBarrierRestoration =
+  contentRecovery.ContentBarrierRestoration;
+export type DispatchBarrier = contentRecovery.DispatchBarrier;
 export const OwnershipHandoverContextSchema =
   ownership.OwnershipHandoverContextSchema;
 export const OwnershipHandoverTargetSchema =
@@ -66,6 +94,7 @@ export const ForumBaselineProofSchema = forum.ForumBaselineProofSchema;
 export const RequestForumBaselineSchema = forum.RequestForumBaselineSchema;
 export const ForumBaselineIntentSchema = forum.ForumBaselineIntentSchema;
 export const ForumBaselineSnapshotSchema = forum.ForumBaselineSnapshotSchema;
+export const ForumRecoveredRuntimeSchema = forum.ForumRecoveredRuntimeSchema;
 export const CompleteForumBaselineSchema = forum.CompleteForumBaselineSchema;
 export const FailForumBaselineSchema = forum.FailForumBaselineSchema;
 export type PublishForumBundle = forum.PublishForumBundle;
@@ -73,6 +102,7 @@ export type ForumBaselineProof = forum.ForumBaselineProof;
 export type RequestForumBaseline = forum.RequestForumBaseline;
 export type ForumBaselineIntent = forum.ForumBaselineIntent;
 export type ForumBaselineSnapshot = forum.ForumBaselineSnapshot;
+export type ForumRecoveredRuntime = forum.ForumRecoveredRuntime;
 export type CompleteForumBaseline = forum.CompleteForumBaseline;
 export const RequestControlPlaneUpgradeSchema =
   controlPlane.RequestControlPlaneUpgradeSchema;
@@ -237,47 +267,7 @@ export const DeploymentStatusSchema = z.enum([
   "failed",
   "canceled",
 ]);
-export const CreateDeploymentSchema = z
-  .object({
-    requestId: IdentifierSchema,
-    environmentId: IdentifierSchema,
-    versionSetRevisionId: IdentifierSchema,
-    expectedGeneration: z.number().int().nonnegative(),
-    kind: z
-      .enum(["deploy", "promote", "rollback", "adopt-worker"])
-      .default("deploy"),
-    sourceEnvironmentId: IdentifierSchema.optional(),
-    workerBaseline: z
-      .object({
-        artifactIds: z.array(IdentifierSchema).min(1).max(100),
-        candidateArtifactId: IdentifierSchema,
-      })
-      .strict()
-      .optional(),
-  })
-  .strict()
-  .superRefine((input, ctx) => {
-    if (
-      (input.kind === "adopt-worker") !==
-      (input.workerBaseline !== undefined)
-    )
-      ctx.addIssue({
-        code: "custom",
-        message:
-          "Host-only worker adoption requires its explicit original artifact selection",
-      });
-    const baseline = input.workerBaseline;
-    if (
-      baseline !== undefined &&
-      (new Set(baseline.artifactIds).size !== baseline.artifactIds.length ||
-        !baseline.artifactIds.includes(baseline.candidateArtifactId))
-    )
-      ctx.addIssue({
-        code: "custom",
-        message:
-          "Baseline artifacts must be unique and include the routed candidate",
-      });
-  });
+export const CreateDeploymentSchema = deploymentRequests.CreateDeploymentSchema;
 export const DeploymentSchema = z.object({
   repairOfDeploymentId: IdentifierSchema.nullable().default(null),
   id: IdentifierSchema,
@@ -364,6 +354,7 @@ export const FinishDeploymentSchema = z
   })
   .strict();
 export const DeploymentDetailSchema = z.object({
+  forumRecoveredRuntime: ForumRecoveredRuntimeSchema.nullable().default(null),
   deployment: DeploymentSchema,
   environment: EnvironmentSchema,
   versionSet: VersionSetRevisionSchema,
@@ -374,7 +365,20 @@ export const DeploymentDetailSchema = z.object({
   stages: z.array(StageSchema),
   minecraftRecoveries: z.array(MinecraftRecoveryIntentSchema).default([]),
   platformRecoveries: z.array(PlatformRecoveryIntentSchema).default([]),
+  contentRecoveries: z
+    .array(contentRecovery.ContentRecoveryIntentSchema)
+    .default([]),
 });
+export const ContentRecoveryContextSchema = z.object({
+  intent: contentRecovery.ContentRecoveryIntentSchema,
+  deployment: DeploymentDetailSchema,
+  priorDeployment: DeploymentDetailSchema.nullable(),
+  expectedSettlements: contentRecovery.ContentSettlementFingerprintsSchema,
+  recoveryHistory: z.array(contentRecovery.ContentRecoveryIntentSchema),
+});
+export type ContentRecoveryContext = z.infer<
+  typeof ContentRecoveryContextSchema
+>;
 export const WorkerRecoveryContextSchema = z.object({
   intent: WorkerRecoveryIntentSchema,
   deployment: DeploymentDetailSchema,

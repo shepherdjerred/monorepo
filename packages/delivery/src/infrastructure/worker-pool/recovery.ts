@@ -18,6 +18,7 @@ import {
 } from "#infrastructure/delivery-records.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
 import { readWorkerVersions } from "./pool.ts";
+import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
 
 export async function recoveryOwnership(
   tx: Transaction,
@@ -25,6 +26,7 @@ export async function recoveryOwnership(
   expectedGeneration: number,
 ) {
   await lock(tx, "delivery:claim");
+  await requireNoContentBarrier(tx);
   await lock(tx, `deployment:${deploymentId}`);
   const deployment = required(
     await tx.deployment.findUnique({ where: { id: deploymentId } }),

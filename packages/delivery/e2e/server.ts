@@ -6,7 +6,8 @@ import { createApp } from "#server/app.ts";
 import { testPublisher } from "#testing/seed.ts";
 import { createHash } from "node:crypto";
 import { seedMinecraftRecovery } from "./minecraft.ts";
-import { seedBrowserForum } from "./forum.ts";
+import { seedBrowserForum } from "#testing/browser-forum.ts";
+import { seedContentRecovery } from "#testing/browser-content-recovery.ts";
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import { platformFixture } from "#testing/platform-fixture.ts";
 import { seedPlatformBrowser } from "./platform.ts";
@@ -24,7 +25,8 @@ async function startHarness() {
     Promise.resolve(forumBundlePolicy),
   );
   await seedDelivery(delivery);
-  await seedBrowserForum(delivery);
+  const forum = await seedBrowserForum(delivery);
+  await seedContentRecovery(delivery, forum.id);
   const scout = await workerFixture(delivery, "scout-prod");
   await scout.acceptedPool();
   const central = await workerFixture(delivery);

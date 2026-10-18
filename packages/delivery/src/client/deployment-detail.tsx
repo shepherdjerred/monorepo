@@ -15,6 +15,7 @@ import {
 } from "./platform-recovery.tsx";
 import { MinecraftRecovery } from "./minecraft-recovery.tsx";
 import { FrozenForumBaseline } from "./forum-baseline.tsx";
+import { ContentRecovery } from "./content-recovery.tsx";
 
 export type DeploymentAction =
   | { kind: "cancel" | "retry" }
@@ -68,6 +69,10 @@ export function DeploymentDetail({
 }) {
   const [reason, setReason] = useState("");
   const { deployment } = detail;
+  const producerRestorationPending = detail.contentRecoveries.some(
+    (intent) =>
+      intent.dispatchBarrier !== null && intent.barrierRestoredAt === null,
+  );
   return (
     <section className="panel" aria-labelledby="deployment-heading">
       <div className="section-heading">
@@ -116,6 +121,7 @@ export function DeploymentDetail({
         }}
       />
       <MinecraftRecovery detail={detail} />
+      <ContentRecovery detail={detail} />
       <FrozenForumBaseline detail={detail} />
       <div className="detail-grid">
         <div>
@@ -251,7 +257,11 @@ export function DeploymentDetail({
             ["failed", "canceled"].includes(deployment.status) && (
               <button
                 className="primary-button"
-                disabled={pending || deployment.recoveryRequired}
+                disabled={
+                  pending ||
+                  deployment.recoveryRequired ||
+                  producerRestorationPending
+                }
                 onClick={() => {
                   onAction({ kind: "retry" });
                 }}

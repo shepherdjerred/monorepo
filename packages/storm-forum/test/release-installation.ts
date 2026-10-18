@@ -6,6 +6,10 @@ import { z } from "zod";
 import { runPhp } from "#src/process.ts";
 import { forumManifest } from "#src/config.ts";
 const OwnerSchema = z.object({ owner: z.uuid() });
+Bun.env["FORUM_RELEASE_ID"] = crypto.randomUUID().replaceAll("-", "");
+Bun.env["RUNTIME_IMAGE"] =
+  `docker.io/shepherdjerred/storm-forum@sha256:${"a".repeat(64)}`;
+Bun.env["BUNDLE_SHA256"] = "a".repeat(64);
 const installed = z
   .object({ state: z.literal("installed"), xenforoVersion: z.string().min(1) })
   .strict()

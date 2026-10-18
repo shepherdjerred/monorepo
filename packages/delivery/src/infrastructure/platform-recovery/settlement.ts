@@ -22,6 +22,7 @@ import {
   type AdmitPlatformRecoveryApply,
 } from "#shared/platform-recovery-contract.ts";
 import { pendingRecovery } from "./ownership.ts";
+import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.ts";
 import { platformSettlements, recordedPlatformJobs } from "./context.ts";
 
@@ -207,15 +208,11 @@ export async function completePlatformRecovery(
         "CONFLICT",
         "Recovery native checkpoints changed after inspection",
       );
-    await tx.applicationLock.delete({ where: { deploymentId: row.id } });
-    await tx.platformLock.deleteMany({ where: { deploymentId: row.id } });
-    await tx.environment.update({
-      where: { id: env.id },
-      data: { activeDeploymentId: null, generation: { increment: 1 } },
-    });
-    await tx.deployment.update({
-      where: { id: row.id },
-      data: { recoveryRequired: false },
+    await settleRecoveryTarget(tx, {
+      deploymentId: row.id,
+      environmentId: env.id,
+      expectedGeneration: env.generation,
+      releaseGlobal: true,
     });
     const result = await tx.platformRecoveryIntent.update({
       where: { id },

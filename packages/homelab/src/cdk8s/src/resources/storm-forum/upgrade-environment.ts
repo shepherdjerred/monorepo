@@ -1,5 +1,30 @@
 import type { EnvVar } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import type { ForumRelease } from "./release-schema.ts";
+import { FORUM_RECOVERY_ANNOTATIONS } from "@shepherdjerred/ops-model/forum-recovery.ts";
+
+export function forumRecoveryEnvironment(release: ForumRelease): EnvVar[] {
+  const variables: EnvVar[] = [
+    {
+      name: "RUNTIME_IMAGE",
+      // A historical restore keeps the original recorded image identity.
+      value: release.restore?.runtimeImage ?? release.image,
+    },
+  ];
+  if (release.restore === undefined)
+    variables.push(
+      { name: "FORUM_RELEASE_ID", value: release.releaseId },
+      ...Object.entries({
+        FORUM_RECOVERY_INTENT_ID: FORUM_RECOVERY_ANNOTATIONS.intent,
+        FORUM_RECOVERY_ACTION: FORUM_RECOVERY_ANNOTATIONS.action,
+      }).map(([name, annotation]) => ({
+        name,
+        valueFrom: {
+          fieldRef: { fieldPath: `metadata.annotations['${annotation}']` },
+        },
+      })),
+    );
+  return variables;
+}
 
 export function upgradeBackupEnvironment(
   source: NonNullable<ForumRelease["preUpgradeBackup"]>,

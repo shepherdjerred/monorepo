@@ -6,7 +6,7 @@ import {
 } from "#infrastructure/forum/fixtures.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 
-/** Genuine API/PG lifecycle with explicitly synthetic licensed/native observations, never used by production. */
+/** Shared genuine API/PG fixture with synthetic native observations, never used by production. */
 export async function seedBrowserForum(delivery: Delivery) {
   await seedForum(delivery);
   const baseline = await delivery.requestForumBaseline(
@@ -34,7 +34,7 @@ export async function seedBrowserForum(delivery: Delivery) {
     delivery,
     "browser/forum/ci",
   );
-  await delivery.createDeployment(
+  return delivery.createDeployment(
     {
       requestId: "browser/forum/first-upgrade",
       environmentId: "storm-forum/prod",

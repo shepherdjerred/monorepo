@@ -62,7 +62,11 @@ function originalProof(snapshot: ForumBaselineSnapshot) {
 /** Baseline is an original-runtime migration input, never an invented accepted application version set. */
 export async function freezeForumBaseline(
   tx: Transaction,
-  input: { environment: Environment; pipeline: PipelineRevision },
+  input: {
+    environment: Environment;
+    pipeline: PipelineRevision;
+    recoveredRuntime?: boolean;
+  },
 ) {
   const { environment, pipeline } = input;
   if (
@@ -79,7 +83,11 @@ export async function freezeForumBaseline(
       "BUSY",
       "Forum original baseline observation is still pending",
     );
-  if (environment.acceptedVersionSetRevisionId !== null) return null;
+  if (
+    input.recoveredRuntime === true ||
+    environment.acceptedVersionSetRevisionId !== null
+  )
+    return null;
   if (environment.acceptedForumBaselineIntentId === null)
     throw new DeliveryError(
       "CONFLICT",

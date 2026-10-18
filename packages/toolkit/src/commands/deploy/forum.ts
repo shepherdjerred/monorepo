@@ -4,6 +4,10 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import type { DeployOptions } from "./common.ts";
+import {
+  runContentRecovery,
+  validateContentRecovery,
+} from "./content-recovery.ts";
 
 export function deployMachineCredential(
   command: string,
@@ -23,6 +27,10 @@ export function validateForumCommand(
   options: DeployOptions,
 ) {
   const [action] = positionals;
+  if (action === "recover" || action === "recovery") {
+    validateContentRecovery("forum", positionals, options);
+    return;
+  }
   if (action === "inspect" && positionals.length === 2) return;
   if (!(
     (action === "publish" || action === "baseline") &&
@@ -43,6 +51,8 @@ export async function runForumCommand(
   options: DeployOptions & { requestNotice?: (id: string) => void },
 ) {
   const [action, target] = positionals;
+  if (action === "recover" || action === "recovery")
+    return runContentRecovery(client, positionals, options);
   if (action === "inspect") {
     if (target === undefined)
       throw new Error("Explicit forum baseline identity required");

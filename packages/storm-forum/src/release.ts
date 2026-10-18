@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, open, unlink } from "node:fs/promises";
 import { S3Client } from "bun";
 import { z } from "zod";
+import { ForumReleaseIdSchema } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { forumManifest, type Stage } from "./config.ts";
 import { runPhp } from "./process.ts";
 import {
@@ -10,6 +11,14 @@ import {
   snapshotForum,
 } from "./backup.ts";
 import { SnapshotSourceSchema } from "./storage.ts";
+import {
+  ForumReleaseJournalSchema,
+  reuseCompletedForumRelease,
+  runForumReleaseSteps,
+  writeForumReleaseJournal,
+  type ForumReleaseJournal,
+  type FORUM_RELEASE_STEPS,
+} from "./release-journal.ts";
 
 const BundleEnvironmentSchema = z.object({
   BUNDLE_ENDPOINT: z.url(),
@@ -28,6 +37,21 @@ const InstallationSchema = z.discriminatedUnion("state", [
     .strict(),
   z.object({ state: z.literal("empty") }).strict(),
 ]);
+export async function observeForumInstallation() {
+  return InstallationSchema.parse(
+    JSON.parse(await runPhp(["/opt/storm-forum/runtime/installed.php"])),
+  );
+}
+export function originalForumSource(installedVersion: string) {
+  return validateBackupSource(
+    {
+      bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
+      xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
+      runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
+    },
+    installedVersion,
+  );
+}
 export function validateBackupSource(
   source: unknown,
   installedVersion: string,
@@ -134,41 +158,84 @@ export function validateVendorVersion(
   }
 }
 export async function releaseForum(stage: Stage): Promise<void> {
+  if ((Bun.env["FORUM_RECOVERY_INTENT_ID"] ?? "").length > 0)
+    throw new Error(
+      "Forum recovery requires the dedicated native recovery entrypoint",
+    );
+  const candidate = SnapshotSourceSchema.parse({
+    runtimeImage: Bun.env["RUNTIME_IMAGE"],
+    bundleSha256: Bun.env["BUNDLE_SHA256"],
+    xenforoVersion: forumManifest.xenforoVersion,
+  });
+  const releaseId = ForumReleaseIdSchema.parse(Bun.env["FORUM_RELEASE_ID"]);
+  const journalPath = `/var/lib/storm-forum/.release-journals/${releaseId}.json`;
   const lock = "/var/lib/storm-forum/.release-lock";
+  if (await Bun.file(journalPath).exists()) {
+    const prior = ForumReleaseJournalSchema.parse(
+      await Bun.file(journalPath).json(),
+    );
+    if (
+      await reuseCompletedForumRelease(
+        { journal: prior, candidate, stage },
+        {
+          unlocked: async () =>
+            !(await Bun.file(lock).exists()) &&
+            !(await Bun.file("/var/lib/storm-forum/.maintenance").exists()),
+          verify: async () => {
+            await verifyForumRelease(prior);
+          },
+        },
+      )
+    )
+      return;
+  }
   const handle = await open(lock, "wx", 0o600);
   const owner = crypto.randomUUID();
   let completed = false;
   let ownsMaintenance = false;
   let mutating = false;
   let unsafeInstallation = false;
+  const journal: ForumReleaseJournal = {
+    schema: "storm-forum-release/v1",
+    stage,
+    owner,
+    candidate,
+    original: null,
+    installationObserved: false,
+    originalSnapshot: null,
+    phase: "prepared",
+    step: null,
+    completed: [],
+  };
+  const checkpoint = async () => {
+    await writeForumReleaseJournal(journalPath, journal);
+  };
   try {
     await handle.writeFile(
       JSON.stringify({ stage, owner, startedAt: new Date().toISOString() }),
     );
+    await mkdir("/var/lib/storm-forum/.release-journals", {
+      recursive: true,
+      mode: 0o700,
+    });
+    await checkpoint();
     await validateVendorBundle();
+    journal.phase = "maintenance";
+    await checkpoint();
     await beginStormForumBackup(owner);
     ownsMaintenance = true;
     await Bun.sleep(65_000);
     unsafeInstallation = true;
-    const installationOutput = await runPhp(
-      ["/opt/storm-forum/runtime/installed.php"],
-      "/app/forum",
-    );
-    const installation = InstallationSchema.parse(
-      JSON.parse(installationOutput),
-    );
+    const installation = await observeForumInstallation();
     unsafeInstallation = false;
     if (installation.state === "installed") {
       // The database has not been upgraded yet. Restore it with the previous
       // private bundle, rather than recording this job's incoming bundle.
-      const sourceBundle = validateBackupSource(
-        {
-          bundleSha256: Bun.env["BACKUP_SOURCE_BUNDLE_SHA256"],
-          xenforoVersion: Bun.env["BACKUP_SOURCE_XENFORO_VERSION"],
-          runtimeImage: Bun.env["BACKUP_SOURCE_RUNTIME_IMAGE"],
-        },
-        installation.xenforoVersion,
-      );
+      const sourceBundle = originalForumSource(installation.xenforoVersion);
+      journal.original = sourceBundle;
+      journal.installationObserved = true;
+      journal.phase = "snapshot";
+      await checkpoint();
       const snapshot = await snapshotForum(
         owner,
         {
@@ -179,43 +246,22 @@ export async function releaseForum(stage: Stage): Promise<void> {
         },
         sourceBundle,
       );
+      journal.originalSnapshot = snapshot.manifestKey;
+      await checkpoint();
       process.stdout.write(`Pre-upgrade snapshot: ${snapshot.manifestKey}\n`);
     }
+    journal.installationObserved = true;
+    journal.phase = "ready";
+    await checkpoint();
     mutating = true;
-    await runPhp(
-      ["/opt/storm-forum/runtime/install.php"],
-      "/app/forum",
-      15 * 60_000,
+    await runForumReleaseSteps(
+      journal,
+      (step) => executeForumReleaseStep(step, stage),
+      checkpoint,
     );
-    await runPhp(
-      ["/opt/storm-forum/runtime/addons.php"],
-      "/app/forum",
-      15 * 60_000,
-    );
-    await runPhp(["cmd.php", "storm:configure", "--stage", stage]);
-    await runPhp(["cmd.php", "storm:styles"], "/app/forum", 5 * 60_000);
-    // ACP merges are resumable manual jobs. Finish them before the importer
-    // checks its ownership fence; an unfinished merge still blocks import.
-    await runPhp([
-      "cmd.php",
-      "xf:run-jobs",
-      "--manual-only",
-      "--max-execution-time",
-      "50",
-    ]);
-    await runPhp(["cmd.php", "storm:seed"]);
-    // This release's corpus is reviewed with the image; retain native IDs and edits.
-    await runPhp(
-      ["cmd.php", "storm:history", "--migrate"],
-      "/app/forum",
-      5 * 60_000,
-    );
-    await runPhp(
-      ["cmd.php", "storm:accounts", "--stage", stage],
-      "/app/forum",
-      5 * 60_000,
-    );
-    await runPhp(["cmd.php", "xf:run-jobs", "--max-execution-time", "50"]);
+    await verifyForumRelease(journal);
+    journal.phase = "verified";
+    await checkpoint();
     completed = true;
   } finally {
     await handle.close();
@@ -225,6 +271,57 @@ export async function releaseForum(stage: Stage): Promise<void> {
         await endStormForumBackup(owner);
       }
       await unlink(lock);
+      if (completed) {
+        journal.phase = "complete";
+        await checkpoint();
+      }
     }
   }
+}
+
+export async function executeForumReleaseStep(
+  step: (typeof FORUM_RELEASE_STEPS)[number],
+  stage: Stage,
+): Promise<void> {
+  const commands = {
+    install: ["/opt/storm-forum/runtime/install.php"],
+    addons: ["/opt/storm-forum/runtime/addons.php"],
+    configure: ["cmd.php", "storm:configure", "--stage", stage],
+    styles: ["cmd.php", "storm:styles"],
+    "manual-jobs": [
+      "cmd.php",
+      "xf:run-jobs",
+      "--manual-only",
+      "--max-execution-time",
+      "50",
+    ],
+    seed: ["cmd.php", "storm:seed"],
+    history: ["cmd.php", "storm:history", "--migrate"],
+    accounts: ["cmd.php", "storm:accounts", "--stage", stage],
+    jobs: ["cmd.php", "xf:run-jobs", "--max-execution-time", "50"],
+  };
+  await runPhp(
+    commands[step],
+    "/app/forum",
+    ["install", "addons"].includes(step) ? 15 * 60_000 : 5 * 60_000,
+  );
+}
+
+export async function verifyForumRelease(
+  journal: ForumReleaseJournal,
+): Promise<void> {
+  ForumReleaseJournalSchema.parse(journal);
+  const assembly = await Bun.file("/app/forum/.storm-assembly").text();
+  const installed = InstallationSchema.parse(
+    JSON.parse(await runPhp(["/opt/storm-forum/runtime/installed.php"])),
+  );
+  if (
+    installed.state !== "installed" ||
+    installed.xenforoVersion !== journal.candidate.xenforoVersion ||
+    assembly.trim() !== journal.candidate.bundleSha256
+  )
+    throw new Error(
+      "Forum native installed identity differs from the same approved recovery candidate",
+    );
+  await runPhp(["/opt/storm-forum/runtime/recovery-verify.php"]);
 }

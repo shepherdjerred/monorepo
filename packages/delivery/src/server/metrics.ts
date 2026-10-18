@@ -44,7 +44,11 @@ export async function deliveryMetrics(database: Database): Promise<string> {
         (SELECT count(*)::float8 FROM "ApplicationLock") AS locks,
         (SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MIN("acquiredAt"))),0)::float8 FROM "ApplicationLock") AS "lockAge",
         (SELECT count(*)::float8 FROM "Deployment" WHERE "recoveryRequired" = true) AS "recoveryRequired",
-        (SELECT count(*)::float8 FROM "WorkerRecoveryIntent" WHERE status IN ('pending','running')) AS "recoveriesPending"
+        ((SELECT count(*)::float8 FROM "WorkerRecoveryIntent" WHERE status IN ('pending','running')) +
+         (SELECT count(*)::float8 FROM "MinecraftRecoveryIntent" WHERE status IN ('pending','running')) +
+         (SELECT count(*)::float8 FROM "PlatformRecoveryIntent" WHERE status IN ('pending','running')) +
+         (SELECT count(*)::float8 FROM "ContentRecoveryIntent" WHERE status = 'pending' OR
+           ("dispatchBarrier" IS NOT NULL AND "barrierRestoredAt" IS NULL))) AS "recoveriesPending"
     `,
   ]);
   const [state] = z.array(StateSchema).length(1).parse(raw);
@@ -127,8 +131,8 @@ export async function deliveryMetrics(database: Database): Promise<string> {
       state.recoveryRequired,
     ],
     [
-      "delivery_worker_recovery_pending",
-      "Worker recovery intents awaiting a verified terminal result.",
+      "delivery_independent_recoveries_pending",
+      "Independent recovery intents or journaled producer restorations still requiring settlement.",
       state.recoveriesPending,
     ],
   ] as const)

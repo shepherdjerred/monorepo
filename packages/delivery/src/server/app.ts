@@ -20,11 +20,11 @@ import {
 } from "#shared/contract.ts";
 import type { Principal, PublishBuild } from "#shared/contract.ts";
 import { ciIdentity } from "#infrastructure/qualification.ts";
-import { RecoveryRequestSchema } from "#infrastructure/recovery.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { registerWorkerRoutes } from "./worker-routes.ts";
 import { registerPlatformRoutes } from "./platform-routes.ts";
 import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
+import { registerContentRecoveryRoutes } from "./content-recovery-routes.ts";
 import { registerClaimRoute } from "./claim-route.ts";
 import { registerTrmnlRepairRoute } from "./trmnl-repair-route.ts";
 import { registerControlPlaneRoutes } from "./control-plane-routes.ts";
@@ -41,6 +41,7 @@ import { registerArtifactRoutes } from "./artifact-routes.ts";
 import { registerQualificationRoutes } from "./qualification-routes.ts";
 import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
 import { registerOwnershipRoute } from "./ownership-route.ts";
+import { registerRecoveryRoute } from "./recovery-route.ts";
 
 type Options = {
   sourceRevision?: string;
@@ -121,6 +122,8 @@ export function createApp(options: Options) {
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
         /\/worker-recovery(?:\/|$)/.test(c.req.path) ||
         /\/minecraft-recovery(?:\/|$)/.test(c.req.path) ||
+        (/\/content-recovery(?:\/|$)/.test(c.req.path) &&
+          !c.req.path.endsWith("/admit-repair")) ||
         (/\/platform-recovery(?:\/|$)/.test(c.req.path) &&
           !c.req.path.endsWith("/admit-apply")) ||
         /^\/api\/v1\/forum\/baselines\/[^/]+\/(?:submitted|complete|fail)$/.test(
@@ -147,6 +150,7 @@ export function createApp(options: Options) {
   const delivery = options.delivery;
   registerOwnershipRoute(app, options);
   registerPlatformRecoveryRoutes(app, delivery, enabled);
+  registerContentRecoveryRoutes(app, delivery, enabled);
   registerWorkerRecoveryRoutes(app, delivery);
   registerMinecraftRecoveryRoutes(
     app,
@@ -367,30 +371,7 @@ export function createApp(options: Options) {
       ),
     );
   });
-  app.post("/api/v1/deployments/:id/release-lock", async (c) => {
-    requireScope(c.get("principal"), "admin");
-    const input = RecoveryRequestSchema.parse(await c.req.json());
-    if (options.inspectRecovery === undefined)
-      throw new DeliveryError(
-        "PAUSED",
-        "Independent recovery inspection is unavailable",
-      );
-    const detail = await delivery.detail(c.req.param("id"));
-    if (detail.deployment.workerSnapshot !== null)
-      throw new DeliveryError(
-        "INVALID",
-        "Retained workers require independently verified worker recovery intent and routing proof",
-      );
-    const settled = await options.inspectRecovery(detail, input);
-    return c.json(
-      await delivery.releaseLock(
-        detail.deployment.id,
-        input.reason,
-        c.get("principal"),
-        settled,
-      ),
-    );
-  });
+  registerRecoveryRoute(app, delivery, options.inspectRecovery);
   app.all("/api/*", (c) =>
     c.json(
       {

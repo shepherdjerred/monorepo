@@ -2,9 +2,11 @@ import type { Transaction } from "#infrastructure/delivery-data.ts";
 import { lock, required } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { heldPlatformRecovery } from "./context.ts";
+import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
 
 export async function pendingRecovery(tx: Transaction, intentId: string) {
   await lock(tx, "delivery:claim");
+  await requireNoContentBarrier(tx);
   await lock(tx, `platform-recovery:${intentId}`);
   const intent = required(
     await tx.platformRecoveryIntent.findUnique({ where: { id: intentId } }),

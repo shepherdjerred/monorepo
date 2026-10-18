@@ -25,6 +25,7 @@ import { applyForumSyncWaves } from "./sync-waves.ts";
 import {
   upgradeBackupEnvironment,
   forumBootstrapEnvironment,
+  forumRecoveryEnvironment,
 } from "./upgrade-environment.ts";
 import type { ForumRelease, ForumStage } from "./release-schema.ts";
 import { forumTemplateInputs } from "./delivery-inputs.ts";
@@ -364,16 +365,7 @@ export function createStormForumChart(
               ],
               env: [
                 ...(base.env ?? []),
-                ...(release.restore || release.preUpgradeBackup
-                  ? [
-                      {
-                        name: "RUNTIME_IMAGE",
-                        // Original runtimes accept the snapshot's historical
-                        // identity; the validated Pod still pulls its exact mirror.
-                        value: release.restore?.runtimeImage ?? release.image,
-                      },
-                    ]
-                  : []),
+                ...forumRecoveryEnvironment(release),
                 ...(release.restore
                   ? [
                       ...["ACCESS_KEY", "SECRET_KEY"].map((suffix) => ({

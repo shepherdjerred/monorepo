@@ -159,6 +159,7 @@ model Deployment {
   workerRecoveries                     WorkerRecoveryIntent[]
   minecraftRecoveries                  MinecraftRecoveryIntent[]
   platformRecoveries                   PlatformRecoveryIntent[]
+  contentRecoveries                    ContentRecoveryIntent[]
   expectedGeneration                   Int
   kind                                 String
   automatic                            Boolean                     @default(false)
@@ -229,6 +230,28 @@ model PlatformRecoveryIntent {
   encryptedPlan                 Json?
   planFingerprint               String?
   planApproval                  Json?
+  createdAt                     DateTime   @default(now())
+  finishedAt                    DateTime?
+
+  @@index([status, createdAt])
+  @@index([deploymentId, createdAt])
+}
+
+model ContentRecoveryIntent {
+  id                            String     @id
+  deploymentId                  String
+  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
+  targetKind                    String
+  requestedBy                   String
+  reason                        String
+  expectedEnvironmentGeneration Int
+  snapshotFingerprint           String
+  status                        String     @default("pending")
+  nativeReceipts                Json       @default("[]")
+  dispatchBarrier               Json?
+  barrierRestoredAt             DateTime?
+  message                       String?
+  resultFingerprint             String?
   createdAt                     DateTime   @default(now())
   finishedAt                    DateTime?
 

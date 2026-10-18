@@ -30,6 +30,8 @@ import {
   RecordPlatformRecoveryPlanSchema,
   PlatformRecoveryPlanReceiptSchema,
   OwnershipHandoverContextSchema,
+  ContentRecoveryIntentSchema,
+  ContentRecoveryContextSchema,
 } from "./contract.ts";
 import type {
   CreateDeployment,
@@ -59,6 +61,13 @@ import type {
   ApprovePlatformRecoveryPlan,
   AdmitPlatformRecoveryApply,
   RequestTrmnlRepair,
+  RequestContentRecovery,
+  ContentRecoveryNativeReceipt,
+  ContentRecoveryOwnership,
+  CompleteContentRecovery,
+  AdmitContentRecoveryRepair,
+  DispatchBarrier,
+  ContentBarrierRestoration,
 } from "./contract.ts";
 
 export class DeliveryClientError extends Error {
@@ -360,6 +369,68 @@ export function createDeliveryClient(options: {
       request(
         `/minecraft-recovery/${encodeURIComponent(id)}`,
         MinecraftRecoveryDetailSchema,
+      ),
+    requestContentRecovery: (id: string, input: RequestContentRecovery) =>
+      request(
+        `/deployments/${encodeURIComponent(id)}/content-recovery`,
+        ContentRecoveryIntentSchema,
+        input,
+      ),
+    contentRecovery: (id: string) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}`,
+        ContentRecoveryContextSchema,
+      ),
+    recordContentRecoveryNative: (
+      id: string,
+      input: ContentRecoveryNativeReceipt,
+    ) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/native`,
+        ContentRecoveryIntentSchema,
+        input,
+      ),
+    admitContentRecoveryRepair: (
+      id: string,
+      input: AdmitContentRecoveryRepair,
+    ) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/admit-repair`,
+        ContentRecoveryIntentSchema,
+        input,
+      ),
+    completeContentRecovery: (id: string, input: CompleteContentRecovery) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/complete`,
+        ContentRecoveryIntentSchema,
+        input,
+      ),
+    failContentRecovery: (id: string, message: string) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/fail`,
+        ContentRecoveryIntentSchema,
+        { message },
+      ),
+    recordContentRecoveryBarrier: (id: string, journal: DispatchBarrier) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/barrier`,
+        ContentRecoveryIntentSchema,
+        journal,
+      ),
+    admitContentRecoveryRestore: (
+      id: string,
+      input: ContentRecoveryOwnership,
+    ) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/admit-restore`,
+        ContentRecoveryIntentSchema,
+        input,
+      ),
+    restoredContentRecovery: (id: string, input: ContentBarrierRestoration) =>
+      request(
+        `/content-recovery/${encodeURIComponent(id)}/restored`,
+        ContentRecoveryIntentSchema,
+        input,
       ),
     compose: (input: ComposeVersionSet) =>
       request("/versions", VersionSetRevisionSchema, input),

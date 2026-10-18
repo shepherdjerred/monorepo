@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ForumReleaseIdSchema } from "@shepherdjerred/ops-model/forum-recovery.ts";
 
 export const ForumStageSchema = z
   .object({
@@ -40,7 +41,7 @@ export const ReleaseSchema = z
       .optional(),
     bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),
     bundleKey: z.string().regex(/^releases\/[\w.-]+\.zip$/),
-    releaseId: z.string().regex(/^[a-f0-9]{12}$/),
+    releaseId: ForumReleaseIdSchema,
     preUpgradeBackup: z
       .object({
         bundleSha256: z.string().regex(/^[a-f0-9]{64}$/),

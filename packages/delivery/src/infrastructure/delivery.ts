@@ -12,6 +12,23 @@ import {
 } from "./delivery-registration.ts";
 import { createDeployment, approve, cancel } from "./delivery-requests.ts";
 import { requestTrmnlRepair } from "./trmnl-repair/requests.ts";
+import {
+  requestContentRecovery,
+  contentRecovery,
+} from "./content-recovery/requests.ts";
+import {
+  recordContentRecoveryNative,
+  recordContentRecoveryBarrier,
+} from "./content-recovery/checkpoints.ts";
+import {
+  admitContentRecoveryRepair,
+  completeContentRecovery,
+} from "./content-recovery/settlement.ts";
+import {
+  admitContentRecoveryRestore,
+  restoredContentRecovery,
+} from "./content-recovery/restoration.ts";
+import { failContentRecovery } from "./content-recovery/failure.ts";
 import { claim, stage, finish, releaseLock } from "./delivery-execution.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
@@ -113,6 +130,15 @@ export class Delivery {
   registerEnvironment = registerEnvironment;
   createDeployment = createDeployment;
   requestTrmnlRepair = requestTrmnlRepair;
+  requestContentRecovery = requestContentRecovery;
+  contentRecovery = contentRecovery;
+  recordContentRecoveryNative = recordContentRecoveryNative;
+  recordContentRecoveryBarrier = recordContentRecoveryBarrier;
+  admitContentRecoveryRepair = admitContentRecoveryRepair;
+  completeContentRecovery = completeContentRecovery;
+  failContentRecovery = failContentRecovery;
+  admitContentRecoveryRestore = admitContentRecoveryRestore;
+  restoredContentRecovery = restoredContentRecovery;
   approve = approve;
   cancel = cancel;
   claim = claim;

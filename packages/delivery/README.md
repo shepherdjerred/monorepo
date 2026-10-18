@@ -57,6 +57,8 @@ The API is rooted at `/api/v1`:
 | Human production approval                                     | `POST /deployments/:id/approval`                                 |
 | Cancel or retry                                               | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`    |
 | Independently inspect and recover an ambiguous Argo operation | `POST /deployments/:id/release-lock`                             |
+| Request native site/Forum recovery under the retained lock    | `POST /deployments/:id/content-recovery`                         |
+| Inspect frozen content recovery and native receipts           | `GET /content-recovery/:id`                                      |
 | Retain unverified migration evidence                          | `GET /imports`, `POST /imports`                                  |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
@@ -305,6 +307,18 @@ actual finished operation requirement for independent unlock. It handles failure
 before and after source selection. Stop the prior mutation executor before
 settling; a closed Workflow alone does not prove its Activity process stopped.
 Do not remove database locks to bypass that check.
+
+Static sites, combined Scout frontends and Forum use separate content recovery
+intents. `toolkit deploy sites recover` or `forum recover` requires an admin
+credential, exact environment generation and reason. The matching `recovery`
+command and UI show immutable history, native receipts and refusal messages.
+Native inspection and bounded repair retain the frozen artifacts and original
+backup. Independent settlement releases quarantine through a generation CAS;
+the original failed result and accepted pointers remain unchanged. A failed
+inspection keeps ownership. A journaled producer host awaiting restoration
+continues to block dispatch even after settlement succeeds. Generic Argo unlock
+cannot bypass these checks or authorize a database rollback. Follow the
+[content recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-site-or-forum-release).
 
 Ordinary worker rollout admission requires a verified retained-host baseline.
 Fixed-profile pipelines support independent host-only baseline verification.

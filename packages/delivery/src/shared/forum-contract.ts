@@ -9,6 +9,14 @@ const Digest = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 const Fingerprint = z.string().regex(/^[a-f0-9]{64}$/u);
 const Identity = z.string().min(1);
 const Generation = z.number().int().nonnegative();
+export const ForumRecoveredRuntimeSchema = z.strictObject({
+  recoveryIntentId: IdentifierSchema,
+  deploymentId: IdentifierSchema,
+  image: ArtifactVersionSchema,
+  bundle: ArtifactVersionSchema,
+  xenforoVersion: z.string().regex(/^\d+\.\d+\.\d+$/u),
+});
+export type ForumRecoveredRuntime = z.infer<typeof ForumRecoveredRuntimeSchema>;
 export const QualifiedForumBundleQuerySchema = z
   .object({
     xenforoVersion: z.string().regex(/^\d+\.\d+\.\d+$/u),

@@ -50,6 +50,10 @@ toolkit deploy minecraft recovery <INTENT_ID> --json
 toolkit deploy forum publish --file <PRIVATE_BUNDLE_DESCRIPTOR> --machine
 toolkit deploy forum baseline --file <ORIGINAL_BASELINE_DESCRIPTOR> --machine
 toolkit deploy forum inspect <INTENT_ID> --json
+toolkit deploy forum recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Inspect and settle the frozen forum release under retained ownership"
+toolkit deploy forum recovery <INTENT_ID> --json
+toolkit deploy sites recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Inspect and settle the frozen archive under retained ownership"
+toolkit deploy sites recovery <INTENT_ID> --json
 toolkit deploy platform request --file <REVIEWED_INTENT_JSON>
 toolkit deploy platform control-plane --file <REVIEWED_CONTROLLER_JSON> --machine
 toolkit deploy platform recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Independently settle the original native infrastructure operation"
@@ -137,6 +141,27 @@ expected environment generation, qualified original image/bundle artifact IDs an
 a reason. Native completed Job, Pod digests, installed XF and bundle observations
 come from the API's independent authenticated inspector. `forum inspect` reads the
 same immutable proof shown in the UI; the baseline never invents deployment acceptance.
+
+`sites recover` and `forum recover` request a separate admin-authorized recovery
+intent for a failed or canceled release that retains its target lock. Requests
+bind the reviewed environment generation and reason; the caller supplies no
+native observations. Inspection and bounded repair retain the original archive
+or forum inputs. Independent native readback and generation checks govern
+settlement. A failure or refusal keeps ownership; successful recovery releases
+quarantine while preserving the failed deployment and accepted pointers.
+The matching `recovery` command and UI expose frozen operation identities,
+native receipts and refusal reasons. This path cannot authorize an image-only
+database rollback or delete a foreign maintenance lock.
+The request does not start automation. Pause the dispatcher Schedule and run
+`bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent <ID>
+--action inspect|repair --context admin@torvalds --url <DELIVERY_URL>` through
+the existing operator credentials. The command journals and stops the ordinary
+Activity host before effects and restores it after independent settlement.
+Retry the same intent after interruption; do not manually pre-scale the host.
+Static repair resolves `DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID` and
+`DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY` from the dedicated activator item,
+and `CLOUDFLARE_API_TOKEN` from the six-zone cache-purge item. An absent purge
+credential stops recovery; the general `CF_API_TOKEN` is not a fallback.
 
 All commands support `--json`. `wait` polls in the foreground and returns 0 for
 success, 1 for a failed/canceled deployment, and 2 when its deadline expires.
