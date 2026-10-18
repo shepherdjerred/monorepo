@@ -43,6 +43,28 @@ const selection = {
   },
 };
 
+it("accepts omitted TypeMeta from the single-Application endpoint while rejecting wrong kinds and missing ownership", () => {
+  const { kind: _kind, ...endpointResponse } = application();
+  expect(deliverySelectionPatch(endpointResponse, selection)).toEqual(
+    deliverySelectionPatch(application(), selection),
+  );
+  expect(() =>
+    deliverySelectionPatch(
+      { ...endpointResponse, kind: "Deployment" },
+      selection,
+    ),
+  ).toThrow();
+  expect(() =>
+    deliverySelectionPatch(
+      {
+        ...endpointResponse,
+        metadata: { ...endpointResponse.metadata, annotations: {} },
+      },
+      selection,
+    ),
+  ).toThrow("delegated");
+});
+
 describe("Delivery Application ownership", () => {
   it("rejects queued or stale active operations before producing any selection mutation", () => {
     expect(() =>
