@@ -34,3 +34,9 @@ index 62058de..22f619c 100644
 @@ -333 +333 @@ func (p *Plugin) doRestore(snapshotID string, port int) (string, error) {
 -	bkpList, err := p.getSnapList(pvname, schdname, bkpname)
 +	bkpList, err := p.cl.ZFSChain(pvname, schdname, bkpname)
+diff --git a/pkg/zfs/plugin/zfs.go b/pkg/zfs/plugin/zfs.go
+--- a/pkg/zfs/plugin/zfs.go
++++ b/pkg/zfs/plugin/zfs.go
+@@ -186 +186 @@ func (p *Plugin) DeleteSnapshot(snapshotID string) error {
+-	return p.deleteBackup(snapshotID)
++	return p.deleteSnapshot(snapshotID)

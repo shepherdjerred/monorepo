@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { R2Object } from "./r2-prefix-inventory.ts";
-import { restoreProtectedBackupNames } from "./r2/restore-protection.ts";
 
 export const R2_ORPHAN_MINIMUM_AGE_HOURS = 24;
 export const R2_ZFS_PREFIX = "zfspv-incr/backups/";
@@ -28,7 +27,7 @@ const CandidateSchema = z.object({
 });
 
 export const R2OrphanManifestSchema = z.object({
-  contractVersion: z.literal(4),
+  contractVersion: z.literal(5),
   observedAt: z.iso.datetime(),
   minimumAgeHours: z.literal(R2_ORPHAN_MINIMUM_AGE_HOURS),
   storage: z.object({
@@ -39,7 +38,6 @@ export const R2OrphanManifestSchema = z.object({
   onlyBackupName: z.string().min(1).nullable(),
   protectedBackupNames: z.array(z.string().min(1)),
   incompleteChainRoots: z.array(z.string()),
-  restoreProtectedBackupNames: z.array(z.string().min(1)),
   candidates: z.array(CandidateSchema),
 });
 
@@ -140,7 +138,9 @@ export function buildR2OrphanManifest(input: {
       `Selected R2 backup prefix is missing: ${input.onlyBackupName}; refusing to continue`,
     );
   }
-  const directProtectedNames = [
+  // Restores resolve by GUID ancestry (the plugin's ZFSChain), so the chain
+  // protection already covers every stream a retained backup needs.
+  const protectedBackupNames = [
     ...new Set([
       ...input.liveBackupNames,
       ...input.metadataBackupNames,
@@ -148,14 +148,6 @@ export function buildR2OrphanManifest(input: {
       ...heldBackupNames,
       ...input.chainProtection.protectedBackupNames,
     ]),
-  ].toSorted();
-  const restoreProtectedNames = restoreProtectedBackupNames({
-    objectKeys: input.zfsObjects.map((object) => object.key),
-    protectedBackupNames: directProtectedNames,
-    zfsPrefix: R2_ZFS_PREFIX,
-  });
-  const protectedBackupNames = [
-    ...new Set([...directProtectedNames, ...restoreProtectedNames]),
   ].toSorted();
   const protectedSet = new Set(protectedBackupNames);
   const cutoff = observedAt - R2_ORPHAN_MINIMUM_AGE_HOURS * 3_600_000;
@@ -190,7 +182,7 @@ export function buildR2OrphanManifest(input: {
   }
 
   return R2OrphanManifestSchema.parse({
-    contractVersion: 4,
+    contractVersion: 5,
     observedAt: new Date(observedAt).toISOString(),
     minimumAgeHours: R2_ORPHAN_MINIMUM_AGE_HOURS,
     storage: input.storage,
@@ -198,7 +190,6 @@ export function buildR2OrphanManifest(input: {
     onlyBackupName: input.onlyBackupName ?? null,
     protectedBackupNames,
     incompleteChainRoots: input.chainProtection.incompleteRoots,
-    restoreProtectedBackupNames: restoreProtectedNames,
     candidates,
   });
 }

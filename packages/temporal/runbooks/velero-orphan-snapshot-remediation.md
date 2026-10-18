@@ -39,22 +39,26 @@ repository root. Do not resolve references into an env file.
 ## Restore-chain safety gate
 
 A missing parent Backup does not prove its snapshots or remote objects are
-independent. OpenEBS 3.6.0 selects an incremental restore's base by its position
-in the sorted schedule/volume history. Removing an earlier entry can change
-that base even when no retained `prevSnapName` directly names it.
+independent. The maintained plugin restores an incremental by following stream
+GUIDs back to its full (`ZFSChain` in
+`packages/homelab/images/velero-plugin/`), so every ancestor of a retained
+stream is required, whatever its name or position.
 
 Before any local snapshot or ZFSBackup CR deletion, prove that it is absent
 from every retained chain and from the live plugin's next-backup inputs.
-Preserve all `prevSnapName` references. Do not reset CR counts: the plugin also
-uses those counts to choose the next full backup. Rehearse a retained restore
-on isolated storage and verify its data. A Completed Backup is not restore
-proof. If these checks cannot be completed, stop at the read-only inventory.
+Preserve all `prevSnapName` references: the plugin chooses the next backup's
+parent from the latest completed ZFSBackup. Rehearse a retained restore on
+isolated storage and verify its data. A Completed Backup is not restore proof.
+If these checks cannot be completed, stop at the read-only inventory.
 
-The version 4 R2 manifest conservatively protects the entire preceding remote
-history for each retained schedule/volume, plus all live ZFSBackup snapshot
-references and actual stream ancestry. Unknown object layouts fail closed.
-Version 2 and 3 manifests are rejected; regenerate inspection before applying
-anything.
+The version 5 R2 manifest protects live Backups, backup metadata, ZFSBackup
+snapshot references, held names, and the actual stream ancestry of all of
+them. Unknown object layouts fail closed. Earlier manifest versions are
+rejected; regenerate inspection before applying anything.
+
+The plugin normally deletes expired R2 data itself (see its README). This
+manual path is for what that sweep cannot reach: families with no further
+deletions, unscheduled leftovers, and data whose sweep failed.
 
 ## Step 1: Verify the orphan finding
 
