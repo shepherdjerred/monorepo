@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import { selectSteps } from "#src/pipeline/select.ts";
 import {
   separateMaintenance,
   maintenanceSteps,
@@ -62,7 +63,7 @@ test.each(["release-notes", "ci-images"] as const)(
   },
 );
 
-test("separation removes only maintenance and retains publication and deployment gates", () => {
+test("separation removes only maintenance and retains publication and verification gates", () => {
   const before = buildPipelineSteps({
     images: TEST_IMAGES,
     changedBase: "base",
@@ -74,7 +75,6 @@ test("separation removes only maintenance and retains publication and deployment
       .map((step) => step.key),
   ).toEqual(["ci-base-refresh", "ci-playwright-refresh"]);
   expect(after.find((step) => step.key === "helm-push")?.dependsOn).toEqual([
-    "homelab-release-admission",
     "images",
   ]);
   expect(after.find((step) => step.key === "publish")?.dependsOn).toContain(
@@ -85,16 +85,44 @@ test("separation removes only maintenance and retains publication and deployment
   ).toContain(
     "bun --no-install scripts/release/release.ts --phase github-release",
   );
-  for (const key of [
-    "verify",
-    "playwright-e2e",
-    "images",
-    "publish",
-    "argocd-sync",
-    "version-commit-back",
-  ]) {
+  for (const key of ["verify", "playwright-e2e", "images", "publish"]) {
     expect(after.find((step) => step.key === key)).toEqual(
       before.find((step) => step.key === key),
     );
   }
 });
+
+test.each([false, true])(
+  "separated maintenance has complete PR and main dependency graphs (catalog=%s)",
+  (deliveryPublication) => {
+    const graph = separateMaintenance(
+      buildPipelineSteps({
+        images: TEST_IMAGES,
+        changedBase: "base",
+        deliveryPublication,
+      }),
+    );
+    for (const event of ["pull_request", "push"]) {
+      const selected = selectSteps(graph, {
+        event,
+        branch: "main",
+        defaultBranch: "main",
+        changedFiles: [],
+      });
+      const keys = new Set(selected.map((step) => step.key));
+      expect(keys.has("verify")).toBe(true);
+      for (const step of selected) {
+        for (const dependency of step.dependsOn ?? [])
+          expect(
+            keys.has(dependency),
+            `${event}/${step.key}/${dependency}`,
+          ).toBe(true);
+      }
+      expect(keys.has("helm-push")).toBe(event === "push");
+      expect(keys.has("delivery-publish")).toBe(
+        event === "push" && deliveryPublication,
+      );
+      expect(keys.has("homelab-release-admission")).toBe(false);
+    }
+  },
+);

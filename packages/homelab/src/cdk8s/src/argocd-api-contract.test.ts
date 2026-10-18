@@ -16,6 +16,52 @@ import {
 
 const contract = await readArgocdApiContract();
 
+test.each([
+  { apiVersion: "v1", kind: "Namespace", allowed: true },
+  {
+    apiVersion: "rbac.authorization.k8s.io/v1",
+    kind: "ClusterRole",
+    allowed: true,
+  },
+  { apiVersion: "apps/v1", kind: "Deployment", allowed: false },
+  { apiVersion: "apps/v1", kind: "Namespace", allowed: false },
+])(
+  "empty namespace is accepted only for recognized cluster scope: $apiVersion/$kind",
+  async ({ apiVersion, kind, allowed }) => {
+    const { server, syncPosts, resourceQueries } =
+      serveIntroducedResourceLookup({
+        response: { status: 404, body: {} },
+        resource: {
+          apiVersion,
+          kind,
+          name: "delivery-catalog-recovery",
+          namespace: "",
+        },
+      });
+    try {
+      const { exitCode, stderr } = await runSyncManagedAtRevision(
+        server.url.origin,
+      );
+      expect(exitCode).toBe(allowed ? 0 : 1);
+      expect(syncPosts()).toBe(allowed ? 1 : 0);
+      if (allowed) {
+        expect(stderr).toBe("");
+        expect(resourceQueries).toHaveLength(1);
+        expect(new URLSearchParams(resourceQueries[0]).has("namespace")).toBe(
+          false,
+        );
+      } else {
+        expect(stderr).toContain(
+          "Only a recognized cluster-scoped resource may have an empty namespace",
+        );
+        expect(resourceQueries).toEqual([]);
+      }
+    } finally {
+      await server.stop(true);
+    }
+  },
+);
+
 function introducedResourceFor(contractCase: ArgocdApiContractCase) {
   const { query } = contractCase.request;
   const group = query["group"] ?? "";
