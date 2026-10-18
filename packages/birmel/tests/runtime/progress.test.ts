@@ -75,6 +75,25 @@ describe("renderProgress", () => {
     expect(body).toContain("Step 11");
   });
 
+  test("keeps an emoji whole when narration is cut at its budget", () => {
+    // 278 units, then an emoji occupying units 278-279, then more text: a
+    // code-unit cut at 279 would leave a lone high surrogate before the "…".
+    const narration = `${"a".repeat(278)}😀${"b".repeat(20)}`;
+    const body = renderProgress({
+      entries: [],
+      narration,
+      stepNumber: 1,
+      maxSteps: 8,
+      elapsedMs: 0,
+    });
+    const line = body
+      .split("\n")
+      .find((candidate) => candidate.startsWith("> "));
+
+    expect(line).toBe(`> ${"a".repeat(278)}…`);
+    expect(body.isWellFormed()).toBe(true);
+  });
+
   test("stays inside Discord's message ceiling", () => {
     const body = renderProgress({
       entries: Array.from({ length: 8 }, (_, index) => ({

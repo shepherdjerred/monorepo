@@ -33,6 +33,7 @@ COPY --parents \
   packages/birmel \
   packages/config \
   packages/sentry-config \
+  packages/text \
   packages/feature-flags \
   packages/glitter-context \
   packages/llm-models \
@@ -119,6 +120,7 @@ COPY --parents --chown=0:1000 --chmod=o-rwx,g=rX \
   packages/birmel \
   packages/config \
   packages/sentry-config \
+  packages/text \
   packages/feature-flags \
   packages/llm-models \
   packages/llm-observability \

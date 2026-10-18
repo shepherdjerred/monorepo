@@ -29,6 +29,7 @@ import {
 import { recoverTurnAnswer } from "./turn-answer-recovery.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 export type AgentExecutionResult = {
   text: string;
@@ -54,9 +55,7 @@ export type IsolatedAgentOptions = {
 const logger = loggers.agent.child("execution");
 
 function boundedText(value: string, maxLength: number): string {
-  return value.length <= maxLength
-    ? value
-    : `${value.slice(0, maxLength - 1)}…`;
+  return truncateGraphemes(value, maxLength);
 }
 
 function boundedSummary(value: unknown): string {
