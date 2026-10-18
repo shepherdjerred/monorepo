@@ -6,6 +6,7 @@ import {
   RiotMatchIdSchema,
   LeaguePuuidSchema,
   ScoutClientObservationSchema,
+  RawMatchSchema,
 } from "@scout-for-lol/data";
 import {
   createTestDatabase,
@@ -13,11 +14,13 @@ import {
 } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client-device.ts";
 import fixture from "#src/scout-client/canonical/testdata/classic-end-of-game.json";
+import type { resolveCompleteMatch } from "#src/evidence/matches.ts";
 
 const { prisma } = createTestDatabase("terminal-scoreboard-recovery");
 const io = vi.hoisted(() => ({
   hardDisabled: vi.fn(() => false),
   render: vi.fn(async () => "rendered"),
+  completeMatch: vi.fn<typeof resolveCompleteMatch>(),
 }));
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 vi.mock("#src/configuration/flags.ts", async (original) => ({
@@ -25,10 +28,7 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   isFeatureHardDisabled: io.hardDisabled,
 }));
 vi.mock("#src/evidence/matches.ts", () => ({
-  resolveCompleteMatch: async () => ({
-    kind: "unavailable",
-    reason: "No full match coverage",
-  }),
+  resolveCompleteMatch: io.completeMatch,
 }));
 vi.mock("#src/temporal/notification-lane/notification-render.ts", () => ({
   renderMatchNotificationArtifact: io.render,
@@ -57,6 +57,11 @@ beforeEach(async () => {
   io.hardDisabled.mockReturnValue(false);
   io.render.mockReset();
   io.render.mockResolvedValue("rendered");
+  io.completeMatch.mockReset();
+  io.completeMatch.mockResolvedValue({
+    kind: "unavailable",
+    reason: "No full match coverage",
+  });
   await prisma.$transaction([
     prisma.matchNotificationIntent.deleteMany(),
     prisma.matchReportSnapshot.deleteMany(),
@@ -180,6 +185,36 @@ test("accepted Classic scoreboard reaches an ordinary pending report intent with
   await expect(matchMayAnnounce(prisma, matchId, "settlement")).rejects.toThrow(
     "no observation",
   );
+});
+
+test("available full evidence does not send an unobserved result through observed-only recovery", async () => {
+  await upload();
+  const complete = RawMatchSchema.parse(
+    await Bun.file(
+      new URL("../../../../../testdata/rift.json", import.meta.url),
+    ).json(),
+  );
+  complete.metadata.matchId = matchId;
+  io.completeMatch.mockResolvedValue({
+    kind: "available",
+    value: complete,
+    frozen: false,
+    coverage: "complete",
+    evidence: [{ source: "RIOT", sourceId: matchId }],
+  });
+  await reconcileMatchHistory();
+  expect(await prisma.matchObservation.count()).toBe(0);
+  expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+  expect(await prisma.matchNotificationIntent.count()).toBe(1);
+  expect(
+    await prisma.matchEvidenceAdmission.findUnique({
+      where: { riotMatchId: matchId },
+    }),
+  ).toMatchObject({
+    policy: "FULL",
+    historyReportComplete: true,
+    recoveryError: null,
+  });
 });
 
 test("late scoreboards render historical reports without notification, settlement or progression", async () => {

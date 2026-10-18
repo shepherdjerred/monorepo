@@ -32,15 +32,13 @@ async function ensureHistoryReport(
   return true;
 }
 
-async function recoverWithoutCompleteMatch(
+async function recoverReportOnly(
   matchId: RiotMatchId,
-  kind: "pending" | "unavailable" | "conflict",
+  kind: "available" | "pending" | "unavailable" | "conflict",
 ): Promise<boolean> {
   if (kind === "conflict")
     throw new Error(`Conflicting match evidence for ${matchId}`);
-  return kind === "unavailable"
-    ? await reconcileScoreboardReport(matchId)
-    : false;
+  return kind === "pending" ? false : await reconcileScoreboardReport(matchId);
 }
 
 /** Reconcile missing artifacts; live report eligibility never implies full-match effect coverage. */
@@ -92,11 +90,17 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
         where: { riotMatchId: matchId },
       });
       const match = await resolveCompleteMatch(matchId);
-      if (match.kind !== "available") {
-        const reportComplete = await recoverWithoutCompleteMatch(
-          matchId,
-          match.kind,
-        );
+      if (
+        match.kind !== "available" ||
+        (admission.policy === "FULL" &&
+          (await prisma.matchObservation.findUnique({
+            where: { riotMatchId: matchId },
+            select: { riotMatchId: true },
+          })) === null)
+      ) {
+        // A result admission does not establish the full pipeline's observed
+        // roster. Recover its report without entering observed-only readers.
+        const reportComplete = await recoverReportOnly(matchId, match.kind);
         await prisma.matchEvidenceAdmission.updateMany({
           where: { riotMatchId: matchId, recoveryClaimId: claim },
           data: {
