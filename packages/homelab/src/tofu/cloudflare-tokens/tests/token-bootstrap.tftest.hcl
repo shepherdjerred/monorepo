@@ -45,3 +45,33 @@ run "bootstrap_only_selected_consumer" {
     error_message = "Deferred consumers must neither create credentials nor publish token handoffs."
   }
 }
+
+run "committed_cache_uses_existing_user_token_provider" {
+  command = plan
+  variables {
+    cloudflare_api_tokens = jsondecode(file("desired-state.json")).cloudflare_api_tokens
+  }
+  assert {
+    condition = (
+      keys(cloudflare_api_token.managed) == ["delivery-static-cache", "woodpecker"] &&
+      keys(nonsensitive(output.cloudflare_api_token_handoffs)) == ["delivery-static-cache", "woodpecker"] &&
+      length(cloudflare_api_token.managed["delivery-static-cache"].policies) == 1 &&
+      cloudflare_api_token.managed["delivery-static-cache"].policies[0].effect == "allow" &&
+      length(cloudflare_api_token.managed["delivery-static-cache"].policies[0].permission_groups) == 1 &&
+      cloudflare_api_token.managed["delivery-static-cache"].policies[0].permission_groups[0].id == "e17beae8b8cb423a99b1730f21238bed" &&
+      jsondecode(cloudflare_api_token.managed["delivery-static-cache"].policies[0].resources) == {
+        "com.cloudflare.api.account.zone.3584931497b83f9359a3cc2983cc5cb4" = "*"
+        "com.cloudflare.api.account.zone.ec9aaac18b0aae64b456e54773d11e66" = "*"
+        "com.cloudflare.api.account.zone.bc4593740e6621ab2e64799c63441bfd" = "*"
+        "com.cloudflare.api.account.zone.879487f81194d63121d0b8dddd16f08f" = "*"
+        "com.cloudflare.api.account.zone.d4036b55fca60ca5f998866309e951d8" = "*"
+        "com.cloudflare.api.account.zone.efb999158b3977e07b26f6a74809c80a" = "*"
+      } &&
+      cloudflare_api_token.managed["delivery-static-cache"].status == "active" &&
+      cloudflare_api_token.managed["delivery-static-cache"].expires_on == "2027-10-17T23:59:59Z" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["delivery-static-cache"].vault_item_id) == "la7gkfl5eqtxiiv2hq3qujx2gi" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["delivery-static-cache"].vault_field) == "credential"
+    )
+    error_message = "The committed purge token must use the existing user-token provider, preserve the existing managed token and retain its exact expiry and credential handoff."
+  }
+}

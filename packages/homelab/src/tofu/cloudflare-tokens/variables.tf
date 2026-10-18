@@ -3,7 +3,6 @@ variable "cloudflare_api_tokens" {
   type = map(object({
     managed       = optional(bool, true)
     supersedes_id = optional(string)
-    account_id    = optional(string)
     name          = string
     policies = list(object({
       effect = string

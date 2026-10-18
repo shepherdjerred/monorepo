@@ -257,37 +257,46 @@ const PLATFORM_STACKS: readonly PlatformStack[] = [
   "cloudflare-tokens",
 ];
 
-test("new account-scoped tokens have no fabricated rotation predecessor", async () => {
+test("static cache uses only six-zone purge authority and its existing handoff", async () => {
   const stackDir = new URL("../../src/tofu/cloudflare-tokens/", import.meta.url)
     .pathname;
   const desired = await loadPlatformDesiredState(stackDir, "cloudflare-tokens");
   const token = z
     .object({
       cloudflare_api_tokens: z.object({
-        "delivery-static-cache": z.object({
-          account_id: z.literal("48948ed6cd40d73e34d27f0cc10e595f"),
-          supersedes_id: z.string().optional(),
-          policies: z.array(
-            z.object({
-              permission_groups: z.array(z.object({ name: z.string() })),
-              resources: z.record(z.string(), z.string()),
-            }),
-          ),
-        }),
+        "delivery-static-cache": z.record(z.string(), z.unknown()),
       }),
     })
     .parse(desired).cloudflare_api_tokens["delivery-static-cache"];
-  expect(token.supersedes_id).toBeUndefined();
-  expect(token.policies).toHaveLength(1);
-  expect(
-    token.policies[0]?.permission_groups.map((entry) => entry.name),
-  ).toEqual(["Cache Purge"]);
-  expect(Object.keys(token.policies[0]?.resources ?? {})).toHaveLength(6);
-  expect(
-    Object.keys(token.policies[0]?.resources ?? {}).every((key) =>
-      /^com\.cloudflare\.api\.account\.zone\.[a-f0-9]{32}$/u.test(key),
-    ),
-  ).toBe(true);
+  expect(token).toEqual({
+    name: "Delivery static cache purge",
+    policies: [
+      {
+        effect: "allow",
+        permission_groups: [
+          { id: "e17beae8b8cb423a99b1730f21238bed", name: "Cache Purge" },
+        ],
+        resources: {
+          "com.cloudflare.api.account.zone.3584931497b83f9359a3cc2983cc5cb4":
+            "*",
+          "com.cloudflare.api.account.zone.ec9aaac18b0aae64b456e54773d11e66":
+            "*",
+          "com.cloudflare.api.account.zone.bc4593740e6621ab2e64799c63441bfd":
+            "*",
+          "com.cloudflare.api.account.zone.879487f81194d63121d0b8dddd16f08f":
+            "*",
+          "com.cloudflare.api.account.zone.d4036b55fca60ca5f998866309e951d8":
+            "*",
+          "com.cloudflare.api.account.zone.efb999158b3977e07b26f6a74809c80a":
+            "*",
+        },
+      },
+    ],
+    expires_on: "2027-10-17T23:59:59Z",
+    status: "active",
+    vault_item_id: "la7gkfl5eqtxiiv2hq3qujx2gi",
+    vault_field: "credential",
+  });
 });
 
 describe("committed platform desired state", () => {

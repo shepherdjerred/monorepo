@@ -237,7 +237,7 @@ deletion; immutable archive checks do not imply an append-only storage policy.
 The allowlist lives in the homelab's `delivery-storage-policy.json` and is
 checked against every static registration.
 
-Cache invalidation uses a dedicated Cloudflare account token with Cache Purge
+Cache invalidation uses a dedicated Cloudflare user token with Cache Purge
 permission on the registrations' exact zones. The existing encrypted
 `cloudflare-tokens` OpenTofu stack owns issuance and its 1Password handoff.
 Static executor bootstrap requires both storage and cache credentials;

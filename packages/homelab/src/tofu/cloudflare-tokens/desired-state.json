@@ -3,7 +3,6 @@
   "platform": "cloudflare-tokens",
   "cloudflare_api_tokens": {
     "delivery-static-cache": {
-      "account_id": "48948ed6cd40d73e34d27f0cc10e595f",
       "name": "Delivery static cache purge",
       "policies": [
         {

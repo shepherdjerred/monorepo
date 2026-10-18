@@ -954,10 +954,6 @@
             "type": "string",
             "minLength": 1
           },
-          "account_id": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{32}$"
-          },
           "name": {
             "type": "string",
             "minLength": 1
