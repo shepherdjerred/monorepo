@@ -1,3 +1,5 @@
+import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
+
 /** Reviewed 1Password registration; no credential values belong in source. */
 export const DELIVERY_CREDENTIAL_ITEMS: {
   service: string | undefined;
@@ -31,17 +33,6 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   trmnlKey: "p7th6tqeel7k2sm47mrrto7oca",
 };
 
-export function deliveryImageReference(version: string): string | undefined {
-  if (version === `0.0.0@sha256:${"0".repeat(64)}`) return undefined;
-  const digest =
-    /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?@(sha256:[a-f0-9]{64})$/u.exec(
-      version,
-    )?.[1];
-  if (digest === undefined || digest === `sha256:${"0".repeat(64)}`)
-    throw new Error("Delivery requires a published immutable image digest");
-  return `docker.io/shepherdjerred/delivery@${digest}`;
-}
-
 export type DeliveryActivation = {
   image: string;
   serviceItemId: string;
@@ -63,10 +54,8 @@ export type DeliveryExecutorActivation = DeliveryActivation & {
 };
 
 /** Publication alone cannot activate a service lacking its declared credentials. */
-export function deliveryActivation(
-  version: string,
-): DeliveryActivation | undefined {
-  const image = deliveryImageReference(version);
+export function deliveryActivation(): DeliveryActivation | undefined {
+  const image = `${firstPartyImageRepository("delivery")}:delivery-recipe`;
   if (
     (DELIVERY_CREDENTIAL_ITEMS.trmnlArchiveReader === undefined) !==
     (DELIVERY_CREDENTIAL_ITEMS.trmnlKey === undefined)
@@ -82,7 +71,7 @@ export function deliveryActivation(
       "Forum capability requires both its restricted archive reader and runtime observer registrations",
     );
   const { service, observer } = DELIVERY_CREDENTIAL_ITEMS;
-  return image === undefined || service === undefined
+  return service === undefined
     ? undefined
     : {
         image,
@@ -106,9 +95,8 @@ export function deliveryActivation(
       };
 }
 
-export function deliveryExecutorActivation(
-  version: string,
-): DeliveryExecutorActivation | undefined {
+export function deliveryExecutorActivation():
+  DeliveryExecutorActivation | undefined {
   if (
     (DELIVERY_CREDENTIAL_ITEMS.platformRegistry === undefined) !==
     (DELIVERY_CREDENTIAL_ITEMS.platformArgocd === undefined)
@@ -123,7 +111,7 @@ export function deliveryExecutorActivation(
     throw new Error(
       "Static activation requires both storage and cache purge credentials",
     );
-  const service = deliveryActivation(version);
+  const service = deliveryActivation();
   const executorItemId = DELIVERY_CREDENTIAL_ITEMS.executor;
   const argocdItemId = DELIVERY_CREDENTIAL_ITEMS.argocd;
   return service === undefined ||

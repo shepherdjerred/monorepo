@@ -8,7 +8,6 @@ import {
   runSmoke,
   selectedTargets,
   type CommandExecutor,
-  VERSION_CATALOG_URL,
 } from "./bake-images.ts";
 import { lastSuccessfulImageReleaseCommit } from "./live-version-catalog.ts";
 import { writeFallbackReport } from "./image-selection-report.ts";
@@ -23,7 +22,6 @@ import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
-import { readLiveVersionCatalogSource } from "./live-version-catalog.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -32,7 +30,8 @@ import {
   parseImageSelection,
   parseStringArray,
 } from "../migration-core.ts";
-import { findManagedImagePin } from "../../../scripts/lib/image-pin-catalog.ts";
+import { imageIdentity } from "../../../scripts/lib/image-pin-catalog.ts";
+import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 function commandResult(
   exitCode = 0,
   stdout = "",
@@ -40,62 +39,31 @@ function commandResult(
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
 }
-function versionCatalogSource(
+function qualifiedInventory(
   entries: readonly { readonly name: string; readonly value: string }[],
-): string {
-  return JSON.stringify({
-    $schema: "./schema.json",
-    schemaVersion: 1,
-    entries: entries.map((entry) => ({
-      name: entry.name,
-      category: "internal-image",
-      artifactType: "image",
-      management: { managed: false },
-      value: entry.value,
-    })),
-  });
+) {
+  return new Map(
+    entries
+      .filter((entry) => !entry.name.endsWith("/prod"))
+      .map((entry) => {
+        const name = entry.name.split("/")[1];
+        if (name === undefined) throw new Error("Missing fixture image name");
+        const [version, digest] = entry.value.split("@");
+        return [
+          name,
+          ArtifactVersionSchema.parse({
+            ...imageIdentity(name),
+            id: `original/${name}`,
+            buildId: "original-build",
+            sourceRevision: "a".repeat(40),
+            createdAt: "2026-10-17T12:00:00.000Z",
+            version,
+            digest,
+          }),
+        ] as const;
+      }),
+  );
 }
-
-test("reads and validates the version catalog from live main", async () => {
-  const source = versionCatalogSource([{ name: "ci-base", value: "1.0.0" }]);
-  const observed: string[][] = [];
-  const result = await readLiveVersionCatalogSource(async (command) => {
-    observed.push([...command]);
-    return command[1] === "show" ? commandResult(0, source) : commandResult();
-  });
-  expect(result).toBe(source);
-  expect(observed).toEqual([
-    ["git", "fetch", "--no-tags", "--depth=100", "origin", "main"],
-    ["git", "show", "origin/main:packages/version-catalog/src/catalog.json"],
-  ]);
-});
-
-test("keeps live catalog transport failures retryable", async () => {
-  for (const failedCommand of ["fetch", "show"]) {
-    await expect(
-      readLiveVersionCatalogSource(async (command) =>
-        command[1] === failedCommand
-          ? commandResult(1)
-          : commandResult(0, versionCatalogSource([])),
-      ),
-    ).rejects.toBeInstanceOf(TransientError);
-  }
-});
-
-test("rejects malformed live catalogs before image release", async () => {
-  for (const source of [
-    "{}",
-    JSON.stringify({ entries: [null] }),
-    JSON.stringify({ entries: [{ name: 1, value: "1.0.0" }] }),
-    JSON.stringify({ entries: [{ name: "ci-base", value: 1 }] }),
-  ]) {
-    await expect(
-      readLiveVersionCatalogSource(async (command) =>
-        command[1] === "show" ? commandResult(0, source) : commandResult(),
-      ),
-    ).rejects.toThrow("Live version catalog has an invalid");
-  }
-});
 async function targetSelectionFailureExecutor(
   command: readonly string[],
 ): Promise<BuildxCommandResult> {
@@ -234,84 +202,18 @@ test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).not.toContain("infra");
 });
 
-test("selects the exact commit-back pin and never the prod promotion pin", () => {
-  const betaDigest = `sha256:${"a".repeat(64)}`;
-  const prodDigest = `sha256:${"b".repeat(64)}`;
-  expect(
-    findManagedImagePin(
-      versionCatalogSource([
-        {
-          name: "shepherdjerred/example/prod",
-          value: `2.0.0-1@${prodDigest}`,
-        },
-        {
-          name: "shepherdjerred/example/beta",
-          value: `2.0.0-2@${betaDigest}`,
-        },
-      ]),
-      "example",
-    ),
-  ).toEqual({
-    key: "shepherdjerred/example/beta",
-    digest: betaDigest,
-  });
-  expect(
-    findManagedImagePin(
-      versionCatalogSource([
-        {
-          name: "shepherdjerred/unrelated",
-          value: `2.0.0-1@${prodDigest}`,
-        },
-      ]),
-      "example",
-    ),
-  ).toBeUndefined();
-});
-
-test("fails closed on malformed or ambiguous structured catalogs", () => {
-  expect(() => findManagedImagePin("{", "example")).toThrow(
-    "version catalog is not valid JSON",
-  );
-
-  const digest = `sha256:${"a".repeat(64)}`;
-  const duplicateCatalog = versionCatalogSource([
-    {
-      name: "shepherdjerred/example",
-      value: `2.0.0-1@${digest}`,
-    },
-    {
-      name: "shepherdjerred/example",
-      value: `2.0.0-2@${digest}`,
-    },
-  ]);
-  expect(() => findManagedImagePin(duplicateCatalog, "example")).toThrow(
-    "version catalog names must be unique",
-  );
-});
-
-test("resolves every bake target from the real structured version catalog", async () => {
-  const catalog = await Bun.file(VERSION_CATALOG_URL).text();
-  const missingPins = expandTargets(knownImageTargets).filter(
-    (target) => findManagedImagePin(catalog, target) === undefined,
-  );
-
-  expect(missingPins).toEqual([]);
-});
-
 test("shares its full-build target universe with the image selector", () => {
   expect(knownImageTargets).toEqual(ALL_IMAGE_TARGETS);
   expect(knownImageTargets).toContain("birmel");
   expect(knownImageTargets).not.toContain("glitter-boys-launcher");
 });
 
-test("validates structured pins before starting a production push", async () => {
+test("rejects an unknown canonical recipe before production effects", async () => {
   const commands: string[][] = [];
-  const digest = `sha256:${"a".repeat(64)}`;
-
   await expect(
     pushImages(
       {
-        targets: ["birmel"],
+        targets: ["unregistered"],
         commit: "commit",
         buildNumber: "42",
         contractHash: "contract",
@@ -322,18 +224,10 @@ test("validates structured pins before starting a production push", async () => 
           return commandResult();
         },
         environment: {},
-        readVersionCatalog: async () =>
-          versionCatalogSource([
-            {
-              name: "shepherdjerred/unrelated",
-              value: `2.0.0-1@${digest}`,
-            },
-          ]),
+        readQualifiedImages: async () => new Map(),
       },
     ),
-  ).rejects.toThrow(
-    "No managed image pin exists for docker.io/shepherdjerred/birmel",
-  );
+  ).rejects.toThrow("Unknown CI image recipe");
   expect(commands).toEqual([]);
 });
 
@@ -353,6 +247,7 @@ test("runs the default application candidate smoke check", async () => {
         return commandResult();
       },
       environment: {},
+      readQualifiedImages: async () => new Map(),
       getManifestDigest: async () => digest,
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
@@ -882,13 +777,13 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     digests: Readonly<Record<string, string>>;
     buildNumber: string;
   }[] = [];
-  const catalog = versionCatalogSource([
+  const catalog = qualifiedInventory([
     {
       name: "shepherdjerred/birmel",
       value: `2.0.0-1@${pinned}`,
     },
     {
-      name: "shepherdjerred/scout-for-lol/beta",
+      name: "shepherdjerred/scout-for-lol",
       value: `2.0.0-2@${pinned}`,
     },
     {
@@ -896,7 +791,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       value: `2.0.0-1@${pinned}`,
     },
     {
-      name: "shepherdjerred/starlight-karma-bot/beta",
+      name: "shepherdjerred/starlight-karma-bot",
       value: `2.0.0-2@${pinned}`,
     },
     {
@@ -920,7 +815,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     {
       executor,
       environment: {},
-      readVersionCatalog: async () => catalog,
+      readQualifiedImages: async () => catalog,
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
         events.push(`resolve:${image}`);
@@ -1023,14 +918,15 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   expect(metadata).toEqual([
     {
       "shepherdjerred/birmel": digest,
-      "shepherdjerred/starlight-karma-bot/beta": digest,
+      "shepherdjerred/starlight-karma-bot": digest,
     },
   ]);
   expect(candidateMetadata).toEqual([
     {
       digests: {
         "shepherdjerred/birmel": digest,
-        "shepherdjerred/starlight-karma-bot/beta": digest,
+        "shepherdjerred/scout-for-lol": digest,
+        "shepherdjerred/starlight-karma-bot": digest,
       },
       buildNumber: "42",
     },
@@ -1062,8 +958,8 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
       {
         executor: async () => commandResult(),
         environment: {},
-        readVersionCatalog: async () =>
-          versionCatalogSource([
+        readQualifiedImages: async () =>
+          qualifiedInventory([
             {
               name: "shepherdjerred/birmel",
               value: `2.0.0-1@${pinned}`,
@@ -1101,8 +997,8 @@ test("keeps upstream provenance for infrastructure images", async () => {
     {
       executor: async () => commandResult(),
       environment: {},
-      readVersionCatalog: async () =>
-        versionCatalogSource([
+      readQualifiedImages: async () =>
+        qualifiedInventory([
           {
             name: "shepherdjerred/redlib",
             value: `2.0.0-1@${pinned}`,

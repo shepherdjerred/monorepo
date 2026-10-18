@@ -24,6 +24,9 @@ describe("version catalog", () => {
     const map = versionCatalogMap(catalog);
     expect(catalog.entries.length).toBeGreaterThan(100);
     expect(Object.keys(map)).toHaveLength(catalog.entries.length);
+    expect(new Set(catalog.entries.map((entry) => entry.category))).toEqual(
+      new Set(["upstream"]),
+    );
   });
 
   test("serializes a canonical round trip", () => {
@@ -47,9 +50,13 @@ describe("version catalog", () => {
   test.each(["ci", "local"])(
     "round trips the %s image publisher",
     (imagePublisher) => {
-      const imageEntry = rawCatalog.entries.find(
-        (entry) => entry.category === "internal-image",
-      );
+      const imageEntry = {
+        name: "historical/example",
+        category: "internal-image",
+        artifactType: "image",
+        management: { managed: false },
+        value: `1.0.0-1@sha256:${"a".repeat(64)}`,
+      };
       const catalog = {
         ...rawCatalog,
         entries: [{ ...imageEntry, imagePublisher }],

@@ -5,7 +5,6 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { optionalEnv, run } from "../lib/run.ts";
-import { rehearseRetiredScoutCommand } from "../lib/ci/retired-release-rehearsal.ts";
 import {
   readScoutPostHogSite,
   requireMarketingIdentifiers,
@@ -309,7 +308,6 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
 
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
-  if (rehearseRetiredScoutCommand(args, Bun.env["CI_PIPELINE_EVENT"])) return;
   if (args[0] === "prepare-state") {
     await prepareState(args, args.includes("--dry-run"));
     return;

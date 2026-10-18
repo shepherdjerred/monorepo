@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { chartName, setChartVersion } from "#scripts/migration-core.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
+import { chartValidationValues } from "./helm-delivery-publication.ts";
 
 if (import.meta.main) {
   const root = path.resolve(import.meta.dir, "../..");
@@ -15,10 +16,11 @@ if (import.meta.main) {
     const name = chartName(chartPath.replace(/\/Chart\.yaml$/, ""));
     const temporaryDirectory = await mkdtemp(path.join(tmpdir(), "helm-lint-"));
     try {
-      await cp(chartPath.replace(/\/Chart\.yaml$/, ""), temporaryDirectory, {
+      const chartDirectory = path.join(temporaryDirectory, name);
+      await cp(chartPath.replace(/\/Chart\.yaml$/, ""), chartDirectory, {
         recursive: true,
       });
-      const chart = `${temporaryDirectory}/Chart.yaml`;
+      const chart = `${chartDirectory}/Chart.yaml`;
       await Bun.write(
         chart,
         setChartVersion(await Bun.file(chart).text(), "0.0.0-lint"),
@@ -29,12 +31,18 @@ if (import.meta.main) {
           `No manifest found for ${name}; register it in setup-charts.ts`,
         );
       }
-      await mkdir(`${temporaryDirectory}/templates`, { recursive: true });
+      await mkdir(`${chartDirectory}/templates`, { recursive: true });
       await Bun.write(
-        `${temporaryDirectory}/templates/${name}.k8s.yaml`,
+        `${chartDirectory}/templates/${name}.k8s.yaml`,
         workerPoolTemplate(await Bun.file(manifest).text(), name),
       );
-      await $`helm lint ${temporaryDirectory}`;
+      const values = chartValidationValues(name);
+      const validationPath = path.join(temporaryDirectory, "validation.json");
+      const arguments_ =
+        values === undefined ? [] : ["--values", validationPath];
+      if (values !== undefined)
+        await Bun.write(validationPath, JSON.stringify(values));
+      await $`helm lint ${chartDirectory} ${arguments_}`;
     } finally {
       await rm(temporaryDirectory, { force: true, recursive: true });
     }

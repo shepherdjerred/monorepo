@@ -1,8 +1,61 @@
 import { z } from "zod";
 import { run } from "@shepherdjerred/root-scripts/lib/run.ts";
+import {
+  loadWoodpeckerConfig,
+  woodpeckerJson,
+} from "@shepherdjerred/toolkit/lib/woodpecker/ci.ts";
 import type { HandoverDescriptor } from "./delivery-handover-selection.ts";
 
-export async function handoverJson(command: string[]): Promise<unknown> {
+const PipelineStatus = z.enum(["pending", "running", "blocked"]);
+type PipelineReader = {
+  config: typeof loadWoodpeckerConfig;
+  json: typeof woodpeckerJson;
+};
+const pipelineReader: PipelineReader = {
+  config: loadWoodpeckerConfig,
+  json: woodpeckerJson,
+};
+
+export async function handoverJson(
+  command: string[],
+  reader: PipelineReader = pipelineReader,
+): Promise<unknown> {
+  if (command[0] === "toolkit" && command[1] === "woodpecker") {
+    // Native pipeline ls emits a table even with --output json. Read its
+    // authenticated API instead; retain exactly the existing quiescence query.
+    const status = z
+      .tuple([
+        z.literal("toolkit"),
+        z.literal("woodpecker"),
+        z.literal("pipeline"),
+        z.literal("ls"),
+        z.literal("shepherdjerred/monorepo"),
+        z.literal("--status"),
+        PipelineStatus,
+        z.literal("--limit"),
+        z.literal("1"),
+        z.literal("--output"),
+        z.literal("json"),
+      ])
+      .parse(command)[6];
+    const config = await reader.config();
+    if (config.baseUrl !== "https://woodpecker.sjer.red" || config.repoId !== 1)
+      throw new Error("Handover requires the canonical Woodpecker repository");
+    return z
+      .array(
+        z.object({
+          number: z.number().int().positive(),
+          status: z.literal(status),
+        }),
+      )
+      .max(1)
+      .parse(
+        await reader.json(
+          `/api/repos/1/pipelines?status=${status}&perPage=1`,
+          config,
+        ),
+      );
+  }
   const result = await run(command, {
     capture: true,
     echoCapturedStdout: false,
@@ -29,7 +82,7 @@ export function assertHandoverWebhook(raw: unknown, expectedId: number) {
     return (
       url.protocol === "https:" &&
       url.hostname === "woodpecker.sjer.red" &&
-      url.pathname === "/hook"
+      url.pathname === "/api/hook"
     );
   });
   const selected = matching.find((hook) => hook.id === expectedId);
@@ -42,7 +95,7 @@ export function assertHandoverWebhook(raw: unknown, expectedId: number) {
     id: selected.id,
     active: false as const,
     origin: "https://woodpecker.sjer.red",
-    path: "/hook",
+    path: "/api/hook",
   };
 }
 

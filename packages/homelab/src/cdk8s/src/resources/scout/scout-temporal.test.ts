@@ -6,33 +6,14 @@ import {
   allScoutTemporalResources,
   resourcesFor,
 } from "@shepherdjerred/homelab/cdk8s/src/scout-test-resources.ts";
-import { scoutWorkflowWorkerImageIsCapable } from "./workflow-worker.ts";
-
-const CAPABLE_STABLE_IMAGE = `2.0.0-12198@sha256:${"a".repeat(64)}`;
-const CAPABLE_CANDIDATE_IMAGE = `2.0.0-12199@sha256:${"b".repeat(64)}`;
-
 function betaResourcesWithWorkflowCandidate() {
   const app = new App();
-  createScoutChart(app, "beta", {
-    stable: CAPABLE_STABLE_IMAGE,
-    candidate: CAPABLE_CANDIDATE_IMAGE,
-  });
+  createScoutChart(app, "beta");
   return resourcesFor(app);
 }
-
 function prodResourcesWithWorkflowCandidate() {
   const app = new App();
-  createScoutChart(app, "prod", {
-    stable: CAPABLE_STABLE_IMAGE,
-    candidate: CAPABLE_CANDIDATE_IMAGE,
-    retained: [
-      {
-        track: "retained-1d266e3903e2",
-        image:
-          "2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
-      },
-    ],
-  });
+  createScoutChart(app, "prod");
   return resourcesFor(app);
 }
 
@@ -145,7 +126,6 @@ describe("Scout competition Temporal boundary", () => {
   test("gives every central worker its active namespace and no drain", () => {
     const synthesized = allScoutTemporalResources();
     const workerNames = [
-      "temporal-temporal-workflows-stable",
       "temporal-temporal-workflows-candidate",
       "temporal-temporal-agent-worker",
       "temporal-temporal-gateway",
@@ -202,7 +182,7 @@ describe("Scout beta workflow candidate", () => {
     );
     const spec = WorkflowDeploymentSpecSchema.parse(deployment?.spec);
     expect(deployment?.metadata["annotations"]).toEqual({
-      "argocd.argoproj.io/sync-wave": "0",
+      "argocd.argoproj.io/sync-wave": "-2",
     });
     expect(spec.template.spec.automountServiceAccountToken).toBe(false);
     expect(spec.template.spec.containers).toHaveLength(1);
@@ -265,122 +245,44 @@ describe("Scout beta workflow candidate", () => {
     expect(serialized).not.toContain('"port":5432');
     expect(serialized).not.toContain('"port":443');
   });
-  test("boots the capable beta and production Workflow tracks", () => {
-    expect(
-      scoutWorkflowWorkerImageIsCapable(`2.0.0-12197@sha256:${"a".repeat(64)}`),
-    ).toBe(false);
-    expect(scoutWorkflowWorkerImageIsCapable(CAPABLE_STABLE_IMAGE)).toBe(true);
-    const workflowDeployments = allScoutTemporalResources()
-      .filter(
-        (resource) =>
-          resource.kind === "Deployment" &&
-          resource.metadata.name.includes("scout-workflow-worker"),
-      )
-      .map((resource) => resource.metadata.name)
-      .filter((name) => !name.includes("-retained-"));
-    expect(workflowDeployments).toEqual([
-      "scout-beta-scout-workflow-worker-stable",
-      "scout-beta-scout-workflow-worker-candidate",
-      "scout-prod-scout-workflow-worker-stable",
-      "scout-prod-scout-workflow-worker-candidate",
-    ]);
-  });
-  test("requires a stable capable build before creating the candidate", () => {
-    const onlyCandidateApp = new App();
-    createScoutChart(onlyCandidateApp, "beta", {
-      stable: `2.0.0-12197@sha256:${"a".repeat(64)}`,
-      candidate: CAPABLE_CANDIDATE_IMAGE,
-      retained: [],
-    });
-    expect(
-      resourcesFor(onlyCandidateApp).some((resource) =>
-        resource.metadata.name.includes("workflow-worker"),
-      ),
-    ).toBe(false);
-
-    const stableOnlyApp = new App();
-    createScoutChart(stableOnlyApp, "beta", {
-      stable: CAPABLE_STABLE_IMAGE,
-      candidate: CAPABLE_STABLE_IMAGE,
-      retained: [],
-    });
-    const deployments = resourcesFor(stableOnlyApp).filter(
+  test("only source recipes are synthesized; frozen pools own deployed builds", () => {
+    const recipes = allScoutTemporalResources().filter(
       (resource) =>
         resource.kind === "Deployment" &&
-        resource.metadata.name.includes("workflow-worker"),
+        resource.metadata.name.includes("scout-workflow-worker"),
     );
-    expect(deployments.map((deployment) => deployment.metadata.name)).toEqual([
-      "scout-beta-scout-workflow-worker-stable",
+    expect(recipes.map((resource) => resource.metadata.name)).toEqual([
       "scout-beta-scout-workflow-worker-candidate",
+      "scout-prod-scout-workflow-worker-candidate",
     ]);
+    for (const recipe of recipes)
+      expect(
+        WorkflowDeploymentSpecSchema.parse(recipe.spec).template.spec
+          .containers[0]?.image,
+      ).toContain("required `Delivery requires image:scout-for-lol`");
   });
 });
 
-test("renders capable production Workflow tracks", () => {
-  const synthesized = prodResourcesWithWorkflowCandidate();
+test("keeps the production recipe credentialless with its exact network identity", () => {
+  const resources = prodResourcesWithWorkflowCandidate();
+  const recipe = resources.find(
+    (resource) =>
+      resource.kind === "Deployment" &&
+      resource.metadata.name === "scout-prod-scout-workflow-worker-candidate",
+  );
+  const spec = WorkflowDeploymentSpecSchema.parse(recipe?.spec);
+  expect(spec.template.spec.automountServiceAccountToken).toBe(false);
   expect(
-    synthesized.some(
-      (resource) =>
-        resource.kind === "Deployment" &&
-        resource.metadata.name === "scout-prod-scout-workflow-worker-stable",
+    spec.template.spec.containers[0]?.env.every(
+      (env) => env.valueFrom === undefined,
     ),
   ).toBe(true);
-  expect(
-    synthesized.some(
-      (resource) =>
-        resource.kind === "Deployment" &&
-        resource.metadata.name === "scout-prod-scout-workflow-worker-candidate",
-    ),
-  ).toBe(true);
-  const workerPolicy = synthesized.find(
+  const policy = resources.find(
     (resource) =>
       resource.kind === "NetworkPolicy" &&
       resource.metadata.name === "scout-workflow-worker-netpol",
   );
-  expect(JSON.stringify(workerPolicy?.spec)).toContain(
+  expect(JSON.stringify(policy?.spec)).toContain(
     '"worker-family":"scout-prod-workflows"',
   );
-});
-
-test("preserves retained builds before replacing mutable Workflow tracks", () => {
-  const resources = prodResourcesWithWorkflowCandidate();
-  const retained = resources.find(
-    (resource) =>
-      resource.kind === "Deployment" &&
-      resource.metadata.name ===
-        "scout-prod-scout-workflow-worker-retained-1d266e3903e2",
-  );
-  expect(retained).toBeDefined();
-  expect(retained?.metadata["annotations"]).toEqual(
-    expect.objectContaining({ "argocd.argoproj.io/sync-wave": "-2" }),
-  );
-  const spec = WorkflowDeploymentSpecSchema.parse(retained?.spec);
-  expect(spec.template.spec.automountServiceAccountToken).toBe(false);
-  expect(spec.template.spec.containers[0]?.readinessProbe.exec.command).toEqual(
-    ["bun", "-e", expect.stringContaining("temporal_worker_num_pollers{")],
-  );
-  expect(spec.template.spec.containers[0]?.image).toBe(
-    "docker.io/shepherdjerred/scout-for-lol:2.0.0-1008523@sha256:d4ab832cde525daa54208c58eb080c86e3a4bee7ff904dd6186a51937ff50985",
-  );
-  expect(
-    spec.template.spec.containers[0]?.env.map((env) => env.name),
-  ).not.toContain("DISCORD_TOKEN");
-  for (const track of ["stable", "candidate"]) {
-    const mutable = resources.find(
-      (resource) =>
-        resource.kind === "Deployment" &&
-        resource.metadata.name === `scout-prod-scout-workflow-worker-${track}`,
-    );
-    expect(mutable?.metadata["annotations"]).toEqual(
-      expect.objectContaining({
-        "argocd.argoproj.io/sync-wave": track === "stable" ? "-1" : "0",
-      }),
-    );
-    expect(
-      WorkflowDeploymentSpecSchema.parse(mutable?.spec).template.spec
-        .containers[0]?.image,
-    ).toBe(
-      `docker.io/shepherdjerred/scout-for-lol:${track === "stable" ? CAPABLE_STABLE_IMAGE : CAPABLE_CANDIDATE_IMAGE}`,
-    );
-  }
 });

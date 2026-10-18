@@ -13,19 +13,13 @@ import {
   fingerprintChart,
 } from "homelab/scripts/helm/helm-release-core.ts";
 import { stageChart } from "homelab/scripts/helm/helm-push.ts";
+import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
+import { createScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
+import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 
 const FIRST = "a".repeat(40);
 const SECOND = "b".repeat(40);
 const THIRD = "c".repeat(40);
-function identity(resource: unknown) {
-  const parsed = z
-    .object({ kind: z.string(), metadata: z.object({ name: z.string() }) })
-    .parse(resource);
-  return `${parsed.kind}/${parsed.metadata.name}`;
-}
-function sorted(resources: unknown[]) {
-  return resources.toSorted((a, b) => identity(a).localeCompare(identity(b)));
-}
 function pool(target: string, repository: string) {
   const profile =
     target === "central" ? "central-workflows" : `${target}-workflows`;
@@ -43,12 +37,7 @@ function pool(target: string, repository: string) {
     })),
   };
 }
-async function render(
-  chartName: string,
-  manifest: string,
-  selected: unknown,
-  legacyWorkers = "stopped",
-) {
+async function render(chartName: string, manifest: string, selected: unknown) {
   const directory = await mkdtemp(path.join(tmpdir(), "worker-host-render-"));
   try {
     await Bun.write(
@@ -59,8 +48,8 @@ async function render(
       path.join(directory, "values.yaml"),
       stringify({
         delivery: {
+          ...chartValidationValues(chartName)?.delivery,
           workerPool: selected === "" ? "" : JSON.stringify(selected),
-          legacyWorkers,
         },
       }),
     );
@@ -96,18 +85,7 @@ function synth(chartName: string, stage?: "beta" | "prod") {
     createTemporalWorkflowWorkers(chart, {
       serverServiceName: "temporal-server",
     });
-  else
-    for (const track of [
-      "stable",
-      "candidate",
-      "retained-dddddddddddd",
-    ] as const)
-      createScoutWorkflowWorker(
-        chart,
-        stage,
-        track,
-        `2.0.0-20000@sha256:${"e".repeat(64)}`,
-      );
+  else createScoutWorkflowWorker(chart, stage);
   return {
     manifest: chart
       .toJson()
@@ -117,6 +95,93 @@ function synth(chartName: string, stage?: "beta" | "prod") {
   };
 }
 
+it.each(["beta", "prod"] as const)(
+  "preserves the shared %s Scout egress policy for every retained host",
+  async (stage) => {
+    const app = new App();
+    createScoutChart(app, stage);
+    const chart = app.charts[0];
+    if (chart === undefined) throw new Error("Missing actual Scout chart");
+    applyOrdinaryDeliveryImageBindings(app);
+    const source = chart.toJson();
+    const original = source.find(
+      (resource) =>
+        resource.kind === "NetworkPolicy" &&
+        resource.metadata.name === "scout-workflow-worker-netpol",
+    );
+    expect(original).toBeDefined();
+    const resources = await render(
+      chart.node.id,
+      source.map((resource) => stringify(resource)).join("---\n"),
+      pool(`scout-${stage}`, "scout-for-lol"),
+    );
+    const policies = resources.filter((resource) => {
+      const parsed = z
+        .object({
+          kind: z.string(),
+          metadata: z.object({ name: z.string() }),
+        })
+        .parse(resource);
+      return (
+        parsed.kind === "NetworkPolicy" &&
+        parsed.metadata.name === "scout-workflow-worker-netpol"
+      );
+    });
+    expect(policies).toEqual([original]);
+    const policy = z
+      .object({
+        spec: z.object({
+          podSelector: z.object({
+            matchLabels: z.record(z.string(), z.string()),
+          }),
+          egress: z.array(
+            z.object({
+              ports: z.array(
+                z.object({
+                  port: z.number(),
+                  protocol: z.string().optional(),
+                }),
+              ),
+            }),
+          ),
+        }),
+      })
+      .parse(policies[0]);
+    expect(
+      policy.spec.egress.flatMap((rule) =>
+        rule.ports.map((port) => [port.port, port.protocol ?? "TCP"]),
+      ),
+    ).toEqual([
+      [53, "UDP"],
+      [53, "TCP"],
+      [7233, "TCP"],
+    ]);
+    const hosts = resources.flatMap((resource) => {
+      const parsed = z
+        .object({
+          kind: z.literal("Deployment"),
+          spec: z.object({
+            template: z.object({
+              metadata: z.object({
+                labels: z.record(z.string(), z.string()),
+              }),
+            }),
+          }),
+        })
+        .safeParse(resource);
+      return parsed.success &&
+        parsed.data.spec.template.metadata.labels["worker-family"] ===
+          `scout-${stage}-workflows`
+        ? [parsed.data]
+        : [];
+    });
+    expect(hosts).toHaveLength(3);
+    for (const host of hosts)
+      expect(host.spec.template.metadata.labels).toMatchObject(
+        policy.spec.podSelector.matchLabels,
+      );
+  },
+);
 describe("Delivery fixed worker host rendering", () => {
   it("keeps native synth valid while chart staging and published fingerprints use the real Helm template", async () => {
     const directory = await mkdtemp(
@@ -160,7 +225,7 @@ describe("Delivery fixed worker host rendering", () => {
     }
   });
   it.each(["temporal", "scout-beta", "scout-prod"])(
-    "preserves %s legacy manifests exactly when no pool is selected",
+    "refuses %s without a frozen pool",
     async (name) => {
       const stage =
         name === "temporal"
@@ -169,8 +234,8 @@ describe("Delivery fixed worker host rendering", () => {
             ? "beta"
             : "prod";
       const source = synth(name, stage);
-      expect(sorted(await render(name, source.manifest, ""))).toEqual(
-        sorted(source.resources),
+      await expect(render(name, source.manifest, "")).rejects.toThrow(
+        "Delivery requires workerPool",
       );
     },
   );
@@ -220,11 +285,7 @@ describe("Delivery fixed worker host rendering", () => {
           JSON.stringify(resource).includes('"kind":"Deployment"') &&
           !JSON.stringify(resource).includes("delivery-wf-"),
       );
-      for (const old of oldDeployments)
-        expect(old).toMatchObject({
-          spec: { replicas: 0 },
-          metadata: { annotations: { "argocd.argoproj.io/sync-wave": "-1" } },
-        });
+      expect(oldDeployments).toHaveLength(0);
       expect(
         new Set(resources.map((resource) => JSON.stringify(resource))).size,
       ).toBe(resources.length);
@@ -244,22 +305,5 @@ describe("Delivery fixed worker host rendering", () => {
     await expect(render("temporal", source.manifest, selected)).rejects.toThrow(
       "input invalid",
     );
-  });
-  it("keeps every legacy replica through initial pool bootstrap", async () => {
-    const source = synth("temporal");
-    const resources = await render(
-      "temporal",
-      source.manifest,
-      pool("central", "temporal-worker"),
-      "keep",
-    );
-    const legacy = resources.filter(
-      (resource) =>
-        JSON.stringify(resource).includes('"kind":"Deployment"') &&
-        !JSON.stringify(resource).includes("delivery-wf-"),
-    );
-    expect(legacy).toHaveLength(2);
-    for (const deployment of legacy)
-      expect(deployment).toMatchObject({ spec: { replicas: 1 } });
   });
 });

@@ -14,7 +14,7 @@ Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
 Sandboxes (Paper 26.2 + WorldEdit + MCBridge; build MCBridge first). Profiles:
 paper, storm-dev (Docker by default); storm-prod, storm-candidate (the published
 image; cluster by default, ttl ≤ 8h):
-  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep] [--json]
+  toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep] [--artifact-file original-artifact.json] [--json]
   toolkit mc sandbox ls [--json]
   toolkit mc sandbox down <id…> | --all
 

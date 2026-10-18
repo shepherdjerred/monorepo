@@ -31,7 +31,9 @@ const HelmValues = z.record(z.string(), z.unknown());
 const HelmSource = z.object({
   helm: z.object({
     valuesObject: HelmValues,
-    parameters: z.array(z.object({ name: z.string(), value: z.string() })),
+    parameters: z
+      .array(z.object({ name: z.string(), value: z.string() }))
+      .optional(),
   }),
 });
 const OpItemSchema = z
@@ -198,24 +200,12 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     }
   });
 
-  test("pins the image by the accepted production digest", () => {
-    const values = tsmcValues();
-    expect(values["image"]).toEqual({
+  test("requires Delivery to preserve both higher-precedence tag inputs", () => {
+    expect(tsmcValues()["image"]).toEqual({
       repository: "docker.io/shepherdjerred/the-storm-server",
       pullSecret: "dockerhub-pull-minecraft-tsmc",
-      tag: versions["shepherdjerred/the-storm-server/prod"],
     });
-    expect(versions["shepherdjerred/the-storm-server/prod"]).toMatch(
-      /@sha256:[a-f\d]{64}$/,
-    );
-    // Helm parameters take precedence over valuesObject. The effective image
-    // must follow the catalog even after an operational image override.
-    expect(tsmcHelm().parameters).toEqual([
-      {
-        name: "image.tag",
-        value: versions["shepherdjerred/the-storm-server/prod"],
-      },
-    ]);
+    expect(tsmcHelm().parameters).toBeUndefined();
   });
 
   test("leaves plugins and config delivery to the image", () => {

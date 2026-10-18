@@ -200,14 +200,24 @@ describe("mc-sandbox chart", () => {
     });
   });
 
-  it("allows exactly the catalog-pinned server images", () => {
-    expect(mcSandboxImageAllowlist()).toEqual([
+  it("allows only upstream tools and explicitly frozen candidate and accepted originals", () => {
+    const originals = {
+      "shepherdjerred/the-storm-server/candidate": `sha256:${"a".repeat(64)}`,
+      "shepherdjerred/the-storm-server/accepted": `sha256:${"b".repeat(64)}`,
+    };
+    expect(mcSandboxImageAllowlist(originals)).toEqual([
       `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
       `docker.io/itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
-      `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server"]}`,
-      `docker.io/shepherdjerred/the-storm-server:${versions["shepherdjerred/the-storm-server/prod"]}`,
+      `docker.io/shepherdjerred/the-storm-server@${originals["shepherdjerred/the-storm-server/candidate"]}`,
+      `docker.io/shepherdjerred/the-storm-server@${originals["shepherdjerred/the-storm-server/accepted"]}`,
     ]);
-    for (const image of mcSandboxImageAllowlist()) {
+    expect(mcSandboxImageAllowlist({})).toHaveLength(2);
+    expect(() =>
+      mcSandboxImageAllowlist({
+        "shepherdjerred/the-storm-server/candidate": "latest",
+      }),
+    ).toThrow();
+    for (const image of mcSandboxImageAllowlist(originals)) {
       expect(image).toMatch(/@sha256:[0-9a-f]{64}$/);
     }
   });

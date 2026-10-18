@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   Deployment,
   DeploymentStrategy,
@@ -15,7 +16,6 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -62,7 +62,7 @@ export function createTasknotesDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "tasknotes-server",
-      image: `docker.io/shepherdjerred/tasknotes-server:${versions["shepherdjerred/tasknotes-server"]}`,
+      image: firstPartyImageRecipe("tasknotes-server"),
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
@@ -120,8 +120,7 @@ export function createTasknotesDeployment(chart: Chart) {
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
         SENTRY_RELEASE: EnvValue.fromValue(
-          versions["shepherdjerred/tasknotes-server"].split("@")[0] ??
-            versions["shepherdjerred/tasknotes-server"],
+          firstPartyImageRecipe("tasknotes-server"),
         ),
       },
     }),
@@ -131,7 +130,7 @@ export function createTasknotesDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "obsidian-headless",
-      image: `docker.io/shepherdjerred/obsidian-headless:${versions["shepherdjerred/obsidian-headless"]}`,
+      image: firstPartyImageRecipe("obsidian-headless"),
       command: ["/bin/sh", "-c"],
       args: [
         // Run ob sync --continuous in the background; a companion loop touches

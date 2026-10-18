@@ -8,6 +8,8 @@ import {
   releasePrunesChart,
 } from "#scripts/helm/helm-release-core.ts";
 import { stageChart } from "#scripts/helm/helm-push.ts";
+import { bindChartImageDependencies } from "#scripts/helm/helm-delivery-publication.ts";
+import { publicationImageDigests } from "#cdk8s/src/release-configuration.ts";
 import { bootstrapArgo } from "./bootstrap-native.ts";
 import {
   bootstrapRootManifest,
@@ -25,26 +27,57 @@ type Captured = {
   applications: BootstrapApplication[];
   priorRoot: string;
 };
+type Bindings = {
+  digests: Readonly<Record<string, string>>;
+  maintenanceImage?: string;
+};
 
-function maintenanceImage(manifests: unknown[]) {
-  const deployments = manifests.filter((value) => {
-    const identity = z
-      .object({ kind: z.string(), metadata: z.object({ name: z.string() }) })
-      .parse(value);
-    return (
-      identity.kind === "Deployment" &&
-      identity.metadata.name === "temporal-maintenance-worker"
+/** Bootstrap replaces the generator, while retaining the original maintenance worker image. */
+export async function bootstrapImages(
+  descriptor: BootstrapDescriptor,
+  captured: Captured,
+  read = bootstrapArgo,
+): Promise<Bindings> {
+  const digests = {
+    ...publicationImageDigests(),
+    "shepherdjerred/delivery": descriptor.images.delivery.digest,
+    "shepherdjerred/woodpecker-config-extension":
+      descriptor.images.woodpecker.digest,
+  };
+  if (!descriptor.targets.includes("woodpecker")) return { digests };
+  const prior = captured.applications.find(
+    (app) => app.metadata.name === "woodpecker",
+  );
+  if (prior === undefined)
+    throw new Error("Woodpecker bootstrap requires its original Application");
+  z.object({
+    repoURL: z.literal(CHART_ORIGIN),
+    chart: z.literal("woodpecker"),
+  }).parse(prior.spec["source"]);
+  const result = z
+    .object({ manifests: z.array(z.string()) })
+    .parse(
+      await read(
+        `/woodpecker/manifests?revision=${encodeURIComponent(prior.status.sync.revision)}`,
+      ),
     );
-  });
-  const image = z
-    .string()
-    .regex(
-      /^docker\.io\/shepherdjerred\/temporal-worker(?::2\.0\.0-\d+)?@sha256:[a-f0-9]{64}$/u,
+  const deployments = result.manifests
+    .map((raw) =>
+      z
+        .object({
+          kind: z.string(),
+          metadata: z.object({ name: z.string() }).loose(),
+        })
+        .loose()
+        .parse(JSON.parse(raw)),
+    )
+    .filter(
+      (item) =>
+        item.kind === "Deployment" &&
+        item.metadata.name === "temporal-maintenance-worker",
     );
-  const container = (name: string) =>
-    z.object({ name: z.literal(name), image });
-  const [original] = z
-    .tuple([
+  const originals = z
+    .array(
       z.object({
         metadata: z.object({ namespace: z.literal("woodpecker-ci") }),
         spec: z.object({
@@ -56,112 +89,89 @@ function maintenanceImage(manifests: unknown[]) {
               }),
             }),
             spec: z.object({
-              containers: z.tuple([container("temporal-maintenance-worker")]),
-              initContainers: z.tuple([container("copy-kometa-config")]),
+              containers: z.tuple([
+                z.object({
+                  name: z.literal("temporal-maintenance-worker"),
+                  image: z.string(),
+                }),
+              ]),
+              initContainers: z.tuple([
+                z.object({
+                  name: z.literal("copy-kometa-config"),
+                  image: z.string(),
+                }),
+              ]),
             }),
           }),
         }),
       }),
-    ])
+    )
+    .length(1)
     .parse(deployments);
-  const selected = original.spec.template.spec.containers[0].image;
-  if (selected !== original.spec.template.spec.initContainers[0].image)
+  const original = originals[0];
+  if (original === undefined)
+    throw new Error("Original Woodpecker maintenance Deployment is missing");
+  const maintenanceImage = z
+    .string()
+    .regex(
+      /^docker\.io\/shepherdjerred\/temporal-worker(?::2\.0\.0-\d+)?@sha256:[a-f0-9]{64}$/u,
+    )
+    .parse(original.spec.template.spec.containers[0].image);
+  if (original.spec.template.spec.initContainers[0].image !== maintenanceImage)
     throw new Error(
       "Original Woodpecker maintenance init/runtime image differs",
     );
-  return selected;
-}
-
-/** Retain the exact immutable original; replacing the generator is not a maintenance-worker release. */
-export async function bootstrapMaintenanceImage(
-  prior: BootstrapApplication,
-  read = bootstrapArgo,
-) {
-  z.object({
-    metadata: z.object({ name: z.literal("woodpecker") }),
-    spec: z.object({
-      source: z.object({
-        repoURL: z.literal(CHART_ORIGIN),
-        chart: z.literal("woodpecker"),
-      }),
-    }),
-  }).parse(prior);
-  const result = z
-    .object({ manifests: z.array(z.string()) })
-    .parse(
-      await read(
-        `/woodpecker/manifests?revision=${encodeURIComponent(prior.status.sync.revision)}`,
+  return {
+    digests: {
+      ...digests,
+      "shepherdjerred/temporal-worker": maintenanceImage.slice(
+        maintenanceImage.indexOf("@") + 1,
       ),
-    );
-  return maintenanceImage(
-    result.manifests.map((raw) => JSON.parse(raw) as unknown),
-  );
+    },
+    maintenanceImage,
+  };
 }
 
-export function preserveBootstrapMaintenanceImage(
-  raw: string,
-  original: string,
-) {
-  const current = maintenanceImage(
-    parseAllDocuments(raw).map((doc): unknown => {
-      if (doc.errors.length > 0)
-        throw new Error("Invalid Woodpecker bootstrap manifest");
-      const value: unknown = doc.toJSON();
-      return value;
-    }),
-  );
-  let count = 0;
-  const preserved = raw.replaceAll(current, () => {
-    count++;
-    return original;
-  });
-  if (count !== 2)
-    throw new Error(
-      "Woodpecker bootstrap must preserve exactly its original maintenance init/runtime images",
-    );
-  return preserved;
-}
-
-function prepareBootstrapManifest(
+/** Preserve native root selections before resolving only the bootstrap's required image bindings. */
+export function prepareBootstrapManifest(
   raw: string,
   name: string,
   input: {
     descriptor: BootstrapDescriptor;
     captured: Captured;
-    maintenance: string | undefined;
+    bindings: Bindings;
   },
 ) {
-  if (name === "apps")
-    return bootstrapRootManifest(
-      raw,
-      [input.captured.root, ...input.captured.applications],
-      input.descriptor,
-      input.captured.priorRoot,
-    );
-  const selected = bootstrapImageManifest(
-    raw,
+  const { descriptor, captured, bindings } = input;
+  const preserved =
+    name === "apps"
+      ? bootstrapRootManifest(
+          raw,
+          [captured.root, ...captured.applications],
+          descriptor,
+          captured.priorRoot,
+        )
+      : raw;
+  let bound = bindChartImageDependencies(preserved, bindings.digests);
+  if (name === "apps") return bound;
+  if (name === "woodpecker") {
+    const original = z.string().min(1).parse(bindings.maintenanceImage);
+    const bare = `docker.io/shepherdjerred/temporal-worker@${bindings.digests["shepherdjerred/temporal-worker"] ?? ""}`;
+    let count = 0;
+    bound = bound.replaceAll(bare, () => {
+      count++;
+      return original;
+    });
+    if (count !== 2)
+      throw new Error(
+        "Woodpecker bootstrap must preserve exactly its original maintenance init/runtime images",
+      );
+  }
+  return bootstrapImageManifest(
+    bound,
     z.enum(["woodpecker", "delivery", "delivery-control-plane"]).parse(name),
-    input.descriptor,
+    descriptor,
   );
-  return name === "woodpecker"
-    ? preserveBootstrapMaintenanceImage(
-        selected,
-        z.string().parse(input.maintenance),
-      )
-    : selected;
-}
-
-async function capturedMaintenanceImage(
-  descriptor: BootstrapDescriptor,
-  captured: Captured,
-) {
-  if (!descriptor.targets.includes("woodpecker")) return;
-  const prior = captured.applications.find(
-    (app) => app.metadata.name === "woodpecker",
-  );
-  if (prior === undefined)
-    throw new Error("Woodpecker bootstrap requires its original Application");
-  return bootstrapMaintenanceImage(prior);
 }
 export function bootstrapArchiveNames(descriptor: BootstrapDescriptor) {
   return [
@@ -177,17 +187,13 @@ export async function prepareBootstrapArchives(
   directory: string,
 ) {
   const homelab = new URL("../../", import.meta.url).pathname;
-  const maintenance = await capturedMaintenanceImage(descriptor, captured);
+  const bindings = await bootstrapImages(descriptor, captured);
   await run(["bun", "--no-install", "run", "build"], {
     cwd: path.join(homelab, "src/cdk8s"),
     env: {
-      HOMELAB_IMAGE_DIGESTS_JSON: JSON.stringify({
-        "shepherdjerred/delivery": descriptor.images.delivery.digest,
-      }),
-      HOMELAB_RELEASE_VERSION: descriptor.images.delivery.version,
+      HOMELAB_IMAGE_DIGESTS_JSON: JSON.stringify(bindings.digests),
     },
     unsetEnv: [
-      "HOMELAB_VERSION_CATALOG_JSON",
       "HOMELAB_CHART_REVISIONS_JSON",
       "OP_SERVICE_ACCOUNT_TOKEN",
       "ARGOCD_TOKEN",
@@ -209,7 +215,7 @@ export async function prepareBootstrapArchives(
     const prepared = prepareBootstrapManifest(original, name, {
       descriptor,
       captured,
-      maintenance,
+      bindings,
     });
     const manifestPath = path.join(directory, `${name}.yaml`);
     await Bun.write(manifestPath, bootstrapRootTemplate(prepared, name), {

@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
@@ -79,7 +80,7 @@ export function createPinchtabDeployment(chart: Chart) {
   deployment.addInitContainer(
     withCommonProps({
       name: "install-browser-firewall",
-      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: firstPartyImageRecipe("birmel"),
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu

@@ -32,6 +32,8 @@ test("TRMNL provenance handoff is required even when no static-site archives are
       optional: () => Promise.resolve(undefined),
       required: (key) => {
         if (key === "delivery-image-digests") return Promise.resolve("{}");
+        if (key === "delivery-retained-image-artifacts")
+          return Promise.resolve("[]");
         throw new Error(`Missing required ${key}`);
       },
     }),

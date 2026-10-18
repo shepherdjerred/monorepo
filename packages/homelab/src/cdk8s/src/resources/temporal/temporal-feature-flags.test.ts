@@ -68,7 +68,7 @@ describe("Temporal feature-flag boundary", () => {
       // The credentialless central-workflows track resolves the flag itself
       // (see temporal-workflow-boundary.test.ts) — it is the only role that
       // actually hosts workflow code, so it cannot skip this check.
-      "central-workflows-stable",
+      // PG-retained hosts are generated from this single frozen recipe.
       "central-workflows-candidate",
     ]);
     const deployments = synthesizeTemporal().flatMap((resource) => {

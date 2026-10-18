@@ -54,7 +54,6 @@ export const SCOUT_GATEWAY_SYNC_WAVE = "1";
 export const SCOUT_RUNTIME_ROLE_LABEL = "scout-runtime-role";
 
 export type ScoutGatewayDeploymentOptions = {
-  readonly imageVersion: string;
   /**
    * The application role's environment, verbatim.
    *
@@ -222,9 +221,9 @@ export function createScoutGatewayDeployment(
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
-      ...scoutAdminRoleContainerBase(options.imageVersion),
+      ...scoutAdminRoleContainerBase(),
       ports: [
-        ...scoutAdminRoleContainerBase(options.imageVersion).ports,
+        ...scoutAdminRoleContainerBase().ports,
         scoutTemporalMetricsContainerPort,
       ],
       volumeMounts: [

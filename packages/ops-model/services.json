@@ -124,13 +124,7 @@
       "bugsinkProjects": ["discord-plays-pokemon"],
       "analyticsSites": ["pokemon"],
       "grafanaDashboards": ["discord-plays-stream-health"],
-      "deploy": [
-        {
-          "name": "default",
-          "versionKey": "shepherdjerred/discord-plays-pokemon",
-          "argoApp": "pokemon"
-        }
-      ]
+      "deploy": []
     },
     {
       "id": "discord-plays-mario-kart",
@@ -144,13 +138,7 @@
       "bugsinkProjects": ["discord-plays-mario-kart"],
       "analyticsSites": ["mario-kart"],
       "grafanaDashboards": ["discord-plays-stream-health"],
-      "deploy": [
-        {
-          "name": "default",
-          "versionKey": "shepherdjerred/discord-plays-mario-kart",
-          "argoApp": "mario-kart"
-        }
-      ]
+      "deploy": []
     },
     {
       "id": "starlight-karma-bot",

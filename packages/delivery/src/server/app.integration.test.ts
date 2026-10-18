@@ -4,6 +4,43 @@ import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createApp } from "./app.ts";
 
+async function assertPublisherMetadataBoundary(
+  app: ReturnType<typeof createApp>,
+  versionSetId: string,
+) {
+  const publisher = {
+    Authorization: "Bearer test-publisher-credential-32-characters",
+  };
+  const metadata = await app.request("/api/v1/overview", {
+    headers: publisher,
+  });
+  expect(metadata.status).toBe(200);
+  const snapshot = await app.request(
+    `/api/v1/versions/${encodeURIComponent(versionSetId)}`,
+    { headers: publisher },
+  );
+  expect(snapshot.status).toBe(200);
+  for (const action of ["approval", "content-recovery"]) {
+    const denied = await app.request(`/api/v1/deployments/unknown/${action}`, {
+      method: "POST",
+      headers: { ...publisher, "Content-Type": "application/json" },
+      body: JSON.stringify(
+        action === "approval"
+          ? {
+              decision: "approve",
+              reason: "Publishing cannot approve a release",
+            }
+          : {
+              requestId: "publisher-cannot-recover",
+              expectedEnvironmentGeneration: 0,
+              reason: "Publishing cannot administer recovery",
+            },
+      ),
+    });
+    expect(denied.status).toBe(403);
+  }
+}
+
 describe("Delivery API authorization and kill switch", () => {
   let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
   let delivery: Delivery;
@@ -63,6 +100,7 @@ describe("Delivery API authorization and kill switch", () => {
     );
   });
   test("publisher cannot deploy or execute even when spoofing operator identity", async () => {
+    await assertPublisherMetadataBoundary(app, fixture.versionSet.id);
     const response = await app.request("/api/v1/deployments", {
       method: "POST",
       headers: {

@@ -5,7 +5,6 @@ import {
   luckPerms,
   multiverseCore,
   serverImage,
-  stormServerImages,
   worldEdit,
   type PluginPin,
 } from "#src/pins.ts";
@@ -222,8 +221,11 @@ function stormDevProfile(
  * image without it never answers the bridge health check. Amd64-only, so it
  * defaults to the cluster.
  */
-function stormImageProfile(image: string) {
-  const imageConfig = stormImageConfig(image);
+function stormImageProfile(
+  image: string,
+  config: NonNullable<SandboxCreateRequest["publishedConfig"]>,
+) {
+  const imageConfig = stormImageConfig(image, config);
   return (
     _world: SandboxCreateRequest["world"],
     secrets: Secrets,
@@ -271,31 +273,54 @@ function stormImageProfile(image: string) {
 }
 
 const PROFILES: Record<
-  SandboxCreateRequest["profile"],
+  "paper" | "storm-dev",
   (world: SandboxCreateRequest["world"], secrets: Secrets) => ResolvedProfile
 > = {
   paper: paperProfile,
   "storm-dev": stormDevProfile,
-  "storm-prod": stormImageProfile(stormServerImages.prod),
-  "storm-candidate": stormImageProfile(stormServerImages.candidate),
 };
 
 export function resolveProfile(
-  request: Pick<SandboxCreateRequest, "profile" | "world">,
+  request: Pick<
+    SandboxCreateRequest,
+    "profile" | "world" | "publishedArtifact" | "publishedConfig"
+  >,
   secrets: Secrets,
 ): ResolvedProfile {
+  if (
+    request.profile === "storm-prod" ||
+    request.profile === "storm-candidate"
+  ) {
+    if (
+      request.publishedArtifact === undefined ||
+      request.publishedConfig === undefined
+    )
+      throw new Error(
+        "Published Storm profile requires an explicit frozen artifact and source configuration",
+      );
+    const artifact = request.publishedArtifact;
+    return stormImageProfile(
+      `${artifact.uri}@${artifact.digest}`,
+      request.publishedConfig,
+    )(request.world, secrets);
+  }
   return PROFILES[request.profile](request.world, secrets);
 }
 
 /** The provider a request runs on: its own choice, else the profile's default. */
 export function providerFor(
-  request: Pick<SandboxCreateRequest, "profile" | "world" | "provider">,
+  request: Pick<
+    SandboxCreateRequest,
+    "profile" | "world" | "provider" | "publishedArtifact" | "publishedConfig"
+  >,
 ): ProviderKind {
   return (
     request.provider ??
-    resolveProfile(request, {
-      bridgeToken: "0".repeat(48),
-      rconPassword: "0".repeat(48),
-    }).defaultProvider
+    (request.profile === "storm-prod" || request.profile === "storm-candidate"
+      ? "kubernetes"
+      : PROFILES[request.profile](request.world, {
+          bridgeToken: "0".repeat(48),
+          rconPassword: "0".repeat(48),
+        }).defaultProvider)
   );
 }

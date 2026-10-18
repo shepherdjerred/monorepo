@@ -1,9 +1,71 @@
+import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { ChartPublication } from "@shepherdjerred/ops-model/chart-publication.ts";
 import type { PublishedChart, HelmReleasePlan } from "./helm-release-core.ts";
+import {
+  imageRegistry,
+  firstPartyImageRepository,
+} from "@shepherdjerred/version-catalog/image-registry";
+import { parseAllDocuments, stringify } from "yaml";
+import path from "node:path";
 
 /** Required selection inputs used only by producer lint/render, outside the packaged chart. */
-export function chartValidationValues(name: string) {
-  if (name === "delivery") return { delivery: {} };
+function selectionValidationValues(name: string) {
+  // Producer-only inputs; never included in values.yaml or qualified selections.
+  const digest = `sha256:${"f".repeat(64)}`;
+  const image = (repository: string) =>
+    `docker.io/shepherdjerred/${repository}@${digest}`;
+  const owner = new ServiceIndex().byChart(name);
+  const worker =
+    name === "temporal" || name === "scout-beta" || name === "scout-prod";
+  if (name === "delivery" || name === "arcade")
+    return { delivery: { image: image(name) } };
+  if (name === "delivery-control-plane")
+    return {
+      delivery: {
+        images: { "delivery-control-plane": image("temporal-worker") },
+      },
+    };
+  if (worker) {
+    const central = name === "temporal";
+    const repository = central ? "temporal-worker" : "scout-for-lol";
+    const environmentId = central
+      ? "temporal/prod"
+      : `scout-for-lol/${name.slice(6)}`;
+    return {
+      delivery: {
+        images: { [repository]: image(repository) },
+        workerPool: JSON.stringify({
+          schema: "delivery-worker-pool/v1",
+          environmentId,
+          target: central ? "central" : name,
+          versions: [
+            {
+              environmentId,
+              buildId: "f".repeat(40),
+              host: {
+                profile: central ? "central-workflows" : `${name}-workflows`,
+              },
+              image: image(repository),
+              replicas: 1,
+            },
+          ],
+        }),
+      },
+    };
+  }
+  if (
+    name !== "storm-forum" &&
+    name !== "storm-forum-beta" &&
+    owner !== undefined &&
+    owner.images.length > 0
+  )
+    return {
+      delivery: {
+        images: Object.fromEntries(
+          owner.images.map((repository) => [repository, image(repository)]),
+        ),
+      },
+    };
   if (name !== "storm-forum" && name !== "storm-forum-beta") return;
   return {
     delivery: {
@@ -16,6 +78,74 @@ export function chartValidationValues(name: string) {
       previousRuntimeImage: `docker.io/shepherdjerred/storm-forum@sha256:${"e".repeat(64)}`,
     },
   };
+}
+
+/** Synthetic producer validation only; no value here is packaged as a selection. */
+export function chartValidationValues(name: string) {
+  const selected = selectionValidationValues(name);
+  if (selected === undefined && new ServiceIndex().byChart(name) === undefined)
+    return;
+  return {
+    delivery: {
+      ...selected?.delivery,
+      dependencies: Object.fromEntries(
+        imageRegistry.images.map((entry) => [
+          entry.name,
+          `${firstPartyImageRepository(entry.name)}@sha256:${"f".repeat(64)}`,
+        ]),
+      ),
+    },
+  };
+}
+
+/** Freeze root-owned first-party dependencies into immutable chart bytes. */
+export function bindChartImageDependencies(
+  manifest: string,
+  images: Readonly<Record<string, string>>,
+): string {
+  function bind(value: unknown): unknown {
+    if (typeof value === "string") {
+      const match =
+        /^\{\{ required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "dependencies" \| default dict\) "\1"\) \}\}$/u.exec(
+          value,
+        );
+      const name = match?.[1];
+      if (name === undefined) return value;
+      const digest = images[`shepherdjerred/${name}`];
+      if (digest === undefined || !/^sha256:[a-f0-9]{64}$/u.test(digest))
+        throw new Error(
+          `Root chart dependency lacks its original published image:${name}`,
+        );
+      return `${firstPartyImageRepository(name)}@${digest}`;
+    }
+    if (Array.isArray(value)) return value.map((child) => bind(child));
+    return value !== null && typeof value === "object"
+      ? Object.fromEntries(
+          Object.entries(value).map(([key, child]) => [key, bind(child)]),
+        )
+      : value;
+  }
+  return parseAllDocuments(manifest)
+    .map((doc) => {
+      if (doc.errors.length > 0)
+        throw new Error("Invalid generated chart manifest");
+      return stringify(bind(doc.toJSON()), { compat: "yaml-1.1" });
+    })
+    .join("---\n");
+}
+
+export async function bindGeneratedDependencies(
+  directory: string,
+  images: Readonly<Record<string, string>> | undefined,
+) {
+  if (images === undefined) return;
+  for await (const name of new Bun.Glob("*.k8s.yaml").scan(directory)) {
+    const file = path.join(directory, name);
+    await Bun.write(
+      file,
+      bindChartImageDependencies(await Bun.file(file).text(), images),
+    );
+  }
 }
 
 /** A qualified CI release cannot inherit an archive from a failed or uncatalogued older producer. */

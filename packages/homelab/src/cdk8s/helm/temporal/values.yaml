@@ -1,4 +1,3 @@
 # Default values for temporal chart
 delivery:
   workerPool: ""
-  legacyWorkers: "keep"

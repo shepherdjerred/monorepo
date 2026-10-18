@@ -27,7 +27,7 @@ const PROFILES = {
 } as const;
 
 function poolValidation(profile: (typeof PROFILES)[keyof typeof PROFILES]) {
-  return `{{ $pool := mustFromJson .Values.delivery.workerPool }}
+  return `{{ $pool := mustFromJson (required "Delivery requires workerPool" (get (.Values.delivery | default dict) "workerPool")) }}
 {{ if or (ne $pool.schema "delivery-worker-pool/v1") (ne $pool.target "${profile.target}") }}{{ fail "Worker pool identity mismatch" }}{{ end }}
 {{ if or (lt (len $pool.versions) 1) (gt (len $pool.versions) 1000) }}{{ fail "Worker pool size invalid" }}{{ end }}
 {{ $seen := dict }}
@@ -49,16 +49,13 @@ export function workerPoolExpressions(chart: string): string[] {
     ...[
       ...poolValidation(PROFILES[parsed.data]).matchAll(/\{\{[^{}]*\}\}/gu),
     ].map((match) => match[0]),
-    "{{ if .Values.delivery.workerPool }}",
     "{{ range $worker := $pool.versions }}",
     '{{ $track := printf "retained-%s" (trunc 12 $worker.buildId) }}',
     "{{ $track }}",
     "{{ $worker.image | quote }}",
     "{{ $worker.replicas }}",
-    "{{ else }}",
     "{{ end }}",
     "{{ $worker.buildId | quote }}",
-    '{{ if eq .Values.delivery.legacyWorkers "stopped" }}',
   ];
 }
 
@@ -142,21 +139,6 @@ function prototypeManifest(
   return rendered;
 }
 
-function stoppedManifest(resource: z.infer<typeof Resource>): string {
-  const stopped = structuredClone(resource);
-  if (stopped.kind === "Deployment") {
-    const spec = z.looseObject({ replicas: z.number() }).parse(stopped["spec"]);
-    stopped["spec"] = { ...spec, replicas: 0 };
-    stopped.metadata["annotations"] = {
-      ...z
-        .record(z.string(), z.string())
-        .parse(stopped.metadata["annotations"] ?? {}),
-      "argocd.argoproj.io/sync-wave": "-1",
-    };
-  }
-  return stringify(stopped, { lineWidth: 0 });
-}
-
 /** Use the source-owned candidate host recipe; PG supplies only identity, image and replicas. */
 export function workerPoolTemplate(manifest: string, chart: string): string {
   if (!(chart in PROFILES)) return manifest;
@@ -167,24 +149,17 @@ export function workerPoolTemplate(manifest: string, chart: string): string {
       throw new Error("Invalid worker chart YAML");
     return Resource.parse(document.toJSON() as unknown);
   });
-  const legacy: string[] = [];
   const prototype: string[] = [];
-  const stoppedLegacy: string[] = [];
   const ordinary: string[] = [];
   for (const resource of documents) {
     const name = resource.metadata.name;
-    if (!name.includes(profile.prefix)) {
-      ordinary.push(stringify(resource, { lineWidth: 0 }));
-      continue;
-    }
-    legacy.push(stringify(resource, { lineWidth: 0 }));
-    stoppedLegacy.push(stoppedManifest(resource));
     if (name.includes(`${profile.prefix}candidate`))
       prototype.push(prototypeManifest(resource, profile.prefix));
+    else ordinary.push(stringify(resource, { lineWidth: 0 }));
   }
-  if (prototype.length === 0 || legacy.length === 0)
+  if (prototype.length === 0)
     throw new Error(`Missing ${chart} candidate worker prototype`);
-  const template = `${ordinary.join("---\n")}---\n{{ if .Values.delivery.workerPool }}\n${poolValidation(profile)}{{ range $worker := $pool.versions }}\n{{ $track := printf "retained-%s" (trunc 12 $worker.buildId) }}\n${prototype.join("---\n")}---\n{{ end }}\n{{ if eq .Values.delivery.legacyWorkers "stopped" }}\n${stoppedLegacy.join("---\n")}---\n{{ else }}\n${legacy.join("---\n")}---\n{{ end }}\n{{ else }}\n${legacy.join("---\n")}---\n{{ end }}\n`;
+  const template = `${ordinary.join("---\n")}---\n${poolValidation(profile)}{{ range $worker := $pool.versions }}\n{{ $track := printf "retained-%s" (trunc 12 $worker.buildId) }}\n${prototype.join("---\n")}---\n{{ end }}\n`;
   // Helm evaluates directives even in YAML comments. Preserve raw YAML syntax
   // for artifact inventories; Kubernetes validation still uses Helm-rendered values.
   return template.replaceAll(/^(\{\{[^\n]*)$/gmu, "# $1");

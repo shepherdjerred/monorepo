@@ -81,7 +81,9 @@ test("the library dependency hash covers every export, local import and workspac
     })
     .parse(parsed.config).tasks.build;
   const covers = (file: string) =>
-    config.inputs.some((pattern) => new Bun.Glob(pattern).match(file));
+    config.inputs.some((pattern) =>
+      new Bun.Glob(pattern.replace("$TURBO_ROOT$/", "../")).match(file),
+    );
   expect(covers("package.json")).toBe(true);
   const pending = Object.values(manifest.exports)
     .flatMap((value) =>
@@ -156,10 +158,16 @@ async function fixture() {
         "@shepherdjerred/version-catalog": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
         "@shepherdjerred/delivery": "workspace:*",
+        "@shepherdjerred/ops-model": "workspace:*",
       },
     }),
   );
-  for (const name of ["version-catalog", "s3-signed-request", "delivery"])
+  for (const name of [
+    "version-catalog",
+    "s3-signed-request",
+    "delivery",
+    "ops-model",
+  ])
     await Bun.write(
       path.join(root, `packages/${name}/package.json`),
       JSON.stringify({
@@ -191,6 +199,10 @@ async function fixture() {
     "packages/version-catalog/src/catalog.json",
     "packages/s3-signed-request/src/index.ts",
     "packages/delivery/src/shared/contract.ts",
+    "packages/ops-model/src/catalog.ts",
+    "packages/version-catalog/src/image-registry.ts",
+    "ci/scripts/images/image-targets.ts",
+    "scripts/ci/publish-delivery.ts",
   ])
     await Bun.write(
       path.join(root, file),
@@ -231,8 +243,8 @@ function hashes(root: string) {
   );
 }
 
-test.each(["packages/version-catalog/src/catalog.json"])(
-  "release metadata %s preserves consumer hashes while root validation still invalidates",
+test.each(["scripts/ci/publish-delivery.ts"])(
+  "CLI-only publication input %s preserves consumer hashes while root validation still invalidates",
   async (file) => {
     const root = await fixture();
     try {
@@ -250,7 +262,7 @@ test.each(["packages/version-catalog/src/catalog.json"])(
   },
 );
 
-test("exported helper, signer and Delivery contract changes still invalidate the consumer", async () => {
+test("exported helpers and their exact artifact ownership inputs invalidate the consumer", async () => {
   const root = await fixture();
   try {
     let before = hashes(root);
@@ -260,6 +272,9 @@ test("exported helper, signer and Delivery contract changes still invalidate the
       "scripts/temporal-replay.ts",
       "packages/s3-signed-request/src/index.ts",
       "packages/delivery/src/shared/contract.ts",
+      "packages/ops-model/src/catalog.ts",
+      "packages/version-catalog/src/image-registry.ts",
+      "ci/scripts/images/image-targets.ts",
     ]) {
       await Bun.write(path.join(root, file), "export const version = 2;\n");
       const after = hashes(root);
@@ -279,7 +294,7 @@ test("metadata-only changes produce an actual consumer cache hit and restore its
     expect(await Bun.file(proof).text()).toBe("executed");
     await rm(proof);
     await Bun.write(
-      path.join(root, "packages/version-catalog/src/catalog.json"),
+      path.join(root, "scripts/ci/publish-delivery.ts"),
       '{"version":2}\n',
     );
     const result = turbo(root, "run");

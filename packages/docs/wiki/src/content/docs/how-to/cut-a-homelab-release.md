@@ -66,8 +66,7 @@ original CI-qualified artifacts already recorded in PostgreSQL.
 
    Run a fresh PR and inspect its generated graph: verification, builds and
    immutable publication only. Keep the old hosted release authority stopped.
-   Remove the PR-only retired-release rehearsal adapters and exclusive tests
-   after this proof; the new graph must never call them. Before the new CI
+   The generated graph must contain no legacy deployment adapters. Before the new CI
    artifact credentials take over, verify their exact storage IAM grants and
    readback through the existing operator storage procedure.
 
@@ -146,6 +145,11 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    `ROOT_ARGOCD_TOKEN` from the newly issued `delivery-platform` item; retain
    the separate operator reference for preownership CAS. No administrator-token
    fallback exists for guarded root operations.
+   For API bootstrap, also inject `ARGOCD_WORKLOAD_TOKEN` from the issued
+   `delivery` application-account item. The helper independently verifies that
+   principal and uses it for needed workload child reconciliation; the platform
+   account retains root and control-plane operations. A root account cannot
+   substitute for the application credential, or an administrator for either.
 
 6. Build the two operator bootstrap images directly from the proven source.
    PR pipelines do not publish them, and old main automation is stopped.
@@ -344,7 +348,7 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    Transfer all ready authority together, enable the declarative dispatch
    Schedule, and verify the first actual releases. Re-enable the inspected
    publication-only webhook after handover.
-   Remove old deployment credentials and rehearsal adapters; keep Woodpecker
+   Remove old deployment credentials; keep Woodpecker
    limited to verification and immutable artifact production.
 
 If interrupted, retain the private descriptor, receipt, archives and

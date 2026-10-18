@@ -1,6 +1,5 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
-import { z } from "zod";
 import {
   Cpu,
   Deployment,
@@ -16,63 +15,15 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
-
-export type ScoutWorkflowWorkerTrack =
-  "stable" | "candidate" | `retained-${string}`;
-
-export function scoutRetainedWorkflowWorkerPins(stage: Stage) {
-  const prefix = `shepherdjerred/scout-for-lol/${stage}/workflows/`;
-  return Object.entries(versions)
-    .filter(([key]) => key.startsWith(`${prefix}retained-`))
-    .map(([key, image]) => ({
-      track: z
-        .templateLiteral(["retained-", z.string().regex(/^[a-f0-9]{12}$/)])
-        .parse(key.slice(prefix.length)),
-      image,
-    }));
-}
-
-// Build 12197 predates the workflow-only entrypoint. The main image release
-// overrides the candidate pin while rendering, so the first capable build can
-// create the pod in the same release without ever attempting to boot 12197.
-const LAST_IMAGE_WITHOUT_WORKFLOW_WORKER = 12_197;
-const WorkflowImageVersionSchema = z
-  .string()
-  .regex(/^2\.0\.0-(\d+)@sha256:[0-9a-f]{64}$/);
-
-export function scoutWorkflowWorkerImageIsCapable(
-  imageVersion: string,
-): boolean {
-  const parsed = WorkflowImageVersionSchema.parse(imageVersion);
-  const buildText = parsed.split("@", 1)[0]?.split("-", 2)[1];
-  const build = z.coerce.number().int().positive().parse(buildText);
-  return build > LAST_IMAGE_WITHOUT_WORKFLOW_WORKER;
-}
-
-function workflowWorkerSyncWave(track: ScoutWorkflowWorkerTrack): string {
-  if (track === "stable") return "-1";
-  return track === "candidate" ? "0" : "-2";
-}
 
 export function createScoutWorkflowWorker(
   chart: Chart,
   stage: Stage,
-  track: ScoutWorkflowWorkerTrack,
-  imageVersionOverride?: string,
-): Deployment | undefined {
+): Deployment {
+  const track = "candidate";
   const component = `scout-${stage}-workflows-${track}`;
   const name = `scout-workflow-worker-${track}`;
-  const imageKey = `shepherdjerred/scout-for-lol/${stage}/workflows/${track}`;
-  const imageVersion = imageVersionOverride ?? versions[imageKey];
-  if (imageVersion === undefined) {
-    throw new Error(`Missing Scout Workflow Worker image pin ${imageKey}`);
-  }
-  if (!scoutWorkflowWorkerImageIsCapable(imageVersion)) {
-    return undefined;
-  }
-
   const deployment = new Deployment(chart, name, {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -80,9 +31,8 @@ export function createScoutWorkflowWorker(
     securityContext: { fsGroup: 1000 },
     metadata: {
       annotations: {
-        // Retained builds start first. The promoted stable build must also be
-        // ready before candidate changes, including a promotion commit-back.
-        "argocd.argoproj.io/sync-wave": workflowWorkerSyncWave(track),
+        // This recipe is expanded only from the frozen PostgreSQL pool.
+        "argocd.argoproj.io/sync-wave": "-2",
       },
     },
     podMetadata: {
@@ -99,7 +49,8 @@ export function createScoutWorkflowWorker(
   const container = deployment.addContainer(
     withCommonProps({
       name,
-      image: `docker.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+      image:
+        '{{ required `Delivery requires image:scout-for-lol` (get (get (.Values.delivery | default dict) "images" | default dict) "scout-for-lol") }}',
       command: ["bun"],
       args: ["run", "src/temporal/workflow-worker.ts"],
       ports: [{ name: "metrics", number: 9464, protocol: Protocol.TCP }],

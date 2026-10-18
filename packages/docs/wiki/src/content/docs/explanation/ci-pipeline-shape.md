@@ -65,18 +65,17 @@ when the base is missing. Without a valid base they run conservatively, so
 the base must travel with each workflow rather than only with `verify` and the
 release chain.
 
-When the [catalog comparator](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/internal-image-pins.ts)
-finds only internal image build number and digest changes,
-[`verify`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/verify.ts)
-checks the catalog package, root scripts, the homelab chart consumer, and root
-invariants. Other catalog edits and an unknown or invalid comparison base run
-the full verification graph. CI renders and publishes immutable charts; Delivery
-selects and reconciles the exact release separately. On a proven metadata-only main push, the
-[extension selector](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/internal-image-pin-change.ts)
-also omits unrelated package and toolchain-refresh workflows. It keeps the
-artifact producer dependency closure and Delivery catalog publication, without
-an Argo sync, deployment credential or Git commit-back. An uncertain catalog
-comparison selects the full main graph.
+First-party release versions do not produce Git catalog edits. The
+[image producer](https://github.com/shepherdjerred/monorepo/blob/main/ci/scripts/images/bake-images.ts)
+publishes immutable candidates and preserves original qualified artifacts for
+unchanged recipes. The
+[chart producer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/helm/helm-push.ts)
+freezes those exact inputs into immutable archives. Changed-file selectors and
+the producer dependency closure determine CI work; there is no pin-only shortcut.
+The catalog retains upstream and toolchain dependencies, while
+[Delivery owns first-party release selections](/explanation/homelab/release-safety/)
+in PostgreSQL. Publication does not select or reconcile a workload. CI has no
+Argo sync, deployment credential or Git commit-back.
 
 The verify and Playwright workflows use the private Turbo cache over the
 tailnet. [Separate teams and signing keys](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/turbo-cache.ts)

@@ -148,6 +148,8 @@ describe("CI step pod network boundary", () => {
     const consumers = await emittedApiConsumers();
     expect(consumers.map((consumer) => consumer.key).toSorted()).toEqual([
       "delivery-publish",
+      "helm-push",
+      "images",
       "scout-site-archives",
       "trmnl-plugin-archives",
     ]);

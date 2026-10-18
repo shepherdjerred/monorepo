@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
@@ -21,7 +22,6 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   createStreambotWeb,
   streambotWebProbes,
@@ -152,7 +152,7 @@ export function createStreambotDeployment(
   const container = deployment.addContainer(
     withCommonProps({
       name: "streambot",
-      image: `docker.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
+      image: firstPartyImageRecipe("streambot"),
       envVariables: {
         ...(web?.plex === undefined
           ? {}

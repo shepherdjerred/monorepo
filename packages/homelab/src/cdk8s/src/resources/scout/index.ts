@@ -17,7 +17,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -85,7 +84,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   });
   const {
     path,
-    imageVersion,
     applicationId,
     s3BucketName,
     selinuxLevel,
@@ -94,7 +92,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   } = match(stage)
     .with("beta", () => {
       return {
-        imageVersion: versions["shepherdjerred/scout-for-lol/beta"],
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rtu44pohnp5ixdp2njuv5f6t2e",
         applicationId: "1311755320745394317",
         s3BucketName: "scout-beta",
@@ -108,7 +105,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     })
     .with("prod", () => {
       return {
-        imageVersion: versions["shepherdjerred/scout-for-lol/prod"],
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/pacrc4wfbtct4y3qazkvazop5a",
         applicationId: "1182800769188110366",
         s3BucketName: "scout-prod",
@@ -417,7 +413,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   deployment.addContainer(
     withCommonProps({
-      image: `{{ get (get (.Values.delivery | default dict) "images" | default dict) "scout-for-lol" | default "docker.io/shepherdjerred/scout-for-lol:${imageVersion}" }}`,
+      image:
+        '{{ required `Delivery requires image:scout-for-lol` (get (get (.Values.delivery | default dict) "images" | default dict) "scout-for-lol") }}',
       ports: [
         {
           name: "port-3000",
@@ -477,7 +474,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
 
   // Hosted roles share the stage claim and SELinux level.
   createScoutGatewayDeployment(chart, stage, {
-    imageVersion,
     envVariables: { ...envVariables, ...voiceEnvVariables },
     claim: localPathVolume.claim,
     selinuxLevel,
@@ -485,7 +481,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     voiceSecretMount,
   });
   createScoutActivityWorkerDeployment(chart, stage, {
-    imageVersion,
     envVariables,
     claim: localPathVolume.claim,
     selinuxLevel,

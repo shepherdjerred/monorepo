@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
+import { publishedStorm } from "#test/fixtures/published-storm.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { BRIDGE_JAR } from "#protocol/paths.ts";
 import {
@@ -79,7 +80,12 @@ function pod(options: {
   return buildSandboxPod({
     id: "sbx-abc123",
     profileName,
-    profile: resolveProfile({ profile: profileName, world: "flat" }, secrets),
+    profile: resolveProfile(
+      profileName === "storm-prod" || profileName === "storm-candidate"
+        ? publishedStorm(profileName)
+        : { profile: profileName, world: "flat" },
+      secrets,
+    ),
     ttlSeconds: options.ttlSeconds ?? 7200,
     expiresAt: "2026-10-04T02:00:00.000Z",
     keep: false,
@@ -227,8 +233,8 @@ describe("sandbox pod manifest (mc-sandbox admission policy)", () => {
       subPath: "plugins/TheStormFixtures.jar",
       readOnly: true,
     });
-    expect(storm.containers[0]?.image).toMatch(
-      /^docker\.io\/shepherdjerred\/the-storm-server:.+@sha256:/u,
+    expect(storm.containers[0]?.image).toBe(
+      `${publishedStorm().publishedArtifact?.uri}@${publishedStorm().publishedArtifact?.digest}`,
     );
   });
 });
@@ -248,10 +254,7 @@ describe("profiles", () => {
   });
 
   it("boots the storm image with fixture credentials and world bootstrap", () => {
-    const profile = resolveProfile(
-      { profile: "storm-prod", world: "flat" },
-      secrets,
-    );
+    const profile = resolveProfile(publishedStorm(), secrets);
     expect(profile.seedData).toBe(false);
     expect(profile.plugins).toEqual([]);
     expect(profile.env).toMatchObject({

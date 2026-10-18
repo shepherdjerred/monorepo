@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   Capability,
   Cpu,
@@ -16,7 +17,6 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import {
@@ -63,7 +63,7 @@ export function createBirmelDeployment(chart: Chart) {
   deployment.addInitContainer(
     withCommonProps({
       name: "install-code-sandbox-firewall",
-      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: firstPartyImageRecipe("birmel"),
       command: ["/bin/sh", "-c"],
       args: [
         `set -eu
@@ -117,7 +117,7 @@ done`,
 
   deployment.addContainer(
     withCommonProps({
-      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: firstPartyImageRecipe("birmel"),
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
@@ -247,10 +247,7 @@ done`,
           key: "SENTRY_DSN",
         }),
         SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
-        SENTRY_RELEASE: EnvValue.fromValue(
-          versions["shepherdjerred/birmel"].split("@")[0] ??
-            versions["shepherdjerred/birmel"],
-        ),
+        SENTRY_RELEASE: EnvValue.fromValue(firstPartyImageRecipe("birmel")),
 
         // General configuration
         LOG_LEVEL: EnvValue.fromValue("info"),
@@ -283,7 +280,7 @@ done`,
   deployment.addContainer(
     withCommonProps({
       name: "code-sandbox",
-      image: `docker.io/shepherdjerred/birmel:${versions["shepherdjerred/birmel"]}`,
+      image: firstPartyImageRecipe("birmel"),
       command: ["tini", "-s", "--", "bun", "src/sandbox/server.ts"],
       securityContext: {
         user: 0,

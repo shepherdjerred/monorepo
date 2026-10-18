@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -16,7 +17,6 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 
@@ -62,7 +62,7 @@ function createGlitterWorker(
   const container = deployment.addContainer(
     withCommonProps({
       name: definition.name,
-      image: `docker.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: firstPartyImageRecipe("temporal-worker"),
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },

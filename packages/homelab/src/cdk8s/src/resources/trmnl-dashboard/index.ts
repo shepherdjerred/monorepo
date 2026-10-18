@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
@@ -19,7 +20,6 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const OPS_DASHBOARD_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341";
@@ -55,7 +55,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   const container = deployment.addContainer(
     withCommonProps({
       name: "trmnl-dashboard",
-      image: `docker.io/shepherdjerred/trmnl-dashboard:${versions["shepherdjerred/trmnl-dashboard"]}`,
+      image: firstPartyImageRecipe("trmnl-dashboard"),
       ports: [{ number: 3000, name: "http" }],
       envVariables: {
         HOME: EnvValue.fromValue("/tmp"),

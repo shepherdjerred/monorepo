@@ -69,16 +69,7 @@ function ownedRecoveryArgo(
     throw new Error(
       "Recovery Argo operation is not owned by this frozen deployment",
     );
-  const expected =
-    request === bootstrapId
-      ? {
-          ...selection,
-          parameters: {
-            ...selection.parameters,
-            "delivery.legacyWorkers": "keep",
-          },
-        }
-      : selection;
+  const expected = selection;
   return {
     receipt: verifyArgoRelease(before, expected, request).operationId,
     expected,

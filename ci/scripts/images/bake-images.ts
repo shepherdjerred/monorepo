@@ -5,7 +5,6 @@ import { writeJsonHandoff } from "../../../scripts/lib/ci/ci-handoff.ts";
 import {
   setDigestMetadata,
   setDeliveryDigestMetadata,
-  setVersionCatalogMetadata,
   imageDigestWriters,
 } from "../../../scripts/lib/ci/image-publication-handoff.ts";
 import {
@@ -26,7 +25,12 @@ import {
   parseBakeArguments,
   parseImageSelection,
 } from "../migration-core.ts";
-import { resolveManagedImagePins } from "../../../scripts/lib/image-pin-catalog.ts";
+import {
+  imageIdentity,
+  unbuiltImageOriginals,
+  type QualifiedImageInventory,
+} from "../../../scripts/lib/image-pin-catalog.ts";
+import type { ArtifactVersion } from "../../../packages/delivery/src/shared/contract.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import {
   ensureDockerHubAccess,
@@ -36,11 +40,11 @@ import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
-import { lastSuccessfulImageReleaseCommit } from "./live-version-catalog.ts";
 import {
-  recordPublishedImageRelease,
-  resolvePublishedImageCatalog,
-} from "../../../scripts/lib/ci/published-image-release.ts";
+  lastSuccessfulImageReleaseCommit,
+  readQualifiedImages,
+} from "./live-version-catalog.ts";
+import { includeMissingQualifiedImages } from "../selectors/select-image-targets-pins.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import {
   writeFallbackReport,
@@ -50,10 +54,6 @@ import {
 const registry = "docker.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
-export const VERSION_CATALOG_URL = new URL(
-  "../../../packages/version-catalog/src/catalog.json",
-  import.meta.url,
-);
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
 
 export type CommandExecutor = (
@@ -178,20 +178,12 @@ async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
   gitSha: string,
-  versionCatalogSource?: string,
 ): Promise<void> {
   const parsedBuildNumber = Number(buildNumber);
   if (!Number.isSafeInteger(parsedBuildNumber) || parsedBuildNumber <= 0) {
     throw new Error("Build number must be a positive safe integer");
   }
-  const catalogSource =
-    versionCatalogSource ?? (await Bun.file(VERSION_CATALOG_URL).text());
-  const candidates = pinCandidatesForDigests(
-    digests,
-    buildNumber,
-    gitSha,
-    catalogSource,
-  );
+  const candidates = pinCandidatesForDigests(digests, buildNumber, gitSha);
   await writeJsonHandoff("pin-candidates", {
     schema: "pin-candidates/v1",
     buildNumber: parsedBuildNumber,
@@ -259,12 +251,31 @@ export async function runSmoke(
   if (exitCode !== 0) process.exit(exitCode);
 }
 
+async function publishStarlightTag(
+  name: string,
+  candidate: string,
+  buildNumber: string,
+  executor: CommandExecutor,
+) {
+  if (name !== "starlight-karma-bot") return;
+  const tag = await executor([
+    "docker",
+    "buildx",
+    "imagetools",
+    "create",
+    "--tag",
+    `${registry}/${name}:2.0.0-${buildNumber}`,
+    candidate,
+  ]);
+  if (tag.exitCode !== 0) throw new Error(`Version tag failed for ${name}`);
+}
+
 export async function pushImages(
   options: PushOptions,
   dependencies: {
     readonly executor?: CommandExecutor;
     readonly environment?: Readonly<Record<string, string | undefined>>;
-    readonly readVersionCatalog?: () => Promise<string>;
+    readonly readQualifiedImages?: () => Promise<QualifiedImageInventory>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
     readonly verifyRegistryAccess?: RegistryAccessVerifier;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
@@ -281,12 +292,12 @@ export async function pushImages(
     ) => Promise<void>;
     readonly writeDeliveryMetadata?: (
       digests: Readonly<Record<string, string>>,
+      retained?: readonly ArtifactVersion[],
     ) => Promise<void>;
     readonly writeCandidates?: (
       digests: Readonly<Record<string, string>>,
       buildNumber: string,
       gitSha: string,
-      versionCatalogSource: string,
     ) => Promise<void>;
     readonly writeText?: TextWriter;
   } = {},
@@ -294,9 +305,8 @@ export async function pushImages(
   const { targets, commit, buildNumber, contractHash } = options;
   const executor = dependencies.executor ?? execute;
   const environment = dependencies.environment ?? Bun.env;
-  const readVersionCatalog =
-    dependencies.readVersionCatalog ??
-    (async () => Bun.file(VERSION_CATALOG_URL).text());
+  const { readQualifiedImages: readOriginals = readQualifiedImages } =
+    dependencies;
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
   const verifyRegistryAccess =
     dependencies.verifyRegistryAccess ?? ensureDockerHubAccess;
@@ -324,8 +334,11 @@ export async function pushImages(
   const writeCandidates =
     dependencies.writeCandidates ?? setPinCandidatesMetadata;
   const writeText = dependencies.writeText ?? Bun.write;
-  const versionCatalog = await readVersionCatalog();
-  const targetsWithPins = resolveManagedImagePins(versionCatalog, targets);
+  const originals = await readOriginals();
+  const targetsWithPins = targets.map((name) => {
+    imageIdentity(name);
+    return { name, original: originals.get(name) };
+  });
   const caddyfileArguments = caddyfileEntitlementArguments(
     targets,
     environment["CADDYFILE_SMOKE_PATH"],
@@ -356,7 +369,7 @@ export async function pushImages(
   const digests: Record<string, string> = {};
   const deliveryDigests: Record<string, string> = {};
   const outcomes: PushOutcome[] = [];
-  for (const { name, pin: managedPin } of targetsWithPins) {
+  for (const { name, original } of targetsWithPins) {
     const image = `${registry}/${name}`;
     const candidateTag = `${image}:candidate-${commit}`;
     const digest = await getManifestDigest(candidateTag);
@@ -369,34 +382,29 @@ export async function pushImages(
     const newFingerprint = await getRuntimeFingerprint(candidate);
     if (newFingerprint === undefined)
       throw new TransientError(`Candidate unavailable: ${candidate}`);
-    const outcome = await classifyRuntimeChange(
-      {
-        image,
-        pinnedDigest: managedPin.digest,
-        candidateFingerprint: newFingerprint,
-      },
-      getRuntimeFingerprint,
-    );
+    const outcome =
+      original === undefined
+        ? "no-pin-bumped"
+        : await classifyRuntimeChange(
+            {
+              image,
+              pinnedDigest: original.digest,
+              candidateFingerprint: newFingerprint,
+            },
+            getRuntimeFingerprint,
+          );
     outcomes.push({ image: name, outcome });
     deliveryDigests[`shepherdjerred/${name}`] = digest;
     if (outcome === "content-unchanged") continue;
-    if (name === "starlight-karma-bot") {
-      const tag = await executor([
-        "docker",
-        "buildx",
-        "imagetools",
-        "create",
-        "--tag",
-        `${image}:2.0.0-${buildNumber}`,
-        candidate,
-      ]);
-      if (tag.exitCode !== 0) throw new Error(`Version tag failed for ${name}`);
-    }
-    digests[managedPin.key] = digest;
+    await publishStarlightTag(name, candidate, buildNumber, executor);
+    digests[`shepherdjerred/${name}`] = digest;
   }
   await writeMetadata(digests);
-  await writeDeliveryMetadata(deliveryDigests);
-  await writeCandidates(digests, buildNumber, commit, versionCatalog);
+  await writeDeliveryMetadata(
+    deliveryDigests,
+    unbuiltImageOriginals(originals, targets),
+  );
+  await writeCandidates(deliveryDigests, buildNumber, commit);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
@@ -412,42 +420,23 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
-  // Every push records the live catalog for Helm and the no-target metadata
-  // path, and derives Temporal Workflow candidate pins from it. Fetch it first
-  // so the same bounded fetch also exposes the image-release base to selection.
-  const release = options.push
-    ? await resolvePublishedImageCatalog(commit, execute)
-    : undefined;
-  const liveVersionCatalog = release?.catalog;
-  const selection = await selectedTargets(options, commit, execute, () =>
-    Promise.resolve(release?.baseCommit),
+  const originals = options.push ? await readQualifiedImages() : undefined;
+  const selection = await selectedTargets(options, commit, execute);
+  const bakeTargets = expandTargets(
+    originals === undefined
+      ? selection.targets
+      : includeMissingQualifiedImages(selection.targets, originals),
   );
-  const bakeTargets = expandTargets(selection.targets);
   if (bakeTargets.length === 0) {
     console.log("no image-owning packages affected — nothing to build");
     await annotate(["--report", selectionReport]);
     if (options.push) {
-      await setVersionCatalogMetadata(
-        liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
-      );
       await setDigestMetadata({});
-      await setDeliveryDigestMetadata({});
-      await setPinCandidatesMetadata(
-        {},
-        buildNumber,
-        commit,
-        liveVersionCatalog,
-      );
+      await setDeliveryDigestMetadata({}, [...(originals?.values() ?? [])]);
+      await setPinCandidatesMetadata({}, buildNumber, commit);
       await Bun.write(pushOutcomes, "[]\n");
-      await recordPublishedImageRelease(commit, buildNumber);
     }
     return;
-  }
-
-  if (options.push) {
-    await setVersionCatalogMetadata(
-      liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
-    );
   }
 
   await ensureBuilder();
@@ -469,9 +458,9 @@ async function main(): Promise<void> {
         contractHash,
       },
       {
-        ...(liveVersionCatalog === undefined
+        ...(originals === undefined
           ? {}
-          : { readVersionCatalog: () => Promise.resolve(liveVersionCatalog) }),
+          : { readQualifiedImages: () => Promise.resolve(originals) }),
       },
     );
   }
@@ -479,7 +468,6 @@ async function main(): Promise<void> {
   if (!(await Bun.file(selectionReport).exists())) {
     await writeFallbackReport(selection.targets, selection.fallbackReason);
   }
-  if (options.push) await recordPublishedImageRelease(commit, buildNumber);
   const annotationArguments = ["--report", selectionReport];
   if (await Bun.file(pushOutcomes).exists()) {
     annotationArguments.push("--outcomes", pushOutcomes);

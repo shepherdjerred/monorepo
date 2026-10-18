@@ -320,10 +320,11 @@ test("post-PATCH bootstrap recovery requires its exact finished native operation
     chart: selection.chart,
     targetRevision: selection.revision,
     helm: {
-      parameters: Object.entries({
-        ...selection.parameters,
-        "delivery.legacyWorkers": "keep",
-      }).map(([name, value]) => ({ name, value, forceString: true })),
+      parameters: Object.entries(selection.parameters).map(([name, value]) => ({
+        name,
+        value,
+        forceString: true,
+      })),
     },
   };
   const operationId = crypto.randomUUID();

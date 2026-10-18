@@ -14,6 +14,7 @@ import { transferDeliveryOwnership } from "./delivery-handover.ts";
 import {
   assertHandoverWebhook,
   handoverAutomation,
+  handoverJson,
 } from "./delivery-handover-native.ts";
 import { createHandoverArgo } from "./delivery-handover-access.ts";
 
@@ -335,7 +336,7 @@ test("old automation proof requires the exact disabled webhook and no native pen
       {
         id: 7,
         active: false,
-        config: { url: "https://woodpecker.sjer.red/hook?private=value" },
+        config: { url: "https://woodpecker.sjer.red/api/hook?private=value" },
       },
     ],
   ];
@@ -343,9 +344,22 @@ test("old automation proof requires the exact disabled webhook and no native pen
     id: 7,
     active: false,
     origin: "https://woodpecker.sjer.red",
-    path: "/hook",
+    path: "/api/hook",
   });
   expect(() => assertHandoverWebhook(raw, 8)).toThrow("exact Woodpecker");
+  expect(() =>
+    assertHandoverWebhook(
+      [
+        [
+          {
+            ...raw[0]![0]!,
+            config: { url: "https://woodpecker.sjer.red/hook" },
+          },
+        ],
+      ],
+      7,
+    ),
+  ).toThrow("exact Woodpecker");
   expect(() =>
     assertHandoverWebhook(
       [
@@ -354,7 +368,7 @@ test("old automation proof requires the exact disabled webhook and no native pen
           {
             id: 8,
             active: true,
-            config: { url: "https://woodpecker.sjer.red/hook" },
+            config: { url: "https://woodpecker.sjer.red/api/hook" },
           },
         ],
       ],
@@ -372,6 +386,94 @@ test("old automation proof requires the exact disabled webhook and no native pen
   await expect(handoverAutomation(current.descriptor, read)).rejects.toThrow(
     "pipeline prevents",
   );
+});
+
+test("default handover transport reads the exact native API for every active status", async () => {
+  const config = {
+    baseUrl: "https://woodpecker.sjer.red",
+    repoId: 1,
+    token: "synthetic",
+  };
+  const json = vi.fn((): Promise<unknown> => Promise.resolve([]));
+  const current = fixture();
+  const hooks = [
+    [
+      {
+        id: 7,
+        active: false,
+        config: { url: "https://woodpecker.sjer.red/api/hook" },
+      },
+    ],
+  ];
+  const read = (command: string[]) =>
+    command[0] === "gh"
+      ? Promise.resolve(hooks)
+      : handoverJson(command, { config: () => Promise.resolve(config), json });
+  await handoverAutomation(current.descriptor, read);
+  expect(json.mock.calls).toEqual(
+    ["pending", "running", "blocked"].map((status) => [
+      `/api/repos/1/pipelines?status=${status}&perPage=1`,
+      config,
+    ]),
+  );
+  json.mockImplementation(() =>
+    Promise.resolve([{ number: 10_955, status: "pending" }]),
+  );
+  await expect(handoverAutomation(current.descriptor, read)).rejects.toThrow(
+    "Native pending pipeline prevents",
+  );
+});
+
+test("handover API transport refuses malformed, wrong-status and over-limit responses", async () => {
+  const command = [
+    "toolkit",
+    "woodpecker",
+    "pipeline",
+    "ls",
+    "shepherdjerred/monorepo",
+    "--status",
+    "pending",
+    "--limit",
+    "1",
+    "--output",
+    "json",
+  ];
+  const connection = {
+    baseUrl: "https://woodpecker.sjer.red",
+    repoId: 1,
+    token: "synthetic",
+  };
+  const config = async () => connection;
+  for (const response of [
+    "",
+    {},
+    [{ number: 1 }],
+    [{ number: 1, status: "success" }],
+    [{ number: 1, status: "running" }],
+    [
+      { number: 1, status: "pending" },
+      { number: 2, status: "pending" },
+    ],
+  ]) {
+    await expect(
+      handoverJson(command, { config, json: () => Promise.resolve(response) }),
+    ).rejects.toThrow();
+  }
+  for (const actual of [
+    { baseUrl: "https://example.invalid", repoId: 1, token: "synthetic" },
+    { baseUrl: "https://woodpecker.sjer.red", repoId: 2, token: "synthetic" },
+  ]) {
+    const json = vi.fn(() => Promise.resolve([]));
+    await expect(
+      handoverJson(command, { config: () => Promise.resolve(actual), json }),
+    ).rejects.toThrow("canonical Woodpecker repository");
+    expect(json).not.toHaveBeenCalled();
+  }
+  const json = vi.fn(() => Promise.resolve([]));
+  await expect(
+    handoverJson([...command, "--event", "push"], { config, json }),
+  ).rejects.toThrow();
+  expect(json).not.toHaveBeenCalled();
 });
 
 test("handover native client rejects admin identities and chooses two separate scoped capabilities for actual PATCHes", async () => {

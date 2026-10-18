@@ -4,7 +4,7 @@ import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { getTemporalPlatformHealthRuleGroup } from "./temporal-platform-health.ts";
 import { temporalQueueTimeoutRules } from "./temporal-timeouts.ts";
 import {
-  buildScoutRetainedWorkflowWorkerHealthRules,
+  buildRetainedWorkflowWorkerHealthRules,
   buildTemporalDomainWorkerHealthRules,
 } from "./temporal-worker-health.ts";
 
@@ -449,7 +449,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         },
         ...temporalQueueTimeoutRules(),
         ...buildTemporalDomainWorkerHealthRules(),
-        ...buildScoutRetainedWorkflowWorkerHealthRules(),
+        ...buildRetainedWorkflowWorkerHealthRules(),
         {
           alert: "TemporalReportHeartbeatStale",
           annotations: {

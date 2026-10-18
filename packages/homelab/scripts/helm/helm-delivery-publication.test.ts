@@ -9,24 +9,69 @@ import {
   retainCurrentProducerArchives,
   validateChartProducerVersion,
   chartValidationValues,
+  bindChartImageDependencies,
 } from "./helm-delivery-publication.ts";
 import { planCharts } from "./helm-release-core.ts";
 import { stageChart } from "./helm-push.ts";
 
+const parameter = (field: string, name: string) =>
+  `{{ required \`Delivery requires image:${name}\` (get (get (.Values.delivery | default dict) "${field}" | default dict) "${name}") }}`;
+
 const version = "2.0.0-1000042";
 const digest = `sha256:${"a".repeat(64)}`;
 
-test("producer validation supplies required forum selections without giving other charts or packaged defaults a fake deployment", () => {
-  for (const name of ["storm-forum", "storm-forum-beta"]) {
-    expect(chartValidationValues(name)?.delivery.bundleSha256).toBe(
-      "f".repeat(64),
-    );
-    expect(chartValidationValues(name)?.delivery.previousBundleSha256).toBe(
-      "e".repeat(64),
-    );
-  }
-  expect(chartValidationValues("arcade")).toBeUndefined();
-  expect(chartValidationValues("delivery")).toEqual({ delivery: {} });
+test("producer validation supplies required selections outside packaged chart defaults", () => {
+  for (const name of ["storm-forum", "storm-forum-beta"])
+    expect(chartValidationValues(name)).toMatchObject({
+      delivery: {
+        bundleSha256: "f".repeat(64),
+        previousBundleSha256: "e".repeat(64),
+      },
+    });
+  expect(chartValidationValues("not-a-chart")).toBeUndefined();
+  for (const name of ["arcade", "delivery"])
+    expect(chartValidationValues(name)).toMatchObject({
+      delivery: {
+        image: `docker.io/shepherdjerred/${name}@sha256:${"f".repeat(64)}`,
+      },
+    });
+  for (const name of ["temporal", "scout-beta", "scout-prod"])
+    expect(chartValidationValues(name)).toMatchObject({
+      delivery: {
+        workerPool: expect.stringContaining(
+          '"schema":"delivery-worker-pool/v1"',
+        ),
+      },
+    });
+});
+
+test("publication freezes only exact root dependencies and preserves required PG selections and YAML 1.1 strings", () => {
+  const input = JSON.stringify({
+    spec: {
+      image: parameter("dependencies", "caddy-s3proxy"),
+      runtime: parameter("images", "temporal-worker"),
+      parameters: { dedup: "off", shared: "yes" },
+    },
+  });
+  const image = `docker.io/shepherdjerred/caddy-s3proxy@${digest}`;
+  const rendered = bindChartImageDependencies(input, {
+    "shepherdjerred/caddy-s3proxy": digest,
+  });
+  expect(Bun.YAML.parse(rendered)).toEqual({
+    spec: {
+      image,
+      runtime: parameter("images", "temporal-worker"),
+      parameters: { dedup: "off", shared: "yes" },
+    },
+  });
+  expect(() => bindChartImageDependencies(input, {})).toThrow(
+    "original published image:caddy-s3proxy",
+  );
+  expect(() =>
+    bindChartImageDependencies(input, {
+      "shepherdjerred/caddy-s3proxy": "latest",
+    }),
+  ).toThrow("original published image");
 });
 
 test("actual active API and control-plane archives lint and render without packaging validation selections", async () => {

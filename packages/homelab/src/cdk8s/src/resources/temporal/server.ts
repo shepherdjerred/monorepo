@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import type { ConfigMap } from "cdk8s-plus-31";
@@ -196,7 +197,7 @@ export function createTemporalServerDeployment(
   deployment.addContainer(
     withCommonProps({
       name: "authenticated-external-gateway",
-      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: firstPartyImageRecipe("caddy-s3proxy"),
       command: ["/bin/sh", "-c"],
       args: [
         'printf "%s" "$CADDY_CONFIG" > /tmp/temporal.Caddyfile && exec caddy run --config /tmp/temporal.Caddyfile --adapter caddyfile',

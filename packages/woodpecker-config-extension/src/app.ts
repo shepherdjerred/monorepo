@@ -10,10 +10,6 @@ import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
-import {
-  internalImagePinSteps,
-  isInternalImagePinChange,
-} from "#src/pipeline/internal-image-pin-change.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
@@ -69,34 +65,6 @@ export type AppOptions = {
     pipeline: Pipeline,
   ) => Promise<unknown>;
 };
-
-async function stepsForMainChange({
-  steps,
-  pipeline,
-  defaultBranch,
-  changedFiles,
-  changedBase,
-  imageFetcher,
-}: {
-  steps: CiStep[];
-  pipeline: Pipeline;
-  defaultBranch: string;
-  changedFiles: readonly string[] | undefined;
-  changedBase: string | undefined;
-  imageFetcher: ImageFetcher;
-}): Promise<CiStep[]> {
-  return changedFiles !== undefined &&
-    pipeline.event === "push" &&
-    pipeline.branch === defaultBranch &&
-    (await isInternalImagePinChange(
-      changedFiles,
-      changedBase,
-      pipeline.commit,
-      imageFetcher,
-    ))
-    ? internalImagePinSteps(steps)
-    : steps;
-}
 
 async function needsCredentiallessHostedAutomation(
   actorClass: "owner-controlled" | "hosted-automation",
@@ -391,17 +359,10 @@ export function createApp(options: AppOptions): Hono {
     });
     const selected = groupSmallChecks(
       signRemoteCacheSteps(
-        selectSteps(
-          await stepsForMainChange({
-            steps: maintenance.enabled ? separateMaintenance(steps) : steps,
-            pipeline,
-            defaultBranch: repo.default_branch,
-            changedFiles,
-            changedBase,
-            imageFetcher: options.imageFetcher,
-          }),
-          { ...selectionContext, changedFiles: changedFiles ?? [] },
-        ),
+        selectSteps(maintenance.enabled ? separateMaintenance(steps) : steps, {
+          ...selectionContext,
+          changedFiles: changedFiles ?? [],
+        }),
         prVerification ? "pull-request" : "trusted",
       ),
       emit.performance.grouping,

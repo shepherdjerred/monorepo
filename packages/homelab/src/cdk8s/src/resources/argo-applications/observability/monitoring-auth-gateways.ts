@@ -1,8 +1,8 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const PROMETHEUS_GATEWAY_PORT = 9091;
 export const ALERTMANAGER_GATEWAY_PORT = 9094;
@@ -120,7 +120,7 @@ type GatewayContainerProps = Readonly<{
 function gatewayContainer(props: GatewayContainerProps) {
   return {
     name: props.name,
-    image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+    image: firstPartyImageRecipe("caddy-s3proxy"),
     command: ["/bin/sh", "-c"],
     args: [
       'printf "%s" "$CADDY_CONFIG" > /tmp/Caddyfile && exec caddy run --config /tmp/Caddyfile --adapter caddyfile',

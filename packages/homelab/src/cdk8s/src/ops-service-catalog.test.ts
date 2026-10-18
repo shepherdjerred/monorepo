@@ -3,7 +3,7 @@ import { App } from "cdk8s";
 import { z } from "zod";
 import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
 import { setupCharts } from "./setup-charts.ts";
-import versions from "./versions.ts";
+import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 
 const ApplicationSchema = z
   .object({
@@ -59,18 +59,15 @@ describe("ops service catalog drift", () => {
         (name) => !rendered.has(name) && !dormant.includes(name),
       ),
     ).toEqual([]);
-    expect(dormant.filter((name) => !rendered.has(name)).sort()).toEqual([
-      "delivery",
-      "delivery-control-plane",
-    ]);
+    expect(dormant.filter((name) => !rendered.has(name)).sort()).toEqual([]);
   });
 
-  it("deploys from version catalog keys that exist", () => {
-    const versionKeys = new Set(Object.keys(versions));
+  it("declares registered primary images without requiring Git deployment pins", () => {
+    const images = new Set(imageRegistry.images.map((entry) => entry.name));
     const missing = SERVICE_CATALOG.services
       .flatMap((service) => service.deploy)
-      .map((variant) => variant.versionKey)
-      .filter((key) => !versionKeys.has(key));
+      .map((variant) => variant.versionKey.split("/")[1])
+      .filter((image) => image === undefined || !images.has(image));
 
     expect(missing).toEqual([]);
   });

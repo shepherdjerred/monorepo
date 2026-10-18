@@ -6,15 +6,12 @@ import {
   deliveryExecutorActivation,
   type DeliveryExecutorActivation,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 /** Controller ownership is separate from the applications it deploys and rolls back. */
 export function createDeliveryControlPlaneChart(
   app: App,
   activation:
-    DeliveryExecutorActivation | undefined = deliveryExecutorActivation(
-    versions["shepherdjerred/delivery"],
-  ),
+    DeliveryExecutorActivation | undefined = deliveryExecutorActivation(),
 ) {
   const chart = new Chart(app, "delivery-control-plane", {
     namespace: "temporal",

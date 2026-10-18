@@ -15,7 +15,10 @@ async function inspectPrincipal(token: string): Promise<unknown> {
 }
 
 /** Explicit one-time operator authority never becomes a runtime or root-release credential fallback. */
-export async function bootstrapCredentials(inspect = inspectPrincipal) {
+export async function bootstrapCredentials(
+  inspect = inspectPrincipal,
+  requireWorkload = false,
+) {
   const operator = z.string().min(1).parse(Bun.env["ARGOCD_TOKEN"]);
   const root = z.string().min(1).parse(Bun.env["ROOT_ARGOCD_TOKEN"]);
   z.object({ loggedIn: z.literal(true), username: z.literal("admin") }).parse(
@@ -25,5 +28,11 @@ export async function bootstrapCredentials(inspect = inspectPrincipal) {
     loggedIn: z.literal(true),
     username: z.enum(["woodpecker", "delivery-platform"]),
   }).parse(await inspect(root));
-  return { ARGOCD_TOKEN: root };
+  if (!requireWorkload) return { ARGOCD_TOKEN: root };
+  const workload = z.string().min(1).parse(Bun.env["ARGOCD_WORKLOAD_TOKEN"]);
+  z.object({
+    loggedIn: z.literal(true),
+    username: z.literal("delivery"),
+  }).parse(await inspect(workload));
+  return { ARGOCD_TOKEN: root, ARGOCD_WORKLOAD_TOKEN: workload };
 }

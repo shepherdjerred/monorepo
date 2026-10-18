@@ -1,528 +1,234 @@
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
+import { DeliveryClientError } from "../../../packages/delivery/src/shared/client-error.ts";
+import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
 import {
-  readLiveVersionCatalogSource,
-  readPublishedVersionCatalogSource,
-  retainPublishedImagePins,
-  resolveImageReleaseCatalog,
-} from "./live-version-catalog.ts";
+  CANONICAL_IMAGE_TARGETS,
+  imageIdentity,
+  qualifiedImage,
+  unbuiltImageOriginals,
+  chartPublicationImages,
+} from "../../../scripts/lib/image-pin-catalog.ts";
+import { readQualifiedImages } from "./live-version-catalog.ts";
+import { includeMissingQualifiedImages } from "../selectors/select-image-targets-pins.ts";
 import {
-  parseVersionCatalogText,
-  serializeVersionCatalog,
-  type VersionCatalogEntry,
-} from "../../../packages/version-catalog/src/index.ts";
-import type { LiveCatalogExecutor } from "./live-version-catalog.ts";
-import type { BuildxCommandResult } from "./bake-retry.ts";
-import { TransientError } from "../../../scripts/lib/transient-error.ts";
-import { UNPUBLISHED_IMAGE_DIGEST } from "../../../scripts/lib/image-pin-catalog.ts";
+  ServiceIndex,
+  SERVICE_CATALOG,
+} from "../../../packages/ops-model/src/catalog.ts";
 
-function commandResult(exitCode = 0, stdout = ""): BuildxCommandResult {
-  return { exitCode, stdout, stderr: "" };
-}
-
-const CATALOG = JSON.stringify({
-  entries: [
-    {
-      name: "shepherdjerred/temporal-worker/workflows/stable",
-      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
-    },
-    {
-      name: "shepherdjerred/temporal-worker/workflows/candidate",
-      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
-    },
-  ],
-});
-
-test("returns the live catalog without consulting the version-bump branch", async () => {
-  const commands: string[] = [];
-  const executor: LiveCatalogExecutor = async (command) => {
-    commands.push(command.join(" "));
-    return command[1] === "fetch" ? commandResult() : commandResult(0, CATALOG);
-  };
-  await expect(readLiveVersionCatalogSource(executor)).resolves.toBe(CATALOG);
-  expect(commands).toEqual([
-    "git fetch --no-tags --depth=100 origin main",
-    "git show origin/main:packages/version-catalog/src/catalog.json",
-  ]);
-});
-
-test("fails transiently when origin main cannot be refreshed", async () => {
-  await expect(
-    readLiveVersionCatalogSource(async () => commandResult(1)),
-  ).rejects.toThrow(TransientError);
-});
-
-test("fails transiently when the live version catalog cannot be read", async () => {
-  await expect(
-    readLiveVersionCatalogSource(async (command) =>
-      command[1] === "fetch" ? commandResult() : commandResult(1),
-    ),
-  ).rejects.toThrow(TransientError);
-});
-
-test("rejects malformed live version catalogs", async () => {
-  for (const malformedCatalog of [
-    JSON.stringify({ entries: "invalid" }),
-    JSON.stringify({ entries: ["invalid"] }),
-  ]) {
-    await expect(
-      readLiveVersionCatalogSource(async (command) =>
-        command[1] === "fetch"
-          ? commandResult()
-          : commandResult(0, malformedCatalog),
-      ),
-    ).rejects.toThrow("Live version catalog has an invalid");
-  }
-});
-
-function catalog(
-  pins: readonly (readonly [string, string])[],
-  upstream = "1.0",
-  notes = "current main",
-): string {
-  return JSON.stringify({
-    $schema: "./schema.json",
-    schemaVersion: 1,
-    entries: [
-      ...pins.map(([name, value]) => ({
-        name,
-        value,
-        category: "internal-image",
-        artifactType: "image",
-        management: { managed: false },
-        notes: [notes],
-      })),
-      {
-        name: "upstream/chart",
-        value: upstream,
-        category: "upstream",
-        artifactType: "helm-chart",
-        management: { managed: false },
-      },
-    ],
-  });
-}
-function pin(build: number, digest = "a"): string {
-  return `2.0.0-${build.toString()}@sha256:${digest.repeat(64)}`;
-}
-function candidates(
-  build: number,
-  keys: readonly string[] = [],
-  digest = "b",
-): string {
-  return JSON.stringify({
-    schema: "pin-candidates/v1",
-    buildNumber: build,
-    candidates: Object.fromEntries(
-      keys.map((key) => [
-        key,
-        {
-          version: `2.0.0-${build.toString()}`,
-          digest: `sha256:${digest.repeat(64)}`,
-        },
-      ]),
-    ),
-  });
-}
-function entries(source: string): readonly VersionCatalogEntry[] {
-  return parseVersionCatalogText(source).entries;
-}
-
-function localCatalog(value: string): string {
-  const parsed = parseVersionCatalogText(
-    catalog([
-      ["local-image", value],
-      ["worker", pin(100)],
+test("full fresh publication works before environment registration without inventing accepted state", async () => {
+  const fresh = Object.fromEntries(
+    CANONICAL_IMAGE_TARGETS.map((name) => [
+      `shepherdjerred/${name}`,
+      `sha256:${"d".repeat(64)}`,
     ]),
   );
-  return serializeVersionCatalog({
-    ...parsed,
-    entries: parsed.entries.map((entry) =>
-      entry.name === "local-image"
-        ? { ...entry, imagePublisher: "local" }
-        : entry,
+  const result = await chartPublicationImages(
+    (key) =>
+      Promise.resolve(
+        JSON.stringify(key === "delivery-image-digests" ? fresh : []),
+      ),
+    {
+      overview: () => Promise.resolve({ environments: [] }),
+      latestQualifiedArtifact: () => {
+        throw new Error(
+          "Fresh outputs must not require an earlier qualified image",
+        );
+      },
+      version: () => {
+        throw new Error("No accepted release exists");
+      },
+    },
+  );
+  expect(result).toEqual({
+    ...fresh,
+    "shepherdjerred/the-storm-server/candidate":
+      fresh["shepherdjerred/the-storm-server"],
+  });
+  expect(result).not.toHaveProperty("shepherdjerred/the-storm-server/accepted");
+});
+
+test("chart bytes reuse original dependencies while sandbox permissions freeze only actual candidate and accepted metadata", async () => {
+  const candidate = original("the-storm-server");
+  const accepted = {
+    ...candidate,
+    id: "minecraft/accepted/original",
+    digest: `sha256:${"c".repeat(64)}`,
+  };
+  const read = (key: string) =>
+    Promise.resolve(
+      key === "delivery-image-digests"
+        ? JSON.stringify({
+            "shepherdjerred/delivery": `sha256:${"d".repeat(64)}`,
+          })
+        : JSON.stringify([original("caddy-s3proxy")]),
+    );
+  const client = {
+    latestQualifiedArtifact: () => Promise.resolve(candidate),
+    overview: () =>
+      Promise.resolve({
+        environments: [
+          {
+            id: "minecraft/tsmc",
+            acceptedVersionSetRevisionId: "minecraft/accepted",
+          },
+        ],
+      }),
+    version: () =>
+      Promise.resolve({
+        serviceId: "minecraft",
+        components: { "image:the-storm-server": accepted },
+      }),
+  };
+  expect(await chartPublicationImages(read, client)).toEqual({
+    "shepherdjerred/delivery": `sha256:${"d".repeat(64)}`,
+    "shepherdjerred/caddy-s3proxy": original("caddy-s3proxy").digest,
+    "shepherdjerred/the-storm-server/candidate": candidate.digest,
+    "shepherdjerred/the-storm-server/accepted": accepted.digest,
+  });
+  const noAccepted = await chartPublicationImages(read, {
+    ...client,
+    overview: () =>
+      Promise.resolve({
+        environments: [
+          { id: "minecraft/tsmc", acceptedVersionSetRevisionId: null },
+        ],
+      }),
+  });
+  expect(noAccepted).not.toHaveProperty(
+    "shepherdjerred/the-storm-server/accepted",
+  );
+  await expect(
+    chartPublicationImages(
+      () => Promise.resolve(JSON.stringify({ unknown: "latest" })),
+      client,
     ),
+  ).rejects.toThrow();
+  await expect(
+    chartPublicationImages(
+      (key) =>
+        Promise.resolve(
+          key === "delivery-image-digests"
+            ? JSON.stringify({
+                "shepherdjerred/caddy-s3proxy": candidate.digest,
+              })
+            : JSON.stringify([original("caddy-s3proxy")]),
+        ),
+      client,
+    ),
+  ).rejects.toThrow("overlap");
+});
+
+function original(name: string) {
+  return ArtifactVersionSchema.parse({
+    ...imageIdentity(name),
+    id: `ci/1/42/image/${name}`,
+    buildId: `ci/1/42/${imageIdentity(name).serviceId}`,
+    sourceRevision: "a".repeat(40),
+    createdAt: "2026-10-17T12:00:00.000Z",
+    digest: `sha256:${"b".repeat(64)}`,
+    version: "2.0.0-1000042",
+    origin: { kind: "first-party" },
   });
 }
 
-test("retains local bootstrap and published pins from current source across CI releases", () => {
-  const bootstrap = `0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`;
-  const main = localCatalog(bootstrap);
-  const released = retainPublishedImagePins(
-    main,
-    main,
-    candidates(200, ["worker"]),
-  );
-  expect(entries(released)[0]?.value).toBe(bootstrap);
-  expect(entries(released)[1]?.value).toBe(pin(200, "b"));
-  const localPublication = `0.1.0-1@sha256:${"d".repeat(64)}`;
-  const current = localCatalog(localPublication);
-  const retained = retainPublishedImagePins(current, released, candidates(201));
-  const next = retainPublishedImagePins(current, retained, candidates(202));
-  expect(entries(next)[0]?.value).toBe(localPublication);
-  expect(entries(next)[1]?.value).toBe(pin(200, "b"));
-});
-
-test("CI cannot overwrite local ownership declared by either catalog", () => {
-  const local = localCatalog(`0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`);
-  const legacy = catalog([
-    ["local-image", pin(100)],
-    ["worker", pin(100)],
-  ]);
-  expect(
-    entries(retainPublishedImagePins(local, legacy, candidates(200)))[0]?.value,
-  ).toBe(`0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`);
-  for (const [current, previous] of [
-    [local, legacy],
-    [legacy, local],
-    [local, local],
-  ] as const) {
-    expect(() =>
-      retainPublishedImagePins(
-        current,
-        previous,
-        candidates(200, ["local-image"]),
-      ),
-    ).toThrow("CI candidate contains locally published image key");
+test("all21 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(21);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(21);
+  for (const name of CANONICAL_IMAGE_TARGETS) {
+    expect(imageIdentity(name)).toMatchObject({
+      kind: "image",
+      component: `image:${name}`,
+      uri: `docker.io/shepherdjerred/${name}`,
+    });
   }
-});
-
-test("retains a new image's first publication in producer metadata", () => {
-  const name = "shepherdjerred/velero-plugin";
-  const bootstrap = catalog([[name, `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`]]);
-  const published = retainPublishedImagePins(
-    bootstrap,
-    bootstrap,
-    candidates(200, [name]),
-  );
-  const retained = retainPublishedImagePins(
-    bootstrap,
-    published,
-    candidates(201),
-  );
-  expect(entries(published)[0]?.value).toBe(pin(200, "b"));
-  expect(entries(retained)[0]?.value).toBe(pin(200, "b"));
-  expect(
-    entries(retainPublishedImagePins(bootstrap, bootstrap, candidates(200))),
-  ).toEqual(entries(bootstrap));
-});
-
-test("retains prepared image markers without regressing published pins", () => {
-  const prepared = "shepherdjerred/prepared-service";
-  const marker = `0.0.0@${UNPUBLISHED_IMAGE_DIGEST}`;
-  const previous = catalog([
-    ["worker", pin(100)],
-    [prepared, marker],
-  ]);
-  const partial = retainPublishedImagePins(
-    previous,
-    previous,
-    candidates(200, ["worker"]),
-  );
-  expect(entries(partial).map((entry) => entry.value)).toEqual([
-    pin(200, "b"),
-    marker,
-    "1.0",
-  ]);
-  const current = catalog([
-    ["worker", pin(200, "b")],
-    [prepared, pin(300)],
-  ]);
-  expect(
-    entries(retainPublishedImagePins(current, partial, candidates(301))),
-  ).toEqual(entries(current));
-  const invalid = catalog([[prepared, `0.1.0-0@${UNPUBLISHED_IMAGE_DIGEST}`]]);
-  expect(() =>
-    retainPublishedImagePins(invalid, previous, candidates(302)),
-  ).toThrow("Invalid internal image release pin");
-  expect(() =>
-    retainPublishedImagePins(previous, invalid, candidates(302)),
-  ).toThrow("Invalid internal image release pin");
-});
-
-test("retains published pins across partial and consecutive no-target releases", () => {
-  const stable = "worker/workflows/stable";
-  const candidate = "worker/workflows/candidate";
-  const main = catalog([
-    ["worker", pin(100)],
-    [stable, pin(100)],
-    [candidate, pin(100)],
-    ["other", pin(100)],
-  ]);
-  const released = retainPublishedImagePins(
-    main,
-    main,
-    candidates(200, ["worker", candidate]),
-  );
-  const next = retainPublishedImagePins(
-    main,
-    released,
-    candidates(201, ["other"], "c"),
-  );
-  const noop = retainPublishedImagePins(main, next, candidates(202));
-  const secondNoop = retainPublishedImagePins(main, noop, candidates(203));
-  expect(entries(secondNoop).map((entry) => [entry.name, entry.value])).toEqual(
-    [
-      ["worker", pin(200, "b")],
-      [stable, pin(100)],
-      [candidate, pin(200, "b")],
-      ["other", pin(201, "c")],
-      ["upstream/chart", "1.0"],
-    ],
+  expect(() => imageIdentity("scout-for-lol/prod/workflows/stable")).toThrow(
+    "Unknown CI image recipe",
   );
 });
 
-test("current main owns newer pins, upstream versions, metadata and retired keys", () => {
-  const previous = catalog(
-    [
-      ["worker", pin(100)],
-      ["retired", pin(100)],
-    ],
-    "1.0",
-    "old note",
-  );
-  const main = catalog(
-    [
-      ["worker", pin(300)],
-      ["new", pin(300)],
-    ],
-    "2.0",
-    "new note",
-  );
-  const result = retainPublishedImagePins(
-    main,
-    previous,
-    candidates(200, ["worker", "retired"]),
-  );
-  expect(entries(result)).toEqual(entries(main));
-});
-
-test.each([
-  "shepherdjerred/scout-for-lol/prod/workflows/stable",
-  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
-])(
-  "source bootstrap slots %s remain independent of newer producer metadata",
-  (key) => {
-    const main = catalog([
-      [key, pin(100, "c")],
-      ["worker", pin(100)],
-    ]);
-    const previous = catalog([
-      [key, pin(200)],
-      ["worker", pin(200)],
-    ]);
-    const released = retainPublishedImagePins(main, previous, candidates(300));
-    expect(entries(released).map((entry) => [entry.name, entry.value])).toEqual(
-      [
-        [key, pin(100, "c")],
-        ["worker", pin(200)],
-        ["upstream/chart", "1.0"],
-      ],
-    );
-    expect(retainPublishedImagePins(main, released, candidates(301))).toBe(
-      released,
-    );
-  },
-);
-
-test.each([
-  "shepherdjerred/scout-for-lol/prod/workflows/stable",
-  "shepherdjerred/scout-for-lol/prod/workflows/candidate",
-])("CI publication cannot mint source-owned bootstrap slot %s", (key) => {
-  const main = catalog([[key, pin(100)]]);
-  expect(() =>
-    retainPublishedImagePins(main, main, candidates(200, [key])),
-  ).toThrow("CI candidate contains source-owned bootstrap image key");
-});
-
-test("rejects conflicting digests at the same release rather than choosing one", () => {
-  const main = catalog([["worker", pin(200)]]);
-  expect(() =>
-    retainPublishedImagePins(main, main, candidates(200, ["worker"])),
-  ).toThrow("Conflicting published image pins");
-});
-
-test("rejects unknown candidate keys, invalid versions and malformed handoffs", () => {
-  const main = catalog([["worker", pin(100)]]);
-  expect(() =>
-    retainPublishedImagePins(main, main, candidates(200, ["unknown"])),
-  ).toThrow("unknown internal image key");
-  expect(() =>
-    retainPublishedImagePins(main, main, candidates(200, ["upstream/chart"])),
-  ).toThrow("unknown internal image key");
-  expect(() =>
-    retainPublishedImagePins(
-      main,
-      main,
-      candidates(200, ["worker"]).replace("2.0.0-200", "2.0.0-201"),
-    ),
-  ).toThrow("version does not match its build");
-  expect(() =>
-    retainPublishedImagePins(
-      main,
-      catalog([["worker", "invalid"]]),
-      candidates(200),
-    ),
-  ).toThrow("Invalid internal image release pin");
-  expect(() => retainPublishedImagePins(main, main, "{}")).toThrow();
-  expect(() => retainPublishedImagePins(main, main, "{")).toThrow(
-    "pin candidates is not valid JSON",
+test("root chart publication owns only its canonical undelegated charts", () => {
+  const index = new ServiceIndex(SERVICE_CATALOG);
+  const charts = index.rootReleaseCharts();
+  expect(charts.length).toBeGreaterThan(0);
+  expect(new Set(charts.map((chart) => chart.name)).size).toBe(charts.length);
+  for (const chart of charts) {
+    expect(index.byChart(chart.name)?.id).toBe(chart.serviceId);
+    expect(SERVICE_CATALOG.deliveryDelegations?.[chart.name]).toBeUndefined();
+  }
+  expect(charts.map((chart) => chart.name)).not.toContain(
+    "delivery-control-plane",
   );
 });
 
-test("requires both handoffs from the same completed pipeline", async () => {
-  const main = catalog([["worker", pin(100)]]);
-  const reads: string[] = [];
-  const result = await readPublishedVersionCatalogSource(
-    main,
-    "6485",
-    async (key, pipeline) => {
-      reads.push(`${pipeline}/${key}`);
-      return key === "version-catalog" ? main : candidates(200, ["worker"]);
-    },
+test("qualified inventory preserves each original artifact/build/source through no-target and partial publications", async () => {
+  const originals = new Map(
+    CANONICAL_IMAGE_TARGETS.map((name) => [name, original(name)]),
   );
-  expect(reads).toEqual(["6485/version-catalog", "6485/pin-candidates"]);
-  expect(entries(result)[0]?.value).toBe(pin(200, "b"));
-  await expect(
-    readPublishedVersionCatalogSource(main, "6485", async () => {
-      throw new Error("required handoff is missing");
-    }),
-  ).rejects.toThrow("required handoff is missing");
-  await expect(
-    readPublishedVersionCatalogSource(main, "../6485", async () => main),
-  ).rejects.toThrow("Image release pipeline");
-});
-
-test("reuses immutable publication handoffs without reading Git deployment state", async () => {
-  const main = catalog([["worker", pin(100)]]);
-  const commands: string[] = [];
-  const reads: string[] = [];
-  const release = await resolveImageReleaseCatalog(
-    "current",
-    async (command) => {
-      commands.push(command.join(" "));
-      return commandResult(0, command[1] === "show" ? main : "");
-    },
-    {
-      CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
-      CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
-    },
-    async (key, pipeline) => {
-      reads.push(`${pipeline}/${key}`);
-      return key === "version-catalog" ? main : candidates(200, ["worker"]);
-    },
-  );
-  expect(release.baseCommit).toBe("published-source");
-  expect(entries(release.catalog)[0]?.value).toBe(pin(200, "b"));
-  expect(commands).toEqual([
-    "git fetch --no-tags --depth=100 origin main",
-    "git show origin/main:packages/version-catalog/src/catalog.json",
-    "git show current:packages/version-catalog/src/catalog.json",
-    "git cat-file -e published-source^{commit}",
-    "git merge-base --is-ancestor published-source current",
-  ]);
-  expect(reads).toEqual(["6485/version-catalog", "6485/pin-candidates"]);
-});
-
-test("does not reuse pins or narrow builds from a release outside current ancestry", async () => {
-  const main = catalog([["worker", pin(100)]]);
-  const release = await resolveImageReleaseCatalog(
-    "current",
-    async (command) => {
-      if (command[1] === "merge-base") return commandResult(1);
-      return commandResult(0, command[1] === "show" ? main : "");
-    },
-    {
-      CI_LAST_IMAGE_RELEASE_COMMIT: "other-branch",
-      CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
-    },
-    async (_key, pipeline) => {
-      throw new Error(`must not read unrelated pipeline ${pipeline}`);
-    },
-  );
-  expect(release.baseCommit).toBeUndefined();
-  expect(entries(release.catalog)).toEqual(entries(main));
-});
-
-test("keeps upstream versions and metadata tied to the build while advancing image pins", async () => {
-  const source = catalog([["worker", pin(100)]], "1.11.9", "build source");
-  const live = catalog(
-    [
-      ["worker", pin(200)],
-      ["future", pin(200)],
-    ],
-    "1.11.10",
-    "future source",
-  );
-  const release = await resolveImageReleaseCatalog(
-    "current",
-    async (command) =>
-      commandResult(
-        0,
-        command[1] === "show"
-          ? command[2]?.startsWith("current:")
-            ? source
-            : live
-          : "",
-      ),
-    {},
-  );
-  expect(entries(release.catalog)).toEqual(
-    entries(catalog([["worker", pin(200)]], "1.11.9", "build source")),
-  );
-});
-
-test.each(["missing", "invalid"])(
-  "rejects a %s build source catalog",
-  async (mode) => {
-    await expect(
-      resolveImageReleaseCatalog(
-        "current",
-        async (command) => {
-          if (command[2]?.startsWith("current:"))
-            return commandResult(mode === "missing" ? 1 : 0, "{}");
-          return commandResult(0, command[1] === "show" ? catalog([]) : "");
-        },
-        {},
-      ),
-    ).rejects.toThrow(
-      mode === "missing"
-        ? "Unable to read the build source version catalog"
-        : "Invalid input",
-    );
-  },
-);
-
-test("reads the required published artifacts through the configured S3 handoff store", async () => {
-  const main = catalog([["worker", pin(100)]]);
   const requested: string[] = [];
-  vi.stubEnv("CI_PIPELINE_NUMBER", "7000");
-  vi.stubEnv("SEAWEEDFS_HANDOFF_ACCESS_KEY_ID", "test-key");
-  vi.stubEnv("SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY", "test-secret");
-  vi.stubGlobal("fetch", async (request: Request) => {
-    const path = new URL(request.url).pathname;
-    requested.push(path);
-    return new Response(
-      path.endsWith("/version-catalog.json")
-        ? main
-        : candidates(200, ["worker"]),
-    );
+  const actual = await readQualifiedImages(async (query) => {
+    const name = query.component.slice("image:".length);
+    requested.push(name);
+    expect(query).toEqual({
+      serviceId: imageIdentity(name).serviceId,
+      component: `image:${name}`,
+      kind: "image",
+    });
+    return originals.get(name);
   });
-  try {
-    const release = await resolveImageReleaseCatalog(
-      "current",
-      async (command) => commandResult(0, command[1] === "show" ? main : ""),
-      {
-        CI_LAST_IMAGE_RELEASE_COMMIT: "published-source",
-        CI_LAST_IMAGE_RELEASE_PIPELINE: "6485",
-      },
-    );
-    expect(entries(release.catalog)[0]?.value).toBe(pin(200, "b"));
-    expect(requested.sort()).toEqual([
-      "/ci-handoff/6485/pin-candidates.json",
-      "/ci-handoff/6485/version-catalog.json",
-    ]);
-  } finally {
-    vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
+  expect(requested).toEqual(CANONICAL_IMAGE_TARGETS);
+  expect(actual).toEqual(originals);
+  expect(unbuiltImageOriginals(actual, [])).toEqual([...originals.values()]);
+  expect(unbuiltImageOriginals(actual, ["delivery"])).toEqual(
+    [...originals]
+      .filter(([name]) => name !== "delivery")
+      .map(([, artifact]) => artifact),
+  );
+  expect(includeMissingQualifiedImages([], actual)).toEqual([]);
+});
+
+test("only404 absence selects new builds, including the fixed infra recipe group", async () => {
+  const originals = await readQualifiedImages(async (query) => {
+    const name = query.component.slice("image:".length);
+    if (name === "delivery" || name === "redlib")
+      throw new DeliveryClientError(
+        404,
+        "NOT_FOUND",
+        "No original qualified artifact",
+      );
+    return original(name);
+  });
+  expect(includeMissingQualifiedImages(["tracker"], originals)).toEqual([
+    "delivery",
+    "infra",
+    "tracker",
+  ]);
+});
+
+test.each([401, 403, 500])(
+  "API status%s cannot become missing-original rebuild or Git/history fallback",
+  async (status) => {
+    await expect(
+      readQualifiedImages(async () => {
+        throw new DeliveryClientError(status, "HTTP_ERROR", "refused");
+      }),
+    ).rejects.toMatchObject({ status });
+  },
+);
+
+test("malformed or foreign qualified identities are refused", async () => {
+  await expect(readQualifiedImages(async () => ({}))).rejects.toThrow();
+  for (const mutation of [
+    { serviceId: "arcade" },
+    { component: "image:arcade" },
+    { uri: "docker.io/foreign/delivery" },
+  ]) {
+    expect(() =>
+      qualifiedImage("delivery", { ...original("delivery"), ...mutation }),
+    ).toThrow("canonical owner/component/repository");
   }
+  await expect(
+    readQualifiedImages(async () => {
+      throw new Error("network unavailable");
+    }),
+  ).rejects.toThrow("network unavailable");
 });

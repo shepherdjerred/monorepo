@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import {
@@ -12,7 +13,6 @@ import {
 } from "cdk8s-plus-31";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { withCommonProps } from "./common.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject } from "cdk8s";
 import { Probe } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import {
@@ -404,7 +404,7 @@ export class S3StaticSites extends Construct {
         // non-critical usage; see the 2026-06-12 right-sizing plan.
         resources: {},
         name: "caddy",
-        image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+        image: firstPartyImageRecipe("caddy-s3proxy"),
         portNumber: STATIC_SITE_HTTP_PORT,
         envVariables: {
           AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({

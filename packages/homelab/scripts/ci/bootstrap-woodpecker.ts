@@ -59,6 +59,41 @@ function argumentsForBootstrap() {
   };
 }
 
+/** Reuse the existing root lifecycle and scoped application sync before ownership transfer. */
+export async function releaseBootstrapRoot(input: {
+  descriptor: {
+    targets: readonly string[];
+    revision: string;
+    requestId: string;
+  };
+  expectedPath: string;
+  credentials: { ARGOCD_TOKEN: string; ARGOCD_WORKLOAD_TOKEN?: string };
+  run: (
+    args: string[],
+    credentials: Record<string, string>,
+  ) => Promise<unknown>;
+}) {
+  const { descriptor, credentials } = input;
+  const identity = [
+    "--revision",
+    descriptor.revision,
+    "--request-id",
+    descriptor.requestId,
+  ];
+  const root = { ARGOCD_TOKEN: credentials.ARGOCD_TOKEN };
+  if (descriptor.targets.includes("delivery")) {
+    const workload = z.string().min(1).parse(credentials.ARGOCD_WORKLOAD_TOKEN);
+    await input.run(["stage-root-release", "apps", ...identity], root);
+    await input.run(["sync-managed", "delivery", ...identity], {
+      ARGOCD_TOKEN: workload,
+    });
+  }
+  await input.run(
+    ["release-root", "apps", input.expectedPath, ...identity],
+    root,
+  );
+}
+
 async function main() {
   const { descriptorFile, directory, repository, dryRun } =
     argumentsForBootstrap();
@@ -67,7 +102,10 @@ async function main() {
   );
   await assertBootstrapCheckout(descriptor.sourceRevision);
   const sourceProof = await bootstrapSourceProof(descriptor);
-  await bootstrapCredentials();
+  await bootstrapCredentials(
+    undefined,
+    descriptor.targets.includes("delivery"),
+  );
   const captured = await captureBootstrapApplications();
   assertBootstrapOwnershipOff(captured.applications);
   await assertBootstrapRegistryEmpty(
@@ -222,30 +260,34 @@ async function main() {
       requestId: descriptor.requestId,
       revision: descriptor.revision,
     });
-    const rootCredentials = await bootstrapCredentials();
-    await run(
-      [
-        "bun",
-        "--no-install",
-        path.join(repository, "packages/homelab/scripts/argocd/argocd.ts"),
-        "release-root",
-        "apps",
-        expectedPath,
-        "--revision",
-        descriptor.revision,
-        "--request-id",
-        descriptor.requestId,
-      ],
-      {
-        cwd: directory,
-        env: rootCredentials,
-        unsetEnv: [
-          "OP_SERVICE_ACCOUNT_TOKEN",
-          "ROOT_ARGOCD_TOKEN",
-          "ARGOCD_AUTH_TOKEN",
-        ],
-      },
+    const rootCredentials = await bootstrapCredentials(
+      undefined,
+      descriptor.targets.includes("delivery"),
     );
+    await releaseBootstrapRoot({
+      descriptor,
+      expectedPath,
+      credentials: rootCredentials,
+      run: (args, credentials) =>
+        run(
+          [
+            "bun",
+            "--no-install",
+            path.join(repository, "packages/homelab/scripts/argocd/argocd.ts"),
+            ...args,
+          ],
+          {
+            cwd: directory,
+            env: credentials,
+            unsetEnv: [
+              "OP_SERVICE_ACCOUNT_TOKEN",
+              "ROOT_ARGOCD_TOKEN",
+              "ARGOCD_AUTH_TOKEN",
+              "ARGOCD_WORKLOAD_TOKEN",
+            ],
+          },
+        ),
+    });
     const operations = [];
     for (const name of ["apps", ...descriptor.targets])
       operations.push(

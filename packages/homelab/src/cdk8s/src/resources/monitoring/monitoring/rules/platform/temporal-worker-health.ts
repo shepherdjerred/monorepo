@@ -1,10 +1,5 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
-import {
-  scoutRetainedWorkflowWorkerPins,
-  scoutWorkflowWorkerImageIsCapable,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 
@@ -51,59 +46,24 @@ type TemporalDomainQueueDefinition = {
   workflowServedNamespaces?: readonly string[];
 };
 
-// Do not install these rules until both tracks can render. A capable
-// candidate alone is insufficient: Scout's chart bootstraps the stable worker
-// first, so candidate-only alerts would fire on absent pods.
-function scoutWorkflowQueue(
-  stage: "beta" | "prod",
-  stableImage: string,
-  candidateImage: string,
-): TemporalDomainQueueDefinition[] {
-  if (
-    !scoutWorkflowWorkerImageIsCapable(stableImage) ||
-    !scoutWorkflowWorkerImageIsCapable(candidateImage)
-  ) {
-    return [];
-  }
-  const queue = `scout-${stage}`;
-  return [
-    {
-      queue,
-      metricsNamespace: queue,
-      deploymentPattern: `${queue}-scout-workflow-worker.*`,
-      servicePattern: ".*scout-workflow-worker.*metrics.*",
-      candidateDeploymentPattern: `${queue}-scout-workflow-worker-candidate`,
-      candidateServicePattern: ".*scout-workflow-worker-candidate.*metrics.*",
-      candidatePollerServicePattern:
-        ".*scout-workflow-worker-(stable|candidate).*metrics.*",
-      activityPoller: false,
-      servedNamespaces: [stage],
-    },
-  ];
-}
-
-const scoutWorkflowQueues = [
-  ...scoutWorkflowQueue(
-    "beta",
-    versions["shepherdjerred/scout-for-lol/beta/workflows/stable"],
-    versions["shepherdjerred/scout-for-lol/beta/workflows/candidate"],
-  ),
-  ...scoutWorkflowQueue(
-    "prod",
-    versions["shepherdjerred/scout-for-lol/prod/workflows/stable"],
-    versions["shepherdjerred/scout-for-lol/prod/workflows/candidate"],
-  ),
-];
+const scoutWorkflowQueues: TemporalDomainQueueDefinition[] = (
+  ["beta", "prod"] as const
+).map((stage) => ({
+  queue: `scout-${stage}`,
+  metricsNamespace: `scout-${stage}`,
+  deploymentPattern: ".*delivery-wf-retained-[a-f0-9]{12}",
+  servicePattern: ".*delivery-wf-retained-.*metrics.*",
+  activityPoller: false,
+  servedNamespaces: [stage],
+}));
 
 export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
   [
     {
       queue: "monorepo-workflows",
       metricsNamespace: "temporal",
-      deploymentPattern: "temporal-temporal-workflows.*",
-      servicePattern: ".*temporal-workflows.*metrics.*",
-      candidateDeploymentPattern: "temporal-temporal-workflows-candidate",
-      candidateServicePattern: ".*temporal-workflows-candidate.*metrics.*",
+      deploymentPattern: ".*delivery-wf-retained-[a-f0-9]{12}",
+      servicePattern: ".*delivery-wf-retained-.*metrics.*",
       activityPoller: false,
       servedNamespaces: ["prod", "beta"],
     },
@@ -208,38 +168,24 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
     },
   ];
 
-export function buildScoutRetainedWorkflowWorkerHealthRules(
-  readPins: typeof scoutRetainedWorkflowWorkerPins = scoutRetainedWorkflowWorkerPins,
-): PrometheusRule[] {
-  return (["beta", "prod"] as const).flatMap((stage) =>
-    readPins(stage).map(({ track }) => {
-      const queue = `scout-${stage}`;
-      const buildPrefix = track.slice("retained-".length);
-      const deployment = `${queue}-scout-workflow-worker-${track}`;
-      // CDK8s truncates Service names. Match the unique track prefix rather
-      // than assuming that the full metrics-service suffix survives.
-      const serviceSelector = `namespace="${queue}",service=~".*scout-workflow-worker-${track}.*"`;
-      const pollerSelector = `${serviceSelector},temporal_namespace="${stage}",worker_deployment_name="${queue}-workflows",worker_build_id=~"${buildPrefix}.*",task_queue="${queue}",poller_type=~"workflow_task|sticky_workflow_task"`;
-      return {
-        alert: "TemporalScoutRetainedWorkflowWorkerUnavailable",
-        annotations: {
-          summary: `Retained ${queue} Workflow build ${buildPrefix} is unavailable`,
-          description:
-            "A retained Workflow build has no ready replica, metrics scrape, or Workflow poller. Stable and candidate workers cannot replace its routed or pinned tasks. Restore this exact build before retiring its pin.",
-        },
-        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `(max(kube_deployment_status_replicas_available{namespace="${queue}",deployment="${deployment}"}) or vector(0)) < 1 or (max(up{${serviceSelector}}) or vector(0)) < 1 or (sum(temporal_worker_num_pollers{${pollerSelector}}) or vector(0)) < 1`,
-        ),
-        for: "5m",
-        labels: {
-          severity: "warning",
-          task_queue: queue,
-          track,
-          worker_build_id_prefix: buildPrefix,
-        },
-      };
-    }),
-  );
+/** Native desired replicas reflect the frozen pool, including deliberate retirement to zero. */
+export function buildRetainedWorkflowWorkerHealthRules(): PrometheusRule[] {
+  return ["temporal", "scout-beta", "scout-prod"].map((namespace) => {
+    const selector = `namespace="${namespace}",deployment=~".*delivery-wf-retained-[a-f0-9]{12}"`;
+    return {
+      alert: "TemporalRetainedWorkflowWorkerUnavailable",
+      annotations: {
+        summary: "A desired retained Workflow host has no available replica",
+        description:
+          "Restore the exact retained build selected by Delivery; other healthy hosts cannot serve its pinned tasks.",
+      },
+      expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+        `(kube_deployment_spec_replicas{${selector}} > 0) unless on(namespace, deployment) (kube_deployment_status_replicas_available{${selector}} > 0)`,
+      ),
+      for: "5m",
+      labels: { severity: "warning", worker_namespace: namespace },
+    };
+  });
 }
 
 export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {

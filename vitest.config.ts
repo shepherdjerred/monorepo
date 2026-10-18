@@ -227,6 +227,8 @@ export default {
           include: [
             ...defaultTestInclude,
             "../ci/scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)",
+            // Qualified image reuse depends on the canonical ownership index.
+            "../packages/ops-model/src/catalog.test.ts",
           ],
         }
       : {}),

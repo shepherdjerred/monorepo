@@ -2,41 +2,36 @@ import { test, expect, describe } from "vitest";
 import { SERVICES, resolveServiceSelector } from "#lib/deployed/catalog.ts";
 import { showCatalogAt } from "#lib/deployed/git.ts";
 import { parseCatalogPins } from "#lib/deployed/catalog-pins.ts";
-import { parseVersionCatalogText } from "@shepherdjerred/version-catalog";
+import {
+  SERVICE_CATALOG,
+  ServiceIndex,
+} from "@shepherdjerred/ops-model/catalog.ts";
+import { firstPartyImage } from "@shepherdjerred/version-catalog/image-registry";
 
 /**
- * Drift guard: every versionKey in the service registry must exist in the real
- * version catalog on HEAD. This catches typos and renamed pins without importing
- * across the package boundary (banned by no-parent-imports). The catalog is the
- * source of truth the command reads live, so validating against it is stronger
- * than checking scripts/ci/src/catalog.ts.
+ * Recipe/ownership drift guard. Version keys identify repositories and variants;
+ * selected first-party versions belong to Delivery, not the Git catalog.
  */
 describe("deployed service registry", () => {
-  test("every registry versionKey has a published pin or an explicit bootstrap marker on HEAD", async () => {
+  test("registry variants have canonical image owners and no Git-selected version on HEAD", async () => {
     const text = await showCatalogAt("HEAD");
     if (text == null) {
       throw new Error("could not read the version catalog on HEAD");
     }
     const pins = parseCatalogPins(text);
-    const pending = new Set(
-      parseVersionCatalogText(text)
-        .entries.filter(
-          (entry) =>
-            entry.category === "internal-image" &&
-            entry.artifactType === "image" &&
-            entry.value === `0.0.0@sha256:${"0".repeat(64)}`,
-        )
-        .map((entry) => entry.name),
-    );
-    const missing: string[] = [];
+    const owners = new ServiceIndex(SERVICE_CATALOG);
     for (const service of SERVICES) {
       for (const variant of service.variants) {
-        if (!pins.has(variant.versionKey) && !pending.has(variant.versionKey)) {
-          missing.push(variant.versionKey);
-        }
+        const [namespace, image] = variant.versionKey.split("/");
+        expect(namespace).toBe("shepherdjerred");
+        if (image === undefined)
+          throw new Error("Registry image recipe missing");
+        expect(firstPartyImage(image).name).toBe(image);
+        expect(owners.byImage(image)?.id).toBe(service.alias);
+        expect(owners.byImage(image)?.argoApps).toContain(variant.argoApp);
+        expect(pins.has(variant.versionKey)).toBe(false);
       }
     }
-    expect(missing).toEqual([]);
   });
 
   test("service aliases and variant keys are unique", () => {

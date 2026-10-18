@@ -5,6 +5,7 @@
  * here may carry a secret: tokens and RCON passwords stay in sandbox records.
  */
 import { z } from "zod";
+import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import type { BlockPos } from "./bridge.ts";
 
 export const ErrorResponseSchema = z.strictObject({ error: z.string() });
@@ -49,18 +50,62 @@ export const WorldKindSchema = z.enum(["flat", "void"]);
 export const ProviderKindSchema = z.enum(["docker", "kubernetes"]);
 export type ProviderKind = z.infer<typeof ProviderKindSchema>;
 
-export const SandboxCreateRequestSchema = z.strictObject({
-  profile: ProfileSchema,
-  world: WorldKindSchema,
-  ttlSeconds: z
-    .number()
-    .int()
-    .min(60)
-    .max(24 * 60 * 60),
-  keep: z.boolean(),
-  /** Defaults to the profile's provider (Kubernetes for the storm images). */
-  provider: ProviderKindSchema.optional(),
-});
+export const SandboxCreateRequestSchema = z
+  .strictObject({
+    profile: ProfileSchema,
+    world: WorldKindSchema,
+    ttlSeconds: z
+      .number()
+      .int()
+      .min(60)
+      .max(24 * 60 * 60),
+    keep: z.boolean(),
+    /** Defaults to the profile's provider (Kubernetes for the storm images). */
+    provider: ProviderKindSchema.optional(),
+    publishedArtifact: ArtifactVersionSchema.optional(),
+    publishedConfig: z
+      .strictObject({
+        sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
+        sha256: z.string().regex(/^[a-f0-9]{64}$/u),
+        yaml: z
+          .string()
+          .min(1)
+          .max(64 * 1024),
+      })
+      .optional(),
+  })
+  .superRefine((input, context) => {
+    const published =
+      input.profile === "storm-prod" || input.profile === "storm-candidate";
+    const selected = input.publishedArtifact;
+    if (
+      published &&
+      (selected === undefined ||
+        input.publishedConfig === undefined ||
+        selected.serviceId !== "minecraft" ||
+        selected.component !== "image:the-storm-server" ||
+        selected.kind !== "image" ||
+        selected.uri !== "docker.io/shepherdjerred/the-storm-server" ||
+        selected.origin.kind !== "first-party" ||
+        selected.sourceRevision !== input.publishedConfig.sourceRevision ||
+        new Bun.CryptoHasher("sha256")
+          .update(input.publishedConfig.yaml)
+          .digest("hex") !== input.publishedConfig.sha256)
+    )
+      context.addIssue({
+        code: "custom",
+        message:
+          "Published sandbox requires its exact original Minecraft artifact and matching frozen source configuration",
+      });
+    if (
+      !published &&
+      (selected !== undefined || input.publishedConfig !== undefined)
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Only published Storm profiles accept a frozen artifact",
+      });
+  });
 export type SandboxCreateRequest = z.infer<typeof SandboxCreateRequestSchema>;
 
 const EndpointSchema = z.strictObject({

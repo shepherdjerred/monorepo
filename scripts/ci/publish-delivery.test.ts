@@ -19,7 +19,8 @@ function readPublicationHandoffs(
   return readProducerHandoffs(staticArchives, {
     ...read,
     required: (key) =>
-      key === "trmnl-plugin-artifacts"
+      key === "trmnl-plugin-artifacts" ||
+      key === "delivery-retained-image-artifacts"
         ? Promise.resolve("[]")
         : read.required(key),
   });

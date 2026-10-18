@@ -89,7 +89,10 @@ supervised `kubectl port-forward` that restarts with backoff and is re-attached
 annotations; records whose pod disappeared are dropped.
 
 `storm-prod` and `storm-candidate` boot `docker.io/shepherdjerred/the-storm-server`
-at the version catalog's `/prod` and candidate pins with fixture credentials.
+at Delivery's exact accepted release or latest qualified candidate with fixture
+credentials. `--artifact-file original-artifact.json` supplies an explicit frozen
+original ArtifactVersion instead. An absent accepted release is an error;
+the candidate never substitutes for production acceptance.
 The image bakes Paper, every plugin, and owned config; the harness stages
 a config overlay that enables the companion module and its local dependencies,
 while disabling RWF, which requires the provisioned `rwf` world and production
@@ -100,14 +103,15 @@ bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
 
-The bootstrap fixture profiles require digest-specific module schema snapshots
-in `src/sandbox/storm-image-configs.json`. These describe fixture compatibility;
-they do not select the deployed Minecraft version. The digest-verified reader
-in `scripts/lib/storm-image-config.ts` reads the exact published image's
-`/plugins/TheStorm/config.yml`, verifies manifest and layer SHA-256 digests,
-and extracts the file checksum and module keys. Review updated fixture
-snapshots with their explicit image descriptor. Unknown digests and missing
-required modules fail instead of borrowing the current checkout's schema.
+Published profiles freeze `server/owned/plugins/TheStorm/config.yml` from the
+original image artifact's immutable source revision, matching the Dockerfile's
+copy into `/plugins`. The daemon verifies the source identity and file checksum
+before creating its overlay. Future qualified images require no Git digest
+snapshot update. The historical `storm-image-configs.json` remains an immutable
+test fixture; unknown images without explicit frozen configuration and missing
+required modules fail. Kubernetes admission still intersects the requested
+digest with exact candidate/accepted originals frozen into the published root
+chart; a newer image may wait for the next root release.
 Production upgrades and their preservation evidence are owned by Delivery.
 
 The locally built `TheStormFixtures.jar` also prepares the named worlds and

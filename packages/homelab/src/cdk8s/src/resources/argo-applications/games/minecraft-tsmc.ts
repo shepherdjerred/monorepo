@@ -144,8 +144,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     image: {
       repository: "docker.io/shepherdjerred/the-storm-server",
       pullSecret: "dockerhub-pull-minecraft-tsmc",
-      // Candidate publication must not activate an unprepared production volume.
-      tag: versions["shepherdjerred/the-storm-server/prod"],
+      // Delivery preserves its frozen image.tag parameter on the live source.
     },
     // Sized for the Search and Destroy world: up to 100 ticking Citizens bot
     // players share this server with survival. The rwfbots load profile
@@ -305,14 +304,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
         targetRevision: versions.minecraft,
         chart: "minecraft",
         helm: {
-          // Own the higher-precedence parameter too: an earlier operational
-          // override must not keep the StatefulSet on an ad hoc image.
-          parameters: [
-            {
-              name: "image.tag",
-              value: versions["shepherdjerred/the-storm-server/prod"],
-            },
-          ],
           valuesObject: minecraftValues,
         },
       },

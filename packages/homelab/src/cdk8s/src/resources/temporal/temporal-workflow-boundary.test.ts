@@ -4,14 +4,13 @@ import {
   findTemporalResource,
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-workflow-boundary");
 }
 
 describe("central Temporal Workflow boundary", () => {
-  test.each(["stable", "candidate"] as const)(
+  test.each(["candidate"] as const)(
     "runs a credentialless %s Workflow-only role",
     (track) => {
       const deployment = findTemporalResource(
@@ -94,13 +93,8 @@ describe("central Temporal Workflow boundary", () => {
         name: "TEMPORAL_WORKER_DEPLOYMENT_NAME",
         value: "monorepo-central-workflows",
       });
-      // Read the expected pin from the catalog rather than freezing a literal:
-      // each track has its own entry (candidate follows CI, stable is promoted
-      // separately), and the deployment resolves the very same key, so a
-      // hardcoded version made every image bump fail this test without
-      // indicating anything was actually wrong.
-      expect(container.image).toBe(
-        `docker.io/shepherdjerred/temporal-worker:${versions[`shepherdjerred/temporal-worker/workflows/${track}`]}`,
+      expect(container.image).toContain(
+        "required `Delivery requires image:temporal-worker`",
       );
       expect(container.volumeMounts).toEqual([
         { mountPath: "/tmp", name: `central-workflows-${track}-tmp` },
@@ -186,7 +180,7 @@ describe("central Temporal Workflow boundary", () => {
     ]);
   });
 
-  test("admits stable and candidate workers through the Temporal server", () => {
+  test("admits frozen-pool worker recipes through the Temporal server", () => {
     const serverPolicy = findTemporalResource(
       resources(),
       "NetworkPolicy",
@@ -197,31 +191,24 @@ describe("central Temporal Workflow boundary", () => {
     expect(serialized).toContain('"port":7233');
   });
 
-  test.each(["stable", "candidate"])(
-    "scrapes only the %s Workflow track",
-    (track) => {
-      const synthesized = resources();
-      for (const serviceName of [
-        `temporal-temporal-workflows-${track}-metrics-service`,
-        `temporal-workflows-${track}-app-metrics`,
-      ]) {
-        const service = findTemporalResource(
-          synthesized,
-          "Service",
-          serviceName,
-        );
-        const spec = z
-          .object({ selector: z.record(z.string(), z.string()) })
-          .parse(service.spec);
-        expect(spec.selector).toEqual({
-          component: `central-workflows-${track}`,
-        });
-      }
-    },
-  );
+  test.each(["candidate"])("scrapes only the %s Workflow track", (track) => {
+    const synthesized = resources();
+    for (const serviceName of [
+      `temporal-temporal-workflows-${track}-metrics-service`,
+      `temporal-workflows-${track}-app-metrics`,
+    ]) {
+      const service = findTemporalResource(synthesized, "Service", serviceName);
+      const spec = z
+        .object({ selector: z.record(z.string(), z.string()) })
+        .parse(service.spec);
+      expect(spec.selector).toEqual({
+        component: `central-workflows-${track}`,
+      });
+    }
+  });
 });
 
-test.each(["stable", "candidate"])(
+test.each(["candidate"])(
   "attributes the %s SDK metrics to their actual Temporal namespace",
   (track) => {
     const monitor = findTemporalResource(

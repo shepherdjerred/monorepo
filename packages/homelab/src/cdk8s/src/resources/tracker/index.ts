@@ -29,9 +29,12 @@ function databaseUrl() {
   return `${protocol}://${user}:${password}@tracker-postgresql:5432/tracker_db`;
 }
 
-/** The caller supplies a published catalog digest; no placeholder image enters a release. */
+/** A synthesis recipe is replaced by the required PG image binding before packaging. */
 export function createTrackerDeployment(chart: Chart, image: string) {
-  if (!/^docker\.io\/shepherdjerred\/tracker@sha256:[a-f0-9]{64}$/u.test(image))
+  if (
+    image !== "docker.io/shepherdjerred/tracker:delivery-recipe" &&
+    !/^docker\.io\/shepherdjerred\/tracker@sha256:[a-f0-9]{64}$/u.test(image)
+  )
     throw new Error("Tracker requires a pinned public image digest");
   const pg = Secret.fromSecretName(
     chart,

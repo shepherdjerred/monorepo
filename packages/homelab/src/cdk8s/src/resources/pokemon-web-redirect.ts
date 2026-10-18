@@ -1,3 +1,4 @@
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Size, type Chart } from "cdk8s";
 import {
   Capability,
@@ -12,7 +13,6 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const CADDYFILE = `{
   admin off
@@ -45,7 +45,7 @@ export function createPokemonWebRedirect(chart: Chart) {
   );
   deployment.addContainer(
     withCommonProps({
-      image: `docker.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
+      image: firstPartyImageRecipe("caddy-s3proxy"),
       ports: [{ name: "ui", number: 8081 }],
       securityContext: {
         ensureNonRoot: true,

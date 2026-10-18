@@ -326,7 +326,7 @@ async function main() {
   const publications = await buildPublications(
     {
       ...handoffs,
-      retainedArtifacts: [acquired],
+      retainedArtifacts: [...handoffs.retainedArtifacts, acquired],
       sourceRevision,
       ciUrl: requireEnv("CI_PIPELINE_URL"),
       pipelineNumber,

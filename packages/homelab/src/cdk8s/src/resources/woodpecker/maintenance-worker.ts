@@ -15,7 +15,7 @@ import {
 } from "cdk8s-plus-31";
 import { ConfigMap } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   CI_NODE_HOSTNAME,
@@ -73,9 +73,7 @@ const WORKER_LABELS = {
 /** Where the collector script is projected; the activity invokes it by path. */
 export const MAINTENANCE_SCRIPT_PATH = "/woodpecker/maintenance";
 
-const WORKER_IMAGE =
-  "docker.io/shepherdjerred/temporal-worker:" +
-  versions["shepherdjerred/temporal-worker"];
+const WORKER_IMAGE = firstPartyImageRecipe("temporal-worker");
 
 const KOMETA_CONFIG = `libraries:
   Movies:

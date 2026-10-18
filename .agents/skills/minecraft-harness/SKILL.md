@@ -38,7 +38,7 @@ commands target it automatically; otherwise pass `--target <id>`.
 `--provider kubernetes` runs the sandbox as a pod in the cluster's `mc-sandbox`
 namespace (ports reach you through `kubectl port-forward`; TTL at most 8h).
 `--profile storm-prod` / `storm-candidate` boot the published the-storm-server
-image at its production / candidate pin and default to the cluster; use them to
+image from Delivery's accepted release / latest qualified candidate and default to the cluster; use them to
 check behavior as live tsmc runs it.
 
 ## Routing

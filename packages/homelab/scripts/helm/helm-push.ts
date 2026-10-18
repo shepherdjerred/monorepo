@@ -18,7 +18,10 @@ import {
   retainCurrentProducerArchives,
   validateChartProducerVersion,
   chartValidationValues,
+  bindGeneratedDependencies,
 } from "./helm-delivery-publication.ts";
+import { chartPublicationImages } from "@shepherdjerred/root-scripts/lib/image-pin-catalog.ts";
+import { requireEnv as requireEnvironment } from "@shepherdjerred/root-scripts/lib/run.ts";
 import {
   ChartPublicationSchema,
   type ChartPublication,
@@ -44,14 +47,6 @@ const SYNTH_DIRECTORY = "src/cdk8s/dist";
 
 function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
-}
-
-function requireEnvironment(name: string): string {
-  const value = Bun.env[name];
-  if (value === undefined || value === "") {
-    throw new Error(`Required environment variable is missing: ${name}`);
-  }
-  return value;
 }
 
 async function runCommand(
@@ -358,6 +353,13 @@ async function writeReleaseArtifacts(
   );
 }
 
+async function publicationImages(dryRun: boolean) {
+  if (dryRun) return;
+  const images = await chartPublicationImages();
+  Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"] = JSON.stringify(images);
+  return images;
+}
+
 async function main(): Promise<void> {
   const { buildNumber, dryRun, requested, deliveryCatalog } = parseOptions();
   const publication = dryRun
@@ -372,14 +374,15 @@ async function main(): Promise<void> {
   const version = `2.0.0-${buildNumber}`;
   validateChartProducerVersion(publication, buildNumber);
   const root = homelabRoot();
-  // First synth applies current-build image overrides while child chart
-  // revisions are still floating. That content plan determines which leaves
-  // receive this release version. A second synth below injects those exact
-  // revisions into the coordinating apps chart.
+  const imageInputs = await publicationImages(dryRun);
   delete Bun.env["HOMELAB_CHART_REVISIONS_JSON"];
   await runCommand(["bun", "--no-install", "run", "build"], {
     cwd: path.join(root, "src/cdk8s"),
   });
+  await bindGeneratedDependencies(
+    path.join(root, SYNTH_DIRECTORY),
+    imageInputs,
+  );
   const inputs = await discoverChartInputs(
     path.join(root, HELM_DIRECTORY),
     path.join(root, SYNTH_DIRECTORY),
@@ -432,6 +435,10 @@ async function main(): Promise<void> {
     await runCommand(["bun", "--no-install", "run", "build"], {
       cwd: path.join(root, "src/cdk8s"),
     });
+    await bindGeneratedDependencies(
+      path.join(root, SYNTH_DIRECTORY),
+      imageInputs,
+    );
     const releaseInputs = await discoverChartInputs(
       path.join(root, HELM_DIRECTORY),
       path.join(root, SYNTH_DIRECTORY),

@@ -1,3 +1,2 @@
 delivery:
   workerPool: ""
-  legacyWorkers: "keep"

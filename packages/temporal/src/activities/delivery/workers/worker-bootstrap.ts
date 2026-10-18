@@ -134,10 +134,7 @@ export async function bootstrapDeliveryWorkerHosts(
     "Deployment",
   );
   if (!requireLegacyWorkerCoverage(deployments, pool)) return;
-  const bootstrap = {
-    ...selection,
-    parameters: { ...selection.parameters, "delivery.legacyWorkers": "keep" },
-  };
+  const bootstrap = selection;
   const operationId = deliveryOperationId(
     `${detail.deployment.id}:worker-bootstrap`,
   );
