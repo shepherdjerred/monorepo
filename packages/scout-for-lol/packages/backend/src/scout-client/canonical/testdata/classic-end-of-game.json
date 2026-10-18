@@ -1,0 +1,256 @@
+{
+  "resource": "post_game",
+  "data": {
+    "gameId": 123456789,
+    "gameMode": "JADE",
+    "gameType": "MATCHED_GAME",
+    "queueType": "JADE_RANKED_SOLO_5x5",
+    "gameLength": 2213,
+    "endOfGameTimestamp": 1792296413231,
+    "invalid": false,
+    "teams": [
+      {
+        "teamId": 200,
+        "isWinningTeam": true,
+        "players": [
+          {
+            "teamId": 200,
+            "championId": 60078,
+            "botPlayer": false,
+            "items": [773153, 773078, 773111, 771055, 773068, 773211, 773340],
+            "spell1Id": 714,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "0e804916-14a0-596f-9a7e-571b27241793",
+            "riotIdGameName": "Player 1",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 1,
+              "kills": 11,
+              "deaths": 9,
+              "assists": 6,
+              "goldEarned": 15370,
+              "totalDamageDealtToChampions": 21099,
+              "totalMinionsKilled": 138,
+              "neutralMinionsKilled": 0,
+              "champLevel": 18
+            }
+          },
+          {
+            "teamId": 200,
+            "championId": 60011,
+            "botPlayer": false,
+            "items": [773160, 773153, 773031, 773046, 773006, 773124, 773348],
+            "spell1Id": 711,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "scoreboard-observerxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "riotIdGameName": "Player 2",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 1,
+              "kills": 14,
+              "deaths": 6,
+              "assists": 5,
+              "goldEarned": 19343,
+              "totalDamageDealtToChampions": 28360,
+              "totalMinionsKilled": 102,
+              "neutralMinionsKilled": 152,
+              "champLevel": 18
+            }
+          },
+          {
+            "teamId": 200,
+            "championId": 60266,
+            "botPlayer": false,
+            "items": [773211, 773111, 773022, 773074, 773153, 773071, 773340],
+            "spell1Id": 714,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "d45a0cb6-bf31-5508-a1e7-dd66740a1ebf",
+            "riotIdGameName": "Player 3",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 1,
+              "kills": 8,
+              "deaths": 15,
+              "assists": 8,
+              "goldEarned": 16289,
+              "totalDamageDealtToChampions": 28782,
+              "totalMinionsKilled": 215,
+              "neutralMinionsKilled": 3,
+              "champLevel": 18
+            }
+          },
+          {
+            "teamId": 200,
+            "championId": 60051,
+            "botPlayer": false,
+            "items": [773031, 773072, 773046, 773035, 773006, 773156, 773340],
+            "spell1Id": 721,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "193df0c5-a01d-5746-a7a8-9c601f3c9129",
+            "riotIdGameName": "Player 4",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 1,
+              "kills": 18,
+              "deaths": 4,
+              "assists": 13,
+              "goldEarned": 19804,
+              "totalDamageDealtToChampions": 36135,
+              "totalMinionsKilled": 257,
+              "neutralMinionsKilled": 7,
+              "champLevel": 18
+            }
+          },
+          {
+            "teamId": 200,
+            "championId": 60111,
+            "botPlayer": false,
+            "items": [773047, 773068, 773075, 772049, 773102, 0, 773348],
+            "spell1Id": 73,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "8659f96b-1773-5aeb-a307-dadfe6bd2f15",
+            "riotIdGameName": "Player 5",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 1,
+              "kills": 0,
+              "deaths": 7,
+              "assists": 28,
+              "goldEarned": 11221,
+              "totalDamageDealtToChampions": 18609,
+              "totalMinionsKilled": 10,
+              "neutralMinionsKilled": 1,
+              "champLevel": 18
+            }
+          }
+        ]
+      },
+      {
+        "teamId": 100,
+        "isWinningTeam": false,
+        "players": [
+          {
+            "teamId": 100,
+            "championId": 60044,
+            "botPlayer": false,
+            "items": [773075, 773025, 773157, 773135, 771026, 773158, 773340],
+            "spell1Id": 74,
+            "spell2Id": 714,
+            "gameId": 123456789,
+            "puuid": "167681bc-df4f-5660-b67d-d194ca7c6053",
+            "riotIdGameName": "Player 6",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 0,
+              "kills": 11,
+              "deaths": 10,
+              "assists": 9,
+              "goldEarned": 14891,
+              "totalDamageDealtToChampions": 37307,
+              "totalMinionsKilled": 172,
+              "neutralMinionsKilled": 0,
+              "champLevel": 18
+            }
+          },
+          {
+            "teamId": 100,
+            "championId": 60019,
+            "botPlayer": false,
+            "items": [773160, 773153, 773047, 773172, 773075, 0, 773340],
+            "spell1Id": 711,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "d61fe5dc-1b4a-5f2f-9805-7aaa6397ef23",
+            "riotIdGameName": "Player 7",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 0,
+              "kills": 6,
+              "deaths": 12,
+              "assists": 8,
+              "goldEarned": 11580,
+              "totalDamageDealtToChampions": 17076,
+              "totalMinionsKilled": 19,
+              "neutralMinionsKilled": 92,
+              "champLevel": 17
+            }
+          },
+          {
+            "teamId": 100,
+            "championId": 60105,
+            "botPlayer": false,
+            "items": [773100, 773157, 773047, 773165, 773089, 773135, 773340],
+            "spell1Id": 74,
+            "spell2Id": 714,
+            "gameId": 123456789,
+            "puuid": "3ae63fdf-385a-5e8d-97fc-c1248353e95e",
+            "riotIdGameName": "Player 8",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 0,
+              "kills": 15,
+              "deaths": 6,
+              "assists": 2,
+              "goldEarned": 17014,
+              "totalDamageDealtToChampions": 35858,
+              "totalMinionsKilled": 230,
+              "neutralMinionsKilled": 3,
+              "champLevel": 18
+            }
+          },
+          {
+            "teamId": 100,
+            "championId": 60005,
+            "botPlayer": false,
+            "items": [773124, 773157, 773115, 771026, 0, 773006, 773340],
+            "spell1Id": 73,
+            "spell2Id": 74,
+            "gameId": 123456789,
+            "puuid": "c39cff33-d3cf-53d1-a675-66e3b0811448",
+            "riotIdGameName": "Player 9",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 0,
+              "kills": 2,
+              "deaths": 15,
+              "assists": 6,
+              "goldEarned": 11575,
+              "totalDamageDealtToChampions": 12170,
+              "totalMinionsKilled": 111,
+              "neutralMinionsKilled": 8,
+              "champLevel": 17
+            }
+          },
+          {
+            "teamId": 100,
+            "championId": 60013,
+            "botPlayer": false,
+            "items": [773128, 773060, 773158, 773040, 773027, 0, 773348],
+            "spell1Id": 720,
+            "spell2Id": 716,
+            "gameId": 123456789,
+            "puuid": "257b6779-acac-5dc6-9c05-855a6b775334",
+            "riotIdGameName": "Player 10",
+            "riotIdTagLine": "TEST",
+            "stats": {
+              "WIN": 0,
+              "kills": 6,
+              "deaths": 9,
+              "assists": 3,
+              "goldEarned": 13868,
+              "totalDamageDealtToChampions": 18497,
+              "totalMinionsKilled": 169,
+              "neutralMinionsKilled": 6,
+              "champLevel": 18
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

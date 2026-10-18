@@ -116,3 +116,4 @@ export {
   championNameToDisplayName,
   getChampionDisplayNameById,
 } from "./data-dragon/images.ts";
+export { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";

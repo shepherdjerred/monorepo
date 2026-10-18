@@ -59,7 +59,7 @@ setItemMissHandler(({ itemId }) => {
 });
 
 /** Format a natural language message about who finished the game */
-function formatGameCompletionMessage(
+export function formatGameCompletionMessage(
   playerAliases: string[],
   queueType: QueueType,
 ): string {

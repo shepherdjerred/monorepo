@@ -26,6 +26,7 @@ import {
 } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
+import { readReportScoreboard } from "#src/evidence/report-scoreboard.ts";
 import {
   deliveryIntentKey,
   lateBindingEarningsDeliveryKeyPrefix,
@@ -147,9 +148,21 @@ function countMint(
 export async function matchMayAnnounce(
   db: Db,
   matchId: RiotMatchId,
+  kind?: NotificationIntentKind,
 ): Promise<boolean> {
   const observation = await getObservation(db, { matchId });
   if (observation === null) {
+    if (
+      kind === "postmatch" &&
+      (await readReportScoreboard(matchId, db)) !== null
+    ) {
+      const admission = await db.matchEvidenceAdmission.findUniqueOrThrow({
+        where: { riotMatchId: matchId },
+      });
+      return (
+        z.enum(["FULL", "HISTORY_ONLY"]).parse(admission.policy) === "FULL"
+      );
+    }
     throw new Error(
       `Refusing to mint notification intents for ${matchId}: no observation stands for it, so whether it is owed a public delivery is unknown`,
     );
@@ -202,7 +215,7 @@ async function mintMatchIntent(
     announcement?: OpaqueVersionedEnvelope | undefined;
   },
 ): Promise<MatchIntentMint> {
-  if (!(await matchMayAnnounce(db, args.matchId))) return "silent";
+  if (!(await matchMayAnnounce(db, args.matchId, args.kind))) return "silent";
   const key = NotificationIntentKeySchema.parse(args.key);
   const standing = await getIntent(db, { intentKey: key });
   if (standing !== null) {

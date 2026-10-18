@@ -5,7 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import { acceptedClientMatchDispatches } from "./ingress.ts";
 import { acceptedClientBindingMatchIds } from "./accepted-observations.ts";
-import { LOCAL_CANONICAL_DELAY_MS } from "./canonical-match.ts";
+import { LOCAL_CANONICAL_DELAY_MS } from "#src/evidence/source-grace.ts";
 
 const fixture = RawMatchSchema.parse(
   await Bun.file("../../testdata/rift.json").json(),

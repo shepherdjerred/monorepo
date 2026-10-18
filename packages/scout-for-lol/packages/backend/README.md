@@ -778,6 +778,39 @@ in `scout_client_identity_aliases_total{outcome}`.
 
 ### Client-sourced matches and their timelines
 
+#### Scoreboard-backed reports
+
+A terminal end-of-game scoreboard can be sufficient for a report without
+being a complete Match-V5 payload. The client result adapter joins accepted
+gameflow metadata from the same device, platform and game, validates outcomes
+and observer membership, and publishes into the shared result registry.
+Unknown lobby creation and participant numbers remain null. Original receipt
+time decides admission before reconciliation delays; observed completion time
+is used when lobby creation is unavailable.
+
+Ingestion reconciliation resolves report-ready evidence through the same
+Riot-priority result policy. API-supported games retain the same two-minute
+source grace as complete client matches, measured from original discovery;
+games known to withhold results do not wait. Freshly resolved full evidence
+participates immediately, before its independent archive projection completes.
+`MatchReportSnapshot` freezes the normalized result and registered audience
+before rendering. The existing fenced report renderer,
+S3 image receipts, idempotent postmatch intents and notification reconciliation
+handle delivery. The current scoreboard renderer requires the facts displayed
+by the existing Classic report, including loadout and both sides' statistics.
+It never manufactures objective, rune or Match-V5 fields to satisfy another
+consumer's schema.
+
+A snapshot does not create a full processing observation, advance a Riot
+cursor, settle markets, award progression or finalize a custom game. Those
+operations retain their complete-match requirements. Live report intents also
+require permanent FULL admission; historical scoreboards render silently and
+cannot produce settlement announcements. Failed renders retry from the frozen
+snapshot even if source lookup rows later disappear. This path shares the
+existing production hard-disable for client evidence recovery.
+
+#### Complete client matches
+
 A post-game bundle carries the League client's full `games/{id}` — every
 participant — beside the end-of-game block, and its `game-timelines/{id}`.
 `canonical/lcu-match.ts` converts the first two into a Match-V5 match and

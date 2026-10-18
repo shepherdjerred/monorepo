@@ -115,3 +115,43 @@ test("contradictory game metadata cannot supply missing Riot statistics", () => 
     resolveGameResult([contradicted, riot])?.participants[0]?.deaths,
   ).toBeNull();
 });
+
+test("scoreboards can omit unknown participant numbers and lobby creation while retaining observed completion", () => {
+  const scoreboard = GameResultSchema.parse({
+    ...client,
+    gameCreation: null,
+    completedAt: 1_700_001_200_000,
+    participants: client.participants.map((player) => ({
+      ...player,
+      participantId: null,
+      items: [1, 2, 3, 4, 5, 6, 0],
+      spells: [4, 14],
+      jungleMinions: 0,
+    })),
+  });
+  expect(scoreboard.gameCreation).toBeNull();
+  expect(
+    GameResultSchema.safeParse({ ...scoreboard, completedAt: undefined })
+      .success,
+  ).toBe(false);
+  const riot = GameResultSchema.parse({ ...client, source: "RIOT" });
+  const result = resolveGameResult([scoreboard, riot]);
+  expect(result?.source).toBe("RIOT");
+  expect(result?.participants[0]).toMatchObject({
+    participantId: 1,
+    items: [1, 2, 3, 4, 5, 6, 0],
+    jungleMinions: 0,
+  });
+});
+
+test("known participant-number contradictions remain conflicts", () => {
+  const changed = GameResultSchema.parse({
+    ...client,
+    sourceId: "changed",
+    participants: client.participants.map((player, index) => ({
+      ...player,
+      participantId: index + 10,
+    })),
+  });
+  expect(resolveGameResult([client, changed])).toBeNull();
+});

@@ -18,6 +18,8 @@ import {
 } from "./canonical/local-result.ts";
 import { postGameDeliveryMode } from "./dispatch-policy.ts";
 import { resolveResultEvidence } from "#src/evidence/results.ts";
+import { parseEndOfGameResult } from "./canonical/end-of-game-result.ts";
+import { z } from "zod";
 
 const NORMALIZER_VERSION = 1;
 
@@ -37,16 +39,44 @@ export async function projectClientGameResult(
     `${observation.platformId.toUpperCase()}_${observation.gameId}`,
   );
   if (!matchId.success) return;
-  const result = parseLocalGameResult(
+  let result = parseLocalGameResult(
     matchId.data,
     observation.payload,
     observation.localPuuid,
     observation.observationId,
   );
+  const received = await prisma.scoutClientObservation.findUniqueOrThrow({
+    where: { observationId: observation.observationId },
+    select: { receivedAt: true, deviceId: true },
+  });
+  if (result === null) {
+    const context = await prisma.scoutClientObservation.findFirst({
+      where: {
+        deviceId: received.deviceId,
+        gameId: observation.gameId,
+        platformId: { equals: observation.platformId, mode: "insensitive" },
+        kind: "gameflow",
+        disposition: "ACCEPTED",
+        capturedAt: { lte: new Date(observation.capturedAt) },
+      },
+      orderBy: [{ capturedAt: "desc" }, { observationId: "asc" }],
+      select: { payload: true },
+    });
+    const envelope = z
+      .object({ data: z.unknown() })
+      .safeParse(context?.payload);
+    result = parseEndOfGameResult({
+      matchId: matchId.data,
+      payload: observation.payload,
+      context: envelope.success ? envelope.data.data : null,
+      observer: observation.localPuuid,
+      sourceId: observation.observationId,
+    });
+  }
   if (result === null) return;
   const completedAt = localResultCompletionTime(observation.payload, result);
   if (completedAt === null) return;
-  const discoveredAt = new Date();
+  const discoveredAt = received.receivedAt;
   const deliveryMode = postGameDeliveryMode(
     observation,
     completedAt,

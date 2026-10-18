@@ -10,10 +10,25 @@ import {
   LoadingState,
   ErrorState,
 } from "@scout-for-lol/design-system/domain/states";
-import { getChampionDisplayName } from "@scout-for-lol/data";
+import {
+  getChampionDisplayName,
+  gameResultTimestamp,
+  resolveQueueTypeFromGame,
+  queueTypeToDisplayString,
+} from "@scout-for-lol/data";
 import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
 
 type Results = RouterOutputs["scoutClient"]["results"];
+
+function resultTitle(game: Results["results"][number]): string {
+  if (game.gameType === "CUSTOM_GAME") return "Custom game";
+  const queue = resolveQueueTypeFromGame(
+    game.queueId,
+    game.gameMode,
+    game.gameType,
+  );
+  return queue === undefined ? game.gameMode : queueTypeToDisplayString(queue);
+}
 
 /** A scoreboard can show known facts even when the full report lacks inputs. */
 export function ScoutClientHistoryView(props: { readonly data: Results }) {
@@ -47,11 +62,10 @@ export function ScoutClientHistoryView(props: { readonly data: Results }) {
         <Card key={game.matchId}>
           <CardHeader>
             <CardTitle>
-              {game.gameType === "CUSTOM_GAME" ? "Custom game" : game.gameMode}{" "}
-              · {game.matchId}
+              {resultTitle(game)} · {game.matchId}
             </CardTitle>
             <CardDescription>
-              {new Date(game.gameCreation).toLocaleString()} ·{" "}
+              {new Date(gameResultTimestamp(game)).toLocaleString()} ·{" "}
               {Math.round(game.durationSeconds / 60).toString()} min
             </CardDescription>
           </CardHeader>
@@ -82,9 +96,13 @@ export function ScoutClientHistoryView(props: { readonly data: Results }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {game.participants.map((player) => (
+                  {game.participants.map((player, index) => (
                     <tr
-                      key={player.participantId}
+                      key={
+                        player.participantId === null
+                          ? `slot:${index.toString()}`
+                          : `participant:${player.participantId.toString()}`
+                      }
                       className="border-t border-scout-line"
                     >
                       <th scope="row" className="px-3 py-3 font-medium">

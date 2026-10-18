@@ -13,6 +13,10 @@ import {
 } from "./match-archive.ts";
 import { renderMatchNotificationArtifact } from "#src/temporal/notification-lane/notification-render.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { reconcileScoreboardReport } from "./scoreboard-recovery.ts";
+import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolution.ts";
+import type { RawMatch } from "@scout-for-lol/data";
+import { gameResultFromMatch } from "#src/scout-client/canonical/riot-result.ts";
 
 async function ensureHistoryReport(
   matchId: RiotMatchId,
@@ -31,7 +35,21 @@ async function ensureHistoryReport(
   return true;
 }
 
-/** Background capture/render only: this module has no effect or notification producer. */
+async function recoverReportOnly(
+  matchId: RiotMatchId,
+  match: ArtifactResolution<RawMatch>,
+): Promise<boolean> {
+  if (match.kind === "conflict")
+    throw new Error(`Conflicting match evidence for ${matchId}`);
+  return match.kind === "pending"
+    ? false
+    : await reconcileScoreboardReport(
+        matchId,
+        match.kind === "available" ? [gameResultFromMatch(match.value)] : [],
+      );
+}
+
+/** Reconcile missing artifacts; live report eligibility never implies full-match effect coverage. */
 export async function reconcileMatchHistory(now = new Date()): Promise<number> {
   if (!evidenceRecoveryEnabled()) return 0;
   // Adopt old silent FULL rows through the same audited admission boundary.
@@ -50,30 +68,16 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
       discoveredAt: row.observedAt,
       historical: true,
     });
-  const rows = await prisma.matchEvidenceAdmission.findMany({
-    where: {
-      recoveryNextAttemptAt: { lte: now },
-      OR: [
-        {
-          policy: "HISTORY_ONLY",
-          OR: [
-            { historyReportComplete: false },
-            { historyTimelineRecovered: false },
-          ],
-        },
-        {
-          policy: "FULL",
-          timelineMissing: true,
-          historyTimelineRecovered: false,
-        },
-      ],
-    },
-    // Historical rendering shares background capacity with live reports.
-    // Bound each sweep tightly; durable deadlines rotate unfinished rows.
-    take: 2,
-    orderBy: [{ recoveryNextAttemptAt: "asc" }, { riotMatchId: "asc" }],
-    select: { riotMatchId: true },
-  });
+  const rows = await prisma.$queryRaw<{ riotMatchId: RiotMatchId }[]>`
+    SELECT a."riotMatchId" FROM "MatchEvidenceAdmission" a
+    WHERE a."recoveryNextAttemptAt" <= ${now} AND (
+      (a.policy = 'HISTORY_ONLY' AND (NOT a."historyReportComplete" OR NOT a."historyTimelineRecovered")) OR
+      (a.policy = 'FULL' AND a."timelineMissing" AND NOT a."historyTimelineRecovered") OR
+      (NOT a."historyReportComplete" AND
+        NOT EXISTS (SELECT 1 FROM "MatchObservation" o WHERE o."riotMatchId" = a."riotMatchId") AND
+        (EXISTS (SELECT 1 FROM "MatchResultEvidence" e WHERE e."riotMatchId" = a."riotMatchId") OR
+         EXISTS (SELECT 1 FROM "MatchReportSnapshot" s WHERE s."riotMatchId" = a."riotMatchId"))))
+    ORDER BY a."recoveryNextAttemptAt", a."riotMatchId" LIMIT 2`;
   const failures: unknown[] = [];
   for (const item of rows) {
     const claim = crypto.randomUUID();
@@ -94,10 +98,24 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
         where: { riotMatchId: matchId },
       });
       const match = await resolveCompleteMatch(matchId);
-      if (match.kind !== "available") {
+      if (
+        match.kind !== "available" ||
+        (admission.policy === "FULL" &&
+          (await prisma.matchObservation.findUnique({
+            where: { riotMatchId: matchId },
+            select: { riotMatchId: true },
+          })) === null)
+      ) {
+        // A result admission does not establish the full pipeline's observed
+        // roster. Recover its report without entering observed-only readers.
+        const reportComplete = await recoverReportOnly(matchId, match);
         await prisma.matchEvidenceAdmission.updateMany({
           where: { riotMatchId: matchId, recoveryClaimId: claim },
-          data: { recoveryClaimId: null },
+          data: {
+            recoveryClaimId: null,
+            historyReportComplete: reportComplete,
+            recoveryError: null,
+          },
         });
         continue;
       }
