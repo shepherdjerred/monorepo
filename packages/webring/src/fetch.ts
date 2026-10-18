@@ -43,6 +43,21 @@ function escapeAttributeValue(value: string): string {
  * the behavior of the retired `truncate-html` package (which was pinned to a
  * dead cheerio 1.0.0-rc.12/htmlparser2@6 chain).
  */
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+// Longest prefix of whole grapheme clusters within `length` UTF-16 units, so a
+// cut never leaves half an emoji or splits a flag or ZWJ sequence.
+function graphemePrefix(text: string, length: number): string {
+  let prefix = "";
+  for (const { segment } of graphemes.segment(text)) {
+    if (prefix.length + segment.length > length) {
+      break;
+    }
+    prefix += segment;
+  }
+  return prefix;
+}
+
 function truncate(html: string, length = 300): string {
   let out = "";
   let remaining = length;
@@ -74,7 +89,7 @@ function truncate(html: string, length = 300): string {
         remaining -= collapsed.length;
         return;
       }
-      out += `${escapeText(collapsed.slice(0, remaining))}...`;
+      out += `${escapeText(graphemePrefix(collapsed, remaining))}...`;
       truncated = true;
     },
     onclosetag(name) {
