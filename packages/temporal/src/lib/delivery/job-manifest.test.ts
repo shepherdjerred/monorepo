@@ -3,7 +3,10 @@ import {
   assertMatchingDeliveryJob,
   deliveryJobManifest,
 } from "./job-manifest.ts";
-import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
+import {
+  DELIVERY_JOB_BOOTSTRAP,
+  type DeliveryJobRequest,
+} from "#shared/delivery-job.ts";
 
 const request: DeliveryJobRequest = {
   deploymentId: "deployment-42",
@@ -13,6 +16,44 @@ const request: DeliveryJobRequest = {
   sourceRevision: "b".repeat(40),
   input: { stack: "github", proof: { a: 1, b: 2 } },
 };
+
+it.each(["worker-images", "worker-step"] as const)(
+  "prepares only the dependencies needed by %s",
+  (recipe) => {
+    const preparation = DELIVERY_JOB_BOOTSTRAP.split(
+      "bun install --frozen-lockfile\n",
+    )[1]?.split("cd packages/temporal\n")[0];
+    if (preparation === undefined) throw new Error("Missing Job preparation");
+    const result = Bun.spawnSync(
+      [
+        "bash",
+        "-c",
+        String.raw`set -euo pipefail
+bun() { printf 'bun:%s\n' "$*"; }
+bunx() { printf 'bunx:%s\n' "$*"; }
+${preparation}`,
+      ],
+      {
+        env: {
+          PATH: Bun.env["PATH"],
+          DELIVERY_JOB_REQUEST: JSON.stringify({ ...request, recipe }),
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.toString().trim().split("\n").filter(Boolean)).toEqual(
+      recipe === "worker-images"
+        ? []
+        : [
+            "bunx:turbo run generate --filter=@shepherdjerred/temporal^...",
+            "bun:run --cwd packages/llm-models build:runtime",
+            "bun:build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit",
+          ],
+    );
+  },
+);
 
 it("mounts the namespace-only readonly API token solely in fixed recovery recipes and accepts only known Kubernetes defaults", () => {
   const job = deliveryJobManifest({

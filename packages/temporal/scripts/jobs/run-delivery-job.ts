@@ -9,15 +9,6 @@ import {
   DELIVERY_JOB_RESULT_PREFIX,
 } from "#shared/delivery-job.ts";
 import {
-  prepareDeliveryWorkerRollout,
-  stepDeliveryWorkerRollout,
-} from "#lib/delivery/workers/worker-rollout.ts";
-import { run as runRootRelease } from "./root-release.ts";
-import { run as runTofuApply } from "./tofu-apply.ts";
-import { run as runTofuPlan } from "./tofu-plan.ts";
-import { run as runControlPlane } from "./control-plane.ts";
-import { run as runPlatformRecovery } from "./platform-recovery.ts";
-import {
   verifyDeliveryWorkerImages,
   WorkerImageProofInputSchema,
 } from "#lib/delivery/workers/worker-image-proof.ts";
@@ -83,6 +74,8 @@ async function main() {
       break;
     }
     case "worker-preflight": {
+      const { prepareDeliveryWorkerRollout } =
+        await import("#lib/delivery/workers/worker-rollout.ts");
       const input = z
         .object({
           detail: WorkerRolloutSnapshotSchema,
@@ -98,6 +91,8 @@ async function main() {
       break;
     }
     case "worker-step": {
+      const { stepDeliveryWorkerRollout } =
+        await import("#lib/delivery/workers/worker-rollout.ts");
       const input = z
         .object({
           detail: WorkerRolloutSnapshotSchema,
@@ -110,21 +105,31 @@ async function main() {
       result = await stepDeliveryWorkerRollout(input, command);
       break;
     }
-    case "root-release":
-      result = await runRootRelease(request);
+    case "root-release": {
+      const { run } = await import("./root-release.ts");
+      result = await run(request);
       break;
-    case "tofu-apply":
-      result = await runTofuApply(request);
+    }
+    case "tofu-apply": {
+      const { run } = await import("./tofu-apply.ts");
+      result = await run(request);
       break;
-    case "tofu-plan":
-      result = await runTofuPlan(request);
+    }
+    case "tofu-plan": {
+      const { run } = await import("./tofu-plan.ts");
+      result = await run(request);
       break;
-    case "control-plane":
-      result = await runControlPlane(request);
+    }
+    case "control-plane": {
+      const { run } = await import("./control-plane.ts");
+      result = await run(request);
       break;
-    case "platform-recovery":
-      result = await runPlatformRecovery(request);
+    }
+    case "platform-recovery": {
+      const { run } = await import("./platform-recovery.ts");
+      result = await run(request);
       break;
+    }
   }
   await Bun.write(
     Bun.stdout,

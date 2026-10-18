@@ -178,7 +178,7 @@ export function nativePod(
     runtime.length !== 2 ||
     runtime.some(
       (container) =>
-        !context.image.runtimeDigests.some(
+        ![context.image.digest, ...context.image.runtimeDigests].some(
           (digest) =>
             container.imageID.replace(/^docker-pullable:\/\//u, "") ===
             `${context.image.uri}@${digest}`,

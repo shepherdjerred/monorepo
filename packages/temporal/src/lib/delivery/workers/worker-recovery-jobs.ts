@@ -108,6 +108,40 @@ function requireTerminalJob(actual: V1Job) {
     throw new Error("Recovery Job is not independently terminal");
 }
 
+function uncreatedProvenance(stage: Stage, context: WorkerRecoveryContext) {
+  return (
+    stage.key === "worker-image-provenance" &&
+    stage.status === "running" &&
+    stage.deploymentId === context.deployment.deployment.id &&
+    /^delivery-[a-f0-9]{40}$/u.test(stage.operationId) &&
+    stage.message === "Waiting for an identity-bound revision-pinned Job" &&
+    !context.deployment.evidence.some(
+      (entry) =>
+        entry.operationId === stage.operationId ||
+        entry.summary.includes(stage.operationId),
+    )
+  );
+}
+
+async function readRecoveryJob(
+  stage: Stage,
+  context: WorkerRecoveryContext,
+  read: RecoveryJobReader,
+) {
+  try {
+    return await read.job(stage.operationId);
+  } catch (error) {
+    if (
+      !z.object({ code: z.literal(404) }).safeParse(error).success ||
+      !uncreatedProvenance(stage, context)
+    )
+      throw error;
+    const pods = await read.pods(stage.operationId);
+    if (pods.length > 0) throw error;
+    return;
+  }
+}
+
 /** Readback never creates, restarts or deletes a Job, even when its create response was lost. */
 export async function proveTerminalWorkerJobs(
   context: WorkerRecoveryContext,
@@ -123,7 +157,15 @@ export async function proveTerminalWorkerJobs(
       entry.key,
     ),
   )) {
-    const actual = await read.job(stage.operationId);
+    const actual = await readRecoveryJob(stage, context, read);
+    if (actual === undefined) {
+      evidence.push({
+        kind: "reconciliation",
+        operationId: stage.operationId,
+        summary: `Read-only provenance Job delivery-worker-jobs/${stage.operationId} was not created: authenticated GET 404, no recorded native receipt and no executor Pods`,
+      });
+      continue;
+    }
     const { uid, fingerprint } = requireOwnedJob(
       actual,
       stage,

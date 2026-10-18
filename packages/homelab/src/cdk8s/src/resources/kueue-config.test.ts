@@ -24,7 +24,16 @@ const ClusterQueueSchema = z.object({
   spec: z
     .object({
       namespaceSelector: z.object({
-        matchLabels: z.record(z.string(), z.string()),
+        matchLabels: z.record(z.string(), z.string()).optional(),
+        matchExpressions: z
+          .array(
+            z.object({
+              key: z.string(),
+              operator: z.string(),
+              values: z.array(z.string()),
+            }),
+          )
+          .optional(),
       }),
       preemption: z.object({
         withinClusterQueue: z.string(),
@@ -193,16 +202,30 @@ describe("kueue-config", () => {
     expect(CI_GATE_WORKFLOWS).toBe(4);
   });
 
-  it("admits only the CI namespace, and never preempts", () => {
+  it("admits declared executor namespaces only on the compute queue, and never preempts", () => {
     for (const name of [
       CI_CLUSTER_QUEUE,
       CI_GATE_CLUSTER_QUEUE,
       CI_MAINTENANCE_CLUSTER_QUEUE,
     ]) {
       const { spec } = clusterQueue(name);
-      expect(spec.namespaceSelector.matchLabels).toEqual({
-        "kubernetes.io/metadata.name": "woodpecker-ci",
-      });
+      expect(spec.namespaceSelector).toEqual(
+        name === CI_CLUSTER_QUEUE
+          ? {
+              matchExpressions: [
+                {
+                  key: "kubernetes.io/metadata.name",
+                  operator: "In",
+                  values: [
+                    "woodpecker-ci",
+                    "delivery-worker-jobs",
+                    "delivery-platform-jobs",
+                  ],
+                },
+              ],
+            }
+          : { matchLabels: { "kubernetes.io/metadata.name": "woodpecker-ci" } },
+      );
       // Kueue stops a plain pod by deleting it, which Woodpecker would read
       // as a step that succeeded.
       expect(spec.preemption).toEqual({

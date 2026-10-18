@@ -49,7 +49,7 @@ function validateProof(context: ForumBaselineContext, raw: ForumBaselineProof) {
   if (
     proof.pods.some(
       (pod) =>
-        !image.runtimeDigests.some(
+        ![image.digest, ...image.runtimeDigests].some(
           (digest) => pod.imageId === `${image.uri}@${digest}`,
         ),
     )

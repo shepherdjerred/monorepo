@@ -37,11 +37,18 @@ export type WorkerRecoveryEffects = {
 const StableArgo = z.object({
   operation: z.null().optional(),
   status: z.object({
-    sync: z.object({ status: z.literal("Synced") }),
+    sync: z.object({ status: z.enum(["Synced", "OutOfSync"]) }),
     health: z.object({ status: z.literal("Healthy") }),
     operationState: z.object({ phase: z.literal("Succeeded") }),
   }),
 });
+
+function recoverySync(raw: unknown, operated: boolean) {
+  const sync = StableArgo.parse(raw).status.sync.status;
+  if (operated && sync !== "Synced")
+    throw new Error("Operated worker recovery requires a Synced Application");
+  return sync;
+}
 
 function ownedRecoveryArgo(
   before: unknown,
@@ -205,10 +212,10 @@ export async function proveSettledWorkerRecovery(
   const { selection } = deliverySelection(detail);
   const application = encodeURIComponent(selection.application);
   const before = await effects.readArgo(application);
-  StableArgo.parse(before);
   const operated = detail.stages.some((stage) =>
     ["reconcile", "worker-host-bootstrap"].includes(stage.key),
   );
+  const beforeSync = recoverySync(before, operated);
   const owned = operated ? ownedRecoveryArgo(before, detail) : undefined;
   if (owned === undefined)
     await requireUnappliedWorkerHosts(context, pool, effects, before);
@@ -238,7 +245,7 @@ export async function proveSettledWorkerRecovery(
     throw new Error("Recovery routing changed during proof");
   requireStableRecoveryRoutes(pool, routes);
   const after = await effects.readArgo(application);
-  StableArgo.parse(after);
+  const afterSync = recoverySync(after, operated);
   if (workerSourceFingerprint(before) !== workerSourceFingerprint(after))
     throw new Error("Application changed during recovery proof");
   if (
@@ -259,13 +266,13 @@ export async function proveSettledWorkerRecovery(
       {
         kind: "reconciliation",
         operationId: receipt,
-        summary: `Independently settled failed release; source Workflow ${workflowId} closed, no acceptance inferred`,
+        summary: `Independently settled failed release; source Workflow ${workflowId} closed, Argo comparison ${beforeSync}/${afterSync}, no acceptance inferred`,
       },
       {
         kind: "runtime",
         operationId: receipt,
         summary:
-          "Exact live host digests, all served pollers, stable routing and unchanged Argo source verified twice",
+          "Exact live host digests, all served pollers, stable routing and unchanged Argo source verified",
       },
     ],
   });

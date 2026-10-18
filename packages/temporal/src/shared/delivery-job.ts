@@ -58,9 +58,12 @@ tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temp
 test -n "$tool_paths"
 export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
 bun install --frozen-lockfile
-bunx turbo run generate build --filter=@shepherdjerred/temporal^...
-bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
-export PATH="/workspace/bin:$PATH"
+if [ "$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")" != worker-images ]; then
+  bunx turbo run generate --filter=@shepherdjerred/temporal^...
+  bun run --cwd packages/llm-models build:runtime
+  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
+  export PATH="/workspace/bin:$PATH"
+fi
 cd packages/temporal
 bun scripts/jobs/run-delivery-job.ts
 `;
