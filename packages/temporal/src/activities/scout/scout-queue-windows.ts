@@ -20,6 +20,11 @@ import {
 } from "./scout-queue-windows-report.ts";
 import { buildPrBody, canAutoMerge } from "./scout-queue-windows-pr-body.ts";
 import {
+  checkSparseQueueLiveness,
+  unverifiedWarnings,
+  type QueueLivenessCheck,
+} from "./scout-queue-window-liveness.ts";
+import {
   changedFilesInPaths,
   closeSeasonRefreshPr,
   openSeasonRefreshPr,
@@ -65,6 +70,11 @@ export type ScoutQueueWindowsResult = {
   warningFingerprint: string | undefined;
   warningConsecutiveRuns: number;
   editSummaries: string[];
+  /**
+   * Web-search liveness checks for `sparse-no-close` warnings. Absent in
+   * retained Activity results from before the checks existed.
+   */
+  livenessChecks?: QueueLivenessCheck[];
   outcome: "pr-created" | "no-diff" | "no-diff-warned";
 };
 
@@ -189,6 +199,7 @@ async function updateWarningState(
 function resultDetails(
   report: QueueWindowsReport,
   warningState: { fingerprint: string | undefined; consecutiveRuns: number },
+  livenessChecks: QueueLivenessCheck[],
 ): Pick<
   ScoutQueueWindowsResult,
   | "editCount"
@@ -198,8 +209,10 @@ function resultDetails(
   | "warningFingerprint"
   | "warningConsecutiveRuns"
   | "editSummaries"
+  | "livenessChecks"
 > {
   return {
+    livenessChecks,
     editCount: report.edits.length,
     warningCount: report.warnings.length,
     warningSummaries: report.warnings.map(
@@ -222,8 +235,11 @@ export const scoutQueueWindowsActivities = {
   /**
    * Scan recent scout-prod match volume, propose limited-queue availability
    * window edits into `queue-windows.json`, and open a PR on drift.
-   * Deterministic (no agent). Auto-merges open/reopen-only PRs; any close is
-   * left for human confirmation against Riot patch notes.
+   * The diff is deterministic. Auto-merges open/reopen-only PRs; any close is
+   * left for human confirmation against Riot patch notes. Each
+   * `sparse-no-close` warning additionally gets an LLM web-search liveness
+   * check; a guarded `live` verdict drops it from the escalation fingerprint
+   * and streak, and any other outcome leaves the warning active.
    */
   async refreshScoutQueueWindows(): Promise<ScoutQueueWindowsResult> {
     const start = Date.now();
@@ -292,12 +308,17 @@ export const scoutQueueWindowsActivities = {
 
       const rawReport: unknown = await Bun.file(reportPath).json();
       const report = QueueWindowsReportSchema.parse(rawReport);
+      const livenessChecks = await checkSparseQueueLiveness({
+        report,
+        queueWindowsFile: `${repoDir}/${QUEUE_WINDOWS_PATH}`,
+        lookbackDays: LOOKBACK_DAYS,
+      });
       const warningState = await updateWarningState(
         s3Endpoint,
         region,
-        report.warnings,
+        unverifiedWarnings(report.warnings, livenessChecks),
       );
-      const details = resultDetails(report, warningState);
+      const details = resultDetails(report, warningState, livenessChecks);
 
       let files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       await discardFormattingOnlyChanges({

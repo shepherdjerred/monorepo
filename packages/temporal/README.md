@@ -899,6 +899,28 @@ reports, family state, skip record, and actual acceptance receipts; a completed
 Workflow alone does not prove delivery. Keep recurring delivery paused during
 this rehearsal. The Workflow rejects every namespace other than `beta`.
 
+## Scout queue-window warnings
+
+`refreshScoutQueueWindows` computes queue-window drift deterministically from
+the `scout-prod` match lake. A `sparse-no-close` warning means an open-ended
+window had no tracked matches in the lookback, which cannot distinguish an
+ended mode from one tracked players skip. For each such warning the Scout
+worker runs a two-call liveness check with `gpt-5.6-sol` through its
+`OPENAI_API_KEY`: a web-search research call
+(`scout.queue-window-liveness.research`) and a tool-less structured verdict
+(`scout.queue-window-liveness.finalize`) of `live`, `ended`, or `unknown`.
+
+The model only proposes. `live` is accepted only when a cited URL is a Riot or
+League wiki page that the research call's own web search returned. An accepted
+`live` warning becomes an `observing`/`info` finding and leaves the warning
+fingerprint and consecutive-run streak, so a report whose sparse warnings are
+all verified live is `clear`. `ended` and `unknown` stay active warnings;
+`ended` adds an action to set the window's `end` in `queue-windows.json`. A
+provider, transport, timeout, or structured-output failure records `unknown`
+with its error class and fails the optional "Liveness verification (web
+search)" check without failing the Activity. Results recorded before the check
+existed carry no `livenessChecks` and render their original report.
+
 ## Documentation
 
 - [Temporal overview](../docs/wiki/src/content/docs/explanation/temporal/overview.md)

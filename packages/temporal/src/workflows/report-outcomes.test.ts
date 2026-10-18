@@ -248,3 +248,228 @@ describe("deterministic maintenance report outcomes", () => {
     expect(notificationCondition(first)).toEqual(notificationCondition(later));
   });
 });
+
+const SPARSE_QUEUES = ["aram mayhem", "classic", "classic aram mayhem"];
+const sparseFindings = SPARSE_QUEUES.map((queue) =>
+  queueWarningFinding({
+    kind: "sparse-no-close",
+    queue,
+    total: 0,
+    message: `${queue}: no matches in 28 days`,
+  }),
+);
+const WIKI = "https://wiki.leagueoflegends.com/en-us/ARAM:_Mayhem";
+const PATCH =
+  "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-19-notes/";
+
+function sparseResult(
+  livenessChecks: ScoutQueueWindowsResult["livenessChecks"],
+): ScoutQueueWindowsResult {
+  return {
+    changedFiles: [],
+    branchName: undefined,
+    commitHash: undefined,
+    prUrl: undefined,
+    autoMergeRequested: false,
+    autoMergeConfigured: undefined,
+    editCount: 0,
+    warningCount: sparseFindings.length,
+    warningSummaries: sparseFindings.map((finding) => finding.summary),
+    warningFindings: sparseFindings,
+    warningFingerprint: "e".repeat(64),
+    warningConsecutiveRuns: 3,
+    editSummaries: [],
+    ...(livenessChecks === undefined ? {} : { livenessChecks }),
+    outcome: "no-diff-warned",
+  };
+}
+
+function check(
+  index: number,
+  status: "live" | "ended" | "unknown",
+  extra: { endedOn?: string; errorClass?: string; sources?: string[] } = {},
+) {
+  return {
+    findingId: sparseFindings[index]?.id ?? "",
+    queue: SPARSE_QUEUES[index] ?? "",
+    status,
+    rationale: `${status} rationale`,
+    sources: extra.sources ?? [WIKI],
+    ...(extra.endedOn === undefined ? {} : { endedOn: extra.endedOn }),
+    ...(extra.errorClass === undefined ? {} : { errorClass: extra.errorClass }),
+  };
+}
+
+function envelope(report: ActivityReportInput) {
+  return ReportEnvelopeV1Schema.parse({
+    ...validate(report),
+    schemaVersion: 1,
+    reportRunId: "queue:liveness",
+    completedAt: OBSERVED_AT,
+    provenance: { workflowId: "queue-test", runId: "liveness" },
+  });
+}
+
+describe("Scout queue-window liveness", () => {
+  test("results without liveness checks keep their pre-liveness report", () => {
+    const report = validate(
+      scoutQueueWindowsReport(STARTED_AT, sparseResult(undefined)),
+    );
+    expect(report.verdict).toBe("attention");
+    expect(report.checks.map((item) => item.id)).toEqual([
+      "match-evidence",
+      "proposal-publication",
+      "auto-merge-configuration",
+    ]);
+    expect(report.evidence.map((item) => item.id)).toEqual([
+      "queue-window-result",
+    ]);
+    expect(report.limitations).toEqual([]);
+    expect(report.actions).toEqual([]);
+    expect(report.headline).toBe(
+      `3 warnings with fingerprint ${"e".repeat(64)} (3 consecutive runs).`,
+    );
+    expect(
+      report.findings.map((finding) => [finding.state, finding.severity]),
+    ).toEqual([
+      ["active", "warning"],
+      ["active", "warning"],
+      ["active", "warning"],
+    ]);
+  });
+
+  test("all sparse queues verified live produce a clear, non-actionable report", () => {
+    const report = envelope(
+      scoutQueueWindowsReport(
+        STARTED_AT,
+        sparseResult([check(0, "live"), check(1, "live"), check(2, "live")]),
+      ),
+    );
+    expect(report).toMatchObject({ execution: "complete", verdict: "clear" });
+    expect(report.headline).toBe(
+      "Match evidence produced no queue-window changes. 3 sparse queues were verified live by web search.",
+    );
+    expect(
+      report.findings.map((finding) => [finding.state, finding.severity]),
+    ).toEqual([
+      ["observing", "info"],
+      ["observing", "info"],
+      ["observing", "info"],
+    ]);
+    expect(report.findings[0]?.detail).toContain("Verified live by web search");
+    expect(report.findings[0]?.detail).toContain(WIKI);
+    expect(report.checks.find((item) => item.id === "queue-liveness")).toEqual({
+      id: "queue-liveness",
+      label: "Liveness verification (web search)",
+      required: false,
+      status: "passed",
+      summary: "Passed 3 / Problem 0 / Not checked 0",
+      evidenceReceiptIds: ["queue-liveness"],
+    });
+    expect(report.limitations).toEqual([
+      "Sparse-queue liveness is model-assessed from web search; a verified-live queue is informational, not proof of match volume.",
+    ]);
+    expect(notificationCondition(report).actionable).toBe(false);
+  });
+
+  test("an ended verdict stays active and proposes closing the window", () => {
+    const report = envelope(
+      scoutQueueWindowsReport(
+        STARTED_AT,
+        sparseResult([
+          check(0, "live"),
+          check(1, "ended", { endedOn: "2026-09-24", sources: [PATCH] }),
+          check(2, "live"),
+        ]),
+      ),
+    );
+    expect(report.verdict).toBe("attention");
+    expect(report.headline).toBe(
+      `1 warnings with fingerprint ${"e".repeat(64)} (3 consecutive runs). 2 sparse queues were verified live by web search.`,
+    );
+    expect(report.findings[1]).toMatchObject({
+      state: "active",
+      severity: "warning",
+    });
+    expect(report.findings[1]?.detail).toContain("liveness=ended");
+    expect(report.actions).toEqual([
+      `Set \`end\` for classic in queue-windows.json (LLM cites ended 2026-09-24: ${PATCH}).`,
+    ]);
+    expect(
+      report.checks.find((item) => item.id === "queue-liveness")?.summary,
+    ).toBe("Passed 2 / Problem 1 / Not checked 0");
+    expect(notificationCondition(report).actionable).toBe(true);
+  });
+
+  test("a failed liveness call keeps the warning and marks the check failed", () => {
+    const report = envelope(
+      scoutQueueWindowsReport(
+        STARTED_AT,
+        sparseResult([
+          check(0, "live"),
+          check(1, "unknown", { errorClass: "AI_APICallError", sources: [] }),
+          check(2, "unknown", { sources: [] }),
+        ]),
+      ),
+    );
+    expect(report).toMatchObject({
+      execution: "complete",
+      verdict: "attention",
+    });
+    expect(
+      report.checks.find((item) => item.id === "queue-liveness"),
+    ).toMatchObject({
+      status: "failed",
+      required: false,
+      summary: "Passed 1 / Problem 1 / Not checked 1",
+    });
+    expect(
+      report.evidence.find((item) => item.id === "queue-liveness")?.status,
+    ).toBe("failure");
+    expect(report.findings[1]?.detail).toContain("(AI_APICallError)");
+    expect(
+      report.findings.filter((finding) => finding.state === "active"),
+    ).toHaveLength(2);
+  });
+
+  test("a verified-live queue does not change the active-warning condition", () => {
+    const withLive = envelope(
+      scoutQueueWindowsReport(
+        STARTED_AT,
+        sparseResult([check(0, "live"), check(1, "ended"), check(2, "live")]),
+      ),
+    );
+    const differentRationale = envelope(
+      scoutQueueWindowsReport(
+        STARTED_AT,
+        sparseResult([
+          { ...check(0, "live"), rationale: "new wording" },
+          check(1, "ended"),
+          check(2, "live"),
+        ]),
+      ),
+    );
+    expect(notificationCondition(withLive)).toEqual(
+      notificationCondition(differentRationale),
+    );
+  });
+
+  test("no sparse warnings records a skipped liveness check", () => {
+    const report = validate(
+      scoutQueueWindowsReport(STARTED_AT, {
+        ...sparseResult([]),
+        warningCount: 0,
+        warningSummaries: [],
+        warningFindings: [],
+        warningFingerprint: undefined,
+        warningConsecutiveRuns: 0,
+        outcome: "no-diff",
+      }),
+    );
+    expect(report.verdict).toBe("clear");
+    expect(
+      report.checks.find((item) => item.id === "queue-liveness"),
+    ).toMatchObject({ status: "skipped", required: false });
+    expect(report.limitations).toEqual([]);
+  });
+});

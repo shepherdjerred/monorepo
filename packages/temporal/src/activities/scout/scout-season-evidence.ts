@@ -1,3 +1,4 @@
+import { riotSourceFamily } from "./riot-source-family.ts";
 import { runCommand } from "./scout-season-refresh-git.ts";
 
 const NO_DRIFT_SENTINEL = "NO_DRIFT";
@@ -36,29 +37,11 @@ const MONTH_NAMES = [
 const MAX_SOURCE_CONTENT_LENGTH = 4_000_000;
 const SEASON_CONTEXT_PATTERN = /\b(?:act|patch|ranked|season)\b/u;
 
-function seasonSourceFamily(url: string): "riot" | "wiki" | undefined {
-  if (!URL.canParse(url)) return undefined;
-  const host = new URL(url).hostname;
-  if (host === "wiki.leagueoflegends.com") {
-    return "wiki";
-  }
-  if (
-    [
-      "www.leagueoflegends.com",
-      "leagueoflegends.com",
-      "support-leagueoflegends.riotgames.com",
-    ].includes(host)
-  ) {
-    return "riot";
-  }
-  return undefined;
-}
-
 function isSpecificSeasonSource(url: string): boolean {
   if (!URL.canParse(url)) return false;
   const parsed = new URL(url);
   const segments = parsed.pathname.split("/").filter((part) => part !== "");
-  const family = seasonSourceFamily(url);
+  const family = riotSourceFamily(url);
   if (family === "wiki") return segments.length >= 2;
   return parsed.hostname === "support-leagueoflegends.riotgames.com"
     ? segments.includes("articles") && segments.length >= 4
@@ -67,7 +50,7 @@ function isSpecificSeasonSource(url: string): boolean {
 
 export function hasIndependentSeasonSources(urls: string[]): boolean {
   const families = urls
-    .map((url) => seasonSourceFamily(url))
+    .map((url) => riotSourceFamily(url))
     .filter((family) => family !== undefined);
   return new Set(families).size >= 2;
 }
@@ -192,7 +175,7 @@ export function unsupportedSeasonDates(
             isSpecificSeasonSource(source.url) &&
             sourceContainsDate(source.content, date),
         )
-        .map((source) => seasonSourceFamily(source.url))
+        .map((source) => riotSourceFamily(source.url))
         .filter((family) => family !== undefined),
     );
     return supportingFamilies.size < 2;

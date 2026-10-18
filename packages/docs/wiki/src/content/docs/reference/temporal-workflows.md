@@ -104,7 +104,7 @@ Schedule defaults: [Scout schedule definitions](https://github.com/shepherdjerre
 | data-dragon weekly refresh | Sat 06:00                                        | deterministic          | heartbeat + **auto-merge PR**   |
 | season-refresh             | Mon 07:00                                        | agent research + gates | heartbeat + PR                  |
 | showcase-refresh           | Mon 10:00                                        | deterministic          | PR                              |
-| queue-windows              | daily 06:45                                      | deterministic          | heartbeat + gated PR            |
+| queue-windows              | daily 06:45                                      | deterministic + LLM    | heartbeat + gated PR            |
 | image-gc                   | daily 04:00                                      | deterministic          | S3 deletions                    |
 | competition updates        | every minute                                     | deterministic          | due Discord standings           |
 | clash snapshot             | every 15 minutes                                 | deterministic          | Clash-v1 schedule and roster    |

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { nextWarningState } from "./scout-queue-windows.ts";
+import { unverifiedWarnings } from "./scout-queue-window-liveness.ts";
 import { queueWarningFinding } from "./scout-queue-windows-report.ts";
 
 const FINGERPRINT = "a".repeat(64);
@@ -88,5 +89,35 @@ describe("Scout queue warning state", () => {
       consecutiveRuns: 4,
       lastWorkflowRunId: "run-4",
     });
+  });
+});
+
+describe("Scout queue liveness filtering", () => {
+  const sparse = {
+    kind: "sparse-no-close",
+    queue: "classic",
+    message: "no matches",
+    total: 0,
+  };
+  const young = { kind: "window-too-young", queue: "urf", message: "young" };
+  const unknownKind = { kind: "new-kind", message: "unidentified" };
+  const check = (status: "live" | "ended" | "unknown") => ({
+    findingId: queueWarningFinding(sparse).id ?? "",
+    queue: "classic",
+    status,
+    rationale: "evidence",
+    sources: [],
+  });
+
+  test("drops only warnings with an accepted live verdict", () => {
+    expect(
+      unverifiedWarnings([sparse, young, unknownKind], [check("live")]),
+    ).toEqual([young, unknownKind]);
+  });
+
+  test("keeps ended and unknown warnings in the escalation state", () => {
+    expect(unverifiedWarnings([sparse], [check("ended")])).toEqual([sparse]);
+    expect(unverifiedWarnings([sparse], [check("unknown")])).toEqual([sparse]);
+    expect(unverifiedWarnings([sparse], [])).toEqual([sparse]);
   });
 });
