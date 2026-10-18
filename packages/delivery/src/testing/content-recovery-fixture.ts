@@ -1,4 +1,8 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
+import {
+  SERVICE_CATALOG,
+  ServiceIndex,
+} from "@shepherdjerred/ops-model/catalog.ts";
 import { testExecutor, testOperator, testPublisher } from "./seed.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
@@ -6,6 +10,12 @@ import type {
   ContentRecoveryContext,
   ContentRecoveryOwnership,
 } from "#shared/contract.ts";
+
+/** These target-recovery tests isolate content ownership from root rollout policy. */
+export const contentRecoveryCatalog = new ServiceIndex({
+  ...SERVICE_CATALOG,
+  platformDeliveryDelegated: false,
+});
 
 /** Genuine disposable qualification and ordinary claims; no accepted-state import. */
 export async function contentRecoveryFixture(

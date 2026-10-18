@@ -8,6 +8,10 @@ import {
   testPublisher,
 } from "@shepherdjerred/delivery/testing";
 import { staticAcceptanceEvidence } from "./static-site-effects.ts";
+import {
+  SERVICE_CATALOG,
+  ServiceIndex,
+} from "@shepherdjerred/ops-model/catalog.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 beforeAll(async () => {
@@ -18,7 +22,13 @@ afterAll(async () => {
 });
 
 test("the static adapter's evidence can finish its exact deployment through the real PG-backed API", async () => {
-  const delivery = new Delivery(cluster.database);
+  // This adapter-to-API test isolates byte acceptance; root prerequisites have
+  // their own persisted platform integration fixture.
+  const delivery = new Delivery(
+    cluster.database,
+    1,
+    new ServiceIndex({ ...SERVICE_CATALOG, platformDeliveryDelegated: false }),
+  );
   const digest = `sha256:${"a".repeat(64)}`;
   const publication = await delivery.publish(
     {

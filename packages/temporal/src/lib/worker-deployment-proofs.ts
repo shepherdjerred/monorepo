@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { ociImageConfigurations } from "@shepherdjerred/ops-model/oci-image-configurations.ts";
 import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
-import { WORKFLOW_TASK_QUEUES } from "#shared/task-queues.ts";
 
 const PrometheusResponseSchema = z.object({
   status: z.literal("success"),
@@ -14,11 +13,6 @@ const PrometheusResponseSchema = z.object({
     ),
   }),
 });
-const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
-  "30m": 60,
-  "2h": 240,
-} as const;
-const MAX_RULE_EVALUATION_AGE_SECONDS = 300;
 const AcceptedDeploymentSchema = z.object({
   name: z.string().min(1),
   routingConfig: z.object({
@@ -110,34 +104,6 @@ export async function requireReplayCheckout(
   if (status.stdout.trim().length > 0) {
     throw new Error("Replay checkout has tracked modifications");
   }
-}
-
-export function rolloutPoller(
-  options: {
-    namespace: string;
-    deploymentName: string;
-    buildId: string;
-    taskQueue: string;
-  },
-  currentBuildId?: string,
-): {
-  namespace: string;
-  deploymentName: string;
-  buildId: string;
-  currentBuildId?: string;
-  taskQueue: string;
-  taskQueues?: readonly string[];
-} {
-  return {
-    ...options,
-    ...(currentBuildId === undefined ? {} : { currentBuildId }),
-    taskQueue: options.taskQueue,
-    ...(options.taskQueue === WORKFLOW_TASK_QUEUES[0]
-      ? {
-          taskQueues: WORKFLOW_TASK_QUEUES,
-        }
-      : {}),
-  };
 }
 
 export async function runWorkerDeploymentPreflight(
@@ -240,181 +206,6 @@ export async function requireAcceptancePrerequisite(
     },
     run,
   );
-}
-
-async function requireHealthyRuleEvaluations(
-  duration: "30m" | "2h",
-  run: RolloutCommandRunner,
-): Promise<void> {
-  const evaluationProgress = await queryRolloutMetric(
-    `min(min_over_time((changes(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[5m]) > bool 0)[${duration}:5m]))`,
-    `${duration} Temporal rule evaluation progression query`,
-    run,
-  );
-  if (evaluationProgress <= 0) {
-    throw new Error(
-      `Temporal rule evaluations did not advance during the required ${duration} rollout window`,
-    );
-  }
-  const historicalEvaluationAgeSeconds = await queryRolloutMetric(
-    `max(max_over_time((time() - prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"})[${duration}:1m]))`,
-    `${duration} Temporal rule evaluation historical age query`,
-    run,
-  );
-  if (historicalEvaluationAgeSeconds > MAX_RULE_EVALUATION_AGE_SECONDS) {
-    throw new Error(
-      `Temporal rule evaluations reached ${String(historicalEvaluationAgeSeconds)} seconds old during the required ${duration} rollout window`,
-    );
-  }
-  const evaluationAgeSeconds = await queryRolloutMetric(
-    `max(time() - max by (rule_group) (prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}))`,
-    `${duration} Temporal rule evaluation freshness query`,
-    run,
-  );
-  if (evaluationAgeSeconds > MAX_RULE_EVALUATION_AGE_SECONDS) {
-    throw new Error(
-      `Temporal rule evaluations are ${String(evaluationAgeSeconds)} seconds old`,
-    );
-  }
-  const evaluationFailures = await queryRolloutMetric(
-    `sum(increase(prometheus_rule_evaluation_failures_total{rule_group=~".*;temporal-.*"}[${duration}])) or vector(0)`,
-    `${duration} Temporal rule evaluation failure query`,
-    run,
-  );
-  if (evaluationFailures !== 0) {
-    throw new Error(
-      `Temporal Prometheus rules recorded ${String(evaluationFailures)} evaluation failures during the required ${duration} rollout window`,
-    );
-  }
-}
-
-async function requirePollerHistory(input: {
-  duration: "30m" | "2h";
-  requiredHistorySamples: number;
-  buildId: string;
-  taskQueue: string;
-  poller: {
-    namespace: string;
-    deploymentName: string;
-  };
-  run: RolloutCommandRunner;
-}): Promise<void> {
-  const { duration, requiredHistorySamples, buildId, taskQueue, poller, run } =
-    input;
-  const pollerSelector = `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type="workflow_task"})`;
-  const pollerHistorySamples = await queryRolloutMetric(
-    `count_over_time((${pollerSelector})[${duration}:])`,
-    `${duration} ${buildId} ${taskQueue} Workflow poller coverage query`,
-    run,
-  );
-  if (pollerHistorySamples < requiredHistorySamples) {
-    throw new Error(
-      `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} rollout window`,
-    );
-  }
-  const combinedPollerSelector = `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type=~"workflow_task|sticky_workflow_task"})`;
-  const pollerSamples = await queryRolloutMetric(
-    `min_over_time((${combinedPollerSelector})[${duration}:30s])`,
-    `${duration} ${buildId} ${taskQueue} Workflow poller history query`,
-    run,
-  );
-  if (pollerSamples < 1) {
-    throw new Error(
-      `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} rollout window`,
-    );
-  }
-  // Core can briefly report zero nonsticky pollers while sticky pollers remain
-  // active. Keep the new-Workflow queue live by requiring a nonsticky poller in
-  // every one-minute interval, in addition to uninterrupted combined coverage.
-  const nonstickyPollerSamples = await queryRolloutMetric(
-    `min_over_time((max_over_time((${pollerSelector})[1m:30s]))[${duration}:30s])`,
-    `${duration} ${buildId} ${taskQueue} nonsticky Workflow poller history query`,
-    run,
-  );
-  if (nonstickyPollerSamples < 1) {
-    throw new Error(
-      `Nonsticky Workflow poller for ${buildId} on ${taskQueue} was unavailable for at least one minute during the required ${duration} rollout window`,
-    );
-  }
-}
-
-async function requireCandidateWorkflowHealth(
-  duration: "30m" | "2h",
-  poller: {
-    namespace: string;
-    deploymentName: string;
-    buildId: string;
-    taskQueue: string;
-    taskQueues?: readonly string[];
-  },
-  run: RolloutCommandRunner,
-): Promise<void> {
-  for (const taskQueue of poller.taskQueues ?? [poller.taskQueue]) {
-    const selector = `temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(poller.buildId)},task_queue=${JSON.stringify(taskQueue)}`;
-    for (const metric of [
-      "temporal_worker_workflow_task_execution_failed_total",
-      "temporal_worker_workflow_failed_total",
-    ]) {
-      const failures = await queryRolloutMetric(
-        `sum(increase(${metric}{${selector}}[${duration}])) or vector(0)`,
-        `${duration} candidate ${metric} query`,
-        run,
-      );
-      if (failures !== 0) {
-        throw new Error(
-          `Candidate build ${poller.buildId} recorded ${String(failures)} ${metric} failures on ${taskQueue} during the required ${duration} rollout window`,
-        );
-      }
-    }
-  }
-}
-
-export async function requireHealthyRolloutWindow(
-  duration: "30m" | "2h",
-  run: RolloutCommandRunner,
-  poller?: {
-    namespace: string;
-    deploymentName: string;
-    buildId: string;
-    currentBuildId?: string;
-    taskQueue: string;
-    taskQueues?: readonly string[];
-  },
-): Promise<void> {
-  const requiredHistorySamples = REQUIRED_PROMETHEUS_HISTORY_SAMPLES[duration];
-  const historySamples = await queryRolloutMetric(
-    `min(min by (rule_group) (count_over_time(prometheus_rule_group_last_evaluation_timestamp_seconds{rule_group=~".*;temporal-.*"}[${duration}])))`,
-    `${duration} Temporal rule evaluation history query`,
-    run,
-  );
-  if (historySamples < requiredHistorySamples) {
-    throw new Error(
-      `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} rollout window`,
-    );
-  }
-  await requireHealthyRuleEvaluations(duration, run);
-  if (poller !== undefined) {
-    await requireCandidateWorkflowHealth(duration, poller, run);
-    const buildIds = [poller.buildId];
-    if (
-      poller.currentBuildId !== undefined &&
-      poller.currentBuildId !== poller.buildId
-    ) {
-      buildIds.push(poller.currentBuildId);
-    }
-    for (const buildId of buildIds) {
-      for (const taskQueue of poller.taskQueues ?? [poller.taskQueue]) {
-        await requirePollerHistory({
-          duration,
-          requiredHistorySamples,
-          buildId,
-          taskQueue,
-          poller,
-          run,
-        });
-      }
-    }
-  }
 }
 
 export async function verifyCandidateImageBuildId(

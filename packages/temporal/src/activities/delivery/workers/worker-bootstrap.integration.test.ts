@@ -13,7 +13,10 @@ import type {
   WorkerPoolSnapshot,
 } from "@shepherdjerred/delivery/contract";
 import type { DeliverySelection } from "homelab/scripts/argocd/argocd-delivery.ts";
-import { deliverySelection } from "#lib/delivery/selection.ts";
+import {
+  deliveryOperationId,
+  deliverySelection,
+} from "#lib/delivery/selection.ts";
 import { requirePoolRoutingCoverage } from "#lib/delivery/workers/worker-retirement.ts";
 import {
   bootstrapDeliveryWorkerHosts,
@@ -466,7 +469,7 @@ test("independent original-A hosts and captured older chart leave qualified app-
     {
       key: "worker-baseline",
       status: "succeeded",
-      operationId: "baseline-observed",
+      operationId: deliveryOperationId(`${adoption.id}:worker-baseline`),
       message: "Original runtime and all routes independently observed",
       evidence,
     },

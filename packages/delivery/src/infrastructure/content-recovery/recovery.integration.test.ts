@@ -5,6 +5,7 @@ import {
   contentNativeReceipt,
   contentBarrier,
   contentObservation,
+  contentRecoveryCatalog,
 } from "#testing/content-recovery-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
@@ -12,7 +13,7 @@ import { pendingDeliveryObservations } from "#infrastructure/delivery-data.ts";
 import { requireControlPlaneQuiescence } from "#infrastructure/control-plane/lifecycle.ts";
 import { deliveryMetrics } from "#server/metrics.ts";
 
-const scope = useDeliveryFixture();
+const scope = useDeliveryFixture({ catalog: contentRecoveryCatalog });
 let fixture: Awaited<ReturnType<typeof contentRecoveryFixture>>;
 beforeEach(async () => {
   fixture = await contentRecoveryFixture(scope.delivery);
