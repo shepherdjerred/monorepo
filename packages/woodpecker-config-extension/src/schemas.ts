@@ -65,7 +65,7 @@ export const PipelineSchema = z.looseObject({
 });
 
 export const RepoSchema = z.looseObject({
-  id: z.number(),
+  id: z.number().int().positive(),
   name: z.string(),
   default_branch: z.string(),
 });

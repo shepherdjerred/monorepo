@@ -356,7 +356,10 @@ export function createApp(options: AppOptions): Hono {
       verifyBase,
       imageReleaseBase: imageReleaseBase?.commit,
       imageReleasePipeline: imageReleaseBase?.pipelineNumber,
-    });
+    }).map((step) => ({
+      ...step,
+      environment: { ...step.environment, CI_REPO_ID: String(repo.id) },
+    }));
     const selected = groupSmallChecks(
       signRemoteCacheSteps(
         selectSteps(maintenance.enabled ? separateMaintenance(steps) : steps, {
