@@ -302,7 +302,7 @@ export function bootstrapRootManifest(
         `Bootstrap source lacks ${name}; provision reviewed source registrations first`,
       );
   return [...inherited, ...documents]
-    .map((doc) => stringify(doc))
+    .map((doc) => stringify(doc, { compat: "yaml-1.1" }))
     .join("---\n");
 }
 
