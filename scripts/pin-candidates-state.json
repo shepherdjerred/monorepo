@@ -59,10 +59,10 @@
       "buildNumber": 1010387
     },
     "shepherdjerred/scout-for-lol/prod": {
-      "version": "2.0.0-1010485",
-      "digest": "sha256:258d1a63e8a1070f75493b314ca324c43b9da566caca9e37d7bd21af858ac17f",
-      "gitSha": "11b99ce23035b26a73832f61113c1286bdea0629",
-      "buildNumber": 1010485
+      "version": "2.0.0-1010826",
+      "digest": "sha256:6fb3a730330929dc026549bc928d4532a7fe9cd45d0e4e4796330c46c9ec2212",
+      "gitSha": "820534947c80f7af9d5019b372542e86ae73b0a1",
+      "buildNumber": 1010826
     },
     "shepherdjerred/scout-for-lol/prod/workflows/candidate": {
       "version": "2.0.0-1010387",
