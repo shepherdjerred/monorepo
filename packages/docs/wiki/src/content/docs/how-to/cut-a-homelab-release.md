@@ -29,7 +29,8 @@ original CI-qualified artifacts already recorded in PostgreSQL.
 
    ```bash
    gh api repos/shepherdjerred/monorepo/hooks --jq '.[] | {id, active, url: (.config.url | split("?")[0])}'
-   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=false
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=false --silent
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --jq '{id, active}'
    toolkit woodpecker pipeline ls shepherdjerred/monorepo
    toolkit woodpecker pipeline stop shepherdjerred/monorepo PIPELINE_NUMBER
    ```
@@ -59,7 +60,8 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    then re-enable the inspected webhook:
 
    ```bash
-   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=true
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=true --silent
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --jq '{id, active}'
    ```
 
    Run a fresh PR and inspect its generated graph: verification, builds and
