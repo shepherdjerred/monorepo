@@ -794,7 +794,10 @@ observation runs its applicable projections before match-level completion is
 rechecked; a standing sibling result cannot skip the new projection pass.
 
 Ingestion reconciliation resolves report-ready evidence through the same
-Riot-priority result policy. API-supported games retain the same two-minute
+Riot-priority result policy. With beta evidence recovery enabled, a Riot 403
+is reported as an unavailable source and does not block independent client
+evidence. Contract failures still throw; production retains its existing
+forbidden-read behavior. API-supported games retain the same two-minute
 source grace as complete client matches, measured from original discovery;
 games known to withhold results do not wait. Freshly resolved full evidence
 participates immediately, before its independent archive projection completes.
