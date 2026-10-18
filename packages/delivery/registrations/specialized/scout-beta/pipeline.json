@@ -29,8 +29,7 @@
       "index.html",
       "app/index.html",
       "docs/index.html",
-      "404.html",
-      "customs/index.html"
+      "404.html"
     ],
     "verification": {
       "url": "https://beta.scout-for-lol.com/",

@@ -28,7 +28,7 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    already queued or running old main pipelines. Read back both changes.
 
    ```bash
-   gh api repos/shepherdjerred/monorepo/hooks --jq '.[] | {id, active, url: .config.url}'
+   gh api repos/shepherdjerred/monorepo/hooks --jq '.[] | {id, active, url: (.config.url | split("?")[0])}'
    gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=false
    toolkit woodpecker pipeline ls shepherdjerred/monorepo
    toolkit woodpecker pipeline stop shepherdjerred/monorepo PIPELINE_NUMBER

@@ -1,8 +1,7 @@
 import {
-  requiredReleaseEntrypoints,
+  RELEASE_ENTRYPOINTS,
   archiveEntrypoints,
 } from "./scout-release-entrypoints.ts";
-import { assertScoutCustomsArtifactPolicy } from "./scout-customs-artifact.ts";
 
 export const DELIVERY_SCOUT_RELEASE_WORK_DIR =
   ".delivery-artifacts/scout-release";
@@ -24,14 +23,13 @@ export async function hashSiteArchive(directory: string): Promise<string> {
   return `sha256:${hasher.digest("hex")}`;
 }
 
-/** Preserve flavor and entrypoint safety before any immutable publication. */
+/** Both frontend flavors retain the current application/docs entrypoints. */
 export async function assertScoutArchiveSource(
   directory: string,
   flavor: "prod" | "beta",
 ): Promise<void> {
   const present = await archiveEntrypoints(directory);
-  for (const required of requiredReleaseEntrypoints(flavor))
+  for (const required of RELEASE_ENTRYPOINTS)
     if (!present.includes(required))
       throw new Error(`Scout ${flavor} archive is missing ${required}`);
-  await assertScoutCustomsArtifactPolicy(directory, flavor);
 }
