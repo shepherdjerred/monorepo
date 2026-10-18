@@ -5,13 +5,17 @@ description: Find land, protect your first base, and meet The Storm's townsfolk.
 
 In this short walkthrough, you will find a place to build, protect it, and save a home you can return to.
 
-Start by [joining the server](/join/). You arrive beside the windmill in Spawn Town. Your starter tools, bread, and welcome book arrive automatically, once. You also start with 500 crystals.
+Start by [joining the server](/join/). You arrive beside the windmill in Spawn Town with an iron sword, pickaxe, axe, shovel, and hoe, 16 cooked porkchops, and a welcome book. This starter kit is given once. You also start with 500 crystals.
 
-Open the welcome book again at any time with `/guide`. The walkthrough is optional.
+Choose a biome in the welcome screen, or select **Explore Spawn** to look around first. A compass in your ninth hotbar slot opens the biome picker when you left- or right-click it. It stays with you until your first successful random teleport.
+
+Open the three-page welcome book again at any time with `/guide`. The walkthrough is optional.
 
 ## 1. Check your safety settings
 
 Run `/rules`. Spawn is PvP-free, but PvP is enabled outside it. Run `/pvp off` if you want to opt out. You can change that setting once a week.
+
+Beginner's Luck prevents combat with Spawn Town's NPCs during your first 12 hours of active play. You can still talk to them and accept quests.
 
 No griefing is allowed. Unlocked containers are fair game where you have access; locked containers are protected. Read [the rules](/norms/) before leaving spawn.
 
@@ -23,7 +27,7 @@ Open `/quests` to see your quest journal. NPCs around town offer more quests whe
 
 ## 3. Find somewhere to build
 
-Run `/rtp` to travel to a safe wilderness spot. Random teleporting is free for your first seven days, although travel cooldowns still apply.
+Use your compass to choose a biome, or run `/rtp` to travel to a safe wilderness spot. Random teleporting is free for your first seven days, although travel cooldowns still apply.
 
 Gather wood and find an unoccupied place for a small shelter. Build on your own land or with permission. Use `/claim info` to check the chunk you stand in.
 
