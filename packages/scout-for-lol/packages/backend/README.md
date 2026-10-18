@@ -601,10 +601,9 @@ keeps a start-to-close retry out while the original attempt still runs, and
 `fence.assertHeld()` refuses the receipt write once the lock may have lapsed.
 A conflicting receipt fails the Activity non-retryably and increments
 `scout_durable_receipts_recorded_total{outcome="conflict"}`, which raises
-`ScoutDurableReceiptConflicts`. The retired `ScoutEffectClaim` row once
-recorded the same thing as the receipt, and nothing reads or writes it now;
-lock keys keep its strings, so a rolling deploy still serializes old and new
-attempts on one lock.
+`ScoutDurableReceiptConflicts`. The retired `ScoutEffectClaim` table once
+recorded the same thing as the receipt and has been dropped; lock keys keep
+its strings, so attempts from any build serialize on one lock.
 
 Two analytics events are fenced by a durable transition rather than a claim,
 and both are at-most-once: a post-match report's per-guild core output by the
@@ -1308,10 +1307,9 @@ which is how a resumed settlement receipt still names a Dare an earlier attempt
 resolved. The
 intent expires thirty days after the event, and an ambiguous DM failure stays
 `unknown-delivery` for operator resolution. The legacy Dare event/delivery
-outbox and its post-match drain are retired; settlement sinks only decide
-whether the intents may be minted. Until its tables are dropped, a standing
-legacy event still owns its deduplication key and prevents the notification
-lane from announcing the same event again.
+outbox, its tables and its post-match drain are retired; settlement sinks only
+decide whether the intents may be minted. The drop migration refuses to run
+while a legacy delivery is still owed.
 
 The offline recovery notice is a `product-announcement` intent with the
 `offline-recovery` effect, one per subscribed channel and outage, minted with

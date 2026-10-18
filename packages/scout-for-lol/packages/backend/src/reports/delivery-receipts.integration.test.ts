@@ -16,7 +16,6 @@ import { OperationsIntentPayloadSchema } from "@scout-for-lol/data";
 const { prisma } = createTestDatabase("report-delivery-receipts");
 beforeEach(async () => {
   await prisma.report.deleteMany();
-  await prisma.scoutEffectClaim.deleteMany();
 });
 afterAll(async () => {
   await prisma.$disconnect();
@@ -158,15 +157,8 @@ describe("durable report chunk delivery", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  test("starts every chunk pending and ignores legacy send claims", async () => {
+  test("starts every chunk pending", async () => {
     const input = await dispatch();
-    await prisma.scoutEffectClaim.create({
-      data: {
-        key: `report-discord:${input.result.runId.toString()}:0`,
-        kind: "report-discord",
-        state: "COMPLETED",
-      },
-    });
     const [chunk] = await freezeReportDelivery(input, prisma);
     if (chunk === undefined) throw new Error("Missing chunk");
     expect(chunk).toMatchObject({
