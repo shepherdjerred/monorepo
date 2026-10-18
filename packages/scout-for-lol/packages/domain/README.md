@@ -49,6 +49,15 @@ handoff, and from then on Temporal's conflict and reuse policies govern the
 id. Persistence mirrors the in-flight half with a partial unique key, but the
 table above is defined here and applied only by the transition functions.
 
+## Result evidence
+
+`artifacts/game-result.ts` describes result facts independently of complete
+Match-V5 coverage. Terminal scoreboards may have null participant numbers and
+lobby creation, while retaining an observed completion timestamp and stated
+loadout. `gameResultTimestamp` returns a stated creation or completion instant;
+it does not estimate missing lobby creation. Compatible result enrichment
+preserves Riot priority, known participant-number conflicts and frozen inputs.
+
 ## Bryan Bucks money brands
 
 `src/identity/bucks-money.ts` is authoritative for what a Bryan Bucks quantity

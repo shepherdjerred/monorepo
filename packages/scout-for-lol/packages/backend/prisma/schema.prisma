@@ -2870,6 +2870,16 @@ model RiotPayloadCapture {
   @@index([archivedAt, nextAttemptAt])
 }
 
+/// Frozen report input and tracked audience when a result can render before full match coverage.
+/// This is normalized evidence; original observations remain independently archived in S3.
+model MatchReportSnapshot {
+  riotMatchId String    @id
+  document    Json
+  createdAt   DateTime  @default(now())
+  /// Report rendering and intent reconciliation completed, not the game's end time.
+  completedAt DateTime?
+}
+
 /// Both adapters publish to the same result evidence registry; ownership stays at query boundaries.
 model MatchResultEvidence {
   source              String

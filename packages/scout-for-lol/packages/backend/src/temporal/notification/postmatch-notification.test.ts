@@ -30,6 +30,10 @@ const stubs = vi.hoisted(() => ({
   generateMatchReport: vi.fn(),
 }));
 
+vi.mock("#src/evidence/report-scoreboard.ts", () => ({
+  readReportScoreboard: async () => null,
+}));
+
 vi.mock("#src/temporal/match/match-context.ts", () => ({
   resolveScoutObservedMatchContext: stubs.resolveScoutObservedMatchContext,
 }));

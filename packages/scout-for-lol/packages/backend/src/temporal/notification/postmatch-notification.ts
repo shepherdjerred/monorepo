@@ -1,11 +1,20 @@
 import { AttachmentBuilder, type MessageCreateOptions } from "discord.js";
 import { ApplicationFailure } from "@temporalio/common";
 import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
+import { readReportScoreboard } from "#src/evidence/report-scoreboard.ts";
+import { getAccountConfigsByPuuids } from "#src/database/player-accounts.ts";
+import { prisma } from "#src/database/index.ts";
+import { buildScoreboardReport } from "#src/league/tasks/postmatch/scoreboard-report.ts";
+import { createMatchImage } from "#src/league/tasks/postmatch/match-report-image.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
 import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
 import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
-import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
+import {
+  generateMatchReport,
+  formatGameCompletionMessage,
+} from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
   AI_REVIEW_ATTACHMENT_NAME,
   aiReviewAttachment,
@@ -211,6 +220,38 @@ export async function renderPostmatchNotification(
   riotMatchId: RiotMatchId,
   mode: ScoutPostmatchRenderMode,
 ): Promise<ScoutPostmatchRender> {
+  const scoreboard = await readReportScoreboard(riotMatchId);
+  if (scoreboard !== null) {
+    const players = await getAccountConfigsByPuuids(
+      scoreboard.trackedPuuids,
+      prisma,
+    );
+    const report = buildScoreboardReport(scoreboard.result, players);
+    if (report === null)
+      throw new Error(
+        `Frozen report evidence is not renderable for ${riotMatchId}`,
+      );
+    const [attachment, embed] = await createMatchImage(
+      report,
+      riotMatchId,
+      undefined,
+    );
+    return disassembleReport(
+      {
+        content: formatGameCompletionMessage(
+          report.players.map((player) => player.playerConfig.alias),
+          report.queueType,
+        ),
+        files: [attachment],
+        embeds: [embed],
+      },
+      riotMatchId,
+      {
+        queueId: scoreboard.result.queueId,
+        gameCreation: gameResultTimestamp(scoreboard.result),
+      },
+    );
+  }
   // The OBSERVED roster, which is the one the minter used to decide this
   // report was owed. Rebuilding it here asked a different question and could
   // answer it differently for reasons outside the match: the live roster is

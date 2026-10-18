@@ -34,6 +34,7 @@ function gameResultDocument(match: RawMatch) {
     gameMode: match.info.gameMode,
     gameType: match.info.gameType,
     gameCreation: match.info.gameCreation,
+    completedAt: match.info.gameEndTimestamp,
     durationSeconds: match.info.gameDuration,
     participants: match.info.participants.map((player) => ({
       participantId: player.participantId,
@@ -55,6 +56,17 @@ function gameResultDocument(match: RawMatch) {
       damageToChampions: player.totalDamageDealtToChampions,
       minions: player.totalMinionsKilled,
       level: player.champLevel,
+      items: [
+        player.item0,
+        player.item1,
+        player.item2,
+        player.item3,
+        player.item4,
+        player.item5,
+        player.item6,
+      ],
+      spells: [player.summoner1Id, player.summoner2Id],
+      jungleMinions: player.neutralMinionsKilled,
     })),
   };
 }

@@ -11,7 +11,7 @@ export const ParticipantIdentitySchema = z.discriminatedUnion("kind", [
 
 const StatSchema = z.number().int().nonnegative().nullable();
 export const GameResultParticipantSchema = z.strictObject({
-  participantId: z.number().int().positive(),
+  participantId: z.number().int().positive().nullable(),
   teamId: z.number().int().positive(),
   identity: ParticipantIdentitySchema,
   championId: z.number().int().nonnegative(),
@@ -24,6 +24,9 @@ export const GameResultParticipantSchema = z.strictObject({
   damageToChampions: StatSchema,
   minions: StatSchema,
   level: StatSchema,
+  items: z.array(z.number().int().nonnegative()).length(7).optional(),
+  spells: z.array(z.number().int().nonnegative()).length(2).optional(),
+  jungleMinions: StatSchema.optional(),
 });
 
 /** Facts a result can state without manufacturing Match-V5 statistics. */
@@ -35,15 +38,26 @@ export const GameResultSchema = z
     queueId: z.number().int().nonnegative(),
     gameMode: z.string().min(1),
     gameType: z.string().min(1),
-    gameCreation: z.number().int().positive(),
+    gameCreation: z.number().int().positive().nullable(),
+    completedAt: z.number().int().positive().optional(),
     durationSeconds: z.number().positive().max(86_400),
     participants: z.array(GameResultParticipantSchema).min(2).max(20),
   })
   .superRefine((game, ctx) => {
+    if (game.gameCreation === null && game.completedAt === undefined)
+      ctx.addIssue({
+        code: "custom",
+        message: "Result requires an observed creation or completion time",
+      });
     const ids = new Set(
-      game.participants.map((player) => player.participantId),
+      game.participants.flatMap((player) =>
+        player.participantId === null ? [] : [player.participantId],
+      ),
     );
-    if (ids.size !== game.participants.length)
+    if (
+      ids.size !==
+      game.participants.filter((player) => player.participantId !== null).length
+    )
       ctx.addIssue({ code: "custom", message: "Duplicate participant IDs" });
     const teams = new Map<number, boolean>();
     for (const player of game.participants) {
@@ -64,6 +78,14 @@ export const GameResultSchema = z
     }
   });
 export type GameResult = z.infer<typeof GameResultSchema>;
+
+/** The stated timestamp for analytical ordering; never manufacture lobby creation. */
+export function gameResultTimestamp(result: GameResult): number {
+  const timestamp = result.gameCreation ?? result.completedAt;
+  if (timestamp === undefined)
+    throw new Error("Result has no stated timestamp");
+  return timestamp;
+}
 
 /** Riot owns overlapping facts; compatible client evidence fills absent stats. */
 export function resolveGameResult(
@@ -86,13 +108,23 @@ export function resolveGameResult(
   const compatible = ordered.filter(
     (candidate) => !resultOutcomesConflict(primary, candidate),
   );
+  const completedAt =
+    primary.completedAt ??
+    compatible.find((candidate) => candidate.completedAt !== undefined)
+      ?.completedAt;
   return {
     ...primary,
+    gameCreation:
+      primary.gameCreation ??
+      compatible.find((candidate) => candidate.gameCreation !== null)
+        ?.gameCreation ??
+      null,
+    ...(completedAt === undefined ? {} : { completedAt }),
     participants: primary.participants.map((player) => {
       const enrichments = compatible.flatMap((candidate) =>
         candidate.participants.filter(
           (other) =>
-            other.participantId === player.participantId &&
+            sameResultParticipant(player, other) &&
             other.teamId === player.teamId &&
             other.championId === player.championId &&
             other.win === player.win &&
@@ -109,6 +141,15 @@ export function resolveGameResult(
           | "minions"
           | "level",
       ) => enrichments.find((other) => other[key] !== null)?.[key] ?? null;
+      const items = enrichments.find(
+        (other) => other.items !== undefined,
+      )?.items;
+      const spells = enrichments.find(
+        (other) => other.spells !== undefined,
+      )?.spells;
+      const jungleMinions = enrichments.find(
+        (other) => other.jungleMinions !== undefined,
+      )?.jungleMinions;
       return {
         ...player,
         kills: stat("kills"),
@@ -118,6 +159,9 @@ export function resolveGameResult(
         damageToChampions: stat("damageToChampions"),
         minions: stat("minions"),
         level: stat("level"),
+        ...(items === undefined ? {} : { items }),
+        ...(spells === undefined ? {} : { spells }),
+        ...(jungleMinions === undefined ? {} : { jungleMinions }),
       };
     }),
   };
@@ -140,7 +184,7 @@ function resultOutcomesConflict(
       (player) =>
         !candidate.participants.some(
           (other) =>
-            player.participantId === other.participantId &&
+            sameResultParticipant(player, other) &&
             player.teamId === other.teamId &&
             player.championId === other.championId &&
             player.win === other.win &&
@@ -148,6 +192,22 @@ function resultOutcomesConflict(
         ),
     )
   );
+}
+
+/** Scoreboards need not expose Riot's participant number; identities still name players. */
+function sameResultParticipant(
+  first: GameResult["participants"][number],
+  other: GameResult["participants"][number],
+): boolean {
+  if (first.participantId !== null && other.participantId !== null)
+    return first.participantId === other.participantId;
+  if (first.identity.kind === "riot" && other.identity.kind === "riot")
+    return first.identity.puuid === other.identity.puuid;
+  return first.identity.kind === "local" && other.identity.kind === "local"
+    ? first.identity.uuid === other.identity.uuid
+    : first.teamId === other.teamId &&
+        first.championId === other.championId &&
+        !identitiesConflict(first.identity, other.identity);
 }
 
 function identitiesConflict(

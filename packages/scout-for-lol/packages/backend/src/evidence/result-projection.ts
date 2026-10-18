@@ -1,5 +1,6 @@
 import {
   GameResultSchema,
+  gameResultTimestamp,
   type GameResult,
 } from "@scout-for-lol/domain/artifacts/game-result.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -10,6 +11,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { upsertClashGameSighting } from "#src/league/clash/sighting.ts";
+import { registeredResultPuuids } from "./result-accounts.ts";
 
 /** Independent result projection; no source selection, dispatch or game effects. */
 export async function projectResultEvidence(
@@ -37,17 +39,7 @@ export async function projectResultEvidence(
     resolveQueueTypeFromGame(result.queueId, result.gameMode, result.gameType),
   );
   if (!queue.success) return;
-  const puuids = result.participants.flatMap((player) =>
-    player.identity.kind === "riot"
-      ? [LeaguePuuidSchema.parse(player.identity.puuid)]
-      : [],
-  );
-  const accounts = await prisma.account.findMany({
-    where: { puuid: { in: puuids } },
-    distinct: ["puuid"],
-    select: { puuid: true },
-  });
-  const tracked = new Set<string>(accounts.map((account) => account.puuid));
+  const tracked = new Set<string>(await registeredResultPuuids(result));
   const [platform, gameId] = result.matchId.split("_");
   if (gameId === undefined)
     throw new Error("Validated match has no game identity");
@@ -63,7 +55,7 @@ export async function projectResultEvidence(
       queue: queue.data,
       championId: player.championId,
       teamId: player.teamId,
-      observedAt: new Date(result.gameCreation),
+      observedAt: new Date(gameResultTimestamp(result)),
       win: player.win,
     });
   }

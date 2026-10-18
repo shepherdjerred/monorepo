@@ -59,6 +59,8 @@ export function localResultCompletionTime(
   payload: unknown,
   result: GameResult,
 ): number | null {
+  if (result.completedAt !== undefined) return result.completedAt;
+  if (result.gameCreation === null) return null;
   const { data } = PayloadSchema.parse(payload);
   const witnessed = localMatchEndTimestamp(data);
   return witnessed === null && TimingPresenceSchema.safeParse(data).success
