@@ -13,9 +13,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +35,7 @@ final class BeginnerProtection implements BeginnerStatus {
   private final Runnable unsubscribe;
   private final Map<UUID, CompletableFuture<Boolean>> pending = new HashMap<>();
   private final Map<UUID, Instant> refreshAt = new HashMap<>();
+  private final Set<UUID> evaluated = new HashSet<>();
   private final Map<UUID, Integer> phases = new ConcurrentHashMap<>();
   private final Map<UUID, Long> minutes = new ConcurrentHashMap<>();
   private final List<java.util.function.Consumer<UUID>> changes = new ArrayList<>();
@@ -102,6 +106,14 @@ final class BeginnerProtection implements BeginnerStatus {
             context.scheduler().mainThread());
   }
 
+  @Override
+  public Optional<Status> current(UUID id) {
+    if (!clock.ready().isDone()
+        || clock.ready().isCompletedExceptionally()
+        || !evaluated.contains(id)) return Optional.empty();
+    return Optional.of(snapshot(id, !stopped && clock.enabled(id)));
+  }
+
   private Status snapshot(UUID id, boolean enabled) {
     var millis = clock.millis(id);
     return new Status(
@@ -145,6 +157,7 @@ final class BeginnerProtection implements BeginnerStatus {
         failure == null && Boolean.TRUE.equals(enabled) && owns && player.isOnline() && !stopped;
     if (failure != null) context.logger().warn("Could not evaluate beginner's luck", failure);
     if (!stopped && owns) {
+      evaluated.add(id);
       var was = clock.enabled(id);
       clock.enabled(id, on, on && !afk.isAfk(id));
       if (was != on) changed(id);
@@ -174,6 +187,7 @@ final class BeginnerProtection implements BeginnerStatus {
     if (clock.ready().isDone() && !clock.ready().isCompletedExceptionally())
       clock.enabled(player.getUniqueId(), false, false);
     refreshAt.remove(player.getUniqueId());
+    evaluated.remove(player.getUniqueId());
     pending.remove(player.getUniqueId());
     phases.remove(player.getUniqueId());
   }

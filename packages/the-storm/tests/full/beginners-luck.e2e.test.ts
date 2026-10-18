@@ -56,6 +56,46 @@ describe("beginner's luck on native Paper", () => {
       );
       player.chat("/beginnersluck");
       await ready;
+      // Scripted NPC combat bypasses town land protection. Exercise the Citizen
+      // at its real home so its normal chunk ownership stays intact.
+      const citizen = '@e[nbt={BukkitValues:{"thestorm:npc":"stan"}},limit=1]';
+      await rcon.command(`minecraft:tp ${player.username} -35.5 64 3.5`);
+      await waitUntil(
+        "newcomer reaches the NPC test site",
+        () => Math.abs(player.entity.position.x + 35.5) < 0.5,
+      );
+      await rcon.command("fill -45 63 -5 -25 63 5 minecraft:stone");
+      await waitUntil("Citizen is loaded at the test site", async () =>
+        /entity data: [\d.]+f/u.test(
+          await rcon.command(`data get entity ${citizen} Health`),
+        ),
+      );
+      const citizenHealth = await rcon.command(
+        `data get entity ${citizen} Health`,
+      );
+      const playerHealth = await rcon.command(
+        `data get entity ${player.username} Health`,
+      );
+      await rcon.command(
+        `damage ${citizen} 4 minecraft:player_attack by ${player.username}`,
+      );
+      expect(await rcon.command(`data get entity ${citizen} Health`)).toBe(
+        citizenHealth,
+      );
+      await rcon.command(
+        `damage ${player.username} 4 minecraft:mob_attack by ${citizen}`,
+      );
+      expect(
+        await rcon.command(`data get entity ${player.username} Health`),
+      ).toBe(playerHealth);
+      const warning = waitForMessage(veteran, /Warning 1 of 2/u);
+      await rcon.command(
+        `damage ${citizen} 1 minecraft:player_attack by ${veteran.username}`,
+      );
+      await warning;
+      expect(await rcon.command(`data get entity ${citizen} Health`)).not.toBe(
+        citizenHealth,
+      );
       await rcon.command(
         "execute in minecraft:wilds run fill 2995 64 -5 3005 64 5 minecraft:stone",
       );
@@ -71,6 +111,9 @@ describe("beginner's luck on native Paper", () => {
           Math.abs(player.entity.position.x - 3000.5) < 1 &&
           Math.abs(veteran.entity.position.x - 3003.5) < 1,
       );
+      // The control account rejoined last. Let vanilla's post-login protection
+      // expire before comparing actual health loss for the two players.
+      await veteran.waitForTicks(65);
       const result = Probe.parse(
         JSON.parse(
           await rcon.command(

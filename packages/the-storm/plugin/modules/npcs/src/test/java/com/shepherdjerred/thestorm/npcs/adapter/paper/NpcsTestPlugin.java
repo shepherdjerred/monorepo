@@ -85,6 +85,18 @@ public class NpcsTestPlugin extends JavaPlugin {
             getComponentLogger(),
             com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
     var catalog = new NpcCatalog(load(data));
+    var beginner =
+        org.mockito.Mockito.mock(com.shepherdjerred.thestorm.mobs.app.BeginnerStatus.class);
+    org.mockito.Mockito.when(beginner.current(org.mockito.ArgumentMatchers.any()))
+        .thenReturn(
+            java.util.Optional.of(
+                new com.shepherdjerred.thestorm.mobs.app.BeginnerStatus.Status(
+                    false,
+                    java.time.Duration.ZERO,
+                    java.time.Duration.ofHours(6),
+                    java.time.Duration.ofHours(12),
+                    1)));
+    context.services().provide(com.shepherdjerred.thestorm.mobs.app.BeginnerStatus.class, beginner);
     var trainer =
         new Trainer(
             new NoPurchases(),

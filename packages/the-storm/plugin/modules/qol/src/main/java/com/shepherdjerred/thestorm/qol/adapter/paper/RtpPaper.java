@@ -39,16 +39,21 @@ public final class RtpPaper {
                     .thenApply(ensured -> ensured.profile().firstSeen()),
             recovered);
     var worlds = context.services().require(WildWorlds.class);
+    var compass = new StarterCompass(context, store);
     var flow =
         new RtpFlow(
-            new RtpFlow.Ports(worlds, context.services().require(SettledLand.class), store),
+            new RtpFlow.Ports(
+                worlds, context.services().require(SettledLand.class), store, compass),
             context,
             config,
             new LandingMemory(config.landingMemoryDuration()));
     var dialog = new ArrivalDialog(context, config, flow);
     var commands = new RtpCommands(flow, worlds, config);
     var plugin = context.plugin();
-    List<Listener> listeners = List.of(new JoinListener(store, dialog, context));
+    List<Listener> listeners =
+        List.of(
+            new JoinListener(store, dialog, context, compass),
+            new StarterCompassListener(compass, dialog));
     for (var listener : listeners) {
       plugin.getServer().getPluginManager().registerEvents(listener, plugin);
     }

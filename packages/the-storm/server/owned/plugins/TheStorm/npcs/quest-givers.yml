@@ -258,7 +258,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: martha
     trainer: none
@@ -276,7 +276,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: mason
     trainer: none
@@ -294,7 +294,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: stanley
     trainer: none
@@ -312,7 +312,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: bridge-hobo
     trainer: none
@@ -330,7 +330,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: walter
     trainer: none
@@ -348,7 +348,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: addison
     trainer: none
@@ -366,7 +366,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: iovita
     trainer: none
@@ -384,7 +384,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver, guard]
+    roles: [quest-giver, guard, beginner-safe]
     schedule: none
     dialogue: guard-captain
     trainer: none
@@ -402,7 +402,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: edgar
     trainer: none
@@ -420,7 +420,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: alger
     trainer: none
@@ -438,7 +438,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: cade
     trainer: none
@@ -456,7 +456,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: oswin
     trainer: none
@@ -474,7 +474,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: fergus
     trainer: none
@@ -510,7 +510,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: lenox
     trainer: none
@@ -528,7 +528,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: leight
     trainer: none
@@ -546,7 +546,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: winston
     trainer: none
@@ -564,7 +564,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: bobert
     trainer: none
@@ -582,7 +582,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-giver]
+    roles: [quest-giver, beginner-safe]
     schedule: none
     dialogue: anna
     trainer: none
@@ -600,7 +600,7 @@ npcs:
         pitch: 0.0,
       }
     pose: standing
-    roles: [quest-board]
+    roles: [quest-board, beginner-safe]
     schedule: none
     dialogue: quest-board
     trainer: none

@@ -32,6 +32,7 @@ final class RtpFlow {
   private final ChunkTickets tickets;
   private final SealedWorlds sealed;
   private final TeleportTravel travel;
+  private final StarterCompass compass;
 
   RtpFlow(Ports ports, ModuleContext context, QolConfig config, LandingMemory memory) {
     this.worlds = ports.worlds();
@@ -40,6 +41,7 @@ final class RtpFlow {
     this.memory = memory;
     this.context = context;
     this.config = config;
+    this.compass = ports.compass();
     this.search = new RtpSearch(config, context.scheduler());
     this.tickets = context.services().require(ChunkTickets.class);
     this.sealed = context.services().require(SealedWorlds.class);
@@ -120,12 +122,14 @@ final class RtpFlow {
               new TeleportTravel.Landing(
                   destination,
                   () -> tickets.release(world, chunkX, chunkZ),
-                  () ->
-                      memory.remember(
-                          world.getName(),
-                          destination.getBlockX(),
-                          destination.getBlockZ(),
-                          context.time().instant()))));
+                  () -> {
+                    memory.remember(
+                        world.getName(),
+                        destination.getBlockX(),
+                        destination.getBlockZ(),
+                        context.time().instant());
+                    compass.arrived(player);
+                  })));
     }
   }
 
@@ -185,5 +189,5 @@ final class RtpFlow {
         .toList();
   }
 
-  record Ports(WildWorlds worlds, SettledLand land, QolStore store) {}
+  record Ports(WildWorlds worlds, SettledLand land, QolStore store, StarterCompass compass) {}
 }

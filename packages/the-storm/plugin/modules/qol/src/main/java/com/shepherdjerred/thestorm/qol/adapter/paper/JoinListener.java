@@ -12,11 +12,14 @@ final class JoinListener implements Listener {
   private final QolStore store;
   private final ArrivalDialog dialog;
   private final ModuleContext context;
+  private final StarterCompass compass;
 
-  JoinListener(QolStore store, ArrivalDialog dialog, ModuleContext context) {
+  JoinListener(
+      QolStore store, ArrivalDialog dialog, ModuleContext context, StarterCompass compass) {
     this.store = store;
     this.dialog = dialog;
     this.context = context;
+    this.compass = compass;
   }
 
   @EventHandler
@@ -32,7 +35,9 @@ final class JoinListener implements Listener {
                     context.logger().error("Could not remember {}", player.getName(), failure);
                     return;
                   }
-                  if (ensured.created() && player.isOnline()) {
+                  if (!player.isOnline()) return;
+                  compass.loaded(player, ensured.profile().starterRtpPending());
+                  if (ensured.created()) {
                     dialog.show(player);
                   }
                 },

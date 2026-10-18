@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.mobs.app;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -8,10 +9,17 @@ import java.util.concurrent.CompletableFuture;
 public interface BeginnerStatus {
   CompletableFuture<Status> status(UUID player);
 
+  /** Main-thread cached status; empty while initial storage or flag evaluation is loading. */
+  Optional<Status> current(UUID player);
+
   record Status(
       boolean enabled,
       Duration active,
       Duration calmFor,
       Duration normalAfter,
-      double damageMultiplier) {}
+      double damageMultiplier) {
+    public boolean protectsFromNpcs() {
+      return enabled && active.compareTo(normalAfter) < 0;
+    }
+  }
 }

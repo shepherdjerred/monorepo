@@ -11,13 +11,16 @@ import static org.mockito.Mockito.when;
 
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.mobs.app.BeginnerStatus;
 import com.shepherdjerred.thestorm.npcs.adapter.content.ContentLoader;
 import com.shepherdjerred.thestorm.npcs.app.NpcStateStore;
 import com.shepherdjerred.thestorm.npcs.domain.combat.NpcLedger;
 import com.shepherdjerred.thestorm.npcs.domain.config.NpcsConfig;
 import com.shepherdjerred.thestorm.npcs.domain.content.ContentRules;
 import com.shepherdjerred.thestorm.npcs.domain.npc.NpcDefinition;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -53,6 +56,7 @@ final class NpcCombatTest {
   private NpcDefinition guardDefinition;
   private NpcDefinition civilian;
   private NpcCombat combat;
+  private final BeginnerStatus beginner = mock(BeginnerStatus.class);
 
   @BeforeEach
   void wire() {
@@ -102,6 +106,14 @@ final class NpcCombatTest {
     when(attacker.getLocation()).thenReturn(new Location(world, 2, 64, 0));
     when(attacker.isValid()).thenReturn(true);
     when(server.getEntity(attackerId)).thenReturn(attacker);
+    when(beginner.current(any()))
+        .thenReturn(
+            Optional.of(
+                new BeginnerStatus.Status(
+                    false, Duration.ZERO, Duration.ofHours(6), Duration.ofHours(12), 1)));
+    var services = new Services();
+    services.provide(BeginnerStatus.class, beginner);
+    when(context.services()).thenReturn(services);
     combat = new NpcCombat(npcs, config, context, store);
     combat.initialize();
   }
@@ -117,6 +129,35 @@ final class NpcCombatTest {
             List.of(new NpcLedger.Death("minecraft:overworld", "stan", 24000))));
     assertThat(combat.awaitingDawn("stan")).isTrue();
     verify(npcs).reconcileWhenReady();
+  }
+
+  @Test
+  void protectedNewcomerCannotStartNpcCombatOrReceiveGuardRetaliation() {
+    loaded.complete(NpcLedger.Snapshot.empty());
+    when(beginner.current(attackerId))
+        .thenReturn(
+            Optional.of(
+                new BeginnerStatus.Status(
+                    true, Duration.ofHours(11), Duration.ofHours(6), Duration.ofHours(12), 0.9)));
+    combat.hit(civilian, victim, attacker, true);
+    assertThat(combat.protectedFrom(civilian, attacker)).isTrue();
+    assertThat(combat.threat(guardDefinition, guard)).isEmpty();
+    verify(store, never()).save(any());
+  }
+
+  @Test
+  void npcProtectionEndsAtTwelveActiveHoursAndWhileLoadingCannotStartCombat() {
+    loaded.complete(NpcLedger.Snapshot.empty());
+    when(beginner.current(attackerId)).thenReturn(Optional.empty());
+    assertThat(combat.protectedFrom(civilian, attacker)).isTrue();
+    when(beginner.current(attackerId))
+        .thenReturn(
+            Optional.of(
+                new BeginnerStatus.Status(
+                    true, Duration.ofHours(12), Duration.ofHours(6), Duration.ofHours(12), 1)));
+    assertThat(combat.protectedFrom(civilian, attacker)).isFalse();
+    combat.hit(civilian, victim, attacker, true);
+    assertThat(combat.threat(guardDefinition, guard)).contains(attacker);
   }
 
   @Test

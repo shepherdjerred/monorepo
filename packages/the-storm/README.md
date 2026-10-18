@@ -133,8 +133,19 @@ cleanup. These checks are also committer-run.
 
 `/guide` opens the same welcome book delivered by the starter kit. It is optional
 and available to every player; successful opens record `guide_opened` analytics.
-The shipped pages explain survival, PvP opt-out, free newcomer RTP, towns, locks,
-quests and help. The delayed arrival tips point back to it.
+The three shipped pages cover getting started, protecting a home, and finding
+quests or help. A single delayed arrival tip points back to it. New players
+receive iron tools, sixteen cooked porkchops, and the book. The windmill spawn
+faces outward toward town.
+
+The arrival dialog gives a two-sentence introduction, twelve biome choices in
+title case, and an **Explore Spawn** exit. Escape also closes it. Until a player's
+first successful RTP, a personal compass occupies hotbar slot nine; either mouse
+button reopens the picker. QoL persists this entitlement separately from the RTP
+search throttle, so failed searches, reconnects, restarts and deaths retain it.
+The compass cannot be dropped or transferred and does not enter graves. Existing
+players do not receive one on migration. A successful RTP through either the
+picker or a command clears the entitlement before removing the item.
 
 The console-only `storm-maintenance begin <owner>` atomically checks for human
 players and closes login admission when empty. Its versioned JSON response
@@ -1003,9 +1014,16 @@ Level changes never refill health, player-given names are preserved, and bonus
 XP/loot use the lowest applied level so restored mobs cannot pay inflated rewards.
 PvP, bosses, environmental hazards and sealed minigame worlds retain their
 ordinary rules. Flag evaluation runs asynchronously; unavailable or false
-evaluations pause the allowance and restore normal combat. The first-arrival
-biome picker explains supplies, shelter, `/sethome`, protection and ordinary
-grave recovery. Travel pricing, cooldowns and death consequences are unchanged.
+evaluations pause the allowance and restore normal combat.
+
+Spawn Citizens NPCs carry the `beginner-safe` role. They and protected players
+cannot damage each other throughout the full twelve active hours, including the
+six-to-twelve-hour ramp. These cancelled hits create no warnings, wanted state,
+or guard retaliation; dialogue, quests, trainers and shops still work. The NPC
+module reads the mobs module's cached `BeginnerStatus` on the main thread, without
+waiting for storage or flag evaluation. While that initial snapshot loads, spawn
+NPC combat stays blocked. NPCs outside spawn and ordinary mob combat retain their
+existing rules. Travel pricing, cooldowns and death consequences are unchanged.
 
 ## Command travel
 

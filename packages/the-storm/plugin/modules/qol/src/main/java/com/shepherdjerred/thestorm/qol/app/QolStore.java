@@ -14,6 +14,9 @@ public interface QolStore {
   /** Records the last wilderness search for its independent search throttle. */
   CompletableFuture<Void> setLastRtp(UUID player, Instant when);
 
+  /** Clears newcomer entitlement only after an actual successful RTP landing. */
+  CompletableFuture<Void> completeStarterRtp(UUID player);
+
   /** Legacy RTP entitlement storage retained for recovery; new charges use Essentials. */
   CompletableFuture<Void> insertRtpAttempt(RtpAttempt attempt);
 

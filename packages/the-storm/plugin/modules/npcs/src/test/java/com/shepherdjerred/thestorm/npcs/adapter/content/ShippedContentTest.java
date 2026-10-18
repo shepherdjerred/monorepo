@@ -111,7 +111,7 @@ final class ShippedContentTest {
   void theBankerPointsPlayersToTheAvailableExchange() {
     var content = shipped();
     var braxton = content.npc("braxton").orElseThrow();
-    assertThat(braxton.roles()).containsExactly("banker");
+    assertThat(braxton.roles()).containsExactlyInAnyOrder("banker", "beginner-safe");
     var greet = content.dialogue(braxton).orElseThrow().nodes().get("greet");
     assertThat(java.util.Objects.requireNonNull(greet).text()).contains("/shop braxtons-exchange");
     assertThat(braxton.trainer()).isEmpty();

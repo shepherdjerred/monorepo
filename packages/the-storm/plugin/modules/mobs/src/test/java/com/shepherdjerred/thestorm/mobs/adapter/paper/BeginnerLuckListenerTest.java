@@ -136,6 +136,20 @@ final class BeginnerLuckListenerTest {
     return player;
   }
 
+  @Test
+  void cachedNpcProtectionCoversTheRampAndEndsAtTwelveActiveHours() {
+    var player = player("Newcomer", true);
+    var id = player.getUniqueId();
+    assertThat(protection.current(id)).isPresent();
+    assertThat(protection.current(id).orElseThrow().protectsFromNpcs()).isTrue();
+    now.updateAndGet(time -> time.plus(Duration.ofHours(11)));
+    assertThat(protection.current(id).orElseThrow().protectsFromNpcs()).isTrue();
+    now.updateAndGet(time -> time.plus(Duration.ofHours(1)));
+    assertThat(protection.current(id).orElseThrow().protectsFromNpcs()).isFalse();
+    protection.left(player);
+    assertThat(protection.current(id)).isEmpty();
+  }
+
   Zombie mob() {
     var mob = world.spawn(new Location(world, 3001, 5, 0), Zombie.class);
     levels.apply(mob, 50);
