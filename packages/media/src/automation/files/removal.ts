@@ -1,4 +1,6 @@
 import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
+import { fileMovieAccess } from "#automation/editions/access.ts";
+import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import {
   FileGuardError,
   RemovalPlanSchema,
@@ -59,10 +61,19 @@ export async function removeFiles(
     return {
       plan: await removalPlan(tx, initialContext, decisionId),
       epoch: RetentionEpochSchema.parse(decision.evidence).recoveryEpoch,
+      ownerOverride:
+        z
+          .object({ ownerOverride: z.unknown().optional() })
+          .parse(decision.evidence).ownerOverride !== undefined,
+      completed: decision.state === (purge ? "purged" : "quarantined"),
     };
   });
   const { plan } = snapshot;
   const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
+  const movieAccess =
+    snapshot.ownerOverride || snapshot.completed
+      ? undefined
+      : await fileMovieAccess(initialContext, mediaIds);
   if (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
     throw new PendingLegacyClaimsError(mediaIds);
   const context = await prepareRemovalProof(initialContext, plan);
@@ -81,32 +92,46 @@ export async function removeFiles(
         where: { id: decisionId },
       });
       if (decision.state === completeState) return;
+      const choices: MovieChoiceFreshness[] = [];
       for (const entry of plan) {
+        const choice: { current: MovieChoiceFreshness | null } = {
+          current: null,
+        };
         const authorize = async () => {
           await context.checkpoint("retention-authorization");
           if (!(await enabled()))
             throw new FileGuardError("retention_disabled");
-          await assertRetention({
+          choice.current = await assertRetention({
             tx,
             context,
             decisionId,
             mediaIds: entry.mediaIds,
             generations: entry.generations,
             purge,
+            movieAccess,
           });
           await assertOwnedAsset(
             tx,
             entry,
             purge ? "quarantined" : "published",
           );
+          choice.current?.assertActive();
         };
         await authorize();
         const operations = fileOperations(
           context,
           context.roots[entry.libraryKind],
           authorize,
+          () => {
+            choice.current?.assertActive();
+          },
         );
         await removeEntry(operations, entry, operationId, purge);
+        choices.push({
+          assertActive: () => {
+            choice.current?.assertActive();
+          },
+        });
       }
       for (const entry of plan) {
         await tx.libraryAsset.update({
@@ -176,6 +201,7 @@ export async function removeFiles(
           decisionId,
         })),
       });
+      for (const choice of choices) choice.assertActive();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );

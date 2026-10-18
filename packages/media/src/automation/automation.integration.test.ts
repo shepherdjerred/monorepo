@@ -373,14 +373,15 @@ test("last requester cancellation settles an unsubmitted reservation without cal
   const activities = createAcquisitionActivities(context());
   const reserved = await activities.reconcileMediaIntent(data.input);
   if (reserved.attemptId === null) throw new Error("Attempt missing");
-  await database().mediaRequest.updateMany({
-    where: { mediaId: data.media.id },
-    data: { active: false },
+  const request = await database().mediaRequest.findFirstOrThrow({
+    where: { mediaId: data.media.id, userId: data.user.id },
   });
-  await database().mediaIntent.update({
-    where: targetWhere(defaultScope(data.media.id)),
-    data: { monitoring: false },
-  });
+  await new PrismaMediaCommands(database(), { keepDays: 30 }).cancelRequest(
+    { ...data.user, role: "member" },
+    crypto.randomUUID(),
+    request.id,
+    request.version,
+  );
   expect(
     await activities.submitMediaTorrent({
       operationId: data.input.operationId,

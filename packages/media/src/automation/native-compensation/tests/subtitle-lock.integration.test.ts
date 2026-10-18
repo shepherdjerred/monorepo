@@ -5,6 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { compensatedCaptionFixture } from "#infrastructure/native-compensation/caption.test-support.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 import { PrismaNativeCompensation } from "#infrastructure/native-compensation/service.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { observeNativeCompensation } from "#migration/native-compensation/producer.ts";
@@ -32,6 +33,10 @@ test("compensation approval cannot bypass a held supplementary installation jour
   if (fixture === undefined) throw new Error("Actual caption fixture missing");
   const { f, operation } = fixture;
   const db = harness.database();
+  await chooseCurrentTestMovieEdition(db, {
+    requestId: f.file.request.id,
+    access: { serverMachineId: "server", movieSectionId: "1" },
+  });
   const acquired = await f.file.acquisition("Interrupted caption successor");
   const files = createMediaFileActivities(f.file.context);
   expect(await files.inspectAndStageMedia(acquired.input)).toEqual({

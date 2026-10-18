@@ -31,6 +31,7 @@ const config = z
       z.strictObject({ attemptId: z.uuid(), operationId: z.uuid() }),
     ]),
     serverMachineId: z.string().optional(),
+    movieSectionId: z.string().min(1).optional(),
   })
   .parse(JSON.parse(await readFile(z.string().parse(process.argv[2]), "utf8")));
 const db = createDatabase(config.databaseUrl);
@@ -73,6 +74,7 @@ const execution = () => {
     checkpoint: () => Promise.resolve(),
   };
 };
+const movieSectionId = config.movieSectionId;
 const files = {
   db,
   roots: config.roots,
@@ -83,6 +85,9 @@ const files = {
   ...(config.serverMachineId === undefined
     ? {}
     : { serverMachineId: config.serverMachineId }),
+  ...(movieSectionId === undefined
+    ? {}
+    : { permittedMovieSection: () => Promise.resolve(movieSectionId) }),
   publicationExecution: execution,
   enabled: {
     acquisition: () => Promise.resolve(true),

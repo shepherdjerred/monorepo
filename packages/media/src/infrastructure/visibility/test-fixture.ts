@@ -2,6 +2,9 @@ import type { Database } from "#infrastructure/database.ts";
 import { z } from "zod";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
+import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
+import { createTestDefaultTarget } from "#testing/editions.ts";
 
 export async function visibilityFixture(db: Database) {
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
@@ -29,11 +32,19 @@ export async function visibilityFixture(db: Database) {
       title: "Visibility movie",
       externalIds: { plexSectionId: "1" },
       availability: "downloading",
-      intents: { create: { availability: "downloading" } },
     },
   });
+  await createTestDefaultTarget(db, media.id, { availability: "downloading" });
   const request = await db.mediaRequest.create({
     data: { mediaId: media.id, userId: member.id },
+  });
+  await chooseTestMovieEdition(db, {
+    actor: { ...member, role: "member" },
+    mediaId: media.id,
+    access: { serverMachineId: "visibility-fixture", movieSectionId: "1" },
+  });
+  const intent = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
   });
   const release = await db.releaseCandidate.create({
     data: {
@@ -95,11 +106,16 @@ export async function visibilityFixture(db: Database) {
   });
   const attempt = await db.acquisitionAttempt.create({
     data: {
+      ...(await captureMovieAttemptChoice(db, {
+        sponsorRequestId: request.id,
+        scope: { rootMediaId: media.id, mediaId: media.id, edition: "default" },
+        access: { serverMachineId: "visibility-fixture", movieSectionId: "1" },
+      })),
       operationId: operation.id,
       releaseId: release.id,
       sponsorRequestId: request.id,
       mediaIds: [media.id],
-      generations: { [media.id]: 0 },
+      generations: { [media.id]: intent.generation },
       state: "downloading",
       torrentId: torrent.id,
       recoveryEpoch: runtime.recoveryEpoch,
@@ -108,6 +124,7 @@ export async function visibilityFixture(db: Database) {
   const app = new PrismaMediaApplication(db, {
     keepDays: 30,
     serverMachineId: "visibility-fixture",
+    movieSectionId: "1",
   });
   async function publish() {
     const current = await db.mediaItem.findUniqueOrThrow({

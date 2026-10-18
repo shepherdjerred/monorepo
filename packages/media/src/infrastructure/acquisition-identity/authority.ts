@@ -15,7 +15,7 @@ import {
 } from "./snapshot.ts";
 import { authorizeRenewal } from "#infrastructure/action-guards.ts";
 import { assertAutomaticIdentity } from "./automatic.ts";
-import { assertSponsorAuthority } from "./sponsor.ts";
+import { assertSponsorAuthority, type AcquisitionAccess } from "./sponsor.ts";
 
 /** Caller retains canonical root/leaf, claims and runtime authority locks first. */
 export async function assertIdentityDecision(
@@ -67,9 +67,12 @@ export async function assertIdentityDecision(
 export async function assertAttemptIdentity(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
-  serverMachineId?: string,
+  access?: string | AcquisitionAccess,
   purpose: "new_effect" | "resume_recorded_submission" = "new_effect",
 ): Promise<AcquisitionIdentitySnapshot | null> {
+  const authority =
+    typeof access === "string" ? { serverMachineId: access } : access;
+  const serverMachineId = authority?.serverMachineId;
   if (attempt.edition !== "default")
     throw new MediaError(
       "edition_not_available",
@@ -103,22 +106,10 @@ export async function assertAttemptIdentity(
     sponsorRequestId: identity.sponsorRequestId,
     operationId: attempt.operationId,
     mediaIds: attempt.mediaIds,
+    movieAccess: authority?.movieAccess,
+    recordedAttemptId: attempt.id,
   });
-  if (identity.proof.kind === "owner") {
-    const decision = await assertIdentityDecision(
-      tx,
-      identity.proof.decisionOperationId,
-    );
-    if (
-      decision?.evidenceHash !== identity.proof.decisionHash ||
-      decision.recoveryEpoch !== attempt.recoveryEpoch ||
-      decision.candidateDigest !== identity.source.candidateDigest ||
-      decision.serverMachineId !== identity.sponsorAuthority.serverMachineId ||
-      identityHash(canonicalSemantics(decision.canonical)) !==
-        identityHash(canonicalSemantics(identity.canonical))
-    )
-      throw new Error("Acquisition owner decision is corrupt");
-  }
+  await assertAttemptOwnerDecision(tx, attempt.recoveryEpoch, identity);
   const current = await buildCanonicalIdentity(tx, attempt.mediaIds);
   if (
     identityHash(canonicalSemantics(current)) !==
@@ -142,6 +133,27 @@ export async function assertAttemptIdentity(
   if (identity.proof.kind === "automatic")
     await assertAutomaticIdentity(tx, release, current);
   return identity;
+}
+
+async function assertAttemptOwnerDecision(
+  tx: Prisma.TransactionClient,
+  epoch: number,
+  identity: AcquisitionIdentitySnapshot,
+) {
+  if (identity.proof.kind !== "owner") return;
+  const decision = await assertIdentityDecision(
+    tx,
+    identity.proof.decisionOperationId,
+  );
+  if (
+    decision?.evidenceHash !== identity.proof.decisionHash ||
+    decision.recoveryEpoch !== epoch ||
+    decision.candidateDigest !== identity.source.candidateDigest ||
+    decision.serverMachineId !== identity.sponsorAuthority.serverMachineId ||
+    identityHash(canonicalSemantics(decision.canonical)) !==
+      identityHash(canonicalSemantics(identity.canonical))
+  )
+    throw new Error("Acquisition owner decision is corrupt");
 }
 
 async function assertAttemptCut(

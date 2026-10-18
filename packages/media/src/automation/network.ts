@@ -247,9 +247,14 @@ export async function createMediaFileRuntime(
       controlPolicy: "plex-excluded" as const,
     },
   };
+  const behavior = mediaBehaviorConfig(config.ENVIRONMENT, true);
   const fileContext: FileContext = {
     db,
     serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+    permittedMovieSection: async () => {
+      const configured = await behavior.get("permittedMovieSectionId");
+      return configured.value;
+    },
     roots,
     pathMapping: createMediaPathMapping({
       canonicalRoots: roots,
@@ -297,7 +302,6 @@ export async function createMediaFileRuntime(
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
     }),
   };
-  const behavior = mediaBehaviorConfig(config.ENVIRONMENT, true);
   return {
     activities,
     capacity: {
@@ -375,8 +379,11 @@ export async function createMediaNetworkRuntime(
       const flag = await behavior.get("personalDiscordEnabled");
       return config.DISCORD_BOT_TOKEN !== undefined && flag.value;
     },
-    notify: async (message) =>
-      createNotificationTransport(await deliveryConfig())(message),
+    notify: async (message, mutation) => {
+      const delivery = await deliveryConfig();
+      mutation?.beforeMutation();
+      return createNotificationTransport(delivery)(message, mutation);
+    },
     reconcileNotification: async (input) =>
       createNotificationReceiptReader(await deliveryConfig())(input),
     sharedAnnouncements: async () => {

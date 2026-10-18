@@ -18,17 +18,15 @@ export async function verifyIdentityHttp(
       where: { id: f.user.id },
       data: { role: "owner" },
     });
-    await db.plexIdentityMapping.create({
-      data: {
-        userId: actor.id,
-        serverMachineId: "server",
-        serverAccountId: actor.plexAccountId,
-        kind: "account",
-        permittedSectionIds: ["1"],
-        permittedMediaKinds: ["movie"],
-        verifiedAt: new Date(),
-      },
+    const mapping = await db.plexIdentityMapping.findUniqueOrThrow({
+      where: { userId: actor.id },
     });
+    expect(mapping).toMatchObject({
+      serverMachineId: "fixture-server",
+      kind: "account",
+    });
+    expect(mapping.permittedSectionIds).toContain("1");
+    expect(mapping.permittedMediaKinds).toContain("movie");
     await db.mediaItem.update({
       where: { id: f.media.id },
       data: { externalIds: { plexSectionId: "1" } },
@@ -62,7 +60,15 @@ export async function verifyIdentityHttp(
       Promise.resolve({ actor, csrfHash: "csrf-hash" });
     dependencies.media = new PrismaMediaApplication(db, {
       keepDays: 30,
-      serverMachineId: "server",
+      serverMachineId: mapping.serverMachineId,
+      movieSectionId: "1",
+    });
+    const before = await db.operation.findMany({
+      where: { targetId: f.media.id },
+      orderBy: { id: "asc" },
+    });
+    const currentMedia = await db.mediaItem.findUniqueOrThrow({
+      where: { id: f.media.id },
     });
     const app = createMediaApp(dependencies);
     const previewUrl = `/api/v1/media/${f.media.id}/releases/${release.id}/identity-preview`;
@@ -76,7 +82,7 @@ export async function verifyIdentityHttp(
     const input = {
       action: "select_release",
       releaseId: release.id,
-      expectedVersion: 0,
+      expectedVersion: currentMedia.version,
       identityConfirmation: {
         previewDigest: preview.previewDigest,
         candidateDigest: preview.candidateDigest,
@@ -98,9 +104,12 @@ export async function verifyIdentityHttp(
       }),
     });
     expect(forged.status).toBe(400);
-    expect(await db.operation.count({ where: { targetId: f.media.id } })).toBe(
-      0,
-    );
+    expect(
+      await db.operation.findMany({
+        where: { targetId: f.media.id },
+        orderBy: { id: "asc" },
+      }),
+    ).toEqual(before);
     await db.plexIdentityMapping.update({
       where: { userId: actor.id },
       data: { permittedSectionIds: ["9"] },
@@ -123,9 +132,12 @@ export async function verifyIdentityHttp(
       revokedList.status,
       revokedAction.status,
     ]).toEqual([403, 403, 403]);
-    expect(await db.operation.count({ where: { targetId: f.media.id } })).toBe(
-      0,
-    );
+    expect(
+      await db.operation.findMany({
+        where: { targetId: f.media.id },
+        orderBy: { id: "asc" },
+      }),
+    ).toEqual(before);
     await db.plexIdentityMapping.update({
       where: { userId: actor.id },
       data: { permittedSectionIds: ["1"] },
@@ -137,7 +149,10 @@ export async function verifyIdentityHttp(
     });
     expect(accepted.status).toBe(202);
     const operation = await db.operation.findFirstOrThrow({
-      where: { targetId: f.media.id },
+      where: {
+        targetId: f.media.id,
+        id: { notIn: before.map((row) => row.id) },
+      },
     });
     expect(operation.payload).toMatchObject({
       identityDecision: {

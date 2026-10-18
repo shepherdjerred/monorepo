@@ -6,6 +6,7 @@ import { recordCleanupEvaluation } from "./seeding.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { rm } from "node:fs/promises";
+import { withTvVisibility } from "./tv.test-support.ts";
 
 const h = automationTestHarness();
 function value(text: string, name: string): number {
@@ -128,82 +129,93 @@ test("aggregate cleanup bindings become stale on same-timestamp raw or policy dr
 });
 
 test("watch cohort excludes cancelled roots and exclusions, includes direct+effective leaf only once and rejects future evidence", async () => {
-  const f = await visibilityFixture(h.database());
-  await f.publish();
-  await f.db.mediaRuntimeState.update({
-    where: { id: "singleton" },
-    data: { mode: "active", ownershipConfirmed: true },
-  });
-  const series = await f.db.mediaItem.create({
-    data: { kind: "series", title: "Series", intents: { create: {} } },
-  });
-  const root = await f.db.mediaRequest.create({
-    data: { mediaId: series.id, userId: f.member.id, direct: true },
-  });
-  await f.db.mediaRequest.update({
-    where: { id: f.request.id },
-    data: { direct: false },
-  });
-  await f.db.requestCoverage.create({
-    data: {
-      rootRequestId: root.id,
-      requestId: f.request.id,
-      mediaId: f.media.id,
-      sourceVersion: 0,
-    },
-  });
-  await f.db.watchState.create({
-    data: {
-      mediaId: f.media.id,
-      userId: f.member.id,
-      source: "plex",
-      watched: false,
-      observedAt: new Date(Date.now() + 60_000),
-    },
-  });
-  expect(
-    value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
-  ).toBe(1);
-  expect(
-    value(
-      await renderMediaMetrics(f.db),
-      "media_watch_evidence_oldest_timestamp_seconds",
-    ),
-  ).toBe(0);
-  await f.db.mediaRequest.update({
-    where: { id: root.id },
-    data: { active: false },
-  });
-  expect(
-    value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
-  ).toBe(0);
-  await f.db.mediaRequest.update({
-    where: { id: f.request.id },
-    data: { direct: true },
-  });
-  await f.db.watchState.update({
-    where: {
-      userId_mediaId_edition: {
-        userId: f.member.id,
+  await withTvVisibility(h.database(), false, async (f) => {
+    await f.publish();
+    await f.db.mediaRuntimeState.update({
+      where: { id: "singleton" },
+      data: { mode: "active", ownershipConfirmed: true },
+    });
+    const root = await f.cover(f.member);
+    // Retain the existing TV claim while selecting its inherited source only.
+    await f.db.mediaRequest.update({
+      where: { id: f.request.id },
+      data: { direct: false },
+    });
+    await f.db.watchState.create({
+      data: {
         mediaId: f.media.id,
-        edition: "default",
+        userId: f.member.id,
+        source: "plex",
+        watched: false,
+        observedAt: new Date(Date.now() + 60_000),
       },
-    },
-    data: { observedAt: new Date() },
+    });
+    expect(
+      value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
+    ).toBe(1);
+    expect(
+      value(
+        await renderMediaMetrics(f.db),
+        "media_watch_evidence_oldest_timestamp_seconds",
+      ),
+    ).toBe(0);
+    await f.app.cancelRequest(
+      f.member,
+      crypto.randomUUID(),
+      root.id,
+      root.version,
+    );
+    expect(
+      value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
+    ).toBe(0);
+    await f.app.createRequest(f.member, crypto.randomUUID(), {
+      mediaId: f.media.id,
+      subtitleLanguages: [],
+      includeSpecials: false,
+    });
+    await f.cover(f.member);
+    const current = await f.db.mediaRequest.findUniqueOrThrow({
+      where: { id: f.request.id },
+    });
+    expect(current).toMatchObject({
+      active: true,
+      direct: true,
+      excluded: false,
+    });
+    expect(
+      await f.db.requestCoverage.count({
+        where: { requestId: current.id, active: true },
+      }),
+    ).toBe(1);
+    expect(
+      value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
+    ).toBe(1);
+    await f.db.watchState.update({
+      where: {
+        userId_mediaId_edition: {
+          userId: f.member.id,
+          mediaId: f.media.id,
+          edition: "default",
+        },
+      },
+      data: { observedAt: new Date() },
+    });
+    expect(
+      value(
+        await renderMediaMetrics(f.db),
+        "media_watch_evidence_oldest_timestamp_seconds",
+      ),
+    ).toBeGreaterThan(0);
+    await f.app.cancelRequest(
+      f.member,
+      crypto.randomUUID(),
+      current.id,
+      current.version,
+    );
+    expect(
+      value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
+    ).toBe(0);
   });
-  expect(
-    value(
-      await renderMediaMetrics(f.db),
-      "media_watch_evidence_oldest_timestamp_seconds",
-    ),
-  ).toBeGreaterThan(0);
-  await f.db.mediaRequest.update({
-    where: { id: f.request.id },
-    data: { excluded: true },
-  });
-  expect(
-    value(await renderMediaMetrics(f.db), "media_watch_evidence_required"),
-  ).toBe(0);
 });
 
 test("real file inspection advances ready to validating in exact acquisition gauges", async () => {

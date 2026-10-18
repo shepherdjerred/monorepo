@@ -27,6 +27,7 @@ import {
 import { abandonNativeReplacement } from "./replacement-fixture.ts";
 import { killPublicationChild } from "./fixtures/kill-publication.ts";
 import { embeddedFixtureSource } from "#automation/publication-proof/embedded-fixture.ts";
+import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 
 export function testCompensationExecution(): NativeCompensationExecutionContext {
   const signal = new AbortController().signal;
@@ -168,6 +169,11 @@ export async function nativeCompensationFixture(
         ? await abandonNativeReplacement(db, cipher, setup)
         : null;
     if (priorNativeReceipt !== null) {
+      if (setup.file.media.kind === "movie")
+        await chooseCurrentTestMovieEdition(db, {
+          requestId: setup.file.request.id,
+          access: { serverMachineId: "server", movieSectionId: "1" },
+        });
       await interrupt(setup);
       setup = await restoreNativeFixtureAgain(db, setup);
     }

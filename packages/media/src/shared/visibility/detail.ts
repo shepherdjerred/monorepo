@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
+import { MovieEditionFulfillmentSchema } from "#shared/movie-editions/fulfillment.ts";
 import { CleanupReasonSchema, RecordedSeedingPolicySchema } from "./seeding.ts";
 
 export const ObservationFreshnessSchema = z.enum([
@@ -9,6 +11,15 @@ export const ObservationFreshnessSchema = z.enum([
   "old_epoch",
 ]);
 export const MediaVisibilitySchema = z.strictObject({
+  movieRequests: z
+    .array(
+      z.strictObject({
+        requestId: z.uuid(),
+        edition: MovieEditionKeySchema,
+        fulfillment: MovieEditionFulfillmentSchema,
+      }),
+    )
+    .max(7),
   playback: z.strictObject({
     scope: z.enum(["title", "collection"]),
     playable: z.boolean(),

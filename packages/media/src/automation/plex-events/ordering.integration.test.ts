@@ -15,9 +15,27 @@ import {
 } from "./test-support.ts";
 
 const h = watchHarness();
+function events(mediaId: string) {
+  return h.database().applicationEvent.findMany({
+    where: { mediaId },
+    orderBy: { id: "asc" },
+  });
+}
+function eventDelta(
+  before: Awaited<ReturnType<typeof events>>,
+  after: Awaited<ReturnType<typeof events>>,
+) {
+  const ids = new Set(before.map((event) => event.id));
+  expect(after.filter((event) => ids.has(event.id))).toEqual(before);
+  return after.filter((event) => !ids.has(event.id));
+}
 test("unexpected malformed second-user response commits none of the batch", async () => {
   const f = await h.fixture();
   await h.requester(f.media.id);
+  const baseline = await events(f.media.id);
+  expect(baseline).toMatchObject([
+    { kind: "movie_edition_chosen", actorId: f.user.id },
+  ]);
   let calls = 0;
   await expect(
     observeRequesterWatch(
@@ -40,11 +58,7 @@ test("unexpected malformed second-user response commits none of the batch", asyn
   expect(
     rows.every((row) => row.watched && row.observedAt.getTime() === 0),
   ).toBe(true);
-  expect(
-    await h
-      .database()
-      .applicationEvent.count({ where: { mediaId: f.media.id } }),
-  ).toBe(0);
+  expect(await events(f.media.id)).toEqual(baseline);
 });
 test("retention queue waits for canonical authority and uses the committed generation", async () => {
   const f = await h.fixture();
@@ -125,6 +139,10 @@ test.each(["success", "failure"])(
 );
 test("newer issuance alone fences an older completion, and replay cannot apply twice", async () => {
   const f = await h.fixture();
+  const baseline = await events(f.media.id);
+  expect(baseline).toMatchObject([
+    { kind: "movie_edition_chosen", actorId: f.user.id },
+  ]);
   const ctx = h.context();
   const execution = testWatchExecution();
   const first = await prepareWatchBatch(ctx, f.media.id, {}, execution);
@@ -148,18 +166,26 @@ test("newer issuance alone fences an older completion, and replay cannot apply t
   expect(await finalizeWatchBatch(ctx, second, outcomes, execution)).toBe(
     "committed",
   );
+  const committed = await events(f.media.id);
+  expect(eventDelta(baseline, committed)).toMatchObject([
+    {
+      kind: "media_marked_unwatched",
+      actorId: f.user.id,
+      payload: { generation: 2 },
+    },
+  ]);
   expect(await finalizeWatchBatch(ctx, second, outcomes, execution)).toBe(
     "superseded",
   );
-  expect(
-    await h
-      .database()
-      .applicationEvent.count({ where: { mediaId: f.media.id } }),
-  ).toBe(1);
+  expect(await events(f.media.id)).toEqual(committed);
 });
 test("two legitimate unwatched outcomes commit atomically despite their own generation advances", async () => {
   const f = await h.fixture();
-  await h.requester(f.media.id);
+  const second = await h.requester(f.media.id);
+  const baseline = await events(f.media.id);
+  expect(baseline).toMatchObject([
+    { kind: "movie_edition_chosen", actorId: f.user.id },
+  ]);
   const before = Date.now();
   expect(
     await observeRequesterWatch(h.context(watchedTransport(false)), f.media.id),
@@ -177,11 +203,21 @@ test("two legitimate unwatched outcomes commit atomically despite their own gene
       where: { mediaId_edition: defaultScope(f.media.id) },
     }),
   ).toMatchObject({ generation: 3 });
-  expect(
-    await h
-      .database()
-      .applicationEvent.count({ where: { mediaId: f.media.id } }),
-  ).toBe(2);
+  const added = eventDelta(baseline, await events(f.media.id));
+  expect(added).toHaveLength(2);
+  expect(added.map((event) => event.kind)).toEqual([
+    "media_marked_unwatched",
+    "media_marked_unwatched",
+  ]);
+  const actors = added.map((event) => {
+    if (event.actorId === null)
+      throw new Error("Unwatched event is missing its requester actor");
+    return event.actorId;
+  });
+  expect(actors.sort()).toEqual([f.user.id, second.id].sort());
+  expect(added.map((event) => event.payload)).toEqual(
+    expect.arrayContaining([{ generation: 2 }, { generation: 3 }]),
+  );
 });
 test.each(["future", "stale"])(
   "%s batch start is rejected without freshening watch evidence",

@@ -47,13 +47,16 @@ export type MediaAutomationContext = {
   };
   publicOrigin: string;
   downloadRoot: string;
-  notify: (message: {
-    channel: "email" | "discord" | "discord_shared";
-    recipient: string;
-    subject: string;
-    text: string;
-    idempotencyKey: string;
-  }) => Promise<{ receipt: string }>;
+  notify: (
+    message: {
+      channel: "email" | "discord" | "discord_shared";
+      recipient: string;
+      subject: string;
+      text: string;
+      idempotencyKey: string;
+    },
+    mutation?: { beforeMutation: () => void },
+  ) => Promise<{ receipt: string }>;
   reconcileNotification?: (input: ReceiptQuery) => Promise<ReceiptObservation>;
   personalDiscordAvailable?: () => Promise<boolean>;
   sharedAnnouncements?: () => Promise<{

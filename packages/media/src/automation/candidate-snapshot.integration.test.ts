@@ -5,6 +5,7 @@ import { persistCandidateSnapshot } from "./candidate-evidence.ts";
 import { searchCandidates, loadProfile } from "./acquisition-candidates.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import { StoredCandidateSchema } from "./providers.ts";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 
 const { database, context, fixture, cipher } = automationTestHarness();
 const evaluation = { accepted: true, reasons: [], qualityRank: 0, score: 0 };
@@ -38,10 +39,19 @@ async function snapshotFixture() {
     where: { mediaId: f.media.id },
   });
   const claim = {
+    ...(await captureMovieAttemptChoice(database(), {
+      sponsorRequestId: request.id,
+      scope: {
+        rootMediaId: f.media.id,
+        mediaId: f.media.id,
+        edition: "default",
+      },
+      access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+    })),
     releaseId: id,
     sponsorRequestId: request.id,
     mediaIds: [f.media.id],
-    generations: { [f.media.id]: 1 },
+    generations: { [f.media.id]: f.input.generation },
     operationId: crypto.randomUUID(),
     state: "reserved",
   };

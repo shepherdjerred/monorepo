@@ -13,6 +13,7 @@ export async function publicationAuthorityGuard(
   context: PublicationContext,
   input: { libraryKind: "movies" | "tv"; recoveryEpoch: number },
 ): Promise<() => void> {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   assertPublicationActive(context);
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -49,7 +50,9 @@ export async function publicationAuthorityGuard(
     deadlines.push(Date.parse(evidence.topologyCheckedAt) + 900_000);
   }
   const deadline = Math.min(...deadlines);
-  const monotonicDeadline = performance.now() + (deadline - Date.now());
+  const monotonicDeadline = observed.monotonic + (deadline - observed.wall);
+  if (!Number.isFinite(deadline) || !Number.isFinite(monotonicDeadline))
+    throw new FileGuardError("publication_authority_expired");
   const assertActive = () => {
     assertPublicationActive(context);
     if (Date.now() >= deadline || performance.now() >= monotonicDeadline)

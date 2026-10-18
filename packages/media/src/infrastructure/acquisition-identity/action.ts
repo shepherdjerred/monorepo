@@ -3,6 +3,7 @@ import { assertDefaultAcquisitionEdition } from "#infrastructure/editions/acquis
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaAction } from "#shared/contract.ts";
 import type { MediaCommandSettings } from "#infrastructure/command-base.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import {
   lockCanonicalMedia,
   lockExistingDefaultTargets,
@@ -32,6 +33,7 @@ export async function prepareActionAuthority(
     input: MediaAction;
     settings: MediaCommandSettings;
     expected?: ExpectedTarget | undefined;
+    movieChoiceAccess?: MovieChoiceAccess | undefined;
   },
 ) {
   const { mediaId, input, settings } = options;
@@ -80,6 +82,7 @@ export async function prepareActionAuthority(
           releaseId: input.releaseId,
           confirmation: input.identityConfirmation,
           ...settings,
+          movieChoiceAccess: options.movieChoiceAccess,
         })
       : null;
   if (input.action === "select_release")

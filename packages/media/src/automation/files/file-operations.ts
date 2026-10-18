@@ -6,6 +6,7 @@ export function fileOperations(
   context: FileContext,
   roots: MediaFileRoots,
   authorize: () => Promise<void>,
+  beforeEffect?: () => void,
 ): FileOperations {
   return new FileOperations(roots, {
     authorize: async () => {
@@ -13,6 +14,7 @@ export function fileOperations(
       await context.verifyStorageAuthority(roots);
     },
     checkpoint: context.checkpoint,
+    ...(beforeEffect === undefined ? {} : { beforeEffect }),
     ...(context.contentProof === undefined
       ? {}
       : { contentProof: context.contentProof }),

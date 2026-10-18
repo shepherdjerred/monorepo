@@ -5,6 +5,15 @@ import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { z } from "zod";
 import {
+  lockMovieChoiceIdentities,
+  type MovieChoiceAccess,
+} from "#infrastructure/movie-editions/access.ts";
+import { assertAttemptMovieChoice } from "#automation/editions/choice.ts";
+import { currentFulfillmentAsset } from "#automation/editions/fulfillment.ts";
+import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
+import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfillment.ts";
+import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
+import {
   FileGuardError,
   GenerationsSchema,
   type Transaction,
@@ -65,8 +74,11 @@ export async function assertRuntime(
 export async function assertAcquisition(
   tx: Transaction,
   attemptId: string,
-  serverMachineId?: string,
-): Promise<void> {
+  authority: {
+    serverMachineId?: string | undefined;
+    movieAccess?: MovieChoiceAccess | undefined;
+  } = {},
+) {
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
     include: { reservations: true },
@@ -82,9 +94,13 @@ export async function assertAcquisition(
     throw new FileGuardError("edition_not_available");
   await lockEffectiveRequests(tx, attempt.mediaIds);
   await assertRuntime(tx, epoch);
+  const choice =
+    attempt.state === "imported"
+      ? null
+      : await assertAttemptMovieChoice(tx, attemptId, authority.movieAccess);
   if (attempt.state !== "imported") {
     try {
-      await assertLegacySubmissionSponsor(tx, attempt, serverMachineId);
+      await assertLegacySubmissionSponsor(tx, attempt, authority);
     } catch (error) {
       if (error instanceof MediaError) throw new FileGuardError(error.code);
       throw error;
@@ -125,7 +141,9 @@ export async function assertAcquisition(
     throw new FileGuardError("reservation_obsolete");
   if (["failed", "cancelled", "obsolete"].includes(attempt.state))
     throw new FileGuardError("attempt_obsolete");
-  await assertAcquisitionIdentity(tx, attempt, serverMachineId);
+  await assertAcquisitionIdentity(tx, attempt, authority);
+  choice?.assertActive();
+  return choice;
 }
 
 export async function assertRetention(input: {
@@ -135,7 +153,8 @@ export async function assertRetention(input: {
   mediaIds: readonly string[];
   generations: Readonly<Record<string, number>>;
   purge: boolean;
-}): Promise<void> {
+  movieAccess?: MovieChoiceAccess | undefined;
+}): Promise<MovieChoiceFreshness | null> {
   const { tx, context } = input;
   await assertPublicationUnfenced(tx, input.mediaIds);
   await assertNoMediaSubtitleReplacement(tx, input.mediaIds);
@@ -178,10 +197,12 @@ export async function assertRetention(input: {
       mediaIds: input.mediaIds,
       purge: input.purge,
     });
-    return;
+    return null;
   }
   if (evidence.data.warningEventId === undefined)
     throw new FileGuardError("warning_unconfirmed");
+  await lockMovieChoiceIdentities(tx, { mediaIds: input.mediaIds });
+  const guards: MovieChoiceFreshness[] = [];
   for (const mediaId of input.mediaIds) {
     const warning =
       mediaId === decision.mediaId
@@ -190,19 +211,27 @@ export async function assertRetention(input: {
             acceptedAt: decision.warningAcceptedAt,
           }
         : await coveredWarning({ ...input, mediaId, timestamp });
-    if (
-      warning.acceptedAt === null ||
-      timestamp - warning.acceptedAt.getTime() < 7 * 86_400_000
-    )
-      throw new FileGuardError("warning_grace_incomplete");
-    await assertRetentionItem({
+    assertWarningGrace(warning.acceptedAt, timestamp);
+    const guard = await assertRetentionItem({
       tx,
       mediaId,
       generations: input.generations,
       timestamp,
       warningEventId: warning.warningEventId,
+      movieAccess: input.movieAccess,
     });
+    if (guard !== null) guards.push(guard);
   }
+  const assertActive = () => {
+    for (const guard of guards) guard.assertActive();
+  };
+  assertActive();
+  return { assertActive };
+}
+
+function assertWarningGrace(acceptedAt: Date | null, timestamp: number) {
+  if (acceptedAt === null || timestamp - acceptedAt.getTime() < 7 * 86_400_000)
+    throw new FileGuardError("warning_grace_incomplete");
 }
 
 async function assertRetentionAuthority(
@@ -283,14 +312,29 @@ async function assertRetentionItem(input: {
   generations: Readonly<Record<string, number>>;
   timestamp: number;
   warningEventId: string;
-}): Promise<void> {
+  movieAccess?: MovieChoiceAccess | undefined;
+}) {
   const { tx, mediaId, generations, timestamp } = input;
   const item = await tx.mediaItem.findUniqueOrThrow({
     where: { id: mediaId },
     include: {
       intents: { where: { edition: "default" } },
       holds: { where: { edition: "default" } },
-      requests: { where: effectiveRequestWhere, include: { user: true } },
+      requests: {
+        where: {
+          OR: [
+            effectiveRequestWhere,
+            {
+              edition: { not: "default" },
+              media: { kind: "movie" },
+              active: true,
+              excluded: false,
+              direct: true,
+            },
+          ],
+        },
+        include: { user: true },
+      },
       watchStates: { where: { edition: "default" } },
     },
   });
@@ -303,8 +347,13 @@ async function assertRetentionItem(input: {
     )
   )
     throw new FileGuardError("retention_hold");
+  const movie = await assertRetentionFulfillment(tx, {
+    mediaId,
+    kind: item.kind,
+    movieAccess: input.movieAccess,
+  });
   const requesters = item.requests.filter(
-    (claim) => claim.user.role !== "owner",
+    (claim) => claim.edition === "default" && claim.user.role !== "owner",
   );
   if (requesters.length === 0)
     throw new FileGuardError("owner_only_or_unclaimed");
@@ -340,4 +389,32 @@ async function assertRetentionItem(input: {
     where: targetWhere(defaultScope(mediaId)),
   });
   if (reservation !== null) throw new FileGuardError("acquisition_active");
+  movie?.freshness?.assertActive();
+  return movie?.freshness ?? null;
+}
+
+async function assertRetentionFulfillment(
+  tx: Transaction,
+  input: {
+    mediaId: string;
+    kind: string;
+    movieAccess: MovieChoiceAccess | undefined;
+  },
+) {
+  const currentAsset = await currentFulfillmentAsset(tx, input.mediaId);
+  const movie =
+    input.kind === "movie"
+      ? await readMovieDemandAuthority(tx, {
+          mediaId: input.mediaId,
+          currentAsset,
+          access: requireMovieChoiceAccess(input.movieAccess ?? {}),
+        })
+      : null;
+  for (const demand of movie?.demands ?? []) {
+    if (demand.fulfillment.status !== "fulfilled")
+      throw new FileGuardError(
+        demand.fulfillment.reason ?? "movie_edition_choice_required",
+      );
+  }
+  return movie;
 }

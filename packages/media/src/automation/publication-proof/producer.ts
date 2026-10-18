@@ -37,7 +37,7 @@ type Producer = {
   authorizePlan: (
     tx: Transaction,
     current: AcquisitionAttempt,
-  ) => Promise<void>;
+  ) => Promise<() => void>;
   authorizeEntry: (
     tx: Transaction,
     current: AcquisitionAttempt,
@@ -58,7 +58,7 @@ export async function producePublication(input: Producer): Promise<void> {
   });
   const intent = await context.db.$transaction(
     async (tx) => {
-      const current = await lockProducer(tx, input);
+      const { current, assertAuthority } = await lockProducer(tx, input);
       const persisted = await loadPublicationIntent(tx, attempt.id);
       if (persisted !== null) {
         if (
@@ -93,6 +93,7 @@ export async function producePublication(input: Producer): Promise<void> {
         assertPublicationActive(context);
         const result = await createPublicationIntent(tx, captured);
         assertPublicationActive(context);
+        assertAuthority();
         return result;
       });
     },
@@ -102,14 +103,17 @@ export async function producePublication(input: Producer): Promise<void> {
   const recording = publicationRecording(context, intent, stores);
   await context.db.$transaction(
     async (tx) => {
-      const current = await lockProducer(tx, input);
-      for (const store of stores)
-        store.bindAuthority(
-          await publicationAuthorityGuard(tx, context, {
-            libraryKind: store.kind,
-            recoveryEpoch: current.recoveryEpoch,
-          }),
-        );
+      const { current, assertAuthority } = await lockProducer(tx, input);
+      for (const store of stores) {
+        const physicalAuthority = await publicationAuthorityGuard(tx, context, {
+          libraryKind: store.kind,
+          recoveryEpoch: current.recoveryEpoch,
+        });
+        store.bindAuthority(() => {
+          assertAuthority();
+          physicalAuthority();
+        });
+      }
       const operations = recording.operations((entry) =>
         input.authorizeEntry(tx, current, entry),
       );
@@ -199,7 +203,7 @@ async function lockProducer(tx: Transaction, input: Producer) {
     throw new FileGuardError("publication_plan_changed");
   // Whole-plan claims/runtime/identity authority is transaction-local. Reacquire
   // it in both transactions, before entry profiles and physical row locks.
-  await input.authorizePlan(tx, current);
+  const assertAuthority = await input.authorizePlan(tx, current);
   for (const entry of input.plan)
     await input.authorizeEntry(tx, current, entry);
   await lockPublicationRows(tx, {
@@ -208,5 +212,6 @@ async function lockProducer(tx: Transaction, input: Producer) {
     entries: input.plan.map((entry) => ({ entry })),
   });
   assertPublicationActive(input.context);
-  return current;
+  assertAuthority();
+  return { current, assertAuthority };
 }

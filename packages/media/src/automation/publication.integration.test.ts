@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 import { createPublicationActivities } from "./publication.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { publicationSeries } from "./reconciliation/publication.test-support.ts";
@@ -223,11 +224,20 @@ test("a correct Plex path with the wrong canonical movie identity stays unavaila
   });
   const attempt = await database().acquisitionAttempt.create({
     data: {
+      ...(await captureMovieAttemptChoice(database(), {
+        sponsorRequestId: request.id,
+        scope: {
+          rootMediaId: data.media.id,
+          mediaId: data.media.id,
+          edition: "default",
+        },
+        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      })),
       operationId: data.input.operationId,
       releaseId: data.release.id,
       sponsorRequestId: request.id,
       mediaIds: [data.media.id],
-      generations: { [data.media.id]: 1 },
+      generations: { [data.media.id]: data.input.generation },
       state: "imported",
     },
   });
@@ -288,11 +298,20 @@ test("Plex verification cannot mark a concurrently quarantined asset available",
   });
   const attempt = await database().acquisitionAttempt.create({
     data: {
+      ...(await captureMovieAttemptChoice(database(), {
+        sponsorRequestId: request.id,
+        scope: {
+          rootMediaId: data.media.id,
+          mediaId: data.media.id,
+          edition: "default",
+        },
+        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+      })),
       operationId: data.input.operationId,
       releaseId: data.release.id,
       sponsorRequestId: request.id,
       mediaIds: [data.media.id],
-      generations: { [data.media.id]: 1 },
+      generations: { [data.media.id]: data.input.generation },
       state: "imported",
     },
   });

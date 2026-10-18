@@ -80,6 +80,7 @@ model MediaUser {
   subtitleReplacementApprovals SubtitleReplacementReview[]
   legacyRequesterBindings LegacyRequesterBinding[] @relation("LegacyRequesterSubject")
   legacyRequesterDeclarations LegacyRequesterBinding[] @relation("LegacyRequesterActor")
+  movieEditionChoices MovieEditionChoice[] @relation("MovieChoiceActor")
 }
 
 model MigrationCapture {
@@ -340,11 +341,40 @@ model MediaRequest {
   updatedAt             DateTime  @updatedAt
   coverageSources RequestCoverage[] @relation("CoveredRequest")
   expandedCoverage RequestCoverage[] @relation("RootRequest")
+  movieEditionChoiceId String?
+  movieEditionChoiceRevision Int @default(0)
+  movieEditionChoice MovieEditionChoice? @relation("LiveMovieChoice", fields: [id, movieEditionChoiceId, movieEditionChoiceRevision], references: [requestId, id, choiceRevision], onDelete: Restrict, onUpdate: Restrict, map: "movie_request_live_choice_fk")
+  movieEditionChoices MovieEditionChoice[] @relation("MovieChoiceRequest")
 
   @@unique([userId, mediaId, edition])
   @@unique([id, edition])
   @@unique([id, mediaId, edition])
+  @@unique([id, userId, mediaId, edition], map: "movie_request_subject_scope_key")
   @@index([mediaId, active])
+}
+
+model MovieEditionChoice {
+  id String @id @default(uuid())
+  requestId String
+  choiceRevision Int
+  actorId String
+  actor MediaUser @relation("MovieChoiceActor", fields: [actorId], references: [id], onDelete: Restrict)
+  subjectUserId String
+  rootMediaId String
+  edition String
+  definitionVersion Int
+  registryVersion Int
+  requestVersionAtChoice Int
+  authority Json
+  createdAt DateTime @default(now())
+  request MediaRequest @relation("MovieChoiceRequest", fields: [requestId, subjectUserId, rootMediaId, edition], references: [id, userId, mediaId, edition], onDelete: Restrict, onUpdate: Restrict, map: "movie_choice_request_fk")
+  definition MediaEditionDefinition @relation(fields: [rootMediaId, edition, definitionVersion], references: [rootMediaId, key, definitionVersion], onDelete: Restrict, onUpdate: Restrict, map: "movie_choice_definition_fk")
+  liveRequests MediaRequest[] @relation("LiveMovieChoice")
+  attempts AcquisitionAttempt[]
+  @@unique([requestId, choiceRevision], map: "movie_choice_revision_key")
+  @@unique([requestId, id, choiceRevision], map: "movie_choice_live_key")
+  @@unique([id, choiceRevision], map: "movie_choice_attempt_key")
+  @@index([rootMediaId, edition], map: "movie_choice_scope_idx")
 }
 
 model RequestCoverage {
@@ -402,7 +432,9 @@ model MediaEditionDefinition {
   displayVersion Int @default(0)
   targets MediaIntent[]
   assets LibraryAsset[]
+  movieChoices MovieEditionChoice[]
   @@id([rootMediaId, key])
+  @@unique([rootMediaId, key, definitionVersion], map: "movie_definition_version_key")
 }
 
 model MediaIntent {
@@ -519,6 +551,10 @@ model AcquisitionAttempt {
   failure          Json?
   filePlan         Json?
   identityEvidence Json?
+  movieEditionChoiceId String?
+  movieEditionChoiceRevision Int?
+  movieEditionAuthority Json?
+  movieEditionChoice MovieEditionChoice? @relation(fields: [movieEditionChoiceId, movieEditionChoiceRevision], references: [id, choiceRevision], onDelete: Restrict, onUpdate: Restrict, map: "movie_attempt_choice_fk")
   recoveryEpoch    Int                      @default(0)
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt

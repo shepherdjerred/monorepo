@@ -28,6 +28,7 @@ async function fixture() {
 test("a historical cross-root shared file remains stored but cannot be quarantined", async () => {
   const f = await fixture();
   const published = await f.published();
+  const retention = await f.retention();
   const second = await cluster.database.mediaItem.create({
     data: { kind: "movie", title: "Distinct canonical root" },
   });
@@ -47,7 +48,6 @@ test("a historical cross-root shared file remains stored but cannot be quarantin
       data: { editionRootId: null },
     });
   });
-  const retention = await f.retention();
   let effects = 0;
   f.context.checkpoint = async () => {
     effects++;
@@ -76,38 +76,50 @@ test("a historical cross-root shared file remains stored but cannot be quarantin
   ).toMatchObject({ state: "published", editionRootId: null, version: 0 });
 });
 
-test("nondefault acquisition cannot borrow the default reservation or stage files", async () => {
+test("new nondefault acquisition cannot be admitted or borrow the default reservation", async () => {
   const f = await fixture();
   const acquired = await f.acquisition();
-  const named = await cluster.database.acquisitionAttempt.create({
-    data: {
-      edition: "named-test",
-      releaseId: acquired.attempt.releaseId,
-      sponsorRequestId: f.request.id,
-      mediaIds: [f.media.id],
-      generations: z
-        .record(z.string(), z.json())
-        .parse(acquired.attempt.generations),
-      state: "ready",
-      operationId: crypto.randomUUID(),
-      torrentId: acquired.attempt.torrentId,
-      recoveryEpoch: 0,
-    },
+  const operationId = crypto.randomUUID();
+  const reservation = await cluster.database.acquisitionReservation.findMany({
+    where: { attemptId: acquired.attempt.id },
   });
   let effects = 0;
   f.context.checkpoint = async () => {
     effects++;
   };
-  expect(
-    await createMediaFileActivities(f.context).inspectAndStageMedia({
-      attemptId: named.id,
-      operationId: named.operationId,
+  await expect(
+    cluster.database.acquisitionAttempt.create({
+      data: {
+        edition: "named-test",
+        releaseId: acquired.attempt.releaseId,
+        sponsorRequestId: f.request.id,
+        mediaIds: [f.media.id],
+        generations: z
+          .record(z.string(), z.json())
+          .parse(acquired.attempt.generations),
+        state: "ready",
+        operationId,
+        torrentId: acquired.attempt.torrentId,
+        recoveryEpoch: 0,
+      },
     }),
-  ).toEqual({ status: "blocked", reason: "edition_not_available" });
+  ).rejects.toThrow(
+    "New movie acquisition requires exact birth choice authority",
+  );
   expect(effects).toBe(0);
   expect(
+    await cluster.database.acquisitionAttempt.findMany({
+      where: { operationId },
+    }),
+  ).toEqual([]);
+  expect(
+    await cluster.database.acquisitionReservation.findMany({
+      where: { attemptId: acquired.attempt.id },
+    }),
+  ).toEqual(reservation);
+  expect(
     await cluster.database.acquisitionAttempt.findUniqueOrThrow({
-      where: { id: named.id },
+      where: { id: acquired.attempt.id },
     }),
   ).toMatchObject({ filePlan: null, state: "ready" });
 });

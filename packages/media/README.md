@@ -12,10 +12,54 @@ automatically take ownership of existing library files or torrents.
 
 Canonical media identity and lifecycle intent are separate. Current-state
 requests, reservations, watches, holds, policies and coverage address a
-`(mediaId, edition)` scope. Existing public commands address `default`, meaning
-no specific edition; this does not prove a theatrical cut. Ordinary compatible
-quality upgrades retain their existing behavior. Named-edition requests and
-physical classification are not exposed by these commands.
+`(mediaId, edition)` scope. Version-1 and version-2 public commands address
+`default`, meaning no named cut is asserted; this does not prove a theatrical
+cut. They retain their original command hashes and replay results. A movie
+request created through those commands remains pending until its subject makes
+an explicit edition choice. TV requests retain their existing behavior.
+
+The version-3 movie API exposes the closed registry in
+`shared/movie-editions/registry.ts`. The request form begins with no selection;
+even **Unmarked release** requires a deliberate choice. The authenticated
+subject, or a current owner acting for an exactly mapped managed Home profile,
+chooses against the current target, request and choice revisions. The immutable
+choice records actor and subject separately. Cancellation, exclusion or loss of
+direct demand revokes the live pointer while preserving its history; reviving
+the request does not revive that choice.
+
+New choices and fulfillment reads resolve current movie-library configuration
+outside their database transactions. Cancel and clear-choice commands use
+server and identity authorization independently, so a configuration outage or
+revoked library access does not block self protection.
+
+| Route                                                            | Contract                                                                                                                               |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v3/media/:id/movie-edition-context`                    | Read-only definitions, subject and current request/target revisions.                                                                   |
+| `GET /api/v3/movie-requests?subjectUserId=:id`                   | Paginated requests for the authorized subject, including named pending requests and protection-only rows after library access is lost. |
+| `POST /api/v3/media/:id/movie-requests`                          | Explicit edition request with expected revisions and an idempotency key.                                                               |
+| `POST /api/v3/media/:id/movie-requests/:requestId/cancel`        | Cancel the exact request without requiring download permission.                                                                        |
+| `POST /api/v3/media/:id/movie-requests/:requestId/revoke-choice` | Clear the choice while retaining protective demand.                                                                                    |
+
+Named choices currently remain pending with `edition_acquisition_not_ready`.
+They grant no named download or physical classification authority. An unmarked
+choice can sponsor ordinary compatible quality upgrades, subject to the existing
+cut checks. Every new movie attempt captures its original choice and revision at
+birth; later retries cannot attach or replace that authority. Search, reservation,
+submission and file publication recheck the current exact choice. Copying and
+hashing prepare an operation-owned partial outside PostgreSQL locks; accepting
+staging rechecks the whole attempt under those locks before bounded filesystem
+effects. Before copying, preparation refuses an existing partial without proof
+of creation; a path or matching checksum does not authorize replacement. Current
+Plex access has a process-local expiry guard checked after final awaited work,
+alongside the existing storage and execution deadlines. Previously committed
+receipts and exact recorded compensation retain their separate recovery paths.
+
+Playable shared bytes do not fulfill an unchosen request. Readiness delivery
+requires matching choice and verified Plex publication; automatic retention
+keeps every pending subject's demand protective, including owner and named
+requests. The visibility response exposes only the viewer's movie request
+fulfillment separately from playback. Unknown command responses retry the
+original body and idempotency key; revision conflicts require explicit review.
 
 Default acquisition separately evaluates cut markers in every retained provider
 title, original selected torrent member, and current file's original provenance.

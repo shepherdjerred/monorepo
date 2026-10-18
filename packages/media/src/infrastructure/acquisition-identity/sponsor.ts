@@ -4,6 +4,18 @@ import { MediaError, requireOwner } from "#application/errors.ts";
 import { authorizeRequester } from "#infrastructure/requester-authorization.ts";
 import type { AcquisitionIdentitySnapshot } from "#shared/acquisition/identity.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { readMovieChoice } from "#infrastructure/movie-editions/authority.ts";
+import {
+  requireMovieChoiceAccess,
+  type MovieChoiceAccess,
+} from "#infrastructure/movie-editions/access.ts";
+import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
+import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
+
+export type AcquisitionAccess = {
+  serverMachineId?: string | undefined;
+  movieAccess?: MovieChoiceAccess | undefined;
+};
 
 export async function captureSponsorAuthority(
   tx: Prisma.TransactionClient,
@@ -11,7 +23,8 @@ export async function captureSponsorAuthority(
     operationId: string;
     sponsorRequestId: string;
     mediaIds: string[];
-    serverMachineId?: string;
+    serverMachineId?: string | undefined;
+    movieAccess?: MovieChoiceAccess | undefined;
   },
 ) {
   if (input.serverMachineId === undefined)
@@ -26,10 +39,29 @@ export async function captureSponsorAuthority(
   const mapping = await tx.plexIdentityMapping.findUnique({
     where: { userId: sponsor.userId },
   });
+  const media = await tx.mediaItem.findUniqueOrThrow({
+    where: { id: sponsor.mediaId },
+  });
+  const choice =
+    media.kind === "movie"
+      ? await readMovieChoice(tx, {
+          requestId: sponsor.id,
+          access: requireMovieChoiceAccess(input.movieAccess ?? {}),
+        })
+      : null;
+  if (choice !== null && choice.status !== "authorized")
+    throw new MovieChoiceProtection(
+      choice.status === "protected" &&
+        choice.reason === "movie_edition_choice_required"
+        ? "movie_edition_choice_required"
+        : "movie_edition_choice_changed",
+    );
   const actorId =
-    mapping?.kind === "managed"
-      ? await managedSponsorActor(tx, sponsor)
-      : sponsor.userId;
+    choice?.status === "authorized"
+      ? choice.actor.id
+      : mapping?.kind === "managed"
+        ? await managedSponsorActor(tx, sponsor)
+        : sponsor.userId;
   if (actorId === null)
     throw new MediaError(
       "plex_library_access_required",
@@ -46,6 +78,7 @@ export async function captureSponsorAuthority(
     sponsorRequestId: sponsor.id,
     operationId: input.operationId,
     mediaIds: input.mediaIds,
+    movieAccess: input.movieAccess,
   });
   return authority;
 }
@@ -117,12 +150,13 @@ async function managedSponsorActor(
 export async function assertLegacySubmissionSponsor(
   tx: Prisma.TransactionClient,
   attempt: {
+    id: string;
     identityEvidence: unknown;
     sponsorRequestId: string | null;
     operationId: string;
     mediaIds: string[];
   },
-  serverMachineId?: string,
+  access?: string | AcquisitionAccess,
 ) {
   if (attempt.identityEvidence !== null) return;
   if (attempt.sponsorRequestId === null)
@@ -131,11 +165,23 @@ export async function assertLegacySubmissionSponsor(
       "Historical acquisition has no provable requester authority",
       409,
     );
+  const recorded = await readMovieAttemptSponsor(tx, { attemptId: attempt.id });
+  if (recorded !== null) {
+    await assertSponsorAuthority(tx, {
+      authority: recorded,
+      sponsorRequestId: attempt.sponsorRequestId,
+      operationId: attempt.operationId,
+      mediaIds: attempt.mediaIds,
+      recordedAttemptId: attempt.id,
+      movieAccess: typeof access === "string" ? undefined : access?.movieAccess,
+    });
+    return;
+  }
   await captureSponsorAuthority(tx, {
     operationId: attempt.operationId,
     sponsorRequestId: attempt.sponsorRequestId,
     mediaIds: attempt.mediaIds,
-    ...(serverMachineId === undefined ? {} : { serverMachineId }),
+    ...(typeof access === "string" ? { serverMachineId: access } : access),
   });
 }
 
@@ -146,6 +192,8 @@ export async function assertSponsorAuthority(
     sponsorRequestId: string;
     operationId: string;
     mediaIds: string[];
+    movieAccess?: MovieChoiceAccess | undefined;
+    recordedAttemptId?: string;
   },
 ) {
   const operation = await tx.operation.findUnique({
@@ -186,7 +234,14 @@ export async function assertSponsorAuthority(
   const actor = await tx.mediaUser.findUniqueOrThrow({
     where: { id: input.authority.actorId },
   });
+  const movieProven = await assertMovieSponsor(tx, {
+    ...input,
+    actorId: actor.id,
+    userId: sponsor.userId,
+    requestId: sponsor.id,
+  });
   if (
+    !movieProven &&
     actor.id !== input.authority.userId &&
     (await managedSponsorActor(tx, sponsor)) !== actor.id
   )
@@ -221,4 +276,43 @@ export async function assertSponsorAuthority(
     if (owner !== null)
       requireOwner(await authorizeRequester(tx, owner, owner.id, settings));
   }
+}
+
+async function assertMovieSponsor(
+  tx: Prisma.TransactionClient,
+  input: {
+    authority: AcquisitionIdentitySnapshot["sponsorAuthority"];
+    actorId: string;
+    userId: string;
+    requestId: string;
+    movieAccess?: MovieChoiceAccess | undefined;
+    recordedAttemptId?: string;
+  },
+) {
+  const choice =
+    input.movieAccess === undefined
+      ? null
+      : await readMovieChoice(tx, {
+          requestId: input.requestId,
+          access: input.movieAccess,
+        });
+  if (
+    choice !== null &&
+    (choice.status !== "authorized" || choice.actor.id !== input.actorId)
+  )
+    throw new MovieChoiceProtection("movie_edition_choice_changed");
+  const recorded =
+    input.recordedAttemptId === undefined
+      ? null
+      : await readMovieAttemptSponsor(tx, {
+          attemptId: input.recordedAttemptId,
+        });
+  if (
+    recorded !== null &&
+    (recorded.actorId !== input.actorId ||
+      recorded.userId !== input.userId ||
+      recorded.serverMachineId !== input.authority.serverMachineId)
+  )
+    throw new Error("Recorded movie sponsor differs from acquisition identity");
+  return choice !== null || recorded !== null;
 }

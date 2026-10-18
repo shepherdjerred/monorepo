@@ -227,6 +227,12 @@ export class MediaRequestCommands extends MediaCommandBase {
         active: false,
         direct: false,
         excluded: true,
+        ...(request.media.kind === "movie"
+          ? {
+              movieEditionChoiceId: null,
+              movieEditionChoiceRevision: { increment: 1 },
+            }
+          : {}),
         version: { increment: 1 },
       },
     });
