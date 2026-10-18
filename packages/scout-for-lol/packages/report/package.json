@@ -35,7 +35,8 @@
     "satori": "^0.47.0",
     "ts-pattern": "^5.7.0",
     "yoga-wasm-web": "^0.3.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/text": "workspace:*"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",

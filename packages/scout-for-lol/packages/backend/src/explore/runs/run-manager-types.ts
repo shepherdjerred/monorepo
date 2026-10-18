@@ -62,6 +62,11 @@ export type ActiveRun = {
   abortController: AbortController;
   subscribers: Set<Subscriber>;
   answer: string;
+  /**
+   * Set once an `answer_delta` was cut at the answer cap. The cut may drop a
+   * whole grapheme, so no later delta may append past it.
+   */
+  answerCapped: boolean;
   activity: string | null;
   trace: ExploreTraceEntry[];
   /**

@@ -13,6 +13,7 @@ import {
   replaceExploreAnswer,
 } from "#src/explore/replace-answer.ts";
 import { finalizeExploreTrace } from "#src/explore/trace.ts";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 /** Save the useful prefix of an interrupted run, if it produced one. */
 export async function persistPartialAnswer(
@@ -80,8 +81,5 @@ export async function persistPartialAnswer(
 }
 
 export function clampAnswer(text: string): string {
-  const trimmed = text.trim();
-  return trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH
-    ? trimmed
-    : `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
+  return truncateGraphemes(text.trim(), EXPLORE_ANSWER_MAX_LENGTH);
 }

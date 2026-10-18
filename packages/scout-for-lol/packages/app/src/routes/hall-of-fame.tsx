@@ -27,6 +27,7 @@ import {
 import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { useHallParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
+import { firstGraphemes } from "@shepherdjerred/text";
 
 function recordValue(value: number | null, precision: number): string {
   return value === null ? "—" : value.toFixed(precision);
@@ -116,7 +117,7 @@ export function HallPicker() {
           <Card key={guild.id} className="flex flex-col justify-between">
             <CardHeader className="space-y-2">
               <div className="flex size-10 items-center justify-center rounded-lg border border-scout-border/60 bg-scout-canvas text-sm font-semibold text-scout-ink">
-                {guild.name.slice(0, 2).toUpperCase()}
+                {firstGraphemes(guild.name, 2).toUpperCase()}
               </div>
               <CardTitle className="text-xl">{guild.name}</CardTitle>
             </CardHeader>

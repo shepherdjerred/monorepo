@@ -29,6 +29,7 @@ import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import type { PostableChannel } from "#src/lib/discord/postable-channels.ts";
 import type { resolveSubscriptionPuuid } from "#src/lib/subscription/add.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 /**
  * How long a prepared creation waits for a human. Ten minutes, the same window
@@ -183,7 +184,7 @@ export async function postableChannelName(
 function boundedSummary(summary: string): string {
   return summary.length <= CREATION_MAX_SUMMARY_LENGTH
     ? summary
-    : `${summary.slice(0, CREATION_MAX_SUMMARY_LENGTH - 1).trimEnd()}…`;
+    : `${graphemePrefix(summary, CREATION_MAX_SUMMARY_LENGTH - 1).trimEnd()}…`;
 }
 
 /**

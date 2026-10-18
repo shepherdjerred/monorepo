@@ -167,6 +167,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/release-tools",
     "packages/s3-signed-request",
     "packages/temporal-observability",
+    "packages/text",
     "packages/version-catalog",
     "ci/scripts/bun-install.sh",
     "ci/scripts/selectors/select-image-targets-lockfile.ts",

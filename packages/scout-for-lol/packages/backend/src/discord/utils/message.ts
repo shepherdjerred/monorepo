@@ -1,8 +1,11 @@
 /**
  * Discord message utilities
  *
- * Helpers for safely handling Discord message interactions
+ * Helpers for safely handling Discord message interactions. Every cut lands on
+ * a grapheme cluster boundary so emoji, flags, and combining marks stay whole.
  */
+
+import { chunkGraphemes, graphemePrefix } from "@shepherdjerred/text";
 
 /**
  * Discord's message content limit
@@ -40,7 +43,7 @@ export function truncateDiscordMessage(
 ): string {
   return message.length <= maxLength
     ? message
-    : `${message.slice(0, maxLength)}...`;
+    : `${graphemePrefix(message, maxLength)}...`;
 }
 
 /**
@@ -56,7 +59,9 @@ export function truncateEmbedFieldValue(text: string): string {
   const FIELD_BUFFER = 20;
   const maxLength = MAX_FIELD_VALUE_LENGTH - FIELD_BUFFER;
 
-  return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
+  return text.length <= maxLength
+    ? text
+    : `${graphemePrefix(text, maxLength)}...`;
 }
 
 /**
@@ -72,7 +77,9 @@ export function truncateEmbedDescription(text: string): string {
   const DESCRIPTION_BUFFER = 20;
   const maxLength = MAX_DESCRIPTION_LENGTH - DESCRIPTION_BUFFER;
 
-  return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
+  return text.length <= maxLength
+    ? text
+    : `${graphemePrefix(text, maxLength)}...`;
 }
 
 /**
@@ -82,14 +89,8 @@ function splitLongLine(
   line: string,
   maxLength: number,
 ): { chunks: string[]; remaining: string } {
-  const chunks: string[] = [];
-  let remaining = line;
-
-  while (remaining.length > maxLength) {
-    chunks.push(remaining.slice(0, maxLength));
-    remaining = remaining.slice(maxLength);
-  }
-
+  const chunks = chunkGraphemes(line, maxLength);
+  const remaining = chunks.pop() ?? "";
   return { chunks, remaining };
 }
 
@@ -206,7 +207,10 @@ function splitFencedCodeBlock(
       splitAt = body.length;
     } else {
       const boundary = body.lastIndexOf("\n", available);
-      splitAt = boundary > 0 ? boundary : available;
+      splitAt =
+        boundary > 0
+          ? boundary
+          : (chunkGraphemes(body, available)[0] ?? "").length;
     }
     const chunkBody = body.slice(0, splitAt);
     chunks.push(

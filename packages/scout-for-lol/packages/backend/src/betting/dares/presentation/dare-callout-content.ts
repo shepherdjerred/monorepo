@@ -9,6 +9,7 @@ import {
   type DarePotTotal,
 } from "@scout-for-lol/data";
 import type { DareResultAnnouncement } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 /**
  * Discord's hard message content limit.
@@ -285,14 +286,9 @@ function hiddenLinesNote(hidden: number): string[] {
 
 /** `text` cut to at most `room` characters, ending in an ellipsis if cut. */
 function truncateWithEllipsis(text: string, room: number): string {
-  if (text.length <= room) return text;
-  let cut = text.slice(0, Math.max(0, room - 1));
-  // Never leave half of a surrogate pair at the cut.
-  const last = cut.codePointAt(cut.length - 1);
-  if (last !== undefined && last >= 0xd8_00 && last <= 0xdb_ff) {
-    cut = cut.slice(0, -1);
-  }
-  return `${cut.trimEnd()}…`;
+  return text.length <= room
+    ? text
+    : `${graphemePrefix(text, Math.max(0, room - 1)).trimEnd()}…`;
 }
 
 /**

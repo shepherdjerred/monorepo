@@ -3,6 +3,7 @@ import { EXPLORE_ACTIVITY_MAX_LENGTH } from "@scout-for-lol/data";
 import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type { ExploreToolResultInspection } from "#src/explore/tool-inspection.ts";
 import { EXPLORE_SKILL_NAMES } from "#src/explore/skills/registry.ts";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 /**
  * The owner-only live status strings.
@@ -35,12 +36,9 @@ import { EXPLORE_SKILL_NAMES } from "#src/explore/skills/registry.ts";
 /** Collapse whitespace and bound the length, always returning something. */
 function clampActivity(text: string, fallback: string): string {
   const collapsed = text.replaceAll(/\s+/gu, " ").trim();
-  if (collapsed.length === 0) {
-    return fallback;
-  }
-  return collapsed.length <= EXPLORE_ACTIVITY_MAX_LENGTH
-    ? collapsed
-    : `${collapsed.slice(0, EXPLORE_ACTIVITY_MAX_LENGTH - 1)}…`;
+  return collapsed.length === 0
+    ? fallback
+    : truncateGraphemes(collapsed, EXPLORE_ACTIVITY_MAX_LENGTH);
 }
 
 /** Readable at a glance: exact below ten thousand, compact above. */

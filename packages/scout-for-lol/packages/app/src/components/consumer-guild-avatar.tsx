@@ -1,4 +1,5 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
+import { firstGraphemes } from "@shepherdjerred/text";
 type ConsumerGuildAvatarProps = {
   name: string;
   size: "compact" | "large";
@@ -7,7 +8,7 @@ type ConsumerGuildAvatarProps = {
 };
 
 export function ConsumerGuildAvatar(props: ConsumerGuildAvatarProps) {
-  const initial = props.name.trim().slice(0, 1).toLocaleUpperCase();
+  const initial = firstGraphemes(props.name.trim(), 1).toLocaleUpperCase();
   const sizeClasses =
     props.size === "large"
       ? "h-12 w-12 rounded-lg text-lg"

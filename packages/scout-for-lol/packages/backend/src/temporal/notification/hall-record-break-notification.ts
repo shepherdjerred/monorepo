@@ -21,6 +21,7 @@ import {
   MalformedAnnouncementIntentError,
   type HallRecordBreakAnnouncement,
 } from "#src/temporal/notification/announcement-codecs.ts";
+import { graphemePrefix, truncateGraphemes } from "@shepherdjerred/text";
 
 /**
  * The Hall-shaped notification: what a `hall-record-break` intent delivers.
@@ -62,8 +63,8 @@ function recordLabel(id: string): string {
 function truncateToLength(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return maxLength <= 3
-    ? text.slice(0, Math.max(0, maxLength))
-    : `${text.slice(0, maxLength - 3)}...`;
+    ? graphemePrefix(text, Math.max(0, maxLength))
+    : truncateGraphemes(text, maxLength, "...");
 }
 
 /**

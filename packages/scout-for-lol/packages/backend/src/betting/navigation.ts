@@ -25,6 +25,7 @@ import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/markets/bet-button.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
 export const BUCKS_NAVIGATION_VERSION = "1";
@@ -91,7 +92,7 @@ function formatGameLabel(aliases: readonly string[]): string | undefined {
       ? `${shown.join(", ")} +${formatInteger(hidden)}`
       : shown.join(", ");
   return label.length > MAX_GAME_LABEL_CHARS
-    ? `${label.slice(0, MAX_GAME_LABEL_CHARS).trimEnd()}…`
+    ? `${graphemePrefix(label, MAX_GAME_LABEL_CHARS).trimEnd()}…`
     : label;
 }
 

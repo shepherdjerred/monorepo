@@ -21,6 +21,7 @@ import {
   versionsOf,
 } from "#src/explore/store-mappers.ts";
 import { deepestLeafFrom } from "#src/explore/tree.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 export type ExploreTurnStoreClient = Pick<
   ExtendedPrismaClient,
@@ -78,7 +79,7 @@ export function titleFromQuestion(question: string): string {
   const collapsed = question.replaceAll(/\s+/g, " ").trim();
   return collapsed.length <= EXPLORE_TITLE_MAX_LENGTH
     ? collapsed
-    : `${collapsed.slice(0, EXPLORE_TITLE_MAX_LENGTH - 1).trimEnd()}…`;
+    : `${graphemePrefix(collapsed, EXPLORE_TITLE_MAX_LENGTH - 1).trimEnd()}…`;
 }
 
 export async function listExploreConversations(

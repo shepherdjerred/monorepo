@@ -11,11 +11,9 @@ import {
   formatSeriesValue,
   isPercentageSeries,
 } from "@scout-for-lol/report";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 const MAX_NATIVE_CELL_LENGTH = 160;
-const nativeCellGraphemeSegmenter = new Intl.Segmenter(undefined, {
-  granularity: "grapheme",
-});
 
 export type NativeRowValue = string | number | null;
 export type NativeRow = {
@@ -28,17 +26,7 @@ export function truncateNativeCell(
   value: string,
   maxLength = MAX_NATIVE_CELL_LENGTH,
 ): string {
-  if (value.length <= maxLength) {
-    return value;
-  }
-  let truncated = "";
-  for (const { segment } of nativeCellGraphemeSegmenter.segment(value)) {
-    if (truncated.length + segment.length > maxLength - 1) {
-      break;
-    }
-    truncated += segment;
-  }
-  return `${truncated}…`;
+  return truncateGraphemes(value, maxLength);
 }
 
 const displayWidthGraphemeSegmenter = new Intl.Segmenter(undefined, {

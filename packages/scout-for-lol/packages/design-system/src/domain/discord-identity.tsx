@@ -1,3 +1,4 @@
+import { firstGraphemes } from "@shepherdjerred/text";
 export function DiscordIdentity(props: {
   displayName: string;
   avatarUrl?: string;
@@ -10,7 +11,7 @@ export function DiscordIdentity(props: {
           className="scout-discord-identity__placeholder"
           aria-hidden="true"
         >
-          {props.displayName.slice(0, 1).toUpperCase()}
+          {firstGraphemes(props.displayName, 1).toUpperCase()}
         </span>
       ) : (
         <img

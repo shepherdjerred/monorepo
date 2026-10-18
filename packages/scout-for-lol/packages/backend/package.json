@@ -105,7 +105,8 @@
     "tslog": "^5.1.0",
     "uuid": "^14.0.0",
     "yoga-wasm-web": "^0.3.3",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/text": "workspace:*"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
