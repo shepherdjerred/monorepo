@@ -160,6 +160,54 @@ test("artifact publication preserves build gates and has no deployment-acceptanc
   expect(publication?.defaultBranchOnly).toBe(true);
 });
 
+test.each([false, true])(
+  "chart publication checks fresh content-unchanged Storm artifacts (fresh=%s)",
+  async (fresh) => {
+    const chart = steps().find((step) => step.key === "helm-push");
+    if (chart === undefined) throw new Error("Helm producer missing");
+    const gateEnd = chart.commands.findIndex((command) =>
+      command.startsWith("MISE_TOOLCHAIN_SCOPE="),
+    );
+    expect(gateEnd).toBeGreaterThan(1);
+    const child = Bun.spawn(
+      [
+        "bash",
+        "-eu",
+        "-c",
+        [
+          'bun() { case "$2" in',
+          'scripts/ci/read-ci-handoff.ts) if [ "$3" = delivery-image-digests ]; then printf "%s" "$FRESH_IMAGE_DIGESTS"; else printf "{}"; fi ;;',
+          "ci/scripts/selectors/ci-changed.ts) return 1 ;;",
+          "*) return 2 ;; esac; }",
+          ...chart.commands.slice(1, gateEnd),
+          String.raw`printf 'helm-publication-requested\n'`,
+        ].join("\n"),
+      ],
+      {
+        env: {
+          FRESH_IMAGE_DIGESTS: JSON.stringify(
+            fresh
+              ? {
+                  "shepherdjerred/the-storm-server": `sha256:${"a".repeat(64)}`,
+                }
+              : {},
+          ),
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    const [status, output, error] = await Promise.all([
+      child.exited,
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+    ]);
+    expect(error).toBe("");
+    expect(status).toBe(0);
+    expect(output).toBe(fresh ? "helm-publication-requested\n" : "");
+  },
+);
+
 test("every emitted dependency exists and the full graph is acyclic", () => {
   const graph = steps();
   const selected = selectSteps(graph, {

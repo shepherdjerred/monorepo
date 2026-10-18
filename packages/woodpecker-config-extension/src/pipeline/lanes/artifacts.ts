@@ -17,7 +17,7 @@ const smokeVariable = "CADDYFILE_SMOKE_PATH";
 /** Build immutable candidates; Delivery independently qualifies and selects them. */
 function chartPublicationRequested(): string[] {
   return [
-    'image_digests="$(bun --no-install scripts/ci/read-ci-handoff.ts image-digests)"',
+    'image_digests="$(bun --no-install scripts/ci/read-ci-handoff.ts delivery-image-digests)"',
     "charts_requested=false",
     "for selector in helm argocd tofu tofu-platforms; do",
     '  if bun --no-install ci/scripts/selectors/ci-changed.ts "$selector"; then charts_requested=true; fi',
