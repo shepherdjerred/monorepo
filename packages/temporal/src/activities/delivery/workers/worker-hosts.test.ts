@@ -18,10 +18,18 @@ import {
   verifyControlPlaneArtifactPods,
 } from "#lib/delivery/workers/worker-hosts.ts";
 import { controlPlanePod } from "./worker-fixtures.ts";
+import { verifyCandidateImageBuildId } from "#lib/worker-deployment-proofs.ts";
 
 const OLD = "a".repeat(40);
 const CURRENT = "b".repeat(40);
 const NOW = new Date("2026-10-17T20:00:00.000Z");
+function imageConfiguration(buildId: string, architecture = "amd64") {
+  return {
+    os: "linux",
+    architecture,
+    config: { Env: [`GIT_SHA=${buildId}`] },
+  };
+}
 it("visibility retirement covers current/deprecated deployment versions and pinned overrides", () => {
   const route = workerHostSpecification("central").routes[0];
   if (route === undefined) throw new Error("Missing central route");
@@ -176,7 +184,7 @@ describe("Retained worker retirement and cutover safety", () => {
       const worker = selected.versions.find((entry) => entry.image === image);
       if (worker === undefined) throw new Error("Unknown immutable image");
       return {
-        stdout: JSON.stringify([`GIT_SHA=${worker.buildId}`]),
+        stdout: JSON.stringify(imageConfiguration(worker.buildId)),
         stderr: "",
       };
     };
@@ -189,11 +197,44 @@ describe("Retained worker retirement and cutover safety", () => {
       verifyDeliveryWorkerImages(
         { deployment: { id: "proof/2", workerSnapshot: selected } },
         async () => ({
-          stdout: JSON.stringify([`GIT_SHA=${CURRENT}`]),
+          stdout: JSON.stringify(imageConfiguration(CURRENT)),
           stderr: "",
         }),
       ),
     ).rejects.toThrow("was not built from");
+  });
+  it("checks sibling-platform source metadata and refuses images without production amd64", async () => {
+    const image = `docker.io/shepherdjerred/temporal-worker@sha256:${"a".repeat(64)}`;
+    let configurations = {
+      "linux/amd64": imageConfiguration(OLD),
+      "linux/arm64": imageConfiguration(OLD, "arm64"),
+    };
+    const run = async (command: readonly string[]) => {
+      expect(command).toEqual([
+        "docker",
+        "buildx",
+        "imagetools",
+        "inspect",
+        image,
+        "--format",
+        "{{json .Image}}",
+      ]);
+      return { stdout: JSON.stringify(configurations), stderr: "" };
+    };
+    await verifyCandidateImageBuildId(image, OLD, run);
+    configurations = {
+      ...configurations,
+      "linux/arm64": imageConfiguration(CURRENT, "arm64"),
+    };
+    await expect(verifyCandidateImageBuildId(image, OLD, run)).rejects.toThrow(
+      "was not built from",
+    );
+    await expect(
+      verifyCandidateImageBuildId(image, OLD, async () => ({
+        stdout: JSON.stringify(imageConfiguration(OLD, "arm64")),
+        stderr: "",
+      })),
+    ).rejects.toThrow("production linux/amd64");
   });
 });
 

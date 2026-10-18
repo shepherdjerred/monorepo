@@ -174,7 +174,12 @@ function fixture(overrides: Partial<State> = {}) {
   const run: RolloutCommandRunner = async (argv) => {
     const command = [...argv];
     commands.push(command);
-    if (command[0] === "docker") return json([`GIT_SHA=${CANDIDATE}`]);
+    if (command[0] === "docker")
+      return json({
+        os: "linux",
+        architecture: "amd64",
+        config: { Env: [`GIT_SHA=${CANDIDATE}`] },
+      });
     if (command[0] === "git")
       return {
         stdout: command[1] === "rev-parse" ? state.checkout : "",
