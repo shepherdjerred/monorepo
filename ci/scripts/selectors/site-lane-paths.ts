@@ -11,6 +11,7 @@ export const workspacePaths = [
 
 export const deployScripts = [
   "scripts/release/deploy-site.ts",
+  "scripts/lib/sites/build.ts",
   "scripts/lib/s3-static-site.ts",
   "scripts/lib/run.ts",
 ] as const;
