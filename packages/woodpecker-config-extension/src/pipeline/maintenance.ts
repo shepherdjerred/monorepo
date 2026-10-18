@@ -200,7 +200,7 @@ function workspaceSeedSteps(images: CiImages): CiStep[] {
   ];
 }
 
-/** Deployment still waits for GitHub releases and all application artifacts. */
+/** Artifact publication retains verification while refresh work runs separately. */
 export function separateMaintenance(steps: readonly CiStep[]): CiStep[] {
   return steps
     .filter(
@@ -213,7 +213,7 @@ export function separateMaintenance(steps: readonly CiStep[]): CiStep[] {
           ...step,
           // Charts consume committed pins and this pipeline's image handoff.
           // Refresh workflows create separate PRs; their workspaces are isolated.
-          dependsOn: ["homelab-release-admission", "images"],
+          dependsOn: ["images"],
         };
       return step.key === "release-please" ? githubReleaseStep(step) : step;
     });

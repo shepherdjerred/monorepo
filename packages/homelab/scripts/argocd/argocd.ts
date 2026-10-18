@@ -152,16 +152,37 @@ const RenderedObjectSchema = z
   })
   .passthrough();
 
-const RenderedResourceSchema = z.object({
-  apiVersion: z.string().min(1),
-  kind: z.string().min(1),
-  metadata: z
-    .object({
-      name: z.string().min(1),
-      namespace: z.string().min(1).optional(),
-    })
-    .passthrough(),
-});
+const RenderedResourceSchema = z
+  .object({
+    apiVersion: z.string().min(1),
+    kind: z.string().min(1),
+    metadata: z
+      .object({
+        name: z.string().min(1),
+        namespace: z.string().optional(),
+      })
+      .passthrough(),
+  })
+  .refine(
+    ({ apiVersion, kind, metadata }) =>
+      metadata.namespace !== "" ||
+      isClusterScopedRootResource(apiVersion, kind),
+    {
+      path: ["metadata", "namespace"],
+      message:
+        "Only a recognized cluster-scoped resource may have an empty namespace",
+    },
+  )
+  .transform((resource) => ({
+    ...resource,
+    metadata: {
+      ...resource.metadata,
+      namespace:
+        resource.metadata.namespace === ""
+          ? undefined
+          : resource.metadata.namespace,
+    },
+  }));
 
 // The `apps` chart is namespaced to ArgoCD, so CDK8s stamps that namespace on
 // every rendered object, including cluster-scoped ones. Kubernetes ignores the
