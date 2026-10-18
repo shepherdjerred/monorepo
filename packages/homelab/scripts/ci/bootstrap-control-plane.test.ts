@@ -10,6 +10,59 @@ import {
   bootstrapRootManifest,
 } from "./bootstrap-selection.ts";
 import { bootstrapArchiveNames } from "./bootstrap-publication.ts";
+import { parseBootstrapSourceProof } from "./bootstrap-native.ts";
+
+test("bootstrap requires fresh bound v2 source integration proof while preserving original artifact sources", () => {
+  const { descriptor } = fixture();
+  const merge = "f".repeat(40);
+  const proof = {
+    schema: "delivery-source-proof/v2",
+    sourceRevision: descriptor.sourceRevision,
+    mergeRevision: merge,
+    pullRequest: descriptor.pullRequest,
+    mainRevision: merge,
+    mainState: "red",
+    pipelineNumber: 900,
+    pipelineUrl: "https://woodpecker.sjer.red/repos/1/pipeline/900",
+    verifiedAt: new Date().toISOString(),
+    integrationProof: {
+      kind: "squash-tree-equality",
+      sourceTreeRevision: "e".repeat(40),
+      mergeTreeRevision: "e".repeat(40),
+      mergeMainBaseRevision: merge,
+    },
+    reviewEvidence: {
+      headRevision: descriptor.sourceRevision,
+      requiredApprovals: 0,
+      reviewDecision: null,
+      requiredChecks: [
+        { name: "ci-complete", appId: null, state: "pass", url: null },
+      ],
+    },
+  };
+  expect(parseBootstrapSourceProof(proof, descriptor)).toMatchObject({
+    sourceRevision: descriptor.sourceRevision,
+    mergeRevision: merge,
+  });
+  expect(descriptor.controlPlane?.image.sourceRevision).not.toBe(
+    proof.sourceRevision,
+  );
+  expect(descriptor.controlPlane?.chart.sourceRevision).not.toBe(
+    proof.sourceRevision,
+  );
+  for (const invalid of [
+    { ...proof, schema: "delivery-source-proof/v1" },
+    { ...proof, mergeRevision: undefined },
+    { ...proof, sourceRevision: merge },
+    { ...proof, pullRequest: descriptor.pullRequest + 1 },
+    { ...proof, verifiedAt: "2020-01-01T00:00:00.000Z" },
+    {
+      ...proof,
+      integrationProof: { ...proof.integrationProof, mergeTreeRevision: merge },
+    },
+  ])
+    expect(() => parseBootstrapSourceProof(invalid, descriptor)).toThrow();
+});
 
 function fixture() {
   const bytes = new TextEncoder().encode("original CI chart archive");

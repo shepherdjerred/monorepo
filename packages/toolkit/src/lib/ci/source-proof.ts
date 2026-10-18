@@ -1,5 +1,9 @@
 import { z } from "zod";
 import {
+  SourceProofSchema,
+  type SourceProof,
+} from "@shepherdjerred/ops-model/ci-source-proof.ts";
+import {
   pipelineState,
   requiredChecks,
   reviewBlockers,
@@ -12,49 +16,97 @@ export const SourceAncestrySchema = z.object({
   base_commit: z.object({ sha: Revision }),
   merge_base_commit: z.object({ sha: Revision }),
 });
-export const SourceProofSchema = z
-  .object({
-    schema: z.literal("delivery-source-proof/v1"),
-    sourceRevision: Revision,
-    pullRequest: z.number().int().positive(),
-    mainRevision: Revision,
-    mainState: z.enum(["green", "red", "pending"]),
-    pipelineNumber: z.number().int().positive(),
-    pipelineUrl: z.url(),
-    verifiedAt: z.iso.datetime(),
-    reviewEvidence: z
-      .object({
-        headRevision: Revision,
-        requiredApprovals: z.number().int().nonnegative(),
-        reviewDecision: z
-          .enum(["APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED"])
-          .nullable(),
-        requiredChecks: z
-          .array(
-            z.object({
-              name: z.string(),
-              appId: z.number().nullable(),
-              state: z.literal("pass"),
-              url: z.string().nullable(),
-            }),
-          )
-          .min(1),
-      })
-      .strict(),
-  })
-  .strict()
-  .superRefine((value, context) => {
-    if (
-      value.pipelineUrl !==
-      `https://woodpecker.sjer.red/repos/1/pipeline/${String(value.pipelineNumber)}`
-    )
-      context.addIssue({
-        code: "custom",
-        message:
-          "Bootstrap source proof requires the canonical monorepo Woodpecker pipeline",
-      });
+export const SourceGitCommitSchema = z.object({
+  sha: Revision,
+  tree: z.object({ sha: Revision }),
+});
+type SourceEffects = {
+  snapshot: () => Promise<Snapshot>;
+  compare: (
+    base: string,
+    head: string,
+  ) => Promise<z.infer<typeof SourceAncestrySchema>>;
+  commit: (revision: string) => Promise<z.infer<typeof SourceGitCommitSchema>>;
+};
+
+function ancestor(
+  observation: z.infer<typeof SourceAncestrySchema>,
+  base: string,
+) {
+  return (
+    ["ahead", "identical"].includes(observation.status) &&
+    observation.base_commit.sha === base &&
+    observation.merge_base_commit.sha === base
+  );
+}
+
+async function integration(
+  snapshot: Snapshot,
+  source: string,
+  effects: SourceEffects,
+) {
+  const mergeRevision = Revision.parse(snapshot.pr.merge_commit_sha);
+  const [sourceCommit, mergeCommit, sourceMerge, mergeMain] = await Promise.all(
+    [
+      effects.commit(source),
+      effects.commit(mergeRevision),
+      effects.compare(source, mergeRevision),
+      effects.compare(mergeRevision, snapshot.main.headSha),
+    ],
+  );
+  const original = SourceGitCommitSchema.parse(sourceCommit);
+  const merged = SourceGitCommitSchema.parse(mergeCommit);
+  const sourceAncestry = SourceAncestrySchema.parse(sourceMerge);
+  if (sourceAncestry.base_commit.sha !== source)
+    throw new Error("Git comparison is not bound to the reviewed source");
+  if (original.sha !== source || merged.sha !== mergeRevision)
+    throw new Error(
+      "Git commit observation differs from the reviewed source or associated PR merge",
+    );
+  if (!ancestor(SourceAncestrySchema.parse(mergeMain), mergeRevision))
+    throw new Error("Associated PR merge is not an ancestor of current main");
+  const trees = {
+    sourceTreeRevision: original.tree.sha,
+    mergeTreeRevision: merged.tree.sha,
+    mergeMainBaseRevision: mergeRevision,
+  };
+  if (ancestor(sourceAncestry, source))
+    return {
+      mergeRevision,
+      integrationProof: {
+        kind: "reviewed-head-ancestor" as const,
+        ...trees,
+        sourceMergeBaseRevision: source,
+      },
+    };
+  if (original.tree.sha !== merged.tree.sha)
+    throw new Error(
+      "Reviewed source is not an ancestor of its PR merge and their Git trees differ; update and review the source",
+    );
+  return {
+    mergeRevision,
+    integrationProof: { kind: "squash-tree-equality" as const, ...trees },
+  };
+}
+
+function evidenceIdentity(snapshot: Snapshot) {
+  const { pipeline, checks, pipelineUrl } = requireSource(
+    snapshot,
+    snapshot.pr.head.sha,
+  );
+  return JSON.stringify({
+    pr: snapshot.pr.number,
+    source: snapshot.pr.head.sha,
+    merge: snapshot.pr.merge_commit_sha,
+    main: snapshot.main.headSha,
+    pipeline,
+    pipelineUrl,
+    checks,
+    rules: snapshot.rules,
+    reviews: snapshot.reviews,
+    reviewDecision: snapshot.reviewDecision,
   });
-export type SourceProof = z.infer<typeof SourceProofSchema>;
+}
 
 function requireSource(snapshot: Snapshot, source: string) {
   if (
@@ -103,39 +155,26 @@ function requireSource(snapshot: Snapshot, source: string) {
 /** Distinct post-merge bootstrap evidence; ordinary merge-readiness semantics stay unchanged. */
 export async function collectSourceProof(
   source: string,
-  effects: {
-    snapshot: () => Promise<Snapshot>;
-    compare: (
-      sourceRevision: string,
-      mainRevision: string,
-    ) => Promise<z.infer<typeof SourceAncestrySchema>>;
-  },
+  effects: SourceEffects,
 ): Promise<SourceProof> {
   Revision.parse(source);
   const before = await effects.snapshot();
   requireSource(before, source);
-  const ancestry = SourceAncestrySchema.parse(
-    await effects.compare(source, before.main.headSha),
-  );
-  if (
-    !["ahead", "identical"].includes(ancestry.status) ||
-    ancestry.base_commit.sha !== source ||
-    ancestry.merge_base_commit.sha !== source
-  )
-    throw new Error(
-      "Reviewed source is not an ancestor of the independently observed current main",
-    );
+  const initialIntegration = await integration(before, source, effects);
   const after = await effects.snapshot();
   const { pipeline, checks, pipelineUrl } = requireSource(after, source);
-  if (
-    after.main.headSha !== before.main.headSha ||
-    after.pr.number !== before.pr.number
-  )
+  if (evidenceIdentity(after) !== evidenceIdentity(before))
     throw new Error(
-      "Main or PR identity changed during source-proof collection; retry the bounded read",
+      "Source, merge, main, pipeline or review identity changed during source-proof collection; retry the bounded read",
+    );
+  const finalIntegration = await integration(after, source, effects);
+  if (JSON.stringify(initialIntegration) !== JSON.stringify(finalIntegration))
+    throw new Error(
+      "Source integration proof changed during collection; retry the bounded read",
     );
   return SourceProofSchema.parse({
-    schema: "delivery-source-proof/v1",
+    schema: "delivery-source-proof/v2",
+    ...finalIntegration,
     sourceRevision: source,
     pullRequest: after.pr.number,
     mainRevision: after.main.headSha,

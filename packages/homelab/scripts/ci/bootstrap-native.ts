@@ -16,6 +16,7 @@ import {
   assertBootstrapControlPlaneImage,
 } from "./bootstrap-image-proof.ts";
 import { isVerifiedRootReleaseTermination } from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
+import { SourceProofSchema } from "@shepherdjerred/ops-model/ci-source-proof.ts";
 
 const ORIGIN = "https://argocd.sjer.red";
 const ApplicationIdentity = z.object({
@@ -270,22 +271,21 @@ export async function bootstrapSourceProof(
     { capture: true, echoCapturedStdout: false },
   );
   const raw: unknown = JSON.parse(result.stdout);
-  const proof = z
-    .object({
-      schema: z.literal("delivery-source-proof/v1"),
-      sourceRevision: z.literal(descriptor.sourceRevision),
-      pullRequest: z.literal(descriptor.pullRequest),
-      pipelineNumber: z.number().int().positive(),
-      pipelineUrl: z.url(),
-      verifiedAt: z.iso.datetime(),
-      reviewEvidence: z
-        .object({
-          headRevision: z.literal(descriptor.sourceRevision),
-        })
-        .loose(),
-    })
-    .loose()
-    .parse(raw);
+  return parseBootstrapSourceProof(raw, descriptor);
+}
+
+export function parseBootstrapSourceProof(
+  raw: unknown,
+  descriptor: Pick<BootstrapDescriptor, "sourceRevision" | "pullRequest">,
+) {
+  const proof = SourceProofSchema.parse(raw);
+  if (
+    proof.sourceRevision !== descriptor.sourceRevision ||
+    proof.pullRequest !== descriptor.pullRequest
+  )
+    throw new Error(
+      "Bootstrap source proof differs from the requested reviewed PR head",
+    );
   if (Date.parse(proof.verifiedAt) < Date.now() - 60_000)
     throw new Error("Bootstrap source proof is stale");
   return proof;

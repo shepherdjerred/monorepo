@@ -36,11 +36,13 @@ original CI-qualified artifacts already recorded in PostgreSQL.
 
    Select the inspected Woodpecker webhook ID, not an unrelated integration.
    Disable any other source of old main releases during the window. Merge only
-   after the real required checks and review pass. Retain the reviewed head SHA;
-   a different merge commit cannot borrow its checks.
+   after the real required checks and review pass. Retain the reviewed head SHA.
+   For a squash merge, `source-proof` requires its complete Git tree to equal
+   the PR's associated merge commit tree. That merge must remain on main.
+   Different trees require a source update and renewed CI/review.
 
 2. Replace the generator **before** changing credential locator source. From a
-   clean checkout of the initially reviewed merged head, use the image-producing
+   clean checkout of the reviewed PR head proven integrated into main, use the image-producing
    commands and workload descriptor below, with `targets: ["woodpecker"]`.
    Publish the fixed bootstrap images directly; no main pipeline is needed.
    Run only this first subset:
@@ -67,7 +69,7 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    artifact credentials take over, verify their exact storage IAM grants and
    readback through the existing operator storage procedure.
 
-3. Use a clean checkout of the next merged, reviewed head and provision the declared
+3. Use a clean checkout of the next reviewed PR head proven integrated into main and provision the declared
    prerequisites through their operator OpenTofu wrappers. The dedicated
    Tailscale stack needs its scoped bootstrap admin access; unavailable access
    stops this procedure. Register actual output item IDs in reviewed source,

@@ -363,10 +363,14 @@ to be current.
 post-merge bootstrap read. The source must equal the actual reviewed PR head
 and the successful completed full Woodpecker pipeline, including the native
 review and completion gates and all current required checks. GitHub must show
-the PR merged and independently prove that exact head is an ancestor of current
-main. A second fresh snapshot fences source/main changes during collection.
-The result preserves both source and main revisions; it never assigns head
-checks to a different merge commit. Bootstrap descriptors, builds and effects
+the PR merged and bind its actual associated merge commit to current main by
+ancestry. The reviewed head must be an ancestor of that merge commit, or its
+complete Git tree must equal the merge commit's tree exactly. The latter permits
+squash merges without assigning checks to unreviewed bytes. A different tree
+requires a source update and renewed CI/review. The strict v2 result records the
+proof kind, original source, associated merge, tree identities and current main.
+Two independent Git reads and fresh snapshots must preserve all identities,
+successful pipeline, checks and review evidence. Bootstrap descriptors, builds and effects
 must use that exact source, and refresh this proof immediately before effects.
 Normal `ci wait` readiness and its closed-PR behavior remain unchanged.
 

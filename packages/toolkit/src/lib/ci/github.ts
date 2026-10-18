@@ -17,6 +17,10 @@ export const PrSchema = z.object({
   html_url: z.url(),
   state: z.enum(["open", "closed"]),
   merged: z.boolean(),
+  merge_commit_sha: z
+    .string()
+    .regex(/^[a-f0-9]{40}$/u)
+    .nullish(),
   draft: z.boolean(),
   mergeable: z.boolean().nullable(),
   mergeable_state: z.enum([

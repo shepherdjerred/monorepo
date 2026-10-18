@@ -6,6 +6,7 @@ import { CiObserver } from "#lib/ci/observer.ts";
 import {
   collectSourceProof,
   SourceAncestrySchema,
+  SourceGitCommitSchema,
 } from "#lib/ci/source-proof.ts";
 import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
@@ -41,6 +42,12 @@ export async function ciSourceProofCommand(args: string[]) {
     const signal = AbortSignal.timeout(90_000);
     const proof = await collectSourceProof(source, {
       snapshot: () => observer.snapshot(number, signal, true),
+      commit: (revision) =>
+        github.read(
+          `/repos/${github.repo}/git/commits/${revision}`,
+          SourceGitCommitSchema,
+          signal,
+        ),
       compare: (revision, main) =>
         github.read(
           `/repos/${github.repo}/compare/${revision}...${main}`,
