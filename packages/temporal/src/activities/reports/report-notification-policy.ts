@@ -8,7 +8,6 @@ import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/reports/report-delivery-p
 
 const DAILY_NOTIFICATION_FAMILIES: Readonly<Record<string, string>> = {
   "homelab-audit-daily": "homelab-audit",
-  "ci-io-telemetry-daily": "ci-io-telemetry",
   "scout-queue-windows-daily": "scout-queue-windows",
   "daily-notification-policy-canary": "daily-notification-policy-canary",
 };

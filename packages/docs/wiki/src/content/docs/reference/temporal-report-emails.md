@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-Temporal sends eleven source-defined scheduled reports plus report-only agent
+Temporal sends ten source-defined scheduled reports plus report-only agent
 task results. The schedule definitions remain authoritative for timing; this
 page records the email surface they share.
 
