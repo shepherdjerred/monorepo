@@ -8,6 +8,7 @@ import {
 } from "@shepherdjerred/delivery/testing";
 import type { WorkerRecoveryContext } from "@shepherdjerred/delivery/contract";
 import type { V1Job } from "@kubernetes/client-node";
+import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 import {
   proveSettledWorkerRecovery,
   type WorkerRecoveryEffects,
@@ -260,6 +261,120 @@ test("read-only pre-effect recovery can settle healthy comparison drift without 
   ).toBe(true);
 });
 
+async function recordUnappliedBootstrapIntent() {
+  const deploymentId = context.deployment.deployment.id;
+  const operationId = deliveryOperationId(`${deploymentId}:worker-bootstrap`);
+  await cluster.database.stage.updateMany({
+    where: { deploymentId, key: "worker-image-provenance" },
+    data: { status: "succeeded" },
+  });
+  await cluster.database.stage.createMany({
+    data: [
+      {
+        id: crypto.randomUUID(),
+        deploymentId,
+        key: "preflight",
+        status: "succeeded",
+        operationId: crypto.randomUUID(),
+        message: "Frozen chart verified",
+      },
+      {
+        id: crypto.randomUUID(),
+        deploymentId,
+        key: "worker-host-bootstrap",
+        status: "running",
+        operationId,
+        message: "Source PATCH rejected before any native operation",
+      },
+    ],
+  });
+  context = await store.workerRecovery(context.intent.id, testExecutor);
+  return operationId;
+}
+
+test("rejected bootstrap source PATCH independently settles original hosts while retaining its running intent and failed history", async () => {
+  const operationId = await recordUnappliedBootstrapIntent();
+  const external = boundary();
+  const reads = { workflow: 0, jobs: 0, candidate: 0 };
+  const proof = await proveSettledWorkerRecovery(context, {
+    ...external,
+    workflowClosed: async (id) => {
+      reads.workflow++;
+      return await external.workflowClosed(id);
+    },
+    terminalJobs: async (requested) => {
+      reads.jobs++;
+      return await external.terminalJobs(requested);
+    },
+    noCandidateReferences: async (pool) => {
+      reads.candidate++;
+      await external.noCandidateReferences(pool);
+    },
+  });
+  expect(reads).toEqual({ workflow: 2, jobs: 2, candidate: 2 });
+  expect(proof.evidence).toContainEqual(
+    expect.objectContaining({ operationId, kind: "reconciliation" }),
+  );
+  await settleWithoutAcceptance(proof);
+  const result = await store.detail(context.deployment.deployment.id);
+  expect(
+    result.stages.find((stage) => stage.key === "worker-host-bootstrap"),
+  ).toMatchObject({ status: "running", operationId });
+});
+
+test.each([
+  "unowned intent",
+  "another effect stage",
+  "late candidate",
+  "late source change",
+])(
+  "unapplied bootstrap recovery retains quarantine for %s",
+  async (failure) => {
+    await recordUnappliedBootstrapIntent();
+    if (failure === "unowned intent")
+      context.deployment.stages.find(
+        (stage) => stage.key === "worker-host-bootstrap",
+      )!.operationId = crypto.randomUUID();
+    if (failure === "another effect stage")
+      context.deployment.stages.push({
+        ...context.deployment.stages[0]!,
+        id: crypto.randomUUID(),
+        key: "reconcile",
+      });
+    const external = boundary();
+    const candidate =
+      context.deployment.deployment.workerSnapshot!.versions.find(
+        (worker) =>
+          worker.introducedByDeploymentId === context.deployment.deployment.id,
+      )!;
+    let podReads = 0;
+    let argoReads = 0;
+    await expect(
+      proveSettledWorkerRecovery(context, {
+        ...external,
+        readArgo: async (application) => {
+          const observed = await external.readArgo(application);
+          return failure === "late source change" && ++argoReads === 3
+            ? {
+                ...prior,
+                metadata: { uid: "replaced-after-independent-observations" },
+              }
+            : observed;
+        },
+        resources: async (application, kind) => {
+          const resources = await external.resources(application, kind);
+          return failure === "late candidate" &&
+            kind === "Pod" &&
+            ++podReads === 2
+            ? [...resources, retainedWorkerPod(candidate)]
+            : resources;
+        },
+      }),
+    ).rejects.toThrow();
+    expect(await cluster.database.applicationLock.count()).toBe(1);
+  },
+);
+
 test("unknown Job incarnation, live executor and candidate references retain the lock", async () => {
   const external = boundary();
   job.metadata!.uid = "replaced-job";
@@ -411,11 +526,7 @@ test("post-PATCH bootstrap recovery requires its exact finished native operation
     chart: selection.chart,
     targetRevision: selection.revision,
     helm: {
-      parameters: Object.entries(selection.parameters).map(([name, value]) => ({
-        name,
-        value,
-        forceString: true,
-      })),
+      parameters: deliveryArgoParameters(selection.parameters),
     },
   };
   const operationId = crypto.randomUUID();

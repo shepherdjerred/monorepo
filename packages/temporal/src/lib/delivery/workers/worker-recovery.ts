@@ -92,6 +92,7 @@ async function requireUnappliedWorkerHosts(
 ) {
   const detail = context.deployment;
   const application = deliverySelection(detail).selection.application;
+  const allowBootstrapIntent = unappliedBootstrapIntent(detail, before);
   // Only read-only image inspection can precede source effect intent. Unknown stages fail closed.
   if (
     detail.stages.some(
@@ -101,7 +102,8 @@ async function requireUnappliedWorkerHosts(
           "preflight",
           "worker-baseline",
           "worker-prior-source",
-        ].includes(stage.key),
+        ].includes(stage.key) &&
+        !(allowBootstrapIntent && stage.key === "worker-host-bootstrap"),
     )
   )
     throw new Error("Recovery cannot classify an unowned pre-effect stage");
@@ -162,6 +164,82 @@ async function requireUnappliedWorkerHosts(
   verifyWorkerBaselinePods(pods, observed);
 }
 
+/** A recorded bootstrap intent is not proof that its source PATCH was accepted. */
+function unappliedBootstrapIntent(
+  detail: WorkerRecoveryContext["deployment"],
+  before: unknown,
+) {
+  const bootstrap = detail.stages.filter(
+    (stage) => stage.key === "worker-host-bootstrap",
+  );
+  const prior = detail.stages.find(
+    (stage) => stage.key === "worker-prior-source",
+  );
+  return (
+    detail.deployment.workerSnapshot?.workerOperation === "rollout" &&
+    bootstrap.length === 1 &&
+    bootstrap[0]?.status === "running" &&
+    bootstrap[0].operationId ===
+      deliveryOperationId(`${detail.deployment.id}:worker-bootstrap`) &&
+    ["worker-prior-source", "worker-image-provenance", "preflight"].every(
+      (key) =>
+        detail.stages.filter(
+          (stage) => stage.key === key && stage.status === "succeeded",
+        ).length === 1,
+    ) &&
+    detail.stages.every((stage) =>
+      [
+        "worker-prior-source",
+        "worker-image-provenance",
+        "preflight",
+        "worker-host-bootstrap",
+      ].includes(stage.key),
+    ) &&
+    prior?.operationId === workerSourceFingerprint(before)
+  );
+}
+
+async function recheckUnappliedBootstrap(
+  context: WorkerRecoveryContext,
+  pool: WorkerPoolSnapshot,
+  effects: WorkerRecoveryEffects,
+  observed: {
+    application: unknown;
+    pool: WorkerPoolSnapshot;
+    workflowId: string;
+    jobs: EvidenceInput[];
+    routes: CompleteWorkerRecovery["routes"];
+  },
+) {
+  await requireUnappliedWorkerHosts(
+    context,
+    pool,
+    effects,
+    observed.application,
+  );
+  await effects.pollers(observed.pool);
+  if (
+    (await effects.workflowClosed(context.deployment.deployment.id)) !==
+      observed.workflowId ||
+    JSON.stringify(await effects.terminalJobs(context)) !==
+      JSON.stringify(observed.jobs) ||
+    JSON.stringify(await effects.routes(pool)) !==
+      JSON.stringify(observed.routes)
+  )
+    throw new Error("Unapplied bootstrap observations changed during proof");
+  const final = await effects.readArgo(
+    encodeURIComponent(
+      deliverySelection(context.deployment).selection.application,
+    ),
+  );
+  recoverySync(final, false);
+  if (
+    workerSourceFingerprint(final) !==
+    workerSourceFingerprint(observed.application)
+  )
+    throw new Error("Application changed after unapplied bootstrap recheck");
+}
+
 function requireStableRecoveryRoutes(
   pool: WorkerPoolSnapshot,
   routes: CompleteWorkerRecovery["routes"],
@@ -212,9 +290,12 @@ export async function proveSettledWorkerRecovery(
   const { selection } = deliverySelection(detail);
   const application = encodeURIComponent(selection.application);
   const before = await effects.readArgo(application);
-  const operated = detail.stages.some((stage) =>
-    ["reconcile", "worker-host-bootstrap"].includes(stage.key),
-  );
+  const unappliedBootstrap = unappliedBootstrapIntent(detail, before);
+  const operated =
+    !unappliedBootstrap &&
+    detail.stages.some((stage) =>
+      ["reconcile", "worker-host-bootstrap"].includes(stage.key),
+    );
   const beforeSync = recoverySync(before, operated);
   const owned = operated ? ownedRecoveryArgo(before, detail) : undefined;
   if (owned === undefined)
@@ -248,6 +329,15 @@ export async function proveSettledWorkerRecovery(
   const afterSync = recoverySync(after, operated);
   if (workerSourceFingerprint(before) !== workerSourceFingerprint(after))
     throw new Error("Application changed during recovery proof");
+  if (unappliedBootstrap) {
+    await recheckUnappliedBootstrap(context, pool, effects, {
+      application: after,
+      pool: observed,
+      workflowId,
+      jobs,
+      routes,
+    });
+  }
   if (
     owned !== undefined &&
     verifyArgoRelease(after, owned.expected, owned.request).operationId !==
@@ -263,6 +353,18 @@ export async function proveSettledWorkerRecovery(
     routes,
     evidence: [
       ...jobs,
+      ...(unappliedBootstrap
+        ? [
+            {
+              kind: "reconciliation" as const,
+              operationId: deliveryOperationId(
+                `${detail.deployment.id}:worker-bootstrap`,
+              ),
+              summary:
+                "Recorded bootstrap intent retained; unchanged original source, hosts, terminal jobs and stable routing independently verified without inferring a native operation",
+            },
+          ]
+        : []),
       {
         kind: "reconciliation",
         operationId: receipt,

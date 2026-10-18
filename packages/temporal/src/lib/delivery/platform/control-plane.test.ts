@@ -5,6 +5,7 @@ import {
   ControlPlaneJobInputSchema,
   controlPlaneSelections,
   runControlPlaneUpgrade,
+  requireExactControlPlaneSource,
   type ControlPlaneEffects,
 } from "./control-plane.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
@@ -14,6 +15,35 @@ import {
   CONTROL_PLANE_IMAGE_ABI,
   CONTROL_PLANE_IMAGE_LABEL,
 } from "@shepherdjerred/ops-model/delivery-control-plane.ts";
+import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
+
+test("prior source proof compares the exact wire representation of logical Helm strings", () => {
+  const selection = {
+    application: "delivery-control-plane",
+    environmentId: "delivery-control-plane/prod",
+    repository: "https://chartmuseum.sjer.red",
+    chart: "delivery-control-plane",
+    revision: "2.0.0-42",
+    parameters: {
+      example: JSON.stringify({ value: String.raw`comma,slash\braces{}` }),
+    },
+  };
+  const source = {
+    repoURL: selection.repository,
+    chart: selection.chart,
+    targetRevision: selection.revision,
+    helm: { parameters: deliveryArgoParameters(selection.parameters) },
+  };
+  expect(() =>
+    requireExactControlPlaneSource({ spec: { source } }, selection),
+  ).not.toThrow();
+  const parameter = source.helm.parameters[0];
+  if (parameter === undefined) throw new Error("Fixture parameter missing");
+  parameter.value = selection.parameters.example;
+  expect(() =>
+    requireExactControlPlaneSource({ spec: { source } }, selection),
+  ).toThrow("frozen exact selection");
+});
 
 test("control-plane child commands preserve writable Buildx state separately from read-only registry credentials", async () => {
   vi.stubEnv("DOCKER_CONFIG", "/var/run/delivery/docker");

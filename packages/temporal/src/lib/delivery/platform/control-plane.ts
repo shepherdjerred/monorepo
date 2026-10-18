@@ -7,6 +7,7 @@ import {
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   DeliverySelectionSchema,
+  deliveryArgoParameters,
   deliverySelectionPatch,
   assertDeliveryRootPreservesSelection,
   type DeliverySelection,
@@ -127,7 +128,14 @@ export function requireExactControlPlaneSource(
       Object.fromEntries(
         (source.helm?.parameters ?? []).map(({ name, value }) => [name, value]),
       ),
-    ) !== canonicalJson(selection.parameters)
+    ) !==
+      canonicalJson(
+        Object.fromEntries(
+          deliveryArgoParameters(selection.parameters).map(
+            ({ name, value }) => [name, value],
+          ),
+        ),
+      )
   )
     throw new Error(
       "Prior control-plane source differs from its frozen exact selection",
