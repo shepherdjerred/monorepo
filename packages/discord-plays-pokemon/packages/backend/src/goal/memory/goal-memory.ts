@@ -17,6 +17,7 @@ import path from "node:path";
 import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import { writeFileAtomic } from "@shepherdjerred/discord-stream-lifecycle/persistence/atomic-write";
 import type { GoalState } from "#src/goal/goal-types.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 type StatResult = Awaited<ReturnType<typeof stat>>;
 
@@ -356,7 +357,7 @@ function clip(line: string): string {
   const flattened = line.replaceAll(/\s+/g, " ").trim();
   return flattened.length <= LINE_MAX_CHARS
     ? flattened
-    : `${flattened.slice(0, LINE_MAX_CHARS)}…`;
+    : `${graphemePrefix(flattened, LINE_MAX_CHARS)}…`;
 }
 
 function renderSessionLog(

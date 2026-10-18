@@ -2,6 +2,7 @@ import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protoc
 import type { PartyMon } from "@discord-plays-pokemon/common";
 import type { Game } from "./game.ts";
 import { pokemonSpriteUrl } from "./pokemon-sprites.ts";
+import { firstGraphemes } from "@shepherdjerred/text";
 
 const BADGES = [
   "Stone",
@@ -17,7 +18,7 @@ const BADGES = [
 export function Avatar({ user }: { readonly user: DiscordUser }) {
   return user.avatarUrl === null ? (
     <span className="avatar avatar-initial" aria-hidden="true">
-      {user.name.slice(0, 1).toUpperCase()}
+      {firstGraphemes(user.name, 1).toUpperCase()}
     </span>
   ) : (
     <img

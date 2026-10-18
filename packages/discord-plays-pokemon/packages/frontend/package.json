@@ -24,6 +24,7 @@
     "react-dom": "19.3.0",
     "zod": "^4.4.3",
     "@shepherdjerred/discord-plays-core": "workspace:*",
+    "@shepherdjerred/text": "workspace:*",
     "@fontsource/pixelify-sans": "^5.2.8"
   },
   "devDependencies": {

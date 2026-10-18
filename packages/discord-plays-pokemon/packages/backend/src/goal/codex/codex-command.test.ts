@@ -183,6 +183,16 @@ describe("formatMemoryForPrompt", () => {
   test("trims saved memory", () => {
     expect(formatMemoryForPrompt("  remember this  ")).toBe("remember this");
   });
+
+  test.each([
+    { name: "even alignment", memory: "😀".repeat(2000) },
+    { name: "odd alignment", memory: `a${"😀".repeat(2000)}` },
+  ])("truncates long memory without splitting emoji ($name)", ({ memory }) => {
+    const result = formatMemoryForPrompt(memory);
+    expect(result).toContain("[truncated to 3000 characters]");
+    expect(result.length).toBeLessThanOrEqual(PROMPT_BUDGETS.memory);
+    expect(result.isWellFormed()).toBe(true);
+  });
 });
 
 test("pokemonctl advertises advance and sends one guarded request", async () => {

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vitest";
 import type { Game } from "./game.ts";
-import { ActivityPanels, TrainerPanels } from "./trainer-panels.tsx";
+import { ActivityPanels, Avatar, TrainerPanels } from "./trainer-panels.tsx";
 import { pokemonSpriteUrl } from "./pokemon-sprites.ts";
 
 const GAME: Game = {
@@ -105,3 +105,26 @@ test("journal illustrates Pokémon events, evolution, shiny catches, and badges"
   expect(markup).toContain('class="event-marker"');
   expect(markup).toContain("Stone Badge");
 });
+
+test.each([
+  { name: "ash", initial: "A" },
+  { name: "😀Ash", initial: "😀" },
+  { name: "👨‍👩‍👧‍👦 family", initial: "👨‍👩‍👧‍👦" },
+])(
+  "default avatar shows the whole first character of $name",
+  ({ name, initial }) => {
+    const markup = renderToStaticMarkup(
+      <Avatar
+        user={{
+          discordId: "1",
+          username: "trainer",
+          name,
+          avatarUrl: null,
+        }}
+      />,
+    );
+    expect(markup).toBe(
+      `<span class="avatar avatar-initial" aria-hidden="true">${initial}</span>`,
+    );
+  },
+);
