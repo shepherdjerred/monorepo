@@ -14,7 +14,6 @@
     "redlib": "self-hosted-apps/redlib",
     "media": "streambot/prod",
     "s3-static-sites": "static-sites/proxy",
-    "glitter-boys-launcher": "glitter-boys-launcher/prod",
     "temporal": "temporal/prod",
     "delivery-control-plane": "delivery-control-plane/prod",
     "scout-beta": "scout-for-lol/beta",
@@ -290,13 +289,14 @@
     },
     {
       "id": "glitter-boys-launcher",
+      "rootReleaseExclusions": { "glitter-boys-launcher": "inactive" },
       "images": ["glitter-boys-launcher"],
       "charts": ["glitter-boys-launcher"],
       "title": "Glitter Boys launcher",
       "kind": "product",
       "package": "glitter-boys-launcher",
       "namespaces": ["glitter-boys-launcher"],
-      "argoApps": ["glitter-boys-launcher"],
+      "argoApps": [],
       "grafanaDashboards": ["glitter-boys-launcher"]
     },
     {

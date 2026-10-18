@@ -3,6 +3,7 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { workerFixture } from "#testing/worker-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { CreateDeploymentSchema } from "#shared/contract.ts";
+import { deliveryOperationId } from "#shared/operation-id.ts";
 
 const context = useDeliveryFixture();
 
@@ -129,17 +130,22 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
   await expect(
     context.delivery.finish(selected.id, result, testExecutor),
   ).rejects.toMatchObject({ code: "INVALID" });
-  await context.delivery.stage(
-    selected.id,
-    {
-      key: "worker-baseline",
-      operationId: `baseline:${selected.id}`,
-      status: "succeeded",
-      message: "Independent adapter observation fixture",
-      evidence: result.evidence,
-    },
-    testExecutor,
-  );
+  for (const key of [
+    "worker-image-provenance",
+    "worker-prior-source",
+    "worker-baseline",
+  ])
+    await context.delivery.stage(
+      selected.id,
+      {
+        key,
+        operationId: deliveryOperationId(`${selected.id}:${key}`),
+        status: "succeeded",
+        message: "Independent adapter observation fixture",
+        evidence: result.evidence,
+      },
+      testExecutor,
+    );
   await context.delivery.finish(selected.id, result, testExecutor);
   const after = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: fixture.environmentId },

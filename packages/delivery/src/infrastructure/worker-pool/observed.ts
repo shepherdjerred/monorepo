@@ -39,7 +39,7 @@ export async function workerObservationArtifact(
   return selected;
 }
 
-function requireObservationStages(
+export function requireWorkerBaselineStages(
   deploymentId: string,
   stages: { key: string; status: string; operationId: string }[],
 ) {
@@ -119,7 +119,7 @@ export async function retainedObservedWorkerArtifact(
       "CONFLICT",
       "Worker differs from its exact observed baseline identity",
     );
-  requireObservationStages(introduction.id, introduction.stages);
+  requireWorkerBaselineStages(introduction.id, introduction.stages);
   const original = await workerObservationArtifact(database, worker.artifactId);
   if (
     original.buildId !== worker.artifactBuildId ||

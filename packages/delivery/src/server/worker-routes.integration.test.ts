@@ -5,6 +5,7 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { workerFixture, freshWorkerProof } from "#testing/worker-fixture.ts";
 import type { Principal } from "#shared/contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
+import { deliveryOperationId } from "#shared/operation-id.ts";
 
 const context = useDeliveryFixture();
 let workers: Awaited<ReturnType<typeof workerFixture>>;
@@ -244,28 +245,81 @@ test("host-only baseline intent requires admin authority and preserves source ar
     status: 400,
     code: "INVALID",
   });
-  await context.delivery.stage(
-    selected.id,
+  const result = {
+    status: "succeeded",
+    message: "Independently verified baseline",
+    recoveryRequired: false,
+    evidence,
+  };
+  const baselineStage = await post(
+    `/deployments/${selected.id}/stages`,
+    "executor",
     {
       key: "worker-baseline",
       status: "succeeded",
-      operationId: "observed-host-baseline",
+      operationId: deliveryOperationId(`${selected.id}:worker-baseline`),
       message: "Independent original host readback fixture",
       evidence,
     },
-    testExecutor,
   );
-  await context.delivery.finish(
-    selected.id,
-    {
+  expect(baselineStage.status).toBe(200);
+  // Even qualified images require both native image and captured-source proof.
+  for (const key of ["worker-image-provenance", "worker-prior-source"]) {
+    const refused = await post(
+      `/deployments/${selected.id}/finish`,
+      "executor",
+      result,
+    );
+    expect(refused.status).toBe(409);
+    expect(await context.cluster.database.workerVersion.count()).toBe(0);
+    expect(
+      await context.cluster.database.environment.findUniqueOrThrow({
+        where: { id: workers.environmentId },
+      }),
+    ).toMatchObject({ activeDeploymentId: selected.id });
+    expect(
+      await context.cluster.database.deployment.findUniqueOrThrow({
+        where: { id: selected.id },
+      }),
+    ).toMatchObject({ status: "running" });
+    const proof = await post(`/deployments/${selected.id}/stages`, "executor", {
+      key,
+      operationId: deliveryOperationId(`${selected.id}:${key}`),
       status: "succeeded",
-      message: "Independently verified baseline",
-      recoveryRequired: false,
+      message: "Independent native proof fixture",
       evidence,
-    },
-    testExecutor,
+    });
+    expect(proof.status).toBe(200);
+  }
+  const finished = await post(
+    `/deployments/${selected.id}/finish`,
+    "executor",
+    result,
   );
+  expect(finished.status).toBe(200);
   const accepted = await client("deployer").workers(workers.environmentId);
+  const stageIdentity = {
+    deploymentId_key: { deploymentId: selected.id, key: "worker-baseline" },
+  };
+  await context.cluster.database.stage.update({
+    where: stageIdentity,
+    data: {
+      operationId: deliveryOperationId("different-deployment:worker-baseline"),
+    },
+  });
+  await expect(
+    client("deployer").createDeployment({
+      ...rollout,
+      requestId: "api-foreign-baseline-proof",
+      expectedGeneration: accepted.generation,
+    }),
+  ).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
+  await context.cluster.database.stage.update({
+    where: stageIdentity,
+    data: {
+      operationId: deliveryOperationId(`${selected.id}:worker-baseline`),
+    },
+  });
   const next = await client("deployer").createDeployment({
     ...rollout,
     expectedGeneration: accepted.generation,

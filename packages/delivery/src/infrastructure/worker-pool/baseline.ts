@@ -19,7 +19,10 @@ import {
   freezeWorkerSnapshot,
   requireSameWorkerIdentity,
 } from "./pool.ts";
-import { workerObservationArtifact } from "./observed.ts";
+import {
+  requireWorkerBaselineStages,
+  workerObservationArtifact,
+} from "./observed.ts";
 
 export async function requireWorkerAdmission(
   tx: Transaction,
@@ -40,6 +43,7 @@ export async function requireWorkerAdmission(
       status: "succeeded",
       stages: { some: { key: "worker-baseline", status: "succeeded" } },
     },
+    include: { stages: true },
     orderBy: { finishedAt: "desc" },
   });
   if (baseline === null)
@@ -47,6 +51,7 @@ export async function requireWorkerAdmission(
       "INVALID",
       "Adopt and independently verify the retained worker baseline before requesting a worker rollout",
     );
+  requireWorkerBaselineStages(baseline.id, baseline.stages);
   const snapshot = WorkerPoolSnapshotSchema.parse(baseline.workerSnapshot);
   if (
     snapshot.workerOperation !== "baseline" ||
@@ -192,5 +197,9 @@ export async function acceptWorkerBaseline(
       "INVALID",
       "Worker baseline requires independently observed host, image configuration and routing evidence",
     );
+  requireWorkerBaselineStages(
+    deployment.id,
+    await tx.stage.findMany({ where: { deploymentId: deployment.id } }),
+  );
   await materializeWorkerSnapshot(tx, snapshot);
 }

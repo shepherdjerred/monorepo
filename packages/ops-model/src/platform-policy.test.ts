@@ -17,6 +17,7 @@ test("root selection uses canonical chart owners and excludes upstream, inactive
     "minecraft",
     "minecraft-tsmc",
     "delivery",
+    "glitter-boys-launcher",
     "storm-forum-beta",
     "argocd",
   ])
@@ -31,7 +32,7 @@ test("root selection uses canonical chart owners and excludes upstream, inactive
   expect(delegated).toEqual(charts.filter((chart) => chart.name !== "arcade"));
   const activated = new ServiceIndex().rootReleaseCharts();
   expect(Object.keys(SERVICE_CATALOG.deliveryDelegations ?? {})).toHaveLength(
-    20,
+    19,
   );
   for (const name of Object.keys(SERVICE_CATALOG.deliveryDelegations ?? {}))
     expect(activated.map((chart) => chart.name)).not.toContain(name);
