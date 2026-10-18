@@ -1,0 +1,14 @@
+{
+  "kind": "argocd",
+  "application": "delivery",
+  "namespace": "delivery",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "delivery",
+  "chartComponent": "chart:delivery",
+  "parameters": {},
+  "artifactParameters": { "delivery.image": "image:delivery" },
+  "verification": {
+    "url": "https://delivery.tailnet-1a49.ts.net/healthz",
+    "expectedStatus": 200
+  }
+}

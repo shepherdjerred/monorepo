@@ -11,7 +11,7 @@
  * Usage:
  *   bun packages/homelab/scripts/argocd/argocd.ts sync-managed <app> [--revision <v>]
  *       [--prune] [--terminate-after-applied]
- *       [--request-id <uuid>] [--timeout <s>] [--dry-run]
+ *       [--request-id <uuid>] [--delivery-selection <recovery.json>] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd/argocd.ts release-root apps <expected.json> \
  *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd/argocd.ts delete-application <app> \
@@ -34,6 +34,8 @@
 
 import { requireEnv, optionalEnv } from "../../../../scripts/lib/run.ts";
 import { publishVerifiedRootReleaseReceipt } from "./argocd-verified-receipt.ts";
+import { deliveryEnvironment } from "../../src/delivery-ownership.ts";
+import { selectDeliveryRecoverySource } from "./argocd-delivery-recovery.ts";
 import { TransientError } from "../../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../../scripts/lib/transient.ts";
 import {
@@ -1094,6 +1096,12 @@ function prepareRootManifestOverride(
     };
   }
   const application = RenderedApplicationSchema.parse(parsed);
+  // Delegated children have explicit sync disabled and their selected source is
+  // owned by Delivery. Use the exact-source path so root ignoreDifferences is
+  // honored instead of applying a stale local-manifest override.
+  if (deliveryEnvironment(parsed) !== undefined) {
+    return { override, suspendedApplication: null };
+  }
   if (
     application.spec.syncPolicy === undefined ||
     !Object.hasOwn(application.spec.syncPolicy, "automated")
@@ -2858,6 +2866,10 @@ function releaseReconciliationTargets(
     if (application.metadata.name === rootAppName) {
       continue;
     }
+    if (deliveryEnvironment(parsed) !== undefined) {
+      expectedByName.delete(application.metadata.name);
+      continue;
+    }
     const published = expectedByName.get(application.metadata.name);
     if (
       published === undefined &&
@@ -3085,10 +3097,10 @@ async function releaseHealthWait(
   // revision were verified by the release that published them; an unrelated
   // app that is Progressing or degraded now must not fail this release.
   const releaseRevision = expectedAppsRelease(expected).revision;
-  const published = expected.filter(
+  let published = expected.filter(
     (application) => application.revision === releaseRevision,
   );
-  const retained = expected.filter(
+  let retained = expected.filter(
     (application) => application.revision !== releaseRevision,
   );
   console.log(
@@ -3098,6 +3110,19 @@ async function releaseHealthWait(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
+  const delegated = new Set(
+    (await getApplicationManifests("apps", releaseRevision, token)).flatMap(
+      (manifest) => {
+        const parsed: unknown = JSON.parse(manifest);
+        if (deliveryEnvironment(parsed) === undefined) return [];
+        return [RenderedApplicationSchema.parse(parsed).metadata.name];
+      },
+    ),
+  );
+  published = published.filter(
+    (application) => !delegated.has(application.name),
+  );
+  retained = retained.filter((application) => !delegated.has(application.name));
   const deadline = Date.now() + timeoutSeconds * 1000;
   let latestFailures: readonly string[] = [];
   while (Date.now() < deadline) {
@@ -3594,7 +3619,7 @@ function usage(): never {
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts sync-managed <app> " +
       "[--revision <v>] [--prune] [--terminate-after-applied] " +
-      "[--request-id <uuid>] [--timeout <s>] [--dry-run]\n" +
+      "[--request-id <uuid>] [--delivery-selection <recovery.json>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts release-root apps <expected.json> " +
       "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts delete-application <app> " +
@@ -3672,6 +3697,29 @@ async function main(): Promise<void> {
         requestId === undefined
           ? undefined
           : SyncRequestIdSchema.parse(requestId);
+      const recoveryFile = flag(argv, "delivery-selection");
+      if (recoveryFile !== undefined) {
+        if (
+          revision === undefined ||
+          exactRequestId === undefined ||
+          argv.includes("--prune") ||
+          terminateAfterApplied
+        )
+          throw new Error(
+            "Delivery recovery requires exact revision/request and a full non-pruned managed sync",
+          );
+        await selectDeliveryRecoverySource(
+          await Bun.file(recoveryFile).json(),
+          {
+            application: app,
+            revision,
+            requestId: exactRequestId,
+            origin: serverUrl(),
+            dryRun,
+            ...(dryRun ? {} : { token: requireEnv("ARGOCD_TOKEN") }),
+          },
+        );
+      }
       if (!dryRun) {
         await assertApplySafe(app, requireEnv("ARGOCD_TOKEN"), revision);
       }

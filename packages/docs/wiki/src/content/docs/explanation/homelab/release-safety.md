@@ -5,28 +5,129 @@ sidebar:
   order: 2
 ---
 
-The homelab release pipeline does several things that look redundant until you
-consider what each one prevents. Every step exists because of a specific way a
-GitOps release can go wrong.
+Build qualification, release selection, and reconciliation have separate owners.
+
+Woodpecker builds and qualifies immutable artifacts. Delivery keeps selected
+versions and release history in PostgreSQL. Temporal executes frozen deployment
+requests, and ArgoCD reconciles Kubernetes resources. Git retains reviewed
+registrations and pipeline definitions, with no selected deployment versions.
+
+The root path below shows the guarded reconciliation protocol. Delivery
+invokes it after artifact qualification; it preserves exact revision,
+lifecycle, operation ownership, and prune checks.
 
 ```mermaid
 sequenceDiagram
   accTitle: Homelab release sequence
-  accDescr: One CI release command suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, preflights and reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
+  accDescr: CI publishes immutable artifacts. Delivery qualifies and selects their exact versions, then executes guarded root reconciliation with owned operations and safe pruning.
   participant BK as CI
   participant CM as ChartMuseum
+  participant D as Delivery and Temporal
   participant Root as apps Application
   participant Child as child Applications
 
-  BK->>Root: suspend current repository auto-sync
   BK->>CM: publish 2.0.0-build charts
-  BK->>Root: stage child specs and prerequisites, still suspended
-  BK->>Child: read-only apply-safety preflight
-  BK->>Child: reconcile every desired child in root wave order
-  BK->>Root: restore exact revision with verified pruning
-  BK->>Root: retain identity through apply and termination
-  BK->>Child: require Synced and Healthy
+  BK->>D: register original artifact provenance
+  D->>D: qualify complete producing pipeline and freeze selection
+  D->>Root: suspend current repository auto-sync
+  D->>Root: stage child specs and prerequisites, still suspended
+  D->>Child: read-only apply-safety preflight
+  D->>Child: reconcile root-owned children in wave order
+  D->>Root: restore exact revision with verified pruning
+  D->>Root: retain identity through apply and termination
+  D->>Child: require exact runtime acceptance
 ```
+
+## Why application releases delegate selection
+
+Delivery-owned applications keep their exact desired versions and deployment
+history in PostgreSQL. Git retains infrastructure, application registration,
+deployment templates, and reviewed pipeline definitions. This separates a
+successful build from a selected release and from an accepted running release.
+
+The [application release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
+marks explicitly delegated applications. The root owns their registration and
+lifecycle; Delivery owns the selected chart revision and complete release
+parameter list. Static chart values remain under infrastructure ownership.
+Root synchronization preserves those delegated fields during application, as
+well as ignoring them during comparison. A comparison ignore alone would allow
+the next root sync to overwrite PostgreSQL's selection.
+
+The [root release command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
+leaves delegated children out of its release reconciliation and acceptance
+checks. It also avoids local manifest overrides for those children, which could
+reintroduce an older selection. Each application therefore has one release
+owner, while root pruning and infrastructure changes retain their existing
+safety checks.
+
+Delivery's executor records external intent before changing ArgoCD. An
+interrupted or ambiguous operation keeps its environment locked for recovery.
+Application acceptance includes exact operation identity, deployment history,
+running image digests, and runtime checks. A green comparison alone cannot
+accept a release.
+
+Static sites publish standard tar archives with SHA-256 digests. Scout's beta
+and production frontend flavors are built separately in the same version set,
+each bound to its exact backend image. Selecting a flavor activates those
+published bytes without rebuilding them. Bucket delegation is explicit; an
+unregistered or mismatched owner blocks the adapter. Publication alone cannot
+activate a site. Acceptance reads back every selected S3
+object, compares public entrypoint bytes with the selected archive, and checks
+an identity-bound release marker before recording success. A successful HTTP
+status or cache purge acknowledgement alone cannot accept stale frontend HTML.
+
+Browser identity comes from the existing Tailscale Kubernetes operator's proxy.
+For each human request, Delivery verifies the fixed Ingress, its operator-owned
+StatefulSet and ready proxy Pod addresses twice. Only the actual socket peer
+matching that current identity may supply user headers. The authorized login
+must also match Delivery's operator allowlist; browser writes require the same
+origin. Missing, changing or unavailable proxy metadata fails closed.
+Machine requests use separate bearer credentials. These checks do not rely on
+NetworkPolicy enforcement, additional OAuth clients or an application sidecar.
+
+## Why production recipes remain distinct
+
+One deployment record can coordinate several effects without pretending they
+have the same acceptance criteria. The
+[execution contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md)
+keeps those checks in fixed recipes rather than arbitrary user-authored commands.
+
+Scout's selected backend, Workflow workers, and matching frontend archive form
+one release. The production decision approves that complete selection. A host
+baseline or drained-worker retirement cannot accept the application release.
+
+Worker versions remain independently addressable after promotion. PostgreSQL
+retains each original artifact, baked source identity, host, and replica intent.
+An older pinned execution can therefore finish on its original worker. The
+execution control plane has its own chart and Application. Its original image
+advances separately from application workers. An application rollback therefore
+cannot restore older executor settings or interrupt its own release.
+
+Minecraft accepts a candidate only after backup preservation, isolated restored
+world validation, and production runtime checks. The controller records durable
+intent outside the release Workflow. Forum releases retain their licensed
+bundle identity, maintenance boundary, backup, and migration checks. These
+stateful recipes cannot use an ordinary image rollback as a recovery procedure.
+
+Root releases retain the exact chart inventory and call the guarded
+`release-root` procedure. OpenTofu applies consume a single-use encrypted plan
+bound to the source, stack, native Job, and state identity. Existing automatic
+stacks remain automatic; reviewed credential stacks require their exact saved
+plan's human decision. Root and state changes share a PostgreSQL ownership lock
+and explicit prerequisites, so a newer build cannot silently replace the
+selected inputs midway through execution.
+
+Writer ownership transfers in one coordinated cutover. Existing CI deployment
+work stops before Delivery imports observed state and receives release authority.
+An imported observation never fabricates a qualified artifact or accepted release.
+This boundary prevents two deployment systems from independently choosing the
+same application's desired state. CI retains immutable package publication and
+repository automation; it holds no application deployment or provider credentials.
+
+TRMNL plugin templates are immutable artifacts bound to the selected backend
+image. Delivery publishes the frozen plugin archive and independently reads back
+all three plugin targets. Partial publication keeps the environment locked until
+an identity-bound repair or recovery proves the external state.
 
 ## Why `release-root` stages and restores the root
 
@@ -364,10 +465,10 @@ is the visibility authority; compiler distribution is the public exception.
 The [publication flow](https://github.com/shepherdjerred/monorepo/tree/main/ci/scripts/images)
 checks anonymous access at each pushed digest. Exposed private images and
 inaccessible public compilers fail the release. Source-label and exact-image
-smoke checks remain required before recording candidate pins. Kubernetes pulls
+smoke checks remain required before recording immutable publications. Kubernetes pulls
 use only the reader identity. Separate encrypted OpenTofu states keep token
 management outside CI. Recovery lives in
-[Cut a homelab release](/how-to/cut-a-homelab-release/#if-docker-hub-rejects-a-workload-pull).
+[Cut a homelab release](/how-to/cut-a-homelab-release/#recover-a-delivery-operation).
 
 Forum backup metadata retains its GHCR runtime identity string. Its digest
 identifies the copied image, while Kubernetes pulls from Docker Hub. This keeps
@@ -375,33 +476,21 @@ existing snapshots compatible with retained binaries' strict restore checks.
 The [forum release chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/storm-forum/index.ts)
 keeps transport references and backup identities separate.
 
-Application image selection uses the newest `main` commit whose `images` and
-`version-commit-back` jobs both passed as its comparison base. The image job
-fetches a bounded window of `main` history before validating that commit,
-because its Woodpecker clone contains only the current commit. If the prior
-release is older than that window, selection rebuilds every image.
+Application image comparison uses a successful producing pipeline whose image
+and chart publication workflows both completed. A green pipeline with skipped
+producers cannot supply the baseline. The image job validates that pipeline's
+commit against a bounded window of history. Missing ancestry causes a full build.
 
-The image publisher reads current comparison digests and commit-back keys from
-the structured `packages/version-catalog/src/catalog.json` source of truth.
-`@shepherdjerred/version-catalog` owns its language-neutral JSON Schema plus the
-shared parser and serializer; CDK8s owns only its typed runtime projection. The
-image tests resolve every real bake target against the structured catalog so a
-representation migration cannot finish a production push and only then discover
-that it has no pin to update.
+Producer handoffs retain unchanged image inputs with their original digests and
+source identities. They never turn a retained deployment into a fresh build.
+Delivery independently qualifies the complete producing pipeline before those
+artifacts become eligible for selection. A successful build can therefore remain
+undeployed, and deploying an older retained version does not change build metadata.
 
-The problem being solved: a version-pin commit can cancel the rest of the build
-that produced the image it pins. Treating that as an invalidated build would
-throw away a completed image build, smoke test, and durable pin-handoff
-evidence.
-
-So a later pin commit cancels the remaining build without invalidating that
-evidence. Changes after the image-release commit still rebuild their affected
-closures. The catalog's `catalog.json` is deployment state: image publishing
-reads it to compare and write pins, while production Dockerfiles leave it out
-of the application layers. The Temporal operator rollout command reads the
-catalog from its checkout. Image selection therefore ignores changes to that
-JSON file but still selects changes to the catalog parser. A pin
-commit cannot rebuild and repin the same application forever.
+The language-neutral version catalog holds dependency and bootstrap inputs.
+Its parser and CDK8s projection validate those contracts. Selected application
+versions, worker routing, rollback history, and approvals belong to PostgreSQL.
+Image publication performs no deployment commit-back and maintains no Git queue.
 
 ## Related
 

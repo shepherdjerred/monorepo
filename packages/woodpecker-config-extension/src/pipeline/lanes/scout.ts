@@ -1,41 +1,16 @@
 import type { CiImages } from "#src/images.ts";
 import {
-  DOCKERHUB_PUBLISH,
-  DOCKERHUB_PUBLISH_LOGIN,
   DOCKERHUB_READ,
   DOCKERHUB_READ_LOGIN,
 } from "#src/pipeline/lanes/registry.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
-import { admissionGate } from "#src/pipeline/lanes/release.ts";
 import {
-  DEPLOY_KEYS,
+  DELIVERY_ARCHIVE_KEYS,
   HANDOFF_KEYS,
   GITHUB_DOWNLOAD,
   grant,
 } from "#src/pipeline/lanes/tofu.ts";
-
-/**
- * Scout's site release: archive, beta deploy, tag, and production reconcile.
- *
- * The four lanes are bound together by one state document. scout-beta-release
- * writes it; the others read it and stop if it is absent, which is how a build
- * that released nothing avoids tagging or reconciling anything. That document
- * binds the tag to the backend digest, both site archives, and the source
- * commit, so the pieces of one release cannot be mixed across builds.
- */
-
-const SITE_DEPLOY_GROUP = { limit: 1, group: "site-deploys" } as const;
-
-/**
- * The aws CLI and the release scripts read the standard AWS names, while the
- * grants keep the SeaweedFS-specific ones so a leaked value is traceable to
- * this system.
- */
-const AWS_ALIASES = [
-  'export AWS_ACCESS_KEY_ID="$SEAWEEDFS_SITES_ACCESS_KEY_ID"',
-  'export AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SITES_SECRET_ACCESS_KEY"',
-];
 
 const SCOUT_WORKSPACE_FILTERS = [
   "--filter '@shepherdjerred/root-scripts'",
@@ -49,134 +24,79 @@ const SCOUT_WORKSPACE_FILTERS = [
   "--filter '@shepherdjerred/glitter-context'",
 ].join(" ");
 
+/** CI publishes both immutable frontend flavors against one exact backend; Delivery owns activation and approval. */
 export function scoutSteps(images: CiImages): CiStep[] {
   return [
     {
-      key: "scout-beta-release",
-      label: "scout beta release",
+      key: "scout-site-archives",
+      label: "publish Scout site archives",
       image: images.base,
       commands: [
-        // Release when this build pushed a Scout backend image, or when the
-        // site sources changed on their own.
-        ...admissionGate(
-          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
-        ),
-        'scout_candidate="$(bun --no-install scripts/ci/read-ci-handoff.ts image-digests | jq -r \'."shepherdjerred/scout-for-lol/beta" // empty\')"',
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+        "printf '[]' | bun --no-install scripts/ci/write-ci-handoff.ts scout-site-artifacts",
+        'scout_delivery_candidate="$(bun --no-install scripts/ci/read-ci-handoff.ts delivery-image-digests | jq -r \'."shepherdjerred/scout-for-lol" // empty\')"',
         "scout_source_changed=false",
         "if bun --no-install ci/scripts/selectors/ci-changed.ts site-scout; then scout_source_changed=true; fi",
-        'if [ -z "$scout_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
+        'if [ -z "$scout_delivery_candidate" ] && [ "$scout_source_changed" != "true" ]; then exit 0; fi',
         ". ci/scripts/toolchain.sh",
         `ci/scripts/bun-install.sh --frozen-lockfile ${SCOUT_WORKSPACE_FILTERS}`,
         "bun --no-install run --cwd packages/llm-models build",
         "bun --no-install run --cwd packages/astro-opengraph-images build",
         "bun --no-install run --cwd packages/glitter-context build",
-        ...AWS_ALIASES,
         DOCKERHUB_READ_LOGIN,
-        "mkdir -p .scout-release",
-        "bun --no-install scripts/ci/read-ci-handoff.ts version-catalog > .scout-release/version-catalog.json",
-        'if [ -n "$scout_candidate" ]; then',
-        '  scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest --candidate-digest "$scout_candidate" --version-catalog-file .scout-release/version-catalog.json)"',
-        "else",
-        '  scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest --version-catalog-file .scout-release/version-catalog.json)"',
-        "fi",
-        'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output .scout-release/state.json',
-        'scout_state="$(cat .scout-release/state.json)"',
-        'bun --no-install scripts/release/scout-site-release.ts archive --state "$scout_state"',
-        // Published before the beta deploy so a failed deploy still leaves the
-        // tag and reconcile lanes able to see what was archived.
-        "bun --no-install scripts/ci/write-ci-handoff.ts scout-release-state < .scout-release/state.json",
-        'bun --no-install scripts/release/scout-site-release.ts deploy-beta --state "$scout_state"',
+        'scout_delivery_backend="$(bun --no-install scripts/release/resolve-scout-delivery-backend.ts)"',
+        'bun --no-install scripts/release/scout-site-release.ts prepare-state --delivery-archive --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_delivery_backend" --output .delivery-artifacts/scout-release/state.json',
+        "bun --no-install scripts/release/publish-scout-site-archives.ts .delivery-artifacts/scout-release/state.json",
       ],
-      dependsOn: ["images", "argocd-sync"],
+      environment: {
+        DELIVERY_URL: "http://delivery.delivery.svc.cluster.local:7353",
+      },
+      dependsOn: ["images"],
       timeoutMinutes: 30,
       resources: VERIFY_TIER,
       defaultBranchOnly: true,
-      concurrency: SITE_DEPLOY_GROUP,
+      concurrency: { limit: 1, group: "site-archives" },
       secrets: [
         GITHUB_DOWNLOAD,
         DOCKERHUB_READ,
-        ...DEPLOY_KEYS,
+        ...DELIVERY_ARCHIVE_KEYS,
         ...HANDOFF_KEYS,
-      ],
-    },
-    {
-      key: "scout-tag-release",
-      label: "scout tag release",
-      image: images.base,
-      commands: [
-        // Absent state is a real outcome here: this build released nothing.
-        ...admissionGate(
-          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+        grant(
+          "ci-delivery-credentials",
+          "DELIVERY_PUBLISHER_TOKEN",
+          "DELIVERY_API_TOKEN",
         ),
-        'scout_state="$(bun --no-install scripts/ci/read-optional-ci-handoff.ts scout-release-state)"',
-        'if [ -z "$scout_state" ]; then exit 0; fi',
-        ". ci/scripts/toolchain.sh",
-        ...AWS_ALIASES,
-        DOCKERHUB_PUBLISH_LOGIN,
-        'bun --no-install scripts/release/scout-site-release.ts tag-release --state "$scout_state"',
-      ],
-      dependsOn: ["scout-beta-release"],
-      timeoutMinutes: 30,
-      resources: MEDIUM_TIER,
-      defaultBranchOnly: true,
-      secrets: [
-        GITHUB_DOWNLOAD,
-        ...DOCKERHUB_PUBLISH,
-        ...DEPLOY_KEYS,
-        ...HANDOFF_KEYS,
       ],
     },
-    {
-      key: "scout-prod-reconcile",
-      label: "scout production reconcile",
-      image: images.base,
-      commands: [
-        "if ! bun --no-install ci/scripts/selectors/ci-changed.ts scout-reconcile; then exit 0; fi",
-        ...admissionGate(
-          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
-        ),
-        ". ci/scripts/toolchain.sh",
-        ...AWS_ALIASES,
-        DOCKERHUB_READ_LOGIN,
-        'prod_pin="$(bun --no-install scripts/release/scout-site-release.ts resolve-prod-pin)"',
-        'bun --no-install scripts/release/scout-site-release.ts reconcile-prod-pin --prod-pin "$prod_pin"',
-      ],
-      dependsOn: ["argocd-sync", "scout-beta-release"],
-      timeoutMinutes: 30,
-      resources: MEDIUM_TIER,
-      defaultBranchOnly: true,
-      concurrency: SITE_DEPLOY_GROUP,
-      secrets: [
-        GITHUB_DOWNLOAD,
-        DOCKERHUB_READ,
-        ...DEPLOY_KEYS,
-        ...HANDOFF_KEYS,
-      ],
-    },
-    {
-      key: "release-please",
-      label: "release please",
-      image: images.base,
-      commands: [
-        "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production",
-        "bun --no-install run --cwd packages/llm-models build:runtime",
-        "bun --no-install scripts/release/release.ts",
-      ],
-      dependsOn: ["verify"],
-      timeoutMinutes: 60,
-      resources: MEDIUM_TIER,
-      defaultBranchOnly: true,
-      concurrency: { limit: 1, group: "release-please" },
-      secrets: [
-        GITHUB_DOWNLOAD,
-        grant("ci-release-openai-credentials", "OPENAI_API_KEY"),
-        grant("ci-github-credentials", "GITHUB_APP_ID"),
-        grant("ci-github-credentials", "GITHUB_APP_INSTALLATION_ID"),
-        grant("ci-github-credentials", "GITHUB_APP_PRIVATE_KEY"),
-      ],
-    },
+    releasePleaseStep(images),
   ];
+}
+
+/** Package/repository release automation remains separate from hosted workload deployment. */
+function releasePleaseStep(images: CiImages): CiStep {
+  return {
+    key: "release-please",
+    label: "release please",
+    image: images.base,
+    commands: [
+      "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production",
+      "bun --no-install run --cwd packages/llm-models build:runtime",
+      "bun --no-install scripts/release/release.ts",
+    ],
+    dependsOn: ["verify"],
+    timeoutMinutes: 60,
+    resources: MEDIUM_TIER,
+    defaultBranchOnly: true,
+    concurrency: { limit: 1, group: "release-please" },
+    secrets: [
+      GITHUB_DOWNLOAD,
+      grant("ci-release-openai-credentials", "OPENAI_API_KEY"),
+      grant("ci-github-credentials", "GITHUB_APP_ID"),
+      grant("ci-github-credentials", "GITHUB_APP_INSTALLATION_ID"),
+      grant("ci-github-credentials", "GITHUB_APP_PRIVATE_KEY"),
+    ],
+  };
 }
 
 /** Publication has no inference credential when refinement runs separately. */

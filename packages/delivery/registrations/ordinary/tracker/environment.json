@@ -1,0 +1,10 @@
+{
+  "id": "tracker/prod",
+  "serviceId": "tracker",
+  "name": "prod",
+  "application": "tracker",
+  "pipelineRevisionId": "tracker/prod/1",
+  "configurationRevision": "tracker/prod/1",
+  "configuration": {},
+  "automatic": true
+}

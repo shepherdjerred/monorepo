@@ -6,7 +6,10 @@
     // consumers' ^build edges. Release state and CLI-only dependencies must
     // not invalidate those consumers. Root script checks retain full inputs.
     "build": {
-      "dependsOn": ["@shepherdjerred/s3-signed-request#build"],
+      "dependsOn": [
+        "@shepherdjerred/s3-signed-request#build",
+        "@shepherdjerred/delivery#build"
+      ],
       "inputs": [
         "package.json",
         "run-temporal-node.ts",

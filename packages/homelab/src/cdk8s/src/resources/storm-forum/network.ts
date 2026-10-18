@@ -60,6 +60,15 @@ export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
         },
         { from: [namespace("tailscale")], ports: [port(8081)] },
         { from: [namespace("prometheus")], ports: [port(8080), port(8081)] },
+        {
+          from: [
+            {
+              ...namespace("delivery"),
+              podSelector: { matchLabels: { app: "delivery" } },
+            },
+          ],
+          ports: [port(8082)],
+        },
       ],
       egress: forumEgress(),
     },

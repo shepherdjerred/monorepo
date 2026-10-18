@@ -40,7 +40,7 @@ export function scoutRuntimeProbes() {
 /** Shared admin surface and baseline reservation for Scout's split roles. */
 export function scoutAdminRoleContainerBase(imageVersion: string) {
   return {
-    image: `docker.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+    image: `{{ get (get (.Values.delivery | default dict) "images" | default dict) "scout-for-lol" | default "docker.io/shepherdjerred/scout-for-lol:${imageVersion}" }}`,
     ports: [{ name: "port-3000", number: 3000, protocol: Protocol.TCP }],
     securityContext: {
       ensureNonRoot: false,

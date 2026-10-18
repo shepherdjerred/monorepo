@@ -13,6 +13,7 @@ import { initFeatureFlags } from "@shepherdjerred/feature-flags";
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
 import { performanceConfig } from "#src/performance-config.ts";
+import { deliveryPublicationEnabled } from "#src/delivery-config.ts";
 import { requireGateImage } from "#src/gate-image.ts";
 
 function requireEnv(name: string): string {
@@ -54,6 +55,7 @@ await initFeatureFlags({
   },
 });
 const app = createApp({
+  deliveryPublicationEnabled,
   performanceOptions: performanceConfig,
   maintenanceEnabled: async (manual) => {
     const result = await maintenanceConfig(manual);
@@ -81,14 +83,13 @@ const app = createApp({
       baseUrl: serverUrl,
       token: apiToken,
     }),
-  // Keep the commit and its artifact coordinates together. Commit-back can
-  // succeed by updating a pending PR, before those pins reach main.
+  // Retain immutable build inputs only from a fully successful producer pipeline.
   imageReleaseBase: (repoId, branch) =>
     lastPipelineWithSuccessfulWorkflows(
       repoId,
       branch,
-      ["images", "version-commit-back"],
-      { baseUrl: serverUrl, token: apiToken },
+      ["images", "helm-push"],
+      { baseUrl: serverUrl, token: apiToken, requirePipelineSuccess: true },
     ),
   hostedAutomationApproved: (pipeline) =>
     hasExactHeadApproval(pipeline, {

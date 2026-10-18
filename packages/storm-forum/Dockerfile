@@ -21,6 +21,7 @@ COPY --from=bun /app/node_modules /app/node_modules
 COPY --from=bun /app/packages /app/packages
 COPY packages/config/src /app/packages/config/src
 COPY packages/feature-flags/src /app/packages/feature-flags/src
+COPY packages/ops-model/src /app/packages/ops-model/src
 COPY packages/storm-forum /opt/storm-forum
 RUN ln -s /app/packages/storm-forum/node_modules /opt/storm-forum/node_modules \
     && ln -s /app/packages/storm-theme /opt/storm-theme
@@ -30,7 +31,8 @@ COPY packages/storm-forum/runtime/fpm.conf /usr/local/etc/php-fpm.conf
 ARG VERSION=dev
 ARG GIT_SHA=unknown
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" \
-      org.opencontainers.image.version=$VERSION org.opencontainers.image.revision=$GIT_SHA
+      org.opencontainers.image.version=$VERSION org.opencontainers.image.revision=$GIT_SHA \
+      red.sjer.delivery.forum-recovery="storm-forum-recovery/v1"
 WORKDIR /opt/storm-forum
 USER 1000:1000
 CMD ["php-fpm", "--nodaemonize", "--force-stderr", "--fpm-config", "/usr/local/etc/php-fpm.conf"]

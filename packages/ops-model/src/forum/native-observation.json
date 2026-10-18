@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "namespaces": ["storm-forum", "storm-forum-beta"],
+  "podPrefix": "storm-forum-web-",
+  "container": "php",
+  "claims": ["storm-forum-files", "storm-forum-database"],
+  "command": [
+    "php",
+    "-r",
+    "ini_set('display_errors','0');try{if(file_exists('/var/lib/storm-forum/.maintenance')||file_exists('/var/lib/storm-forum/.release-lock'))throw new RuntimeException('unsettled');$bundle=trim((string)file_get_contents('/app/forum/.storm-assembly'));if(!preg_match('/^[a-f0-9]{64}$/D',$bundle))throw new RuntimeException('unsettled');require '/app/forum/src/XF.php';XF::start('/app/forum');$app=XF::setupApp('XF\\\\Install\\\\App');$app->start();if(!(new XF\\Install\\Helper($app))->isInstalled())throw new RuntimeException('unsettled');$version=$app->db()->fetchOne(\"SELECT version_string FROM xf_addon WHERE addon_id = 'XF'\");if(!is_string($version)||!preg_match('/^\\d+\\.\\d+\\.\\d+$/D',$version))throw new RuntimeException('unsettled');clearstatcache();if(file_exists('/var/lib/storm-forum/.maintenance')||file_exists('/var/lib/storm-forum/.release-lock')||trim((string)file_get_contents('/app/forum/.storm-assembly'))!==$bundle)throw new RuntimeException('unsettled');echo json_encode(['schemaVersion'=>1,'state'=>'installed','xenforoVersion'=>$version,'bundleSha256'=>$bundle,'maintenance'=>false,'releaseLock'=>false],JSON_THROW_ON_ERROR);}catch(Throwable $error){fwrite(STDERR,'Forum is unsettled');exit(1);}"
+  ]
+}

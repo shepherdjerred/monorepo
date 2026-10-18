@@ -1,0 +1,17 @@
+{
+  "kind": "argocd",
+  "application": "tasknotes",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "tasknotes",
+  "chartComponent": "chart:tasknotes",
+  "namespace": "tasknotes",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.tasknotes-server": "image:tasknotes-server",
+    "delivery.images.obsidian-headless": "image:obsidian-headless"
+  },
+  "verification": {
+    "url": "https://tasknotes.tailnet-1a49.ts.net/api/health",
+    "expectedStatus": 200
+  }
+}

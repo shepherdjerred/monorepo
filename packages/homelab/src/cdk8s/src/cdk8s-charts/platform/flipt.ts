@@ -19,6 +19,7 @@ import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-po
  */
 const CONSUMER_NAMESPACES = [
   "arcade",
+  "delivery",
   "starlight-karma-bot-beta",
   "starlight-karma-bot-prod",
   "scout-beta",

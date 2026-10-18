@@ -90,6 +90,7 @@ export function playwrightSteps(
           "ci/scripts/selection/**",
           "scripts/ci/namespace-playwright-reports.ts",
           "scripts/ci/write-ci-report-index.ts",
+          "packages/delivery/**",
           "packages/sjer.red/**",
           "packages/docs/wiki/**",
           "packages/alert-dashboard/**",

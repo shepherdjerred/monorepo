@@ -1,0 +1,9 @@
+{
+  "id": "static-sites/cross-compilers",
+  "serviceId": "static-sites",
+  "name": "cross-compilers",
+  "pipelineRevisionId": "static-sites/cross-compilers/1",
+  "configurationRevision": "static-sites/cross-compilers/1",
+  "configuration": {},
+  "automatic": true
+}

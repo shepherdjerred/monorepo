@@ -944,13 +944,7 @@
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "supersedes_id",
-          "name",
-          "policies",
-          "vault_item_id",
-          "vault_field"
-        ],
+        "required": ["name", "policies", "vault_item_id", "vault_field"],
         "properties": {
           "managed": {
             "type": "boolean",

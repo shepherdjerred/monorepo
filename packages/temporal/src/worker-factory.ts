@@ -35,7 +35,10 @@ export async function createQueueWorker(
     return await Worker.create({
       connection,
       namespace,
-      workflowsPath,
+      workflowsPath:
+        definition.role === "delivery-workflows"
+          ? new URL("workflows/delivery.ts", import.meta.url).pathname
+          : workflowsPath,
       interceptors: {
         // Keep domain tagging after tracing modules so its span is active.
         workflowModules: [
@@ -49,7 +52,8 @@ export async function createQueueWorker(
         : { sinks: temporalTracing.sinks }),
       workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
       taskQueue: definition.taskQueue,
-      ...(bootstrap.workerDeployment === undefined
+      ...(bootstrap.workerDeployment === undefined ||
+      definition.role === "delivery-workflows"
         ? {}
         : {
             workerDeploymentOptions: {

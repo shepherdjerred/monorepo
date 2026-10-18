@@ -1,0 +1,10 @@
+{
+  "id": "delivery-control-plane/prod",
+  "serviceId": "delivery-control-plane",
+  "name": "prod",
+  "application": "delivery-control-plane",
+  "pipelineRevisionId": "delivery-control-plane/1",
+  "configurationRevision": "delivery-control-plane/1",
+  "configuration": {},
+  "automatic": true
+}

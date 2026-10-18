@@ -11,6 +11,18 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
+import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
+import {
+  deliveryPlanningBase,
+  retainCurrentProducerArchives,
+  validateChartProducerVersion,
+  chartValidationValues,
+} from "./helm-delivery-publication.ts";
+import {
+  ChartPublicationSchema,
+  type ChartPublication,
+} from "@shepherdjerred/ops-model/chart-publication.ts";
 import {
   assertReleaseNotStale,
   activeArgoRepositoryChartNames,
@@ -103,7 +115,11 @@ async function fetchPublishedChart(
     chartDirectory,
     path.join(chartDirectory, "templates", `${input.name}.k8s.yaml`),
   );
-  return { version: latest.version, fingerprint: actualFingerprint };
+  return {
+    version: latest.version,
+    fingerprint: actualFingerprint,
+    digest: `sha256:${latest.digest}`,
+  };
 }
 
 async function fetchLatestPublishedRevision(
@@ -126,7 +142,7 @@ async function fetchLatestPublishedRevision(
   return latest.version;
 }
 
-async function stageChart(
+export async function stageChart(
   input: ChartInput,
   version: string,
   temporaryDirectory: string,
@@ -138,7 +154,7 @@ async function stageChart(
   await runCommand(["mkdir", "-p", templatesDirectory]);
   await Bun.write(
     path.join(templatesDirectory, `${input.name}.k8s.yaml`),
-    Bun.file(input.manifestPath),
+    workerPoolTemplate(await Bun.file(input.manifestPath).text(), input.name),
   );
 
   const chartYamlPath = path.join(chartDirectory, "Chart.yaml");
@@ -147,8 +163,30 @@ async function stageChart(
     .replace(/^version:.*$/m, `version: "${version}"`)
     .replace(/^appVersion:.*$/m, `appVersion: "${version}"`);
   await Bun.write(chartYamlPath, `${withVersion.trimEnd()}\n`);
-  await runCommand(["helm", "lint", "--strict", chartDirectory]);
-  await runCommand(["helm", "template", "release-validation", chartDirectory]);
+  const validationValues = chartValidationValues(input.name);
+  const validationArguments: string[] = [];
+  if (validationValues !== undefined) {
+    const validationPath = path.join(
+      temporaryDirectory,
+      `${input.name}-validation.json`,
+    );
+    await Bun.write(validationPath, JSON.stringify(validationValues));
+    validationArguments.push("--values", validationPath);
+  }
+  await runCommand([
+    "helm",
+    "lint",
+    "--strict",
+    chartDirectory,
+    ...validationArguments,
+  ]);
+  await runCommand([
+    "helm",
+    "template",
+    "release-validation",
+    chartDirectory,
+    ...validationArguments,
+  ]);
   await runCommand([
     "helm",
     "package",
@@ -198,6 +236,7 @@ function usage(): never {
 function parseOptions(): {
   readonly buildNumber: string;
   readonly dryRun: boolean;
+  readonly deliveryCatalog: boolean;
   readonly requested: ReadonlySet<string>;
 } {
   const args = Bun.argv.slice(2);
@@ -213,7 +252,12 @@ function parseOptions(): {
       "Selective production publication is unsafe: the content planner chooses the complete coordinated chart set",
     );
   }
-  return { buildNumber, dryRun, requested };
+  return {
+    buildNumber,
+    dryRun,
+    requested,
+    deliveryCatalog: args.includes("--delivery-catalog"),
+  };
 }
 
 async function publishedInventory(
@@ -315,8 +359,18 @@ async function writeReleaseArtifacts(
 }
 
 async function main(): Promise<void> {
-  const { buildNumber, dryRun, requested } = parseOptions();
+  const { buildNumber, dryRun, requested, deliveryCatalog } = parseOptions();
+  const publication = dryRun
+    ? undefined
+    : ChartPublicationSchema.parse({
+        schema: "delivery-chart-publications/v1",
+        sourceRevision: requireEnvironment("CI_COMMIT_SHA"),
+        pipelineNumber: Number(requireEnvironment("CI_PIPELINE_NUMBER")),
+        repositoryId: Number(requireEnvironment("CI_REPO_ID")),
+        charts: [],
+      });
   const version = `2.0.0-${buildNumber}`;
+  validateChartProducerVersion(publication, buildNumber);
   const root = homelabRoot();
   // First synth applies current-build image overrides while child chart
   // revisions are still floating. That content plan determines which leaves
@@ -345,7 +399,12 @@ async function main(): Promise<void> {
       temporaryDirectory,
     );
     assertReleaseNotStale(Number.parseInt(buildNumber, 10), published);
-    const candidatePlan = planCharts(inputs, published);
+    const planningBase = deliveryPlanningBase(
+      published,
+      version,
+      deliveryCatalog,
+    );
+    const candidatePlan = planCharts(inputs, planningBase);
     const appsInput = inputs.find((input) => input.name === "apps");
     if (appsInput === undefined) {
       throw new Error("Release inputs are missing the apps chart");
@@ -381,7 +440,8 @@ async function main(): Promise<void> {
       requested.size === 0
         ? releaseInputs
         : releaseInputs.filter((input) => requested.has(input.name));
-    const plan = planCharts(releaseInputs, published);
+    const plan = planCharts(releaseInputs, planningBase);
+    retainCurrentProducerArchives(publication, published, plan, version);
     await writeReleaseArtifacts(version, buildNumber, plan, revisions);
     const plannedNames = dryRun
       ? scoped.map((input) => input.name)
@@ -399,6 +459,7 @@ async function main(): Promise<void> {
       return;
     }
     if (plan.publishOrder.length === 0) {
+      await writePublication(publication);
       console.log("No chart content changed; publishing zero charts");
       return;
     }
@@ -410,10 +471,29 @@ async function main(): Promise<void> {
         throw new Error(`No staged archive for ${name}`);
       }
       await pushChart(name, archive, username, password);
+      publication?.charts.push({
+        name,
+        revision: version,
+        digest: `sha256:${createHash("sha256")
+          .update(new Uint8Array(await Bun.file(archive).arrayBuffer()))
+          .digest("hex")}`,
+      });
     }
+    await writePublication(publication);
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
 }
 
-await main();
+async function writePublication(publication: ChartPublication | undefined) {
+  if (publication === undefined)
+    throw new Error(
+      "Actual chart publication requires its original CI identity",
+    );
+  await Bun.write(
+    path.join(process.cwd(), "delivery-chart-publications.json"),
+    JSON.stringify(ChartPublicationSchema.parse(publication)) + "\n",
+  );
+}
+
+if (import.meta.main) await main();

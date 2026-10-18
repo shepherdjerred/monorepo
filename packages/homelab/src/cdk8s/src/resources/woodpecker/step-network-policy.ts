@@ -22,7 +22,12 @@ import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resou
  * The same key is duplicated in the monitoring rules for the same reason. Do
  * not rename it in one place.
  */
-const CI_STEP_POD_LABEL = "ci.sjer.red/step-key";
+export const CI_STEP_POD_LABEL = "ci.sjer.red/step-key";
+export const DELIVERY_CI_API_STEPS = [
+  "delivery-publish",
+  "scout-site-archives",
+  "trmnl-plugin-archives",
+];
 
 /** buildkitd's own namespace and gRPC port, which the image lanes dial. */
 const BUILDKITD_NAMESPACE = "buildkitd";
@@ -60,6 +65,34 @@ const CI_POD_PEER = {
  * *grant* extra access based on one.
  */
 export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
+  new KubeNetworkPolicy(chart, "delivery-publication-egress", {
+    metadata: { namespace: WOODPECKER_CI_NAMESPACE },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: CI_STEP_POD_LABEL,
+            operator: "In",
+            values: DELIVERY_CI_API_STEPS,
+          },
+        ],
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "delivery" },
+              },
+              podSelector: { matchLabels: { app: "delivery" } },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7353), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
   return new KubeNetworkPolicy(chart, "woodpecker-step-netpol", {
     metadata: {
       name: "woodpecker-step-netpol",

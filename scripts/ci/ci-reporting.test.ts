@@ -407,6 +407,7 @@ describe("CI reporting manifest", () => {
       {
         runner: "vitest",
         args: [
+          "scripts/argocd/argocd-delivery.test.ts",
           "scripts/argocd/argocd-manifest-overrides.test.ts",
           "scripts/argocd/argocd-ignored-differences.test.ts",
           "scripts/scripts-typecheck.test.ts",
@@ -421,6 +422,11 @@ describe("CI reporting manifest", () => {
           "scripts/argocd/argocd-release-result.test.ts",
           "scripts/argocd/argocd-verified-receipt.test.ts",
           "scripts/tofu/tofu-stack.test.ts",
+          "scripts/tofu/delivery-stack.test.ts",
+          "scripts/helm/helm-delivery-publication.test.ts",
+          "scripts/ci/bootstrap-selection.test.ts",
+          "scripts/ci/bootstrap-control-plane.test.ts",
+          "scripts/ci/delivery-handover.test.ts",
           "scripts/tofu/credential-handoff.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
         ],

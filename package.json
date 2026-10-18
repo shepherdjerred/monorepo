@@ -70,7 +70,6 @@
     "check-patched-deps": "bun scripts/checks/deps/check-patched-deps.ts",
     "check-ci-env": "bun scripts/checks/ci/check-ci-env.ts",
     "check-ci-admission-budget": "bun scripts/checks/ci/check-ci-admission-budget.ts",
-    "check-worker-image-pins": "bun scripts/checks/ci/verify-worker-image-build-ids.ts --offline",
     "check-script-migrations": "bun scripts/checks/check-script-migrations.ts",
     "check-test-standardization": "bun scripts/checks/check-test-standardization.ts",
     "script-coverage": "bun scripts/checks/check-script-coverage.ts"
@@ -102,6 +101,7 @@
     "packages/cooklang-for-obsidian",
     "packages/cooklang-rich-preview",
     "packages/cross-compilers-site",
+    "packages/delivery",
     "packages/discord-plays-core",
     "packages/discord-plays-mario-kart",
     "packages/discord-plays-mario-kart/packages/backend",

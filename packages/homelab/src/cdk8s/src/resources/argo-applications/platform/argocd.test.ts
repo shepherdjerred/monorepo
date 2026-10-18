@@ -34,6 +34,7 @@ const ApplicationSchema = z
               }),
               rbac: z.object({
                 "policy.csv": z.string(),
+                "policy.default": z.string(),
               }),
             }),
           }),
@@ -125,19 +126,17 @@ async function evaluateApplicationHealth(
 }
 
 describe("ArgoCD application", () => {
-  it("grants the Woodpecker release step only its required application access", () => {
+  it("disables legacy CI authority and creates three dedicated API capabilities without default privileges", () => {
     const application = synthArgoCdApplication();
 
     expect(
       application.spec.source.helm.valuesObject.configs.rbac[
         "policy.csv"
       ].split("\n"),
-    ).toEqual([
-      "p, woodpecker, applications, sync, default/*, allow",
-      "p, woodpecker, applications, get, default/*, allow",
-      "p, woodpecker, applications, override, default/apps, allow",
-      "p, woodpecker, applications, update, default/apps, allow",
-    ]);
+    ).not.toContain("p, woodpecker, applications, sync, default/*, allow");
+    expect(
+      application.spec.source.helm.valuesObject.configs.rbac["policy.default"],
+    ).toBe("");
   });
 
   it("installs the executable Application health customization", () => {

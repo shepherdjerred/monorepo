@@ -6,9 +6,9 @@ import {
 } from "#lib/deployed/catalog.ts";
 
 /**
- * Every selector the hand-maintained registry accepted before it was derived
- * from the ops-model catalog, with the version keys it resolved to. Resolution
- * must stay identical.
+ * Standalone selectors retained from the hand-maintained registry, with their
+ * version keys. The retired Obsidian standalone mapping is checked separately
+ * below because its container is now owned by TaskNotes.
  */
 const LEGACY_SELECTORS: Record<string, readonly string[]> = {
   birmel: ["shepherdjerred/birmel"],
@@ -45,7 +45,6 @@ const LEGACY_SELECTORS: Record<string, readonly string[]> = {
   "trmnl-dashboard": ["shepherdjerred/trmnl-dashboard"],
   trmnl: ["shepherdjerred/trmnl-dashboard"],
   "caddy-s3proxy": ["shepherdjerred/caddy-s3proxy"],
-  "obsidian-headless": ["shepherdjerred/obsidian-headless"],
   // Package-name fallback: the first homelab service.
   homelab: ["shepherdjerred/caddy-s3proxy"],
 };
@@ -79,18 +78,21 @@ describe("deployed registry derived from the service catalog", () => {
       ).toSorted(),
     ).toEqual(
       [
+        "alert-dashboard default shepherdjerred/alert-dashboard alert-dashboard",
         "arcade default shepherdjerred/arcade arcade",
         "birmel default shepherdjerred/birmel birmel",
         "discord-plays-mario-kart default shepherdjerred/discord-plays-mario-kart mario-kart",
         "discord-plays-pokemon default shepherdjerred/discord-plays-pokemon pokemon",
         "homelab default shepherdjerred/caddy-s3proxy s3-static-sites",
-        "homelab default shepherdjerred/obsidian-headless apps",
+        "homelab redlib shepherdjerred/redlib redlib",
         "scout-for-lol beta shepherdjerred/scout-for-lol/beta scout-beta",
         "scout-for-lol prod shepherdjerred/scout-for-lol/prod scout-prod",
         "starlight-karma-bot beta shepherdjerred/starlight-karma-bot/beta starlight-karma-bot-beta",
         "starlight-karma-bot prod shepherdjerred/starlight-karma-bot/prod starlight-karma-bot-prod",
+        "storm-brain default shepherdjerred/storm-brain storm-brain",
         "streambot default shepherdjerred/streambot media",
         "tasknotes-server default shepherdjerred/tasknotes-server tasknotes",
+        "the-storm tsmc shepherdjerred/the-storm-server minecraft-tsmc",
         "temporal default shepherdjerred/temporal-worker temporal",
         "tracker default shepherdjerred/tracker tracker",
         "trmnl-dashboard default shepherdjerred/trmnl-dashboard trmnl-dashboard",
@@ -109,8 +111,12 @@ describe("deployed registry derived from the service catalog", () => {
     ).toBe("shepherdjerred/starlight-karma-bot/beta");
     expect(resolveServiceSelector("scout/nope")).toBeNull();
     expect(resolveServiceSelector("not-a-service")).toBeNull();
-    // A catalog service with no deploy variants is not deployable here.
-    expect(resolveServiceSelector("alert-dashboard")).toBeNull();
+    expect(resolveServiceSelector("alert-dashboard")?.variant).toBeNull();
+    expect(resolveServiceSelector("alert-dashboard")?.service.alias).toBe(
+      "ops-dashboard",
+    );
+    // The Obsidian container is a TaskNotes sidecar, not a standalone apps workload.
+    expect(resolveServiceSelector("obsidian-headless")).toBeNull();
   });
 
   test("changed packages map to their services", () => {
@@ -120,5 +126,22 @@ describe("deployed registry derived from the service catalog", () => {
     expect(servicesForPackages(["tracker"]).map((s) => s.alias)).toEqual([
       "tracker",
     ]);
+    const minecraft = resolveServiceSelector("minecraft/tsmc");
+    expect(minecraft?.service.package).toBe("the-storm");
+    expect(minecraft?.variant).toEqual({
+      name: "tsmc",
+      versionKey: "shepherdjerred/the-storm-server",
+      argoApp: "minecraft-tsmc",
+    });
+    expect(servicesForPackages(["the-storm"])).toEqual([minecraft?.service]);
+    expect(
+      servicesForPackages(["homelab"])
+        .flatMap((service) => service.variants)
+        .find((variant) => variant.name === "redlib"),
+    ).toEqual({
+      name: "redlib",
+      versionKey: "shepherdjerred/redlib",
+      argoApp: "redlib",
+    });
   });
 });

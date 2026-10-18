@@ -1,0 +1,13 @@
+{
+  "kind": "static-site",
+  "archiveComponent": "site:scout-design-system",
+  "bucket": "scout-design-system",
+  "cloudflareZoneId": "bc4593740e6621ab2e64799c63441bfd",
+  "immutablePrefixes": [],
+  "extraExcludes": [],
+  "entrypoints": ["index.html"],
+  "verification": {
+    "url": "https://design.scout-for-lol.com/",
+    "expectedStatus": 200
+  }
+}

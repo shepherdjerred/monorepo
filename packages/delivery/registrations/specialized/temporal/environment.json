@@ -1,0 +1,10 @@
+{
+  "id": "temporal/prod",
+  "serviceId": "temporal",
+  "name": "prod",
+  "application": "temporal",
+  "pipelineRevisionId": "temporal/1",
+  "configurationRevision": "temporal/1",
+  "configuration": {},
+  "automatic": true
+}

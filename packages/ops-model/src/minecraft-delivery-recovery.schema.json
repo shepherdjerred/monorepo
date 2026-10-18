@@ -1,0 +1,224 @@
+{
+  "title": "Storm pre-selection independent recovery report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "requestId",
+    "observedAt",
+    "journalSha256",
+    "phase",
+    "productionWriteAuthorized",
+    "originalReopened",
+    "helpersAbsent",
+    "copyAbsent",
+    "source",
+    "pods",
+    "routes",
+    "application"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "storm-preselection-recovery"
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "journalSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "phase": {
+      "const": "REOPENED"
+    },
+    "productionWriteAuthorized": {
+      "const": false
+    },
+    "originalReopened": {
+      "const": true
+    },
+    "helpersAbsent": {
+      "const": true
+    },
+    "copyAbsent": {
+      "const": true
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serverUid",
+        "resourceVersion",
+        "templateSha256",
+        "image",
+        "claimUid",
+        "claimResourceVersion",
+        "volumeName",
+        "volumeUid",
+        "volumeResourceVersion",
+        "volumeSource",
+        "replicas"
+      ],
+      "properties": {
+        "serverUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resourceVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "image": {
+          "type": "string",
+          "pattern": "^docker[.]io/shepherdjerred/the-storm-server:[A-Za-z0-9_.-]+@sha256:[a-f0-9]{64}$"
+        },
+        "claimUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "claimResourceVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeUid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeResourceVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "volumeSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["driver", "volumeHandle"],
+          "properties": {
+            "driver": {
+              "type": "string",
+              "minLength": 1
+            },
+            "volumeHandle": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "pods": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "uid",
+          "resourceVersion",
+          "image",
+          "ownerUid",
+          "claimName"
+        ],
+        "properties": {
+          "uid": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resourceVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "image": {
+            "type": "string",
+            "pattern": "^docker[.]io/shepherdjerred/the-storm-server:[A-Za-z0-9_.-]+@sha256:[a-f0-9]{64}$"
+          },
+          "ownerUid": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claimName": {
+            "const": "datadir-minecraft-tsmc-0"
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "uid", "resourceVersion", "selectorSha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "minecraft-tsmc",
+              "minecraft-tsmc-bedrock",
+              "minecraft-tsmc-bluemap",
+              "minecraft-tsmc-rcon"
+            ]
+          },
+          "uid": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resourceVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selectorSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uid", "resourceVersion", "sourceSha256", "operationPhase"],
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resourceVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "operationPhase": {
+          "type": "string",
+          "enum": ["none", "Succeeded", "Failed", "Error"]
+        }
+      }
+    }
+  }
+}

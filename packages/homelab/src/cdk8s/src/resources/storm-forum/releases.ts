@@ -4,12 +4,12 @@ import { KubeConfigMap } from "@shepherdjerred/homelab/cdk8s/generated/imports/k
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import inventory from "./releases.json";
 import { createStormForumChart } from "./index.ts";
-import { ReleaseSchema } from "./release-schema.ts";
+import { ForumStageSchema } from "./release-schema.ts";
 
 const InventorySchema = z
   .object({
     schemaVersion: z.literal(1),
-    releases: z.array(ReleaseSchema).max(2),
+    releases: z.array(ForumStageSchema).max(2),
   })
   .strict()
   .refine(
@@ -60,7 +60,6 @@ export function createStormForumApplications(chart: Chart): void {
           {
             group: "batch",
             kind: "Job",
-            name: `storm-forum-${release.restore ? "restore" : "release"}-${release.releaseId}`,
             namespace: name,
             jsonPointers: ["/spec/template"],
           },

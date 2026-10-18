@@ -100,16 +100,15 @@ bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
 
-Each published pin requires a digest-specific module schema snapshot in
-`src/sandbox/storm-image-configs.json`. The image pin updater generates these
-snapshots in the same commit as the catalog change. It reads the exact
-published image's `/plugins/TheStorm/config.yml`, verifies the manifest and
-layer SHA-256 digests, and records the file checksum and module keys. For a
-manual pin change, run `bun scripts/release/sync-storm-image-configs.ts` from
-the repository root. Both production and candidate profiles are checked by
-the harness tests; unknown digests and missing required modules fail instead
-of borrowing the current checkout's schema. Only the two current pins are
-retained, so unrelated image builds do not grow a historical snapshot list.
+The bootstrap fixture profiles require digest-specific module schema snapshots
+in `src/sandbox/storm-image-configs.json`. These describe fixture compatibility;
+they do not select the deployed Minecraft version. The digest-verified reader
+in `scripts/lib/storm-image-config.ts` reads the exact published image's
+`/plugins/TheStorm/config.yml`, verifies manifest and layer SHA-256 digests,
+and extracts the file checksum and module keys. Review updated fixture
+snapshots with their explicit image descriptor. Unknown digests and missing
+required modules fail instead of borrowing the current checkout's schema.
+Production upgrades and their preservation evidence are owned by Delivery.
 
 The locally built `TheStormFixtures.jar` also prepares the named worlds and
 geometry a fresh volume requires. Both providers mount it as a single file,

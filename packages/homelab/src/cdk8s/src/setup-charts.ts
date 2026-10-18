@@ -41,6 +41,10 @@ import { createStormForumCharts } from "./resources/storm-forum/releases.ts";
 import versions from "./versions.ts";
 import { trackerImageReference } from "./resources/tracker/image.ts";
 import { createTrackerChart } from "./cdk8s-charts/platform/tracker.ts";
+import { createDeliveryChart } from "./cdk8s-charts/platform/delivery.ts";
+import { createDeliveryControlPlaneChart } from "./cdk8s-charts/platform/delivery-control-plane.ts";
+import { deliveryActivation } from "./resources/delivery/activation.ts";
+import { applyOrdinaryDeliveryImageBindings } from "./ordinary-delivery-image-bindings.ts";
 import {
   attachDockerHubPullSecrets,
   prepareDockerHubPullSecrets,
@@ -60,6 +64,10 @@ export async function setupCharts(app: App): Promise<void> {
     versions["shepherdjerred/tracker"],
   );
   createTrackerChart(app, trackerImage);
+  createDeliveryChart(
+    app,
+    deliveryActivation(versions["shepherdjerred/delivery"]),
+  );
   createScoutChart(app, "beta");
   createScoutChart(app, "prod");
   createStarlightKarmaBotChart(app, "beta");
@@ -98,6 +106,7 @@ export async function setupCharts(app: App): Promise<void> {
   createAlertDashboardChart(app);
   createRelayChart(app);
   createTemporalChart(app);
+  createDeliveryControlPlaneChart(app);
   createTrmnlDashboardChart(app);
   createTurboCacheChart(app);
   createBuildkitdChart(app);
@@ -109,6 +118,7 @@ export async function setupCharts(app: App): Promise<void> {
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
   createServiceProbesChart(app);
+  applyOrdinaryDeliveryImageBindings(app);
   prepareDockerHubPullSecrets(app);
   attachDockerHubPullSecrets(app);
   applyApplicationReleasePolicy(app);

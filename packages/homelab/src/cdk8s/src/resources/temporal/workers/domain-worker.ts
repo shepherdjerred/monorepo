@@ -21,6 +21,8 @@ import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/sr
 
 export type TemporalDomainWorkerProps = {
   name: string;
+  /** Stable native identity for a reviewed resource API contract; other workers retain CDK names. */
+  deploymentName?: string;
   component: string;
   syncWave?: number;
   podLabels?: Record<string, string>;
@@ -77,6 +79,9 @@ export function createTemporalDomainWorker(
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     metadata: {
+      ...(props.deploymentName === undefined
+        ? {}
+        : { name: props.deploymentName }),
       annotations: {
         "argocd.argoproj.io/sync-wave": String(props.syncWave ?? 3),
       },

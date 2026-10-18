@@ -12,6 +12,13 @@
   },
   "buckets": [
     {
+      "name": "delivery-artifacts",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Original immutable release archives referenced by PostgreSQL deployment and rollback history"
+    },
+    {
       "name": "tracker-attachments",
       "mode": "protected",
       "cadences": ["six-hourly", "daily"],

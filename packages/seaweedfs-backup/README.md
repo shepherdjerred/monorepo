@@ -9,6 +9,10 @@ Daily protection includes the `glitter-boys` bucket's immutable launcher
 installers, updater archives, and signed manifests. Restore these exact published
 bytes; rebuilding produces different timestamped signatures.
 
+The `delivery-artifacts` bucket is also protected daily without suffix
+exclusions. Restore its original archive bytes alongside the Delivery catalog;
+deployment and rollback history refer to their immutable digests.
+
 Changed objects stream between S3-compatible endpoints and are verified by
 SHA-256 read-back. Unchanged objects are reused by source bucket, key, size,
 ETag, and modification time. A snapshot becomes visible only when every

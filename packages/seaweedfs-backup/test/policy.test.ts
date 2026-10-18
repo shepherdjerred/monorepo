@@ -57,6 +57,22 @@ describe("SeaweedFS backup policy", () => {
     }
   });
 
+  test("retains all original Delivery archive bytes for deployment and rollback recovery", () => {
+    const archives = SEAWEEDFS_BACKUP_POLICY.buckets.find(
+      (bucket) => bucket.name === "delivery-artifacts",
+    );
+    if (archives === undefined)
+      throw new Error("Missing Delivery artifact backup policy");
+    expect(archives.mode).toBe("protected");
+    expect(archives.cadences).toEqual(["daily"]);
+    expect(archives.excludeSuffixes).toEqual([]);
+    for (const key of [
+      "sites/scout-frontend/original.tar",
+      "trmnl-plugins/original.json",
+    ])
+      expect(objectIsProtected(key, archives)).toBe(true);
+  });
+
   test("classifies every bucket declared by the SeaweedFS Tofu stack", async () => {
     const bucketsFile = await Bun.file(
       new URL("../../homelab/src/tofu/seaweedfs/buckets.tf", import.meta.url),

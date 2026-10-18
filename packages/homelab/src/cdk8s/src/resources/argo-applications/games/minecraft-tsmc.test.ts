@@ -7,6 +7,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   THE_STORM_PAPER_VERSION,
   createMinecraftTsmcApp,
+  minecraftChartRepository,
 } from "./minecraft-tsmc.ts";
 import { createMinecraftShuxinApp } from "./minecraft-shuxin.ts";
 import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
@@ -40,6 +41,18 @@ const OpItemSchema = z
     spec: z.object({ itemPath: z.string() }).loose(),
   })
   .loose();
+
+test("TSMC chart mirror is coupled to its exact reviewed ownership cutover", () => {
+  expect(minecraftChartRepository({})).toBe(
+    "https://itzg.github.io/minecraft-server-charts/",
+  );
+  expect(minecraftChartRepository({ "minecraft-tsmc": "minecraft/tsmc" })).toBe(
+    "https://chartmuseum.sjer.red",
+  );
+  expect(() =>
+    minecraftChartRepository({ "minecraft-tsmc": "minecraft-shuxin/prod" }),
+  ).toThrow("reviewed Delivery environment");
+});
 
 async function dockerfile(): Promise<string> {
   return Bun.file(`${serverDir}/Dockerfile`).text();

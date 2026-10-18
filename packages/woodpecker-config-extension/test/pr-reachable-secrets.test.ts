@@ -48,49 +48,20 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  * name means a pull request -- including one whose only purpose is to change
  * this pipeline -- can now read that credential.
  *
- * Everything below is plan-time or check-time access that a pull request
- * genuinely needs:
+ * Everything below supports verification or build handoff access:
  *
- * - `tofu-plan-*` hold their stack's provider credentials because a plan has
- *   to talk to the provider. They are the reason most of this list exists.
  * - `codex-review-gate` mints a review token.
- * - The SeaweedFS names are three distinct identities, each scoped in the
- *   gateway to the buckets its job touches. `SEAWEEDFS_HANDOFF_*` reaches only
- *   the `ci-handoff` bucket and `SEAWEEDFS_TOFU_STATE_*` only
- *   `homelab-tofu-state`, so neither can touch a published site.
- * - `SEAWEEDFS_TOFU_ADMIN_*` is the one genuinely broad credential left here.
- *   It belongs to `tofu-plan-seaweedfs`, whose stack manages the buckets
- *   themselves, and SeaweedFS requires unscoped `Admin` to create one.
- *   Narrowing it means moving bucket management off the pull-request path,
- *   which is a change to the pipeline's shape rather than to its grants.
+ * - `SEAWEEDFS_HANDOFF_*` reaches only the `ci-handoff` bucket.
+ * - OpenTofu validation is offline and has no provider or state credentials.
  */
 const PR_REACHABLE_SECRETS = [
-  "ANIMEZ_PASSWORD",
-  "ANIMEZ_PID",
-  "AVISTAZ_PASSWORD",
-  "AVISTAZ_PID",
-  "CLOUDFLARE_ACCOUNT_ID",
-  "CLOUDFLARE_API_TOKEN",
   "GITHUB_APP_ID",
   "GITHUB_APP_INSTALLATION_ID",
   "GITHUB_APP_PRIVATE_KEY",
   "GITHUB_DOWNLOAD_TOKEN",
   "GITHUB_REVIEW_TOKEN",
-  "PRIVATEHD_PASSWORD",
-  "PRIVATEHD_PID",
-  "PROWLARR_API_KEY",
-  "QBITTORRENT_PASSWORD",
-  "RADARR_API_KEY",
   "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
   "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
-  "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",
-  "SEAWEEDFS_TOFU_ADMIN_SECRET_ACCESS_KEY",
-  "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
-  "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
-  "SONARR_API_KEY",
-  "TAILSCALE_OAUTH_CLIENT_ID",
-  "TAILSCALE_OAUTH_CLIENT_SECRET",
-  "TOFU_GITHUB_TOKEN",
   "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
   "TURBO_TOKEN",
 ];
@@ -107,8 +78,8 @@ const RELEASE_ONLY_SECRETS = [
   "NPM_TOKEN",
   "CHARTMUSEUM_USERNAME",
   "CHARTMUSEUM_PASSWORD",
-  "SEAWEEDFS_SITES_ACCESS_KEY_ID",
-  "SEAWEEDFS_SITES_SECRET_ACCESS_KEY",
+  "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
+  "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
 ];
 
 /**
@@ -119,12 +90,6 @@ const RELEASE_ONLY_SECRETS = [
  * requirement -- so a step quietly gaining the site-write identity would
  * otherwise pass every check while widening what a build can overwrite.
  */
-const SITE_WRITERS = [
-  "scout-beta-release",
-  "scout-prod-reconcile",
-  "scout-tag-release",
-  "sites",
-];
 
 describe("what a pull request can reach", () => {
   test("grants registry writes only to publishers and reads only to site extraction", () => {
@@ -132,12 +97,9 @@ describe("what a pull request can reach", () => {
       "ci-base-refresh",
       "ci-playwright-refresh",
       "images",
-      "scout-tag-release",
     ]);
     expect(credentialHolders("DOCKERHUB_READ_CONFIG_JSON")).toEqual([
-      "scout-beta-release",
-      "scout-prod-reconcile",
-      "version-commit-back",
+      "scout-site-archives",
     ]);
     for (const step of allSteps()) {
       for (const grant of step.secrets ?? []) {
@@ -230,7 +192,7 @@ describe("what a pull request can reach", () => {
    * it gets its own closed-world assertion rather than riding on the set
    * above: which steps hold it matters as much as whether a pull request can.
    */
-  test("grants the site-write identity to exactly the deploy steps", () => {
+  test("no CI step receives live site-write credentials", () => {
     const holders = allSteps()
       .filter((step) =>
         (step.secrets ?? []).some((grant) =>
@@ -239,7 +201,7 @@ describe("what a pull request can reach", () => {
       )
       .map((step) => step.key)
       .sort();
-    expect(holders).toEqual(SITE_WRITERS);
+    expect(holders).toEqual([]);
   });
 
   /**

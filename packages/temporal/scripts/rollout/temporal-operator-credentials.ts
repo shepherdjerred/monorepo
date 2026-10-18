@@ -2,9 +2,29 @@ import {
   resolveCredentials,
   TEMPORAL_IN_CLUSTER_ADDRESS,
 } from "@shepherdjerred/toolkit/lib/credentials.ts";
+import { Connection } from "@temporalio/client";
+import { KubeConfig } from "@kubernetes/client-node";
+import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
+import { requiredEnvironment } from "#scripts/cli-arguments.ts";
 
 type Environment = Readonly<Record<string, string | undefined>>;
 type ResolveCredentials = (names: readonly string[]) => Promise<void>;
+
+/** Shared by foreground outage commands; vault access never survives into native children. */
+export async function openOperatorRecovery(context: "admin@torvalds") {
+  await resolveOperatorTemporalApiKey();
+  Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
+  const kubernetes = new KubeConfig();
+  kubernetes.loadFromDefault();
+  kubernetes.setCurrentContext(context);
+  const connection = await Connection.connect(
+    temporalConnectionOptions({
+      environment: Bun.env,
+      defaultAddress: requiredEnvironment(Bun.env, "TEMPORAL_ADDRESS"),
+    }),
+  );
+  return { kubernetes, connection };
+}
 
 /**
  * Whether an operator command must broker `TEMPORAL_API_KEY` before it runs.

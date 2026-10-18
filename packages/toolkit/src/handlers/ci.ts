@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ciCommand } from "#commands/ci.ts";
 import { parseTimeout } from "#lib/ci/arguments.ts";
 import { ciBenchmarkCommand } from "#commands/ci-benchmark.ts";
+import { ciSourceProofCommand } from "#commands/ci-source-proof.ts";
 import {
   requiredCredentialsFor,
   resolveCredentials,
@@ -50,6 +51,10 @@ export async function handleCiCommand(
     await ciBenchmarkCommand(args);
     return;
   }
+  if (subcommand === "source-proof") {
+    await ciSourceProofCommand(args);
+    return;
+  }
   const json = args.includes("--json");
   try {
     if (
@@ -68,6 +73,7 @@ export async function handleCiCommand(
   timings         Report recent latency by actual workflow class and attempt
   maintenance     Show recent maintenance runs and coordinator inspection details
   benchmark       Inspect and archive retained canary resource evidence
+  source-proof PR --source SHA  Verify exact reviewed, green source is merged into main before bootstrap
 
 Options:
   --json                       One final JSON report on stdout

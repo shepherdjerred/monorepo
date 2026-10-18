@@ -155,10 +155,11 @@ async function fixture() {
       dependencies: {
         "@shepherdjerred/version-catalog": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
+        "@shepherdjerred/delivery": "workspace:*",
       },
     }),
   );
-  for (const name of ["version-catalog", "s3-signed-request"])
+  for (const name of ["version-catalog", "s3-signed-request", "delivery"])
     await Bun.write(
       path.join(root, `packages/${name}/package.json`),
       JSON.stringify({
@@ -187,9 +188,9 @@ async function fixture() {
     "scripts/lib/run.ts",
     "scripts/run-temporal-node.ts",
     "scripts/temporal-replay.ts",
-    "scripts/pin-candidates-state.json",
     "packages/version-catalog/src/catalog.json",
     "packages/s3-signed-request/src/index.ts",
+    "packages/delivery/src/shared/contract.ts",
   ])
     await Bun.write(
       path.join(root, file),
@@ -230,10 +231,7 @@ function hashes(root: string) {
   );
 }
 
-test.each([
-  "scripts/pin-candidates-state.json",
-  "packages/version-catalog/src/catalog.json",
-])(
+test.each(["packages/version-catalog/src/catalog.json"])(
   "release metadata %s preserves consumer hashes while root validation still invalidates",
   async (file) => {
     const root = await fixture();
@@ -252,7 +250,7 @@ test.each([
   },
 );
 
-test("exported helper and signer changes still invalidate the consumer", async () => {
+test("exported helper, signer and Delivery contract changes still invalidate the consumer", async () => {
   const root = await fixture();
   try {
     let before = hashes(root);
@@ -261,6 +259,7 @@ test("exported helper and signer changes still invalidate the consumer", async (
       "scripts/run-temporal-node.ts",
       "scripts/temporal-replay.ts",
       "packages/s3-signed-request/src/index.ts",
+      "packages/delivery/src/shared/contract.ts",
     ]) {
       await Bun.write(path.join(root, file), "export const version = 2;\n");
       const after = hashes(root);
@@ -279,10 +278,6 @@ test("metadata-only changes produce an actual consumer cache hit and restore its
     const proof = path.join(root, "packages/consumer/results/proof.txt");
     expect(await Bun.file(proof).text()).toBe("executed");
     await rm(proof);
-    await Bun.write(
-      path.join(root, "scripts/pin-candidates-state.json"),
-      '{"version":2}\n',
-    );
     await Bun.write(
       path.join(root, "packages/version-catalog/src/catalog.json"),
       '{"version":2}\n',

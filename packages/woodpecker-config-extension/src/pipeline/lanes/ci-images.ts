@@ -2,20 +2,13 @@ import type { CiImages } from "#src/images.ts";
 import {
   DOCKERHUB_PUBLISH,
   DOCKERHUB_PUBLISH_LOGIN,
-  DOCKERHUB_READ,
-  DOCKERHUB_READ_LOGIN,
 } from "#src/pipeline/lanes/registry.ts";
-import { admissionGate } from "#src/pipeline/lanes/release.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
-import { IMAGE_ORCHESTRATION_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
-import {
-  GITHUB_DOWNLOAD,
-  grant,
-  HANDOFF_KEYS,
-} from "#src/pipeline/lanes/tofu.ts";
+import { IMAGE_ORCHESTRATION_TIER } from "#src/pipeline/tiers.ts";
+import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
 
 /**
- * Toolchain image refreshes and the version pin commit-back.
+ * Toolchain image refreshes.
  *
  * These lanes write back to the repository, so they hold the GitHub App
  * credential rather than only the read token. The App identity is what lets a
@@ -71,34 +64,5 @@ export function ciImageSteps(images: CiImages): CiStep[] {
   return [
     refreshStep(images, "ci-base", ["ci-base"], 60),
     refreshStep(images, "ci-playwright", ["ci-playwright"], 60),
-    {
-      key: "version-commit-back",
-      label: "commit back image pins",
-      image: images.base,
-      commands: [
-        ...admissionGate(
-          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
-        ),
-        "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
-        DOCKERHUB_READ_LOGIN,
-        'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$(bun --no-install scripts/ci/read-ci-handoff.ts pin-candidates)"',
-      ],
-      // A pin commit creates a new main pipeline. Wait until this build's
-      // exact-revision release has finished so that commit cannot supersede
-      // release-root halfway through its staged child syncs.
-      dependsOn: ["images", "argocd-sync"],
-      timeoutMinutes: 60,
-      resources: MEDIUM_TIER,
-      defaultBranchOnly: true,
-      // Shares the image lane's group: the pin it writes describes exactly
-      // what that lane pushed, so the two must not interleave across builds.
-      concurrency: { limit: 1, group: "image-push" },
-      secrets: [
-        GITHUB_DOWNLOAD,
-        DOCKERHUB_READ,
-        ...GITHUB_APP,
-        ...HANDOFF_KEYS,
-      ],
-    },
   ];
 }

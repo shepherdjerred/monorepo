@@ -3,6 +3,16 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "shepherdjerred/delivery",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": { "managed": false },
+      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "Unpublished bootstrap marker. Activate only after the Delivery image is published and its database, credentials, and release ownership are verified."
+      ]
+    },
+    {
       "name": "shepherdjerred/arcade",
       "category": "internal-image",
       "artifactType": "image",

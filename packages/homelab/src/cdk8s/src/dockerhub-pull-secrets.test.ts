@@ -49,6 +49,51 @@ function secrets(app: App) {
     .map((resource) => schema.parse(resource.toJson()));
 }
 
+describe("Docker Hub templated image readers", () => {
+  it("requires a namespace reader for opaque image templates", () => {
+    const app = new App();
+    const chart = new Chart(app, "worker", { namespace: "worker" });
+    const resource = new ApiObject(chart, "worker", {
+      apiVersion: "v1",
+      kind: "Pod",
+      spec: { containers: [{ image: "{{ .Values.worker.image }}" }] },
+    });
+    prepareDockerHubPullSecrets(app);
+    attachDockerHubPullSecrets(app);
+    expect(secrets(app).map((secret) => secret.metadata.namespace)).toEqual([
+      "worker",
+    ]);
+    expect(resource.toJson()).toHaveProperty("spec.imagePullSecrets", [
+      { name: "dockerhub-pull-worker" },
+    ]);
+  });
+
+  it("attaches the namespace reader to a private image's Helm fallback", () => {
+    const app = new App();
+    const chart = new Chart(app, "arcade", { namespace: "arcade" });
+    const resource = new ApiObject(chart, "arcade", {
+      apiVersion: "v1",
+      kind: "Pod",
+      spec: {
+        containers: [
+          {
+            image:
+              '{{ .Values.delivery.image | default "docker.io/shepherdjerred/arcade:current" }}',
+          },
+        ],
+      },
+    });
+    prepareDockerHubPullSecrets(app);
+    attachDockerHubPullSecrets(app);
+    expect(secrets(app).map((secret) => secret.metadata.namespace)).toEqual([
+      "arcade",
+    ]);
+    expect(resource.toJson()).toHaveProperty("spec.imagePullSecrets", [
+      { name: "dockerhub-pull-arcade" },
+    ]);
+  });
+});
+
 describe("Docker Hub credential preparation", () => {
   it.each([
     "Pod",

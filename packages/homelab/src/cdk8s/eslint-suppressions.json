@@ -29,11 +29,6 @@
       "count": 1
     }
   },
-  "src/helm-template.test.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/misc/minecraft/minecraft-config.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2

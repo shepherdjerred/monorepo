@@ -4,6 +4,7 @@ import {
   findTemporalResource,
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
+import { podTemplateSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
 
 function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-freshrss");
@@ -37,26 +38,20 @@ describe("Temporal FreshRSS integration", () => {
       "Deployment",
       "temporal-temporal-repo-worker",
     );
+    const pod = podTemplateSchema(
+      z
+        .object({
+          env: z.array(
+            z.object({ name: z.string(), value: z.string().optional() }),
+          ),
+          volumeMounts: z.array(z.object({ mountPath: z.string() }).loose()),
+        })
+        .loose(),
+    );
     const deploymentSpec = z
       .object({
-        template: z.object({
-          metadata: z.object({ labels: z.record(z.string(), z.string()) }),
-          spec: z.object({
-            containers: z.array(
-              z
-                .object({
-                  env: z.array(
-                    z.object({
-                      name: z.string(),
-                      value: z.string().optional(),
-                    }),
-                  ),
-                  volumeMounts: z.array(
-                    z.object({ mountPath: z.string() }).loose(),
-                  ),
-                })
-                .loose(),
-            ),
+        template: pod.extend({
+          spec: pod.shape.spec.extend({
             volumes: z.array(
               z
                 .object({

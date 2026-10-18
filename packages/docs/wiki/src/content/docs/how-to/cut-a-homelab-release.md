@@ -5,317 +5,578 @@ sidebar:
   order: 8
 ---
 
-The main Woodpecker pipeline publishes and reconciles repository-backed homelab
-releases. Use this guide to inspect the release sequence and recover a failed
-stage through the repository-owned release workflow.
+Woodpecker verifies source and publishes immutable images, charts and archives.
+Delivery records desired and accepted version sets in PostgreSQL and runs the
+reviewed deployment pipeline through Temporal. ArgoCD reconciles the frozen
+selection. Git contains definitions and policy, with no selected deployment
+versions or release commit-back queue.
 
-## The sequence
+## Bootstrap Delivery in one maintenance window
 
-| Stage | What happens                                                              |
-| ----- | ------------------------------------------------------------------------- |
-| 1     | Admit only a build whose commit is the current `main`                     |
-| 2     | Suspend the current repository auto-sync on the root `apps` Application   |
-| 3     | Publish the `2.0.0-build` chart set to ChartMuseum, immutably             |
-| 4     | Stage exact child specs and root prerequisites, with children suspended   |
-| 5     | Reconcile every desired child in root sync-wave order                     |
-| 6     | Restore and safely finalize the exact root revision with verified pruning |
-| 7     | Require every release-scoped child to be `Synced` and `Healthy`           |
+Use this procedure only before live Delivery ownership exists. Keep release
+mutations paused until the complete catalog and native baselines are ready.
+The descriptor in `packages/homelab/scripts/ci/bootstrap-selection.ts`
+allows only Woodpecker, Delivery API and Delivery control-plane charts.
+Operator-published API/generator images and derived root archives remain
+ineligible for ordinary release selection. The control plane instead uses
+original CI-qualified artifacts already recorded in PostgreSQL.
 
-If the admission step finds a newer `main` commit, the homelab mutation lanes
-stop before suspending auto-sync or applying OpenTofu. Once admitted, a release
-continues with its bound build UUID and revision even if `main` moves later.
+1. Obtain green **whole-pipeline CI and required review for the exact PR head**.
+   Inspect `toolkit pr health PR` and the native pipeline. Do not substitute an
+   image-only workflow, another commit's checks, or a failed producer.
+   Before merging, disable the repository's Woodpecker webhook and stop any
+   already queued or running old main pipelines. Read back both changes.
 
-Stage 4 is deliberately separate from stage 6. New child-level safety settings
-must exist before those children sync, but enabling floating auto-sync before
-every chart is published could expose a partially published release.
+   ```bash
+   gh api repos/shepherdjerred/monorepo/hooks --jq '.[] | {id, active, url: (.config.url | split("?")[0])}'
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=false --silent
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --jq '{id, active}'
+   toolkit woodpecker pipeline ls shepherdjerred/monorepo
+   toolkit woodpecker pipeline stop shepherdjerred/monorepo PIPELINE_NUMBER
+   ```
 
-Stage 4 also applies root-owned prerequisites such as admission policies from
-the exact chart source. Only Applications whose auto-sync policy must stay
-disabled use local manifest overrides, so stage 4 owns child operations without
-racing ArgoCD while unchanged cluster-scoped resources still follow Argo's
-normal source-apply path. In stage 6, the
-[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-reapplies every exact sync wave before running the verified prune. Unchanged
-resources use source-selective syncs. The self-managed root Application alone
-uses a local override to keep auto-sync disabled between batches; the final
-prune restores that one policy. Stage 7 is the single authoritative scoped
-health gate.
+   Select the inspected Woodpecker webhook ID, not an unrelated integration.
+   Disable any other source of old main releases during the window. Merge only
+   after the real required checks and review pass. Retain the reviewed head SHA.
+   For a squash merge, `source-proof` requires its complete Git tree to equal
+   the PR's associated merge commit tree. That merge must remain on main.
+   Different trees require a source update and renewed CI/review.
 
-After verification, watch the serialized `openai`, `anthropic`, `discord`, and
-`cloudflare-tokens` jobs selected by the changed paths. Each job previews its
-encrypted platform state. For a change you intend to apply, trigger a manual
-build of the current main commit with `TOFU_PLATFORM_PLAN` set to exactly one
-of those stack names. The extension schedules only release admission and that
-stack's plan workflow. It saves the plan encrypted and prints its pipeline
-number and SHA-256 digest. Review that manual build's plan output after it
-finishes successfully. Within 24 hours, trigger another manual build of the
-same main commit with `TOFU_PLATFORM_APPLY` set to the stack and
-`TOFU_PLATFORM_PLAN_PIPELINE` set to the reviewed plan's pipeline number. This
-second build applies those saved plan bytes; it cannot calculate a replacement
-plan. It fails if main has moved, the plan has expired, or OpenTofu state has
-changed. Both builds receive only that stack's credentials. After a successful
-apply, the encrypted plan is replaced with a consumed marker.
+2. Replace the generator **before** changing credential locator source. From a
+   clean checkout of the reviewed PR head proven integrated into main, use the image-producing
+   commands and workload descriptor below, with `targets: ["woodpecker"]`.
+   Publish the fixed bootstrap images directly; no main pipeline is needed.
+   Run only this first subset:
 
-If one fails, stop the rollout at that platform. Inspect its vendor resources,
-encrypted state object, and intended 1Password rotation units. Resume only
-after deciding whether the failed operation completed; do not start a
-replacement apply while that result is unknown.
+   ```bash
+   toolkit ci source-proof PR --source REVIEWED_HEAD_SHA --json
+   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/woodpecker-bootstrap.json --output /private/woodpecker-preview --dry-run
+   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/woodpecker-bootstrap.json --output /private/woodpecker-apply
+   ```
 
-Stage 5 renders the same exact root revision and walks its child Applications
-in numeric sync-wave order. Repository-published children take their immutable
-revision from the release inventory. External children, such as cert-manager,
-take the complete source pinned in the root manifest, including chart or Git
-revision and Helm values. This matters because stage 4 disabled their auto-sync
-too: waiting until stage 6 to restore
-that policy would let a repository child run against an older external
-controller. A release-inventory child missing from the exact root, or a
-repository child missing from the release inventory, is a hard failure.
+   Pause root automation with the inspected `apps --sync-policy none` command
+   below before running this helper. No Delivery Application or registered
+   catalog is needed. Verify the generator's actual image digest and baked SHA,
+   then re-enable the inspected webhook:
 
-The
-[release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
-stages repository-chart Applications with explicit auto-sync state. The
-[artifact-level chart test](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/helm-template.test.ts)
-requires every published automated policy to have a boolean `enabled`. If the
-final root apply reports that `spec.syncPolicy.automated` became invalid
-`null`, do not retry. Regenerate the chart with explicit state.
+   ```bash
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=true --silent
+   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --jq '{id, active}'
+   ```
 
-## If a child stays out of sync
+   Run a fresh PR and inspect its generated graph: verification, builds and
+   immutable publication only. Keep the old hosted release authority stopped.
+   Remove the PR-only retired-release rehearsal adapters and exclusive tests
+   after this proof; the new graph must never call them. Before the new CI
+   artifact credentials take over, verify their exact storage IAM grants and
+   readback through the existing operator storage procedure.
 
-Child reconciliation retries a failed operation recorded against the current
-chart revision, **even when ArgoCD already reports the application Synced and
-Healthy**. That is intentional: it clears a failed apply after a new
-child-level safety setting made the same immutable chart revision safe to
-retry.
+3. Use a clean checkout of the next reviewed PR head proven integrated into main and provision the declared
+   prerequisites through their operator OpenTofu wrappers. Apply the tailnet
+   policy so the existing Kubernetes operator can assign `tag:delivery` to
+   Delivery's Ingress proxy. Keep its admin-only access rules. Delivery uses
+   the existing operator identity; no additional Tailscale token or OAuth
+   client is needed. Register actual output item IDs in reviewed source,
+   never placeholder IDs or copied administrator credentials.
 
-It also checks the most recent deployment history. Immediately after stage 4,
-ArgoCD can compare a newly pinned external source and report the new revision
-as `Synced` before that source has been deployed. The comparison revision alone
-is not release evidence; stage 5 syncs again unless the latest history entry's
-source is semantically identical to the complete rendered source. Comparing
-only the target revision would miss a Helm-values change at the same chart
-version. External applications already deployed from that exact source are
-left to their restored auto-sync policy instead of pulling unrelated
-same-source drift into this release.
+   ```bash
+   toolkit ci source-proof PR --source REVIEWED_HEAD_SHA --json
+   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale plan
+   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale apply
+   ```
 
-So a stuck child usually clears on the next release rather than needing a hand
-sync.
+   Any source change needs its own exact CI/review proof before bootstrap.
+   Use the existing credential broker and service-account wrapper; never put
+   credential values in descriptors, shell arguments or receipts.
 
-Scout child syncs allow the same 40-minute cold report-lake startup budget as
-their Kubernetes probes, plus five minutes for readiness and later sync waves.
-Temporal child syncs cover the schema-migration deadline. The root CI lane
-allows two hours for these sequential waits and the remaining release work;
-every child must still apply successfully and pass the scoped health gate.
+4. Pause root and Argo's own automatic reconciliation before the account
+   prerequisite. Inspect their exact native identities first.
 
-## If pruning looks wrong
+   ```bash
+   toolkit argocd app get apps -o json
+   toolkit argocd app get argocd -o json
+   toolkit argocd app set apps --sync-policy none
+   toolkit argocd app set argocd --sync-policy none
+   ```
 
-Root pruning does not trust ArgoCD's cached `OutOfSync` or `requiresPruning`
-flags. The selective manifest-override sync temporarily marks unselected
-retained children as requiring prune, so those flags can describe the override
-rather than the published tree.
+   The bootstrap classifier permits only these maintenance pauses and the exact
+   reviewed Delivery account change. Unrelated Application or shared-resource
+   drift fails closed. The live default RBAC role must already be empty.
 
-The release script renders the exact `apps` revision and treats only live child
-Applications **absent from that rendered set** as prune candidates. Each
-candidate must also carry the `ci.sjer.red/application-lifecycle: cascade`
-annotation and the Argo resources finalizer.
+5. Create an external account request containing `schema`, `sourceRevision`,
+   `pullRequest` and a fresh `requestId` UUID:
 
-:::caution
-Never classify prune candidates from `OutOfSync` or `requiresPruning` alone. That
-is how you delete a retained application.
-:::
+   ```json
+   {
+     "schema": "delivery-argocd-account-bootstrap/v1",
+     "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA",
+     "pullRequest": 123,
+     "requestId": "FRESH_REQUEST_UUID"
+   }
+   ```
 
-## If a static site deploy gets AccessDenied
+   Run through the existing service-account wrapper with **distinct** operator
+   and root credentials. The helper independently reads their native usernames:
+   `ARGOCD_TOKEN` must be the existing operator `admin`; `ROOT_ARGOCD_TOKEN`
+   must be legacy `woodpecker` or dedicated `delivery-platform`. The operator
+   performs only preownership inspection and child/account CAS. The guarded root
+   subprocess receives only the root token, never the operator credential.
+   These references contain no credential values:
 
-Compare the failing bucket with `scripts/release/deploy-site.ts` and the
-`ci-sites` identity in the `seaweedfs-s3-credentials` 1Password item. For a
-new site bucket, add its `Read`, `Write`, `List`, and `Tagging` actions to that
-identity without changing its credential or other bucket grants. Wait for the
-1Password operator to update the `seaweedfs-s3-credentials` Secret in the
-`seaweedfs` namespace.
+   ```bash
+   ARGOCD_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/yikdwue26c7gdbk5ftbvaclkli/ARGOCD_AUTH_TOKEN' ROOT_ARGOCD_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/ga3ma76q6vw2bxeyvkqj4xaucy/ARGOCD_AUTH_TOKEN' scripts/onepassword/with-service-account.sh op run -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/homelab/scripts/ci/bootstrap-argocd-accounts.ts /private/account-request.json --output /private/account-preview --dry-run
+   ```
 
-Wait for the updated configuration to reach the gateway's mounted file, then
-[reload its identities with SIGHUP](https://github.com/seaweedfs/seaweedfs/blob/4.47/weed/s3api/s3api_server.go#L441):
+   Use this same credential separation for the workload bootstrap. Output
+   directories must be new, private and outside the checkout.
+
+   ```bash
+   bun packages/homelab/scripts/ci/bootstrap-argocd-accounts.ts /private/account-request.json --output /private/account-preview --dry-run
+   bun packages/homelab/scripts/ci/bootstrap-argocd-accounts.ts /private/account-request.json --output /private/account-apply
+   bun packages/homelab/scripts/tofu/tofu-stack.ts argocd plan
+   bun packages/homelab/scripts/tofu/tofu-stack.ts argocd apply
+   ```
+
+   The helper preserves the running Argo repository, chart and revision. It
+   changes only the three reviewed account definitions and their principal
+   rows, then records the owned finished sync UUID. OpenTofu issues the scoped
+   tokens afterwards. Register those output IDs in reviewed source before
+   building the control plane. That OpenTofu step retires the old Woodpecker
+   token/item. For subsequent API/control-plane bootstrap, resolve
+   `ROOT_ARGOCD_TOKEN` from the newly issued `delivery-platform` item; retain
+   the separate operator reference for preownership CAS. No administrator-token
+   fallback exists for guarded root operations.
+
+6. Build the two operator bootstrap images directly from the proven source.
+   PR pipelines do not publish them, and old main automation is stopped.
+   Use the existing Docker credential store and a fresh `2.0.0-N` version
+   whose tags do not already exist. Set `SOURCE_SHA`, `BOOTSTRAP_VERSION` and
+   `BOOTSTRAP_DIR` to the inspected source, chosen version and private directory.
+
+   ```bash
+   GIT_SHA="$SOURCE_SHA" VERSION="$BOOTSTRAP_VERSION" docker buildx bake woodpecker-config-extension delivery --set '*.platform=linux/amd64' --set '*.target=smoke' --set '*.output=type=cacheonly'
+   GIT_SHA="$SOURCE_SHA" VERSION="$BOOTSTRAP_VERSION" docker buildx bake woodpecker-config-extension delivery --set '*.platform=linux/amd64' --set "woodpecker-config-extension.tags=docker.io/shepherdjerred/woodpecker-config-extension:$BOOTSTRAP_VERSION" --set "delivery.tags=docker.io/shepherdjerred/delivery:$BOOTSTRAP_VERSION" --metadata-file "$BOOTSTRAP_DIR/images.json" --push
+   ```
+
+   Retain native build metadata and registry manifest digests. The descriptor's
+   source SHA and version must match each image's baked `GIT_SHA` and `VERSION`.
+   These are truthful operator bootstrap publications, not CI-qualified builds.
+   Do not invoke CI handoff writers or invent a pipeline number for them.
+
+7. Create an external workload descriptor. Replace the illustrative strings
+   with actual source, immutable digests, version and a fresh UUID:
+
+   ```json
+   {
+     "schema": "delivery-bootstrap/v1",
+     "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA",
+     "pullRequest": 123,
+     "revision": "2.0.0-UNUSED_CHART_NUMBER",
+     "requestId": "FRESH_REQUEST_UUID",
+     "targets": ["woodpecker", "delivery"],
+     "images": {
+       "woodpecker": {
+         "repository": "docker.io/shepherdjerred/woodpecker-config-extension",
+         "digest": "sha256:ACTUAL_MANIFEST_DIGEST",
+         "version": "2.0.0-IMAGE_NUMBER",
+         "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA"
+       },
+       "delivery": {
+         "repository": "docker.io/shepherdjerred/delivery",
+         "digest": "sha256:ACTUAL_MANIFEST_DIGEST",
+         "version": "2.0.0-IMAGE_NUMBER",
+         "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA"
+       }
+     }
+   }
+   ```
+
+   Resolve the separate operator/root tokens and ChartMuseum publication credentials through their
+   existing wrapper. Run a preview, inspect its immutable archive inventory,
+   then execute with a different new output directory:
+
+   ```bash
+   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/bootstrap.json --output /private/bootstrap-preview --dry-run
+   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/bootstrap.json --output /private/bootstrap-api
+   ```
+
+   The helper derives an immutable root archive from the captured native root.
+   It preserves every unrelated child source, lifecycle and shared resource,
+   including Forum's existing chart without the new seven selected parameters.
+   It publishes only the selected fixed children and this derived root, then
+   uses the normal exact-revision `release-root` lifecycle.
+
+8. Verify API readiness, PostgreSQL migrations and private authentication. Do
+   **not register catalog environments yet**. Keep dispatch paused and temporarily
+   enable API catalog writes for publication and qualification. With no registered
+   environment, those records cannot dispatch a release. Let the publication-only main
+   pipeline publish and register the genuine Temporal image and separate
+   control-plane chart. Wait for its whole native pipeline to succeed, then
+   qualify those actual build records through the API's independent CI verifier:
+
+   ```bash
+   toolkit deploy qualify IMAGE_BUILD_ID --machine --json
+   toolkit deploy qualify CHART_BUILD_ID --machine --json
+   ```
+
+   This uses the execute credential and exact native main-push CI evidence;
+   it needs no running Temporal worker or dispatch Schedule. A failed producer
+   cannot be qualified. Keep each artifact's original producing source/build,
+   even when it differs from the reviewed bootstrap procedure source.
+
+   Create exact qualified-artifact queries containing
+   `{serviceId, component, kind, digest, version, originKind: "first-party"}`.
+   The image role is `temporal` / `image:temporal-worker` / `image`; the chart
+   role is `delivery-control-plane` / `chart:delivery-control-plane` / `chart`.
+   Resolve their original records through the authenticated catalog:
+
+   ```bash
+   toolkit deploy artifact --file /private/cp-image-query.json --machine --json > /private/cp-image.json
+   toolkit deploy artifact --file /private/cp-chart-query.json --machine --json > /private/cp-chart.json
+   ```
+
+   Use a second descriptor targeting only `delivery-control-plane`, with a new
+   **root archive** revision/request UUID and canonical `deliveryUrl`. Add
+   `controlPlane: {image: ORIGINAL_IMAGE_RECORD, chart: ORIGINAL_CHART_RECORD}`
+   from these results. The helper independently rechecks qualification and
+   original identities, archive bytes and image provenance. Every image platform
+   must declare the `delivery-control-plane/v2` capability, which includes the
+   dedicated Delivery Workflow poller; an older Activity-only image is refused.
+   It selects the
+   original CP chart URI/version/digest and image; it never repackages the CP
+   child chart into the operator root revision. Preserve both original IDs in
+   the receipt for the first managed upgrade's `previousImageArtifactId` and
+   `priorChartArtifactId` inputs. The initial managed-upgrade contract expects
+   this installer's explicit image Helm selection; the independent Job verifies
+   that exact native shape before effects.
+   Subsequent upgrades derive their prior selection from immutable acceptance.
+   No accepted deployment is invented for bootstrap.
+
+   The existing API must independently report an empty environment catalog;
+   inspection failure or any registered environment blocks bootstrap. Artifact
+   and build registration/qualification are permitted before this transfer.
+   Restore the global write pause before the control-plane bootstrap.
+
+   Install the source-declared dispatch Schedule on the dedicated queue, paused
+   from its first creation. Use the supported Temporal CLI, not the old central
+   worker's Schedule inventory:
+
+   ```bash
+   toolkit temporal --namespace prod schedule create --schedule-id delivery-dispatch --type deliveryDispatchWorkflow --task-queue delivery-workflows --interval 1m --overlap-policy Skip --execution-timeout 5m --catchup-window 5m --paused --notes 'Awaiting Delivery ownership transfer'
+   toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
+   ```
+
+   If the Schedule already exists, inspect its exact type, dedicated queue and
+   paused state before continuing; do not create a second Schedule or trigger
+   it. Start the required baseline Workflows explicitly as shown below while
+   this Schedule remains paused. The three steady control-plane
+   roles request 300m CPU and 768 MiB; their combined limits are 3 CPU and 3 GiB.
+
+9. With API and control-plane hosts ready, seed genuine qualified publication
+   provenance and inspect actual current runtime. Establish worker host-only
+   adoption and Forum's read-only native baseline before new releases. Bootstrap
+   receipts do not create accepted VersionSets or eligible artifacts.
+   Keep the dispatch Schedule paused while seeding. Run only required read-only
+   baseline Workflows explicitly, and wait for their native evidence:
+
+   ```bash
+   toolkit deploy workers baseline --file /private/worker-baseline.json --machine --json
+   toolkit deploy forum baseline --file /private/forum-baseline.json --machine --json
+   ```
+
+   These commands record pending intents; a paused Schedule does not dispatch
+   them. Inspect each returned intent and start only its exact recorded
+   Workflow ID, with the corresponding actual deployment/intent ID:
+
+   ```bash
+   toolkit temporal --namespace prod workflow start --workflow-id ACTUAL_WORKER_BASELINE_WORKFLOW_ID --type deliveryDeploymentWorkflow --task-queue delivery-workflows --input '{"deploymentId":"ACTUAL_WORKER_BASELINE_DEPLOYMENT_ID"}'
+   toolkit temporal --namespace prod workflow start --workflow-id ACTUAL_FORUM_BASELINE_WORKFLOW_ID --type deliveryForumBaselineWorkflow --task-queue delivery-workflows --input '{"intentId":"ACTUAL_FORUM_BASELINE_INTENT_ID"}'
+   ```
+
+   Read back each run before retrying; never invent a replacement Workflow ID.
+   Wait for native baseline settlement before handover. For subsequent
+   control-plane upgrades, pause dispatch and drain all other pending releases,
+   baselines and recoveries first. The upgrade's native Job stops the journaled
+   ordinary Activity host, proves the dedicated queue contains only its exact
+   own run, and replays its unchanged history against the qualified candidate
+   source before selection. The selected chart must restore every host to its
+   declared replica count. A failed preselection restores only the same prior
+   UID/template; crash recovery uses the same durable journal.
+   Because dispatch remains paused, start that upgrade's returned stable
+   Workflow ID explicitly as well:
+
+   ```bash
+   toolkit temporal --namespace prod workflow start --workflow-id delivery/ACTUAL_CONTROL_PLANE_DEPLOYMENT_ID --type deliveryDeploymentWorkflow --task-queue delivery-workflows --input '{"deploymentId":"ACTUAL_CONTROL_PLANE_DEPLOYMENT_ID"}'
+   ```
+
+   Pause global Delivery writes after those requests settle. Disable the exact
+   Woodpecker webhook again and stop queued/running native pipelines for the
+   brief ownership transfer. Inspect the authenticated, source-bound context:
+
+   ```bash
+   toolkit deploy handover-context --machine --json
+   ```
+
+   Prepare an external `delivery-ownership-handover/v1` descriptor with the
+   exact reviewed `sourceRevision`, `pullRequest`, fresh `requestId`, canonical
+   `deliveryUrl`, inspected `woodpeckerWebhookId`, and **every catalog target**:
+   `targets: [{application, environmentId, expectedGeneration}]`. Copy actual
+   generations from the context. Worker targets require their original retained
+   host baseline; unaccepted Forum targets require their native runtime baseline.
+   This initial cutover requires every target to be ready together. If any
+   baseline, credential or prerequisite is unavailable, leave release authority
+   stopped and complete it before transferring ownership or enabling dispatch;
+   do not select a rolling subset.
+
+   ```bash
+   bun packages/homelab/scripts/ci/delivery-handover.ts /private/handover.json --output /private/handover-preview --dry-run
+   bun packages/homelab/scripts/ci/delivery-handover.ts /private/handover.json --output /private/handover-apply
+   ```
+
+   The handover uses issued, source-registered workload/platform accounts,
+   independently checks their actual identities and permissions, and preserves
+   each complete native source while adding PG ownership and disabling autosync.
+   Fresh paused admission, zero pending requests/locks and stable baselines are
+   required before every UID/resource-version CAS. It never records acceptance.
+   Retain its private receipt if interrupted; leave both mutation systems paused
+   while inspecting exact native metadata and the recorded intent.
+
+   Transfer all ready authority together, enable the declarative dispatch
+   Schedule, and verify the first actual releases. Re-enable the inspected
+   publication-only webhook after handover.
+   Remove old deployment credentials and rehearsal adapters; keep Woodpecker
+   limited to verification and immutable artifact production.
+
+If interrupted, retain the private descriptor, receipt, archives and
+`expected.json`. Inspect the recorded UID/source and owned operation before
+continuing. After `root-release-intent`, resume **the same** existing root
+request using its recorded revision and expected inventory:
 
 ```bash
-kubectl exec -n seaweedfs deployment/seaweedfs-s3 -- \
-  sh -c 'test "$(cat /proc/1/comm)" = weed && kill -HUP 1'
+bun packages/homelab/scripts/argocd/argocd.ts release-root apps /private/bootstrap-api/expected.json --revision RECORDED_REVISION --request-id RECORDED_REQUEST_UUID
 ```
 
-Use the existing 1Password-backed site credential to probe the new bucket with
-`aws s3api list-objects-v2`. It must succeed for the new bucket and return
-`AccessDenied` for `homelab-tofu-state`. Once both probes pass, retry the
-failed site release.
+Do not rerun the whole bootstrap with a new identity, overwrite an immutable
+archive, or treat a missing response as failure-before-effect. Before root
+submission, inspect exact publication and source-freeze receipts and resolve
+the recorded step under the same maintenance ownership. After real PG/native
+ownership exists, use independent Delivery recovery instead of bootstrap.
 
-## If the image did not rebuild
+## Inspect and request a release
 
-Application image selection uses the newest `main` commit whose `images` and
-`version-commit-back` jobs both passed as its comparison base.
+1. Inspect the environment in Delivery and list its qualified versions:
 
-`version-commit-back` waits for `argocd-sync` before creating a pin commit.
-That ordering keeps its new main pipeline from superseding an exact-revision
-root release halfway through child reconciliation. A separate newer main push
-can still supersede the build; its completed image build, smoke test, and
-durable pin-handoff evidence remain valid. Changes after that image-release
-commit still rebuild their affected closures; an unchanged pin-only successor
-does not rebuild and repin the same application forever.
+   ```bash
+   toolkit deploy versions SERVICE --json
+   ```
 
-If you expected a rebuild and got none, check whether your commit only moved a
-pin. The `images` workflow prints its comparison base, changed paths, target
-reasons, and push outcomes as an image release summary in the Woodpecker log.
+   Inspect desired, observed and accepted versions separately. A pending or
+   rejected build is not an eligible release. Automatic environments queue the
+   latest qualified candidate; Scout and Starlight production require human
+   approval of the exact frozen request.
 
-If an unrelated release fails on a prepared service, check its bootstrap pin.
-The [pin retention contract](https://raw.githubusercontent.com/shepherdjerred/monorepo/main/ci/scripts/images/live-version-catalog.ts)
-accepts the exact `0.0.0@sha256:` marker with an all-zero digest and preserves
-published pins. Publish and verify the service image, then commit its immutable
-release pin before activating it.
+2. Request an explicit version set when an operator selection is needed:
 
-If the image push finishes but candidate classification reports that no managed
-pin exists, do not retry the push. The comparison digest and commit-back key
-come from `packages/version-catalog/src/catalog.json`; verify that the
-real bake target has an exact image entry there and that the publisher is
-reading that structured catalog rather than the generated runtime projection.
+   ```bash
+   toolkit deploy start ENVIRONMENT VERSION_SET --json
+   toolkit deploy wait DEPLOYMENT_ID --timeout 86400 --json
+   ```
 
-## Bootstrap a configuration-extension graph change
+   The UI shows each stage, blocker and evidence. A successful build does not
+   prove reconciliation or runtime acceptance. Retry retains the selected
+   artifacts; rollback selects a previously accepted set. Forum and Minecraft
+   require their preservation and restoration procedures rather than a blind
+   image reversal.
 
-The deployed Woodpecker configuration extension selects the workflows for its
-own pull request. The
-[`GLOBAL_SELECTOR_INPUTS` definition](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/inputs.ts)
-makes changes under `packages/woodpecker-config-extension` inputs to every
-workflow. If a graph change retires a failing lane, the old extension selects
-that lane for the replacement PR and prevents the ordinary merge gate from
-passing. The
-[`images` release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
-and
-[`version-commit-back` lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/ci-images.ts)
-run only on `main`, so those jobs cannot break the cycle before merge. The
-[PR-only repository administrator bypass](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/github/rulesets.tf)
-provides the narrow landing path for this recovery.
+3. For a failed operation, inspect its recorded effects before retrying:
 
-Use this exceptional path only when the new graph removes or replaces the
-blocking workflow:
+   ```bash
+   toolkit deploy status DEPLOYMENT_ID --json
+   ```
 
-1. Get explicit repository-owner authorization for an admin merge exception.
-2. Keep the graph change in its Git-Spice PR. Run the configuration extension's
-   focused build, typecheck, tests, and lint locally.
-3. Wait for the exact PR head's automated review, `verify`, and every unaffected
-   required check. Inspect the failed workflow logs and confirm that each
-   failure belongs only to a lane removed or replaced by the new graph.
-4. Have the repository owner merge that reviewed PR with the forge's admin
-   branch-protection override. This is the supported landing mechanism for the
-   bootstrap; do not mark the failing retired lane successful or modify its
-   required-check result.
-5. Monitor the resulting exact `main` pipeline through `images` and
-   `version-commit-back`. Wait for ArgoCD to reconcile
-   `woodpecker-woodpecker-config-extension`, then confirm that its running image
-   digest changed to the newly committed pin.
-6. Retry the affected PR and confirm that the replacement graph is selected.
+   A retained lock protects ambiguous external writes. Stop the old executor
+   and use the corresponding independent recovery procedure. Do not remove a
+   database lock or replace a foreign active Argo operation.
 
-Never patch the live Deployment or image pin to break this cycle. The exception
-lands reviewed source; the ordinary image release, pin commit, and ArgoCD
-reconciliation still provide the deployment evidence.
+## If an image did not rebuild
 
-## If Docker Hub rejects a workload pull
+The image workflow compares source against the most recent complete publication
+whose source is an ancestor of the current build. It retains unchanged image
+identities from the durable publication inventory. Neither deployment success
+nor a Git commit-back branch controls artifact reuse.
 
-1. Check the image and visibility in the
-   [registry catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/image-registry.json).
-   Provision repositories with the `dockerhub` OpenTofu stack before publishing.
-   Keep token management in the operator-only `dockerhub-tokens` stack.
-2. Inspect pod pull events and `imagePullSecrets`. The namespace needs a ready
-   `dockerhub-pull-<namespace>` Secret of type `kubernetes.io/dockerconfigjson`.
-   Inspect metadata without printing secret values.
-3. Check the reader `OnePasswordItem` readiness. Repair declarations and pull
-   references through GitOps. External Helm apps need their chart's pull-secret
-   values too.
-4. Inspect the exact digest in the
-   [publication job](https://github.com/shepherdjerred/monorepo/tree/main/ci/scripts/images).
-   Private images must reject anonymous reads; public compilers must allow them.
-   Source labels and exact-image smoke checks still apply.
+Inspect the image workflow's comparison base, changed paths, target reasons and
+push outcomes. Missing publication evidence rebuilds the required image closure;
+corrupt or conflicting evidence fails the producer. Bootstrap a new service by
+publishing and qualifying its actual image before requesting its deployment.
 
-Application namespaces use the reader identity. Publishing, registry management,
-and Renovate use separate identities.
+## Recover a Delivery operation
 
-## If the release will not start
+Use this procedure for a failed or canceled delegated application deployment
+whose Delivery details show `recoveryRequired`. It also covers a stopped worker
+that recorded intent before selecting the chart or submitting an Argo operation.
+For a site, Scout frontend, or forum release, use
+[content recovery](#recover-a-site-or-forum-release) instead. Specialized worker
+recovery retains its separate native proof. The generic helper refuses these targets.
 
-A previous root operation stuck in `Running` blocks the next ordered release.
-Stage 6 prevents that in the normal pipeline. One process owns every desired
-wave and the final prune. It waits for the exact request ID, revision, and
-per-operation UUID; verifies each selected batch; terminates its aggregate
-health wait; and waits for termination before starting the next operation.
-After every resource in the exact rendered revision has a successful batch
-result, except for the intentionally suspended root auto-sync policy, the
-full-source operation must report the restored root Application as `Synced` and
-every validated prune candidate as `Pruned`. A fully applied early batch or
-prune wave is not enough.
+1. Pause Delivery mutations. Confirm the old Workflow is closed and its mutation
+   executor is stopped through the repository-owned worker deployment path.
+   A closed Workflow alone does not prove an Activity process has stopped.
+2. Inspect the retained target and recorded reconciliation request:
 
-A CI retry reuses the request id, which is derived from the pipeline number
-rather than generated — a random id would make a retry look like a different
-requester. `release-root` adopts an operation only
-when the UUID and revision match and its selected resources are exactly one
-desired batch, or when it is the unselected final prune. An unrelated active
-operation or an unexpected selection remains a hard failure. The operation must
-also carry an explicit `stage`, `batch`, `prune`, or `child` marker; prune
-adoption
-requires Argo's prune flag. This prevents an interrupted legacy full-source sync
-from impersonating the post-batch prune. Each POST also receives an internal
-operation UUID; adoption requires the live operation and its status to share
-that UUID before a stable applied result can be finalized.
+   ```bash
+   toolkit deploy status DEPLOYMENT_ID --machine --json
+   ```
 
-For a rewritten Application's manifest-override operation, inspect the
-`ci.sjer.red/revision` operation-info entry. Argo does not retain
-`operation.sync.revision` for that request shape, so CI persists the same exact
-revision beside both UUIDs and rejects any disagreement when both forms exist.
-Unchanged resources use source-selective operations and retain the revision in
-Argo's ordinary sync request as well as the identity metadata.
+3. Export the frozen artifact and configuration selection for review:
 
-A release blocked here means the current operation must be inspected before
-retrying. Confirm the operation's request ID, revision, selected resources,
-phase marker, and prune flag in ArgoCD. Do not terminate it based on revision
-alone. Once the observed operation belongs to the same CI pipeline, restart
-the failed workflow; the same command and request id adopt only that exact
-operation and continue the release.
+   ```bash
+   bun packages/temporal/scripts/recovery/delivery.ts export DEPLOYMENT_ID --file /tmp/delivery-recovery.json
+   ```
 
-```bash
-argocd app get apps --show-operation
-```
+   The helper requires the failed or canceled deployment to retain its original
+   environment lock. It verifies the recorded stage request and rejects credential
+   parameter keys. Inspect the application, chart digest, image digests, request
+   ID, and non-secret configuration in this file.
 
-## If the root operation says it was terminated
+4. Settle that exact selection while Delivery retains ownership:
 
-After the exact root operation reports all selected resources applied, the
-release process deliberately terminates its aggregate wait. This leaves an
-ArgoCD terminal message that does not describe release failure.
+   ```bash
+   bun packages/temporal/scripts/recovery/delivery.ts settle DEPLOYMENT_ID --file /tmp/delivery-recovery.json
+   ```
 
-Use the `homelab-release-result.json` handoff object and the CI
-`homelab-release-result` annotation as the receipt:
+   The helper rereads Delivery before using the credential broker. It invokes
+   `sync-managed` with an explicit `--delivery-selection` file, exact revision,
+   and recorded request ID. The command verifies the chart digest, root field
+   preservation, delegation, inactive operations, and resource-version tests
+   before selecting the source. Existing apply-safety and operation-ownership
+   checks still govern the bounded sync. There is no pruning or acceptance write.
 
-- `applied-verified` means the request ID, revision, selected resource results,
-  and final health of the charts this build published all passed. Charts
-  retained at an earlier revision are reported as warnings, not waited on.
-- `superseded` means a newer build published its apps chart first. This build
-  applied nothing and succeeded; the newer build's receipt is the record.
+5. Read the finished operation UUID from the application named in the export:
 
-No receipt means the release did not complete.
+   ```bash
+   toolkit argocd app get APPLICATION -o json | jq -er '.status.operationState.operation.info[] | select(.name == "ci.sjer.red/operation-id") | .value'
+   ```
 
-## If you start a global sync manually
+6. Release ownership through independent observation:
 
-An ordinary global sync of `apps` is supported. Use ArgoCD's normal sync action;
-do not copy child sync options into the request by hand. Admission merges each
-managed child Application's declared options into the manual operation, and
-the declared value wins if the request contains the same option key.
+   ```bash
+   toolkit deploy recover DEPLOYMENT_ID --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
+   ```
 
-The global sync follows the chart's deterministic waves. Only the recursive
-`apps` Application ignores health; degraded child Applications remain visible
-and block progression where their wave is a dependency boundary. If a global
-sync reports an immutable-field or mutually-exclusive-probe-handler failure,
-stop and inspect that resource. The automated `release-root` path runs its
-read-only preflight before submitting child operations, but a manual ArgoCD UI
-sync does not run that client-side check.
+   This remains available while writes are paused and Temporal is unavailable.
+   The API requires the matching finished request, operation UUID, environment
+   delegation, and settled Jobs. Recovery clears ownership; it does not mark the
+   failed deployment accepted. Request a new deployment to perform acceptance.
+
+If any check fails, retain the lock and inspect that exact external operation.
+Do not delete database locks or replace a foreign active operation.
+
+## Recover a site or forum release
+
+Use a separate recovery intent when a failed or canceled site, Scout frontend,
+or forum release retains its lock. Recovery settles native effects without
+accepting the failed deployment or changing its accepted release.
+
+1. Pause the Delivery dispatcher Schedule and drain other running releases and
+   recovery operations. Inspect the held deployment:
+
+   ```bash
+   toolkit deploy status DEPLOYMENT_ID --machine --json
+   ```
+
+   Keep its exact environment generation, selected artifacts, pipeline and
+   recorded operations. Leave the ordinary Activity host at one replica: the
+   maintenance command journals its exact identity before stopping it. A closed
+   Workflow alone does not prove its executor stopped.
+
+2. Request inspection with the admin credential and that exact generation:
+
+   ```bash
+   toolkit deploy sites recover DEPLOYMENT_ID --machine --expected-generation GENERATION --reason "Inspect and settle the exact frozen site release under retained ownership"
+   ```
+
+   For a forum release, replace `sites` with `forum`. Retain the returned intent
+   ID and request ID. The caller supplies no native proof or replacement artifacts.
+
+3. Inspect the intent and its native receipts:
+
+   ```bash
+   toolkit deploy sites recovery INTENT_ID --machine --json
+   ```
+
+   Use `forum recovery` for the forum. The UI shows the same frozen operation,
+   native Job identities and refusal reasons. Repair uses the frozen archive or
+   forum release inputs. It cannot reverse a database upgrade or remove another
+   execution's maintenance lock.
+
+4. Run the one-shot maintenance command with the existing operator context:
+
+   ```bash
+   bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent INTENT_ID --action inspect --context admin@torvalds --url https://delivery.tailnet-1a49.ts.net
+   ```
+
+   `inspect` settles only an already verified desired release. If repair is
+   needed, review the refusal and rerun with `--action repair`. Repair uses the
+   frozen archive or same forum candidate; it retains the original backup.
+   The command stops the journaled Activity host, checks the original executor
+   and native Jobs, verifies the result, then restores that exact host. It does
+   not create an automatic recovery Workflow or controller.
+
+   If an interrupted forum `install`, `addons`, `seed`, `history` or `accounts`
+   step cannot be retried safely, retain the reported step and journal SHA-256.
+   Keep maintenance active. Check the terminal original Pod's UID, image and
+   owning Job UID against the frozen receipt before copying it for native repair.
+   Preserve its original image, environment, PVCs and init containers. For
+   example, after reviewing the native history checkpoints:
+
+   ```bash
+   kubectl --context admin@torvalds -n FORUM_NAMESPACE debug ORIGINAL_POD --copy-to=MANUAL_REPAIR_POD --container=release --keep-init-containers=true --keep-labels=true --profile=restricted --share-processes=false -- php /opt/storm-forum/runtime/command.php storm:history --migrate
+   ```
+
+   Use the corresponding native command for reviewed seed or account repair.
+   Diagnose installation and add-on state with XenForo's native recovery tools;
+   do not blindly rerun a migration or delete a pending merge marker.
+   Wait for the exact manual Pod to terminate and retain its result. Read its
+   current UID and resource version, then remove only that Pod:
+
+   ```bash
+   kubectl --context admin@torvalds -n FORUM_NAMESPACE get pod MANUAL_REPAIR_POD -o jsonpath='{.metadata.uid}{" "}{.metadata.resourceVersion}{" "}{.status.phase}{"\n"}'
+   kubectl --context admin@torvalds delete --raw /api/v1/namespaces/FORUM_NAMESPACE/pods/MANUAL_REPAIR_POD -f - <<'JSON'
+   {"apiVersion":"v1","kind":"DeleteOptions","preconditions":{"uid":"MANUAL_POD_UID","resourceVersion":"MANUAL_POD_RESOURCE_VERSION"},"propagationPolicy":"Foreground"}
+   JSON
+   ```
+
+   Require its deletion before acknowledging the same interrupted step and
+   exact journal hash:
+
+   ```bash
+   bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent INTENT_ID --action repair --acknowledge-step STEP --expected-journal-sha256 JOURNAL_SHA256 --context admin@torvalds --url https://delivery.tailnet-1a49.ts.net
+   ```
+
+   Fixed read-only native checks must prove completion before that one
+   checkpoint is appended. A failed check keeps the owner, backup and journal.
+
+5. Confirm independent settlement succeeded and the original failed result and
+   accepted pointers remain unchanged. A failed or refused recovery retains
+   ownership; inspect its exact reason before requesting another attempt.
+
+   If `dispatchBarrier` is present, also require `barrierRestoredAt` before
+   resuming dispatch. A terminal recovery status alone does not prove that its
+   journaled producer host has been restored.
+
+   If interrupted, rerun the same command and intent. Do not create a new
+   journal or manually scale the producer to bypass its identity checks.
+
+Do not use generic `deploy recover` or delete PostgreSQL locks for these targets.
 
 ## Where it lives
 
-The workflow is defined by the
-[main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
+The reviewed execution contracts are documented in `packages/delivery/README.md`
 and the
-[Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts).
+[Temporal worker](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md).
 
 ## Related
 
 - [Why the release pipeline is shaped this way](/explanation/homelab/release-safety/)
+- [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)

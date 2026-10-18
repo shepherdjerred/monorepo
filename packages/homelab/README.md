@@ -63,7 +63,7 @@ some things I'm proud of:
 - Automated backups
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
-- Declarative GitOps deployment via ArgoCD, driven by CI (see below)
+- Declarative GitOps deployment via ArgoCD, selected and verified by Delivery
 - Automated dependency updates for Docker images (with pinned SHAs), Helm
   charts, and Bun dependencies —
   [my approach](src/cdk8s/src/versions.ts) keeps every dependency pinned and
@@ -116,21 +116,35 @@ uses `WaitForFirstConsumer`, so an earlier PVC wave would block provisioning
 before ArgoCD could create the required Pod. The web Deployment remains at wave
 1, after the database is healthy and the release Job has completed.
 
-Deploys are driven by the generated Woodpecker pipeline. The
+Woodpecker verifies source and publishes immutable artifacts. Delivery owns
+operational plans, applies and releases through Temporal. The
 [CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
-explains its change selection and release ordering:
+explains CI change selection:
 
 - **Every PR** runs the change-selected `bun run verify` graph (which includes homelab's
-  `check:talos`, `lint:helm`, and `check:1password` tasks) plus change-gated
-  `tofu plan`s for the affected stacks and dry-run rehearsals of the helm push
-  and ArgoCD reconcile.
-- **On merge to main**, the pipeline applies selected OpenTofu stacks, publishes
-  versioned Helm charts
-  (`scripts/helm/helm-push.ts`), and syncs + waits on ArgoCD
-  (`scripts/argocd/argocd.ts`).
+  `check:talos`, `lint:helm`, and `check:1password` tasks), offline OpenTofu
+  validation and immutable artifact rehearsals.
+- **On merge to main**, CI builds and publishes immutable images, versioned
+  Helm charts (`scripts/helm/helm-push.ts`) and archives with original
+  provenance. Delivery qualifies them before executing a frozen release.
+
+Delivery's private browser endpoint uses the existing Tailscale Kubernetes
+operator and an Ingress tagged `tag:delivery`. Its policy allows admins only.
+No application-side Tailscale credential or additional OAuth client is required.
+The [bootstrap procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md)
+orders the existing tailnet policy, Argo accounts and immutable source selection.
 
 Never apply manifests directly with `kubectl apply` — all changes go through
 ArgoCD, which reverts direct mutations.
+
+## Manifest validation
+
+CDK8s `dist/` contains native Kubernetes manifests for kubeconform validation.
+Helm publication stages retained-worker expansion separately, fingerprints the
+generated template bytes, and validates them through real Helm rendering.
+The local Helm render and lint commands use that same expansion. Keep
+PostgreSQL-selected worker pools and images in release parameters rather than
+writing them into native synth output or chart defaults.
 
 ## Installation
 

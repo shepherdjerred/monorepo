@@ -20,7 +20,6 @@ const config: CiHandoffConfig = {
 };
 const COMMIT = "a".repeat(40);
 const NEW_COMMIT = "b".repeat(40);
-const candidate = "worker/workflows/candidate";
 const pin = (build: number) =>
   `2.0.0-${build.toString()}@sha256:${"a".repeat(64)}`;
 function catalog(build: number, key = "worker") {
@@ -57,25 +56,11 @@ function release(pipelineNumber = 8002, key = "worker"): PublishedImageRelease {
     }),
   };
 }
-function executor(
-  main = catalog(1_008_001),
-  state?: {
-    schema: string;
-    pins: object;
-    withdrawnCandidates?: Record<string, number>;
-  },
-): LiveCatalogExecutor {
+function executor(main = catalog(1_008_001)): LiveCatalogExecutor {
   return async (command) => ({
     exitCode: 0,
     stderr: "",
-    stdout:
-      command[2] === "origin/main:scripts/pin-candidates-state.json"
-        ? JSON.stringify(
-            state ?? { schema: "pin-candidates-state/v1", pins: {} },
-          )
-        : command[1] === "show"
-          ? main
-          : "",
+    stdout: command[1] === "show" ? main : "",
   });
 }
 const environment = {
@@ -84,7 +69,7 @@ const environment = {
   CI_LAST_IMAGE_RELEASE_PIPELINE: "7999",
 };
 
-test("publication head cannot undo a lower-build Prod Workflow promotion", async () => {
+test("publication head does not replace historical source bootstrap slots", async () => {
   const key = "shepherdjerred/scout-for-lol/prod/workflows/stable";
   const current = catalog(1_008_523, key);
   const latest: PublishedImageRelease = {
@@ -217,21 +202,6 @@ test("refreshes a queued pipeline's stale baseline from the most recent publicat
   );
   expect(value.baseCommit).toBe(COMMIT);
   expect(JSON.parse(value.catalog).entries[0].value).toBe(pin(1_008_002));
-});
-
-test("honors a reviewed candidate withdrawal when reading the durable head", async () => {
-  const state = {
-    schema: "pin-candidates-state/v1",
-    pins: {},
-    withdrawnCandidates: { [candidate]: 1_008_002 },
-  };
-  const value = await resolvePublishedImageCatalog(
-    NEW_COMMIT,
-    executor(catalog(1_007_000, candidate), state),
-    environment,
-    { readLatest: async () => release(8002, candidate) },
-  );
-  expect(JSON.parse(value.catalog).entries[0].value).toBe(pin(1_007_000));
 });
 
 test("rejects an already published or superseded pipeline before building", async () => {

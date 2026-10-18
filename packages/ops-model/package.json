@@ -28,6 +28,7 @@
   },
   "exports": {
     "./services.json": "./services.json",
+    "./platform-policy.json": "./platform-policy.json",
     "./*": "./src/*"
   }
 }

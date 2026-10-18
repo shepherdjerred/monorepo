@@ -7,6 +7,16 @@
   "additionalProperties": false,
   "properties": {
     "$schema": { "type": "string" },
+    "platformDeliveryDelegated": {
+      "description": "Reviewed root/OpenTofu mutation owner policy; selected versions and plans remain in PostgreSQL.",
+      "type": "boolean"
+    },
+    "deliveryDelegations": {
+      "description": "Reviewed release-owner policy only; selected versions remain in PostgreSQL.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
     "services": {
       "type": "array",
       "minItems": 1,
@@ -33,6 +43,26 @@
             "type": "array",
             "uniqueItems": true,
             "items": { "type": "string", "minLength": 1 }
+          },
+          "images": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "bootstrapImages": {
+            "description": "Canonical first-party image references used by this service's bootstrap; image ownership remains with the producer.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "charts": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "rootReleaseExclusions": {
+            "description": "Reviewed upstream or inactive chart exclusions; selected versions remain in PostgreSQL.",
+            "type": "object",
+            "additionalProperties": { "enum": ["upstream", "inactive"] }
           },
           "bugsinkProjects": {
             "type": "array",

@@ -1,0 +1,10 @@
+{
+  "id": "ops-dashboard/prod",
+  "serviceId": "ops-dashboard",
+  "name": "prod",
+  "application": "alert-dashboard",
+  "pipelineRevisionId": "ops-dashboard/prod/1",
+  "configurationRevision": "ops-dashboard/prod/1",
+  "configuration": {},
+  "automatic": true
+}

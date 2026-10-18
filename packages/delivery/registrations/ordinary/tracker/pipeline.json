@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "tracker",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "tracker",
+  "chartComponent": "chart:tracker",
+  "namespace": "tracker",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.tracker": "image:tracker"
+  },
+  "verification": {
+    "url": "https://tracker.tailnet-1a49.ts.net/readyz",
+    "expectedStatus": 200
+  }
+}

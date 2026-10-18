@@ -25,6 +25,14 @@ describe("workflow bundle", () => {
       "backupStormForumWorkflow",
       "runSeaweedFsBackupWorkflow",
       "runSeaweedFsBackupRetentionAndGcWorkflow",
+      "agentChatWorkflow",
+      "agentChatTurnReceiptWorkflow",
+      "agentChatCatalogWorkflow",
+      "scheduledAgentChatTurnWorkflow",
+      "discordAgentChatWorkflow",
+      "httpAgentChatWorkflow",
+      "deliveryDeploymentWorkflow",
+      "deliveryDispatchWorkflow",
     ]) {
       expect(typeof workflows[name]).toBe("function");
     }

@@ -3,6 +3,9 @@ import { Glob } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { workerPoolExpressions } from "@shepherdjerred/homelab/cdk8s/scripts/delivery/worker-pool-template.ts";
+import { ORDINARY_DELIVERY_ENVIRONMENTS } from "homelab/src/delivery-target-policy.ts";
+import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 
@@ -87,6 +90,33 @@ function resourceObjects(manifest: unknown, source: string): unknown[] {
   return listResult.data.items ?? [];
 }
 
+function implicitAutoSyncApplication(
+  manifest: unknown,
+  source: string,
+): string | undefined {
+  if (
+    manifest === null ||
+    typeof manifest !== "object" ||
+    Array.isArray(manifest)
+  )
+    return;
+  const resourceResult = KubernetesResourceSchema.safeParse(manifest);
+  if (!resourceResult.success)
+    throw new Error(
+      `Could not inspect ${source}: ${z.prettifyError(resourceResult.error)}`,
+    );
+  if (resourceResult.data.kind !== "Application") return;
+  const result = ApplicationAutoSyncSchema.safeParse(manifest);
+  if (!result.success)
+    throw new Error(
+      `Could not inspect ${source}: ${z.prettifyError(result.error)}`,
+    );
+  const automated = result.data.spec.syncPolicy?.automated;
+  if (automated !== undefined && automated.enabled === undefined)
+    return result.data.metadata.name;
+  return;
+}
+
 function implicitAutoSyncApplications(content: string, entry: string) {
   const implicitAutoSync: string[] = [];
   for (const [documentIndex, document] of parseAllDocuments(
@@ -104,36 +134,32 @@ function implicitAutoSyncApplications(content: string, entry: string) {
       document.toJS(),
       source,
     ).entries()) {
-      if (
-        manifest === null ||
-        typeof manifest !== "object" ||
-        Array.isArray(manifest)
-      ) {
-        continue;
-      }
-      const resourceResult = KubernetesResourceSchema.safeParse(manifest);
-      if (!resourceResult.success) {
-        throw new Error(
-          `Could not inspect ${source} resource ${resourceIndex.toString()}: ${z.prettifyError(resourceResult.error)}`,
-        );
-      }
-      if (resourceResult.data.kind !== "Application") {
-        continue;
-      }
-      const applicationResult = ApplicationAutoSyncSchema.safeParse(manifest);
-      if (!applicationResult.success) {
-        throw new Error(
-          `Could not inspect ${source} resource ${resourceIndex.toString()}: ${z.prettifyError(applicationResult.error)}`,
-        );
-      }
-      const application = applicationResult.data;
-      const automated = application.spec.syncPolicy?.automated;
-      if (automated !== undefined && automated.enabled === undefined) {
-        implicitAutoSync.push(`${entry}:${application.metadata.name}`);
-      }
+      const name = implicitAutoSyncApplication(
+        manifest,
+        `${source} resource ${resourceIndex.toString()}`,
+      );
+      if (name !== undefined) implicitAutoSync.push(`${entry}:${name}`);
     }
   }
   return implicitAutoSync;
+}
+
+function stripDeliveryImageBindings(line: string, chart: string): string {
+  let stripped = line;
+  if (
+    ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined ||
+    ["temporal", "scout-beta", "scout-prod"].includes(chart)
+  )
+    stripped = stripped.replaceAll(
+      /\{\{ get \(get \(\.Values\.delivery \| default dict\) "images" \| default dict\) "([a-z0-9-]+)" \| default "docker\.io\/shepherdjerred\/\1(?::[\w.-]+)?@sha256:[a-f0-9]{64}" \}\}/gu,
+      "",
+    );
+  if (chart === "temporal")
+    stripped = stripped.replaceAll(
+      /\{\{ get \(get \(\.Values\.delivery \| default dict\) "images" \| default dict\) "delivery-control-plane" \| default "docker\.io\/shepherdjerred\/temporal-worker(?::[\w.-]+)?@sha256:[a-f0-9]{64}" \}\}/gu,
+      "",
+    );
+  return stripped;
 }
 
 /**
@@ -152,7 +178,7 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
     // - {{ "{{" }} / {{ "}}" }} — standard escape used by escapeHelmGoTemplate
     // - {{ print "{{" }} / {{ print "}}" }} — alternative used by Grafana dashboards
     // - {{ `{{` }} / {{ `}}` }} — backtick-based escape for JSON-rendered templates
-    const stripped = line
+    let stripped = line
       .replaceAll('{{ "{{" }}', "")
       .replaceAll('{{ "}}" }}', "")
       .replaceAll('{{ print "{{" }}', "")
@@ -160,6 +186,30 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
       .replaceAll("{{ `{{` }}", "")
       .replaceAll("{{ `}}` }}", "");
 
+    // First-party release inputs are intentional Helm, scoped to their chart
+    // and exact reviewed expression grammar. Consumer templates still escape.
+    if (fileName === "arcade.k8s.yaml") {
+      stripped = stripped.replaceAll(
+        /\{\{ \.Values\.delivery\.image \| default "docker\.io\/shepherdjerred\/arcade:[\w.@:-]+" \}\}/gu,
+        "",
+      );
+    }
+    if (
+      ["storm-forum.k8s.yaml", "storm-forum-beta.k8s.yaml"].includes(fileName)
+    ) {
+      stripped = stripped.replaceAll(
+        /\{\{ required `Delivery requires (image|bundleKey|bundleSha256|previousBundleSha256|previousXenforoVersion|previousRuntimeImage|releaseId)` \.Values\.delivery\.\1 \}\}/gu,
+        "",
+      );
+    }
+
+    for (const expression of workerPoolExpressions(
+      fileName.replace(/\.k8s\.yaml$/u, ""),
+    )) {
+      stripped = stripped.replaceAll(expression, "");
+    }
+    const chart = fileName.replace(/\.k8s\.yaml$/u, "");
+    stripped = stripDeliveryImageBindings(stripped, chart);
     // Only {{ triggers Helm template parsing. Standalone }} is safe.
     if (stripped.includes("{{")) {
       violations.push({ lineNumber: i + 1, line: line.trim() });
@@ -212,11 +262,28 @@ async function helmTemplateChart(chartName: string): Promise<{
       path.join(templatesDir, `${chartName}.k8s.yaml`),
       manifestFile,
     );
+    const valuesFile = Bun.file(path.join(HELM_DIR, chartName, "values.yaml"));
+    if (await valuesFile.exists()) {
+      await Bun.write(path.join(tempDir, "values.yaml"), valuesFile);
+    }
 
-    const proc = Bun.spawn(["helm", "template", "test-release", tempDir], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const validation = chartValidationValues(chartName),
+      validationPath = path.join(tempDir, "producer-validation.json");
+    if (validation !== undefined)
+      await Bun.write(validationPath, JSON.stringify(validation));
+    const proc = Bun.spawn(
+      [
+        "helm",
+        "template",
+        "test-release",
+        tempDir,
+        ...(validation === undefined ? [] : ["--values", validationPath]),
+      ],
+      {
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
     const [stdout, stderr, exitCode] = await Promise.all([
       new Response(proc.stdout).text(),
       new Response(proc.stderr).text(),
@@ -229,7 +296,35 @@ async function helmTemplateChart(chartName: string): Promise<{
 }
 
 describe("Helm Escaping - Denylist Check (dist/)", () => {
-  it("should not contain unescaped {{ in any dist file", async () => {
+  it("rejects unknown release expressions and consumer templates", () => {
+    for (const [content, source] of [
+      ["{{ .Values.delivery.unreviewed }}", "arcade.k8s.yaml"],
+      ["{{ .Values.delivery.image }}", "arcade.k8s.yaml"],
+      [
+        '{{ .Values.delivery.image | default "docker.io/shepherdjerred/arcade:1" }}',
+        "apps.k8s.yaml",
+      ],
+      ["{{ unescaped_consumer_template }}", "storm-forum.k8s.yaml"],
+      [
+        "{{ required `Delivery requires image` .Values.delivery.bundleKey }}",
+        "storm-forum.k8s.yaml",
+      ],
+      [
+        "{{ required `Delivery requires unreviewed` .Values.delivery.unreviewed }}",
+        "storm-forum.k8s.yaml",
+      ],
+      [
+        "{{ required `Delivery requires image` .Values.delivery.image }}",
+        "apps.k8s.yaml",
+      ],
+    ] as const) {
+      expect(() => checkForUnescapedBraces(content, source)).toThrow(
+        "unescaped {{",
+      );
+    }
+  });
+
+  it("escapes consumer templates and permits only reviewed release expressions", async () => {
     const glob = new Glob("*.k8s.yaml");
     for await (const entry of glob.scan(DIST_DIR)) {
       const content = await Bun.file(path.join(DIST_DIR, entry)).text();

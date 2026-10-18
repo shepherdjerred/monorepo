@@ -13,6 +13,7 @@ import {
   endStormForumBackup,
 } from "./backup.ts";
 import { restoreForum } from "./restore.ts";
+import { recoverForumRelease } from "./recovery.ts";
 const command = z
   .enum(["assemble", "release", "restore", "worker"])
   .parse(Bun.argv[2]);
@@ -27,7 +28,9 @@ switch (command) {
     break;
   }
   case "release": {
-    await releaseForum(StageSchema.parse(Bun.env["STORM_FORUM_STAGE"]));
+    if ((Bun.env["FORUM_RECOVERY_INTENT_ID"] ?? "").length > 0)
+      await recoverForumRelease();
+    else await releaseForum(StageSchema.parse(Bun.env["STORM_FORUM_STAGE"]));
 
     break;
   }

@@ -1,0 +1,39 @@
+{
+  "kind": "argocd",
+  "application": "scout-beta",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "scout-beta",
+  "chartComponent": "chart:scout-beta",
+  "namespace": "scout-beta",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.scout-for-lol": "image:scout-for-lol"
+  },
+  "workerRollout": {
+    "target": "scout-beta",
+    "imageComponent": "image:scout-for-lol",
+    "runnerImage": "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50"
+  },
+  "scoutSite": {
+    "archiveComponent": "site:scout-frontend-beta",
+    "bucket": "scout-frontend-beta",
+    "cloudflareZoneId": "bc4593740e6621ab2e64799c63441bfd",
+    "immutablePrefixes": [
+      "_astro/",
+      "app/assets/",
+      "docs/_astro/",
+      "assets/scout/game/"
+    ],
+    "extraExcludes": [".release-version"],
+    "entrypoints": [
+      "index.html",
+      "app/index.html",
+      "docs/index.html",
+      "404.html"
+    ],
+    "verification": {
+      "url": "https://beta.scout-for-lol.com/",
+      "expectedStatus": 200
+    }
+  }
+}

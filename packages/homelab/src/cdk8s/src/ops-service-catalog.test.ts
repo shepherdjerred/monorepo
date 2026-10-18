@@ -47,10 +47,22 @@ describe("ops service catalog drift", () => {
 
   it("names only ArgoCD Applications that are rendered", async () => {
     const rendered = new Set(await renderedApplicationNames());
-
-    expect(claimedApplications.filter((name) => !rendered.has(name))).toEqual(
-      [],
+    const dormant = SERVICE_CATALOG.services.flatMap((service) =>
+      service.argoApps.filter(
+        (name) => service.rootReleaseExclusions?.[name] === "inactive",
+      ),
     );
+    // Planned Applications stay catalog-owned while credential-gated bootstrap
+    // omits their resources. Every absence must be explicitly classified.
+    expect(
+      claimedApplications.filter(
+        (name) => !rendered.has(name) && !dormant.includes(name),
+      ),
+    ).toEqual([]);
+    expect(dormant.filter((name) => !rendered.has(name)).sort()).toEqual([
+      "delivery",
+      "delivery-control-plane",
+    ]);
   });
 
   it("deploys from version catalog keys that exist", () => {

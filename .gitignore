@@ -69,6 +69,7 @@ logs/
 # Test coverage output
 coverage/
 /.ci-reports/
+/.delivery-artifacts/
 # Written by `release-root`, including its dry run; a receipt for one
 # execution, never source.
 /packages/homelab/homelab-release-result.json

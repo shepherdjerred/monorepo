@@ -1,0 +1,389 @@
+import { run } from "../run.ts";
+import { fileURLToPath } from "node:url";
+
+type DeploySiteBase = {
+  bucket: string;
+  name: string;
+  /**
+   * Retired names that still resolve to this entry. The Woodpecker config
+   * extension is a version-pinned image built from main, so a renamed site's
+   * PR CI (and post-merge main builds until the extension redeploys) still
+   * address it by the old name. Remove once the redeployed extension's
+   * generated loops use the new name.
+   */
+  aliases?: readonly string[];
+  url: string;
+  /** Package dir the buildCmd runs in (relative to repo root). */
+  buildDir: string;
+  buildCmd: string;
+  /** Directory synced to the bucket (relative to repo root). */
+  distDir: string;
+  /** "s3" (SeaweedFS) or "r2" (Cloudflare). */
+  target: "s3" | "r2";
+  /**
+   * Bucket-key prefixes (relative to `distDir`, trailing slash) holding
+   * content-hashed/fingerprinted assets. The deploy syncs these with a 1-year
+   * `immutable` Cache-Control and never `--delete`s them (a SeaweedFS lifecycle
+   * rule prunes old hashes by age); everything else is synced `no-cache` +
+   * `--delete`. Defaults to `["_astro/"]` (Astro's hashed output dir). Set `[]`
+   * for sites with no fingerprinted assets, or a bundler-specific dir (Vite's
+   * `assets/`, the scout SPA's `app/assets/`).
+   */
+  immutablePrefixes: string[];
+  /**
+   * Extra bucket keys/prefixes to keep across the deleting sync pass (objects
+   * not present in `distDir` that a runtime writer still owns — e.g. Temporal's
+   * `data/manifest.json` for better-skill-capped).
+   */
+  extraExcludes?: string[];
+};
+
+type DeploySite = DeploySiteBase;
+
+// Every site is served through caddy-s3-proxy in front of SeaweedFS, so the
+// endpoint is the SeaweedFS S3 gateway for target "s3". No site currently uses
+// "r2", but the target is kept so the endpoint logic matches the old helper.
+const DEPLOY_SITES: readonly DeploySite[] = [
+  {
+    bucket: "statically-typed",
+    name: "statically-typed",
+    url: "https://statically-typed.com",
+    buildDir: "packages/statically-typed",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/statically-typed/dist",
+    target: "s3",
+    immutablePrefixes: [],
+  },
+  {
+    bucket: "sjer-red",
+    name: "sjer.red",
+    url: "https://sjer.red",
+    buildDir: "packages/sjer.red",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/sjer.red/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "resume",
+    name: "resume",
+    url: "https://resume.sjer.red",
+    buildDir: "packages/resume",
+    // xelatex compiles the gitignored resume.pdf; CI deploys --prebuilt (the
+    // resume-build step's artifact) because only the texlive container has TeX.
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/resume",
+    target: "s3",
+    immutablePrefixes: [],
+  },
+  {
+    bucket: "scout-design-system",
+    name: "scout-design-system",
+    url: "https://design.scout-for-lol.com",
+    buildDir: "packages/scout-for-lol",
+    // Builds both catalogs and joins them: the design system at the root, the
+    // app's components under /app/.
+    buildCmd: "bun --no-install run build:storybook-site",
+    distDir: "packages/scout-for-lol/storybook-site",
+    target: "s3",
+    // Storybook's hashed chunks share `assets/` with the unhashed Scout art,
+    // fonts, and theme bootstrap the asset plugin copies in, so nothing here
+    // can be marked immutable wholesale.
+    immutablePrefixes: [],
+  },
+  {
+    bucket: "webring",
+    name: "webring",
+    url: "https://webring.sjer.red",
+    buildDir: "packages/webring",
+    buildCmd: "bun --no-install run typedoc",
+    distDir: "packages/webring/docs",
+    target: "s3",
+    immutablePrefixes: [],
+  },
+  {
+    bucket: "cook",
+    name: "cooklang-rich-preview",
+    url: "https://cook.sjer.red",
+    buildDir: "packages/cooklang-rich-preview",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/cooklang-rich-preview/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "cross-compilers",
+    name: "cross-compilers-site",
+    aliases: ["macos-cross-site"],
+    url: "https://cross-compilers.sjer.red",
+    buildDir: "packages/cross-compilers-site",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/cross-compilers-site/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "stocks-sjer-red",
+    name: "stocks-sjer-red",
+    url: "https://stocks.sjer.red",
+    buildDir: "packages/stocks-sjer-red",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/stocks-sjer-red/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "wiki-sjer-red",
+    name: "wiki",
+    url: "https://wiki.sjer.red",
+    buildDir: "packages/docs/wiki",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/docs/wiki/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  // NOTE: the scout-for-lol buckets (scout-frontend, scout-frontend-beta) are
+  // deliberately NOT in this catalog. Their deploys are versioned and
+  // stage-pinned via scripts/release/scout-site-release.ts (archive / deploy-beta /
+  // reconcile-prod) so prod site content stays in lockstep with the promoted
+  // backend image — a manual deploy-site.ts sync would reintroduce the
+  // unversioned skew that crashed the prod SPA against the pinned backend.
+  {
+    bucket: "better-skill-capped",
+    name: "better-skill-capped",
+    url: "https://better-skill-capped.com",
+    buildDir: "packages/better-skill-capped",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/better-skill-capped/dist",
+    target: "s3",
+    // Vite SPA — content-hashed bundles live under `assets/`, not `_astro/`.
+    immutablePrefixes: ["assets/"],
+    // Temporal `fetchSkillCappedManifest` writes this daily; Vite dist has no
+    // `data/` so a bare `--delete` wipe would 404 the SPA's cold-load path.
+    extraExcludes: ["data/*"],
+  },
+  {
+    bucket: "glitter-boys",
+    name: "glitter-boys",
+    url: "https://glitter-boys.com",
+    buildDir: "packages/glitter-boys",
+    buildCmd: "bun --no-install run build",
+    distDir: "packages/glitter-boys/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+    // Native release publication owns this prefix independently of Astro builds.
+    extraExcludes: ["launcher/*"],
+  },
+  {
+    bucket: "glitter-boys-ppl",
+    name: "glitter",
+    url: "https://ppl.glitter-boys.com",
+    buildDir: "packages/glitter",
+    // The glitter site imports `@shepherdjerred/glitter-context`, whose `dist/`
+    // is gitignored and not produced by `bun install`. Build the shared-context
+    // producer first (its own build runs codegen + tsc) so a clean-checkout
+    // deploy can resolve the dependency — mirrors how the site-scout lane builds
+    // its workspace producers before the consumer.
+    buildCmd:
+      "bun --no-install run --cwd ../glitter-context build && bun --no-install run build",
+    distDir: "packages/glitter/dist",
+    target: "s3",
+    immutablePrefixes: [],
+  },
+  {
+    bucket: "ts-mc-docs",
+    name: "ts-mc-docs",
+    // The currently deployed Woodpecker config extension still has one PR
+    // dry-run using the former portal ID; resolve it to the surviving docs
+    // site until that pinned extension is rebuilt and deployed.
+    aliases: ["ts-mc"],
+    url: "https://docs.ts-mc.net",
+    buildDir: "packages/ts-mc-docs",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/ts-mc-docs/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
+    // Independently published world archives are not part of Astro's dist.
+    extraExcludes: ["world-archive/*"],
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Repo root resolution
+// ---------------------------------------------------------------------------
+
+/** Repo root = three levels up from the shared site builder. */
+function repoRoot(): string {
+  return fileURLToPath(new URL("../../..", import.meta.url));
+}
+
+// ---------------------------------------------------------------------------
+// CLI
+// ---------------------------------------------------------------------------
+
+function usage(): never {
+  console.error(
+    "Usage: bun scripts/release/deploy-site.ts <site-name|bucket> [--dry-run] [--prebuilt]\n" +
+      "       bun scripts/release/deploy-site.ts --list\n\n" +
+      "--prebuilt skips the site's buildCmd and requires distDir to already\n" +
+      "contain files (e.g. a CI artifact built in a specialized container).\n\n" +
+      "A site is selected by its name OR its bucket (the bucket is the stable,\n" +
+      "space-free id preferred for package scripts, e.g. `scout-frontend`).\n\n" +
+      "Sites:\n" +
+      DEPLOY_SITES.map((s) => `  ${s.bucket}  (${s.name})`).join("\n"),
+  );
+  process.exit(1);
+}
+
+/** Run the site's build (skipping the no-op "true" sentinel for pre-built sites). */
+async function runBuild(
+  site: DeploySite,
+  buildDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  if (site.buildCmd === "true") {
+    console.log(
+      `build: skipped (buildCmd is "true"; ${site.name} is pre-built)`,
+    );
+    return;
+  }
+  console.log(`+++ build: (${site.buildDir}) ${site.buildCmd}`);
+  if (dryRun) {
+    console.log(`DRYRUN: would run \`${site.buildCmd}\` in ${site.buildDir}`);
+    return;
+  }
+  await run(["sh", "-c", site.buildCmd], { cwd: buildDir });
+}
+
+function selectSite(args: string[]): DeploySite {
+  const positional = args.filter((a) => !a.startsWith("--"));
+  const siteName = positional[0];
+  if (siteName === undefined || positional.length > 1) {
+    usage();
+  }
+  // Match by name, alias, or bucket (bucket is space-free — preferred in scripts).
+  const site = DEPLOY_SITES.find(
+    (s) =>
+      s.name === siteName ||
+      s.bucket === siteName ||
+      (s.aliases ?? []).includes(siteName),
+  );
+  if (!site) {
+    console.error(`Unknown site: ${siteName}`);
+    usage();
+  }
+  return site;
+}
+
+async function assertPrebuiltSite(
+  site: DeploySite,
+  distDir: string,
+): Promise<void> {
+  const glob = new Bun.Glob("**/*");
+  let fileCount = 0;
+  try {
+    for await (const _ of glob.scan({ cwd: distDir, onlyFiles: true })) {
+      fileCount += 1;
+      break;
+    }
+  } catch (error) {
+    const isEnoent =
+      error instanceof Error && "code" in error && error.code === "ENOENT";
+    if (!isEnoent) throw error;
+  }
+  if (fileCount === 0) {
+    throw new Error(
+      `--prebuilt: ${site.distDir} is missing or empty — refusing to sync`,
+    );
+  }
+}
+
+export async function prepareStaticSite(
+  args: string[],
+  dryRun: boolean,
+): Promise<{ bucket: string; source: string; root: string } | null> {
+  const allowed = new Set([
+    "--archive",
+    "--dry-run",
+    "--prebuilt",
+    "--list",
+    "--help",
+    "-h",
+  ]);
+  if (
+    args.some((argument) => argument.startsWith("-") && !allowed.has(argument))
+  )
+    throw new Error("Unknown site build option");
+  if (args.includes("--help") || args.includes("-h")) {
+    usage();
+  }
+  if (args.includes("--list")) {
+    for (const s of DEPLOY_SITES) {
+      console.log(`${s.name}\t${s.bucket}\t${s.url}`);
+    }
+    return null;
+  }
+
+  const prebuilt = args.includes("--prebuilt");
+  const site = selectSite(args);
+
+  const root = repoRoot();
+  const buildDir = `${root}/${site.buildDir}`;
+  const distDir = `${root}/${site.distDir}`;
+
+  console.log(`--- Deploy ${site.name} -> ${site.bucket} (${site.url})`);
+  console.log(dryRun ? "(dry run)" : "(live)");
+
+  if (prebuilt) {
+    // The dist was produced elsewhere (e.g. a CI artifact from a container
+    // with build-only tooling like playwright browsers). Refuse to sync a
+    // missing/empty dir — with --delete that would wipe the bucket.
+    await assertPrebuiltSite(site, distDir);
+    console.log(
+      `build: skipped (--prebuilt; syncing existing ${site.distDir})`,
+    );
+  } else {
+    await runBuild(site, buildDir, dryRun);
+  }
+
+  // Every site in the catalog ships a root index.html. Refuse a live sync
+  // without it: pass 2 runs with --delete, so a dist missing its root files
+  // (e.g. build 5648's artifact, where the `**/*` glob dropped every
+  // root-level file) would wipe them from the bucket and take the site down.
+  // Dry runs may legitimately have no dist (the build is skipped).
+  await assertSiteRoot(site, distDir, dryRun);
+  await assertRequiredErrorPage(site.name, distDir, dryRun);
+
+  return { bucket: site.bucket, source: distDir, root };
+}
+
+async function assertRequiredErrorPage(
+  siteName: string,
+  distDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  if (
+    dryRun ||
+    !["better-skill-capped", "cooklang-rich-preview"].includes(siteName)
+  )
+    return;
+  if (!(await Bun.file(`${distDir}/404.html`).exists())) {
+    throw new Error(
+      `${siteName}: required 404.html is missing; refusing to publish an incomplete site`,
+    );
+  }
+}
+
+async function assertSiteRoot(
+  site: DeploySite,
+  distDir: string,
+  dryRun: boolean,
+): Promise<void> {
+  if (!dryRun && !(await Bun.file(`${distDir}/index.html`).exists())) {
+    throw new Error(
+      `${site.distDir}/index.html is missing — refusing to publish an incomplete site archive`,
+    );
+  }
+}

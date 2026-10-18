@@ -85,14 +85,11 @@ function pipelinesUrl(repoId: number, options: WoodpeckerApiOptions): URL {
 /**
  * Newest commit on `branch` where every named workflow succeeded.
  *
- * Stricter than `lastSuccessfulCommit`, and deliberately so: the image lane's
- * base must have successful image publication and pin handoffs, not
- * merely one whose pipeline went green. A pipeline can pass overall with those
- * workflows skipped, and treating such a commit as the base would make the
- * next build believe images already exist for content that was never built.
- *
- * The pipeline number addresses its published-pin handoffs. Commit-back may
- * update a pending PR; it does not prove those pins have reached main.
+ * A green pipeline can have skipped artifact workflows. Requiring the named
+ * producers prevents using a commit whose immutable inputs were never built.
+ * Artifact reuse also requires complete pipeline success; verification-only
+ * caching may retain successful work from an otherwise failed run.
+ * The pipeline number addresses the original producer's immutable handoffs.
  *
  * Returns undefined when no recent pipeline qualifies, which callers must read
  * as "no base" -- building everything -- rather than as an error.
@@ -101,15 +98,16 @@ export async function lastPipelineWithSuccessfulWorkflows(
   repoId: number,
   branch: string,
   workflowNames: readonly string[],
-  options: WoodpeckerApiOptions & { readonly scanLimit?: number },
+  options: WoodpeckerApiOptions & {
+    readonly scanLimit?: number;
+    readonly requirePipelineSuccess?: boolean;
+  },
 ): Promise<SuccessfulWorkflowPipeline | undefined> {
   const scanLimit = options.scanLimit ?? 20;
   const listUrl = pipelinesUrl(repoId, options);
   listUrl.searchParams.set("branch", branch);
-  // A manual main run can finish these exact workflows even when another lane
-  // fails. Special-purpose manual plans cannot qualify because they never run
-  // the requested workflows. Reuse the published artifacts and verified work
-  // instead of rebuilding them on the next push.
+  // Verification may reuse successful workflows from a partially failed run.
+  // Artifact inputs additionally require the complete producer to succeed.
   listUrl.searchParams.set("event", "push,manual");
   listUrl.searchParams.set("perPage", scanLimit.toString());
 
@@ -129,6 +127,11 @@ export async function lastPipelineWithSuccessfulWorkflows(
       await getJson(detailUrl, options),
     );
     if (!detail.success) continue;
+    if (
+      options.requirePipelineSuccess === true &&
+      detail.data.status !== "success"
+    )
+      continue;
     const succeeded = new Set(
       detail.data.workflows
         .filter((workflow) => workflow.state === "success")

@@ -12,7 +12,8 @@ import {
   assertStackExecutionContext,
   dockerTokenPlanSummary,
 } from "./dockerhub-tokens.ts";
-import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
+import { STACK_MANIFEST, parseTofuStack } from "./tofu-stack-manifest.ts";
+import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
   collectOnePasswordTargets,
   loadPlatformDesiredState,
@@ -159,6 +160,29 @@ describe("OpenTofu credential contracts", () => {
     ).not.toThrow();
   });
 
+  test("Delivery reuses the operator while tailnet policy keeps only its existing ACL OAuth credentials", () => {
+    expect(() => parseTofuStack("tailscale-delivery")).toThrow(
+      "Unknown OpenTofu stack",
+    );
+    const requested: string[] = [];
+    const environment = buildTofuEnvironment("tailscale", (name) => {
+      requested.push(name);
+      return `${name}-fixture`;
+    });
+    expect(requested.toSorted()).toEqual(
+      [
+        ...STATE_SOURCES,
+        "TAILSCALE_OAUTH_CLIENT_ID",
+        "TAILSCALE_OAUTH_CLIENT_SECRET",
+      ].toSorted(),
+    );
+    expect(environment["TAILSCALE_API_KEY"]).toBeUndefined();
+    expect(environment["OP_SERVICE_ACCOUNT_TOKEN"]).toBeUndefined();
+    expect(
+      environment["TF_VAR_tofu_state_encryption_passphrase"],
+    ).toBeUndefined();
+  });
+
   test.each(STACKS)("%s requests only its declared credentials", (stack) => {
     const requested: string[] = [];
     buildTofuEnvironment(stack, (environmentName) => {
@@ -232,6 +256,48 @@ const PLATFORM_STACKS: readonly PlatformStack[] = [
   "discord",
   "cloudflare-tokens",
 ];
+
+test("static cache uses only six-zone purge authority and its existing handoff", async () => {
+  const stackDir = new URL("../../src/tofu/cloudflare-tokens/", import.meta.url)
+    .pathname;
+  const desired = await loadPlatformDesiredState(stackDir, "cloudflare-tokens");
+  const token = z
+    .object({
+      cloudflare_api_tokens: z.object({
+        "delivery-static-cache": z.record(z.string(), z.unknown()),
+      }),
+    })
+    .parse(desired).cloudflare_api_tokens["delivery-static-cache"];
+  expect(token).toEqual({
+    name: "Delivery static cache purge",
+    policies: [
+      {
+        effect: "allow",
+        permission_groups: [
+          { id: "e17beae8b8cb423a99b1730f21238bed", name: "Cache Purge" },
+        ],
+        resources: {
+          "com.cloudflare.api.account.zone.3584931497b83f9359a3cc2983cc5cb4":
+            "*",
+          "com.cloudflare.api.account.zone.ec9aaac18b0aae64b456e54773d11e66":
+            "*",
+          "com.cloudflare.api.account.zone.bc4593740e6621ab2e64799c63441bfd":
+            "*",
+          "com.cloudflare.api.account.zone.879487f81194d63121d0b8dddd16f08f":
+            "*",
+          "com.cloudflare.api.account.zone.d4036b55fca60ca5f998866309e951d8":
+            "*",
+          "com.cloudflare.api.account.zone.efb999158b3977e07b26f6a74809c80a":
+            "*",
+        },
+      },
+    ],
+    expires_on: "2027-10-17T23:59:59Z",
+    status: "active",
+    vault_item_id: "la7gkfl5eqtxiiv2hq3qujx2gi",
+    vault_field: "credential",
+  });
+});
 
 describe("committed platform desired state", () => {
   test("rejects a nonboolean Cloudflare token management flag", async () => {

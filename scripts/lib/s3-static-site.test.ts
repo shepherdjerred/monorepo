@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
-  filesHaveSameBytes,
   forceMutableUploadCommand,
   isMissingS3Object,
   mutableSitePruneCommand,
@@ -12,6 +11,7 @@ import {
   staticSiteFilePaths,
   staticSiteSyncDryRunCommand,
 } from "./s3-static-site.ts";
+import { filesHaveSameBytes } from "./s3-static-site-readback.ts";
 
 const temporaryDirectories: string[] = [];
 

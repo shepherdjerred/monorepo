@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { WorkerDeploymentRolloutOptions } from "./worker-deployment-rollout.ts";
 
 export const WorkerDeploymentRolloutTargetSchema = z.enum([
   "central",
@@ -7,18 +6,21 @@ export const WorkerDeploymentRolloutTargetSchema = z.enum([
   "scout-prod",
 ]);
 
-export type WorkerDeploymentRolloutTargetConfiguration = Pick<
-  WorkerDeploymentRolloutOptions,
-  | "deploymentName"
-  | "rolloutLockName"
-  | "taskQueue"
-  | "candidatePinName"
-  | "stablePinName"
-  | "imageRepository"
-  | "replayCommands"
-  | "canaryCommand"
-  | "acceptancePrerequisite"
->;
+export type WorkerDeploymentRolloutTargetConfiguration = {
+  deploymentName: string;
+  rolloutLockName: string;
+  taskQueue: string;
+  candidatePinName: string;
+  stablePinName: string;
+  imageRepository: string;
+  replayCommands: readonly (readonly string[])[];
+  canaryCommand: readonly string[];
+  acceptancePrerequisite?: {
+    namespace: string;
+    deploymentName: string;
+    taskQueue: string;
+  };
+};
 
 export function resolveWorkerDeploymentRolloutTarget(
   rawTarget: string,
