@@ -94,7 +94,11 @@ export async function observeWorkerBaseline(
         targetRevision: z.string(),
       }),
     }),
-    status: SettledArgoStatusSchema,
+    status: SettledArgoStatusSchema.extend({
+      sync: SettledArgoStatusSchema.shape.sync.extend({
+        status: z.enum(["Synced", "OutOfSync"]),
+      }),
+    }),
   });
   const observed = await effects.application(selection.application);
   const fingerprint = workerSourceFingerprint(observed);
@@ -140,7 +144,7 @@ export async function observeWorkerBaseline(
     {
       kind: "reconciliation",
       operationId,
-      summary: `Host-only baseline observed captured source ${fingerprint}; no Application source or routing mutation`,
+      summary: `Host-only baseline observed captured source ${fingerprint}, Argo comparison ${stable.status.sync.status}; no Application source or routing mutation`,
     },
     {
       kind: "acceptance",

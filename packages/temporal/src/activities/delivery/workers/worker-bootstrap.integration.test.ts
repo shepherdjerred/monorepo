@@ -30,6 +30,7 @@ import {
 } from "./worker-baseline.ts";
 import { finishDelivery } from "#activities/delivery/execute.ts";
 import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
+import { SettledArgoStatusSchema } from "#lib/delivery/argocd-proof.ts";
 import { retainedWorkerPod } from "./worker-fixtures.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
@@ -293,6 +294,28 @@ test("missing replacement Pod proof leaves the bootstrap intent running and the 
   ).toBe(1);
 });
 
+async function observeComparisonDrift(
+  baseline: DeploymentDetail,
+  effects: WorkerBaselineEffects,
+  comparison: (status: string) => void,
+) {
+  comparison("OutOfSync");
+  const evidence = await observeWorkerBaseline(baseline, effects);
+  expect(
+    evidence.some((entry) =>
+      entry.summary.includes("Argo comparison OutOfSync"),
+    ),
+  ).toBe(true);
+  const status = z
+    .object({ status: z.unknown() })
+    .parse(await effects.application("temporal")).status;
+  expect(() => SettledArgoStatusSchema.parse(status)).toThrow();
+  comparison("Unknown");
+  await expect(observeWorkerBaseline(baseline, effects)).rejects.toThrow();
+  comparison("OutOfSync");
+  return evidence;
+}
+
 test("independent original-A hosts and captured older chart leave qualified app-C acceptance untouched", async () => {
   await cluster.database.$executeRawUnsafe(
     'TRUNCATE "Environment", "Pipeline", "Build", "VersionSet", "Request", "Audit" CASCADE',
@@ -358,6 +381,7 @@ test("independent original-A hosts and captured older chart leave qualified app-
   const reads: string[] = [];
   const observedAt = new Date().toISOString();
   let reportedRevision = "1.0.1";
+  let comparisonStatus = "Synced";
   const effects: WorkerBaselineEffects = {
     async application() {
       reads.push("argo");
@@ -371,7 +395,7 @@ test("independent original-A hosts and captured older chart leave qualified app-
           },
         },
         status: {
-          sync: { status: "Synced", revision: reportedRevision },
+          sync: { status: comparisonStatus, revision: reportedRevision },
           health: { status: "Healthy" },
           operationState: { phase: "Succeeded", finishedAt: observedAt },
         },
@@ -438,7 +462,7 @@ test("independent original-A hosts and captured older chart leave qualified app-
   };
   detail = await captureBaselineSource(adoption.id, effects);
   reads.length = 0;
-  const evidence = await observeWorkerBaseline(detail, effects);
+  await observeWorkerBaseline(detail, effects);
   expect(reads).toEqual([
     "argo",
     "Deployment",
@@ -447,6 +471,9 @@ test("independent original-A hosts and captured older chart leave qualified app-
     "poller:beta",
     "argo",
   ]);
+  const evidence = await observeComparisonDrift(detail, effects, (status) => {
+    comparisonStatus = status;
+  });
   reportedRevision = "1.0.2";
   await expect(observeWorkerBaseline(detail, effects)).rejects.toThrow(
     "exact settled captured chart",
