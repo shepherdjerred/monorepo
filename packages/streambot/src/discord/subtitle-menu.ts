@@ -1,3 +1,4 @@
+import { graphemePrefix } from "@shepherdjerred/text";
 /**
  * `/stream subtitles`'s track picker: a Discord select menu built from the ranked subtitle
  * candidates for the currently-playing source. Lives outside the command handler so the handler
@@ -135,7 +136,7 @@ export function buildMenuOptions(
   const options: MenuOption[] = [
     { label: "Off (no subtitles)", value: "0" },
     ...shown.map((candidate, index) => ({
-      label: labelForCandidate(candidate).slice(0, 100),
+      label: graphemePrefix(labelForCandidate(candidate), 100),
       value: String(index + 1),
     })),
   ];

@@ -1,3 +1,4 @@
+import { graphemePrefix } from "@shepherdjerred/text";
 import {
   AUDIO_CHANNEL,
   PlaybackChannelNumberSchema,
@@ -69,7 +70,7 @@ export class ChannelSelection {
         const number = PlaybackChannelNumberSchema.parse(start + index + 1);
         const view = get(number)?.view();
         const current = view?.current;
-        return `${number === selected ? "→ " : ""}${playbackChannelLabel(number)}: ${view?.state ?? "idle"}${current == null ? "" : ` · ${current.title.slice(0, 64)}`} · ${String(view?.queue.length ?? 0)} queued`;
+        return `${number === selected ? "→ " : ""}${playbackChannelLabel(number)}: ${view?.state ?? "idle"}${current == null ? "" : ` · ${graphemePrefix(current.title, 64)}`} · ${String(view?.queue.length ?? 0)} queued`;
       },
     );
     return `Streambot channels · page ${String(page)}/${String(pages)} · selected ${String(selected)}\n${lines.join("\n")}\n\n${NUMBERED_CHANNEL_HINT} Availability is shared across voice channels and servers.${pages > 1 ? " Use /stream channels page:<number> to see more." : ""}`;

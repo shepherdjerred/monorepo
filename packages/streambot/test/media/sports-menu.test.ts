@@ -114,6 +114,21 @@ describe("sports Discord picker", () => {
     },
   );
 
+  it("keeps emoji whole when truncating titles at Discord limits", () => {
+    // The emoji straddles unit 99/100 of the select label (limit 100) and
+    // unit 199/200 of the field name (limit 200).
+    const page = sportsMenuPage(
+      [{ ...LIVE, title: `${"a".repeat(98)}🏈${"b".repeat(98)}🇺🇸tail` }],
+      0,
+    );
+    const name = page.embeds[0]!.toJSON().fields?.[0]?.name ?? "";
+    expect(name).toBe(`${"a".repeat(98)}🏈${"b".repeat(98)}…`);
+    expect(name.isWellFormed()).toBe(true);
+    expect(page.components[0]!.toJSON().components[0]).toMatchObject({
+      options: [{ label: `${"a".repeat(98)}…` }],
+    });
+  });
+
   it("keeps long provider titles within Discord limits and escapes markdown", () => {
     const page = sportsMenuPage(
       [{ ...LIVE, title: "**Game** ".repeat(100) }],

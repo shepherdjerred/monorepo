@@ -1,3 +1,4 @@
+import { graphemePrefix } from "@shepherdjerred/text";
 /**
  * Pure rendering for the player card — the live now-playing message with a progress bar and
  * control rows. Emits neutral descriptors rather than discord.js builders (the same split
@@ -320,7 +321,7 @@ function buildChapterSelect(view: PlaybackView): SelectSpec | null {
         ? `Jump to a chapter (first ${String(shown.length)} of ${String(chapters.length)})`
         : "Jump to a chapter",
     options: shown.map((chapter) => ({
-      label: `${String(chapter.index)}. ${chapter.title}`.slice(0, 100),
+      label: graphemePrefix(`${String(chapter.index)}. ${chapter.title}`, 100),
       value: String(chapter.index),
       description: formatTimecode(chapter.startSeconds),
     })),

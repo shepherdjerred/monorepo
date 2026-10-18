@@ -1,3 +1,4 @@
+import { truncateGraphemes } from "@shepherdjerred/text";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -26,10 +27,6 @@ const PROVIDER_NAMES = {
   streameast: "StreamEast",
   tvsportslive: "TVSportsLive",
 };
-
-function truncate(value: string, length: number): string {
-  return value.length <= length ? value : `${value.slice(0, length - 1)}…`;
-}
 
 function eventStatus(event: SportsEvent): string {
   if (event.status === "live") return "🔴 **Live**";
@@ -63,7 +60,7 @@ export function sportsMenuPage(events: readonly SportsEvent[], page: number) {
   if (shown.length > 0) {
     embed.addFields(
       shown.map((event) => ({
-        name: truncate(escapeMarkdown(event.title), 200),
+        name: truncateGraphemes(escapeMarkdown(event.title), 200),
         value: `${eventStatus(event)} · ${PROVIDER_NAMES[event.provider]}`,
       })),
     );
@@ -74,7 +71,7 @@ export function sportsMenuPage(events: readonly SportsEvent[], page: number) {
       ? []
       : [
           {
-            label: truncate(event.title, 100),
+            label: truncateGraphemes(event.title, 100),
             description: `${PROVIDER_NAMES[event.provider]} · ${sportsEventTimeLabel(event)}`,
             value: String(start + index),
           },
@@ -210,7 +207,7 @@ export async function sendSportsMenu(
     }
     await picked.deferUpdate();
     await interaction.editReply({
-      content: `Checking **${truncate(escapeMarkdown(event.title), 200)}**…`,
+      content: `Checking **${truncateGraphemes(escapeMarkdown(event.title), 200)}**…`,
       components: [],
       allowedMentions: { parse: [] },
     });
