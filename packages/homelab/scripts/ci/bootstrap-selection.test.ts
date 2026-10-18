@@ -442,15 +442,15 @@ test("both prerequisites require paused root automation", () => {
 });
 
 test("the immutable packaged root keeps Forum on its native source in the restored chart", async () => {
-  const directory = await mkdtemp(
-    path.join(os.tmpdir(), "delivery-bootstrap-chart-"),
-  );
+  const directory = await mkdtemp(path.join(os.tmpdir(), "bootstrap-chart-"));
   try {
     const forum = native("storm-forum");
     forum.spec["literalConfig"] = {
       exporter: `lines.append(f'bytes{{bucket="{bucket_name}"}} {cache["storage_bytes"]}')`,
       multiline: "{{\n literal }}\n{{ unclosed",
       template: "{{ $labels.instance }} and {{ .Values.mustNotExecute }}",
+      dedup: "off",
+      shared: "yes",
     };
     const root = native("apps");
     const raw = bootstrapRootManifest(
@@ -476,7 +476,9 @@ test("the immutable packaged root keeps Forum on its native source in the restor
       capture: true,
       echoCapturedStdout: false,
     });
-    const applications = parseAllDocuments(rendered.stdout).map((doc) =>
+    const applications = parseAllDocuments(rendered.stdout, {
+      version: "1.1",
+    }).map((doc) =>
       z
         .object({
           metadata: z.object({ name: z.string() }),
