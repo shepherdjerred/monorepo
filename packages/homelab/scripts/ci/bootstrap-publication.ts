@@ -8,6 +8,7 @@ import {
   releasePrunesChart,
 } from "#scripts/helm/helm-release-core.ts";
 import { stageChart } from "#scripts/helm/helm-push.ts";
+import { bootstrapArgo } from "./bootstrap-native.ts";
 import {
   bootstrapRootManifest,
   bootstrapRootTemplate,
@@ -19,6 +20,149 @@ import {
 } from "./bootstrap-selection.ts";
 
 const CHART_ORIGIN = "https://chartmuseum.tailnet-1a49.ts.net";
+type Captured = {
+  root: BootstrapApplication;
+  applications: BootstrapApplication[];
+  priorRoot: string;
+};
+
+function maintenanceImage(manifests: unknown[]) {
+  const deployments = manifests.filter((value) => {
+    const identity = z
+      .object({ kind: z.string(), metadata: z.object({ name: z.string() }) })
+      .parse(value);
+    return (
+      identity.kind === "Deployment" &&
+      identity.metadata.name === "temporal-maintenance-worker"
+    );
+  });
+  const image = z
+    .string()
+    .regex(
+      /^docker\.io\/shepherdjerred\/temporal-worker(?::2\.0\.0-\d+)?@sha256:[a-f0-9]{64}$/u,
+    );
+  const container = (name: string) =>
+    z.object({ name: z.literal(name), image });
+  const [original] = z
+    .tuple([
+      z.object({
+        metadata: z.object({ namespace: z.literal("woodpecker-ci") }),
+        spec: z.object({
+          template: z.object({
+            metadata: z.object({
+              labels: z.object({
+                app: z.literal("temporal-maintenance-worker"),
+                component: z.literal("maintenance-worker"),
+              }),
+            }),
+            spec: z.object({
+              containers: z.tuple([container("temporal-maintenance-worker")]),
+              initContainers: z.tuple([container("copy-kometa-config")]),
+            }),
+          }),
+        }),
+      }),
+    ])
+    .parse(deployments);
+  const selected = original.spec.template.spec.containers[0].image;
+  if (selected !== original.spec.template.spec.initContainers[0].image)
+    throw new Error(
+      "Original Woodpecker maintenance init/runtime image differs",
+    );
+  return selected;
+}
+
+/** Retain the exact immutable original; replacing the generator is not a maintenance-worker release. */
+export async function bootstrapMaintenanceImage(
+  prior: BootstrapApplication,
+  read = bootstrapArgo,
+) {
+  z.object({
+    metadata: z.object({ name: z.literal("woodpecker") }),
+    spec: z.object({
+      source: z.object({
+        repoURL: z.literal(CHART_ORIGIN),
+        chart: z.literal("woodpecker"),
+      }),
+    }),
+  }).parse(prior);
+  const result = z
+    .object({ manifests: z.array(z.string()) })
+    .parse(
+      await read(
+        `/woodpecker/manifests?revision=${encodeURIComponent(prior.status.sync.revision)}`,
+      ),
+    );
+  return maintenanceImage(
+    result.manifests.map((raw) => JSON.parse(raw) as unknown),
+  );
+}
+
+export function preserveBootstrapMaintenanceImage(
+  raw: string,
+  original: string,
+) {
+  const current = maintenanceImage(
+    parseAllDocuments(raw).map((doc): unknown => {
+      if (doc.errors.length > 0)
+        throw new Error("Invalid Woodpecker bootstrap manifest");
+      const value: unknown = doc.toJSON();
+      return value;
+    }),
+  );
+  let count = 0;
+  const preserved = raw.replaceAll(current, () => {
+    count++;
+    return original;
+  });
+  if (count !== 2)
+    throw new Error(
+      "Woodpecker bootstrap must preserve exactly its original maintenance init/runtime images",
+    );
+  return preserved;
+}
+
+function prepareBootstrapManifest(
+  raw: string,
+  name: string,
+  input: {
+    descriptor: BootstrapDescriptor;
+    captured: Captured;
+    maintenance: string | undefined;
+  },
+) {
+  if (name === "apps")
+    return bootstrapRootManifest(
+      raw,
+      [input.captured.root, ...input.captured.applications],
+      input.descriptor,
+      input.captured.priorRoot,
+    );
+  const selected = bootstrapImageManifest(
+    raw,
+    z.enum(["woodpecker", "delivery", "delivery-control-plane"]).parse(name),
+    input.descriptor,
+  );
+  return name === "woodpecker"
+    ? preserveBootstrapMaintenanceImage(
+        selected,
+        z.string().parse(input.maintenance),
+      )
+    : selected;
+}
+
+async function capturedMaintenanceImage(
+  descriptor: BootstrapDescriptor,
+  captured: Captured,
+) {
+  if (!descriptor.targets.includes("woodpecker")) return;
+  const prior = captured.applications.find(
+    (app) => app.metadata.name === "woodpecker",
+  );
+  if (prior === undefined)
+    throw new Error("Woodpecker bootstrap requires its original Application");
+  return bootstrapMaintenanceImage(prior);
+}
 export function bootstrapArchiveNames(descriptor: BootstrapDescriptor) {
   return [
     ...descriptor.targets.filter(
@@ -29,14 +173,11 @@ export function bootstrapArchiveNames(descriptor: BootstrapDescriptor) {
 }
 export async function prepareBootstrapArchives(
   descriptor: BootstrapDescriptor,
-  captured: {
-    root: BootstrapApplication;
-    applications: BootstrapApplication[];
-    priorRoot: string;
-  },
+  captured: Captured,
   directory: string,
 ) {
   const homelab = new URL("../../", import.meta.url).pathname;
+  const maintenance = await capturedMaintenanceImage(descriptor, captured);
   await run(["bun", "--no-install", "run", "build"], {
     cwd: path.join(homelab, "src/cdk8s"),
     env: {
@@ -65,21 +206,11 @@ export async function prepareBootstrapArchives(
     if (input === undefined)
       throw new Error(`Bootstrap source does not build ${name}`);
     const original = await Bun.file(input.manifestPath).text();
-    const prepared =
-      name === "apps"
-        ? bootstrapRootManifest(
-            original,
-            [captured.root, ...captured.applications],
-            descriptor,
-            captured.priorRoot,
-          )
-        : bootstrapImageManifest(
-            original,
-            z
-              .enum(["woodpecker", "delivery", "delivery-control-plane"])
-              .parse(name),
-            descriptor,
-          );
+    const prepared = prepareBootstrapManifest(original, name, {
+      descriptor,
+      captured,
+      maintenance,
+    });
     const manifestPath = path.join(directory, `${name}.yaml`);
     await Bun.write(manifestPath, bootstrapRootTemplate(prepared, name), {
       mode: 0o600,
