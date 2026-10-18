@@ -140,6 +140,19 @@ export function platformSettlements(
   return {
     desired: targetFingerprint(detail),
     ...(hasPrior && prior !== null ? { prior: targetFingerprint(prior) } : {}),
+    ...(prior === null &&
+    snapshot.kind === "tofu-apply" &&
+    snapshot.stack === "discord"
+      ? {
+          original: fingerprint({
+            kind: "tofu-original-target",
+            source: snapshot.source,
+            stack: snapshot.stack,
+            planDeploymentId: snapshot.planDeploymentId,
+            plan: snapshot.plan,
+          }),
+        }
+      : {}),
   };
 }
 

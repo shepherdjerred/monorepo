@@ -131,7 +131,10 @@ export async function originalForumRecoveryJob(
       "Original Forum image lacks its original source or native recovery ABI; legacy unjournaled migrations need reviewed native inspection",
     );
   const selected = deliverySelection(detail);
-  const documents = await renderWorkerChart(selected, command);
+  const documents = await renderWorkerChart(
+    { selection: selected.selection, chart: selected.chart },
+    command,
+  );
   const name = `storm-forum-release-${createHash("sha256").update(detail.deployment.id).digest("hex").slice(0, 32)}`;
   const raw = documents
     .filter(

@@ -13,7 +13,7 @@ import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import { recoveryExecutionJob, type RecoveryAction } from "./request.ts";
 
 const Inspection = z.strictObject({
-  state: z.enum(["desired", "prior", "readonly"]),
+  state: z.enum(["desired", "prior", "readonly", "original"]),
   observedAt: z.iso.datetime(),
   proofSummary: z.string().min(20).max(4000),
 });

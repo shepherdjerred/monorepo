@@ -195,7 +195,7 @@ export async function completePlatformRecovery(
   if (expected === undefined || expected !== input.settlement.fingerprint)
     throw new DeliveryError(
       "CONFLICT",
-      "Recovery target is neither the exact frozen desired state nor a genuine prior accepted state",
+      "Recovery target does not match an exact frozen allowed settlement",
     );
   return this.database.$transaction(async (tx) => {
     const { intent, row, env } = await pendingRecovery(tx, id);

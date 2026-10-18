@@ -401,6 +401,15 @@ receipts or deleted resources alone never prove that an external write did not
 occur. Completion within sixty seconds uses the original snapshot and ownership
 CAS; it releases locks without advancing any acceptance pointer.
 
+A first Discord apply without an accepted prior may instead settle the
+`original` target. Inspection authenticates its original approved saved plan,
+compares all six managed before values and all six computed application
+baselines with fresh provider reads, and requires the same state lineage with a
+nondecreasing serial that stays stable during inspection. A serial increase is
+recorded; this proves the original target, not unchanged state history or a
+successful apply. The same Workflow, terminal Job, freshness and ownership CAS
+checks still apply, and no acceptance pointer advances.
+
 Partial OpenTofu recovery produces a new immutable encrypted plan on that same
 intent. Its receipt names the recovery intent, original source/stack, state,
 digest, expiration, and native Job identity. Only execute-scoped plan endpoints

@@ -79,6 +79,7 @@ export const PlatformSettlementFingerprintsSchema = z
     desired: Hash.optional(),
     prior: Hash.optional(),
     readonly: Hash.optional(),
+    original: Hash.optional(),
   })
   .strict();
 export const CompletePlatformRecoverySchema = z
@@ -108,7 +109,7 @@ export const CompletePlatformRecoverySchema = z
       .max(20),
     settlement: z
       .object({
-        state: z.enum(["desired", "prior", "readonly"]),
+        state: z.enum(["desired", "prior", "readonly", "original"]),
         fingerprint: Hash,
       })
       .strict(),
