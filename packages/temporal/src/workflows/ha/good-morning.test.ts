@@ -15,6 +15,7 @@ import {
   goodMorningWakeUp,
   shouldHeatFloor,
 } from "./good-morning.ts";
+import { HA_ACTIVITY_RETRY } from "./util.ts";
 
 const TASK_QUEUE = TASK_QUEUES.HOME;
 // Each integration case compiles and starts a native Temporal worker. The
@@ -391,9 +392,12 @@ describe("goodMorningWakeUp", () => {
         `wake-temperature-missing-${crypto.randomUUID()}`,
       );
 
-      // The shared three-attempt policy still applies, so a transiently
-      // missing entity during an HA restart recovers instead of degrading.
-      expect(scenario.temperatureReadAttempts).toBe(3);
+      // The shared Home Assistant retry policy still applies, so a
+      // transiently missing entity during an HA restart recovers instead of
+      // degrading.
+      expect(scenario.temperatureReadAttempts).toBe(
+        HA_ACTIVITY_RETRY.maximumAttempts,
+      );
       expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
       expect(scenario.notifications).toEqual(["Good Morning"]);
       expect(scenario.outcomes).toEqual([

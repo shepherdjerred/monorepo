@@ -21,10 +21,20 @@ import type {
 import type { HaSchema } from "#generated/ha-schema.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
+// Home Assistant is unreachable for most of a minute while its pod restarts.
+// Back off 2s, 4s, 8s, 16s and 20s between six attempts (50s of waiting) so a
+// routine restart delays an automation instead of failing it.
+export const HA_ACTIVITY_RETRY = {
+  initialInterval: "2 seconds",
+  backoffCoefficient: 2,
+  maximumInterval: "20 seconds",
+  maximumAttempts: 6,
+} as const;
+
 const activities = proxyActivities<HaActivities>({
   taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "30 seconds",
-  retry: { maximumAttempts: 3 },
+  retry: HA_ACTIVITY_RETRY,
 });
 
 // Cleanup owns the last chance to turn off a device after the sleep timer. Use
