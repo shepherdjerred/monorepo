@@ -98,6 +98,34 @@ Wait a minute first — the destroy is retried on the agent's reconcile loop.
 Then clear the stale mount, or destroy the blocking snapshot by exact name, or
 restart the agent pod.
 
+If the dataset is unmounted and the destroy still reports `dataset is busy`,
+look for a process that still maps a deleted executable from it. Unmounting
+does not release a memory mapping, so a host-PID process, such as a profiler
+that loaded an executable from a finished pod, keeps the dataset busy. Search
+the volume's node read-only:
+
+```bash
+NODE=liskov  # the volume's spec.ownerNodeID
+for PID in $(talosctl -n "$NODE" processes | awk 'NR > 1 {print $2}'); do
+  talosctl -n "$NODE" read "/proc/$PID/maps" 2>/dev/null |
+    awk '/\(deleted\)$/ && $4 != "00:01" {print $4, $6}' | sort -u > /tmp/maps
+  [ -s /tmp/maps ] || continue
+  talosctl -n "$NODE" read "/proc/$PID/mountinfo" 2>/dev/null |
+    awk '{print $3}' | sort -u > /tmp/mounts
+  awk -v pid="$PID" 'NR == FNR {m[$1] = 1; next} !($1 in m) {print pid, $0}' \
+    /tmp/mounts /tmp/maps
+done
+```
+
+Each line is a PID, the device of a deleted mapped file, and the file's former
+path. Device `00:01` is shared memory and is skipped. The listed file sits on a
+filesystem that is not mounted in that process's namespace, which is how a
+host-PID agent holds an executable from a finished pod's volume. Name the
+process with `talosctl -n "$NODE" processes | awk -v pid=<PID> '$2 == pid'`. If it is an
+agent rather than a process of a pod still using the volume, restart only that
+agent's pod after confirming the node keeps its required peers. The destroy
+then succeeds on the ZFS agent's next reconcile.
+
 **Never strip the finalizer to make the deletion go through.** That converts a
 stuck resource into an orphaned dataset and is how the original mess was made.
 If the agent is genuinely unrecoverable, destroy the dataset yourself inside the

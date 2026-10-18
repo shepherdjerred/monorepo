@@ -19,7 +19,9 @@ import type { TaintedNode } from "cdk8s-plus-31";
  *
  * - Per-node system/observability pods (monitoring collectors, CSI node
  *   plugin) — they TOLERATE the taint so liskov is monitored and can
- *   provision volumes, but are not pinned to it.
+ *   provision volumes, but are not pinned to it. The Alloy eBPF profiler is
+ *   the exception: it maps CI executables through hostPID and kept CI
+ *   workspace ZFS datasets busy, so it does not tolerate the taint.
  * - Woodpecker CI pods — they tolerate AND select the node (the agent's pod
  *   defaults in resources/woodpecker/agent.ts, enforced by
  *   resources/woodpecker/ci-pod-guard.ts), so CI runs only on liskov and

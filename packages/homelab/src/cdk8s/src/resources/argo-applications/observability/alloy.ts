@@ -3,7 +3,6 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 // Grafana Alloy River config: eBPF-sample every pod on the local node kernel-side
 // and push profiles to Pyroscope. No application instrumentation — works for the
@@ -86,8 +85,9 @@ export function createAlloyApp(chart: Chart) {
       type: "daemonset",
       // eBPF reads host PIDs from /proc; share the host PID namespace.
       hostPID: true,
-      // Profile the CI-only node (liskov) too.
-      tolerations: [CI_NODE_TOLERATION],
+      // No CI-node toleration: profiling stays on production. On liskov the
+      // hostPID profiler mapped executables from short-lived CI workspace
+      // volumes and kept their ZFS datasets busy after the pods exited.
       updateStrategy: {
         type: "RollingUpdate",
         rollingUpdate: { maxUnavailable: 1 },

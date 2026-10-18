@@ -47,6 +47,26 @@ const LokiRetentionSchema = z.object({
   }),
 });
 
+const LokiRulesConfigMapSchema = z.object({
+  kind: z.literal("ConfigMap"),
+  metadata: z.object({ name: z.literal("loki-alert-rules") }),
+  data: z.object({ "alloy-rules.yaml": z.string() }),
+});
+
+const LokiRuleFileSchema = z.object({
+  groups: z.array(
+    z.object({
+      rules: z.array(
+        z.object({
+          alert: z.string(),
+          expr: z.string(),
+          labels: z.object({ severity: z.string() }),
+        }),
+      ),
+    }),
+  ),
+});
+
 function lokiValues(): unknown {
   const app = new App();
   const chart = new Chart(app, "test");
@@ -100,6 +120,34 @@ describe("Loki Argo CD application", () => {
       "/var/loki/compactor",
     );
     expect(retention.loki.compactor.delete_request_store).toBe("filesystem");
+  });
+
+  it("alerts on the profiler's unwind-table rejection log per node", () => {
+    const app = new App();
+    const chart = new Chart(app, "test");
+    createLokiApp(chart);
+    const rulesConfigMap = parseAllDocuments(app.synthYaml())
+      .map((document) => LokiRulesConfigMapSchema.safeParse(document.toJS()))
+      .find((result) => result.success);
+    if (!rulesConfigMap?.success) {
+      throw new Error("loki-alert-rules ConfigMap was not synthesized");
+    }
+    const rules = LokiRuleFileSchema.parse(
+      parseAllDocuments(
+        rulesConfigMap.data.data["alloy-rules.yaml"],
+      )[0]?.toJS(),
+    ).groups.flatMap((group) => group.rules);
+    const rule = rules.find(
+      (entry) => entry.alert === "AlloyUnwindInfoArrayFull",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing AlloyUnwindInfoArrayFull");
+    }
+    expect(rule.expr).toContain(
+      '{namespace="alloy", container="alloy"} |= "unwind info array full"',
+    );
+    expect(rule.expr).toContain("sum by (namespace, pod, node_name)");
+    expect(rule.labels.severity).toBe("warning");
   });
 
   it("keeps pattern tee batches below the receiver message budget", () => {

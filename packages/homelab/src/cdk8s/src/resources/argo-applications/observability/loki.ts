@@ -197,6 +197,7 @@ groups:
 `;
 
 // Version compatibility is independent of unwind capacity and session health.
+// Unwind-table exhaustion is detected from the profiler's own rejection log.
 const alloyAlertRules = `
 groups:
   - name: alloy-profiling-coverage
@@ -212,6 +213,17 @@ groups:
         annotations:
           summary: "Alloy cannot profile an unsupported Go executable"
           description: "The embedded profiler rejected a Go version. Coverage is partial even when sessions succeed. An unwind-table restart does not repair version support; verify a supported upstream profiler release."
+      - alert: AlloyUnwindInfoArrayFull
+        expr: |
+          sum by (namespace, pod, node_name) (
+            count_over_time({namespace="alloy", container="alloy"} |= "unwind info array full" [15m])
+          ) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alloy rejected executables because its unwind table is full"
+          description: "The profiler on {{ "{{" }} $labels.node_name {{ "}}" }} logged 'unwind info array full' and is skipping new executables. Capture diagnostics and recover only that node's profiler after verifying its peer. Map scale does not increase this table."
 `;
 
 export function createLokiApp(chart: Chart) {
