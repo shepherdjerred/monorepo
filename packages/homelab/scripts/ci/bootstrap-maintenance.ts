@@ -2,8 +2,47 @@ import { z } from "zod";
 import { reviewedAccountSource } from "./bootstrap-account-policy.ts";
 import {
   bootstrapFingerprint,
+  BootstrapMetadataSchema,
   type BootstrapApplication,
 } from "./bootstrap-selection.ts";
+
+const ManagedMetadata = BootstrapMetadataSchema.omit({
+  uid: true,
+  resourceVersion: true,
+});
+
+function assertRepresentationMetadata(
+  declared: z.infer<typeof ManagedMetadata>,
+  actual: BootstrapApplication["metadata"],
+) {
+  const observed = ManagedMetadata.parse(actual);
+  // Hydration is a controller-consumed request, not an undeclared desired setting.
+  const hydrate = "argocd.argoproj.io/hydrate";
+  if (
+    declared.annotations[hydrate] === undefined &&
+    ["normal", "hard"].includes(observed.annotations[hydrate] ?? "")
+  )
+    delete observed.annotations["argocd.argoproj.io/hydrate"];
+  if (bootstrapFingerprint(declared) !== bootstrapFingerprint(observed))
+    throw new Error(`Unreviewed native metadata drift for ${actual.name}`);
+}
+
+/** Argo omits the empty API group when serializing core-resource ignore rules. */
+function comparableSpec(spec: Record<string, z.JSONType>) {
+  if (spec["ignoreDifferences"] === undefined) return spec;
+  const rules = z
+    .array(z.record(z.string(), z.json()))
+    .parse(spec["ignoreDifferences"]);
+  return {
+    ...spec,
+    ignoreDifferences: rules.map((rule) => {
+      if (rule["group"] !== "") return rule;
+      const core = { ...rule };
+      delete core["group"];
+      return core;
+    }),
+  };
+}
 
 function expectedMaintenanceSpec(
   app: BootstrapApplication,
@@ -41,34 +80,50 @@ export function assertBootstrapMaintenance(
   applications: BootstrapApplication[],
   manifests: string[],
 ) {
-  const declared = new Map<string, Record<string, z.JSONType>>();
+  const declared = new Map<
+    string,
+    {
+      metadata: z.infer<typeof ManagedMetadata>;
+      spec: Record<string, z.JSONType>;
+    }
+  >();
   for (const raw of manifests) {
     const value = z
       .object({
         kind: z.string(),
-        metadata: z.object({ name: z.string() }),
+        metadata: ManagedMetadata,
         spec: z.record(z.string(), z.json()).optional(),
       })
       .parse(JSON.parse(raw));
     if (value.kind !== "Application") continue;
     if (declared.has(value.metadata.name))
       throw new Error("Duplicate prior root Application");
-    declared.set(
-      value.metadata.name,
-      z.record(z.string(), z.json()).parse(value.spec),
-    );
+    declared.set(value.metadata.name, {
+      metadata: value.metadata,
+      spec: z.record(z.string(), z.json()).parse(value.spec),
+    });
   }
   const drift = new Set<string>();
   for (const app of applications) {
-    const original = declared.get(app.metadata.name);
-    if (original === undefined)
+    const declaration = declared.get(app.metadata.name);
+    if (declaration === undefined)
       throw new Error("Live Application missing from immutable prior root");
-    if (bootstrapFingerprint(original) === bootstrapFingerprint(app.spec))
-      continue;
-    const expected = expectedMaintenanceSpec(app, original);
-    if (bootstrapFingerprint(expected) !== bootstrapFingerprint(app.spec))
+    const original = declaration.spec;
+    const observed = comparableSpec(app.spec);
+    const prior = comparableSpec(original);
+    if (
+      bootstrapFingerprint(original) !== bootstrapFingerprint(prior) ||
+      bootstrapFingerprint(app.spec) !== bootstrapFingerprint(observed)
+    )
+      assertRepresentationMetadata(declaration.metadata, app.metadata);
+    if (
+      bootstrapFingerprint(prior) !== bootstrapFingerprint(observed) &&
+      bootstrapFingerprint(expectedMaintenanceSpec(app, prior)) !==
+        bootstrapFingerprint(observed)
+    )
       throw new Error(`Unreviewed native root drift for ${app.metadata.name}`);
-    drift.add(app.metadata.name);
+    if (bootstrapFingerprint(original) !== bootstrapFingerprint(app.spec))
+      drift.add(app.metadata.name);
   }
   assertRootDrift(rawRoot, drift);
 }
