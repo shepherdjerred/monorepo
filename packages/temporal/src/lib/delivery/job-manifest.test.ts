@@ -133,6 +133,14 @@ describe("bounded revision-pinned Delivery Jobs", () => {
         ?.filter((volume) => volume.secret !== undefined)
         .map((volume) => volume.secret?.secretName),
     ).toEqual(["dockerhub-pull-delivery-worker-jobs"]);
+    expect(
+      worker.spec?.template.spec?.containers[0]?.env?.filter((entry) =>
+        ["DOCKER_CONFIG", "BUILDX_CONFIG"].includes(entry.name),
+      ),
+    ).toEqual([
+      { name: "DOCKER_CONFIG", value: "/var/run/delivery/docker" },
+      { name: "BUILDX_CONFIG", value: "/workspace/buildx" },
+    ]);
     const platform = deliveryJobManifest(request);
     expect(platform.metadata?.namespace).toBe("delivery-platform-jobs");
     const transplanted = structuredClone(worker);

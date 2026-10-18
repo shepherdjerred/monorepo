@@ -108,6 +108,7 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                 { name: "HOME", value: "/workspace/home" },
                 { name: "TMPDIR", value: "/workspace/tmp" },
                 { name: "DOCKER_CONFIG", value: "/var/run/delivery/docker" },
+                { name: "BUILDX_CONFIG", value: "/workspace/buildx" },
                 { name: "DELIVERY_JOB_REQUEST", value: canonicalJson(input) },
                 {
                   name: "DELIVERY_SOURCE_REVISION",
