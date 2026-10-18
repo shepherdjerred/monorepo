@@ -16,10 +16,12 @@ The Application declares both the image value and Helm's higher-precedence
 operational parameter overrides with the declared list; recording credentials
 remain supplied by the chart's `extraEnv` secret references.
 
-The Storm is mc-router's default backend as well as the destination for
-`ts-mc.net` and `mc.ts-mc.net`. Some server directories resolve DNS before
-sending their Java status handshake; the default lets those IP-based checks
-reach The Storm. Explicit hostname routes still select their own servers.
+The Storm uses mc-router's default backend for `ts-mc.net`, `mc.ts-mc.net`,
+and status checks that send a resolved IP. The pinned mc-router 1.47.2 ignores
+`defaultServer` when `externalServerName` is also present, so the Service must
+declare only the default annotation. Other servers retain their explicit
+hostname routes and take precedence. This keeps the default attached to the
+same Service and StatefulSet covered by the mining-reset admission guards.
 UDP Query remains private to the forum's status service.
 
 ## Plugin and configuration ownership
