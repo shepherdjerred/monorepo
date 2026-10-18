@@ -578,11 +578,10 @@ awaiting a child.
 
 ### Retired Workflow patches
 
-Scout keeps a `patched` gate only while a protected execution still needs its
-old branch: every open execution, plus executions closed within the one-day
-compatibility window. Once every affected execution has closed and that
-window has passed, the gate becomes `deprecatePatch` at the same call site and
-only the new branch remains. The deprecated marker still records where the
+Scout keeps a `patched` gate only while an open execution can still take its
+old branch. Once every such execution has closed and the open executions
+replay against the candidate, the gate becomes `deprecatePatch` at the same
+call site and only the new branch remains. There is no waiting period. The deprecated marker still records where the
 gate stood, so a rollback to the previous bundle replays histories the new one
 records. A later release removes the `deprecatePatch` call.
 
@@ -590,9 +589,13 @@ The deprecated gates are the post-match ownership retirement marker
 (`workflows/retired-ownership.ts` in the Scout Temporal package), the
 generation rename, the prematch delivery and maintenance tails, the post-match
 intent mint, chunked discovery dispatch, the dispatcher's Riot watermark
-bypass, the initial-history pending-request fix, and the Workflow UI
-current-details marker. `match-replay.test.ts` and the dispatcher tests record
-each one and replay it both as recorded and as the gated release recorded it.
+bypass, the initial-history pending-request fix, the Workflow UI
+current-details marker, and explicit dispatch ordering. Four beta-only gates
+are deprecated in beta and never reached in prod: background history dispatch,
+the discovered-history anchor, match evidence preparation, and archive-only
+matches without tournament effects. `match-replay.test.ts`,
+`evidence-recovery.test.ts` and the dispatcher tests record each one and
+replay it both as recorded and as the gated release recorded it.
 
 ### The effect fence
 
@@ -630,10 +633,10 @@ the old ones once nothing running used them.
 Registration removal requires zero running old-type executions, no open
 execution requiring pre-rename commands, and no unaccepted old-type start
 requests in either stage. Closed old-type runs are outside the new bundle's
-query and replay support after the one-day compatibility window; their
-histories remain stored under the namespace's normal retention policy. Shared
-namespace retention expiry is not a live cutover prerequisite. Passing source
-tests alone does not prove the live drain or the compatibility window.
+query and replay support; their histories remain stored under the namespace's
+normal retention policy. Shared namespace retention expiry is not a live
+cutover prerequisite. Passing source tests alone does not prove the live
+drain.
 
 Only the renamed types are registered now. The Workflow bundle exports no
 `*V2Workflow` alias, the Activity workers register each Activity once

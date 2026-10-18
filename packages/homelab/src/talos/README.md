@@ -23,7 +23,7 @@ Patches are applied to the base Talos machine configuration to customize the clu
 **Current settings**:
 
 - `max-pods: 300` - Maximum number of pods per node (increased from 250)
-- `systemReserved.memory: 24Gi` - Non-pod memory reserved for ZFS ARC (16 GiB) plus an ~8 GiB production-only host kernel/OS burst. The 40 GiB CI-era budget included a BuildKit/Dagger storm that now runs on liskov; post-migration torvalds slab peaked at ~7.2 GiB. Re-raise this value in lockstep with `zfs_arc_max` if a production-only soak demonstrates a larger burst.
+- `systemReserved.memory: 24Gi` - Non-pod memory reserved for ZFS ARC (16 GiB) plus an ~8 GiB production-only host kernel/OS burst. The 40 GiB CI-era budget included a BuildKit/Dagger storm that now runs on liskov; post-migration torvalds slab peaked at ~7.2 GiB. Re-raise this value in lockstep with `zfs_arc_max` if production-only measurements show a larger burst.
 - `systemReserved.cpu: 4` - Non-pod CPU reserved for the host and control-plane services
 - `kubeReserved.memory: 8Gi` - Memory reserved for Kubernetes system daemons (raised 2Gi → 8Gi 2026-07-11 after the /podruntime memcg-OOM outage; see the original investigation)
 - `kubeReserved.cpu: 1` - CPU reserved for Kubernetes system daemons

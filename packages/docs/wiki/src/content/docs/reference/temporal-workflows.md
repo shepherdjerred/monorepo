@@ -228,7 +228,7 @@ Source: [receipt dispatch contract](/reference/durable-agent-chat-storage/#turn-
 ## Related
 
 - [Schedule reference](/reference/temporal-schedules/) — cron mechanics
-- [Roll out Scout's Temporal workers](/how-to/roll-out-scout-temporal/) — cutover and soak procedure
+- [Roll out Scout's Temporal workers](/how-to/roll-out-scout-temporal/) — cutover and acceptance procedure
 - [Agent task input](/reference/agent-task-input/) — the task schema
 - [Durable agent chats](/explanation/temporal/durable-agent-chats/) — chat identity and persistence boundaries
 - [Why Temporal](/explanation/temporal/overview/) — what the fleet is for

@@ -1,7 +1,6 @@
 import { expect, test } from "vitest";
 import { Worker } from "@temporalio/worker";
 import type { WorkflowHandle } from "@temporalio/client";
-import { z } from "zod";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -26,6 +25,14 @@ import {
   SCOUT_PREMATCH_MAINTENANCE_PATCH,
 } from "./prematch.ts";
 import { SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH } from "./retired-ownership.ts";
+import {
+  SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH,
+  SCOUT_MATCH_EVIDENCE_PREPARATION_PATCH,
+} from "./evidence/match.ts";
+import {
+  expectRetiredGatesReplay,
+  recordedPatchMarkers,
+} from "./retired-patches.test-fixtures.ts";
 import {
   createScoutMatchStore,
   scoutMatchActivityStubs,
@@ -216,63 +223,14 @@ test("a discovery recorded before the page carried matches still replays", async
 
 // ─── Histories recorded through the retired gates ─────────────────────────
 
-/** The marker name the TypeScript SDK records patch calls under. */
-const PATCH_MARKER = "core_patch";
-
 /** The temporal-ui-current-details patch every phase update records. */
 const UI_DETAILS_PATCH = "temporal-ui-current-details-v1";
 
-const PatchMarkerDataSchema = z.strictObject({
-  id: z.string(),
-  deprecated: z.boolean(),
-});
-
-/**
- * Rewrite the named patches' markers as the gated release recorded them, and
- * return the deprecation flag each was recorded with, by patch id.
- */
-function asRecordedByGatedRelease(
-  history: History,
-  patchIds: readonly string[],
-): Record<string, boolean[]> {
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  const recorded: Record<string, boolean[]> = {};
-  for (const event of history.events ?? []) {
-    const marker = event.markerRecordedEventAttributes;
-    if (marker?.markerName !== PATCH_MARKER) continue;
-    for (const payloads of Object.values(marker.details ?? {})) {
-      for (const payload of payloads.payloads ?? []) {
-        const data = PatchMarkerDataSchema.parse(
-          JSON.parse(decoder.decode(payload.data ?? new Uint8Array())),
-        );
-        if (!patchIds.includes(data.id)) continue;
-        (recorded[data.id] ??= []).push(data.deprecated);
-        payload.data = encoder.encode(
-          JSON.stringify({ id: data.id, deprecated: false }),
-        );
-      }
-    }
-  }
-  return recorded;
-}
-
-/**
- * Each retired gate records its marker once, deprecated, and the history
- * replays both as recorded and as the gated release recorded it.
- */
-async function expectRetiredGatesReplay(
-  history: History,
-  patchIds: readonly string[],
-): Promise<void> {
-  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
-  await Worker.runReplayHistory({ workflowsPath }, history);
-  const gated = structuredClone(history);
-  expect(asRecordedByGatedRelease(gated, patchIds)).toEqual(
-    Object.fromEntries(patchIds.map((patchId) => [patchId, [true]])),
-  );
-  await Worker.runReplayHistory({ workflowsPath }, gated);
-}
+/** Beta-only retired gates: dev and prod runs never evaluate them. */
+const BETA_ONLY_PATCHES = [
+  SCOUT_MATCH_EVIDENCE_PREPARATION_PATCH,
+  SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH,
+] as const;
 
 test("a match run records its retired gates and replays as the gated release", async () => {
   await harness.startWorkers(scoutMatchActivityStubs(createScoutMatchStore()));
@@ -298,11 +256,37 @@ test("a match run records its retired gates and replays as the gated release", a
         "mintPostmatchNotificationIntents",
     ),
   ).toHaveLength(1);
+  // A non-beta run takes the same path the beta-only gates never touched.
+  expect(recordedPatchMarkers(recorded, BETA_ONLY_PATCHES)).toEqual({});
   await expectRetiredGatesReplay(recorded, [
     UI_DETAILS_PATCH,
     SCOUT_GENERATION_RENAME_PATCH,
     SCOUT_MATCH_MINT_INTENTS_PATCH,
   ]);
+}, 120_000);
+
+test("a non-beta archive-only match still finalizes and records no beta-only marker", async () => {
+  const store = createScoutMatchStore({ policy: "ARCHIVE_ONLY" });
+  await harness.startWorkers(scoutMatchActivityStubs(store));
+  const handle = await harness
+    .client()
+    .workflow.start(scoutMatchProcessingWorkflow, {
+      taskQueue: "scout-dev",
+      workflowId: "match-core-archive-only-non-beta",
+      args: [
+        scoutMatchProcessingInputCodec.serialize({
+          stage,
+          riotMatchId: RiotMatchIdSchema.parse(MATCH_ID),
+        }),
+      ],
+    });
+  await handle.result();
+
+  expect(store.calls).toContain("finalizeTournamentResult");
+  expect(store.calls).not.toContain("settleMatchMarkets");
+  expect(
+    recordedPatchMarkers(await handle.fetchHistory(), BETA_ONLY_PATCHES),
+  ).toEqual({});
 }, 120_000);
 
 test("a discovery records its retired gates and replays as the gated release", async () => {

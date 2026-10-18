@@ -3,7 +3,6 @@ import {
   condition,
   deprecatePatch,
   getExternalWorkflowHandle,
-  patched,
   setHandler,
   startChild,
   workflowInfo,
@@ -41,6 +40,15 @@ import { issuedWorkflowType } from "./generation-rename.ts";
 export const SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH =
   "scout-discovery-batched-dispatch";
 const DISCOVERY_DISPATCH_BATCH_SIZE = 100;
+
+/**
+ * The retired gate that made discoveries state their ordering assurance
+ * instead of leaving the receiver to infer it from acknowledgement targets.
+ * Every discovery that could take the old branch has closed. Remove the
+ * `deprecatePatch` call in a release after this one.
+ */
+export const SCOUT_DISPATCH_EXPLICIT_ORDERING_PATCH =
+  "scout-dispatch-explicit-ordering";
 
 export const ScoutDispatchableDiscoveredMatchesSchema =
   ScoutDiscoveredMatchSchema.extend({
@@ -115,6 +123,9 @@ export async function processDiscoveredMatchesThroughDispatcher(
   }
   const info = workflowInfo();
   const readyAt = IsoInstantSchema.parse(new Date(Date.now()).toISOString());
+  // The gate evaluated while building the first item, before any other
+  // command, so the marker still records here.
+  deprecatePatch(SCOUT_DISPATCH_EXPLICIT_ORDERING_PATCH);
   const dispatches: ScoutClientMatchDispatchItem[] = matches.map((match) => ({
     riotMatchId: match.riotMatchId,
     sourcePuuid: match.sourcePuuid,
@@ -122,9 +133,7 @@ export async function processDiscoveredMatchesThroughDispatcher(
     gameEndTimestamp: match.gameEndTimestamp,
     readyAt,
     completionTargets: [{ workflowId: info.workflowId, runId: info.runId }],
-    ...(patched("scout-dispatch-explicit-ordering")
-      ? { orderingAssured: true }
-      : {}),
+    orderingAssured: true,
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
   const dispatcher = getExternalWorkflowHandle(dispatcherId);

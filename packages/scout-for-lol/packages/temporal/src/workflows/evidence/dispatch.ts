@@ -1,7 +1,7 @@
 import {
+  deprecatePatch,
   getExternalWorkflowHandle,
   isCancellation,
-  patched,
 } from "@temporalio/workflow";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutStage } from "#src/contracts.ts";
@@ -11,6 +11,17 @@ import {
 } from "#src/workflow-contracts.ts";
 import { scoutClientMatchDispatchCompletedSignal } from "#src/signals.ts";
 import { realtimePipelineActivities } from "#src/workflows/activity-options.ts";
+
+/**
+ * Retired beta-only gates. Prod never evaluated them, so prod histories carry
+ * no marker and prod still records none. Every beta run that could take the
+ * old branch has closed. Remove the `deprecatePatch` calls in a release after
+ * this one.
+ */
+export const SCOUT_HISTORY_DISPATCH_BACKGROUND_PATCH =
+  "scout-history-dispatch-background";
+export const SCOUT_DISCOVERED_HISTORY_ANCHOR_PATCH =
+  "scout-discovered-history-anchor";
 
 /** Only old signal histories infer this fact from their acknowledgement targets. */
 export function clientDispatchHasOrderingAssurance(
@@ -50,8 +61,8 @@ export async function queueNextHistoricalMatch(
   pending: Map<RiotMatchId, ScoutClientMatchDispatchItem>,
   lateArrivals: Map<RiotMatchId, ScoutClientMatchDispatchItem>,
 ): Promise<boolean> {
-  if (stage !== "beta" || !patched("scout-history-dispatch-background"))
-    return false;
+  if (stage !== "beta") return false;
+  deprecatePatch(SCOUT_HISTORY_DISPATCH_BACKGROUND_PATCH);
   const history = [...pending.values(), ...lateArrivals.values()].find(
     (item) => item.deliveryMode === "silent-backfill",
   );
@@ -72,11 +83,9 @@ export async function advanceDiscoveredHistoryAnchor(
   stage: ScoutStage,
   match: ScoutClientMatchDispatchItem,
 ): Promise<void> {
-  if (
-    stage === "beta" &&
-    patched("scout-discovered-history-anchor") &&
-    clientDispatchHasOrderingAssurance(match)
-  )
+  if (stage !== "beta") return;
+  deprecatePatch(SCOUT_DISCOVERED_HISTORY_ANCHOR_PATCH);
+  if (clientDispatchHasOrderingAssurance(match))
     await realtimePipelineActivities(stage).advanceMatchCursor({
       stage,
       riotMatchId: match.riotMatchId,

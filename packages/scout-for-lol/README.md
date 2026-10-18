@@ -109,10 +109,10 @@ are one-shot and each command starts a new saved conversation.
 - Scout beta bootstraps deterministic Workflow versioning with a capable stable
   image followed by a distinct credentialless candidate; the backend retains
   its embedded drain poller and all effectful Activity Workers until the
-  candidate is promoted and soaked
+  candidate is promoted
 - PostHog for privacy-scoped server-side product analytics
-- Docker image built and deployed from CI; beta deploys continuously and prod
-  is promoted via a Renovate image-pin PR
+- CI builds and publishes the image; Delivery releases beta automatically and
+  promotes prod with human approval
 
 The [Scout explanation pages](../docs/wiki/src/content/docs/explanation/)
 describe the report lake, custom games, and Temporal analysis boundaries.

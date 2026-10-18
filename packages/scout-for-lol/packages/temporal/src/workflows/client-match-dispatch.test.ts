@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { Client, WorkflowStartOptions } from "@temporalio/client";
+import type { WorkflowStartOptions } from "@temporalio/client";
 import { ApplicationFailure } from "@temporalio/common";
-import { Worker } from "@temporalio/worker";
 import { z } from "zod";
 import {
   IsoInstantSchema,
@@ -29,7 +28,19 @@ import {
   scoutPostMatchDiscoveryWorkflow,
 } from "./index.ts";
 import { SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH } from "./client-match-dispatch.ts";
-import { SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH } from "./shared-match-dispatch.ts";
+import {
+  SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH,
+  SCOUT_DISPATCH_EXPLICIT_ORDERING_PATCH,
+} from "./shared-match-dispatch.ts";
+import {
+  SCOUT_DISCOVERED_HISTORY_ANCHOR_PATCH,
+  SCOUT_HISTORY_DISPATCH_BACKGROUND_PATCH,
+} from "./evidence/dispatch.ts";
+import { SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH } from "./evidence/match.ts";
+import {
+  expectRetiredGatesReplay,
+  recordedPatchMarkers,
+} from "./retired-patches.test-fixtures.ts";
 import {
   createScoutMatchStore,
   MATCH_ID,
@@ -900,19 +911,43 @@ test("chunks a 108-match discovery and waits for every acknowledgement before ma
     fresh.calls.filter((call) => call === "commitMatchObservation"),
   ).toHaveLength(1);
 
-  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
-  await Worker.runReplayHistory(
-    { workflowsPath },
+  // Every dispatched item states its ordering assurance.
+  expect(
+    (dispatcherHistory.events ?? []).flatMap((event) => {
+      const signal = event.workflowExecutionSignaledEventAttributes;
+      return signal?.signalName === dispatchScoutClientMatchesSignal.name
+        ? (signal.input?.payloads ?? []).flatMap((payload) =>
+            z
+              .array(z.object({ orderingAssured: z.boolean().optional() }))
+              .parse(
+                JSON.parse(
+                  new TextDecoder().decode(payload.data ?? new Uint8Array()),
+                ),
+              )
+              .map((item) => item.orderingAssured),
+          )
+        : [];
+    }),
+  ).toEqual(matches.map(() => true));
+  // A non-beta dispatcher never evaluated the beta-only gates.
+  expect(
+    recordedPatchMarkers(dispatcherHistory, [
+      SCOUT_HISTORY_DISPATCH_BACKGROUND_PATCH,
+      SCOUT_DISCOVERED_HISTORY_ANCHOR_PATCH,
+      SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH,
+    ]),
+  ).toEqual({});
+
+  // The retired gates' markers are still recorded, deprecated, and a history
+  // the gated release recorded replays through them.
+  await expectRetiredGatesReplay(
     discoveryHistory,
+    [
+      SCOUT_DISPATCH_EXPLICIT_ORDERING_PATCH,
+      SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH,
+    ],
     discoveryId,
   );
-  // The retired gate's marker is still recorded, deprecated, and a history
-  // the gated release recorded replays through it.
-  const gated = structuredClone(discoveryHistory);
-  expect(
-    asRecordedByGatedRelease(gated, SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH),
-  ).toEqual([true]);
-  await Worker.runReplayHistory({ workflowsPath }, gated, discoveryId);
 }, 120_000);
 
 test("a rediscovered, already-processed match does not hold back the matches after it", async () => {
@@ -963,51 +998,6 @@ test("a rediscovered, already-processed match does not hold back the matches aft
   expect(log).toContain(`${SECOND_MATCH_ID}:fan-out`);
   expect(log.filter((entry) => entry === "maintenance")).toHaveLength(2);
 }, 90_000);
-
-type DispatcherHistory = Awaited<
-  ReturnType<ReturnType<Client["workflow"]["getHandle"]>["fetchHistory"]>
->;
-
-/** The marker name the TypeScript SDK records `patched` calls under. */
-const PATCH_MARKER = "core_patch";
-
-const PatchMarkerDataSchema = z.strictObject({
-  id: z.string(),
-  deprecated: z.boolean(),
-});
-
-/**
- * Rewrite this patch's markers as the release that still gated on it recorded
- * them: not deprecated. Retained histories carry exactly that, and core
- * refuses a non-deprecated marker no command claims, so replaying the rewrite
- * proves the deprecated gate still claims it at the same command. Returns
- * the deprecation flag each rewritten marker was recorded with.
- */
-function asRecordedByGatedRelease(
-  history: DispatcherHistory,
-  patchId: string,
-): boolean[] {
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  const recorded: boolean[] = [];
-  for (const event of history.events ?? []) {
-    const marker = event.markerRecordedEventAttributes;
-    if (marker?.markerName !== PATCH_MARKER) continue;
-    for (const payloads of Object.values(marker.details ?? {})) {
-      for (const payload of payloads.payloads ?? []) {
-        const data = PatchMarkerDataSchema.parse(
-          JSON.parse(decoder.decode(payload.data ?? new Uint8Array())),
-        );
-        if (data.id !== patchId) continue;
-        recorded.push(data.deprecated);
-        payload.data = encoder.encode(
-          JSON.stringify({ id: patchId, deprecated: false }),
-        );
-      }
-    }
-  }
-  return recorded;
-}
 
 test("processes an older Riot match another account's poll delivered after a newer one", async () => {
   // The prod shape: discovery polls a rotating subset of accounts, and each
@@ -1086,16 +1076,11 @@ test("processes an older Riot match another account's poll delivered after a new
   // Replay safety. The recorded history carries the retired gate's marker,
   // deprecated, exactly where the gate recorded it, and a history the gated
   // release recorded replays through it.
-  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
-  await Worker.runReplayHistory({ workflowsPath }, history, dispatcherId);
-  const gated = structuredClone(history);
-  expect(
-    asRecordedByGatedRelease(
-      gated,
-      SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH,
-    ),
-  ).toEqual([true]);
-  await Worker.runReplayHistory({ workflowsPath }, gated, dispatcherId);
+  await expectRetiredGatesReplay(
+    history,
+    [SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH],
+    dispatcherId,
+  );
 }, 120_000);
 
 test("processes a queued client late arrival once Riot discovers it too", async () => {

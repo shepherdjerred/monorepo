@@ -2,7 +2,6 @@ import {
   condition,
   deprecatePatch,
   isCancellation,
-  patched,
   setHandler,
   sleep,
   workflowInfo,
@@ -38,6 +37,7 @@ import {
   queueNextHistoricalMatch,
   advanceDiscoveredHistoryAnchor,
 } from "./evidence/dispatch.ts";
+import { SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH } from "./evidence/match.ts";
 
 function compareClientDispatchItems(
   left: ScoutClientMatchDispatchItem,
@@ -209,12 +209,13 @@ function clientMatchCoreIsComplete(
         ]
       : []),
   ];
-  if (
-    stage !== "beta" ||
-    state.policy === "FULL" ||
-    !patched("scout-archive-only-no-effects")
-  )
+  if (stage !== "beta" || state.policy === "FULL") {
     required.push(SCOUT_MATCH_RECEIPT_KINDS.tournament);
+  } else {
+    // Beta archive-only work needs no tournament receipt. The marker records
+    // exactly where the retired gate evaluated.
+    deprecatePatch(SCOUT_ARCHIVE_ONLY_NO_EFFECTS_PATCH);
+  }
   return (
     required.every((kind) => receipts.has(kind)) &&
     state.trackedAccounts.cursorAdvanced === state.trackedAccounts.total

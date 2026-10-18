@@ -223,7 +223,7 @@ export const scoutDurableReceiptsRecorded = new Counter({
  *
  * A counter that only counted the rare answer would make zero ambiguous
  * between "it never happened" and "nothing is wired up" — and zero is the
- * reading this soak is most likely to produce and most needs to trust.
+ * reading this counter is most likely to produce and most needs to trust.
  * Counting the ordinary answers too means `applied` climbing is standing proof
  * the instrument is live, so a flat `answered-by-another-run` beside it is
  * evidence rather than silence. It is the counter's version of why the gauges
@@ -236,7 +236,7 @@ export const scoutDurableReceiptsRecorded = new Counter({
  * than the gap it reports. It carries no alert rule in
  * `scout-durable-rules.ts` on purpose, and a threshold is not a substitute:
  * a threshold is still a rule someone can lower. This is a measurement
- * feeding a decision after the soak, and if it reads non-zero the answer is
+ * feeding a design decision, and if it reads non-zero the answer is
  * the durable record, not a page.
  *
  * Both labels are closed. `outcome` is the three members of
