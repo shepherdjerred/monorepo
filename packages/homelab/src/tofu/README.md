@@ -322,22 +322,16 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
 
-The separate operator-only `tailscale-delivery` stack provisions Delivery's
-browser identity proxy. Its OAuth client has only `auth_keys` scope and can
-assign only `tag:delivery`. The stack writes a concealed `TS_AUTHKEY` field to
-the `delivery-tailscale-oauth` 1Password item and outputs only that item's UUID.
-Its new S3 state key and saved plans require enforced encryption with
-`TAILSCALE_DELIVERY_TOFU_STATE_PASSPHRASE`; no existing plaintext state is adopted.
-The provisioning identity must manage OAuth clients, while the existing
-`tailscale` CI identity remains restricted to ACL policy and has no vault-write
-access. Apply the ACL tag registration before provisioning the OAuth client,
-then use the output UUID to activate the reviewed sidecar secret reference.
+Delivery uses the existing Kubernetes operator's Ingress proxy with
+`tailscale.com/tags: tag:delivery`. The tag owners include `tag:k8s-operator`
+so the existing operator can register that proxy. Tailnet access remains
+admin-only; tagged workloads receive no access to Delivery.
 
-The sidecar consumes the [official container OAuth mechanism](https://tailscale.com/docs/features/containers/docker/docker-params):
-the stored `TS_AUTHKEY` includes `?ephemeral=false`, and the container advertises
-`tag:delivery`. Persisted state and `TS_AUTH_ONCE=true` retain the node identity
-across restarts. Serving the browser through Tailscale supplies authenticated
-human identity; machine API credentials remain separate.
+Apply this stack's reviewed tag policy before creating the Delivery Ingress.
+The existing ACL-scoped OAuth credentials manage the policy. Delivery needs
+no separate OAuth client, admin API key, node credential or encrypted state
+passphrase. Browser identity comes from the operator-managed proxy; machine
+API credentials remain separate.
 
 ### \*arr
 
@@ -345,7 +339,7 @@ Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality p
 
 ### ArgoCD
 
-Mints the `woodpecker`, `delivery`, and read-only `delivery-observer` ArgoCD account tokens and writes each to
+Mints the `delivery`, `delivery-platform`, and read-only `delivery-observer` ArgoCD account tokens and writes each to
 its own 1Password item. ArgoCD's chart owns the account registrations and RBAC;
 reconcile that chart before applying a newly registered account's token. Delivery
 consumes its token separately from its API machine credentials so OpenTofu

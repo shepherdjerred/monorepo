@@ -103,12 +103,6 @@ export function behaviorConfig(stage: string) {
         default: "[]",
         names: { flag: "delivery-operator-logins" },
       },
-      trustedProxyAddresses: {
-        schema: StringListSchema,
-        sources: ["flag", "default"],
-        default: "[]",
-        names: { flag: "delivery-trusted-proxy-addresses" },
-      },
     },
     sources: {
       flag: createFlagConfigSource({
@@ -119,7 +113,6 @@ export function behaviorConfig(stage: string) {
           writesEnabled: "boolean",
           enabledEnvironments: "string",
           operatorLogins: "string",
-          trustedProxyAddresses: "string",
         },
       }),
     },

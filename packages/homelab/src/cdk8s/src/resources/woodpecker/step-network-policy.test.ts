@@ -1,8 +1,51 @@
 import { describe, expect, it } from "vitest";
-import { App } from "cdk8s";
+import { App, Chart } from "cdk8s";
+import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
+import { createWoodpeckerStepNetworkPolicy } from "./step-network-policy.ts";
+import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/network-policy.ts";
+
+async function emittedApiConsumers() {
+  const process = Bun.spawn(
+    [
+      "bun",
+      "-e",
+      `
+      import { buildPipelineSteps } from "./src/pipeline/steps.ts";
+      import { emitWorkflow } from "./src/pipeline/emit.ts";
+      import { TEST_IMAGES, TEST_IDENTITY } from "./test/identity.ts";
+      import { parse } from "yaml";
+      const consumers = buildPipelineSteps({images: TEST_IMAGES, changedBase: "base", deliveryPublication: true})
+        .filter(step => step.secrets?.some(grant => grant.env === "DELIVERY_API_TOKEN"))
+        .map(step => ({key: step.key, labels: parse(emitWorkflow(step, TEST_IDENTITY)).steps[0].backend_options.kubernetes.labels}));
+      console.log(JSON.stringify(consumers));
+    `,
+    ],
+    {
+      cwd: fileURLToPath(
+        new URL(
+          "../../../../../../woodpecker-config-extension/",
+          import.meta.url,
+        ),
+      ),
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(process.stdout).text(),
+    new Response(process.stderr).text(),
+    process.exited,
+  ]);
+  if (exitCode !== 0) throw new Error(`CI emitter contract failed: ${stderr}`);
+  return z
+    .array(
+      z.object({ key: z.string(), labels: z.record(z.string(), z.string()) }),
+    )
+    .parse(JSON.parse(stdout));
+}
 
 const PeerSchema = z
   .object({
@@ -101,6 +144,90 @@ function egressTo(
 }
 
 describe("CI step pod network boundary", () => {
+  it("pairs exact real generator archive/publication Pod labels with both sides of Delivery HTTP access", async () => {
+    const consumers = await emittedApiConsumers();
+    expect(consumers.map((consumer) => consumer.key).toSorted()).toEqual([
+      "delivery-publish",
+      "scout-site-archives",
+      "trmnl-plugin-archives",
+    ]);
+    const api = new Chart(new App(), "delivery-network", {
+      namespace: "delivery",
+    });
+    const ci = new Chart(new App(), "ci-network", {
+      namespace: "woodpecker-ci",
+    });
+    createDeliveryNetworkPolicy(api);
+    createWoodpeckerStepNetworkPolicy(ci);
+    const apiPolicy = NetworkPolicySchema.parse(api.toJson()[0]);
+    const ciPolicy = z
+      .array(NetworkPolicySchema)
+      .parse(ci.toJson())
+      .find((policy) =>
+        policy.metadata.name.includes("delivery-publication-egress"),
+      );
+    expect(apiPolicy.spec.podSelector.matchLabels).toEqual({ app: "delivery" });
+    expect(ciPolicy?.metadata.namespace).toBe("woodpecker-ci");
+    const Rule = z.object({
+      from: z.array(PeerSchema),
+      ports: z.array(z.object({ port: z.number(), protocol: z.string() })),
+    });
+    const peers = z
+      .array(Rule)
+      .parse(apiPolicy.spec.ingress)
+      .flatMap((rule) =>
+        rule.from
+          .filter(
+            (peer) =>
+              peer.namespaceSelector?.matchLabels?.[
+                "kubernetes.io/metadata.name"
+              ] === "woodpecker-ci",
+          )
+          .map((peer) => {
+            expect(rule.ports).toEqual([{ port: 7353, protocol: "TCP" }]);
+            return peer;
+          }),
+      );
+    expect(peers).toHaveLength(1);
+    const Selector = z.object({
+      matchExpressions: z.array(
+        z.object({
+          key: z.string(),
+          operator: z.literal("In"),
+          values: z.array(z.string()),
+        }),
+      ),
+    });
+    for (const selector of [
+      Selector.parse(peers[0]?.podSelector),
+      Selector.parse(ciPolicy?.spec.podSelector),
+    ]) {
+      expect(selector.matchExpressions).toHaveLength(1);
+      const expression = selector.matchExpressions[0];
+      expect(expression?.values.toSorted()).toEqual(
+        consumers.map((consumer) => consumer.key).toSorted(),
+      );
+      for (const consumer of consumers)
+        expect(expression?.values).toContain(
+          consumer.labels[expression?.key ?? ""],
+        );
+      expect(expression?.values).not.toContain("verify");
+      expect(expression?.values).not.toContain("scout-beta-release");
+    }
+    expect(ciPolicy?.spec.egress).toEqual([
+      {
+        to: [
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "delivery" },
+            },
+            podSelector: { matchLabels: { app: "delivery" } },
+          },
+        ],
+        ports: [{ port: 7353, protocol: "TCP" }],
+      },
+    ]);
+  });
   /**
    * Selecting by label existence rather than value is deliberate: the step key
    * and commit labels both vary per build, so there is no constant value to

@@ -152,18 +152,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "delivery-trusted-proxy-addresses",
-      "owner": "delivery",
-      "namespace": "delivery",
-      "source": "code",
-      "purpose": "Exact ingress proxy peer addresses allowed to assert Tailscale human identity.",
-      "type": "variant",
-      "default": "[]",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "arcade_enabled",
       "owner": "arcade",
       "namespace": "arcade",

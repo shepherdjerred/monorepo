@@ -9,7 +9,6 @@ test("TRMNL capability requires both dedicated credentials and projects only the
   const activation = {
     image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
     serviceItemId: "service",
-    tailscaleItemId: "tailnet",
   };
   expect(deliveryTrmnlEnvironment(chart, activation)).toEqual({});
   expect(() =>

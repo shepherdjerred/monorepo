@@ -441,18 +441,6 @@
       "value": "2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07"
     },
     {
-      "name": "tailscale/tailscale",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver"
-      },
-      "value": "v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d"
-    },
-    {
       "name": "tailscale/golink",
       "category": "upstream",
       "artifactType": "image",

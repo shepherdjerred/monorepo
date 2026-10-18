@@ -21,7 +21,6 @@
     "openai": { "mode": "reviewed-plan", "prerequisites": [] },
     "posthog": { "mode": "automatic", "prerequisites": [] },
     "seaweedfs": { "mode": "automatic", "prerequisites": [] },
-    "tailscale": { "mode": "automatic", "prerequisites": ["tofu:seaweedfs"] },
-    "tailscale-delivery": { "mode": "operator-only", "prerequisites": [] }
+    "tailscale": { "mode": "automatic", "prerequisites": ["tofu:seaweedfs"] }
   }
 }

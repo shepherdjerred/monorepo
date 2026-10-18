@@ -70,15 +70,17 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    readback through the existing operator storage procedure.
 
 3. Use a clean checkout of the next reviewed PR head proven integrated into main and provision the declared
-   prerequisites through their operator OpenTofu wrappers. The dedicated
-   Tailscale stack needs its scoped bootstrap admin access; unavailable access
-   stops this procedure. Register actual output item IDs in reviewed source,
+   prerequisites through their operator OpenTofu wrappers. Apply the tailnet
+   policy so the existing Kubernetes operator can assign `tag:delivery` to
+   Delivery's Ingress proxy. Keep its admin-only access rules. Delivery uses
+   the existing operator identity; no additional Tailscale token or OAuth
+   client is needed. Register actual output item IDs in reviewed source,
    never placeholder IDs or copied administrator credentials.
 
    ```bash
    toolkit ci source-proof PR --source REVIEWED_HEAD_SHA --json
-   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale-delivery plan
-   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale-delivery apply
+   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale plan
+   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale apply
    ```
 
    Any source change needs its own exact CI/review proof before bootstrap.

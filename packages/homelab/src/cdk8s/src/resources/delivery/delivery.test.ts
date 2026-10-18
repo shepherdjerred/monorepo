@@ -19,7 +19,6 @@ beforeEach(resetProbeRegistry);
 const activation = {
   image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
   serviceItemId: "service-item",
-  tailscaleItemId: "tailscale-item",
   executorItemId: "executor-item",
 };
 const Resources = z.array(
@@ -29,6 +28,7 @@ const Resources = z.array(
       metadata: z.object({
         name: z.string(),
         labels: z.record(z.string(), z.string()).optional(),
+        annotations: z.record(z.string(), z.string()).optional(),
       }),
       spec: z.unknown().optional(),
     })
@@ -225,7 +225,7 @@ describe("Delivery infrastructure", () => {
       ).toBe(false);
     }
   });
-  it("confines Delivery API egress to publication and the gated Scout archive producer", () => {
+  it("confines Delivery API egress to publication and the two archive producers", () => {
     const chart = new Chart(new App(), "ci-network");
     createWoodpeckerStepNetworkPolicy(chart);
     const policy = z
@@ -261,7 +261,11 @@ describe("Delivery infrastructure", () => {
       {
         key: "ci.sjer.red/step-key",
         operator: "In",
-        values: ["delivery-publish", "scout-beta-release"],
+        values: [
+          "delivery-publish",
+          "scout-site-archives",
+          "trmnl-plugin-archives",
+        ],
       },
     ]);
     expect(policy?.spec.egress).toEqual([
@@ -335,13 +339,16 @@ describe("Delivery execution and service bootstrap", () => {
       "pods/log": ["get"],
     });
   });
-  it("keeps unpublished and credential-incomplete services inactive", () => {
+  it("keeps unpublished and credential-incomplete executors inactive without requiring per-app tailnet credentials", () => {
     expect(
       deliveryImageReference(`0.0.0@sha256:${"0".repeat(64)}`),
     ).toBeUndefined();
     expect(
       deliveryActivation(`2.0.0-42@sha256:${"a".repeat(64)}`),
-    ).toBeUndefined();
+    ).toMatchObject({
+      image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
+      serviceItemId: "ahbp4izt7fibvwdjwd4ffhiime",
+    });
     expect(
       deliveryExecutorActivation(`2.0.0-42@sha256:${"a".repeat(64)}`),
     ).toBeUndefined();
@@ -350,7 +357,7 @@ describe("Delivery execution and service bootstrap", () => {
     ]);
     expect(() => deliveryImageReference("latest")).toThrow();
   });
-  it("authenticates browser traffic through same-Pod Serve, and exposes only the bearer-authenticated machine API", () => {
+  it("uses the existing HTTPS operator ingress and keeps machine API traffic separately authenticated", () => {
     const resources = Resources.parse(
       createDeliveryChart(new App(), activation).toJson(),
     );
@@ -401,14 +408,26 @@ describe("Delivery execution and service bootstrap", () => {
         .every((port) => port.port === 7353),
     ).toBe(true);
     expect(JSON.stringify(spec.ingress)).toContain(
-      '"values":["delivery-publish","scout-beta-release"]',
+      '"values":["delivery-publish","scout-site-archives","trmnl-plugin-archives"]',
     );
     expect(JSON.stringify(spec.ingress)).toContain(
       '"kubernetes.io/metadata.name":"woodpecker-ci"',
     );
-    expect(resources.some((resource) => resource.kind === "Ingress")).toBe(
-      false,
-    );
+    expect(
+      resources.find((resource) => resource.kind === "Ingress"),
+    ).toMatchObject({
+      metadata: {
+        name: "delivery-operator-ingress",
+        annotations: { "tailscale.com/tags": "tag:delivery" },
+      },
+      spec: {
+        ingressClassName: "tailscale",
+        defaultBackend: {
+          service: { name: "delivery", port: { number: 7353 } },
+        },
+        tls: [{ hosts: ["delivery"] }],
+      },
+    });
     const deployment = resources.find(
       (resource) => resource.kind === "Deployment",
     );
@@ -429,12 +448,16 @@ describe("Delivery execution and service bootstrap", () => {
         }),
       })
       .parse(deployment?.spec).template.spec;
+    expect(pod.containers.map((container) => container.name)).toEqual([
+      "delivery",
+    ]);
     expect(
-      pod.containers.find((container) => container.name === "tailscale")?.env,
-    ).toContainEqual({ name: "TS_KUBE_SECRET", value: "" });
+      pod.containers
+        .flatMap((container) => container.env)
+        .some(({ name }) => name.startsWith("TS_")),
+    ).toBe(false);
     expect(
-      pod.containers.find((container) => container.name === "tailscale")?.env,
-    ).toContainEqual({ name: "TS_USERSPACE", value: "true" });
-    expect(JSON.stringify(resources)).toContain("http://127.0.0.1:7353");
+      resources.filter((resource) => resource.kind === "PersistentVolumeClaim"),
+    ).toEqual([]);
   });
 });

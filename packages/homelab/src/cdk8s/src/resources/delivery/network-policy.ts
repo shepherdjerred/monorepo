@@ -6,9 +6,15 @@ import {
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import {
+  CI_STEP_POD_LABEL,
+  DELIVERY_CI_API_STEPS,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
+import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 
 const ns = (name: string) => ({
   namespaceSelector: { matchLabels: { "kubernetes.io/metadata.name": name } },
@@ -25,6 +31,17 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         { from: [ns("prometheus")], ports: [tcp(7353)] },
+        {
+          from: [
+            {
+              ...ns(DELIVERY_TAILSCALE_INGRESS.proxyNamespace),
+              podSelector: {
+                matchLabels: DELIVERY_TAILSCALE_INGRESS.parentLabels,
+              },
+            },
+          ],
+          ports: [tcp(7353)],
+        },
         {
           from: [
             {
@@ -52,9 +69,9 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
               podSelector: {
                 matchExpressions: [
                   {
-                    key: "ci.sjer.red/step-key",
+                    key: CI_STEP_POD_LABEL,
                     operator: "In",
-                    values: ["delivery-publish", "scout-beta-release"],
+                    values: DELIVERY_CI_API_STEPS,
                   },
                 ],
               },
@@ -66,10 +83,7 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
       egress: [
         dnsEgressRule(),
         externalHttpsEgressRule(),
-        {
-          to: [{ ipBlock: { cidr: "192.168.1.81/32" } }],
-          ports: [tcp(6443)],
-        },
+        kubernetesApiEgressRule(),
         {
           to: [
             {

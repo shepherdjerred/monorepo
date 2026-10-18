@@ -76,12 +76,14 @@ object, compares public entrypoint bytes with the selected archive, and checks
 an identity-bound release marker before recording success. A successful HTTP
 status or cache purge acknowledgement alone cannot accept stale frontend HTML.
 
-Browser identity terminates at Tailscale Serve inside the Delivery Pod. Serve
-forwards to the API over loopback, which is the only peer trusted to supply
-Tailscale user headers. The cluster-visible API requires machine credentials.
-This authentication boundary does not rely on NetworkPolicy enforcement by the
-cluster's CNI. The state volume preserves the sidecar's tailnet identity across
-restarts; its OAuth credential can register only the dedicated Delivery tag.
+Browser identity comes from the existing Tailscale Kubernetes operator's proxy.
+For each human request, Delivery verifies the fixed Ingress, its operator-owned
+StatefulSet and ready proxy Pod addresses twice. Only the actual socket peer
+matching that current identity may supply user headers. The authorized login
+must also match Delivery's operator allowlist; browser writes require the same
+origin. Missing, changing or unavailable proxy metadata fails closed.
+Machine requests use separate bearer credentials. These checks do not rely on
+NetworkPolicy enforcement, additional OAuth clients or an application sidecar.
 
 ## Why production recipes remain distinct
 

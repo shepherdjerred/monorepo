@@ -18,16 +18,17 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import type { DeliveryActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
 import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/network-policy.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createDeliveryMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/monitoring.ts";
 import { deliveryForumEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum-bootstrap.ts";
 import { deliveryTrmnlEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/trmnl-bootstrap.ts";
 import { createDeliveryCatalogRecovery } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/catalog-recovery.ts";
 import { attachNativeForumReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum/native-reader.ts";
+import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { createDeliveryIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/ingress.ts";
+import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -75,14 +76,6 @@ export function createDeliveryChart(
     "ci-reader-secret",
     ciItem.name,
   );
-  const tailnetItem = new OnePasswordItem(chart, "tailnet-identity", {
-    spec: { itemPath: vaultItemPath(activation.tailscaleItemId) },
-  });
-  const tailnetSecret = Secret.fromSecretName(
-    chart,
-    "tailnet-secret",
-    tailnetItem.name,
-  );
   const observerItem =
     activation.observerItemId === undefined
       ? undefined
@@ -97,6 +90,7 @@ export function createDeliveryChart(
     automountServiceAccountToken: false,
     securityContext: { fsGroup: 1000 },
   });
+  const observer = createDeliveryIngressObserver(deployment);
   const dbEnv = {
     DB_USER: EnvValue.fromSecretValue({ secret: database, key: "username" }),
     DB_PASSWORD: EnvValue.fromSecretValue({
@@ -197,85 +191,21 @@ export function createDeliveryChart(
     activation.forumReaderItemId !== undefined &&
     activation.forumObserverItemId !== undefined
   )
-    attachNativeForumReader(deployment);
-  const serveConfig = new ConfigMap(chart, "tailnet-serve", {
-    data: {
-      "serve.json": JSON.stringify({
-        TCP: { "443": { HTTPS: true } },
-        Web: {
-          "${TS_CERT_DOMAIN}:443": {
-            Handlers: { "/": { Proxy: "http://127.0.0.1:7353" } },
-          },
-        },
-        AllowFunnel: {},
-      }),
-    },
-  });
-  const state = new ZfsNvmeVolume(chart, "delivery-tailnet-state", {
-    storage: Size.gibibytes(1),
-  });
-  // Serve terminates authenticated tailnet TLS inside this Pod and connects
-  // over loopback. There is no cluster-accessible identity-trusting listener;
-  // this boundary remains enforced even when the CNI ignores NetworkPolicy.
-  deployment.addContainer(
-    withCommonProps({
-      name: "tailscale",
-      image: `docker.io/tailscale/tailscale:${versions["tailscale/tailscale"]}`,
-      securityContext,
-      envVariables: {
-        TS_AUTHKEY: EnvValue.fromSecretValue({
-          secret: tailnetSecret,
-          key: "TS_AUTHKEY",
-        }),
-        TS_USERSPACE: EnvValue.fromValue("true"),
-        TS_KUBE_SECRET: EnvValue.fromValue(""),
-        TS_STATE_DIR: EnvValue.fromValue("/var/lib/tailscale"),
-        TS_SOCKET: EnvValue.fromValue("/var/run/tailscale/tailscaled.sock"),
-        TS_AUTH_ONCE: EnvValue.fromValue("true"),
-        TS_HOSTNAME: EnvValue.fromValue("delivery"),
-        TS_EXTRA_ARGS: EnvValue.fromValue("--advertise-tags=tag:delivery"),
-        TS_SERVE_CONFIG: EnvValue.fromValue("/etc/tailscale/serve.json"),
-        TS_ENABLE_HEALTH_CHECK: EnvValue.fromValue("true"),
-        TS_LOCAL_ADDR_PORT: EnvValue.fromValue("0.0.0.0:9002"),
-      },
-      volumeMounts: [
-        {
-          path: "/etc/tailscale",
-          volume: Volume.fromConfigMap(chart, "serve-config", serveConfig),
-        },
-        {
-          path: "/var/lib/tailscale",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "tailnet-state",
-            state.claim,
-          ),
-        },
-        {
-          path: "/tmp",
-          volume: Volume.fromEmptyDir(chart, "tailnet-tmp", "tailnet-tmp"),
-        },
-        {
-          path: "/var/run/tailscale",
-          volume: Volume.fromEmptyDir(
-            chart,
-            "tailnet-socket",
-            "tailnet-socket",
-          ),
-        },
-      ],
-      resources: {
-        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
-        memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },
-      },
-      readiness: Probe.fromHttpGet("/healthz", { port: 9002 }),
-      liveness: Probe.fromHttpGet("/healthz", { port: 9002 }),
-    }),
-  );
-  new Service(chart, "service", {
+    attachNativeForumReader(deployment, observer);
+  const service = new Service(chart, "service", {
     metadata: { name: "delivery", labels: { app: "delivery" } },
     selector: deployment,
     ports: [{ name: "http", port: 7353 }],
+  });
+  new TailscaleIngress(chart, "operator-ingress", {
+    metadata: {
+      name: DELIVERY_TAILSCALE_INGRESS.name,
+      annotations: { "tailscale.com/tags": "tag:delivery" },
+    },
+    host: "delivery",
+    service,
+    port: 7353,
+    probePath: "/healthz",
   });
   createDeliveryNetworkPolicy(chart);
   createDeliveryMonitoring(chart);

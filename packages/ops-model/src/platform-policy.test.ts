@@ -83,7 +83,7 @@ test("platform modes and dependency order preserve existing release controls", (
     "root",
     "static-sites",
   ]);
-  expect(tofuStackPolicy("tailscale-delivery").mode).toBe("operator-only");
+  expect(TofuStackSchema.safeParse("tailscale-delivery").success).toBe(false);
   expect(tofuStackPolicy("application-secrets").mode).toBe("validate-only");
   expect(TofuStackSchema.safeParse("unknown").success).toBe(false);
 });

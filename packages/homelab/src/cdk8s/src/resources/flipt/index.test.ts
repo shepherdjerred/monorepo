@@ -410,6 +410,10 @@ describe("Flipt network policy", () => {
     ["the production forum to read registration and season", "storm-forum"],
     ["the private forum to read registration and season", "storm-forum-beta"],
     ["Arcade to read per-game rollout gates", "arcade"],
+    [
+      "Delivery to evaluate fresh authorization and activation gates",
+      "delivery",
+    ],
     ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
@@ -424,6 +428,7 @@ describe("Flipt network policy", () => {
       );
     expect(policy.spec.ingress).toContainEqual(
       expect.objectContaining({
+        ports: [{ port: 8080, protocol: "TCP" }],
         from: expect.arrayContaining([
           {
             namespaceSelector: {
@@ -433,5 +438,43 @@ describe("Flipt network policy", () => {
         ]),
       }),
     );
+  });
+
+  it("keeps consumer ingress namespace-scoped on the authenticated gateway only", () => {
+    const policy = z
+      .object({
+        spec: z.object({
+          policyTypes: z.array(z.string()),
+          ingress: z.array(
+            z.object({
+              ports: z.array(
+                z.object({ port: z.number(), protocol: z.string() }),
+              ),
+              from: z.array(
+                z.object({
+                  namespaceSelector: z.object({
+                    matchLabels: z.record(z.string(), z.string()),
+                  }),
+                }),
+              ),
+            }),
+          ),
+        }),
+      })
+      .parse(
+        findManifest(synthesize(), "NetworkPolicy", "flipt-ingress-netpol"),
+      );
+    expect(policy.spec.policyTypes).toEqual(["Ingress"]);
+    for (const rule of policy.spec.ingress) {
+      expect(rule.ports).toEqual([{ port: 8080, protocol: "TCP" }]);
+      for (const peer of rule.from) {
+        const labels = peer.namespaceSelector.matchLabels;
+        expect(Object.keys(labels)).toEqual(["kubernetes.io/metadata.name"]);
+        expect(labels["kubernetes.io/metadata.name"]).toMatch(
+          /^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$/u,
+        );
+        expect(labels["kubernetes.io/metadata.name"]).not.toBe("default");
+      }
+    }
   });
 });

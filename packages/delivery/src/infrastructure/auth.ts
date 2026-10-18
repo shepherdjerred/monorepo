@@ -1,9 +1,16 @@
 import { timingSafeEqual, createHash } from "node:crypto";
+import { isIP } from "node:net";
 import type { Principal } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { RuntimeConfig } from "./config.ts";
 
 const digest = (value: string) => createHash("sha256").update(value).digest();
+const canonicalPeer = (address: string) =>
+  address.startsWith("::ffff:") &&
+  isIP(address) === 6 &&
+  isIP(address.slice(7)) === 4
+    ? address.slice(7)
+    : address;
 export async function authenticate(
   request: Request,
   peerAddress: string | null,
@@ -25,7 +32,7 @@ export async function authenticate(
     return credential.principal;
   }
   const trusted = await config.trustedProxyAddresses();
-  if (peerAddress === null || !trusted.includes(peerAddress))
+  if (peerAddress === null || !trusted.includes(canonicalPeer(peerAddress)))
     throw new DeliveryError(
       "UNAUTHORIZED",
       "Authenticated private ingress required",

@@ -13,6 +13,7 @@ import { LocalQueueV1Beta2 } from "@shepherdjerred/homelab/cdk8s/generated/impor
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { CI_CLUSTER_QUEUE } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
@@ -117,6 +118,7 @@ export function createDeliveryJobs(
         externalHttpsEgressRule(),
         ...(profile === "platform"
           ? [
+              kubernetesApiEgressRule(),
               {
                 to: [
                   {

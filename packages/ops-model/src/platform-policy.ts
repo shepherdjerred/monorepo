@@ -19,7 +19,6 @@ export const TofuStackSchema = z.enum([
   "posthog",
   "seaweedfs",
   "tailscale",
-  "tailscale-delivery",
 ]);
 export type TofuStack = z.infer<typeof TofuStackSchema>;
 export const PlatformPrerequisiteSchema = z.enum([

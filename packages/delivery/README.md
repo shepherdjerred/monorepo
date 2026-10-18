@@ -244,17 +244,28 @@ Static executor bootstrap requires both storage and cache credentials;
 publication and site ownership stay disabled until their actual permissions
 and archive readback have been verified.
 
-Human requests require an allowlisted Tailscale login received from an exact
-trusted proxy peer address. The proxy must strip inbound identity headers and
-the backend must only admit that proxy and explicitly authorized machine clients.
+Human requests require an allowlisted Tailscale login from the existing
+operator's fixed `delivery/delivery-operator-ingress`. The pinned operator strips
+inbound identity headers and supplies the authenticated login. For each human
+request, the API verifies its exact socket peer against fresh Kubernetes reads:
+the current Ingress UID, exact managed parent labels, ready nonterminating proxy
+Pod IP, and its current StatefulSet controller UID, labels and selector in the
+`tailscale` namespace. It repeats those observations before trusting the peer.
+Unknown, stale, duplicate or reused IP identities fail closed. The API's
+short-lived projected identity can only get that Ingress, list proxy-namespace
+Pods and get their StatefulSets; no Secret access or workload writes are granted.
+Kubernetes verification failure blocks human authentication with a useful
+boundary error. There is no static IP, Pod CIDR or namespace-only trust fallback.
 Browser mutations require the configured origin. Machine credentials carry
 server-configured scopes; a publishing credential cannot deploy or execute,
-and machine credentials cannot approve production releases. Credential values
-are never returned by the identity endpoint.
+and machine credentials cannot approve production releases. Bearer authentication
+does not read Kubernetes or inherit proxy identity. Credential values are never
+returned by the identity endpoint. Health checks also require no Kubernetes access.
 
 Typed configuration resolves fresh flag snapshots for `delivery-writes-enabled`,
-`delivery-enabled-environments`, `delivery-operator-logins`, and
-`delivery-trusted-proxy-addresses`. Defaults deny writes and trust no identities.
+`delivery-enabled-environments` and `delivery-operator-logins`. Defaults deny
+writes and authorize no human logins. Proxy trust is verified native ownership,
+not a feature flag.
 Pausing writes stops admission of new effects while allowing cancellation and
 recording results of already owned operations. Scout and Starlight production
 require human approval bound to the frozen version set, configuration, and

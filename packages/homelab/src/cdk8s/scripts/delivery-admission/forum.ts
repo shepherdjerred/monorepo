@@ -29,7 +29,6 @@ if (nodes.items.length > 0)
 const chart = createDeliveryChart(new App(), {
   image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
   serviceItemId: "test-service",
-  tailscaleItemId: "test-tailnet",
   forumReaderItemId: "test-reader",
   forumObserverItemId: "test-observer",
 });

@@ -74,6 +74,10 @@ tasks.test {
   // Candidate visits prepare two disjoint yards concurrently. MockBukkit chunk snapshots allocate
   // blocks across the world's full height, so this fixture exceeds the shared 512m test heap.
   maxHeapSize = "1g"
+  // MockBukkit materializes full-height chunk blocks for every snapshot. Bound each class's
+  // world/ByteBuddy state to a fresh worker instead of sharing a worker across the whole suite.
+  // Retain the same bounded heap, serial forks, complete test selection and noSkippedTests gate.
+  forkEvery = 1
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/rwf.yml"))
       .withPropertyName("shippedConfig")

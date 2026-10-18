@@ -4,7 +4,6 @@ import { deliveryForumEnvironment } from "./forum-bootstrap.ts";
 const activation = {
   image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
   serviceItemId: "service-item",
-  tailscaleItemId: "tailnet-item",
 };
 test("forum API capability projects only its exact dedicated fields and rejects incomplete registration", () => {
   const chart = new Chart(new App(), "forum-credentials");

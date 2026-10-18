@@ -103,7 +103,6 @@ test("original archive bootstrap renders the fixed active hosts and rejects a re
         createDeliveryControlPlaneChart(app, {
           image: `docker.io/shepherdjerred/delivery@sha256:${"b".repeat(64)}`,
           serviceItemId: "test-service",
-          tailscaleItemId: "test-tailnet",
           executorItemId: "test-executor",
           argocdItemId: "test-workload-argocd",
           platformRegistryItemId: "test-registry",

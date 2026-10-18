@@ -3,7 +3,6 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   service: string | undefined;
   executor: string | undefined;
   argocd: string | undefined;
-  tailscale: string | undefined;
   observer: string | undefined;
   staticStorage: string | undefined;
   staticCache: string | undefined;
@@ -19,7 +18,6 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   service: "ahbp4izt7fibvwdjwd4ffhiime",
   executor: "ahbp4izt7fibvwdjwd4ffhiime",
   argocd: undefined,
-  tailscale: undefined,
   observer: undefined,
   staticStorage: undefined,
   staticCache: undefined,
@@ -47,7 +45,6 @@ export function deliveryImageReference(version: string): string | undefined {
 export type DeliveryActivation = {
   image: string;
   serviceItemId: string;
-  tailscaleItemId: string;
   observerItemId?: string;
   forumReaderItemId?: string;
   forumObserverItemId?: string;
@@ -84,13 +81,12 @@ export function deliveryActivation(
     throw new Error(
       "Forum capability requires both its restricted archive reader and runtime observer registrations",
     );
-  const { service, tailscale, observer } = DELIVERY_CREDENTIAL_ITEMS;
-  return image === undefined || service === undefined || tailscale === undefined
+  const { service, observer } = DELIVERY_CREDENTIAL_ITEMS;
+  return image === undefined || service === undefined
     ? undefined
     : {
         image,
         serviceItemId: service,
-        tailscaleItemId: tailscale,
         ...(observer === undefined ? {} : { observerItemId: observer }),
         ...(DELIVERY_CREDENTIAL_ITEMS.forumReader === undefined
           ? {}

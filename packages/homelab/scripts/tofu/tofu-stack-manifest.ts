@@ -241,21 +241,6 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
       },
     ],
   },
-  "tailscale-delivery": {
-    encrypted: true,
-    operatorOnly: true,
-    credentials: [
-      { source: "TAILSCALE_ADMIN_API_KEY", target: "TAILSCALE_API_KEY" },
-      {
-        source: "OP_SERVICE_ACCOUNT_TOKEN",
-        target: "OP_SERVICE_ACCOUNT_TOKEN",
-      },
-      {
-        source: "TAILSCALE_DELIVERY_TOFU_STATE_PASSPHRASE",
-        target: "TF_VAR_tofu_state_encryption_passphrase",
-      },
-    ],
-  },
 };
 
 export function parseTofuStack(value: string): TofuStack {

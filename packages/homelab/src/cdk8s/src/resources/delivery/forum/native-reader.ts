@@ -1,5 +1,5 @@
 import { ApiObject, Chart, JsonPatch } from "cdk8s";
-import { ConfigMap, ServiceAccount } from "cdk8s-plus-31";
+import { ConfigMap, type ServiceAccount } from "cdk8s-plus-31";
 import type { Deployment } from "cdk8s-plus-31";
 import {
   KubeRole,
@@ -11,12 +11,11 @@ import stages from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/rele
 const ACTOR = "system:serviceaccount:delivery:delivery-forum-observer";
 const POLICY = "delivery-forum-observer.sjer.red";
 /** Legacy adoption only: fixed readonly PHP, no generic exec, Secrets or workload mutation. */
-export function attachNativeForumReader(deployment: Deployment) {
+export function attachNativeForumReader(
+  deployment: Deployment,
+  account: ServiceAccount,
+) {
   const chart = Chart.of(deployment);
-  const account = new ServiceAccount(chart, "forum-native-observer", {
-    metadata: { name: "delivery-forum-observer" },
-    automountToken: false,
-  });
   for (const stage of stages.releases) {
     const namespace =
       stage.stage === "prod" ? "storm-forum" : "storm-forum-beta";

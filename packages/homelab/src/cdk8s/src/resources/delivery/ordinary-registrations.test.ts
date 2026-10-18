@@ -69,7 +69,6 @@ function activeChart(name: string): Chart {
       ? createDeliveryChart(fixture, {
           image: `docker.io/shepherdjerred/delivery@sha256:${"f".repeat(64)}`,
           serviceItemId: "service-item",
-          tailscaleItemId: "tailscale-item",
         })
       : name === "tracker"
         ? createTrackerChart(
@@ -256,7 +255,6 @@ test("application rollbacks never render the separately owned control-plane role
   const chart = createDeliveryControlPlaneChart(fixture, {
     image: `docker.io/shepherdjerred/delivery@sha256:${"d".repeat(64)}`,
     serviceItemId: "service-item",
-    tailscaleItemId: "tailscale-item",
     executorItemId: "executor-item",
     argocdItemId: "argo-item",
     minecraftRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",

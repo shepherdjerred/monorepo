@@ -213,9 +213,13 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         {
-          // Allow gRPC from temporal worker
+          // Fixed worker roles in the Temporal namespace, including all three
+          // independently released Delivery control-plane pollers.
           from: [
             {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
               podSelector: {
                 matchExpressions: [
                   {
@@ -224,6 +228,8 @@ export function createTemporalChart(app: App) {
                     values: [
                       "gateway",
                       "delivery-worker",
+                      "delivery-platform-worker",
+                      "delivery-workflows",
                       "home-worker",
                       "reports-worker",
                       "infra-worker",
@@ -238,6 +244,19 @@ export function createTemporalChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        {
+          // Native replay, routing, and self-upgrade Jobs are isolated from
+          // poller Pods and from arbitrary clients in either Job namespace.
+          from: ["delivery-worker-jobs", "delivery-platform-jobs"].map(
+            (namespace) => ({
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": namespace },
+              },
+              podSelector: { matchLabels: { app: "delivery-stage" } },
+            }),
+          ),
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         {

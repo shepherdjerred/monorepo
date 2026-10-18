@@ -24,12 +24,6 @@
     "reason": "Disposable independent validation restore; original offsite backup remains protected"
   },
   {
-    "namespace": "delivery",
-    "name": "delivery-tailnet-state",
-    "backup": "enabled",
-    "reason": "Tailscale device identity and HTTPS certificate state for the private Delivery browser endpoint"
-  },
-  {
     "namespace": "arcade",
     "name": "arcade-assets",
     "backup": "disabled",

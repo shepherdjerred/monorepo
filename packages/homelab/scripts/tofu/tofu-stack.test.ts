@@ -12,7 +12,7 @@ import {
   assertStackExecutionContext,
   dockerTokenPlanSummary,
 } from "./dockerhub-tokens.ts";
-import { STACK_MANIFEST } from "./tofu-stack-manifest.ts";
+import { STACK_MANIFEST, parseTofuStack } from "./tofu-stack-manifest.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
   collectOnePasswordTargets,
@@ -59,7 +59,6 @@ const STACKS: readonly TofuStack[] = [
   "posthog",
   "seaweedfs",
   "tailscale",
-  "tailscale-delivery",
 ];
 
 describe("OpenTofu credential contracts", () => {
@@ -161,19 +160,27 @@ describe("OpenTofu credential contracts", () => {
     ).not.toThrow();
   });
 
-  test("Delivery Tailscale identity provisioning is operator-only while CI can validate its source", () => {
-    expect(() =>
-      assertStackExecutionContext("tailscale-delivery", "validate", "true"),
-    ).not.toThrow();
-    expect(() =>
-      assertStackExecutionContext("tailscale-delivery", "plan", "true"),
-    ).toThrow("operator-only");
-    expect(() =>
-      assertStackExecutionContext("tailscale-delivery", "apply", "true"),
-    ).toThrow("operator-only");
-    expect(() =>
-      assertStackExecutionContext("tailscale-delivery", "apply", undefined),
-    ).not.toThrow();
+  test("Delivery reuses the operator while tailnet policy keeps only its existing ACL OAuth credentials", () => {
+    expect(() => parseTofuStack("tailscale-delivery")).toThrow(
+      "Unknown OpenTofu stack",
+    );
+    const requested: string[] = [];
+    const environment = buildTofuEnvironment("tailscale", (name) => {
+      requested.push(name);
+      return `${name}-fixture`;
+    });
+    expect(requested.toSorted()).toEqual(
+      [
+        ...STATE_SOURCES,
+        "TAILSCALE_OAUTH_CLIENT_ID",
+        "TAILSCALE_OAUTH_CLIENT_SECRET",
+      ].toSorted(),
+    );
+    expect(environment["TAILSCALE_API_KEY"]).toBeUndefined();
+    expect(environment["OP_SERVICE_ACCOUNT_TOKEN"]).toBeUndefined();
+    expect(
+      environment["TF_VAR_tofu_state_encryption_passphrase"],
+    ).toBeUndefined();
   });
 
   test.each(STACKS)("%s requests only its declared credentials", (stack) => {

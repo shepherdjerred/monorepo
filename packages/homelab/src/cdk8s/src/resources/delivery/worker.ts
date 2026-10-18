@@ -9,6 +9,7 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import type { DeliveryExecutorActivation } from "./activation.ts";
@@ -156,7 +157,7 @@ export function createDeliveryWorker(
         externalHttpsEgressRule(),
         ...(activation.workerRegistryItemId === undefined
           ? []
-          : [{ ports: [tcp(443)] }]),
+          : [{ ports: [tcp(443)] }, kubernetesApiEgressRule()]),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: [tcp(7233)],

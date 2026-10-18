@@ -17,6 +17,7 @@ import { createApp } from "./app.ts";
 import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import { createTrmnlRecoveryInspector } from "#infrastructure/trmnl-recovery.ts";
+import { createTrustedProxyAddresses } from "#infrastructure/ingress/proxy.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags({
@@ -87,8 +88,7 @@ const app = createApp({
       behaviorConfig(bootstrap.ENVIRONMENT).value("enabledEnvironments"),
     operatorLogins: () =>
       behaviorConfig(bootstrap.ENVIRONMENT).value("operatorLogins"),
-    trustedProxyAddresses: () =>
-      behaviorConfig(bootstrap.ENVIRONMENT).value("trustedProxyAddresses"),
+    trustedProxyAddresses: createTrustedProxyAddresses(),
   },
   peerAddress: (request) => server.requestIP(request)?.address ?? null,
 });

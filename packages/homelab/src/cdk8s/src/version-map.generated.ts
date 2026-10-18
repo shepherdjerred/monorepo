@@ -38,7 +38,6 @@ export const VersionMapSchema = z
     "linuxserver/sonarr": z.string(),
     "timothyjmiller/cloudflare-ddns": z.string(),
     "cloudflare/cloudflared": z.string(),
-    "tailscale/tailscale": z.string(),
     "tailscale/golink": z.string(),
     "home-assistant/home-assistant": z.string(),
     "bropat/eufy-security-ws": z.string(),

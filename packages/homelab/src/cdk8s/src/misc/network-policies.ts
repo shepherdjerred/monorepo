@@ -48,3 +48,11 @@ export function externalHttpsEgressRule() {
     ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
   };
 }
+
+/** The reviewed control-plane endpoint after Kubernetes Service DNAT. */
+export function kubernetesApiEgressRule() {
+  return {
+    to: [{ ipBlock: { cidr: "192.168.1.81/32" } }],
+    ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }],
+  };
+}

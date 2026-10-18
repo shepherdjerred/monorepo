@@ -6,7 +6,10 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  kubernetesApiEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import { createDeliveryJobs } from "./jobs.ts";
 const namespace = (name: string) => ({
@@ -75,6 +78,7 @@ export function createDeliveryPlatformWorker(
       egress: [
         dnsEgressRule(),
         { ports: ports(443) },
+        kubernetesApiEgressRule(),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: ports(7233),

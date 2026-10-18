@@ -10,7 +10,6 @@ function nativeForumResources() {
   const chart = createDeliveryChart(new App(), {
     image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
     serviceItemId: "test-service",
-    tailscaleItemId: "test-tailnet",
     forumReaderItemId: "test-restricted-reader",
     forumObserverItemId: "test-runtime-observer",
   });

@@ -60,7 +60,6 @@ const VALIDATED_STACKS = [
   "anthropic",
   "discord",
   "cloudflare-tokens",
-  "tailscale-delivery",
 ] as const;
 
 /** CI validates configuration offline. Operational plans and applies run in Delivery. */

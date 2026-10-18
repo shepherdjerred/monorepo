@@ -39,7 +39,7 @@ resource "tailscale_acl" "homelab" {
       "tag:ci"           = ["autogroup:admin"]
       "tag:monitoring"   = ["autogroup:admin"]
       "tag:iot"          = ["autogroup:admin"]
-      "tag:delivery"     = ["autogroup:admin"]
+      "tag:delivery"     = ["autogroup:admin", "tag:k8s-operator"]
     }
 
     acls = [
@@ -150,7 +150,7 @@ resource "tailscale_acl" "homelab" {
     # change. Tag-sourced tests are unambiguous; add user-identity tests with
     # your real login once known (see runbook).
     tests = [
-      # Delivery's embedded Serve node exposes only the operator UI. Existing
+      # Delivery's operator-managed ingress exposes only the operator UI. Existing
       # admin access covers it; tagged workloads receive no new tailnet grant.
       {
         src  = "tag:delivery"
