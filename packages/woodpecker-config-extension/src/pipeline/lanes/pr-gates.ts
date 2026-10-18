@@ -52,8 +52,8 @@ export function prGateSteps(
         `for site in ${DRY_RUN_SITES.join(" ")}; do`,
         '  bun --no-install scripts/release/check-site-build.ts "$site"',
         "done",
-        'scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest --version-catalog-file packages/version-catalog/src/catalog.json)"',
-        'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output /tmp/scout-release-state.json --dry-run',
+        // Synthetic input is confined to print-only rehearsal, never published.
+        `bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest sha256:${"f".repeat(64)} --output /tmp/scout-release-state.json --dry-run`,
         'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog --dry-run',
         "bun --no-install scripts/release/release.ts --dry-run",
       ],

@@ -39,7 +39,7 @@ final class DiagnosticJfr implements AutoCloseable {
 
   record Binding(UUID match, UUID attempt) {}
 
-  record Limits(Duration duration, long maximumBytes, Duration activationWait) {
+  record Limits(Duration duration, long maximumBytes, Duration transitionWait) {
     static Limits diagnostic() {
       return new Limits(Duration.ofSeconds(300), 250L * 1024 * 1024, Duration.ofSeconds(30));
     }
@@ -223,7 +223,7 @@ final class DiagnosticJfr implements AutoCloseable {
         throw new IllegalStateException("applied JFR settings differ from audited settings");
       rejectForeign(recording);
       state.set(State.PREPARED);
-      if (requests.poll(limits.activationWait().toMillis(), TimeUnit.MILLISECONDS)
+      if (requests.poll(limits.transitionWait().toMillis(), TimeUnit.MILLISECONDS)
               != Request.ACTIVATE
           || !invalid.get().isEmpty())
         throw new IllegalStateException("Live activation was not permitted");
@@ -237,8 +237,7 @@ final class DiagnosticJfr implements AutoCloseable {
       if (foreign.get()) invalid.compareAndSet("", "foreign JFR recording overlapped capture");
       if (recording.getState() == RecordingState.RUNNING) recording.stop();
       state.set(State.EXPORTING);
-      if (recording.getState() != RecordingState.CLOSED)
-        throw new IllegalStateException("destination recording did not close on stop");
+      awaitClosed(recording);
       detail = describe(recording, settings, DiagnosticJfrFiles.inspect(destination));
       scanForeign(recording);
       if (!validated || !explicitStop)
@@ -298,6 +297,17 @@ final class DiagnosticJfr implements AutoCloseable {
       if (requests.poll(100, TimeUnit.MILLISECONDS) == Request.STOP) return;
       scanForeign(recording);
       if (foreign.get()) return;
+    }
+  }
+
+  private void awaitClosed(Recording recording) throws InterruptedException {
+    // Duration expiry exposes STOPPED before the JFR timer finishes dumping and closing.
+    // Only this owned worker waits; a stuck or failed dump must never become a completed export.
+    var deadline = System.nanoTime() + limits.transitionWait().toNanos();
+    while (recording.getState() != RecordingState.CLOSED) {
+      if (System.nanoTime() >= deadline)
+        throw new IllegalStateException("destination recording did not close on stop");
+      Thread.sleep(2);
     }
   }
 
