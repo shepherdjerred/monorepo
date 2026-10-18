@@ -72,17 +72,25 @@ export const HandoverContextSchema = z
           configurationRevision: z.string(),
           configuration: z.record(z.string(), z.string()),
           acceptedVersionSetRevisionId: z.string().nullable(),
-          pipeline: z
-            .object({
-              kind: z.enum(["argocd", "control-plane"]),
-              application: z.string(),
-              namespace: z.string().optional(),
-              chartRepository: z.string(),
-              chartName: z.string(),
-              workerRollout: z.unknown().optional(),
-              forumRelease: z.unknown().optional(),
-            })
-            .loose(),
+          pipeline: z.union([
+            z
+              .object({
+                kind: z.enum(["argocd", "control-plane"]),
+                application: z.string(),
+                namespace: z.string().optional(),
+                chartRepository: z.string(),
+                chartName: z.string(),
+                workerRollout: z.unknown().optional(),
+                forumRelease: z.unknown().optional(),
+              })
+              .loose(),
+            z
+              .object({
+                kind: z.literal("root-release"),
+                runnerImage: z.string().min(1),
+              })
+              .loose(),
+          ]),
           baseline: z
             .object({
               kind: z.enum(["worker", "forum"]),
@@ -99,6 +107,7 @@ export const HandoverContextSchema = z
 function requireHandoverBaseline(
   row: z.infer<typeof HandoverContextSchema>["targets"][number],
 ) {
+  if (row.pipeline.kind === "root-release") return;
   if (
     row.pipeline.workerRollout !== undefined &&
     row.baseline?.kind !== "worker"
@@ -152,6 +161,7 @@ export function handoverContext(
     if (
       registered.length !== 1 ||
       row?.generation !== target.expectedGeneration ||
+      row.pipeline.kind === "root-release" ||
       row.pipeline.application !== target.application
     )
       throw new Error(
@@ -172,6 +182,10 @@ export function handoverPatch(
   raw: unknown,
   registered: z.infer<typeof HandoverContextSchema>["targets"][number],
 ) {
+  if (registered.pipeline.kind === "root-release")
+    throw new Error(
+      "Root releases retain the guarded root workflow; they are not leaf handover targets",
+    );
   const app = BootstrapApplicationSchema.parse(raw);
   const original = z
     .object({
