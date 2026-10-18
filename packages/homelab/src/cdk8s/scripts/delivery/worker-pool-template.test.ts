@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseAllDocuments, stringify } from "yaml";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { createTemporalWorkflowWorkers } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/workflow-worker.ts";
 import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
 import { workerPoolTemplate } from "./worker-pool-template.ts";
@@ -12,6 +13,9 @@ import {
   fingerprintChart,
 } from "homelab/scripts/helm/helm-release-core.ts";
 import { stageChart } from "homelab/scripts/helm/helm-push.ts";
+import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-publication.ts";
+import { createScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
+import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 
 const FIRST = "a".repeat(40);
 const SECOND = "b".repeat(40);
@@ -44,6 +48,7 @@ async function render(chartName: string, manifest: string, selected: unknown) {
       path.join(directory, "values.yaml"),
       stringify({
         delivery: {
+          ...chartValidationValues(chartName)?.delivery,
           workerPool: selected === "" ? "" : JSON.stringify(selected),
         },
       }),
@@ -90,6 +95,93 @@ function synth(chartName: string, stage?: "beta" | "prod") {
   };
 }
 
+it.each(["beta", "prod"] as const)(
+  "preserves the shared %s Scout egress policy for every retained host",
+  async (stage) => {
+    const app = new App();
+    createScoutChart(app, stage);
+    const chart = app.charts[0];
+    if (chart === undefined) throw new Error("Missing actual Scout chart");
+    applyOrdinaryDeliveryImageBindings(app);
+    const source = chart.toJson();
+    const original = source.find(
+      (resource) =>
+        resource.kind === "NetworkPolicy" &&
+        resource.metadata.name === "scout-workflow-worker-netpol",
+    );
+    expect(original).toBeDefined();
+    const resources = await render(
+      chart.node.id,
+      source.map((resource) => stringify(resource)).join("---\n"),
+      pool(`scout-${stage}`, "scout-for-lol"),
+    );
+    const policies = resources.filter((resource) => {
+      const parsed = z
+        .object({
+          kind: z.string(),
+          metadata: z.object({ name: z.string() }),
+        })
+        .parse(resource);
+      return (
+        parsed.kind === "NetworkPolicy" &&
+        parsed.metadata.name === "scout-workflow-worker-netpol"
+      );
+    });
+    expect(policies).toEqual([original]);
+    const policy = z
+      .object({
+        spec: z.object({
+          podSelector: z.object({
+            matchLabels: z.record(z.string(), z.string()),
+          }),
+          egress: z.array(
+            z.object({
+              ports: z.array(
+                z.object({
+                  port: z.number(),
+                  protocol: z.string().optional(),
+                }),
+              ),
+            }),
+          ),
+        }),
+      })
+      .parse(policies[0]);
+    expect(
+      policy.spec.egress.flatMap((rule) =>
+        rule.ports.map((port) => [port.port, port.protocol ?? "TCP"]),
+      ),
+    ).toEqual([
+      [53, "UDP"],
+      [53, "TCP"],
+      [7233, "TCP"],
+    ]);
+    const hosts = resources.flatMap((resource) => {
+      const parsed = z
+        .object({
+          kind: z.literal("Deployment"),
+          spec: z.object({
+            template: z.object({
+              metadata: z.object({
+                labels: z.record(z.string(), z.string()),
+              }),
+            }),
+          }),
+        })
+        .safeParse(resource);
+      return parsed.success &&
+        parsed.data.spec.template.metadata.labels["worker-family"] ===
+          `scout-${stage}-workflows`
+        ? [parsed.data]
+        : [];
+    });
+    expect(hosts).toHaveLength(3);
+    for (const host of hosts)
+      expect(host.spec.template.metadata.labels).toMatchObject(
+        policy.spec.podSelector.matchLabels,
+      );
+  },
+);
 describe("Delivery fixed worker host rendering", () => {
   it("keeps native synth valid while chart staging and published fingerprints use the real Helm template", async () => {
     const directory = await mkdtemp(

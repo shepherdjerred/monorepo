@@ -153,12 +153,9 @@ export function workerPoolTemplate(manifest: string, chart: string): string {
   const ordinary: string[] = [];
   for (const resource of documents) {
     const name = resource.metadata.name;
-    if (!name.includes(profile.prefix)) {
-      ordinary.push(stringify(resource, { lineWidth: 0 }));
-      continue;
-    }
     if (name.includes(`${profile.prefix}candidate`))
       prototype.push(prototypeManifest(resource, profile.prefix));
+    else ordinary.push(stringify(resource, { lineWidth: 0 }));
   }
   if (prototype.length === 0)
     throw new Error(`Missing ${chart} candidate worker prototype`);

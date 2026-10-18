@@ -348,7 +348,7 @@ export function bootstrapImageManifest(
   const reference = `${image.repository}:${image.version}@${image.digest}`;
   let count = 0;
   const replaced = raw.replaceAll(
-    /docker\.io\/shepherdjerred\/woodpecker-config-extension:[\w.@:-]+/gu,
+    /docker\.io\/shepherdjerred\/woodpecker-config-extension(?::[\w.-]+)?@sha256:[a-f0-9]{64}/gu,
     () => {
       count++;
       return reference;
