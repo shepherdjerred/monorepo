@@ -1,11 +1,14 @@
 import { expect, test, vi } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { contentRecoveryFixture } from "#testing/content-recovery-fixture.ts";
+import {
+  contentRecoveryFixture,
+  contentRecoveryCatalog,
+} from "#testing/content-recovery-fixture.ts";
 import { testExecutor } from "#testing/seed.ts";
 import { createApp } from "#server/app.ts";
 import { ContentRecoveryIntentSchema } from "#shared/contract.ts";
 
-const scope = useDeliveryFixture();
+const scope = useDeliveryFixture({ catalog: contentRecoveryCatalog });
 const admin = "content-admin-test-token-with-more-than-32-characters";
 const publisher = "content-publisher-test-token-with-more-than-32-characters";
 const executor = "content-executor-test-token-with-more-than-32-characters";

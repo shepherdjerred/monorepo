@@ -51,6 +51,10 @@ const delegated = parseCatalog({
   ...SERVICE_CATALOG,
   deliveryDelegations: { "storm-forum": "storm-forum/prod" },
 });
+const legacyOwned = parseCatalog({
+  ...SERVICE_CATALOG,
+  deliveryDelegations: {},
+});
 const missing = async () => {
   throw new DeliveryClientError(404, "NOT_FOUND", "No qualified bundle");
 };
@@ -94,7 +98,9 @@ test("unrelated and retained-only publications do not manufacture a new forum CI
 });
 
 test("an unprovisioned legacy-owned bundle is optional, but source delegation makes it required", async () => {
-  expect(await attachForumPublication([producer], missing)).toEqual([producer]);
+  expect(
+    await attachForumPublication([producer], missing, legacyOwned),
+  ).toEqual([producer]);
   await expect(
     attachForumPublication([producer], missing, delegated),
   ).rejects.toMatchObject({ status: 404 });
@@ -118,10 +124,11 @@ test.each([
   "policy and original-byte identity are checked even before cutover: %j",
   async (change) => {
     await expect(
-      attachForumPublication([producer], async () => ({
-        ...original,
-        ...change,
-      })),
+      attachForumPublication(
+        [producer],
+        async () => ({ ...original, ...change }),
+        legacyOwned,
+      ),
     ).rejects.toThrow();
   },
 );

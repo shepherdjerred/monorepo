@@ -1,6 +1,6 @@
 ---
 title: Roll out a Temporal Worker Deployment
-description: Canary, ramp, promote, or roll back central or Scout Workflow bundles while stable and candidate pollers remain available.
+description: Verify, promote, or roll back central or Scout Workflow bundles while retained pollers remain available.
 sidebar:
   order: 7
 ---
@@ -32,7 +32,7 @@ defines the retained hosts, rollout proofs, and independent recovery boundary.
    Scout production requires human approval of the exact frozen release. Its
    backend, Workflow hosts, and frontend archive share one deployment and lock.
 
-3. Follow the deployment through replay, canary, ramp, and promotion:
+3. Follow replay, pinned canary, direct promotion, and normally routed canary:
 
    ```bash
    toolkit deploy wait DEPLOYMENT_ID --timeout 86400 --json
@@ -40,6 +40,8 @@ defines the retained hosts, rollout proofs, and independent recovery boundary.
 
    Success requires the selected runtime and routing proofs. Keep every older
    host that still serves current, ramping, canary, or pinned executions.
+   Delivery has no fixed traffic bake periods; retirement still requires native
+   drainage and execution visibility checks.
 
 4. Request retirement of a drained host through Delivery:
 

@@ -129,9 +129,12 @@ Worker releases freeze an environment-owned PostgreSQL pool into each
 Deployment. Only the reviewed central and Scout host profiles are allowed;
 pool entries select immutable original image artifacts and zero or one replica.
 Central hosts serve both `prod` and `beta`. Their rollout plan records both
-namespaces, and each explicit routing step checks both. Replay, pinned canaries,
-healthy pollers, beta prerequisites, and the existing observation windows still
-apply. A partial routing response is inspected before repeating the same step.
+namespaces, and each explicit routing step checks both. Replay, exact image
+identity, pinned canaries, healthy pollers and beta prerequisites precede direct
+promotion. A normally routed canary then verifies each namespace. There are no
+fixed traffic bake periods; original hosts remain until independent drainage
+proof permits retirement. A partial routing response is inspected before
+repeating the same step.
 
 First ownership transfer uses a separate owned Argo bootstrap operation. It
 keeps every legacy replica while creating retained hosts, and refuses any

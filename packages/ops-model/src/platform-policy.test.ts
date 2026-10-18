@@ -8,7 +8,9 @@ import {
 } from "./platform-policy.ts";
 
 test("root selection uses canonical chart owners and excludes upstream, inactive and delegated targets", () => {
-  const charts = new ServiceIndex().rootReleaseCharts();
+  const charts = new ServiceIndex(
+    parseCatalog({ ...SERVICE_CATALOG, deliveryDelegations: {} }),
+  ).rootReleaseCharts();
   expect(charts).toContainEqual({ name: "apps", serviceId: "gitops" });
   expect(charts).toContainEqual({ name: "temporal", serviceId: "temporal" });
   for (const name of [
@@ -28,6 +30,12 @@ test("root selection uses canonical chart owners and excludes upstream, inactive
     }),
   ).rootReleaseCharts();
   expect(delegated).toEqual(charts.filter((chart) => chart.name !== "arcade"));
+  const activated = new ServiceIndex().rootReleaseCharts();
+  expect(Object.keys(SERVICE_CATALOG.deliveryDelegations ?? {})).toHaveLength(
+    19,
+  );
+  for (const name of Object.keys(SERVICE_CATALOG.deliveryDelegations ?? {}))
+    expect(activated.map((chart) => chart.name)).not.toContain(name);
 });
 
 test("a root exclusion must name inventory owned by its service", () => {

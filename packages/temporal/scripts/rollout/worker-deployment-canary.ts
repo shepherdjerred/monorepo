@@ -13,6 +13,7 @@ const ArgumentsSchema = z.object({
   deploymentName: z.string().min(1),
   buildId: WorkerBuildIdSchema,
   namespace: z.string().min(1),
+  routing: z.enum(["pinned", "normal"]),
 });
 
 async function main(): Promise<void> {
@@ -21,6 +22,9 @@ async function main(): Promise<void> {
     deploymentName: requiredArgument(args, "--deployment-name"),
     buildId: requiredArgument(args, "--build-id"),
     namespace: requiredArgument(args, "--namespace"),
+    routing: args.includes("--routing")
+      ? requiredArgument(args, "--routing")
+      : "pinned",
   });
   const connection = await Connection.connect(
     temporalConnectionOptions({
@@ -38,12 +42,16 @@ async function main(): Promise<void> {
       taskQueue: TASK_QUEUES.WORKFLOWS,
       args: [input],
       workflowExecutionTimeout: "5 minutes",
-      versioningOverride: {
-        pinnedTo: {
-          deploymentName: input.deploymentName,
-          buildId: input.buildId,
-        },
-      },
+      ...(input.routing === "pinned"
+        ? {
+            versioningOverride: {
+              pinnedTo: {
+                deploymentName: input.deploymentName,
+                buildId: input.buildId,
+              },
+            },
+          }
+        : {}),
     });
     await handle.result();
     console.warn(
@@ -53,6 +61,7 @@ async function main(): Promise<void> {
         workflowId,
         runId: handle.firstExecutionRunId,
         outcome: "passed",
+        routing: input.routing,
       }),
     );
   } finally {

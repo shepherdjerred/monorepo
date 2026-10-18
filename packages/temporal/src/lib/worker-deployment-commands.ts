@@ -27,35 +27,6 @@ export function temporalCommand(
   ];
 }
 
-export async function setRampingVersion(
-  options: {
-    address: string;
-    namespace: string;
-    tls?: boolean;
-    deploymentName: string;
-    buildId: string;
-  },
-  percentage: number,
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await run(
-    temporalCommand(options, [
-      "worker",
-      "deployment",
-      "set-ramping-version",
-      "--deployment-name",
-      options.deploymentName,
-      "--build-id",
-      options.buildId,
-      "--percentage",
-      String(percentage),
-      "--yes",
-      "--output",
-      "json",
-    ]),
-  );
-}
-
 export async function setCurrentVersion(
   options: {
     address: string;

@@ -26,10 +26,4 @@ export const WorkerRolloutPlanSchema = z
     deploymentId: IdentifierSchema,
   })
   .strict();
-export const WorkerRolloutActionSchema = z.enum([
-  "start",
-  "advance-50",
-  "advance-100",
-  "promote",
-  "verify",
-]);
+export const WorkerRolloutActionSchema = z.enum(["promote", "verify"]);

@@ -5,12 +5,14 @@ import { createTestDatabase } from "./postgres.ts";
 import { seedDelivery, testExecutor, testPublisher } from "./seed.ts";
 import type { ForumPolicyReader } from "#infrastructure/forum/source-policy.ts";
 import type { TestRegistration } from "./seed.ts";
+import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 
 /** Each calling test file owns one disposable cluster and a fresh seeded test. */
 export function useDeliveryFixture(
   options: {
     forumPolicyReader?: ForumPolicyReader;
     registration?: TestRegistration;
+    catalog?: ServiceIndex;
   } = {},
 ) {
   let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
@@ -21,7 +23,7 @@ export function useDeliveryFixture(
     delivery = new Delivery(
       cluster.database,
       1,
-      undefined,
+      options.catalog,
       options.forumPolicyReader,
     );
   }, 60_000);

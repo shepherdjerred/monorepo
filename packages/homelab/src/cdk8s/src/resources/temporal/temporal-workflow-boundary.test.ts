@@ -220,3 +220,29 @@ describe("central Temporal Workflow boundary", () => {
     },
   );
 });
+
+test.each(["stable", "candidate"])(
+  "attributes the %s SDK metrics to their actual Temporal namespace",
+  (track) => {
+    const monitor = findTemporalResource(
+      resources(),
+      "ServiceMonitor",
+      `temporal-workflows-${track}-metrics-service-monitor`,
+    );
+    expect(monitor.spec).toMatchObject({
+      endpoints: [
+        {
+          metricRelabelings: [
+            {
+              action: "replace",
+              sourceLabels: ["exported_namespace"],
+              regex: "(.+)",
+              targetLabel: "temporal_namespace",
+              replacement: "$1",
+            },
+          ],
+        },
+      ],
+    });
+  },
+);

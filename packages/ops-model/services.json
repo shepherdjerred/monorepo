@@ -1,7 +1,27 @@
 {
   "$schema": "./services.schema.json",
-  "deliveryDelegations": {},
-  "platformDeliveryDelegated": false,
+  "deliveryDelegations": {
+    "arcade": "arcade/prod",
+    "birmel": "birmel/prod",
+    "tasknotes": "tasknotes-server/prod",
+    "tracker": "tracker/prod",
+    "delivery": "delivery/prod",
+    "trmnl-dashboard": "trmnl-dashboard/prod",
+    "alert-dashboard": "ops-dashboard/prod",
+    "storm-brain": "storm-brain/prod",
+    "starlight-karma-bot-beta": "starlight-karma-bot/beta",
+    "starlight-karma-bot-prod": "starlight-karma-bot/prod",
+    "redlib": "self-hosted-apps/redlib",
+    "media": "streambot/prod",
+    "s3-static-sites": "static-sites/proxy",
+    "temporal": "temporal/prod",
+    "delivery-control-plane": "delivery-control-plane/prod",
+    "scout-beta": "scout-for-lol/beta",
+    "scout-prod": "scout-for-lol/prod",
+    "storm-forum": "storm-forum/prod",
+    "minecraft-tsmc": "minecraft/tsmc"
+  },
+  "platformDeliveryDelegated": true,
   "services": [
     {
       "id": "delivery",

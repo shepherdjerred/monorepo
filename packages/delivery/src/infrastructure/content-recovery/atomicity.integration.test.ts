@@ -4,11 +4,12 @@ import {
   contentRecoveryFixture,
   contentBarrier,
   contentObservation,
+  contentRecoveryCatalog,
 } from "#testing/content-recovery-fixture.ts";
 import { testExecutor } from "#testing/seed.ts";
 import { lock } from "#infrastructure/delivery-records.ts";
 
-const scope = useDeliveryFixture();
+const scope = useDeliveryFixture({ catalog: contentRecoveryCatalog });
 
 test("prior settlement binds frozen configuration even when the same version was genuinely accepted under another configuration", async () => {
   const fixture = await contentRecoveryFixture(scope.delivery, {

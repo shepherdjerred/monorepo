@@ -62,7 +62,8 @@ export const BootstrapDescriptorSchema = z
       const name =
         target === "woodpecker" ? "woodpecker-config-extension" : "delivery";
       if (
-        image.sourceRevision !== value.sourceRevision ||
+        (value.targets.includes(target) &&
+          image.sourceRevision !== value.sourceRevision) ||
         image.repository !== `docker.io/shepherdjerred/${name}`
       )
         context.addIssue({
@@ -168,9 +169,20 @@ function manifestApplication(app: BootstrapApplication) {
       ...(app.metadata.namespace === undefined
         ? {}
         : { namespace: app.metadata.namespace }),
-      labels: app.metadata.labels,
-      annotations: app.metadata.annotations,
-      finalizers: app.metadata.finalizers,
+      ...(Object.keys(app.metadata.labels).length === 0
+        ? {}
+        : { labels: app.metadata.labels }),
+      annotations:
+        app.metadata.name === "apps"
+          ? Object.fromEntries(
+              Object.entries(app.metadata.annotations).filter(
+                ([key]) => key !== "ops.sjer.red/verified-root-release",
+              ),
+            )
+          : app.metadata.annotations,
+      ...(app.metadata.finalizers.length === 0
+        ? {}
+        : { finalizers: app.metadata.finalizers }),
     },
     spec: app.spec,
   };

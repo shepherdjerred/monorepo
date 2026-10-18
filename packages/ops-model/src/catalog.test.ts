@@ -50,7 +50,7 @@ test("separate CP chart ownership does not alias its original Temporal image pro
 });
 
 describe("service catalog", () => {
-  test.each(["unknown", "apps", "argocd", "delivery"])(
+  test.each(["unknown", "apps", "argocd"])(
     "rejects a delegation to %s",
     (application) => {
       expect(() =>
@@ -69,6 +69,23 @@ describe("service catalog", () => {
       ).toThrow(/registered non-control-plane Application/);
     },
   );
+
+  test("permits the registered Delivery API workload to own its release", () => {
+    expect(
+      parseCatalog({
+        services: [
+          {
+            id: "delivery",
+            title: "Delivery",
+            kind: "workload",
+            namespaces: ["delivery"],
+            argoApps: ["delivery"],
+          },
+        ],
+        deliveryDelegations: { delivery: "delivery/prod" },
+      }).deliveryDelegations,
+    ).toEqual({ delivery: "delivery/prod" });
+  });
 
   test("rejects two Applications delegated to the same environment", () => {
     expect(() =>
@@ -250,11 +267,17 @@ describe("ServiceIndex", () => {
     expect(index.byId("obsidian-headless")?.deploy).toEqual([]);
   });
 
-  test("owns the prepared launcher inventory without a deployable image", () => {
+  test("owns the prepared launcher inventory without an active Application", () => {
     const launcher = index.requireById("glitter-boys-launcher");
     expect(index.byNamespace("glitter-boys-launcher")).toBe(launcher);
     expect(index.byArgoApp("glitter-boys-launcher")).toBeUndefined();
     expect(launcher.argoApps).toEqual([]);
+    expect(launcher.rootReleaseExclusions).toEqual({
+      "glitter-boys-launcher": "inactive",
+    });
+    expect(SERVICE_CATALOG.deliveryDelegations).not.toHaveProperty(
+      "glitter-boys-launcher",
+    );
     expect(launcher.deploy).toEqual([]);
   });
 

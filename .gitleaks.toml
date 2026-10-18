@@ -8,6 +8,8 @@ regexes = [
   '''^phc_[A-Za-z0-9]+$''',
   # Public 1Password item reference for the Storm production release.
   '''^xdstbl5gobpao35rjprlp3hzgi$''',
+  # Public 1Password item reference for the Delivery TRMNL capability.
+  '''^p7th6tqeel7k2sm47mrrto7oca$''',
 ]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',

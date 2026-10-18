@@ -17,14 +17,11 @@ import { resolveWorkerDeploymentRolloutTarget } from "#lib/worker-deployment-tar
 import {
   parseTemporalJson,
   setCurrentVersion,
-  setRampingVersion,
   temporalCommand,
 } from "#lib/worker-deployment-commands.ts";
 import {
   requireAcceptancePrerequisite,
-  requireHealthyRolloutWindow,
   requireHealthyWorkflowPoller,
-  rolloutPoller,
   runWorkerDeploymentPreflight,
   verifyCandidateImageBuildId,
 } from "#lib/worker-deployment-proofs.ts";
@@ -248,135 +245,64 @@ function unchangedStable(
   if (state.currentVersionBuildID !== plan.expectedCurrentBuildId)
     throw new Error("Current worker changed outside this deployment");
 }
-function requireRamp(
-  state: Awaited<ReturnType<typeof routing>>,
-  options: Options,
-  percentage: number,
-) {
+function requireNoRamp(state: Awaited<ReturnType<typeof routing>>) {
   if (
-    state.rampingVersionBuildID !== options.buildId ||
-    state.rampingVersionPercentage !== percentage
+    state.rampingVersionBuildID !== "" ||
+    state.rampingVersionPercentage !== 0
   )
-    throw new Error(`Candidate must own the ${String(percentage)}% ramp`);
-}
-function requireElapsed(
-  state: Awaited<ReturnType<typeof routing>>,
-  milliseconds: number,
-  now: Date,
-) {
-  const elapsed =
-    now.getTime() -
-    new Date(state.rampingVersionPercentageChangedTime).getTime();
-  if (!Number.isFinite(elapsed) || elapsed < milliseconds)
-    throw new Error(
-      "Worker ramp has not completed its required observation period",
-    );
-}
-async function advance(
-  options: Options,
-  plan: WorkerRolloutPlan,
-  transition: { target: 50 | 100; now: Date },
-  run: RolloutCommandRunner,
-) {
-  const { target, now } = transition;
-  const before = await routing(options, run);
-  unchangedStable(before, plan);
-  if (
-    before.rampingVersionBuildID === options.buildId &&
-    before.rampingVersionPercentage === target
-  )
-    return;
-  const previous = target === 50 ? 10 : 50;
-  requireRamp(before, options, previous);
-  requireElapsed(
-    before,
-    target === 50 ? 30 * 60 * 1000 : 2 * 60 * 60 * 1000,
-    now,
-  );
-  await requireHealthyRolloutWindow(
-    target === 50 ? "30m" : "2h",
-    run,
-    rolloutPoller(options, plan.expectedCurrentBuildId),
-  );
-  await requireAcceptancePrerequisite(options, run);
-  const checked = await routing(options, run);
-  unchangedStable(checked, plan);
-  requireRamp(checked, options, previous);
-  await setRampingVersion(options, target, run);
+    throw new Error("Worker deployment has an active ramp");
 }
 
-async function start(
+async function canary(
   options: Options,
-  plan: WorkerRolloutPlan,
   run: RolloutCommandRunner,
+  routingMode: "pinned" | "normal",
 ) {
-  const state = await routing(options, run);
-  unchangedStable(state, plan);
-  if (
-    state.rampingVersionBuildID === "" &&
-    state.rampingVersionPercentage === 0
-  ) {
-    await requireAcceptancePrerequisite(options, run);
-    const checked = await routing(options, run);
-    unchangedStable(checked, plan);
-    if (
-      checked.rampingVersionBuildID !== "" ||
-      checked.rampingVersionPercentage !== 0
-    )
-      throw new Error("Worker ramp changed during start checks");
-    await setRampingVersion(options, 10, run);
-  } else requireRamp(state, options, 10);
+  await run([
+    ...options.canaryCommand,
+    "--namespace",
+    options.namespace,
+    ...(routingMode === "pinned"
+      ? [
+          "--deployment-name",
+          options.deploymentName,
+          "--build-id",
+          options.buildId,
+        ]
+      : options.target === "central"
+        ? [
+            "--deployment-name",
+            options.deploymentName,
+            "--build-id",
+            options.buildId,
+            "--routing",
+            "normal",
+          ]
+        : []),
+  ]);
 }
+
 async function promote(
   options: Options,
   plan: WorkerRolloutPlan,
   run: RolloutCommandRunner,
-  now: Date,
 ) {
   const before = await routing(options, run);
-  if (
-    before.currentVersionBuildID === options.buildId &&
-    before.rampingVersionBuildID === "" &&
-    before.rampingVersionPercentage === 0
-  )
-    return;
-  requireRamp(before, options, 100);
-  if (before.currentVersionBuildID !== options.buildId) {
-    unchangedStable(before, plan);
-    requireElapsed(before, 2 * 60 * 60 * 1000, now);
-    await requireHealthyRolloutWindow(
-      "2h",
-      run,
-      rolloutPoller(options, plan.expectedCurrentBuildId),
-    );
-    await requireAcceptancePrerequisite(options, run);
-    await verifyCandidateImageBuildId(
-      options.candidateImage,
-      options.buildId,
-      run,
-    );
-    const checked = await routing(options, run);
-    unchangedStable(checked, plan);
-    requireRamp(checked, options, 100);
-    await setCurrentVersion(options, options.buildId, run);
-  }
-  const current = await routing(options, run);
-  if (current.currentVersionBuildID !== options.buildId)
-    throw new Error("Candidate did not become current");
-  requireRamp(current, options, 100);
-  await run(
-    temporalCommand(options, [
-      "worker",
-      "deployment",
-      "set-ramping-version",
-      "--deployment-name",
-      options.deploymentName,
-      "--delete",
-      "--yes",
-      "--output",
-      "json",
-    ]),
+  requireNoRamp(before);
+  // Inspect an ambiguous prior response before repeating the same mutation.
+  if (before.currentVersionBuildID === options.buildId) return;
+  unchangedStable(before, plan);
+  await requireAcceptancePrerequisite(options, run);
+  await verifyCandidateImageBuildId(
+    options.candidateImage,
+    options.buildId,
+    run,
   );
+  await canary(options, run, "pinned");
+  const checked = await routing(options, run);
+  unchangedStable(checked, plan);
+  requireNoRamp(checked);
+  await setCurrentVersion(options, options.buildId, run);
 }
 
 async function stepRoute(
@@ -385,7 +311,6 @@ async function stepRoute(
     plan: WorkerRolloutPlan;
     action: WorkerRolloutAction;
     connection: DeliveryWorkerConnection;
-    now?: Date;
   },
   run: RolloutCommandRunner,
   namespace: "prod" | "beta",
@@ -398,42 +323,28 @@ async function stepRoute(
   requirePlan(input.detail, plan, options);
   await requireCandidate(options, run);
   switch (input.action) {
-    case "start":
-      await start(options, plan, run);
-      break;
-    case "advance-50":
-      await advance(
-        options,
-        plan,
-        { target: 50, now: input.now ?? new Date() },
-        run,
-      );
-      break;
-    case "advance-100":
-      await advance(
-        options,
-        plan,
-        { target: 100, now: input.now ?? new Date() },
-        run,
-      );
-      break;
     case "promote":
-      await promote(options, plan, run, input.now ?? new Date());
+      await promote(options, plan, run);
       break;
     case "verify":
       break;
   }
   const state = await routing(options, run);
   if (
-    (input.action === "verify" || input.action === "promote") &&
-    (state.currentVersionBuildID !== options.buildId ||
-      state.rampingVersionBuildID !== "" ||
-      state.rampingVersionPercentage !== 0)
+    state.currentVersionBuildID !== options.buildId ||
+    state.rampingVersionBuildID !== "" ||
+    state.rampingVersionPercentage !== 0
   )
     throw new Error("Candidate is not the exclusively accepted current worker");
-  if (input.action === "start") requireRamp(state, options, 10);
-  if (input.action === "advance-50") requireRamp(state, options, 50);
-  if (input.action === "advance-100") requireRamp(state, options, 100);
+  if (input.action === "verify") {
+    await canary(options, run, "normal");
+    const after = await routing(options, run);
+    requireNoRamp(after);
+    if (after.currentVersionBuildID !== options.buildId)
+      throw new Error(
+        "Current worker changed during the normally routed canary",
+      );
+  }
   return {
     action: input.action,
     candidateBuildId: options.buildId,

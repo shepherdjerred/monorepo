@@ -3,6 +3,7 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { workerFixture } from "#testing/worker-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { CreateDeploymentSchema } from "#shared/contract.ts";
+import { deliveryOperationId } from "#shared/operation-id.ts";
 
 const context = useDeliveryFixture();
 
@@ -67,6 +68,18 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
   const before = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: fixture.environmentId },
   });
+  await expect(
+    context.delivery.createDeployment(
+      {
+        requestId: "rollout-before-baseline",
+        environmentId: fixture.environmentId,
+        versionSetRevisionId: c.version.id,
+        expectedGeneration: input.expectedGeneration,
+        kind: "deploy",
+      },
+      testOperator,
+    ),
+  ).rejects.toMatchObject({ code: "INVALID" });
   const selected = await context.delivery.createDeployment(input, testOperator);
   expect(await context.delivery.createDeployment(input, testOperator)).toEqual(
     selected,
@@ -117,17 +130,22 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
   await expect(
     context.delivery.finish(selected.id, result, testExecutor),
   ).rejects.toMatchObject({ code: "INVALID" });
-  await context.delivery.stage(
-    selected.id,
-    {
-      key: "worker-baseline",
-      operationId: `baseline:${selected.id}`,
-      status: "succeeded",
-      message: "Independent adapter observation fixture",
-      evidence: result.evidence,
-    },
-    testExecutor,
-  );
+  for (const key of [
+    "worker-image-provenance",
+    "worker-prior-source",
+    "worker-baseline",
+  ])
+    await context.delivery.stage(
+      selected.id,
+      {
+        key,
+        operationId: deliveryOperationId(`${selected.id}:${key}`),
+        status: "succeeded",
+        message: "Independent adapter observation fixture",
+        evidence: result.evidence,
+      },
+      testExecutor,
+    );
   await context.delivery.finish(selected.id, result, testExecutor);
   const after = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: fixture.environmentId },
@@ -166,22 +184,63 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
       testOperator,
     ),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
-  await expect(
-    context.delivery.createDeployment(
-      {
-        requestId: "still-guarded-rollout",
-        environmentId: fixture.environmentId,
-        versionSetRevisionId: c.version.id,
-        expectedGeneration: pool.generation,
-        kind: "deploy",
-      },
-      testOperator,
+  const rollout = await context.delivery.createDeployment(
+    {
+      requestId: "verified-baseline-rollout",
+      environmentId: fixture.environmentId,
+      versionSetRevisionId: c.version.id,
+      expectedGeneration: pool.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  expect(rollout.workerSnapshot).toMatchObject({
+    workerOperation: "rollout",
+    candidateBuildId: "3".padEnd(40, "0"),
+    versions: pool.versions,
+  });
+  await context.delivery.cancel(rollout.id, testOperator);
+  // Retirement changes desired state, not the original baseline identity.
+  const original = pool.versions[0];
+  if (original === undefined) throw new Error("Missing baseline worker");
+  await context.cluster.database.workerVersion.update({
+    where: { id: original.id },
+    data: { replicas: 0, generation: { increment: 1 }, retiredAt: new Date() },
+  });
+  const added = await fixture.acceptedRelease(4);
+  const evolved = await context.delivery.workers(
+    fixture.environmentId,
+    testOperator,
+  );
+  const next = await context.delivery.createDeployment(
+    {
+      requestId: "evolving-pool-rollout",
+      environmentId: fixture.environmentId,
+      versionSetRevisionId: c.version.id,
+      expectedGeneration: evolved.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  expect(
+    next.workerSnapshot?.versions.find((worker) => worker.id === original.id),
+  ).toMatchObject({
+    replicas: 0,
+    generation: 1,
+  });
+  expect(next.workerSnapshot?.versions).toHaveLength(3);
+  expect(
+    next.workerSnapshot?.versions.find(
+      (worker) => worker.artifactId === added.artifactId,
     ),
-  ).rejects.toMatchObject({ code: "INVALID" });
+  ).toMatchObject({
+    introducedByDeploymentId: added.deployment.id,
+    replicas: 1,
+  });
 });
 
-test("baseline artifact selection rejects unqualified provenance and is mandatory only for host adoption", async () => {
-  const { a, input } = await prepare();
+test("baseline requires explicit host selection and a qualified application candidate", async () => {
+  const { a, c, input } = await prepare();
   expect(
     CreateDeploymentSchema.safeParse({ ...input, kind: "deploy" }).success,
   ).toBe(false);
@@ -199,7 +258,7 @@ test("baseline artifact selection rejects unqualified provenance and is mandator
     }).success,
   ).toBe(false);
   await context.cluster.database.build.updateMany({
-    where: { artifacts: { some: { id: a.artifactId } } },
+    where: { artifacts: { some: { id: c.artifactId } } },
     data: { status: "pending" },
   });
   await expect(

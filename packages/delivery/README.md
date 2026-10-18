@@ -454,12 +454,18 @@ pending or owned. An observation import cannot establish that baseline.
 Initial migration uses an admin-only `adopt-worker` deployment intent through
 `POST /api/v1/deployments`, with the current qualified full-app version set and
 `workerBaseline: { artifactIds, candidateArtifactId }`. The artifact IDs reference
-every observed original qualified worker host; the candidate identifies existing
+every observed original worker host; the candidate identifies existing
 Temporal current routing. Legacy Activities and Workflows may use different
 revisions, so the routed candidate may differ from the full-app image. The
 executor independently verifies unchanged Argo source/health, actual host and
 runtime image identities, baked source revisions, and every served route twice.
-Only its successful `worker-baseline` stage and completion materialize the pool.
+An original image publication whose full CI is pending or failed can be retained
+only through this native host observation, with its original build/source and
+runtime digests unchanged. Its image, source and deterministic baseline stages
+must succeed before materialization. Later reads require that exact successful
+adoption lineage; the image remains ineligible for new release selection or
+version-set composition until it independently qualifies. The captured native
+chart may predate the qualified version set used to anchor the request.
 This host-only history never advances desired, observed, or accepted application
 revisions or configuration and cannot serve as a full-app rollback target.
 The first subsequent complete rollout establishes application acceptance.

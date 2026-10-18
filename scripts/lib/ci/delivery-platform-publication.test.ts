@@ -141,7 +141,7 @@ test("root inventory uses every exact original artifact ID from this actual coor
   const missing = builds.map((build) => ({
     ...build,
     artifacts: build.artifacts.filter(
-      (artifact) => artifact.component !== "chart:arcade",
+      (artifact) => artifact.component !== "chart:woodpecker",
     ),
   }));
   await expect(
@@ -150,7 +150,7 @@ test("root inventory uses every exact original artifact ID from this actual coor
       { ...metadata, rootInventory: inventory },
       anchor,
     ),
-  ).rejects.toThrow("genuine current-CI chart producer receipt for arcade");
+  ).rejects.toThrow("genuine current-CI chart producer receipt for woodpecker");
   await expect(
     attachPlatformPublication(
       builds,
@@ -199,7 +199,7 @@ test("site prerequisites exclude Scout's combined deployment and keep the exact 
   ).toEqual([
     { environmentId: "static-sites/sjer-red", artifactId: "archive/sjer-red" },
   ]);
-  expect(SERVICE_CATALOG.platformDeliveryDelegated).toBe(false);
+  expect(SERVICE_CATALOG.platformDeliveryDelegated).toBe(true);
 });
 
 test("a newer root freezes unchanged original site archives so an older queued site can follow its explicit parent", async () => {
