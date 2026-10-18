@@ -38,6 +38,9 @@ describe("shared player travel on native Paper", () => {
       /Teleported to wilderness in wilds/u,
       45_000,
     );
+    await waitUntil("successful RTP consumes the starter compass", () =>
+      bot.inventory.items().every((item) => item.name !== "compass"),
+    );
     await command(bot, "/tpinfo rtp", /You have used 1\.0/u);
     const balance = await command(bot, "/balance", /500.*crystals/iu);
     expect(balance).toMatch(/500/u);

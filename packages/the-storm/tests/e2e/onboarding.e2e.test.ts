@@ -13,6 +13,34 @@ function username(prefix: string): string {
 }
 
 describe("onboarding", () => {
+  test("new players receive iron tools and sixteen cooked porkchops", async ({
+    bot,
+  }) => {
+    await waitUntil("starter inventory delivered", () =>
+      bot.inventory.items().some((item) => item.name === "cooked_porkchop"),
+    );
+    for (const name of [
+      "iron_sword",
+      "iron_pickaxe",
+      "iron_axe",
+      "iron_shovel",
+      "iron_hoe",
+      "written_book",
+    ]) {
+      expect(
+        bot.inventory.items().some((item) => item.name === name),
+        name,
+      ).toBe(true);
+    }
+    expect(
+      bot.inventory.items().find((item) => item.name === "cooked_porkchop")
+        ?.count,
+    ).toBe(16);
+    expect(bot.inventory.items().some((item) => item.name === "bread")).toBe(
+      false,
+    );
+  });
+
   test("a non-operator can reopen the guide without receiving another kit", async ({
     bot,
   }) => {
@@ -97,12 +125,10 @@ describe("onboarding", () => {
       const shown = (pattern: RegExp) =>
         seen.some((line) => pattern.test(line));
       expect(shown(/Welcome to The Storm/)).toBe(true);
-      expect(shown(/starting supplies arrive automatically/)).toBe(true);
+      expect(shown(/Use your compass to choose a biome/)).toBe(true);
       expect(shown(/\/kit\b|You received the .* kit/)).toBe(false);
-      expect(shown(/Start with \/rules/)).toBe(true);
       expect(shown(/\/guide/)).toBe(true);
-      expect(shown(/PvP is on outside spawn/)).toBe(true);
-      expect(shown(/File a ticket/)).toBe(true);
+      expect(shown(/Start with \/rules|File a ticket/)).toBe(false);
     } finally {
       await disconnectBot(newcomer);
     }
@@ -120,9 +146,9 @@ describe("onboarding", () => {
       },
     });
     // Capture starts before connecting, so an early tip cannot be missed.
-    await waitUntil("starter supplies tip", () =>
+    await waitUntil("compass tip", () =>
       firstArrival.some((line) =>
-        line.includes("starting supplies arrive automatically"),
+        line.includes("Use your compass to choose a biome"),
       ),
     );
     expect(
@@ -150,7 +176,7 @@ describe("onboarding", () => {
       );
       expect(
         seen.some((line) =>
-          line.includes("starting supplies arrive automatically"),
+          line.includes("Use your compass to choose a biome"),
         ),
       ).toBe(false);
     } finally {

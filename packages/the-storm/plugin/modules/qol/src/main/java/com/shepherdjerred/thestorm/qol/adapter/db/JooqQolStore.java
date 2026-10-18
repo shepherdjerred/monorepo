@@ -53,6 +53,16 @@ public final class JooqQolStore implements QolStore {
   }
 
   @Override
+  public CompletableFuture<Void> completeStarterRtp(UUID player) {
+    return write(
+        dsl ->
+            dsl.update(QOL_PLAYER)
+                .set(QOL_PLAYER.STARTER_RTP_PENDING, 0)
+                .where(QOL_PLAYER.PLAYER.eq(player.toString()))
+                .execute());
+  }
+
+  @Override
   public CompletableFuture<List<RtpAttempt>> pendingRtpAttempts() {
     return database.read(
         dsl ->
@@ -90,8 +100,9 @@ public final class JooqQolStore implements QolStore {
     dsl.insertInto(QOL_PLAYER)
         .set(QOL_PLAYER.PLAYER, player.toString())
         .set(QOL_PLAYER.FIRST_SEEN, now.toEpochMilli())
+        .set(QOL_PLAYER.STARTER_RTP_PENDING, 1)
         .execute();
-    return new Ensured(new PlayerProfile(player, now, Optional.empty()), true);
+    return new Ensured(new PlayerProfile(player, now, Optional.empty(), true), true);
   }
 
   private static PlayerProfile profile(
@@ -99,7 +110,8 @@ public final class JooqQolStore implements QolStore {
     return new PlayerProfile(
         UUID.fromString(row.getPlayer()),
         Instant.ofEpochMilli(row.getFirstSeen()),
-        instant(row.getLastRtp()));
+        instant(row.getLastRtp()),
+        row.getStarterRtpPending() == 1);
   }
 
   private static Optional<Instant> instant(@Nullable Long millis) {

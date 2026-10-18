@@ -1,6 +1,7 @@
 plugins { id("storm.jooq-conventions") }
 
 dependencies {
+  implementation(project(":mobs"))
   testImplementation(libs.mockito)
   compileOnly(libs.citizens) { isTransitive = false }
   testImplementation(libs.citizens) { isTransitive = false }

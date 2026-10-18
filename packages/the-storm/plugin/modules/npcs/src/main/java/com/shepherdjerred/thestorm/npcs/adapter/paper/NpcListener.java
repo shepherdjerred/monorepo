@@ -81,6 +81,24 @@ final class NpcListener implements Listener {
   }
 
   /** Damage allowances apply only after startup state is available. */
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void onBeginnerDamage(EntityDamageEvent event) {
+    if (!world.ready()) return;
+    var attacker = NpcAttackers.attacker(event);
+    if (attacker.isEmpty()) return;
+    var from = attacker.orElseThrow();
+    var victim = world.npcOf(event.getEntity());
+    if (victim.isPresent() && world.combat().protectedFrom(victim.orElseThrow(), from)) {
+      event.setCancelled(true);
+      return;
+    }
+    var npc = world.npcOf(from);
+    if (npc.isPresent()
+        && event.getEntity() instanceof Player player
+        && world.combat().protectedFrom(npc.orElseThrow(), player)) event.setCancelled(true);
+  }
+
+  /** Records offenses only after combat protection has accepted the hit. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onDamage(EntityDamageEvent event) {
     if (!world.ready() || event.getFinalDamage() <= 0) {

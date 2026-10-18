@@ -71,7 +71,7 @@ faq:
   entries:
     - id: starter-kit
       keywords: [starter kit, starting kit, starting items, how do I start]
-      reply: "New players receive an iron sword, stone tools, bread and a welcome book automatically on first join. Read /rules before building."
+      reply: "New players receive iron tools, 16 cooked porkchops, a welcome book and a travel compass. Left- or right-click the compass to choose a biome."
       link: ""
     - id: server-rules
       keywords: [server rules, what are the rules, read the rules]
@@ -88,10 +88,7 @@ faq:
 onboarding:
   enabled: true
   lines:
-    - "Your starting supplies arrive automatically. Read your welcome book or /guide for your first steps."
-    - "Start with /rules, then /rtp to find land. Save your spot with /sethome."
-    - "PvP is on outside spawn. Use /pvp off if you prefer; you can change it once a week."
-    - "Need staff? File a ticket: /ticket <what happened>."
+    - "Use your compass to choose a biome, or explore spawn first. /guide has the basics."
 
 ladders:
   - offense: spam

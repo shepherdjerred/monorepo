@@ -7,6 +7,8 @@ dependencies {
   implementation(project(":economy"))
   implementation(project(":world"))
   implementation(project(":mobs"))
+  implementation(project(":npcs"))
+  testImplementation(libs.mockito)
 }
 
 // QolConfigTest parses the qol.yml the server ships.

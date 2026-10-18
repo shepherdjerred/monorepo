@@ -265,7 +265,7 @@ npcs:
       yaw: 0.0
       pitch: 0.0
     pose: standing
-    roles: [trainer]
+    roles: [trainer, beginner-safe]
     schedule: none
     dialogue: stan
     trainer: shopkeeper
@@ -281,7 +281,7 @@ npcs:
       yaw: 0.0
       pitch: 0.0
     pose: standing
-    roles: [trainer]
+    roles: [trainer, beginner-safe]
     schedule: none
     dialogue: darren
     trainer: mechanic
@@ -297,7 +297,7 @@ npcs:
       yaw: 0.0
       pitch: 0.0
     pose: standing
-    roles: [trainer]
+    roles: [trainer, beginner-safe]
     schedule: none
     dialogue: zavier
     trainer: engineer
@@ -313,7 +313,7 @@ npcs:
       yaw: 0.0
       pitch: 0.0
     pose: standing
-    roles: [trainer]
+    roles: [trainer, beginner-safe]
     schedule: none
     dialogue: lynn
     trainer: spellcaster
@@ -329,7 +329,7 @@ npcs:
       yaw: 0.0
       pitch: 0.0
     pose: standing
-    roles: [trainer]
+    roles: [trainer, beginner-safe]
     schedule: none
     dialogue: aldric
     trainer: governor
@@ -345,7 +345,7 @@ npcs:
       yaw: 180.0
       pitch: 0.0
     pose: standing
-    roles: [banker]
+    roles: [banker, beginner-safe]
     schedule: none
     dialogue: braxton
     trainer: none
@@ -361,7 +361,7 @@ npcs:
       yaw: 90.0
       pitch: 0.0
     pose: standing
-    roles: [tavern-keeper]
+    roles: [tavern-keeper, beginner-safe]
     schedule: tavern-keeper
     dialogue: nat
     trainer: none
@@ -377,7 +377,7 @@ npcs:
       yaw: -90.0
       pitch: 0.0
     pose: standing
-    roles: [blacksmith]
+    roles: [blacksmith, beginner-safe]
     schedule: blacksmith
     dialogue: thomas
     trainer: none
@@ -393,7 +393,7 @@ npcs:
       yaw: -90.0
       pitch: 0.0
     pose: standing
-    roles: [guard]
+    roles: [guard, beginner-safe]
     schedule: east-guard
     dialogue: east-guard
     trainer: none
@@ -409,7 +409,7 @@ npcs:
       yaw: 90.0
       pitch: 0.0
     pose: standing
-    roles: [guard]
+    roles: [guard, beginner-safe]
     schedule: west-guard
     dialogue: west-guard
     trainer: none

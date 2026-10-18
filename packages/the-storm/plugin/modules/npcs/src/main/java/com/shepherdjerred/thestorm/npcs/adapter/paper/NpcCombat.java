@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.mobs.app.BeginnerStatus;
 import com.shepherdjerred.thestorm.npcs.app.NpcStateStore;
 import com.shepherdjerred.thestorm.npcs.domain.combat.NpcLedger;
 import com.shepherdjerred.thestorm.npcs.domain.combat.WarningDeck;
@@ -33,6 +34,7 @@ final class NpcCombat {
   private final NpcsConfig config;
   private final ModuleContext context;
   private final NpcStateStore store;
+  private final BeginnerStatus beginner;
   private final NpcLedger ledger = new NpcLedger();
   private final WarningDeck warnings;
   private final Map<String, Encounter> encounters = new HashMap<>();
@@ -47,6 +49,7 @@ final class NpcCombat {
     this.config = config;
     this.context = context;
     this.store = store;
+    this.beginner = context.services().require(BeginnerStatus.class);
     warnings = new WarningDeck(config.warningPhrases(), context.random());
   }
 
@@ -97,7 +100,10 @@ final class NpcCombat {
   }
 
   void hit(NpcDefinition npc, LivingEntity victim, LivingEntity attacker, boolean lethal) {
-    if (!ready() || !responsible(attacker) || victim.equals(attacker)) {
+    if (!ready()
+        || !responsible(attacker)
+        || victim.equals(attacker)
+        || protectedFrom(npc, attacker)) {
       return;
     }
     // A fresh attack is a new incident, even if the attacker escaped an earlier pursuit.
@@ -169,7 +175,7 @@ final class NpcCombat {
     var guard = npc.roles().contains("guard");
     var encounter = encounters.get(npc.id());
     if (encounter != null) {
-      var assigned = assigned(npc.id(), encounter, feet, guard);
+      var assigned = assigned(npc, encounter, feet, guard);
       if (assigned.isPresent()) {
         return assigned;
       }
@@ -183,7 +189,10 @@ final class NpcCombat {
               feet.getWorld().getNearbyEntities(feet, radius, radius, radius),
               new GuardThreats.Search(feet, config.guard()),
               new GuardThreats.Filters(
-                  target -> eligible(target) && !retreating(npc.id(), target),
+                  target ->
+                      eligible(target)
+                          && !protectedFrom(npc, target)
+                          && !retreating(npc.id(), target),
                   target -> wanted(target, feet),
                   target -> visible(entity, target)));
       seen = new Seen(tick, nearby);
@@ -192,6 +201,7 @@ final class NpcCombat {
     var target =
         seen.threat()
             .filter(this::eligible)
+            .filter(candidate -> !protectedFrom(npc, candidate))
             .filter(candidate -> !retreating(npc.id(), candidate))
             .filter(candidate -> candidate.getWorld().equals(feet.getWorld()))
             .filter(
@@ -240,10 +250,12 @@ final class NpcCombat {
   }
 
   private Optional<LivingEntity> assigned(
-      String npc, Encounter encounter, Location feet, boolean guard) {
+      NpcDefinition definition, Encounter encounter, Location feet, boolean guard) {
+    var npc = definition.id();
     var source = context.plugin().getServer().getEntity(encounter.target());
     if (!(source instanceof LivingEntity attacker)
         || !eligible(attacker)
+        || protectedFrom(definition, attacker)
         || !attacker.getWorld().equals(feet.getWorld())
         || encounter.untilTick() <= tick) {
       return Optional.empty();
@@ -301,6 +313,7 @@ final class NpcCombat {
   }
 
   private void assignGuard(NpcDefinition npc, LivingEntity attacker, Location incident) {
+    if (protectedFrom(npc, attacker)) return;
     var previous = encounters.get(npc.id());
     if (previous != null
         && previous.defend()
@@ -318,6 +331,19 @@ final class NpcCombat {
             feet.getWorld().getKey().asString(),
             player.getUniqueId(),
             feet.getWorld().getFullTime());
+  }
+
+  boolean protectedFrom(NpcDefinition npc, LivingEntity entity) {
+    if (!npc.roles().contains("beginner-safe")) return false;
+    var source =
+        entity instanceof org.bukkit.entity.Tameable pet && pet.getOwner() instanceof Player owner
+            ? owner
+            : entity;
+    return source instanceof Player player
+        && beginner
+            .current(player.getUniqueId())
+            .map(BeginnerStatus.Status::protectsFromNpcs)
+            .orElse(true);
   }
 
   private boolean eligible(LivingEntity entity) {

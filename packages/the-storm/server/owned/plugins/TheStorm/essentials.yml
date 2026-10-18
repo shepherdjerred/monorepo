@@ -11,7 +11,7 @@ spawn:
   x: 68.5
   y: 69.0
   z: 66.5
-  yaw: -90.0
+  yaw: 90.0
   pitch: 0.0
 
 teleports:
@@ -77,19 +77,23 @@ kits:
           amount: 1
           name: null
           enchantments: {}
-        - material: STONE_PICKAXE
+        - material: IRON_PICKAXE
           amount: 1
           name: null
           enchantments: {}
-        - material: STONE_AXE
+        - material: IRON_AXE
           amount: 1
           name: null
           enchantments: {}
-        - material: STONE_SHOVEL
+        - material: IRON_SHOVEL
           amount: 1
           name: null
           enchantments: {}
-        - material: BREAD
+        - material: IRON_HOE
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: COOKED_PORKCHOP
           amount: 16
           name: null
           enchantments: {}
@@ -100,79 +104,35 @@ kits:
             - |-
               <dark_aqua><b>The Storm</b></dark_aqua>
 
-              Build, trade, and explore.
-              You start with tools, food and 500 crystals.
+              Pick a biome with your
+              compass. Gather wood
+              and build a shelter.
 
-              /bal shows your money.
-              /guide reopens this book.
+              /sethome saves a home.
+              /home takes you back.
+
+              /bal: 500 starter crystals.
             - |-
-              <dark_aqua><b>Stay safe</b></dark_aqua>
+              <dark_aqua><b>Protect your home</b></dark_aqua>
 
               Read /rules. No griefing.
-              Spawn is PvP-free. Outside it, PvP is on.
 
-              /pvp off opts out, once a week.
+              /town create <name>
+              /claim protects your land.
+
+              PvP is on outside spawn.
+              /pvp off opts out.
             - |-
-              <dark_aqua><b>Find your own land</b></dark_aqua>
+              <dark_aqua><b>Explore and help</b></dark_aqua>
 
-              /rtp finds a safe spot. Free for seven days; cooldowns apply.
+              /quests: your journal
+              /graves: lost gear
+              /ticket <message>: help
 
-              Gather wood. Pick a home, then /sethome to save it.
-            - |-
-              <dark_aqua><b>Protect your base</b></dark_aqua>
+              Guide and Discord:
+              <click:open_url:'https://docs.ts-mc.net/'>docs.ts-mc.net</click>
 
-              /town create <name> starts a town.
-              /claim protects the chunk you stand in.
-
-              Build on your land or with permission.
-            - |-
-              <dark_aqua><b>Lock what you love</b></dark_aqua>
-
-              Placed chests lock automatically. Look at one: /lock info checks it.
-
-              Unlocked chests are fair game where access permits.
-            - |-
-              <dark_aqua><b>Your first reward</b></dark_aqua>
-
-              Right-click Anna by the windmill for a daily reward.
-
-              /quests opens your journal.
-              /shop shows the shops.
-            - |-
-              <dark_aqua><b>Travel</b></dark_aqua>
-
-              /spawn goes to the windmill.
-              /home goes to your home.
-              /tpa asks to visit a friend.
-
-              Trips cost crystals. /tpinfo shows prices and cooldowns.
-            - |-
-              <dark_aqua><b>Recover your things</b></dark_aqua>
-
-              /graves lists your graves.
-
-              Recover items within two hours. After that, others may take them.
-            - |-
-              <dark_aqua><b>Brave The Storm</b></dark_aqua>
-
-              Mobs and ores drop Storm Shards.
-
-              Use one on the windmill's emerald block in rain to upgrade equipment.
-            - |-
-              <dark_aqua><b>Play together</b></dark_aqua>
-
-              /arena lists co-op games.
-              /rwf join enters Search and Destroy.
-
-              Ask in chat or Discord to find players.
-            - |-
-              <dark_aqua><b>Find your people</b></dark_aqua>
-
-              /help lists commands.
-              /ticket <message> asks staff for help.
-
-              Discord and the full player guide:
-              docs.ts-mc.net
+              /guide reopens this book.
 
 # The book /rules opens. MiniMessage; at most 100 pages. The server's official
 # rules, as given by the owner.

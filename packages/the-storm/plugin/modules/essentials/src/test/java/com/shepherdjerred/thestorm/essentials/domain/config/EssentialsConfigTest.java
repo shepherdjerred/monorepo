@@ -63,7 +63,8 @@ final class EssentialsConfigTest {
     assertThat(starter.once()).isTrue();
     assertThat(starter.items())
         .extracting(KitItem::material)
-        .contains("IRON_SWORD", "STONE_PICKAXE", "STONE_AXE", "STONE_SHOVEL", "BREAD");
+        .containsExactly(
+            "IRON_SWORD", "IRON_PICKAXE", "IRON_AXE", "IRON_SHOVEL", "IRON_HOE", "COOKED_PORKCHOP");
     assertThat(starter.books())
         .singleElement()
         .satisfies(book -> assertThat(book.title()).isEqualTo("Welcome to The Storm"));
@@ -73,9 +74,11 @@ final class EssentialsConfigTest {
   void theGuideUsesTheDeliveredWelcomeBookAndExplainsRealProtectionAndTravel() throws IOException {
     var config = parsed(shipped());
     assertThat(config.kits().guide()).isSameAs(config.kits().starterKit().books().getFirst());
+    assertThat(config.kits().guide().pages()).hasSize(3);
     assertThat(String.join("\n", config.kits().guide().pages()))
-        .contains("/guide", "/rtp", "seven days", "/sethome", "/town create", "/claim")
-        .contains("/pvp off", "once a week", "automatically", "/lock info", "/graves");
+        .contains("/guide", "compass", "/sethome", "/town create", "/claim", "/pvp off", "/graves");
+    assertThat(config.kits().starterKit().items().getLast().amount()).isEqualTo(16);
+    assertThat(config.spawn().yaw()).isEqualTo(90);
   }
 
   @Test

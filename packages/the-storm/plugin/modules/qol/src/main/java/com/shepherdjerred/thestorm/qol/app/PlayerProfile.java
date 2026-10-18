@@ -11,4 +11,5 @@ import java.util.UUID;
  * @param firstSeen the first time this module saw them
  * @param lastRtp their last RTP search for the independent search throttle
  */
-public record PlayerProfile(UUID player, Instant firstSeen, Optional<Instant> lastRtp) {}
+public record PlayerProfile(
+    UUID player, Instant firstSeen, Optional<Instant> lastRtp, boolean starterRtpPending) {}
