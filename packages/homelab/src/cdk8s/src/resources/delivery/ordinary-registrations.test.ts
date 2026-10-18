@@ -35,6 +35,7 @@ const PipelineSchema = z.object({
 });
 const ManifestSchema = z.object({
   kind: z.string(),
+  metadata: z.object({ name: z.string() }),
   spec: z.object({
     template: z.object({
       spec: z.object({
@@ -239,6 +240,7 @@ test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
       ),
     );
     const containers: string[] = [];
+    const dependencies = new Set<string>();
     for (const manifest of manifests) {
       const parsed = ManifestSchema.safeParse(manifest);
       if (!parsed.success) continue;
@@ -254,6 +256,13 @@ test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
         name: `dockerhub-pull-${pipeline.namespace}`,
       });
       for (const container of firstParty) {
+        if (name === "arcade" && parsed.data.metadata.name === "arcade-edge") {
+          expect(container.image).toBe(
+            `docker.io/shepherdjerred/caddy-s3proxy@sha256:${"f".repeat(64)}`,
+          );
+          observeChartDependency(container.image, dependencies);
+          continue;
+        }
         expect(
           [...selected.values()].map((binding) => binding.image),
         ).toContain(container.image);
@@ -262,6 +271,7 @@ test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
     }
     for (const binding of selected.values())
       expect(containers).toContain(binding.image);
+    expect(dependencies.size).toBe(name === "arcade" ? 1 : 0);
     await expect(render(chart, [])).rejects.toThrow("Delivery requires image");
   },
 );

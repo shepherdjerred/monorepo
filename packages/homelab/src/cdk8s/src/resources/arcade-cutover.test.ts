@@ -8,6 +8,7 @@ import { createPokemonChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-char
 import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
 import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/mario-kart.ts";
 import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/pokemon.ts";
+import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 
 const Resource = z.object({
   kind: z.string(),
@@ -34,10 +35,12 @@ function resources() {
 describe("Arcade account handover", () => {
   test("reconciles the shared owner after both legacy applications", () => {
     const app = new App();
-    const root = new Chart(app, "root", { namespace: "argocd" });
+    const root = new Chart(app, "apps", { namespace: "argocd" });
     createArcadeApp(root);
     createMarioKartApp(root);
     createPokemonApp(root);
+    // The central policy overwrites annotations declared by individual factories.
+    applyApplicationReleasePolicy(app);
     const applications = parseAllDocuments(app.synthYaml()).map((document) =>
       Resource.parse(document.toJSON()),
     );
@@ -63,7 +66,12 @@ describe("Arcade account handover", () => {
     );
     expect(
       deployments.map((resource) => resource.metadata.name).toSorted(),
-    ).toEqual(["arcade", "mario-kart-mario-kart-edge", "pokemon-web-redirect"]);
+    ).toEqual([
+      "arcade",
+      "arcade-edge",
+      "mario-kart-mario-kart-edge",
+      "pokemon-web-redirect",
+    ]);
     expect(
       deployments.find((resource) => resource.metadata.name === "arcade")?.spec,
     ).toMatchObject({ replicas: 1 });

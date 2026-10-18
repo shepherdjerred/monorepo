@@ -38,6 +38,8 @@ export const APPLICATION_SYNC_WAVES = {
   dependentConfiguration: "2",
   woodpecker: "3",
   leaf: "4",
+  // Legacy game charts must release fixed edge ports and aliases before Arcade.
+  arcade: "5",
 } as const;
 
 const RETAIN_APPLICATIONS = new Set(["apps", "argocd"]);
@@ -113,6 +115,9 @@ function applicationSyncWave(name: string): string {
   }
   if (name === "kueue") {
     return APPLICATION_SYNC_WAVES.kueue;
+  }
+  if (name === "arcade") {
+    return APPLICATION_SYNC_WAVES.arcade;
   }
   return name === "woodpecker"
     ? APPLICATION_SYNC_WAVES.woodpecker

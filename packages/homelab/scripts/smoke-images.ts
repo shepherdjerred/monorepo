@@ -14,7 +14,7 @@
  * Run after `bun run docker:build` (turbo wires `smoke` dependsOn `docker:build`).
  */
 
-import { marioKartCaddyfile } from "#cdk8s/src/resources/mario-kart-caddyfile.ts";
+import { arcadeCaddyfile } from "#cdk8s/src/resources/arcade-caddyfile.ts";
 
 type SmokeResult = { image: string; ok: boolean; detail: string };
 
@@ -159,7 +159,7 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
       };
     }
 
-    const marioKart = await run(
+    const arcade = await run(
       [
         "docker",
         "run",
@@ -184,20 +184,20 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
         "-c",
         "cat > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
       ],
-      { stdin: new Blob([marioKartCaddyfile("mario-kart-ui-service:8081")]) },
+      { stdin: new Blob([arcadeCaddyfile("arcade-arcade-ui:8081")]) },
     );
-    if (marioKart.exitCode !== 0) {
+    if (arcade.exitCode !== 0) {
       return {
         image,
         ok: false,
-        detail: `Mario Kart Caddyfile validation failed (exit ${String(marioKart.exitCode)})\n${marioKart.stdout}\n${marioKart.stderr}`,
+        detail: `Arcade Caddyfile validation failed (exit ${String(arcade.exitCode)})\n${arcade.stdout}\n${arcade.stderr}`,
       };
     }
 
     return {
       image,
       ok: true,
-      detail: `version=${version.stdout.trim()}; s3proxy module present; static-site and Mario Kart production configs validate`,
+      detail: `version=${version.stdout.trim()}; s3proxy module present; static-site and Arcade production configs validate`,
     };
   } finally {
     await forceRemove(name);
