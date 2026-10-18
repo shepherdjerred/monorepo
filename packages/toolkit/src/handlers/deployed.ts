@@ -17,9 +17,9 @@ Selector:
 Options:
   --commit <ref>         Override the commit to check
   --json                 Output as JSON
-  --no-cluster           Skip ArgoCD + kubectl (git/gh only)
+  --no-cluster           Skip ArgoCD + kubectl; retain managed Delivery evidence
   --no-github            Skip gh PR lookups
-  --delivery             Include PostgreSQL release evidence for managed targets
+  --delivery             Request Delivery evidence beyond catalog-managed targets
 
 Examples:
   toolkit deployed                       # is HEAD deployed?

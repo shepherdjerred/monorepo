@@ -519,13 +519,16 @@ and reports (including the `service` field of `--json`) name each service by
 its catalog id, for example `temporal` or `static-sites`; the older names
 `temporal-worker` and `caddy-s3proxy` still work as selectors.
 
-Applications annotated with `delivery.shepherdjerred.com/environment` use
-PostgreSQL artifact provenance for the selected release. `--delivery` also
-queries this evidence explicitly, including with `--no-cluster`. The report
+Catalog-delegated applications and applications annotated with
+`delivery.shepherdjerred.com/environment` automatically use PostgreSQL artifact
+provenance for the selected release, including with `--no-cluster` or when
+ArgoCD is unavailable. `--delivery` explicitly requests this evidence for other
+targets. The report
 keeps desired, observed, accepted, and live pod digests separate; `SELECTED`
 means the commit is selected but its runtime digest is unconfirmed. Delegated
-applications report `UNKNOWN` when Delivery cannot be read or its environment
-does not match the Argo ownership annotation. Historical Git pins cannot
+applications report `UNKNOWN` when Delivery cannot be read, its environment is
+missing, or it differs from the catalog delegation or Argo ownership annotation.
+Historical Git pins cannot
 substitute for that evidence.
 
 `toolkit screenshot <package> [route]` starts a registered package on its fixed

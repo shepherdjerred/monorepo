@@ -39,6 +39,7 @@ import type { Overview } from "@shepherdjerred/delivery/contract";
 import { deliveryClient } from "#lib/delivery/client.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 import { deliveryEvidence, deliveryVerdict } from "#lib/deployed/delivery.ts";
+import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
 
 export type DeployedOptions = {
   selector?: string | undefined;
@@ -325,8 +326,12 @@ async function evaluateTarget(
     ...gitDetail(git, variant, verdict, ctx.openBumps),
     ...clusterDetail({ git, verdict, argo, pods, digestMatch }),
   ];
+  const expectedEnvironments = [
+    SERVICE_CATALOG.deliveryDelegations?.[variant.argoApp],
+    argo?.deliveryEnvironmentId,
+  ].filter((environment) => environment !== undefined);
   const deliveryRequested =
-    ctx.opts.delivery === true || argo?.deliveryEnvironmentId !== undefined;
+    ctx.opts.delivery === true || expectedEnvironments.length > 0;
   const deliveryOverview = deliveryRequested
     ? await ctx.deliveryOverview()
     : undefined;
@@ -339,16 +344,12 @@ async function evaluateTarget(
           ctx.commit.sha,
           isAncestor,
         );
-  if (
-    deliveryRequested &&
-    (deliveryOverview === null ||
-      (argo?.deliveryEnvironmentId !== undefined &&
-        releaseEvidence?.environmentId !== argo.deliveryEnvironmentId))
-  ) {
+  const ownershipMatches = expectedEnvironments.every(
+    (environment) => releaseEvidence?.environmentId === environment,
+  );
+  if (deliveryRequested && (deliveryOverview === null || !ownershipMatches)) {
     verdict = "UNKNOWN";
-    detail = [
-      "Delivery is unavailable; release ownership and selection could not be verified.",
-    ];
+    detail = ["Delivery release ownership or selection could not be verified."];
   } else if (releaseEvidence !== null) {
     verdict = deliveryVerdict(releaseEvidence, ctx.merged, pods);
     detail = [

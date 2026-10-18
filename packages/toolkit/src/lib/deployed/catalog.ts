@@ -4,12 +4,11 @@
  * `deploy` variants is a deployable service here, keyed by its catalog id.
  *
  * The catalog carries only the package↔versionKey↔argoApp wiring, which
- * changes rarely, so bundling it into the compiled binary is fine. Pinned
- * versions are never bundled: the version catalog is read live via git.
+ * changes rarely, so bundling it into the compiled binary is fine. Selected
+ * versions come from Delivery; Git catalog reads retain only historical evidence.
  *
  * A drift test (test-integration/catalog.integration.test.ts) checks every
- * versionKey against the live version catalog on HEAD so the registry can't
- * silently fall out of sync.
+ * image owner and Argo mapping, and ensures Git contains no workload selections.
  */
 import {
   SERVICE_CATALOG,

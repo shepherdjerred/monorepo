@@ -107,7 +107,7 @@ export type RunningPod = {
 
 /** Full per-variant report. */
 export type VariantReport = {
-  /** PostgreSQL selection/observation/acceptance, when explicitly requested. */
+  /** PostgreSQL selection/observation/acceptance for managed or requested targets. */
   delivery?: DeliveryEvidence | null;
   service: string;
   variant: string;
