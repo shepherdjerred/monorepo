@@ -1,6 +1,7 @@
 import {
   ApplicationFailure,
   condition,
+  deprecatePatch,
   getExternalWorkflowHandle,
   patched,
   setHandler,
@@ -33,7 +34,10 @@ import {
 } from "#src/workflow-contracts.ts";
 import { issuedWorkflowType } from "./generation-rename.ts";
 
-/** Preserve the single signal recorded by discovery runs before chunking. */
+/**
+ * The retired chunking gate: every retained discovery recorded it. Remove the
+ * `deprecatePatch` call in a release after this one.
+ */
 export const SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH =
   "scout-discovery-batched-dispatch";
 const DISCOVERY_DISPATCH_BATCH_SIZE = 100;
@@ -124,26 +128,25 @@ export async function processDiscoveredMatchesThroughDispatcher(
   }));
   const dispatcherId = await ensureClientMatchDispatcher(stage);
   const dispatcher = getExternalWorkflowHandle(dispatcherId);
-  if (patched(SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH)) {
-    // The receiver can start processing before the next signal arrives. Put
-    // earlier matches in earlier chunks so splitting cannot reorder a poll.
-    const ordered = dispatches.toSorted(
-      (left, right) =>
-        left.gameEndTimestamp - right.gameEndTimestamp ||
-        left.riotMatchId.localeCompare(right.riotMatchId),
+  // The marker still records here so a rollback to a bundle that gates on it
+  // replays this history.
+  deprecatePatch(SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH);
+  // The receiver can start processing before the next signal arrives. Put
+  // earlier matches in earlier chunks so splitting cannot reorder a poll.
+  const ordered = dispatches.toSorted(
+    (left, right) =>
+      left.gameEndTimestamp - right.gameEndTimestamp ||
+      left.riotMatchId.localeCompare(right.riotMatchId),
+  );
+  for (
+    let offset = 0;
+    offset < ordered.length;
+    offset += DISCOVERY_DISPATCH_BATCH_SIZE
+  ) {
+    await dispatcher.signal(
+      dispatchScoutClientMatchesSignal,
+      ordered.slice(offset, offset + DISCOVERY_DISPATCH_BATCH_SIZE),
     );
-    for (
-      let offset = 0;
-      offset < ordered.length;
-      offset += DISCOVERY_DISPATCH_BATCH_SIZE
-    ) {
-      await dispatcher.signal(
-        dispatchScoutClientMatchesSignal,
-        ordered.slice(offset, offset + DISCOVERY_DISPATCH_BATCH_SIZE),
-      );
-    }
-  } else {
-    await dispatcher.signal(dispatchScoutClientMatchesSignal, dispatches);
   }
   await condition(() =>
     matches.every((match) => results.has(match.riotMatchId)),

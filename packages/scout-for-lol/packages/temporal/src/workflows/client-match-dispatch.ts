@@ -1,5 +1,6 @@
 import {
   condition,
+  deprecatePatch,
   isCancellation,
   patched,
   setHandler,
@@ -84,17 +85,25 @@ function clientDispatchIsBehindWatermark(
 }
 
 /**
- * Replay gate for exempting Riot discoveries from the late-arrival watermark.
- *
- * Histories recorded before this patch routed every item behind the watermark
- * to review, Riot discoveries included, and replaying them without a marker
- * keeps that decision. The long-running dispatcher reaches its first live
- * Workflow Task after deploy with `patched` answering true, so it adopts the
- * new routing without a restart. Retire with `deprecatePatch` once no
- * execution predating it can still replay.
+ * The retired gate that exempted Riot discoveries from the late-arrival
+ * watermark. Every retained dispatcher run recorded it. Remove the
+ * `deprecatePatch` call in a release after this one.
  */
 export const SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH =
   "scout-v2-dispatch-riot-bypasses-watermark";
+
+/**
+ * Whether Riot vouches for an item: it carries ordering assurance. The marker
+ * records only on that decision, exactly where the retired gate evaluated, so
+ * a rollback to a bundle that gates on it replays.
+ */
+function riotDiscoveryBypassesWatermark(
+  match: ScoutClientMatchDispatchItem,
+): boolean {
+  if (!clientDispatchHasOrderingAssurance(match)) return false;
+  deprecatePatch(SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH);
+  return true;
+}
 
 /**
  * Whether an item must go to late-arrival review instead of being processed.
@@ -112,17 +121,10 @@ function clientDispatchNeedsLateReview(
   match: ScoutClientMatchDispatchItem,
   watermark: ScoutClientMatchDispatchOrderKey | null,
 ): boolean {
-  if (
-    watermark === null ||
-    !clientDispatchIsBehindWatermark(match, watermark)
-  ) {
-    return false;
-  }
-  // Evaluated only on the decision it gates, so a history that never met a
-  // late Riot item records no marker.
-  return !(
-    clientDispatchHasOrderingAssurance(match) &&
-    patched(SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH)
+  return (
+    watermark !== null &&
+    clientDispatchIsBehindWatermark(match, watermark) &&
+    !riotDiscoveryBypassesWatermark(match)
   );
 }
 
@@ -377,9 +379,10 @@ async function routeLateClientDispatchToReview(
 /**
  * Take the earliest queued late arrival off the queue, if there is one.
  *
- * A Riot discovery there was queued before the patch, or is a client-only
- * arrival that Riot has since discovered too. Riot vouches for it, so it is
- * processed in order like any other discovery instead of refused.
+ * A Riot discovery there was queued before Riot items bypassed the
+ * watermark, or is a client-only arrival that Riot has since discovered too.
+ * Riot vouches for it, so it is processed in order like any other discovery
+ * instead of refused.
  */
 async function settleFirstLateArrival(
   stage: ScoutStage,
@@ -388,10 +391,7 @@ async function settleFirstLateArrival(
 ): Promise<boolean> {
   const late = firstClientDispatchItem(lateArrivals);
   if (late === undefined) return false;
-  if (
-    clientDispatchHasOrderingAssurance(late) &&
-    patched(SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH)
-  ) {
+  if (riotDiscoveryBypassesWatermark(late)) {
     lateArrivals.delete(late.riotMatchId);
     mergeClientDispatchItem(pending, late);
     return true;

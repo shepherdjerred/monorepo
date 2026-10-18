@@ -1,4 +1,9 @@
-import { isCancellation, log, patched, startChild } from "@temporalio/workflow";
+import {
+  deprecatePatch,
+  isCancellation,
+  log,
+  startChild,
+} from "@temporalio/workflow";
 import {
   ApplicationFailure,
   WorkflowExecutionAlreadyStartedError,
@@ -82,18 +87,14 @@ export async function scoutPrematchDiscoveryWorkflow(
     }
   }
 
-  // Gated, although it is appended at the end. Closed discovery histories are
-  // retained for the namespace's 30-day retention and replayed against a
-  // candidate bundle before promotion, and one recorded before the tail
-  // completed right after its last child start, so an unconditional Activity
-  // there would fail that replay. Retire with `deprecatePatch` once no history
-  // predating it is retained.
-  if (patched(SCOUT_PREMATCH_MAINTENANCE_PATCH)) {
-    setWorkflowPhase("**Phase:** running prematch maintenance");
-    await realtimePipelineActivities(input.stage).runPrematchMaintenance({
-      stage: input.stage,
-    });
-  }
+  // The maintenance tail's retired gate: every retained poll recorded it.
+  // `deprecatePatch` keeps the marker here so a rollback to a bundle that
+  // still gates on it replays this history.
+  deprecatePatch(SCOUT_PREMATCH_MAINTENANCE_PATCH);
+  setWorkflowPhase("**Phase:** running prematch maintenance");
+  await realtimePipelineActivities(input.stage).runPrematchMaintenance({
+    stage: input.stage,
+  });
 
   return scoutPrematchDiscoveryResultCodec.serialize({
     status: "completed",
@@ -206,23 +207,20 @@ export async function scoutPrematchGameWorkflow(
   const observedSomething =
     archive.artifacts.length > 0 || plan.notificationIntentKeys.length > 0;
 
-  // Gated, because both are INSERTED commands. A history recorded before
-  // this change completed straight after `planPrematchFanOut`; replaying it
-  // against an unconditional markets Activity or child start would be
-  // nondeterminism. The old branch starts nothing and opens nothing, which is
-  // exactly what that generation did. Retire with `deprecatePatch` once no
-  // execution predating it can still replay.
-  let notifications = 0;
-  if (patched(SCOUT_PREMATCH_DELIVERY_PATCH)) {
-    if (observedSomething) {
-      await openGameMarkets(activities, {
-        stage: input.stage,
-        riotMatchId,
-      });
-    }
-    const started = await startMatchFanOutChildren(input.stage, children);
-    notifications = started.notifications;
+  // The delivery block's retired gate: every retained game recorded it.
+  // `deprecatePatch` keeps the marker here so a rollback to a bundle that
+  // still gates on it replays this history.
+  deprecatePatch(SCOUT_PREMATCH_DELIVERY_PATCH);
+  if (observedSomething) {
+    await openGameMarkets(activities, {
+      stage: input.stage,
+      riotMatchId,
+    });
   }
+  const { notifications } = await startMatchFanOutChildren(
+    input.stage,
+    children,
+  );
   setWorkflowPhase(
     `**Phase:** planned ${String(children.length)} notification children, started ${String(notifications)}`,
   );
@@ -238,14 +236,16 @@ export async function scoutPrematchGameWorkflow(
 }
 
 /**
- * The patch that gives the per-game core its markets and its notification
- * children. Recorded histories name this id; never rename it.
+ * The retired patch that gave the per-game core its markets and its
+ * notification children. Recorded histories name this id; never rename it.
+ * Remove the `deprecatePatch` call in a release after this one.
  */
 export const SCOUT_PREMATCH_DELIVERY_PATCH = "scout-v2-prematch-delivery";
 
 /**
- * The patch that gives discovery its maintenance tail. Recorded histories
- * name this id; never rename it.
+ * The retired patch that gave discovery its maintenance tail. Recorded
+ * histories name this id; never rename it. Remove the `deprecatePatch` call
+ * in a release after this one.
  */
 export const SCOUT_PREMATCH_MAINTENANCE_PATCH = "scout-v2-prematch-maintenance";
 

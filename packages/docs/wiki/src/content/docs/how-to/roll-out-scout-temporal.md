@@ -41,6 +41,11 @@ namespace retention can remain longer for other applications. Inspect older
 Scout histories with an archived compatible bundle; do not reset them onto a
 bundle that has retired their types or patch branches.
 
+Retire a drained patch in two releases. First replace `patched` with
+`deprecatePatch` at the same call site and keep only the new branch, so a
+rollback to the previous bundle still reads the marker. Remove the
+`deprecatePatch` call in a later release.
+
 For compatibility removal, enumerate executions with their run IDs and replay
 each protected run explicitly. A Workflow ID alone selects its latest run and
 does not verify earlier runs in a continue-as-new chain. Both history replay

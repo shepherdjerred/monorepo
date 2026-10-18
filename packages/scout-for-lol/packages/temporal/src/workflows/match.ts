@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { ApplicationFailure, patched, startChild } from "@temporalio/workflow";
+import {
+  ApplicationFailure,
+  deprecatePatch,
+  startChild,
+} from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
@@ -52,7 +56,7 @@ import {
   installMatchDispatchCompletionHandler,
   processDiscoveredMatchesThroughDispatcher,
 } from "./shared-match-dispatch.ts";
-import { replayRetiredPostmatchOwnershipRead } from "./retired-ownership.ts";
+import { markRetiredPostmatchOwnership } from "./retired-ownership.ts";
 import { issuedWorkflowType } from "./generation-rename.ts";
 
 /**
@@ -210,11 +214,8 @@ export async function scoutPostMatchDiscoveryWorkflow(
   rawInput: ScoutPostMatchDiscoveryInputEnvelope,
 ): Promise<ScoutPostMatchDiscoveryResultEnvelope> {
   const input = scoutPostMatchDiscoveryInputCodec.parse(rawInput);
-  // Discovery owns every pass unconditionally. Histories recorded while the
-  // v1 rollback switch existed asked first, and closed ones are retained and
-  // replayed before promotion; this replays that read for them and does
-  // nothing for any other run. See `retired-ownership.ts`.
-  await replayRetiredPostmatchOwnershipRead(input);
+  // Discovery owns every pass unconditionally. See `retired-ownership.ts`.
+  markRetiredPostmatchOwnership();
   const dispatchResults = installMatchDispatchCompletionHandler();
   setWorkflowPhase("**Phase:** discovering completed matches");
   const scan = await realtimePipelineActivities(
@@ -531,13 +532,11 @@ async function commitObservation(
 }
 
 /**
- * The marker that says a history was recorded by a run that minted its
- * postmatch intents from the Workflow.
+ * The retired marker that says a history was recorded by a run that minted
+ * its postmatch intents from the Workflow.
  *
- * Named once so the gate and its pin cannot drift apart, and never reused: a
- * patch id identifies ONE change to one Workflow's command sequence for the
- * life of that Workflow, so changing this string would silently re-run the
- * decision for every execution that already made it.
+ * Never reused: a patch id identifies ONE change to one Workflow's command
+ * sequence. Remove the `deprecatePatch` call in a release after this one.
  */
 export const SCOUT_MATCH_MINT_INTENTS_PATCH = "scout-v2-match-mint-intents";
 
@@ -723,31 +722,12 @@ export async function scoutMatchProcessingWorkflow(
   // Minting first means a failure leaves the cursor where it was and the next
   // discovery surfaces the match again.
   //
-  // Gated, because this is an inserted COMMAND rather than a changed payload.
-  //
-  // A history recorded before this Activity existed has `advanceMatchCursor`
-  // where replay would now schedule the mint. That is nondeterminism, and it
-  // wedges the execution rather than failing it — no retry clears it, and the
-  // match is stuck with its cursor unmoved forever.
-  //
-  // Everywhere else in this file the pre-change generation is told apart by
-  // the recorded payload, which is the better instrument because the payload
-  // IS that execution's fact. A command sequence leaves no payload to read:
-  // nothing in the history says which generation wrote it except a marker put
-  // there for the purpose. So this one is a patch, and the difference is not
-  // stylistic — it is which fact exists to be read.
-  //
-  // The old branch mints nothing, and that is exactly what that generation
-  // did: no per-match Activity minted postmatch intents before this one, so
-  // an execution replaying past this point already behaves as its own code
-  // wrote it. Nothing is lost that that execution ever had.
-  //
-  // Retire with `deprecatePatch` once no execution predating it can still
-  // replay, not before.
-  if (patched(SCOUT_MATCH_MINT_INTENTS_PATCH)) {
-    setWorkflowPhase("**Phase:** minting the post-match report intents");
-    await activities.mintPostmatchNotificationIntents(ref);
-  }
+  // The mint's retired gate: every retained run recorded it. `deprecatePatch`
+  // keeps the marker here so a rollback to a bundle that still gates on it
+  // replays this history.
+  deprecatePatch(SCOUT_MATCH_MINT_INTENTS_PATCH);
+  setWorkflowPhase("**Phase:** minting the post-match report intents");
+  await activities.mintPostmatchNotificationIntents(ref);
 
   // Last, because it is what stops rediscovery.
   setWorkflowPhase("**Phase:** advancing tracked-account cursors");

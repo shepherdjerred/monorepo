@@ -576,17 +576,23 @@ claim and the guarded close against a real Postgres; `match.test.ts` proves
 the overlap end to end, with the second discovery starting while the first is
 awaiting a child.
 
-### Post-match discovery patches
+### Retired Workflow patches
 
-The Workflow preserves the retired ownership command for historical replay
-fixtures through `replayRetiredPostmatchOwnershipRead` in the Scout Temporal
-package's `workflows/retired-ownership.ts`. Later runs carry the
-`scout-v2-retired-postmatch-ownership` marker. No Activity worker registers
-the retired read: only its recorded answer is replayed.
-`match-replay.test.ts` checks committed fixtures of both generations and a
-tampered-command negative control. Retiring the patch is a separate
-compatibility release using `deprecatePatch` after no retained history needs
-the old branch.
+Scout keeps a `patched` gate only while a protected execution still needs its
+old branch: every open execution, plus executions closed within the one-day
+compatibility window. Once every affected execution has closed and that
+window has passed, the gate becomes `deprecatePatch` at the same call site and
+only the new branch remains. The deprecated marker still records where the
+gate stood, so a rollback to the previous bundle replays histories the new one
+records. A later release removes the `deprecatePatch` call.
+
+The deprecated gates are the post-match ownership retirement marker
+(`workflows/retired-ownership.ts` in the Scout Temporal package), the
+generation rename, the prematch delivery and maintenance tails, the post-match
+intent mint, chunked discovery dispatch, the dispatcher's Riot watermark
+bypass, the initial-history pending-request fix, and the Workflow UI
+current-details marker. `match-replay.test.ts` and the dispatcher tests record
+each one and replay it both as recorded and as the gated release recorded it.
 
 ### The effect fence
 
@@ -638,29 +644,26 @@ An execution still running under a pre-rename type, or one whose history
 predates the `scout-generation-rename` patch, can no longer make progress: its
 type, or the Activity and child types it schedules, resolve on no worker.
 
-Three things outlive the rename because they describe history:
+Three things outlive the rename:
 
 - `SCOUT_PRE_RENAME_WORKFLOW_TYPES` and `scoutRenamedWorkflowType`.
   `ScoutWorkflowStart` rows keep the type they were written with, and a new
   request is compared with a recorded one under the renamed name, so
   re-requesting a Workflow id first requested before the rename follows that
   request rather than conflicting.
-- The `scout-generation-rename` patch (`workflows/generation-rename.ts` in the
-  Scout Temporal package). Child starts, Activity schedules and
-  Continue-As-New issue the renamed types behind it, and a history recorded
-  before it replays with the pre-rename names it recorded. It moves to
-  `deprecatePatch` once no history predating it is retained for replay.
+- The deprecated `scout-generation-rename` marker
+  (`workflows/generation-rename.ts` in the Scout Temporal package). Child
+  starts, Activity schedules and Continue-As-New issue the renamed types
+  unconditionally and record the marker where the retired gate stood.
 - Workflow IDs, signal names, codec kinds and Schedule IDs that contain `v2`
   are identities and stay as they are, and so does
   `readLegacyMatchCompletionV2`, which open histories recorded.
 
-Closed histories recorded under a pre-rename type no longer replay against
-this bundle, because their own type is not registered. Choose
+Closed histories recorded under a pre-rename type, or before the rename
+patch, no longer replay against this bundle. Choose
 `TEMPORAL_REPLAY_WORKFLOW_IDS` for a promotion from executions started under
-the renamed types. `generation-rename-replay.test.ts` covers both sides: a
-fixture under its recorded pre-rename type fails replay, the same commands
-under the renamed type replay, and runs recorded with and without the patch,
-across a mid-run swap and across Continue-As-New, replay.
+the renamed types. `generation-rename-replay.test.ts` covers runs recorded now,
+including across Continue-As-New.
 
 ## Scout Client player identity
 
@@ -1016,10 +1019,8 @@ then runs `runPrematchMaintenance`
 and callout refresh, and, unless betting is hard-disabled, parlay market
 activation and betting and parlay window closes. Discovery records one
 `prematch_detections_total{status}` sample per probed account (`game`,
-`idle`, `unreadable`). The maintenance tail sits behind the
-`scout-v2-prematch-maintenance` patch. It stays `patched` until no closed poll
-history recorded before the tail is retained, because retained histories are
-replayed before promotion and one of them completed where the tail now runs.
+`idle`, `unreadable`). The maintenance tail's retired
+`scout-v2-prematch-maintenance` gate is deprecated.
 
 Notification intents are keyed `prematch-discord:<matchId>:<channelId>`, a
 delivered or `unknown-delivery` intent is never redriven, and betting pools are
@@ -1061,8 +1062,8 @@ completed roster is counted as
 
 ### Prematch delivery and markets
 
-Behind the `scout-v2-prematch-delivery` patch, `scoutPrematchGameWorkflow`
-does three things after its capture and plan:
+After its capture and plan, `scoutPrematchGameWorkflow` does three things
+(its retired `scout-v2-prematch-delivery` gate is deprecated):
 
 1. `openPrematchMarkets` (`src/temporal/prematch/prematch-markets.ts`)
    makes the one-of-two Bucks decision behind the effect fence, with a

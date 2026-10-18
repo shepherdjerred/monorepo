@@ -1,4 +1,4 @@
-import { patched, proxyActivities } from "@temporalio/workflow";
+import { deprecatePatch, proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutBryanBucksActivities,
   ScoutBryanBucksAnalyticsResult,
@@ -17,24 +17,10 @@ const { syncScoutBryanBucksAnalytics } =
     },
   });
 
-const { syncScoutBryanBucksAnalytics: syncEmbeddedScoutBryanBucksAnalytics } =
-  proxyActivities<ScoutBryanBucksActivities>({
-    taskQueue: "scout-beta-background",
-    startToCloseTimeout: "2 minutes",
-    heartbeatTimeout: "30 seconds",
-    retry: {
-      maximumAttempts: 5,
-      initialInterval: "10 seconds",
-      backoffCoefficient: 2,
-      maximumInterval: "1 minute",
-    },
-  });
-
 export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanBucksAnalyticsResult> {
-  if (patched("scout-bryan-bucks-central-activity-v2")) {
-    return await syncScoutBryanBucksAnalytics();
-  }
-  return patched("scout-bryan-bucks-embedded-activity-v1")
-    ? await syncEmbeddedScoutBryanBucksAnalytics()
-    : await syncScoutBryanBucksAnalytics();
+  // Retired gate: every retained run recorded it, so the embedded-queue
+  // generation no longer replays. The marker still records so a rollback to a
+  // bundle that gates on it replays; remove it in a release after this one.
+  deprecatePatch("scout-bryan-bucks-central-activity-v2");
+  return await syncScoutBryanBucksAnalytics();
 }

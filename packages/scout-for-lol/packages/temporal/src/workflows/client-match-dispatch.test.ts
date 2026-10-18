@@ -906,13 +906,13 @@ test("chunks a 108-match discovery and waits for every acknowledgement before ma
     discoveryHistory,
     discoveryId,
   );
-  const withoutGate = structuredClone(discoveryHistory);
+  // The retired gate's marker is still recorded, deprecated, and a history
+  // the gated release recorded replays through it.
+  const gated = structuredClone(discoveryHistory);
   expect(
-    unrecordPatch(withoutGate, SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH),
-  ).toBe(1);
-  await expect(
-    Worker.runReplayHistory({ workflowsPath }, withoutGate, discoveryId),
-  ).rejects.toMatchObject({ name: "DeterminismViolationError" });
+    asRecordedByGatedRelease(gated, SCOUT_DISCOVERY_BATCHED_DISPATCH_PATCH),
+  ).toEqual([true]);
+  await Worker.runReplayHistory({ workflowsPath }, gated, discoveryId);
 }, 120_000);
 
 test("a rediscovered, already-processed match does not hold back the matches after it", async () => {
@@ -977,18 +977,19 @@ const PatchMarkerDataSchema = z.strictObject({
 });
 
 /**
- * Turn this patch's markers into a history that never recorded the patch.
- *
- * Core refuses a non-deprecated marker no command claims, so a plain rename
- * would fail replay on the marker itself and prove nothing about the gated
- * branch. Renamed AND deprecated, the marker is one core may skip, `patched`
- * answers false as it does for an execution that predates the gate, and any
- * nondeterminism left is the gated routing disagreeing with the history.
+ * Rewrite this patch's markers as the release that still gated on it recorded
+ * them: not deprecated. Retained histories carry exactly that, and core
+ * refuses a non-deprecated marker no command claims, so replaying the rewrite
+ * proves the deprecated gate still claims it at the same command. Returns
+ * the deprecation flag each rewritten marker was recorded with.
  */
-function unrecordPatch(history: DispatcherHistory, patchId: string): number {
+function asRecordedByGatedRelease(
+  history: DispatcherHistory,
+  patchId: string,
+): boolean[] {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
-  let rewritten = 0;
+  const recorded: boolean[] = [];
   for (const event of history.events ?? []) {
     const marker = event.markerRecordedEventAttributes;
     if (marker?.markerName !== PATCH_MARKER) continue;
@@ -998,14 +999,14 @@ function unrecordPatch(history: DispatcherHistory, patchId: string): number {
           JSON.parse(decoder.decode(payload.data ?? new Uint8Array())),
         );
         if (data.id !== patchId) continue;
+        recorded.push(data.deprecated);
         payload.data = encoder.encode(
-          JSON.stringify({ id: `${patchId}-unrecorded`, deprecated: true }),
+          JSON.stringify({ id: patchId, deprecated: false }),
         );
-        rewritten += 1;
       }
     }
   }
-  return rewritten;
+  return recorded;
 }
 
 test("processes an older Riot match another account's poll delivered after a newer one", async () => {
@@ -1082,26 +1083,19 @@ test("processes an older Riot match another account's poll delivered after a new
     "maintenance:settle=true",
   ]);
 
-  // Replay safety. The recorded history carries the gate's marker and replays
-  // cleanly. With that marker renamed it is what an execution predating the
-  // gate would hold here, so the code takes the old review path and disagrees
-  // with the recorded child start. That disagreement proves the gate, not the
-  // new routing alone, decides what an open history replays.
+  // Replay safety. The recorded history carries the retired gate's marker,
+  // deprecated, exactly where the gate recorded it, and a history the gated
+  // release recorded replays through it.
   const workflowsPath = new URL("index.ts", import.meta.url).pathname;
   await Worker.runReplayHistory({ workflowsPath }, history, dispatcherId);
-  const withoutGate = structuredClone(history);
+  const gated = structuredClone(history);
   expect(
-    unrecordPatch(withoutGate, SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH),
-  ).toBe(1);
-  const replayed = Worker.runReplayHistory(
-    { workflowsPath },
-    withoutGate,
-    dispatcherId,
-  );
-  await expect(replayed).rejects.toMatchObject({
-    name: "DeterminismViolationError",
-  });
-  await expect(replayed).rejects.not.toThrow(/patch marker/u);
+    asRecordedByGatedRelease(
+      gated,
+      SCOUT_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH,
+    ),
+  ).toEqual([true]);
+  await Worker.runReplayHistory({ workflowsPath }, gated, dispatcherId);
 }, 120_000);
 
 test("processes a queued client late arrival once Riot discovers it too", async () => {

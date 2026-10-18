@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { Worker } from "@temporalio/worker";
 import type { WorkflowHandle } from "@temporalio/client";
+import { z } from "zod";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -10,62 +11,52 @@ import {
   scoutMatchProcessingInputCodec,
   scoutPostMatchDiscoveryInputCodec,
   scoutPrematchDiscoveryInputCodec,
+  scoutPrematchGameInputCodec,
 } from "#src/workflow-contracts.ts";
 import {
   scoutMatchProcessingWorkflow,
   scoutPostMatchDiscoveryWorkflow,
   scoutPrematchDiscoveryWorkflow,
+  scoutPrematchGameWorkflow,
 } from "./index.ts";
-import { SCOUT_WORKFLOW_NAMES } from "#src/identifiers.ts";
+import { SCOUT_GENERATION_RENAME_PATCH } from "./generation-rename.ts";
 import { SCOUT_MATCH_MINT_INTENTS_PATCH } from "./match.ts";
 import {
-  SCOUT_POSTMATCH_OWNERSHIP_PATCH,
-  SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH,
-} from "./retired-ownership.ts";
-import recordedOwnershipGate from "./fixtures/dev-postmatch-discovery.ownership-gate.json" with { type: "json" };
-import recordedRetiredOwnershipDiscovery from "./fixtures/postmatch-discovery.retired-ownership-marker.json" with { type: "json" };
-import recordedMaintenancePoll from "./fixtures/prematch-discovery.maintenance-marker.json" with { type: "json" };
-import { DeterminismViolationError } from "@temporalio/workflow";
+  SCOUT_PREMATCH_DELIVERY_PATCH,
+  SCOUT_PREMATCH_MAINTENANCE_PATCH,
+} from "./prematch.ts";
+import { SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH } from "./retired-ownership.ts";
 import {
   createScoutMatchStore,
   scoutMatchActivityStubs,
   MATCH_ID,
 } from "./match.test-fixtures.ts";
-import { recordedUnderRenamedType } from "./recorded-history.test-fixtures.ts";
 import { useScoutWorkflowHarness } from "./workflow-harness.test-fixtures.ts";
-import { SCOUT_PREMATCH_MAINTENANCE_PATCH } from "./prematch.ts";
 import {
   createScoutPrematchStore,
+  GAME_REF,
   scoutPrematchActivityStubs,
 } from "./prematch.test-fixtures.ts";
 
 /**
  * This Workflow family, replayed against histories older than the code.
  *
- * Both cases here exist because a compatibility claim about a recorded
- * history can only be proved against one, and the repository holds none. Each
- * builds the missing history from a real run, and the two build it
- * differently because the generations differ differently:
+ * A compatibility claim about a recorded history can only be proved against
+ * one, so each case builds that history from a real run:
  *
  * - The discovery case rewrites payload BYTES and removes no events. That
  *   generation ran the same commands in the same order and differed only in
  *   what they carried.
- * - The mint case removes EVENTS and renumbers what refers to them. That
- *   generation ran one command fewer.
- *
- * Which technique a future change needs follows from which axis it moved. A
- * required field added to a recorded result is the first; an inserted,
- * removed or reordered Activity is the second.
- *
- * A generation the current code can no longer PRODUCE needs a third: a
- * committed fixture recorded from the older source. The deprecated patches
- * below are that case.
+ * - The retired-gate cases rewrite each deprecated patch marker back to the
+ *   non-deprecated marker the gated release recorded. Retained histories
+ *   carry exactly those, and core refuses a non-deprecated marker no command
+ *   claims, so the replay proves each `deprecatePatch` still claims its
+ *   marker at the command where the gate stood.
  */
 
 const harness = useScoutWorkflowHarness();
 
 type History = Awaited<ReturnType<WorkflowHandle["fetchHistory"]>>;
-type Event = NonNullable<History["events"]>[number];
 
 const stage = "dev" as const;
 const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
@@ -223,172 +214,83 @@ test("a discovery recorded before the page carried matches still replays", async
   );
 }, 120_000);
 
-// ─── A per-match run whose history predates the mint ───────────────────────
+// ─── Histories recorded through the retired gates ─────────────────────────
 
-/**
- * One patch-gated Activity: the patch id `patched` records and the Activity
- * the gated block schedules.
- */
-type PatchedActivity = {
-  readonly patchId: string;
-  readonly activityType: string;
-};
-
-const MINT: PatchedActivity = {
-  patchId: SCOUT_MATCH_MINT_INTENTS_PATCH,
-  activityType: "mintPostmatchNotificationIntents",
-};
-
-/**
- * The events a patch generation added: the marker `patched` wrote and the
- * gated Activity's own schedule.
- *
- * The marker is matched by the SDK's own marker name and its patch id, and
- * the caller asserts that exactly one such marker exists, so a fixture that
- * matched the wrong marker fails loudly instead of quietly stripping it.
- */
-function isGatedEvent(event: Event, gate: PatchedActivity): boolean {
-  const scheduled =
-    event.activityTaskScheduledEventAttributes?.activityType?.name;
-  return scheduled === gate.activityType || namesPatch(event, gate.patchId);
-}
-
-/**
- * Whether this event is the marker for the named patch.
- *
- * Matching on the marker name alone is not enough: the Workflow UI
- * interceptor records a patch of its own, so a history carries two, and
- * stripping the wrong one would leave the gate reading true while the mint's
- * events were gone. The id is read from the marker's own payload bytes.
- */
-function namesPatch(event: Event, patchId: string): boolean {
-  const marker = event.markerRecordedEventAttributes;
-  if (marker?.markerName !== PATCH_MARKER) return false;
-  const decoder = new TextDecoder();
-  return Object.values(marker.details ?? {}).some((payloads) =>
-    (payloads.payloads ?? []).some((payload) =>
-      decoder.decode(payload.data ?? new Uint8Array()).includes(patchId),
-    ),
-  );
-}
-
-/** The marker name the TypeScript SDK records `patched` calls under. */
+/** The marker name the TypeScript SDK records patch calls under. */
 const PATCH_MARKER = "core_patch";
 
-function historyWithoutPatchedActivity(
+/** The temporal-ui-current-details patch every phase update records. */
+const UI_DETAILS_PATCH = "temporal-ui-current-details-v1";
+
+const PatchMarkerDataSchema = z.strictObject({
+  id: z.string(),
+  deprecated: z.boolean(),
+});
+
+/**
+ * Rewrite the named patches' markers as the gated release recorded them, and
+ * return the deprecation flag each was recorded with, by patch id.
+ */
+function asRecordedByGatedRelease(
   history: History,
-  gate: PatchedActivity,
-): History {
-  const events = history.events ?? [];
-  const mintScheduledIds = new Set(
-    events
-      .filter(
-        (event) =>
-          event.activityTaskScheduledEventAttributes?.activityType?.name ===
-          gate.activityType,
-      )
-      .map((event) => Number(event.eventId)),
-  );
-  // A patch marker is followed directly by the search-attribute upsert the
-  // SDK records with it. A generation without the patch emitted neither, so
-  // that upsert goes too. Only that one: another patch's marker and upsert
-  // can sit between this marker and the gated schedule (the UI interceptor's
-  // does when the gate is a Workflow's first command), and the older
-  // generation recorded those.
-  const markerId = Number(
-    events.find((event) => namesPatch(event, gate.patchId))?.eventId ?? 0,
-  );
-  const isGatedPatchUpsert = (event: Event): boolean =>
-    event.upsertWorkflowSearchAttributesEventAttributes != null &&
-    Number(event.eventId) === markerId + 1;
-  const dropped = events.filter((event) => {
-    if (isGatedPatchUpsert(event)) return true;
-    if (isGatedEvent(event, gate)) return true;
-    const started = event.activityTaskStartedEventAttributes?.scheduledEventId;
-    const completed =
-      event.activityTaskCompletedEventAttributes?.scheduledEventId;
-    return (
-      (started !== undefined &&
-        started !== null &&
-        mintScheduledIds.has(Number(started))) ||
-      (completed !== undefined &&
-        completed !== null &&
-        mintScheduledIds.has(Number(completed)))
-    );
-  });
-  const droppedIds = new Set(dropped.map((event) => Number(event.eventId)));
-  const kept = events.filter((event) => !droppedIds.has(Number(event.eventId)));
-  const renumbered = new Map<number, number>();
-  kept.forEach((event, index) => {
-    renumbered.set(Number(event.eventId), index + 1);
-  });
-  // Every id reference in a history event lives under a key ending in
-  // `EventId`, so remapping by key name is exhaustive without enumerating the
-  // dozen attribute shapes that carry one.
-  // Rewritten IN PLACE rather than rebuilt. Two things here are values, not
-  // structures: a payload's `metadata` holds byte arrays, and event ids arrive
-  // as Long instances — rebuilding either through `Object.entries` turns it
-  // into an index-keyed object, and the Workflow then fails at start with an
-  // unreadable encoding. Mutating only the id fields cannot do that.
-  const remapIds = (value: unknown): void => {
-    if (Array.isArray(value)) {
-      for (const entry of value) remapIds(entry);
-      return;
-    }
-    if (typeof value !== "object" || value === null) return;
-    if (ArrayBuffer.isView(value)) return;
-    if ("low" in value && "high" in value && "unsigned" in value) return;
-    for (const [key, entry] of Object.entries(value)) {
-      if (key === "eventId" || key.endsWith("EventId")) {
-        const mapped = renumbered.get(Number(entry));
-        if (mapped !== undefined) Reflect.set(value, key, mapped);
-        continue;
+  patchIds: readonly string[],
+): Record<string, boolean[]> {
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  const recorded: Record<string, boolean[]> = {};
+  for (const event of history.events ?? []) {
+    const marker = event.markerRecordedEventAttributes;
+    if (marker?.markerName !== PATCH_MARKER) continue;
+    for (const payloads of Object.values(marker.details ?? {})) {
+      for (const payload of payloads.payloads ?? []) {
+        const data = PatchMarkerDataSchema.parse(
+          JSON.parse(decoder.decode(payload.data ?? new Uint8Array())),
+        );
+        if (!patchIds.includes(data.id)) continue;
+        (recorded[data.id] ??= []).push(data.deprecated);
+        payload.data = encoder.encode(
+          JSON.stringify({ id: data.id, deprecated: false }),
+        );
       }
-      remapIds(entry);
     }
-  };
-  for (const event of kept) remapIds(event);
-  // Activity ids come from a counter the SDK advances once per scheduled
-  // activity, so a generation that never scheduled the mint numbered the
-  // activities AFTER it one lower. Leaving the recorded numbering in place
-  // makes replay fail on the id rather than on the command, which would be a
-  // defect in the fixture rather than in the code under test.
-  let activityNumber = 0;
-  for (const event of kept) {
-    const scheduled = event.activityTaskScheduledEventAttributes;
-    if (scheduled === undefined || scheduled === null) continue;
-    activityNumber += 1;
-    scheduled.activityId = String(activityNumber);
   }
-  return { events: kept };
+  return recorded;
 }
 
-test("a history recorded before the mint existed still replays", async () => {
-  const store = createScoutMatchStore();
-  await harness.startWorkers(scoutMatchActivityStubs(store));
+/**
+ * Each retired gate records its marker once, deprecated, and the history
+ * replays both as recorded and as the gated release recorded it.
+ */
+async function expectRetiredGatesReplay(
+  history: History,
+  patchIds: readonly string[],
+): Promise<void> {
+  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
+  await Worker.runReplayHistory({ workflowsPath }, history);
+  const gated = structuredClone(history);
+  expect(asRecordedByGatedRelease(gated, patchIds)).toEqual(
+    Object.fromEntries(patchIds.map((patchId) => [patchId, [true]])),
+  );
+  await Worker.runReplayHistory({ workflowsPath }, gated);
+}
+
+test("a match run records its retired gates and replays as the gated release", async () => {
+  await harness.startWorkers(scoutMatchActivityStubs(createScoutMatchStore()));
   const handle = await harness
     .client()
     .workflow.start(scoutMatchProcessingWorkflow, {
       taskQueue: "scout-dev",
-      workflowId: "match-core-pre-mint-history",
+      workflowId: "match-core-retired-gates",
       args: [
         scoutMatchProcessingInputCodec.serialize({
-          stage: "dev",
+          stage,
           riotMatchId: RiotMatchIdSchema.parse(MATCH_ID),
         }),
       ],
     });
   await handle.result();
-
   const recorded = await handle.fetchHistory();
-  const preChange = historyWithoutPatchedActivity(recorded, MINT);
 
-  // The fixture is only a pre-change history if it lost BOTH the marker and
-  // the mint's three events; a strip that silently matched neither would make
-  // this test pass for the wrong reason.
-  expect(
-    (recorded.events ?? []).filter((event) => namesPatch(event, MINT.patchId)),
-  ).toHaveLength(1);
   expect(
     (recorded.events ?? []).filter(
       (event) =>
@@ -396,141 +298,32 @@ test("a history recorded before the mint existed still replays", async () => {
         "mintPostmatchNotificationIntents",
     ),
   ).toHaveLength(1);
-  // Five events leave: the marker, the phase upsert, and the mint's schedule,
-  // start and completion.
-  expect((preChange.events ?? []).length).toBe(
-    (recorded.events ?? []).length - 5,
-  );
-  // And the patch it recorded is the one this gate names.
-  expect(SCOUT_MATCH_MINT_INTENTS_PATCH).toBe("scout-v2-match-mint-intents");
-
-  await Worker.runReplayHistory(
-    { workflowsPath: new URL("index.ts", import.meta.url).pathname },
-    preChange,
-  );
+  await expectRetiredGatesReplay(recorded, [
+    UI_DETAILS_PATCH,
+    SCOUT_GENERATION_RENAME_PATCH,
+    SCOUT_MATCH_MINT_INTENTS_PATCH,
+  ]);
 }, 120_000);
 
-// ─── Discoveries recorded around the retired ownership read ────────────────
+test("a discovery records its retired gates and replays as the gated release", async () => {
+  // Chunked dispatch's retired gate is covered by the dispatcher tests; this
+  // page carries no game end, so it takes the direct child path.
+  const recorded = await recordOneMatchDiscovery("discovery-retired-gates");
 
-const OWNERSHIP: PatchedActivity = {
-  patchId: SCOUT_POSTMATCH_OWNERSHIP_PATCH,
-  activityType: "resolvePostMatchDiscoveryOwnerV2",
-};
-
-/**
- * Committed fixtures, for generations the current code can no longer
- * produce: each was recorded by running the older Workflow source against the
- * same Activity stubs these tests use, under the pre-rename Workflow type, and
- * is replayed under its renamed type (`recordedUnderRenamedType`). Retained
- * histories of the generations before the retirement marker all ran under the
- * pre-rename types, which this bundle no longer registers, so in production
- * they no longer replay at all; these keep the branches the patches still gate
- * deterministic until the patches are retired.
- */
-function discoveryFixture(recorded: unknown): History {
-  return recordedUnderRenamedType(
-    recorded,
-    SCOUT_WORKFLOW_NAMES.postMatchDiscovery,
-  );
-}
-
-function ownershipReads(history: History): number {
-  return (history.events ?? []).filter(
-    (event) =>
-      event.activityTaskScheduledEventAttributes?.activityType?.name ===
-      OWNERSHIP.activityType,
-  ).length;
-}
-
-function markersFor(history: History, patchId: string): number {
-  return (history.events ?? []).filter((event) => namesPatch(event, patchId))
-    .length;
-}
-
-async function replay(history: History): Promise<void> {
-  await Worker.runReplayHistory(
-    { workflowsPath: new URL("index.ts", import.meta.url).pathname },
-    history,
-  );
-}
-
-test("a discovery recorded while the ownership read existed still replays", async () => {
-  const recorded = discoveryFixture(recordedOwnershipGate);
-
-  // The fixture is that generation only if it asked exactly once and never
-  // named the retirement.
-  expect(markersFor(recorded, OWNERSHIP.patchId)).toBe(1);
-  expect(ownershipReads(recorded)).toBe(1);
-  expect(markersFor(recorded, SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH)).toBe(0);
-
-  await replay(recorded);
-}, 120_000);
-
-test("the ownership fixture fails replay once its recorded read is changed", async () => {
-  // The negative control: a replay that accepted any command where the
-  // ownership read was recorded would pass the test above for the wrong
-  // reason. A bare `deprecatePatch` of the ownership patch is exactly such a
-  // change, and fails here the same way.
-  const tampered = discoveryFixture(
-    JSON.parse(
-      JSON.stringify(recordedOwnershipGate).replace(
-        `"name":"${OWNERSHIP.activityType}"`,
-        '"name":"tamperedActivity"',
-      ),
+  expect(
+    (recorded.events ?? []).filter(
+      (event) =>
+        event.activityTaskScheduledEventAttributes?.activityType?.name ===
+        "resolvePostMatchDiscoveryOwnerV2",
     ),
-  );
-  expect(ownershipReads(tampered)).toBe(0);
-
-  await expect(replay(tampered)).rejects.toBeInstanceOf(
-    DeterminismViolationError,
-  );
+  ).toHaveLength(0);
+  await expectRetiredGatesReplay(recorded, [
+    SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH,
+    UI_DETAILS_PATCH,
+  ]);
 }, 120_000);
 
-test("a discovery recorded before the ownership read still replays", async () => {
-  const recorded = discoveryFixture(recordedOwnershipGate);
-  const preChange = historyWithoutPatchedActivity(recorded, OWNERSHIP);
-
-  // The strip removed both the marker and the read; one that matched neither
-  // would pass for the wrong reason.
-  expect(markersFor(preChange, OWNERSHIP.patchId)).toBe(0);
-  expect(ownershipReads(preChange)).toBe(0);
-  expect((recorded.events ?? []).length - (preChange.events ?? []).length).toBe(
-    5,
-  );
-
-  await replay(preChange);
-}, 120_000);
-
-test("a discovery that recorded the ownership retirement marker still replays", async () => {
-  const recorded = discoveryFixture(recordedRetiredOwnershipDiscovery);
-
-  expect(markersFor(recorded, SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH)).toBe(1);
-
-  await replay(recorded);
-}, 120_000);
-
-test("a discovery recorded now names the retirement and never asks", async () => {
-  const recorded = await recordOneMatchDiscovery("discovery-retired-ownership");
-
-  expect(markersFor(recorded, SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH)).toBe(1);
-  expect(markersFor(recorded, OWNERSHIP.patchId)).toBe(0);
-  expect(ownershipReads(recorded)).toBe(0);
-  expect(SCOUT_POSTMATCH_OWNERSHIP_PATCH).toBe("scout-v2-postmatch-ownership");
-  expect(SCOUT_POSTMATCH_OWNERSHIP_RETIRED_PATCH).toBe(
-    "scout-v2-retired-postmatch-ownership",
-  );
-
-  await replay(recorded);
-}, 120_000);
-
-// ─── A prematch poll whose history predates the maintenance tail ──────────
-
-const MAINTENANCE: PatchedActivity = {
-  patchId: SCOUT_PREMATCH_MAINTENANCE_PATCH,
-  activityType: "runPrematchMaintenance",
-};
-
-async function recordPrematchPoll(workflowId: string): Promise<History> {
+test("a prematch poll records its retired gates and replays as the gated release", async () => {
   await harness.startWorkers(
     scoutPrematchActivityStubs(createScoutPrematchStore(), []),
   );
@@ -538,40 +331,36 @@ async function recordPrematchPoll(workflowId: string): Promise<History> {
     .client()
     .workflow.start(scoutPrematchDiscoveryWorkflow, {
       taskQueue: "scout-dev",
-      workflowId,
+      workflowId: "prematch-discovery-retired-gates",
       args: [scoutPrematchDiscoveryInputCodec.serialize({ stage })],
     });
   await handle.result();
-  return await handle.fetchHistory();
-}
 
-test("a prematch discovery recorded before the maintenance tail still replays", async () => {
-  const recorded = await recordPrematchPoll(
-    "prematch-discovery-pre-maintenance-history",
-  );
-  // A closed history from before the tail: it completed straight after
-  // discovery, which is what a retained history replayed against the candidate
-  // bundle looks like.
-  const preChange = historyWithoutPatchedActivity(recorded, MAINTENANCE);
-
-  expect(markersFor(recorded, MAINTENANCE.patchId)).toBe(1);
-  expect((recorded.events ?? []).length - (preChange.events ?? []).length).toBe(
-    5,
-  );
-  expect(SCOUT_PREMATCH_MAINTENANCE_PATCH).toBe(
-    "scout-v2-prematch-maintenance",
-  );
-
-  await replay(preChange);
+  await expectRetiredGatesReplay(await handle.fetchHistory(), [
+    UI_DETAILS_PATCH,
+    SCOUT_GENERATION_RENAME_PATCH,
+    SCOUT_PREMATCH_MAINTENANCE_PATCH,
+  ]);
 }, 120_000);
 
-test("a prematch poll that recorded the maintenance marker still replays", async () => {
-  const recorded = recordedUnderRenamedType(
-    recordedMaintenancePoll,
-    SCOUT_WORKFLOW_NAMES.prematchDiscovery,
+test("a prematch game records its retired gates and replays as the gated release", async () => {
+  await harness.startWorkers(
+    scoutPrematchActivityStubs(createScoutPrematchStore()),
   );
+  const handle = await harness
+    .client()
+    .workflow.start(scoutPrematchGameWorkflow, {
+      taskQueue: "scout-dev",
+      workflowId: "prematch-game-retired-gates",
+      args: [
+        scoutPrematchGameInputCodec.serialize({ stage, gameRef: GAME_REF }),
+      ],
+    });
+  await handle.result();
 
-  expect(markersFor(recorded, MAINTENANCE.patchId)).toBe(1);
-
-  await replay(recorded);
+  await expectRetiredGatesReplay(await handle.fetchHistory(), [
+    UI_DETAILS_PATCH,
+    SCOUT_GENERATION_RENAME_PATCH,
+    SCOUT_PREMATCH_DELIVERY_PATCH,
+  ]);
 }, 120_000);
