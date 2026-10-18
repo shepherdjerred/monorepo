@@ -16,6 +16,19 @@ export const DeliverySelectionSchema = z.object({
 });
 export type DeliverySelection = z.infer<typeof DeliverySelectionSchema>;
 
+/** Preserve literal strings through Helm's strvals grammar, including JSON objects. */
+export function deliveryArgoParameters(
+  parameters: DeliverySelection["parameters"],
+) {
+  return Object.entries(parameters)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([name, value]) => ({
+      name,
+      value: value.replaceAll(/[\\{},]/gu, String.raw`\$&`),
+      forceString: true as const,
+    }));
+}
+
 export const DeliveryArgoSourceSchema = z
   .object({
     repoURL: z.string(),
@@ -104,9 +117,7 @@ export function deliverySelectionPatch(
     throw new Error(
       "Selected release does not match the registered Application destination/source",
     );
-  const parameters = Object.entries(selection.parameters)
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([name, value]) => ({ name, value, forceString: true }));
+  const parameters = deliveryArgoParameters(selection.parameters);
   const selected = {
     ...source,
     targetRevision: selection.revision,

@@ -12,7 +12,10 @@ import type {
   DeploymentDetail,
   WorkerPoolSnapshot,
 } from "@shepherdjerred/delivery/contract";
-import type { DeliverySelection } from "homelab/scripts/argocd/argocd-delivery.ts";
+import {
+  deliveryArgoParameters,
+  type DeliverySelection,
+} from "homelab/scripts/argocd/argocd-delivery.ts";
 import {
   deliveryOperationId,
   deliverySelection,
@@ -131,11 +134,7 @@ function observation(selection: DeliverySelection, operationId: string) {
     chart: selection.chart,
     targetRevision: selection.revision,
     helm: {
-      parameters: Object.entries(selection.parameters).map(([name, value]) => ({
-        name,
-        value,
-        forceString: true,
-      })),
+      parameters: deliveryArgoParameters(selection.parameters),
     },
   };
   return {

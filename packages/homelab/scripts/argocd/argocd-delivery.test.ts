@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import {
   deliverySelectionPatch,
+  deliveryArgoParameters,
   assertDeliveryRootPreservesSelection,
 } from "./argocd-delivery.ts";
 import {
@@ -42,6 +44,75 @@ const selection = {
     image: `docker.io/shepherdjerred/arcade@sha256:${"a".repeat(64)}`,
   },
 };
+
+// Argo CD v3.5.4 util/helm/cmd.go cleanSetParameters preserves escaped commas.
+function argoCleanSetParameters(value: string) {
+  return value.startsWith("{") && value.endsWith("}")
+    ? value
+    : value.replaceAll(/(?<!\\),/gu, String.raw`\,`);
+}
+
+it("round-trips literal selection strings through the real Helm parameter parser", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "delivery-helm-wire-"));
+  try {
+    await Bun.write(
+      path.join(directory, "Chart.yaml"),
+      "apiVersion: v2\nname: wire-proof\nversion: 0.1.0\n",
+    );
+    await Bun.write(
+      path.join(directory, "templates/value.yaml"),
+      "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: wire-proof\ndata:\n  value: {{ .Values.delivery.workerPool | quote }}\n",
+    );
+    for (const logical of [
+      "",
+      "{}",
+      "[]",
+      JSON.stringify({
+        versions: [
+          { id: "old", note: String.raw`comma,slash\braces{}` },
+          { id: "new" },
+        ],
+      }),
+    ]) {
+      const parameters = { "delivery.workerPool": logical };
+      const wire = deliveryArgoParameters(parameters);
+      expect(
+        deliverySelectionPatch(application(), { ...selection, parameters })[2]
+          ?.value,
+      ).toMatchObject({ helm: { parameters: wire } });
+      const parameter = wire[0];
+      if (parameter === undefined) throw new Error("Wire parameter missing");
+      const cleaned = argoCleanSetParameters(parameter.value);
+      expect(cleaned).toBe(parameter.value);
+      const child = Bun.spawn(
+        [
+          "helm",
+          "template",
+          "proof",
+          directory,
+          "--set-string",
+          `${parameter.name}=${cleaned}`,
+        ],
+        { stdout: "pipe", stderr: "pipe" },
+      );
+      const [exit, stdout, stderr] = await Promise.all([
+        child.exited,
+        new Response(child.stdout).text(),
+        new Response(child.stderr).text(),
+      ]);
+      expect(stderr).toBe("");
+      expect(exit).toBe(0);
+      expect(
+        z
+          .object({ data: z.object({ value: z.string() }) })
+          .parse(Bun.YAML.parse(stdout)).data.value,
+      ).toBe(logical);
+      expect(parameters["delivery.workerPool"]).toBe(logical);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 it("accepts omitted TypeMeta from the single-Application endpoint while rejecting wrong kinds and missing ownership", () => {
   const { kind: _kind, ...endpointResponse } = application();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { verifyArgoRelease } from "./argocd.ts";
+import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 
 const requestId = "11111111-1111-4111-8111-111111111111";
 const operationId = "22222222-2222-4222-8222-222222222222";
@@ -53,6 +54,40 @@ function observation() {
   };
 }
 describe("Delivery Argo operation evidence", () => {
+  it("proves exact wire parameters without changing the frozen logical JSON", () => {
+    const logical = JSON.stringify({
+      versions: [
+        { id: "old", note: String.raw`comma,slash\braces{}` },
+        { id: "new" },
+      ],
+    });
+    const selected = {
+      ...selection,
+      parameters: { "delivery.workerPool": logical },
+    };
+    const current = observation();
+    const parameters = deliveryArgoParameters(selected.parameters);
+    current.spec.source.helm.parameters = parameters;
+    const history = current.status.history[0];
+    if (history === undefined) throw new Error("Fixture history missing");
+    history.source.helm.parameters = structuredClone(parameters);
+    expect(verifyArgoRelease(current, selected, requestId).operationId).toBe(
+      operationId,
+    );
+    expect(() =>
+      verifyArgoRelease(
+        current,
+        { ...selected, parameters: { "delivery.workerPool": "{}" } },
+        requestId,
+      ),
+    ).toThrow("exact owned");
+    const parameter = history.source.helm.parameters[0];
+    if (parameter === undefined) throw new Error("Fixture parameter missing");
+    parameter.value = logical;
+    expect(() => verifyArgoRelease(current, selected, requestId)).toThrow(
+      "exact owned",
+    );
+  });
   it("returns the exact request and external operation receipt", () => {
     expect(verifyArgoRelease(observation(), selection, requestId)).toEqual({
       requestId,

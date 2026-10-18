@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   DeliveryArgoSourceSchema,
+  deliveryArgoParameters,
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
 
@@ -51,9 +52,10 @@ export function verifyArgoRelease(
     left.id > right.id ? left : right,
   );
   const expectedParameters = Object.fromEntries(
-    Object.entries(selection.parameters).sort(([left], [right]) =>
-      left.localeCompare(right),
-    ),
+    deliveryArgoParameters(selection.parameters).map(({ name, value }) => [
+      name,
+      value,
+    ]),
   );
   const sourceMatches = (source: z.infer<typeof SourceSchema>) =>
     source.repoURL === selection.repository &&
