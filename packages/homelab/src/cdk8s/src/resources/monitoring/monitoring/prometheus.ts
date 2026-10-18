@@ -22,6 +22,7 @@ import { getEtcdCustomRuleGroups } from "./rules/platform/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/storage/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/platform/temporal.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
+import { getMediaRuleGroups } from "./rules/media.ts";
 import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { getFliptRuleGroups } from "./rules/flipt.ts";
@@ -36,6 +37,15 @@ import { getGlitterLauncherReleaseRuleGroups } from "./rules/glitter-boys-launch
 export function createPrometheusMonitoring(chart: Chart) {
   createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
+
+  new PrometheusRule(chart, "prometheus-media-rules", {
+    metadata: {
+      name: "prometheus-media-rules",
+      namespace: "media",
+      labels: { release: "prometheus" },
+    },
+    spec: { groups: getMediaRuleGroups() },
+  });
 
   // The release deadline remains monitored independently of telemetry activation.
   const launcherReleaseGroups = getGlitterLauncherReleaseRuleGroups();

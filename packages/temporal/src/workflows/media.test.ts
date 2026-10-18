@@ -1,0 +1,558 @@
+import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Worker } from "@temporalio/worker";
+import { expect, test } from "vitest";
+import { WorkflowFailedError, type WorkflowHandle } from "@temporalio/client";
+import { setTimeout } from "node:timers/promises";
+import type {
+  MediaNetworkActivities,
+  MediaFileActivities,
+} from "@shepherdjerred/media/automation";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
+
+const workflowsPath = new URL("media.ts", import.meta.url).pathname;
+
+test.each([
+  { language: "en" },
+  {
+    language: "en",
+    forced: false,
+    hearingImpaired: "any" as const,
+    targetAuthority: "a".repeat(64),
+  },
+  {
+    language: "en",
+    forced: true,
+    hearingImpaired: "excluded" as const,
+    targetAuthority: "b".repeat(64),
+  },
+])(
+  "subtitle target $language/$forced survives a no-match timer and replay",
+  async (target) => {
+    const args = {
+      operationId: "subtitle-target-operation",
+      assetId: "asset",
+      ...target,
+    };
+    let searches = 0;
+    const result = await runScenario({
+      workflow: "acquireMediaSubtitlesWorkflow",
+      args,
+      network: {
+        findMediaSubtitles: async (input) => {
+          expect(input).toEqual(args);
+          searches++;
+          return searches === 1
+            ? {
+                status: "waiting",
+                subtitleId: null,
+                reason: "matching_subtitles_not_found",
+              }
+            : { status: "found", subtitleId: "subtitle", reason: null };
+        },
+        finishMediaOperation: async (input) => {
+          expect(input.status).toBe("completed");
+        },
+      },
+      files: {
+        installMediaSubtitles: async (input) => {
+          expect(input).toEqual({
+            operationId: args.operationId,
+            subtitleId: "subtitle",
+          });
+          return { status: "installed" };
+        },
+      },
+    });
+    expect(searches).toBe(2);
+    expect(result).toEqual({ status: "completed" });
+  },
+  60_000,
+);
+
+test.each(["owner_health_superseded", "email_verification_superseded"])(
+  "%s ends notification delivery without scheduling another send or receipt read",
+  async (reason) => {
+    let calls = 0;
+    const checkpoints: string[] = [];
+    const result = await runScenario({
+      workflow: "deliverMediaNotificationWorkflow",
+      args: {
+        operationId: "protected-notification",
+        notificationId: "protected-delivery",
+      },
+      files: {},
+      network: {
+        deliverMediaNotification: async () => {
+          calls++;
+          return { status: "failed", reason };
+        },
+        finishMediaOperation: async (input) => {
+          checkpoints.push(input.status);
+        },
+      },
+    });
+    expect(calls).toBe(1);
+    expect(checkpoints).toEqual(["reconciling"]);
+    expect(result).toEqual({ status: "blocked", reason });
+  },
+  60_000,
+);
+
+test.each(["accepted", "unknown", "failed"] as const)(
+  "notification %s schedules only bounded receipt observations",
+  async (status) => {
+    let calls = 0;
+    const result = await runScenario({
+      workflow: "deliverMediaNotificationWorkflow",
+      args: {
+        operationId: "notification-operation",
+        notificationId: "delivery",
+      },
+      files: {},
+      network: {
+        deliverMediaNotification: async () => {
+          calls++;
+          return { status, reason: null };
+        },
+        finishMediaOperation: async (input) => {
+          expect(input.operationId).toBe("notification-operation");
+        },
+      },
+    });
+    expect(calls).toBe(status === "accepted" ? 3 : 1);
+    expect(result).toEqual({
+      status: status === "accepted" ? "completed" : "blocked",
+    });
+  },
+  60_000,
+);
+
+test.each(["purged", "obsolete"] as const)(
+  "rollback cleanup remains scheduled through protection and bounded history rollover until %s",
+  async (terminalStatus) => {
+    let attempts = 0;
+    const checkpoints: string[] = [];
+    const result = await runScenario({
+      workflow: "cleanupMediaUpgradeWorkflow",
+      args: { operationId: "cleanup-operation", cleanupId: "cleanup" },
+      network: {
+        finishMediaOperation: async (input) => {
+          checkpoints.push(input.status);
+        },
+      },
+      files: {
+        cleanupSupersededMediaFile: async (input) => {
+          expect(input.cleanupId).toBe("cleanup");
+          attempts++;
+          return attempts <= 15
+            ? { status: "protected", reason: "rollback_window_incomplete" }
+            : { status: terminalStatus };
+        },
+      },
+    });
+    expect(result).toEqual({
+      status: terminalStatus === "purged" ? "completed" : "obsolete",
+    });
+    expect(attempts).toBe(16);
+    expect(checkpoints).toEqual([
+      ...Array.from({ length: 15 }, () => "reconciling"),
+      "completed",
+    ]);
+  },
+  60_000,
+);
+
+test("whole-series expansion continues with the durable cursor after each bounded history", async () => {
+  const cursors: (string | null)[] = [];
+  let completed = 0;
+  await runScenario({
+    workflow: "expandMediaRequestWorkflow",
+    args: {
+      operationId: "operation",
+      requestId: "root",
+      requestVersion: 3,
+      cursor: null,
+    },
+    files: {},
+    network: {
+      expandMediaRequest: async (input) => {
+        expect(input.requestVersion).toBe(3);
+        cursors.push(input.cursor);
+        const page = input.cursor === null ? 0 : Number(input.cursor);
+        return {
+          processed: page === 40 ? 1 : 25,
+          nextCursor: page === 40 ? null : String(page + 1),
+        };
+      },
+      finishMediaOperation: async (input) => {
+        expect(input.status).toBe("completed");
+        completed++;
+      },
+    },
+  });
+  expect(cursors).toEqual([
+    null,
+    ...Array.from({ length: 40 }, (_, index) => String(index + 1)),
+  ]);
+  expect(completed).toBe(1);
+}, 60_000);
+
+test("subtitle cancellation checkpoints terminal cleanup after the browser wait", async () => {
+  const checkpoints: string[] = [];
+  await runScenario({
+    workflow: "acquireMediaSubtitlesWorkflow",
+    args: {
+      operationId: "subtitle-operation",
+      assetId: "asset",
+      language: "en",
+    },
+    expectFailure: true,
+    cancelOnTimer: true,
+    files: {},
+    network: {
+      findMediaSubtitles: async () => ({
+        status: "waiting",
+        subtitleId: null,
+        reason: "subtitle_browser_pending",
+      }),
+      finishMediaOperation: async (input) => {
+        checkpoints.push(input.operationId);
+      },
+    },
+  });
+  expect(checkpoints).toEqual(["subtitle-operation"]);
+}, 60_000);
+
+test.each(["failed", "cancelled"])(
+  "terminal acquisition %s records a resumable operation",
+  async (mode) => {
+    let stages = 0;
+    const checkpoints: { status: string; reason: string | null }[] = [];
+    const result = await runScenario({
+      workflow: "acquireMediaReleaseWorkflow",
+      args: { operationId: "operation", attemptId: "attempt", submitted: true },
+      expectFailure: true,
+      cancelOnTimer: mode === "cancelled",
+      network: {
+        observeMediaAcquisition: async () => ({
+          status: mode === "cancelled" ? "downloading" : "ready",
+          reason: null,
+        }),
+        finishMediaOperation: async (input) => {
+          checkpoints.push({ status: input.status, reason: input.reason });
+        },
+      },
+      files: {
+        inspectAndStageMedia: async () => {
+          stages++;
+          throw new Error("Fixture staging failed");
+        },
+      },
+    });
+    expect(result).toEqual({ failed: true });
+    expect(stages).toBe(mode === "failed" ? 3 : 0);
+    expect(checkpoints).toEqual([
+      { status: "reconciling", reason: `acquisition_${mode}` },
+    ]);
+  },
+  60_000,
+);
+
+async function runScenario(input: {
+  network: Partial<MediaNetworkActivities>;
+  files: Partial<MediaFileActivities>;
+  workflow: string;
+  args: object;
+  expectFailure?: boolean;
+  cancelOnTimer?: boolean;
+}) {
+  const environment = await TestWorkflowEnvironment.createTimeSkipping();
+  const workflowWorker = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    workflowsPath,
+  });
+  const networkWorker = await Worker.create({
+    connection: environment.nativeConnection,
+    taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+    activities: {
+      publishRolledBackMedia: async () => ({
+        status: "not_applicable",
+        reason: null,
+      }),
+      ...input.network,
+    },
+  });
+  const fileWorker =
+    Object.keys(input.files).length === 0
+      ? null
+      : await Worker.create({
+          connection: environment.nativeConnection,
+          taskQueue: TASK_QUEUES.MEDIA_FILES,
+          activities: input.files,
+        });
+  const networkRun = networkWorker.run();
+  const fileRun = fileWorker?.run() ?? Promise.resolve();
+  try {
+    const handle = await environment.client.workflow.start(input.workflow, {
+      workflowId: crypto.randomUUID(),
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      args: [input.args],
+    });
+    const cancellation =
+      input.cancelOnTimer === true
+        ? cancelWaitingWorkflow(handle)
+        : Promise.resolve();
+    const [result] = await Promise.all([
+      workflowWorker.runUntil(async () => {
+        try {
+          // Keep test-server time locked until cancellation reaches a real timer.
+          // Awaiting result first auto-skips the timer and races Activity completion.
+          if (input.cancelOnTimer === true) await cancellation;
+          return await handle.result();
+        } catch (error) {
+          if (!input.expectFailure || !(error instanceof WorkflowFailedError))
+            throw error;
+          return { failed: true };
+        }
+      }),
+      cancellation,
+    ]);
+    const history = await handle.fetchHistory();
+    await Worker.runReplayHistory({ workflowsPath }, history);
+    return result;
+  } finally {
+    networkWorker.shutdown();
+    fileWorker?.shutdown();
+    await Promise.all([networkRun, fileRun]);
+    await environment.teardown();
+  }
+}
+
+async function cancelWaitingWorkflow(
+  handle: Pick<WorkflowHandle, "fetchHistory" | "cancel">,
+): Promise<void> {
+  for (let poll = 0; poll < 100; poll++) {
+    const history = await handle.fetchHistory();
+    if (
+      history.events?.some(
+        (event) => event.timerStartedEventAttributes != null,
+      ) === true
+    ) {
+      await handle.cancel();
+      return;
+    }
+    await setTimeout(10);
+  }
+  throw new Error("Workflow did not reach a durable wait");
+}
+
+test("acquisition waits for download and Plex before finalizing", async () => {
+  const calls: string[] = [];
+  let observations = 0;
+  let scans = 0;
+  let submissions = 0;
+  const result = await runScenario({
+    workflow: "acquireMediaReleaseWorkflow",
+    args: { operationId: "operation", attemptId: "attempt" },
+    network: {
+      submitMediaTorrent: async () => {
+        submissions++;
+        if (submissions === 1)
+          return { status: "waiting", reason: "rate-limited" };
+        calls.push("submit");
+        return { status: "submitted", reason: null };
+      },
+      observeMediaAcquisition: async () => {
+        observations++;
+        return {
+          status: observations === 1 ? "downloading" : "ready",
+          reason: null,
+        };
+      },
+      publishMediaToPlex: async () => {
+        scans++;
+        return {
+          status: scans === 1 ? "waiting" : "available",
+          reason: null,
+        };
+      },
+      finalizeMediaAcquisition: async () => {
+        calls.push("finalize");
+      },
+      finishMediaOperation: async (input) => {
+        calls.push(`finish:${input.status}`);
+      },
+    },
+    files: {
+      inspectAndStageMedia: async () => {
+        calls.push("stage");
+        return { status: "staged" };
+      },
+      promoteMediaFiles: async () => {
+        calls.push("promote");
+        return { status: "published" };
+      },
+    },
+  });
+  expect(result).toEqual({ status: "completed" });
+  expect(calls).toEqual([
+    "submit",
+    "stage",
+    "promote",
+    "finalize",
+    "finish:completed",
+  ]);
+  expect(observations).toBe(2);
+  expect(scans).toBe(2);
+  expect(submissions).toBe(2);
+}, 60_000);
+
+test("seeding survives incomplete downloads, live source dependencies, and a final guard deferral", async () => {
+  let evaluations = 0;
+  let removals = 0;
+  let finishes = 0;
+  const result = await runScenario({
+    workflow: "maintainMediaTorrentWorkflow",
+    args: { operationId: "seed", torrentId: "torrent" },
+    files: {
+      inspectAndStageMedia: async () => {
+        throw new Error("Seeding must not stage files");
+      },
+    },
+    network: {
+      evaluateMediaSeeding: async () => {
+        evaluations++;
+        return evaluations < 3
+          ? {
+              status: "protected",
+              reason:
+                evaluations === 1 ? "download_incomplete" : "source_in_use",
+            }
+          : { status: "removable", reason: null };
+      },
+      removeMediaTorrent: async () => {
+        removals++;
+        return removals === 1
+          ? { status: "protected", reason: "source_dependencies_changed" }
+          : { status: "removed", reason: null };
+      },
+      finishMediaOperation: async () => {
+        finishes++;
+      },
+    },
+  });
+  expect(result).toEqual({ status: "completed" });
+  expect(evaluations).toBe(4);
+  expect(removals).toBe(2);
+  expect(finishes).toBe(1);
+}, 60_000);
+
+test.each(["rolled_back", "protected"] as const)(
+  "failed Plex verification reports the %s rollback outcome",
+  async (rollbackStatus) => {
+    const calls: string[] = [];
+    let rolledBack = false;
+    let restoredScans = 0;
+    const result = await runScenario({
+      workflow: "acquireMediaReleaseWorkflow",
+      args: { operationId: "operation", attemptId: "attempt", submitted: true },
+      network: {
+        publishRolledBackMedia: async () => {
+          if (!rolledBack) return { status: "not_applicable", reason: null };
+          restoredScans++;
+          return {
+            status: restoredScans === 1 ? "waiting" : "available",
+            reason: null,
+          };
+        },
+        observeMediaAcquisition: async () => ({
+          status: "ready",
+          reason: null,
+        }),
+        publishMediaToPlex: async () => ({
+          status: "blocked",
+          reason: "plex_identity_mismatch",
+        }),
+        finishMediaOperation: async (input) => {
+          calls.push(`finish:${input.status}`);
+        },
+      },
+      files: {
+        inspectAndStageMedia: async () => ({ status: "staged" }),
+        promoteMediaFiles: async () => ({ status: "published" }),
+        rollbackMediaPromotion: async () => {
+          calls.push("rollback");
+          rolledBack = true;
+          return {
+            status: rollbackStatus,
+            reason: "new_publications_quarantined",
+          };
+        },
+      },
+    });
+    expect(result).toEqual({
+      status: "blocked",
+      reason:
+        rollbackStatus === "protected"
+          ? "new_publications_quarantined"
+          : "plex_identity_mismatch",
+    });
+    expect(calls).toEqual(["rollback", "finish:reconciling"]);
+    expect(restoredScans).toBe(2);
+  },
+  60_000,
+);
+
+test("retrying a rolled-back acquisition only verifies restored playback", async () => {
+  let scans = 0;
+  const result = await runScenario({
+    workflow: "acquireMediaReleaseWorkflow",
+    args: { operationId: "retry", attemptId: "rolled-back" },
+    files: {},
+    network: {
+      publishRolledBackMedia: async () => {
+        scans++;
+        return { status: scans === 1 ? "waiting" : "available", reason: null };
+      },
+      finishMediaOperation: async (input) => {
+        expect(input.status).toBe("reconciling");
+      },
+    },
+  });
+  expect(result).toEqual({
+    status: "blocked",
+    reason: "acquisition_rolled_back",
+  });
+  expect(scans).toBe(2);
+}, 60_000);
+
+test("restoration remains pending until Plex confirms the restored file", async () => {
+  let scans = 0;
+  const calls: string[] = [];
+  const result = await runScenario({
+    workflow: "restoreMediaWorkflow",
+    args: { operationId: "restore", mediaId: "media", generation: 2 },
+    network: {
+      publishRestoredMedia: async () => {
+        scans++;
+        return {
+          status: scans === 1 ? "waiting" : "available",
+          reason: null,
+        };
+      },
+      finishMediaOperation: async () => {
+        calls.push("finish");
+      },
+    },
+    files: {
+      restoreMediaFiles: async () => {
+        calls.push("restore");
+        return { status: "restored" };
+      },
+    },
+  });
+  expect(result).toEqual({ status: "completed" });
+  expect(scans).toBe(2);
+  expect(calls).toEqual(["restore", "finish"]);
+}, 60_000);

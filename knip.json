@@ -66,6 +66,19 @@
         "*.ts"
       ]
     },
+    "packages/media": {
+      "entry": [
+        "architecture.config.ts",
+        "src/**/*.test.ts",
+        "scripts/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "scripts/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
     "packages/architecture": {
       "entry": ["bin/*.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "bin/**/*.ts", "test/**/*.ts"]

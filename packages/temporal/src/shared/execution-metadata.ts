@@ -21,6 +21,8 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
 > = {
   [TASK_QUEUES.WORKFLOWS]: "platform",
   [TASK_QUEUES.HOME]: "home",
+  [TASK_QUEUES.MEDIA_NETWORK]: "home",
+  [TASK_QUEUES.MEDIA_FILES]: "home",
   [TASK_QUEUES.REPORTS]: "reports",
   [TASK_QUEUES.INFRA]: "infra",
   [TASK_QUEUES.OPS]: "infra",

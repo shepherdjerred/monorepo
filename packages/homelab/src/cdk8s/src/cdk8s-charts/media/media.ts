@@ -15,6 +15,10 @@ import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src
 import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/streambot.ts";
 import { STREAMBOT_WEB_PUBLIC_ORIGIN } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/web.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createUnifiedMediaApplication } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/index.ts";
+import { mediaImageReference } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/image.ts";
+import { MEDIA_APPLICATION_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/environment.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   IntOrString,
   KubeNetworkPolicy,
@@ -84,12 +88,35 @@ export async function createMediaChart(app: App) {
     publicProbePath: "/readyz",
   });
 
+  const mediaVersion = versions["shepherdjerred/media"];
+  const mediaImage = mediaImageReference(mediaVersion);
+  if (mediaImage !== undefined)
+    createUnifiedMediaApplication(chart, {
+      image: mediaImage,
+      claims: {
+        movies: moviesVolume.claim,
+        tv: tvVolume.claim,
+        downloads: downloadsVolume.claim,
+      },
+      plex: { serviceName: plex.service.name, tokenSecret: plex.tokenSecret },
+    });
+
   // NetworkPolicy: Default deny ingress from outside namespace
   // Allows Tailscale, Cloudflare tunnel, intra-namespace, and Prometheus
   new KubeNetworkPolicy(chart, "media-ingress-policy", {
     metadata: { name: "media-ingress-policy" },
     spec: {
-      podSelector: {},
+      // New application pods and its PostgreSQL receive their own narrower rules.
+      podSelector: {
+        matchExpressions: [
+          { key: MEDIA_APPLICATION_LABEL, operator: "DoesNotExist" },
+          {
+            key: "cluster-name",
+            operator: "NotIn",
+            values: ["media-postgresql"],
+          },
+        ],
+      },
       policyTypes: ["Ingress"],
       ingress: [
         // Allow from Tailscale (private access)

@@ -86,7 +86,7 @@ command. Missing starts and unexplained stops remain failures.
 Retained histories use the pre-history verification branch through a Temporal
 patch marker.
 
-Production runs one image in twelve single-replica Kubernetes Deployments. The
+Production uses one worker image across role-specific Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 plus the `agent-chat-ingress` command queue and isolated
 `agent-chat-delivery` queue. The credentialless
@@ -133,11 +133,88 @@ existing executions.
 | `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
 | `glitter-context` | `glitter-context`                                                                      |                                  1 |
 | `maintenance`     | `maintenance`                                                                          |                                  1 |
+| `media-network`   | `media-network`                                                                        |                                  4 |
+| `media-files`     | `media-files`                                                                          |                                  1 |
 | `workflows`       | `monorepo-workflows`                                                                   |                               none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
+
+The [Media application](../media/README.md) defines two Activity roles in the
+media Kubernetes namespace. Network Activities own authenticated provider,
+qBittorrent, Plex, and notification calls. File Activities have read-only download
+mounts and writable library mounts, without provider credentials. Deterministic
+Media Workflows stay on `monorepo-workflows` in the `prod` Temporal namespace.
+The application image publication gate controls whether the Media workloads are
+synthesized. Media schedules are declared initially paused; their existence does
+not establish that application workers or recovery procedures are ready.
+
+Plex event hints use the existing durable outbox to start
+`observePlexEventHintWorkflow` on `monorepo-workflows`; its only observation
+Activity runs on `media-network`. History contains bounded media/mapping IDs,
+never the webhook capability, raw payload, account or poster. The default-off
+hint gate does not replace polling or final retention checks. A hint requests a
+fresh scoped watch read; it grants no deletion authority.
+
+Each watch observation obtains the current Activity cancellation signal and a
+wall/monotonic deadline before IO. The current attempt's scheduled timestamp
+plus its explicit start-to-close timeout bounds work conservatively, including
+queue delay. The SDK's required overall timeout further caps it. Both SDK
+timestamps and budgets must be finite and positive, including when the server
+supplies the overall budget for an omitted Workflow option. Existing
+Workflow options remain unchanged. The new hint Activity declares both budgets,
+heartbeats and bounded retries, and sanitizes failures before history encoding.
+Capability provisioning, proxy URL-log privacy and actual PMS delivery remain
+separate prerequisites before enabling hints.
+
+Native archive prepare/apply Workflows observe current Plex playback and archive
+exclusion on `media-network`, then prove or rebind exact files on `media-files`.
+Their separate expiry cleanup Workflow preserves the original deadline and
+refreshes network evidence during physical work. The existing inventory sweep
+pages ordinary current-epoch cleanups before a separate archive-continuation
+cursor; historical pending rows cannot replay old cleanup authority. No new
+schedule is added. Only explicitly selected archives receive cleanup commands;
+retained dependencies and current playback remain retained. Every new archive
+Activity obtains invocation-local cancellation and finite wall/monotonic SDK
+deadlines before runtime initialization, with checks around awaited work and
+physical effects. Current-version transitions lacking an immutable physical
+receipt remain protected rather than renewing authority through another review.
+
+Interrupted upgrades use separate `prepareNativeCompensationWorkflow` and
+`applyNativeCompensationWorkflow` reviews, followed by
+`compensateNativePublicationWorkflow`. Network Activities refresh exact Plex,
+playback and storage observations; file Activities restore only the reviewed
+predecessor and retain successor bytes. Durable execution and coordinator fences
+allow an exact cold retry without resuming the old acquisition. Completion keeps
+files importing and household holds active. After fresh positive household
+authority covers every leaf, `publishCompensatedMediaWorkflow` verifies Plex and
+atomically releases the publication fence with availability. Mixed or missing
+choices remain protected. These operations use the existing outbox and role
+queues, with no additional schedule. Each invocation checks cancellation and
+finite SDK deadlines before and after runtime initialization, awaited locks and
+effects. Ordinary publication uses the same invocation-local deadline factory
+at its recorded filesystem boundary; existing Workflow timeout options and
+historical payload formats remain unchanged.
+
+The initially paused `media-capacity` schedule runs each minute with SKIP overlap.
+Its new Workflow first observes canonical mounts on `media-network`, then samples
+them on `media-files`; the API never mounts libraries. Each Activity checks the
+typed `capacityObservationEnabled` flag once before allocating its durable
+ordering token or performing IO. Collection works in observe mode and creates
+no ownership, writer, storage or deletion authority. Existing file operations
+retain their independent capacity checks. Role-bound cycle and sample-attempt
+counters reject late results, including retries of the same token. Missing,
+expired or changed mount proof prevents sampling.
+
+Capacity Activities use finite queue and execution budgets. Each invocation
+derives a conservative wall and monotonic deadline from Temporal's scheduled
+timestamps and explicit timeouts before lazy runtime initialization. The current
+attempt's scheduled timestamp includes queue delay, deliberately shortening the
+allowed work; it is not treated as an actual start timestamp. Cancellation and
+deadline checks surround IO and transactional writes, so a late unabortable
+filesystem call cannot publish a fresh reading. No existing Workflow history is
+changed by this separate schedule and Workflow.
 
 The infra process polls `ops` separately so every-five-minute snapshot fan-out
 can overlap four bounded reads while heavyweight infra automation stays serial.

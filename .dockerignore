@@ -23,3 +23,7 @@ packages/docs/wiki/*
 # context AND out of scoped runtime source COPYs (e.g. scout's report package).
 **/__snapshots__
 packages/sjer.red/src/content
+# Media clients and the regex runtime are generated inside their image stages.
+packages/media/generated
+packages/media/scripts/regex-oracle/bin
+packages/media/scripts/regex-oracle/obj
