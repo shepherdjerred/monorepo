@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   argocdApplicationLink,
   chartmuseumChartLink,
-  dockerHubTagLink,
   githubCommitLink,
   temporalWorkflowLink,
   woodpeckerPipelineLink,
@@ -24,19 +23,6 @@ describe("tool links", () => {
     expect(temporalWorkflowLink("delivery/abc").url).toBe(
       "https://temporal-ui.tailnet-1a49.ts.net/namespaces/prod/workflows/delivery%2Fabc",
     );
-  });
-
-  it("links Docker Hub tags and ignores other registries", () => {
-    expect(
-      dockerHubTagLink(
-        `docker.io/shepherdjerred/arcade:1.2.3@sha256:${"a".repeat(64)}`,
-      )?.url,
-    ).toBe("https://hub.docker.com/r/shepherdjerred/arcade/tags?name=1.2.3");
-    expect(dockerHubTagLink("docker.io/shepherdjerred/arcade")?.url).toBe(
-      "https://hub.docker.com/r/shepherdjerred/arcade/tags",
-    );
-    expect(dockerHubTagLink("ghcr.io/owner/image:1")).toBeNull();
-    expect(dockerHubTagLink("s3://bucket/key.zip")).toBeNull();
   });
 
   it("produces schema-valid links", () => {

@@ -13,7 +13,6 @@ export const TOOL_HOSTS = {
   temporal: "https://temporal-ui.tailnet-1a49.ts.net",
   bugsink: "https://bugsink.sjer.red",
   chartmuseum: "https://chartmuseum.tailnet-1a49.ts.net",
-  dockerHub: "https://hub.docker.com",
 } as const;
 
 const WOODPECKER_REPOSITORY_ID = 1;
@@ -99,26 +98,6 @@ export function bugsinkLink(): Link {
     kind: "bugsink",
     label: "Bugsink",
     url: url(TOOL_HOSTS.bugsink, ""),
-  };
-}
-
-const DOCKER_HUB_IMAGE =
-  /^(?:docker\.io\/)?(?<owner>[a-z0-9][a-z0-9._-]*)\/(?<repository>[a-z0-9][a-z0-9._-]*)(?::(?<tag>[\w.-]+))?(?:@sha256:[a-f0-9]{64})?$/;
-
-/** Docker Hub tags page for an image reference, or null for another registry. */
-export function dockerHubTagLink(reference: string): Link | null {
-  const groups = DOCKER_HUB_IMAGE.exec(reference)?.groups;
-  if (groups?.["owner"] === undefined || groups["repository"] === undefined)
-    return null;
-  const { owner, repository, tag } = groups;
-  const base = `${TOOL_HOSTS.dockerHub}/r/${owner}/${repository}/tags`;
-  return {
-    kind: "registry",
-    label:
-      tag === undefined
-        ? `Docker Hub ${repository}`
-        : `Docker Hub ${repository}:${tag}`,
-    url: tag === undefined ? base : `${base}?name=${encodeURIComponent(tag)}`,
   };
 }
 
