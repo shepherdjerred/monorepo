@@ -34,6 +34,7 @@ function harness(
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
   const app = createApp({
+    deliveryPublicationEnabled: () => Promise.resolve(true),
     maintenanceEnabled: () => Promise.resolve(maintenanceEnabled),
     sourceCacheEnabled,
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),
@@ -48,9 +49,13 @@ function harness(
   return { app, imageFetcher, base, cancelSupersededPr, sourceCacheEnabled };
 }
 
-async function request(overrides: Record<string, unknown> = {}) {
+async function request(
+  overrides: Record<string, unknown> = {},
+  repoId = fixture.repo.id,
+) {
   const body = JSON.stringify({
     ...fixture,
+    repo: { ...fixture.repo, id: repoId },
     pipeline: {
       ...fixture.pipeline,
       author: BOT,
@@ -241,6 +246,46 @@ describe("signed maintenance routing", () => {
 
 describe("signed workflow routing", () => {
   const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  test("publishes the signed internal repository identity in every artifact producer", async () => {
+    const repoId = 29;
+    const { app } = harness(true, gateImage);
+    const response = await app.request(
+      await request(
+        {
+          event: "push",
+          ref: "refs/heads/main",
+          author: "shepherdjerred",
+          sender: "shepherdjerred",
+          changed_files: [],
+          variables: { CI_REPO_ID: "999", CI_REPO_REMOTE_ID: "82" },
+        },
+        repoId,
+      ),
+    );
+    expect(response.status).toBe(200);
+    const result = ConfigResponseSchema.parse(await response.json());
+    for (const key of [
+      "images",
+      "helm-push",
+      "sites",
+      "scout-site-archives",
+      "trmnl-plugin-archives",
+      "delivery-publish",
+    ]) {
+      const config = result.configs.find(
+        (entry) => entry.name === `.woodpecker/${key}.yaml`,
+      );
+      if (config === undefined) throw new Error(`Missing ${key} producer`);
+      const workflow = z
+        .object({
+          steps: z.array(
+            z.object({ environment: z.record(z.string(), z.unknown()) }),
+          ),
+        })
+        .parse(parse(config.data));
+      expect(workflow.steps[0]?.environment["CI_REPO_ID"]).toBe(String(repoId));
+    }
+  });
   test("cleanup failures preserve the full replacement verification graph", async () => {
     const { app, cancelSupersededPr } = harness(true, gateImage);
     cancelSupersededPr.mockRejectedValue(new Error("cleanup failed"));
