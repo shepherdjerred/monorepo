@@ -4,6 +4,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import patch
 
@@ -179,7 +180,16 @@ class CopyCleanupTest(unittest.TestCase):
         )
         return control, state, original_claim, original, claim, volume
 
-    def exercise(self, *, missing_claim=False, pending=False, attached=False, pod=False, altered=None, reclaim=True):
+    def exercise(
+        self,
+        *,
+        missing_claim: bool = False,
+        pending: bool = False,
+        attached: bool = False,
+        pod: bool = False,
+        altered: Callable[[JsonObject, JsonObject, JsonObject], None] | None = None,
+        reclaim: bool = True,
+    ) -> tuple[JsonObject, dict[str, bool], list[str]]:
         control, state, original_claim, original, claim, volume = self.fixture()
         if altered:
             altered(state, claim, volume)
@@ -206,7 +216,7 @@ class CopyCleanupTest(unittest.TestCase):
         storage = {"claim": not missing_claim, "volume": True, "native": True}
         events = []
 
-        def run(arguments, timeout=30):
+        def run(arguments: list[str], timeout: float = 30) -> str:
             if "patch" in arguments:
                 operations = json.loads(arguments[arguments.index("-p") + 1])
                 self.assertEqual(
@@ -255,7 +265,7 @@ class CopyCleanupTest(unittest.TestCase):
                 {"items": [{"spec": {"source": {"persistentVolumeName": "copy-pv"}}}] if attached else []}
             )
 
-        def read(kind, name, namespace=control.NAMESPACE):
+        def read(kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
             if kind == "pvc":
                 return original_claim
             if kind == "pv":
@@ -264,8 +274,11 @@ class CopyCleanupTest(unittest.TestCase):
             self.assertEqual((kind, name, namespace), ("restore.velero.io", "storm-verify-" + REQUEST, "velero"))
             return restore
 
-        def delete(*arguments, **kwargs):
-            options = json.loads(kwargs["input"])
+        def delete(*arguments: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+            encoded = kwargs["input"]
+            if not isinstance(encoded, str):
+                raise TypeError("Expected JSON DeleteOptions on stdin")
+            options = json.loads(encoded)
             self.assertEqual(options["preconditions"], {"uid": "copy-claim", "resourceVersion": "42"})
             self.assertIn(
                 "/api/v1/namespaces/" + control.RESTORED_NAMESPACE + "/persistentvolumeclaims/" + control.CLAIM,
@@ -276,7 +289,7 @@ class CopyCleanupTest(unittest.TestCase):
             events.append("copy-claim-delete")
             if not pending and reclaim and volume.object("spec")["persistentVolumeReclaimPolicy"] == "Delete":
                 storage.update(volume=False, native=False)
-            return subprocess.CompletedProcess([], 0)
+            return subprocess.CompletedProcess([], 0, stdout="", stderr="")
 
         with (
             tempfile.TemporaryDirectory() as directory,
@@ -316,9 +329,9 @@ class CopyCleanupTest(unittest.TestCase):
             self.exercise(reclaim=False)
 
     def test_attached_or_mounted_copy_is_not_mutated(self) -> None:
-        for flags in ({"attached": True}, {"pod": True}):
-            with self.subTest(flags=flags), self.assertRaisesRegex(ValueError, "Pod|VolumeAttachment"):
-                self.exercise(**flags)
+        for consumer in ("attached", "pod"):
+            with self.subTest(consumer=consumer), self.assertRaisesRegex(ValueError, "Pod|VolumeAttachment"):
+                self.exercise(attached=consumer == "attached", pod=consumer == "pod")
 
     def test_foreign_copy_or_claim_reference_is_rejected(self) -> None:
         for field, value in (("volumeHandle", "original-handle"), ("driver", "foreign")):

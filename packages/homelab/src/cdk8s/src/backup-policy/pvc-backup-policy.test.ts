@@ -113,25 +113,25 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-describe("PVC backup policy", () => {
-  it("classifies 59 included and 52 excluded PVCs without duplicates after retiring per-app tailnet state", () => {
-    const keys = PVC_BACKUP_POLICY.map((entry) =>
-      pvcBackupPolicyKey(entry.namespace, entry.name),
-    );
-    expect(keys).toHaveLength(111);
-    expect(new Set(keys).size).toBe(111);
-    expect(
-      PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(59);
-    expect(
-      PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-    ).toHaveLength(52);
-    expect(
-      getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
-        .backup,
-    ).toBe("disabled");
-  });
+it("classifies 59 included and 52 excluded PVCs without duplicates after retiring per-app tailnet state", () => {
+  const keys = PVC_BACKUP_POLICY.map((entry) =>
+    pvcBackupPolicyKey(entry.namespace, entry.name),
+  );
+  expect(keys).toHaveLength(111);
+  expect(new Set(keys).size).toBe(111);
+  expect(
+    PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
+  ).toHaveLength(59);
+  expect(
+    PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
+  ).toHaveLength(52);
+  expect(
+    getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
+      .backup,
+  ).toBe("disabled");
+});
 
+describe("PVC backup policy", () => {
   it("classifies every synthesized and operator-managed PVC", async () => {
     const outdir = await mkdtemp(
       path.join(tmpdir(), "pvc-backup-policy-synth-"),
@@ -157,6 +157,12 @@ describe("PVC backup policy", () => {
         }
         const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
         admissionKinds.set(parsed.data.kind, currentCount + 1);
+        if (
+          parsed.data.metadata.name === "delivery-tsmc-copy-reclaim.sjer.red"
+        ) {
+          const key = `copy:${parsed.data.kind}`;
+          admissionKinds.set(key, (admissionKinds.get(key) ?? 0) + 1);
+        }
         if (
           parsed.data.kind === "MutatingAdmissionPolicy" &&
           parsed.data.metadata.name.startsWith("pvc-backup-")
@@ -205,10 +211,12 @@ describe("PVC backup policy", () => {
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(5);
     // Includes PVC backup, ArgoCD, CI pod, mining reset update/scale, restoration
     // update/scale/delete and Service write/delete paths, mc-harness sandbox pod guards,
-    // bounded CI RAM scratch, the ten active TSMC controller guards and the
+    // bounded CI RAM scratch, the eleven active TSMC controller guards and the
     // read-only Forum observer CONNECT guard.
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(23);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(23);
+    expect(admissionKinds.get("copy:ValidatingAdmissionPolicy")).toBe(1);
+    expect(admissionKinds.get("copy:ValidatingAdmissionPolicyBinding")).toBe(1);
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(24);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(24);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {
