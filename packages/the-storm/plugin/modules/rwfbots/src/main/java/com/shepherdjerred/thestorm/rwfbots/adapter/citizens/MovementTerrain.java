@@ -79,12 +79,14 @@ final class MovementTerrain implements MovementSafety.Terrain {
   public boolean supported(Vec3 feet, double drop) {
     var cell = block(BlockPos.of(feet));
     if (water(cell) || Tag.CLIMBABLE.isTagged(cell.getType())) return true;
-    for (var dx : new double[] {-0.25, 0.25}) {
-      for (var dz : new double[] {-0.25, 0.25}) {
-        if (!supportAt(feet.plus(dx, 0, dz), drop, true)) return false;
-      }
-    }
-    return true;
+    var westNorth = supportAt(feet.plus(-0.25, 0, -0.25), drop, true);
+    var eastSouth = supportAt(feet.plus(0.25, 0, 0.25), drop, true);
+    var westSouth = supportAt(feet.plus(-0.25, 0, 0.25), drop, true);
+    var eastNorth = supportAt(feet.plus(0.25, 0, -0.25), drop, true);
+    // Floor under a diagonal pair of corners holds a body crossing between blocks that touch only
+    // at a corner (a diagonal wall walked along its top); an edge with one side over the void
+    // still does not count.
+    return (westNorth && eastSouth) || (westSouth && eastNorth);
   }
 
   @Override

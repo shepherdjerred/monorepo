@@ -155,4 +155,16 @@ final class MovementTerrainTest {
                 .reason())
         .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
   }
+
+  @Test
+  void blocksTouchingOnlyAtACornerHoldABodyCrossingBetweenThem() {
+    // hemispheres: a diagonal wall of corner-touching blocks walked along its top. Crossing the
+    // shared corner, two footprint corners rest on the blocks and two over air.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE);
+    world.getBlockAt(2, 1, 1).setType(Material.STONE);
+    assertThat(terrain.supported(new Vec3(2.0, 2, 2.0), 0.1)).isTrue();
+    assertThat(terrain.supported(new Vec3(2.0, 2, 1.0), 0.1))
+        .as("only one corner on a block")
+        .isFalse();
+  }
 }
