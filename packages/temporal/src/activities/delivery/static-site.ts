@@ -7,6 +7,7 @@ import type { EvidenceInput } from "@shepherdjerred/delivery/contract";
 import { restoreStaticArchive } from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
 import {
   firstS3ObjectMismatch,
+  isMissingS3Object,
   s3SyncStaticSite,
 } from "@shepherdjerred/root-scripts/lib/s3-static-site.ts";
 import {
@@ -137,12 +138,7 @@ async function readReceipt(
     },
   );
   if (result.exitCode !== 0) {
-    if (
-      result.stderr.includes("NoSuchKey") ||
-      (result.stderr.includes("404") &&
-        result.stderr.includes("does not exist"))
-    )
-      return null;
+    if (isMissingS3Object(result.stderr)) return null;
     throw new Error("Static activation receipt could not be read");
   }
   const raw: unknown = JSON.parse(result.stdout);
