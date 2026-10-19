@@ -270,4 +270,46 @@ func TestCloudCloseFailureCannotCountSuccessfulBackup(t *testing.T) {
 	}
 }
 
+func TestBackupBinaryWriterCountsFragmentedHeaderExactly(t *testing.T) {
+	bucket := memblob.OpenBucket(nil)
+	defer bucket.Close()
+	connection := &Conn{Log: streamLogger(), ctx: context.Background(), bucket: bucket, file: "stream"}
+	c, peer := socketClient(t)
+	if err := syscall.SetNonblock(c.fd, true); err != nil {
+		t.Fatal(err)
+	}
+	c.file = connection.Create(OpBackup)
+	if c.file == nil {
+		t.Fatal("production writer not created")
+	}
+	s := &Server{OpType: OpBackup, Log: streamLogger(), cl: connection}
+	event, epfd := registeredEvent(t, s, c, syscall.EPOLLIN)
+	header := bytes.Repeat([]byte{0}, 312)
+	body := bytes.Repeat([]byte{1}, 512)
+	if _, err := syscall.Write(peer, header); err != nil {
+		t.Fatal(err)
+	}
+	s.dispatchClientEvent(event, epfd)
+	if c.closed {
+		t.Fatal("buffered header closed transfer")
+	}
+	if _, err := syscall.Write(peer, body); err != nil {
+		t.Fatal(err)
+	}
+	syscall.Shutdown(peer, syscall.SHUT_WR)
+	event.Events = syscall.EPOLLIN | syscall.EPOLLHUP
+	s.dispatchClientEvent(event, epfd)
+	if s.state.firstFailure != nil || s.state.successCount != 1 || c.readBytes != 824 {
+		t.Fatal("fragmented binary stream miscounted")
+	}
+	actual, err := bucket.ReadAll(context.Background(), "stream")
+	if err != nil || !bytes.Equal(actual, append(header, body...)) {
+		t.Fatal("fragmented stream bytes differ")
+	}
+	attributes, err := bucket.Attributes(context.Background(), "stream")
+	if err != nil || attributes.ContentType != "application/octet-stream" {
+		t.Fatal("binary stream content type differs")
+	}
+}
+
 func fmtAddress(port int) string { return net.JoinHostPort("127.0.0.1", fmt.Sprint(port)) }

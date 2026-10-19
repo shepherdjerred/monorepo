@@ -11,6 +11,11 @@ and the first transfer failure reach the native backup or restore caller.
 Diagnostic fields contain byte counts and error classes, without raw cloud
 error messages or endpoints.
 
+Backup writers declare `application/octet-stream`. This avoids the pinned
+GoCloud MIME sniffer returning cumulative buffered byte counts when a short
+initial ZFS header is followed by a write that crosses its 512-byte threshold;
+strict per-write accounting remains enabled.
+
 `ZFSChain` reads DRR_BEGIN headers and follows `fromGuid` to `toGuid`, ending at
 a full stream with `fromGuid=0`. It rejects missing parents, duplicate GUIDs,
 and cycles before opening the restore connection. GUIDs are decimal strings
