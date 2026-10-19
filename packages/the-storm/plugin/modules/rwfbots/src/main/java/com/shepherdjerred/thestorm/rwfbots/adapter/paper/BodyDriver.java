@@ -315,7 +315,10 @@ public final class BodyDriver {
                 bot.requestMovementRecovery("STALLED", frame.tick());
               }
               if (step.replan() || checked.refused()) {
-                bot.noteStuck(snapshot(player, movement, refusal), frame.tick());
+                bot.noteStuck(
+                    snapshot(player, movement, refusal)
+                        + bodies.lastRefusal(bot.uuid()).map(why -> "; why " + why).orElse(""),
+                    frame.tick());
               }
               return !recovering
                   && (checked == MovementSafety.Reason.CLEAR
@@ -351,7 +354,8 @@ public final class BodyDriver {
     var target = movement.waypoint();
     return String.format(
         java.util.Locale.ROOT,
-        "%s %s%s at %.2f,%.2f,%.2f vy %.2f fall %.1f; feet %s head %s below %s; to %.1f,%.1f,%.1f",
+        "%s %s%s at %.2f,%.2f,%.2f vy %.2f fall %.1f%s%s%s; feet %s head %s below %s;"
+            + " to %.1f,%.1f,%.1f",
         refusal.reason(),
         refusal.hop(),
         refusal.escaping() ? " escape" : "",
@@ -360,6 +364,9 @@ public final class BodyDriver {
         at.getZ(),
         velocity.getY(),
         player.getFallDistance(),
+        player.isFlying() ? " flying" : "",
+        player.getAllowFlight() ? " may-fly" : "",
+        player.hasGravity() ? "" : " no-gravity",
         feet.getType().getKey().getKey(),
         head.getType().getKey().getKey(),
         below.getType().getKey().getKey(),

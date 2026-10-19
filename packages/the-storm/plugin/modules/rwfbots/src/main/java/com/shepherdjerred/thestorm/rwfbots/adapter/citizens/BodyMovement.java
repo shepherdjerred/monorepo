@@ -18,6 +18,7 @@ import org.bukkit.util.Vector;
 /** Physical movement is checked after every planner, combat controller and recovery proposal. */
 final class BodyMovement {
   private Optional<Flight> flight = Optional.empty();
+  private Optional<String> lastRefusal = Optional.empty();
   private final TraversalCapture survival;
   private final java.util.function.BiConsumer<Player, Vector> doors;
   private final java.util.function.BiPredicate<Player, org.bukkit.util.BoundingBox> collisions;
@@ -71,6 +72,13 @@ final class BodyMovement {
     if (checked.destination().isPresent()
         && !survives(player, terrain, checked.destination().orElseThrow(), hop))
       checked = new MovementSafety.Result(Optional.empty(), MovementSafety.Reason.UNSAFE_LANDING);
+    if (checked.reason().refused())
+      lastRefusal =
+          Optional.of(
+              checked.reason() == MovementSafety.Reason.UNSAFE_LANDING
+                  ? "landing forecast refused"
+                  : MovementSafety.explain(
+                      terrain, new MovementSafety.Request(position, goal, hop)));
     beginFlight(candidate, checked.reason());
     var heading = checked.destination().map(point -> point.minus(position)).orElse(Vec3.ZERO);
     steer(
@@ -114,6 +122,11 @@ final class BodyMovement {
         && (candidate.hop() == Hop.LEAP
             || candidate.hop() == Hop.DROP
             || candidate.hop() == Hop.JUMP)) flight = Optional.of(candidate);
+  }
+
+  /** Why the last refused step was refused, for /rwfbots debug. */
+  Optional<String> lastRefusal() {
+    return lastRefusal;
   }
 
   void stop(Player player) {

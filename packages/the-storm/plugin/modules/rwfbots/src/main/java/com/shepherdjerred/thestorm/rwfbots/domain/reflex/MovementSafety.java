@@ -109,6 +109,106 @@ public final class MovementSafety {
     return new Result(Optional.empty(), Reason.BLOCKED);
   }
 
+  /**
+   * Why {@code request} is refused, replaying the path its own check takes: the first sample of a
+   * walking corridor, swimming leg, climb or flight that is outside the map, collides, is hazardous
+   * or lacks support, or which condition on its target fails. A diagnostic for stuck bodies, not a
+   * decision.
+   */
+  public static String explain(Terrain terrain, Request request) {
+    var from = request.from();
+    var target = request.target();
+    return switch (request.hop()) {
+      case WALK -> {
+        var heading = target.minus(from).horizontal();
+        var to =
+            heading.isZero()
+                ? target
+                : from.plus(heading.normalized().scale(Math.min(LOOK_AHEAD, heading.length())));
+        yield "walk " + leg(terrain, from, to, Check.WALK);
+      }
+      case SWIM -> {
+        var corner = target.y() > from.y() ? from.withY(target.y()) : target.withY(from.y());
+        yield "swim straight "
+            + leg(terrain, from, target, Check.SWIM)
+            + ", via corner "
+            + leg(terrain, from, corner, Check.SWIM)
+            + " then "
+            + leg(terrain, corner, target, Check.SWIM);
+      }
+      case CLIMB -> climbing(terrain, from, target);
+      case LEAP, DROP, JUMP -> flying(terrain, request);
+    };
+  }
+
+  private enum Check {
+    WALK,
+    SWIM,
+    CLEAR
+  }
+
+  private static String leg(Terrain terrain, Vec3 from, Vec3 to, Check check) {
+    var count = Math.max(1, (int) Math.ceil(from.distance(to) / SAMPLE_GAP));
+    for (var index = 0; index <= count; index++) {
+      var point = from.lerp(to, (double) index / count);
+      var problem = problem(terrain, point, index, check);
+      if (problem.isPresent())
+        return String.format(
+            java.util.Locale.ROOT,
+            "sample %d/%d at %.2f,%.2f,%.2f %s",
+            index,
+            count,
+            point.x(),
+            point.y(),
+            point.z(),
+            problem.orElseThrow());
+    }
+    return "clear";
+  }
+
+  private static Optional<String> problem(Terrain terrain, Vec3 point, int index, Check check) {
+    if (!terrain.inside(point)) return Optional.of("outside");
+    if (!terrain.clear(point))
+      return Optional.of(
+          terrain.clear(point.plus(0, STEP_HEIGHT, 0)) ? "collides below a step" : "collides");
+    if (terrain.hazardous(point)) return Optional.of("hazardous");
+    return switch (check) {
+      case WALK ->
+          floor(terrain, point, index) ? Optional.empty() : Optional.of("no floor within a step");
+      case SWIM ->
+          terrain.supported(point, WALK_DROP)
+              ? Optional.empty()
+              : Optional.of("no water or floor within a step");
+      case CLEAR -> Optional.empty();
+    };
+  }
+
+  private static String climbing(Terrain terrain, Vec3 from, Vec3 target) {
+    if (from.horizontalDistance(target) > 1.5) return "climb target too far across";
+    if (target.y() - from.y() > MAX_JUMP_RISE) return "climb target too far above";
+    if (!safe(terrain, target)) return "climb target " + leg(terrain, target, target, Check.CLEAR);
+    if (!terrain.supported(target, WALK_DROP)) return "climb target unsupported";
+    var raised = from.withY(Math.max(from.y(), target.y()));
+    return "climb up "
+        + leg(terrain, from, raised, Check.CLEAR)
+        + " then across "
+        + leg(terrain, raised, target, Check.CLEAR);
+  }
+
+  private static String flying(Terrain terrain, Request request) {
+    var from = request.from();
+    var target = request.target();
+    var origin = request.takeoff().orElse(from);
+    if (origin.horizontalDistance(target) > MAX_LEAP_SPAN) return "flight too long";
+    if (origin.y() - target.y() < -MAX_JUMP_RISE) return "flight rises too far";
+    if (!safe(terrain, target)) return "landing " + leg(terrain, target, target, Check.CLEAR);
+    if (!terrain.supported(target, WALK_DROP)) return "landing unsupported";
+    var flightY =
+        Math.max(from.y(), target.y())
+            + (request.hop() == Hop.LEAP && request.takeoff().isEmpty() ? 1.3 : 0);
+    return "flight " + leg(terrain, from.withY(flightY), target.withY(flightY), Check.CLEAR);
+  }
+
   /** A straight combat approach must have continuous floor, not merely unobstructed sight. */
   public static boolean supportedCorridor(Terrain terrain, Vec3 from, Vec3 to) {
     var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
