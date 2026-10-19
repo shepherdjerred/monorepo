@@ -1,17 +1,21 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamNote;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -78,7 +82,9 @@ public final class Tactics {
     objectiveScores(scores, situation, context);
     var objective = ObjectivePolicy.direct(state.memory(), situation, context);
     var current = currentPlan(state, situation, context);
-    current.ifPresent(plan -> scores.merge(plan.option(), COMMIT_BONUS, Double::sum));
+    current
+        .filter(plan -> plan.option() != Option.RECOVER)
+        .ifPresent(plan -> scores.merge(plan.option(), COMMIT_BONUS, Double::sum));
     var candidates = aboveFloor(scores);
     var temperature =
         Lever.DECISION_TEMPERATURE.clamp(
@@ -123,7 +129,13 @@ public final class Tactics {
             top(scores),
             choice,
             temperature,
-            pick.draw());
+            pick.draw(),
+            new DecisionTrace.Movement(
+                situation.self().pos(),
+                situation.self().traversal().fallDistance(),
+                situation.self().onGround(),
+                routed.failure(),
+                routed.recovery()));
     return new Thought(
         new TacticsState(Optional.of(plan), now, state.lifeEpoch(), born, clock, memory),
         decision,
@@ -171,27 +183,64 @@ public final class Tactics {
 
   private record Planning(Plan plan, int lifeEpoch, ObjectivePolicy.Directive objective) {}
 
-  private record Routed(Plan plan, Decision decision, TacticalMemory memory) {}
+  private record Routed(
+      Plan plan,
+      Decision decision,
+      TacticalMemory memory,
+      Optional<RouteResult.Problem> failure,
+      DecisionTrace.Recovery recovery) {}
 
   private static Routed route(Planning planning, Situation situation, TacticsContext context) {
     var plan = planning.plan();
     var memory = planning.objective().memory();
     if (planning.objective().forced().isEmpty()
-        && (plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT)
-        && Planner.slotPoint(situation, context)
-            .filter(point -> planning.objective().memory().excludes(point, situation.now()))
-            .isPresent()) {
-      var recovery = Planner.recovery(situation, context);
-      return new Routed(
-          recovery, Planner.decide(recovery, situation, context, planning.lifeEpoch()), memory);
+        && (plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT)) {
+      var excluded =
+          Planner.slotPoint(situation, context)
+              .filter(point -> planning.objective().memory().excludes(point, situation.now()));
+      if (excluded.isPresent())
+        return recover(planning, situation, context, new Setback(memory, Optional.empty()));
     }
     var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
-    if (decision.routeFailure().isPresent()) {
-      memory = memory.blocked(decision.routeFailure().orElseThrow().goal(), situation.now());
-      plan = Planner.recovery(situation, context);
-      decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
-    }
-    return new Routed(plan, decision, memory);
+    if (decision.routeFailure().isEmpty())
+      return new Routed(plan, decision, memory, Optional.empty(), DecisionTrace.Recovery.NONE);
+    var failure = decision.routeFailure().orElseThrow();
+    return recover(
+        planning,
+        situation,
+        context,
+        new Setback(
+            memory.blocked(failure.goal(), situation.now()), Optional.of(failure.problem())));
+  }
+
+  /** Tactical memory after a route failed, and why it failed when that happened this step. */
+  private record Setback(TacticalMemory memory, Optional<RouteResult.Problem> failure) {}
+
+  /**
+   * Replaces a goal the bot cannot route to: a routed step to an adjacent node, else a direct walk
+   * back onto the graph, so a failed route never leaves the bot standing while any node is in
+   * reach.
+   */
+  private static Routed recover(
+      Planning planning, Situation situation, TacticsContext context, Setback setback) {
+    var memory = setback.memory();
+    var failure = setback.failure();
+    var plan = Planner.recovery(situation, context);
+    var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
+    if (plan.current() instanceof PlanStep.Hold)
+      return new Routed(plan, decision, memory, failure, DecisionTrace.Recovery.HOLD);
+    if (!decision.waypoints().isEmpty() || decision.routeFailure().isEmpty())
+      return new Routed(plan, decision, memory, failure, DecisionTrace.Recovery.STEP);
+    var reentry = Planner.reentry(situation, context);
+    if (reentry.isEmpty())
+      return new Routed(plan, decision, memory, failure, DecisionTrace.Recovery.HOLD);
+    var walk = new Waypoint(reentry.orElseThrow(), Hop.WALK);
+    return new Routed(
+        plan,
+        decision.withWaypoints(List.of(walk)),
+        memory,
+        failure,
+        DecisionTrace.Recovery.REENTER);
   }
 
   /** Without a team assignment anyone may save the fuse; screens yield to live fuse workers. */

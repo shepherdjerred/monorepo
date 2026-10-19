@@ -35,8 +35,10 @@ final class RouteNavigator {
         new Tolls(
             query.risk(),
             TraversalDensity.memoized(context.nav().graph().nodeCount(), query.penalty()));
-    if (tolls.risk().source().self().traversal().fallDistance() > 0) {
-      if (InitialLanding.cancelsFall(context.nav().graph(), endpoints.source()))
+    var self = tolls.risk().source().self();
+    if (self.traversal().fallDistance() > 0) {
+      // A body standing on solid ground has landed whatever its reported fall distance says.
+      if (self.onGround() || InitialLanding.cancelsFall(context.nav().graph(), endpoints.source()))
         return find(
             context,
             endpoints,

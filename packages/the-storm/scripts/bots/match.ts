@@ -1,0 +1,154 @@
+#!/usr/bin/env bun
+/**
+ * Plays one bots-only Search and Destroy showcase on a chosen map in a
+ * disposable Paper server and keeps its bot decision trace and match
+ * recording, for diagnosing bot movement offline with `bun run bots:stuck`.
+ * Every 20 s of live play it also appends `/rwfbots debug` (each bot's plan
+ * and movement problems this life) to `<output>/debug.log`.
+ *
+ *   bun run bots:match --map the-harshest-harvest --count 24 --output .cache/bots-match/hh
+ *
+ * Build the jar first (`bunx turbo run build --filter=@shepherdjerred/the-storm`).
+ */
+import { appendFile, cp, mkdir, readdir } from "node:fs/promises";
+import path from "node:path";
+import { parseArgs } from "node:util";
+import { z } from "zod";
+import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
+import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
+import { ownedConfigDir, packageRoot, stormJar } from "#e2e/harness/paths.ts";
+import {
+  rwfRecordingSalt,
+  rwfTestSettings,
+} from "#e2e/harness/rwf-settings.ts";
+import { startServer } from "#e2e/harness/server.ts";
+import { RconClient } from "#e2e/harness/rcon.ts";
+import { status } from "#e2e/harness/rwf-match.ts";
+
+const ArgsSchema = z.object({
+  map: z.string().regex(/^[a-z0-9-]+$/u),
+  count: z.coerce.number().int().min(2).max(256),
+  output: z.string().min(1),
+  minutes: z.coerce.number().positive().max(30),
+  jar: z.string().min(1),
+});
+
+const { values } = parseArgs({
+  options: {
+    map: { type: "string" },
+    count: { type: "string", default: "24" },
+    output: { type: "string" },
+    minutes: { type: "string", default: "12" },
+    // Another build of TheStorm.jar, to compare bots before and after a change.
+    jar: { type: "string", default: stormJar },
+  },
+});
+const args = ArgsSchema.parse(values);
+const output = path.resolve(args.output);
+
+const jar = path.resolve(args.jar);
+if (!(await Bun.file(jar).exists())) {
+  throw new Error(
+    `${jar} is missing; build it first with: bunx turbo run build --filter=@shepherdjerred/the-storm`,
+  );
+}
+await mkdir(output, { recursive: true });
+const dataDir = path.join(output, "data");
+
+const brainToken = crypto.randomUUID();
+const brain = startFakeBrain(brainToken);
+const brainBaseUrl = `http://host.docker.internal:${brain.port.toString()}`;
+const fixtures = await gameplayFixtures(packageRoot, "full");
+const server = await startServer({
+  cacheDir: path.join(packageRoot, ".cache", "e2e", "bots-match"),
+  dataDir,
+  bootTimeoutMs: 300_000,
+  warmCache: true,
+  stormJar: jar,
+  ...fixtures,
+  rwfMap: args.map,
+  rwf: { ...rwfTestSettings, countdown: "PT15S", endLinger: "PT5S" },
+  resources: { cpus: 4, memoryLimit: "6g", heap: "4G" },
+  ownedConfigDir,
+  env: {
+    FLIPT_URL: brainBaseUrl,
+    FLIPT_ENVIRONMENT: "prod",
+    POSTHOG_API_HOST: brainBaseUrl,
+    POSTHOG_PROJECT_TOKEN: "phc_test",
+    RWF_RECORDING_SALT: rwfRecordingSalt,
+    DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
+    DISCORD_CHANNEL_ID: "1",
+  },
+  brain: { baseUrl: brainBaseUrl, token: brainToken },
+  sweep: {
+    intervalMinutes: 1,
+    redriveAfterMinutes: 0,
+    redriveBackoffMinutes: 0,
+    slaAfterMinutes: 10_080,
+  },
+  agent: { mode: "shadow", reviewSamplePercent: 100 },
+});
+
+try {
+  const rcon = await RconClient.connect({
+    host: server.info.host,
+    port: server.info.rconPort,
+    password: server.info.rconPassword,
+  });
+  // The first map is still being prepared after boot; the showcase is refused until it is ready.
+  const ready = Date.now() + 300_000;
+  for (
+    let lobby = await status(rcon);
+    !lobby.ready;
+    lobby = await status(rcon)
+  ) {
+    if (Date.now() > ready) throw new Error("the lobby map never became ready");
+    await Bun.sleep(2000);
+  }
+  const started = await rcon.command(
+    `rwf admin showcase ${args.count.toString()}`,
+  );
+  console.warn(started);
+  if (!started.includes("Showcase of"))
+    throw new Error("the showcase was refused");
+  const deadline = Date.now() + args.minutes * 60_000;
+  let matchId: string | undefined;
+  let nextDebug = 0;
+  for (;;) {
+    const now = await status(rcon);
+    if (now.phase === "Live") matchId ??= now.matchId;
+    if (now.phase === "Live" && Date.now() >= nextDebug) {
+      // Each bot's plan and movement problems, which the decision trace does not carry.
+      nextDebug = Date.now() + 20_000;
+      const debug = await rcon.command("rwfbots debug");
+      await appendFile(
+        path.join(output, "debug.log"),
+        `--- ${new Date().toISOString()}\n${debug}\n`,
+      );
+    }
+    if (matchId !== undefined && now.phase !== "Live") break;
+    if (Date.now() > deadline) {
+      console.warn(`stopping after ${args.minutes.toString()} minutes`);
+      break;
+    }
+    await Bun.sleep(2000);
+  }
+  rcon.close();
+  console.warn(`match ${matchId ?? "never went live"}`);
+} finally {
+  await server.stop();
+  await brain.stop();
+}
+
+const storm = path.join(dataDir, "plugins", "TheStorm");
+for (const [from, to] of [
+  ["rwfbots-traces", "traces"],
+  ["rwf-recordings", "recordings"],
+] as const) {
+  const source = path.join(storm, from);
+  await cp(source, path.join(output, to), { recursive: true });
+  const files = await readdir(path.join(output, to), { recursive: true });
+  console.warn(
+    `${to}: ${files.filter((file) => file.endsWith(".gz")).join(", ")}`,
+  );
+}

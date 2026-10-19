@@ -101,7 +101,7 @@ final class BlockedRouteCooldownTest {
     var memory = TacticalMemory.EMPTY.blocked(GOAL, 50);
     for (var tick : List.of(100L, 125L)) {
       var thought = think(tick, memory);
-      assertThat(thought.decision().option()).isEqualTo(Option.HUNT);
+      assertThat(thought.decision().option()).isEqualTo(Option.RECOVER);
       assertThat(thought.state().memory().blockedUntil()).containsEntry(GOAL, 150L);
       memory = thought.state().memory();
     }
@@ -113,7 +113,7 @@ final class BlockedRouteCooldownTest {
     assertThat(memory.excludes(GOAL, 150)).isFalse();
     var thought = think(150, memory);
     assertThat(thought.state().memory().blockedUntil()).containsEntry(GOAL, 250L);
-    assertThat(thought.decision().option()).isEqualTo(Option.HUNT);
+    assertThat(thought.decision().option()).isEqualTo(Option.RECOVER);
   }
 
   @Test

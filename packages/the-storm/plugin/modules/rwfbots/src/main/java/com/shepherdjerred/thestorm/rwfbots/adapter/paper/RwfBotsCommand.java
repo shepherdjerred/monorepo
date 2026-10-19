@@ -343,13 +343,14 @@ public final class RwfBotsCommand {
     var team = bot.profile().map(p -> p.team().value()).orElse("-");
     return String.format(
         Locale.ROOT,
-        "%s [%s, %s] plan %s (age %d ticks) skill %.2f",
+        "%s [%s, %s] plan %s (age %d ticks) skill %.2f; movement problems this life %s",
         bot.name(),
         team,
         kit,
         bot.planLabel(),
         bot.decisionAge(),
-        bot.drafted().personality().skill());
+        bot.drafted().personality().skill(),
+        new java.util.TreeMap<>(bot.movementProblemsThisLife()));
   }
 
   private static void info(Audience to, String text) {

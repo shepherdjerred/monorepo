@@ -9,8 +9,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -38,6 +40,7 @@ public final class BotBody {
   private long lastMovementProblemTick = -1;
   private long nextMovementRecovery;
   private int movementRecoveries;
+  private final Map<String, Integer> movementProblemsThisLife = new TreeMap<>();
   private long nextStreak;
   private long shieldUntil;
 
@@ -130,6 +133,7 @@ public final class BotBody {
    * Rate-limited navigation recovery keeps persistent failures visible without flooding thinkers.
    */
   void requestMovementRecovery(String reason, long tick) {
+    movementProblemsThisLife.merge(reason.split(":", 2)[0], 1, Integer::sum);
     lastMovementProblem = Optional.of(reason);
     lastMovementProblemTick = tick;
     if (tick >= nextMovementRecovery) {
@@ -145,6 +149,11 @@ public final class BotBody {
 
   public long lastMovementProblemTick() {
     return lastMovementProblemTick;
+  }
+
+  /** Ticks with each kind of movement problem this life (BLOCKED, STALLED, UNREACHABLE...). */
+  public Map<String, Integer> movementProblemsThisLife() {
+    return Map.copyOf(movementProblemsThisLife);
   }
 
   public int movementRecoveries() {
@@ -172,6 +181,7 @@ public final class BotBody {
 
   /** A new life: the reflex starts over looking along {@code facing}. */
   void newLife(Facing facing) {
+    movementProblemsThisLife.clear();
     reflex = ReflexState.initial(facing);
     motion = MotionRecovery.State.INITIAL;
     recoveryRequested = false;

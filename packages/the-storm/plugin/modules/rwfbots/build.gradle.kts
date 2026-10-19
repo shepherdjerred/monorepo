@@ -52,6 +52,10 @@ val shippedConfig = file("../../../server/owned/plugins/TheStorm/rwfbots.yml")
 // The training yard's baked nav artifact: the headless sim plays on it as well as SyntheticMap.
 val trainingYardNav =
     file("../../../server/owned/plugins/TheStorm/rwf/maps/training-yard/nav.rwfnav")
+// Shipped maps where live bots were recorded stuck; the stuck-spot regression test routes on them.
+val shippedMaps = file("../../../server/owned/plugins/TheStorm/rwf/maps")
+val stuckSpotNavs =
+    listOf("the-harshest-harvest", "miner-dispute").map { shippedMaps.resolve("$it/nav.rwfnav") }
 
 tasks.test {
   dependsOn("prepareActorParity")
@@ -72,6 +76,8 @@ tasks.test {
       .withPathSensitivity(PathSensitivity.RELATIVE)
   systemProperty("thestorm.rwfbots.config", shippedConfig.absolutePath)
   systemProperty("thestorm.rwfbots.trainingYardNav", trainingYardNav.absolutePath)
+  inputs.files(stuckSpotNavs).withPropertyName("stuckSpotNavs").withPathSensitivity(PathSensitivity.RELATIVE)
+  systemProperty("thestorm.rwfbots.shippedMaps", shippedMaps.absolutePath)
   systemProperty("thestorm.rwfbots.actorParity", layout.buildDirectory.dir("actor-parity").get().asFile.absolutePath)
 }
 

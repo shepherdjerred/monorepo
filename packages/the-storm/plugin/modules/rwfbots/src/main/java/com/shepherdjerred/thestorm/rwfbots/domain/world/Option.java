@@ -16,5 +16,10 @@ public enum Option {
   RETAKE,
   HUNT,
   ESCAPE_POISON,
-  REWIND
+  REWIND,
+  /**
+   * Step off a goal the bot cannot route to. Never scored or drawn: tactics substitutes it when a
+   * route fails, and it yields to any real pick once its short commitment ends.
+   */
+  RECOVER
 }

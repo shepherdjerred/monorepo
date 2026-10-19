@@ -24,8 +24,13 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import org.bukkit.Material;
@@ -59,6 +64,10 @@ public final class BotTicker {
   private final ThinkStats staleness = new ThinkStats();
   private final ThinkStats sections = new ThinkStats();
   private final LoadTelemetry load = new LoadTelemetry();
+
+  /** Which bot bodies stood on solid ground last tick. */
+  private final Map<UUID, Boolean> groundedLastTick = new HashMap<>();
+
   private long tick;
   private Optional<BotChat> chat = Optional.empty();
 
@@ -163,6 +172,7 @@ public final class BotTicker {
       return;
     }
     var match = session.orElseThrow();
+    settleLandings();
     var snapshot = match.capture().capture(tick, state.orElseThrow());
     chat.ifPresent(talk -> talk.tick(Optional.of(snapshot)));
     var clouds = tactical.capture(loop, state.orElseThrow(), tick);
@@ -185,6 +195,27 @@ public final class BotTicker {
     var elapsed = nanoClock.getAsLong() - started;
     sections.record(elapsed);
     governor.observe(new Governor.Sample(msptP95(tickTimes.get()), elapsed / 1_000_000.0));
+  }
+
+  /**
+   * Clears the fall distance of a bot body that has stood on solid ground for two ticks. Vanilla
+   * resets it from its own collision on-ground flag, which an NPC body without client movement does
+   * not refresh while standing still, so a body could keep a landed fall's distance indefinitely
+   * and plan every route as a fatal drop. The landing tick itself is left to vanilla, so a real
+   * fall still deals its damage.
+   */
+  private void settleLandings() {
+    Set<UUID> present = new HashSet<>();
+    for (var bot : roster.live()) {
+      var entity = roster.bodies().entity(bot.uuid());
+      if (entity.isEmpty()) continue;
+      var body = entity.orElseThrow();
+      present.add(bot.uuid());
+      var grounded = SnapshotCapture.onGround(body);
+      var wasGrounded = Boolean.TRUE.equals(groundedLastTick.put(bot.uuid(), grounded));
+      if (grounded && wasGrounded && body.getFallDistance() > 0) body.setFallDistance(0);
+    }
+    groundedLastTick.keySet().retainAll(present);
   }
 
   /**

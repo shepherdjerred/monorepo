@@ -3297,10 +3297,29 @@ first contact and over the first 20 s. The full-lane suite keeps its
 recordings under `.cache/e2e/rwf/<matchId>/`.
 
 Decision traces: with `traces.enabled`, every think step appends one
-tab-separated `decision` line (tick, bot, epoch, option, plan label,
-temperature, draw, quantized features, top utilities, path length) to
+tab-separated `decision` line (tick, bot, epoch, softmax option, plan label,
+temperature, draw, quantized features, top utilities, path length, then the
+decided option, why the requested route failed, how it was recovered, the
+bot's feet, its fall distance and whether it stood on ground) to
 `plugins/TheStorm/rwfbots-traces/<matchId>.gz`, written off the main thread;
-lines past `queueCapacity` are dropped and counted.
+lines past `queueCapacity` are dropped and counted. The movement columns are
+diagnostics only and are not part of the replay hash.
+
+When a route fails, tactics records the goal as blocked and substitutes a
+`RECOVER` step to an adjacent node, routed from the same node the failed route
+started at. If that step cannot be routed either, the bot walks straight back
+to its nearest node, so a failed route never leaves a bot standing while any
+node is in reach. `RECOVER` is never scored or drawn and earns no commitment
+bonus. A bot body that has stood on solid ground for two ticks has its fall
+distance cleared, and the router treats a grounded body as landed: an NPC body
+does not refresh vanilla's collision on-ground flag while standing still, so a
+landed fall could otherwise be planned as a fatal drop indefinitely.
+
+`bun run bots:match --map <id> --count <n> --output <dir>` plays one bots-only
+showcase on that map in a disposable server and keeps its trace and recording;
+`bun run bots:stuck <trace.gz>` reports, per bot, time spent standing still
+while not holding on purpose, decisions without a path, option flip-flops,
+route failures and recoveries.
 
 ## Product metrics
 

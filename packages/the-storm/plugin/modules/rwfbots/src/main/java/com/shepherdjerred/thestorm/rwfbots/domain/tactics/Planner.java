@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.CoverPoints;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TraversalCosts;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.Predicate;
@@ -138,23 +140,52 @@ public final class Planner {
     return bombPlan(Option.ARM, situation, context, situation.snapshot().bomb(bomb).orElseThrow());
   }
 
-  /** A reachable adjacent staging step while a failed goal remains excluded. */
+  /**
+   * A reachable adjacent staging step while a failed goal remains excluded, from the node {@link
+   * #pathTo} starts at so the step and its route agree on where the bot stands; a hold when no node
+   * with an exit is in reach.
+   */
   static Plan recovery(Situation situation, TacticsContext context) {
+    return recoveryStep(situation, context)
+        .map(
+            step ->
+                Plan.of(Option.RECOVER, situation.now(), new PlanStep.Route(step, Stance.CAUTIOUS)))
+        .orElseGet(() -> holdHere(Option.HOLD_ANGLE, situation, context));
+  }
+
+  /**
+   * Where a bot whose recovery route also failed walks straight to, ignoring route risk: the feet
+   * of the node it is nearest when it has drifted off it, else the recovery step itself. Empty only
+   * when no node lies within reach.
+   */
+  static Optional<Vec3> reentry(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
-    var from = graph.nearestNodeWithin(situation.self().pos(), 3);
-    if (from.isEmpty()) return holdHere(Option.HOLD_ANGLE, situation, context);
+    var self = situation.self().pos();
+    var node = startNode(graph, self);
+    if (node.isEmpty()) return Optional.empty();
+    var feet = graph.feet(node.getAsInt());
+    if (feet.horizontalDistance(self) > ROUTE_REACHED || Math.abs(feet.y() - self.y()) >= 1.5)
+      return Optional.of(feet);
+    return recoveryStep(situation, context);
+  }
+
+  private static Optional<Vec3> recoveryStep(Situation situation, TacticsContext context) {
+    var graph = context.nav().graph();
+    var from = startNode(graph, situation.self().pos());
+    if (from.isEmpty()) return Optional.empty();
     var start = from.getAsInt();
-    if (graph.edgeStart(start) == graph.edgeEnd(start))
-      return holdHere(Option.HOLD_ANGLE, situation, context);
+    if (graph.edgeStart(start) == graph.edgeEnd(start)) return Optional.empty();
     var edge =
         graph.edgeStart(start)
             + Math.floorMod(
                 situation.self().id().value() + situation.now() / 20,
                 graph.edgeEnd(start) - graph.edgeStart(start));
-    return Plan.of(
-        Option.HUNT,
-        situation.now(),
-        new PlanStep.Route(graph.feet(graph.edgeTarget(edge)), Stance.CAUTIOUS));
+    return Optional.of(graph.feet(graph.edgeTarget(edge)));
+  }
+
+  private static OptionalInt startNode(NavGraph graph, Vec3 pos) {
+    var node = graph.nearestNode(pos);
+    return node.isPresent() ? node : graph.nearestNodeWithin(pos, 3);
   }
 
   /** The plan carrying out {@code option} from {@code situation}. */
@@ -220,6 +251,7 @@ public final class Planner {
                           .orElseGet(() -> holdHere(option, situation, context)));
       case ESCAPE_POISON ->
           Plan.of(option, now, new PlanStep.Route(poisonExit(situation, context), Stance.CAUTIOUS));
+      case RECOVER -> recovery(situation, context);
       case REWIND ->
           Plan.of(
               option,

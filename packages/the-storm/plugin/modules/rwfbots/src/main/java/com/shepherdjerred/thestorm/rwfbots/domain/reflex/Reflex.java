@@ -611,16 +611,19 @@ public final class Reflex {
     }
 
     private boolean walksInterface(Waypoint waypoint) {
-      return waypoint.hop() == Hop.SWIM
-          || waypoint.hop() == Hop.CLIMB
-          || self.traversal().fallDistance() > 0;
+      return waypoint.hop() == Hop.SWIM || waypoint.hop() == Hop.CLIMB || airborne();
+    }
+
+    /** Still falling: a body on solid ground has landed whatever its fall distance says. */
+    private boolean airborne() {
+      return self.traversal().fallDistance() > 0 && !self.onGround();
     }
 
     /** A certified pending first contact owns its forecast controls until actual contact. */
     private boolean ownsFirstContact() {
       var active = state.activeJump().filter(jump -> jump.stage() == ActiveJump.Stage.AIRBORNE);
       var points = input.decision().waypoints();
-      if (points.isEmpty() || self.traversal().fallDistance() <= 0) return false;
+      if (points.isEmpty() || !airborne()) return false;
       var refuge = points.getFirst();
       if ((refuge.hop() != Hop.DROP && refuge.hop() != Hop.CLIMB)
           || active.filter(jump -> compatibleLanding(jump.waypoint(), refuge)).isPresent()

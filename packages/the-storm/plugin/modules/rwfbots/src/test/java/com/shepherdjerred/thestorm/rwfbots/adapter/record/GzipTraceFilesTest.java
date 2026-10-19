@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.compute.DirectComputePool;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
@@ -14,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.zip.GZIPInputStream;
@@ -38,7 +41,13 @@ final class GzipTraceFilesTest {
             new DecisionTrace.ScoredOption(Option.ARM, 0.5)),
         Option.ENGAGE,
         0.25,
-        0.125);
+        0.125,
+        new DecisionTrace.Movement(
+            new Vec3(10.25, 64, -3.04),
+            2.5,
+            false,
+            Optional.of(RouteResult.Problem.DISCONNECTED),
+            DecisionTrace.Recovery.REENTER));
   }
 
   private static String read(Path file) throws IOException {
@@ -61,7 +70,8 @@ final class GzipTraceFilesTest {
     assertThat(text.lines()).hasSize(2);
     assertThat(text.lines().findFirst().orElseThrow())
         .isEqualTo(
-            "decision\t10\t4\t0\tENGAGE\tidle\t0.2500\t0.1250\thealth=7,enemies=2\tENGAGE=0.7500,ARM=0.5000\t0");
+            "decision\t10\t4\t0\tENGAGE\tidle\t0.2500\t0.1250\thealth=7,enemies=2\tENGAGE=0.7500,ARM=0.5000\t0"
+                + "\tHOLD_ANGLE\tDISCONNECTED\tREENTER\t10.3\t64.0\t-3.0\t2.5\tfalse");
     assertThat(text.lines().skip(1).findFirst().orElseThrow()).startsWith("decision\t15\t4\t1\t");
   }
 

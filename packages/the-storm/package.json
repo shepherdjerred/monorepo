@@ -86,6 +86,8 @@
     "bots:generate": "bun scripts/bots/generate-personalities.ts",
     "bots:dataset": "uv run --project tools/learning --locked python scripts/bots/learning/dataset.py",
     "bots:benchmark": "bun scripts/bots/benchmark.ts",
+    "bots:match": "bun scripts/bots/match.ts",
+    "bots:stuck": "bun scripts/bots/stuck.ts",
     "bots:ppo": "bun tools/learning/run.ts",
     "bots:pilot": "bun tools/learning/pilot.ts",
     "bots:evaluate": "bun tools/learning/evaluation.ts",
