@@ -58,6 +58,7 @@ public final class NavGraph {
   private final float[] edgeCost;
   private final EdgeCapabilities capabilities;
   private final AtomicLongArray runUpDistances;
+  private final BitSet unheldClimbDiagonals;
   private final WaterIndex water;
   private final float heuristicScale;
   private final int[] reverseStart;
@@ -163,7 +164,44 @@ public final class NavGraph {
         reverseEdge[fill[this.edgeTo[edge]]++] = edge;
       }
     }
+    unheldClimbDiagonals = unheldClimbDiagonals(n);
     reachability = new DirectedReachability(this);
+  }
+
+  /**
+   * Level diagonal walks between two climbable cells (two ladders in a shaft, a vine round a
+   * pillar) whose corner cells hold nothing up: a body leaving its ladder through such a corner
+   * falls, so the walk cannot be followed. Found once from the graph; the baked artifact is
+   * unchanged.
+   */
+  private BitSet unheldClimbDiagonals(int nodes) {
+    var unheld = new BitSet(edgeTo.length);
+    for (var node = climbable.nextSetBit(0);
+        node >= 0 && node < nodes;
+        node = climbable.nextSetBit(node + 1)) {
+      for (var edge = edgeStart[node]; edge < edgeStart[node + 1]; edge++) {
+        if (unheldDiagonal(node, edge)) unheld.set(edge);
+      }
+    }
+    return unheld;
+  }
+
+  private boolean unheldDiagonal(int node, int edge) {
+    var target = edgeTo[edge];
+    if (Hop.ofCode(edgeHop[edge]) != Hop.WALK || !climbable.get(target)) return false;
+    var from = cell(node);
+    var to = cell(target);
+    var dx = to.x() - from.x();
+    var dz = to.z() - from.z();
+    if (dx == 0 || dz == 0 || to.y() != from.y()) return false;
+    return nodeAt(from.offset(dx, 0, 0)).isEmpty() || nodeAt(from.offset(0, 0, dz)).isEmpty();
+  }
+
+  /**
+   * Whether {@code edge} is a level diagonal between climbables through a corner holding nothing.
+   */
+  public boolean unheldClimbDiagonal(int edge) {
+    return unheldClimbDiagonals.get(edge);
   }
 
   private static int[] indexCells(GridBounds bounds, int[] cellOfNode) {

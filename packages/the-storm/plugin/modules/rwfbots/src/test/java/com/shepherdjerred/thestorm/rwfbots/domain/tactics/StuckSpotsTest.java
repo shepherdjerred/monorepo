@@ -7,6 +7,7 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavCodec;
@@ -22,6 +23,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Strategy;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamPlan;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
@@ -37,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SplittableRandom;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -199,5 +202,43 @@ final class StuckSpotsTest {
         .isNotEmpty();
     if (nav.graph().nearestNode(drifted).isEmpty())
       assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.REENTER);
+  }
+
+  @Test
+  void aRouteBetweenLaddersInAShaftNeverCutsThroughAnEmptyCorner() {
+    // cloned-balance: four ladders face into a shaft round an open centre. The baked graph walks
+    // diagonally from one ladder to the next through an empty corner, where a body would let go and
+    // fall; bodies hung on their ladder trying it.
+    var nav = nav("cloned-balance");
+    var graph = nav.graph();
+    var ladder = graph.nodeAt(new BlockPos(4114, 36, 1099)).orElseThrow();
+    var other = graph.nodeAt(new BlockPos(4115, 36, 1100)).orElseThrow();
+    var diagonal = -1;
+    for (var edge = graph.edgeStart(ladder); edge < graph.edgeEnd(ladder); edge++)
+      if (graph.edgeTarget(edge) == other) diagonal = edge;
+    assertThat(diagonal).as("the baked diagonal between the ladders").isNotNegative();
+    assertThat(graph.unheldClimbDiagonal(diagonal)).isTrue();
+
+    var self = combatant(1, RED, graph.feet(ladder)).withMotion(false, false);
+    var situation = situation(nav, self, Optional.empty(), 100);
+    var route =
+        Planner.pathTo(
+            situation, context(nav), graph.feet(other), new Planner.Way(Stance.CAUTIOUS, false));
+    var points = route.waypoints();
+    for (var i = 0; i + 1 < points.size(); i++) {
+      var a = BlockPos.of(points.get(i).pos());
+      var b = BlockPos.of(points.get(i + 1).pos());
+      assertThat(
+              a.x() != b.x()
+                  && a.z() != b.z()
+                  && a.y() == b.y()
+                  && points.get(i + 1).hop() == Hop.WALK)
+          .as("level diagonal walk %s -> %s", a, b)
+          .isFalse();
+    }
+    if (!points.isEmpty()) {
+      var first = BlockPos.of(points.getFirst().pos());
+      assertThat(first).isNotEqualTo(new BlockPos(4115, 36, 1100));
+    }
   }
 }
