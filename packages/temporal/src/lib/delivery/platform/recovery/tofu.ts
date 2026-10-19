@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   PlatformRecoveryPlanReceiptSchema,
   RecordPlatformRecoveryPlanSchema,
+  RecordTofuPlanSchema,
   type PlatformRecoveryContext,
   type PlatformReleaseSnapshot,
 } from "@shepherdjerred/delivery/contract";
@@ -18,7 +19,12 @@ import {
 import {
   encryptRecoveryPlan,
   decryptRecoveryPlan,
+  decryptDeliveryPlan,
 } from "#lib/delivery/platform/plan-crypto.ts";
+import {
+  requireOriginalDiscordTarget,
+  readDiscordApplications,
+} from "./tofu-original.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import type { RecoveryAction } from "./request.ts";
@@ -31,7 +37,17 @@ type Inputs = {
   intentId: string;
   native: DeliveryJobReceipt;
   fence: () => Promise<void>;
+  original?: boolean;
 };
+function targetChanged(
+  exitCode: number,
+  changes: ReturnType<typeof deliveryTofuChanges>,
+) {
+  return exitCode !== 0 || Object.values(changes).some((count) => count !== 0);
+}
+function originalTargetRequested(input: Inputs) {
+  return input.original === true && input.snapshot.stack === "discord";
+}
 
 async function applySavedRecovery(
   tofu: DeliveryTofuContext,
@@ -112,6 +128,44 @@ async function saveRecoveryPlan(
   );
 }
 
+async function inspectOriginalTarget(
+  tofu: DeliveryTofuContext,
+  snapshot: Extract<Snapshot, { kind: "tofu-apply" }>,
+  before: Awaited<ReturnType<DeliveryTofuContext["state"]>>,
+  currentPlan: unknown,
+) {
+  const saved = await deliveryRequest(
+    `platform/plans/${encodeURIComponent(snapshot.planDeploymentId)}`,
+    RecordTofuPlanSchema,
+  );
+  if (canonicalJson(saved.receipt) !== canonicalJson(snapshot.plan))
+    throw new Error(
+      "Original approved plan receipt differs from the frozen apply",
+    );
+  const originalPath = path.join(tofu.workspace, "original.tfplan");
+  await Bun.write(
+    originalPath,
+    decryptDeliveryPlan(
+      saved,
+      z.string().parse(Bun.env["DELIVERY_PLAN_ENCRYPTION_PASSPHRASE"]),
+    ),
+    { mode: 0o600 },
+  );
+  const shown = await tofu.command(["show", "-json", originalPath]);
+  const nativeBefore = requireOriginalDiscordTarget(
+    privateProviderJson(shown.stdout),
+    currentPlan,
+    await readDiscordApplications(),
+  );
+  if (canonicalJson(await tofu.state()) !== canonicalJson(before))
+    throw new Error("Remote state changed during original-baseline inspection");
+  return {
+    state: "original",
+    observedAt: new Date().toISOString(),
+    proofSummary: `Original target from authenticated saved plan ${snapshot.plan.planDigest}; same lineage ${before.lineage}, original serial ${String(snapshot.plan.state.serial)}, stable current serial ${String(before.serial)}; complete managed before and independent application values match baseline ${nativeBefore}; state history and acceptance unchanged by this settlement`,
+  };
+}
+
 /** All commands use the original frozen source and fixed stack; provider output and plan bytes remain private. */
 export async function runTofuRecovery(
   context: PlatformRecoveryContext,
@@ -126,7 +180,13 @@ export async function runTofuRecovery(
     snapshot.stack,
     async (tofu) =>
       await runTofuRecoveryInWorkspace(
-        { snapshot, intentId: context.intent.id, native, fence },
+        {
+          snapshot,
+          intentId: context.intent.id,
+          native,
+          fence,
+          original: context.expectedSettlements.original !== undefined,
+        },
         action,
         tofu,
       ),
@@ -169,12 +229,20 @@ export async function runTofuRecoveryInWorkspace(
   if (action === "inspect") {
     if (
       snapshot.kind === "tofu-apply" &&
-      (planned.exitCode !== 0 ||
-        Object.values(changes).some((count) => count !== 0))
-    )
+      targetChanged(planned.exitCode, changes)
+    ) {
+      if (originalTargetRequested(input)) {
+        return await inspectOriginalTarget(
+          tofu,
+          snapshot,
+          before,
+          privateProviderJson(rendered.stdout),
+        );
+      }
       throw new Error(
         "OpenTofu target is partial or drifted; create and approve an exact recovery plan before settlement",
       );
+    }
     return {
       state: snapshot.kind === "tofu-plan" ? "readonly" : "desired",
       observedAt: new Date().toISOString(),

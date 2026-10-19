@@ -5,6 +5,14 @@ import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { testNativeReceipt } from "#testing/platform-execution.ts";
 import type { CompletePlatformRecovery } from "#shared/contract.ts";
 import { CompletePlatformRecoverySchema } from "#shared/contract.ts";
+import { platformFixture } from "#testing/platform-fixture.ts";
+import {
+  checkpointTestPlan,
+  finishTestPlatform,
+  requestTestPlan,
+  testApply,
+} from "#testing/platform-execution.ts";
+import { platformSettlements } from "./context.ts";
 
 const context = useDeliveryFixture();
 let fixture: Awaited<ReturnType<typeof controlPlaneFixture>>;
@@ -205,4 +213,105 @@ test("all prior recovery attempts remain part of independent native settlement",
     },
     testExecutor,
   );
+});
+
+test("first Discord apply may settle its authenticated original target without accepting it or inventing a prior", async () => {
+  const platform = await platformFixture(context.cluster.database);
+  const delivery = platform.delivery;
+  const plan = await requestTestPlan(
+    delivery,
+    platform.sourceBuildId,
+    "discord",
+  );
+  const saved = await checkpointTestPlan(delivery, plan);
+  await finishTestPlatform(delivery, plan, saved);
+  const apply = await testApply(delivery, plan);
+  await delivery.approve(
+    apply.id,
+    "approve",
+    "Reviewed exact original Discord plan",
+    testOperator,
+  );
+  await delivery.claim(apply.id, testExecutor);
+  const native = testNativeReceipt(apply.id);
+  await delivery.stage(
+    apply.id,
+    {
+      key: "tofu-apply",
+      status: "running",
+      operationId: native.name,
+      message: JSON.stringify(native),
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await delivery.finish(
+    apply.id,
+    {
+      status: "failed",
+      message: "Private application rejects the original desired URL",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const failed = await delivery.detail(apply.id);
+  const intent = await delivery.requestPlatformRecovery(
+    apply.id,
+    {
+      requestId: "discord/original/recovery",
+      expectedEnvironmentGeneration: failed.environment.generation,
+      reason:
+        "Independently prove original target after failed first Discord apply",
+    },
+    testOperator,
+  );
+  const current = await delivery.platformRecovery(intent.id, testOperator);
+  const fingerprint = current.expectedSettlements.original;
+  if (fingerprint === undefined)
+    throw new Error("Expected original Discord target");
+  expect(current.expectedSettlements.prior).toBeUndefined();
+  expect(
+    platformSettlements(current.deployment, current.deployment).original,
+  ).toBeUndefined();
+  const changed = structuredClone(current.deployment);
+  const snapshot = changed.deployment.platformSnapshot;
+  if (snapshot?.kind !== "tofu-apply")
+    throw new Error("Expected frozen apply plan");
+  snapshot.plan.planDigest = `sha256:${"f".repeat(64)}`;
+  expect(platformSettlements(changed, null).original).not.toBe(fingerprint);
+  snapshot.stack = "github";
+  expect(platformSettlements(changed, null).original).toBeUndefined();
+  const input = CompletePlatformRecoverySchema.parse({
+    expectedEnvironmentGeneration: current.intent.expectedEnvironmentGeneration,
+    snapshotFingerprint: current.intent.snapshotFingerprint,
+    observedAt: new Date().toISOString(),
+    sourceWorkflow: { workflowId: `delivery/${apply.id}`, status: "FAILED" },
+    nativeJobs: [{ ...native, status: "Failed", podsAbsent: false }],
+    settlement: { state: "original", fingerprint },
+    proofSummary:
+      "Authenticated original target matches six managed and six independent native application baselines; original serial 1 and stable current serial 2",
+  });
+  await expect(
+    delivery.completePlatformRecovery(
+      intent.id,
+      {
+        ...input,
+        settlement: { state: "original", fingerprint: "0".repeat(64) },
+      },
+      testExecutor,
+    ),
+  ).rejects.toThrow();
+  const completed = await delivery.completePlatformRecovery(
+    intent.id,
+    input,
+    testExecutor,
+  );
+  expect(completed.status).toBe("succeeded");
+  const after = await delivery.detail(apply.id);
+  expect(after.deployment.status).toBe("failed");
+  expect(after.deployment.recoveryRequired).toBe(false);
+  expect(after.environment.acceptedPlatformDeploymentId).toBeNull();
+  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
+  expect(await context.cluster.database.platformLock.count()).toBe(0);
 });

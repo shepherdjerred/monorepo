@@ -54,6 +54,24 @@ async function main() {
   const raw = Bun.env["DELIVERY_JOB_REQUEST"];
   if (raw === undefined) throw new Error("Delivery Job input is missing");
   const request = DeliveryJobRequestSchema.parse(JSON.parse(raw));
+  if (
+    request.recipe === "platform-recovery" &&
+    Bun.env["NODE_EXTRA_CA_CERTS"] === undefined
+  ) {
+    const ca = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
+    if (!(await Bun.file(ca).exists()))
+      throw new Error("Platform recovery requires its mounted Kubernetes CA");
+    if (process.execve === undefined)
+      throw new Error("Platform recovery requires process execve support");
+    process.execve(
+      process.execPath,
+      [process.execPath, ...process.argv.slice(1)],
+      {
+        ...Bun.env,
+        NODE_EXTRA_CA_CERTS: ca,
+      },
+    );
+  }
   const checkout = await command(["git", "rev-parse", "HEAD"]);
   if (checkout.stdout.trim() !== request.sourceRevision)
     throw new Error(
