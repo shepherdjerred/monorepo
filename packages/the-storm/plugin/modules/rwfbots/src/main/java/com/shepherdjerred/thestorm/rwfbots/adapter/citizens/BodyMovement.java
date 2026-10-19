@@ -70,7 +70,7 @@ final class BodyMovement {
                 new MovementSafety.Request(position, goal, hop, flight.map(Flight::origin)));
     if (checked.destination().isPresent()
         && !survives(player, terrain, checked.destination().orElseThrow(), hop))
-      checked = new MovementSafety.Result(Optional.empty(), MovementSafety.Reason.BLOCKED);
+      checked = new MovementSafety.Result(Optional.empty(), MovementSafety.Reason.UNSAFE_LANDING);
     beginFlight(candidate, checked.reason());
     var heading = checked.destination().map(point -> point.minus(position)).orElse(Vec3.ZERO);
     steer(

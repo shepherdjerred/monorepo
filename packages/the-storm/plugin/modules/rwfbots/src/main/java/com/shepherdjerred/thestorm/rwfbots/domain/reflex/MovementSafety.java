@@ -40,7 +40,14 @@ public final class MovementSafety {
     CLEAR,
     REDIRECTED,
     BLOCKED,
-    ARRIVED
+    /** The step is clear, but the body's landing check forecasts damage it must not take. */
+    UNSAFE_LANDING,
+    ARRIVED;
+
+    /** Whether the body refused to take the step at all. */
+    public boolean refused() {
+      return this == BLOCKED || this == UNSAFE_LANDING;
+    }
   }
 
   public record Result(Optional<Vec3> destination, Reason reason) {}

@@ -84,7 +84,7 @@ final class BodyMovementTest {
     var doorRequests = new java.util.ArrayList<org.bukkit.util.Vector>();
     var ordinary =
         motion(survival(Optional.empty()), (body, heading) -> doorRequests.add(heading.clone()));
-    assertThat(ordinary.move(player, target)).isEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(ordinary.move(player, target)).isEqualTo(MovementSafety.Reason.UNSAFE_LANDING);
     assertThat(player.getVelocity().getX()).isZero();
     var immune =
         motion(

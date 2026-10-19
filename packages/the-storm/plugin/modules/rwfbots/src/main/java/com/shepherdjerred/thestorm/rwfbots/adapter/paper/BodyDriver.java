@@ -306,13 +306,10 @@ public final class BodyDriver {
                                   .activeJump()
                                   .filter(active -> active.stage() == ActiveJump.Stage.RUN_UP)
                                   .flatMap(active -> active.waypoint().launch())));
-              if (step.jump() && checked != MovementSafety.Reason.BLOCKED) {
+              if (step.jump() && !checked.refused()) {
                 bodies.jump(bot.uuid());
               }
-              if (checked == MovementSafety.Reason.BLOCKED
-                  || checked == MovementSafety.Reason.REDIRECTED) {
-                bot.requestMovementRecovery(checked.name(), frame.tick());
-              }
+              report(bot, new Refusal(checked, hop, recovering), frame.tick());
               if (step.replan()) {
                 bot.requestMovementRecovery("STALLED", frame.tick());
               }
@@ -321,6 +318,20 @@ public final class BodyDriver {
                       || checked == MovementSafety.Reason.REDIRECTED);
             })
         .orElse(false);
+  }
+
+  /** What the body's last movement check said about the step it was asked to take. */
+  private record Refusal(MovementSafety.Reason reason, Hop hop, boolean escaping) {}
+
+  /**
+   * Records a refused or redirected step with the primitive refused, so /rwfbots debug shows which
+   * kind of step a body will not take (a DROP off a counter, a SWIM under a roof) and why.
+   */
+  private static void report(BotBody bot, Refusal refusal, long tick) {
+    if (!refusal.reason().refused() && refusal.reason() != MovementSafety.Reason.REDIRECTED) return;
+    bot.requestMovementRecovery(
+        refusal.reason().name() + " " + refusal.hop() + (refusal.escaping() ? " escape" : ""),
+        tick);
   }
 
   private void releaseUse(BotBody bot, Frame frame) {
