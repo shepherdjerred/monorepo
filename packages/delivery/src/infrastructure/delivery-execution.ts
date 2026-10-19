@@ -286,6 +286,19 @@ export async function stage(
         "Completed stage cannot be rewritten",
       );
     const { evidence: items, ...data } = input;
+    const mc = /^minecraft-preservation-[1-9]\d*$/u.test(input.key)
+      ? PipelineRevisionSchema.parse(
+          wire(
+            required(
+              await tx.pipeline.findUnique({
+                where: { id: row.pipelineRevisionId },
+              }),
+              "Pipeline",
+            ),
+          ),
+        ).definition
+      : undefined;
+    const append = mc?.kind === "argocd" && mc.minecraftUpgrade !== undefined;
     const updated = await tx.stage.upsert({
       where: { deploymentId_key: { deploymentId, key: input.key } },
       create: { id: id(), deploymentId, ...data },
@@ -295,8 +308,9 @@ export async function stage(
       tx,
       deploymentId,
       items,
-      row.kind === "upgrade-control-plane" && input.key === "control-plane"
-        ? { prefix: "stage/control-plane", appendOnly: true }
+      append ||
+        (row.kind === "upgrade-control-plane" && input.key === "control-plane")
+        ? { prefix: `stage/${input.key}`, appendOnly: true }
         : `stage/${input.key}`,
     );
     await audit(tx, actor, {
