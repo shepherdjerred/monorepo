@@ -166,11 +166,11 @@ public final class MovementSafety {
     return "clear";
   }
 
-  private static Optional<String> problem(Terrain terrain, Vec3 point, int index, Check check) {
-    if (!terrain.inside(point)) return Optional.of("outside");
-    if (!terrain.clear(point))
-      return Optional.of(
-          terrain.clear(point.plus(0, STEP_HEIGHT, 0)) ? "collides below a step" : "collides");
+  private static Optional<String> problem(Terrain terrain, Vec3 sample, int index, Check check) {
+    if (!terrain.inside(sample)) return Optional.of("outside");
+    var stepped = check == Check.WALK ? stood(terrain, sample) : Optional.<Vec3>empty();
+    if (!terrain.clear(sample) && stepped.isEmpty()) return Optional.of("collides");
+    var point = stepped.orElse(sample);
     if (terrain.hazardous(point)) return Optional.of("hazardous");
     return switch (check) {
       case WALK ->
@@ -214,22 +214,29 @@ public final class MovementSafety {
     var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
     var escaping = terrain.hazardous(from);
     for (var index = 0; index <= count; index++) {
-      var point = from.lerp(to, (double) index / count);
-      if (!terrain.inside(point) || !passable(terrain, point)) return false;
+      var sample = from.lerp(to, (double) index / count);
+      if (!terrain.inside(sample)) return false;
+      var point = stood(terrain, sample);
+      if (point.isEmpty()) return false;
       if (!escaping || index == count) {
-        if (terrain.hazardous(point) || !floor(terrain, point, index)) return false;
+        if (terrain.hazardous(point.orElseThrow()) || !floor(terrain, point.orElseThrow(), index))
+          return false;
       }
     }
     return true;
   }
 
   /**
-   * Whether a walking body can occupy {@code point}: clear there, or clear on top of a ledge no
-   * higher than vanilla's step height, which a walk climbs as it goes. Without the step a slab or
-   * stair edge read as a wall, so a bot walking up one sidestepped along it instead.
+   * Where a walking body stands at {@code point}: there when clear, else on top of a ledge no
+   * higher than vanilla's step height, which a walk climbs as it goes; empty when neither is clear.
+   * Floor and hazards are judged where it stands, so the top of a stair or a ladder exit counts as
+   * floor. Without the step a slab or stair edge read as a wall, so a bot walking up one
+   * sidestepped along it instead.
    */
-  private static boolean passable(Terrain terrain, Vec3 point) {
-    return terrain.clear(point) || terrain.clear(point.plus(0, STEP_HEIGHT, 0));
+  private static Optional<Vec3> stood(Terrain terrain, Vec3 point) {
+    if (terrain.clear(point)) return Optional.of(point);
+    var stepped = point.plus(0, STEP_HEIGHT, 0);
+    return terrain.clear(stepped) ? Optional.of(stepped) : Optional.empty();
   }
 
   private static boolean floor(Terrain terrain, Vec3 point, int index) {

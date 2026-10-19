@@ -105,6 +105,23 @@ final class MovementSafetyTest {
   }
 
   @Test
+  void aSteppedUpWalkFindsItsFloorOnTopOfTheStep() {
+    // A ladder top or a stair: the floor beyond the step is the step's own top, half a block above
+    // the feet, so floor is found only by looking from the stepped-up height.
+    var onTop = (java.util.function.Predicate<Vec3>) point -> point.x() + 0.3 > 1.0;
+    var step =
+        new Terrain(
+            point -> onTop.test(point) ? point.y() >= 1.5 - 1e-9 : Math.abs(point.y() - 1) < 1e-9,
+            point -> onTop.test(point) && point.y() < 1.5 - 1e-9,
+            point -> false);
+    var target = new Vec3(2.5, 1.5, 0.5);
+
+    var result = move(step, target, Hop.WALK);
+
+    assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
   void aStepTallerThanVanillaStepHeightStillBlocksAnOrdinaryWalk() {
     var wall =
         new Terrain(
