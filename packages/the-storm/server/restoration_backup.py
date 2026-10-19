@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 from restoration_json import JsonObject
 
 DIMENSIONS = frozenset(
-    ("overworld", "the_nether", "the_end", "settlement", "rustworks", "rwf", "wilds", "peaks", "mining")
+    ("overworld", "the_nether", "the_end", "settlement", "rustworks", "rwf", "rwf_lobby", "wilds", "peaks", "mining")
 )
 REQUIRED = frozenset(("world/level.dat", "plugins/TheStorm/the-storm.db"))
 
