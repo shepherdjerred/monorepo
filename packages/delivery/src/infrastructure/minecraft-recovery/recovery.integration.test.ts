@@ -134,6 +134,106 @@ function controller(uid = "native-controller-1") {
     sourceFingerprint: "d".repeat(64),
   };
 }
+
+test("preservation completion appends immutable proof without replacing its legacy native receipt", async () => {
+  const key = "minecraft-preservation-1",
+    prefix = `${deploymentId}/stage/${key}/`;
+  const native = {
+    kind: "preflight" as const,
+    operationId: controller().uid,
+    summary: JSON.stringify({
+      adapter: "minecraft-preservation-controller",
+      ...controller(),
+    }),
+  };
+  const legacy = await context.cluster.database.evidence.create({
+    data: { id: prefix + "0", deploymentId, ...native },
+  });
+  const stage = {
+    key,
+    status: "running" as const,
+    operationId,
+    message: JSON.stringify(controller()),
+  };
+  await context.delivery.stage(
+    deploymentId,
+    { ...stage, evidence: [native] },
+    testExecutor,
+  );
+  const final = {
+    ...stage,
+    status: "succeeded" as const,
+    message: "Independent restore and gameplay verified",
+    evidence: [
+      {
+        kind: "backup" as const,
+        operationId,
+        summary: "Exact independent restore and whole-volume proof",
+      },
+      {
+        kind: "preflight" as const,
+        operationId,
+        summary: "Exact candidate gameplay and untouched original reopening",
+      },
+    ],
+  };
+  await context.delivery.stage(deploymentId, final, testExecutor);
+  await context.delivery.stage(deploymentId, final, testExecutor);
+  const rows = await context.cluster.database.evidence.findMany({
+    where: { deploymentId, id: { startsWith: prefix } },
+  });
+  expect(rows).toHaveLength(3);
+  expect(rows.find((row) => row.id === legacy.id)).toEqual(legacy);
+  expect(rows.map((row) => row.summary).sort()).toEqual(
+    [native.summary, ...final.evidence.map((item) => item.summary)].sort(),
+  );
+  await expect(
+    context.delivery.stage(
+      deploymentId,
+      { ...final, operationId: "foreign-op" },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Stage operation identity cannot change");
+  await expect(
+    context.delivery.stage(
+      deploymentId,
+      { ...final, message: "rewritten" },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Completed stage cannot be rewritten");
+  const proof = rows.find((row) => row.kind === "backup");
+  if (!proof) throw new Error("Backup proof missing");
+  await context.cluster.database.evidence.update({
+    where: { id: proof.id },
+    data: { summary: "corrupt stored receipt" },
+  });
+  await expect(
+    context.delivery.stage(deploymentId, final, testExecutor),
+  ).rejects.toThrow("Evidence cannot be rewritten");
+});
+
+test("ordinary pipelines cannot request append evidence through a preservation stage key", async () => {
+  const ordinary = await context.delivery.createDeployment(
+    context.input(),
+    testOperator,
+  );
+  await context.delivery.claim(ordinary.id, testExecutor);
+  const stage = {
+    key: "minecraft-preservation-1",
+    status: "running" as const,
+    operationId: "ordinary-op",
+    message: "ordinary",
+    evidence: [{ kind: "preflight" as const, summary: "original" }],
+  };
+  await context.delivery.stage(ordinary.id, stage, testExecutor);
+  await expect(
+    context.delivery.stage(
+      ordinary.id,
+      { ...stage, evidence: [{ kind: "backup", summary: "changed" }] },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Evidence cannot be rewritten");
+});
 async function quarantine(completed = false, receipt = true) {
   await context.delivery.stage(
     deploymentId,

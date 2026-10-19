@@ -70,7 +70,9 @@ The independent control-plane stage appends immutable evidence for native Job
 admission, its dispatch journal, replay, and final acceptance. Exact proof replays
 reuse existing records, including older indexed receipts. Stage operation identity
 and completed-stage immutability remain mandatory; other stages retain indexed
-evidence identities.
+evidence identities. Frozen Minecraft upgrade pipelines also append preservation
+proofs under their numbered preservation stage, retaining the initial native
+controller receipt when the independent backup and gameplay proofs arrive.
 
 CI registration is pending until the backend verifies the exact Woodpecker
 main-push pipeline reached success. Artifact selection cannot consume pending
