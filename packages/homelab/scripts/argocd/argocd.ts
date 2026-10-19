@@ -47,7 +47,7 @@ import {
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
   REPOSITORY_CHART_URLS,
-} from "../../src/cdk8s/src/application-release-policy.ts";
+} from "../../src/application-release-contract.ts";
 import {
   activeOperationId,
   activeOperationRequestId,
@@ -280,6 +280,14 @@ const ReconcileApplicationSchema = z.object({
 });
 
 type ExpectedApplication = z.infer<typeof ExpectedApplicationsSchema>[number];
+
+/** In-process Delivery authority; CLI callers continue using publication freshness. */
+export type RootReleaseAuthority = {
+  requestId: string;
+  revision: string;
+  inventory: readonly ExpectedApplication[];
+  authorize: () => Promise<unknown>;
+};
 
 type ReleaseReconciliationTarget = {
   readonly name: string;
@@ -1420,6 +1428,7 @@ async function stageRootRelease(
   requestId: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  authority?: RootReleaseAuthority,
 ): Promise<void> {
   const exactRevision = BuildRevisionSchema.parse(revision);
   const exactRequestId = SyncRequestIdSchema.parse(requestId);
@@ -1429,7 +1438,7 @@ async function stageRootRelease(
   if (dryRun) {
     return;
   }
-  await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
+  await authorizeRootRevision(exactRevision, timeoutSeconds, authority);
   const token = requireEnv("ARGOCD_TOKEN");
   const manifests = await getApplicationManifests(
     rootAppName,
@@ -1484,6 +1493,7 @@ async function finalizeRootRelease(
   requestId: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  authority?: RootReleaseAuthority,
 ): Promise<readonly string[]> {
   const exactRevision = BuildRevisionSchema.parse(revision);
   const exactRequestId = SyncRequestIdSchema.parse(requestId);
@@ -1496,7 +1506,7 @@ async function finalizeRootRelease(
   if (dryRun) {
     return [];
   }
-  await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
+  await authorizeRootRevision(exactRevision, timeoutSeconds, authority);
   const token = requireEnv("ARGOCD_TOKEN");
   const manifests = await getApplicationManifests(
     rootAppName,
@@ -1652,6 +1662,20 @@ async function assertExpectedAppsRevisionIsLatest(
   throw new Error(
     `Apps release ${expectedRevision} is not published; newest published apps revision is ${latest.version}`,
   );
+}
+
+async function authorizeRootRevision(
+  revision: string,
+  timeoutSeconds: number,
+  authority?: RootReleaseAuthority,
+): Promise<void> {
+  if (authority === undefined) {
+    await assertExpectedAppsRevisionIsLatest(revision, timeoutSeconds);
+    return;
+  }
+  if (authority.revision !== revision)
+    throw new Error("Delivery root authority revision changed");
+  await authority.authorize();
 }
 
 async function fetchChartMuseumInventory(
@@ -3020,6 +3044,7 @@ async function reconcileRelease(
   deferredApps: ReadonlySet<string>,
   waitForHealth: boolean,
   requestId: string | undefined,
+  authority?: RootReleaseAuthority,
 ): Promise<void> {
   const exactRequestId =
     requestId === undefined ? undefined : SyncRequestIdSchema.parse(requestId);
@@ -3034,10 +3059,7 @@ async function reconcileRelease(
     return;
   }
   const appsRelease = expectedAppsRelease(expected);
-  await assertExpectedAppsRevisionIsLatest(
-    appsRelease.revision,
-    timeoutSeconds,
-  );
+  await authorizeRootRevision(appsRelease.revision, timeoutSeconds, authority);
   const token = requireEnv("ARGOCD_TOKEN");
   const targets = releaseReconciliationTargets(
     await getApplicationManifests("apps", appsRelease.revision, token),
@@ -3281,13 +3303,15 @@ async function assertLiveAutoSyncMatchesRelease(
   );
 }
 
-async function releaseRoot(
+export async function releaseRoot(
   rootAppName: string,
   expectedPath: string,
   revision: string,
   requestId: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  authority?: RootReleaseAuthority,
+  resultFile: string = HOMELAB_RELEASE_RESULT_FILE,
 ): Promise<void> {
   try {
     await releaseRootPhases(
@@ -3297,6 +3321,8 @@ async function releaseRoot(
       requestId,
       timeoutSeconds,
       dryRun,
+      authority,
+      resultFile,
     );
   } catch (error: unknown) {
     if (!(error instanceof SupersededReleaseError)) {
@@ -3307,7 +3333,7 @@ async function releaseRoot(
       revision: error.revision,
       supersededBy: error.supersededBy,
     });
-    await Bun.write(HOMELAB_RELEASE_RESULT_FILE, `${JSON.stringify(result)}\n`);
+    await Bun.write(resultFile, `${JSON.stringify(result)}\n`);
     console.log(`release receipt: ${result.outcome} by ${result.supersededBy}`);
   }
 }
@@ -3319,6 +3345,8 @@ async function releaseRootPhases(
   requestId: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  authority?: RootReleaseAuthority,
+  resultFile: string = HOMELAB_RELEASE_RESULT_FILE,
 ): Promise<void> {
   if (rootAppName !== "apps") {
     throw new Error("release-root only supports the apps root");
@@ -3326,6 +3354,15 @@ async function releaseRootPhases(
   const exactRevision = BuildRevisionSchema.parse(revision);
   const exactRequestId = SyncRequestIdSchema.parse(requestId);
   const expected = await readExpectedApplications(expectedPath);
+  if (
+    authority !== undefined &&
+    (authority.requestId !== exactRequestId ||
+      authority.revision !== exactRevision ||
+      canonicalJson(authority.inventory) !== canonicalJson(expected))
+  )
+    throw new Error(
+      "Delivery root authority differs from the exact request and inventory",
+    );
   const appsRelease = expectedAppsRelease(expected);
   if (appsRelease.revision !== exactRevision) {
     throw new Error(
@@ -3363,6 +3400,7 @@ async function releaseRootPhases(
       exactRequestId,
       timeoutSeconds,
       dryRun,
+      authority,
     );
     await reconcileRelease(
       expectedPath,
@@ -3371,6 +3409,7 @@ async function releaseRootPhases(
       new Set(),
       false,
       exactRequestId,
+      authority,
     );
   }
   const verifiedResourceIdentities = await finalizeRootRelease(
@@ -3379,6 +3418,7 @@ async function releaseRootPhases(
     exactRequestId,
     timeoutSeconds,
     dryRun,
+    authority,
   );
   // Ordered before the health wait deliberately. A wrong policy cannot make the
   // health wait fail — it reads only `status` — so this is not a prerequisite.
@@ -3407,7 +3447,7 @@ async function releaseRootPhases(
         revision: application.revision,
       })),
     });
-    await Bun.write(HOMELAB_RELEASE_RESULT_FILE, `${JSON.stringify(result)}\n`);
+    await Bun.write(resultFile, `${JSON.stringify(result)}\n`);
     console.log(
       `release receipt: ${result.outcome}; ArgoCD root is intentionally ${result.terminalOperationState}`,
     );
@@ -3962,14 +4002,15 @@ async function main(): Promise<void> {
   }
 }
 
-await runMain(async () => {
-  try {
-    await main();
-  } catch (error: unknown) {
-    if (error instanceof SupersededReleaseError) {
-      console.log(error.message);
-      return;
+if (import.meta.main)
+  await runMain(async () => {
+    try {
+      await main();
+    } catch (error: unknown) {
+      if (error instanceof SupersededReleaseError) {
+        console.log(error.message);
+        return;
+      }
+      throw error;
     }
-    throw error;
-  }
-});
+  });

@@ -245,7 +245,7 @@ export function inactiveWorkerVersion(
   };
 }
 
-/** Server 1.32 uses colon search attributes; deprecated version strings use dot. Check both plus pinned overrides. */
+/** Historical use does not pin AutoUpgrade workflows; retain all other reference forms fail-closed. */
 export function workerOpenExecutionQuery(
   route: Route,
   buildId: string,
@@ -258,7 +258,7 @@ export function workerOpenExecutionQuery(
     .parse(route.deploymentName);
   const version = `${route.deploymentName}:${buildId}`;
   const legacy = `${route.deploymentName}.${buildId}`;
-  return `ExecutionStatus = 'Running' AND (TemporalWorkerDeploymentVersion IN ('${version}', '${legacy}') OR TemporalUsedWorkerDeploymentVersions IN ('${version}', '${legacy}') OR BuildIds IN ('versioned:${buildId}', 'pinned:${version}', 'pinned:${legacy}'))`;
+  return `ExecutionStatus = 'Running' AND (TemporalWorkerDeploymentVersion IN ('${version}', '${legacy}') OR TemporalUsedWorkerDeploymentVersions IN ('${version}', '${legacy}') OR BuildIds IN ('versioned:${buildId}', 'pinned:${version}', 'pinned:${legacy}')) AND (TemporalWorkflowVersioningBehavior != 'AutoUpgrade' OR TemporalWorkflowVersioningBehavior IS NULL)`;
 }
 
 export function retirementEffects(

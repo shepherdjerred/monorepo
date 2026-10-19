@@ -3,14 +3,14 @@
   "compilerOptions": {
     "noEmit": true,
     "types": ["bun"],
-    // argocd.ts typechecks cdk8s release policy, which imports generated k8s
-    // types through the same aliases the cdk8s package uses.
+    // Script fixtures use the same generated-type aliases as the cdk8s package.
     "paths": {
       "@shepherdjerred/homelab/cdk8s/*": ["./src/cdk8s/*"],
       "@shepherdjerred/homelab/*": ["./*"]
     }
   },
   "include": [
+    "src/application-release-contract.ts",
     "src/domain-registry.ts",
     "src/delivery-storage.ts",
     "src/delivery-platform-grants.ts",

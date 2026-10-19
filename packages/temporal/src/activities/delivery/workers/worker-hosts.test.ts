@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
   WorkerPoolSnapshotSchema,
@@ -40,6 +41,60 @@ it("visibility retirement covers current/deprecated deployment versions and pinn
   expect(query).toContain(`'versioned:${OLD}'`);
   expect(query).toContain(`'pinned:monorepo-central-workflows:${OLD}'`);
   expect(query).toContain("TemporalUsedWorkerDeploymentVersions IN");
+});
+it("excludes only canonical AutoUpgrade while retaining pinned, unknown and legacy references", () => {
+  const route = workerHostSpecification("central").routes[0];
+  if (route === undefined) throw new Error("Missing central route");
+  const version = `${route.deploymentName}:${OLD}`;
+  const legacyVersion = `${route.deploymentName}.${OLD}`;
+  const references = [
+    ["TemporalWorkerDeploymentVersion", version],
+    ["TemporalWorkerDeploymentVersion", legacyVersion],
+    ["TemporalUsedWorkerDeploymentVersions", version],
+    ["TemporalUsedWorkerDeploymentVersions", legacyVersion],
+    ["BuildIds", `versioned:${OLD}`],
+    ["BuildIds", `pinned:${version}`],
+    ["BuildIds", `pinned:${legacyVersion}`],
+  ] as const;
+  const database = new Database(":memory:");
+  try {
+    database.run(`CREATE TABLE visibility (
+      ExecutionStatus TEXT, TemporalWorkerDeploymentVersion TEXT,
+      TemporalUsedWorkerDeploymentVersions TEXT, BuildIds TEXT,
+      TemporalWorkflowVersioningBehavior TEXT
+    )`);
+    const matches = database.query(
+      `SELECT COUNT(*) AS matches FROM visibility WHERE ${workerOpenExecutionQuery(route, OLD)}`,
+    );
+    // A single matching reference exercises the unchanged IN predicates;
+    // SQL evaluation also verifies that missing behavior is not lost to NULL logic.
+    for (const [attribute, reference] of references) {
+      for (const behavior of [
+        "AutoUpgrade",
+        "Pinned",
+        null,
+        "Unknown",
+        "Auto-Upgrade",
+      ]) {
+        database.run("DELETE FROM visibility");
+        database
+          .query(
+            `INSERT INTO visibility (ExecutionStatus, ${attribute}, TemporalWorkflowVersioningBehavior) VALUES ('Running', ?, ?)`,
+          )
+          .run(reference, behavior);
+        expect(
+          matches.get(),
+          `${String(behavior)} ${attribute} ${reference}`,
+        ).toEqual({
+          matches: behavior === "AutoUpgrade" ? 0 : 1,
+        });
+      }
+    }
+    database.run("UPDATE visibility SET ExecutionStatus = 'Completed'");
+    expect(matches.get()).toEqual({ matches: 0 });
+  } finally {
+    database.close();
+  }
 });
 it("the complete central chart's unrelated multi-container hosts do not enter legacy worker validation", () => {
   const run = Bun.spawnSync(
