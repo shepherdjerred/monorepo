@@ -168,7 +168,7 @@ export async function recoverContentWithOperator(
       if (image?.kind !== "image")
         throw new Error("Forum candidate image is missing");
       try {
-        verifyDeliveryPods(web, [image]);
+        await verifyDeliveryPods(web, [image]);
       } catch {
         throw new ContentOperatorError(
           `Forum database is repaired but its exact candidate web Deployment is not ready. With the same frozen source still selected, run toolkit argocd app sync ${policy.application} --revision ${selected.selection.revision} --resource apps:Deployment:storm-forum-web (no prune), then rerun this SAME recovery intent.`,

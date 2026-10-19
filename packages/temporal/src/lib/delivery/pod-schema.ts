@@ -18,6 +18,7 @@ export const DeliveryPodSchema = z.object({
           name: z.string(),
           ready: z.boolean(),
           imageID: z.string(),
+          image: z.string().optional(),
           state: z.object({ running: z.unknown().optional() }),
         }),
       )

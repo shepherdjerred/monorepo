@@ -89,6 +89,11 @@ mutations have one Activity attempt. An ambiguous failure retains the
 environment lock until an operator inspects the recorded external operation and
 explicitly releases it with evidence through Delivery.
 
+The ordinary Delivery role also receives its existing scoped registry reader.
+An alternate CRI index is accepted only after immutable registry bytes prove the
+complete qualified runnable descriptor set and the running config; differences
+must be positively identified attestation descriptors. Artifact records stay immutable.
+
 The production image bundles the guarded Argo command. A missing bundle fails
 instead of selecting another implementation. Development runs the source
 command. PostgreSQL, Temporal and ArgoCD recovery remain available through their

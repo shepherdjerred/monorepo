@@ -8,7 +8,7 @@
   "parameters": {},
   "artifactParameters": { "delivery.image": "image:arcade" },
   "verification": {
-    "url": "https://mariokart.sjer.red/health",
+    "url": "https://arcade.sjer.red/health",
     "expectedStatus": 200
   }
 }

@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { verifyArgoRelease } from "./argocd.ts";
+import { describe, expect, it, vi } from "vitest";
+import { verifyArgoRelease, waitForForumArgoRelease } from "./argocd.ts";
+import { DELIVERY_ENVIRONMENT_ANNOTATION } from "homelab/src/delivery-ownership.ts";
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 
 const requestId = "11111111-1111-4111-8111-111111111111";
@@ -53,6 +54,153 @@ function observation() {
     },
   };
 }
+
+function forumObservation(sync = "Synced", health = "Healthy") {
+  const current = observation();
+  return {
+    ...current,
+    metadata: {
+      name: selection.application,
+      uid: "forum-application-uid",
+      resourceVersion: "1",
+      annotations: {
+        [DELIVERY_ENVIRONMENT_ANNOTATION]: selection.environmentId,
+      },
+    },
+    spec: {
+      ...current.spec,
+      destination: { namespace: "storm-forum" },
+      syncPolicy: { automated: { enabled: false } },
+    },
+    status: {
+      ...current.status,
+      sync: { ...current.status.sync, status: sync },
+      health: { status: health },
+    },
+  };
+}
+
+describe("Forum post-sync observation", () => {
+  it("waits for genuine Synced Healthy without repeating sync or migration", async () => {
+    const pending = forumObservation("OutOfSync", "Progressing");
+    expect(() => verifyArgoRelease(pending, selection, requestId)).toThrow();
+    let reads = 0;
+    let fences = 0;
+    const waits: number[] = [];
+    const receipt = await waitForForumArgoRelease(selection, requestId, {
+      read: async () => (++reads === 1 ? pending : forumObservation()),
+      fence: async () => {
+        fences++;
+      },
+      wait: async (milliseconds) => {
+        waits.push(milliseconds);
+      },
+    });
+    expect(receipt.operationId).toBe(operationId);
+    expect({ reads, fences, waits }).toEqual({
+      reads: 2,
+      fences: 2,
+      waits: [5000],
+    });
+  });
+
+  it("bounds pending observations and retains cancellation/claim fencing", async () => {
+    let reads = 0;
+    let waits = 0;
+    const effects = {
+      read: async () => {
+        reads++;
+        return forumObservation("OutOfSync", "Progressing");
+      },
+      fence: vi.fn<() => Promise<void>>().mockResolvedValue(),
+      wait: async () => {
+        waits++;
+      },
+    };
+    await expect(
+      waitForForumArgoRelease(selection, requestId, effects),
+    ).rejects.toThrow("Timed out");
+    expect({ reads, waits }).toEqual({ reads: 60, waits: 59 });
+    await expect(
+      waitForForumArgoRelease(selection, requestId, {
+        ...effects,
+        fence: async () => {
+          throw new Error("claim changed");
+        },
+      }),
+    ).rejects.toThrow("claim changed");
+    expect(reads).toBe(60);
+  });
+
+  it("refuses unhealthy, failed, foreign source and missing ownership immediately", async () => {
+    const invalid = [
+      {
+        ...forumObservation(),
+        status: {
+          ...forumObservation().status,
+          health: { status: "Degraded" },
+        },
+      },
+      {
+        ...forumObservation(),
+        status: {
+          ...forumObservation().status,
+          operationState: {
+            ...forumObservation().status.operationState,
+            phase: "Failed",
+          },
+        },
+      },
+      {
+        ...forumObservation(),
+        spec: {
+          ...forumObservation().spec,
+          source: {
+            ...forumObservation().spec.source,
+            targetRevision: "2.0.0-41",
+          },
+        },
+      },
+      {
+        ...forumObservation(),
+        metadata: { ...forumObservation().metadata, annotations: {} },
+      },
+    ];
+    for (const application of invalid)
+      await expect(
+        waitForForumArgoRelease(selection, requestId, {
+          read: async () => application,
+          fence: vi.fn<() => Promise<void>>().mockResolvedValue(),
+          wait: async () => {
+            throw new Error("must not wait");
+          },
+        }),
+      ).rejects.not.toThrow("must not wait");
+  });
+
+  it("refuses replacement Application or operation while waiting", async () => {
+    for (const replaceOperation of [false, true]) {
+      let reads = 0;
+      const replaced = forumObservation();
+      if (replaceOperation)
+        replaced.status.operationState.operation.info[1] = {
+          name: "ci.sjer.red/operation-id",
+          value: "33333333-3333-4333-8333-333333333333",
+        };
+      else replaced.metadata.uid = "foreign-uid";
+      await expect(
+        waitForForumArgoRelease(selection, requestId, {
+          read: async () =>
+            ++reads === 1
+              ? forumObservation("OutOfSync", "Progressing")
+              : replaced,
+          fence: vi.fn<() => Promise<void>>().mockResolvedValue(),
+          wait: vi.fn<() => Promise<void>>().mockResolvedValue(),
+        }),
+      ).rejects.toThrow("changed while waiting");
+    }
+  });
+});
 describe("Delivery Argo operation evidence", () => {
   it("proves exact wire parameters without changing the frozen logical JSON", () => {
     const logical = JSON.stringify({

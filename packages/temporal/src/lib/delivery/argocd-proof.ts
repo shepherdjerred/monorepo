@@ -47,9 +47,16 @@ const OperationObservationSchema = ObservationSchema.extend({
     health: z.object({ status: z.enum(["Healthy", "Progressing"]) }),
   }),
 });
+const ForumObservationSchema = OperationObservationSchema.extend({
+  status: OperationObservationSchema.shape.status.extend({
+    sync: SettledArgoStatusSchema.shape.sync.extend({
+      status: z.enum(["Synced", "OutOfSync"]),
+    }),
+  }),
+});
 
 function verifyObservedOperation(
-  current: z.infer<typeof OperationObservationSchema>,
+  current: z.infer<typeof ForumObservationSchema>,
   selection: DeliverySelection,
   operationId: string,
 ) {
@@ -109,6 +116,20 @@ export function observeArgoRelease(
   const current = OperationObservationSchema.parse(input);
   return {
     ...verifyObservedOperation(current, selection, operationId),
+    health: current.status.health.status,
+  };
+}
+
+/** Pending Forum readback is observation only; final acceptance remains strict. */
+export function observeForumArgoRelease(
+  input: unknown,
+  selection: DeliverySelection,
+  operationId: string,
+) {
+  const current = ForumObservationSchema.parse(input);
+  return {
+    ...verifyObservedOperation(current, selection, operationId),
+    sync: current.status.sync.status,
     health: current.status.health.status,
   };
 }

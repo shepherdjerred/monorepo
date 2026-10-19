@@ -77,7 +77,10 @@ function bearerChallenge(
   return parsed.success ? parsed.data : undefined;
 }
 
-async function registryFetch(url: string, accept: string): Promise<Response> {
+export async function registryFetch(
+  url: string,
+  accept: string,
+): Promise<Response> {
   const initial = await fetchWithTimeout(url, { headers: { Accept: accept } });
   if (initial.status !== 401) return initial;
   const challenge = bearerChallenge(initial.headers.get("www-authenticate"));
