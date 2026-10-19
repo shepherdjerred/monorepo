@@ -8,9 +8,10 @@ COPY chain.patch /tmp/chain.patch
 COPY zfs_chain.go zfs_chain_test.go pkg/clouduploader/
 RUN git apply --unidiff-zero /tmp/chain.patch
 COPY stream.patch /tmp/stream.patch
-COPY stream.go stream_test.go pkg/clouduploader/
+COPY restore.patch /tmp/restore.patch
+COPY stream.go stream_test.go restore_reader.go restore_reader_test.go pkg/clouduploader/
 COPY transfer_result.go transfer_result_test.go pkg/zfs/plugin/
-RUN git apply /tmp/stream.patch
+RUN git apply /tmp/stream.patch && git apply --unidiff-zero /tmp/restore.patch
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
   go test ./pkg/clouduploader ./pkg/zfs/plugin \
   && CGO_ENABLED=0 go build -o /out/velero-blockstore-openebs ./velero-blockstore-openebs

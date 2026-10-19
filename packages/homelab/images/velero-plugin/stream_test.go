@@ -7,13 +7,88 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/sirupsen/logrus"
+	"gocloud.dev/blob"
+	"gocloud.dev/blob/driver"
 	"gocloud.dev/blob/memblob"
+	"gocloud.dev/gcerrors"
 )
+
+type failingProviderBucket struct {
+	driver.Bucket
+	cause error
+}
+
+func (b *failingProviderBucket) NewTypedWriter(context.Context, string, string, *driver.WriterOptions) (driver.Writer, error) {
+	return nil, b.cause
+}
+func (b *failingProviderBucket) ErrorCode(error) gcerrors.ErrorCode { return gcerrors.Unknown }
+
+func TestProviderFailureDiagnosticsUseActualGoCloudAndNestedAWSCause(t *testing.T) {
+	private := "private-token https://private-endpoint/object-key request-id"
+	request := awserr.NewRequestFailure(awserr.New("ServiceUnavailable", private, nil), 503, private)
+	aws := awserr.New("MultipartUploadFailure", private, request)
+	bucket := blob.NewBucket(&failingProviderBucket{cause: aws})
+	writer, err := bucket.NewWriter(context.Background(), "private-key", &blob.WriterOptions{ContentType: "application/octet-stream"})
+	if err == nil {
+		_, err = writer.Write([]byte("private-world-data"))
+	}
+	if err == nil {
+		t.Fatal("expected real GoCloud writer failure")
+	}
+	message := streamFailure("cloud-write", err).Error()
+	for _, want := range []string{"(*gcerr.Error)", "gcerr=1", "http=503", "aws=ServiceUnavailable"} {
+		if !strings.Contains(message, want) {
+			t.Fatalf("missing safe provider classification %s", want)
+		}
+	}
+	if strings.Contains(message, "private") || strings.Contains(message, "request-id") {
+		t.Fatal("provider diagnostics leaked private error fields")
+	}
+}
+
+func TestProviderFailureDiagnosticsClassifyTransportWithoutRawMessages(t *testing.T) {
+	for _, tc := range []struct {
+		cause error
+		want  string
+	}{
+		{&net.OpError{Op: "read", Net: "tcp", Err: syscall.ECONNRESET}, "transport=connection-reset"},
+		{io.ErrUnexpectedEOF, "transport=unexpected-eof"},
+		{context.DeadlineExceeded, "transport=context-deadline"},
+		{awserr.New("private-provider-code", "private-message", context.Canceled), "aws=other transport=context-canceled"},
+	} {
+		message := streamFailure("cloud-read", fmt.Errorf("private-endpoint: %w", tc.cause)).Error()
+		if !strings.Contains(message, tc.want) || strings.Contains(message, "private") {
+			t.Fatal("unsafe or missing transport classification")
+		}
+	}
+}
+
+func TestActualGoCloudReaderCleanEOFCompletesStrictRestore(t *testing.T) {
+	bucket := memblob.OpenBucket(nil)
+	if err := bucket.WriteAll(context.Background(), "fixture", []byte("abc"), nil); err != nil {
+		t.Fatal(err)
+	}
+	reader, err := bucket.NewReader(context.Background(), "fixture", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close()
+	c, _ := socketClient(t)
+	s := &Server{OpType: OpRestore, Log: streamLogger()}
+	for i := 0; i < 4 && err == nil; i++ {
+		err = s.restoreRead(c, reader, reader.Size())
+	}
+	if err != io.EOF || c.status != TransferStatusDone || c.readBytes != 3 || c.sentBytes != 3 {
+		t.Fatal("real GoCloud EOF was misclassified as cloud-read failure")
+	}
+}
 
 type restoreStep struct {
 	data string
@@ -170,7 +245,7 @@ func TestRestoreHangupCannotManufactureCompletion(t *testing.T) {
 			t.Fatal(err)
 		}
 		c, _ := socketClient(t)
-		c.file = ReadWriter(reader)
+		c.file = ReadWriter(&rangeRestoreReader{reader: reader, size: reader.Size()})
 		s := &Server{OpType: OpRestore, Log: streamLogger(), cl: &Conn{Log: streamLogger()}}
 		event, epfd := registeredEvent(t, s, c, mask)
 		s.dispatchClientEvent(event, epfd)
@@ -190,7 +265,7 @@ func TestCombinedRestoreReadyAndHalfClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	c, _ := socketClient(t)
-	c.file = ReadWriter(reader)
+	c.file = ReadWriter(&rangeRestoreReader{reader: reader, size: reader.Size()})
 	s := &Server{OpType: OpRestore, Log: streamLogger(), cl: &Conn{Log: streamLogger()}}
 	event, epfd := registeredEvent(t, s, c, syscall.EPOLLIN|syscall.EPOLLOUT|syscall.EPOLLRDHUP)
 	s.dispatchClientEvent(event, epfd)

@@ -13,6 +13,11 @@ The API and executor share the Delivery contract. Workflow IDs use the shared
 `deliveryWorkflowId` helper so an acknowledged outbox row always identifies the
 execution actually submitted.
 
+Long Delivery effect Activities retain heartbeats and cancellation with a
+five-minute heartbeat deadline. This tolerates a brief restart of the single
+Temporal server while preserving the existing one-attempt mutation policy and
+all native completion and acceptance checks.
+
 The `delivery-dispatch` Schedule qualifies published builds against their exact
 terminal CI execution, reconciles automatic environment selections, and submits
 unacknowledged outbox rows. It starts paused until the service, executor

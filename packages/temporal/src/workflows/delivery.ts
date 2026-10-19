@@ -19,7 +19,9 @@ const metadata = proxyActivities<DeliveryActivities>({
 const mutation = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
   startToCloseTimeout: "25 minutes",
-  heartbeatTimeout: "1 minute",
+  // The single Temporal server can briefly restart during an owned release.
+  // Keep heartbeats/cancellation active without expiring effects during that gap.
+  heartbeatTimeout: "5 minutes",
   // A worker crash or lost subprocess receipt requires inspection, not a repeat write.
   retry: { maximumAttempts: 1 },
 });
@@ -35,7 +37,7 @@ const observation = proxyActivities<DeliveryActivities>({
 const jobs = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
   startToCloseTimeout: "135 minutes",
-  heartbeatTimeout: "1 minute",
+  heartbeatTimeout: "5 minutes",
   retry: { maximumAttempts: 1 },
 });
 const qualification = proxyActivities<DeliveryActivities>({
@@ -46,14 +48,14 @@ const qualification = proxyActivities<DeliveryActivities>({
 const platform = proxyActivities<PlatformDeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
   startToCloseTimeout: "135 minutes",
-  heartbeatTimeout: "1 minute",
+  heartbeatTimeout: "5 minutes",
   retry: { maximumAttempts: 1 },
 });
 const controlPlane = proxyActivities<PlatformDeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
   startToCloseTimeout: "135 minutes",
   scheduleToCloseTimeout: "150 minutes",
-  heartbeatTimeout: "1 minute",
+  heartbeatTimeout: "5 minutes",
   // Continuations inspect the same persisted native Job UID; they never repeat a missing Job.
   retry: {
     maximumAttempts: 10,

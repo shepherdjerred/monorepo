@@ -11,6 +11,14 @@ and the first transfer failure reach the native backup or restore caller.
 Diagnostic fields contain byte counts and error classes, without raw cloud
 error messages or endpoints.
 
+S3 restores freeze the object size and ETag before sending bytes. A mid-body
+unexpected EOF or connection reset can reopen that same conditional object at
+the exact forwarded offset, at most three times. Each range must match the
+original identity and full size. Authorization, changed objects, close failures
+and receiver errors still fail immediately; completion still requires exact
+byte counts and a real EOF. Provider diagnostics expose only bounded codes,
+numeric HTTP status and fixed transport classes.
+
 Backup writers declare `application/octet-stream`. This avoids the pinned
 GoCloud MIME sniffer returning cumulative buffered byte counts when a short
 initial ZFS header is followed by a write that crosses its 512-byte threshold;

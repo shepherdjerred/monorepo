@@ -1,0 +1,24 @@
+diff --git a/pkg/clouduploader/conn.go b/pkg/clouduploader/conn.go
+--- a/pkg/clouduploader/conn.go
++++ b/pkg/clouduploader/conn.go
+@@ -301 +301 @@
+-		r, err := c.bucket.NewReader(c.ctx, c.file, nil)
++		r, err := c.newRestoreReader()
+@@ -303 +303 @@
+-			c.Log.Errorf("Failed to obtain reader: %s", err.Error())
++			c.Log.Error(streamFailure("cloud-open", err))
+@@ -323 +323 @@
+-		r := (*blob.Reader)(rw)
++		r := (*rangeRestoreReader)(rw)
+diff --git a/pkg/clouduploader/server.go b/pkg/clouduploader/server.go
+--- a/pkg/clouduploader/server.go
++++ b/pkg/clouduploader/server.go
+@@ -232 +232 @@
+-	reader := (*blob.Reader)(c.file)
++	reader := (*rangeRestoreReader)(c.file)
+diff --git a/pkg/clouduploader/server_utils.go b/pkg/clouduploader/server_utils.go
+--- a/pkg/clouduploader/server_utils.go
++++ b/pkg/clouduploader/server_utils.go
+@@ -161 +161 @@
+-func (s *Server) GetReadWriter(bwriter *blob.Writer, breader *blob.Reader, opType ServerOperation) (ReadWriter, error) {
++func (s *Server) GetReadWriter(bwriter *blob.Writer, breader *rangeRestoreReader, opType ServerOperation) (ReadWriter, error) {

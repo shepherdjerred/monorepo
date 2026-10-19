@@ -49,6 +49,33 @@ async function execute(failApply: boolean, waits = 0) {
   }
 }
 
+async function mutationHeartbeatHistory(
+  environment: TestWorkflowEnvironment,
+  workflowId: string,
+) {
+  const history = await environment.client.workflow
+    .getHandle(workflowId)
+    .fetchHistory();
+  const mutations = history.events?.flatMap((event) => {
+    const scheduled = event.activityTaskScheduledEventAttributes;
+    return scheduled &&
+      [
+        "applyDelivery",
+        "inspectDeliveryWorkerImages",
+        "prepareDeliveryWorker",
+        "stepDeliveryWorker",
+      ].includes(scheduled.activityType?.name ?? "")
+      ? [scheduled]
+      : [];
+  });
+  expect(mutations).toHaveLength(5);
+  for (const scheduled of mutations ?? []) {
+    expect(Number(scheduled.heartbeatTimeout?.seconds)).toBe(300);
+    expect(scheduled.retryPolicy?.maximumAttempts).toBe(1);
+  }
+  return history;
+}
+
 describe("Delivery Workflow", () => {
   it("directly promotes the verified frozen multi-namespace plan and replays its history", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -123,9 +150,10 @@ describe("Delivery Workflow", () => {
       ]);
       expect(times).toHaveLength(2);
       expect((times[1] ?? 0) - (times[0] ?? 0)).toBeLessThan(30 * 60 * 1000);
+      const history = await mutationHeartbeatHistory(environment, workflowId);
       await Worker.runReplayHistory(
         { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
-        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+        history,
       );
     } finally {
       await environment.teardown();

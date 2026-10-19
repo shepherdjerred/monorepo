@@ -1,9 +1,15 @@
 package clouduploader
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"syscall"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"gocloud.dev/gcerrors"
 )
 
 // Error strings intentionally contain only fixed classes and concrete Go types.
@@ -13,7 +19,57 @@ type cloudStreamError struct {
 }
 
 func (e *cloudStreamError) Error() string {
-	return fmt.Sprintf("cloud-stream %s (%s)", e.kind, safeErrorType(e.cause))
+	status, provider, transport := safeProviderFailure(e.cause)
+	return fmt.Sprintf("cloud-stream %s (%s) gcerr=%d http=%d aws=%s transport=%s", e.kind, safeErrorType(e.cause), gcerrors.Code(e.cause), status, provider, transport)
+}
+
+// Never format provider messages, request IDs, endpoints, object keys or headers.
+// The pinned AWS SDK predates Unwrap: multipart failures expose OrigErr instead.
+func safeProviderFailure(err error) (status int, provider, transport string) {
+	provider, transport = "none", "none"
+	for depth := 0; err != nil && depth < 16; depth++ {
+		if request, ok := err.(awserr.RequestFailure); ok && request.StatusCode() >= 100 && request.StatusCode() <= 599 {
+			status = request.StatusCode()
+		}
+		if aws, ok := err.(awserr.Error); ok {
+			switch code := aws.Code(); code {
+			case "AccessDenied", "InvalidAccessKeyId", "SignatureDoesNotMatch", "ExpiredToken", "RequestExpired", "RequestTimeTooSkewed", "NoSuchBucket", "NoSuchKey", "NoSuchUpload", "InvalidPart", "InvalidPartOrder", "EntityTooSmall", "EntityTooLarge", "RequestTimeout", "SlowDown", "InternalError", "ServiceUnavailable", "NetworkingError", "RequestCanceled", "MultipartUploadFailure":
+				provider = code
+			default:
+				provider = "other"
+			}
+		}
+		if network, ok := err.(net.Error); ok && network.Timeout() {
+			transport = "network-timeout"
+		}
+		if _, ok := err.(*net.DNSError); ok {
+			transport = "dns"
+		}
+		switch err {
+		case context.Canceled:
+			transport = "context-canceled"
+		case context.DeadlineExceeded:
+			transport = "context-deadline"
+		case io.ErrUnexpectedEOF:
+			transport = "unexpected-eof"
+		case syscall.ECONNRESET:
+			transport = "connection-reset"
+		case syscall.EPIPE:
+			transport = "broken-pipe"
+		case syscall.ETIMEDOUT:
+			transport = "socket-timeout"
+		case syscall.ECONNREFUSED:
+			transport = "connection-refused"
+		}
+		next := errors.Unwrap(err)
+		if next == nil {
+			if aws, ok := err.(awserr.Error); ok {
+				next = aws.OrigErr()
+			}
+		}
+		err = next
+	}
+	return
 }
 func (e *cloudStreamError) Unwrap() error { return e.cause }
 func safeErrorType(err error) string {
@@ -56,6 +112,9 @@ func (s *Server) restoreRead(c *Client, reader io.Reader, expected int64) error 
 		return io.EOF
 	}
 	if readErr != nil {
+		if classified, ok := readErr.(*cloudStreamError); ok {
+			return classified
+		}
 		return streamFailure("cloud-read", readErr)
 	}
 	// (0,nil) is no progress, never EOF/completion. Level-triggered OUT retries.
