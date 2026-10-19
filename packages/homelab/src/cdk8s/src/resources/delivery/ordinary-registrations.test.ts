@@ -59,6 +59,66 @@ beforeAll(async () => {
   await setupCharts(app);
 });
 
+test("external Helm dependencies retain their namespace reader after Delivery image binding", () => {
+  const apps = app.charts.find((chart) => chart.node.id === "apps");
+  if (apps === undefined) throw new Error("Missing root Applications chart");
+  const resources = z
+    .array(
+      z
+        .object({
+          kind: z.string(),
+          metadata: z.object({ name: z.string() }).loose(),
+        })
+        .loose(),
+    )
+    .parse(apps.toJson());
+  expect(
+    resources.find(
+      (resource) =>
+        resource.kind === "Application" &&
+        resource.metadata.name === "prometheus",
+    ),
+  ).toMatchObject({
+    spec: {
+      destination: { namespace: "prometheus" },
+      source: {
+        helm: {
+          valuesObject: {
+            global: {
+              imagePullSecrets: [{ name: "dockerhub-pull-prometheus" }],
+            },
+            prometheus: {
+              prometheusSpec: {
+                containers: expect.arrayContaining([
+                  expect.objectContaining({
+                    name: "authenticated-gateway",
+                    image:
+                      '{{ required `Delivery requires image:caddy-s3proxy` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "caddy-s3proxy") }}',
+                  }),
+                ]),
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  const readers = resources.filter(
+    (resource) =>
+      resource.kind === "OnePasswordItem" &&
+      resource.metadata.name === "dockerhub-pull-prometheus",
+  );
+  expect(readers).toHaveLength(1);
+  expect(readers[0]).toMatchObject({
+    metadata: { name: "dockerhub-pull-prometheus", namespace: "prometheus" },
+    type: "kubernetes.io/dockerconfigjson",
+    spec: {
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi",
+    },
+  });
+});
+
 /** Render an active fixture for prepared services without changing their source activation. */
 function activeChart(name: string): Chart {
   if (!["tracker", "glitter-boys-launcher", "delivery"].includes(name)) {
