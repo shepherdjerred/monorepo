@@ -8,11 +8,220 @@ import { testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { requestTestPlan } from "#testing/platform-execution.ts";
 import { platformFixture } from "#testing/platform-fixture.ts";
+import { testNativeReceipt } from "#testing/platform-execution.ts";
+import { deliveryOperationId } from "#shared/operation-id.ts";
+import { fingerprint } from "#infrastructure/delivery-records.ts";
 
 const context = useDeliveryFixture();
 let fixture: Awaited<ReturnType<typeof controlPlaneFixture>>;
 beforeEach(async () => {
   fixture = await controlPlaneFixture(context.cluster.database);
+});
+
+test("controller native admission, dispatch journal, replay and final acceptance append immutable evidence across API replacement", async () => {
+  const selected = await fixture.delivery.requestControlPlaneUpgrade(
+    fixture.environment.id,
+    fixture.input,
+    testOperator,
+  );
+  await fixture.delivery.claim(selected.id, testExecutor);
+  const native = testNativeReceipt(selected.id);
+  const prefix = `${selected.id}/stage/control-plane/`;
+  const nativeEvidence = {
+    kind: "preflight" as const,
+    operationId: native.uid,
+    summary: `Exact platform Job ${native.namespace}/${native.name}; fingerprint ${native.specFingerprint}`,
+  };
+  const legacy = await context.cluster.database.evidence.create({
+    data: { id: `${prefix}0`, deploymentId: selected.id, ...nativeEvidence },
+  });
+  const running = {
+    key: "control-plane",
+    status: "running" as const,
+    operationId: native.name,
+    message: JSON.stringify(native),
+  };
+  await fixture.delivery.stage(
+    selected.id,
+    { ...running, evidence: [nativeEvidence] },
+    testExecutor,
+  );
+  const journal = {
+    ...nativeEvidence,
+    summary: JSON.stringify({
+      adapter: "control-plane-dispatch-barrier/v1",
+      deploymentUID: crypto.randomUUID(),
+      templateFingerprint: "a".repeat(64),
+      priorReplicas: 1,
+      podUIDs: [crypto.randomUUID()],
+      replicaSetUIDs: [crypto.randomUUID()],
+    }),
+  };
+  await fixture.delivery.stage(
+    selected.id,
+    { ...running, evidence: [journal] },
+    testExecutor,
+  );
+  // The native fence and resumed Activity repeat their original offset-zero payload.
+  await fixture.delivery.stage(
+    selected.id,
+    { ...running, evidence: [nativeEvidence] },
+    testExecutor,
+  );
+  const replay = {
+    ...nativeEvidence,
+    summary: JSON.stringify({
+      adapter: "control-plane-history-replay/v1",
+      workflowId: `delivery/${selected.id}`,
+      imageArtifactId: selected.controlPlaneSnapshot!.nextArtifact.id,
+    }),
+  };
+  await fixture.delivery.stage(
+    selected.id,
+    { ...running, evidence: [replay] },
+    testExecutor,
+  );
+  const snapshot = selected.controlPlaneSnapshot;
+  if (snapshot === null) throw new Error("Expected frozen controller snapshot");
+  const final = [
+    nativeEvidence,
+    {
+      kind: "reconciliation" as const,
+      operationId: crypto.randomUUID(),
+      summary: "Exact independently owned controller synchronization finished",
+    },
+    {
+      kind: "runtime" as const,
+      operationId: native.uid,
+      summary:
+        "All original qualified controller templates and Pod digests verified",
+    },
+    {
+      kind: "acceptance" as const,
+      operationId: native.uid,
+      summary: JSON.stringify({
+        adapter: "control-plane",
+        previousArtifactId: snapshot.previousArtifact.id,
+        nextArtifactId: snapshot.nextArtifact.id,
+        chartArtifactId: snapshot.chartArtifact.id,
+        nativeJobUID: native.uid,
+        argoRequestId: deliveryOperationId(`${selected.id}:control-plane`),
+        argoOperationId: crypto.randomUUID(),
+      }),
+    },
+  ];
+  const replacement = new Delivery(
+    context.cluster.database,
+    1,
+    fixture.delivery.catalog,
+  );
+  await replacement.stage(
+    selected.id,
+    { ...running, status: "succeeded", evidence: final },
+    testExecutor,
+  );
+  const recorded = await context.cluster.database.evidence.findMany({
+    where: { deploymentId: selected.id },
+  });
+  expect(recorded).toHaveLength(6);
+  expect(recorded.find((entry) => entry.id === legacy.id)).toEqual(legacy);
+  await replacement.stage(
+    selected.id,
+    { ...running, status: "succeeded", evidence: final },
+    testExecutor,
+  );
+  expect(
+    await context.cluster.database.evidence.count({
+      where: { deploymentId: selected.id },
+    }),
+  ).toBe(6);
+  await expect(
+    replacement.stage(
+      selected.id,
+      {
+        ...running,
+        operationId: "another-job",
+        status: "succeeded",
+        evidence: [],
+      },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Stage operation identity cannot change");
+  await expect(
+    replacement.stage(
+      selected.id,
+      { ...running, status: "running", evidence: [] },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Completed stage cannot be rewritten");
+  await replacement.finish(
+    selected.id,
+    {
+      status: "succeeded",
+      message: "Exact native controller accepted",
+      recoveryRequired: false,
+      evidence: final,
+    },
+    testExecutor,
+  );
+  const accepted = await replacement.detail(selected.id);
+  expect(accepted.environment.acceptedControlPlaneDeploymentId).toBe(
+    selected.id,
+  );
+});
+
+test("ordinary stages cannot opt into controller evidence append by choosing its stage key", async () => {
+  const selected = await context.delivery.createDeployment(
+    context.input(),
+    testOperator,
+  );
+  await context.delivery.claim(selected.id, testExecutor);
+  const stage = {
+    key: "control-plane",
+    status: "running" as const,
+    operationId: "ordinary/op",
+    message: "ordinary",
+    evidence: [{ kind: "preflight" as const, summary: "original" }],
+  };
+  await context.delivery.stage(selected.id, stage, testExecutor);
+  await expect(
+    context.delivery.stage(
+      selected.id,
+      { ...stage, evidence: [{ kind: "preflight", summary: "changed" }] },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Evidence cannot be rewritten");
+});
+
+test("controller evidence content identity still refuses a conflicting existing record", async () => {
+  const selected = await fixture.delivery.requestControlPlaneUpgrade(
+    fixture.environment.id,
+    fixture.input,
+    testOperator,
+  );
+  await fixture.delivery.claim(selected.id, testExecutor);
+  const item = { kind: "preflight" as const, summary: "expected" };
+  await context.cluster.database.evidence.create({
+    data: {
+      id: `${selected.id}/stage/control-plane/${fingerprint(item)}`,
+      deploymentId: selected.id,
+      kind: item.kind,
+      summary: "corrupt",
+    },
+  });
+  await expect(
+    fixture.delivery.stage(
+      selected.id,
+      {
+        key: "control-plane",
+        status: "running",
+        operationId: "native/op",
+        message: "inspect",
+        evidence: [item],
+      },
+      testExecutor,
+    ),
+  ).rejects.toThrow("Evidence cannot be rewritten");
 });
 
 test("independent controller selection retains original cross-owner provenance and accepts only its own pointer", async () => {

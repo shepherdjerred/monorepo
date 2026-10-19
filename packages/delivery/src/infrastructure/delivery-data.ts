@@ -133,17 +133,56 @@ export async function environment(
     }),
   );
 }
+function storedEvidenceFingerprint(item: {
+  kind: string;
+  summary: string;
+  url: string | null;
+  operationId: string | null;
+}) {
+  return fingerprint({
+    kind: item.kind,
+    summary: item.summary,
+    ...(item.url === null ? {} : { url: item.url }),
+    ...(item.operationId === null ? {} : { operationId: item.operationId }),
+  });
+}
+
+async function existingEvidence(
+  tx: Transaction,
+  evidenceId: string,
+  legacy?: { deploymentId: string; scope: string; item: EvidenceInput },
+) {
+  const existing = await tx.evidence.findUnique({ where: { id: evidenceId } });
+  if (existing !== null || legacy === undefined) return existing;
+  // Preserve and replay existing indexed controller receipts without changing their IDs.
+  return tx.evidence.findFirst({
+    where: {
+      deploymentId: legacy.deploymentId,
+      id: { startsWith: legacy.scope },
+      kind: legacy.item.kind,
+      summary: legacy.item.summary,
+      url: legacy.item.url ?? null,
+      operationId: legacy.item.operationId ?? null,
+    },
+  });
+}
+
 export async function evidence(
   tx: Transaction,
   deploymentId: string,
   items: EvidenceInput[],
-  prefix: string,
+  target: string | { prefix: string; appendOnly: true },
 ) {
+  const { prefix, appendOnly } =
+    typeof target === "string" ? { prefix: target, appendOnly: false } : target;
   for (const [offset, item] of items.entries()) {
-    const evidenceId = `${deploymentId}/${prefix}/${String(offset)}`;
-    const existing = await tx.evidence.findUnique({
-      where: { id: evidenceId },
-    });
+    const scope = `${deploymentId}/${prefix}/`;
+    const evidenceId = `${scope}${appendOnly ? fingerprint(item) : String(offset)}`;
+    const existing = await existingEvidence(
+      tx,
+      evidenceId,
+      appendOnly ? { deploymentId, scope, item } : undefined,
+    );
     if (existing === null) {
       await tx.evidence.create({
         data: {
@@ -156,16 +195,7 @@ export async function evidence(
         },
       });
     } else {
-      if (
-        fingerprint({
-          kind: existing.kind,
-          summary: existing.summary,
-          ...(existing.url === null ? {} : { url: existing.url }),
-          ...(existing.operationId === null
-            ? {}
-            : { operationId: existing.operationId }),
-        }) !== fingerprint(item)
-      )
+      if (storedEvidenceFingerprint(existing) !== fingerprint(item))
         throw new DeliveryError("CONFLICT", "Evidence cannot be rewritten");
     }
   }
