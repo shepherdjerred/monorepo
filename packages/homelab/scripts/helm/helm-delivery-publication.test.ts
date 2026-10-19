@@ -12,13 +12,59 @@ import {
   bindChartImageDependencies,
 } from "./helm-delivery-publication.ts";
 import { planCharts } from "./helm-release-core.ts";
-import { stageChart } from "./helm-push.ts";
+import { runCommand, stageChart } from "./helm-push.ts";
 
 const parameter = (field: string, name: string) =>
   `{{ required \`Delivery requires image:${name}\` (get (get (.Values.delivery | default dict) "${field}" | default dict) "${name}") }}`;
 
 const version = "2.0.0-1000042";
 const digest = `sha256:${"a".repeat(64)}`;
+
+test("the real synth child receives the parent's exact chart revision inventory", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "helm-child-inventory-"));
+  const output = path.join(directory, "source.json");
+  const key = "HOMELAB_CHART_REVISIONS_JSON";
+  const previous = Bun.env[key];
+  const previousVault = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
+  const code = `
+    import { App, Chart } from "cdk8s";
+    import { createFliptApp } from "./src/resources/argo-applications/apps/flipt.ts";
+    import { applyApplicationReleasePolicy } from "./src/application-release-policy.ts";
+    const app = new App();
+    const chart = new Chart(app, "apps");
+    createFliptApp(chart);
+    applyApplicationReleasePolicy(app);
+    await Bun.write(${JSON.stringify(output)}, JSON.stringify({
+      ...chart.toJson()[0].spec.source,
+      vaultCredentialPresent: Bun.env.OP_SERVICE_ACCOUNT_TOKEN !== undefined,
+    }));
+  `;
+  try {
+    Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = "test-only-vault";
+    Reflect.deleteProperty(Bun.env, key);
+    await runCommand([process.execPath, "-e", code], {
+      cwd: new URL("../../src/cdk8s/", import.meta.url).pathname,
+    });
+    expect(JSON.parse(await readFile(output, "utf8"))).toMatchObject({
+      targetRevision: "~2.0.0-0",
+      vaultCredentialPresent: false,
+    });
+    Bun.env[key] = JSON.stringify({ flipt: version });
+    await runCommand([process.execPath, "-e", code], {
+      cwd: new URL("../../src/cdk8s/", import.meta.url).pathname,
+    });
+    expect(JSON.parse(await readFile(output, "utf8"))).toMatchObject({
+      targetRevision: version,
+      vaultCredentialPresent: false,
+    });
+  } finally {
+    if (previous === undefined) Reflect.deleteProperty(Bun.env, key);
+    else Bun.env[key] = previous;
+    if (previousVault === undefined) delete Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
+    else Bun.env["OP_SERVICE_ACCOUNT_TOKEN"] = previousVault;
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 test("producer validation supplies required selections outside packaged chart defaults", () => {
   for (const name of ["storm-forum", "storm-forum-beta"])

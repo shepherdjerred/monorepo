@@ -145,21 +145,75 @@ function rootOwnedSource(raw: unknown, delegated: boolean) {
   return source;
 }
 
+type StoppedRootContext = {
+  deployment: {
+    deployment: Pick<
+      PlatformRecoveryContext["deployment"]["deployment"],
+      "id" | "platformSnapshot" | "status" | "recoveryRequired"
+    >;
+    environment: Pick<
+      PlatformRecoveryContext["deployment"]["environment"],
+      "acceptedPlatformDeploymentId"
+    >;
+  };
+  priorDeployment: {
+    deployment: Pick<
+      PlatformRecoveryContext["deployment"]["deployment"],
+      "id" | "platformSnapshot" | "status"
+    >;
+  } | null;
+};
+
+function requireAcceptedPrior(context: StoppedRootContext) {
+  const prior = context.priorDeployment;
+  const accepted = context.deployment.environment.acceptedPlatformDeploymentId;
+  if (prior === null) {
+    if (accepted !== null)
+      throw new Error("Stopped root lost its accepted prior");
+  } else if (
+    prior.deployment.id === context.deployment.deployment.id ||
+    prior.deployment.id !== accepted ||
+    prior.deployment.status !== "succeeded" ||
+    prior.deployment.platformSnapshot?.kind !== "root-release"
+  )
+    throw new Error(
+      "Stopped root accepted prior differs from its frozen successful release",
+    );
+  return prior;
+}
+
+function requireHistoricalPriorReceipt(
+  root: ReturnType<typeof application.parse>,
+  prior: StoppedRootContext["priorDeployment"],
+) {
+  if (prior === null) return;
+  const snapshot = prior.deployment.platformSnapshot;
+  if (snapshot?.kind !== "root-release")
+    throw new Error("Accepted prior is not a frozen root release");
+  const chart = snapshot.charts.find(({ name }) => name === "apps");
+  const receipt = VerifiedRootReleaseReceiptSchema.parse(
+    JSON.parse(
+      z
+        .string()
+        .parse(root.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION]),
+    ),
+  );
+  if (
+    receipt.revision !== chart?.artifact.version ||
+    receipt.requestId !==
+      deliveryOperationId(`${prior.deployment.id}:root-release`) ||
+    Date.parse(receipt.operationFinishedAt) <
+      Date.parse(receipt.operationStartedAt) ||
+    Date.parse(receipt.verifiedAt) < Date.parse(receipt.operationFinishedAt)
+  )
+    throw new Error(
+      "Stopped attempt lost the exact historical accepted root receipt",
+    );
+}
+
 /** Read-only stopped state is neither a complete release nor an unchanged prior. */
 export async function inspectStoppedRootRecovery(
-  context: {
-    deployment: {
-      deployment: Pick<
-        PlatformRecoveryContext["deployment"]["deployment"],
-        "id" | "platformSnapshot" | "status" | "recoveryRequired"
-      >;
-      environment: Pick<
-        PlatformRecoveryContext["deployment"]["environment"],
-        "acceptedPlatformDeploymentId"
-      >;
-    };
-    priorDeployment: unknown;
-  },
+  context: StoppedRootContext,
   effects: {
     read: (name: string) => Promise<unknown>;
     render: (chart: ArtifactVersion) => Promise<unknown[]>;
@@ -167,18 +221,17 @@ export async function inspectStoppedRootRecovery(
 ) {
   const detail = context.deployment;
   const snapshot = detail.deployment.platformSnapshot;
+  const prior = requireAcceptedPrior(context);
   if (
-    context.priorDeployment !== null ||
     snapshot?.kind !== "root-release" ||
     !["failed", "canceled"].includes(detail.deployment.status) ||
-    !detail.deployment.recoveryRequired ||
-    detail.environment.acceptedPlatformDeploymentId !== null
+    !detail.deployment.recoveryRequired
   )
     throw new Error(
-      "Stopped recovery is restricted to an unaccepted failed first root",
+      "Stopped recovery requires a failed root attempt and its unchanged accepted prior",
     );
   const chart = snapshot.charts.find(({ name }) => name === "apps");
-  if (chart === undefined) throw new Error("Frozen first root lacks apps");
+  if (chart === undefined) throw new Error("Frozen root attempt lacks apps");
   const requestId = deliveryOperationId(`${detail.deployment.id}:root-release`);
   const rendered = new Map<string, ReturnType<typeof application.parse>>();
   // Rendered resources have no native UID/status; parse their relevant source metadata separately.
@@ -252,6 +305,7 @@ export async function inspectStoppedRootRecovery(
     rendered.set(name, await inspect(name));
   const root = rendered.get("apps");
   if (root === undefined) throw new Error("Current root is missing");
+  requireHistoricalPriorReceipt(root, prior);
   assertDeliveryRootPreservesSelection(root);
   const operation = requireStoppedOperation(
     root,
@@ -279,7 +333,7 @@ export async function inspectStoppedRootRecovery(
   return {
     state: "stopped" as const,
     observedAt: new Date().toISOString(),
-    proofSummary: `Stopped unaccepted first root ${requestId}/${operationId}; ${rendered.size.toString()} frozen root-owned Application identities and sources stable, no active operations; partial health retained without acceptance`,
+    proofSummary: `Stopped root attempt ${requestId}/${operationId}; ${rendered.size.toString()} frozen root-owned Application identities and sources stable, no active operations; partial health retained without acceptance, prior ${prior?.deployment.id ?? "none"} unchanged`,
     stoppedRoot: {
       requestId,
       operationId,

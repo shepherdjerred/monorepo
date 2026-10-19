@@ -24,7 +24,11 @@ import {
 import { pendingRecovery } from "./ownership.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.ts";
-import { platformSettlements, recordedPlatformJobs } from "./context.ts";
+import {
+  platformSettlements,
+  recordedPlatformJobs,
+  stoppedRootPriorMatches,
+} from "./context.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 function requireRecoveryEffectOwner(delivery: Delivery, kind: string) {
@@ -203,7 +207,7 @@ export async function completePlatformRecovery(
     const report = input.stoppedRoot;
     const recorded = recordedPlatformJobs(context.deployment);
     if (
-      context.priorDeployment !== null ||
+      !stoppedRootPriorMatches(context.deployment, context.priorDeployment) ||
       snapshot?.kind !== "root-release" ||
       report?.requestId !==
         deliveryOperationId(
@@ -227,7 +231,7 @@ export async function completePlatformRecovery(
     )
       throw new DeliveryError(
         "CONFLICT",
-        "Stopped first-root recovery requires its complete partial-state report and terminal original native Job",
+        "Stopped root recovery requires its unchanged accepted prior, complete partial-state report and terminal original native Job",
       );
   } else if (input.stoppedRoot !== undefined) {
     throw new DeliveryError(

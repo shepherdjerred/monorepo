@@ -28,7 +28,7 @@ export async function recoverStoppedRoot(id: string, connection: Connection) {
     context.expectedSettlements.stopped === undefined
   )
     throw new Error(
-      "Stopped root recovery requires its pending first-root intent",
+      "Stopped root recovery requires its pending frozen root-attempt intent",
     );
   Bun.env["ARGOCD_TOKEN"] = z
     .string()
@@ -60,7 +60,9 @@ export async function recoverStoppedRoot(id: string, connection: Connection) {
   });
   const current = await load();
   if (canonicalJson(current) !== canonicalJson(context))
-    throw new Error("First root recovery ownership changed during inspection");
+    throw new Error(
+      "Root attempt recovery ownership changed during inspection",
+    );
   const { state, ...observation } = observed;
   const proof = CompletePlatformRecoverySchema.parse({
     ...observation,

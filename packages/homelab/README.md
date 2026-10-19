@@ -148,6 +148,8 @@ ArgoCD, which reverts direct mutations.
 CDK8s `dist/` contains native Kubernetes manifests for kubeconform validation.
 Helm publication stages retained-worker expansion separately, fingerprints the
 generated template bytes, and validates them through real Helm rendering.
+The synth child receives the producer's exact chart-revision inventory through
+its explicit environment so packaged child Applications retain their planned versions.
 The local Helm render and lint commands use that same expansion. Keep
 PostgreSQL-selected worker pools and images in release parameters rather than
 writing them into native synth output or chart defaults.
