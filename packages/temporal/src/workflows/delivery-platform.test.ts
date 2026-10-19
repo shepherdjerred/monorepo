@@ -130,9 +130,23 @@ test.each(["platform", "controlPlane", "recovery"] as const)(
             ? ["platform-job", "settled"]
             : ["platform-job", "platform-job", "settled"],
       );
+      const history = await environment.client.workflow
+        .getHandle(workflowId)
+        .fetchHistory();
+      const effects = history.events?.flatMap((event) => {
+        const scheduled = event.activityTaskScheduledEventAttributes;
+        return scheduled?.taskQueue?.name === TASK_QUEUES.DELIVERY_PLATFORM
+          ? [scheduled]
+          : [];
+      });
+      expect(effects).toHaveLength(1);
+      expect(Number(effects?.[0]?.heartbeatTimeout?.seconds)).toBe(300);
+      expect(effects?.[0]?.retryPolicy?.maximumAttempts).toBe(
+        kind === "controlPlane" ? 10 : 1,
+      );
       await Worker.runReplayHistory(
         { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
-        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+        history,
       );
     } finally {
       await environment.teardown();
