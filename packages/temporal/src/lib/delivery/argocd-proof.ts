@@ -42,12 +42,17 @@ const ObservationSchema = z.object({
   }),
 });
 
-export function verifyArgoRelease(
-  input: unknown,
+const OperationObservationSchema = ObservationSchema.extend({
+  status: ObservationSchema.shape.status.extend({
+    health: z.object({ status: z.enum(["Healthy", "Progressing"]) }),
+  }),
+});
+
+function verifyObservedOperation(
+  current: z.infer<typeof OperationObservationSchema>,
   selection: DeliverySelection,
   operationId: string,
 ) {
-  const current = ObservationSchema.parse(input);
   const latest = current.status.history.reduce((left, right) =>
     left.id > right.id ? left : right,
   );
@@ -93,4 +98,29 @@ export function verifyArgoRelease(
     operationId: z.uuid().parse(operationIds[0]?.value),
     revision: selection.revision,
   };
+}
+
+/** Observe only a settled owned operation; Progressing is not release acceptance. */
+export function observeArgoRelease(
+  input: unknown,
+  selection: DeliverySelection,
+  operationId: string,
+) {
+  const current = OperationObservationSchema.parse(input);
+  return {
+    ...verifyObservedOperation(current, selection, operationId),
+    health: current.status.health.status,
+  };
+}
+
+export function verifyArgoRelease(
+  input: unknown,
+  selection: DeliverySelection,
+  operationId: string,
+) {
+  return verifyObservedOperation(
+    ObservationSchema.parse(input),
+    selection,
+    operationId,
+  );
 }

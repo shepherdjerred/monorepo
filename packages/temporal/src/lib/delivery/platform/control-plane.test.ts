@@ -16,6 +16,7 @@ import {
   CONTROL_PLANE_IMAGE_LABEL,
 } from "@shepherdjerred/ops-model/delivery-control-plane.ts";
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
+import { verifyArgoRelease } from "#lib/delivery/argocd-proof.ts";
 
 test("prior source proof compares the exact wire representation of logical Helm strings", () => {
   const selection = {
@@ -128,6 +129,7 @@ function fixture() {
   };
   let selected = false;
   const owned = crypto.randomUUID();
+  const applicationUID = crypto.randomUUID();
   const workload = (next: boolean) => ({
     kind: "Deployment",
     metadata: { name: "delivery-executor", namespace: "temporal" },
@@ -153,6 +155,7 @@ function fixture() {
     kind: "Application",
     metadata: {
       name: "delivery-control-plane",
+      uid: applicationUID,
       resourceVersion: "42",
       annotations: {
         "delivery.shepherdjerred.com/environment":
@@ -248,6 +251,9 @@ function fixture() {
     sync: vi.fn(async () => {
       /* The injected source observation carries the owned finished native operation. */
     }),
+    wait: vi.fn(async () => {
+      // Scripted observations advance without a wall-clock delay.
+    }),
   };
   return { input, effects, patch, image, app, owned };
 }
@@ -317,9 +323,110 @@ test("chart-only control-plane upgrade preserves original image provenance and o
     argoOperationId: owned,
   });
   expect(patch).toHaveBeenCalledTimes(1);
-  expect(effects.fence).toHaveBeenCalledTimes(3);
+  expect(effects.fence).toHaveBeenCalledTimes(4);
   expect(effects.quiesce).toHaveBeenCalledTimes(1);
   expect(effects.replay).toHaveBeenCalledTimes(1);
+});
+
+test("settled owned CP operation waits for real Healthy after transient Progressing; global acceptance stays strict", async () => {
+  const { input, effects, app, owned } = fixture();
+  const read = effects.read;
+  let progressing = 0;
+  effects.read = async (name) => {
+    if (name === "apps") return read(name);
+    const observed = app();
+    if (
+      observed.spec.source.targetRevision === "2.0.0-2" &&
+      progressing++ < 2
+    ) {
+      observed.status.health.status = "Progressing";
+      expect(() =>
+        verifyArgoRelease(
+          observed,
+          controlPlaneSelections(input).next.selection,
+          deliveryOperationId(`${input.deploymentId}:control-plane`),
+        ),
+      ).toThrow();
+    }
+    return observed;
+  };
+  const receipt = await runControlPlaneUpgrade(
+    input,
+    effects,
+    crypto.randomUUID(),
+  );
+  expect(receipt.argoOperationId).toBe(owned);
+  expect(effects.wait).toHaveBeenCalledTimes(2);
+  expect(effects.fence).toHaveBeenCalledTimes(6);
+});
+
+test.each(["health", "failure", "source", "uid", "request"] as const)(
+  "post-sync CP %s drift fails immediately without accepting Progressing",
+  async (mode) => {
+    const { input, effects, app } = fixture();
+    const read = effects.read;
+    effects.read = async (name) => {
+      if (name === "apps") return read(name);
+      const observed = app();
+      if (observed.spec.source.targetRevision === "2.0.0-2") {
+        observed.status.health.status = "Progressing";
+        if (mode === "health") observed.status.health.status = "Degraded";
+        if (mode === "failure") observed.status.operationState.phase = "Failed";
+        if (mode === "source")
+          observed.spec.source.targetRevision = "2.0.0-999";
+        if (mode === "uid") observed.metadata.uid = crypto.randomUUID();
+        if (mode === "request")
+          observed.status.operationState.operation.info[0]!.value =
+            crypto.randomUUID();
+      }
+      return observed;
+    };
+    await expect(
+      runControlPlaneUpgrade(input, effects, crypto.randomUUID()),
+    ).rejects.toThrow();
+    expect(effects.wait).not.toHaveBeenCalled();
+  },
+);
+
+test("CP health polling refuses an owned operation replacement between observations", async () => {
+  const { input, effects, app } = fixture();
+  const read = effects.read;
+  let reads = 0;
+  effects.read = async (name) => {
+    if (name === "apps") return read(name);
+    const observed = app();
+    if (observed.spec.source.targetRevision === "2.0.0-2") {
+      if (reads++ === 0) observed.status.health.status = "Progressing";
+      else
+        observed.status.operationState.operation.info[1]!.value =
+          crypto.randomUUID();
+    }
+    return observed;
+  };
+  await expect(
+    runControlPlaneUpgrade(input, effects, crypto.randomUUID()),
+  ).rejects.toThrow("owned operation changed");
+  expect(effects.wait).toHaveBeenCalledTimes(1);
+});
+
+test("CP health wait is bounded and never accepts permanently Progressing", async () => {
+  const { input, effects, app } = fixture();
+  const read = effects.read;
+  let observations = 0;
+  effects.read = async (name) => {
+    if (name === "apps") return read(name);
+    const observed = app();
+    if (observed.spec.source.targetRevision === "2.0.0-2") {
+      observations++;
+      observed.status.health.status = "Progressing";
+    }
+    return observed;
+  };
+  await expect(
+    runControlPlaneUpgrade(input, effects, crypto.randomUUID()),
+  ).rejects.toThrow("Timed out");
+  expect(observations).toBe(60);
+  expect(effects.wait).toHaveBeenCalledTimes(59);
 });
 test("incompatible candidate replay blocks source selection after the native process barrier", async () => {
   const { input, effects, patch } = fixture();
