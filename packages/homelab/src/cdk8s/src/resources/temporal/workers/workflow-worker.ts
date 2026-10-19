@@ -19,7 +19,7 @@ function createWorkflowWorker(
     podLabels: { "worker-family": "central-workflows" },
     cpuRequest: Cpu.millis(250),
     cpuLimit: Cpu.millis(1000),
-    memoryRequest: Size.mebibytes(1536),
+    memoryRequest: Size.mebibytes(768),
     memoryLimit: Size.gibibytes(2),
     automountServiceAccountToken: false,
     // Unlike application secrets, Flipt reachability is not a credential —

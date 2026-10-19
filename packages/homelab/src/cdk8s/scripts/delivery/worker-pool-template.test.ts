@@ -273,6 +273,10 @@ describe("Delivery fixed worker host rendering", () => {
                 containers: [
                   {
                     image: `docker.io/shepherdjerred/${repository}@sha256:${buildId.slice(0, 1).repeat(64)}`,
+                    resources: {
+                      requests: { memory: central ? "768Mi" : "256Mi" },
+                      limits: { memory: central ? "2048Mi" : "1024Mi" },
+                    },
                   },
                 ],
               },
