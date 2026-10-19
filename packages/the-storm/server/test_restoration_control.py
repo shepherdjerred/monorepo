@@ -6,10 +6,11 @@ import json
 import tarfile
 import tempfile
 import unittest
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from urllib.request import Request
 
 from restoration_json import JsonObject
 
@@ -910,6 +911,126 @@ class RestorationControlTest(unittest.TestCase):
                         *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
                     ],
                 )
+
+    def original_abort_gitops(self, change: Callable[[list[dict[str, str]]], None] | None = None) -> JsonObject:
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        application = self.cluster.objects["application", control.SERVER]
+        source = application.object("spec").object("source")
+        source["repoURL"] = "https://chartmuseum.sjer.red"
+        source.object("helm").object("valuesObject").object("image").pop("tag")
+        sync = application.object("status").object("sync")
+        sync["status"] = "OutOfSync"
+        sync.object("comparedTo")["source"] = copy.deepcopy(source)
+        application.object("status")["resources"] = [
+            {"group": "apps", "kind": "StatefulSet", "namespace": control.NAMESPACE, "name": control.SERVER},
+            {"kind": "Service", "namespace": control.NAMESPACE, "name": control.SERVER},
+        ]
+
+        def response(request: Request, timeout: float) -> MagicMock:
+            if not request.full_url.endswith("/managed-resources"):
+                return self.chart_request.return_value
+            server = copy.deepcopy(self.cluster.server)
+            predicted = copy.deepcopy(server)
+            predicted.object("spec")["replicas"] = 1
+            resources = [
+                {
+                    "group": "apps",
+                    "kind": "StatefulSet",
+                    "namespace": control.NAMESPACE,
+                    "name": control.SERVER,
+                    "liveState": json.dumps(server),
+                    "normalizedLiveState": json.dumps(server),
+                    "predictedLiveState": json.dumps(predicted),
+                },
+                {
+                    "kind": "Service",
+                    "namespace": control.NAMESPACE,
+                    "name": control.SERVER,
+                    "liveState": "{}",
+                    "normalizedLiveState": "{}",
+                    "predictedLiveState": "{}",
+                },
+            ]
+            if change is not None:
+                change(resources)
+            result = MagicMock()
+            result.__enter__.return_value.status = 200
+            result.__enter__.return_value.read.return_value = json.dumps({"items": resources}).encode()
+            return result
+
+        self.chart_request.side_effect = response
+        return journal
+
+    def test_original_abort_uses_helm_parameter_and_only_owned_replica_drift(self):
+        journal = self.original_abort_gitops()
+        with patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": "registered-reader-fixture"}):
+            control.abort(self.path, journal)
+        self.assertEqual(journal.string("phase"), "REOPENED")
+        self.assertIs(journal.get("productionWriteAuthorized"), False)
+        self.assertNotIn("installation", journal)
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertEqual(control.server_image(self.cluster.server), journal.string("rollbackImage"))
+
+    def test_original_abort_refuses_other_drift_and_stale_or_incomplete_comparison(self):
+        for change in (
+            "image",
+            "replicas",
+            "other-resource",
+            "missing",
+            "duplicate",
+            "uid",
+            "resource-version",
+            "app-race",
+        ):
+            with self.subTest(change=change):
+                self.path.unlink(missing_ok=True)
+                self.cluster = Cluster()
+
+                def modify(resources: list[dict[str, str]], change: str = change) -> None:
+                    item = resources[0]
+                    if change in ("missing", "duplicate"):
+                        resources.pop() if change == "missing" else resources.append(copy.deepcopy(item))
+                    elif change == "other-resource":
+                        resources[1]["predictedLiveState"] = '{"spec":{"ports":[]}}'
+                    elif change == "app-race":
+                        self.cluster.objects["application", control.SERVER]["operation"] = {"sync": {}}
+                    elif change in ("uid", "resource-version"):
+                        raw = JsonObject.parse(item["liveState"])
+                        raw.object("metadata")["uid" if change == "uid" else "resourceVersion"] = "changed"
+                        item["liveState"] = json.dumps(raw)
+                    else:
+                        predicted = JsonObject.parse(item["predictedLiveState"])
+                        if change == "image":
+                            predicted.object("spec").object("template").object("spec").objects("containers")[0][
+                                "image"
+                            ] = "foreign"
+                        else:
+                            predicted.object("spec")["replicas"] = 2
+                        item["predictedLiveState"] = json.dumps(predicted)
+
+                journal = self.original_abort_gitops(modify)
+                before = len(self.cluster.mutations)
+                with (
+                    patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": "registered-reader-fixture"}),
+                    self.assertRaises(ValueError),
+                ):
+                    control.abort(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
+
+    def test_parameter_only_image_does_not_relax_normal_release_sync(self):
+        journal = self.original_abort_gitops()
+        with self.assertRaisesRegex(ValueError, "reconciled GitOps"):
+            control.assert_gitops_image(journal, journal.string("rollbackImage"))
+        application = self.cluster.objects["application", control.SERVER]
+        application.object("status").object("sync")["status"] = "Synced"
+        control.assert_gitops_image(journal, journal.string("rollbackImage"))
+        application.object("spec").object("source").object("helm").object("valuesObject").object("image")["tag"] = (
+            "foreign"
+        )
+        with self.assertRaisesRegex(ValueError, "reconciled GitOps"):
+            control.assert_gitops_image(journal, journal.string("rollbackImage"))
 
     def test_abort_resumes_interrupted_routes_after_clearing_the_lease_and_is_idempotent_after_wake(self):
         journal = self.initialize()

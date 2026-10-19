@@ -2123,31 +2123,99 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     save(path, journal)
 
 
-def assert_gitops_image(journal: JsonObject, expected_image: str | None = None) -> None:
-    """The reconciled Application must declare this image at both Helm precedence levels."""
+def assert_original_abort_drift(application: JsonObject, journal: JsonObject) -> None:
+    """Only the recorded untouched server's stopped replica count may differ from GitOps."""
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal, allow_unheld=journal.string("phase") in ("RELEASING", "REOPENED"))
+    assert_rollback_template(server, journal)
+    if (
+        journal.get("productionWriteAuthorized") is not False
+        or journal.string("phase") not in ("LEASED_OFFLINE", "RELEASING", "REOPENED")
+        or server.object("spec").integer("replicas") != 0
+        or server.object("status", {}).get("replicas", 0) != 0
+    ):
+        raise ValueError("Original abort requires its unchanged stopped maintenance lease")
+    token = os.environ.get("ARGOCD_AUTH_TOKEN")
+    if not token:
+        raise ValueError("Original abort drift proof requires the registered Argo reader credential")
+    request = Request(
+        "https://argocd.sjer.red/api/v1/applications/minecraft-tsmc/managed-resources",
+        headers={"Authorization": "Bearer " + token},
+    )
+    with urlopen(request, timeout=30) as response:
+        if response.status != 200:
+            raise ValueError("Original abort requires a fresh Argo resource comparison")
+        resources = JsonObject.parse(response.read()).objects("items")
+    expected = {
+        (item.string("group", ""), item.string("kind"), item.string("namespace", ""), item.string("name"))
+        for item in application.object("status").objects("resources")
+    }
+    observed: set[tuple[str, str, str, str]] = set()
+    differences = 0
+    for item in resources:
+        identity = (item.string("group", ""), item.string("kind"), item.string("namespace", ""), item.string("name"))
+        if identity not in expected or identity in observed:
+            raise ValueError("Original abort Argo resource inventory changed")
+        observed.add(identity)
+        live = JsonObject.parse(item.string("normalizedLiveState"))
+        predicted = JsonObject.parse(item.string("predictedLiveState"))
+        if live == predicted:
+            continue
+        raw_live = JsonObject.parse(item.string("liveState"))
+        if (
+            identity != ("apps", "StatefulSet", NAMESPACE, SERVER)
+            or raw_live.object("metadata").get("uid") != journal.string("serverUid")
+            or raw_live.object("metadata").get("resourceVersion") != server.object("metadata").string("resourceVersion")
+            or live.object("spec").get("replicas") != 0
+            or predicted.object("spec").get("replicas") != 1
+        ):
+            raise ValueError("Original abort permits only the leased StatefulSet replica difference")
+        live.object("spec").pop("replicas")
+        predicted.object("spec").pop("replicas")
+        if live != predicted:
+            raise ValueError("Original abort permits only the leased StatefulSet replica difference")
+        differences += 1
+    if observed != expected or differences != 1 or read("application", SERVER, "argocd") != application:
+        raise ValueError("Original abort requires an unchanged complete Argo replica-only comparison")
+    if read("statefulset", SERVER) != server:
+        raise ValueError("Original abort server changed during its Argo comparison")
+
+
+def assert_gitops_image(
+    journal: JsonObject, expected_image: str | None = None, *, original_abort: bool = False
+) -> None:
+    """Require the exact effective Helm image and reconciled source, except owned abort replica drift."""
     application = read("application", SERVER, "argocd")
     spec = application.object("spec")
     source = spec.object("source")
     helm = source.object("helm")
     image = helm.object("valuesObject").object("image")
-    declared = image.string("repository") + ":" + image.string("tag")
     image_parameters = [item for item in helm.objects("parameters") if item.string("name").startswith("image.")]
+    if len(image_parameters) != 1 or image_parameters[0].get("name") != "image.tag":
+        raise ValueError("Release requires one exact GitOps image.tag parameter")
+    tag = image_parameters[0].string("value")
+    declared = image.string("repository") + ":" + tag
     sync = application.object("status").object("sync")
     if (
         declared != (expected_image if expected_image is not None else journal.string("candidateImage"))
-        or image_parameters != [{"name": "image.tag", "value": image.string("tag")}]
+        or ("tag" in image and image.get("tag") != tag)
+        or image_parameters != [{"name": "image.tag", "value": tag}]
         or set(helm) != {"parameters", "valuesObject"}
         or "sources" in spec
         or source.get("chart") != "minecraft"
         or source.get("repoURL") not in MINECRAFT_CHART_ARCHIVES
         or source.get("targetRevision") != MINECRAFT_CHART_VERSION
         or spec.object("destination").get("namespace") != NAMESPACE
-        or sync.get("status") != "Synced"
+        or sync.get("status") not in (("Synced", "OutOfSync") if original_abort else ("Synced",))
         or sync.object("comparedTo").get("source") != source
         or sync.object("comparedTo").get("destination") != spec.object("destination")
         or "operation" in application
     ):
         raise ValueError("Release requires the reconciled GitOps Application to declare the accepted candidate image")
+    if sync.get("status") != "Synced":
+        if expected_image != journal.string("rollbackImage"):
+            raise ValueError("Original abort cannot select a candidate image")
+        assert_original_abort_drift(application, journal)
     request = Request(
         MINECRAFT_CHART_ARCHIVES[source.string("repoURL")],
         headers={"User-Agent": "the-storm-restoration/1"},
@@ -2348,7 +2416,7 @@ def abort(path: Path, journal: JsonObject) -> None:
     if journal.string("phase") == "LEASED_OFFLINE":
         require_offline(journal, readers=True)
         assert_rollback_template(read("statefulset", SERVER), journal)
-        assert_gitops_image(journal, journal.string("rollbackImage"))
+        assert_gitops_image(journal, journal.string("rollbackImage"), original_abort=True)
         # Even terminated, unrecorded source-volume pods make prior write access uncertain.
         pods = JsonObject.parse(run(["-n", NAMESPACE, "get", "pods", "-o", "json"])).objects("items")
         for pod in pods:
@@ -2375,10 +2443,12 @@ def abort(path: Path, journal: JsonObject) -> None:
         or journal.get("readersRemoved") is not True
     ):
         raise ValueError("Abort reopening requires unchanged original-volume evidence and reader cleanup")
-    reopen(path, journal, journal.string("rollbackImage"), journal.object("rollbackTemplate"))
+    reopen(path, journal, journal.string("rollbackImage"), journal.object("rollbackTemplate"), original_abort=True)
 
 
-def reopen(path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject) -> None:
+def reopen(
+    path: Path, journal: JsonObject, expected_image: str, accepted_template: JsonObject, *, original_abort: bool = False
+) -> None:
     """Restore captured routes for an accepted candidate or byte-verified whole-volume rollback."""
     server = read("statefulset", SERVER)
     assert_owner(server, journal, allow_unheld=True)
@@ -2390,7 +2460,7 @@ def reopen(path: Path, journal: JsonObject, expected_image: str, accepted_templa
         server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
     ):
         raise ValueError("Release requires a gracefully stopped accepted candidate or rollback")
-    assert_gitops_image(journal, expected_image)
+    assert_gitops_image(journal, expected_image, original_abort=original_abort)
     if journal.get("phase") == "LEASED_OFFLINE":
         require_offline(journal)
         journal["phase"] = "RELEASING"
