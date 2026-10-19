@@ -629,4 +629,26 @@ final class TacticsCommitmentTest {
     assertThat(afterBombChange(Option.DEFUSE, new PlanStep.Defuse(id), bomb).decision().option())
         .isEqualTo(Option.HOLD_ANGLE);
   }
+
+  @Test
+  void standingStillEarnsNoCommitment() {
+    var here = new Vec3(1, 1, 1);
+    var hold = new PlanStep.Hold(here, here.plus(1, 0, 0), Stance.CAUTIOUS);
+    assertThat(Tactics.earnsCommitment(Plan.of(Option.HOLD_ANGLE, 0, hold))).isFalse();
+    assertThat(
+            Tactics.earnsCommitment(
+                Plan.of(Option.RECOVER, 0, new PlanStep.Route(here, Stance.CAUTIOUS))))
+        .isFalse();
+    assertThat(Tactics.earnsCommitment(Plan.of(Option.ENGAGE, 0, hold))).isFalse();
+    assertThat(Tactics.earnsCommitment(Plan.of(Option.HUNT, 0, hold))).isFalse();
+    assertThat(
+            Tactics.earnsCommitment(
+                Plan.of(Option.HUNT, 0, new PlanStep.Route(here, Stance.CAUTIOUS))))
+        .isTrue();
+    assertThat(Tactics.earnsCommitment(Plan.of(Option.HOLD_SLOT, 0, hold))).isTrue();
+    assertThat(
+            Tactics.earnsCommitment(
+                Plan.of(Option.TAKE_SLOT, 0, new PlanStep.Route(here, Stance.CAUTIOUS))))
+        .isTrue();
+  }
 }

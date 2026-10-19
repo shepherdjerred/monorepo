@@ -334,12 +334,17 @@ public record Blackboard(
             .count();
   }
 
-  /** The nav nodes teammates other than {@code except} are about to walk. */
-  public Set<Integer> pathsOfOthers(CombatantId except) {
+  /**
+   * The nav nodes that teammates ranked ahead of {@code self} (a lower combatant id) are about to
+   * walk. Only lower-ranked bots yield, so routing around each other always settles: when every bot
+   * avoided every other's latest path, two teammates sharing a corridor could each move off the
+   * other's new route on every think, and pace back and forth instead of walking.
+   */
+  public Set<Integer> pathsAhead(CombatantId self) {
     var out = new HashSet<Integer>();
     paths.forEach(
         (bot, nodes) -> {
-          if (!bot.equals(except)) {
+          if (bot.value() < self.value()) {
             out.addAll(nodes);
           }
         });

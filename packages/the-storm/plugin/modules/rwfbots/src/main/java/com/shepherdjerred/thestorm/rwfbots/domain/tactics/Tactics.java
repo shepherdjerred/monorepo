@@ -83,7 +83,7 @@ public final class Tactics {
     var objective = ObjectivePolicy.direct(state.memory(), situation, context);
     var current = currentPlan(state, situation, context);
     current
-        .filter(plan -> plan.option() != Option.RECOVER)
+        .filter(Tactics::earnsCommitment)
         .ifPresent(plan -> scores.merge(plan.option(), COMMIT_BONUS, Double::sum));
     var candidates = aboveFloor(scores);
     var temperature =
@@ -141,6 +141,19 @@ public final class Tactics {
         decision,
         trace,
         note(plan, decision, situation, context).working(memory.defusing()));
+  }
+
+  /**
+   * Whether the plan under way earns {@link #COMMIT_BONUS}: not a recovery step, not an idle hold,
+   * and not a fight or hunt that fell back to holding because it has no one to chase. Sticking with
+   * standing still would only make a bot that drifted into it stand longer.
+   */
+  static boolean earnsCommitment(Plan plan) {
+    return switch (plan.option()) {
+      case RECOVER, HOLD_ANGLE -> false;
+      case ENGAGE, HUNT -> !(plan.current() instanceof PlanStep.Hold);
+      default -> true;
+    };
   }
 
   private static boolean offensive(Option option) {

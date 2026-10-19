@@ -1390,7 +1390,7 @@ public final class Planner {
             graph,
             context.seed(),
             new RoutePenalty.Tolls(
-                situation.board().pathsOfOthers(situation.self().id()), corridor, extra));
+                situation.board().pathsAhead(situation.self().id()), corridor, extra));
     var points =
         RouteNavigator.find(
             context,

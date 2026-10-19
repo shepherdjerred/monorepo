@@ -25,7 +25,7 @@ final class TeamNotesTest {
     assertThat(board.isCoverClaimed(42, A)).as("a bot's own claim is not in its way").isFalse();
     var released = board.note(A, TeamNote.NONE);
     assertThat(released.isCoverClaimed(42, B)).isFalse();
-    assertThat(released.pathsOfOthers(B)).isEmpty();
+    assertThat(released.pathsAhead(B)).isEmpty();
   }
 
   @Test
@@ -40,13 +40,14 @@ final class TeamNotesTest {
   }
 
   @Test
-  void pathsOfOthersLeaveOutTheAsker() {
+  void onlyPathsOfTeammatesRankedAheadAreInTheWay() {
     var board =
         Blackboard.open(RED, Strategy.RUSH)
             .note(A, new TeamNote(Optional.empty(), Optional.empty(), Set.of(1, 2)))
             .note(B, new TeamNote(Optional.empty(), Optional.empty(), Set.of(3)));
-    assertThat(board.pathsOfOthers(A)).containsExactly(3);
-    assertThat(board.pathsOfOthers(C)).containsExactlyInAnyOrder(1, 2, 3);
+    assertThat(board.pathsAhead(A)).as("the first bot yields to nobody").isEmpty();
+    assertThat(board.pathsAhead(B)).containsExactlyInAnyOrder(1, 2);
+    assertThat(board.pathsAhead(C)).containsExactlyInAnyOrder(1, 2, 3);
   }
 
   @Test
