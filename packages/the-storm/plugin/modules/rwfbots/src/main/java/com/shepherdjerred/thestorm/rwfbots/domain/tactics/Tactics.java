@@ -225,7 +225,7 @@ public final class Tactics {
       Planning planning, Situation situation, TacticsContext context, Setback setback) {
     var memory = setback.memory();
     var failure = setback.failure();
-    if (Planner.strandedOnClimb(situation, context)) {
+    if (RecoverySteps.strandedOnClimb(situation, context)) {
       var letGo = Planner.letGo(situation, context);
       return new Routed(
           letGo,
