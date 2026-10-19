@@ -122,6 +122,7 @@ test("actual BOTH bootstrap stages and Helm renders reviewed images while retain
     const previousRoot = bindChartImageDependencies(manifests.get("apps")!, {
       "shepherdjerred/caddy-s3proxy": digest("d"),
       "shepherdjerred/velero-plugin": digest("e"),
+      "shepherdjerred/zfs-driver": digest("a"),
     });
     const priorDocuments = parseAllDocuments(previousRoot)
       .map((doc) => doc.toJSON())
@@ -158,6 +159,7 @@ test("actual BOTH bootstrap stages and Helm renders reviewed images while retain
     expect(bindings.maintenanceImage).toBe(maintenanceImage);
     expect(bindings.digests).not.toHaveProperty("shepherdjerred/caddy-s3proxy");
     expect(bindings.digests).not.toHaveProperty("shepherdjerred/velero-plugin");
+    expect(bindings.digests).not.toHaveProperty("shepherdjerred/zfs-driver");
     const rendered = new Map<string, any[]>();
     for (const name of ["apps", "woodpecker", "delivery"]) {
       const input = inputs.find((item) => item.name === name)!;
