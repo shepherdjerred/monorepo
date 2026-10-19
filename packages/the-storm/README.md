@@ -3316,6 +3316,13 @@ distance cleared, and the router treats a grounded body as landed: an NPC body
 does not refresh vanilla's collision on-ground flag while standing still, so a
 landed fall could otherwise be planned as a fatal drop indefinitely.
 
+Holding is a patrol, not a statue (`Patrol`): a bot holding a slot, a retake
+point, or a hunt or fight with nothing to chase, with no enemy in sight, moves
+between reachable posts around its hold (within 1.8 blocks of a slot so it still
+holds it, 3 otherwise), lingering 2 to 5 s at each by its patience. It stands
+still to shoot a visible enemy, when sneaking as the last of its team, and for
+deliberate holds (`HOLD_ANGLE` at a late start or a pending elimination).
+
 The body's last movement gate (`MovementSafety`, read against live terrain by
 `MovementTerrain`) follows vanilla where the graph's primitives meet real
 blocks. A body is grounded when its centre or any footprint corner rests on a
