@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <template_modifications>
+  <modification type="public" template="PAGE_CONTAINER" modification_key="storm_card_artwork_revision" description="Refresh public social previews when shared artwork changes" execution_order="20" enabled="1" action="str_replace">
+    <find><![CDATA['theme': $stormPublicTheme]]></find>
+    <replace><![CDATA['theme': $stormPublicTheme, 'v': $stormBrandRevision]]></replace>
+  </modification>
+  <modification type="public" template="PAGE_CONTAINER" modification_key="storm_brand_head" description="Original Storm favicon and cloud touch icon on every public page" execution_order="20" enabled="1" action="str_replace">
+    <find><![CDATA[</head>]]></find>
+    <replace><![CDATA[<xf:include template="storm_brand_head" />$0]]></replace>
+  </modification>
   <modification type="public" template="PAGE_CONTAINER" modification_key="storm_classic_reactions_css" description="Classic ratings styling on native forum pages" execution_order="10" enabled="1" action="str_replace">
     <find><![CDATA[<xf:set var="$cssUrls" value="{{ ['public:normalize.css', 'public:fa.css'] }}" />]]></find>
     <replace><![CDATA[$0<xf:css src="storm_forum.less" />]]></replace>

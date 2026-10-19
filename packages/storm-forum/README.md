@@ -189,7 +189,11 @@ and renderer/artwork revision. Personal appearance choices do not change cards.
 
 The homepage keeps the chronological news feed and historical posts. Its join
 panel links to Java/Bedrock instructions and the first-session guide; gameplay
-images are native captures under `assets/gameplay`.
+images are dated archived photographs from the shared theme's `assets/brand`.
+The original cloud wordmark follows the existing seasonal colors. Managed styles
+set the classic favicon, cloud application icons, metadata card and email logo;
+the assembly also supplies the original root favicon and touch icon. Share-image
+URLs and cached cards include the shared artwork revision.
 
 The reviewed `config/welcome-announcement.json` is an editorial post, separate
 from generated seed threads. Run `php cmd.php storm:announce` inside the forum

@@ -31,6 +31,7 @@ manifest=${manifests[0]}
 grep -qF '<title>BlueMap</title>' "$out/index.html" || fail "unexpected viewer title"
 grep -qE 'rel="icon" href="\./assets/favicon-[[:alnum:]_-]+\.png"' "$out/index.html" || fail "unexpected viewer icon"
 grep -qF 'name="og:image" content="' "$out/index.html" || fail "unexpected viewer preview image"
+grep -qF '</head>' "$out/index.html" || fail "unexpected viewer document head"
 grep -qF 'Failed to load BlueMap webapp!' "$script" || fail "unexpected viewer error message"
 grep -qF 'bluemap-screenshot.png' "$script" || fail "unexpected screenshot filename"
 [[ $(grep -oF './lang/' "$script" | wc -l) -eq 2 ]] || fail "unexpected language loader"
@@ -40,9 +41,22 @@ grep -qF 'bluemap-screenshot.png' "$script" || fail "unexpected screenshot filen
 favicon_hash=$(sha256sum "$branding/favicon.svg" | cut -d ' ' -f 1)
 favicon_name=livemap-icon-${favicon_hash:0:16}.svg
 install -m 0644 "$branding/favicon.svg" "$out/assets/$favicon_name"
-# Open Graph crawlers require an absolute URL. Pin this source asset to the
-# PR commit so the URL works before the LiveMap server image is released.
-preview_url="https://raw.githubusercontent.com/shepherdjerred/monorepo/12bedf8fb050116786c395fe6604b81e3de5dcf4/packages/the-storm/server/livemap/social.png"
+# Ship the preview with this release; no external repository revision can leave
+# the live viewer displaying an older brand image.
+preview_hash=$(sha256sum "$branding/social.png" | cut -d ' ' -f 1)
+preview_name=livemap-social-${preview_hash:0:16}.png
+install -m 0644 "$branding/social.png" "$out/assets/$preview_name"
+preview_url="https://bluemap.ts-mc.net/assets/$preview_name"
+for size in 180 192 512; do
+  icon_hash=$(sha256sum "$branding/icon-$size.png" | cut -d ' ' -f 1)
+  icon_name=livemap-app-$size-${icon_hash:0:16}.png
+  install -m 0644 "$branding/icon-$size.png" "$out/assets/$icon_name"
+  case $size in
+    180) touch_icon=$icon_name ;;
+    192) app_icon_192=$icon_name ;;
+    512) app_icon_512=$icon_name ;;
+  esac
+done
 
 for locale in "$out"/lang/*.conf; do
   [[ ${locale##*/} == settings.conf ]] && continue
@@ -68,7 +82,8 @@ mv -- "$script.branded" "$out/assets/$script_name"
 rm -- "$script"
 
 sed 's/BlueMap/LiveMap/g' "$manifest" |
-  jq --arg icon "$favicon_name" '.icons = [{src: $icon, sizes: "any", type: "image/svg+xml"}]' >"$manifest.branded"
+  jq --arg small "$app_icon_192" --arg large "$app_icon_512" \
+    '.icons = [{src: $small, sizes: "192x192", type: "image/png"}, {src: $large, sizes: "512x512", type: "image/png"}]' >"$manifest.branded"
 manifest_hash=$(sha256sum "$manifest.branded" | cut -d ' ' -f 1)
 manifest_name=livemap-${manifest_hash:0:16}.webmanifest
 mv -- "$manifest.branded" "$out/assets/$manifest_name"
@@ -77,6 +92,8 @@ rm -- "$manifest"
 sed -e 's/BlueMap/LiveMap/g' -e 's/bluemap, map/livemap, map/g' \
   -e "s|assets/favicon-[[:alnum:]_-]*\.png|assets/$favicon_name|g" \
   -e "s|\(name=\"og:image\" content=\"\)[^\"]*|\1$preview_url|g" \
+  -e 's|name="og:|property="og:|g' \
+  -e "s|</head>|<meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\"><meta property=\"og:image:alt\" content=\"The Storm LiveMap, with its original wordmark and archived spawn\"><meta name=\"twitter:card\" content=\"summary_large_image\"><meta name=\"twitter:image\" content=\"$preview_url\"><link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"./assets/$touch_icon\"></head>|" \
   -e "s|assets/index-[[:alnum:]_-]*\.js|assets/$script_name|g" \
   -e "s|assets/manifest-[[:alnum:]_-]*\.webmanifest|assets/$manifest_name|g" \
   "$out/index.html" >"$out/index.html.branded"

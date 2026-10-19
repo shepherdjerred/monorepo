@@ -44,10 +44,8 @@ export async function renderCard(input: StormCard): Promise<Uint8Array> {
   );
   if (!theme) throw new Error("Missing Storm card theme");
   const palette = theme.palettes.dark;
-  const scenery = themeCatalog.scenery[theme.scenery];
-  if (!scenery) throw new Error("Missing Storm card scenery");
   const [background, logo, regular, strong] = await Promise.all([
-    dataImage(scenery.desktop, "image/jpeg"),
+    dataImage("spawn.jpg", "image/jpeg"),
     dataImage(theme.contentLogos.dark, "image/svg+xml"),
     font,
     bold,

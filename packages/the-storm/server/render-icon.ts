@@ -1,7 +1,10 @@
 import { Resvg } from "@resvg/resvg-js";
 
-// Adapted from the existing TS mark in ts-mc-docs/src/assets/storm-mark.svg.
-const source = new URL("assets/server-icon.svg", import.meta.url);
+// The original cloud-backed TS mark is shared by all Storm applications.
+const source = new URL(
+  "../../storm-theme/assets/brand/mark.svg",
+  import.meta.url,
+);
 const destination = new URL("assets/server-icon.png", import.meta.url);
 const rendered = new Resvg(await Bun.file(source).text(), {
   fitTo: { mode: "width", value: 64 },

@@ -27,6 +27,14 @@ final class OwnedStyles extends \XF\Service\AbstractService
                 'inputBgColor','inputTextColor','buttonPrimaryBg','buttonCtaBg','selectedItemBgColor','selectedItemColor','metaThemeColor'];
             foreach ($native as $name) { $values[$name] = ['default'=>$palette[$name], 'alternate'=>$other[$name]]; }
             foreach (['publicLogoUrl','publicLogoUrl2x'] as $name) { $values[$name] = ['default'=>'styles/storm/' . $theme['logos'][$mode], 'alternate'=>'styles/storm/' . $theme['logos'][$mode === 'light' ? 'dark' : 'light']]; }
+            foreach ([
+                'publicFaviconUrl'=>'favicon-32.png',
+                'publicIconUrl'=>'icon-192.png',
+                'publicIconUrlLarge'=>'icon-512.png',
+                'publicMetadataLogoUrl'=>'social.png',
+                'emailPublicLogoUrl'=>'wordmark.png',
+            ] as $name=>$asset) { $values[$name] = 'styles/storm/brand/' . $asset; }
+            $values['publicIconsMaskable'] = false;
             $app->repository('XF:StyleProperty')->updatePropertyValues($style, $values);
             $template = $app->finder('XF:Template')->where(['style_id' => $style->style_id, 'type' => 'public', 'title' => 'extra.less'])->fetchOne() ?: $app->em()->create('XF:Template');
             $template->style_id = $style->style_id;

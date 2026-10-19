@@ -56,6 +56,8 @@ $copy = static function (string $source, string $target) use (&$copy): void {
 };
 $copy('/opt/storm-forum/addon/Storm', '/app/forum/src/addons/Storm');
 $copy('/opt/storm-theme/assets', '/app/forum/styles/storm');
+$copy('/opt/storm-theme/assets/brand/favicon.ico', '/app/forum/favicon.ico');
+$copy('/opt/storm-theme/assets/brand/icon-180.png', '/app/forum/apple-touch-icon.png');
 $copy('/opt/storm-forum/assets/gameplay', '/app/forum/styles/storm/gameplay');
 $copy('/opt/storm-theme/dist/browser.js', '/app/forum/styles/storm/browser.js');
 $copy('/opt/storm-forum/dist/minecraft.js', '/app/forum/styles/storm/minecraft.js');

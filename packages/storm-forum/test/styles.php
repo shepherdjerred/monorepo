@@ -45,6 +45,9 @@ foreach (['light', 'dark'] as $mode) {
         $check($properties['contentBg']->getVariationValue('default') === ($mode === 'dark' ? '#2a2a2a' : '#ffffff'), 'Appearance palette did not reach the child');
         $theme = \Storm\Forum\Service\ThemeCatalog::theme($season);
         $check($properties['publicLogoUrl']->getVariationValue('default') === 'styles/storm/' . $theme['logos'][$mode], 'Themed logo property did not reach the child');
+        $check($properties['publicFaviconUrl']->getVariationValue('default') === 'styles/storm/brand/favicon-32.png', 'Original favicon did not reach the child');
+        $check($properties['publicIconUrl']->getVariationValue('default') === 'styles/storm/brand/icon-192.png', 'Cloud application icon did not reach the child');
+        $check($properties['publicIconUrlLarge']->getVariationValue('default') === 'styles/storm/brand/icon-512.png', 'Cloud large application icon did not reach the child');
         $check($properties['chromeBg']->getVariationValue('default') === $theme['palettes'][$mode]['chromeBg'], 'Catalog palette did not reach the child');
         $check((bool)$properties['flexile_show_header_content']->property_value, 'Header content setting is not inherited');
     }
