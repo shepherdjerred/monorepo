@@ -189,4 +189,22 @@ final class MovementTerrainTest {
         .isNotEqualTo(
             com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
   }
+
+  @Test
+  void aBodyOffCentreUnderAnOverhangTakesOffFromItsCellsCentre() {
+    // hemispheres: a body 0.3 off its node's centre raised its head into a stair overhanging the
+    // next column for every jump onto the step ahead, and stood refused for over five minutes.
+    world.getBlockAt(3, 1, 2).setType(Material.STONE);
+    world.getBlockAt(1, 3, 2).setType(Material.STONE);
+    var from = new Vec3(2.21, 1, 2.5);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            from, new Vec3(3.5, 2, 2.5), com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.JUMP);
+    var result =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, request);
+    assertThat(result.reason())
+        .isEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
+    assertThat(result.destination()).contains(new Vec3(2.5, 1, 2.5));
+  }
 }

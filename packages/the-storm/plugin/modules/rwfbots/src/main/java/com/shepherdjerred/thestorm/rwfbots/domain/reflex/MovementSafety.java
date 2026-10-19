@@ -18,6 +18,8 @@ public final class MovementSafety {
   private static final double STEP_HEIGHT = 0.6;
   // How far from its footing a body still only needs footing, while it steps back from an edge.
   private static final double LEAVING = 0.5;
+  // Within this of its cell's centre a body already takes off from there.
+  private static final double CENTRED = 0.05;
   private static final double[] ANGLES = {0, 30, -30, 60, -60, 90, -90};
 
   private MovementSafety() {}
@@ -79,9 +81,11 @@ public final class MovementSafety {
       return swim(terrain, request.from(), request.target());
     }
     if (request.hop() == Hop.LEAP || request.hop() == Hop.DROP || request.hop() == Hop.JUMP) {
-      return traversal(terrain, request)
-          ? new Result(Optional.of(request.target()), Reason.CLEAR)
-          : new Result(Optional.empty(), Reason.BLOCKED);
+      if (traversal(terrain, request))
+        return new Result(Optional.of(request.target()), Reason.CLEAR);
+      return takeoff(terrain, request)
+          .map(centre -> new Result(Optional.of(centre), Reason.REDIRECTED))
+          .orElseGet(() -> new Result(Optional.empty(), Reason.BLOCKED));
     }
     var heading = request.target().minus(request.from()).horizontal();
     if (heading.isZero()) {
@@ -94,6 +98,22 @@ public final class MovementSafety {
     return climbAround(terrain, request.from(), request.target())
         .map(corner -> new Result(Optional.of(corner), Reason.REDIRECTED))
         .orElse(walked);
+  }
+
+  /**
+   * The centre of the cell a grounded body stands in, when the traversal it was refused is clear
+   * from there and it can walk there: a body standing off its node's centre may otherwise raise its
+   * head into an overhang beside it for every jump (hemispheres: a stair under a balcony).
+   */
+  private static Optional<Vec3> takeoff(Terrain terrain, Request request) {
+    var from = request.from();
+    if (request.takeoff().isPresent() || !terrain.grounded(from)) return Optional.empty();
+    var centre = new Vec3(Math.floor(from.x()) + 0.5, from.y(), Math.floor(from.z()) + 0.5);
+    if (centre.horizontalDistance(from) < CENTRED) return Optional.empty();
+    return walkCorridor(terrain, from, centre)
+            && traversal(terrain, new Request(centre, request.target(), request.hop()))
+        ? Optional.of(centre)
+        : Optional.empty();
   }
 
   /**
