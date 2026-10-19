@@ -53,6 +53,12 @@ test("only the durable controller receives maintenance identity; the restored sa
           containers: z.array(
             z.object({
               command: z.array(z.string()),
+              env: z.array(
+                z.looseObject({
+                  name: z.string(),
+                  value: z.string().optional(),
+                }),
+              ),
               volumeMounts: z.array(z.looseObject({ name: z.string() })),
             }),
           ),
@@ -64,6 +70,16 @@ test("only the durable controller receives maintenance identity; the restored sa
   expect(spec.template.spec.containers[0]?.command).toEqual([
     "bun",
     "scripts/jobs/minecraft-controller.ts",
+  ]);
+  expect(
+    spec.template.spec.containers[0]?.env.filter(
+      (entry) => entry.name === "NODE_EXTRA_CA_CERTS",
+    ),
+  ).toEqual([
+    {
+      name: "NODE_EXTRA_CA_CERTS",
+      value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+    },
   ]);
   expect(
     spec.template.spec.volumes.find((volume) => volume.name === "journal"),

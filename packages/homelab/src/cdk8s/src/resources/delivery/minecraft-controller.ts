@@ -121,6 +121,10 @@ export function createDeliveryMinecraftController(
               env: [
                 { name: "HOME", value: "/journal/home" },
                 {
+                  name: "NODE_EXTRA_CA_CERTS",
+                  value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+                },
+                {
                   name: "DELIVERY_API_URL",
                   value: "http://delivery.delivery.svc.cluster.local:7353",
                 },
