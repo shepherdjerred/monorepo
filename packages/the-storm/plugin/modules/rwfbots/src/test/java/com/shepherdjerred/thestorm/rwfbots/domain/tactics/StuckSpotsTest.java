@@ -272,4 +272,32 @@ final class StuckSpotsTest {
     assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.LET_GO);
     assertThat(thought.decision().waypoints()).isEmpty();
   }
+
+  @Test
+  void aRecoveryStepOffAWalkwayEndIsOneTheBodyCanTakeAndStaysOnTheIsland() {
+    // hemispheres: the rim walkway's west end leaves only by leaps, which a body that may not
+    // sprint refuses, and by a drop off the rim into the dead ground under the island. A bot there
+    // stepped between them for five minutes without moving.
+    var nav = nav("hemispheres");
+    var graph = nav.graph();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    var walking =
+        new com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState(
+            false, 3, 1, 0, -1, -1, -1, -1, 0, -1, -1, -1, -1, 20, 0);
+    var self = combatant(1, RED, new Vec3(2128.9, 42.5, 3094.5)).withTraversal(walking);
+    var start = graph.nearestNode(self.pos()).orElseThrow();
+    var targets = new java.util.HashSet<Vec3>();
+    for (var tick = 100L; tick < 1100; tick += 20) {
+      var plan = Planner.recovery(situation(nav, self, Optional.empty(), tick), context(nav));
+      assertThat(plan.current()).isInstanceOf(PlanStep.Route.class);
+      var goal = ((PlanStep.Route) plan.current()).goal();
+      targets.add(goal);
+      var node = graph.nearestNode(goal).orElseThrow();
+      assertThat(graph.reachable(node, spawn)).as("step to %s keeps the island", goal).isTrue();
+      for (var edge = graph.edgeStart(start); edge < graph.edgeEnd(start); edge++)
+        if (graph.edgeTarget(edge) == node)
+          assertThat(graph.edgeHop(edge)).as("step to %s", goal).isNotEqualTo(Hop.LEAP);
+    }
+    assertThat(targets).isNotEmpty();
+  }
 }

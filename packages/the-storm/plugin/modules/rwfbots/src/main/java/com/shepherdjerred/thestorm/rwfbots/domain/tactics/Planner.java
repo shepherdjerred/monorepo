@@ -21,10 +21,12 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -161,15 +163,21 @@ public final class Planner {
     var graph = context.nav().graph();
     var start = startNode(graph, situation.self().pos());
     if (start.isEmpty() || !graph.climbable(start.getAsInt())) return false;
-    var reachesSpawn = false;
-    var spawns = 0;
-    for (var site : context.nav().sites().spawns()) {
-      var spawn = context.nav().approachNode(site);
-      if (spawn.isEmpty()) continue;
-      spawns++;
-      reachesSpawn |= graph.reachable(start.getAsInt(), spawn.getAsInt());
-    }
-    return spawns > 0 && !reachesSpawn;
+    var spawns = spawnNodes(context);
+    return !spawns.isEmpty() && !reachesAny(graph, start.getAsInt(), spawns);
+  }
+
+  /** The nodes the map's spawns are approached from. */
+  private static List<Integer> spawnNodes(TacticsContext context) {
+    var nodes = new ArrayList<Integer>();
+    for (var site : context.nav().sites().spawns())
+      context.nav().approachNode(site).ifPresent(nodes::add);
+    return nodes;
+  }
+
+  private static boolean reachesAny(NavGraph graph, int from, List<Integer> targets) {
+    for (var target : targets) if (graph.reachable(from, target)) return true;
+    return false;
   }
 
   /** A stranded climber lets go, as a player would, instead of hanging on for the whole match. */
@@ -193,17 +201,32 @@ public final class Planner {
     return recoveryStep(situation, context);
   }
 
+  /**
+   * The recovery step: an adjacent node the body can actually move to (no leap for a body that may
+   * not sprint, no diagonal that lets go of a ladder) that keeps it able to reach a spawn when it
+   * can now, preferring steps without fall damage. A raw edge led bots off a walkway's end into the
+   * dead ground under an island, or to a leap their body refused without a word.
+   */
   private static Optional<Vec3> recoveryStep(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
     var from = startNode(graph, situation.self().pos());
     if (from.isEmpty()) return Optional.empty();
     var start = from.getAsInt();
-    if (graph.edgeStart(start) == graph.edgeEnd(start)) return Optional.empty();
+    var spawns = spawnNodes(context);
+    var anchored = !spawns.isEmpty() && reachesAny(graph, start, spawns);
+    var safe = new ArrayList<Integer>();
+    var hurting = new ArrayList<Integer>();
+    for (var edge = graph.edgeStart(start); edge < graph.edgeEnd(start); edge++) {
+      if (graph.unheldClimbDiagonal(edge)
+          || (graph.edgeHop(edge) == Hop.LEAP && !situation.self().traversal().maySprint())
+          || (anchored && !reachesAny(graph, graph.edgeTarget(edge), spawns))) continue;
+      (graph.edgeDamage(edge) == 0 ? safe : hurting).add(edge);
+    }
+    var steps = safe.isEmpty() ? hurting : safe;
+    if (steps.isEmpty()) return Optional.empty();
     var edge =
-        graph.edgeStart(start)
-            + Math.floorMod(
-                situation.self().id().value() + situation.now() / 20,
-                graph.edgeEnd(start) - graph.edgeStart(start));
+        steps.get(
+            Math.floorMod(situation.self().id().value() + situation.now() / 20, steps.size()));
     return Optional.of(graph.feet(graph.edgeTarget(edge)));
   }
 
@@ -1256,8 +1279,8 @@ public final class Planner {
     var distance = graph.feet(node).horizontalDistance(enemy);
     for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
       var next = graph.feet(graph.edgeTarget(edge));
-      if (graph.edgeHop(edge) != com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP
-          && next.horizontalDistance(enemy) > distance + 0.25) retreats++;
+      if (graph.edgeHop(edge) != Hop.DROP && next.horizontalDistance(enemy) > distance + 0.25)
+        retreats++;
     }
     return retreats;
   }
