@@ -63,6 +63,7 @@ export const INFRASTRUCTURE_IMAGE_TARGETS: readonly string[] = [
   "redlib",
   "the-storm-server",
   "velero-plugin",
+  "zfs-driver",
 ];
 
 export const ALL_IMAGE_TARGETS = [...APPLICATION_IMAGE_TARGETS, "infra"].sort();

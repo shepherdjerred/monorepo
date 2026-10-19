@@ -105,9 +105,18 @@ export function bindChartImageDependencies(
 ): string {
   function bind(value: unknown): unknown {
     if (typeof value === "string") {
+      // Some upstream charts require repository:tag instead of a full image.
+      // Freeze the same original digest into their tag@digest projection.
+      const tagPrefix = '{{ printf "selected@%s" (last (splitList "@" (';
+      const tagSuffix = "))) }}";
+      const digestTag =
+        value.startsWith(tagPrefix) && value.endsWith(tagSuffix);
+      const reference = digestTag
+        ? `{{ ${value.slice(tagPrefix.length, -tagSuffix.length)} }}`
+        : value;
       const match =
         /^\{\{ required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "dependencies" \| default dict\) "\1"\) \}\}$/u.exec(
-          value,
+          reference,
         );
       const name = match?.[1];
       if (name === undefined) return value;
@@ -116,7 +125,9 @@ export function bindChartImageDependencies(
         throw new Error(
           `Root chart dependency lacks its original published image:${name}`,
         );
-      return `${firstPartyImageRepository(name)}@${digest}`;
+      return digestTag
+        ? `selected@${digest}`
+        : `${firstPartyImageRepository(name)}@${digest}`;
     }
     if (Array.isArray(value)) return value.map((child) => bind(child));
     return value !== null && typeof value === "object"

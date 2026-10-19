@@ -258,7 +258,15 @@ target "storm-forum" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
+}
+
+target "zfs-driver" {
+  context    = "packages/homelab/images/zfs-driver"
+  target     = "image"
+  tags       = imagetags("zfs-driver")
+  cache-from = cachefrom("zfs-driver")
+  cache-to   = cacheto("zfs-driver")
 }
 
 target "velero-plugin" {

@@ -4,6 +4,8 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
+import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
 export function createOpenEBSApp(chart: Chart) {
   new Namespace(chart, `openebs-namespace`, {
     metadata: {
@@ -28,6 +30,16 @@ export function createOpenEBSApp(chart: Chart) {
       },
     },
     "zfs-localpv": {
+      imagePullSecrets: [{ name: dockerHubPullSecretName("openebs") }],
+      zfsPlugin: {
+        image: {
+          registry: "",
+          repository: firstPartyImageRepository("zfs-driver"),
+          // Upstream always joins repository:tag. Keep its required tag as a
+          // label; only the frozen dependency's digest selects the image.
+          tag: '{{ printf "selected@%s" (last (splitList "@" (required `Delivery requires image:zfs-driver` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "zfs-driver")))) }}',
+        },
+      },
       zfsNode: {
         encrKeysDir: "/var",
         // The CSI node plugin must run on liskov to provision/mount the
