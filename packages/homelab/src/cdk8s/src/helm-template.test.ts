@@ -149,6 +149,11 @@ function implicitAutoSyncApplications(content: string, entry: string) {
 
 function stripDeliveryImageBindings(line: string, chart: string): string {
   let stripped = line;
+  if (chart === "apps")
+    stripped = stripped.replaceAll(
+      '{{ printf "selected@%s" (last (splitList "@" (required `Delivery requires image:zfs-driver` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "zfs-driver")))) }}',
+      "",
+    );
   for (const image of imageRegistry.images) {
     stripped = stripped.replaceAll(
       `{{ required \`Delivery requires image:${image.name}\` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "${image.name}") }}`,
@@ -369,6 +374,22 @@ async function helmTemplateChart(chartName: string): Promise<{
 }
 
 describe("Helm Escaping - Denylist Check (dist/)", () => {
+  it("permits only the root's reviewed ZFS driver digest-tag projection", () => {
+    const expression =
+      '{{ printf "selected@%s" (last (splitList "@" (required `Delivery requires image:zfs-driver` (get (get (.Values.delivery | default dict) "dependencies" | default dict) "zfs-driver")))) }}';
+    expect(() =>
+      checkForUnescapedBraces(expression, "apps.k8s.yaml"),
+    ).not.toThrow();
+    for (const [content, source] of [
+      [expression, "openebs.k8s.yaml"],
+      [expression.replaceAll("zfs-driver", "unreviewed"), "apps.k8s.yaml"],
+      [expression.replace("selected@%s", "%s"), "apps.k8s.yaml"],
+    ] as const)
+      expect(() => checkForUnescapedBraces(content, source)).toThrow(
+        "unescaped {{",
+      );
+  });
+
   it("rejects unknown release expressions and consumer templates", () => {
     for (const [content, source] of [
       ["{{ .Values.delivery.unreviewed }}", "arcade.k8s.yaml"],
