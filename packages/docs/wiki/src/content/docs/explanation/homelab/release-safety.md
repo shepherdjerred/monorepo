@@ -224,7 +224,7 @@ exempting a missing Secret because cert-manager
 [records a failed request as `Issuing=False`](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/controller/certificates/issuing/issuing_controller.go#L408-L430)
 while the missing-Secret Ready condition can remain unchanged. A different
 false Ready reason or failed issuance stays `Degraded`. The
-[five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
+[guarded Argo command's bounded sync timeout](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 still fails a Certificate that never becomes ready. Ignoring Certificate health
 would let later CA and workload waves race a missing trust Secret, so the
 release does not use that shortcut.
@@ -401,10 +401,10 @@ independently unhealthy. Waiting synchronously on the root would mean waiting on
 every one of them, and a single permanently unhealthy child would hold the
 release open forever.
 
-So the [main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
+So Delivery's [root release Job](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/scripts/jobs/root-release.ts)
 separates root application from release-scoped health. One
 [atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-retains the exact CI request identity while ArgoCD applies the root
+retains the frozen Delivery request identity while ArgoCD applies the root
 revision. It sends every desired wave as bounded exact-source selections plus
 local overrides only where policy is deliberately rewritten. It compares each
 batch's reported group, kind, and name identities with its exact selection and
@@ -423,7 +423,7 @@ asynchronously. A second process can read before the accepted operation appears.
 Keeping submission and finalization together lets the command poll through that
 gap and distinguish stale state from its own operation.
 
-A CI retry reuses the request identity. The
+A retry of the same frozen request reuses its identity. The
 [operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 adopts only the same request ID and revision. It refuses any unrelated active
 operation. For the root workflow, the active resource selection must also equal

@@ -291,7 +291,14 @@ export async function stage(
       create: { id: id(), deploymentId, ...data },
       update: data,
     });
-    await evidence(tx, deploymentId, items, `stage/${input.key}`);
+    await evidence(
+      tx,
+      deploymentId,
+      items,
+      row.kind === "upgrade-control-plane" && input.key === "control-plane"
+        ? { prefix: "stage/control-plane", appendOnly: true }
+        : `stage/${input.key}`,
+    );
     await audit(tx, actor, {
       action: "deployment.stage",
       entityId: deploymentId,
