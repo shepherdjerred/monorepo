@@ -41,6 +41,8 @@ public final class BotBody {
   private long nextMovementRecovery;
   private int movementRecoveries;
   private final Map<String, Integer> movementProblemsThisLife = new TreeMap<>();
+  private Optional<String> lastStuck = Optional.empty();
+  private long lastStuckTick = -1;
   private long nextStreak;
   private long shieldUntil;
 
@@ -151,6 +153,20 @@ public final class BotBody {
     return lastMovementProblemTick;
   }
 
+  /** The body's state the last time it refused or stalled on a step this life. */
+  void noteStuck(String state, long tick) {
+    lastStuck = Optional.of(state);
+    lastStuckTick = tick;
+  }
+
+  public Optional<String> lastStuck() {
+    return lastStuck;
+  }
+
+  public long lastStuckTick() {
+    return lastStuckTick;
+  }
+
   /** Ticks with each kind of movement problem this life (BLOCKED, STALLED, UNREACHABLE...). */
   public Map<String, Integer> movementProblemsThisLife() {
     return Map.copyOf(movementProblemsThisLife);
@@ -182,6 +198,8 @@ public final class BotBody {
   /** A new life: the reflex starts over looking along {@code facing}. */
   void newLife(Facing facing) {
     movementProblemsThisLife.clear();
+    lastStuck = Optional.empty();
+    lastStuckTick = -1;
     reflex = ReflexState.initial(facing);
     motion = MotionRecovery.State.INITIAL;
     recoveryRequested = false;

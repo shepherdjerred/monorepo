@@ -309,9 +309,13 @@ public final class BodyDriver {
               if (step.jump() && !checked.refused()) {
                 bodies.jump(bot.uuid());
               }
-              report(bot, new Refusal(checked, hop, recovering), frame.tick());
+              var refusal = new Refusal(checked, hop, recovering);
+              report(bot, refusal, frame.tick());
               if (step.replan()) {
                 bot.requestMovementRecovery("STALLED", frame.tick());
+              }
+              if (step.replan() || checked.refused()) {
+                bot.noteStuck(snapshot(player, movement, refusal), frame.tick());
               }
               return !recovering
                   && (checked == MovementSafety.Reason.CLEAR
@@ -332,6 +336,36 @@ public final class BodyDriver {
     bot.requestMovementRecovery(
         refusal.reason().name() + " " + refusal.hop() + (refusal.escaping() ? " escape" : ""),
         tick);
+  }
+
+  /**
+   * The body's state when it refused or stalled on a step, for /rwfbots debug: where it stands and
+   * how it moves, whether it is in a climbable block or water, and the waypoint it was given.
+   */
+  private static String snapshot(Player player, BodyCommand.MoveToward movement, Refusal refusal) {
+    var at = Places.at(player);
+    var feet = at.getBlock();
+    var head = feet.getRelative(org.bukkit.block.BlockFace.UP);
+    var below = feet.getRelative(org.bukkit.block.BlockFace.DOWN);
+    var velocity = player.getVelocity();
+    var target = movement.waypoint();
+    return String.format(
+        java.util.Locale.ROOT,
+        "%s %s%s at %.2f,%.2f,%.2f vy %.2f fall %.1f; feet %s head %s below %s; to %.1f,%.1f,%.1f",
+        refusal.reason(),
+        refusal.hop(),
+        refusal.escaping() ? " escape" : "",
+        at.getX(),
+        at.getY(),
+        at.getZ(),
+        velocity.getY(),
+        player.getFallDistance(),
+        feet.getType().getKey().getKey(),
+        head.getType().getKey().getKey(),
+        below.getType().getKey().getKey(),
+        target.x(),
+        target.y(),
+        target.z());
   }
 
   private void releaseUse(BotBody bot, Frame frame) {
