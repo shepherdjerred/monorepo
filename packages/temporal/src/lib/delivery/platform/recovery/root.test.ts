@@ -89,6 +89,7 @@ function fixture() {
     },
     status: {
       sync: { status: "Synced", revision },
+      health: { status: "Progressing" },
       operationState: {
         phase: "Failed",
         message: "Operation terminated",
@@ -148,6 +149,60 @@ test("recovery accepts only the owned verified root termination plus the full fr
   await expect(inspectRootRecovery(context, effects)).rejects.toThrow(
     "verified complete",
   );
+});
+
+test("verified root recovery accepts canonical floating source with exact receipt revision and retained Progressing health", async () => {
+  const { context, root, effects } = fixture();
+  root.spec.source.targetRevision = "~2.0.0-0";
+  const observed = await inspectRootRecovery(context, effects);
+  expect(observed.state).toBe("desired");
+  expect(root.status.health.status).toBe("Progressing");
+  expect(root.status.sync.revision).toBe("2.0.0-900");
+});
+
+test("floating root recovery retains exact receipt, source, child health and final observation fences", async () => {
+  for (const drift of [
+    "health",
+    "revision",
+    "source",
+    "receipt",
+    "child",
+    "late-source",
+    "late-receipt",
+  ]) {
+    const { context, root, child, effects } = fixture();
+    root.spec.source.targetRevision = "~2.0.0-0";
+    if (drift === "health") root.status.health.status = "Degraded";
+    if (drift === "revision") root.status.sync.revision = "2.0.0-901";
+    if (drift === "source") root.spec.source.targetRevision = "~2.0.0";
+    if (drift === "receipt")
+      root.status.operationState.operation.info[1]!.value = crypto.randomUUID();
+    if (drift === "child") child.status.health.status = "Progressing";
+    let reads = 0;
+    await expect(
+      inspectRootRecovery(context, {
+        ...effects,
+        read: async (name) => {
+          if (name !== "apps") return child;
+          reads += 1;
+          const observed = structuredClone(root);
+          if (reads === 2 && drift === "late-source")
+            observed.spec.source.targetRevision = "2.0.0-900";
+          if (reads === 2 && drift === "late-receipt") {
+            const value = JSON.parse(
+              observed.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION],
+            );
+            value.verifiedAt = new Date(
+              Date.parse(value.verifiedAt) + 1,
+            ).toISOString();
+            observed.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION] =
+              JSON.stringify(value);
+          }
+          return observed;
+        },
+      }),
+    ).rejects.toThrow();
+  }
 });
 
 function stoppedMetadata(name: string) {

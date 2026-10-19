@@ -29,6 +29,13 @@ const Application = z.object({
     operationState: z.object({ phase: z.string() }),
   }),
 });
+// A verified terminate-after-applied root aggregates retained child health;
+// its published children are still proved independently below.
+const RootApplication = Application.extend({
+  status: Application.shape.status.extend({
+    health: z.object({ status: z.enum(["Healthy", "Progressing"]) }).optional(),
+  }),
+});
 type RootSnapshot = Extract<PlatformReleaseSnapshot, { kind: "root-release" }>;
 type RootRecoveryContext = {
   deployment: {
@@ -54,7 +61,7 @@ function selectRoot(context: RootRecoveryContext, raw: unknown) {
   if (desired?.kind !== "root-release")
     throw new Error("Recovery target is not the frozen root release");
   const prior = context.priorDeployment?.deployment.platformSnapshot;
-  const root = Application.parse(raw);
+  const root = RootApplication.parse(raw);
   if (
     root.spec.source.chart !== "apps" ||
     !isVerifiedRootReleaseTermination(raw)
@@ -62,7 +69,7 @@ function selectRoot(context: RootRecoveryContext, raw: unknown) {
     throw new Error(
       "Root lacks its independently verified complete release receipt",
     );
-  if (root.spec.source.targetRevision === rootRevision(desired))
+  if (root.status.sync.revision === rootRevision(desired))
     return {
       state: "desired" as const,
       selected: desired,
@@ -70,7 +77,7 @@ function selectRoot(context: RootRecoveryContext, raw: unknown) {
     };
   if (
     prior?.kind === "root-release" &&
-    root.spec.source.targetRevision === rootRevision(prior)
+    root.status.sync.revision === rootRevision(prior)
   )
     return {
       state: "prior" as const,
@@ -128,13 +135,16 @@ export async function inspectRootRecovery(
 ) {
   const raw = await effects.read("apps");
   const { state, selected, ownerId } = selectRoot(context, raw);
-  const rootSource = Application.parse(raw).spec.source;
+  const rootSource = RootApplication.parse(raw).spec.source;
   if (
     canonicalJson(rootSource) !==
     canonicalJson({
       repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
       chart: "apps",
-      targetRevision: rootRevision(selected),
+      targetRevision:
+        rootSource.targetRevision === "~2.0.0-0"
+          ? "~2.0.0-0"
+          : rootRevision(selected),
     })
   )
     throw new Error(
@@ -169,7 +179,15 @@ export async function inspectRootRecovery(
   const after = await effects.read("apps");
   if (
     canonicalJson(selectRoot(context, after)) !==
-    canonicalJson({ state, selected, ownerId })
+      canonicalJson({ state, selected, ownerId }) ||
+    canonicalJson(RootApplication.parse(after).spec.source) !==
+      canonicalJson(rootSource) ||
+    z
+      .object({
+        metadata: z.object({ annotations: z.record(z.string(), z.string()) }),
+      })
+      .parse(after).metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION] !==
+      identity.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION]
   )
     throw new Error("Root selection changed during independent proof");
   return {

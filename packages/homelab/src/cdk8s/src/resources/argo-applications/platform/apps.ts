@@ -15,7 +15,8 @@ export function createAppsApp(chart: Chart) {
       project: "default",
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
-        targetRevision: "~2.0.0-0",
+        // Self-selection follows this immutable chart, including full-source pruning.
+        targetRevision: "{{ .Chart.Version }}",
         chart: "apps",
       },
       destination: {
