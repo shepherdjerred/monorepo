@@ -55,7 +55,7 @@ val trainingYardNav =
 // Shipped maps where live bots were recorded stuck; the stuck-spot regression test routes on them.
 val shippedMaps = file("../../../server/owned/plugins/TheStorm/rwf/maps")
 val stuckSpotNavs =
-    listOf("the-harshest-harvest", "miner-dispute", "cloned-balance").map { shippedMaps.resolve("$it/nav.rwfnav") }
+    listOf("the-harshest-harvest", "miner-dispute", "cloned-balance", "hemispheres").map { shippedMaps.resolve("$it/nav.rwfnav") }
 
 tasks.test {
   dependsOn("prepareActorParity")

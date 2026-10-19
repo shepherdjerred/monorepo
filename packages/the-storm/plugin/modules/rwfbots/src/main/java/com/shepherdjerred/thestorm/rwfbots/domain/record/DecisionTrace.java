@@ -41,7 +41,9 @@ public record DecisionTrace(
     /** A direct walk back onto the navigation graph after the step could not be routed either. */
     REENTER,
     /** Nothing reachable was found; the bot holds. */
-    HOLD
+    HOLD,
+    /** The bot hangs on a climb that reaches no spawn and lets go of it. */
+    LET_GO
   }
 
   /**

@@ -375,4 +375,23 @@ final class BodyMovementTest {
     assertThat(reason.refused()).isTrue();
     assertThat(player.getVelocity().getX()).isEqualTo(0.2);
   }
+
+  @Test
+  void aBodyThatStopsOnALadderSlidesDownUnlessItSneaks() {
+    // Vanilla holds a ladder or vine only while sneaking. Bodies held on forever, so bots that
+    // caught vines hanging over the void hung there all match.
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    for (var y = 1; y <= 6; y++) world.getBlockAt(2, y, 2).setType(Material.LADDER);
+    var player = TraversalPlayerMock.add(server, "on-ladder");
+    player.teleport(new Location(world, 2.5, 4, 2.5));
+    // A tick of gravity: the server pulls the body down between steering updates.
+    player.setVelocity(new org.bukkit.util.Vector(0, -0.08, 0));
+    var motion = motion(survival(Optional.empty()), (body, heading) -> {});
+    motion.stop(player);
+    assertThat(player.getVelocity().getY()).as("let go").isNegative();
+    player.setSneaking(true);
+    player.setVelocity(new org.bukkit.util.Vector(0, -0.08, 0));
+    motion.stop(player);
+    assertThat(player.getVelocity().getY()).as("sneaking holds on").isGreaterThanOrEqualTo(0);
+  }
 }

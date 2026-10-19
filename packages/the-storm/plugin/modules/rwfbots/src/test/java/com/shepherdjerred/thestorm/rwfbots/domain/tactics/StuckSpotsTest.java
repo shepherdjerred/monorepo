@@ -241,4 +241,35 @@ final class StuckSpotsTest {
       assertThat(first).isNotEqualTo(new BlockPos(4115, 36, 1100));
     }
   }
+
+  @Test
+  void aBotHangingFromVinesUnderTheIslandLetsGoInsteadOfHangingAllMatch() {
+    // hemispheres: vines hang from the island's underside into the void and end under it. Bots
+    // knocked off the edge slid down them and hung at the bottom vine for over five minutes.
+    var nav = nav("hemispheres");
+    var vine = new Vec3(2090.5, 2.7, 3100.5);
+    var start = nav.graph().nearestNode(vine).orElseThrow();
+    assertThat(nav.graph().climbable(start)).as("the bottom vine").isTrue();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    var goal = nav.graph().feet(spawn);
+    var self = combatant(1, RED, vine).withMotion(false, false);
+    var state =
+        new TacticsState(
+            Optional.of(Plan.of(Option.TAKE_SLOT, 95, new PlanStep.Route(goal, Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+
+    var thought =
+        Tactics.think(
+            state,
+            situation(nav, self, Optional.of(goal), 100),
+            context(nav),
+            new SplittableRandom(1));
+
+    assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.LET_GO);
+    assertThat(thought.decision().waypoints()).isEmpty();
+  }
 }

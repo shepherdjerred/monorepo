@@ -198,11 +198,16 @@ final class BodyMovement {
               : SwimmingMotion.buoyancy(
                   next, position.y(), terrain.waterSurface(position), steering.leavingWater());
     }
-    if (terrain.climbable(position))
+    if (terrain.climbable(position)) {
+      // Vanilla holds a ladder or vine only while sneaking; a body not climbing slides down it.
+      var climbing = steering.hop() == Hop.CLIMB || heading.y() > 0 || player.isSneaking();
       next =
           next.withY(
-              Math.max(
-                  next.y() > 0.2 ? next.y() : -0.15, MovementMotor.climbVertical(heading.y())));
+              climbing
+                  ? Math.max(
+                      next.y() > 0.2 ? next.y() : -0.15, MovementMotor.climbVertical(heading.y()))
+                  : Math.max(next.y(), -0.15));
+    }
     player.setVelocity(new Vector(next.x(), next.y(), next.z()));
   }
 

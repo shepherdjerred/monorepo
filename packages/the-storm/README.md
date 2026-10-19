@@ -3309,8 +3309,9 @@ When a route fails, tactics records the goal as blocked and substitutes a
 `RECOVER` step to an adjacent node, routed from the same node the failed route
 started at. If that step cannot be routed either, the bot walks straight back
 to its nearest node, so a failed route never leaves a bot standing while any
-node is in reach. `RECOVER` is never scored or drawn and earns no commitment
-bonus. A bot body that has stood on solid ground for two ticks has its fall
+node is in reach. A bot hanging on a climb that reaches no spawn (vines that
+hang under an island into the void) lets go instead. `RECOVER` is never scored
+or drawn and earns no commitment bonus. A bot body that has stood on solid ground for two ticks has its fall
 distance cleared, and the router treats a grounded body as landed: an NPC body
 does not refresh vanilla's collision on-ground flag while standing still, so a
 landed fall could otherwise be planned as a fatal drop indefinitely.
@@ -3327,7 +3328,11 @@ To or from a ladder, vine or other climbable, a refused straight move takes a
 two-leg way (rise or sink, then step across; or step across, then climb or
 drop), and swims and climbs may turn along one axis and then the other to round
 a block corner. Level diagonal walks between two climbable cells through a
-corner that holds nothing are left out of routes. When a body still refuses or
+corner that holds nothing are left out of routes. As in vanilla, a body holds
+onto a ladder or vine only while climbing or sneaking; otherwise it slides down.
+A walk may cross a point where only part of its footprint is on a block (a
+one-block walkway, blocks touching at a corner) but must end fully supported,
+and a refused walk leaves an airborne body's momentum alone. When a body still refuses or
 stalls on a step, `/rwfbots debug` shows a snapshot of its state and the first
 check that refused the step.
 

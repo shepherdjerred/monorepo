@@ -154,6 +154,30 @@ public final class Planner {
   }
 
   /**
+   * Whether the bot holds onto a climb from which no spawn can be reached, such as vines hanging
+   * under an island or a shaft whose top is a ceiling: climbing on only keeps it hanging there.
+   */
+  static boolean strandedOnClimb(Situation situation, TacticsContext context) {
+    var graph = context.nav().graph();
+    var start = startNode(graph, situation.self().pos());
+    if (start.isEmpty() || !graph.climbable(start.getAsInt())) return false;
+    var reachesSpawn = false;
+    var spawns = 0;
+    for (var site : context.nav().sites().spawns()) {
+      var spawn = context.nav().approachNode(site);
+      if (spawn.isEmpty()) continue;
+      spawns++;
+      reachesSpawn |= graph.reachable(start.getAsInt(), spawn.getAsInt());
+    }
+    return spawns > 0 && !reachesSpawn;
+  }
+
+  /** A stranded climber lets go, as a player would, instead of hanging on for the whole match. */
+  static Plan letGo(Situation situation, TacticsContext context) {
+    return holdHere(Option.RECOVER, situation, context);
+  }
+
+  /**
    * Where a bot whose recovery route also failed walks straight to, ignoring route risk: the feet
    * of the node it is nearest when it has drifted off it, else the recovery step itself. Empty only
    * when no node lies within reach.
