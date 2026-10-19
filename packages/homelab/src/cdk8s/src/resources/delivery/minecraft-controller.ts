@@ -112,6 +112,8 @@ export function createDeliveryMinecraftController(
             runAsGroup: 1000,
             runAsNonRoot: true,
             fsGroup: 1000,
+            // Keep existing private journal modes unchanged on later mounts.
+            fsGroupChangePolicy: "OnRootMismatch",
             seccompProfile: { type: "RuntimeDefault" },
           },
           imagePullSecrets: [{ name: `dockerhub-pull-${namespace}` }],

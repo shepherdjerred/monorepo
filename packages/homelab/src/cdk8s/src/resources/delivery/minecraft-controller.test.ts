@@ -51,6 +51,12 @@ test("only the durable controller receives maintenance identity; the restored sa
         spec: z.object({
           serviceAccountName: z.literal("delivery-tsmc-controller"),
           automountServiceAccountToken: z.literal(true),
+          securityContext: z.object({
+            runAsUser: z.literal(1000),
+            runAsGroup: z.literal(1000),
+            fsGroup: z.literal(1000),
+            fsGroupChangePolicy: z.literal("OnRootMismatch"),
+          }),
           containers: z.array(
             z.object({
               command: z.array(z.string()),
