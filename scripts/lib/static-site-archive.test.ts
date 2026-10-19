@@ -15,6 +15,7 @@ import {
   validateStaticArchiveUri,
 } from "./static-site-publication.ts";
 import {
+  STATIC_SITE_DELIVERY_OWNERS,
   staticSiteWriter,
   assertStaticSiteDeliveryOwner,
 } from "../../packages/homelab/src/static-site-delivery-ownership.ts";
@@ -155,6 +156,26 @@ describe("immutable static archives", () => {
 });
 
 describe("one static-site writer", () => {
+  test("all reviewed archive and Scout buckets exclude the legacy writer by default", () => {
+    expect(Object.keys(STATIC_SITE_DELIVERY_OWNERS)).toHaveLength(15);
+    for (const [bucket, environment] of Object.entries(
+      STATIC_SITE_DELIVERY_OWNERS,
+    )) {
+      expect(staticSiteWriter(bucket, true)).toBe("delivery");
+      expect(() => staticSiteWriter(bucket, false)).toThrow(
+        "publication is required",
+      );
+      expect(() =>
+        assertStaticSiteDeliveryOwner(bucket, environment),
+      ).not.toThrow();
+      expect(() =>
+        assertStaticSiteDeliveryOwner(bucket, "foreign/environment"),
+      ).toThrow("not delegated");
+    }
+    expect(() =>
+      assertStaticSiteDeliveryOwner("unreviewed-bucket", "foreign/environment"),
+    ).toThrow("not delegated");
+  });
   test("publication alone retains the legacy writer", () => {
     expect(staticSiteWriter("wiki-sjer-red", true, {})).toBe("legacy");
   });

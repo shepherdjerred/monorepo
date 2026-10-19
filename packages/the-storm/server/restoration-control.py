@@ -2140,7 +2140,7 @@ def assert_original_abort_drift(application: JsonObject, journal: JsonObject) ->
         raise ValueError("Original abort drift proof requires the registered Argo reader credential")
     request = Request(
         "https://argocd.sjer.red/api/v1/applications/minecraft-tsmc/managed-resources",
-        headers={"Authorization": "Bearer " + token},
+        headers={"Authorization": "Bearer " + token, "User-Agent": "delivery-restoration-control/1.0"},
     )
     with urlopen(request, timeout=30) as response:
         if response.status != 200:

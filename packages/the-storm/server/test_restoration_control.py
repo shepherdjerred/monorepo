@@ -930,6 +930,7 @@ class RestorationControlTest(unittest.TestCase):
         def response(request: Request, timeout: float) -> MagicMock:
             if not request.full_url.endswith("/managed-resources"):
                 return self.chart_request.return_value
+            self.assertEqual(request.get_header("User-agent"), "delivery-restoration-control/1.0")
             server = copy.deepcopy(self.cluster.server)
             predicted = copy.deepcopy(server)
             predicted.object("spec")["replicas"] = 1
