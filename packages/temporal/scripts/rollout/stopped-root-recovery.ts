@@ -6,7 +6,6 @@ import {
   PlatformRecoveryContextSchema,
   CompletePlatformRecoverySchema,
 } from "@shepherdjerred/delivery/contract";
-import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { argoApplicationRequest } from "#lib/delivery/argo-client.ts";
@@ -31,8 +30,10 @@ export async function recoverStoppedRoot(id: string, connection: Connection) {
     throw new Error(
       "Stopped root recovery requires its pending first-root intent",
     );
-  await resolveCredentials(["ARGOCD_AUTH_TOKEN"]);
-  Bun.env["ARGOCD_TOKEN"] = Bun.env["ARGOCD_AUTH_TOKEN"];
+  Bun.env["ARGOCD_TOKEN"] = z
+    .string()
+    .min(1)
+    .parse(Bun.env["ARGOCD_AUTH_TOKEN"]);
   Bun.env["ARGOCD_SERVER_URL"] = "https://argocd.sjer.red";
   Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
   const nativeReader = stoppedRootNativeReader();

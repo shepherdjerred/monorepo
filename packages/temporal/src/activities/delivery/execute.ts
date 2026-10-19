@@ -33,6 +33,10 @@ import { prepareMinecraftDelivery } from "./minecraft.ts";
 import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import {
+  acknowledgeReconciledRelease,
+  reconciliationAcknowledgementState,
+} from "./reconcile-ack.ts";
 
 const path = (id: string) => `deployments/${encodeURIComponent(id)}`;
 const detail = async (id: string) =>
@@ -220,16 +224,10 @@ export async function applyDelivery(id: string): Promise<void> {
   await stage(current, "reconcile", "running", { operationId });
   await selectArgoRelease(selection);
   await syncArgoRelease(selection, operationId);
-  await stage(current, "reconcile", "succeeded", {
+  await acknowledgeReconciledRelease(
+    reconciliationAcknowledgementState(current),
     operationId,
-    evidence: [
-      {
-        kind: "reconciliation",
-        summary: "Guarded exact-revision Argo operation completed",
-        operationId,
-      },
-    ],
-  });
+  );
 }
 
 export async function verifyDelivery(id: string): Promise<EvidenceInput[]> {

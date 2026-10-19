@@ -1,11 +1,68 @@
 import { describe, expect, test } from "vitest";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import { StageSchema } from "#shared/contract.ts";
 import {
   useDeliveryFixture,
   testPublication,
 } from "#testing/delivery-fixture.ts";
 
 const context = useDeliveryFixture();
+test("ordinary completed stage acknowledgement is idempotent and cannot rewrite its operation or evidence", async () => {
+  const deployment = await context.delivery.createDeployment(
+    context.input(),
+    testOperator,
+  );
+  await context.delivery.claim(deployment.id, testExecutor);
+  const input = {
+    key: "reconcile",
+    status: "succeeded" as const,
+    message: "reconcile: succeeded",
+    operationId: "owned-operation",
+    evidence: [
+      {
+        kind: "reconciliation" as const,
+        summary: "Guarded exact-revision Argo operation completed",
+        operationId: "owned-operation",
+      },
+    ],
+  };
+  await context.delivery.stage(
+    deployment.id,
+    {
+      ...input,
+      status: "running",
+      message: "reconcile: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const first = StageSchema.parse(
+    await context.delivery.stage(deployment.id, input, testExecutor),
+  );
+  expect(
+    StageSchema.parse(
+      await context.delivery.stage(deployment.id, input, testExecutor),
+    ).id,
+  ).toBe(first.id);
+  expect(
+    await context.cluster.database.stage.count({
+      where: { deploymentId: deployment.id, key: "reconcile" },
+    }),
+  ).toBe(1);
+  expect(
+    await context.cluster.database.evidence.count({
+      where: { deploymentId: deployment.id },
+    }),
+  ).toBe(1);
+  for (const changed of [
+    { ...input, operationId: "foreign" },
+    { ...input, message: "different" },
+    { ...input, evidence: [{ ...input.evidence[0]!, summary: "different" }] },
+  ])
+    await expect(
+      context.delivery.stage(deployment.id, changed, testExecutor),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+});
 describe("PostgreSQL delivery invariants 1.1", () => {
   test("duplicate requests create one execution and one transactional outbox entry", async () => {
     const [first, second] = await Promise.all([
