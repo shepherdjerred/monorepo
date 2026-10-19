@@ -1,0 +1,36 @@
+{
+  "source": {
+    "chart": "minecraft",
+    "targetRevision": "5.2.0",
+    "repoURL": "https://chartmuseum.sjer.red",
+    "helm": {
+      "parameters": [
+        {
+          "name": "image.tag",
+          "value": "accepted"
+        },
+        {
+          "name": "image.tag",
+          "value": "ordered-last"
+        }
+      ],
+      "valuesObject": {
+        "Z": "uppercase",
+        "a": "lowercase",
+        "_": "punctuation",
+        "é": "UTF-8",
+        "": "BMP",
+        "😀": "astral",
+        "nested": [
+          {
+            "Z": true,
+            "a": null
+          },
+          7
+        ]
+      }
+    }
+  },
+  "canonicalJson": "{\"chart\":\"minecraft\",\"helm\":{\"parameters\":[{\"name\":\"image.tag\",\"value\":\"accepted\"},{\"name\":\"image.tag\",\"value\":\"ordered-last\"}],\"valuesObject\":{\"Z\":\"uppercase\",\"_\":\"punctuation\",\"a\":\"lowercase\",\"nested\":[{\"Z\":true,\"a\":null},7],\"é\":\"UTF-8\",\"\":\"BMP\",\"😀\":\"astral\"}},\"repoURL\":\"https://chartmuseum.sjer.red\",\"targetRevision\":\"5.2.0\"}",
+  "sha256": "39df0995c4335160dad0ccd227134a5c74f25981347df9cb94d35c4d4dfd606f"
+}

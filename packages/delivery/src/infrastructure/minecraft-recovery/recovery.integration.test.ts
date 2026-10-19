@@ -7,7 +7,7 @@ import {
   RegisterEnvironmentSchema,
 } from "#shared/contract.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
-import { fingerprint } from "#infrastructure/delivery-records.ts";
+import sourceFixture from "@shepherdjerred/ops-model/fixtures/minecraft-recovery-source.json" with { type: "json" };
 import { createMinecraftRecoveryInspector } from "./inspector.ts";
 import { createApp } from "#server/app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
@@ -181,15 +181,11 @@ async function quarantine(completed = false, receipt = true) {
 }
 function nativeProof() {
   const image = `docker.io/shepherdjerred/the-storm-server:accepted@sha256:${"a".repeat(64)}`;
-  const source = {
-    chart: "minecraft",
-    targetRevision: "5.2.0",
-    helm: { parameters: [{ name: "image.tag", value: "accepted" }] },
-  };
+  const source = structuredClone(sourceFixture.source);
   const application = {
     uid: "argo-original",
     resourceVersion: "9",
-    sourceSha256: fingerprint(source),
+    sourceSha256: sourceFixture.sha256,
     operationPhase: "none",
   };
   const report = {

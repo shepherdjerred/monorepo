@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
@@ -40,6 +41,20 @@ export type InspectMinecraftRecovery = (
   detail: DeploymentDetail,
 ) => Promise<MinecraftRecoveryInspection>;
 
+// The Python journal uses UTF-8 JSON with sort_keys=True, not PG's locale-sorted fingerprint.
+function sourceJson(value: z.infer<ReturnType<typeof z.json>>): string {
+  if (Array.isArray(value))
+    return `[${value.map((entry) => sourceJson(entry)).join(",")}]`;
+  if (value !== null && typeof value === "object")
+    return `{${Object.entries(value)
+      .sort(([left], [right]) =>
+        Buffer.compare(Buffer.from(left), Buffer.from(right)),
+      )
+      .map(([key, entry]) => `${JSON.stringify(key)}:${sourceJson(entry)}`)
+      .join(",")}}`;
+  return JSON.stringify(value);
+}
+
 function requireSameArgo(
   argo: z.infer<typeof Argo>,
   report: MinecraftRecoveryInspection,
@@ -48,7 +63,8 @@ function requireSameArgo(
     (argo.operation !== undefined && argo.operation !== null) ||
     argo.metadata.uid !== report.application.uid ||
     argo.metadata.resourceVersion !== report.application.resourceVersion ||
-    fingerprint(argo.spec.source) !== report.application.sourceSha256 ||
+    createHash("sha256").update(sourceJson(argo.spec.source)).digest("hex") !==
+      report.application.sourceSha256 ||
     (argo.status.operationState?.phase ?? "none") !==
       report.application.operationPhase ||
     argo.status.resources.some(
