@@ -88,7 +88,10 @@ Synced/Healthy status and the same original owned operation.
 
 The Argo adapter verifies published chart bytes, selects exact source fields
 with optimistic concurrency, and invokes the existing guarded `sync-managed`
-command. Acceptance requires the owned operation receipt, exact deployment
+command. After the owned sync succeeds, verification uses a bounded series of
+status readbacks without repeating native effects. Every read retains the deployment,
+selection, Application UID and owned-operation fences; final acceptance still
+requires genuine `Synced` and `Healthy` status. Acceptance also requires exact deployment
 history, ready running image digests, and configured runtime checks. Release
 mutations have one Activity attempt. An ambiguous failure retains the
 environment lock until an operator inspects the recorded external operation and

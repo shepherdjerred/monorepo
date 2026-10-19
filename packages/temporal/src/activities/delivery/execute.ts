@@ -13,8 +13,7 @@ import {
   argoRequest,
   selectArgoRelease,
   syncArgoRelease,
-  verifyArgoRelease,
-  waitForForumArgoRelease,
+  waitForArgoRelease,
 } from "./argocd.ts";
 import { observeDeliveryPods } from "./runtime.ts";
 import {
@@ -245,25 +244,22 @@ export async function verifyDelivery(id: string): Promise<EvidenceInput[]> {
   const frozenSelection = canonicalJson(deliverySelection(current));
   const read = async () =>
     await argoRequest(encodeURIComponent(selection.application));
-  const receipt =
-    pipeline.kind === "argocd" && pipeline.forumRelease !== undefined
-      ? await waitForForumArgoRelease(selection, operationId, {
-          read,
-          wait: Bun.sleep,
-          fence: async () => {
-            const fresh = await detail(id);
-            if (
-              fresh.deployment.cancelRequested ||
-              fresh.deployment.status !== "running" ||
-              fresh.environment.activeDeploymentId !== id ||
-              canonicalJson(deliverySelection(fresh)) !== frozenSelection
-            )
-              throw new Error(
-                "Forum deployment ownership or frozen selection changed while waiting",
-              );
-          },
-        })
-      : verifyArgoRelease(await read(), selection, operationId);
+  const receipt = await waitForArgoRelease(selection, operationId, {
+    read,
+    wait: Bun.sleep,
+    fence: async () => {
+      const fresh = await detail(id);
+      if (
+        fresh.deployment.cancelRequested ||
+        fresh.deployment.status !== "running" ||
+        fresh.environment.activeDeploymentId !== id ||
+        canonicalJson(deliverySelection(fresh)) !== frozenSelection
+      )
+        throw new Error(
+          "Deployment ownership or frozen selection changed while waiting",
+        );
+    },
+  });
   await observeDeliveryPods(current);
   await verifyWorkerHosts(current);
   if (pipeline.kind !== "argocd")

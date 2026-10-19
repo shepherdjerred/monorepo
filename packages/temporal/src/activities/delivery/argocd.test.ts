@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { verifyArgoRelease, waitForForumArgoRelease } from "./argocd.ts";
+import { verifyArgoRelease, waitForArgoRelease } from "./argocd.ts";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "homelab/src/delivery-ownership.ts";
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { acknowledgeReconciledRelease } from "./reconcile-ack.ts";
@@ -227,7 +227,7 @@ function observation() {
   };
 }
 
-function forumObservation(sync = "Synced", health = "Healthy") {
+function releaseObservation(sync = "Synced", health = "Healthy") {
   const current = observation();
   return {
     ...current,
@@ -252,29 +252,32 @@ function forumObservation(sync = "Synced", health = "Healthy") {
   };
 }
 
-describe("Forum post-sync observation", () => {
-  it("waits for genuine Synced Healthy without repeating sync or migration", async () => {
-    const pending = forumObservation("OutOfSync", "Progressing");
-    expect(() => verifyArgoRelease(pending, selection, requestId)).toThrow();
-    let reads = 0;
-    let fences = 0;
-    const waits: number[] = [];
-    const receipt = await waitForForumArgoRelease(selection, requestId, {
-      read: async () => (++reads === 1 ? pending : forumObservation()),
-      fence: async () => {
-        fences++;
-      },
-      wait: async (milliseconds) => {
-        waits.push(milliseconds);
-      },
-    });
-    expect(receipt.operationId).toBe(operationId);
-    expect({ reads, fences, waits }).toEqual({
-      reads: 2,
-      fences: 2,
-      waits: [5000],
-    });
-  });
+describe("owned release post-sync observation", () => {
+  it.each(["Synced", "OutOfSync"] as const)(
+    "waits through %s Progressing without repeating native effects",
+    async (sync) => {
+      const pending = releaseObservation(sync, "Progressing");
+      expect(() => verifyArgoRelease(pending, selection, requestId)).toThrow();
+      let reads = 0;
+      let fences = 0;
+      const waits: number[] = [];
+      const receipt = await waitForArgoRelease(selection, requestId, {
+        read: async () => (++reads === 1 ? pending : releaseObservation()),
+        fence: async () => {
+          fences++;
+        },
+        wait: async (milliseconds) => {
+          waits.push(milliseconds);
+        },
+      });
+      expect(receipt.operationId).toBe(operationId);
+      expect({ reads, fences, waits }).toEqual({
+        reads: 2,
+        fences: 2,
+        waits: [5000],
+      });
+    },
+  );
 
   it("bounds pending observations and retains cancellation/claim fencing", async () => {
     let reads = 0;
@@ -282,7 +285,7 @@ describe("Forum post-sync observation", () => {
     const effects = {
       read: async () => {
         reads++;
-        return forumObservation("OutOfSync", "Progressing");
+        return releaseObservation("OutOfSync", "Progressing");
       },
       fence: vi.fn<() => Promise<void>>().mockResolvedValue(),
       wait: async () => {
@@ -290,11 +293,11 @@ describe("Forum post-sync observation", () => {
       },
     };
     await expect(
-      waitForForumArgoRelease(selection, requestId, effects),
+      waitForArgoRelease(selection, requestId, effects),
     ).rejects.toThrow("Timed out");
     expect({ reads, waits }).toEqual({ reads: 60, waits: 59 });
     await expect(
-      waitForForumArgoRelease(selection, requestId, {
+      waitForArgoRelease(selection, requestId, {
         ...effects,
         fence: async () => {
           throw new Error("claim changed");
@@ -307,40 +310,40 @@ describe("Forum post-sync observation", () => {
   it("refuses unhealthy, failed, foreign source and missing ownership immediately", async () => {
     const invalid = [
       {
-        ...forumObservation(),
+        ...releaseObservation(),
         status: {
-          ...forumObservation().status,
+          ...releaseObservation().status,
           health: { status: "Degraded" },
         },
       },
       {
-        ...forumObservation(),
+        ...releaseObservation(),
         status: {
-          ...forumObservation().status,
+          ...releaseObservation().status,
           operationState: {
-            ...forumObservation().status.operationState,
+            ...releaseObservation().status.operationState,
             phase: "Failed",
           },
         },
       },
       {
-        ...forumObservation(),
+        ...releaseObservation(),
         spec: {
-          ...forumObservation().spec,
+          ...releaseObservation().spec,
           source: {
-            ...forumObservation().spec.source,
+            ...releaseObservation().spec.source,
             targetRevision: "2.0.0-41",
           },
         },
       },
       {
-        ...forumObservation(),
-        metadata: { ...forumObservation().metadata, annotations: {} },
+        ...releaseObservation(),
+        metadata: { ...releaseObservation().metadata, annotations: {} },
       },
     ];
     for (const application of invalid)
       await expect(
-        waitForForumArgoRelease(selection, requestId, {
+        waitForArgoRelease(selection, requestId, {
           read: async () => application,
           fence: vi.fn<() => Promise<void>>().mockResolvedValue(),
           wait: async () => {
@@ -353,7 +356,7 @@ describe("Forum post-sync observation", () => {
   it("refuses replacement Application or operation while waiting", async () => {
     for (const replaceOperation of [false, true]) {
       let reads = 0;
-      const replaced = forumObservation();
+      const replaced = releaseObservation();
       if (replaceOperation)
         replaced.status.operationState.operation.info[1] = {
           name: "ci.sjer.red/operation-id",
@@ -361,10 +364,10 @@ describe("Forum post-sync observation", () => {
         };
       else replaced.metadata.uid = "foreign-uid";
       await expect(
-        waitForForumArgoRelease(selection, requestId, {
+        waitForArgoRelease(selection, requestId, {
           read: async () =>
             ++reads === 1
-              ? forumObservation("OutOfSync", "Progressing")
+              ? releaseObservation("OutOfSync", "Progressing")
               : replaced,
           fence: vi.fn<() => Promise<void>>().mockResolvedValue(),
           wait: vi.fn<() => Promise<void>>().mockResolvedValue(),
