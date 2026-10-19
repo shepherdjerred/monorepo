@@ -21,6 +21,8 @@ import org.bukkit.util.BoundingBox;
  */
 final class MovementTerrain implements MovementSafety.Terrain {
   private static final double EPSILON = 0.001;
+  // Just inside the body's half width, so a footprint corner never samples the next cell over.
+  private static final double FOOTPRINT = 0.29;
   private static final Set<Material> HAZARDS =
       Set.of(
           Material.LAVA,
@@ -86,7 +88,15 @@ final class MovementTerrain implements MovementSafety.Terrain {
 
   @Override
   public boolean grounded(Vec3 feet) {
-    return standing && supportAt(feet, EPSILON, false);
+    if (standing && supportAt(feet, EPSILON, false)) return true;
+    // A body whose footprint rests on a block edge is standing, though nothing is under its
+    // centre: vanilla holds it up, and treating the spot as floorless refused every way off it.
+    for (var dx : new double[] {-FOOTPRINT, FOOTPRINT}) {
+      for (var dz : new double[] {-FOOTPRINT, FOOTPRINT}) {
+        if (supportAt(feet.plus(dx, 0, dz), EPSILON, false)) return true;
+      }
+    }
+    return false;
   }
 
   private boolean supportAt(Vec3 point, double drop, boolean allowWater) {

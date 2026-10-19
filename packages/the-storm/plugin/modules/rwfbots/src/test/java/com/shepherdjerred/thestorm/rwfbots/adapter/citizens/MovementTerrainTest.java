@@ -108,4 +108,30 @@ final class MovementTerrainTest {
     assertThat(terrain.clear(new Vec3(2.5, 1.2, 2.5))).isTrue();
     assertThat(terrain.clear(new Vec3(2.5, 1.25, 2.5))).as("a head inside the roof").isFalse();
   }
+
+  @Test
+  void aBodyPerchedOnABlockEdgeIsGroundedAndCanStepBackOntoIt() {
+    // hemispheres: bodies resting part of their footprint on a stair or ledge edge, with air under
+    // their centre, read as floorless and refused every step, even back onto the block.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE);
+    var perched = new Vec3(2.2, 2, 2.5);
+    var edge =
+        new MovementTerrain(
+            world,
+            Optional.of(new GridBounds(new BlockPos(0, 0, 0), 5, 8, 5)),
+            world::collides,
+            false);
+    assertThat(edge.grounded(perched)).isTrue();
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    edge,
+                    new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+                        perched,
+                        new Vec3(1.5, 2, 2.5),
+                        com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK))
+                .reason())
+        .isNotEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
+    assertThat(edge.grounded(new Vec3(2.5, 2, 2.5))).as("clear of the edge").isFalse();
+  }
 }
