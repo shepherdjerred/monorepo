@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { quantityToScalar } from "@kubernetes/client-node/dist/util.js";
 import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { DeliverySelectionSchema } from "homelab/scripts/argocd/argocd-delivery.ts";
@@ -40,7 +41,33 @@ function withoutDefaults(
     ),
   );
 }
-/** Only Kubernetes API defaults are removed; every unknown field remains an exact restart fence. */
+function normalizedQuantity(raw: unknown): string {
+  const quantity = z.string().min(1).parse(raw);
+  const scalar = quantityToScalar(quantity);
+  if (
+    (typeof scalar === "number" &&
+      (!Number.isFinite(scalar) ||
+        Math.abs(scalar) > Number.MAX_SAFE_INTEGER)) ||
+    scalar < 0
+  )
+    throw new Error("Control-plane resource quantity is not finite and safe");
+  return scalar.toString();
+}
+
+function normalizedResources(raw: unknown): Record<string, unknown> {
+  const resources = object.parse(raw);
+  for (const field of ["requests", "limits"]) {
+    if (resources[field] === undefined) continue;
+    const quantities = object.parse(resources[field]);
+    for (const resource of ["cpu", "memory"])
+      if (quantities[resource] !== undefined)
+        quantities[resource] = normalizedQuantity(quantities[resource]);
+    resources[field] = quantities;
+  }
+  return resources;
+}
+
+/** Only API defaults and equivalent resource quantities are normalized; unknown fields stay exact. */
 function normalizedTemplate(raw: unknown): unknown {
   const template = object.parse(structuredClone(raw));
   template["metadata"] = withoutDefaults(template["metadata"], {
@@ -53,6 +80,7 @@ function normalizedTemplate(raw: unknown): unknown {
     terminationGracePeriodSeconds: 30,
     enableServiceLinks: true,
     securityContext: {},
+    hostNetwork: false,
     serviceAccountName: "default",
     serviceAccount: "default",
   });
@@ -70,6 +98,8 @@ function normalizedTemplate(raw: unknown): unknown {
           terminationMessagePolicy: "File",
           resources: {},
         });
+        if (container["resources"] !== undefined)
+          container["resources"] = normalizedResources(container["resources"]);
         for (const probe of [
           "livenessProbe",
           "readinessProbe",

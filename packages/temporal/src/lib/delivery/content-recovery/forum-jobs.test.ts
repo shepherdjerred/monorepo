@@ -18,7 +18,19 @@ import {
   forumRecoveryChild,
   assertNoOtherForumWriter,
   originalForumRecoveryJob,
+  runForumRecoveryChild,
 } from "./forum-jobs.ts";
+
+function localKubernetes(server: string) {
+  const config = new KubeConfig();
+  config.loadFromOptions({
+    clusters: [{ name: "fixture", server, skipTLSVerify: true }],
+    users: [{ name: "fixture" }],
+    contexts: [{ name: "fixture", cluster: "fixture", user: "fixture" }],
+    currentContext: "fixture",
+  });
+  return config;
+}
 
 function original() {
   const job = {
@@ -91,6 +103,103 @@ function original() {
   });
   return { job, receipt };
 }
+
+test.each(["status-only", "uid", "spec", "annotations", "suspension"])(
+  "unsuspend revalidates the fresh Job after controller %s changes during its fence",
+  async (change) => {
+    const { job, receipt } = original();
+    const intentId = "forum/recovery/fresh-cas";
+    const nativeUID = crypto.randomUUID();
+    const child = forumRecoveryChild({
+      original: job,
+      receipt,
+      intentId,
+      action: "inspect",
+      attempt: 1,
+    });
+    if (!child.metadata || !child.spec?.template.spec)
+      throw new Error("Complete child fixture required");
+    child.metadata.uid = nativeUID;
+    child.metadata.resourceVersion = "1";
+    const result = { intentId, settled: true };
+    let patches = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (request.method === "PATCH") {
+          patches++;
+          const patch: unknown = await request.json();
+          expect(patch).toEqual([
+            { op: "test", path: "/metadata/uid", value: nativeUID },
+            { op: "test", path: "/metadata/resourceVersion", value: "2" },
+            { op: "test", path: "/spec/suspend", value: true },
+            { op: "replace", path: "/spec/suspend", value: false },
+          ]);
+          if (!child.spec) throw new Error("Expected child spec");
+          child.spec.suspend = false;
+          child.status = { conditions: [{ type: "Complete", status: "True" }] };
+          return Response.json(child);
+        }
+        if (url.pathname.endsWith("/log"))
+          return new Response(
+            `FORUM_RECOVERY_RESULT_V1=${JSON.stringify(result)}`,
+          );
+        if (url.pathname.endsWith("/pods"))
+          return Response.json({
+            items: url.searchParams
+              .get("labelSelector")
+              ?.startsWith("job-name=")
+              ? [
+                  {
+                    metadata: {
+                      name: "child-pod",
+                      ownerReferences: [{ kind: "Job", uid: nativeUID }],
+                    },
+                    status: { phase: "Succeeded" },
+                  },
+                ]
+              : [],
+          });
+        return Response.json(child);
+      },
+    });
+    const config = localKubernetes(server.url.origin);
+    try {
+      const inspection = runForumRecoveryChild({
+        original: job,
+        receipt,
+        intentId,
+        action: "inspect",
+        attempt: 1,
+        config,
+        checkpoint: async (actual) => {
+          expect(actual.uid).toBe(nativeUID);
+        },
+        fence: async () => {
+          if (!child.metadata || !child.spec?.template.spec)
+            throw new Error("Complete child fixture required");
+          child.metadata.resourceVersion = "2";
+          if (change === "uid") child.metadata.uid = crypto.randomUUID();
+          if (change === "spec")
+            child.spec.template.spec.containers[0]!.image = "unowned/image";
+          if (change === "annotations") child.metadata.annotations = {};
+          if (change === "suspension") child.spec.suspend = false;
+        },
+      });
+      if (change === "status-only") {
+        expect(await inspection).toEqual(result);
+        expect(patches).toBe(1);
+      } else {
+        await expect(inspection).rejects.toThrow();
+        expect(patches).toBe(0);
+      }
+    } finally {
+      await server.stop(true);
+    }
+  },
+);
 
 test("original Forum recovery projects the exact chart proof while retaining its separate operation identity", async () => {
   const { job } = original();
@@ -232,15 +341,7 @@ test("original Forum recovery projects the exact chart proof while retaining its
     expectedSettlements: { desired: "a".repeat(64) },
     recoveryHistory: [],
   });
-  const config = new KubeConfig();
-  config.loadFromOptions({
-    clusters: [
-      { name: "fixture", server: server.url.origin, skipTLSVerify: true },
-    ],
-    users: [{ name: "fixture" }],
-    contexts: [{ name: "fixture", cluster: "fixture", user: "fixture" }],
-    currentContext: "fixture",
-  });
+  const config = localKubernetes(server.url.origin);
   const commands: string[][] = [];
   try {
     const result = await originalForumRecoveryJob(
