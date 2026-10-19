@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwf.app.BotDifficulty;
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
@@ -46,7 +47,7 @@ final class DirectorTest {
   }
 
   private static Director.Request request(int slots, List<Rating> humans, Set<String> excluded) {
-    return new Director.Request(catalog(), Map.of(), humans, slots, excluded, SHIPPED, 2);
+    return new Director.Request(catalog(), Map.of(), humans, slots, excluded, SHIPPED, 2, 0);
   }
 
   @Test
@@ -165,7 +166,8 @@ final class DirectorTest {
             2,
             Set.of("RIVALPLAYER"),
             SHIPPED,
-            2);
+            2,
+            0);
     var pick = Director.pick(request, new SplittableRandom(8));
     assertThat(pick.bots()).extracting(b -> b.personality().id()).containsExactly("challenger");
   }
@@ -201,7 +203,8 @@ final class DirectorTest {
   void storedRatingsAreUsedWhenPresentAndTheDraftIsDeterministic() {
     var stored = Map.of("ember", new Rating(30, 3));
     var request =
-        new Director.Request(catalog(), stored, List.of(Rating.DEFAULT), 5, Set.of(), SHIPPED, 2);
+        new Director.Request(
+            catalog(), stored, List.of(Rating.DEFAULT), 5, Set.of(), SHIPPED, 2, 0);
 
     var a = Director.pick(request, new SplittableRandom(9));
     var b = Director.pick(request, new SplittableRandom(9));
@@ -225,8 +228,8 @@ final class DirectorTest {
             Map.of(Kit.GHOST, 5.0, Kit.LONGBOW, 1.0),
             Map.of(Role.HUNT, 1.0));
 
-    assertThat(Director.kit(mixed, SHIPPED, new SplittableRandom(1))).isEqualTo(Kit.LONGBOW);
-    assertThat(Director.kit(personality, Set.of(Kit.GHOST), new SplittableRandom(1)))
+    assertThat(Director.kit(mixed, SHIPPED, 1, new SplittableRandom(1))).isEqualTo(Kit.LONGBOW);
+    assertThat(Director.kit(personality, Set.of(Kit.GHOST), 1, new SplittableRandom(1)))
         .isEqualTo(Kit.GHOST);
   }
 
@@ -235,7 +238,7 @@ final class DirectorTest {
     var random = new SplittableRandom(4);
     var played = EnumSet.noneOf(Kit.class);
     for (var draw = 0; draw < 200; draw++) {
-      played.add(Director.kit(ghostOnly(), SHIPPED, random));
+      played.add(Director.kit(ghostOnly(), SHIPPED, 1, random));
     }
 
     assertThat(played).containsExactlyInAnyOrderElementsOf(SHIPPED);
@@ -260,5 +263,54 @@ final class DirectorTest {
   void leverOffsetsStayInsideTheirRange() {
     var pushed = LeverOffsets.NONE.plus(Lever.AGGRESSION, 2.5).plus(Lever.AGGRESSION, 2.5);
     assertThat(pushed.z(Lever.AGGRESSION)).isEqualTo(LeverOffsets.MAX_Z);
+  }
+
+  @Test
+  void aDraftThatLeansMeleeHasItsBowKitsWeightedUpToTheRangedShare() {
+    var troopers =
+        List.of(
+            Fixtures.withWeights(
+                Fixtures.personality("anvil", "Anvil", 0.5),
+                Map.of(Kit.TROOPER, 0.9, Kit.LONGBOW, 0.1),
+                Map.of(Role.HUNT, 1.0)),
+            Fixtures.withWeights(
+                Fixtures.personality("brick", "Brick", 0.5),
+                Map.of(Kit.TROOPER, 0.8, Kit.SHORTBOW, 0.2),
+                Map.of(Role.HUNT, 1.0)));
+    var offered = EnumSet.of(Kit.TROOPER, Kit.LONGBOW, Kit.SHORTBOW);
+    assertThat(Director.rangedShare(troopers, offered, 1)).isCloseTo(0.15, within(1e-9));
+
+    var boost = Director.rangedBoost(troopers, offered, 0.35);
+
+    assertThat(boost).isGreaterThan(1);
+    assertThat(Director.rangedShare(troopers, offered, boost)).isBetween(0.35, 0.36);
+    var random = new SplittableRandom(5);
+    var bows = 0;
+    for (var draw = 0; draw < 20_000; draw++) {
+      if (Director.kit(troopers.get(draw % 2), offered, boost, random).hasBow()) bows++;
+    }
+    assertThat(bows / 20_000.0).isCloseTo(0.35, within(0.02));
+  }
+
+  @Test
+  void aDraftAlreadyAtItsRangedShareOrWithoutBowsOnOfferIsLeftAlone() {
+    var archer =
+        List.of(
+            Fixtures.withWeights(
+                Fixtures.personality("quill", "Quill", 0.5),
+                Map.of(Kit.LONGBOW, 1.0),
+                Map.of(Role.HUNT, 1.0)));
+    assertThat(Director.rangedBoost(archer, EnumSet.of(Kit.LONGBOW, Kit.TROOPER), 0.35))
+        .isEqualTo(1);
+    assertThat(Director.rangedBoost(List.of(ghostOnly()), EnumSet.of(Kit.TROOPER), 0.35))
+        .as("no bow on offer: the cap, which changes nothing")
+        .isEqualTo(Director.MAX_RANGED_BOOST);
+    assertThat(
+            Director.kit(
+                ghostOnly(),
+                EnumSet.of(Kit.TROOPER),
+                Director.MAX_RANGED_BOOST,
+                new SplittableRandom(1)))
+        .isEqualTo(Kit.TROOPER);
   }
 }

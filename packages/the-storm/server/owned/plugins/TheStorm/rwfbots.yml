@@ -110,6 +110,12 @@ draft:
       smokescreen,
       tactician,
     ]
+  # The share of drafted bots expected to play a bow or crossbow kit. A draft
+  # whose personalities lean less ranged over the kits on offer has its bow
+  # kits weighted up (at most 16 times) until it reaches this; one already at
+  # or above it is left alone. Personalities alone field about 25% ranged over
+  # every kit and about 38% over the first four.
+  rangedShare: 0.35
 
 # The most line-of-sight rays one think job casts (three per enemy inside a
 # bot's awareness radius); bots past the budget perceive on the next job.

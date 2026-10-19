@@ -39,16 +39,17 @@ final class RwfSizingTest {
   }
 
   @Test
-  void autoFillsTheTrainingYardToSixteenIncludingTheHuman() {
+  void autoFillsTheTrainingYardToTwentyFourIncludingTheHuman() {
+    // Large is half again what the yard's eight spawns a side hold, sharing spawns.
     var harness = start();
     var op = operator(harness);
     op.performCommand("rwf admin size auto");
     assertThat(RwfHarness.messages(op))
-        .anyMatch(text -> text.contains("large 16 total (8/team)"))
-        .anyMatch(text -> text.contains("up to 16 bots with 0 humans"));
+        .anyMatch(text -> text.contains("large 24 total (12/team)"))
+        .anyMatch(text -> text.contains("up to 24 bots with 0 humans"));
     harness.goLive(op);
-    assertThat(harness.snapshot().combatants()).hasSize(16);
-    assertThat(harness.snapshot().combatants().stream().filter(c -> c.id().isBot())).hasSize(15);
+    assertThat(harness.snapshot().combatants()).hasSize(24);
+    assertThat(harness.snapshot().combatants().stream().filter(c -> c.id().isBot())).hasSize(23);
   }
 
   @Test
@@ -88,7 +89,7 @@ final class RwfSizingTest {
     harness.tick(Duration.ofSeconds(31));
     harness.until(() -> harness.snapshot().phase() == MatchSnapshot.PhaseKind.LOBBY);
     harness.goLive(harness.loadedPlayer("Bob"));
-    assertThat(harness.snapshot().combatants()).hasSize(16);
+    assertThat(harness.snapshot().combatants()).hasSize(24);
   }
 
   @Test
@@ -110,8 +111,8 @@ final class RwfSizingTest {
     try {
       var config = directory.resolve("rwf.yml");
       var owned = Files.readString(config);
-      assertThat(owned).contains("maxCombatants: 100");
-      Files.writeString(config, owned.replace("maxCombatants: 100", "maxCombatants: 256"));
+      assertThat(owned).contains("maxCombatants: 108");
+      Files.writeString(config, owned.replace("maxCombatants: 108", "maxCombatants: 256"));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

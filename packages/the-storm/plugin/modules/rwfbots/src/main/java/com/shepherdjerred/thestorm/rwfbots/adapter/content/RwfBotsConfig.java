@@ -135,8 +135,11 @@ public record RwfBotsConfig(
    * What the director may hand out.
    *
    * @param kits the kit ids rwf ships that bots may be given, lower-case
+   * @param rangedShare the share of drafted bots expected to play a bow or crossbow kit; a draft
+   *     whose personalities lean less ranged has its bow kits weighted up until it reaches this,
+   *     and one already at or above it is left alone
    */
-  public record Draft(List<String> kits) {
+  public record Draft(List<String> kits, double rangedShare) {
 
     private static final Pattern KIT = Pattern.compile("[a-z][a-z0-9-]*");
 
@@ -144,6 +147,9 @@ public record RwfBotsConfig(
       kits = List.copyOf(kits);
       if (kits.isEmpty()) {
         throw new IllegalArgumentException("draft.kits must name at least one kit");
+      }
+      if (!(rangedShare >= 0 && rangedShare < 1)) {
+        throw new IllegalArgumentException("draft.rangedShare must be in [0, 1): " + rangedShare);
       }
       for (var kit : kits) {
         if (!KIT.matcher(kit).matches()) {

@@ -53,7 +53,8 @@ public final class Director {
       int slots,
       Set<String> excludedNames,
       Set<Kit> availableKits,
-      int teamCount) {
+      int teamCount,
+      double rangedShare) {
 
     public Request {
       botRatings = Map.copyOf(botRatings);
@@ -66,6 +67,9 @@ public final class Director {
       }
       if (availableKits.isEmpty()) {
         throw new IllegalArgumentException("at least one kit must be available");
+      }
+      if (!(rangedShare >= 0 && rangedShare < 1)) {
+        throw new IllegalArgumentException("ranged share must be in [0, 1): " + rangedShare);
       }
     }
 
@@ -143,12 +147,13 @@ public final class Director {
                 request.humanRatings(),
                 best.stream().map(Personality::skill).toList(),
                 MatchShift.TARGET_HUMAN_WIN);
+    var boost = rangedBoost(best, request.availableKits(), request.rangedShare());
     var bots = new ArrayList<Drafted>();
     for (var personality : best) {
       bots.add(
           new Drafted(
               personality,
-              kit(personality, request.availableKits(), random),
+              kit(personality, request.availableKits(), boost, random),
               LeverCurves.effective(personality.skill(), offsets(personality), shift),
               request.ratingOf(personality)));
     }
@@ -242,33 +247,82 @@ public final class Director {
     return TeamBalancer.spread(TeamBalancer.balance(lobby, request.teamCount()));
   }
 
+  /** The most a draft's bow kits are weighted up to reach its ranged share. */
+  static final double MAX_RANGED_BOOST = 16;
+
+  /**
+   * How much to weight bow and crossbow kits so the drafted personalities are expected to field at
+   * least {@code share} ranged bots over the kits on offer: 1 when they already do, else the
+   * smallest boost (to within 1%) that gets there, at most {@link #MAX_RANGED_BOOST}.
+   */
+  static double rangedBoost(List<Personality> drafted, Set<Kit> available, double share) {
+    if (drafted.isEmpty() || rangedShare(drafted, available, 1) >= share) return 1;
+    var low = 1.0;
+    var high = MAX_RANGED_BOOST;
+    if (rangedShare(drafted, available, high) < share) return high;
+    while (high - low > 0.01) {
+      var middle = (low + high) / 2;
+      if (rangedShare(drafted, available, middle) >= share) high = middle;
+      else low = middle;
+    }
+    return high;
+  }
+
+  /** The expected share of {@code drafted} that draw a bow kit with bow weights times boost. */
+  static double rangedShare(List<Personality> drafted, Set<Kit> available, double boost) {
+    var sum = 0.0;
+    for (var personality : drafted) {
+      var weights = weights(personality, available, boost);
+      var total = 0.0;
+      var ranged = 0.0;
+      for (var entry : weights.entrySet()) {
+        total += entry.getValue();
+        if (entry.getKey().hasBow()) ranged += entry.getValue();
+      }
+      sum += ranged / total;
+    }
+    return sum / drafted.size();
+  }
+
+  /**
+   * The personality's weights over the kits on offer, bow kits times {@code boost}; every kit on
+   * offer weighs one when it weights none of them (its favourites ship in a later milestone).
+   */
+  private static Map<Kit, Double> weights(
+      Personality personality, Set<Kit> available, double boost) {
+    var weights = new java.util.EnumMap<Kit, Double>(Kit.class);
+    for (var kit : Kit.values()) {
+      var weight = personality.kits().get(kit);
+      if (weight != null && weight > 0 && available.contains(kit)) weights.put(kit, weight);
+    }
+    if (weights.isEmpty()) {
+      for (var kit : Kit.values()) if (available.contains(kit)) weights.put(kit, 1.0);
+    }
+    weights.replaceAll((kit, weight) -> kit.hasBow() ? weight * boost : weight);
+    return weights;
+  }
+
   /**
    * A kit drawn from the personality's weights over the kits on offer, or uniformly from the kits
-   * on offer when it weights none of them (its favourites ship in a later milestone).
+   * on offer when it weights none of them, with bow kits weighted by {@code rangedBoost}.
    */
-  static Kit kit(Personality personality, Set<Kit> available, RandomGenerator random) {
-    var total = 0.0;
-    for (var entry : personality.kits().entrySet()) {
-      if (available.contains(entry.getKey())) {
-        total += entry.getValue();
-      }
-    }
-    if (total == 0) {
+  static Kit kit(
+      Personality personality, Set<Kit> available, double rangedBoost, RandomGenerator random) {
+    var favourite =
+        personality.kits().entrySet().stream()
+            .anyMatch(entry -> entry.getValue() > 0 && available.contains(entry.getKey()));
+    if (!favourite && rangedBoost == 1) {
       var offered = Arrays.stream(Kit.values()).filter(available::contains).toList();
       return offered.get(random.nextInt(offered.size()));
     }
+    var weights = weights(personality, available, rangedBoost);
+    var total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
     var draw = random.nextDouble() * total;
     Kit last = null;
-    for (var kit : Kit.values()) {
-      var weight = personality.kits().get(kit);
-      if (weight == null || !available.contains(kit)) {
-        continue;
-      }
-      last = kit;
-      draw -= weight;
-      if (draw < 0) {
-        return kit;
-      }
+    for (var entry : weights.entrySet()) {
+      last = entry.getKey();
+      draw -= entry.getValue();
+      if (draw < 0) return entry.getKey();
     }
     if (last == null) {
       throw new IllegalArgumentException(personality.id() + " has no available kit");
