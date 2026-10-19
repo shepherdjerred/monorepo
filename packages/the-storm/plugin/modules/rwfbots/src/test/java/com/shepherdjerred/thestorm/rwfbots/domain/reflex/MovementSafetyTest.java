@@ -77,6 +77,34 @@ final class MovementSafetyTest {
   }
 
   @Test
+  void aBodyPerchedAboveItsRouteStepsOffAsADropWhenTheLandingIsSafe() {
+    // Perched two blocks up on a block edge, a stall counter or a roof, the body is routed from
+    // the graph node beneath it, so its next waypoint is an ordinary walk at ground level.
+    var perch = new Vec3(0.5, 3, 0.5);
+    var ground =
+        new Terrain(
+            point -> point.y() <= 1 + 1e-9 || point.horizontalDistance(perch) < 0.3,
+            point -> false,
+            point -> false);
+    var result =
+        MovementSafety.choose(
+            ground, new MovementSafety.Request(perch, new Vec3(2.5, 1, 0.5), Hop.WALK));
+    assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+
+    var lava =
+        new Terrain(
+            point -> point.y() <= 1 + 1e-9 || point.horizontalDistance(perch) < 0.3,
+            point -> false,
+            point -> point.y() < 2 && point.horizontalDistance(perch) > 1);
+    assertThat(
+            MovementSafety.choose(
+                    lava, new MovementSafety.Request(perch, new Vec3(2.5, 1, 0.5), Hop.WALK))
+                .reason())
+        .as("a hazardous landing is still refused")
+        .isNotEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
   void aStepTallerThanVanillaStepHeightStillBlocksAnOrdinaryWalk() {
     var wall =
         new Terrain(

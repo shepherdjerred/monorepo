@@ -76,7 +76,22 @@ public final class MovementSafety {
     if (heading.isZero()) {
       return new Result(Optional.empty(), Reason.ARRIVED);
     }
-    return steer(terrain, request, heading);
+    var walked = steer(terrain, request, heading);
+    if (walked.reason() == Reason.BLOCKED && steppingDown(terrain, request))
+      return new Result(Optional.of(request.target()), Reason.CLEAR);
+    return walked;
+  }
+
+  /**
+   * Whether a walk refused only for want of floor within a step is a safe drop instead: the target
+   * lies more than a step below, with clear flight to it and a supported landing. A body perched on
+   * a block edge, a stall counter or a roof is routed from the graph node beneath it, so its next
+   * waypoint is an ordinary walk; refusing to step off left it standing there for minutes. The
+   * body's final landing check still rules out damage it must not take.
+   */
+  private static boolean steppingDown(Terrain terrain, Request request) {
+    return request.from().y() - request.target().y() > WALK_DROP
+        && traversal(terrain, new Request(request.from(), request.target(), Hop.DROP));
   }
 
   private static Result steer(Terrain terrain, Request request, Vec3 heading) {
