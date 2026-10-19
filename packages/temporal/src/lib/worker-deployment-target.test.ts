@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { stat } from "node:fs/promises";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import { candidateSourceCommand } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import { workerCandidateEnvironment } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import {
   registeredWorkerWorkflowTypes,
   selectWorkerReplayTargets,
@@ -154,6 +155,40 @@ describe("resolveWorkerDeploymentRolloutTarget", () => {
     expect(() =>
       resolveWorkerDeploymentRolloutTarget("scout-dev", "temporal:7233"),
     ).toThrow();
+  });
+});
+
+describe("candidate child environment", () => {
+  test("gives the actual child a fixed Linux identity without inheriting credentials", async () => {
+    const environment = workerCandidateEnvironment("beta");
+    expect(Object.keys(environment).sort()).toEqual(
+      [
+        "PATH",
+        "HOME",
+        "TMPDIR",
+        "MISE_DATA_DIR",
+        "MISE_LOCKED",
+        "USER",
+        "TEMPORAL_ADDRESS",
+        "TEMPORAL_NAMESPACE",
+        "TEMPORAL_TLS",
+      ].sort(),
+    );
+    const result = await candidateSourceCommand(
+      [
+        "bun",
+        "-e",
+        "console.log(JSON.stringify({user:process.env.USER,namespace:process.env.TEMPORAL_NAMESPACE,tls:process.env.TEMPORAL_TLS,locked:process.env.MISE_LOCKED}))",
+      ],
+      import.meta.dir,
+      environment,
+    );
+    expect(JSON.parse(result.stdout)).toEqual({
+      user: "delivery",
+      namespace: "beta",
+      tls: "false",
+      locked: "1",
+    });
   });
 });
 

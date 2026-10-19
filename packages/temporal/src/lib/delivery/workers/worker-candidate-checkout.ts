@@ -59,23 +59,33 @@ export async function candidateSourceCommand(
   return { stdout: Buffer.concat(chunks).toString("utf8"), stderr: "" };
 }
 
-/** Candidate children receive only tool locations and the fixed internal connection. */
-async function candidateCommand(
-  argv: readonly string[],
-  cwd: string,
-  namespace: string,
-) {
-  return await candidateSourceCommand(argv, cwd, {
+/** Candidate children receive only tool locations, a fixed identity and the internal connection. */
+export function workerCandidateEnvironment(namespace: string) {
+  return {
     PATH: Bun.env["PATH"],
     HOME: Bun.env["HOME"],
     TMPDIR: Bun.env["TMPDIR"],
     MISE_DATA_DIR: Bun.env["MISE_DATA_DIR"],
     MISE_LOCKED: "1",
+    // Temporal's non-cgo Linux CLI needs an explicit identity for os/user.Current.
+    USER: "delivery",
     TEMPORAL_ADDRESS:
       "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
     TEMPORAL_NAMESPACE: namespace,
     TEMPORAL_TLS: "false",
-  });
+  };
+}
+
+async function candidateCommand(
+  argv: readonly string[],
+  cwd: string,
+  namespace: string,
+) {
+  return await candidateSourceCommand(
+    argv,
+    cwd,
+    workerCandidateEnvironment(namespace),
+  );
 }
 
 /** Mirrors the isolated control-plane replay checkout, never moving controller HEAD. */

@@ -2,7 +2,7 @@ import { Context } from "@temporalio/activity";
 import { z } from "zod";
 import { argoApplicationRequest } from "#lib/delivery/argo-client.ts";
 import { verifyArgoRelease as verifyOwnedArgoRelease } from "#lib/delivery/argocd-proof.ts";
-import { observeForumArgoRelease } from "#lib/delivery/argocd-proof.ts";
+import { observePendingArgoRelease } from "#lib/delivery/argocd-proof.ts";
 import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
 import {
   deliverySelectionPatch,
@@ -100,8 +100,8 @@ export function verifyArgoRelease(
   return verifyOwnedArgoRelease(input, selection, operationId);
 }
 
-/** Wait for Forum status propagation without repeating its migration or sync. */
-export async function waitForForumArgoRelease(
+/** Wait for owned status propagation without repeating native effects. */
+export async function waitForArgoRelease(
   selection: DeliverySelection,
   requestId: string,
   effects: {
@@ -119,18 +119,22 @@ export async function waitForForumArgoRelease(
       .object({ metadata: z.object({ uid: z.string().min(1) }) })
       .parse(application).metadata.uid;
     if (identity !== undefined && identity !== uid)
-      throw new Error("Forum Application incarnation changed while waiting");
+      throw new Error("Application incarnation changed while waiting");
     identity = uid;
     deliverySelectionPatch(application, selection);
-    const observed = observeForumArgoRelease(application, selection, requestId);
+    const observed = observePendingArgoRelease(
+      application,
+      selection,
+      requestId,
+    );
     if (operation !== undefined && operation !== observed.operationId)
-      throw new Error("Forum owned operation changed while waiting");
+      throw new Error("Owned operation changed while waiting");
     operation = observed.operationId;
     if (observed.sync === "Synced" && observed.health === "Healthy")
       return verifyArgoRelease(application, selection, requestId);
     if (attempt < 59) await effects.wait(5000);
   }
   throw new Error(
-    "Timed out waiting for genuine Synced Healthy Forum observation",
+    "Timed out waiting for genuine Synced Healthy release observation",
   );
 }

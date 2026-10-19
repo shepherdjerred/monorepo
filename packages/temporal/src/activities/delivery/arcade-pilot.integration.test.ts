@@ -247,12 +247,17 @@ function observe(
   currentArgo = {
     metadata: {
       name: "arcade",
+      uid: "local-arcade-uid",
       resourceVersion: "local-1",
       annotations: {
         "delivery.shepherdjerred.com/environment": registration.id,
       },
     },
-    spec: { source },
+    spec: {
+      source,
+      destination: { namespace: "arcade" },
+      syncPolicy: { automated: { enabled: false } },
+    },
     status: {
       sync: { status: "Synced", revision: selection.revision },
       health: { status: "Healthy" },
