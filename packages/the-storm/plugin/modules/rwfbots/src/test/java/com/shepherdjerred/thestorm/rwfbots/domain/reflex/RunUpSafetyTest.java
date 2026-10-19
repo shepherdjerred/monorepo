@@ -42,6 +42,11 @@ final class RunUpSafetyTest {
     public boolean climbable(Vec3 feet) {
       return false;
     }
+
+    @Override
+    public boolean footing(Vec3 feet, double drop) {
+      return supported(feet, drop);
+    }
   }
 
   @Test

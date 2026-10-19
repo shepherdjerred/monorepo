@@ -49,6 +49,11 @@ final class MovementSafetyTest {
     public boolean climbable(Vec3 feet) {
       return false;
     }
+
+    @Override
+    public boolean footing(Vec3 feet, double drop) {
+      return floor.test(feet);
+    }
   }
 
   private static MovementSafety.Result move(Terrain terrain, Vec3 target, Hop hop) {
@@ -158,6 +163,11 @@ final class MovementSafetyTest {
       @Override
       public boolean climbable(Vec3 feet) {
         return feet.x() >= 0 && feet.x() < 1 && feet.y() >= 1 && feet.y() < 6;
+      }
+
+      @Override
+      public boolean footing(Vec3 feet, double drop) {
+        return floor.test(feet);
       }
     };
   }

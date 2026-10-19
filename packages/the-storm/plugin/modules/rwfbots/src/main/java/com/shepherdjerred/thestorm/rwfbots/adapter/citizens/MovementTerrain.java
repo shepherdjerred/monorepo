@@ -90,6 +90,17 @@ final class MovementTerrain implements MovementSafety.Terrain {
   }
 
   @Override
+  public boolean footing(Vec3 feet, double drop) {
+    if (supportAt(feet, drop, true)) return true;
+    for (var dx : new double[] {-FOOTPRINT, FOOTPRINT}) {
+      for (var dz : new double[] {-FOOTPRINT, FOOTPRINT}) {
+        if (supportAt(feet.plus(dx, 0, dz), drop, true)) return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
   public boolean grounded(Vec3 feet) {
     if (standing && supportAt(feet, EPSILON, false)) return true;
     // A body whose footprint rests on a block edge is standing, though nothing is under its
@@ -139,28 +150,34 @@ final class MovementTerrain implements MovementSafety.Terrain {
   /** Includes the last fraction of a block above the chosen supported landing. */
   Vec3 contact(Vec3 feet) {
     if (landing(feet) != Waypoint.Landing.GROUND) return feet;
-    var height = feet.y();
+    var height = Double.POSITIVE_INFINITY;
     for (var dx : new double[] {-0.25, 0.25}) {
       for (var dz : new double[] {-0.25, 0.25}) {
-        height = Math.min(height, contactHeight(feet.plus(dx, 0, dz)));
+        var corner = contactHeight(feet.plus(dx, 0, dz));
+        if (corner.isPresent()) height = Math.min(height, corner.getAsDouble());
       }
     }
-    return feet.withY(height);
+    // A walk may cross footing that holds only part of the footprint; its floor is the lowest of
+    // the supported corners. With none supported the chosen movement had no contact at all.
+    if (height == Double.POSITIVE_INFINITY)
+      throw new IllegalStateException(
+          "Chosen ground movement must have a supported contact: " + feet);
+    return feet.withY(Math.min(feet.y(), height));
   }
 
-  private double contactHeight(Vec3 feet) {
+  private OptionalDouble contactHeight(Vec3 feet) {
     var cell = BlockPos.of(feet.plus(0, -EPSILON, 0));
     var bottom = (int) Math.floor(feet.y() - 1.1);
     for (var y = cell.y(); y >= bottom; y--) {
       var floor = block(new BlockPos(cell.x(), y, cell.z()));
-      if (water(floor)) return Math.min(feet.y(), y + 1.0);
+      if (water(floor)) return OptionalDouble.of(Math.min(feet.y(), y + 1.0));
       if (!floor.isPassable() && !hazard(floor)) {
         var surface = topUnder(floor, feet);
-        if (surface.isPresent()) return Math.min(feet.y(), surface.getAsDouble());
+        if (surface.isPresent())
+          return OptionalDouble.of(Math.min(feet.y(), surface.getAsDouble()));
       }
     }
-    throw new IllegalStateException(
-        "Chosen ground movement must have a supported contact: " + feet);
+    return OptionalDouble.empty();
   }
 
   /** A nearby dry bank, including its whole landing footprint, never the open water surface. */

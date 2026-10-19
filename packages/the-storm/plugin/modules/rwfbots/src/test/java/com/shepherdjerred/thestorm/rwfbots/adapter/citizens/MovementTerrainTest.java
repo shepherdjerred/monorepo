@@ -167,4 +167,26 @@ final class MovementTerrainTest {
         .as("only one corner on a block")
         .isFalse();
   }
+
+  @Test
+  void aBodyAtTheEdgeOfANarrowWalkwayCanStepBackToItsMiddle() {
+    // hemispheres: a one-block slab walkway on a wall; a body near its north edge has two
+    // footprint corners over air, and refused every step, even back toward the walkway's middle.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+      world.getBlockAt(x, 0, 2).setType(Material.STONE);
+    }
+    var edge = new Vec3(3.5, 1, 2.05);
+    assertThat(terrain.supported(edge, 0.1)).as("hanging over the edge").isFalse();
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain,
+                    new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+                        edge,
+                        new Vec3(1.5, 1, 2.5),
+                        com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK))
+                .reason())
+        .isNotEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
+  }
 }

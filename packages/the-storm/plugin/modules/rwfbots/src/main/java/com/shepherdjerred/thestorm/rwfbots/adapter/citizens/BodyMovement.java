@@ -80,6 +80,15 @@ final class BodyMovement {
                   : MovementSafety.explain(
                       terrain, new MovementSafety.Request(position, goal, hop)));
     beginFlight(candidate, checked.reason());
+    if (checked.reason().refused()
+        && hop == Hop.WALK
+        && !grounded
+        && !terrain.inWater(position)
+        && !terrain.climbable(position)) {
+      // In the air a walk cannot be steered anyway; stopping the body here only killed a jump in
+      // mid-flight and landed it where it started. Vanilla keeps its momentum.
+      return checked.reason();
+    }
     var heading = checked.destination().map(point -> point.minus(position)).orElse(Vec3.ZERO);
     steer(
         player,

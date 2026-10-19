@@ -357,4 +357,22 @@ final class BodyMovementTest {
     assertThat(player.getVelocity().getY()).isEqualTo(-0.16);
     assertThat(doorRequests).hasSize(2);
   }
+
+  @Test
+  void aRefusedWalkLeavesAnAirborneBodysMomentumAlone() {
+    // hemispheres: bodies mid-jump were refused their walk and steered to a stop in the air, so
+    // every jump landed where it began.
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    var player = TraversalPlayerMock.add(server, "mid-jump");
+    player.teleport(new Location(world, 2.5, 2.4, 2.5));
+    player.setVelocity(new org.bukkit.util.Vector(0.2, 0.1, 0));
+    var motion = motion(survival(Optional.empty()), (body, heading) -> {});
+    var reason =
+        motion.move(
+            player,
+            new Bodies.MotionTarget(
+                new Location(world, 2.5, 2.4, 9.5), false, Hop.WALK, Optional.empty()));
+    assertThat(reason.refused()).isTrue();
+    assertThat(player.getVelocity().getX()).isEqualTo(0.2);
+  }
 }

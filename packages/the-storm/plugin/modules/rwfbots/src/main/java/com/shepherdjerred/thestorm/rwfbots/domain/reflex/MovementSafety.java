@@ -16,6 +16,8 @@ public final class MovementSafety {
   private static final double MAX_LEAP_SPAN = 6;
   // Vanilla walks a body up a ledge this high (a slab or a stair step) without a jump.
   private static final double STEP_HEIGHT = 0.6;
+  // How far from its footing a body still only needs footing, while it steps back from an edge.
+  private static final double LEAVING = 0.5;
   private static final double[] ANGLES = {0, 30, -30, 60, -60, 90, -90};
 
   private MovementSafety() {}
@@ -35,6 +37,9 @@ public final class MovementSafety {
 
     /** Whether a body there holds onto a ladder, vine or other climbable block. */
     boolean climbable(Vec3 feet);
+
+    /** Whether any part of the body's footprint there rests on floor within {@code drop}. */
+    boolean footing(Vec3 feet, double drop);
   }
 
   public record Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff) {
@@ -153,7 +158,7 @@ public final class MovementSafety {
     for (var angle : ANGLES) {
       var rotated = rotate(direction, angle);
       var probe = request.from().plus(rotated.scale(distance));
-      if (supportedCorridor(terrain, request.from(), probe)) {
+      if (walkCorridor(terrain, request.from(), probe)) {
         var destination =
             angle == 0 ? request.target() : request.from().plus(rotated.scale(distance));
         return new Result(Optional.of(destination), angle == 0 ? Reason.CLEAR : Reason.REDIRECTED);
@@ -204,7 +209,7 @@ public final class MovementSafety {
     var count = Math.max(1, (int) Math.ceil(from.distance(to) / SAMPLE_GAP));
     for (var index = 0; index <= count; index++) {
       var point = from.lerp(to, (double) index / count);
-      var problem = problem(terrain, point, index, check);
+      var problem = problem(terrain, point, point.horizontalDistance(from) <= LEAVING, check);
       if (problem.isPresent())
         return String.format(
             java.util.Locale.ROOT,
@@ -219,7 +224,8 @@ public final class MovementSafety {
     return "clear";
   }
 
-  private static Optional<String> problem(Terrain terrain, Vec3 sample, int index, Check check) {
+  private static Optional<String> problem(
+      Terrain terrain, Vec3 sample, boolean leaving, Check check) {
     if (!terrain.inside(sample)) return Optional.of("outside");
     var stepped = check == Check.WALK ? stood(terrain, sample) : Optional.<Vec3>empty();
     if (!terrain.clear(sample) && stepped.isEmpty()) return Optional.of("collides");
@@ -227,7 +233,9 @@ public final class MovementSafety {
     if (terrain.hazardous(point)) return Optional.of("hazardous");
     return switch (check) {
       case WALK ->
-          floor(terrain, point, index) ? Optional.empty() : Optional.of("no floor within a step");
+          floor(terrain, point, leaving) || terrain.footing(point, WALK_DROP)
+              ? Optional.empty()
+              : Optional.of("no footing within a step");
       case SWIM ->
           terrain.supported(point, WALK_DROP)
               ? Optional.empty()
@@ -262,6 +270,31 @@ public final class MovementSafety {
     return "flight " + leg(terrain, from.withY(flightY), target.withY(flightY), Check.CLEAR);
   }
 
+  /**
+   * An ordinary walk: like {@link #supportedCorridor}, but a sample between its ends only needs
+   * footing, some of the footprint on floor within a step, as vanilla holds a body crossing between
+   * blocks that touch at a corner or along a one-block walkway; where the step ends must be fully
+   * supported, so a walk never ends hanging off an edge.
+   */
+  private static boolean walkCorridor(Terrain terrain, Vec3 from, Vec3 to) {
+    var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
+    var escaping = terrain.hazardous(from);
+    for (var index = 0; index <= count; index++) {
+      var sample = from.lerp(to, (double) index / count);
+      if (!terrain.inside(sample)) return false;
+      var point = stood(terrain, sample);
+      if (point.isEmpty()) return false;
+      if (escaping && index != count) continue;
+      var at = point.orElseThrow();
+      if (terrain.hazardous(at)) return false;
+      var floor =
+          floor(terrain, at, sample.horizontalDistance(from) <= LEAVING)
+              || (index > 0 && index < count && terrain.footing(at, WALK_DROP));
+      if (!floor) return false;
+    }
+    return true;
+  }
+
   /** A straight combat approach must have continuous floor, not merely unobstructed sight. */
   public static boolean supportedCorridor(Terrain terrain, Vec3 from, Vec3 to) {
     var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
@@ -272,7 +305,8 @@ public final class MovementSafety {
       var point = stood(terrain, sample);
       if (point.isEmpty()) return false;
       if (!escaping || index == count) {
-        if (terrain.hazardous(point.orElseThrow()) || !floor(terrain, point.orElseThrow(), index))
+        if (terrain.hazardous(point.orElseThrow())
+            || !floor(terrain, point.orElseThrow(), sample.horizontalDistance(from) <= LEAVING))
           return false;
       }
     }
@@ -292,8 +326,13 @@ public final class MovementSafety {
     return terrain.clear(stepped) ? Optional.of(stepped) : Optional.empty();
   }
 
-  private static boolean floor(Terrain terrain, Vec3 point, int index) {
-    return terrain.supported(point, WALK_DROP) || (index == 0 && terrain.grounded(point));
+  /**
+   * Floor under a walking sample: full support, or, within {@link #LEAVING} of where the body
+   * stands, any footing vanilla holds it on, so a body at the edge of a narrow walkway or ledge may
+   * step back from it although it may not walk out to such an edge.
+   */
+  private static boolean floor(Terrain terrain, Vec3 point, boolean leaving) {
+    return terrain.supported(point, WALK_DROP) || (leaving && terrain.grounded(point));
   }
 
   private static boolean clearCorridor(Terrain terrain, Vec3 from, Vec3 to) {
