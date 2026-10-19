@@ -9,6 +9,8 @@ import { chartValidationValues } from "homelab/scripts/helm/helm-delivery-public
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
+import { App, Chart } from "cdk8s";
+import { createAppsApp } from "./resources/argo-applications/platform/apps.ts";
 
 /**
  * Helm Template Rendering Tests
@@ -213,6 +215,8 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
     }
     const chart = fileName.replace(/\.k8s\.yaml$/u, "");
     stripped = stripDeliveryImageBindings(stripped, chart);
+    if (chart === "apps")
+      stripped = stripped.replaceAll("{{ .Chart.Version }}", "");
     // Only {{ triggers Helm template parsing. Standalone }} is safe.
     if (stripped.includes("{{")) {
       violations.push({ lineNumber: i + 1, line: line.trim() });
@@ -229,6 +233,72 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
     );
   }
 }
+
+describe("immutable root chart selection", () => {
+  it("pins each self Application to its selected chart despite later publications or value overrides", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "root-self-pin-"));
+    const app = new App({ outdir: directory });
+    const chart = new Chart(app, "apps", { namespace: "argocd" });
+    const manifest = JSON.stringify(createAppsApp(chart).toJson());
+    checkForUnescapedBraces(manifest, "apps.k8s.yaml");
+    await Bun.write(path.join(directory, "templates/apps.yaml"), manifest);
+    async function render(version: string) {
+      await Bun.write(
+        path.join(directory, "Chart.yaml"),
+        `apiVersion: v2\nname: apps\nversion: ${version}\n`,
+      );
+      const result = Bun.spawnSync([
+        "helm",
+        "template",
+        "apps",
+        directory,
+        "--set-string",
+        "targetRevision=2.0.0-99",
+      ]);
+      expect(result.stderr.toString()).toBe("");
+      expect(result.exitCode).toBe(0);
+      return z
+        .object({
+          spec: z.object({
+            source: z.object({
+              chart: z.literal("apps"),
+              repoURL: z.string(),
+              targetRevision: z.string(),
+            }),
+            syncPolicy: z.object({ syncOptions: z.array(z.string()) }),
+            ignoreDifferences: z.array(z.record(z.string(), z.unknown())),
+          }),
+        })
+        .parse(parseAllDocuments(result.stdout.toString())[0]?.toJS()).spec;
+    }
+    try {
+      const selected = await render("2.0.0-42");
+      const later = await render("2.0.0-43");
+      expect(selected.source.targetRevision).toBe("2.0.0-42");
+      expect(later.source).toEqual({
+        ...selected.source,
+        targetRevision: "2.0.0-43",
+      });
+      expect(await render("2.0.0-42")).toEqual(selected);
+      expect(selected.syncPolicy.syncOptions).toContain(
+        "RespectIgnoreDifferences=true",
+      );
+      expect(
+        selected.ignoreDifferences.some((rule) => rule["name"] === "apps"),
+      ).toBe(false);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+  it.each(["delivery.k8s.yaml", "scout-beta.k8s.yaml"])(
+    "rejects a chart-version expression outside the root chart: %s",
+    (file) => {
+      expect(() =>
+        checkForUnescapedBraces('targetRevision: "{{ .Chart.Version }}"', file),
+      ).toThrow("unescaped");
+    },
+  );
+});
 
 /**
  * Run `helm template` on a chart and return { exitCode, stdout, stderr }.

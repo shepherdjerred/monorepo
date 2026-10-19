@@ -217,8 +217,13 @@ rechecks the closed original Workflow, every recorded Job UID/spec fingerprint,
 and terminal owned executor Pods, including earlier recovery attempts. An absent
 Job never proves absence of effects. Completion requires a fresh complete target
 inspection and the original generation/snapshot/lock CAS. Root recovery verifies
-the durable owned root termination and every frozen child source and health;
-controller recovery verifies the exact prior or desired chart, full Pod templates
+the durable owned root termination and every frozen child source and health.
+Only that receipt-bound root observation permits aggregated `Progressing` health;
+each frozen child must still be `Synced` and `Healthy`. A legacy floating root
+source never replaces the receipt's immutable selected revision. Root chart
+templates pin their own Application to the selected chart's exact version, so
+later artifact publication cannot retarget the active root Application.
+Controller recovery verifies the exact prior or desired chart, full Pod templates
 and original runtime image digests. Desired controller settlement also requires
 the original owned finished Argo operation. No failed release becomes accepted.
 
