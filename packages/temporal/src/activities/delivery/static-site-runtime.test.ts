@@ -9,6 +9,7 @@ import {
 import { createStaticArchive } from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
 import type { RunOptions } from "@shepherdjerred/root-scripts/lib/run.ts";
 import type * as RunModule from "@shepherdjerred/root-scripts/lib/run.ts";
+import type * as S3Module from "@shepherdjerred/root-scripts/lib/s3-static-site.ts";
 import type * as SelectionModule from "./static-site-selection.ts";
 import type { StaticActivationReceipt } from "./static-site-effects.ts";
 import {
@@ -27,10 +28,14 @@ vi.mock("@shepherdjerred/root-scripts/lib/run.ts", async (original) => ({
   run: io.run,
   runAllowExit: io.read,
 }));
-vi.mock("@shepherdjerred/root-scripts/lib/s3-static-site.ts", () => ({
-  s3SyncStaticSite: io.sync,
-  firstS3ObjectMismatch: io.mismatch,
-}));
+vi.mock(
+  "@shepherdjerred/root-scripts/lib/s3-static-site.ts",
+  async (original) => ({
+    ...(await original<typeof S3Module>()),
+    s3SyncStaticSite: io.sync,
+    firstS3ObjectMismatch: io.mismatch,
+  }),
+);
 vi.mock("./static-site-selection.ts", async (original) => {
   const actual = await original<typeof SelectionModule>();
   return {
@@ -76,7 +81,12 @@ beforeEach(async () => {
   io.read.mockImplementation(() =>
     Promise.resolve(
       receipt === null
-        ? { exitCode: 1, stdout: "", stderr: "NoSuchKey" }
+        ? {
+            exitCode: 1,
+            stdout: "",
+            stderr:
+              "fatal error: An error occurred (404) when calling the HeadObject operation: Not Found",
+          }
         : { exitCode: 0, stdout: JSON.stringify(receipt), stderr: "" },
     ),
   );
@@ -201,6 +211,31 @@ test("a corrupted original archive cannot write a receipt or synchronize the sit
   expect(io.sync).not.toHaveBeenCalled();
   expect(receipt).toBeNull();
 });
+
+test.each([
+  "fatal error: An error occurred (403) when calling the HeadObject operation: Forbidden",
+  "fatal error: 404 upstream gateway",
+  "unexpected storage failure",
+])("activation refuses a receipt read failure: %s", async (stderr) => {
+  const detail = await fixture();
+  io.read.mockResolvedValue({ exitCode: 1, stdout: "", stderr });
+  await expect(applyStaticSiteDetail(detail, runtime)).rejects.toThrow(
+    "Static activation receipt could not be read",
+  );
+  expect(io.sync).not.toHaveBeenCalled();
+  expect(receipt).toBeNull();
+});
+
+test.each(["not JSON", JSON.stringify({ invalid: "receipt" })])(
+  "activation refuses malformed receipt data: %s",
+  async (stdout) => {
+    const detail = await fixture();
+    io.read.mockResolvedValue({ exitCode: 0, stdout, stderr: "" });
+    await expect(applyStaticSiteDetail(detail, runtime)).rejects.toThrow();
+    expect(io.sync).not.toHaveBeenCalled();
+    expect(receipt).toBeNull();
+  },
+);
 
 test("native verification refuses stale public HTML even when its activation marker is exact", async () => {
   const detail = await fixture();
