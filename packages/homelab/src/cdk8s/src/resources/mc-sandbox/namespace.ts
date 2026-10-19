@@ -1,7 +1,9 @@
 import type { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { KubeServiceAccount } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   MC_HARNESS_SERVICE_ACCOUNT,
   MC_SANDBOX_NAMESPACE,
@@ -33,6 +35,15 @@ export function createMcSandboxNamespace(chart: Chart): void {
   });
 
   // Sandbox pods name no service account; they never need the API either.
+  // Their private images are selected at runtime, outside static image scanning.
+  new OnePasswordItem(chart, "mc-sandbox-registry-reader", {
+    metadata: {
+      name: dockerHubPullSecretName(MC_SANDBOX_NAMESPACE),
+      namespace: MC_SANDBOX_NAMESPACE,
+    },
+    type: "kubernetes.io/dockerconfigjson",
+    spec: { itemPath: vaultItemPath("ngzmppq52zm7sii6ato2mv3sbi") },
+  });
   new KubeServiceAccount(chart, "mc-sandbox-default-sa", {
     metadata: { name: "default", namespace: MC_SANDBOX_NAMESPACE },
     automountServiceAccountToken: false,

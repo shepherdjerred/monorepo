@@ -22,6 +22,7 @@ import {
 import {
   requireAcceptancePrerequisite,
   requireHealthyWorkflowPoller,
+  requireReplayCheckout,
   runWorkerDeploymentPreflight,
   verifyCandidateImageBuildId,
 } from "#lib/worker-deployment-proofs.ts";
@@ -150,13 +151,14 @@ async function requireCandidate(options: Options, run: RolloutCommandRunner) {
   }
 }
 
-/** Runner must execute replay and canary commands from this candidate's clean checkout. */
+/** Candidate code runs separately from the controller's routing/image proofs. */
 async function prepareRoute(
   detail: WorkerRolloutSnapshot,
   connection: DeliveryWorkerConnection,
-  run: RolloutCommandRunner,
+  runners: { run: RolloutCommandRunner; candidate: RolloutCommandRunner },
   namespace: "prod" | "beta",
 ): Promise<WorkerRolloutPlan> {
+  const { run, candidate } = runners;
   const options = { ...rolloutOptions(detail, connection), namespace };
   await verifyCandidateImageBuildId(
     options.candidateImage,
@@ -164,7 +166,7 @@ async function prepareRoute(
     run,
   );
   await requireCandidate(options, run);
-  await runWorkerDeploymentPreflight(options, run);
+  await runWorkerDeploymentPreflight(options, candidate);
   await requireAcceptancePrerequisite(options, run);
   const state = await routing(options, run);
   if (
@@ -205,11 +207,19 @@ export async function prepareDeliveryWorkerRollout(
   detail: WorkerRolloutSnapshot,
   connection: DeliveryWorkerConnection,
   run: RolloutCommandRunner,
+  candidate: RolloutCommandRunner = run,
 ): Promise<WorkerRolloutPlan> {
   const options = rolloutOptions(detail, connection);
   const plans = [];
   for (const route of workerHostSpecification(options.target).routes)
-    plans.push(await prepareRoute(detail, connection, run, route.namespace));
+    plans.push(
+      await prepareRoute(
+        detail,
+        connection,
+        { run, candidate },
+        route.namespace,
+      ),
+    );
   const primary = plans[0];
   if (primary === undefined)
     throw new Error("Worker rollout has no served namespaces");
@@ -258,6 +268,7 @@ async function canary(
   run: RolloutCommandRunner,
   routingMode: "pinned" | "normal",
 ) {
+  await requireReplayCheckout(options.buildId, run);
   await run([
     ...options.canaryCommand,
     "--namespace",
@@ -286,6 +297,7 @@ async function promote(
   options: Options,
   plan: WorkerRolloutPlan,
   run: RolloutCommandRunner,
+  candidate: RolloutCommandRunner,
 ) {
   const before = await routing(options, run);
   requireNoRamp(before);
@@ -298,7 +310,7 @@ async function promote(
     options.buildId,
     run,
   );
-  await canary(options, run, "pinned");
+  await canary(options, candidate, "pinned");
   const checked = await routing(options, run);
   unchangedStable(checked, plan);
   requireNoRamp(checked);
@@ -314,6 +326,7 @@ async function stepRoute(
   },
   run: RolloutCommandRunner,
   namespace: "prod" | "beta",
+  candidate: RolloutCommandRunner,
 ): Promise<DeliveryWorkerReceipt> {
   const options = {
     ...rolloutOptions(input.detail, input.connection),
@@ -324,7 +337,7 @@ async function stepRoute(
   await requireCandidate(options, run);
   switch (input.action) {
     case "promote":
-      await promote(options, plan, run);
+      await promote(options, plan, run, candidate);
       break;
     case "verify":
       break;
@@ -337,7 +350,7 @@ async function stepRoute(
   )
     throw new Error("Candidate is not the exclusively accepted current worker");
   if (input.action === "verify") {
-    await canary(options, run, "normal");
+    await canary(options, candidate, "normal");
     const after = await routing(options, run);
     requireNoRamp(after);
     if (after.currentVersionBuildID !== options.buildId)
@@ -363,6 +376,7 @@ async function stepRoute(
 export async function stepDeliveryWorkerRollout(
   input: Parameters<typeof stepRoute>[0],
   run: RolloutCommandRunner,
+  candidate: RolloutCommandRunner = run,
 ): Promise<DeliveryWorkerReceipt> {
   const plan = WorkerRolloutPlanSchema.parse(input.plan);
   const expected = workerHostSpecification(plan.target).routes.map(
@@ -390,6 +404,7 @@ export async function stepDeliveryWorkerRollout(
         },
         run,
         route.namespace,
+        candidate,
       ),
     );
   const primary = results[0];

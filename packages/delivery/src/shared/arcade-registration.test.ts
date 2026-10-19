@@ -31,7 +31,7 @@ test("reviewed Arcade registration matches the catalog and published artifact co
   });
   expect(environment).toMatchObject({
     id: "arcade/prod",
-    pipelineRevisionId: "arcade/1",
+    pipelineRevisionId: "arcade/2",
     automatic: true,
   });
 });

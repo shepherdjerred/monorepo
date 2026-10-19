@@ -80,6 +80,7 @@ export const PlatformSettlementFingerprintsSchema = z
     prior: Hash.optional(),
     readonly: Hash.optional(),
     original: Hash.optional(),
+    stopped: Hash.optional(),
   })
   .strict();
 export const CompletePlatformRecoverySchema = z
@@ -109,11 +110,37 @@ export const CompletePlatformRecoverySchema = z
       .max(20),
     settlement: z
       .object({
-        state: z.enum(["desired", "prior", "readonly", "original"]),
+        state: z.enum(["desired", "prior", "readonly", "original", "stopped"]),
         fingerprint: Hash,
       })
       .strict(),
     proofSummary: z.string().trim().min(20).max(4000),
+    stoppedRoot: z
+      .strictObject({
+        requestId: z.uuid(),
+        operationId: z.uuid(),
+        revision: z.string().min(1),
+        applications: z
+          .array(
+            z.strictObject({
+              name: z.string().min(1),
+              uid: z.uuid(),
+              sourceFingerprint: Hash,
+              specFingerprint: Hash,
+              lifecycleFingerprint: Hash,
+              targetRevision: z.string().min(1),
+              syncStatus: z.string().min(1),
+              observedRevision: z.string().nullable(),
+              health: z.string().nullable(),
+              operationPhase: z
+                .enum(["Succeeded", "Failed", "Error"])
+                .nullable(),
+            }),
+          )
+          .min(1)
+          .max(200),
+      })
+      .optional(),
   })
   .strict();
 export type CompletePlatformRecovery = z.infer<

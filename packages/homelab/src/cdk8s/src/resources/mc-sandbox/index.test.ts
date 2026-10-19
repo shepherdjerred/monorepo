@@ -93,6 +93,35 @@ describe("mc-sandbox chart", () => {
     }
   });
 
+  it("declares the existing registry reader consumed by runtime sandbox pods", () => {
+    const account = z
+      .object({ imagePullSecrets: z.array(z.object({ name: z.string() })) })
+      .parse(find("ServiceAccount", "default", "mc-sandbox"));
+    expect(account.imagePullSecrets).toEqual([
+      { name: "dockerhub-pull-mc-sandbox" },
+    ]);
+    const reader = find(
+      "OnePasswordItem",
+      "dockerhub-pull-mc-sandbox",
+      "mc-sandbox",
+    );
+    expect(reader).toMatchObject({
+      type: "kubernetes.io/dockerconfigjson",
+      spec: {
+        itemPath:
+          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi",
+      },
+    });
+    expect(
+      manifests().filter(
+        (resource) =>
+          resource.kind === "OnePasswordItem" &&
+          resource.metadata.name === account.imagePullSecrets[0]?.name &&
+          resource.metadata.namespace === "mc-sandbox",
+      ),
+    ).toHaveLength(1);
+  });
+
   it("lets the harness run and reach sandbox pods", () => {
     const sandbox = rules("mc-sandbox");
     const verbsFor = (resource: string) =>

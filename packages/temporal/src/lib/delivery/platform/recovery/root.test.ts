@@ -6,6 +6,8 @@ import {
 import { VERIFIED_ROOT_RELEASE_ANNOTATION } from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { inspectRootRecovery } from "#lib/delivery/platform/recovery-root.ts";
+import { inspectStoppedRootRecovery } from "#lib/delivery/platform/recovery/root-stopped.ts";
+import { DELIVERY_ROOT_IGNORE_EXPRESSIONS } from "homelab/src/delivery-ownership.ts";
 
 function fixture() {
   const requestId = deliveryOperationId("failed/root:root-release"),
@@ -143,4 +145,150 @@ test("recovery accepts only the owned verified root termination plus the full fr
   await expect(inspectRootRecovery(context, effects)).rejects.toThrow(
     "verified complete",
   );
+});
+
+function stoppedMetadata(name: string) {
+  return {
+    name,
+    namespace: "argocd",
+    uid: crypto.randomUUID(),
+    annotations: {
+      "ci.sjer.red/application-lifecycle": "retain",
+      "argocd.argoproj.io/tracking-id": `apps:argoproj.io/Application:argocd/${name}`,
+    },
+  };
+}
+function stoppedFixture() {
+  const original = fixture();
+  const context = {
+    ...original.context,
+    deployment: {
+      deployment: {
+        ...original.context.deployment.deployment,
+        status: "failed" as const,
+        recoveryRequired: true,
+      },
+      environment: { acceptedPlatformDeploymentId: null },
+    },
+  };
+  const root = {
+    ...original.root,
+    metadata: stoppedMetadata("apps"),
+    spec: {
+      ...original.root.spec,
+      source: { ...original.root.spec.source, targetRevision: "~2.0.0-0" },
+      destination: {
+        namespace: "argocd",
+        server: "https://kubernetes.default.svc",
+      },
+      syncPolicy: {
+        automated: { enabled: false },
+        syncOptions: ["RespectIgnoreDifferences=true"],
+      },
+      ignoreDifferences: [
+        {
+          group: "argoproj.io",
+          kind: "Application",
+          jqPathExpressions: [...DELIVERY_ROOT_IGNORE_EXPRESSIONS],
+        },
+      ],
+    },
+    status: {
+      ...original.root.status,
+      sync: { status: "OutOfSync", revision: "2.0.0-901" },
+      health: { status: "Progressing" },
+    },
+  };
+  const child = {
+    ...original.child,
+    metadata: stoppedMetadata("argocd"),
+    spec: {
+      ...original.child.spec,
+      destination: {
+        namespace: "argocd",
+        server: "https://kubernetes.default.svc",
+      },
+    },
+  };
+  const manifests = [root, child].map(({ metadata: identity, spec }) => ({
+    kind: "Application",
+    metadata: structuredClone(identity),
+    spec: structuredClone(spec),
+  }));
+  const effects = {
+    read: async (name: string): Promise<unknown> =>
+      structuredClone(name === "apps" ? root : child),
+    render: async () => manifests,
+  };
+  return { context, root, child, effects };
+}
+
+test("stopped first-root inspection records actual partial state without claiming a verified release", async () => {
+  const { context, effects, root, child } = stoppedFixture();
+  Object.assign(child.metadata, {
+    finalizers: [
+      "post-delete-finalizer.argocd.argoproj.io",
+      "post-delete-finalizer.argocd.argoproj.io/cleanup",
+    ],
+  });
+  const proof = await inspectStoppedRootRecovery(context, effects);
+  expect(proof.state).toBe("stopped");
+  expect(proof.stoppedRoot.applications).toHaveLength(2);
+  expect(
+    proof.stoppedRoot.applications.find(({ name }) => name === "apps"),
+  ).toMatchObject({
+    uid: root.metadata.uid,
+    targetRevision: "~2.0.0-0",
+    syncStatus: "OutOfSync",
+    health: "Progressing",
+  });
+  expect(root.status.sync.status).toBe("OutOfSync");
+});
+
+test("stopped first-root proof refuses prior acceptance, foreign source/ownership, active operations and late UID changes", async () => {
+  for (const change of [
+    "prior",
+    "accepted",
+    "source",
+    "request",
+    "lifecycle",
+    "active",
+    "late-uid",
+    "foreign-finalizer",
+  ]) {
+    const { context, effects, child, root } = stoppedFixture();
+    if (change === "prior")
+      Object.assign(context, { priorDeployment: context.deployment });
+    if (change === "accepted")
+      Object.assign(context.deployment.environment, {
+        acceptedPlatformDeploymentId: "prior/root",
+      });
+    if (change === "source")
+      child.spec.source.repoURL = "https://foreign.invalid";
+    if (change === "request")
+      root.status.operationState.operation.info[0]!.value = crypto.randomUUID();
+    if (change === "lifecycle")
+      child.metadata.annotations["ci.sjer.red/application-lifecycle"] =
+        "cascade";
+    if (change === "foreign-finalizer")
+      Object.assign(child.metadata, { finalizers: ["foreign/owner"] });
+    let reads = 0;
+    await expect(
+      inspectStoppedRootRecovery(context, {
+        ...effects,
+        read: async (name) => {
+          const actual = await effects.read(name);
+          if (change === "active" && name === "argocd")
+            return { ...child, operation: { sync: {} } };
+          reads += 1;
+          if (change === "late-uid" && name === "argocd" && reads > 2)
+            return {
+              ...child,
+              metadata: { ...child.metadata, uid: crypto.randomUUID() },
+            };
+          return actual;
+        },
+      }),
+    ).rejects.toThrow();
+  }
 });

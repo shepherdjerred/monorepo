@@ -25,6 +25,7 @@ import { pendingRecovery } from "./ownership.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.ts";
 import { platformSettlements, recordedPlatformJobs } from "./context.ts";
+import { deliveryOperationId } from "#shared/operation-id.ts";
 
 function requireRecoveryEffectOwner(delivery: Delivery, kind: string) {
   if (kind === "upgrade-control-plane")
@@ -197,6 +198,43 @@ export async function completePlatformRecovery(
       "CONFLICT",
       "Recovery target does not match an exact frozen allowed settlement",
     );
+  if (input.settlement.state === "stopped") {
+    const snapshot = context.deployment.deployment.platformSnapshot;
+    const report = input.stoppedRoot;
+    const recorded = recordedPlatformJobs(context.deployment);
+    if (
+      context.priorDeployment !== null ||
+      snapshot?.kind !== "root-release" ||
+      report?.requestId !==
+        deliveryOperationId(
+          `${context.deployment.deployment.id}:root-release`,
+        ) ||
+      report.revision !==
+        snapshot.charts.find(({ name }) => name === "apps")?.artifact.version ||
+      report.applications.filter(({ name }) => name === "apps").length !== 1 ||
+      snapshot.charts.some(
+        ({ name }) =>
+          !report.applications.some((application) => application.name === name),
+      ) ||
+      new Set(report.applications.map(({ name }) => name)).size !==
+        report.applications.length ||
+      recorded.length !== 1 ||
+      !input.nativeJobs.some(
+        (job) =>
+          job.uid === recorded[0]?.uid &&
+          ["Complete", "Failed"].includes(job.status),
+      )
+    )
+      throw new DeliveryError(
+        "CONFLICT",
+        "Stopped first-root recovery requires its complete partial-state report and terminal original native Job",
+      );
+  } else if (input.stoppedRoot !== undefined) {
+    throw new DeliveryError(
+      "CONFLICT",
+      "Stopped root evidence cannot describe a different settlement",
+    );
+  }
   return this.database.$transaction(async (tx) => {
     const { intent, row, env } = await pendingRecovery(tx, id);
     if (

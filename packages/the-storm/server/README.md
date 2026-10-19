@@ -38,6 +38,11 @@ source-owned controller. Its immutable request, exact candidate digest and
 private journal are supplied by that controller. The interface never accepts
 world installation, historical restoration, or an image-only rollback operation.
 `restoration-control.py` remains the independent operator restoration mechanism.
+Its release and pre-install abort guards accept the upstream Minecraft chart or
+Delivery's ChartMuseum mirror only at version 5.2.0, after downloading and
+verifying the original archive size and SHA-256. A repository migration therefore
+preserves the maintenance lease's image, template, storage and ownership checks;
+a different chart or archive requires a separately reviewed contract update.
 
 The snapshot captures original server, template, native volume, route and Argo
 source identities before maintenance. Recovery reports use the neutral contract

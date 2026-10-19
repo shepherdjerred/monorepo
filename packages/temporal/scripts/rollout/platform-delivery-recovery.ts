@@ -14,6 +14,7 @@ import {
 } from "#lib/delivery/platform/recovery/native-proof.ts";
 import { recoveryJobReader } from "#lib/delivery/workers/worker-recovery-jobs.ts";
 import { openOperatorRecovery } from "./temporal-operator-credentials.ts";
+import { recoverStoppedRoot } from "./stopped-root-recovery.ts";
 
 /** The same fixed native recipes work during a Delivery worker outage; no arbitrary source/stack/command input exists. */
 async function main() {
@@ -22,9 +23,11 @@ async function main() {
     new Set(["--intent", "--url", "--context", "--action"]),
   );
   const id = requiredParsedArgument(flags, "--intent");
-  const action = RecoveryActionSchema.parse(
-    requiredParsedArgument(flags, "--action"),
-  );
+  const selectedAction = requiredParsedArgument(flags, "--action");
+  const action =
+    selectedAction === "inspect-stopped-root"
+      ? selectedAction
+      : RecoveryActionSchema.parse(selectedAction);
   const context = z
     .literal("admin@torvalds")
     .parse(requiredParsedArgument(flags, "--context"));
@@ -34,6 +37,10 @@ async function main() {
   await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN"]);
   const { kubernetes, connection } = await openOperatorRecovery(context);
   try {
+    if (action === "inspect-stopped-root") {
+      console.warn(JSON.stringify(await recoverStoppedRoot(id, connection)));
+      return;
+    }
     const result = await executePlatformRecoveryAction(id, action, {
       runJob: async (request, onReceipt, continuation) =>
         await runDeliveryJob(request, onReceipt, continuation, {

@@ -140,6 +140,15 @@ export function platformSettlements(
   return {
     desired: targetFingerprint(detail),
     ...(hasPrior && prior !== null ? { prior: targetFingerprint(prior) } : {}),
+    ...(prior === null && snapshot.kind === "root-release"
+      ? {
+          stopped: fingerprint({
+            kind: "stopped-first-root",
+            deploymentId: detail.deployment.id,
+            target: targetFingerprint(detail),
+          }),
+        }
+      : {}),
     ...(prior === null &&
     snapshot.kind === "tofu-apply" &&
     snapshot.stack === "discord"

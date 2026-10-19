@@ -59,6 +59,7 @@ class Cluster:
         source = {
             "chart": "minecraft",
             "repoURL": "https://itzg.github.io/minecraft-server-charts/",
+            "targetRevision": "5.2.0",
             "helm": {
                 "parameters": [{"name": "image.tag", "value": IMAGE.split(":", 1)[1]}],
                 "valuesObject": {"image": {"repository": IMAGE.split(":", 1)[0], "tag": IMAGE.split(":", 1)[1]}},
@@ -170,6 +171,14 @@ class RestorationControlTest(unittest.TestCase):
         ).start()
         self.guard_probe = control.assert_denied
         self.probes = patch.object(control, "assert_denied").start()
+        self.chart_bytes = b"verified chart archive fixture"
+        self.chart_response = MagicMock()
+        self.chart_response.status = 200
+        self.chart_response.read.return_value = self.chart_bytes
+        self.chart_request = patch.object(control, "urlopen").start()
+        self.chart_request.return_value.__enter__.return_value = self.chart_response
+        patch.object(control, "MINECRAFT_CHART_BYTES", len(self.chart_bytes)).start()
+        patch.object(control, "MINECRAFT_CHART_SHA256", hashlib.sha256(self.chart_bytes).hexdigest()).start()
 
     def initialize(self) -> JsonObject:
         return control.initialize(self.path, REQUEST, IMAGE)
@@ -1001,6 +1010,54 @@ class RestorationControlTest(unittest.TestCase):
                     self.cluster.server.object("metadata").strings("annotations")[control.LEASE] = "foreign"
                 else:
                     self.declare_image(IMAGE.replace("fixture", "changed"))
+                before = len(self.cluster.mutations)
+                with self.assertRaises(ValueError):
+                    control.abort(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                self.assertNotIn("preInstallAbort", journal)
+
+    def test_abort_accepts_the_identical_reconciled_mirror_chart(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        application = self.cluster.objects["application", control.SERVER]
+        source = application.object("spec").object("source")
+        source["repoURL"] = "https://chartmuseum.sjer.red"
+        application.object("status").object("sync").object("comparedTo")["source"] = copy.deepcopy(source)
+        control.abort(self.path, journal)
+        self.assertIn("preInstallAbort", journal)
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertEqual(
+            self.chart_request.call_args.args[0].full_url,
+            "https://chartmuseum.sjer.red/charts/minecraft-5.2.0.tgz",
+        )
+        self.assertEqual(self.chart_request.call_args.kwargs, {"timeout": 30})
+        self.chart_response.read.assert_called_with(len(self.chart_bytes) + 1)
+
+    def test_abort_rejects_foreign_chart_source_and_changed_archive_before_mutation(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        original = copy.deepcopy(self.cluster.objects)
+        for change in ("repository", "chart", "version", "digest", "oversized", "http"):
+            with self.subTest(change=change):
+                self.cluster.objects = copy.deepcopy(original)
+                application = self.cluster.objects["application", control.SERVER]
+                source = application.object("spec").object("source")
+                source["repoURL"] = "https://chartmuseum.sjer.red"
+                self.chart_response.read.return_value = self.chart_bytes
+                self.chart_response.status = 200
+                if change == "repository":
+                    source["repoURL"] = source.string("repoURL") + "/foreign"
+                elif change == "chart":
+                    source["chart"] = "minecraft-other"
+                elif change == "version":
+                    source["targetRevision"] = "5.2.1"
+                elif change == "digest":
+                    self.chart_response.read.return_value = b"x" * len(self.chart_bytes)
+                elif change == "oversized":
+                    self.chart_response.read.return_value = self.chart_bytes + b"x"
+                else:
+                    self.chart_response.status = 503
+                application.object("status").object("sync").object("comparedTo")["source"] = copy.deepcopy(source)
                 before = len(self.cluster.mutations)
                 with self.assertRaises(ValueError):
                     control.abort(self.path, journal)

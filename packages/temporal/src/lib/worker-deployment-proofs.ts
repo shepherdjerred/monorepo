@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { ociImageConfigurations } from "@shepherdjerred/ops-model/oci-image-configurations.ts";
 import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
+import { temporalCommand } from "./worker-deployment-commands.ts";
+
+export type RolloutCommandResult = { stdout: string; stderr: string };
+export type RolloutCommandRunner = (
+  command: readonly string[],
+) => Promise<RolloutCommandResult>;
 
 const PrometheusResponseSchema = z.object({
   status: z.literal("success"),
@@ -21,11 +27,6 @@ const AcceptedDeploymentSchema = z.object({
     rampingVersionPercentage: z.number().min(0).max(100),
   }),
 });
-
-export type RolloutCommandResult = { stdout: string; stderr: string };
-export type RolloutCommandRunner = (
-  command: readonly string[],
-) => Promise<RolloutCommandResult>;
 
 function parseJson(raw: string, label: string): unknown {
   try {
@@ -140,22 +141,17 @@ export async function requireAcceptedWorkerDeployment(
   },
   run: RolloutCommandRunner,
 ): Promise<void> {
-  const result = await run([
-    "toolkit",
-    "temporal",
-    "worker",
-    "deployment",
-    "describe",
-    "--name",
-    options.deploymentName,
-    "--output",
-    "json",
-    "--address",
-    options.address,
-    "--namespace",
-    options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
-  ]);
+  const result = await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "describe",
+      "--name",
+      options.deploymentName,
+      "--output",
+      "json",
+    ]),
+  );
   const deployment = AcceptedDeploymentSchema.parse(
     parseJson(result.stdout, "acceptance prerequisite deployment describe"),
   );

@@ -828,6 +828,109 @@ test("release-root resumes at a live later phase instead of restaging", async ()
   }
 });
 
+test("a corrected forward root request may stage after a different terminal interrupted request without rewriting its floating source", async () => {
+  const oldRequestId = "22222222-2222-4222-8222-222222222222";
+  const oldOperation = operationForRootSyncRequest({
+    infos: [
+      { name: "ci.sjer.red/request-id", value: oldRequestId },
+      { name: "ci.sjer.red/operation-id", value: RELEASE_OPERATION_ID },
+      { name: "ci.sjer.red/revision", value: "2.0.0-42" },
+      PRUNE_PHASE_INFO,
+    ],
+    prune: true,
+    revision: "2.0.0-42",
+  });
+  const root = {
+    metadata: { name: "apps" },
+    spec: { source: { ...RootApplicationSource, targetRevision: "~2.0.0-0" } },
+    status: {
+      sync: { status: "OutOfSync", revision: "2.0.0-43" },
+      operationState: {
+        phase: "Failed",
+        message: "Operation terminated",
+        finishedAt: new Date().toISOString(),
+        operation: oldOperation,
+        syncResult: { revision: "2.0.0-42", resources: [] },
+      },
+    },
+  };
+  const posts: unknown[] = [];
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/charts/apps")
+        return Response.json([
+          {
+            version: "2.0.0-43",
+            urls: ["charts/apps-2.0.0-43.tgz"],
+            digest: "a".repeat(64),
+          },
+        ]);
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps/manifests"
+      )
+        return Response.json({ manifests: [StagedRootApplication] });
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps"
+      )
+        return Response.json(root);
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/applications/apps/sync"
+      ) {
+        posts.push(await request.json());
+        return new Response("forward-stage-admitted", { status: 503 });
+      }
+      return new Response("not found", { status: 404 });
+    },
+  });
+  const directory = await mkdtemp(path.join(tmpdir(), "argocd-forward-root-"));
+  const expected = path.join(directory, "expected.json");
+  await Bun.write(
+    expected,
+    JSON.stringify([{ name: "apps", revision: "2.0.0-43" }]),
+  );
+  try {
+    const result = await runArgocdCommand(
+      [
+        "bun",
+        "--no-install",
+        ARGOCD_SCRIPT,
+        "release-root",
+        "apps",
+        expected,
+        "--revision",
+        "2.0.0-43",
+        "--request-id",
+        RELEASE_REQUEST_ID,
+        "--timeout",
+        "1",
+      ],
+      rootReleaseCommandOptions(server.url.origin, directory),
+    );
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toMatchObject({
+      prune: false,
+      revision: "2.0.0-43",
+      infos: expect.arrayContaining([
+        { name: "ci.sjer.red/request-id", value: RELEASE_REQUEST_ID },
+        { name: "ci.sjer.red/release-phase", value: "stage" },
+      ]),
+    });
+    expect(result.exitCode).toBe(34);
+    expect(result.stderr).toContain("forward-stage-admitted");
+    expect(root.spec.source.targetRevision).toBe("~2.0.0-0");
+    expect(root.status.operationState.operation).toEqual(oldOperation);
+  } finally {
+    await server.stop(true);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("root release finalization refuses a batch selecting another namespace", async () => {
   // Same group, kind, and name as the rendered policy, but a namespace the
   // rendered revision never declares, so it is a different target.
