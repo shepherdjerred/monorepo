@@ -11,6 +11,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import threading
@@ -914,6 +915,34 @@ def tar_fingerprint(stream: IO[bytes]) -> dict[str, str]:
     return result
 
 
+@contextmanager
+def verification_stage(stage: str):
+    """Export fixed diagnostics only; the original exception remains internal."""
+    try:
+        yield
+    except Exception as error:
+        known = (ValueError, RuntimeError, tarfile.ReadError, subprocess.TimeoutExpired, OSError)
+        error_class = next((kind.__name__ for kind in known if isinstance(error, kind)), "UnexpectedError")
+        codes = {
+            "Volume contains an unsafe path or a linked file": "unsafe-entry",
+            "Volume stream contains duplicate paths": "duplicate-entry",
+            "Volume contains an unsupported non-regular file": "unsupported-entry",
+            "Volume stream does not include the expected Storm world and database": "required-files-missing",
+            "The independently restored whole volume differs from its stopped source": "byte-mismatch",
+        }
+        code = codes.get(str(error), "operation-failed")
+        if isinstance(error, tarfile.ReadError):
+            message = str(error).lower()
+            code = next((label for needle, label in (
+                ("unexpected end", "tar-unexpected-eof"),
+                ("truncated", "tar-truncated"),
+                ("header", "tar-invalid-header"),
+            ) if needle in message), "tar-read-error")
+        report = {"stage": stage, "errorClass": error_class, "code": code}
+        print("MINECRAFT_VERIFIER_FAILURE " + json.dumps(report), file=sys.stderr, flush=True)
+        raise
+
+
 def remote_fingerprint(journal: JsonObject, namespace: str, exclude_workspace: bool = False) -> dict[str, str]:
     name = reader_manifest(journal, namespace).object("metadata").string("name")
     assert_reader(read("pod", name, namespace), journal, namespace)
@@ -939,11 +968,21 @@ def remote_fingerprint(journal: JsonObject, namespace: str, exclude_workspace: b
             ".",
         ],
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     ) as process:
         if process.stdout is None:
             raise RuntimeError("Volume reader has no output pipe")
         deadline = threading.Timer(1800, process.kill)
+        error_output = bytearray()
+
+        def drain_errors() -> None:
+            if process.stderr is not None:
+                while block := process.stderr.read(4096):
+                    error_output.extend(block)
+                    del error_output[:-8192]
+
+        errors = threading.Thread(target=drain_errors, daemon=True)
+        errors.start()
         deadline.start()
         try:
             result = tar_fingerprint(process.stdout)
@@ -953,11 +992,38 @@ def remote_fingerprint(journal: JsonObject, namespace: str, exclude_workspace: b
             if process.wait(timeout=30) != 0:
                 raise RuntimeError("Volume read failed or exceeded its deadline; no file contents were saved")
             return result
+        except Exception:
+            # Capture the producer's actual exit before cleanup can kill it.
+            errors.join(timeout=1)
+            exit_code = process.poll()
+            text = error_output.decode("utf-8", errors="replace").lower()
+            remote = re.search(r"command terminated with exit code ([0-9]{1,3})(?:\s|$)", text)
+            remote_exit = int(remote.group(1)) if remote is not None else None
+            if remote_exit is not None and remote_exit > 255:
+                remote_exit = None
+            code = next((label for needle, label in (
+                ("permission denied", "permission-denied"),
+                ("forbidden", "forbidden"),
+                ("input/output error", "io-error"),
+                ("file changed as we read", "file-changed"),
+                ("timeout", "timeout"),
+                ("unexpected eof", "unexpected-eof"),
+                ("connection", "connection-error"),
+            ) if needle in text), "unclassified")
+            report = {
+                "side": "source" if namespace == NAMESPACE else "restored",
+                "producerExit": exit_code,
+                "remoteExit": remote_exit,
+                "stderrClass": code,
+            }
+            print("MINECRAFT_STREAM_FAILURE " + json.dumps(report), file=sys.stderr, flush=True)
+            raise
         finally:
             deadline.cancel()
             if process.poll() is None:
                 process.kill()
                 process.wait(timeout=30)
+            errors.join(timeout=5)
 
 
 def require_restore(journal: JsonObject) -> None:
@@ -984,6 +1050,7 @@ def require_restore(journal: JsonObject) -> None:
             assert_reader(pod, journal, RESTORED_NAMESPACE)
 
 
+@verification_stage("verify-backup")
 def verify_backup(path: Path, journal: JsonObject) -> None:
     require_offline(journal, readers=True)
     require_restore(journal)
@@ -1005,8 +1072,10 @@ def verify_backup(path: Path, journal: JsonObject) -> None:
         )
     require_offline(journal, readers=True)
     require_restore(journal)
-    original = remote_fingerprint(journal, NAMESPACE)
-    restored = remote_fingerprint(journal, RESTORED_NAMESPACE)
+    with verification_stage("source-fingerprint"):
+        original = remote_fingerprint(journal, NAMESPACE)
+    with verification_stage("restored-fingerprint"):
+        restored = remote_fingerprint(journal, RESTORED_NAMESPACE)
     require_offline(journal, readers=True)
     require_restore(journal)
     if original != restored:

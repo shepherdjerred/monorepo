@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  MinecraftProducerDiagnostic,
+  MinecraftProducerError,
+} from "./minecraft-controller-error.ts";
 import { MinecraftControllerReceiptSchema as ControllerReceipt } from "@shepherdjerred/delivery/contract";
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { MinecraftRecoveryReportEnvelopeSchema } from "@shepherdjerred/delivery/contract";
@@ -80,10 +84,17 @@ async function request(
           : AbortSignal.any([timeout, options.signal]),
     },
   );
-  if (!response.ok)
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    const diagnostic = z
+      .object({ diagnostic: MinecraftProducerDiagnostic })
+      .safeParse(body);
+    if (diagnostic.success)
+      throw new MinecraftProducerError(diagnostic.data.diagnostic);
     throw new Error(
       `Dedicated Minecraft controller returned HTTP ${String(response.status)}; inspect its durable request journal`,
     );
+  }
   return await response.json();
 }
 export async function runMinecraftEligibility(

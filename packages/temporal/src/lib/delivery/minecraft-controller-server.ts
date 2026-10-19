@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { handleMinecraftRecovery } from "./minecraft-controller-recovery.ts";
 import { Hono } from "hono";
 import { z } from "zod";
+import { MinecraftProducerError } from "./minecraft-controller-error.ts";
 import type {
   DeploymentDetail,
   MinecraftRecoveryIntent,
@@ -191,11 +192,14 @@ export function createMinecraftControllerServer(options: {
       active.delete(requestId);
     }
   });
-  app.onError(() =>
+  app.onError((error) =>
     Response.json(
       {
         error:
           "Minecraft maintenance failed; inspect the private durable request journal before recovery",
+        ...(error instanceof MinecraftProducerError
+          ? { diagnostic: error.diagnostic }
+          : {}),
       },
       { status: 500 },
     ),
