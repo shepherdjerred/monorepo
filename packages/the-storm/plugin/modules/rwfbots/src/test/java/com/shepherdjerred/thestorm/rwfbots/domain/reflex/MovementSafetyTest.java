@@ -195,6 +195,21 @@ final class MovementSafetyTest {
   }
 
   @Test
+  void aSwimmerRoundsABlockCornerInsteadOfClippingIt() {
+    // cloned-balance: shallow water beside a stone corner; the straight swim clips the corner, so
+    // the swimmer moves along one axis and then the other.
+    var water =
+        new Terrain(
+            point -> true, point -> point.x() + 0.3 > 1.0 && point.z() - 0.3 < 1.0, point -> false);
+    var result =
+        MovementSafety.choose(
+            water,
+            new MovementSafety.Request(new Vec3(0.5, 1, 1.1), new Vec3(1.5, 1, 1.5), Hop.SWIM));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(result.destination().orElseThrow().x()).isLessThan(1);
+  }
+
+  @Test
   void aStepTallerThanVanillaStepHeightStillBlocksAnOrdinaryWalk() {
     var wall =
         new Terrain(

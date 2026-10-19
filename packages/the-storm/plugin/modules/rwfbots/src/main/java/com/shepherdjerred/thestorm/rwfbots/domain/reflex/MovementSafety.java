@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -103,12 +104,20 @@ public final class MovementSafety {
     var vertical = from.withY(target.y());
     var across = target.withY(from.y());
     // Only a body holding a climbable can rise or sink in place; one on the ground crosses first.
-    for (var corner : holding ? List.of(vertical, across) : List.of(across, vertical)) {
+    var corners = new ArrayList<>(holding ? List.of(vertical, across) : List.of(across, vertical));
+    corners.addAll(turns(from, target));
+    for (var corner : corners) {
       if (corner.distance(from) < 1e-6 || corner.distance(target) < 1e-6) continue;
       if (climbLeg(terrain, from, corner) && climbLeg(terrain, corner, target))
         return Optional.of(corner);
     }
     return Optional.empty();
+  }
+
+  /** The two axis-aligned turning points from {@code from} to {@code target} at its height. */
+  private static List<Vec3> turns(Vec3 from, Vec3 target) {
+    return List.of(
+        new Vec3(from.x(), from.y(), target.z()), new Vec3(target.x(), from.y(), from.z()));
   }
 
   private static boolean grips(Terrain terrain, Vec3 point) {
@@ -310,6 +319,11 @@ public final class MovementSafety {
     var corner = target.y() > from.y() ? from.withY(target.y()) : target.withY(from.y());
     if (swimCorridor(terrain, from, corner) && swimCorridor(terrain, corner, target))
       return new Result(Optional.of(corner), Reason.CLEAR);
+    // Round a block corner along one axis and then the other rather than clip it.
+    for (var turn : turns(from, target)) {
+      if (swimCorridor(terrain, from, turn) && swimCorridor(terrain, turn, target))
+        return new Result(Optional.of(turn), Reason.REDIRECTED);
+    }
     return new Result(Optional.empty(), Reason.BLOCKED);
   }
 
