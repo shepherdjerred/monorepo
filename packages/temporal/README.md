@@ -280,13 +280,15 @@ The final inspection requires a no-change plan at the frozen source and stable
 state. It alone releases quarantine. A missing/replaced apply Job is never
 recreated; inspect its exact receipt and use a new admin intent if needed.
 
-For an interrupted first root with no accepted prior,
+For an interrupted root attempt,
 `--action inspect-stopped-root` runs the reviewed host source instead of the
 failed Job's frozen source. It verifies terminal original native executors, a
 closed Workflow, the owned frozen root operation and every rendered
 Application's stable UID/source/lifecycle. Typed stopped settlement records
 partial health and clears only stale ownership; it preserves the failed result
-and accepts no root. A corrected independently qualified API must support this
+and accepts no root. An existing accepted root keeps its original pointer and
+frozen snapshot; its historical receipt must still match that exact prior.
+A corrected independently qualified API must support this
 outcome before using the host command; the next corrected root still follows
 normal exact-source `release-root`.
 

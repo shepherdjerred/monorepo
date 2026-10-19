@@ -49,12 +49,13 @@ function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
 }
 
-async function runCommand(
+export async function runCommand(
   command: readonly string[],
   options: { readonly cwd?: string } = {},
 ): Promise<void> {
   const child = Bun.spawn([...command], {
     ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
+    env: { ...Bun.env, OP_SERVICE_ACCOUNT_TOKEN: undefined },
     stdout: "inherit",
     stderr: "inherit",
   });

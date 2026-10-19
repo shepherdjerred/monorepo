@@ -101,6 +101,19 @@ function targetFingerprint(detail: DeploymentDetail) {
       });
 }
 
+export function stoppedRootPriorMatches(
+  detail: DeploymentDetail,
+  prior: DeploymentDetail | null,
+) {
+  if (detail.deployment.platformSnapshot?.kind !== "root-release") return false;
+  return prior === null
+    ? detail.environment.acceptedPlatformDeploymentId === null
+    : prior.deployment.platformSnapshot?.kind === "root-release" &&
+        prior.deployment.status === "succeeded" &&
+        prior.deployment.id !== detail.deployment.id &&
+        prior.deployment.id === detail.environment.acceptedPlatformDeploymentId;
+}
+
 export function platformSettlements(
   detail: DeploymentDetail,
   prior: DeploymentDetail | null,
@@ -137,15 +150,25 @@ export function platformSettlements(
     (snapshot.kind === "root-release"
       ? matching.kind === "root-release"
       : matching.kind === "tofu-apply" && matching.stack === snapshot.stack);
+  const stoppedRoot = stoppedRootPriorMatches(detail, prior);
   return {
     desired: targetFingerprint(detail),
     ...(hasPrior && prior !== null ? { prior: targetFingerprint(prior) } : {}),
-    ...(prior === null && snapshot.kind === "root-release"
+    ...(stoppedRoot
       ? {
           stopped: fingerprint({
-            kind: "stopped-first-root",
+            kind:
+              prior === null ? "stopped-first-root" : "stopped-root-attempt",
             deploymentId: detail.deployment.id,
             target: targetFingerprint(detail),
+            ...(prior === null
+              ? {}
+              : {
+                  prior: {
+                    deploymentId: prior.deployment.id,
+                    target: targetFingerprint(prior),
+                  },
+                }),
           }),
         }
       : {}),

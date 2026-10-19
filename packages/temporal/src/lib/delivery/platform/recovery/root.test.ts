@@ -303,6 +303,96 @@ test("stopped first-root inspection records actual partial state without claimin
   expect(root.status.sync.status).toBe("OutOfSync");
 });
 
+function stoppedWithPriorFixture() {
+  const result = stoppedFixture();
+  const priorId = "accepted/root";
+  const priorSnapshot = structuredClone(
+    result.context.deployment.deployment.platformSnapshot,
+  );
+  if (priorSnapshot.kind !== "root-release") throw new Error("Expected root");
+  for (const chart of priorSnapshot.charts)
+    chart.artifact.version = "2.0.0-899";
+  const context = {
+    ...result.context,
+    deployment: {
+      ...result.context.deployment,
+      environment: { acceptedPlatformDeploymentId: priorId },
+    },
+    priorDeployment: {
+      deployment: {
+        id: priorId,
+        status: "succeeded" as const,
+        platformSnapshot: priorSnapshot,
+      },
+    },
+  };
+  const receipt = VerifiedRootReleaseReceiptSchema.parse(
+    JSON.parse(
+      fixture().root.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION],
+    ),
+  );
+  Object.assign(result.root.metadata.annotations, {
+    [VERIFIED_ROOT_RELEASE_ANNOTATION]: JSON.stringify({
+      ...receipt,
+      requestId: deliveryOperationId(`${priorId}:root-release`),
+      revision: "2.0.0-899",
+    }),
+  });
+  return { ...result, context };
+}
+
+test("stopped later root preserves the historical accepted root while reporting the actual failed attempt", async () => {
+  const { context, effects, root } = stoppedWithPriorFixture();
+  const before = structuredClone(context);
+  const proof = await inspectStoppedRootRecovery(context, effects);
+  expect(proof.state).toBe("stopped");
+  expect(proof.stoppedRoot.revision).toBe("2.0.0-900");
+  expect(proof.proofSummary).toContain("prior accepted/root unchanged");
+  expect(context).toEqual(before);
+  expect(root.status.sync.status).toBe("OutOfSync");
+});
+
+test.each([
+  "pointer",
+  "status",
+  "kind",
+  "receipt-missing",
+  "receipt-request",
+  "receipt-revision",
+  "receipt-time",
+])("stopped later root rejects changed prior %s", async (change) => {
+  const { context, effects, root } = stoppedWithPriorFixture();
+  if (change === "pointer")
+    context.deployment.environment.acceptedPlatformDeploymentId =
+      "foreign/root";
+  if (change === "status")
+    Object.assign(context.priorDeployment.deployment, { status: "failed" });
+  if (change === "kind")
+    Object.assign(context.priorDeployment.deployment.platformSnapshot, {
+      kind: "tofu-plan",
+    });
+  if (change === "receipt-missing")
+    Reflect.deleteProperty(
+      root.metadata.annotations,
+      VERIFIED_ROOT_RELEASE_ANNOTATION,
+    );
+  else {
+    const encoded = Object.entries(root.metadata.annotations).find(
+      ([name]) => name === VERIFIED_ROOT_RELEASE_ANNOTATION,
+    )?.[1];
+    if (encoded === undefined) throw new Error("Expected historical receipt");
+    const receipt = VerifiedRootReleaseReceiptSchema.parse(JSON.parse(encoded));
+    if (change === "receipt-request") receipt.requestId = crypto.randomUUID();
+    if (change === "receipt-revision") receipt.revision = "2.0.0-898";
+    if (change === "receipt-time")
+      receipt.verifiedAt = "2000-01-01T00:00:00.000Z";
+    Object.assign(root.metadata.annotations, {
+      [VERIFIED_ROOT_RELEASE_ANNOTATION]: JSON.stringify(receipt),
+    });
+  }
+  await expect(inspectStoppedRootRecovery(context, effects)).rejects.toThrow();
+});
+
 function stoppedStageFixture() {
   const result = stoppedFixture();
   const { root, child } = result;
