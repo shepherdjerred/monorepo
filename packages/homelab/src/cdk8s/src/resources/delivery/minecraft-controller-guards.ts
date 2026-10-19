@@ -15,6 +15,7 @@ type Guard = {
   operations: string[];
   expressions: string[];
   variables?: { name: string; expression: string }[];
+  scope?: "Namespaced" | "Cluster";
 };
 
 export function controllerGuard(chart: Chart, id: string, guard: Guard): void {
@@ -37,7 +38,7 @@ export function controllerGuard(chart: Chart, id: string, guard: Guard): void {
             apiVersions: [guard.version],
             resources: guard.resources,
             operations: guard.operations,
-            scope: "Namespaced",
+            scope: guard.scope ?? "Namespaced",
           },
         ],
       },
@@ -179,6 +180,34 @@ export function createMinecraftControllerGuards(chart: Chart): void {
     expressions: [
       "request.namespace == 'minecraft-tsmc-delivery-validation' && request.name == 'datadir-minecraft-tsmc-0' && has(oldObject.metadata.labels) && 'velero.io/restore-name' in oldObject.metadata.labels && oldObject.metadata.labels['velero.io/restore-name'].startsWith('storm-verify-')",
       "has(request.options.preconditions) && request.options.preconditions.uid == oldObject.metadata.uid && request.options.preconditions.resourceVersion == oldObject.metadata.resourceVersion",
+    ],
+  });
+  controllerGuard(chart, "copy-reclaim", {
+    group: "",
+    version: "v1",
+    resources: ["persistentvolumes"],
+    operations: ["UPDATE"],
+    scope: "Cluster",
+    expressions: [
+      "has(oldObject.spec.claimRef) && oldObject.spec.claimRef.namespace == 'minecraft-tsmc-delivery-validation' && oldObject.spec.claimRef.name == 'datadir-minecraft-tsmc-0' && has(oldObject.spec.csi) && oldObject.spec.csi.driver == 'zfs.csi.openebs.io'",
+      "has(oldObject.metadata.labels) && 'velero.io/restore-name' in oldObject.metadata.labels && oldObject.metadata.labels['velero.io/restore-name'].startsWith('storm-verify-')",
+      "oldObject.spec.persistentVolumeReclaimPolicy == 'Retain' && object.spec.persistentVolumeReclaimPolicy == 'Delete'",
+      [
+        "capacity",
+        "accessModes",
+        "claimRef",
+        "csi",
+        "storageClassName",
+        "mountOptions",
+        "volumeMode",
+        "nodeAffinity",
+        "volumeAttributesClassName",
+      ]
+        .map((key) => unchanged(`spec.${key}`))
+        .join(" && "),
+      ["labels", "annotations", "finalizers", "ownerReferences"]
+        .map((key) => unchanged(`metadata.${key}`))
+        .join(" && "),
     ],
   });
   createMinecraftControllerPodGuards(chart);

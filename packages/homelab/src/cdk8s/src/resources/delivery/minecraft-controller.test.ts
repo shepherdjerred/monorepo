@@ -140,7 +140,14 @@ function assertRule(namespace: string | undefined, rule: z.infer<typeof Rule>) {
   if (rule.resources.includes("namespaces"))
     expect(rule.verbs).toEqual(["get"]);
   if (rule.resources.includes("persistentvolumes"))
-    expect(rule.verbs).toEqual(["get"]);
+    expect(rule.verbs).toEqual(["get", "list", "watch", "patch"]);
+  if (rule.resources.includes("volumeattachments"))
+    expect(rule.verbs).toEqual(["get", "list"]);
+  if (rule.resources.includes("zfsvolumes")) {
+    expect(namespace).toBe("openebs");
+    expect(rule.apiGroups).toEqual(["zfs.openebs.io"]);
+    expect(rule.verbs).toEqual(["get", "list", "watch"]);
+  }
   if (rule.resources.includes("backups"))
     expect(rule.verbs).toEqual(["get", "create"]);
   if (rule.resources.includes("pods") && rule.verbs.includes("create"))
@@ -173,7 +180,7 @@ test("every controller admission capability is fail-closed and bound to only the
   const policies = resources.filter(
     (item) => item.kind === "ValidatingAdmissionPolicy",
   );
-  expect(policies).toHaveLength(10);
+  expect(policies).toHaveLength(11);
   for (const policy of policies) {
     const spec = z
       .object({
@@ -200,4 +207,55 @@ test("every controller admission capability is fail-closed and bound to only the
         .object({ validationActions: z.array(z.literal("Deny")) })
         .parse(binding.spec).validationActions,
     ).toEqual(["Deny"]);
+});
+
+test("PV policy changes are confined to normal reclaim of an independent validation copy", () => {
+  const guard = fixture().find(
+    (item) =>
+      item.kind === "ValidatingAdmissionPolicy" &&
+      item.metadata.name === "delivery-tsmc-copy-reclaim.sjer.red",
+  );
+  const spec = z
+    .object({
+      matchConstraints: z.object({
+        resourceRules: z.array(
+          z.object({
+            resources: z.array(z.string()),
+            operations: z.array(z.string()),
+            scope: z.string(),
+          }),
+        ),
+      }),
+      validations: z.array(z.object({ expression: z.string() })),
+    })
+    .parse(guard?.spec);
+  expect(spec.matchConstraints.resourceRules).toEqual([
+    {
+      resources: ["persistentvolumes"],
+      operations: ["UPDATE"],
+      scope: "Cluster",
+    },
+  ]);
+  const expressions = spec.validations
+    .map((entry) => entry.expression)
+    .join("\n");
+  expect(expressions).toContain(
+    "oldObject.spec.claimRef.namespace == 'minecraft-tsmc-delivery-validation'",
+  );
+  expect(expressions).toContain(
+    "oldObject.spec.claimRef.name == 'datadir-minecraft-tsmc-0'",
+  );
+  expect(expressions).toContain(
+    "oldObject.spec.csi.driver == 'zfs.csi.openebs.io'",
+  );
+  expect(expressions).toContain(
+    "oldObject.spec.persistentVolumeReclaimPolicy == 'Retain' && object.spec.persistentVolumeReclaimPolicy == 'Delete'",
+  );
+  expect(expressions).toContain("object.spec.csi == oldObject.spec.csi");
+  expect(expressions).toContain(
+    "object.spec.claimRef == oldObject.spec.claimRef",
+  );
+  expect(expressions).toContain(
+    "object.metadata.finalizers == oldObject.metadata.finalizers",
+  );
 });

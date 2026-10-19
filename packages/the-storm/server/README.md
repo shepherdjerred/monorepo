@@ -78,8 +78,13 @@ The receipt and eligibility formats are defined by
 Python validates those neutral contracts before writing a receipt; Temporal
 validates the same source before recording preservation evidence. Private
 startup evidence retains allowlisted startup facts rather than raw player logs.
-Successful verification reopens the unchanged original and deletes only the
-exact restored claim after owned candidate/readers are gone. The backup and
+Successful verification reopens the unchanged original and removes only the
+exact restored claim after owned candidate/readers and volume attachments are
+gone. A retained copy PV changes to `Delete` with UID, resource-version and
+full-spec preconditions; normal CSI reclaim must remove both the copy PV and
+its recorded ZFS volume before cleanup completes. Interrupted cleanup resumes
+from those recorded identities. A failed restore's owned unbound Pending PVC
+can be removed without reclaiming the original PV named in its spec. The backup and
 private journal remain available for independent restoration. Interrupted or
 ambiguous operations retain their journal and ownership for explicit recovery.
 

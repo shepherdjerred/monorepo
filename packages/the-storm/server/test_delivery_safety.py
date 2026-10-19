@@ -1,6 +1,5 @@
 """Native identities and late-join safety, without Paper or cluster access."""
 
-import copy
 import json
 import subprocess
 import tempfile
@@ -124,20 +123,24 @@ class SourceNamespaceTest(unittest.TestCase):
 class CopyCleanupTest(unittest.TestCase):
     def fixture(self):
         control = delivery_validation.load_control()
+        control.__dict__["RESTORED_NAMESPACE"] = control.DELIVERY_VALIDATION_NAMESPACE
         state = JsonObject(
             {
                 "phase": "REOPENED",
+                "requestId": REQUEST,
+                "backup": {"name": "storm-world-" + REQUEST},
                 "productionWriteAuthorized": False,
                 "claimUid": "original-claim",
                 "volumeName": "original-pv",
                 "volumeUid": "original-pv-uid",
-                "volumeSource": {"driver": "zfs", "volumeHandle": "original-handle"},
+                "volumeSource": {"driver": "zfs.csi.openebs.io", "volumeHandle": "original-handle"},
                 "restore": {
                     "name": "storm-verify-" + REQUEST,
+                    "uid": "restore-uid",
                     "claimUid": "copy-claim",
                     "volumeName": "copy-pv",
                     "volumeUid": "copy-pv-uid",
-                    "volumeSource": {"driver": "zfs", "volumeHandle": "copy-handle"},
+                    "volumeSource": {"driver": "zfs.csi.openebs.io", "volumeHandle": "copy-handle"},
                 },
                 "deliveryValidation": {},
             }
@@ -146,7 +149,7 @@ class CopyCleanupTest(unittest.TestCase):
         original = JsonObject(
             {
                 "metadata": {"uid": "original-pv-uid"},
-                "spec": {"csi": {"driver": "zfs", "volumeHandle": "original-handle"}},
+                "spec": {"csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "original-handle"}},
             }
         )
         claim = JsonObject(
@@ -157,41 +160,178 @@ class CopyCleanupTest(unittest.TestCase):
                     "labels": {"velero.io/restore-name": "storm-verify-" + REQUEST},
                 },
                 "spec": {"volumeName": "copy-pv"},
+                "status": {"phase": "Bound"},
             }
         )
         volume = JsonObject(
-            {"metadata": {"uid": "copy-pv-uid"}, "spec": {"csi": {"driver": "zfs", "volumeHandle": "copy-handle"}}}
+            {
+                "metadata": {
+                    "uid": "copy-pv-uid",
+                    "resourceVersion": "52",
+                    "labels": {"velero.io/restore-name": "storm-verify-" + REQUEST},
+                },
+                "spec": {
+                    "csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "copy-handle"},
+                    "persistentVolumeReclaimPolicy": "Retain",
+                    "claimRef": {"namespace": control.RESTORED_NAMESPACE, "name": control.CLAIM, "uid": "copy-claim"},
+                },
+            }
         )
         return control, state, original_claim, original, claim, volume
 
-    def test_cleanup_deletes_only_recorded_claim_with_uid_and_resource_version(self) -> None:
+    def exercise(self, *, missing_claim=False, pending=False, attached=False, pod=False, altered=None, reclaim=True):
         control, state, original_claim, original, claim, volume = self.fixture()
+        if altered:
+            altered(state, claim, volume)
+        native = JsonObject(
+            {
+                "metadata": {
+                    "uid": "native-copy-uid",
+                    "labels": {"velero.io/namespace": control.RESTORED_NAMESPACE, "velero.io/volname": "original-pv"},
+                    "annotations": {"velero.io/backup": "storm-world-" + REQUEST},
+                }
+            }
+        )
+        restore = JsonObject(
+            {"metadata": {"uid": "restore-uid", "labels": {control.LEASE: REQUEST}}, "status": {"phase": "Completed"}}
+        )
+        if pending:
+            state.object("restore").pop("claimUid")
+            claim.object("spec")["volumeName"] = "original-pv"
+            claim.object("status")["phase"] = "Pending"
+            original.object("spec")["claimRef"] = {"uid": "original-claim"}
+            restore.object("status")["phase"] = "Failed"
+        if missing_claim:
+            state.object("deliveryValidation")["copyCleanupIntent"] = "copy-claim"
+        storage = {"claim": not missing_claim, "volume": True, "native": True}
+        events = []
+
+        def run(arguments, timeout=30):
+            if "patch" in arguments:
+                operations = json.loads(arguments[arguments.index("-p") + 1])
+                self.assertEqual(
+                    operations,
+                    [
+                        {"op": "test", "path": "/metadata/uid", "value": "copy-pv-uid"},
+                        {"op": "test", "path": "/metadata/resourceVersion", "value": "52"},
+                        {"op": "test", "path": "/spec", "value": dict(volume.object("spec"))},
+                        {"op": "replace", "path": "/spec/persistentVolumeReclaimPolicy", "value": "Delete"},
+                    ],
+                )
+                volume.object("spec")["persistentVolumeReclaimPolicy"] = "Delete"
+                events.append("copy-policy-delete")
+                if not storage["claim"] and reclaim:
+                    storage.update(volume=False, native=False)
+                return ""
+            if "wait" in arguments:
+                if "pvc/" + control.CLAIM in arguments:
+                    self.assertFalse(storage["claim"])
+                elif "pv/copy-pv" in arguments:
+                    if storage["volume"]:
+                        raise RuntimeError("CSI reclaim still pending")
+                else:
+                    self.assertIn("zfsvolume/copy-handle", arguments)
+                    self.assertFalse(storage["native"])
+                return ""
+            kind = arguments[arguments.index("get") + 1]
+            if kind == "pvc":
+                return json.dumps(claim) if storage["claim"] else ""
+            if kind == "pv":
+                self.assertEqual(arguments[arguments.index("get") + 2], "copy-pv")
+                return json.dumps(volume) if storage["volume"] else ""
+            if kind == "zfsvolume":
+                self.assertEqual(arguments[arguments.index("get") + 2], "copy-handle")
+                return json.dumps(native) if storage["native"] else ""
+            if kind == "pods":
+                return json.dumps(
+                    {
+                        "items": [{"spec": {"volumes": [{"persistentVolumeClaim": {"claimName": control.CLAIM}}]}}]
+                        if pod
+                        else []
+                    }
+                )
+            self.assertEqual(kind, "volumeattachments")
+            return json.dumps(
+                {"items": [{"spec": {"source": {"persistentVolumeName": "copy-pv"}}}] if attached else []}
+            )
+
+        def read(kind, name, namespace=control.NAMESPACE):
+            if kind == "pvc":
+                return original_claim
+            if kind == "pv":
+                self.assertEqual(name, "original-pv")
+                return original
+            self.assertEqual((kind, name, namespace), ("restore.velero.io", "storm-verify-" + REQUEST, "velero"))
+            return restore
+
+        def delete(*arguments, **kwargs):
+            options = json.loads(kwargs["input"])
+            self.assertEqual(options["preconditions"], {"uid": "copy-claim", "resourceVersion": "42"})
+            self.assertIn(
+                "/api/v1/namespaces/" + control.RESTORED_NAMESPACE + "/persistentvolumeclaims/" + control.CLAIM,
+                arguments[0],
+            )
+            self.assertNotIn("original-pv", " ".join(arguments[0]))
+            storage["claim"] = False
+            events.append("copy-claim-delete")
+            if not pending and reclaim and volume.object("spec")["persistentVolumeReclaimPolicy"] == "Delete":
+                storage.update(volume=False, native=False)
+            return subprocess.CompletedProcess([], 0)
+
         with (
             tempfile.TemporaryDirectory() as directory,
             patch.object(control, "assert_managed_restore_namespace"),
-            patch.object(control, "read", side_effect=[original_claim, original, volume]),
-            patch.object(control, "run", side_effect=[json.dumps(claim), '{"items":[]}', ""]),
-            patch.object(delivery_cleanup.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)) as delete,
+            patch.object(control, "read", side_effect=read),
+            patch.object(control, "run", side_effect=run),
+            patch.object(delivery_cleanup.subprocess, "run", side_effect=delete),
         ):
-            delivery_cleanup.cleanup_copy(control, Path(directory) / "journal.json", state)
-        options = json.loads(delete.call_args.kwargs["input"])
-        self.assertEqual(options["preconditions"], {"uid": "copy-claim", "resourceVersion": "42"})
-        self.assertNotIn("original-pv", " ".join(delete.call_args.args[0]))
+            try:
+                delivery_cleanup.cleanup_copy(control, Path(directory) / "journal.json", state)
+            except (ValueError, RuntimeError):
+                self.assertIsNot(state.object("deliveryValidation").get("copyRemoved"), True)
+                raise
+        return state, storage, events
+
+    def test_retained_copy_reclaims_native_storage_before_marking_removed(self) -> None:
+        state, storage, events = self.exercise()
+        self.assertEqual(events, ["copy-policy-delete", "copy-claim-delete"])
+        self.assertEqual(storage, {"claim": False, "volume": False, "native": False})
         self.assertTrue(state.object("deliveryValidation")["copyRemoved"])
 
-    def test_foreign_copy_identity_never_reaches_deletion(self) -> None:
-        control, state, original_claim, original, claim, volume = self.fixture()
-        unsafe = copy.deepcopy(volume)
-        unsafe.object("spec").object("csi")["volumeHandle"] = "original-handle"
-        with (
-            patch.object(control, "assert_managed_restore_namespace"),
-            patch.object(control, "read", side_effect=[original_claim, original, unsafe]),
-            patch.object(control, "run", return_value=json.dumps(claim)),
-            patch.object(delivery_cleanup.subprocess, "run") as delete,
-            self.assertRaisesRegex(ValueError, "exact independent"),
-        ):
-            delivery_cleanup.cleanup_copy(control, Path("unused"), state)
-        delete.assert_not_called()
+    def test_resume_after_claim_deletion_still_reclaims_retained_pv_and_native_volume(self) -> None:
+        state, storage, events = self.exercise(missing_claim=True)
+        self.assertEqual(events, ["copy-policy-delete"])
+        self.assertFalse(storage["native"])
+        self.assertTrue(state.object("deliveryValidation")["copyRemoved"])
+
+    def test_failed_pending_claim_never_reclaims_original_pv_from_its_spec(self) -> None:
+        state, storage, events = self.exercise(pending=True)
+        self.assertEqual(events, ["copy-claim-delete"])
+        self.assertTrue(storage["volume"])
+        self.assertTrue(storage["native"])
+        self.assertTrue(state.object("deliveryValidation")["copyRemoved"])
+
+    def test_incomplete_csi_reclaim_is_not_success(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "still pending"):
+            self.exercise(reclaim=False)
+
+    def test_attached_or_mounted_copy_is_not_mutated(self) -> None:
+        for flags in ({"attached": True}, {"pod": True}):
+            with self.subTest(flags=flags), self.assertRaisesRegex(ValueError, "Pod|VolumeAttachment"):
+                self.exercise(**flags)
+
+    def test_foreign_copy_or_claim_reference_is_rejected(self) -> None:
+        for field, value in (("volumeHandle", "original-handle"), ("driver", "foreign")):
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "exact independent"):
+                self.exercise(
+                    altered=lambda state, claim, volume, field=field, value=value: (
+                        volume.object("spec").object("csi").update({field: value})
+                    )
+                )
+        with self.assertRaisesRegex(ValueError, "exact independent"):
+            self.exercise(
+                altered=lambda state, claim, volume: volume.object("spec").object("claimRef").update({"uid": "foreign"})
+            )
 
 
 if __name__ == "__main__":
