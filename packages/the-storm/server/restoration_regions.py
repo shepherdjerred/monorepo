@@ -93,6 +93,25 @@ def heritage_chunks(catalog: Path, world: str) -> dict[str, set[tuple[int, int]]
     return result
 
 
+def active_towns(catalog: Path, world: str) -> list[tuple[str, str, str]]:
+    """The world's PLAYER sites as (stable town id, active town name, mayor), as the towns domain derives them."""
+    document = json.loads(re.sub(r",(\s*[\]}])", r"\1", catalog.read_text(encoding="utf-8")))
+    result = []
+    for site in document["sites"]:
+        if site["world"] == world and site["kind"] == "PLAYER":
+            identity = uuid.UUID(bytes=_name_uuid("the-storm:heritage-town:v1:" + site["id"]))
+            result.append((str(identity), site["activeTownName"], site["editors"][0]["player"]))
+    return result
+
+
+def _name_uuid(name: str) -> bytes:
+    """Java's UUID.nameUUIDFromBytes: an MD5 name-based (version 3) UUID without a namespace."""
+    digest = bytearray(hashlib.md5(name.encode("utf-8")).digest())
+    digest[6] = (digest[6] & 0x0F) | 0x30
+    digest[8] = (digest[8] & 0x3F) | 0x80
+    return bytes(digest)
+
+
 PARCEL = re.compile(
     r"^  - id: (?P<id>\S+)\n(?:    .*\n)*?    area:\n      world: (?P<world>\S+)\n"
     r"      from: \{ x: (?P<x1>-?\d+), y: -?\d+, z: (?P<z1>-?\d+) \}\n"

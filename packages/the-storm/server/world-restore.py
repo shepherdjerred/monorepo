@@ -23,6 +23,7 @@ from contextlib import ExitStack, closing, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 import restoration_locks
 import restoration_regions
@@ -937,6 +938,22 @@ def exported_dimension(staging: Path, receipt: Mapping[str, object], archive: Ar
     return dimension, json.loads(manifest.read_text(encoding="utf-8"))
 
 
+def supersede_locks(staging: Path, receipt: dict[str, Any]) -> None:
+    """Retain an earlier lock preparation for review and return the journal to its export checkpoint."""
+    epoch = staging / "superseded" / str(uuid.uuid4())
+    epoch.mkdir(mode=0o700, parents=True)
+    save_json(epoch / "prior-journal.json", receipt)
+    (staging / "dimension-locks").rename(epoch / "dimension-locks")
+    for key in ("dimensionLockInputs", "dimensionLockRequestId", "dimensionLocksReceiptSha256"):
+        receipt.pop(key)
+    receipt.pop("dimensionTownsImportedAt", None)
+    receipt["supersededAttempts"] = [*receipt.get("supersededAttempts", []), str(epoch.relative_to(staging))]
+    receipt["phase"] = (
+        "DIMENSION_EXPORT_PRUNED" if "dimensionPruneReceiptSha256" in receipt else "DIMENSION_EXPORT_READY"
+    )
+    save_json(staging / JOURNAL, receipt)
+
+
 def prune_export(staging: Path, radius: int) -> None:
     """Prune the sealed export beyond a circular border; earlier lock rehearsals are retained as superseded."""
     staging = staging.resolve(strict=True)
@@ -957,13 +974,7 @@ def prune_export(staging: Path, radius: int) -> None:
         raise ValueError("Export pruning evidence already exists")
     if receipt["phase"] == "DIMENSION_LOCKS_READY":
         # Locks prepared before pruning describe the unpruned export; keep them for review only.
-        epoch = staging / "superseded" / str(uuid.uuid4())
-        epoch.mkdir(mode=0o700, parents=True)
-        save_json(epoch / "prior-journal.json", receipt)
-        (staging / "dimension-locks").rename(epoch / "dimension-locks")
-        for key in ("dimensionLockInputs", "dimensionLockRequestId", "dimensionLocksReceiptSha256"):
-            receipt.pop(key)
-        receipt["supersededAttempts"] = [*receipt.get("supersededAttempts", []), str(epoch.relative_to(staging))]
+        supersede_locks(staging, receipt)
     receipt.update(phase="DIMENSION_EXPORT_PRUNING", dimensionPruneRadius=radius)
     save_json(staging / JOURNAL, receipt)
     try:
@@ -1020,14 +1031,19 @@ def prepare_dimension_locks(staging: Path, paper: Path, bootstrap: Path, candida
         receipt,
         "Dimension locks require a verified terrain-only dimension export",
         None,
-        ("DIMENSION_EXPORT_READY", "DIMENSION_EXPORT_PRUNED"),
+        ("DIMENSION_EXPORT_READY", "DIMENSION_EXPORT_PRUNED", "DIMENSION_LOCKS_READY"),
     )
+    if receipt["phase"] == "DIMENSION_LOCKS_READY":
+        # A new database copy or catalog revision replaces the earlier preparation, which stays for review.
+        supersede_locks(staging, receipt)
     dimension, expected = exported_dimension(staging, receipt, archive)
     players = staging / "source/world/playerdata"
     owned = Path(__file__).resolve().parent
     configuration = [owned / "owned/plugins/TheStorm" / (name + ".yml") for name in ("heritage", "parcels", "towns")]
     tools = [owned / "conversion" / name for name in ("NativeHistoricalLocks.java", "NativeTerrain.java")]
-    input_paths = (*configuration, *tools, candidate, database)
+    town_tool = owned / "conversion/RestorationDatabase.java"
+    input_paths = (*configuration, *tools, town_tool, candidate, database)
+    towns = restoration_regions.active_towns(configuration[0], archive.dimension)
     inputs = {path.name: digest(path) for path in input_paths}
     source_files = json.loads((staging / "source-files.json").read_text(encoding="utf-8"))
     if fingerprint(dimension) != expected or fingerprint(staging / "source") != source_files:
@@ -1042,13 +1058,40 @@ def prepare_dimension_locks(staging: Path, paper: Path, bootstrap: Path, candida
     shutil.copy2(database, output)
     os.chmod(output, 0o600)
     request = str(uuid.uuid5(uuid.UUID(receipt["requestId"]), "dimension-locks:" + digest(database)))
-    receipt.update(phase="DIMENSION_LOCKS_PREPARING", dimensionLockInputs=inputs, dimensionLockRequestId=request)
+    imported_at = datetime.now(UTC).isoformat()
+    receipt.update(
+        phase="DIMENSION_LOCKS_PREPARING",
+        dimensionLockInputs=inputs,
+        dimensionLockRequestId=request,
+        dimensionTownsImportedAt=imported_at,
+    )
     save_json(staging / JOURNAL, receipt)
     try:
         classes = root / "native-lock-tools"
         classes.mkdir(mode=0o700)
         lock_receipt = root / "historical-locks.json"
         with (root / "locks.log").open("x", encoding="utf-8") as log:
+            # Proven mayors' towns join first, so a collision with a live town aborts before any lock.
+            founded = subprocess.run(
+                [
+                    "java",
+                    "--class-path",
+                    classpath,
+                    str(town_tool),
+                    "additional-towns",
+                    str(candidate),
+                    str(output),
+                    str(configuration[0]),
+                    imported_at,
+                    archive.dimension,
+                ],
+                cwd=root,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+            )
+            if founded.returncode != 0:
+                raise ValueError("Historical town import failed; inspect the private log")
             compiled = subprocess.run(
                 ["javac", "--class-path", classpath, "-d", str(classes), *map(str, tools)],
                 cwd=root,
@@ -1091,9 +1134,15 @@ def prepare_dimension_locks(staging: Path, paper: Path, bootstrap: Path, candida
             "towns_lock_block": facts["containerBlocks"],
             "towns_lock_restoration": facts["locks"],
             "towns_lock_historical_owner": facts["historicalOwners"],
+            "towns_town": len(towns),
+            "towns_member": len(towns),
         }
+        imported_towns = {(row[0], row[1]) for row in added.get("towns_town", set())}
         if (
-            facts["requestId"] != request
+            imported_towns != {(town_id, name) for town_id, name, _ in towns}
+            or {(row[0], row[1], row[2]) for row in added.get("towns_member", set())}
+            != {(mayor, town_id, "OWNER") for town_id, _, mayor in towns}
+            or facts["requestId"] != request
             or facts["world"] != archive.dimension
             or facts["importMode"] != "ADDITIONAL"
             or facts["databaseReadback"] != "VERIFIED"
@@ -1121,6 +1170,8 @@ def prepare_dimension_locks(staging: Path, paper: Path, bootstrap: Path, candida
                 "databaseSha256": digest(output),
                 "historicalLocksReceiptSha256": digest(lock_receipt),
                 "addedRows": counts,
+                "historicalTowns": [{"id": town_id, "name": name, "mayor": mayor} for town_id, name, mayor in towns],
+                "townsImportedAt": imported_at,
                 "otherRowsUnchanged": True,
                 "inputs": inputs,
             },

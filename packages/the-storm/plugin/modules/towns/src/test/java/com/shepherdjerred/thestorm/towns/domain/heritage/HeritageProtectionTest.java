@@ -71,7 +71,11 @@ final class HeritageProtectionTest {
         .singleElement()
         .extracting(HeritageSite::world)
         .isEqualTo("rustworks");
-    assertThat(catalog.sites().stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
+    assertThat(
+            catalog.sites().stream()
+                .filter(
+                    site ->
+                        site.world().equals("world") && site.kind() == HeritageSite.Kind.PLAYER))
         .hasSize(7);
     assertThat(catalog.archive("main-map1-2015-07-09"))
         .contains(
@@ -90,20 +94,46 @@ final class HeritageProtectionTest {
                 "3fb8100fbf954ca8b033318957b8d87c8121c34479adc698d750e7687af1c14d",
                 "map2",
                 "map2-spawn"));
-    // Map 2 has no surviving Towny data: no site proves a mayor or grants editors.
-    assertThat(catalog.sites().stream().filter(site -> site.world().equals("map2")))
+    // Map 2 has no Towny data: owners come from archived signs and bed spawns, so each mayor
+    // leads one active town and leaders of Map 1 towns keep construction rights only.
+    var mapTwo = catalog.sites().stream().filter(site -> site.world().equals("map2")).toList();
+    assertThat(mapTwo)
         .hasSize(61)
         .allSatisfy(
             site -> {
               assertThat(site.id()).startsWith("map2-");
-              assertThat(site.kind()).isNotEqualTo(HeritageSite.Kind.PLAYER);
               assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
-              assertThat(site.editors()).isEmpty();
-              assertThat(site.editingChunks()).isEmpty();
-            })
-        .filteredOn(site -> site.kind() == HeritageSite.Kind.SERVER)
+              assertThat(site.editingChunks().isEmpty()).isEqualTo(site.editors().isEmpty());
+            });
+    assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.SERVER))
         .extracting(HeritageSite::id)
         .containsExactlyInAnyOrder("map2-spawn", "map2-mob-arena");
+    assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
+        .extracting(site -> site.activeTownName() + ":" + site.editors().getFirst().name())
+        .containsExactlyInAnyOrder(
+            "Karthil:grocketman",
+            "Leronfell:JUniZ1",
+            "Keystone_Map2:domoman25",
+            "Altaria:Smaland47",
+            "Eclipse:Grijze3MC",
+            "Asterism_Map2:WinterSolstice8");
+    var mapOneMayors =
+        catalog.sites().stream()
+            .filter(site -> site.world().equals("world") && site.kind() == HeritageSite.Kind.PLAYER)
+            .map(site -> site.editors().getFirst().player())
+            .toList();
+    assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
+        .allSatisfy(
+            site -> assertThat(mapOneMayors).doesNotContain(site.editors().getFirst().player()));
+    assertThat(mapTwo.stream().filter(site -> site.id().equals("map2-the-island")))
+        .singleElement()
+        .satisfies(
+            site -> {
+              assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
+              assertThat(site.editors())
+                  .extracting(HeritageSite.Editor::name)
+                  .containsExactly("EdeTheWolf");
+            });
     assertThat(
             catalog.sites().stream()
                 .filter(site -> site.id().equals("heritage-003"))
@@ -177,6 +207,35 @@ final class HeritageProtectionTest {
     assertThat(engine.decide(owner, act, coreLand).isAllowed()).isTrue();
     assertThat(engine.decide(outsider, act, coreLand).isAllowed()).isFalse();
     assertThat(engine.decide(owner, act, bufferLand).isAllowed()).isFalse();
+  }
+
+  @Test
+  void mapTwoOwnersBuildOnlyInTheirProvenConstruction() throws Exception {
+    var state = state();
+    var engine = new ProtectionEngine(state, player -> true);
+    var build = new Act(Action.BUILD, Subject.BLOCK);
+    for (var id : List.of("map2-karthil", "map2-the-island", "map2-reflectioncraft-house")) {
+      var site =
+          catalog().sites().stream()
+              .filter(value -> value.id().equals(id))
+              .findFirst()
+              .orElseThrow();
+      var core = site.editingChunks().iterator().next();
+      var buffer =
+          site.protectedChunks().stream()
+              .filter(chunk -> !site.editingChunks().contains(chunk))
+              .findFirst()
+              .orElseThrow();
+      var coreLand = state.landAt("map2", core.x() * 16, 69, core.z() * 16);
+      var bufferLand = state.landAt("map2", buffer.x() * 16, 69, buffer.z() * 16);
+      for (var editor : site.editors()) {
+        var owner = new Actor(editor.player(), false);
+        assertThat(engine.decide(owner, build, coreLand).isAllowed()).isTrue();
+        assertThat(engine.decide(owner, build, bufferLand).isAllowed()).isFalse();
+      }
+      assertThat(engine.decide(new Actor(UUID.randomUUID(), false), build, coreLand).isAllowed())
+          .isFalse();
+    }
   }
 
   @Test

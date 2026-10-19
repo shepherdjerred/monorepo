@@ -862,10 +862,15 @@ POI stores plus `data/minecraft` and `data/paper` metadata. Paper's per-world
 `paper-world.yml` stays out. The receipt records the archive's world UUID,
 seed, spawn and chunk counts. `prepare-dimension-locks --database <copy>` runs
 `NativeHistoricalLocks.java` in additional mode against a copy of a stopped
-database. It refuses existing locks in that world or a reused request, appends
-the world's container locks and verifies every other row unchanged. Map 2 has
-no proven editors, so its holdings stay in staff custody except shop parcels
-whose sign names match archived Map 2 player names.
+database. It first founds the world's PLAYER sites as towns with their mayors,
+refusing a town id, name or mayor membership that already exists. It then
+refuses existing locks in that world or a reused request, appends the world's
+container locks and verifies every other row unchanged. Map 2 owners come from
+signs and bed spawns resolved through the archived playerdata. A mayor who
+already leads a Map 1 town keeps construction rights on a HERITAGE site instead
+of a second active town. Grace chunks and unidentified holdings stay in staff
+custody. Rerunning the operation after a catalog revision retains the earlier
+preparation under `superseded/`.
 
 `chunk-extent --shape square|circle` measures a world's saved chunks from a
 region directory, or from an approved archive's headers in memory. Chunk `x`

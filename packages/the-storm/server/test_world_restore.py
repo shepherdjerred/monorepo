@@ -336,6 +336,10 @@ class RestoreTest(unittest.TestCase):
         (inputs / "bootstrap").mkdir()
         with closing(sqlite3.connect(database)) as connection:
             connection.executescript(
+                "CREATE TABLE towns_town(id TEXT PRIMARY KEY, name TEXT, created_at INT, governor_level INT);"
+                "CREATE TABLE towns_member(player_id TEXT PRIMARY KEY, town_id TEXT, role TEXT);"
+                "INSERT INTO towns_town VALUES('live-town','Livetown',0,0);"
+                "INSERT INTO towns_member VALUES('owner','live-town','OWNER');"
                 "CREATE TABLE towns_lock(id TEXT PRIMARY KEY, owner_id TEXT);"
                 "CREATE TABLE towns_lock_block(world TEXT, x INT, lock_id TEXT);"
                 "CREATE TABLE towns_lock_restoration(lock_id TEXT, request_id TEXT);"
@@ -351,7 +355,14 @@ class RestoreTest(unittest.TestCase):
 
     def fake_lock_import(self, mutate_other: bool = False):
         def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
-            if command[0] == "java":
+            if "additional-towns" in command:
+                catalog, world = Path(command[7]), command[9]
+                with closing(sqlite3.connect(command[6])) as connection:
+                    for town, name, mayor in restore.restoration_regions.active_towns(catalog, world):
+                        connection.execute("INSERT INTO towns_town VALUES(?,?,0,0)", (town, name))
+                        connection.execute("INSERT INTO towns_member VALUES(?,?,'OWNER')", (mayor, town))
+                    connection.commit()
+            elif "NativeHistoricalLocks" in command:
                 output, request, receipt = Path(command[9]), command[13], Path(command[14])
                 with closing(sqlite3.connect(output)) as connection:
                     connection.execute("INSERT INTO towns_lock VALUES('restored','custody')")
@@ -440,6 +451,26 @@ class RestoreTest(unittest.TestCase):
         self.assertEqual(json.loads((staging / restore.JOURNAL).read_text())["phase"], "DIMENSION_LOCKS_READY")
         with self.assertRaisesRegex(ValueError, "unpruned"):
             restore.prune_export(staging, 12000)
+
+    def test_dimension_town_ids_match_the_towns_domain_and_refuse_missing_towns(self):
+        # Java: UUID.nameUUIDFromBytes("the-storm:heritage-town:v1:map2-karthil")
+        catalog = Path(__file__).with_name("owned") / "plugins/TheStorm/heritage.yml"
+        towns = {name: (town, mayor) for town, name, mayor in restore.restoration_regions.active_towns(catalog, "map2")}
+        self.assertEqual(towns["Karthil"][0], "6a17bca5-7c95-3df1-b833-e19c5557ed3f")
+        staging, paper, bootstrap, candidate, database = self.dimension_lock_fixture()
+        locks_only = self.fake_lock_import()
+
+        def without_towns(command: list[str], **options: object) -> subprocess.CompletedProcess[str]:
+            if "additional-towns" in command:
+                return subprocess.CompletedProcess(command, 0)
+            return locks_only(command, **options)
+
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore.subprocess, "run", side_effect=without_towns),
+            self.assertRaisesRegex(ValueError, "changed other data"),
+        ):
+            restore.prepare_dimension_locks(staging, paper, bootstrap, candidate, database)
 
     def test_dimension_locks_refuse_changes_to_other_live_rows(self):
         staging, paper, bootstrap, candidate, database = self.dimension_lock_fixture()
