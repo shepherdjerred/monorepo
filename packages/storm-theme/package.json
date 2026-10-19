@@ -15,8 +15,8 @@
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
-    "generate": "bun scripts/generate.ts",
-    "build": "bun scripts/generate.ts --check && bun --no-install build src/browser.ts --target browser --minify --outdir dist",
+    "generate": "bun scripts/generate.ts && bun scripts/render-brand.ts",
+    "build": "bun scripts/generate.ts --check && bun scripts/render-brand.ts --check && bun --no-install build src/browser.ts --target browser --minify --outdir dist",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache . --max-warnings=0",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",

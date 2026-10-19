@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
+  <template type="public" title="storm_brand_head" version_id="4010670" version_string="4.1.6"><![CDATA[
+<link rel="icon" type="image/svg+xml" href="{{ base_url('styles/storm/brand/favicon.svg') }}" />
+<link rel="icon" type="image/png" sizes="48x48" href="{{ base_url('styles/storm/brand/favicon-48.png') }}" />
+<link rel="alternate icon" sizes="16x16 32x32" href="{{ base_url('styles/storm/brand/favicon.ico') }}" />
+<link rel="apple-touch-icon" sizes="180x180" href="{{ base_url('styles/storm/brand/icon-180.png') }}" />
+  ]]></template>
   <template type="public" title="storm_historical_poll" version_id="4010170" version_string="4.1.1"><![CDATA[
 <xf:if is="$thread.storm_historical_poll && $page == 1">
   <section class="block stormHistoricalPoll"><div class="block-container">
@@ -51,7 +57,7 @@
   </div></div></div>
 </xf:if>
   ]]></template>
-  <template type="public" title="storm_portal" version_id="4010570" version_string="4.1.5"><![CDATA[
+  <template type="public" title="storm_portal" version_id="4010670" version_string="4.1.6"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
@@ -67,9 +73,9 @@
   </div>
 </section>
 <section class="stormFeatures" aria-label="Explore The Storm">
-  <a href="https://docs.ts-mc.net/getting-started/"><img src="{{ base_url('styles/storm/gameplay/survival.jpg') }}" alt="The windmill above the wheat fields at spawn" width="640" height="360" loading="lazy" /><h2>Make a home</h2><p>Find land, claim it with a town, and build something worth returning to.</p></a>
-  <a href="https://docs.ts-mc.net/survival/"><img src="{{ base_url('styles/storm/gameplay/quests.jpg') }}" alt="The entrance to the windmill at spawn" width="640" height="360" loading="lazy" /><h2>Follow the storm</h2><p>Meet the townsfolk, earn crystals, and strengthen equipment with Storm Shards.</p></a>
-  <a href="https://docs.ts-mc.net/search-and-destroy/"><img src="{{ base_url('styles/storm/gameplay/games.jpg') }}" alt="Search and Destroy's team lobby" width="640" height="360" loading="lazy" /><h2>Play together</h2><p>Take a break with cooperative arenas or a round of Search and Destroy.</p></a>
+  <a href="https://docs.ts-mc.net/getting-started/"><img src="{{ base_url('styles/storm/brand/windmill.jpg') }}" alt="The Storm's wooden windmill and wheat field, January 2015 archive" width="640" height="339" loading="lazy" /><h2>Make a home</h2><p>Find land, claim it with a town, and build something worth returning to.</p><p class="stormArchiveCaption">From the archive: windmill, January 2015.</p></a>
+  <a href="https://docs.ts-mc.net/survival/"><img src="{{ base_url('styles/storm/brand/spawn-town.jpg') }}" alt="The fountain and townsfolk in Spawn Town, January 2015 archive" width="640" height="339" loading="lazy" /><h2>Follow the storm</h2><p>Meet the townsfolk, earn crystals, and strengthen equipment with Storm Shards.</p><p class="stormArchiveCaption">From the archive: Spawn Town, January 2015.</p></a>
+  <a href="https://docs.ts-mc.net/search-and-destroy/"><img src="{{ base_url('styles/storm/brand/mob-arena.jpg') }}" alt="The Storm's hedge-maze Mob Arena, October 2015 archive" width="640" height="360" loading="lazy" /><h2>Play together</h2><p>Take a break with cooperative arenas or a round of Search and Destroy.</p><p class="stormArchiveCaption">From the archive: Mob Arena, October 2015.</p></a>
 </section>
 <xf:foreach loop="$news" value="$thread">
   <article class="block stormArticle"><div class="block-container">
@@ -111,6 +117,7 @@
 .stormFeatures img {display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;}
 .stormFeatures h2 {font-size:1.15rem;margin:1rem 1rem .5rem;}
 .stormFeatures p {margin:0 1rem 1rem;}
+.stormFeatures .stormArchiveCaption {font-size:.8rem;color:@xf-textColorMuted;}
 @media(max-width:650px) {.stormFeatures {grid-template-columns:1fr;}}
 .stormArticle {margin-left:20px;}
 .stormArticle .block-header {font-size:15px;font-weight:normal;padding:8px 12px 8px 36px;}

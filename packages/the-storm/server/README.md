@@ -151,7 +151,7 @@ in-memory registry.
 ## Startup contract
 
 The multiplayer-list icon is `assets/server-icon.png`, rendered at 64×64 from
-the existing TS mark in `assets/server-icon.svg`. Run `bun run icon:render`
+the original cloud-backed TS in `../../storm-theme/assets/brand/mark.svg`. Run `bun run icon:render`
 from the package after editing the source, then `bun run icon:check`.
 The image installs it as `/data/server-icon.png` on every boot, replacing any
 stale volume copy. `boot-check.sh` verifies its bytes on each boot.

@@ -1,13 +1,20 @@
 windmill.png
-Caption: The windmill in Spawn Town.
-Alt text: A wooden windmill with white sails above a wheat field on The Storm Minecraft server.
+Caption: From the archive: the windmill in Spawn Town, January 2015.
+Alt text: An archived January 2015 screenshot of The Storm's wooden windmill above a wheat field.
 
 games.png
-Caption: The games area on The Storm.
-Alt text: A Minecraft games courtyard with stone buildings, red flags, and colored play areas.
+Caption: From the archive: The Storm's Mob Arena, October 2015.
+Alt text: The Storm's historical hedge-maze Mob Arena inside a circular stone wall, with its original wordmark watermark.
+
+mob-arena.jpg
+Caption: From the archive: The Storm's Mob Arena, October 2015.
+Alt text: The Storm's historical hedge-maze Mob Arena inside a circular stone wall, with its original wordmark watermark.
 
 cover-1200x630.png
-Alt text: The Storm. Build a town. Brave The Storm. Survival, towns, and quests. Java and Bedrock. ts-mc.net, beside a real screenshot of the spawn windmill.
+Alt text: The Storm's original cloud wordmark and “Build a town. Brave The Storm.” over its archived spawn. Survival, towns and quests. Java and Bedrock. ts-mc.net.
 
 directory-banner-468x60.png
-Alt text: The Storm Minecraft server. Survival, towns, and quests. Java and Bedrock. ts-mc.net.
+Alt text: The Storm's original cloud wordmark on a dark teal background.
+
+directory-banner-468x60.gif
+Alt text: The Storm's original animated rain and lightning banner: Survival, Quests & Economy, Join with ts-mc.net.

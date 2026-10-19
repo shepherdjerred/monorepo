@@ -145,27 +145,33 @@ login. Use the stored account email when checking approval or ownership replies.
 The tracked files here preserve the user-edited copy used for the listings.
 They replace reliance on the ignored `.cache/the-storm-promotion/` directory or a local Downloads folder.
 
-| File                                                                                                                                              | Use                                                                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [directory-description.txt](copy/directory-description.txt)                                                                                       | Approved long plain-text description; usable for Discord chat.                                             |
-| [pmc-description.bbcode.txt](copy/pmc-description.bbcode.txt)                                                                                     | Approved long description with BBCode. Use rich-text formatting instead if a site displays tags literally. |
-| [short-descriptions.txt](copy/short-descriptions.txt)                                                                                             | Existing short variants for constrained fields.                                                            |
-| [profile-bio.txt](copy/profile-bio.txt)                                                                                                           | Prepared bio; this is not a claim that every profile uses it.                                              |
-| [image-captions.txt](copy/image-captions.txt)                                                                                                     | Captions and alt text for the prepared images.                                                             |
-| [Reddit titles](copy/reddit-titles.txt), [r/mcservers draft](copy/reddit-mcservers.md), [r/MinecraftServer draft](copy/reddit-minecraftserver.md) | Retained drafts only; Reddit posting is paused. Recheck rules before any future use.                       |
-| [avatar-512.png](images/avatar-512.png)                                                                                                           | 512 × 512 TS profile mark.                                                                                 |
-| [logo-transparent.png](images/logo-transparent.png)                                                                                               | 1300 × 310 transparent wordmark.                                                                           |
-| [cover-1200x630.png](images/cover-1200x630.png)                                                                                                   | 1200 × 630 promotional cover.                                                                              |
-| [directory-banner-468x60.png](images/directory-banner-468x60.png), [JPG variant](images/directory-banner-468x60.jpg)                              | 468 × 60 directory banner. No GIF variant exists.                                                          |
-| [windmill.png](images/windmill.png)                                                                                                               | 830 × 540 gameplay screenshot; primary showcase image.                                                     |
-| [games.png](images/games.png)                                                                                                                     | 830 × 540 gameplay screenshot.                                                                             |
-| [server-icon.png](../server/assets/server-icon.png)                                                                                               | Existing 64 × 64 multiplayer-list icon; reuse the server-owned source.                                     |
+| File                                                                                                                                              | Use                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [directory-description.txt](copy/directory-description.txt)                                                                                       | Approved long plain-text description; usable for Discord chat.                                                     |
+| [pmc-description.bbcode.txt](copy/pmc-description.bbcode.txt)                                                                                     | Approved long description with BBCode. Use rich-text formatting instead if a site displays tags literally.         |
+| [short-descriptions.txt](copy/short-descriptions.txt)                                                                                             | Existing short variants for constrained fields.                                                                    |
+| [profile-bio.txt](copy/profile-bio.txt)                                                                                                           | Prepared bio; this is not a claim that every profile uses it.                                                      |
+| [image-captions.txt](copy/image-captions.txt)                                                                                                     | Captions and alt text for the prepared images.                                                                     |
+| [Reddit titles](copy/reddit-titles.txt), [r/mcservers draft](copy/reddit-mcservers.md), [r/MinecraftServer draft](copy/reddit-minecraftserver.md) | Retained drafts only; Reddit posting is paused. Recheck rules before any future use.                               |
+| [avatar-512.png](images/avatar-512.png)                                                                                                           | 512 × 512 original cloud-backed TS profile mark.                                                                   |
+| [logo-transparent.png](images/logo-transparent.png)                                                                                               | Original cloud wordmark, 1300px wide, with transparency and its natural proportions.                               |
+| [cover-1200x630.png](images/cover-1200x630.png)                                                                                                   | 1200 × 630 original wordmark and archived spawn promotional card.                                                  |
+| [Animated banner](images/directory-banner-468x60.gif), [PNG](images/directory-banner-468x60.png), [JPG](images/directory-banner-468x60.jpg)       | Original 468 × 60 rain/lightning GIF: 90 frames, 2.7 seconds, 353725 bytes. Static variants use its opening frame. |
+| [windmill.png](images/windmill.png)                                                                                                               | Original 1920 × 1017 January 2015 windmill photograph. Use the dated archival caption.                             |
+| [mob-arena.jpg](images/mob-arena.jpg), [PNG alias](images/games.png)                                                                              | Original 720 × 405 October 2015 Mob Arena photograph, including its watermark.                                     |
+| [server-icon.png](../server/assets/server-icon.png)                                                                                               | Original cloud-backed TS rendered at 64 × 64 for Minecraft's multiplayer list.                                     |
 
-Image provenance: the profile mark comes from [server-icon.svg](../server/assets/server-icon.svg),
-and the wordmark comes from [the theme logo](../../storm-theme/assets/logo.svg).
-Gameplay crops come from [survival.jpg](../../storm-forum/assets/gameplay/survival.jpg)
-and [games.jpg](../../storm-forum/assets/gameplay/games.jpg). Cover and banner use
-those existing assets. No generated world scenery or invented builds are included.
+The [canonical artwork and provenance](../../storm-theme/assets/brand/README.md)
+live in the shared theme package. Use its cloud TS for square icons and the
+classic outlined TS for browser favicons. The original banner's message is
+Survival / Quests & Economy / Join with ts-mc.net. Use the GIF where the platform
+accepts it and a static variant otherwise; observe its current size limit.
+
+These are archived photographs, not fresh captures. Keep their original
+watermarks and dated captions. Existing posts and historical galleries remain
+part of the server's history. Record the actual uploaded filename and verification
+date in a placement's row when refreshing it; an asset in this pack does not by
+itself establish that an external listing or profile has been updated.
 
 Minebrowse renders the bold and `[br]` tags used during setup, but displayed the
 `[URL=…]` tags literally. Its saved copy uses named links as plain text instead.

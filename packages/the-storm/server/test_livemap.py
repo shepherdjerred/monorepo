@@ -32,11 +32,11 @@ class LiveMapTests(unittest.TestCase):
         with zipfile.ZipFile(inner, "w") as web:
             web.writestr(
                 "index.html",
-                '<title>BlueMap</title><meta name="og:title" content="BlueMap">'
+                '<html><head><title>BlueMap</title><meta name="og:title" content="BlueMap">'
                 '<meta name="og:image" content="https://avatars.githubusercontent.com/u/42522657?s=200&v=4">'
                 '<link rel="icon" href="./assets/favicon-original.png">'
                 '<script src="./assets/index-original.js"></script>'
-                '<link rel="manifest" href="./assets/manifest-original.webmanifest">',
+                '<link rel="manifest" href="./assets/manifest-original.webmanifest"></head></html>',
             )
             web.writestr("assets/index-original.js", self.script if script is None else script)
             web.writestr("assets/manifest-original.webmanifest", json.dumps({"name": "BlueMap"}))
@@ -84,11 +84,14 @@ class LiveMapTests(unittest.TestCase):
         icon = next((self.output / "assets").glob("livemap-icon-*.svg"))
         self.assertIn(icon.name, html)
         self.assertEqual(icon.read_bytes(), (SERVER / "livemap/favicon.svg").read_bytes())
-        self.assertIn(
-            'name="og:image" content="https://raw.githubusercontent.com/shepherdjerred/monorepo/'
-            '12bedf8fb050116786c395fe6604b81e3de5dcf4/packages/the-storm/server/livemap/social.png"',
-            html,
-        )
+        preview = next((self.output / "assets").glob("livemap-social-*.png"))
+        preview_url = f"https://bluemap.ts-mc.net/assets/{preview.name}"
+        self.assertIn(f'property="og:image" content="{preview_url}"', html)
+        self.assertIn(f'name="twitter:image" content="{preview_url}"', html)
+        self.assertEqual(preview.read_bytes(), (SERVER / "livemap/social.png").read_bytes())
+        self.assertIn('property="og:image:width" content="1200"', html)
+        self.assertIn('property="og:image:height" content="630"', html)
+        self.assertIn('rel="apple-touch-icon"', html)
         entry = next((self.output / "assets").glob("livemap-*.js"))
         self.assertIn(entry.name, html)
         self.assertIn("window.BlueMap={}", entry.read_text())
@@ -102,9 +105,13 @@ class LiveMapTests(unittest.TestCase):
             self.assertIn("Generated using BlueMap", text)
         manifest = next((self.output / "assets").glob("*.webmanifest"))
         self.assertEqual(json.loads(manifest.read_text())["name"], "LiveMap")
-        self.assertEqual(json.loads(manifest.read_text())["icons"], [
-            {"src": icon.name, "sizes": "any", "type": "image/svg+xml"},
-        ])
+        app_icons = json.loads(manifest.read_text())["icons"]
+        self.assertEqual([entry["sizes"] for entry in app_icons], ["192x192", "512x512"])
+        for entry, size in zip(app_icons, (192, 512), strict=True):
+            image = (self.output / "assets" / entry["src"]).read_bytes()
+            self.assertEqual(image, (SERVER / f"livemap/icon-{size}.png").read_bytes())
+            self.assertEqual(int.from_bytes(image[16:20], "big"), size)
+            self.assertEqual(entry["type"], "image/png")
         self.assertIn(manifest.name, html)
         for path in ("sql.php", "settings.json", "maps"):
             self.assertFalse((self.output / path).exists())

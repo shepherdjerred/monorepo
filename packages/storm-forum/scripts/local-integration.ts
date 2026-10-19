@@ -417,16 +417,20 @@ try {
       "/opt/storm-forum/test/preview.php",
     ]);
     await run(["exec", app, "mkdir", "-p", "/app/forum/styles/storm"]);
-    await run([
-      "cp",
-      path.resolve(import.meta.dirname, "../dist/minecraft.js"),
-      `${app}:/app/forum/styles/storm/minecraft.js`,
-    ]);
-    await run([
-      "cp",
-      `${path.resolve(import.meta.dirname, "../../storm-theme/assets")}/.`,
-      `${app}:/app/forum/styles/storm/`,
-    ]);
+    for (const [source, target] of [
+      ["../dist/minecraft.js", "styles/storm/minecraft.js"],
+      ["../../storm-theme/assets/.", "styles/storm/"],
+      ["../../storm-theme/assets/brand/favicon.ico", "favicon.ico"],
+      ["../../storm-theme/assets/brand/icon-180.png", "apple-touch-icon.png"],
+    ] as const) {
+      await run([
+        "cp",
+        source.endsWith("/.")
+          ? `${path.resolve(import.meta.dirname, source)}/.`
+          : path.resolve(import.meta.dirname, source),
+        `${app}:/app/forum/${target}`,
+      ]);
+    }
     await run(["exec", app, "mkdir", "-p", "/app/forum/styles/storm/gameplay"]);
     await run([
       "cp",

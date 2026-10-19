@@ -95,7 +95,7 @@ final class Theme extends \XF\Pub\Controller\AbstractController
         if ($theme === '') {
             $theme = $this->app()->registry()->get('stormForumSeason');
             \Storm\Forum\Service\ThemeCatalog::theme($theme);
-            $params = $this->filter(['surface'=>'str','path'=>'str','thread'=>'uint','forum'=>'uint']);
+            $params = $this->filter(['surface'=>'str','path'=>'str','thread'=>'uint','forum'=>'uint','v'=>'str']);
             $params['theme'] = $theme;
             $this->app()->response()->setHeaders(['Cache-Control'=>'public, max-age=60']);
             return $this->redirect($this->buildLink('canonical:storm-theme/card', null, $params));
@@ -103,11 +103,11 @@ final class Theme extends \XF\Pub\Controller\AbstractController
         $ids = array_column(\Storm\Forum\Service\ThemeCatalog::load()['themes'], 'id');
         if (!in_array($theme, $ids, true)) { return $this->notFound(); }
         $card['theme'] = $theme;
-        $catalog = \Storm\Forum\Service\ThemeCatalog::load();
         $selected = \Storm\Forum\Service\ThemeCatalog::theme($theme);
         $inputs = ['/opt/storm-theme/catalog.json', '/opt/storm-theme/src/render.ts', '/opt/storm-theme/src/render-cli.ts',
+            '/opt/storm-theme/assets/brand/revision.txt',
             '/opt/storm-theme/assets/' . $selected['contentLogos']['dark'],
-            '/opt/storm-theme/assets/' . $catalog['scenery'][$selected['scenery']]['desktop']];
+            '/opt/storm-theme/assets/spawn.jpg'];
         $revision = '';
         foreach ($inputs as $input) {
             if (!is_file($input)) { throw new \RuntimeException('Card input missing'); }

@@ -43,7 +43,7 @@ export default defineConfig({
         TwoColumnContent: "./src/components/TwoColumnContent.astro",
       },
       description: "Documentation for The Storm Minecraft server.",
-      favicon: "/favicon.svg",
+      favicon: "/storm/brand/favicon.svg",
       head: [
         {
           tag: "script",
@@ -56,7 +56,7 @@ export default defineConfig({
       ],
       lastUpdated: true,
       logo: {
-        src: "./src/assets/storm-mark.svg",
+        src: "../storm-theme/assets/brand/mark.svg",
         alt: "The Storm",
       },
       pagefind: true,

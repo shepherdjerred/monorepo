@@ -19,6 +19,8 @@ $assemble = static function () use ($check, $sha): void {
     $check(proc_close($process) === 0);
 };
 $assemble();
+$check(hash_file('sha256', '/app/forum/favicon.ico') === hash_file('sha256', '/opt/storm-theme/assets/brand/favicon.ico'));
+$check(hash_file('sha256', '/app/forum/apple-touch-icon.png') === hash_file('sha256', '/opt/storm-theme/assets/brand/icon-180.png'));
 file_put_contents('/var/lib/storm-forum/data/attachment.txt', 'preserve attachment');
 file_put_contents('/var/lib/storm-forum/internal_data/private.txt', 'preserve private file');
 $assemble();

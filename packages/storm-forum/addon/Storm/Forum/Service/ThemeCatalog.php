@@ -3,6 +3,15 @@ namespace Storm\Forum\Service;
 
 final class ThemeCatalog
 {
+    public static function brandRevision(): string
+    {
+        $revision = file_get_contents('/opt/storm-theme/assets/brand/revision.txt');
+        if ($revision === false || !preg_match('/^[a-f0-9]{12}\n$/D', $revision)) {
+            throw new \RuntimeException('Missing or invalid Storm artwork revision');
+        }
+        return trim($revision);
+    }
+
     public static function load(bool $validateAssets = false): array
     {
         $catalog = json_decode(file_get_contents('/opt/storm-theme/catalog.json'), true, 512, JSON_THROW_ON_ERROR);
