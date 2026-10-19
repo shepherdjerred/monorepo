@@ -449,6 +449,9 @@ Missing original evidence or an admitted `reconcile` stage blocks this path.
 The dedicated controller receives the existing Argo credential solely for its
 original-abort managed-resource read. Its closed Python child environment passes
 that credential without inheriting executor or vault credentials.
+Verification failures report only a fixed source/restored phase, exception class,
+producer exit and classified stream error. Raw child stderr stays bounded in
+memory; world paths, contents and hashes never enter the failed Activity message.
 
 `scripts/rollout/minecraft-delivery-recovery.ts` invokes that same controller and
 independent API verification during a Workflow-worker outage. First inspect the

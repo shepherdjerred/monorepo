@@ -19,6 +19,10 @@ import {
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { minecraftRuntimeImage } from "#lib/delivery/minecraft.ts";
 import {
+  MinecraftProducerError,
+  runMinecraftProducer,
+} from "#lib/delivery/minecraft-controller-error.ts";
+import {
   minecraftRecoveryControllerOrigin,
   runMinecraftPreservation,
   runMinecraftRecovery,
@@ -43,6 +47,85 @@ const identity = {
   name: "delivery-tsmc-controller-0",
   uid: "native-controller-pod-1",
 } as const;
+
+test("real producer failure drains bounded stderr and exports only fixed stage class side and exits", async () => {
+  const diagnostic = {
+    stage: "restored-fingerprint",
+    errorClass: "ReadError",
+    code: "operation-failed",
+    exitCode: 7,
+    side: "restored",
+    producerExit: 23,
+    stderrClass: "permission-denied",
+  };
+  const script = `console.error('MINECRAFT_STREAM_FAILURE '+JSON.stringify(${JSON.stringify({ side: "restored", producerExit: 23, stderrClass: "permission-denied" })}));console.error('MINECRAFT_VERIFIER_FAILURE '+JSON.stringify(${JSON.stringify({ stage: "restored-fingerprint", errorClass: "ReadError", code: "operation-failed" })}));console.error('private/world secret-fixture '+ 'x'.repeat(100000));process.exit(7)`;
+  await expect(
+    runMinecraftProducer([process.execPath, "-e", script], {
+      PATH: Bun.env["PATH"],
+    }),
+  ).rejects.toMatchObject({ diagnostic });
+  try {
+    await runMinecraftProducer([process.execPath, "-e", script], {});
+  } catch (error) {
+    expect(error).toBeInstanceOf(MinecraftProducerError);
+    expect(String(error)).not.toMatch(/private|secret-fixture/u);
+  }
+  expect(
+    await runMinecraftProducer(
+      [process.execPath, "-e", "process.stdout.write('{}')"],
+      {},
+    ),
+  ).toBe("{}");
+});
+
+test("safe controller diagnostic reaches the ordinary failed Activity error without raw stderr", async () => {
+  vi.stubEnv("DELIVERY_EXECUTOR_TOKEN", "local-controller-test-token");
+  const diagnostic = {
+    stage: "source-fingerprint",
+    errorClass: "ReadError",
+    code: "operation-failed",
+    exitCode: 1,
+  };
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    Response.json({ error: "generic", diagnostic }, { status: 500 }),
+  );
+  const detail = await minecraftDetailFixture();
+  await expect(
+    runMinecraftPreservation(
+      detail,
+      "00000000-0000-4000-8000-000000000001",
+      vi.fn(),
+    ),
+  ).rejects.toMatchObject({ diagnostic });
+});
+
+test.each([
+  "MINECRAFT_VERIFIER_FAILURE not-json-private-fixture",
+  "MINECRAFT_VERIFIER_FAILURE null",
+  'MINECRAFT_VERIFIER_FAILURE {"stage":"private-world-path","errorClass":"ReadError","code":"operation-failed"}',
+  'MINECRAFT_STREAM_FAILURE {"side":"source","producerExit":1,"stderrClass":"private-content"}',
+])(
+  "present malformed producer diagnostics fail their contract",
+  async (marker) => {
+    const script = `console.error(${JSON.stringify(marker)});process.exit(1)`;
+    await expect(
+      runMinecraftProducer([process.execPath, "-e", script], {}),
+    ).rejects.toThrow(/diagnostic (JSON is invalid|contract failed)/u);
+  },
+);
+
+test("a producer with no diagnostic preserves its actual nonzero exit", async () => {
+  await expect(
+    runMinecraftProducer([process.execPath, "-e", "process.exit(29)"], {}),
+  ).rejects.toMatchObject({
+    diagnostic: {
+      stage: "producer",
+      errorClass: "ProducerExit",
+      code: "operation-failed",
+      exitCode: 29,
+    },
+  });
+});
 
 test("long controller commands disable socket idle timeout but retain their deadline and caller cancellation", async () => {
   const detail = await minecraftDetailFixture();
@@ -136,6 +219,7 @@ test("HTTP requires native receipt persistence and fresh PG cancellation fence b
     sourceFingerprint: "b".repeat(64),
   };
   const effects: string[] = [];
+  let producerFailure: MinecraftProducerError | undefined;
   const app = createMinecraftControllerServer({
     token: "local-controller-executor-token",
     toolingRevision: "f".repeat(40),
@@ -151,6 +235,7 @@ test("HTTP requires native receipt persistence and fresh PG cancellation fence b
       },
       run: async (_input, command) => {
         effects.push(command);
+        if (producerFailure) throw producerFailure;
         return {
           status: "waiting",
           reason: "players-online",
@@ -184,9 +269,31 @@ test("HTTP requires native receipt persistence and fresh PG cancellation fence b
   detail.stages[0]!.message = JSON.stringify(receipt);
   expect(await call("verify")).toBe(200);
   expect(effects.filter((effect) => effect === "verify")).toHaveLength(1);
+  producerFailure = new MinecraftProducerError({
+    stage: "restored-fingerprint",
+    errorClass: "ReadError",
+    code: "operation-failed",
+    exitCode: 1,
+    producerExit: 23,
+    side: "restored",
+    stderrClass: "permission-denied",
+  });
+  const failed = await app.request(`/requests/${requestId}/verify`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer local-controller-executor-token",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ deploymentId: detail.deployment.id }),
+  });
+  expect(failed.status).toBe(500);
+  expect(await failed.json()).toMatchObject({
+    diagnostic: producerFailure.diagnostic,
+  });
+  producerFailure = undefined;
   detail.deployment.cancelRequested = true;
   expect(await call("verify")).toBe(500);
-  expect(effects.filter((effect) => effect === "verify")).toHaveLength(1);
+  expect(effects.filter((effect) => effect === "verify")).toHaveLength(2);
   expect(
     await call("prepare", true, {
       deploymentId: detail.deployment.id,

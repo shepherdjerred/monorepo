@@ -7,7 +7,7 @@ import tarfile
 import tempfile
 import unittest
 from collections.abc import Callable, Mapping
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from urllib.request import Request
@@ -2345,6 +2345,54 @@ class RestorationControlTest(unittest.TestCase):
             control.writer_manifest(journal).object("spec")["imagePullSecrets"],
             [{"name": "dockerhub-pull-" + control.NAMESPACE}],
         )
+
+    def test_fingerprint_failure_reports_exact_side_without_private_exception_message(self):
+        for side in ("source", "restored"):
+            with self.subTest(side=side):
+                journal, _ = self.reader_fixture()
+                output = io.StringIO()
+                sequence: list[object] = [tarfile.ReadError("private/world/path secret-content")]
+                if side == "restored":
+                    sequence.insert(0, {"file": "private-checksum"})
+                with (
+                    patch.object(control, "remote_fingerprint", side_effect=sequence),
+                    redirect_stderr(output),
+                    self.assertRaises(tarfile.ReadError),
+                ):
+                    control.verify_backup(self.path, journal)
+                reports = [json.loads(line.split(" ", 1)[1]) for line in output.getvalue().splitlines()]
+                self.assertEqual(
+                    reports[0], {"stage": side + "-fingerprint", "errorClass": "ReadError", "code": "tar-read-error"}
+                )
+                self.assertNotIn("private", output.getvalue())
+                self.assertNotIn("proofPath", journal.object("restore"))
+
+    def test_failed_tar_stream_retains_actual_producer_exit_and_only_safe_stderr_class(self):
+        journal, _ = self.reader_fixture()
+        process = MagicMock()
+        process.stdout = io.BytesIO(b"truncated")
+        process.stderr = io.BytesIO(
+            b"tar: private/world/path: Permission denied; credential-fixture\ncommand terminated with exit code 137\n"
+        )
+        process.poll.return_value = 23
+        process.wait.return_value = 23
+        process.__enter__.return_value = process
+        output = io.StringIO()
+        with (
+            patch.object(control, "assert_reader"),
+            patch.object(control, "read", return_value=JsonObject({})),
+            patch.object(control.subprocess, "Popen", return_value=process),
+            redirect_stderr(output),
+            self.assertRaises(tarfile.ReadError),
+        ):
+            control.remote_fingerprint(journal, control.NAMESPACE)
+        report = json.loads(output.getvalue().strip().split(" ", 1)[1])
+        self.assertEqual(
+            report, {"side": "source", "producerExit": 23, "remoteExit": 137, "stderrClass": "permission-denied"}
+        )
+        self.assertNotIn("private", output.getvalue())
+        self.assertNotIn("credential", output.getvalue())
+        process.kill.assert_not_called()
 
     def test_restore_reader_waits_for_the_operator_and_keeps_credential_failure_closed(self):
         journal, pods = self.reader_fixture()

@@ -8,6 +8,7 @@ import {
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { MinecraftControllerProcess } from "#lib/delivery/minecraft-controller-process.ts";
 import { createMinecraftControllerServer } from "#lib/delivery/minecraft-controller-server.ts";
+import { runMinecraftProducer } from "#lib/delivery/minecraft-controller-error.ts";
 
 const config = new KubeConfig();
 config.loadFromCluster();
@@ -21,22 +22,7 @@ const executor = new MinecraftControllerProcess({
     const pod = await core.readNamespacedPod({ namespace, name });
     return { namespace, name, uid: z.string().min(1).parse(pod.metadata?.uid) };
   },
-  async process(command, environment) {
-    const child = Bun.spawn(command, {
-      env: environment,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "ignore",
-      timeout: 2 * 60 * 60_000,
-      killSignal: "SIGTERM",
-    });
-    const output = await new Response(child.stdout).text();
-    if ((await child.exited) !== 0 || output.length > 100_000)
-      throw new Error(
-        "Bounded Minecraft preservation producer failed; retain its durable journal",
-      );
-    return output;
-  },
+  process: runMinecraftProducer,
 });
 const app = createMinecraftControllerServer({
   token: z.string().min(16).parse(Bun.env["DELIVERY_EXECUTOR_TOKEN"]),
