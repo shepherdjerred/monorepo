@@ -16,10 +16,16 @@ import java.util.Optional;
 final class Patrol {
 
   /** How far a slot holder strays: inside {@link Features#SLOT_RADIUS}, so it still holds it. */
-  static final double SLOT_RADIUS = 1.8;
+  static final double SLOT_RADIUS = 3.5;
 
   /** How far a bot holding an angle or a retake point strays. */
-  static final double FREE_RADIUS = 3;
+  static final double FREE_RADIUS = 4;
+
+  /**
+   * How far from the hold a post other than the hold itself lies at least, so each move between
+   * posts is a visible walk rather than a shuffle on the spot.
+   */
+  static final double MIN_SPREAD = 1.5;
 
   /** The shortest stay at a post, for the least patient bot, in ticks (2 s). */
   static final long MIN_DWELL = 40;
@@ -47,13 +53,23 @@ final class Patrol {
     var bot = situation.self().id().value();
     var dwell = MIN_DWELL + Math.round((MAX_DWELL - MIN_DWELL) * context.style().patience());
     var visit = (situation.now() + 37L * bot) / dwell;
-    return Optional.of(graph.feet(posts.get(Math.floorMod(mix(bot, visit), posts.size()))));
+    return Optional.of(graph.feet(posts.get(index(bot, visit, posts.size()))));
+  }
+
+  /** The post of {@code visit}: a hashed pick that never repeats the previous visit's post. */
+  private static int index(int bot, long visit, int size) {
+    var previous = Math.floorMod(mix(bot, visit - 1), size);
+    var pick = Math.floorMod(mix(bot, visit), size - 1);
+    return pick >= previous ? pick + 1 : pick;
   }
 
   /** The ground about a hold: the node it stands on, its feet and how far a patrol strays. */
   private record Area(int home, Vec3 hold, double radius) {}
 
-  /** The nodes within the area's radius of its hold that a bot can walk to from it and back. */
+  /**
+   * The dry nodes within the area's radius of its hold that a bot can walk to from it and back, so
+   * a patrol never wades into water to tread it in place.
+   */
   private static List<Integer> posts(NavGraph graph, Area area) {
     var base = BlockPos.of(area.hold().plus(0, 0.001, 0));
     var reach = (int) Math.ceil(area.radius());
@@ -75,7 +91,10 @@ final class Patrol {
 
   private static boolean post(NavGraph graph, Area area, int node) {
     var feet = graph.feet(node);
-    return feet.horizontalDistance(area.hold()) <= area.radius()
+    var spread = feet.horizontalDistance(area.hold());
+    var wet = graph.water().contains(graph.cell(node));
+    return (node == area.home() || (spread >= MIN_SPREAD && !wet))
+        && spread <= area.radius()
         && Math.abs(feet.y() - area.hold().y()) < 1.5
         && graph.reachable(area.home(), node)
         && graph.reachable(node, area.home());

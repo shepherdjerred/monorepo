@@ -5,6 +5,13 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.RED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockClassification;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.TrainingYardNav;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
@@ -24,6 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
@@ -265,5 +273,53 @@ final class PlaybookTest {
             new SplittableRandom(1));
     assertThat(board.plan().slotOf(sniper).orElseThrow().kind()).isEqualTo(SlotKind.OVERWATCH);
     assertThat(board.plan().slotOf(anchor).orElseThrow().kind()).isEqualTo(SlotKind.ANCHOR);
+  }
+
+  /** Open floor with a shallow pond from x = 9 east. */
+  private record PondField() implements BlockClassification {
+    @Override
+    public GridBounds bounds() {
+      return new GridBounds(new BlockPos(0, 0, 0), 16, 4, 16);
+    }
+
+    @Override
+    public BlockShape shape(int x, int y, int z) {
+      if (y == 0) return BlockShape.FULL;
+      return y == 1 && x >= 9 ? BlockShape.LIQUID : BlockShape.PASSABLE;
+    }
+
+    @Override
+    public boolean blocksSight(int x, int y, int z) {
+      return shape(x, y, z).blocksMovement();
+    }
+  }
+
+  @Test
+  void noSlotIsDealtInWater() {
+    // hemispheres: a defender's slot snapped into a pond, and it trod water there all match.
+    var nav = MapBaker.bake("pond-field", new PondField(), new NavSites(List.of(), List.of()));
+    assertThat(nav.graph().nodeAt(new BlockPos(12, 1, 8))).as("the pond is swimmable").isPresent();
+    var pond = new Vec3(12.5, 1, 8.5);
+    for (var strategy : Strategy.values()) {
+      var slots =
+          Playbook.deal(
+              new Playbook.Setup(
+                  nav,
+                  strategy,
+                  6,
+                  new Vec3(2.5, 1, 2.5),
+                  Optional.empty(),
+                  List.of(),
+                  pond,
+                  0,
+                  pond,
+                  1,
+                  List.of(pond),
+                  pond,
+                  Set.of()));
+      assertThat(slots)
+          .as(strategy.name())
+          .allSatisfy(slot -> assertThat(slot.pos().x()).isLessThan(9));
+    }
   }
 }

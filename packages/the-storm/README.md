@@ -3318,8 +3318,9 @@ landed fall could otherwise be planned as a fatal drop indefinitely.
 
 Holding is a patrol, not a statue (`Patrol`): a bot holding a slot, a retake
 point, or a hunt or fight with nothing to chase, with no enemy in sight, moves
-between reachable posts around its hold (within 1.8 blocks of a slot so it still
-holds it, 3 otherwise), lingering 2 to 5 s at each by its patience. It stands
+between reachable posts around its hold (1.5 to 3.5 blocks out from a slot, which
+it holds within 4 blocks, and up to 4 otherwise), never the same post twice in a
+row, lingering 2 to 5 s at each by its patience. It stands
 still to shoot a visible enemy, when sneaking as the last of its team, and for
 deliberate holds (`HOLD_ANGLE` at a late start or a pending elimination).
 

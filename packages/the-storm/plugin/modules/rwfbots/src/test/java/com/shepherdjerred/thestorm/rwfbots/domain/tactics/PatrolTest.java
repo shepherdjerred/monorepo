@@ -6,7 +6,13 @@ import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.combatant;
 import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockClassification;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
@@ -47,6 +53,11 @@ final class PatrolTest {
           null);
 
   private static Situation situation(long tick, List<CombatantView> visible) {
+    return situation(tick, visible, CONTEXT);
+  }
+
+  private static Situation situation(
+      long tick, List<CombatantView> visible, TacticsContext context) {
     var self = combatant(1, RED, SLOT);
     var slot =
         new Slot(
@@ -81,7 +92,7 @@ final class PatrolTest {
             List.of(self, combatant(3, RED, SLOT.plus(-20, 0, 0)), enemy),
             List.of(),
             PoisonView.NONE,
-            CONTEXT.nav().mapId(),
+            context.nav().mapId(),
             List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, visible, tick), board, Role.DEFEND);
@@ -107,6 +118,71 @@ final class PatrolTest {
     }
     assertThat(posts).as("distinct posts visited").hasSizeGreaterThanOrEqualTo(4);
     assertThat(moving).as("decisions that walk to a post").isGreaterThan(50);
+  }
+
+  @Test
+  void eachMoveBetweenPostsIsAWalkToAnotherPost() {
+    // hemispheres: holders patrolling within 1.8 blocks of their slot looked like they stood still.
+    var previous = Optional.<Vec3>empty();
+    var moves = 0;
+    for (var tick = 0L; tick < 4000; tick += 5) {
+      var post = Patrol.post(situation(tick, List.of()), CONTEXT, SLOT, Patrol.SLOT_RADIUS);
+      assertThat(post).isPresent();
+      if (previous.isPresent() && !previous.orElseThrow().equals(post.orElseThrow())) {
+        moves++;
+        assertThat(post.orElseThrow().horizontalDistance(previous.orElseThrow()))
+            .as("distance between consecutive posts")
+            .isGreaterThanOrEqualTo(1.0);
+      }
+      previous = post;
+    }
+    assertThat(moves).isGreaterThan(40);
+  }
+
+  /** Open floor with a shallow pond from x = 7 east, beside the slot. */
+  private record PondField() implements BlockClassification {
+    @Override
+    public GridBounds bounds() {
+      return new GridBounds(new BlockPos(0, 0, 0), 12, 4, 12);
+    }
+
+    @Override
+    public BlockShape shape(int x, int y, int z) {
+      if (y == 0) return BlockShape.FULL;
+      return y == 1 && x >= 7 ? BlockShape.LIQUID : BlockShape.PASSABLE;
+    }
+
+    @Override
+    public boolean blocksSight(int x, int y, int z) {
+      return shape(x, y, z).blocksMovement();
+    }
+  }
+
+  @Test
+  void aPatrolNeverWadesIntoWaterBesideItsSlot() {
+    // hemispheres: a holder whose patrol or slot lay in a pond trod water there all match.
+    var nav = MapBaker.bake("pond-field", new PondField(), new NavSites(List.of(), List.of()));
+    var graph = nav.graph();
+    assertThat(graph.nodeAt(new BlockPos(7, 1, 5)))
+        .as("a swimmable pond node in range")
+        .isPresent();
+    var context =
+        new TacticsContext(
+            nav,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var posts = new HashSet<Vec3>();
+    for (var tick = 0L; tick < 6000; tick += 10) {
+      Patrol.post(situation(tick, List.of(), context), context, SLOT, Patrol.SLOT_RADIUS)
+          .ifPresent(posts::add);
+    }
+    assertThat(posts).hasSizeGreaterThanOrEqualTo(4);
+    assertThat(posts).allSatisfy(post -> assertThat(post.x()).isLessThan(7));
   }
 
   @Test
