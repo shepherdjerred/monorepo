@@ -61,7 +61,7 @@ final class MovementWorldMock extends WorldMock {
     public boolean isPassable() {
       return switch (getType()) {
         case AIR, FIRE, WATER, LAVA, LADDER -> true;
-        case STONE, MAGMA_BLOCK, SCAFFOLDING -> false;
+        case STONE, STONE_SLAB, STONE_STAIRS, MAGMA_BLOCK, SCAFFOLDING -> false;
         default -> throw new IllegalStateException("terrain fixture does not model " + getType());
       };
     }
@@ -69,12 +69,42 @@ final class MovementWorldMock extends WorldMock {
     @Override
     public BoundingBox getBoundingBox() {
       var size = isPassable() ? 0 : 1;
-      return new BoundingBox(getX(), getY(), getZ(), getX() + size, getY() + size, getZ() + size);
+      // The union of the collision boxes: a stair's is the whole cell.
+      var height = getType() == Material.STONE_SLAB ? 0.5 : size;
+      return new BoundingBox(getX(), getY(), getZ(), getX() + size, getY() + height, getZ() + size);
+    }
+
+    /** Relative collision boxes: a bottom slab, a stair rising on its north half, or a cube. */
+    @Override
+    public org.bukkit.util.VoxelShape getCollisionShape() {
+      var boxes =
+          switch (getType()) {
+            case STONE_SLAB -> java.util.List.of(new BoundingBox(0, 0, 0, 1, 0.5, 1));
+            case STONE_STAIRS ->
+                java.util.List.of(
+                    new BoundingBox(0, 0, 0, 1, 0.5, 1), new BoundingBox(0, 0.5, 0, 1, 1, 0.5));
+            default ->
+                isPassable()
+                    ? java.util.List.<BoundingBox>of()
+                    : java.util.List.of(new BoundingBox(0, 0, 0, 1, 1, 1));
+          };
+      return new org.bukkit.util.VoxelShape() {
+        @Override
+        public java.util.Collection<BoundingBox> getBoundingBoxes() {
+          return boxes;
+        }
+
+        @Override
+        public boolean overlaps(BoundingBox other) {
+          return boxes.stream()
+              .anyMatch(box -> box.clone().shift(getX(), getY(), getZ()).overlaps(other));
+        }
+      };
     }
 
     boolean collides(BoundingBox body, CollisionContext context) {
       if (getType() != Material.SCAFFOLDING)
-        return !isPassable() && getBoundingBox().overlaps(body);
+        return !isPassable() && getCollisionShape().overlaps(body);
       if (context.restrictedScaffoldInput())
         throw new IllegalStateException("native scaffold fixture models ordinary climbing input");
       // Native scaffold collision is empty inside/below the cell; its top catches a body above it.

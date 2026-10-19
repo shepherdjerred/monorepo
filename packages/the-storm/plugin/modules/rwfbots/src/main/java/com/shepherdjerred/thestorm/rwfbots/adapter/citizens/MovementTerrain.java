@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.Predicate;
 import org.bukkit.Material;
@@ -106,10 +107,10 @@ final class MovementTerrain implements MovementSafety.Terrain {
       var floor = block(new BlockPos(top.x(), y, top.z()));
       if (water(floor)) return allowWater;
       if (!floor.isPassable() && !hazard(floor)) {
-        var surface = floor.getBoundingBox();
-        return surface.contains(point.x(), surface.getMaxY() - EPSILON, point.z())
-            && surface.getMaxY() <= point.y() + EPSILON
-            && surface.getMaxY() >= point.y() - drop;
+        var surface = topUnder(floor, point);
+        if (surface.isEmpty()) continue;
+        return surface.getAsDouble() <= point.y() + EPSILON
+            && surface.getAsDouble() >= point.y() - drop;
       }
     }
     return false;
@@ -152,9 +153,8 @@ final class MovementTerrain implements MovementSafety.Terrain {
       var floor = block(new BlockPos(cell.x(), y, cell.z()));
       if (water(floor)) return Math.min(feet.y(), y + 1.0);
       if (!floor.isPassable() && !hazard(floor)) {
-        var surface = floor.getBoundingBox();
-        if (surface.contains(feet.x(), surface.getMaxY() - EPSILON, feet.z()))
-          return Math.min(feet.y(), surface.getMaxY());
+        var surface = topUnder(floor, feet);
+        if (surface.isPresent()) return Math.min(feet.y(), surface.getAsDouble());
       }
     }
     throw new IllegalStateException(
@@ -209,6 +209,24 @@ final class MovementTerrain implements MovementSafety.Terrain {
       }
     }
     return false;
+  }
+
+  /**
+   * The top of {@code block}'s collision under {@code point}'s column, from its actual collision
+   * boxes rather than their union: a stair's union box is a full block high even over its low step,
+   * so a body passing a stair or between slab and stair cells read as having no floor.
+   */
+  private static OptionalDouble topUnder(Block block, Vec3 point) {
+    var top = Double.NEGATIVE_INFINITY;
+    for (var box : block.getCollisionShape().getBoundingBoxes()) {
+      var minX = block.getX() + box.getMinX();
+      var maxX = block.getX() + box.getMaxX();
+      var minZ = block.getZ() + box.getMinZ();
+      var maxZ = block.getZ() + box.getMaxZ();
+      if (point.x() >= minX && point.x() < maxX && point.z() >= minZ && point.z() < maxZ)
+        top = Math.max(top, block.getY() + box.getMaxY());
+    }
+    return top == Double.NEGATIVE_INFINITY ? OptionalDouble.empty() : OptionalDouble.of(top);
   }
 
   private boolean loaded(BlockPos cell) {

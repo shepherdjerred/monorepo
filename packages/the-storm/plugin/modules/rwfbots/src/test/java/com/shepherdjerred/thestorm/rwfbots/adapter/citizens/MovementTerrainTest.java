@@ -134,4 +134,25 @@ final class MovementTerrainTest {
             com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
     assertThat(edge.grounded(new Vec3(2.5, 2, 2.5))).as("clear of the edge").isFalse();
   }
+
+  @Test
+  void aBodyBesideAStairsLowStepStandsOnTheStepNotOnTheStairsWholeBox() {
+    // cloned-balance: slab and stair floors read as floorless one step ahead, because support was
+    // taken from a stair's union box, a full block high over its low step too.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 1, z).setType(Material.STONE_SLAB);
+    }
+    world.getBlockAt(3, 1, 2).setType(Material.STONE_STAIRS);
+    var feet = new Vec3(1.5, 1.5, 2.85);
+    assertThat(terrain.supported(new Vec3(3.5, 1.5, 2.85), 1.1)).isTrue();
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain,
+                    new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+                        feet,
+                        new Vec3(4.4, 1.5, 2.85),
+                        com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK))
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
 }
