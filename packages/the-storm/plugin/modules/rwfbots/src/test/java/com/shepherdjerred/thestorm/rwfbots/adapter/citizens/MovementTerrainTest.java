@@ -98,4 +98,14 @@ final class MovementTerrainTest {
     world.getBlockAt(2, 1, 2).setType(Material.LADDER);
     assertThat(terrain.climbable(feet)).isTrue();
   }
+
+  @Test
+  void aBodyTouchingACeilingIsNotCollidingWithIt() {
+    // the-harshest-harvest: a pond under a cobblestone roof. Buoyancy pressed a swimmer's head to
+    // the roof at feet 9.2; counting that touch as a collision froze it in place for minutes.
+    world.getBlockAt(2, 1, 2).setType(Material.WATER);
+    world.getBlockAt(2, 3, 2).setType(Material.STONE);
+    assertThat(terrain.clear(new Vec3(2.5, 1.2, 2.5))).isTrue();
+    assertThat(terrain.clear(new Vec3(2.5, 1.25, 2.5))).as("a head inside the roof").isFalse();
+  }
 }

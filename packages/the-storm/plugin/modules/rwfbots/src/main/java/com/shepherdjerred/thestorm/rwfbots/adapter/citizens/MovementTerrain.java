@@ -219,14 +219,22 @@ final class MovementTerrain implements MovementSafety.Terrain {
         && light.isLit();
   }
 
+  /**
+   * The body at {@code feet}, shrunk by {@link #EPSILON} at the feet and the head: as in vanilla,
+   * touching a floor or a ceiling is not colliding with it. Only lifting the feet made a swimmer
+   * whose head buoyancy had pressed against a ceiling collide where it already floated, so every
+   * move read as blocked and it froze in place. Side faces keep their full extent, so a body flush
+   * against a block still counts as touching it and does not step up onto stall counters or roofs
+   * it could not climb down from.
+   */
   private static BoundingBox box(Vec3 feet) {
-    var body = AABB.playerAt(feet.plus(0, EPSILON, 0), false);
+    var body = AABB.playerAt(feet, false);
     return new BoundingBox(
         body.min().x(),
-        body.min().y(),
+        body.min().y() + EPSILON,
         body.min().z(),
         body.max().x(),
-        body.max().y(),
+        body.max().y() - EPSILON,
         body.max().z());
   }
 }
