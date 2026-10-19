@@ -162,6 +162,29 @@ describe("selectImageTargets", () => {
     ]);
   });
 
+  test("rebuilds Temporal for the Storm runtime inputs copied into its image", async () => {
+    for (const path of [
+      "packages/the-storm/server/restoration_backup.py",
+      "packages/the-storm/server/delivery_validation.py",
+      "packages/the-storm/server/future-runtime-helper.py",
+      "packages/the-storm/server/restoration-guards.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
+    ]) {
+      expect(await select([path])).toEqual(["infra", "temporal-worker"]);
+    }
+    expect(
+      await select(["packages/the-storm/maintenance-status.json"]),
+    ).toContain("temporal-worker");
+    for (const path of [
+      "packages/the-storm/plugin/core/src/main/java/Example.java",
+      "packages/the-storm/server/owned/plugins/TheStorm/rwf.yml",
+      "packages/the-storm/server/patches/spigot.json",
+      "packages/the-storm/server/nested/not-copied.py",
+    ]) {
+      expect(await select([path])).toEqual(["infra"]);
+    }
+  });
+
   test("rebuilds infra when the managed flag inventory changes", async () => {
     expect(
       await select(["packages/feature-flags/src/managed-flag-inventory.json"]),

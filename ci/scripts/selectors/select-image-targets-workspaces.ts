@@ -52,7 +52,11 @@ const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
   "temporal-worker": {
     "packages/the-storm": [
       "packages/the-storm/package.json",
+      "packages/the-storm/maintenance-status.json",
+      "packages/the-storm/server/*.py",
+      "packages/the-storm/server/restoration-guards.json",
       "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
     ],
     "packages/homelab": [
       "packages/homelab/package.json",
@@ -63,7 +67,11 @@ const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
 };
 
 export const pathMatchesPrefix = (path: string, prefix: string): boolean =>
-  prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;
+  prefix.includes("*")
+    ? new Bun.Glob(prefix).match(path)
+    : prefix.endsWith("/")
+      ? path.startsWith(prefix)
+      : path === prefix;
 
 function workspaceSourceMatches(
   target: string,
