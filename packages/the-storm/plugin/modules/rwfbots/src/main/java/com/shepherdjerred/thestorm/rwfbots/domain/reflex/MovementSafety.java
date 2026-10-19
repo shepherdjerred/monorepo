@@ -12,6 +12,8 @@ public final class MovementSafety {
   private static final double MAX_JUMP_RISE = 1.75;
   // The upstream directed graph permits four-cell diagonal launches (sqrt(32) blocks).
   private static final double MAX_LEAP_SPAN = 6;
+  // Vanilla walks a body up a ledge this high (a slab or a stair step) without a jump.
+  private static final double STEP_HEIGHT = 0.6;
   private static final double[] ANGLES = {0, 30, -30, 60, -60, 90, -90};
 
   private MovementSafety() {}
@@ -98,12 +100,21 @@ public final class MovementSafety {
     var escaping = terrain.hazardous(from);
     for (var index = 0; index <= count; index++) {
       var point = from.lerp(to, (double) index / count);
-      if (!terrain.inside(point) || !terrain.clear(point)) return false;
+      if (!terrain.inside(point) || !passable(terrain, point)) return false;
       if (!escaping || index == count) {
         if (terrain.hazardous(point) || !floor(terrain, point, index)) return false;
       }
     }
     return true;
+  }
+
+  /**
+   * Whether a walking body can occupy {@code point}: clear there, or clear on top of a ledge no
+   * higher than vanilla's step height, which a walk climbs as it goes. Without the step a slab or
+   * stair edge read as a wall, so a bot walking up one sidestepped along it instead.
+   */
+  private static boolean passable(Terrain terrain, Vec3 point) {
+    return terrain.clear(point) || terrain.clear(point.plus(0, STEP_HEIGHT, 0));
   }
 
   private static boolean floor(Terrain terrain, Vec3 point, int index) {

@@ -59,6 +59,37 @@ final class MovementSafetyTest {
   }
 
   @Test
+  void anOrdinaryWalkStepsUpOntoAHalfBlockAsVanillaDoes() {
+    // A stair or slab step half a block high from x = 1: the body collides with it at its current
+    // feet but is clear on top of it. Walking up it is ordinary movement, not a blocked corridor
+    // to be sidestepped along forever.
+    var step =
+        new Terrain(
+            point -> true,
+            point -> point.y() < 1.5 - 1e-9 && point.x() + 0.3 > 1.0,
+            point -> false);
+    var target = new Vec3(2.5, 1.5, 0.5);
+
+    var result = move(step, target, Hop.WALK);
+
+    assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(result.destination()).contains(target);
+  }
+
+  @Test
+  void aStepTallerThanVanillaStepHeightStillBlocksAnOrdinaryWalk() {
+    var wall =
+        new Terrain(
+            point -> true,
+            point -> point.y() < 2.0 - 1e-9 && point.x() + 0.3 > 1.0,
+            point -> false);
+    var result =
+        MovementSafety.choose(
+            wall, new MovementSafety.Request(START, new Vec3(2.5, 2.0, 0.5), Hop.WALK));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
   void localCombatAndRecoverySteeringCannotWalkIntoFireOrVoid() {
     var terrain = new Terrain(point -> point.x() < 1, point -> false, point -> point.z() < 0);
     var result = move(terrain, START.plus(3, 0, 0), Hop.WALK);
