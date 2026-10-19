@@ -1,0 +1,408 @@
+diff --git a/pkg/clouduploader/conn.go b/pkg/clouduploader/conn.go
+index eec75fb..c73bd8c 100644
+--- a/pkg/clouduploader/conn.go
++++ b/pkg/clouduploader/conn.go
+@@ -314,21 +314,16 @@ func (c *Conn) Create(opType ServerOperation) ReadWriter {
+ }
+ 
+ // Destroy close the connection to blob storage object object/file
+-func (c *Conn) Destroy(rw ReadWriter, opType ServerOperation) {
++func (c *Conn) Destroy(rw ReadWriter, opType ServerOperation) error {
+ 	switch opType {
+ 	case OpBackup:
+ 		w := (*blob.Writer)(rw)
+-		if err := w.Close(); err != nil {
+-			c.Log.Warnf("Failed to close file interface : %s", err.Error())
+-		}
+-		return
++		return w.Close()
+ 	case OpRestore:
+ 		r := (*blob.Reader)(rw)
+-		if err := r.Close(); err != nil {
+-			c.Log.Warnf("Failed to close file interface : %s", err.Error())
+-		}
+-		return
++		return r.Close()
+ 	}
++	return errors.New("invalid close operation")
+ }
+ 
+ // getPartSize returns the multiPartChunkSize from the config
+diff --git a/pkg/clouduploader/server.go b/pkg/clouduploader/server.go
+index ecd556a..b179fd7 100644
+--- a/pkg/clouduploader/server.go
++++ b/pkg/clouduploader/server.go
+@@ -17,6 +17,7 @@ limitations under the License.
+ package clouduploader
+ 
+ import (
++	"io"
+ 	"net"
+ 	"syscall"
+ 
+@@ -54,7 +55,8 @@ type ServerState struct {
+ 
+ 	// failedCount defines number of client
+ 	// who didn't completed operation successfully
+-	failedCount int
++	failedCount  int
++	firstFailure error
+ }
+ 
+ // Server defines resource used for uploading/downloading
+@@ -93,7 +95,11 @@ type Client struct {
+ 	buffer []byte
+ 
+ 	// status represents current status for client operation(upload/download)
+-	status TransferStatus
++	status        TransferStatus
++	readBytes     int64
++	sentBytes     int64
++	expectedBytes int64
++	closed        bool
+ 
+ 	// for link-list
+ 	next *Client
+@@ -124,8 +130,8 @@ const (
+ 
+ // ServerOperation is used to define server operation
+ // We are supporting two operation :
+-//	1. Backup
+-//	2. Restore
++//  1. Backup
++//  2. Restore
+ type ServerOperation int
+ 
+ // acceptClient accepts remote connection
+@@ -203,9 +209,12 @@ func (s *Server) handleRead(event syscall.EpollEvent) error {
+ 			return e
+ 		}
+ 		if nbytes > 0 {
+-			_, err := writer.Write(c.buffer[:nbytes])
++			written, err := writer.Write(c.buffer[:nbytes])
+ 			if err != nil {
+-				return errors.Errorf("write returned error : %s", err.Error())
++				return streamFailure("cloud-write", err)
++			}
++			if written != nbytes {
++				return streamFailure("cloud-short-write", io.ErrShortWrite)
+ 			}
+ 		} else {
+ 			return nil // connection closed
+@@ -215,29 +224,13 @@ func (s *Server) handleRead(event syscall.EpollEvent) error {
+ 
+ func (s *Server) handleWrite(event syscall.EpollEvent) error {
+ 	var c = s.getClientFromEvent(event)
+-	var reader *blob.Reader
+ 
+ 	if s.OpType != OpRestore {
+ 		return errors.New("invalid backup operation")
+ 	}
+ 
+-	reader = (*blob.Reader)(c.file)
+-	nbytes, e := reader.Read(c.buffer)
+-	if nbytes > 0 {
+-		e = s.SendData(c, nbytes)
+-		if e != nil {
+-			return e
+-		}
+-	} else if nbytes == 0 {
+-		s.updateClientStatus(c, TransferStatusDone)
+-		s.Log.Infof("Downloading of operation finished for client{%v}", c.fd)
+-		return e
+-	} else {
+-		s.updateClientStatus(c, TransferStatusFailed)
+-		s.Log.Errorf("Error in downloading operation for client{%v} : %s", c.fd, e.Error())
+-		return errors.New("error in downloading operation")
+-	}
+-	return nil
++	reader := (*blob.Reader)(c.file)
++	return s.restoreRead(c, reader, reader.Size())
+ }
+ 
+ // Run will start TCP server
+@@ -318,23 +311,14 @@ func (s *Server) Run(opType ServerOperation, port int) error {
+ 			if int(events[ev].Fd) == fd {
+ 				_, err = s.acceptClient(fd, epfd)
+ 				if err != nil {
+-					s.Log.Errorf("Failed to accept connection : %s", err.Error())
++					if s.state.firstFailure == nil {
++						s.state.firstFailure = streamFailure("accept-client", err)
++					}
++					s.Log.WithField("error_type", safeErrorType(err)).Error("Cloud stream accept failed")
+ 					continue
+ 				}
+ 			} else {
+-				if events[ev].Events == syscall.EPOLLIN {
+-					err = s.handleRead(events[ev])
+-				} else if events[ev].Events == syscall.EPOLLOUT {
+-					err = s.handleWrite(events[ev])
+-				} else if events[ev].Events&syscall.EPOLLHUP != 0 ||
+-					events[ev].Events&syscall.EPOLLERR != 0 ||
+-					events[ev].Events&syscall.EPOLLRDHUP != 0 {
+-					s.handleClientError(err, events[ev], epfd)
+-				}
+-
+-				if err != nil {
+-					s.handleClientError(err, events[ev], epfd)
+-				}
++				s.dispatchClientEvent(events[ev], epfd)
+ 			}
+ 		}
+ 	}
+@@ -346,5 +330,5 @@ exit:
+ 	if err := syscall.Close(fd); err != nil {
+ 		s.Log.Warnf("Failed to close {%v} : %s", fd, err.Error())
+ 	}
+-	return nil
++	return s.state.firstFailure
+ }
+diff --git a/pkg/clouduploader/server_utils.go b/pkg/clouduploader/server_utils.go
+index f3caf48..1fae7fe 100644
+--- a/pkg/clouduploader/server_utils.go
++++ b/pkg/clouduploader/server_utils.go
+@@ -17,6 +17,7 @@ limitations under the License.
+ package clouduploader
+ 
+ import (
++	"io"
+ 	"syscall"
+ 	"time"
+ 	"unsafe"
+@@ -102,6 +103,10 @@ func (s *Server) addClientToEvent(c *Client, event *syscall.EpollEvent) {
+ 
+ // SendData send data(stored in client's buffer) to given client
+ func (s *Server) SendData(c *Client, dataLen int) error {
++	return s.sendData(c, dataLen, func(p []byte) (int, error) { return syscall.Write(c.fd, p) })
++}
++
++func (s *Server) sendData(c *Client, dataLen int, write func([]byte) (int, error)) error {
+ 	var index int
+ 
+ 	if dataLen == 0 {
+@@ -109,9 +114,13 @@ func (s *Server) SendData(c *Client, dataLen int) error {
+ 	}
+ 
+ 	for {
+-		nbytes, e := syscall.Write(c.fd, c.buffer[index:dataLen])
++		nbytes, e := write(c.buffer[index:dataLen])
+ 		if nbytes > 0 {
+ 			index += nbytes
++			c.sentBytes += int64(nbytes)
++			if e != nil && e != syscall.EAGAIN {
++				return streamFailure("socket-write", e)
++			}
+ 			if index == dataLen {
+ 				return nil
+ 			}
+@@ -121,7 +130,10 @@ func (s *Server) SendData(c *Client, dataLen int) error {
+ 				time.Sleep(time.Millisecond)
+ 				continue
+ 			} else {
+-				return errors.Errorf("Write returned error for fd{%v} : %s", c.fd, e.Error())
++				if e == nil {
++					e = io.ErrNoProgress
++				}
++				return streamFailure("socket-write", e)
+ 			}
+ 		}
+ 	}
+@@ -131,16 +143,17 @@ func (s *Server) SendData(c *Client, dataLen int) error {
+ func (s *Server) RecvData(c *Client) (int, error) {
+ 	nbytes, e := syscall.Read(c.fd, c.buffer)
+ 	if nbytes > 0 {
++		c.readBytes += int64(nbytes)
+ 		return nbytes, nil
+ 	} else if nbytes < 0 {
+ 		if e == syscall.EAGAIN {
+ 			return 0, nil
+ 		}
+-		return (-1), errors.Errorf("read returned error for fd{%v} : %s", c.fd, e.Error())
++		return (-1), streamFailure("socket-read", e)
+ 	} else {
+ 		/* got EOF from Client.. */
+ 		s.updateClientStatus(c, TransferStatusDone)
+-		return (-1), errors.Errorf("connection closed for fd{%v}", c.fd)
++		return (-1), io.EOF
+ 	}
+ }
+ 
+@@ -158,13 +171,32 @@ func (s *Server) GetReadWriter(bwriter *blob.Writer, breader *blob.Reader, opTyp
+ // handleClientError performs error handling for given event/client
+ func (s *Server) handleClientError(err error, event syscall.EpollEvent, efd int) {
+ 	var c = s.getClientFromEvent(event)
+-	if s.getClientStatus(c) == TransferStatusDone ||
+-		event.Events&syscall.EPOLLHUP != 0 ||
+-		event.Events&syscall.EPOLLERR != 0 || err == nil {
++	if c.closed {
++		return
++	}
++	c.closed = true
++	if err == io.EOF && c.status == TransferStatusDone {
++		err = nil
++	}
++	if closeErr := s.cl.Destroy(c.file, s.OpType); closeErr != nil && err == nil {
++		err = streamFailure("cloud-close", closeErr)
++	}
++	if c.status != TransferStatusDone && err == nil {
++		err = streamFailure("incomplete-transfer", nil)
++	}
++	if s.OpType == OpRestore && (c.readBytes != c.expectedBytes || c.sentBytes != c.expectedBytes) && err == nil {
++		err = streamFailure("byte-count-mismatch", nil)
++	}
++	if err == nil {
+ 		s.state.successCount++
+ 	} else {
++		c.status = TransferStatusFailed
+ 		s.state.failedCount++
++		if s.state.firstFailure == nil {
++			s.state.firstFailure = err
++		}
+ 	}
++	s.Log.WithFields(map[string]interface{}{"operation": s.OpType, "expected_bytes": c.expectedBytes, "read_bytes": c.readBytes, "sent_bytes": c.sentBytes, "error_type": safeErrorType(err), "error_kind": safeErrorKind(err), "completed": err == nil}).Info("Cloud stream client closed")
+ 
+ 	if err := syscall.EpollCtl(efd, syscall.EPOLL_CTL_DEL, c.fd, nil); err != nil {
+ 		s.Log.Warnf("Failed to delete {%v} from EPOLL: %s", c.fd, err.Error())
+@@ -174,8 +206,6 @@ func (s *Server) handleClientError(err error, event syscall.EpollEvent, efd int)
+ 		s.Log.Warnf("Failed to close {%v}: %s", c.fd, err.Error())
+ 	}
+ 
+-	s.cl.Destroy(c.file, s.OpType)
+-	s.Log.Infof("Client{%v} operation completed.. completed count{%v}", c.fd, s.state.successCount)
+ 	s.removeFromClientList(c)
+ }
+ 
+@@ -188,26 +218,11 @@ func (s *Server) disconnectAllClient(efd int) {
+ 	}
+ 
+ 	curClient := s.FirstClient
+-	for curClient.next != nil {
+-		if s.getClientStatus(curClient) == TransferStatusDone {
+-			s.state.successCount++
+-		} else {
+-			s.state.failedCount++
+-		}
+-
+-		if err := syscall.EpollCtl(efd, syscall.EPOLL_CTL_DEL, curClient.fd, nil); err != nil {
+-			s.Log.Warnf("Failed to delete {%v} from EPOLL: %s", curClient.fd, err.Error())
+-		}
+-
+-		if err := syscall.Close(curClient.fd); err != nil {
+-			s.Log.Warnf("Failed to close {%v}: %s", curClient.fd, err.Error())
+-		}
+-
+-		s.cl.Destroy(curClient.file, s.OpType)
+-		s.Log.Infof("Disconnecting Client{%v}", curClient.fd)
+-
++	for curClient != nil {
+ 		nextClient = curClient.next
+-		s.removeFromClientList(curClient)
++		var event syscall.EpollEvent
++		s.addClientToEvent(curClient, &event)
++		s.handleClientError(nil, event, efd)
+ 		curClient = nextClient
+ 	}
+ }
+diff --git a/pkg/zfs/plugin/backup.go b/pkg/zfs/plugin/backup.go
+index 888d5eb..23f8042 100644
+--- a/pkg/zfs/plugin/backup.go
++++ b/pkg/zfs/plugin/backup.go
+@@ -185,19 +185,19 @@ func (p *Plugin) checkBackupStatus(bkpname string) error {
+ 	}
+ }
+ 
+-func (p *Plugin) doUpload(wg *sync.WaitGroup, filename string, size int64, port int) {
++func (p *Plugin) doUpload(wg *sync.WaitGroup, filename string, size int64, port int, completed chan<- bool) {
+ 	defer wg.Done()
+ 
+ 	ok := p.cl.Upload(filename, size, port)
++	completed <- ok
+ 	if !ok {
+ 		p.Log.Errorf("zfs: Failed to upload file %s", filename)
+-		*p.cl.ConnReady <- false
+ 	}
+ 	// done with the channel, close it
+ 	close(*p.cl.ConnReady)
+ }
+ 
+-func (p *Plugin) doBackup(volumeID string, snapname string, schdname string, port int) (string, error) {
++func (p *Plugin) doBackup(volumeID string, snapname string, schdname string, port int) (resultID string, resultErr error) {
+ 	pv, err := p.getPV(volumeID)
+ 	if err != nil {
+ 		p.Log.Errorf("zfs: Failed to get pv %s snap %s schd %s err %v", volumeID, snapname, schdname, err)
+@@ -250,12 +250,18 @@ func (p *Plugin) doBackup(volumeID string, snapname string, schdname string, por
+ 	var wg sync.WaitGroup
+ 
+ 	wg.Add(1)
+-	go p.doUpload(&wg, filename, size, port)
++	completed := make(chan bool, 1)
++	go p.doUpload(&wg, filename, size, port, completed)
+ 
+ 	// wait for the upload server to exit
+ 	defer func() {
+ 		p.cl.ExitServer = true
+-		wg.Wait()
++		if completed != nil {
++			resultErr = completedTransfer(&wg, completed, resultErr)
++		}
++		if resultErr != nil {
++			resultID = ""
++		}
+ 		p.cl.ConnReady = nil
+ 	}()
+ 
+@@ -279,8 +285,9 @@ func (p *Plugin) doBackup(volumeID string, snapname string, schdname string, por
+ 
+ 	// Flush and close the multipart writer before inspecting the durable stream.
+ 	p.cl.ExitServer = true
+-	wg.Wait()
+-	if err := p.cl.PublishZFSStream(volumeID, schdname, snapname); err != nil {
++	transferResult := completed
++	completed = nil
++	if err := publishCompletedTransfer(&wg, transferResult, func() error { return p.cl.PublishZFSStream(volumeID, schdname, snapname) }); err != nil {
+ 		return "", err
+ 	}
+ 	// generate the snapID
+diff --git a/pkg/zfs/plugin/restore.go b/pkg/zfs/plugin/restore.go
+index 22f619c..29207de 100644
+--- a/pkg/zfs/plugin/restore.go
++++ b/pkg/zfs/plugin/restore.go
+@@ -228,19 +228,19 @@ func (p *Plugin) startRestore(zv *apis.ZFSVolume, bkpname string, port int) (str
+ 	return rname, nil
+ }
+ 
+-func (p *Plugin) doDownload(wg *sync.WaitGroup, filename string, port int) {
++func (p *Plugin) doDownload(wg *sync.WaitGroup, filename string, port int, completed chan<- bool) {
+ 	defer wg.Done()
+ 
+ 	ok := p.cl.Download(filename, port)
++	completed <- ok
+ 	if !ok {
+ 		p.Log.Errorf("zfs: failed to download the file %s", filename)
+-		*p.cl.ConnReady <- false
+ 	}
+ 	// done with the channel, close it
+ 	close(*p.cl.ConnReady)
+ }
+ 
+-func (p *Plugin) dataRestore(zv *apis.ZFSVolume, pvname, schdname, bkpname string, port int) error {
++func (p *Plugin) dataRestore(zv *apis.ZFSVolume, pvname, schdname, bkpname string, port int) (resultErr error) {
+ 	filename := p.cl.GenerateRemoteFileWithSchd(pvname, schdname, bkpname)
+ 	if filename == "" {
+ 		return errors.Errorf("zfs: Error creating remote file name for restore")
+@@ -252,12 +252,13 @@ func (p *Plugin) dataRestore(zv *apis.ZFSVolume, pvname, schdname, bkpname strin
+ 	var wg sync.WaitGroup
+ 
+ 	wg.Add(1)
+-	go p.doDownload(&wg, filename, port)
++	completed := make(chan bool, 1)
++	go p.doDownload(&wg, filename, port, completed)
+ 
+ 	// wait for the download server to exit
+ 	defer func() {
+ 		p.cl.ExitServer = true
+-		wg.Wait()
++		resultErr = completedTransfer(&wg, completed, resultErr)
+ 		p.cl.ConnReady = nil
+ 	}()
+ 

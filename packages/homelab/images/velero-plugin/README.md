@@ -3,6 +3,14 @@
 This image pins OpenEBS Velero plugin 3.6.0 and applies `chain.patch` before
 building. The snapshot format and legacy storage locations remain readable.
 
+`stream.patch` preserves cloud read errors and requires an actual EOF with
+exact expected, read and sent byte counts before a restore transfer completes.
+Combined socket readiness and hangup events drain buffered backup bytes;
+hangups cannot count an incomplete transfer as successful. Cloud close failures
+and the first transfer failure reach the native backup or restore caller.
+Diagnostic fields contain byte counts and error classes, without raw cloud
+error messages or endpoints.
+
 `ZFSChain` reads DRR_BEGIN headers and follows `fromGuid` to `toGuid`, ending at
 a full stream with `fromGuid=0`. It rejects missing parents, duplicate GUIDs,
 and cycles before opening the restore connection. GUIDs are decimal strings
