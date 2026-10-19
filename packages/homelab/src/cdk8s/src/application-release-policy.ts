@@ -8,10 +8,12 @@ import {
   DELIVERY_ENVIRONMENT_ANNOTATION,
 } from "homelab/src/delivery-ownership.ts";
 
+import * as releaseContract from "homelab/src/application-release-contract.ts";
 export const APPLICATION_RESOURCES_FINALIZER =
-  "resources-finalizer.argocd.argoproj.io";
+  releaseContract.APPLICATION_RESOURCES_FINALIZER;
 export const APPLICATION_LIFECYCLE_ANNOTATION =
-  "ci.sjer.red/application-lifecycle";
+  releaseContract.APPLICATION_LIFECYCLE_ANNOTATION;
+export const REPOSITORY_CHART_URLS = releaseContract.REPOSITORY_CHART_URLS;
 export const MANAGED_APPLICATION_LABEL = "ci.sjer.red/managed-application";
 export const ARGOCD_SYNC_WAVE_ANNOTATION = "argocd.argoproj.io/sync-wave";
 
@@ -51,11 +53,6 @@ const PROVIDER_APPLICATIONS = new Set([
   "tailscale",
   "velero",
 ]);
-export const REPOSITORY_CHART_URLS = new Set([
-  "https://chartmuseum.tailnet-1a49.ts.net",
-  "https://chartmuseum.sjer.red",
-]);
-
 const ApplicationManifestSchema = z.object({
   metadata: z.object({ name: z.string() }),
   spec: z.object({

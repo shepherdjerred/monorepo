@@ -6,6 +6,7 @@ import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import { releasePrunesChart } from "homelab/scripts/helm/helm-release-core.ts";
 import { z } from "zod";
 import { HOMELAB_RELEASE_RESULT_FILE } from "homelab/scripts/argocd/argocd-release-result.ts";
+import { releaseRoot } from "homelab/scripts/argocd/argocd.ts";
 import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
 import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
 
@@ -100,28 +101,6 @@ export function verifyRootJobResult(
     );
 }
 
-export function rootReleaseCommand(
-  raw: unknown,
-  inventoryPath: string,
-): string[] {
-  const input = RootReleaseInputSchema.parse(raw);
-  const root = input.charts.find((chart) => chart.name === "apps");
-  if (root === undefined)
-    throw new Error("Root chart missing from validated inventory");
-  return [
-    "bun",
-    "--no-install",
-    "packages/homelab/scripts/argocd/argocd.ts",
-    "release-root",
-    "apps",
-    inventoryPath,
-    "--revision",
-    root.artifact.version,
-    "--request-id",
-    input.requestId,
-  ];
-}
-
 export async function run(
   request: DeliveryJobRequest,
   admit: () => Promise<unknown> = async () =>
@@ -152,42 +131,42 @@ export async function run(
   );
   try {
     const root = path.resolve(import.meta.dirname, "../../../..");
-    const resultFile = Bun.file(path.join(root, HOMELAB_RELEASE_RESULT_FILE));
+    const resultPath = path.join(root, HOMELAB_RELEASE_RESULT_FILE);
+    const resultFile = Bun.file(resultPath);
     if (await resultFile.exists())
       throw new Error(
         "Fresh root Job checkout already contains an unowned release receipt",
       );
     const inventoryPath = path.join(directory, "expected.json");
-    await writeFile(
+    const inventory = input.charts.map(({ name, artifact }) => ({
+      name,
+      revision: artifact.version,
+      prune: releasePrunesChart(name),
+    }));
+    await writeFile(inventoryPath, JSON.stringify(inventory));
+    const selected = input.charts.find(({ name }) => name === "apps");
+    if (selected === undefined) throw new Error("Frozen root chart is missing");
+    const server = Bun.env["ARGOCD_SERVER_URL"];
+    if (server !== undefined && server !== "https://argocd.sjer.red")
+      throw new Error("Root Job Argo server differs from its fixed recipe");
+    // The canonical library repeats this same PG/native admission at stage,
+    // child reconciliation and finalization. Recovery injects admit-apply here.
+    await releaseRoot(
+      "apps",
       inventoryPath,
-      JSON.stringify(
-        input.charts.map(({ name, artifact }) => ({
-          name,
-          revision: artifact.version,
-          prune: releasePrunesChart(name),
-        })),
-      ),
-    );
-    await admit();
-    const child = Bun.spawn(rootReleaseCommand(input, inventoryPath), {
-      cwd: root,
-      env: {
-        PATH: Bun.env["PATH"],
-        HOME: Bun.env["HOME"],
-        TMPDIR: Bun.env["TMPDIR"],
-        ARGOCD_TOKEN: Bun.env["ARGOCD_TOKEN"],
-        ARGOCD_SERVER_URL: "https://argocd.sjer.red",
+      selected.artifact.version,
+      input.requestId,
+      300,
+      false,
+      {
+        requestId: input.requestId,
+        revision: selected.artifact.version,
+        inventory,
+        authorize: admit,
       },
-      stdin: "ignore",
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    const code = await child.exited;
-    if (code !== 0)
-      throw new Error(
-        `Guarded root release failed with exit ${code.toString()}; inspect its recorded request before retrying`,
-      );
-    verifyRootJobResult(await resultFile.json(), input);
+      resultPath,
+    );
+    verifyRootJobResult(await Bun.file(resultPath).json(), input);
     return {
       requestId: input.requestId,
       charts: input.charts.map(({ name, artifact }) => ({

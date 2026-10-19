@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -16,6 +16,178 @@ import {
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
 const ARGOCD_SCRIPT = path.join(PACKAGE_ROOT, "scripts/argocd/argocd.ts");
 const RELEASE_RESULT_FILE = "homelab-release-result.json";
+describe("Delivery root canonical authority", () => {
+  test.each([1, 2, 3])(
+    "fresh admission refuses lost ownership at canonical boundary %s",
+    async (boundary) => {
+      const directory = await mkdtemp(
+        path.join(tmpdir(), "delivery-root-authority-"),
+      );
+      const inventory = [{ name: "apps", revision: "2.0.0-42", prune: false }];
+      const inventoryPath = path.join(directory, "expected.json");
+      await Bun.write(inventoryPath, JSON.stringify(inventory));
+      let admissions = 0,
+        publications = 0,
+        syncs = 0,
+        live = false;
+      let operation: Record<string, unknown> | undefined;
+      let selected: ReturnType<typeof SyncRequestSchema.parse> | undefined;
+      const manifest = JSON.stringify({
+        apiVersion: "argoproj.io/v1alpha1",
+        kind: "Application",
+        metadata: { name: "apps", namespace: "argocd" },
+        spec: {
+          source: {
+            repoURL: "https://chartmuseum.sjer.red",
+            chart: "apps",
+            targetRevision: "2.0.0-42",
+          },
+          syncPolicy: { automated: { enabled: false } },
+        },
+      });
+      function observedRoot() {
+        if (operation === undefined) return { status: {} };
+        return {
+          ...(live ? { operation } : {}),
+          status: {
+            operationState: {
+              phase: live ? "Running" : "Failed",
+              message: live ? "" : "Operation terminated",
+              startedAt: "2026-10-19T00:00:00Z",
+              operation,
+              syncResult: {
+                revision: "2.0.0-42",
+                resources: selected?.resources.map((r) => ({
+                  ...r,
+                  status: "Synced",
+                })),
+              },
+            },
+          },
+        };
+      }
+      const server = Bun.serve({
+        hostname: "127.0.0.1",
+        port: 0,
+        async fetch(request) {
+          const url = new URL(request.url);
+          if (url.pathname === "/admit") {
+            admissions++;
+            return admissions === boundary
+              ? Response.json(
+                  {
+                    error: [
+                      "lost claim",
+                      "cancelled intent",
+                      "snapshot mismatch",
+                    ][boundary - 1],
+                  },
+                  { status: 409 },
+                )
+              : Response.json({ admitted: true });
+          }
+          if (url.pathname === "/api/charts/apps") {
+            publications++;
+            return Response.json([{ version: "2.0.0-99" }]);
+          }
+          if (url.pathname === "/api/v1/applications/apps/manifests")
+            return Response.json({ manifests: [manifest] });
+          if (
+            request.method === "POST" &&
+            url.pathname === "/api/v1/applications/apps/sync"
+          ) {
+            syncs++;
+            const body: unknown = await request.json();
+            selected = SyncRequestSchema.parse(body);
+            operation = operationForSyncRequest(body);
+            live = true;
+            return Response.json({ operation });
+          }
+          if (
+            request.method === "DELETE" &&
+            url.pathname === "/api/v1/applications/apps/operation"
+          ) {
+            live = false;
+            return Response.json({});
+          }
+          return url.pathname === "/api/v1/applications/apps"
+            ? Response.json(observedRoot())
+            : new Response("not found", { status: 404 });
+        },
+      });
+      const script = path.resolve(
+        import.meta.dirname,
+        "../../../scripts/argocd/argocd.ts",
+      );
+      const program = `import {releaseRoot} from ${JSON.stringify(script)};const inventory=${JSON.stringify(inventory)};await releaseRoot('apps',${JSON.stringify(inventoryPath)},'2.0.0-42',${JSON.stringify(RELEASE_REQUEST_ID)},1,false,{requestId:${JSON.stringify(RELEASE_REQUEST_ID)},revision:'2.0.0-42',inventory,authorize:async()=>{const r=await fetch(${JSON.stringify(server.url.origin + "/admit")});if(!r.ok)throw Error('Fresh PG admission denied '+(await r.json()).error);}},${JSON.stringify(path.join(directory, "result.json"))});`;
+      try {
+        const result = await runArgocdCommand(["bun", "-e", program], {
+          cwd: directory,
+          env: {
+            ...Bun.env,
+            ARGOCD_TOKEN: "test-token",
+            ARGOCD_SERVER_URL: server.url.origin,
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+            ARGOCD_POLL_INTERVAL_MS: "5",
+          },
+        });
+        expect(result.exitCode).not.toBe(0);
+        expect(result.stderr).toContain("Fresh PG admission denied");
+        expect(admissions).toBe(boundary);
+        expect(publications).toBe(0);
+        expect(syncs).toBe(boundary === 1 ? 0 : 1);
+        expect(
+          await Bun.file(path.join(directory, "result.json")).exists(),
+        ).toBe(false);
+      } finally {
+        await server.stop(true);
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+  test.each(["request", "revision", "inventory"])(
+    "rejects mismatched %s authority before admission or Argo effects",
+    async (mismatch) => {
+      const directory = await mkdtemp(
+        path.join(tmpdir(), "delivery-root-binding-"),
+      );
+      const expectedPath = path.join(directory, "expected.json"),
+        inventory = [{ name: "apps", revision: "2.0.0-42", prune: false }];
+      await Bun.write(expectedPath, JSON.stringify(inventory));
+      const authority = {
+        requestId:
+          mismatch === "request" ? crypto.randomUUID() : RELEASE_REQUEST_ID,
+        revision: mismatch === "revision" ? "2.0.0-99" : "2.0.0-42",
+        inventory:
+          mismatch === "inventory"
+            ? [{ ...inventory[0], prune: true }]
+            : inventory,
+      };
+      const script = path.resolve(
+        import.meta.dirname,
+        "../../../scripts/argocd/argocd.ts",
+      );
+      try {
+        const result = await runArgocdCommand(
+          [
+            "bun",
+            "-e",
+            `import {releaseRoot} from ${JSON.stringify(script)};await releaseRoot('apps',${JSON.stringify(expectedPath)},'2.0.0-42',${JSON.stringify(RELEASE_REQUEST_ID)},1,false,{...${JSON.stringify(authority)},authorize:async()=>{throw Error('Admission must not run');}});`,
+          ],
+          { cwd: directory },
+        );
+        expect(result.exitCode).not.toBe(0);
+        expect(result.stderr).toContain(
+          "authority differs from the exact request and inventory",
+        );
+        expect(result.stderr).not.toContain("Admission must not run");
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+});
+
 const ReleaseReceiptSchema = z.object({
   outcome: z.string(),
   requestId: z.string(),

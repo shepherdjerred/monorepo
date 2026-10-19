@@ -80,6 +80,11 @@ requests API-owned native observations and records an immutable failure or origi
 baseline. The first upgrade freezes that baseline and rechecks the original before
 candidate source selection; subsequent upgrades use accepted application provenance.
 Neither baseline nor ordinary rollback can reverse database migrations.
+Forum's original guarded sync prunes only independently verified terminal prior
+release Jobs omitted by the exact selected chart. Active, foreign, hook or
+unrelated resources refuse pruning. Completed release journals and backup
+manifests remain on their existing storage; acceptance still requires genuine
+Synced/Healthy status and the same original owned operation.
 
 The Argo adapter verifies published chart bytes, selects exact source fields
 with optimistic concurrency, and invokes the existing guarded `sync-managed`
@@ -120,6 +125,13 @@ terminal-executor observations immediately before a recovery mutation.
 Platform releases freeze qualified source builds and the complete original
 chart inventory. Root mutations reuse `release-root`; central must first be
 delegated so root cannot change its protected control-plane templates.
+Delivery invokes that same canonical root library directly and repeats its
+existing PostgreSQL/native admission before staging, child reconciliation and
+finalization. The admission binds the frozen request, exact chart inventory,
+generation and recorded native Job identity; a newer chart publication cannot
+replace a still-owned selection or recovery. Standalone CLI releases retain
+their published-latest check. Both paths retain the same lifecycle, immutable
+field, request ownership, pruning and verified release receipt checks.
 OpenTofu planning and applying are separate Deployments. Plans capture state
 lineage and serial, action counts, native Job UID, and the exact source build.
 The bounded saved plan is encrypted with the dedicated
@@ -651,6 +663,13 @@ worker pin, rejected-candidate queue or routing lease. Independent worker
 recovery proves exact source, host, routing and execution state before releasing
 ownership; it never rewrites a failed release as accepted. The control-plane
 worker has its own frozen upgrade intent and original image provenance.
+
+Retirement excludes known `AutoUpgrade` executions from historical host
+references; their next Workflow Task follows normal deployment routing. Pinned
+and one-time overrides remain pinned references, and missing or unknown
+versioning behavior remains blocking. Retirement still requires the accepted
+pool, routing exclusion and fresh native drainage or inactive-incarnation proof
+in every served namespace; historical usage alone never supplies drainage.
 
 Worker Jobs execute controller logic from the qualified executor's source.
 Replay and canaries run in a separate clean checkout at the candidate image's

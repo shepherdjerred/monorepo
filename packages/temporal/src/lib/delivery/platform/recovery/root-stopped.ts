@@ -5,11 +5,16 @@ import type {
   PlatformRecoveryContext,
 } from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import {
+  VERIFIED_ROOT_RELEASE_ANNOTATION,
+  VerifiedRootReleaseReceiptSchema,
+} from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
 import { assertDeliveryRootPreservesSelection } from "homelab/scripts/argocd/argocd-delivery.ts";
 import {
   completedOperationRequestId,
   completedOperationId,
   operationRevision,
+  RELEASE_PHASE_INFO_NAME,
 } from "homelab/scripts/argocd/argocd-manifest-overrides.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 
@@ -44,6 +49,86 @@ const controllerFinalizers = new Set([
   "post-delete-finalizer.argocd.argoproj.io",
   "post-delete-finalizer.argocd.argoproj.io/cleanup",
 ]);
+
+function requireStoppedOperation(
+  root: ReturnType<typeof application.parse>,
+  revision: string,
+  names: ReadonlySet<string>,
+) {
+  const operation = z
+    .object({
+      phase: z.enum(["Succeeded", "Failed", "Error"]),
+      finishedAt: z.string().min(1),
+      startedAt: z.string().min(1),
+      operation: object,
+      syncResult: z.object({ revision: z.string() }),
+    })
+    .parse(root.status.operationState);
+  if (operation.phase !== "Succeeded") {
+    z.literal(revision).parse(operation.syncResult.revision);
+    return operation;
+  }
+  const stage = z
+    .object({
+      sync: z.object({
+        prune: z.literal(false).optional(),
+        manifests: z.array(z.string().min(1)).min(1),
+        resources: z
+          .array(
+            z.object({
+              group: z.literal("argoproj.io"),
+              kind: z.literal("Application"),
+              namespace: z.literal("argocd"),
+              name: z.string().min(1),
+            }),
+          )
+          .min(1),
+      }),
+      info: z.array(z.object({ name: z.string(), value: z.string() })),
+    })
+    .parse(operation.operation);
+  const phases = stage.info.filter(
+    ({ name }) => name === RELEASE_PHASE_INFO_NAME,
+  );
+  if (
+    operation.syncResult.revision !== "" ||
+    phases.length !== 1 ||
+    phases[0]?.value !== "stage"
+  )
+    throw new Error(
+      "Stopped successful root operation is not an owned partial inline stage",
+    );
+  const staged = stage.sync.manifests.map(
+    (manifest) =>
+      z
+        .object({
+          kind: z.literal("Application"),
+          metadata: z.object({
+            namespace: z.literal("argocd"),
+            name: z.string().min(1),
+          }),
+        })
+        .parse(JSON.parse(manifest)).metadata.name,
+  );
+  if (
+    new Set(staged).size !== staged.length ||
+    staged.some((name) => !names.has(name)) ||
+    canonicalJson([...staged].sort()) !==
+      canonicalJson(stage.sync.resources.map(({ name }) => name).sort())
+  )
+    throw new Error(
+      "Stopped inline stage resources differ from the frozen Application inventory",
+    );
+  const encoded = root.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION];
+  if (encoded !== undefined) {
+    const receipt = VerifiedRootReleaseReceiptSchema.parse(JSON.parse(encoded));
+    if (receipt.requestId === completedOperationRequestId(root))
+      throw new Error(
+        "Stopped stage already has a complete verified receipt for this request",
+      );
+  }
+  return operation;
+}
 
 /** Only the two root-declared Delivery fields belong to the independent leaf owner. */
 function rootOwnedSource(raw: unknown, delegated: boolean) {
@@ -168,15 +253,11 @@ export async function inspectStoppedRootRecovery(
   const root = rendered.get("apps");
   if (root === undefined) throw new Error("Current root is missing");
   assertDeliveryRootPreservesSelection(root);
-  const operation = z
-    .object({
-      phase: z.enum(["Failed", "Error"]),
-      finishedAt: z.string().min(1),
-      startedAt: z.string().min(1),
-      operation: object,
-      syncResult: z.object({ revision: z.literal(chart.artifact.version) }),
-    })
-    .parse(root.status.operationState);
+  const operation = requireStoppedOperation(
+    root,
+    chart.artifact.version,
+    new Set(expected.keys()),
+  );
   const operationId = z.uuid().parse(completedOperationId(root));
   if (
     completedOperationRequestId(root) !== requestId ||

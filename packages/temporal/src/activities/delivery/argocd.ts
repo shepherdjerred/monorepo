@@ -3,6 +3,7 @@ import { z } from "zod";
 import { argoApplicationRequest } from "#lib/delivery/argo-client.ts";
 import { verifyArgoRelease as verifyOwnedArgoRelease } from "#lib/delivery/argocd-proof.ts";
 import { observeForumArgoRelease } from "#lib/delivery/argocd-proof.ts";
+import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
 import {
   deliverySelectionPatch,
   assertDeliveryRootPreservesSelection,
@@ -45,6 +46,7 @@ export async function syncArgoRelease(
     throw new Error(
       "Required guarded Argo command is missing from the worker image",
     );
+  const prune = await forumSyncPrunes(selection, argoRequest);
   const process = Bun.spawn(
     [
       "bun",
@@ -55,6 +57,7 @@ export async function syncArgoRelease(
       selection.revision,
       "--request-id",
       operationId,
+      ...(prune ? ["--prune"] : []),
       "--timeout",
       "1200",
     ],

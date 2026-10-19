@@ -1,11 +1,19 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import { rm } from "node:fs/promises";
+import path from "node:path";
+import * as canonicalRoot from "homelab/scripts/argocd/argocd.ts";
+import { HOMELAB_RELEASE_RESULT_FILE } from "homelab/scripts/argocd/argocd-release-result.ts";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import {
   RootReleaseInputSchema,
-  rootReleaseCommand,
+  run as runRootRelease,
   verifyRootJobResult,
 } from "#scripts/jobs/root-release.ts";
 import { deliveryTofuGrants } from "homelab/src/delivery-platform-grants.ts";
+
+// Canonical protocol boundaries are exercised through the real Bun library in
+// the homelab tests; this suite checks the native recipe's wiring and receipts.
+vi.mock("homelab/scripts/argocd/argocd.ts", () => ({ releaseRoot: vi.fn() }));
 
 const artifact = ArtifactVersionSchema.parse({
   id: "apps/1",
@@ -23,6 +31,111 @@ const input = {
   requestId: "f8d36d3a-e74e-4b28-a661-b03ed85c7e55",
   charts: [{ name: "apps", artifact }],
 };
+
+test("root recipe verifies archive bytes, binds direct canonical admission, and validates the actual receipt", async () => {
+  const bytes = "immutable chart bytes";
+  const selected = {
+    ...artifact,
+    digest: `sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`,
+  };
+  const frozen = { ...input, charts: [{ name: "apps", artifact: selected }] };
+  const request = {
+    deploymentId: "root/123",
+    stageKey: "root-release",
+    recipe: "root-release" as const,
+    runnerImage: "runner@sha256:" + "b".repeat(64),
+    sourceRevision: selected.sourceRevision,
+    input: frozen,
+  };
+  const resultPath = path.resolve(
+    import.meta.dirname,
+    "../../../../..",
+    HOMELAB_RELEASE_RESULT_FILE,
+  );
+  expect(await Bun.file(resultPath).exists()).toBe(false);
+  const admit = vi.fn(async () => ({ admitted: true }));
+  const canonical = vi
+    .spyOn(canonicalRoot, "releaseRoot")
+    .mockImplementation(async (...args) => {
+      const [
+        app,
+        inventoryPath,
+        revision,
+        requestId,
+        _timeout,
+        dryRun,
+        authority,
+        resultFile,
+      ] = args;
+      expect({ app, revision, requestId, dryRun }).toEqual({
+        app: "apps",
+        revision: selected.version,
+        requestId: input.requestId,
+        dryRun: false,
+      });
+      expect(authority?.inventory).toEqual(
+        await Bun.file(inventoryPath).json(),
+      );
+      expect(authority?.requestId).toBe(requestId);
+      expect(authority?.revision).toBe(revision);
+      expect(resultFile).toBe(resultPath);
+      await authority?.authorize();
+      await Bun.write(
+        resultPath,
+        JSON.stringify({
+          schema: "homelab-release-result/v1",
+          outcome: "applied-verified",
+          rootApplication: "apps",
+          requestId,
+          revision,
+          terminalOperationState: "terminated-after-applied",
+          finalHealth: "all-expected-child-applications-synced-healthy",
+          resourceIdentities: ["argoproj.io/Application/argocd/apps"],
+          applications: [{ name: "apps", revision }],
+        }),
+      );
+    });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(bytes)),
+  );
+  try {
+    await expect(
+      runRootRelease(
+        {
+          ...request,
+          input: {
+            ...frozen,
+            charts: [
+              {
+                name: "apps",
+                artifact: { ...selected, digest: artifact.digest },
+              },
+            ],
+          },
+        },
+        admit,
+      ),
+    ).rejects.toThrow("chart bytes differ");
+    expect(canonical).not.toHaveBeenCalled();
+    expect(admit).not.toHaveBeenCalled();
+    await expect(runRootRelease(request, admit)).resolves.toMatchObject({
+      outcome: "applied-verified",
+      requestId: input.requestId,
+    });
+    expect(canonical).toHaveBeenCalledTimes(1);
+    expect(admit).toHaveBeenCalledTimes(1);
+    await rm(resultPath);
+    canonical.mockImplementationOnce(async () => {
+      await Bun.write(resultPath, JSON.stringify({ outcome: "superseded" }));
+    });
+    await expect(runRootRelease(request, admit)).rejects.toThrow();
+  } finally {
+    canonical.mockRestore();
+    vi.unstubAllGlobals();
+    await rm(resultPath, { force: true });
+  }
+});
 
 describe("reviewed isolated deployment Job recipes", () => {
   test("root acceptance requires the exact guarded applied receipt, never a zero-exit superseded or unrelated release", () => {
@@ -44,20 +157,6 @@ describe("reviewed isolated deployment Job recipes", () => {
       { ...receipt, applications: [{ name: "apps", revision: "2.0.0-999" }] },
     ])
       expect(() => verifyRootJobResult(changed, input)).toThrow();
-  });
-  test("root recipe invokes the existing request-bound release-root command", () => {
-    expect(rootReleaseCommand(input, "/tmp/expected.json")).toEqual([
-      "bun",
-      "--no-install",
-      "packages/homelab/scripts/argocd/argocd.ts",
-      "release-root",
-      "apps",
-      "/tmp/expected.json",
-      "--revision",
-      "2.0.0-123",
-      "--request-id",
-      input.requestId,
-    ]);
   });
   test("root recipe rejects duplicates, moving revisions, foreign archives, and caller-selected pruning", () => {
     expect(

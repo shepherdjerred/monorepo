@@ -3,7 +3,10 @@ import {
   ArtifactVersionSchema,
   PlatformReleaseSnapshotSchema,
 } from "@shepherdjerred/delivery/contract";
-import { VERIFIED_ROOT_RELEASE_ANNOTATION } from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
+import {
+  VERIFIED_ROOT_RELEASE_ANNOTATION,
+  VerifiedRootReleaseReceiptSchema,
+} from "@shepherdjerred/ops-model/argocd-release-receipt.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { inspectRootRecovery } from "#lib/delivery/platform/recovery-root.ts";
 import { inspectStoppedRootRecovery } from "#lib/delivery/platform/recovery/root-stopped.ts";
@@ -243,6 +246,118 @@ test("stopped first-root inspection records actual partial state without claimin
     health: "Progressing",
   });
   expect(root.status.sync.status).toBe("OutOfSync");
+});
+
+function stoppedStageFixture() {
+  const result = stoppedFixture();
+  const { root, child } = result;
+  root.status.operationState.phase = "Succeeded";
+  root.status.operationState.syncResult.revision = "";
+  root.status.operationState.operation.info[3]!.value = "stage";
+  Object.assign(root.status.operationState.operation, {
+    sync: {
+      manifests: [
+        JSON.stringify({
+          kind: "Application",
+          metadata: child.metadata,
+          spec: child.spec,
+        }),
+      ],
+      resources: [
+        {
+          group: "argoproj.io",
+          kind: "Application",
+          namespace: "argocd",
+          name: "argocd",
+        },
+      ],
+      source: root.spec.source,
+    },
+  });
+  Object.assign(root.status, { sync: { status: "OutOfSync" } });
+  const receipt = VerifiedRootReleaseReceiptSchema.parse(
+    JSON.parse(
+      fixture().root.metadata.annotations[VERIFIED_ROOT_RELEASE_ANNOTATION],
+    ),
+  );
+  Object.assign(root.metadata.annotations, {
+    [VERIFIED_ROOT_RELEASE_ANNOTATION]: JSON.stringify({
+      ...receipt,
+      requestId: crypto.randomUUID(),
+      revision: "2.0.0-899",
+    }),
+  });
+  return result;
+}
+
+test("stopped first-root accepts only its partial succeeded inline stage without a current complete receipt", async () => {
+  const { context, effects, root } = stoppedStageFixture();
+  const proof = await inspectStoppedRootRecovery(context, effects);
+  expect(proof.state).toBe("stopped");
+  expect(proof.stoppedRoot.revision).toBe("2.0.0-900");
+  expect(
+    proof.stoppedRoot.applications.find(({ name }) => name === "apps"),
+  ).toMatchObject({
+    uid: root.metadata.uid,
+    operationPhase: "Succeeded",
+    observedRevision: null,
+    targetRevision: "~2.0.0-0",
+    health: "Progressing",
+  });
+  expect(root.status.operationState.syncResult.revision).toBe("");
+});
+
+test.each([
+  "phase",
+  "duplicate-phase",
+  "revision",
+  "request",
+  "result-revision",
+  "prune",
+  "manifests",
+  "foreign-manifest",
+  "resources",
+  "receipt",
+  "late-operation",
+])("stopped succeeded stage refuses %s", async (change) => {
+  const { context, effects, root } = stoppedStageFixture();
+  const operation = root.status.operationState.operation;
+  if (change === "phase") operation.info[3]!.value = "prune";
+  if (change === "duplicate-phase")
+    operation.info.push({ ...operation.info[3]! });
+  if (change === "revision") operation.info[2]!.value = "2.0.0-901";
+  if (change === "request") operation.info[0]!.value = crypto.randomUUID();
+  if (change === "result-revision")
+    root.status.operationState.syncResult.revision = "2.0.0-900";
+  if (change === "prune") Object.assign(operation.sync, { prune: true });
+  if (change === "manifests") Object.assign(operation.sync, { manifests: [] });
+  if (change === "foreign-manifest")
+    Object.assign(operation.sync, {
+      manifests: [
+        JSON.stringify({
+          kind: "Application",
+          metadata: { namespace: "argocd", name: "foreign" },
+        }),
+      ],
+    });
+  if (change === "resources") Object.assign(operation.sync, { resources: [] });
+  if (change === "receipt")
+    Object.assign(
+      root.metadata.annotations,
+      fixture().root.metadata.annotations,
+    );
+  let reads = 0;
+  await expect(
+    inspectStoppedRootRecovery(context, {
+      ...effects,
+      read: async (name) => {
+        const observed = await effects.read(name);
+        return name === "apps" && change === "late-operation" && reads++ > 0
+          ? { ...root, operation: { sync: {} } }
+          : observed;
+      },
+    }),
+  ).rejects.toThrow();
 });
 
 test("stopped first-root proof refuses prior acceptance, foreign source/ownership, active operations and late UID changes", async () => {
