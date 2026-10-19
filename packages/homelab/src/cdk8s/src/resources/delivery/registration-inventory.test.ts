@@ -169,8 +169,10 @@ test("every served static bucket has one pipeline or an explicit independent wri
     expect(zone).toBeDefined();
     expect(pipeline.cloudflareZoneId).toBe(zone?.[1]);
   }
-  for (const bucket of Object.keys(STATIC_SITE_DELIVERY_OWNERS))
-    expect(registered).toContain(bucket);
+  expect(STATIC_SITE_DELIVERY_OWNERS).toEqual(STATIC_BUCKET_RELEASE_POLICIES);
+  expect(Object.keys(STATIC_SITE_DELIVERY_OWNERS).sort()).toEqual(registered);
+  for (const bucket of Object.keys(INDEPENDENT_STATIC_BUCKET_OWNERS))
+    expect(STATIC_SITE_DELIVERY_OWNERS).not.toHaveProperty(bucket);
   const child = Bun.spawn(["bun", "scripts/release/deploy-site.ts", "--list"], {
     cwd: root,
     stdout: "pipe",

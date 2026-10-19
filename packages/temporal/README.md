@@ -294,6 +294,11 @@ normal exact-source `release-root`.
 toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Independent platform recovery verified and quarantine settled'
 ```
 
+Static archive activation is delegated by the reviewed bucket ownership map:
+thirteen independent sites and both Scout frontend stages use their exact
+registered environments. These buckets require immutable artifact publication
+and cannot fall back to a legacy writer; unknown or mismatched owners refuse.
+
 Static archives and Forum releases use a foreground maintenance command rather
 than an automatic recovery worker. Pause `delivery-dispatch`, wait for every open
 Delivery Workflow and original native Job/Pod to finish, and request a content

@@ -1,5 +1,9 @@
+import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
+
 /** Reviewed writer cutovers only. Release versions and selections live in PG. */
-export const STATIC_SITE_DELIVERY_OWNERS: Readonly<Record<string, string>> = {};
+export const STATIC_SITE_DELIVERY_OWNERS: Readonly<Record<string, string>> = {
+  ...STATIC_SITE_DESTINATIONS,
+};
 
 export function staticSiteDeliveryOwner(
   bucket: string,

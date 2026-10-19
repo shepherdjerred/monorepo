@@ -13,6 +13,7 @@
     "src/application-release-contract.ts",
     "src/domain-registry.ts",
     "src/delivery-storage.ts",
+    "src/static-site-delivery-ownership.ts",
     "src/delivery-platform-grants.ts",
     "scripts/tofu/delivery-stack.ts",
     "scripts/tofu/delivery-stack.test.ts",
