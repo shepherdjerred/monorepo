@@ -32,9 +32,6 @@ export function validateRetirementProof(
     };
     const key = fingerprint(route);
     const observed = new Date(proof.observedAt).getTime();
-    const deactivationRead = new Date(proof.deactivationObservedAt).getTime();
-    const deactivated = new Date(proof.lastDeactivationTime).getTime();
-    const checked = new Date(proof.lastCheckedTime).getTime();
     if (seen.has(key) || !routes.some((item) => fingerprint(item) === key))
       throw new DeliveryError(
         "INVALID",
@@ -44,11 +41,6 @@ export function validateRetirementProof(
     if (
       observed > now + 5000 ||
       now - observed > 60_000 ||
-      deactivationRead > now + 5000 ||
-      now - deactivationRead > 60_000 ||
-      deactivated > checked ||
-      checked > deactivationRead ||
-      deactivationRead > observed ||
       proof.currentBuildId === worker.buildId ||
       proof.rampingBuildId === worker.buildId
     )
@@ -56,6 +48,28 @@ export function validateRetirementProof(
         "CONFLICT",
         "Worker retirement requires fresh routing exclusion and post-deactivation drainage readback",
       );
+    if ("proofKind" in proof) {
+      if (new Date(proof.versionCreatedAt).getTime() > observed)
+        throw new DeliveryError(
+          "CONFLICT",
+          "Inactive worker creation postdates its observation",
+        );
+    } else {
+      const read = new Date(proof.deactivationObservedAt).getTime();
+      const deactivated = new Date(proof.lastDeactivationTime).getTime();
+      const checked = new Date(proof.lastCheckedTime).getTime();
+      if (
+        read > now + 5000 ||
+        now - read > 60_000 ||
+        deactivated > checked ||
+        checked > read ||
+        read > observed
+      )
+        throw new DeliveryError(
+          "CONFLICT",
+          "Worker retirement requires fresh post-deactivation drainage readback",
+        );
+    }
   }
   return input;
 }

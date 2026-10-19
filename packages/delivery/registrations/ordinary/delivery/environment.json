@@ -3,7 +3,7 @@
   "serviceId": "delivery",
   "name": "prod",
   "application": "delivery",
-  "pipelineRevisionId": "delivery/1",
+  "pipelineRevisionId": "delivery/2",
   "configurationRevision": "delivery/1",
   "configuration": {},
   "automatic": true

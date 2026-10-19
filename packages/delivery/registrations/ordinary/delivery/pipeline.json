@@ -8,7 +8,7 @@
   "parameters": {},
   "artifactParameters": { "delivery.image": "image:delivery" },
   "verification": {
-    "url": "https://delivery.tailnet-1a49.ts.net/healthz",
+    "url": "http://delivery.delivery.svc.cluster.local:7353/healthz",
     "expectedStatus": 200
   }
 }

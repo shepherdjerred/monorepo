@@ -9,6 +9,7 @@ import {
   proveWorkerRetirement,
   requirePoolRoutingCoverage,
   workerOpenExecutionQuery,
+  inactiveWorkerVersion,
   type WorkerRetirementEffects,
 } from "#lib/delivery/workers/worker-retirement.ts";
 import { verifyDeliveryWorkerImages } from "#lib/delivery/workers/worker-image-proof.ts";
@@ -265,6 +266,118 @@ describe("Independent control-plane artifact runtime", () => {
     expect(() => verifyControlPlaneArtifactPods([], artifact)).toThrow(
       "native Pod",
     );
+  });
+});
+describe("Inactive worker incarnation retirement", () => {
+  it("recognizes the actual INACTIVE server shape without fabricating drainage timestamps", () => {
+    const expected = {
+      deploymentName: "monorepo-central-workflows",
+      buildId: OLD,
+    };
+    const native = {
+      deploymentVersion: expected,
+      status: 1,
+      createTime: { seconds: 1_790_000_000 },
+    };
+    expect(inactiveWorkerVersion(native, expected)).toMatchObject({
+      status: "INACTIVE",
+      buildId: OLD,
+      lastDeactivationTime: null,
+    });
+    for (const status of [0, 2, 3, 4, 5, 6, 99])
+      expect(() =>
+        inactiveWorkerVersion({ ...native, status }, expected),
+      ).toThrow("exact INACTIVE");
+    for (const field of [
+      "firstActivationTime",
+      "lastCurrentTime",
+      "lastDeactivationTime",
+      "currentSinceTime",
+      "rampingSinceTime",
+      "routingChangedTime",
+      "drainageInfo",
+    ])
+      expect(() =>
+        inactiveWorkerVersion({ ...native, [field]: { seconds: 1 } }, expected),
+      ).toThrow("history");
+    expect(() =>
+      inactiveWorkerVersion(native, { ...expected, buildId: CURRENT }),
+    ).toThrow("exact INACTIVE");
+    expect(() =>
+      inactiveWorkerVersion({ ...native, createTime: null }, expected),
+    ).toThrow("timestamp");
+  });
+  it("repeats exact INACTIVE version and open-execution reads on every namespace", async () => {
+    const route = snapshot().versions[0]?.host.routes[0];
+    if (!route) throw new Error("Missing fixture route");
+    const inactive = inactiveWorkerVersion(
+      {
+        status: 1,
+        createTime: { seconds: 1_790_000_000 },
+        deploymentVersion: {
+          deploymentName: route.deploymentName,
+          buildId: OLD,
+        },
+      },
+      { deploymentName: route.deploymentName, buildId: OLD },
+    );
+    let versions = 0;
+    let counts = 0;
+    const observed = effects({
+      version: async () => {
+        versions++;
+        return inactive;
+      },
+      openExecutions: async () => {
+        counts++;
+        return 0;
+      },
+    });
+    const result = await proveWorkerRetirement(
+      snapshot(),
+      "worker/0",
+      observed,
+      NOW,
+    );
+    expect({ versions, counts }).toEqual({ versions: 4, counts: 4 });
+    expect(
+      result.proofs.every(
+        (proof) =>
+          "proofKind" in proof && proof.proofKind === "inactive-unreferenced",
+      ),
+    ).toBe(true);
+    expect(result.proofs.every((proof) => !("drainageStatus" in proof))).toBe(
+      true,
+    );
+    for (const changed of ["version", "executions"] as const) {
+      let reads = 0;
+      await expect(
+        proveWorkerRetirement(
+          snapshot(),
+          "worker/0",
+          effects({
+            version: async () =>
+              changed === "version" && ++reads === 2
+                ? { ...inactive, versionCreatedAt: NOW.toISOString() }
+                : inactive,
+            openExecutions: async () =>
+              changed === "executions" && ++reads === 2 ? 1 : 0,
+          }),
+          NOW,
+        ),
+      ).rejects.toThrow("changed or gained pinned");
+    }
+    await expect(
+      proveWorkerRetirement(
+        snapshot(),
+        "worker/0",
+        effects({
+          version: async () => inactive,
+          openExecutions: async () => 1,
+        }),
+        NOW,
+      ),
+    ).rejects.toThrow("open pinned");
   });
 });
 describe("Retained worker routing, coverage and runtime", () => {
