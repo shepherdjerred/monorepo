@@ -41,7 +41,10 @@ export function requireMinecraftPreservation(
     )
     .map((entry) =>
       z
-        .object({ candidateImage: z.string(), completedAt: z.iso.datetime() })
+        .object({
+          candidateImage: z.string(),
+          completedAt: z.iso.datetime({ offset: true }),
+        })
         .safeParse(JSON.parse(entry.summary)),
     )
     .filter((entry) => entry.success);

@@ -3,7 +3,13 @@ import { describe, expect, test } from "vitest";
 import {
   PipelineRevisionSchema,
   VersionSetRevisionSchema,
+  DeploymentDetailSchema,
+  RegisterEnvironmentSchema,
+  EvidenceSchema,
+  StageSchema,
 } from "@shepherdjerred/delivery/contract";
+import { requireMinecraftPreservation } from "./minecraft-acceptance.ts";
+import { deliveryOperationId } from "./selection.ts";
 import {
   minecraftImageParameters,
   minecraftRuntimeImage,
@@ -227,4 +233,116 @@ describe("TSMC routine upgrade preservation boundary", () => {
       }),
     ).toThrow("reviewed TSMC target");
   });
+});
+
+test("source selection consumes Python's completed receipt while retaining freshness and exact-image gates", async () => {
+  const target = await fixture();
+  const registration: unknown = await Bun.file(
+    new URL(
+      "../../../../delivery/registrations/specialized/minecraft-tsmc/environment.json",
+      import.meta.url,
+    ),
+  ).json();
+  const detail = DeploymentDetailSchema.parse({
+    ...target,
+    environment: {
+      ...RegisterEnvironmentSchema.parse(registration),
+      generation: 1,
+      approvalRequired: false,
+      promotionSourceEnvironmentId: null,
+      desiredVersionSetRevisionId: target.versionSet.id,
+      observedVersionSetRevisionId: null,
+      acceptedVersionSetRevisionId: null,
+      observedAt: null,
+      activeDeploymentId: target.deployment.id,
+      createdAt: timestamp,
+    },
+    deployment: {
+      ...target.deployment,
+      requestId: "preservation/request",
+      versionSetRevisionId: target.versionSet.id,
+      pipelineRevisionId: target.pipeline.id,
+      configurationRevision: "minecraft-tsmc/1",
+      configuration: {},
+      expectedGeneration: 0,
+      status: "running",
+      requestedBy: "publisher",
+      message: null,
+      cancelRequested: false,
+      recoveryRequired: false,
+      createdAt: timestamp,
+      startedAt: timestamp,
+      finishedAt: null,
+    },
+    evidence: [],
+    approvals: [],
+    stages: [],
+  });
+  const operationId = deliveryOperationId(
+    `${detail.deployment.id}:minecraft-preservation`,
+  );
+  const pythonReceipt = {
+    ...receipt(),
+    requestId: operationId,
+    completedAt: "2026-10-19T22:58:35.122659+00:00",
+  };
+  const observedAt = Date.parse("2026-10-19T23:00:28.000Z");
+  const evidence = validateMinecraftPreservation(
+    detail,
+    operationId,
+    { ...result(pythonReceipt), requestId: operationId },
+    observedAt,
+  );
+  detail.evidence = evidence.map((entry, index) =>
+    EvidenceSchema.parse({
+      ...entry,
+      id: `preservation/${String(index)}`,
+      deploymentId: detail.deployment.id,
+      createdAt: timestamp,
+    }),
+  );
+  detail.stages = [
+    StageSchema.parse({
+      id: "preservation/stage",
+      deploymentId: detail.deployment.id,
+      key: "minecraft-preservation-1",
+      status: "succeeded",
+      operationId,
+      message: "Independent restore and candidate gameplay completed",
+      updatedAt: timestamp,
+    }),
+  ];
+  expect(() => requireMinecraftPreservation(detail, observedAt)).not.toThrow();
+  const completedAt = Date.parse(pythonReceipt.completedAt);
+  expect(() =>
+    requireMinecraftPreservation(detail, completedAt + 30 * 60_000 + 1),
+  ).toThrow("fresh exact candidate");
+  expect(() =>
+    requireMinecraftPreservation(detail, completedAt - 60_001),
+  ).toThrow("fresh exact candidate");
+  for (const patch of [
+    { candidateImage: `${uri}:other@sha256:${"9".repeat(64)}` },
+    { completedAt: "2026-10-19T22:58:35.122659" },
+    { completedAt: "invalid" },
+  ]) {
+    detail.evidence = evidence.map((entry, index) =>
+      EvidenceSchema.parse({
+        ...entry,
+        summary:
+          entry.kind === "preflight"
+            ? JSON.stringify({
+                candidateImage: pythonReceipt.candidateImage,
+                completedAt: pythonReceipt.completedAt,
+                ...patch,
+              })
+            : entry.summary,
+        id: `preservation/${String(index)}`,
+        deploymentId: detail.deployment.id,
+        createdAt: timestamp,
+      }),
+    );
+    expect(() => requireMinecraftPreservation(detail, observedAt)).toThrow(
+      "fresh exact candidate",
+    );
+  }
 });
