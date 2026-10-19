@@ -128,6 +128,13 @@ export function createMinecraftControllerPermissions(chart: Chart): void {
       verbs: ["get", "create"],
     },
   ]);
+  role(chart, "openebs", [
+    {
+      apiGroups: ["zfs.openebs.io"],
+      resources: ["zfsvolumes"],
+      verbs: ["get", "list", "watch"],
+    },
+  ]);
   new ApiObject(chart, `${CONTROLLER}-inspection-role`, {
     apiVersion: "rbac.authorization.k8s.io/v1",
     kind: "ClusterRole",
@@ -139,7 +146,16 @@ export function createMinecraftControllerPermissions(chart: Chart): void {
         verbs: ["get"],
         resourceNames: [VALIDATION],
       },
-      { apiGroups: [""], resources: ["persistentvolumes"], verbs: ["get"] },
+      {
+        apiGroups: [""],
+        resources: ["persistentvolumes"],
+        verbs: ["get", "list", "watch", "patch"],
+      },
+      {
+        apiGroups: ["storage.k8s.io"],
+        resources: ["volumeattachments"],
+        verbs: ["get", "list"],
+      },
       {
         apiGroups: ["admissionregistration.k8s.io"],
         resources: [
