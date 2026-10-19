@@ -31,6 +31,8 @@ destinations:
     description: "Amplified mountains, never reset"
     world: peaks
     arrival: spawn
-# Walk-in volumes in hubWorld, inclusive corners, at most 16 blocks per axis.
-# Measured from the promoted hub build.
+# Stargate-style gates at the main spawn: an obsidian frame filled with portal
+# blocks and a destination sign. Each entry is a gate's inner volume in
+# hubWorld, inclusive corners, at most 16 blocks per axis; standing in a gate
+# never starts a vanilla Nether trip. Measured from the placed gates.
 portals: []

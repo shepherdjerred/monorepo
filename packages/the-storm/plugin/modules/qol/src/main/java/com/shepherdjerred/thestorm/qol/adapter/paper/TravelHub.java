@@ -33,13 +33,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * The travel hub at the main spawn: walk-in portals and {@code /worlds}. A wilderness destination
- * is a random teleport; any other arrives at its world's spawn as a warp. Essentials owns the
- * travel policy for both.
+ * The travel hub at the main spawn: Stargate-style walk-in gates and {@code /worlds}. A wilderness
+ * destination is a random teleport; any other arrives at its world's spawn as a warp. Essentials
+ * owns the travel policy for both.
  */
 final class TravelHub implements Listener {
 
@@ -101,6 +103,28 @@ final class TravelHub implements Listener {
       return;
     }
     go(player, portal.get());
+  }
+
+  /** Gates are framed with portal blocks; standing in one never starts a vanilla portal trip. */
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onPortal(PlayerPortalEvent event) {
+    if (inGate(event.getFrom())) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onEntityPortal(EntityPortalEvent event) {
+    if (inGate(event.getFrom())) {
+      event.setCancelled(true);
+    }
+  }
+
+  private boolean inGate(Location at) {
+    return config
+        .portalAt(
+            at.getWorld().getName(), new HubPoint(at.getBlockX(), at.getBlockY(), at.getBlockZ()))
+        .isPresent();
   }
 
   @EventHandler
