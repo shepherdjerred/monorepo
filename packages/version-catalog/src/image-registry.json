@@ -30,6 +30,7 @@
     { "name": "velero-plugin", "visibility": "private" },
     { "name": "windows-cross-compiler", "visibility": "public" },
     { "name": "windows-cross-compiler-winui", "visibility": "public" },
-    { "name": "woodpecker-config-extension", "visibility": "private" }
+    { "name": "woodpecker-config-extension", "visibility": "private" },
+    { "name": "zfs-driver", "visibility": "private" }
   ]
 }

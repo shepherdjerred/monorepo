@@ -511,7 +511,7 @@
         "seaweedfs": "upstream",
         "velero": "upstream"
       },
-      "images": ["velero-plugin"],
+      "images": ["velero-plugin", "zfs-driver"],
       "title": "Storage & backups",
       "kind": "platform",
       "namespaces": [
