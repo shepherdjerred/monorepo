@@ -43,6 +43,12 @@ Delivery's ChartMuseum mirror only at version 5.2.0, after downloading and
 verifying the original archive size and SHA-256. A repository migration therefore
 preserves the maintenance lease's image, template, storage and ownership checks;
 a different chart or archive requires a separately reviewed contract update.
+The effective image tag comes from Helm's `image.tag` parameter; an optional
+image value tag must agree. Pre-install abort alone permits the exact original
+lease's stopped-replica difference after a fresh authenticated Argo normalized
+comparison proves every other resource unchanged. Resolve the registered Argo
+reader credential before launching that operator; candidate release still
+requires `Synced`.
 
 The snapshot captures original server, template, native volume, route and Argo
 source identities before maintenance. Recovery reports use the neutral contract
