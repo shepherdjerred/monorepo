@@ -110,7 +110,7 @@ public final class MovementSafety {
     if (request.takeoff().isPresent() || !terrain.grounded(from)) return Optional.empty();
     var centre = new Vec3(Math.floor(from.x()) + 0.5, from.y(), Math.floor(from.z()) + 0.5);
     if (centre.horizontalDistance(from) < CENTRED) return Optional.empty();
-    return walkCorridor(terrain, from, centre)
+    return walkCorridor(terrain, from, centre, true)
             && traversal(terrain, new Request(centre, request.target(), request.hop()))
         ? Optional.of(centre)
         : Optional.empty();
@@ -178,7 +178,8 @@ public final class MovementSafety {
     for (var angle : ANGLES) {
       var rotated = rotate(direction, angle);
       var probe = request.from().plus(rotated.scale(distance));
-      if (walkCorridor(terrain, request.from(), probe)) {
+      var ends = angle == 0 && heading.length() <= LOOK_AHEAD;
+      if (walkCorridor(terrain, request.from(), probe, ends)) {
         var destination =
             angle == 0 ? request.target() : request.from().plus(rotated.scale(distance));
         return new Result(Optional.of(destination), angle == 0 ? Reason.CLEAR : Reason.REDIRECTED);
@@ -293,10 +294,11 @@ public final class MovementSafety {
   /**
    * An ordinary walk: like {@link #supportedCorridor}, but a sample between its ends only needs
    * footing, some of the footprint on floor within a step, as vanilla holds a body crossing between
-   * blocks that touch at a corner or along a one-block walkway; where the step ends must be fully
-   * supported, so a walk never ends hanging off an edge.
+   * blocks that touch at a corner or along a one-block walkway. Where the walk ends ({@code ends}:
+   * the probe reaches the target) must be fully supported, so a walk never stops hanging off an
+   * edge; a look-ahead point short of the target is only on the way.
    */
-  private static boolean walkCorridor(Terrain terrain, Vec3 from, Vec3 to) {
+  private static boolean walkCorridor(Terrain terrain, Vec3 from, Vec3 to, boolean ends) {
     var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
     var escaping = terrain.hazardous(from);
     for (var index = 0; index <= count; index++) {
@@ -305,14 +307,20 @@ public final class MovementSafety {
       var point = stood(terrain, sample);
       if (point.isEmpty()) return false;
       if (escaping && index != count) continue;
-      var at = point.orElseThrow();
-      if (terrain.hazardous(at)) return false;
-      var floor =
-          floor(terrain, at, sample.horizontalDistance(from) <= LEAVING)
-              || (index > 0 && index < count && terrain.footing(at, WALK_DROP));
-      if (!floor) return false;
+      var on = index > 0 && (index < count || !ends);
+      if (!walkable(terrain, point.orElseThrow(), sample.horizontalDistance(from), on))
+        return false;
     }
     return true;
+  }
+
+  /**
+   * Whether a walk may pass {@code at}, {@code away} from where it set off: not hazardous, and
+   * supported, or footed where the walk is only passing ({@code passing}).
+   */
+  private static boolean walkable(Terrain terrain, Vec3 at, double away, boolean passing) {
+    if (terrain.hazardous(at)) return false;
+    return floor(terrain, at, away <= LEAVING) || (passing && terrain.footing(at, WALK_DROP));
   }
 
   /** A straight combat approach must have continuous floor, not merely unobstructed sight. */

@@ -207,4 +207,26 @@ final class MovementTerrainTest {
             com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
     assertThat(result.destination()).contains(new Vec3(2.5, 1, 2.5));
   }
+
+  @Test
+  void aWalkRoundTheCornerOfANarrowPathIsClearWhenItsLookAheadPointHangsOverTheCorner() {
+    // hemispheres: on one-block walkways the steering probe's look-ahead point, short of the
+    // target, fell where only part of the footprint was on a block; it was asked for full support
+    // and every walk along the path was refused although its end stood fully on the path.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+      world.getBlockAt(x, 0, 2).setType(Material.STONE);
+    }
+    world.getBlockAt(1, 0, 3).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(3.5, 1, 2.5),
+            new Vec3(1.5, 1, 3.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
 }

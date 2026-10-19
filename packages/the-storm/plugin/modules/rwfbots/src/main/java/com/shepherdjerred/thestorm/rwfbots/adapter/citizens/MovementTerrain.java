@@ -92,8 +92,9 @@ final class MovementTerrain implements MovementSafety.Terrain {
   @Override
   public boolean footing(Vec3 feet, double drop) {
     if (supportAt(feet, drop, true)) return true;
-    for (var dx : new double[] {-FOOTPRINT, FOOTPRINT}) {
-      for (var dz : new double[] {-FOOTPRINT, FOOTPRINT}) {
+    // The corners contact() measures, so a walk crossing on footing always has a contact.
+    for (var dx : new double[] {-0.25, 0.25}) {
+      for (var dz : new double[] {-0.25, 0.25}) {
         if (supportAt(feet.plus(dx, 0, dz), drop, true)) return true;
       }
     }
