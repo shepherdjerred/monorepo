@@ -637,6 +637,14 @@ resource "cloudflare_zone_setting" "sjer_red_websockets" {
   value      = "on"
 }
 
+# Delivery verifies public static responses against the immutable archive.
+# Cloudflare Fonts rewrites Google Fonts links into inline CSS, changing bytes.
+resource "cloudflare_zone_setting" "sjer_red_fonts" {
+  zone_id    = cloudflare_zone.sjer_red.id
+  setting_id = "fonts"
+  value      = "off"
+}
+
 # ── Static-asset caching: respect the immutable Cache-Control the deploy sets on
 # content-hashed assets (sjer.red + the cook./stocks. Astro subdomains in this
 # zone all emit `/_astro/`) + Smart Tiered Cache (origin shielding). ───────────

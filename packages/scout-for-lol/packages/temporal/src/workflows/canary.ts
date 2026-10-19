@@ -1,6 +1,7 @@
 import {
   ScoutQueueCanaryInputSchema,
   ScoutBackgroundJobInputSchema,
+  SCOUT_BACKGROUND_JOB_KINDS_V1,
   ScoutQueueCanaryProbeResultSchema,
   type ScoutQueueCanaryInput,
   type ScoutQueueCanaryProbeResult,
@@ -13,13 +14,17 @@ import {
 } from "./activity-options.ts";
 import { scoutTaskQueues } from "#src/identifiers.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
+import { z } from "zod";
 
 export async function scoutQueueCanaryWorkflow(
   rawInput: ScoutQueueCanaryInput,
 ): Promise<ScoutQueueCanaryProbeResult[]> {
   const input = ScoutQueueCanaryInputSchema.parse(rawInput);
+  const backgroundJobKind = patched("scout-queue-canary-background-kinds-v2")
+    ? ScoutBackgroundJobInputSchema.shape.kind
+    : z.enum(SCOUT_BACKGROUND_JOB_KINDS_V1);
   for (const kind of input.backgroundJobKinds ?? []) {
-    ScoutBackgroundJobInputSchema.parse({ stage: input.stage, kind });
+    backgroundJobKind.parse(kind);
   }
   setWorkflowPhase("**Phase:** probing every Scout Activity queue");
   const expectedQueues = scoutTaskQueues(input.stage);
@@ -64,8 +69,8 @@ export async function scoutQueueCanaryWorkflow(
     backgroundJobKinds:
       input.backgroundJobKinds === undefined
         ? undefined
-        : ScoutBackgroundJobInputSchema.shape.kind.options,
+        : backgroundJobKind.options,
   }));
 }
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type { ScoutTemporalActivities } from "#src/activities.ts";

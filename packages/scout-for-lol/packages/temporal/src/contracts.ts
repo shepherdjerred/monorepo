@@ -120,28 +120,36 @@ export type ScoutIngestionReconciliationInput = z.infer<
   typeof ScoutIngestionReconciliationInputSchema
 >;
 
+/** Frozen capability inventory for unpatched retained queue-canary histories. */
+export const SCOUT_BACKGROUND_JOB_KINDS_V1 = [
+  "competition-refresh",
+  "competition-scheduled-updates",
+  "competition-validation",
+  "bucks-reconciliation",
+  "weekly-bucks-leaderboard",
+  "player-pruning",
+  "removed-guild-cleanup",
+  "match-time-rebuild",
+  "outreach",
+  "conversion-check",
+  "summoner-index-backfill",
+  "custom-nights-expiry",
+  "notification-intent-expiry",
+  "prediction-ingest",
+  "legacy-backfill",
+  "progression-reconciliation",
+  "mvp-tally-refresh",
+  "support-inbox",
+  "clash-snapshot",
+] as const;
+
 export const ScoutBackgroundJobInputSchema = z.object({
   stage: ScoutStageSchema,
-  kind: z.enum([
-    "competition-refresh",
-    "competition-scheduled-updates",
-    "competition-validation",
-    "bucks-reconciliation",
-    "weekly-bucks-leaderboard",
-    "player-pruning",
-    "removed-guild-cleanup",
-    "match-time-rebuild",
-    "outreach",
-    "conversion-check",
-    "summoner-index-backfill",
-    "notification-intent-expiry",
-    "prediction-ingest",
-    "legacy-backfill",
-    "progression-reconciliation",
-    "mvp-tally-refresh",
-    "support-inbox",
-    "clash-snapshot",
-  ]),
+  kind: z.enum(
+    SCOUT_BACKGROUND_JOB_KINDS_V1.filter(
+      (kind) => kind !== "custom-nights-expiry",
+    ),
+  ),
 });
 export type ScoutBackgroundJobInput = z.infer<
   typeof ScoutBackgroundJobInputSchema
