@@ -34,7 +34,10 @@ async function main() {
   Bun.env["DELIVERY_API_URL"] = deliveryUrl(
     requiredParsedArgument(flags, "--url"),
   );
-  await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN"]);
+  await resolveCredentials([
+    "DELIVERY_EXECUTOR_TOKEN",
+    ...(action === "inspect-stopped-root" ? ["ARGOCD_AUTH_TOKEN"] : []),
+  ]);
   const { kubernetes, connection } = await openOperatorRecovery(context);
   try {
     if (action === "inspect-stopped-root") {

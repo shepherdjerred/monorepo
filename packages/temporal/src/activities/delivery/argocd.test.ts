@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { verifyArgoRelease, waitForForumArgoRelease } from "./argocd.ts";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "homelab/src/delivery-ownership.ts";
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
+import { acknowledgeReconciledRelease } from "./reconcile-ack.ts";
+import { ApplicationFailure } from "@temporalio/common";
 
 const requestId = "11111111-1111-4111-8111-111111111111";
 const operationId = "22222222-2222-4222-8222-222222222222";
@@ -13,6 +15,176 @@ const selection = {
   revision: "2.0.0-42",
   parameters: { "delivery.image": "image@sha256:digest" },
 };
+
+function acknowledgementFixture() {
+  const expected: Parameters<typeof acknowledgeReconciledRelease>[0] = {
+    deployment: {
+      id: "deployment/ack",
+      status: "running",
+      cancelRequested: false,
+    },
+    environment: {
+      id: "delivery/prod",
+      generation: 4,
+      activeDeploymentId: "deployment/ack",
+    },
+    selection: "exact-frozen-selection",
+    stages: [
+      {
+        key: "reconcile",
+        status: "running",
+        operationId,
+        message: "reconcile: running",
+      },
+    ],
+    evidence: [],
+  };
+  const fresh = structuredClone(expected);
+  const read = vi.fn(async () => structuredClone(fresh));
+  const post = vi.fn(
+    async (body: {
+      message: string;
+      evidence: {
+        kind: "reconciliation";
+        summary: string;
+        operationId: string;
+      }[];
+    }) => {
+      fresh.stages[0]!.status = "succeeded";
+      fresh.stages[0]!.message = body.message;
+      fresh.evidence = body.evidence.map((item, offset) => ({
+        ...item,
+        id: `deployment/ack/stage/reconcile/${String(offset)}`,
+        url: undefined,
+      }));
+    },
+  );
+  return {
+    expected,
+    fresh,
+    effects: {
+      read,
+      post,
+      heartbeat: vi.fn(),
+      wait: vi.fn(async () => 0),
+    },
+  };
+}
+const acknowledgementTimeout = () =>
+  new DOMException("The operation timed out.", "TimeoutError");
+
+describe("post-native-success reconciliation acknowledgement", () => {
+  it("reads a committed lost acknowledgement without posting again", async () => {
+    const f = acknowledgementFixture(),
+      commit = f.effects.post.getMockImplementation()!;
+    f.effects.post.mockImplementationOnce(async (body) => {
+      await commit(body);
+      throw acknowledgementTimeout();
+    });
+    await acknowledgeReconciledRelease(f.expected, operationId, f.effects);
+    expect(f.effects.post).toHaveBeenCalledTimes(1);
+    expect(f.effects.read).toHaveBeenCalledTimes(2);
+    expect(f.effects.heartbeat).toHaveBeenCalledTimes(3);
+  });
+  it("retries only the identical stage POST after a transport timeout", async () => {
+    const f = acknowledgementFixture();
+    f.effects.post.mockRejectedValueOnce(acknowledgementTimeout());
+    await acknowledgeReconciledRelease(f.expected, operationId, f.effects);
+    expect(f.effects.post).toHaveBeenCalledTimes(2);
+    expect(f.effects.post.mock.calls[1]).toEqual(f.effects.post.mock.calls[0]);
+    expect(f.effects.post.mock.calls[0]?.[0]).toMatchObject({
+      key: "reconcile",
+      status: "succeeded",
+      operationId,
+    });
+  });
+  it("waits for a fresh claim read before writing after an API outage", async () => {
+    const f = acknowledgementFixture();
+    f.effects.read.mockRejectedValueOnce(acknowledgementTimeout());
+    await acknowledgeReconciledRelease(f.expected, operationId, f.effects);
+    expect(f.effects.read).toHaveBeenCalledTimes(2);
+    expect(f.effects.post).toHaveBeenCalledTimes(1);
+  });
+  it.each([
+    "claim",
+    "generation",
+    "operation",
+    "selection",
+    "cancellation",
+    "status",
+  ])("refuses changed %s before another write", async (change) => {
+    const f = acknowledgementFixture();
+    f.effects.post.mockRejectedValueOnce(acknowledgementTimeout());
+    f.effects.wait.mockImplementationOnce(async () => {
+      if (change === "claim")
+        f.fresh.environment.activeDeploymentId = "foreign";
+      if (change === "generation") f.fresh.environment.generation++;
+      if (change === "operation") f.fresh.stages[0]!.operationId = "foreign";
+      if (change === "selection") f.fresh.selection = "foreign";
+      if (change === "cancellation") f.fresh.deployment.cancelRequested = true;
+      if (change === "status") f.fresh.deployment.status = "failed";
+      return 0;
+    });
+    await expect(
+      acknowledgeReconciledRelease(f.expected, operationId, f.effects),
+    ).rejects.toThrow();
+    expect(f.effects.post).toHaveBeenCalledTimes(1);
+  });
+  it.each(["message", "evidence"])(
+    "never accepts changed completed %s",
+    async (change) => {
+      const f = acknowledgementFixture(),
+        commit = f.effects.post.getMockImplementation()!;
+      f.effects.post.mockImplementationOnce(async (body) => {
+        await commit(body);
+        if (change === "message") f.fresh.stages[0]!.message = "different";
+        else f.fresh.evidence[0]!.operationId = "different";
+        throw acknowledgementTimeout();
+      });
+      await expect(
+        acknowledgeReconciledRelease(f.expected, operationId, f.effects),
+      ).rejects.toThrow("evidence differs");
+      expect(f.effects.post).toHaveBeenCalledTimes(1);
+    },
+  );
+  it.each([
+    ApplicationFailure.nonRetryable("HTTP409", "DeliveryApi:CONFLICT"),
+    new Error("Native operation failed"),
+    new TypeError("Unknown transport failure"),
+  ])("does not retry non-timeout failures: %s", async (error) => {
+    const f = acknowledgementFixture();
+    f.effects.post.mockRejectedValue(error);
+    await expect(
+      acknowledgeReconciledRelease(f.expected, operationId, f.effects),
+    ).rejects.toBe(error);
+    expect(f.effects.post).toHaveBeenCalledTimes(1);
+    expect(f.effects.wait).not.toHaveBeenCalled();
+  });
+  it("bounds writes and keeps the original timeout when no acknowledgement committed", async () => {
+    const f = acknowledgementFixture(),
+      error = acknowledgementTimeout();
+    f.effects.post.mockRejectedValue(error);
+    await expect(
+      acknowledgeReconciledRelease(f.expected, operationId, f.effects),
+    ).rejects.toBe(error);
+    expect(f.effects.post).toHaveBeenCalledTimes(3);
+    expect(f.effects.read).toHaveBeenCalledTimes(4);
+  });
+  it("reads the final committed write after the last lost response", async () => {
+    const f = acknowledgementFixture(),
+      commit = f.effects.post.getMockImplementation()!;
+    f.effects.post
+      .mockRejectedValueOnce(acknowledgementTimeout())
+      .mockRejectedValueOnce(acknowledgementTimeout())
+      .mockImplementationOnce(async (body) => {
+        await commit(body);
+        throw acknowledgementTimeout();
+      });
+    await acknowledgeReconciledRelease(f.expected, operationId, f.effects);
+    expect(f.effects.post).toHaveBeenCalledTimes(3);
+    expect(f.effects.read).toHaveBeenCalledTimes(4);
+  });
+});
 function observation() {
   const source = {
     repoURL: selection.repository,

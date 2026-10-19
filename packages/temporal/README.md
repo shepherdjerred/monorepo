@@ -658,6 +658,12 @@ original source revision, with its frozen dependencies and build prerequisites.
 Upgrading the controller does not reinterpret a reused candidate image as a new
 build or replay the controller's Workflow code as the candidate.
 
+After a guarded native sync succeeds, transport timeouts recording its completion
+are handled by bounded, identical journal POSTs with fresh claim, operation and
+frozen-selection checks. A committed acknowledgement is read back rather than
+reposted. The native selection and sync are never repeated by this path; other
+failures still retain quarantine.
+
 The hourly `llm-billed-cost-hourly` schedule starts
 `runLlmBilledCostReconciliation` on `monorepo-workflows`. Pause it before
 repairing or replacing the Workflow bundle, then resume it only after a pinned
