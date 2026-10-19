@@ -260,6 +260,7 @@ export class MinecraftControllerProcess {
       HOME: home,
       TMPDIR: path.join(directory, "tmp"),
       KUBECONFIG: config,
+      ARGOCD_AUTH_TOKEN: Bun.env["ARGOCD_AUTH_TOKEN"],
     });
     const result: unknown = JSON.parse(output);
     if (command === "report" || command === "recover") {

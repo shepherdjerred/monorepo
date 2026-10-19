@@ -55,6 +55,7 @@ export function createDeliveryWorker(
     createDeliveryMinecraftController(chart, {
       executorItemId: activation.executorItemId,
       registryItemId: activation.minecraftRegistryItemId,
+      argocdItemId: activation.argocdItemId,
     });
   const item = new OnePasswordItem(chart, "delivery-executor", {
     spec: { itemPath: vaultItemPath(activation.executorItemId) },

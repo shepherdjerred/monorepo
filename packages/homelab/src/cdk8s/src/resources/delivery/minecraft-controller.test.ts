@@ -27,6 +27,7 @@ function fixture() {
   createDeliveryMinecraftController(chart, {
     executorItemId: "executor-item",
     registryItemId: "registry-item",
+    argocdItemId: "argo-item",
   });
   return Resources.parse(chart.toJson());
 }
@@ -81,6 +82,26 @@ test("only the durable controller receives maintenance identity; the restored sa
       value: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
     },
   ]);
+  expect(
+    spec.template.spec.containers[0]?.env.find(
+      (entry) => entry.name === "ARGOCD_AUTH_TOKEN",
+    ),
+  ).toEqual({
+    name: "ARGOCD_AUTH_TOKEN",
+    valueFrom: {
+      secretKeyRef: { name: "delivery-argocd", key: "ARGOCD_TOKEN" },
+    },
+  });
+  expect(
+    resources.find(
+      (item) =>
+        item.kind === "OnePasswordItem" &&
+        item.metadata.name === "delivery-argocd",
+    ),
+  ).toMatchObject({
+    metadata: { namespace: "delivery-tsmc-controller" },
+    spec: { itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/argo-item" },
+  });
   expect(
     spec.template.spec.volumes.find((volume) => volume.name === "journal"),
   ).toMatchObject({

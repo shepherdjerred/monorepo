@@ -438,6 +438,9 @@ reopen the untouched original and clean the exact validation copy. The API then
 independently reads the journal report and Argo source, checks native volume,
 Pod and route identities, and releases only the same quarantined generation.
 Missing original evidence or an admitted `reconcile` stage blocks this path.
+The dedicated controller receives the existing Argo credential solely for its
+original-abort managed-resource read. Its closed Python child environment passes
+that credential without inheriting executor or vault credentials.
 
 `scripts/rollout/minecraft-delivery-recovery.ts` invokes that same controller and
 independent API verification during a Workflow-worker outage. First inspect the
