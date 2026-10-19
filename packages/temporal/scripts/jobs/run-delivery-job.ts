@@ -13,6 +13,7 @@ import {
   WorkerImageProofInputSchema,
 } from "#lib/delivery/workers/worker-image-proof.ts";
 import { renderControlPlaneTemplates } from "#lib/delivery/workers/worker-control-plane.ts";
+import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 
 const ConnectionSchema = z.object({
   address: z.literal(
@@ -101,10 +102,15 @@ async function main() {
         })
         .strict()
         .parse(request.input);
-      result = await prepareDeliveryWorkerRollout(
-        input.detail,
-        input.connection,
-        command,
+      result = await withWorkerCandidateCheckout(
+        input.detail.deployment.workerSnapshot?.candidateBuildId,
+        (candidate) =>
+          prepareDeliveryWorkerRollout(
+            input.detail,
+            input.connection,
+            command,
+            candidate,
+          ),
       );
       break;
     }
@@ -120,7 +126,10 @@ async function main() {
         })
         .strict()
         .parse(request.input);
-      result = await stepDeliveryWorkerRollout(input, command);
+      result = await withWorkerCandidateCheckout(
+        input.detail.deployment.workerSnapshot?.candidateBuildId,
+        (candidate) => stepDeliveryWorkerRollout(input, command, candidate),
+      );
       break;
     }
     case "root-release": {

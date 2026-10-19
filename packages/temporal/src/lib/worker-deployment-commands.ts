@@ -1,4 +1,6 @@
-import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
+type RolloutCommandRunner = (
+  command: readonly string[],
+) => Promise<{ stdout: string; stderr: string }>;
 
 export function parseTemporalJson(raw: string, label: string): unknown {
   try {
@@ -12,18 +14,27 @@ export function temporalCommand(
   options: { address: string; namespace: string; tls?: boolean },
   args: readonly string[],
 ): string[] {
-  // Temporal CLI connection flags must follow the subcommand when invoked
-  // through toolkit's passthrough. Keep the operator-selected endpoint
-  // explicit instead of relying on a local profile or environment defaults.
+  const internal =
+    options.address ===
+    "temporal-temporal-server-service.temporal.svc.cluster.local:7233";
+  if (internal && options.tls === true)
+    throw new Error(
+      "The fixed in-cluster Temporal endpoint requires plaintext",
+    );
+  // Internal Jobs use the native CLI without external credential bootstrap.
+  // Explicit connection flags follow the subcommand for both native and toolkit.
   return [
-    "toolkit",
-    "temporal",
+    ...(internal ? ["temporal"] : ["toolkit", "temporal"]),
     ...args,
     "--address",
     options.address,
     "--namespace",
     options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
+    ...(internal
+      ? ["--disable-config-env", "--disable-config-file", "--tls=false"]
+      : options.tls === true
+        ? ["--tls"]
+        : []),
   ];
 }
 

@@ -63,7 +63,7 @@ export async function seedDelivery(
   if (selected === undefined)
     throw new Error("Seed version set was not created");
   await delivery.registerPipeline(
-    "arcade/1",
+    registration?.environment.pipelineRevisionId ?? "arcade/1",
     registration?.pipeline ?? {
       kind: "argocd",
       application: "arcade",

@@ -44,13 +44,12 @@ async function workerJob(
     stageKey: stage,
     recipe,
     runnerImage: pipeline.workerRollout.runnerImage,
-    sourceRevision:
-      recipe === "worker-images"
-        ? z
-            .string()
-            .regex(/^[a-f0-9]{40}$/u)
-            .parse(Bun.env["GIT_SHA"])
-        : image.sourceRevision,
+    // Controller implementation belongs to the running qualified executor;
+    // candidate replay/canaries use their own immutable source checkout.
+    sourceRevision: z
+      .string()
+      .regex(/^[a-f0-9]{40}$/u)
+      .parse(Bun.env["GIT_SHA"]),
     input,
   };
   const operationId = z

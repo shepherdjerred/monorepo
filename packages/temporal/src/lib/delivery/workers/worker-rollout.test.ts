@@ -239,6 +239,70 @@ function plan(): WorkerRolloutPlan {
   };
 }
 describe("PostgreSQL-owned worker rollout routing", () => {
+  test("new controller code keeps replay and canaries on the old immutable candidate", async () => {
+    const controller = fixture({ checkout: "c".repeat(40) });
+    const candidate = fixture();
+    const prepared = await prepareDeliveryWorkerRollout(
+      detail(),
+      connection,
+      controller.run,
+      candidate.run,
+    );
+    expect(prepared.candidateBuildId).toBe(CANDIDATE);
+    await stepDeliveryWorkerRollout(
+      { detail: detail(), plan: prepared, action: "promote", connection },
+      controller.run,
+      candidate.run,
+    );
+    expect(
+      controller.commands.some(
+        (argv) => argv[0] === "bun" || argv[0] === "git",
+      ),
+    ).toBe(false);
+    expect(
+      controller.commands.some((argv) => argv.includes("set-current-version")),
+    ).toBe(true);
+    expect(
+      candidate.commands.every(
+        (argv) => argv[0] === "bun" || argv[0] === "git",
+      ),
+    ).toBe(true);
+    expect(
+      candidate.commands.some((argv) =>
+        argv.includes("replay:candidate-histories"),
+      ),
+    ).toBe(true);
+    expect(
+      candidate.commands.some(
+        (argv) => argv.includes("--build-id") && argv.includes(CANDIDATE),
+      ),
+    ).toBe(true);
+  });
+  test("a controller checkout matching the candidate cannot hide a wrong candidate checkout", async () => {
+    const controller = fixture();
+    const candidate = fixture({ checkout: STABLE });
+    await expect(
+      prepareDeliveryWorkerRollout(
+        detail(),
+        connection,
+        controller.run,
+        candidate.run,
+      ),
+    ).rejects.toThrow("does not match candidate");
+    expect(candidate.commands.some((argv) => argv[0] === "bun")).toBe(false);
+    await expect(
+      stepDeliveryWorkerRollout(
+        { detail: detail(), plan: plan(), action: "promote", connection },
+        controller.run,
+        candidate.run,
+      ),
+    ).rejects.toThrow("does not match candidate");
+    expect(
+      controller.commands.some((argv) => argv.includes("set-current-version")),
+    ).toBe(false);
+  });
+});
+describe("PostgreSQL-owned routing effects", () => {
   test("central directly promotes both namespaces and safely inspects a lost response", async () => {
     const prod = fixture();
     const beta = fixture({ lostCurrentResponse: true });

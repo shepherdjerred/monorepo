@@ -141,6 +141,12 @@ fixed traffic bake periods; original hosts remain until independent drainage
 proof permits retirement. A partial routing response is inspected before
 repeating the same step.
 
+Worker Jobs invoke the native Temporal CLI only for the fixed in-cluster
+plaintext endpoint, with environment and file configuration disabled. This
+prevents ambient API-key or TLS settings from changing that connection and
+requires no vault access. External operator endpoints retain toolkit's
+credential broker and explicit namespace/transport selection.
+
 First ownership transfer uses a separate owned Argo bootstrap operation. It
 keeps every legacy replica while creating retained hosts, and refuses any
 legacy digest without qualified original-artifact coverage. Exact replacement
@@ -253,6 +259,16 @@ UID, renews admission, and excludes the API credential from the provider child.
 The final inspection requires a no-change plan at the frozen source and stable
 state. It alone releases quarantine. A missing/replaced apply Job is never
 recreated; inspect its exact receipt and use a new admin intent if needed.
+
+For an interrupted first root with no accepted prior,
+`--action inspect-stopped-root` runs the reviewed host source instead of the
+failed Job's frozen source. It verifies terminal original native executors, a
+closed Workflow, the owned frozen root operation and every rendered
+Application's stable UID/source/lifecycle. Typed stopped settlement records
+partial health and clears only stale ownership; it preserves the failed result
+and accepts no root. A corrected independently qualified API must support this
+outcome before using the host command; the next corrected root still follows
+normal exact-source `release-root`.
 
 ```bash
 toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Independent platform recovery verified and quarantine settled'
@@ -635,6 +651,12 @@ worker pin, rejected-candidate queue or routing lease. Independent worker
 recovery proves exact source, host, routing and execution state before releasing
 ownership; it never rewrites a failed release as accepted. The control-plane
 worker has its own frozen upgrade intent and original image provenance.
+
+Worker Jobs execute controller logic from the qualified executor's source.
+Replay and canaries run in a separate clean checkout at the candidate image's
+original source revision, with its frozen dependencies and build prerequisites.
+Upgrading the controller does not reinterpret a reused candidate image as a new
+build or replay the controller's Workflow code as the candidate.
 
 The hourly `llm-billed-cost-hourly` schedule starts
 `runLlmBilledCostReconciliation` on `monorepo-workflows`. Pause it before

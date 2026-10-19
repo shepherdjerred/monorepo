@@ -85,7 +85,7 @@ test("admin context binds actual API source, registered generation/pipeline and 
     expect.objectContaining({
       environmentId: context.fixture.environment.id,
       generation: context.fixture.environment.generation,
-      pipelineRevisionId: "arcade/1",
+      pipelineRevisionId: "arcade/2",
       acceptedVersionSetRevisionId: null,
       baseline: null,
     }),

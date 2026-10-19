@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import IO
+from urllib.request import Request, urlopen
 
 import restoration_activation
 import restoration_files
@@ -46,6 +47,16 @@ POLICIES = (
 RESTORED_NAMESPACE: str = "minecraft-tsmc-restore"
 DELIVERY_VALIDATION_NAMESPACE = "minecraft-tsmc-delivery-validation"
 DELIVERY_VALIDATION_LABEL = "delivery.shepherdjerred.com/validation-target"
+# The upstream artifact mirrored by Delivery retains its original version and bytes.
+MINECRAFT_CHART_VERSION = "5.2.0"
+MINECRAFT_CHART_SHA256 = "3233642dd69f0115dfbd4d5e5c4e251f8f80240b069da717d9cfd9cee6c336be"
+MINECRAFT_CHART_BYTES = 18451
+MINECRAFT_CHART_ARCHIVES = {
+    "https://itzg.github.io/minecraft-server-charts/": (
+        "https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-5.2.0/minecraft-5.2.0.tgz"
+    ),
+    "https://chartmuseum.sjer.red": "https://chartmuseum.sjer.red/charts/minecraft-5.2.0.tgz",
+}
 
 
 class MaintenanceBusy(ValueError):
@@ -2128,7 +2139,8 @@ def assert_gitops_image(journal: JsonObject, expected_image: str | None = None) 
         or set(helm) != {"parameters", "valuesObject"}
         or "sources" in spec
         or source.get("chart") != "minecraft"
-        or source.get("repoURL") != "https://itzg.github.io/minecraft-server-charts/"
+        or source.get("repoURL") not in MINECRAFT_CHART_ARCHIVES
+        or source.get("targetRevision") != MINECRAFT_CHART_VERSION
         or spec.object("destination").get("namespace") != NAMESPACE
         or sync.get("status") != "Synced"
         or sync.object("comparedTo").get("source") != source
@@ -2136,6 +2148,18 @@ def assert_gitops_image(journal: JsonObject, expected_image: str | None = None) 
         or "operation" in application
     ):
         raise ValueError("Release requires the reconciled GitOps Application to declare the accepted candidate image")
+    request = Request(
+        MINECRAFT_CHART_ARCHIVES[source.string("repoURL")],
+        headers={"User-Agent": "the-storm-restoration/1"},
+    )
+    with urlopen(request, timeout=30) as response:
+        archive = response.read(MINECRAFT_CHART_BYTES + 1)
+        if (
+            response.status != 200
+            or len(archive) != MINECRAFT_CHART_BYTES
+            or hashlib.sha256(archive).hexdigest() != MINECRAFT_CHART_SHA256
+        ):
+            raise ValueError("GitOps chart archive differs from the verified Minecraft chart")
 
 
 def release(path: Path, journal: JsonObject) -> None:

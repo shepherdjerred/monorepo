@@ -4,6 +4,7 @@ import path from "node:path";
 import type { ControlPlaneExecution } from "#lib/delivery/platform/control-plane-history.ts";
 import type { ControlPlaneUpgradeSnapshot } from "@shepherdjerred/delivery/contract";
 import { ControlPlaneReplayReceiptSchema } from "#lib/delivery/platform/control-plane-history.ts";
+import { candidateSourceCommand } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 
 /** Same frozen install/build path as the native replay tooling; no provider/vault credentials enter children. */
 export async function replayControlPlaneCandidate(
@@ -23,29 +24,8 @@ export async function replayControlPlaneCandidate(
     TEMPORAL_NAMESPACE: "prod",
   };
   const run = async (command: string[], cwd = directory) => {
-    const child = Bun.spawn(command, {
-      cwd,
-      env: environment,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "ignore",
-    });
-    const chunks: Uint8Array[] = [];
-    let bytes = 0;
-    for await (const chunk of child.stdout) {
-      bytes += chunk.byteLength;
-      if (bytes > 4 * 1024 * 1024) {
-        child.kill("SIGKILL");
-        await child.exited;
-        throw new Error("Candidate replay command exceeded bounded output");
-      }
-      chunks.push(chunk);
-    }
-    if ((await child.exited) !== 0)
-      throw new Error(
-        "Exact candidate source build/history replay failed; control-plane source remains unselected",
-      );
-    return Buffer.concat(chunks).toString("utf8").trim();
+    const result = await candidateSourceCommand(command, cwd, environment);
+    return result.stdout.trim();
   };
   try {
     const source = snapshot.nextArtifact.sourceRevision;

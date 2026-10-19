@@ -5,7 +5,11 @@ import type { Database } from "#infrastructure/database.ts";
 import { testExecutor, testOperator, testPublisher } from "./seed.ts";
 
 /** Real persisted CI qualification and registration, with a small explicit source catalog. */
-export async function platformFixture(database: Database, delegated = true) {
+export async function platformFixture(
+  database: Database,
+  delegated = true,
+  withRootChild = false,
+) {
   const catalog = new ServiceIndex({
     platformDeliveryDelegated: delegated,
     services: [
@@ -14,7 +18,7 @@ export async function platformFixture(database: Database, delegated = true) {
         title: "Disposable platform source catalog",
         kind: "platform",
         namespaces: ["argocd"],
-        argoApps: ["apps"],
+        argoApps: withRootChild ? ["apps", "argocd"] : ["apps"],
         charts: [],
         images: [],
         bootstrapImages: [],
@@ -27,7 +31,10 @@ export async function platformFixture(database: Database, delegated = true) {
     ],
   });
   const delivery = new Delivery(database, 1, catalog);
-  const rootArtifacts = { apps: "platform/chart/apps/1" };
+  const rootArtifacts = {
+    apps: "platform/chart/apps/1",
+    ...(withRootChild ? { argocd: "platform/chart/argocd/1" } : {}),
+  };
   const sourceRevision = "9".repeat(40);
   const published = await delivery.publish(
     {
@@ -53,16 +60,14 @@ export async function platformFixture(database: Database, delegated = true) {
         ],
         sites: [],
       },
-      artifacts: [
-        {
-          id: rootArtifacts.apps,
-          kind: "chart",
-          component: "chart:apps",
-          uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/apps-2.0.0-900.tgz",
-          version: "2.0.0-900",
-          digest: `sha256:${"a".repeat(64)}`,
-        },
-      ],
+      artifacts: Object.entries(rootArtifacts).map(([name, artifactId]) => ({
+        id: artifactId,
+        kind: "chart",
+        component: `chart:${name}`,
+        uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/${name}-2.0.0-900.tgz`,
+        version: "2.0.0-900",
+        digest: `sha256:${"a".repeat(64)}`,
+      })),
     },
     testPublisher,
     { repositoryId: 1, pipelineNumber: 900 },
