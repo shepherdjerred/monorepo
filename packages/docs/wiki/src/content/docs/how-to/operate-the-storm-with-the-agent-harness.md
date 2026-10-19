@@ -62,9 +62,8 @@ Before you start, you need:
    acceptance server is running. Public routes stay closed during that phase.
    The harness refuses ordinary live access throughout restoration.
 
-   It also refuses while tsmc is asleep (scaled to zero) or while the mining
-   reset holds its lock. For ordinary sleep, join `ts-mc.net` so mc-router wakes
-   the server. The harness never changes replicas or router annotations.
+   It also refuses while tsmc is asleep (scaled to zero). For ordinary sleep,
+   join `ts-mc.net` so mc-router wakes the server. The harness never changes replicas or router annotations.
 
 4. After the live guard accepts the target, run reads and writes with
    `--target live`. Writes need `--reason`:
@@ -102,7 +101,7 @@ The guard refuses outright:
 
 - console block commands such as `fill`, `setblock` and `clone` (use `we` or
   `paste` so the change can be undone);
-- the `mining` world and any world outside `mcLiveWorlds`;
+- any world outside `mcLiveWorlds`;
 - regions over the snapshot limit;
 - any write while a human player stands inside the box;
 - block writes intersecting a protected region (`mcLiveProtectedRegions`, by
@@ -129,9 +128,6 @@ write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveBackupMaxAgeHours`,
 - **412 with a start hint:** the daemon started without `MC_BRIDGE_TOKEN`.
   Restart it as in step 2.
 - **409 asleep:** ask the user to join so the router wakes the server.
-- **409 mining reset:** await the reset operator. See
-  [Recover The Storm mining reset](/how-to/recover-the-storm-mining-reset/) for
-  a held lock.
 - **409 world restoration:** await the restoration operator. A running private
   acceptance server does not permit ordinary harness access or public joins.
 - **502 bridge health check:** the running image predates MCBridge or the token

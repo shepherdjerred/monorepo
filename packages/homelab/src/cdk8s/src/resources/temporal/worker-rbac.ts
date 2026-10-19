@@ -46,15 +46,13 @@ export function createTemporalWorkerIngressReaderRbac(
   });
 }
 
-export function createTemporalMiningResetRbac(
+export function createTemporalStormRbac(
   chart: Chart,
   serviceAccount: ServiceAccount,
 ): void {
-  const subject = {
-    kind: "ServiceAccount",
-    name: serviceAccount.name,
-    namespace: serviceAccount.metadata.namespace ?? "temporal",
-  };
+  // The Storm plot reconciliation, companion and Red Warfare recording archive
+  // Activities read the server and exec RCON or file reads in its pod. The
+  // Role keeps its original name so a rename does not churn live RBAC.
   new KubeRole(chart, "temporal-mining-reset-minecraft", {
     metadata: { name: "temporal-mining-reset", namespace: "minecraft-tsmc" },
     rules: [
@@ -74,23 +72,7 @@ export function createTemporalMiningResetRbac(
         apiGroups: ["apps"],
         resources: ["statefulsets"],
         resourceNames: ["minecraft-tsmc"],
-        verbs: ["get", "patch"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["services"],
-        resourceNames: ["minecraft-tsmc"],
-        verbs: ["get", "patch"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["pods", "persistentvolumeclaims"],
-        verbs: ["list"],
-      },
-      {
-        apiGroups: ["batch"],
-        resources: ["jobs"],
-        verbs: ["create", "get", "delete"],
+        verbs: ["get"],
       },
     ],
   });
@@ -101,26 +83,13 @@ export function createTemporalMiningResetRbac(
       kind: "Role",
       name: "temporal-mining-reset",
     },
-    subjects: [subject],
-  });
-  new KubeRole(chart, "temporal-mining-reset-velero", {
-    metadata: { name: "temporal-mining-reset", namespace: "velero" },
-    rules: [
+    subjects: [
       {
-        apiGroups: ["velero.io"],
-        resources: ["backups"],
-        verbs: ["create", "get"],
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: serviceAccount.metadata.namespace ?? "temporal",
       },
     ],
-  });
-  new KubeRoleBinding(chart, "temporal-mining-reset-velero-binding", {
-    metadata: { name: "temporal-mining-reset", namespace: "velero" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-mining-reset",
-    },
-    subjects: [subject],
   });
 }
 

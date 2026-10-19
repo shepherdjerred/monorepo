@@ -1,9 +1,11 @@
 package com.shepherdjerred.thestorm.qol.domain;
 
+import com.shepherdjerred.thestorm.qol.domain.rtp.BorderSearch;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -18,12 +20,14 @@ public record QolConfig(
     int band,
     int borderMargin,
     int nearBestHundredths,
-    List<String> biomes) {
+    List<String> biomes,
+    List<BorderSearch> withinBorder) {
 
   private static final Pattern BIOME = Pattern.compile("[a-z0-9_]+");
 
   public QolConfig {
     biomes = List.copyOf(biomes);
+    withinBorder = List.copyOf(withinBorder);
     searchInterval = positive(searchInterval, "searchInterval");
     landingMemory = positive(landingMemory, "landingMemory");
     if (batchSize < 1 || batchSize > 64) {
@@ -44,6 +48,17 @@ public record QolConfig(
     if (biomes.isEmpty()) {
       throw new IllegalArgumentException("biomes must not be empty");
     }
+    var searched = new HashSet<String>();
+    for (var search : withinBorder) {
+      if (!searched.add(search.world())) {
+        throw new IllegalArgumentException("border search world listed twice: " + search.world());
+      }
+    }
+  }
+
+  /** How {@code world} is searched across its whole border, when it is. */
+  public Optional<BorderSearch> withinBorder(String world) {
+    return withinBorder.stream().filter(search -> search.world().equals(world)).findFirst();
   }
 
   public Duration searchIntervalDuration() {

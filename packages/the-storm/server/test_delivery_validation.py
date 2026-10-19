@@ -307,7 +307,7 @@ class OrchestrationTest(unittest.TestCase):
             patch.object(control, "run", side_effect=["", ready, "There are 0 of a max of 20 players online"]),
         ):
             self.assertEqual(delivery_validation.eligibility(control), {"status": "eligible", "players": 0})
-        server.object("metadata").strings("annotations")[control.MINING] = "existing-owner"
+        server.object("metadata").strings("annotations")[control.LEASE] = "existing-owner"
         with patch.object(control, "read", side_effect=read), patch.object(control, "run") as run:
             self.assertEqual(
                 delivery_validation.eligibility(control), {"status": "waiting", "reason": "maintenance-owner"}

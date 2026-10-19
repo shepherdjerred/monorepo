@@ -204,8 +204,8 @@ describe("assessLiveWrite", () => {
       assessLiveWrite(
         {
           kind: "paste",
-          world: "mining",
-          box: box([0, 0, 0], [1, 1, 1], "mining"),
+          world: "rwf",
+          box: box([0, 0, 0], [1, 1, 1], "rwf"),
         },
         config,
       ),
@@ -497,7 +497,6 @@ describe("live status", () => {
       readyReplicas: 1,
       podPhase: "Running",
       podReady: true,
-      miningResetLock: null,
       worldRestoreLease: null,
     });
     expect(status.image).toMatch(
@@ -506,7 +505,7 @@ describe("live status", () => {
     expect(liveRefusal(status)).toBeNull();
   });
 
-  it("refuses asleep, starting and locked servers", async () => {
+  it("refuses asleep and starting servers", async () => {
     const sts = StatefulSetSchema.parse(await fixture("statefulset.json"));
     const asleep = {
       ...sts,
@@ -515,19 +514,6 @@ describe("live status", () => {
     };
     expect(liveRefusal(parseLiveStatus(asleep, null))).toMatch(/asleep/u);
     expect(liveRefusal(parseLiveStatus(sts, null))).toMatch(/not ready/u);
-    const locked = {
-      ...sts,
-      metadata: {
-        ...sts.metadata,
-        annotations: {
-          ...sts.metadata.annotations,
-          "sjer.red/mining-reset-lock": "2026q4",
-        },
-      },
-    };
-    expect(
-      liveRefusal(parseLiveStatus(locked, await fixture("pod.json"))),
-    ).toMatch(/mining reset/u);
   });
 
   it("refuses restoration leases even when the private acceptance pod is ready", async () => {
@@ -550,7 +536,7 @@ describe("live status", () => {
 });
 
 describe("velero backups", () => {
-  it("names and scopes harness backups like the mining reset", () => {
+  it("names and scopes harness backups to the tsmc PVC", () => {
     expect(harnessBackupName(new Date("2026-10-04T18:15:30.123Z"))).toBe(
       "mc-harness-20261004t181530z",
     );
@@ -580,7 +566,7 @@ describe("velero backups", () => {
     });
   });
 
-  it("judges completion like the mining reset", () => {
+  it("judges completion strictly", () => {
     expect(backupState(backup({ phase: "InProgress" })).state).toBe("pending");
     expect(backupState(backup({ phase: "PartiallyFailed" })).state).toBe(
       "failed",

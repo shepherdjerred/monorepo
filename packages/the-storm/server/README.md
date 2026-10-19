@@ -21,7 +21,7 @@ and status checks that send a resolved IP. The pinned mc-router 1.47.2 ignores
 `defaultServer` when `externalServerName` is also present, so the Service must
 declare only the default annotation. Other servers retain their explicit
 hostname routes and take precedence. This keeps the default attached to the
-same Service and StatefulSet covered by the mining-reset admission guards.
+same Service and StatefulSet covered by the world-restoration admission guards.
 UDP Query remains private to the forum's status service.
 
 ## Delivery preservation interface
@@ -260,7 +260,7 @@ Historical restoration recreates the resource dimensions without retaining
 their old terrain. After `prepare-activation`, run `world-restore.py
 prepare-resources` with the same staging, pinned Paper/bootstrap, candidate,
 verified modern export and backup proof. This produces only native generator,
-identity and fresh level metadata for `wilds`, `peaks` and `mining`.
+identity and fresh level metadata for `wilds` and `peaks`.
 The preparation journal seals the receipt hash before installation; changing
 metadata and its receipt together invalidates the native preparation proof.
 
@@ -272,14 +272,16 @@ requires this proof. It can also complete after a failed private startup has
 been stopped; it does not reinstall the historical world or bypass the
 installation revision and rollback rules.
 
-Converted historical chunks have their old lighting invalidated. BlueMap's
-generated map configuration normally omits chunks without native light data.
-Under the private restoration lease, `repair-private-map` changes only the
-main map's `ignore-missing-light-data` and ambient lighting settings, journals its original bytes,
-reloads BlueMap and queues a forced full render. It loads no gameplay chunks
-and survives restarts because the generated map file is runtime state. BlueMap
-uses full ambient brightness so converted chunks with zeroed light arrays remain
-readable too. It cannot use missing lighting to hide caves or reproduce night mode. See the
+Converted historical chunks have their old lighting invalidated. BlueMap
+normally omits chunks without native light data, so the repository-owned maps
+for restored archive worlds (`plugins/BlueMap/maps/world.conf` and
+`map2.conf`) set `ignore-missing-light-data: true` and `ambient-light: 1`.
+Full ambient brightness keeps converted chunks with zeroed light arrays
+readable; missing lighting cannot hide caves or reproduce night mode. Under the
+private restoration lease, `repair-private-map` only verifies that the
+installed configurations carry these settings, then reloads BlueMap and queues
+a forced full render. It writes no configuration and loads no gameplay chunks.
+See the
 [BlueMap map configuration](https://bluemap.bluecolored.de/wiki/configs/Maps.html).
 
 Prevent admissions and mc-router wake-ups during the cutover. Preserve the old
@@ -289,9 +291,9 @@ image verification before activation.
 1. Check for players, active arena games, outstanding graves, pending inventory
    handoffs, and unfinished refunds or teleport charges. Recover player
    belongings before retiring their owning plugin.
-2. Provision `wilds` with `large_biomes`, `peaks` with `amplified`, and
-   `mining` with `normal` through Multiverse while the old image is running
-   with Storm gameplay disabled. Confirm their NORMAL environment, presets,
+2. Provision `wilds` with `large_biomes` and `peaks` with `amplified`
+   through Multiverse while the old image is running with Storm gameplay
+   disabled. Confirm their NORMAL environment, presets,
    saved registration, and automatic loading.
 3. Stop the server cleanly. For an archive-only cutover, run the reviewed
    repository script against the stopped data volume:
@@ -340,8 +342,9 @@ the economy's durable player-seen ledger.
 
 The Bukkit world spawn remains at `(0,65,0)`; seasonal door offsets use it.
 Storm's player spawn is the existing windmill entrance at `(68.5,69,66.5)`.
-Native border diameters preserve the old radii: 40000 in the main world,
-10000 in the nether, and 5000 in the end.
+Borders are declared in `owned/plugins/TheStorm/world.yml`. The restored
+main world and `map2` have circular borders (radius 7000 and 12000) inside the
+discs their archives were pregenerated as.
 
 ## Rollback
 
@@ -401,6 +404,12 @@ Original Towny claim files were not recovered; the displayed boundaries are
 reconstructed preservation footprints. Claim flags, unclaiming and town
 deletion cannot remove this protection.
 
+The catalog's `archives` list binds each restored world to the SHA-256 of its
+approved source archive and to that world's SERVER spawn site. Restoration
+tools select the sites of one archive's world. Sites in worlds without an
+archive, such as Settlement and Rustworks, preserve modern builds. Every
+catalog world must be loaded before TheStorm enables towns.
+
 Verified editors may intentionally edit only the catalog's proven construction
 chunks. Buffers remain in staff custody. Exact shop boundaries and their assigned
 owner UUIDs live in `parcels.yml`; provenance distinguishes direct evidence from
@@ -438,7 +447,7 @@ input checkpoints remain immutable.
 
 | Operation                   | Required checkpoint                                                   | Result                                                                                           |
 | --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `prepare`                   | Approved archive SHA-256                                              | Validated archive paths, complete chunk inventory, source file hashes                            |
+| `prepare`                   | Reviewed `--archive-id` and its approved SHA-256                      | Validated archive paths, complete chunk inventory, source file hashes                            |
 | `convert-legacy`            | Prepared private copy                                                 | Guarded Paper 1.21.7 conversion and clean shutdown                                               |
 | `convert-companions`        | Legacy terrain converted                                              | Individually converted vanilla players, statistics and maps                                      |
 | `convert-native-chunks`     | Legacy companion checkpoint                                           | Native 26.2 terrain, embedded entities and block entities                                        |
@@ -452,8 +461,13 @@ input checkpoints remain immutable.
 | `restart-arenas`            | Failed transplant whose output matches its historical input           | Reverified inputs and archived failed copy and log                                               |
 | `prepare-database`          | Verified separate arenas and the same modern backup and candidate jar | Fresh candidate Flyway histories, retained identity/moderation rows and proven historical owners |
 | `prepare-activation`        | Verified arena and identity checkpoints and the same modern backup    | Independent assembled world retaining native RWF, Settlement and Rustworks dimensions            |
+| `export-dimension`          | Heritage preservation of a terrain-only archive                       | One sealed native dimension directory for the archive's target world                             |
+| `prune-export`              | Sealed terrain-only export                                            | Export pruned to a circular border, with its new manifest; earlier lock rehearsals superseded    |
+| `prepare-dimension-locks`   | Exported dimension and a stopped copy of the live database            | Private database copy with that world's historical container locks appended                      |
 | `verify-copy`               | Two independent stopped data trees                                    | Complete file hash comparison; symlinks and shared hard links are rejected                       |
 | `database-inventory`        | Existing database                                                     | Integrity check, table schemas and row counts without private row contents                       |
+| `chunk-extent`              | A region directory, or an approved archive read in memory             | Saved chunk count, bounding radius and continuous origin-centred radius                          |
+| `prune-dimension`           | A stopped native dimension directory                                  | Dry-run safety report, or chunks entirely outside a circular border removed                      |
 
 Converters use the exact pinned Paper bootstrap and verify every library hash.
 The conversion guard freezes ticking before world initialization. Whole-world
@@ -659,8 +673,8 @@ request owner, and refuses replacement until the parent lease is released.
 Before that parent exists, normal Service creation is allowed for bootstrap;
 a leased parent cannot disappear because its deletion guard remains active.
 A failed or interrupted acquisition resumes from its private journal
-and retains closed admission. Ordinary live harness access refuses and the mining
-reset defers while the restoration lease is held.
+and retains closed admission. Ordinary live harness access refuses while the
+restoration lease is held.
 
 With the same journal and lease, `backup` creates or resumes an owned Velero
 backup of the exact recorded PVC and PV. It requires closed routes, stopped
@@ -819,6 +833,136 @@ separate from the production gameplay jar. Activation requires an independently
 verified whole-volume rollback copy, preservation of the other retained arena
 dimensions, a fresh CoreProtect epoch, and private acceptance of the matching
 published image before public routes reopen.
+
+## Additional archive worlds
+
+Every `world-restore.py` journal names a reviewed archive: `prepare --archive-id`
+selects its source SHA-256, ZIP root, chunk and player counts and target
+dimension from the registry in the script. `main-map1-2015-07-09` is the
+primary archive; it alone replaces the main overworld, player data, maps and
+identity database through the operations above. `main-map2-2016-01-10` (source
+ZIP `3fb8100f…`, 1,828,991 chunks) restores terrain only, as the `map2`
+dimension. Journals written before archive selection can only name Map 1.
+
+A terrain-only archive runs `prepare`, `convert-legacy`,
+`convert-native-chunks`, `convert-native-auxiliary`, `rehearse-native-layout`,
+`preserve-heritage`, `export-dimension` and `prepare-dimension-locks`. Player,
+statistics and map conversion, arena retention, identity preparation and
+activation refuse its journal. Its playerdata never replaces the live Map 1
+progression, and its `map_*.dat` files stay out because their ids collide with
+Map 1's restored maps. Converter deadlines grow with the reviewed chunk count.
+The rehearsal keeps the archive's own seed; Map 2's archived spawn `0,70,9`
+stands on a top slab, so its reviewed safe spawn is `0,70,8`. Preservation
+covers every saved chunk and every protected chunk of that archive's catalog
+world, with the same underground-upgrade and lighting metadata as Map 1.
+
+`export-dimension` copies the preserved dimension byte for byte to
+`dimension-export/world/dimensions/minecraft/<dimension>`: region, entity and
+POI stores plus `data/minecraft` and `data/paper` metadata. Paper's per-world
+`paper-world.yml` stays out. The receipt records the archive's world UUID,
+seed, spawn and chunk counts. `prepare-dimension-locks --database <copy>` runs
+`NativeHistoricalLocks.java` in additional mode against a copy of a stopped
+database. It refuses existing locks in that world or a reused request, appends
+the world's container locks and verifies every other row unchanged. Map 2 has
+no proven editors, so its holdings stay in staff custody except shop parcels
+whose sign names match archived Map 2 player names.
+
+`chunk-extent --shape square|circle` measures a world's saved chunks from a
+region directory, or from an approved archive's headers in memory. Chunk `x`
+covers blocks `16x..16x+15`, and every shape is centred on the block corner
+`0,0`. The square shape reports the bounding radius and the largest
+origin-centred square with no missing chunk; radius `R` covers blocks
+`-R..R-1`. The circle shape reports the largest whole-block radius whose disc
+meets only saved chunks, and the smallest whole-block radius whose disc wholly
+contains 100%, 99.99% and 99.9% of saved chunks.
+
+| World | Saved chunks | Square bounding | Square continuous | Circle continuous | Circle 100% | Circle 99.99% | Circle 99.9% |
+| ----- | ------------ | --------------- | ----------------- | ----------------- | ----------- | ------------- | ------------ |
+| Map 1 | 638,647      | 208,048         | 5,104             | 7,196             | 290,549     | 12,247        | 9,055        |
+| Map 2 | 1,828,991    | 12,208          | 8,640             | 12,196            | 12,235      | 12,218        | 12,213       |
+
+Both archives were pregenerated as discs, so their circular continuous radius
+exceeds the square one. Map 1's 100% radii come from a few isolated chunks,
+the farthest near block `-203000,-208000`; 63 chunks lie outside its 99.99% disc
+and 638 outside its 99.9% disc.
+
+### Pruning beyond a circular border
+
+The Storm's borders are circles centred on block corner `0,0`: radius 7000 in
+`world` and 12000 in `map2`. `prune-dimension` removes every saved chunk that
+lies entirely outside the disc from a stopped native dimension's `region`,
+`entities` and `poi` stores. Chunks that intersect the disc stay. Region files
+wholly outside are deleted; partial regions are atomically rewritten with the
+outside chunks' location and timestamp entries cleared, leaving every kept
+chunk's bytes unchanged. The receipt records the plan, per-store chunk counts
+before and after, deleted region files and the resulting header hashes.
+
+Without `--apply` it only writes a dry-run receipt and safety report:
+heritage and parcel chunks from the shipped catalogs that lie entirely outside,
+and, with `--data`, town claims from the stopped `plugins/TheStorm/the-storm.db`
+and player-placed CoreProtect blocks outside, grouped by player. `--apply`
+refuses while any claim, parcel or heritage chunk lies entirely outside unless
+`--allow-outside-claims` is passed. It refuses links and held save locks.
+`--no-server-data` states explicitly that a standalone export has no server
+state. `prune-export --staging <dir> --radius 12000` applies the same rule to a
+sealed terrain-only export through its journal; Map 2's installable export is
+pruned this way, removing 58,899 of 1,828,991 chunks and 40 region files.
+
+To prune Map 1 on the live volume:
+
+1. Close admission and stop Paper under the restoration lease
+   (`restoration-control.py preflight`, `acquire`), then take and verify a fresh
+   Velero backup (`backup`, `restore-backup`, `verify-backup`).
+2. From a writer that mounts the stopped data volume, run the dry run:
+
+   ```bash
+   python3 world-restore.py prune-dimension --data /data \
+     --dimension /data/world/dimensions/minecraft/overworld --world world \
+     --radius 7000 --receipt <new-private-receipt>
+   ```
+
+3. Review its town claims, parcels, heritage chunks and per-player placed
+   blocks outside the disc. Resolve or explicitly accept each one.
+4. Repeat with `--apply` and a new receipt, adding `--allow-outside-claims`
+   only for reviewed exceptions. Keep both receipts with the backup.
+5. Start privately and confirm the border, spawn and a sample of kept chunks
+   before releasing the lease.
+
+### Installing an exported dimension
+
+Paper 26.2 stores each Multiverse world at
+`/data/world/dimensions/minecraft/<name>`. Multiverse 5.8 imports a directory
+that already contains native `data` and `region` entries, keeping its stored
+UUID, seed and spawn.
+
+Precondition: `map2` must be installed and imported before any image whose
+`heritage.yml` lists it starts. TheStorm deliberately refuses to enable and
+stops the server while a heritage catalog world, or a town or parcel world, is
+not loaded; it never runs with that world unprotected.
+
+1. Close admission and stop Paper under a verified whole-volume backup
+   (`restoration-control.py preflight`, `acquire`, `backup`, `verify-backup`).
+2. Run `prepare-dimension-locks` against a copy of the stopped
+   `plugins/TheStorm/the-storm.db`.
+3. Copy the exported `map2` directory to
+   `/data/world/dimensions/minecraft/map2` with the volume's server owner and
+   modes. Verify every file against `dimension-pruned-files.json` (or
+   `dimension-export-files.json` for an unpruned export), and check
+   that no other dimension's `data/paper/metadata.dat` holds the export's UUID.
+   Replace the database with the lock-prepared copy only while the stopped
+   database still matches the receipt's `sourceDatabaseSha256`.
+4. Start the server with a catalog that does not list `map2`, run
+   `mv import map2 normal`, and check `mv info map2` for the receipt's UUID,
+   seed and spawn. Stop it cleanly.
+5. Start the image whose catalog lists Map 2. Accept protection at the Map 2
+   spawn, its town sites and its imported locks before reopening admission.
+
+The controller has no reviewed writer operation for steps 2 and 3 yet. Until
+one exists, perform them only under the stopped lease from step 1.
+
+Converted chunks carry no valid light data; the owned `map2.conf` renders
+them as described in [Preparing an existing volume](#preparing-an-existing-volume).
+Queue a forced full render of `map2` after the import.
 
 ## Local checks
 

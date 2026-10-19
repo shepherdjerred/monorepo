@@ -44,7 +44,6 @@ describe("live helpers", () => {
       podPhase: null,
       podReady: false,
       image: null,
-      miningResetLock: null,
       worldRestoreLease: null,
       tokenConfigured: true,
       bridge: { connected: false, localPort: null },

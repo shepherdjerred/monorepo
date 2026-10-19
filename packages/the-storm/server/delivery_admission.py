@@ -15,7 +15,7 @@ def reopen_unstopped(control: ModuleType, path: Path, journal: JsonObject, *, wa
     control.assert_owner(server, journal, allow_unheld=True)
     annotations = server.object("metadata").strings("annotations", {})
     if (
-        any(key in annotations for key in (control.LEASE, control.PHASE, control.IMAGE, control.MINING))
+        any(key in annotations for key in (control.LEASE, control.PHASE, control.IMAGE))
         or server.object("spec").integer("replicas") != 1
         or server.object("status").get("replicas") != 1
     ):

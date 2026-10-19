@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.towns.adapter.paper.TownsTestPlugin;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.InstantSource;
@@ -38,6 +39,9 @@ final class TownsModuleTest {
     server.addSimpleWorld("world");
     server.addSimpleWorld("settlement");
     server.addSimpleWorld("rustworks");
+    for (var claimable : TownsTestPlugin.SHIPPED_CLAIM_WORLDS) {
+      server.addSimpleWorld(claimable);
+    }
     plugin = MockBukkit.createMockPlugin();
     database = StormDatabase.open(directory.resolve("t.db"));
     Files.writeString(directory.resolve("parcels.yml"), "parcels: []\n");
@@ -86,7 +90,10 @@ final class TownsModuleTest {
 
   @Test
   void aWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
-    var config = Files.readString(SHIPPED).replace("worlds: [world]", "worlds: [atlantis]");
+    var config =
+        Files.readString(SHIPPED)
+            .replace(
+                "worlds: [world, frontier, map2, skylands, wilds, peaks]", "worlds: [atlantis]");
     Files.writeString(directory.resolve("towns.yml"), config);
 
     assertThatThrownBy(() -> new TownsModule().enable(context()))

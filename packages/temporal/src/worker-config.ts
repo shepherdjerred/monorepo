@@ -10,7 +10,7 @@ import {
   homeActivities,
   infraActivities,
   opsWorkerActivities,
-  miningResetWorkerActivities,
+  stormWorkerActivities,
   repoActivities,
   reportActivities,
   scoutActivities,
@@ -141,7 +141,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     kind: "activity",
     role: "infra",
     taskQueue: TASK_QUEUES.MINING_RESET,
-    activities: miningResetWorkerActivities,
+    activities: stormWorkerActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {

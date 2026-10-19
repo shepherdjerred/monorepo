@@ -103,7 +103,7 @@ def inspect_source(control: ModuleType, journal: JsonObject) -> tuple[JsonObject
     server = control.read("statefulset", control.SERVER)
     control.assert_owner(server, journal, allow_unheld=True)
     control.assert_rollback_template(server, journal)
-    if any(key in control.annotations(server) for key in (control.LEASE, control.PHASE, control.IMAGE, control.MINING)):
+    if any(key in control.annotations(server) for key in (control.LEASE, control.PHASE, control.IMAGE)):
         raise ValueError("Original server still has maintenance ownership")
     claim = control.read("pvc", control.CLAIM)
     volume = control.read("pv", journal.string("volumeName"), "")

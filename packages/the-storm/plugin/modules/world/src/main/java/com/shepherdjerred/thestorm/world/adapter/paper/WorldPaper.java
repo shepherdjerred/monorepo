@@ -10,11 +10,12 @@ import org.bukkit.GameRules;
 import org.bukkit.Server;
 import org.bukkit.World;
 
-/** Validates previously provisioned worlds and sets the sleep rule. */
+/** Validates previously provisioned worlds, installs borders and sets the sleep rule. */
 public final class WorldPaper {
 
   private WorldPaper() {}
 
+  /** Validates worlds and borders; {@link #circles} enforces circular borders afterwards. */
   public static WildWorlds install(Server server, WorldConfig config) {
     var loaded = new ArrayList<WildWorld>();
     for (var spec : config.worlds()) {
@@ -37,6 +38,15 @@ public final class WorldPaper {
       }
     }
     return new ListedWorlds(loaded);
+  }
+
+  /** The listener that keeps players inside circular borders, when the config has any. */
+  public static java.util.Optional<org.bukkit.event.Listener> circles(WorldConfig config) {
+    var edges = config.borders().stream().flatMap(spec -> spec.circle().stream()).toList();
+    if (edges.isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    return java.util.Optional.of(new CircleBorders(edges));
   }
 
   private static World requireLoaded(Server server, WorldSpec spec) {

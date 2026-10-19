@@ -51,7 +51,7 @@ def eligibility(control: ModuleType) -> JsonObject:
     if server.object("spec").integer("replicas") not in (0, 1):
         raise ValueError("TSMC eligibility requires its reviewed single-server replica policy")
     annotations = server.object("metadata").strings("annotations", {})
-    if any(key in annotations for key in (control.LEASE, control.MINING, control.PHASE, control.IMAGE)):
+    if any(key in annotations for key in (control.LEASE, control.PHASE, control.IMAGE)):
         return JsonObject({"status": "waiting", "reason": "maintenance-owner"})
     application = control.read("application", control.SERVER, "argocd")
     phase = application.object("status", {}).object("operationState", {}).get("phase")

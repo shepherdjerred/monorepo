@@ -48,7 +48,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.storage.RegionFileStorage;
 import net.minecraft.world.level.chunk.storage.RegionStorageInfo;
 
-/** Read-only native container survey and transactional locks in the fresh restoration database. */
+/**
+ * Read-only native container survey and transactional locks. The primary restoration imports into a
+ * fresh database; an additional archive world appends to a stopped database without locks in that world.
+ */
 public final class NativeHistoricalLocks {
   private static final Set<String> CONTAINERS = Set.of(
       "minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel", "minecraft:furnace",
@@ -62,14 +65,19 @@ public final class NativeHistoricalLocks {
 
   private record Container(BlockPos pos, String block, CompoundTag state, String nbtSha256) {}
 
-  private final Path world;
+  private final Path dimension;
+  private final Path players;
+  private final String worldName;
   private final TownsState state;
   private final RegionFileStorage storage;
   private final Map<ChunkPos, CompoundTag> chunks = new LinkedHashMap<>();
   private final Map<UUID, String> names = new HashMap<>();
 
-  private NativeHistoricalLocks(Path world, TownsState state, RegionFileStorage storage) {
-    this.world = world;
+  private NativeHistoricalLocks(
+      Path dimension, Path players, String worldName, TownsState state, RegionFileStorage storage) {
+    this.dimension = dimension;
+    this.players = players;
+    this.worldName = worldName;
     this.state = state;
     this.storage = storage;
   }
@@ -86,38 +94,49 @@ public final class NativeHistoricalLocks {
   }
 
   private static void run(String[] args) throws Exception {
-    if (args.length != 7) {
-      throw new IllegalArgumentException("Expected native world, fresh database, heritage, parcels, towns, request UUID, new receipt");
+    if (args.length != 10) {
+      throw new IllegalArgumentException("Expected native dimension, archived players, world name, fresh|additional, "
+          + "database, heritage, parcels, towns, request UUID, new receipt");
     }
     SharedConstants.tryDetectVersion();
     if (!SharedConstants.getCurrentVersion().name().equals("26.2")) {
       throw new IllegalStateException("Historical lock import requires Paper 26.2");
     }
     Bootstrap.bootStrap();
-    var world = regularDirectory(Path.of(args[0]));
-    var database = regularFile(Path.of(args[1]));
-    var heritagePath = regularFile(Path.of(args[2]));
-    var parcelsPath = regularFile(Path.of(args[3]));
-    var townsPath = regularFile(Path.of(args[4]));
-    var request = UUID.fromString(args[5]);
+    var dimension = regularDirectory(Path.of(args[0]));
+    var players = regularDirectory(Path.of(args[1]));
+    var worldName = args[2];
+    var additional = switch (args[3]) {
+      case "fresh" -> false;
+      case "additional" -> true;
+      default -> throw new IllegalArgumentException("Unsupported historical lock import mode");
+    };
+    var database = regularFile(Path.of(args[4]));
+    var heritagePath = regularFile(Path.of(args[5]));
+    var parcelsPath = regularFile(Path.of(args[6]));
+    var townsPath = regularFile(Path.of(args[7]));
+    var request = UUID.fromString(args[8]);
     if (request.equals(new UUID(0, 0))) throw new IllegalArgumentException("Historical import needs a restoration request");
-    var output = Path.of(args[6]).toAbsolutePath().normalize();
-    if (Files.exists(output) || output.startsWith(world) || database.startsWith(world)) {
+    var output = Path.of(args[9]).toAbsolutePath().normalize();
+    if (Files.exists(output) || output.startsWith(dimension) || database.startsWith(dimension)) {
       throw new IllegalArgumentException("Import requires independent database and new receipt");
     }
     var heritage = parse(heritagePath, HeritageConfig.class);
+    if (heritage.archiveForWorld(worldName).isEmpty()) {
+      throw new IllegalArgumentException("Historical locks require a reviewed archive world");
+    }
     var parcels = parse(parcelsPath, ParcelsConfig.class);
     var towns = parse(townsPath, TownsConfig.class);
     var state = new TownsState(new RegionIndex(towns.regions()));
     state.attachHeritage(new HeritageIndex(heritage.sites()));
     state.attachParcels(new ParcelBook(parcels, InstantSource.fixed(Instant.EPOCH)));
     var footprint = new HashSet<com.shepherdjerred.thestorm.towns.domain.land.ChunkPos>();
-    heritage.sites().stream().filter(site -> site.world().equals("world"))
+    heritage.sites().stream().filter(site -> site.world().equals(worldName))
         .forEach(site -> footprint.addAll(site.footprint()));
-    parcels.parcels().stream().filter(parcel -> parcel.area().world().equals("world"))
+    parcels.parcels().stream().filter(parcel -> parcel.area().world().equals(worldName))
         .forEach(parcel -> footprint.addAll(parcel.area().footprint()));
     towns.regions().forEach(region -> region.areas().all().stream()
-        .filter(area -> area.world().equals("world")).forEach(area -> footprint.addAll(area.footprint())));
+        .filter(area -> area.world().equals(worldName)).forEach(area -> footprint.addAll(area.footprint())));
     var positions = footprint.stream().sorted(Comparator.comparingInt(
         com.shepherdjerred.thestorm.towns.domain.land.ChunkPos::x)
         .thenComparingInt(com.shepherdjerred.thestorm.towns.domain.land.ChunkPos::z)).toList();
@@ -128,10 +147,10 @@ public final class NativeHistoricalLocks {
     var conflicts = new ArrayList<Map<String, Object>>();
     long ignoredArenaContainers = 0;
     long legacyDoubleChests = 0;
-    var regions = world.resolve("dimensions/minecraft/overworld/region");
+    var regions = dimension.resolve("region");
     var info = new RegionStorageInfo("storm-historical-locks", Level.OVERWORLD, "chunk");
     try (var storage = new RegionFileStorage(info, regularDirectory(regions), true)) {
-      var survey = new NativeHistoricalLocks(world, state, storage);
+      var survey = new NativeHistoricalLocks(dimension, players, worldName, state, storage);
       for (var position : positions) {
         var chunk = survey.chunk(position.x(), position.z());
         for (var pos : survey.containerPositions(chunk, position.x(), position.z())) {
@@ -189,9 +208,10 @@ public final class NativeHistoricalLocks {
     var book = new LockBook();
     book.reload(planned);
     if (book.all().size() != planned.size()) throw new IllegalStateException("Historical locks have duplicate identities");
-    importLocks(database, planned);
+    importLocks(database, planned, worldName, request, additional);
     try (var db = StormDatabase.open(database)) {
-      var actual = new JooqLocksStore(db).loadAll().get(60, TimeUnit.SECONDS);
+      var actual = new JooqLocksStore(db).loadAll().get(60, TimeUnit.SECONDS).stream()
+          .filter(lock -> lock.restoration().requestId().equals(request)).toList();
       if (!new HashSet<>(actual).equals(new HashSet<>(planned))) {
         throw new IllegalStateException("Persisted historical locks differ from their inventory");
       }
@@ -201,6 +221,8 @@ public final class NativeHistoricalLocks {
     var facts = new LinkedHashMap<String, Object>();
     facts.put("schemaVersion", 1);
     facts.put("requestId", request.toString());
+    facts.put("world", worldName);
+    facts.put("importMode", additional ? "ADDITIONAL" : "FRESH");
     facts.put("heritageSha256", hash(Files.readAllBytes(heritagePath)));
     facts.put("parcelsSha256", hash(Files.readAllBytes(parcelsPath)));
     facts.put("townsSha256", hash(Files.readAllBytes(townsPath)));
@@ -250,7 +272,7 @@ public final class NativeHistoricalLocks {
 
   private String name(UUID owner) throws Exception {
     if (!names.containsKey(owner)) {
-      var path = regularFile(world.resolve("players/data/" + owner + ".dat"));
+      var path = regularFile(players.resolve(owner + ".dat"));
       var player = NbtIo.readCompressed(path, NbtAccounter.create(64 * 1024 * 1024));
       var name = player.getCompound("bukkit").orElseThrow().getString("lastKnownName").orElseThrow();
       if (name.isBlank()) throw new IllegalStateException("Historical owner has no archived name");
@@ -262,7 +284,7 @@ public final class NativeHistoricalLocks {
   private CompoundTag chunk(int x, int z) throws Exception {
     var pos = new ChunkPos(x, z);
     if (!chunks.containsKey(pos)) {
-      regularFile(world.resolve("dimensions/minecraft/overworld/region/r." + (x >> 5) + "." + (z >> 5) + ".mca"));
+      regularFile(dimension.resolve("region/r." + (x >> 5) + "." + (z >> 5) + ".mca"));
       var chunk = storage.read(pos);
       if (chunk == null || NbtUtils.getDataVersion(chunk, -1) != 4903
           || chunk.getInt("xPos").orElseThrow() != x || chunk.getInt("zPos").orElseThrow() != z) {
@@ -299,7 +321,7 @@ public final class NativeHistoricalLocks {
     var tiles = new HashSet<BlockPos>();
     for (var tile : blockEntities(chunk)) {
       if (!CONTAINERS.contains(tile.getString("id").orElseThrow())) continue;
-      var pos = new BlockPos("world", tile.getInt("x").orElseThrow(), tile.getInt("y").orElseThrow(), tile.getInt("z").orElseThrow());
+      var pos = new BlockPos(worldName, tile.getInt("x").orElseThrow(), tile.getInt("y").orElseThrow(), tile.getInt("z").orElseThrow());
       if (!tiles.add(pos)) throw new IllegalStateException("Duplicate historical container block entity at " + pos);
     }
     for (var section : chunk.getList("sections").orElseThrow().compoundStream().toList()) {
@@ -310,7 +332,7 @@ public final class NativeHistoricalLocks {
       for (var index = 0; index < 4096; index++) {
         var name = NativeTerrain.paletteEntry(blocks, index).getString("Name").orElseThrow();
         if (!CONTAINERS.contains(name)) continue;
-        var pos = new BlockPos("world", chunkX * 16 + index % 16,
+        var pos = new BlockPos(worldName, chunkX * 16 + index % 16,
             section.getByte("Y").orElseThrow() * 16 + index / 256, chunkZ * 16 + index / 16 % 16);
         tiles.add(pos);
       }
@@ -374,12 +396,28 @@ public final class NativeHistoricalLocks {
     return UUID.nameUUIDFromBytes(("the-storm:historical-lock:v1:" + request + ":" + parts).getBytes(StandardCharsets.UTF_8));
   }
 
-  private static void importLocks(Path database, List<Lock> locks) throws Exception {
+  private static void importLocks(Path database, List<Lock> locks, String world, UUID request, boolean additional)
+      throws Exception {
     try (var connection = DriverManager.getConnection("jdbc:sqlite:" + database)) {
       connection.createStatement().execute("PRAGMA foreign_keys=ON");
-      for (var table : List.of("towns_lock", "towns_lock_block", "towns_lock_trust", "towns_lock_restoration", "towns_lock_historical_owner")) {
-        try (var rows = connection.createStatement().executeQuery("SELECT COUNT(*) FROM " + table)) {
-          if (!rows.next() || rows.getLong(1) != 0) throw new IllegalStateException("Historical import requires empty " + table);
+      if (additional) {
+        // An existing server keeps every lock elsewhere; the restored world and this request start empty.
+        for (var check : Map.of("SELECT COUNT(*) FROM towns_lock_block WHERE world=?", world,
+            "SELECT COUNT(*) FROM towns_lock_restoration WHERE request_id=?", request.toString()).entrySet()) {
+          try (var statement = connection.prepareStatement(check.getKey())) {
+            statement.setString(1, check.getValue());
+            try (var rows = statement.executeQuery()) {
+              if (!rows.next() || rows.getLong(1) != 0) {
+                throw new IllegalStateException("Additional historical import requires an unlocked world and new request");
+              }
+            }
+          }
+        }
+      } else {
+        for (var table : List.of("towns_lock", "towns_lock_block", "towns_lock_trust", "towns_lock_restoration", "towns_lock_historical_owner")) {
+          try (var rows = connection.createStatement().executeQuery("SELECT COUNT(*) FROM " + table)) {
+            if (!rows.next() || rows.getLong(1) != 0) throw new IllegalStateException("Historical import requires empty " + table);
+          }
         }
       }
       connection.setAutoCommit(false);

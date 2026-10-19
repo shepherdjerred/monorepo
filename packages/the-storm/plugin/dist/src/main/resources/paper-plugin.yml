@@ -19,7 +19,7 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
-    # The world module requires Multiverse to load wilds and mining before TheStorm starts.
+    # The world module requires Multiverse to load its worlds before TheStorm starts.
     Multiverse-Core:
       load: BEFORE
       required: true

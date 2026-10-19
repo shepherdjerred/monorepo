@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * An annulus of block distances from spawn: past the farthest claim, and short of the world border.
+ * An annulus of block distances from spawn, short of the world border.
  *
  * @param inner the nearest a landing may be
  * @param outer the farthest a landing may be
@@ -31,6 +31,20 @@ public record SearchRing(int inner, int outer) {
       return Optional.empty();
     }
     return Optional.of(new SearchRing(inner, outer));
+  }
+
+  /**
+   * The ring from {@code inner} out to {@code maxRadius}, for a world searched across its whole
+   * border. Empty when the border leaves no room.
+   */
+  public static Optional<SearchRing> within(int inner, int maxRadius) {
+    if (inner < 0 || maxRadius < 0) {
+      throw new IllegalArgumentException("negative search bound");
+    }
+    if (maxRadius <= inner) {
+      return Optional.empty();
+    }
+    return Optional.of(new SearchRing(inner, maxRadius));
   }
 
   /** Distance from spawn to the farthest of {@code points}, or 0 when there are none. */

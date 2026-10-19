@@ -40,10 +40,10 @@ class RestorationResourceTest(unittest.TestCase):
     def install(self):
         return resources.install(self.data, self.payload, self.prepared, self.jar)
 
-    def test_only_nine_metadata_files_added_and_exact_repetition_is_safe(self):
+    def test_only_six_metadata_files_added_and_exact_repetition_is_safe(self):
         result = self.install()
         self.assertEqual(result["phase"], "VERIFIED")
-        self.assertEqual(result["files"], 9)
+        self.assertEqual(result["files"], 6)
         for dimension in resources.DIMENSIONS:
             self.assertEqual(list((self.data / f"world/dimensions/minecraft/{dimension}/region").iterdir()), [])
         self.assertEqual(
@@ -92,7 +92,7 @@ class RestorationResourceTest(unittest.TestCase):
         with patch("pathlib.Path.replace", fail), self.assertRaisesRegex(OSError, "interrupted"):
             self.install()
         result = self.install()
-        self.assertEqual(result["files"], 9)
+        self.assertEqual(result["files"], 6)
         (self.data / "world/level.dat").write_bytes(b"foreign writer")
         with self.assertRaisesRegex(ValueError, "retained data changed"):
             self.install()
@@ -100,7 +100,7 @@ class RestorationResourceTest(unittest.TestCase):
     def test_manifest_cannot_target_any_other_world_or_container_database(self):
         manifest = copy.deepcopy(self.prepared.strings("installationFiles"))
         manifest[storage.DATABASE] = "d" * 64
-        with self.assertRaisesRegex(ValueError, "only nine"):
+        with self.assertRaisesRegex(ValueError, "only six"):
             resources.validate_files(manifest)
 
     def test_retry_normalizes_permissions_after_copy_completed_before_parent_normalization(self):

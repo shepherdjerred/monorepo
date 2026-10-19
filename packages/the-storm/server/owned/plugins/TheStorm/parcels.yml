@@ -263,3 +263,58 @@ parcels:
       Original y=65 stone slab border encloses 118..137,-48..-35.
       No proven owner UUID; held in staff custody.
     weeklyRent: 0
+  - id: map2-dockozel-shop
+    name: "Dockozel's Map 2 Shop"
+    kind: PERMANENT_SHOP
+    area:
+      world: map2
+      from: { x: -75, y: -64, z: -101 }
+      to: { x: -60, y: 319, z: -90 }
+    owners: [654daa41-f84b-49ae-b539-e99885eb8a5c]
+    provenance: >-
+      Dockozel's Shop signs at -74,67,-101 and -74,71,-95 front the wool-roofed
+      spawn market building at -74..-61,-99..-91; its [Buy] signs line -72..-64 at
+      z -97 and -93. The exact bukkit.lastKnownName dockozel in the January 2016
+      playerdata proves the UUID (sign/name match).
+    weeklyRent: 0
+  - id: map2-detern-shop
+    name: "Detern's Map 2 Shop"
+    kind: PERMANENT_SHOP
+    area:
+      world: map2
+      from: { x: -41, y: -64, z: -131 }
+      to: { x: -33, y: 319, z: -115 }
+    owners: [5b1571a8-1eec-412f-999e-86f8a25f41eb]
+    provenance: >-
+      The Detern's Shop sign at -37,66,-115 fronts the stone-brick floored
+      building whose slab border encloses -41..-33,-131..-116; [Buy] and storage
+      signs fill its interior. The exact bukkit.lastKnownName Detern in the
+      January 2016 playerdata proves the UUID (sign/name match).
+    weeklyRent: 0
+  - id: map2-bee-general-store
+    name: "Bee's General Store"
+    kind: PERMANENT_SHOP
+    area:
+      world: map2
+      from: { x: -28, y: -64, z: -126 }
+      to: { x: -18, y: 319, z: -116 }
+    owners: [17855012-d4f1-4681-b9cd-7f2c82e5a8ff]
+    provenance: >-
+      Bee's | General goods! signs at -23,69,-116 and -22,69,-116 identify the
+      cobblestone-walled store spanning -28..-18,-126..-116. Beesolee's own sign
+      at 7034,70,6945 calls it 'Our shop at spawn'; the exact bukkit.lastKnownName
+      beesolee in the January 2016 playerdata proves the UUID (sign/name match).
+    weeklyRent: 0
+  - id: map2-market-west-shop
+    name: "Map 2 Market West Shop"
+    kind: PERMANENT_SHOP
+    area:
+      world: map2
+      from: { x: -116, y: -64, z: -102 }
+      to: { x: -101, y: 319, z: -90 }
+    owners: []
+    provenance: >-
+      Original glass front and stair roof layers identify the western spawn market
+      building at -116..-101,-102..-90, with [Buy] signs at -110..-103 on z -100
+      and -92. No surviving sign names its owner; held in staff custody.
+    weeklyRent: 0

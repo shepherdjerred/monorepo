@@ -72,7 +72,7 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
         or receipt.get("candidateJarSha256") != candidate_sha
         or receipt.get("backupProofSha256") != export.string("proofSha256")
         or receipt.integer("historicalChunks") != 638_647
-        or receipt.get("freshDimensions") != ["wilds", "peaks", "mining"]
+        or receipt.get("freshDimensions") != ["wilds", "peaks"]
         or native.get("status") != "VERIFIED"
         or native.integer("dataVersion") != 4903
         or native.integer("worldTicks") != 0

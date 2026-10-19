@@ -28,29 +28,40 @@ public final class NativePreservationCheckpoint {
   private NativePreservationCheckpoint() {}
 
   public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
-    if (args.length != 4) throw new IllegalArgumentException("Expected source region, copied target region, heritage config, new receipt");
+    // Paper's bootstrap redirects System.err to its logger, which drops uncaught failure traces.
+    var diagnostics = System.err;
+    try {
+      run(args);
+    } catch (IOException | NoSuchAlgorithmException | RuntimeException failure) {
+      failure.printStackTrace(diagnostics);
+      diagnostics.flush();
+      throw failure;
+    }
+  }
+
+  private static void run(String[] args) throws IOException, NoSuchAlgorithmException {
+    if (args.length != 6) {
+      throw new IllegalArgumentException(
+          "Expected source region, copied target region, heritage config, archive id, chunk count, new receipt");
+    }
     SharedConstants.tryDetectVersion();
     if (!SharedConstants.getCurrentVersion().name().equals("26.2")) throw new IllegalStateException("Native preservation requires pinned Paper 26.2");
     Bootstrap.bootStrap();
     var source = Path.of(args[0]).toRealPath();
     var target = Path.of(args[1]).toRealPath();
-    var output = Path.of(args[3]).toAbsolutePath().normalize();
+    var output = Path.of(args[5]).toAbsolutePath().normalize();
+    var expectedChunks = Long.parseLong(args[4]);
     if (source.startsWith(target) || target.startsWith(source) || Files.exists(output)) {
       throw new IllegalArgumentException("Preservation requires independent copied roots and a new receipt");
     }
     var file = Path.of(args[2]).toRealPath();
     var catalog = StrictYaml.parse(file.toString(), Files.readString(file), HeritageConfig.class)
         .fold(value -> value, errors -> {throw new IllegalArgumentException("Invalid heritage catalog: " + errors);});
-    if (!catalog.archiveSha256().equals("89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa")) {
-      throw new IllegalArgumentException("Preservation catalog names another archive");
-    }
+    var archive = catalog.archive(args[3])
+        .orElseThrow(() -> new IllegalArgumentException("Preservation catalog does not review this archive"));
     var protectedChunks = new HashSet<ChunkPos>();
     catalog.sites().forEach(site -> site.footprint().forEach(chunk -> {
-      if (chunk.world().equals("world")) {
-        protectedChunks.add(new ChunkPos(chunk.x(), chunk.z()));
-      } else if (!java.util.Set.of("settlement", "rustworks", "rwf").contains(chunk.world())) {
-        throw new IllegalArgumentException("Unexpected protected dimension");
-      }
+      if (chunk.world().equals(archive.world())) protectedChunks.add(new ChunkPos(chunk.x(), chunk.z()));
     }));
     var seen = new HashSet<ChunkPos>();
     var statuses = new TreeMap<String, Long>();
@@ -110,11 +121,14 @@ public final class NativePreservationCheckpoint {
         copied.flush();
       }
     }
-    if (count != 638647 || !seen.equals(protectedChunks)) {
+    if (count != expectedChunks || !seen.equals(protectedChunks)) {
       throw new IllegalStateException("Preservation did not cover every original or protected chunk");
     }
     var facts = new LinkedHashMap<String, Object>();
     facts.put("schemaVersion", 1);
+    facts.put("archiveId", archive.id());
+    facts.put("archiveSha256", archive.sha256());
+    facts.put("world", archive.world());
     facts.put("dataVersion", 4903);
     facts.put("chunks", count);
     facts.put("protectedChunks", seen.size());

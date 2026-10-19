@@ -46,6 +46,7 @@ final class ModulesTest {
           "shards",
           "shops",
           "skills",
+          "skylands",
           "spells",
           "tickets",
           "towns",

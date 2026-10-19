@@ -1,5 +1,9 @@
-schemaVersion: 1
-archiveSha256: 89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa
+schemaVersion: 2
+archives:
+  - id: main-map1-2015-07-09
+    sha256: 89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa
+    world: world
+    spawnSite: spawn
 sites:
   - id: spawn
     name: Test Heritage Spawn

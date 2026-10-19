@@ -95,6 +95,7 @@ original ArtifactVersion instead. An absent accepted release is an error;
 the candidate never substitutes for production acceptance.
 The image bakes Paper, every plugin, and owned config; the harness stages
 a config overlay that enables the companion module and its local dependencies,
+plus `skylands` when the image's frozen config lists it (older images predate it),
 while disabling RWF, which requires the provisioned `rwf` world and production
 recording salt. Docker and Kubernetes mount the overlay at the config file path,
 leaving the image's baked plugins visible. The overlay uses a clearly fake RWF
@@ -127,7 +128,8 @@ and the inert local Flipt bootstrap required during plugin startup
 (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`). Rollout checks
 therefore fail closed without requiring credentials or a running Flipt service,
 the repository-owned TheStorm and Citizens config with
-only the economy, mail, chat, tracks, towns, tickets, and creative modules on (agent,
+only the economy, mail, chat, tracks, skylands, towns, tickets, and creative
+modules on (skylands generates the `skylands` claim world towns requires; agent,
 discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
 mechanics module and builds its bridge and super-push fixtures at x 400-415.
 
@@ -486,10 +488,9 @@ the sole owner of sandboxes and bridge tokens.
 `--target live` (never inferred) makes the daemon's `LiveService`
 (`src/live/`) the target. It reads cluster state as the
 `mc-sandbox:mc-harness` ServiceAccount (`kubectl --as`): the StatefulSet, pod
-`minecraft-tsmc-0`, the `sjer.red/mining-reset-lock` annotation, and the
-`sjer.red/world-restore-lease` annotation. An asleep or locked server is a 409
-refusal, including a ready restoration acceptance pod; the harness never scales, patches or
-annotates anything. When usable, it supervises a `kubectl port-forward` to the
+`minecraft-tsmc-0`, and the `sjer.red/world-restore-lease` annotation. An
+asleep or leased server is a 409 refusal, including a ready restoration
+acceptance pod; the harness never scales, patches or annotates anything. When usable, it supervises a `kubectl port-forward` to the
 pod's MCBridge port 25580. The bridge token comes only from the daemon's
 `MC_BRIDGE_TOKEN` environment (from the `storm-brain` 1Password item). Logs come
 from bridge `log` events, because the ServiceAccount has no `pods/log` there.
@@ -511,7 +512,7 @@ allow-players, allow-protected, confirm-dangerous, affects):
 The guard refuses outright:
 
 - console block commands, which could not be undone;
-- worlds outside `mcLiveWorlds` (`mining` is rejected at config load);
+- worlds outside `mcLiveWorlds`;
 - boxes over the snapshot limit, and selection-less WorldEdit shapes without
   `--affects`;
 - humans inside the box. Humans within `mcLiveNearPlayerRadius` need
@@ -523,7 +524,7 @@ Each attempt that passes the guard is appended to
 `~/.toolkit/mc/journal/live/<date>.jsonl` with its reason, tier, box, humans
 online, backup and snapshot id, whether or not it succeeds. `live undo` is
 last-in-first-out over overlapping boxes. `live backup` creates a Velero
-`Backup` shaped like the mining reset's.
+`Backup` that snapshots the `minecraft-tsmc` PVC.
 
 Operator steps: the wiki how-to "Operate The Storm with the agent harness".
 
@@ -544,8 +545,8 @@ with `--gunzip` to decompress while saving.
 - Only `test`, `realpath`, `find` and `cat` run in the server, through
   `docker exec` or `kubectl exec` as the scoped mc-harness ServiceAccount
   (`pods/exec` on the sandbox pod or `minecraft-tsmc-0`, container
-  `minecraft-tsmc`). Live reads need a running pod but no bridge token, and
-  the mining-reset lock does not block them.
+  `minecraft-tsmc`). Live reads need a running pod but no bridge token; a
+  world-restoration lease blocks them.
 - The daemon writes the file itself (absolute `--out`, never overwritten
   without `--force`) and returns its size and sha256.
 

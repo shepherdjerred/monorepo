@@ -503,7 +503,6 @@ const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "deliveryDispatchWorkflow",
   "maintainStormForumWorkflow",
-  "announceStormMiningResetCountdownWorkflow",
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",

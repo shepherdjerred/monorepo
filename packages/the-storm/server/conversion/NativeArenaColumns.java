@@ -1,5 +1,6 @@
 import com.google.gson.Gson;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageArchive;
 import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageConfig;
 import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
 import java.io.IOException;
@@ -63,7 +64,8 @@ public final class NativeArenaColumns {
     var file = Path.of(args[2]).toRealPath();
     var catalog = StrictYaml.parse(file.toString(), Files.readString(file), HeritageConfig.class)
         .fold(value -> value, errors -> {throw new IllegalArgumentException("Invalid heritage catalog: " + errors);});
-    if (!catalog.archiveSha256().equals("89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa")) {
+    if (!catalog.archive("main-map1-2015-07-09").map(HeritageArchive::sha256)
+        .equals(java.util.Optional.of("89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa"))) {
       throw new IllegalArgumentException("Arena catalog names another archive");
     }
     var columns = columns(catalog);

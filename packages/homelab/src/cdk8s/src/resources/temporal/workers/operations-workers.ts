@@ -80,7 +80,6 @@ export type TemporalOperationsWorkerProps = {
   backupSecret: ISecret;
   veleroR2AuditSecret: ISecret;
   billingSecret: ISecret;
-  stormDiscordSecret: ISecret;
 };
 
 export function createTemporalOperationsWorkers(
@@ -119,12 +118,6 @@ export function createTemporalOperationsWorkers(
       // Dedicated homelab-bucket Object Read identity. Never reuse Velero's
       // write credential or expose it to credentialless workflow workers.
       ...veleroR2AuditEnv(props.veleroR2AuditSecret),
-      // The Storm's #server channel; routing lives in Git, the token in 1Password.
-      STORM_DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
-        secret: props.stormDiscordSecret,
-        key: "DISCORD_BOT_TOKEN",
-      }),
-      STORM_DISCORD_CHANNEL_ID: EnvValue.fromValue("1558666120507162634"),
       // The mining-reset queue's Red Warfare recording archive.
       ...rwfArchiveEnv(props.secret),
     },

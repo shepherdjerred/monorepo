@@ -206,7 +206,7 @@ final class ClaimingTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"world_nether", "world_the_end", "wilds", "peaks", "mining"})
+  @ValueSource(strings = {"world_nether", "world_the_end", "wilds", "peaks", "settlement"})
   void onlyTheMainWorldCanBeClaimed(String world) {
     var result = claimAs(OWNER, Fixtures.townA(), new ChunkPos(world, 0, 0));
 

@@ -30,6 +30,7 @@ const modules = [
   "shards",
   "shops",
   "skills",
+  "skylands",
   "spells",
   "tickets",
   "towns",
@@ -73,6 +74,10 @@ describe("all modules together", () => {
       "Prepared synthetic fixtures for Storm modules [world, towns, essentials, npcs, arena, shards, seasonal, rwf, creative]",
     );
     expect(logs).not.toContain("The Storm failed to enable");
+    // Skylands creates its generated world itself, before world and qol enable.
+    expect(logs).toMatch(
+      /\[TheStorm\] skylands module loaded skylands \(seed 1731, /u,
+    );
     expect(logs).not.toContain("Could not validate shard altars");
     expect(logs).not.toContain("Could not prepare arenas");
     const roster = await rcon.command("stormnpc list");

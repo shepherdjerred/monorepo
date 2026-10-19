@@ -25,6 +25,8 @@ modules:
   qol: true
   skills: true
   seasonal: true
+  # Creates and loads the generated skylands world itself; never a Multiverse world.
+  skylands: true
   world: true
   tickets: true
   agent: true

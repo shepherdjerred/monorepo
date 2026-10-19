@@ -32,6 +32,12 @@ public interface TeleportTravel {
       String description,
       Supplier<CompletableFuture<Result<Landing, Component>>> preparation);
 
+  /** Travel to a server destination, such as another world's spawn, priced as a warp. */
+  void warp(
+      Player player,
+      String description,
+      Supplier<CompletableFuture<Result<Landing, Component>>> preparation);
+
   CompletableFuture<Status> status(Player player);
 
   record Policy(java.time.Duration rtpFreeFor, java.time.Duration window, double allowance) {}

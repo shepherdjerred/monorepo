@@ -38,6 +38,14 @@ public final class WorldModule implements StormModule {
   public void enable(ModuleContext context) {
     var config = context.loadConfig("world.yml", WorldConfig.class);
     var worlds = WorldPaper.install(context.plugin().getServer(), config);
+    WorldPaper.circles(config)
+        .ifPresent(
+            circles ->
+                context
+                    .plugin()
+                    .getServer()
+                    .getPluginManager()
+                    .registerEvents(circles, context.plugin()));
     context.services().provide(WildWorlds.class, worlds);
     var base = System.getenv("FLIPT_URL");
     var environment = System.getenv("FLIPT_ENVIRONMENT");

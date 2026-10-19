@@ -94,11 +94,20 @@ export const MC_DAEMON_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: true,
   },
-  /** Worlds live block writes may touch; never the quarterly-reset `mining`. */
+  /** Worlds live block writes may touch. */
   mcLiveWorlds: {
     schema: WorldListSchema,
     sources: ["env", "file", "default"],
-    default: ["world", "wilds", "peaks", "settlement", "rustworks"],
+    default: [
+      "world",
+      "frontier",
+      "map2",
+      "skylands",
+      "wilds",
+      "peaks",
+      "settlement",
+      "rustworks",
+    ],
   },
   /** Live block writes larger than this need a recent Velero backup. */
   mcLiveMaxRegionVolume: {
@@ -147,15 +156,9 @@ type McDaemonConfig = Awaited<ReturnType<typeof loadMcDaemonConfig>>;
 export async function liveGuardConfig(
   config: McDaemonConfig,
 ): Promise<LiveGuardConfig> {
-  const worlds = await config.value("mcLiveWorlds");
-  if (worlds.includes("mining")) {
-    throw new Error(
-      "mcLiveWorlds must not include mining (it is wiped every quarter)",
-    );
-  }
   return {
     writes: await config.value("mcLiveWrites"),
-    worlds,
+    worlds: await config.value("mcLiveWorlds"),
     maxRegionVolume: await config.value("mcLiveMaxRegionVolume"),
     backupMaxAgeHours: await config.value("mcLiveBackupMaxAgeHours"),
     nearPlayerRadius: await config.value("mcLiveNearPlayerRadius"),

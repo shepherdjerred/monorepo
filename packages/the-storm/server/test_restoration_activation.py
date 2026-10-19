@@ -113,7 +113,7 @@ class RestorationActivationTest(unittest.TestCase):
                 "backupProofSha256": restoration_files.digest(exported),
                 "databaseSha256": original["plugins/TheStorm/the-storm.db"],
                 "historicalChunks": 638647,
-                "freshDimensions": ["wilds", "peaks", "mining"],
+                "freshDimensions": ["wilds", "peaks"],
                 "retainedDimensions": retained,
                 "inputs": inputs,
                 "native": {

@@ -44,11 +44,9 @@ import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
 import type { MotionLightRoom } from "#shared/infra/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
-import { runMiningWorldResetWorkflow as resetMiningWorld } from "./homelab/mining-reset.ts";
 import { runStormPlotReconciliationWorkflow as _runStormPlotReconciliationWorkflow } from "./homelab/storm-plots.ts";
 import { runRwfRecordingArchiveWorkflow as archiveRwfRecordings } from "./homelab/rwf-recording-archive.ts";
 import { reconcileStormCompanionsWorkflow as reconcileCompanions } from "./homelab/storm-companions.ts";
-import { announceStormMiningResetCountdownWorkflow as announce } from "./homelab/storm-announcements.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
@@ -279,9 +277,7 @@ export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
 }
 
 export const runZfsMaintenanceWorkflow = () => _runZfsMaintenanceWorkflow();
-export const runMiningWorldResetWorkflow = () => resetMiningWorld();
 export const reconcileStormCompanionsWorkflow = () => reconcileCompanions();
-export const announceStormMiningResetCountdownWorkflow = () => announce();
 
 export const runStormPlotReconciliationWorkflow = () =>
   _runStormPlotReconciliationWorkflow();

@@ -58,7 +58,7 @@ Key rules from those references:
 - Take a snapshot before a large edit; `we-undo` only covers WorldEdit history.
 - Actors cannot see chat or drive client UI; assert effects, not `ok: true`.
 - On live, every write needs `--reason`; never scale the StatefulSet or touch
-  mc-router annotations or the mining-reset lock.
+  mc-router annotations or the world-restoration lease.
 
 ## Clean up
 

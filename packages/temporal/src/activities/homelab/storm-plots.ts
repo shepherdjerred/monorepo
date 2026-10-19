@@ -17,9 +17,6 @@ const Protocol = z
   .parse(protocol);
 const Operation = z.uuid();
 const Server = z.object({
-  metadata: z.object({
-    annotations: z.record(z.string(), z.string()).optional(),
-  }),
   spec: z.object({ replicas: z.number().int().nonnegative() }),
   status: z
     .object({ readyReplicas: z.number().int().nonnegative().optional() })
@@ -71,11 +68,6 @@ export async function reconcileStormPlotsWithDependencies(
   );
   if (server.spec.replicas === 0 || (server.status?.readyReplicas ?? 0) === 0) {
     return "sleeping";
-  }
-  if (
-    server.metadata.annotations?.["sjer.red/mining-reset-lock"] !== undefined
-  ) {
-    return "busy";
   }
   let command = `plot admin reconcile ${operation}`;
   for (let attempt = 0; attempt < 240; attempt += 1) {

@@ -53,10 +53,16 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     world = Objects.requireNonNull(getServer().getWorld("world"));
     var modules = section(yaml("config.yml"), "modules");
     var prepared = new ArrayList<String>();
-    if (enabled(modules, "world", prepared)) {
-      worldFixtures();
+    var worldOn = enabled(modules, "world", prepared);
+    var townsOn = enabled(modules, "towns", prepared);
+    if (worldOn || townsOn) {
+      // world.yml lists these worlds and towns.yml claims in them.
+      survivalWorlds();
     }
-    if (enabled(modules, "towns", prepared)) {
+    if (worldOn) {
+      merchantStands();
+    }
+    if (townsOn) {
       protectedWorlds();
       HistoricalLockFixtures.seed(world, content.toPath());
     }
@@ -152,11 +158,14 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     return false;
   }
 
-  private void worldFixtures() {
-    for (var name : List.of("wilds", "peaks", "mining")) {
+  private static void survivalWorlds() {
+    for (var name : List.of("frontier", "map2", "wilds", "peaks")) {
       Objects.requireNonNull(
           new WorldCreator(name).type(WorldType.FLAT).generateStructures(false).createWorld());
     }
+  }
+
+  private void merchantStands() {
     for (var anchor : yaml("world.yml").getMapList("merchant.anchors")) {
       stand(
           ((Number) anchor.get("x")).doubleValue(),

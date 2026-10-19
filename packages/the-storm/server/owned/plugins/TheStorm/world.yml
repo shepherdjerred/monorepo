@@ -1,15 +1,40 @@
-# Worlds the world module requires to be provisioned and loaded before enable.
-# Paper already owns world, world_nether and world_the_end. Owned by the
-# repository; the plugin never writes it.
+# Worlds the world module requires to be loaded before enable. Paper owns world,
+# world_nether and world_the_end; Multiverse loads the other provisioned worlds
+# and the skylands module generates skylands. Owned by the repository; the
+# plugin never writes it.
 # sleepPercentage is the share of awake players who must be in a bed to skip
 # the night, on every overworld. Entering a bed is the only vote.
 
 sleepPercentage: 50
-# Preserve the former ChunkyBorder radii using native border diameters.
+# Border diameters. The restored maps are circles inside the disc their
+# archives were pregenerated as, and their saved terrain past the circle is
+# pruned. A circle keeps the native square at the same diameter as the hard
+# limit. frontier is fully pregenerated inside its border.
 borders:
-  - { world: world, centerX: 0.0, centerZ: 0.0, size: 40000.0 }
-  - { world: world_nether, centerX: 0.0, centerZ: 0.0, size: 10000.0 }
-  - { world: world_the_end, centerX: 0.0, centerZ: 0.0, size: 5000.0 }
+  - { world: world, centerX: 0.0, centerZ: 0.0, size: 14000.0, shape: circle }
+  - { world: map2, centerX: 0.0, centerZ: 0.0, size: 24000.0, shape: circle }
+  - {
+      world: world_nether,
+      centerX: 0.0,
+      centerZ: 0.0,
+      size: 6000.0,
+      shape: square,
+    }
+  - {
+      world: world_the_end,
+      centerX: 0.0,
+      centerZ: 0.0,
+      size: 8000.0,
+      shape: square,
+    }
+  - { world: frontier, centerX: 0.0, centerZ: 0.0, size: 7000.0, shape: square }
+  - {
+      world: skylands,
+      centerX: 0.0,
+      centerZ: 0.0,
+      size: 10000.0,
+      shape: square,
+    }
 # The crier reads current main-world weather and time only when asked.
 crier:
   enabled: true
@@ -42,15 +67,25 @@ merchant:
   arrivalRadius: 12
   visitMinutes: 20
   timeZone: America/Los_Angeles
+# Every survival world allows random teleport. The first entry is the default
+# landing for /rtp, the arrival dialog and the starter compass: frontier is
+# where players spend most of their survival time.
 worlds:
+  - name: frontier
+    preset: normal
+    rtp: true
+  - name: world
+    preset: normal
+    rtp: true
+  - name: map2
+    preset: normal
+    rtp: true
+  - name: skylands
+    preset: skylands
+    rtp: true
   - name: wilds
     preset: large_biomes
     rtp: true
   - name: peaks
     preset: amplified
-    rtp: true
-  # This resource world is disposable; its quarterly reset is managed by
-  # Temporal only after a backup and while the server is stopped.
-  - name: mining
-    preset: normal
     rtp: true

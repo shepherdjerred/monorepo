@@ -54,7 +54,7 @@ final class HeritageProtectionTest {
   @Test
   void catalogContainsEveryReviewedSiteAndSevenProvenMayors() throws Exception {
     var catalog = catalog();
-    assertThat(catalog.sites()).hasSize(234);
+    assertThat(catalog.sites().stream().filter(site -> !site.world().equals("map2"))).hasSize(234);
     assertThat(catalog.sites().stream().filter(site -> site.id().startsWith("archive-")))
         .hasSize(166)
         .allSatisfy(
@@ -73,8 +73,37 @@ final class HeritageProtectionTest {
         .isEqualTo("rustworks");
     assertThat(catalog.sites().stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
         .hasSize(7);
-    assertThat(catalog.archiveSha256())
-        .isEqualTo("89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa");
+    assertThat(catalog.archive("main-map1-2015-07-09"))
+        .contains(
+            new HeritageArchive(
+                "main-map1-2015-07-09",
+                "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa",
+                "world",
+                "spawn"));
+    assertThat(catalog.archiveForWorld("world"))
+        .map(HeritageArchive::id)
+        .contains("main-map1-2015-07-09");
+    assertThat(catalog.archiveForWorld("map2"))
+        .contains(
+            new HeritageArchive(
+                "main-map2-2016-01-10",
+                "3fb8100fbf954ca8b033318957b8d87c8121c34479adc698d750e7687af1c14d",
+                "map2",
+                "map2-spawn"));
+    // Map 2 has no surviving Towny data: no site proves a mayor or grants editors.
+    assertThat(catalog.sites().stream().filter(site -> site.world().equals("map2")))
+        .hasSize(61)
+        .allSatisfy(
+            site -> {
+              assertThat(site.id()).startsWith("map2-");
+              assertThat(site.kind()).isNotEqualTo(HeritageSite.Kind.PLAYER);
+              assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
+              assertThat(site.editors()).isEmpty();
+              assertThat(site.editingChunks()).isEmpty();
+            })
+        .filteredOn(site -> site.kind() == HeritageSite.Kind.SERVER)
+        .extracting(HeritageSite::id)
+        .containsExactlyInAnyOrder("map2-spawn", "map2-mob-arena");
     assertThat(
             catalog.sites().stream()
                 .filter(site -> site.id().equals("heritage-003"))
@@ -105,6 +134,24 @@ final class HeritageProtectionTest {
     assertThat(state.landAt("world", 68, 319, 66).preventsPlayerDamage()).isTrue();
     assertThat(state.landAt("world", 200, 80, 0).preventsPlayerDamage()).isFalse();
     assertThat(state.landAt("other-world", 68, 69, 66)).isInstanceOf(Land.Wilderness.class);
+  }
+
+  @Test
+  void map2GhostSpawnAndTownsAreSafeStaffCustodyHeritage() throws Exception {
+    var state = state();
+    var engine = new ProtectionEngine(state, player -> false);
+    var stranger = new Actor(UUID.randomUUID(), false);
+    var build = new Act(Action.BUILD, Subject.BLOCK);
+    for (var point :
+        List.of(new int[] {0, 70, 8}, new int[] {0, -64, 8}, new int[] {-812, 90, -11218})) {
+      var land = state.landAt("map2", point[0], point[1], point[2]);
+      assertThat(land).isInstanceOf(Land.HeritageLand.class);
+      assertThat(land.preventsPlayerDamage()).isTrue();
+      assertThat(engine.decide(stranger, build, land).isAllowed()).isFalse();
+    }
+    assertThat(((Land.HeritageLand) state.landAt("map2", 0, 70, 8)).site().id())
+        .isEqualTo("map2-spawn");
+    assertThat(state.landAt("map2", 6000, 70, 6000)).isInstanceOf(Land.Wilderness.class);
   }
 
   @Test
@@ -220,11 +267,11 @@ final class HeritageProtectionTest {
   void directoryIncludesSpawnAndMultiwordNamesWithoutFakeMembers() throws Exception {
     var directory = new TownListings(state());
     assertThat(directory.page(1, 25).towns().getFirst().name()).isEqualTo("Spawn");
-    assertThat(directory.page(10, 25).towns()).hasSize(9);
-    var lastPageName = directory.page(10, 25).towns().getLast().name();
+    assertThat(directory.page(12, 25).towns()).hasSize(20);
+    var lastPageName = directory.page(12, 25).towns().getLast().name();
     assertThat(directory.matchingNames(lastPageName.toUpperCase(java.util.Locale.ROOT)))
         .containsExactly(lastPageName);
-    assertThat(directory.matchingNames("")).hasSize(234);
+    assertThat(directory.matchingNames("")).hasSize(295);
     var falls = directory.info("Frost_Falls").orElseThrow();
     assertThat(falls.name()).isEqualTo("Frost Falls");
     assertThat(falls.members()).isZero();
@@ -250,11 +297,11 @@ final class HeritageProtectionTest {
     state.addTown(town);
     var directory = new TownListings(state);
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
-    assertThat(directory.page(1, 25).total()).isEqualTo(234);
+    assertThat(directory.page(1, 25).total()).isEqualTo(295);
     state.replaceTown(town.renamed("NewIdentity"));
     assertThat(directory.info("NewIdentity").orElseThrow().name()).isEqualTo(site.name());
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
-    assertThat(directory.page(1, 25).total()).isEqualTo(234);
+    assertThat(directory.page(1, 25).total()).isEqualTo(295);
     state.removeTown(town.id());
     assertThat(directory.info(site.name()).orElseThrow().members()).isZero();
     assertThat(state.heritageNameReserved(site.activeTownName(), java.util.Optional.empty()))

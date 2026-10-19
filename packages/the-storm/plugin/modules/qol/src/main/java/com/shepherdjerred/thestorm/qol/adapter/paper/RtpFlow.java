@@ -179,7 +179,8 @@ final class RtpFlow {
             world,
             new BlockPoint(spawn.getBlockX(), spawn.getBlockZ()),
             new BlockPoint(center.getBlockX(), center.getBlockZ()),
-            (int) border.getSize()),
+            (int) border.getSize(),
+            config.withinBorder(world.getName())),
         new RtpSearch.Target(biome, claims, repel));
   }
 

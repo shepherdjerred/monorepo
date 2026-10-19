@@ -34,7 +34,7 @@ type Rule = {
  * - `minecraft-tsmc`: read the live server's state and port-forward or exec
  *   into its one pod. No patch, update, or delete on anything: the harness
  *   never changes replicas, annotations, or the StatefulSet (mc-router and
- *   the mining reset own those).
+ *   world restoration own those).
  * - `velero`: take and inspect Backups before risky live writes.
  */
 export const MC_HARNESS_RULES: Record<string, readonly Rule[]> = {
