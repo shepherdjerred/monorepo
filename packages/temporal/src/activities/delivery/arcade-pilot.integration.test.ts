@@ -142,7 +142,7 @@ beforeAll(async () => {
       const url = new URL(
         input instanceof Request ? input.url : input.toString(),
       );
-      if (url.href === "https://mariokart.sjer.red/health")
+      if (url.href === "https://arcade.sjer.red/health")
         return originalFetch(new URL("/runtime/health", boundary.url), init);
       if (url.origin !== api.url.origin && url.origin !== boundary.url.origin)
         throw new Error("Pilot integration cannot contact a live endpoint");
@@ -334,10 +334,10 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
     first.id,
   );
 
-  await client().registerPipeline("arcade/2", pipeline);
+  await client().registerPipeline("arcade/3", pipeline);
   await client().registerEnvironment({
     ...registration,
-    pipelineRevisionId: "arcade/2",
+    pipelineRevisionId: "arcade/3",
     configurationRevision: "arcade/2",
   });
   const second = await publish(2);
@@ -414,7 +414,7 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
   const retryDetail = await claim(retried.id);
   observe(retryDetail, "Succeeded", `sha256:${"f".repeat(64)}`);
   await expect(verifyDelivery(retried.id)).rejects.toThrow(
-    "does not prove the selected image digest",
+    "Runtime alias lacks its selected repository or running config identity",
   );
   const staleRuntime = await client().deployment(retried.id);
   expect(staleRuntime.environment.acceptedVersionSetRevisionId).toBe(first.id);

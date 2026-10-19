@@ -180,7 +180,7 @@ export const RegisterWorkerVersionSchema = z
   })
   .strict();
 export type RegisterWorkerVersion = z.infer<typeof RegisterWorkerVersionSchema>;
-const RouteProofSchema = z
+const RouteProofBaseSchema = z
   .object({
     namespace: z.enum(["prod", "beta"]),
     deploymentName: Key,
@@ -189,15 +189,30 @@ const RouteProofSchema = z
     currentBuildId: Source,
     rampingBuildId: Source.nullable(),
     openExecutions: z.literal(0),
-    drainageStatus: z.literal("DRAINED"),
-    deactivationObservedAt: z.iso.datetime(),
-    lastDeactivationTime: z.iso.datetime(),
-    lastCheckedTime: z.iso.datetime(),
     routingConflictToken: z.string().min(1).max(2048),
     candidateReferences: z.literal(0),
     canaryReferences: z.literal(0),
   })
   .strict();
+const RouteProofSchema = z.union([
+  RouteProofBaseSchema.extend({
+    drainageStatus: z.literal("DRAINED"),
+    deactivationObservedAt: z.iso.datetime(),
+    lastDeactivationTime: z.iso.datetime(),
+    lastCheckedTime: z.iso.datetime(),
+  }),
+  RouteProofBaseSchema.extend({
+    proofKind: z.literal("inactive-unreferenced"),
+    versionStatus: z.literal("INACTIVE"),
+    versionCreatedAt: z.iso.datetime(),
+    firstActivationTime: z.null(),
+    lastCurrentTime: z.null(),
+    lastDeactivationTime: z.null(),
+    currentSinceTime: z.null(),
+    rampingSinceTime: z.null(),
+    routingChangedTime: z.null(),
+  }),
+]);
 export const RetireWorkerVersionSchema = z
   .object({
     requestId: Key,

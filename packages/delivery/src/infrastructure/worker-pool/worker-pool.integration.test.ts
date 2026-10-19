@@ -7,6 +7,7 @@ import { freezeWorkerSnapshot } from "./pool.ts";
 import {
   WorkerPoolSnapshotSchema,
   WorkerHostSpecificationSchema,
+  WorkerRetirementClaimSchema,
 } from "#shared/contract.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
@@ -326,6 +327,91 @@ test("retirement rejects incomplete, stale, routed, sticky-drained and reference
   expect(
     await cluster.database.deployment.count({
       where: { kind: "retire-worker" },
+    }),
+  ).toBe(1);
+});
+
+test("inactive-unreferenced retirement preserves fresh accepted-pool ownership without inventing drainage", async () => {
+  const { workerA, workerB, env } = await baseline();
+  const selected = await delivery.retireWorker(
+    workerA.id,
+    {
+      requestId: "inactive/retire",
+      expectedEnvironmentGeneration: env.generation,
+      expectedWorkerGeneration: workerA.generation,
+    },
+    testOperator,
+  );
+  const proof = {
+    proofs: freshWorkerProof(workerA, workerB.buildId).proofs.map((row) => ({
+      namespace: row.namespace,
+      deploymentName: row.deploymentName,
+      taskQueue: row.taskQueue,
+      observedAt: row.observedAt,
+      currentBuildId: row.currentBuildId,
+      rampingBuildId: row.rampingBuildId,
+      openExecutions: 0 as const,
+      routingConflictToken: row.routingConflictToken,
+      candidateReferences: 0 as const,
+      canaryReferences: 0 as const,
+      proofKind: "inactive-unreferenced" as const,
+      versionStatus: "INACTIVE" as const,
+      versionCreatedAt: new Date(Date.now() - 3_600_000).toISOString(),
+      firstActivationTime: null,
+      lastCurrentTime: null,
+      lastDeactivationTime: null,
+      currentSinceTime: null,
+      rampingSinceTime: null,
+      routingChangedTime: null,
+    })),
+  };
+  for (const { change, error } of [
+    {
+      change: { observedAt: new Date(Date.now() - 120_000).toISOString() },
+      error: { code: "CONFLICT" },
+    },
+    {
+      change: { versionCreatedAt: new Date(Date.now() + 60_000).toISOString() },
+      error: { code: "CONFLICT" },
+    },
+    { change: { versionStatus: "CURRENT" }, error: { name: "ZodError" } },
+    {
+      change: { lastDeactivationTime: new Date().toISOString() },
+      error: { name: "ZodError" },
+    },
+    {
+      change: { currentBuildId: workerA.buildId },
+      error: { code: "CONFLICT" },
+    },
+    {
+      change: { rampingBuildId: workerA.buildId },
+      error: { code: "CONFLICT" },
+    },
+    { change: { openExecutions: 1 }, error: { name: "ZodError" } },
+    { change: { drainageStatus: "DRAINED" }, error: { name: "ZodError" } },
+  ]) {
+    const claim = async () =>
+      await delivery.claim(
+        selected.id,
+        testExecutor,
+        WorkerRetirementClaimSchema.parse({
+          proofs: proof.proofs.map((row) => ({ ...row, ...change })),
+        }),
+      );
+    await expect(claim()).rejects.toMatchObject(error);
+  }
+  await delivery.claim(selected.id, testExecutor, proof);
+  const worker = await cluster.database.workerVersion.findUniqueOrThrow({
+    where: { id: workerA.id },
+  });
+  expect(worker.replicas).toBe(1);
+  expect(worker.retirementProof).toMatchObject({
+    deploymentId: selected.id,
+    proofs: proof.proofs,
+  });
+  expect(
+    await cluster.database.applicationLock.count({
+      where: { deploymentId: selected.id },
     }),
   ).toBe(1);
 });

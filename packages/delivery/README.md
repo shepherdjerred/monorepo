@@ -159,6 +159,11 @@ declares automatic selection; the enabled-environment and write flags, reviewed
 Argo ownership transfer, and paused dispatch Schedule still gate activation.
 Neither file selects an artifact or records deployment state.
 
+Delivery API pipeline revision `delivery/2` verifies `/healthz` through its
+in-cluster Service, which is reachable by the owning activity role. Register the
+new immutable pipeline revision and its environment binding; preserve `delivery/1`
+and the existing configuration revision for historical requests.
+
 After reviewing the existing inventory, run these explicit registrations from
 the repository root with the brokered admin credential:
 
@@ -503,8 +508,14 @@ The intent changes no worker replica state and accepts no caller-supplied proof.
 
 The executor supplies fresh proof when claiming retirement and again immediately
 before effects. Every served namespace/queue must exclude the retired build from
-current and ramping routing, report zero exact open executions, and show drainage
-checked after its last deactivation. Fresh routing and deactivation observations,
+current and ramping routing and report zero exact open executions. The drainage
+proof requires a check after the version's last deactivation.
+An `inactive-unreferenced` proof covers an exact current `INACTIVE` incarnation
+with its server creation time, no returned activation history, and repeated unchanged version,
+routing, and zero-open observations. This proof invents no drainage timestamps;
+idle pollers may remain until the guarded scale-to-zero operation. It does not
+claim that an earlier deleted incarnation never ran.
+Fresh routing and deactivation observations where applicable,
 conflict tokens, and absence of candidate/canary/rollback references are required;
 `DRAINED` alone is insufficient. PostgreSQL rechecks references, generations, and
 the held environment/Application ownership on repeated claims. The same lock
