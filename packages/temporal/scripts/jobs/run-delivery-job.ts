@@ -14,6 +14,7 @@ import {
 } from "#lib/delivery/workers/worker-image-proof.ts";
 import { renderControlPlaneTemplates } from "#lib/delivery/workers/worker-control-plane.ts";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-target.ts";
 
 const ConnectionSchema = z.object({
   address: z.literal(
@@ -104,6 +105,9 @@ async function main() {
         .parse(request.input);
       result = await withWorkerCandidateCheckout(
         input.detail.deployment.workerSnapshot?.candidateBuildId,
+        WorkerDeploymentRolloutTargetSchema.parse(
+          input.detail.deployment.workerSnapshot?.target,
+        ),
         (candidate) =>
           prepareDeliveryWorkerRollout(
             input.detail,
@@ -128,6 +132,9 @@ async function main() {
         .parse(request.input);
       result = await withWorkerCandidateCheckout(
         input.detail.deployment.workerSnapshot?.candidateBuildId,
+        WorkerDeploymentRolloutTargetSchema.parse(
+          input.detail.deployment.workerSnapshot?.target,
+        ),
         (candidate) => stepDeliveryWorkerRollout(input, command, candidate),
       );
       break;

@@ -6,11 +6,24 @@ import {
   requireReplayCheckout,
   type RolloutCommandRunner,
 } from "#lib/worker-deployment-proofs.ts";
+import type { z } from "zod";
+import type { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-target.ts";
+import {
+  workerReplayRoute,
+  workerReplayArguments,
+} from "#lib/delivery/workers/worker-replay-targets.ts";
 
 type CandidateCommand = (
   argv: readonly string[],
   cwd: string,
 ) => ReturnType<RolloutCommandRunner>;
+
+function candidateCommandFamily(argv: readonly string[]) {
+  if (argv.includes("test:workflows")) return "workflow-unit-tests";
+  if (argv.includes("replay:candidate-histories")) return "history-replay";
+  if (argv.some((value) => value.includes("canary"))) return "canary";
+  return argv[0] === "git" ? "checkout" : "preparation";
+}
 
 /** Bounded, credential-scoped subprocess path shared with control-plane replay. */
 export async function candidateSourceCommand(
@@ -36,13 +49,22 @@ export async function candidateSourceCommand(
     }
     chunks.push(chunk);
   }
-  if ((await child.exited) !== 0)
-    throw new Error("Exact candidate source preparation/replay/canary failed");
+  const exitCode = await child.exited;
+  if (exitCode !== 0) {
+    const family = candidateCommandFamily(argv);
+    throw new Error(
+      `Exact candidate source preparation/replay/canary failed (${family}; exit ${String(exitCode)}; signal ${String(child.signalCode)})`,
+    );
+  }
   return { stdout: Buffer.concat(chunks).toString("utf8"), stderr: "" };
 }
 
 /** Candidate children receive only tool locations and the fixed internal connection. */
-async function candidateCommand(argv: readonly string[], cwd: string) {
+async function candidateCommand(
+  argv: readonly string[],
+  cwd: string,
+  namespace: string,
+) {
   return await candidateSourceCommand(argv, cwd, {
     PATH: Bun.env["PATH"],
     HOME: Bun.env["HOME"],
@@ -51,26 +73,44 @@ async function candidateCommand(argv: readonly string[], cwd: string) {
     MISE_LOCKED: "1",
     TEMPORAL_ADDRESS:
       "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-    TEMPORAL_NAMESPACE: "prod",
+    TEMPORAL_NAMESPACE: namespace,
     TEMPORAL_TLS: "false",
-    TEMPORAL_REPLAY_WORKFLOW_IDS: Bun.env["TEMPORAL_REPLAY_WORKFLOW_IDS"],
   });
 }
 
 /** Mirrors the isolated control-plane replay checkout, never moving controller HEAD. */
 export async function withWorkerCandidateCheckout<T>(
   sourceRevision: unknown,
+  target: z.infer<typeof WorkerDeploymentRolloutTargetSchema>,
   use: (candidate: RolloutCommandRunner) => Promise<T>,
-  execute: CandidateCommand = candidateCommand,
+  effects: {
+    execute?: CandidateCommand;
+    replayArguments?: typeof workerReplayArguments;
+  } = {},
 ): Promise<T> {
   const source = WorkerBuildIdSchema.parse(sourceRevision);
+  const execute =
+    effects.execute ??
+    ((argv, cwd) =>
+      candidateCommand(argv, cwd, workerReplayRoute(target).namespace));
+  const replayArguments = effects.replayArguments ?? workerReplayArguments;
   const directory = await mkdtemp(
     path.join(tmpdir(), "delivery-worker-candidate-"),
   );
   const run: RolloutCommandRunner = (argv) => execute(argv, directory);
-  const candidate: RolloutCommandRunner = (argv) =>
+  const candidate: RolloutCommandRunner = async (argv) =>
     execute(
-      argv[0] === "git" ? argv : ["mise", "exec", "--", ...argv],
+      argv[0] === "git"
+        ? argv
+        : [
+            "mise",
+            "exec",
+            "--",
+            ...argv,
+            ...(argv.includes("replay:candidate-histories")
+              ? await replayArguments(directory, target)
+              : []),
+          ],
       path.join(directory, "packages/temporal"),
     );
   try {

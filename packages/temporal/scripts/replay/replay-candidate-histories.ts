@@ -3,9 +3,11 @@ import { runTemporalNodeScript } from "@shepherdjerred/root-scripts/run-temporal
 
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const repositoryRoot = path.resolve(packageRoot, "../..");
-const workflowIds = (Bun.env["TEMPORAL_REPLAY_WORKFLOW_IDS"] ?? "")
+const configuredWorkflowIds = (Bun.env["TEMPORAL_REPLAY_WORKFLOW_IDS"] ?? "")
   .split(",")
   .map((value) => value.trim());
+const workflowIds =
+  Bun.argv.length > 2 ? Bun.argv.slice(2) : configuredWorkflowIds;
 await runTemporalNodeScript({
   packageRoot,
   repositoryRoot,
