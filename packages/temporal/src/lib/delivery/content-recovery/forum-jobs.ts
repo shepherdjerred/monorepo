@@ -297,6 +297,10 @@ export async function runForumRecoveryChild(input: {
   });
   assertNoOtherForumWriter(writers.items, receipt.uid);
   if (actual.spec?.suspend === true) {
+    const current = await jobs.readNamespacedJob({ namespace, name });
+    same(current);
+    if (current.metadata?.uid !== receipt.uid || current.spec?.suspend !== true)
+      throw new Error("Forum recovery child changed before its unsuspend CAS");
     await jobs.patchNamespacedJob(
       {
         namespace,
@@ -306,7 +310,7 @@ export async function runForumRecoveryChild(input: {
           {
             op: "test",
             path: "/metadata/resourceVersion",
-            value: actual.metadata?.resourceVersion,
+            value: current.metadata.resourceVersion,
           },
           { op: "test", path: "/spec/suspend", value: true },
           { op: "replace", path: "/spec/suspend", value: false },

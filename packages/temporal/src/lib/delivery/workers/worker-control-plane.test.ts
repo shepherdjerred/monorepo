@@ -92,6 +92,72 @@ test("ordinary worker releases reject historical unsplit charts and accept only 
   ).toThrow("Historical central chart");
 });
 
+test("Kubernetes quantity and hostNetwork defaults preserve the exact control-plane template fence", () => {
+  const selected = host();
+  Object.assign(selected.spec.template.spec, { hostNetwork: false });
+  const resources = {
+    requests: { cpu: "1000m", memory: "1024Mi" },
+    limits: { cpu: "1000m", memory: "1024Mi", "example.com/device": "1" },
+  };
+  Object.assign(selected.spec.template.spec.containers[0]!, { resources });
+  Object.assign(selected.spec.template.spec, {
+    initContainers: [{ name: "init", image: "exact", resources }],
+  });
+  const expected = controlPlaneTemplates([selected]);
+  const live = structuredClone(selected);
+  const pod = live.spec.template.spec;
+  Reflect.deleteProperty(pod, "hostNetwork");
+  const init = {
+    name: "init",
+    image: "exact",
+    resources: structuredClone(resources),
+  };
+  Object.assign(pod, { initContainers: [init] });
+  for (const container of [...pod.containers, init])
+    Object.assign(container.resources, {
+      requests: { cpu: "1", memory: "1Gi" },
+      limits: { cpu: "1", memory: "1Gi", "example.com/device": "1" },
+    });
+  expect(() => requireUnchangedControlPlane(expected, [live])).not.toThrow();
+  for (const mutate of [
+    (value: typeof live) => {
+      value.spec.template.spec.containers[0]!.resources.requests.cpu = "2";
+    },
+    (value: typeof live) => {
+      Object.assign(value.spec.template.spec.containers[0]!.resources, {
+        limits: { cpu: "1", memory: "2Gi", "example.com/device": "1" },
+      });
+    },
+    (value: typeof live) => {
+      Object.assign(value.spec.template.spec, { hostNetwork: true });
+    },
+    (value: typeof live) => {
+      Object.assign(value.spec.template.spec.containers[0]!.resources, {
+        limits: { cpu: "1", memory: "1Gi", "example.com/device": "1000m" },
+      });
+    },
+    (value: typeof live) => {
+      Object.assign(value.spec.template.spec, { unknownField: false });
+    },
+  ]) {
+    const changed = structuredClone(live);
+    mutate(changed);
+    expect(() => requireUnchangedControlPlane(expected, [changed])).toThrow(
+      "Pod template",
+    );
+  }
+});
+
+test.each(["", "not-a-quantity", "Infinity", "NaN", "9007199254740993", "-1"])(
+  "refuses corrupt or unsafe resource quantity %j",
+  (quantity) => {
+    const selected = host();
+    selected.spec.template.spec.containers[0]!.resources.requests.cpu =
+      quantity;
+    expect(() => controlPlaneTemplates([selected])).toThrow();
+  },
+);
+
 test("ordinary releases cannot change command, environment, annotations, resources, probes, account, mounts or security", () => {
   const expected = controlPlaneTemplates([host()]);
   const mutations = [
