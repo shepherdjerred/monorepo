@@ -14,6 +14,20 @@ from test_restoration_control import IMAGE, REQUEST, Cluster
 
 
 class RecoveryReportTest(unittest.TestCase):
+    def test_source_digest_matches_shared_cross_language_fixture(self) -> None:
+        fixture = JsonObject.parse(
+            Path(__file__)
+            .resolve()
+            .parents[2]
+            .joinpath("ops-model/src/fixtures/minecraft-recovery-source.json")
+            .read_bytes()
+        )
+        self.assertEqual(
+            json.dumps(fixture.object("source"), sort_keys=True, separators=(",", ":"), ensure_ascii=False),
+            fixture.string("canonicalJson"),
+        )
+        self.assertEqual(delivery_recovery.digest(fixture.object("source")), fixture.string("sha256"))
+
     def setUp(self) -> None:
         self.control = delivery_validation.load_control()
         self.control.__dict__["RESTORED_NAMESPACE"] = self.control.DELIVERY_VALIDATION_NAMESPACE
