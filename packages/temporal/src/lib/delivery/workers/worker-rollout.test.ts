@@ -302,6 +302,87 @@ describe("PostgreSQL-owned worker rollout routing", () => {
     ).toBe(false);
   });
 });
+describe("PostgreSQL-owned already-current continuation", () => {
+  test("an already-current exact candidate repeats preflight and final verification without routing writes", async () => {
+    const base = fixture({ current: CANDIDATE });
+    const prepared = await prepareDeliveryWorkerRollout(
+      detail(),
+      connection,
+      base.run,
+    );
+    expect(prepared.expectedCurrentBuildId).toBe(CANDIDATE);
+    expect(
+      prepared.routes.every(
+        (route) => route.expectedCurrentBuildId === CANDIDATE,
+      ),
+    ).toBe(true);
+    expect(base.commands.some((command) => command[0] === "docker")).toBe(true);
+    expect(
+      base.commands.some((command) =>
+        command.includes("replay:candidate-histories"),
+      ),
+    ).toBe(true);
+    expect(
+      base.commands.some(
+        (command) =>
+          command.includes("--build-id") && command.includes(CANDIDATE),
+      ),
+    ).toBe(true);
+    const input = { detail: detail(), plan: prepared, connection };
+    await stepDeliveryWorkerRollout({ ...input, action: "promote" }, base.run);
+    await stepDeliveryWorkerRollout({ ...input, action: "verify" }, base.run);
+    expect(
+      base.commands.some(
+        (command) =>
+          command.includes("--routing") && command.includes("normal"),
+      ),
+    ).toBe(true);
+    expect(
+      base.commands.some(
+        (command) =>
+          command.includes("set-current-version") ||
+          command.includes("set-ramping-version"),
+      ),
+    ).toBe(false);
+  });
+  test("already-current continuation still refuses absent routing, active ramps and a wrong replay checkout", async () => {
+    for (const overrides of [
+      { current: "" },
+      { current: CANDIDATE, ramping: CANDIDATE, percentage: 10 },
+      { current: CANDIDATE, checkout: STABLE },
+    ]) {
+      const base = fixture(overrides);
+      await expect(
+        prepareDeliveryWorkerRollout(detail(), connection, base.run),
+      ).rejects.toThrow();
+      expect(
+        base.commands.some(
+          (command) =>
+            command.includes("set-current-version") ||
+            command.includes("set-ramping-version"),
+        ),
+      ).toBe(false);
+    }
+  });
+  test("an already-current plan refuses subsequent current drift instead of promoting again", async () => {
+    const base = fixture({ current: CANDIDATE });
+    const prepared = await prepareDeliveryWorkerRollout(
+      detail(),
+      connection,
+      base.run,
+    );
+    base.state.current = STABLE;
+    await expect(
+      stepDeliveryWorkerRollout(
+        { detail: detail(), plan: prepared, action: "promote", connection },
+        base.run,
+      ),
+    ).rejects.toThrow("Current worker changed");
+    expect(
+      base.commands.some((command) => command.includes("set-current-version")),
+    ).toBe(false);
+  });
+});
 describe("PostgreSQL-owned routing effects", () => {
   test("central directly promotes both namespaces and safely inspects a lost response", async () => {
     const prod = fixture();
