@@ -112,8 +112,8 @@ export async function setupCharts(app: App): Promise<void> {
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
   createServiceProbesChart(app);
-  applyOrdinaryDeliveryImageBindings(app);
   prepareDockerHubPullSecrets(app);
+  applyOrdinaryDeliveryImageBindings(app);
   attachDockerHubPullSecrets(app);
   applyApplicationReleasePolicy(app);
 }
