@@ -13,7 +13,10 @@ import {
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import { verifyArgoRelease } from "#lib/delivery/argocd-proof.ts";
+import {
+  observeArgoRelease,
+  verifyArgoRelease,
+} from "#lib/delivery/argocd-proof.ts";
 import {
   controlPlaneTemplates,
   requireUnchangedControlPlane,
@@ -87,7 +90,57 @@ export type ControlPlaneEffects = {
   pods: () => Promise<unknown[]>;
   patch: (application: string, patch: unknown) => Promise<void>;
   sync: (selection: DeliverySelection, operationId: string) => Promise<void>;
+  wait?: (milliseconds: number) => Promise<void>;
 };
+
+const ApplicationIdentity = z.object({
+  metadata: z.object({ uid: z.string().min(1) }),
+});
+
+async function waitForControlPlaneHealth(
+  effects: ControlPlaneEffects,
+  expected: {
+    input: z.infer<typeof ControlPlaneJobInputSchema>;
+    selection: DeliverySelection;
+    requestId: string;
+    applicationUID: string;
+  },
+) {
+  let operationId: string | undefined;
+  for (let attempt = 0; attempt < 60; attempt++) {
+    await effects.fence(expected.input);
+    const application = await effects.read("delivery-control-plane");
+    if (
+      ApplicationIdentity.parse(application).metadata.uid !==
+      expected.applicationUID
+    )
+      throw new Error(
+        "Control-plane Application incarnation changed after synchronization",
+      );
+    requireExactControlPlaneSource(application, expected.selection);
+    deliverySelectionPatch(application, expected.selection);
+    const observed = observeArgoRelease(
+      application,
+      expected.selection,
+      expected.requestId,
+    );
+    if (operationId !== undefined && operationId !== observed.operationId)
+      throw new Error(
+        "Control-plane owned operation changed while waiting for health",
+      );
+    operationId = observed.operationId;
+    if (observed.health === "Healthy")
+      return verifyArgoRelease(
+        application,
+        expected.selection,
+        expected.requestId,
+      );
+    if (attempt < 59) await (effects.wait ?? Bun.sleep)(5000);
+  }
+  throw new Error(
+    "Timed out waiting for genuine Healthy control-plane observation",
+  );
+}
 
 export function requireExactControlPlaneSource(
   input: unknown,
@@ -175,10 +228,10 @@ export async function runControlPlaneUpgrade(
   isolatedChart(afterManifests);
   await effects.fence(input);
   assertDeliveryRootPreservesSelection(await effects.read("apps"));
-  requireExactControlPlaneSource(
-    await effects.read("delivery-control-plane"),
-    prior.selection,
-  );
+  const beforeApplication = await effects.read("delivery-control-plane");
+  const applicationUID =
+    ApplicationIdentity.parse(beforeApplication).metadata.uid;
+  requireExactControlPlaneSource(beforeApplication, prior.selection);
   const beforeWorkloads = await effects.workloads();
   requireUnchangedControlPlane(
     controlPlaneTemplates(beforeManifests),
@@ -198,6 +251,10 @@ export async function runControlPlaneUpgrade(
   );
   requireControlPlaneReplicas(beforeManifests, pausedWorkloads, true);
   const current = await effects.read("delivery-control-plane");
+  if (ApplicationIdentity.parse(current).metadata.uid !== applicationUID)
+    throw new Error(
+      "Control-plane Application incarnation changed before selection",
+    );
   requireExactControlPlaneSource(current, prior.selection);
   await effects.assertQuiescent();
   const operationId = deliveryOperationId(
@@ -208,11 +265,12 @@ export async function runControlPlaneUpgrade(
     deliverySelectionPatch(current, next.selection),
   );
   await effects.sync(next.selection, operationId);
-  const owned = verifyArgoRelease(
-    await effects.read("delivery-control-plane"),
-    next.selection,
-    operationId,
-  );
+  const owned = await waitForControlPlaneHealth(effects, {
+    input,
+    selection: next.selection,
+    requestId: operationId,
+    applicationUID,
+  });
   const afterWorkloads = await effects.workloads();
   requireUnchangedControlPlane(
     controlPlaneTemplates(afterManifests),
