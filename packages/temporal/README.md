@@ -679,6 +679,10 @@ worker pin, rejected-candidate queue or routing lease. Independent worker
 recovery proves exact source, host, routing and execution state before releasing
 ownership; it never rewrites a failed release as accepted. The control-plane
 worker has its own frozen upgrade intent and original image provenance.
+If an earlier attempt already made the exact candidate current, a normal retry
+repeats the full preflight and final normally routed canary. Promotion reads back
+that unchanged current route without repeating the routing write; active ramps
+and missing or changed current routes still block continuation.
 
 Retirement excludes known `AutoUpgrade` executions from historical host
 references; their next Workflow Task follows normal deployment routing. Pinned

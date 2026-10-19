@@ -169,12 +169,11 @@ async function prepareRoute(
   await runWorkerDeploymentPreflight(options, candidate);
   await requireAcceptancePrerequisite(options, run);
   const state = await routing(options, run);
-  if (
-    state.currentVersionBuildID === "" ||
-    state.currentVersionBuildID === options.buildId
-  )
+  // A previous attempt may have promoted this exact candidate before final verification failed.
+  // It must still pass the full preflight above and the exclusive-current verification below.
+  if (state.currentVersionBuildID === "")
     throw new Error(
-      "A rollout requires a distinct, explicitly established stable current worker",
+      "A rollout requires an explicitly established stable current worker",
     );
   if (
     state.rampingVersionBuildID !== "" ||
