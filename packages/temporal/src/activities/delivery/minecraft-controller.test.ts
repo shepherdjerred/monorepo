@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { mkdtemp, rm, chmod, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -22,6 +22,7 @@ import { minecraftRecoveryControllerOrigin } from "#lib/delivery/minecraft-contr
 
 const temporary: string[] = [];
 afterEach(async () => {
+  vi.unstubAllEnvs();
   for (const directory of temporary.splice(0))
     await rm(directory, { recursive: true, force: true });
 });
@@ -137,7 +138,10 @@ test("HTTP requires native receipt persistence and fresh PG cancellation fence b
   ).toBe(500);
 });
 
-test("durable controller identity survives restart, rejects changed candidate/tooling, and passes no service credentials to Python", async () => {
+test("durable controller identity survives restart, rejects changed candidate/tooling, and passes only its Argo reader credential to Python", async () => {
+  vi.stubEnv("ARGOCD_AUTH_TOKEN", "test-only-argo-reader");
+  vi.stubEnv("DELIVERY_EXECUTOR_TOKEN", "test-only-executor");
+  vi.stubEnv("OP_SERVICE_ACCOUNT_TOKEN", "test-only-vault");
   const journalRoot = await workspace();
   const detail = await minecraftDetailFixture();
   const input: MinecraftControllerInput = {
@@ -159,11 +163,13 @@ test("durable controller identity survives restart, rejects changed candidate/to
       environment: Record<string, string | undefined>,
     ) => {
       expect(Object.keys(environment).sort()).toEqual([
+        "ARGOCD_AUTH_TOKEN",
         "HOME",
         "KUBECONFIG",
         "PATH",
         "TMPDIR",
       ]);
+      expect(environment["ARGOCD_AUTH_TOKEN"]).toBe("test-only-argo-reader");
       expect(command.slice(0, 2)).toEqual([
         "python3",
         "/reviewed/source/server/delivery_validation.py",

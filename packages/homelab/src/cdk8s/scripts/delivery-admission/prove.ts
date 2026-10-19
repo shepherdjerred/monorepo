@@ -113,6 +113,7 @@ const chart = new Chart(new App(), "admission-proof");
 createDeliveryMinecraftController(chart, {
   executorItemId: "test-executor",
   registryItemId: "test-registry",
+  argocdItemId: "test-argocd",
 });
 const rendered = z.array(Manifest).parse(chart.toJson());
 const baseKinds = new Set([

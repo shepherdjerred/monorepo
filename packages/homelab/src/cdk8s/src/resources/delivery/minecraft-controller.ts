@@ -23,7 +23,11 @@ export const MINECRAFT_CONTROLLER_NAME = "delivery-tsmc-controller";
 /** A durable, closed maintenance capability; its sandbox never receives the controller identity. */
 export function createDeliveryMinecraftController(
   chart: Chart,
-  items: { executorItemId: string; registryItemId: string },
+  items: {
+    executorItemId: string;
+    registryItemId: string;
+    argocdItemId: string;
+  },
 ): void {
   const namespace = MINECRAFT_CONTROLLER_NAMESPACE;
   const name = MINECRAFT_CONTROLLER_NAME;
@@ -66,6 +70,10 @@ export function createDeliveryMinecraftController(
   new OnePasswordItem(chart, `${name}-executor`, {
     metadata: { name: "delivery-executor", namespace },
     spec: { itemPath: vaultItemPath(items.executorItemId) },
+  });
+  new OnePasswordItem(chart, `${name}-argocd`, {
+    metadata: { name: "delivery-argocd", namespace },
+    spec: { itemPath: vaultItemPath(items.argocdItemId) },
   });
   const claim = "delivery-tsmc-journal";
   new ApiObject(chart, `${name}-journal`, {
@@ -134,6 +142,15 @@ export function createDeliveryMinecraftController(
                     secretKeyRef: {
                       name: "delivery-executor",
                       key: "DELIVERY_EXECUTOR_TOKEN",
+                    },
+                  },
+                },
+                {
+                  name: "ARGOCD_AUTH_TOKEN",
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: "delivery-argocd",
+                      key: "ARGOCD_TOKEN",
                     },
                   },
                 },
