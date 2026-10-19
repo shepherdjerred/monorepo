@@ -292,17 +292,22 @@ public final class BodyDriver {
               bot.motion(step.state());
               var recovering = step.state().escapingUntil() > frame.tick();
               var hop = recovering ? Hop.WALK : movement.hop();
+              var at = new Vec3(position.getX(), position.getY(), position.getZ());
               var checked =
-                  bodies.moveSafely(
-                      bot.uuid(),
-                      new Bodies.MotionTarget(
-                          location(step.destination()),
+                  recovering
+                      ? escape(
+                          bot,
+                          MotionRecovery.escapes(step.state(), at, movement.waypoint()),
                           movement.sprint(),
-                          hop,
-                          frame.bounds(),
-                          recovering
-                              ? Optional.empty()
-                              : bot.reflex()
+                          frame)
+                      : bodies.moveSafely(
+                          bot.uuid(),
+                          new Bodies.MotionTarget(
+                              location(step.destination()),
+                              movement.sprint(),
+                              hop,
+                              frame.bounds(),
+                              bot.reflex()
                                   .activeJump()
                                   .filter(active -> active.stage() == ActiveJump.Stage.RUN_UP)
                                   .flatMap(active -> active.waypoint().launch())));
@@ -325,6 +330,21 @@ public final class BodyDriver {
                       || checked == MovementSafety.Reason.REDIRECTED);
             })
         .orElse(false);
+  }
+
+  /** Takes the first escape step the body's movement gate allows, preferred first. */
+  private MovementSafety.Reason escape(
+      BotBody bot, List<Vec3> escapes, boolean sprint, Frame frame) {
+    var reason = MovementSafety.Reason.BLOCKED;
+    for (var target : escapes) {
+      reason =
+          bodies.moveSafely(
+              bot.uuid(),
+              new Bodies.MotionTarget(
+                  location(target), sprint, Hop.WALK, frame.bounds(), Optional.empty()));
+      if (!reason.refused()) return reason;
+    }
+    return reason;
   }
 
   /** What the body's last movement check said about the step it was asked to take. */
