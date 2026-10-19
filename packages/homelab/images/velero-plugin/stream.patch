@@ -1,7 +1,16 @@
 diff --git a/pkg/clouduploader/conn.go b/pkg/clouduploader/conn.go
-index eec75fb..c73bd8c 100644
+index eec75fb..3289f65 100644
 --- a/pkg/clouduploader/conn.go
 +++ b/pkg/clouduploader/conn.go
+@@ -286,7 +286,7 @@ func (c *Conn) Create(opType ServerOperation) ReadWriter {
+ 	}
+ 	switch opType {
+ 	case OpBackup:
+-		w, err := c.bucket.NewWriter(c.ctx, c.file, &blob.WriterOptions{BufferSize: int(c.partSize)})
++		w, err := c.bucket.NewWriter(c.ctx, c.file, &blob.WriterOptions{BufferSize: int(c.partSize), ContentType: "application/octet-stream"})
+ 		if err != nil {
+ 			c.Log.Errorf("Failed to obtain writer: %s", err.Error())
+ 			return nil
 @@ -314,21 +314,16 @@ func (c *Conn) Create(opType ServerOperation) ReadWriter {
  }
  
