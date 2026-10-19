@@ -446,6 +446,22 @@ COPY --parents \
   packages/delivery/src/shared \
   scripts/lib \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
+  packages/homelab/scripts/argocd/argocd-apply-safety.ts \
+  packages/homelab/scripts/argocd/argocd-auto-sync-policy.ts \
+  packages/homelab/scripts/argocd/argocd-child-sync-timeout.ts \
+  packages/homelab/scripts/argocd/argocd-delivery-recovery.ts \
+  packages/homelab/scripts/argocd/argocd-ignored-differences.ts \
+  packages/homelab/scripts/argocd/argocd-manifest-overrides.ts \
+  packages/homelab/scripts/argocd/argocd-release-result.ts \
+  packages/homelab/scripts/argocd/argocd-release-scheduling.ts \
+  packages/homelab/scripts/argocd/argocd-verified-receipt.ts \
+  packages/homelab/scripts/argocd/argocd.ts \
+  packages/homelab/scripts/helm/helm-release-core.ts \
+  packages/homelab/src/application-release-contract.ts \
+  packages/homelab/src/cdk8s/scripts/delivery/worker-pool-template.ts \
+  packages/homelab/src/cdk8s/src/argocd-application-readiness.ts \
+  packages/homelab/src/cdk8s/src/scout-release-budgets.ts \
+  packages/homelab/src/cdk8s/src/temporal-release-budgets.ts \
   packages/homelab/src/delivery-ownership.ts \
   packages/homelab/src/delivery-target-policy.ts \
   packages/homelab/src/static-site-delivery-ownership.ts \

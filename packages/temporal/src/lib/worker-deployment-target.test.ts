@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { stat } from "node:fs/promises";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import { candidateSourceCommand } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import {
+  registeredWorkerWorkflowTypes,
+  selectWorkerReplayTargets,
+  workerReplayRoute,
+} from "#lib/delivery/workers/worker-replay-targets.ts";
 import { resolveWorkerDeploymentRolloutTarget } from "./worker-deployment-target.ts";
 import { temporalCommand } from "./worker-deployment-commands.ts";
 import { requireAcceptedWorkerDeployment } from "./worker-deployment-proofs.ts";
@@ -152,6 +158,186 @@ describe("resolveWorkerDeploymentRolloutTarget", () => {
 });
 
 describe("isolated immutable candidate source", () => {
+  test("reads the real central and Scout registration entrypoints", async () => {
+    const central = registeredWorkerWorkflowTypes(
+      await Bun.file(new URL("../workflows/index.ts", import.meta.url)).text(),
+    );
+    const scout = registeredWorkerWorkflowTypes(
+      await Bun.file(
+        new URL(
+          "../../../scout-for-lol/packages/temporal/src/workflows/index.ts",
+          import.meta.url,
+        ),
+      ).text(),
+    );
+    expect(central).toContain("workerDeploymentCanaryWorkflow");
+    expect(scout).toContain("scoutInteractiveRunWorkflow");
+    expect(new Set(central).size).toBe(central.length);
+    expect(new Set(scout).size).toBe(scout.length);
+  });
+  test("passes exact run pairs through the Scout cwd command while preserving the candidate checkout", async () => {
+    const source = "b".repeat(40),
+      runId = crypto.randomUUID();
+    const calls: { argv: readonly string[]; cwd: string }[] = [];
+    let directory = "";
+    await withWorkerCandidateCheckout(
+      source,
+      "scout-beta",
+      async (candidate) => {
+        await candidate([
+          "bun",
+          "run",
+          "--cwd",
+          "../scout-for-lol/packages/temporal",
+          "replay:candidate-histories",
+          "--stage",
+          "beta",
+        ]);
+      },
+      {
+        execute: async (argv, cwd) => {
+          directory ||= cwd;
+          calls.push({ argv, cwd });
+          return {
+            stdout: argv[0] === "git" && argv[1] === "rev-parse" ? source : "",
+            stderr: "",
+          };
+        },
+        replayArguments: async (root, target) => {
+          expect(root).toBe(directory);
+          expect(target).toBe("scout-beta");
+          return ["--run", "scout-beta-retained", runId];
+        },
+      },
+    );
+    expect(
+      calls.find((call) => call.argv.includes("replay:candidate-histories")),
+    ).toEqual({
+      cwd: `${directory}/packages/temporal`,
+      argv: [
+        "mise",
+        "exec",
+        "--",
+        "bun",
+        "run",
+        "--cwd",
+        "../scout-for-lol/packages/temporal",
+        "replay:candidate-histories",
+        "--stage",
+        "beta",
+        "--run",
+        "scout-beta-retained",
+        runId,
+      ],
+    });
+    await expect(stat(directory)).rejects.toMatchObject({ code: "ENOENT" });
+  });
+  test("discovers actual runtime exports without evaluating Workflow code", () => {
+    expect(
+      registeredWorkerWorkflowTypes(
+        "throw new Error('must not evaluate'); export function alpha() {} export const beta = () => {}; export type OnlyType = string;",
+      ),
+    ).toEqual(["alpha", "beta"]);
+  });
+  test("binds the candidate namespace and queues to its declared target", () => {
+    expect(workerReplayRoute("scout-beta")).toMatchObject({
+      namespace: "beta",
+      taskQueues: ["scout-beta"],
+    });
+    expect(workerReplayRoute("scout-prod")).toMatchObject({
+      namespace: "prod",
+      taskQueues: ["scout-prod"],
+    });
+    expect(workerReplayRoute("central")).toMatchObject({
+      namespace: "prod",
+      taskQueues: expect.arrayContaining(["monorepo-workflows"]),
+    });
+  });
+  test("freezes one exact open run per type, otherwise latest retained closed, and reports missing types", async () => {
+    const openRun = crypto.randomUUID(),
+      closedRun = crypto.randomUUID();
+    const queries: string[] = [];
+    const selection = await selectWorkerReplayTargets(
+      ["alpha", "beta", "missing"],
+      ["scout-beta"],
+      async (query) => {
+        queries.push(query);
+        if (query.includes("'alpha'"))
+          return {
+            workflowId: "scout-beta-alpha",
+            runId: openRun,
+            type: "alpha",
+            taskQueue: "scout-beta",
+          };
+        if (query.includes("'beta'") && query.includes("!= 'Running'"))
+          return {
+            workflowId: "scout-beta-beta",
+            runId: closedRun,
+            type: "beta",
+            taskQueue: "scout-beta",
+          };
+        return null;
+      },
+    );
+    expect(selection).toEqual({
+      targets: [
+        { workflowId: "scout-beta-alpha", runId: openRun },
+        { workflowId: "scout-beta-beta", runId: closedRun },
+      ],
+      missingTypes: ["missing"],
+    });
+    expect(queries).toHaveLength(5);
+    expect(
+      queries.every((query) =>
+        query.startsWith("TaskQueue IN ('scout-beta') AND WorkflowType = "),
+      ),
+    ).toBe(true);
+    expect(queries.filter((query) => query.includes("'alpha'"))).toHaveLength(
+      1,
+    );
+  });
+  test.each([
+    "empty",
+    "foreign-type",
+    "foreign-queue",
+    "invalid-run",
+    "duplicate-type",
+  ])("refuses %s replay selection", async (mode) => {
+    const execution = {
+      workflowId: "scout-beta-alpha",
+      runId: mode === "invalid-run" ? "wrong" : crypto.randomUUID(),
+      type: mode === "foreign-type" ? "foreign" : "alpha",
+      taskQueue: mode === "foreign-queue" ? "scout-prod" : "scout-beta",
+    };
+    await expect(
+      selectWorkerReplayTargets(
+        mode === "duplicate-type" ? ["alpha", "alpha"] : ["alpha"],
+        ["scout-beta"],
+        async () => (mode === "empty" ? null : execution),
+      ),
+    ).rejects.toThrow();
+  });
+  test("candidate failure reports only a fixed family and exit metadata", async () => {
+    await expect(
+      candidateSourceCommand(
+        ["bun", "-e", "console.error('must-not-be-reported');process.exit(3)"],
+        import.meta.dir,
+        { PATH: Bun.env["PATH"] },
+      ),
+    ).rejects.toThrow("preparation; exit 3; signal null");
+    try {
+      await candidateSourceCommand(
+        ["bun", "-e", "console.error('must-not-be-reported');process.exit(3)"],
+        import.meta.dir,
+        { PATH: Bun.env["PATH"] },
+      );
+    } catch (error) {
+      expect(String(error)).not.toContain("must-not-be-reported");
+    }
+  });
+});
+
+describe("candidate checkout identity", () => {
   test.each(["valid", "wrong-sha", "dirty", "replay-failure"])(
     "checks and cleans %s candidate checkout",
     async (mode) => {
@@ -160,25 +346,30 @@ describe("isolated immutable candidate source", () => {
       let root = "";
       const proof = withWorkerCandidateCheckout(
         source,
+        "central",
         async (candidate) => {
           await candidate(["bun", "run", "test:workflows"]);
           if (mode === "replay-failure") throw new Error("Replay failed");
           return "candidate-only";
         },
-        async (argv, cwd) => {
-          root ||= cwd;
-          calls.push({ argv, cwd });
-          return {
-            stdout:
-              argv[0] === "git" && argv[1] === "rev-parse"
-                ? mode === "wrong-sha"
-                  ? "c".repeat(40)
-                  : source
-                : mode === "dirty" && argv[0] === "git" && argv[1] === "status"
-                  ? " M packages/temporal/src/workflows/index.ts"
-                  : "",
-            stderr: "",
-          };
+        {
+          execute: async (argv, cwd) => {
+            root ||= cwd;
+            calls.push({ argv, cwd });
+            return {
+              stdout:
+                argv[0] === "git" && argv[1] === "rev-parse"
+                  ? mode === "wrong-sha"
+                    ? "c".repeat(40)
+                    : source
+                  : mode === "dirty" &&
+                      argv[0] === "git" &&
+                      argv[1] === "status"
+                    ? " M packages/temporal/src/workflows/index.ts"
+                    : "",
+              stderr: "",
+            };
+          },
         },
       );
       if (mode === "valid") await expect(proof).resolves.toBe("candidate-only");

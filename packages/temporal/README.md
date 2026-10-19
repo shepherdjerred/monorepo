@@ -676,6 +676,12 @@ Replay and canaries run in a separate clean checkout at the candidate image's
 original source revision, with its frozen dependencies and build prerequisites.
 Upgrading the controller does not reinterpret a reused candidate image as a new
 build or replay the controller's Workflow code as the candidate.
+The candidate's locked Node toolchain also runs its Workflow unit tests. Replay
+selects one exact retained execution per exported Workflow type in the target
+namespace and worker queues, preferring the latest open run and otherwise the
+latest closed run. Types without retained history are reported; an entirely
+empty selection fails. Each selected Workflow and run ID is passed explicitly
+to the candidate, without provider credentials or history payload logging.
 
 After a guarded native sync succeeds, transport timeouts recording its completion
 are handled by bounded, identical journal POSTs with fresh claim, operation and
