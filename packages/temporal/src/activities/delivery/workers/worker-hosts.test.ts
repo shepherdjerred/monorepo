@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { Connection } from "@temporalio/client";
+import { msToTs } from "@temporalio/common/lib/time.js";
 import { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
@@ -11,6 +13,7 @@ import {
   requirePoolRoutingCoverage,
   workerOpenExecutionQuery,
   inactiveWorkerVersion,
+  retirementEffects,
   type WorkerRetirementEffects,
 } from "#lib/delivery/workers/worker-retirement.ts";
 import { verifyDeliveryWorkerImages } from "#lib/delivery/workers/worker-image-proof.ts";
@@ -25,6 +28,150 @@ import { verifyCandidateImageBuildId } from "#lib/worker-deployment-proofs.ts";
 const OLD = "a".repeat(40);
 const CURRENT = "b".repeat(40);
 const NOW = new Date("2026-10-17T20:00:00.000Z");
+
+type NativeVersionInfo = NonNullable<
+  Awaited<
+    ReturnType<Connection["workflowService"]["describeWorkerDeploymentVersion"]>
+  >["workerDeploymentVersionInfo"]
+>;
+const nativeStatus = z.custom<NonNullable<NativeVersionInfo["status"]>>(
+  (value) => value === 1 || value === 3 || value === 5,
+);
+const drainageStatus = z.custom<
+  NonNullable<NonNullable<NativeVersionInfo["drainageInfo"]>["status"]>
+>((value) => value === 1 || value === 2);
+const NATIVE_INACTIVE = nativeStatus.parse(1);
+const NATIVE_ACTIVE = nativeStatus.parse(3);
+const NATIVE_DRAINED = nativeStatus.parse(5);
+const DRAINING = drainageStatus.parse(1);
+const DRAINED = drainageStatus.parse(2);
+function nativeSummaryFixture(
+  change: string,
+  identity: { deploymentName: string; buildId: string },
+) {
+  return {
+    deploymentVersion: {
+      ...identity,
+      ...(change === "foreign-build" ? { buildId: CURRENT } : {}),
+      ...(change === "foreign-deployment"
+        ? { deploymentName: "another-deployment" }
+        : {}),
+    },
+    status: change === "summary-active" ? NATIVE_ACTIVE : NATIVE_DRAINED,
+    drainageInfo: {
+      status: change === "summary-draining" ? DRAINING : DRAINED,
+    },
+    ...(change === "missing-timestamp"
+      ? {}
+      : { lastDeactivationTime: msToTs(1_790_000_000_000) }),
+  };
+}
+async function readVersion(change = "none") {
+  const connection = Connection.lazy();
+  const route = workerHostSpecification("central").routes[0];
+  if (route === undefined) throw new Error("Missing route");
+  const identity = { deploymentName: route.deploymentName, buildId: OLD };
+  const deactivated = msToTs(1_790_000_000_000);
+  const checked = msToTs(1_790_000_060_000);
+  const summary = nativeSummaryFixture(change, identity);
+  vi.spyOn(
+    connection.workflowService,
+    "describeWorkerDeploymentVersion",
+  ).mockResolvedValue({
+    workerDeploymentVersionInfo: {
+      deploymentVersion: identity,
+      status:
+        change === "inactive"
+          ? NATIVE_INACTIVE
+          : change === "detail-active"
+            ? NATIVE_ACTIVE
+            : NATIVE_DRAINED,
+      createTime: deactivated,
+      ...(change === "inactive"
+        ? {}
+        : {
+            drainageInfo: {
+              status: change === "detail-draining" ? DRAINING : DRAINED,
+              lastCheckedTime: checked,
+            },
+            // Even a detail timestamp cannot substitute for the summary.
+            ...(change === "missing-timestamp"
+              ? { lastDeactivationTime: deactivated }
+              : {}),
+          }),
+    },
+    versionTaskQueues: [],
+    toJSON: () => ({}),
+  });
+  const describeDeployment = vi
+    .spyOn(connection.workflowService, "describeWorkerDeployment")
+    .mockResolvedValue({
+      workerDeploymentInfo: {
+        name:
+          change === "wrong-name" ? "another-deployment" : route.deploymentName,
+        versionSummaries: Array.from(
+          {
+            length:
+              { "missing-summary": 0, "duplicate-summary": 2 }[change] ?? 1,
+          },
+          () => summary,
+        ),
+        routingConfig: {
+          currentDeploymentVersion: {
+            ...identity,
+            buildId: change === "current" ? OLD : CURRENT,
+          },
+          ...(change === "ramping"
+            ? { rampingDeploymentVersion: identity }
+            : {}),
+        },
+      },
+      conflictToken: new Uint8Array([1]),
+      toJSON: () => ({}),
+    });
+  try {
+    const result = await retirementEffects(connection).version(route, OLD);
+    expect(describeDeployment).toHaveBeenCalledTimes(
+      change === "inactive" ? 0 : 1,
+    );
+    return result;
+  } finally {
+    vi.restoreAllMocks();
+    await connection.close();
+  }
+}
+describe("Native retirement summary protocol", () => {
+  it("uses the exact explicit summary timestamp while preserving detail drainage checks", async () => {
+    await expect(readVersion()).resolves.toEqual({
+      buildId: OLD,
+      status: "DRAINED",
+      lastDeactivationTime: "2026-09-21T14:13:20.000Z",
+      checkedAt: "2026-09-21T14:14:20.000Z",
+    });
+  });
+  it("preserves the actual INACTIVE null-timestamp protocol without a summary read", async () => {
+    await expect(readVersion("inactive")).resolves.toMatchObject({
+      status: "INACTIVE",
+      lastDeactivationTime: null,
+    });
+  });
+  it.each([
+    "wrong-name",
+    "missing-summary",
+    "duplicate-summary",
+    "foreign-build",
+    "foreign-deployment",
+    "missing-timestamp",
+    "summary-active",
+    "summary-draining",
+    "detail-active",
+    "detail-draining",
+    "current",
+    "ramping",
+  ])("refuses %s before issuing retirement proof", async (change) => {
+    await expect(readVersion(change)).rejects.toThrow();
+  });
+});
 function imageConfiguration(buildId: string, architecture = "amd64") {
   return {
     os: "linux",

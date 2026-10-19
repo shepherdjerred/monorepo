@@ -110,6 +110,9 @@ are one-shot and each command starts a new saved conversation.
   image followed by a distinct credentialless candidate; the backend retains
   its embedded drain poller and all effectful Activity Workers until the
   candidate is promoted
+- Queue-canary replay retains its original capability inventory behind a Temporal
+  patch marker. New canaries use the current background-job contract; retired
+  kinds are accepted only when replaying the corresponding unpatched history.
 - PostHog for privacy-scoped server-side product analytics
 - CI builds and publishes the image; Delivery releases beta automatically and
   promotes prod with human approval

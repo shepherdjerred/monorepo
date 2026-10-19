@@ -261,6 +261,46 @@ export function workerOpenExecutionQuery(
   return `ExecutionStatus = 'Running' AND (TemporalWorkerDeploymentVersion IN ('${version}', '${legacy}') OR TemporalUsedWorkerDeploymentVersions IN ('${version}', '${legacy}') OR BuildIds IN ('versioned:${buildId}', 'pinned:${version}', 'pinned:${legacy}')) AND (TemporalWorkflowVersioningBehavior != 'AutoUpgrade' OR TemporalWorkflowVersioningBehavior IS NULL)`;
 }
 
+async function workerDeactivationTime(
+  service: Connection["workflowService"],
+  route: Route,
+  buildId: string,
+): Promise<string> {
+  // Server 1.32.1 omits this timestamp from version details; its deployment
+  // summary exposes the actual deactivation timestamp.
+  const deployment = await service.describeWorkerDeployment({
+    namespace: route.namespace,
+    deploymentName: route.deploymentName,
+  });
+  const info = deployment.workerDeploymentInfo;
+  if (info?.name !== route.deploymentName)
+    throw new Error("Temporal returned another worker deployment");
+  const summaries = (info.versionSummaries ?? []).filter(
+    (entry) =>
+      entry.deploymentVersion?.deploymentName === route.deploymentName &&
+      entry.deploymentVersion.buildId === buildId,
+  );
+  const summary = summaries[0];
+  if (
+    summary === undefined ||
+    summaries.length !== 1 ||
+    Number(summary.status) !== 5 ||
+    Number(summary.drainageInfo?.status) !== 2
+  )
+    throw new Error("Temporal omitted a unique drained worker summary");
+  requireUnrouted(
+    {
+      currentBuildId:
+        info.routingConfig?.currentDeploymentVersion?.buildId ?? "",
+      rampingBuildId:
+        info.routingConfig?.rampingDeploymentVersion?.buildId ?? null,
+      token: Buffer.from(deployment.conflictToken).toString("base64"),
+    },
+    buildId,
+  );
+  return timestamp(summary.lastDeactivationTime);
+}
+
 export function retirementEffects(
   connection: Connection,
 ): WorkerRetirementEffects {
@@ -301,9 +341,18 @@ export function retirementEffects(
           deploymentName: route.deploymentName,
           buildId,
         });
+      if (
+        Number(version.status) !== 5 ||
+        Number(version.drainageInfo?.status) !== 2
+      )
+        throw new Error("Temporal did not return a drained worker version");
       return {
         buildId: version.deploymentVersion.buildId ?? "",
-        lastDeactivationTime: timestamp(version.lastDeactivationTime),
+        lastDeactivationTime: await workerDeactivationTime(
+          service,
+          route,
+          buildId,
+        ),
         checkedAt: timestamp(version.drainageInfo?.lastCheckedTime),
         status:
           Number(version.drainageInfo?.status) === 2
