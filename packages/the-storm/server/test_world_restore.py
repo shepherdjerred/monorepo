@@ -268,13 +268,15 @@ class RestoreTest(unittest.TestCase):
 
     def test_verified_selective_export_requires_complete_selection_and_sealed_whole_volume_proof(self):
         data = self.root / "native-data"
-        (data / "world/dimensions/minecraft/rwf/region").mkdir(parents=True)
-        (data / "plugins/TheStorm").mkdir(parents=True)
         for name in (
             "world/level.dat",
             "world/dimensions/minecraft/rwf/region/r.0.0.mca",
+            "world/dimensions/minecraft/rwf_lobby/region/r.0.0.mca",
+            "world/dimensions/minecraft/rwf_lobby/entities/r.0.0.mca",
+            "world/dimensions/minecraft/rwf_lobby/poi/r.0.0.mca",
             "plugins/TheStorm/the-storm.db",
         ):
+            (data / name).parent.mkdir(parents=True, exist_ok=True)
             (data / name).write_bytes(b"fixture")
         hashes = restore.fingerprint(data)
         whole = self.root / "whole.json"
