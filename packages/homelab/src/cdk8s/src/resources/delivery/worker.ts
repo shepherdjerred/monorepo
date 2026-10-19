@@ -73,6 +73,26 @@ export function createDeliveryWorker(
     argoItem.name,
   );
   const staticStorageEnvironment: Record<string, EnvValue> = {};
+  const registryEnvironment: Record<string, EnvValue> = {};
+  if (activation.workerRegistryItemId !== undefined) {
+    const registryItem = new OnePasswordItem(
+      chart,
+      "delivery-runtime-registry",
+      {
+        type: "kubernetes.io/dockerconfigjson",
+        spec: { itemPath: vaultItemPath(activation.workerRegistryItemId) },
+      },
+    );
+    registryEnvironment["DOCKERHUB_READ_CONFIG_JSON"] =
+      EnvValue.fromSecretValue({
+        secret: Secret.fromSecretName(
+          chart,
+          "delivery-runtime-registry-secret",
+          registryItem.name,
+        ),
+        key: ".dockerconfigjson",
+      });
+  }
   if (activation.staticStorageItemId !== undefined) {
     const staticItem = new OnePasswordItem(chart, "delivery-static-storage", {
       spec: { itemPath: vaultItemPath(activation.staticStorageItemId) },
@@ -128,6 +148,7 @@ export function createDeliveryWorker(
     envVariables: {
       ...deliveryTrmnlEnvironment(chart, activation),
       ...staticStorageEnvironment,
+      ...registryEnvironment,
       ...(activation.workerRegistryItemId === undefined
         ? {}
         : {

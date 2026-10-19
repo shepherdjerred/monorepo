@@ -14,6 +14,7 @@ import {
   selectArgoRelease,
   syncArgoRelease,
   verifyArgoRelease,
+  waitForForumArgoRelease,
 } from "./argocd.ts";
 import { observeDeliveryPods } from "./runtime.ts";
 import {
@@ -31,6 +32,7 @@ import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts"
 import { prepareMinecraftDelivery } from "./minecraft.ts";
 import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
+import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 
 const path = (id: string) => `deployments/${encodeURIComponent(id)}`;
 const detail = async (id: string) =>
@@ -241,14 +243,31 @@ export async function verifyDelivery(id: string): Promise<EvidenceInput[]> {
   if (current.deployment.kind === "adopt-worker")
     return await acceptWorkerBaseline(current);
   const { selection, operationId } = deliverySelection(current);
-  const receipt = verifyArgoRelease(
-    await argoRequest(encodeURIComponent(selection.application)),
-    selection,
-    operationId,
-  );
+  const pipeline = current.pipeline.definition;
+  const frozenSelection = canonicalJson(deliverySelection(current));
+  const read = async () =>
+    await argoRequest(encodeURIComponent(selection.application));
+  const receipt =
+    pipeline.kind === "argocd" && pipeline.forumRelease !== undefined
+      ? await waitForForumArgoRelease(selection, operationId, {
+          read,
+          wait: Bun.sleep,
+          fence: async () => {
+            const fresh = await detail(id);
+            if (
+              fresh.deployment.cancelRequested ||
+              fresh.deployment.status !== "running" ||
+              fresh.environment.activeDeploymentId !== id ||
+              canonicalJson(deliverySelection(fresh)) !== frozenSelection
+            )
+              throw new Error(
+                "Forum deployment ownership or frozen selection changed while waiting",
+              );
+          },
+        })
+      : verifyArgoRelease(await read(), selection, operationId);
   await observeDeliveryPods(current);
   await verifyWorkerHosts(current);
-  const pipeline = current.pipeline.definition;
   if (pipeline.kind !== "argocd")
     throw new Error("Unsupported pipeline acceptance");
   const evidence: EvidenceInput[] = [

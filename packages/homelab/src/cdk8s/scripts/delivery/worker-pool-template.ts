@@ -87,6 +87,14 @@ function prototypeManifest(
   prefix: string,
 ): string {
   const prepared = Resource.parse(retainedPrototype(resource, prefix));
+  if (resource.kind === "ServiceAccount")
+    prepared.metadata["annotations"] = {
+      ...z
+        .record(z.string(), z.string())
+        .default({})
+        .parse(prepared.metadata["annotations"]),
+      "argocd.argoproj.io/sync-wave": "-2",
+    };
   if (resource.kind === "Deployment") {
     const deployment = z
       .looseObject({

@@ -137,11 +137,46 @@ describe("Delivery worker capability isolation", () => {
             spec: z.object({
               automountServiceAccountToken: z.boolean(),
               serviceAccountName: z.string(),
+              containers: z.array(
+                z.object({ env: z.array(SecretEnvironmentEntry) }),
+              ),
             }),
           }),
         })
         .parse(deployment?.spec).template.spec;
       expect(pod.automountServiceAccountToken).toBe(enabled);
+      const registryEnvironment = pod.containers
+        .flatMap((container) => container.env)
+        .filter((entry) => entry.name === "DOCKERHUB_READ_CONFIG_JSON");
+      const registryItem = resources.find(
+        (resource) =>
+          resource.kind === "OnePasswordItem" &&
+          resource.metadata.name.includes("delivery-runtime-registry"),
+      );
+      expect(registryEnvironment).toEqual(
+        enabled
+          ? [
+              {
+                name: "DOCKERHUB_READ_CONFIG_JSON",
+                valueFrom: {
+                  secretKeyRef: {
+                    name: registryItem?.metadata.name,
+                    key: ".dockerconfigjson",
+                  },
+                },
+              },
+            ]
+          : [],
+      );
+      if (enabled)
+        expect(registryItem).toMatchObject({
+          type: "kubernetes.io/dockerconfigjson",
+          spec: {
+            itemPath:
+              "vaults/v64ocnykdqju4ui6j6pua56xw4/items/ngzmppq52zm7sii6ato2mv3sbi",
+          },
+        });
+      else expect(registryItem).toBeUndefined();
       const namespaces = resources.filter(
         (resource) => resource.kind === "Namespace",
       );

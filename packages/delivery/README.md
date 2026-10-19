@@ -153,8 +153,8 @@ Arcade provides the small initial acceptance example:
 
 The [pipeline definition](registrations/arcade.pipeline.json) binds the published
 `chart:arcade` chart and `image:arcade` image to Arcade's `delivery.image` Helm
-parameter. Its public health check reaches Arcade through the existing Mario
-Kart edge. The [environment definition](registrations/arcade.environment.json)
+parameter. Pipeline revision `arcade/2` probes Arcade's canonical public health
+endpoint. The [environment definition](registrations/arcade.environment.json)
 declares automatic selection; the enabled-environment and write flags, reviewed
 Argo ownership transfer, and paused dispatch Schedule still gate activation.
 Neither file selects an artifact or records deployment state.
@@ -164,7 +164,7 @@ the repository root with the brokered admin credential:
 
 ```sh
 toolkit deploy inventory --machine
-toolkit deploy pipeline register arcade/1 --file packages/delivery/registrations/arcade.pipeline.json --machine
+toolkit deploy pipeline register arcade/2 --file packages/delivery/registrations/arcade.pipeline.json --machine
 toolkit deploy environment register --file packages/delivery/registrations/arcade.environment.json --machine
 ```
 
@@ -332,6 +332,9 @@ The reviewed source catalog transfers release ownership only after hosting,
 routing proofs, and recovery are verified. Forum
 upgrade admission requires a verified accepted baseline and its frozen prior
 configuration.
+After an owned Forum sync succeeds, verification waits at most five minutes for
+genuine Synced and Healthy status while rechecking the exact release and active
+claim. Pending status never accepts a release or repeats its migration.
 
 ## Root and OpenTofu releases
 

@@ -6,6 +6,10 @@ import type {
 import { argoRequest } from "./argocd.ts";
 import { minecraftRuntimeImage } from "#lib/delivery/minecraft.ts";
 import { DeliveryPodSchema as PodSchema } from "#lib/delivery/pod-schema.ts";
+import {
+  verifyRuntimeImageDigest,
+  type RuntimeManifestReader,
+} from "./runtime-image.ts";
 
 function ignorablePod(pod: z.infer<typeof PodSchema>): boolean {
   return (
@@ -85,11 +89,12 @@ export function verifyCentralChartDependencies(
     throw new Error("Selected chart dependency has no ready running container");
 }
 
-export function verifyDeliveryPods(
+export async function verifyDeliveryPods(
   inputs: unknown[],
   artifacts: ArtifactVersion[],
   exactReferences: ReadonlyMap<string, string> = new Map(),
-): void {
+  readManifest?: RuntimeManifestReader,
+): Promise<void> {
   if (artifacts.length === 0)
     throw new Error("Application pipeline declares no runtime image bindings");
   const witnessed = new Set<string>();
@@ -107,7 +112,6 @@ export function verifyDeliveryPods(
         (candidate) => candidate.name === container.name,
       );
       const digest = /sha256:[a-f0-9]{64}$/u.exec(status?.imageID ?? "")?.[0];
-      const runtimeDigests = artifact.runtimeDigests;
       if (
         digest === undefined ||
         pod.status.phase !== "Running" ||
@@ -115,12 +119,17 @@ export function verifyDeliveryPods(
           (exactReferences.get(artifact.id) ??
             `${artifact.uri}@${artifact.digest}`) ||
         status?.ready !== true ||
-        status.state.running === undefined ||
-        ![artifact.digest, ...runtimeDigests].includes(digest)
+        status.state.running === undefined
       )
         throw new Error(
           `Running container for ${artifact.component} does not prove the selected image digest`,
         );
+      await verifyRuntimeImageDigest(
+        artifact,
+        status.imageID,
+        status.image,
+        readManifest,
+      );
       witnessed.add(artifact.id);
     }
   }
@@ -189,13 +198,13 @@ export async function observeDeliveryPods(
               minecraftRuntimeImage(detail),
             ]),
           );
-    verifyDeliveryPods(pods, artifacts, references);
+    await verifyDeliveryPods(pods, artifacts, references);
   } else if (artifacts.length > 0) {
     const family =
       workerFamily === "central"
         ? "central-workflows"
         : `${workerFamily}-workflows`;
-    verifyDeliveryPods(
+    await verifyDeliveryPods(
       pods.filter(
         (pod) =>
           PodSchema.parse(pod).metadata.labels["worker-family"] !== family,

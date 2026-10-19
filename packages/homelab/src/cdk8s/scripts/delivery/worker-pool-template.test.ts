@@ -263,6 +263,7 @@ describe("Delivery fixed worker host rendering", () => {
         expect(deployments[index]).toMatchObject({
           metadata: {
             name: expect.stringContaining(`retained-${buildId.slice(0, 12)}`),
+            annotations: { "argocd.argoproj.io/sync-wave": "-2" },
           },
           spec: {
             replicas: index === 0 ? 0 : 1,
@@ -278,6 +279,33 @@ describe("Delivery fixed worker host rendering", () => {
             },
           },
         });
+        if (central) {
+          const account = z
+            .object({
+              spec: z.object({
+                template: z.object({
+                  spec: z.object({ serviceAccountName: z.string() }),
+                }),
+              }),
+            })
+            .parse(deployments[index]).spec.template.spec.serviceAccountName;
+          const accounts = resources.filter((resource) => {
+            const identity = z
+              .object({
+                kind: z.string(),
+                metadata: z.object({ name: z.string() }),
+              })
+              .parse(resource);
+            return (
+              identity.kind === "ServiceAccount" &&
+              identity.metadata.name === account
+            );
+          });
+          expect(accounts).toHaveLength(1);
+          expect(accounts[0]).toMatchObject({
+            metadata: { annotations: { "argocd.argoproj.io/sync-wave": "-2" } },
+          });
+        }
       }
       expect(encoded).not.toContain("secretKeyRef");
       const oldDeployments = resources.filter(

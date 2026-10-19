@@ -3,7 +3,7 @@
   "serviceId": "arcade",
   "name": "prod",
   "application": "arcade",
-  "pipelineRevisionId": "arcade/1",
+  "pipelineRevisionId": "arcade/2",
   "configurationRevision": "arcade/1",
   "configuration": {},
   "automatic": true
