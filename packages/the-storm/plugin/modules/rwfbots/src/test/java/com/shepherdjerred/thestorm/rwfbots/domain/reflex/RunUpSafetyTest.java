@@ -37,6 +37,11 @@ final class RunUpSafetyTest {
     public boolean inside(Vec3 feet) {
       return feet.x() >= 0 && feet.x() < 8 && feet.y() == 1 && feet.z() >= 0 && feet.z() < 8;
     }
+
+    @Override
+    public boolean climbable(Vec3 feet) {
+      return false;
+    }
   }
 
   @Test

@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import java.util.List;
 import java.util.Optional;
 
 /** The last movement gate, including local combat steering and bounded recovery sidesteps. */
@@ -30,6 +31,9 @@ public final class MovementSafety {
     boolean hazardous(Vec3 feet);
 
     boolean inside(Vec3 feet);
+
+    /** Whether a body there holds onto a ladder, vine or other climbable block. */
+    boolean climbable(Vec3 feet);
   }
 
   public record Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff) {
@@ -60,9 +64,10 @@ public final class MovementSafety {
    */
   public static Result choose(Terrain terrain, Request request) {
     if (request.hop() == Hop.CLIMB) {
-      return climb(terrain, request)
-          ? new Result(Optional.of(request.target()), Reason.CLEAR)
-          : new Result(Optional.empty(), Reason.BLOCKED);
+      if (climb(terrain, request)) return new Result(Optional.of(request.target()), Reason.CLEAR);
+      return climbAround(terrain, request.from(), request.target())
+          .map(corner -> new Result(Optional.of(corner), Reason.REDIRECTED))
+          .orElseGet(() -> new Result(Optional.empty(), Reason.BLOCKED));
     }
     if (request.hop() == Hop.SWIM) {
       return swim(terrain, request.from(), request.target());
@@ -77,9 +82,48 @@ public final class MovementSafety {
       return new Result(Optional.empty(), Reason.ARRIVED);
     }
     var walked = steer(terrain, request, heading);
-    if (walked.reason() == Reason.BLOCKED && steppingDown(terrain, request))
+    if (walked.reason() != Reason.BLOCKED) return walked;
+    if (steppingDown(terrain, request))
       return new Result(Optional.of(request.target()), Reason.CLEAR);
-    return walked;
+    return climbAround(terrain, request.from(), request.target())
+        .map(corner -> new Result(Optional.of(corner), Reason.REDIRECTED))
+        .orElse(walked);
+  }
+
+  /**
+   * The first corner of a two-leg way between a climbable and the ground, when the straight way is
+   * refused: rise or descend to the target's height and then step across (out of the top of a
+   * ladder, down a vine under an overhang), or step across and then climb or drop (over a ladder
+   * hole, onto a vine). A vertical leg must be clear; every sample of a crossing must be held by
+   * floor or a climbable within reach. Empty when neither end is at a climbable or no way is open.
+   */
+  static Optional<Vec3> climbAround(Terrain terrain, Vec3 from, Vec3 target) {
+    var holding = grips(terrain, from);
+    if (!holding && !grips(terrain, target)) return Optional.empty();
+    var vertical = from.withY(target.y());
+    var across = target.withY(from.y());
+    // Only a body holding a climbable can rise or sink in place; one on the ground crosses first.
+    for (var corner : holding ? List.of(vertical, across) : List.of(across, vertical)) {
+      if (corner.distance(from) < 1e-6 || corner.distance(target) < 1e-6) continue;
+      if (climbLeg(terrain, from, corner) && climbLeg(terrain, corner, target))
+        return Optional.of(corner);
+    }
+    return Optional.empty();
+  }
+
+  private static boolean grips(Terrain terrain, Vec3 point) {
+    return terrain.climbable(point) || terrain.climbable(point.plus(0, -1, 0));
+  }
+
+  private static boolean climbLeg(Terrain terrain, Vec3 from, Vec3 to) {
+    var vertical = from.horizontalDistance(to) < 1e-6;
+    var count = Math.max(1, (int) Math.ceil(from.distance(to) / SAMPLE_GAP));
+    for (var index = 0; index <= count; index++) {
+      var point = from.lerp(to, (double) index / count);
+      if (!safe(terrain, point)) return false;
+      if (!vertical && !grips(terrain, point) && !terrain.supported(point, WALK_DROP)) return false;
+    }
+    return true;
   }
 
   /**

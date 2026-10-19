@@ -44,6 +44,11 @@ final class MovementSafetyTest {
     public boolean inside(Vec3 feet) {
       return feet.x() > -5 && feet.x() < 5 && feet.z() > -5 && feet.z() < 5;
     }
+
+    @Override
+    public boolean climbable(Vec3 feet) {
+      return false;
+    }
   }
 
   private static MovementSafety.Result move(Terrain terrain, Vec3 target, Hop hop) {
@@ -119,6 +124,74 @@ final class MovementSafetyTest {
     var result = move(step, target, Hop.WALK);
 
     assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  /** A column of ladder or vine at x in [0, 1) from y = 1 to 5 against a wall at x < 0. */
+  private static MovementSafety.Terrain climbing(
+      Predicate<Vec3> floor, Predicate<Vec3> obstruction) {
+    return new MovementSafety.Terrain() {
+      @Override
+      public boolean clear(Vec3 feet) {
+        return !obstruction.test(feet);
+      }
+
+      @Override
+      public boolean supported(Vec3 feet, double drop) {
+        return floor.test(feet);
+      }
+
+      @Override
+      public boolean grounded(Vec3 feet) {
+        return floor.test(feet);
+      }
+
+      @Override
+      public boolean hazardous(Vec3 feet) {
+        return false;
+      }
+
+      @Override
+      public boolean inside(Vec3 feet) {
+        return feet.x() > -5 && feet.x() < 5 && feet.z() > -5 && feet.z() < 5;
+      }
+
+      @Override
+      public boolean climbable(Vec3 feet) {
+        return feet.x() >= 0 && feet.x() < 1 && feet.y() >= 1 && feet.y() < 6;
+      }
+    };
+  }
+
+  @Test
+  void aClimberLeavesTheTopOfItsLadderByRisingBeforeSteppingOff() {
+    // The ladder pokes through a floor whose top is y = 5 for x >= 1; the climber stands in the
+    // ladder at y = 4 and its next waypoint is on that floor.
+    var terrain =
+        climbing(
+            point -> point.x() >= 1 && Math.abs(point.y() - 5) < 1e-9,
+            point -> point.x() + 0.3 > 1.0 && point.y() < 5 - 1e-9);
+    var result =
+        MovementSafety.choose(
+            terrain,
+            new MovementSafety.Request(new Vec3(0.5, 4, 0.5), new Vec3(1.5, 5, 0.5), Hop.WALK));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(result.destination().orElseThrow().y()).isGreaterThan(4);
+  }
+
+  @Test
+  void aClimberUnderAnOverhangDescendsBeforeSteppingAcross() {
+    // A vine down a wall with an overhang from y = 6 at x >= 1: the next waypoint is one block
+    // across and one lower, so the straight line hits the overhang but down-then-across is clear.
+    var terrain =
+        climbing(
+            point -> point.x() >= 1 && Math.abs(point.y() - 3) < 1e-9,
+            point -> point.x() + 0.3 > 1.0 && (point.y() + 1.8 > 6 || point.y() < 3 - 1e-9));
+    var result =
+        MovementSafety.choose(
+            terrain,
+            new MovementSafety.Request(new Vec3(0.5, 4.5, 0.5), new Vec3(1.5, 3, 0.5), Hop.WALK));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(result.destination().orElseThrow().y()).isLessThan(4.5);
   }
 
   @Test

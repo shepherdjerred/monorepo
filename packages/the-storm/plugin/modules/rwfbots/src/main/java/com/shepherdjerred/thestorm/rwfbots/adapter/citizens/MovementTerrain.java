@@ -121,7 +121,8 @@ final class MovementTerrain implements MovementSafety.Terrain {
         || water(block(BlockPos.of(feet.plus(0, 1.62, 0))));
   }
 
-  boolean climbable(Vec3 feet) {
+  @Override
+  public boolean climbable(Vec3 feet) {
     return Tag.CLIMBABLE.isTagged(block(BlockPos.of(feet)).getType())
         || Tag.CLIMBABLE.isTagged(block(BlockPos.of(feet.plus(0, 1, 0))).getType());
   }
