@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { stat } from "node:fs/promises";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import { candidateSourceCommand } from "#lib/delivery/workers/worker-candidate-checkout.ts";
@@ -10,7 +10,108 @@ import {
 } from "#lib/delivery/workers/worker-replay-targets.ts";
 import { resolveWorkerDeploymentRolloutTarget } from "./worker-deployment-target.ts";
 import { temporalCommand } from "./worker-deployment-commands.ts";
-import { requireAcceptedWorkerDeployment } from "./worker-deployment-proofs.ts";
+import {
+  requireAcceptedWorkerDeployment,
+  requireHealthyWorkflowPoller,
+} from "./worker-deployment-proofs.ts";
+
+const sample = (value: string) => ({
+  stdout: JSON.stringify({
+    status: "success",
+    data: { resultType: "vector", result: [{ value: [1, value] }] },
+  }),
+  stderr: "",
+});
+function clock() {
+  let now = 0;
+  vi.spyOn(Date, "now").mockImplementation(() => now);
+  return vi.spyOn(Bun, "sleep").mockImplementation(async (duration) => {
+    if (typeof duration !== "number")
+      throw new TypeError("Expected fixed wait");
+    now += duration;
+  });
+}
+describe("fresh worker poller observations", () => {
+  afterEach(() => vi.restoreAllMocks());
+  const options = {
+    namespace: "prod",
+    deploymentName: "scout-prod-workflows",
+    buildId: "a".repeat(40),
+    taskQueue: "scout-prod",
+  };
+  test("requeries the same exact build after transient zero and requires a fresh positive sample", async () => {
+    const wait = clock();
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce(sample("0"))
+      .mockResolvedValueOnce(sample("0"))
+      .mockResolvedValueOnce(sample("2"));
+    await requireHealthyWorkflowPoller(options, run, "stable");
+    expect(run).toHaveBeenCalledTimes(3);
+    expect(
+      new Set(run.mock.calls.map((args) => JSON.stringify(args))).size,
+    ).toBe(1);
+    expect(run.mock.calls[0]?.[0][3]).toContain(
+      'worker_build_id="' + options.buildId + '"',
+    );
+    expect(wait.mock.calls).toEqual([[5000], [5000]]);
+  });
+  test("persistent zero still fails after the fixed observation deadline", async () => {
+    const wait = clock();
+    const run = vi.fn().mockResolvedValue(sample("0"));
+    await expect(
+      requireHealthyWorkflowPoller(options, run, "stable"),
+    ).rejects.toThrow("stable build has no healthy Workflow pollers");
+    expect(run).toHaveBeenCalledTimes(13);
+    expect(wait).toHaveBeenCalledTimes(12);
+    expect(Date.now()).toBe(60_000);
+  });
+  test("command, authorization, malformed and invalid metric responses fail immediately", async () => {
+    const wait = clock();
+    const denied = vi.fn().mockRejectedValue(new Error("HTTP 403"));
+    await expect(
+      requireHealthyWorkflowPoller(options, denied, "candidate"),
+    ).rejects.toThrow("HTTP 403");
+    expect(denied).toHaveBeenCalledTimes(1);
+    for (const response of [
+      { stdout: "invalid-json", stderr: "" },
+      { stdout: '{"status":"error","error":"unauthorized"}', stderr: "" },
+      sample("NaN"),
+      sample("-1"),
+    ]) {
+      const run = vi.fn().mockResolvedValue(response);
+      await expect(
+        requireHealthyWorkflowPoller(options, run, "candidate"),
+      ).rejects.toThrow();
+      expect(run).toHaveBeenCalledTimes(1);
+    }
+    expect(wait).not.toHaveBeenCalled();
+  });
+  test("accepted prerequisite uses the same fresh observation after strict routing proof", async () => {
+    const wait = clock();
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({
+        stdout: JSON.stringify({
+          name: options.deploymentName,
+          routingConfig: {
+            currentVersionBuildID: options.buildId,
+            rampingVersionBuildID: "",
+            rampingVersionPercentage: 0,
+          },
+        }),
+        stderr: "",
+      })
+      .mockResolvedValueOnce(sample("0"))
+      .mockResolvedValueOnce(sample("1"));
+    await requireAcceptedWorkerDeployment(
+      { ...options, address: "temporal.test:7233" },
+      run,
+    );
+    expect(run).toHaveBeenCalledTimes(3);
+    expect(wait).toHaveBeenCalledOnce();
+  });
+});
 
 describe("worker Temporal command boundary", () => {
   const address =

@@ -59,6 +59,11 @@ async function request(
     ),
     {
       method: "POST",
+      // Preservation and recovery can legitimately be silent during a backup.
+      // Their explicit AbortSignal deadline still bounds the whole request.
+      ...(command === "verify" || command === "recover"
+        ? { timeout: false as const }
+        : {}),
       headers: {
         authorization: `Bearer ${token}`,
         "content-type": "application/json",

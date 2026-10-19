@@ -75,14 +75,20 @@ export async function requireHealthyWorkflowPoller(
   run: RolloutCommandRunner,
   label: string,
 ): Promise<void> {
-  const pollers = await queryRolloutMetric(
-    `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(options.taskQueue)},poller_type="workflow_task"}) or vector(0)`,
-    `${label} workflow poller query`,
-    run,
-  );
-  if (pollers < 1) {
-    throw new Error(`${label} build has no healthy Workflow pollers`);
+  const deadline = Date.now() + 60_000;
+  // This gauge counts active polls, so a live worker can briefly report zero.
+  for (let attempt = 0; attempt < 13; attempt++) {
+    const pollers = await queryRolloutMetric(
+      `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(options.taskQueue)},poller_type="workflow_task"}) or vector(0)`,
+      `${label} workflow poller query`,
+      run,
+    );
+    if (pollers >= 1) return;
+    const remaining = deadline - Date.now();
+    if (attempt === 12 || remaining <= 0) break;
+    await Bun.sleep(Math.min(5000, remaining));
   }
+  throw new Error(`${label} build has no healthy Workflow pollers`);
 }
 
 export async function requireReplayCheckout(
@@ -165,16 +171,11 @@ export async function requireAcceptedWorkerDeployment(
       `Build ${options.buildId} has not completed ${options.deploymentName} acceptance`,
     );
   }
-  const pollers = await queryRolloutMetric(
-    `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(options.taskQueue)},poller_type="workflow_task"}) or vector(0)`,
-    "acceptance prerequisite workflow poller query",
+  await requireHealthyWorkflowPoller(
+    options,
     run,
+    `${options.deploymentName} acceptance`,
   );
-  if (pollers < 1) {
-    throw new Error(
-      `${options.deploymentName} acceptance has no healthy Workflow pollers`,
-    );
-  }
 }
 export async function requireAcceptancePrerequisite(
   options: {

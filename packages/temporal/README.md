@@ -156,6 +156,12 @@ fixed traffic bake periods; original hosts remain until independent drainage
 proof permits retirement. A partial routing response is inspected before
 repeating the same step.
 
+Poller proofs make bounded exact-build instant readbacks when active polling
+briefly reaches zero; success requires a fresh positive result, and query or
+schema errors fail immediately. Minecraft preservation and recovery
+HTTP requests disable socket idle timeouts during backups while retaining their
+two-hour total deadline and caller cancellation.
+
 Worker Jobs invoke the native Temporal CLI only for the fixed in-cluster
 plaintext endpoint, with environment and file configuration disabled. This
 prevents ambient API-key or TLS settings from changing that connection and

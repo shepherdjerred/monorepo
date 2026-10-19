@@ -18,10 +18,15 @@ import {
 } from "#lib/delivery/minecraft-controller-process.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { minecraftRuntimeImage } from "#lib/delivery/minecraft.ts";
-import { minecraftRecoveryControllerOrigin } from "#lib/delivery/minecraft-controller.ts";
+import {
+  minecraftRecoveryControllerOrigin,
+  runMinecraftPreservation,
+  runMinecraftRecovery,
+} from "#lib/delivery/minecraft-controller.ts";
 
 const temporary: string[] = [];
 afterEach(async () => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
   for (const directory of temporary.splice(0))
     await rm(directory, { recursive: true, force: true });
@@ -38,6 +43,58 @@ const identity = {
   name: "delivery-tsmc-controller-0",
   uid: "native-controller-pod-1",
 } as const;
+
+test("long controller commands disable socket idle timeout but retain their deadline and caller cancellation", async () => {
+  const detail = await minecraftDetailFixture();
+  const requestId = "00000000-0000-4000-8000-000000000001";
+  const receipt = {
+    ...identity,
+    requestId,
+    specFingerprint: "a".repeat(64),
+    sourceFingerprint: "b".repeat(64),
+  };
+  vi.stubEnv("DELIVERY_EXECUTOR_TOKEN", "local-controller-test-token");
+  const timeout = vi.spyOn(AbortSignal, "timeout");
+  const response = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(async (input) => {
+      if (!(input instanceof URL))
+        throw new TypeError("Expected controller URL");
+      if (input.pathname.endsWith("/verify"))
+        return Response.json({ status: "waiting" });
+      if (input.pathname.endsWith("/recover"))
+        return Response.json({
+          requestId,
+          controller: receipt,
+          reportJson: "{}",
+          reportSha256: `sha256:${"c".repeat(64)}`,
+        });
+      return Response.json(receipt);
+    });
+  const caller = new AbortController();
+  const onReceipt = vi.fn();
+  await runMinecraftPreservation(detail, requestId, onReceipt, caller.signal);
+  await runMinecraftRecovery(detail, "recovery/1", requestId, {
+    onReceipt,
+    signal: caller.signal,
+  });
+  expect(timeout.mock.calls).toEqual([
+    [30_000],
+    [7_200_000],
+    [30_000],
+    [7_200_000],
+  ]);
+  for (const [index, call] of response.mock.calls.entries()) {
+    if (index % 2 === 0) expect(call[1]).not.toHaveProperty("timeout");
+    else expect(call[1]).toHaveProperty("timeout", false);
+  }
+  expect(onReceipt).toHaveBeenCalledTimes(2);
+  for (const call of response.mock.calls)
+    expect(call[1]?.signal?.aborted).toBe(false);
+  caller.abort();
+  for (const call of response.mock.calls)
+    expect(call[1]?.signal?.aborted).toBe(true);
+});
 
 test("operator recovery accepts only the exact loopback port-forward bootstrap", () => {
   expect(minecraftRecoveryControllerOrigin("http://127.0.0.1:17356")).toBe(
