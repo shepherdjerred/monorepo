@@ -54,16 +54,20 @@ export async function createHomeAssistantDeployment(chart: Chart) {
 
   const configDirectory = `${import.meta.dir}/../../../config/homeassistant`;
   const glob = new Glob("*");
-  const files: string[] = [];
+  const scannedFiles: string[] = [];
   for await (const entry of glob.scan({
     cwd: configDirectory,
     onlyFiles: true,
   })) {
     const name = entry.split("/").pop() ?? entry;
     if (name) {
-      files.push(name);
+      scannedFiles.push(name);
     }
   }
+  // Glob scan order follows the filesystem, which differs between checkouts.
+  // The subPath volumeMounts below are an ordered list, so an unsorted scan
+  // changes the pod template on every render and rolls Home Assistant.
+  const files = scannedFiles.toSorted();
 
   const config = new ConfigMap(chart, "ha-cm");
   config.addDirectory(configDirectory);
@@ -76,7 +80,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   // sorted file contents, so an unchanged config yields the same hash (no spurious
   // rollout or ArgoCD drift).
   const configHasher = new Bun.CryptoHasher("sha256");
-  for (const file of [...files].sort()) {
+  for (const file of files) {
     configHasher.update(file);
     configHasher.update(await Bun.file(`${configDirectory}/${file}`).text());
   }

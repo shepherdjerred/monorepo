@@ -339,10 +339,10 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         },
         {
           // Daily homelab-audit failing twice in a row — the agent is
-          // hitting the 45-min activity wall. The existing
-          // TemporalScheduledWorkflowFailingDaily covers activity_task_fail
-          // but the audit's symptom is a non-zero subprocess exit (SIGTERM
-          // at the wall), which our own counter captures directly.
+          // hitting the 45-min activity wall. TemporalScheduledCurrentFailure
+          // reports the latest scheduled run's outcome, but the audit's
+          // symptom is a non-zero subprocess exit (SIGTERM at the wall),
+          // which our own counter captures directly.
           alert: "HomelabAuditFailedTwoDays",
           annotations: {
             summary: "homelab-audit-daily failed two days in a row",
@@ -380,40 +380,8 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          // Catches the "low-volume daily schedule, fails consistently for
-          // days, no one notices" pattern — exactly what kept Scout Data
-          // Dragon broken silently from 2026-05-02 to 2026-05-08. Existing
-          // TemporalWorkflowActivityFailing requires >5 failures in 30m,
-          // which a once-daily schedule can never hit.
-          alert: "TemporalScheduledWorkflowFailingDaily",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "Scheduled workflow {{ $labels.workflowType }} failing repeatedly",
-            ),
-            description: escapePrometheusTemplate(
-              "{{ $labels.workflowType }} activity {{ $labels.activityType }} has had {{ $value }} failures across the last 48h. These are activity failures, including retries, rather than consecutive failed scheduled runs. Inspect the current schedule outcome and Activity history.",
-            ),
-          },
-          // Workflows excluded: HA-presence + iOS-action workflows are
-          // event-triggered (their schedules are user actions, not crons), so
-          // a "2 in 48h" rate doesn't indicate a broken schedule.
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            [
-              "increase(activity_task_fail{",
-              'exported_namespace=~"prod|beta",',
-              `workflowType!~"${["welcomeHome", "leavingHome", "goodNight"].join("|")}"`,
-              "}[48h]) >= 2",
-            ].join(""),
-          ),
-          for: "30m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
           // A Workflow Task fails before any Activity runs, so
-          // `activity_task_fail` above cannot see it and neither can
-          // TemporalScheduledWorkflowFailingDaily. That blind spot hid a
+          // `activity_task_fail` above cannot see it. That blind spot hid a
           // worker pinned three weeks behind `main` for the whole of
           // September: it could not load two registered Workflow types at all
           // ("no such function is exported by the workflow bundle"), the tasks

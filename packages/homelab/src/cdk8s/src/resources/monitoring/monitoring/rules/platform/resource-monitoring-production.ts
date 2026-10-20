@@ -2,6 +2,16 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PROD_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
+
+const GIBIBYTE = 1024 ** 3;
+
+/**
+ * The largest memory request among the Minecraft servers that hibernate at
+ * zero replicas and wake on join (minecraft-shuxin requests 8Gi;
+ * minecraft-sjerred requests 6Gi). Raise it with those requests.
+ */
+export const WAKE_REQUEST_BYTES = 8 * GIBIBYTE;
 
 export function getProductionResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -37,17 +47,32 @@ export function getProductionResourceMonitoringRuleGroups(): PrometheusRuleSpecG
           labels: { severity: "critical" },
         },
         {
-          alert: "ProductionNodeMemoryRequestsHigh",
+          // Requests are sized to typical use and the node runs near full
+          // reservation by design, so a percentage threshold only restates
+          // that policy. The consequence that matters is a hibernated
+          // Minecraft server failing to schedule when a player joins. The
+          // scheduler counts every Pending or Running pod bound to the node;
+          // batch-low pods do not count because a waking game may preempt
+          // them. Duplicate kube-state-metrics series are collapsed first.
+          alert: "ProductionWakeCapacityInsufficient",
           annotations: {
             description: escapePrometheusTemplate(
-              "Pod memory requests on production node {{ $labels.node }} consume {{ $value | humanizePercentage }} of allocatable memory. Reduce requests or move workloads before new pods become unschedulable.",
+              `Production node {{ $labels.node }} has {{ $value | humanize1024 }}B of unreserved memory that a waking game can use, less than the largest scale-to-zero Minecraft request (${String(WAKE_REQUEST_BYTES / GIBIBYTE)} GiB). A player joining that server would leave it Pending. Lower oversized requests or move a workload.`,
             ),
-            summary: "Production node memory requests exceed 95%",
+            summary:
+              "A hibernated Minecraft server cannot be scheduled on wake",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum by (node) (kube_pod_container_resource_requests{resource="memory",node="${PROD_NODE_HOSTNAME}"}) / on (node) kube_node_status_allocatable{resource="memory",node="${PROD_NODE_HOSTNAME}"} > 0.95`,
+            [
+              `max by (node) (kube_node_status_allocatable{resource="memory",node="${PROD_NODE_HOSTNAME}"})`,
+              " - on (node) sum by (node) (",
+              `max by (namespace, pod, container, node) (kube_pod_container_resource_requests{resource="memory",node="${PROD_NODE_HOSTNAME}"})`,
+              ' * on (namespace, pod) group_left () max by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Running"} == 1)',
+              ` unless on (namespace, pod) kube_pod_info{priority_class="${BATCH_PRIORITY}"}`,
+              `) < ${String(WAKE_REQUEST_BYTES)}`,
+            ].join(""),
           ),
-          for: "15m",
+          for: "30m",
           labels: { severity: "warning" },
         },
       ],

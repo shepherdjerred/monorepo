@@ -236,6 +236,150 @@ afterAll(async () => {
   await rm(SYNTH_OUTDIR, { recursive: true, force: true });
 });
 
+const AUDITED_PERSISTENT_RESERVATIONS = new Map<
+  string,
+  z.infer<typeof ContainerSchema>["resources"]
+>([
+  [
+    "birmel/main",
+    {
+      requests: { cpu: "50m", memory: "384Mi" },
+      limits: { memory: "2048Mi" },
+    },
+  ],
+  [
+    "buildkitd/buildkitd",
+    {
+      requests: { cpu: "500m", memory: "5120Mi" },
+      limits: { cpu: "8", memory: "32768Mi" },
+    },
+  ],
+  [
+    "media-qbittorrent/qbittorrent-config-seed",
+    { requests: { cpu: "10m", memory: "16Mi" } },
+  ],
+  ["media-qbittorrent/gluetun", { requests: { cpu: "25m", memory: "128Mi" } }],
+  [
+    "media-qbittorrent/qbittorrent",
+    {
+      requests: { cpu: "200m", memory: "4608Mi" },
+      limits: { cpu: "2000m", memory: "6144Mi" },
+    },
+  ],
+  [
+    "media-qbittorrent/qbittorrent-exporter",
+    { requests: { cpu: "10m", memory: "64Mi" } },
+  ],
+  [
+    "media-plex/main",
+    { requests: { memory: "4096Mi" }, limits: { memory: "16384Mi" } },
+  ],
+  ["media-plex/plex-exporter", { requests: { cpu: "10m", memory: "32Mi" } }],
+  [
+    "arcade/main",
+    {
+      requests: { cpu: "2", memory: "3072Mi" },
+      limits: { cpu: "12", memory: "16384Mi" },
+    },
+  ],
+  [
+    "relay/relay-server",
+    {
+      requests: { cpu: "250m", memory: "64Mi" },
+      limits: { cpu: "1000m", memory: "2048Mi" },
+    },
+  ],
+  [
+    "stash/stash",
+    {
+      requests: { cpu: "250m", memory: "192Mi" },
+      limits: { cpu: "4", memory: "4096Mi" },
+    },
+  ],
+  [
+    "pinchtab/main",
+    {
+      requests: { cpu: "250m", memory: "512Mi" },
+      limits: { cpu: "2000m", memory: "4096Mi" },
+    },
+  ],
+  [
+    "scout-beta-scout-backend/main",
+    {
+      requests: { cpu: "50m", memory: "2048Mi" },
+      limits: { memory: "8192Mi" },
+    },
+  ],
+  [
+    "scout-prod-scout-backend/main",
+    {
+      requests: { cpu: "100m", memory: "2560Mi" },
+      limits: { memory: "8192Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-workflows-candidate/temporal-workflows-candidate",
+    {
+      requests: { cpu: "250m", memory: "768Mi" },
+      limits: { cpu: "1000m", memory: "2048Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-gateway/temporal-gateway",
+    { requests: { cpu: "100m", memory: "256Mi" } },
+  ],
+  [
+    "temporal-temporal-home-worker/temporal-home-worker",
+    { requests: { cpu: "100m", memory: "512Mi" } },
+  ],
+  [
+    "temporal-temporal-reports-worker/temporal-reports-worker",
+    { requests: { cpu: "100m", memory: "512Mi" } },
+  ],
+  [
+    "temporal-temporal-infra-worker/temporal-infra-worker",
+    {
+      requests: { cpu: "500m", memory: "768Mi" },
+      limits: { cpu: "1500m", memory: "6144Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-repo-worker/temporal-repo-worker",
+    {
+      requests: { cpu: "250m", memory: "512Mi" },
+      limits: { cpu: "1500m", memory: "4096Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-scout-worker/temporal-scout-worker",
+    {
+      requests: { cpu: "250m", memory: "512Mi" },
+      limits: { cpu: "1500m", memory: "4096Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",
+    {
+      requests: { cpu: "250m", memory: "768Mi" },
+      limits: { cpu: "1", memory: "4096Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-glitter-context-worker/temporal-glitter-context-worker",
+    {
+      requests: { cpu: "250m", memory: "512Mi" },
+      limits: { cpu: "2", memory: "6144Mi" },
+    },
+  ],
+  [
+    "temporal-temporal-agent-worker/temporal-agent-worker",
+    {
+      requests: { cpu: "250m", memory: "768Mi" },
+      limits: { cpu: "1500m", memory: "1024Mi" },
+    },
+  ],
+]);
+
 describe("Container resource requests backstop", () => {
   it("synthesizes a meaningful number of containers (sanity check)", () => {
     expect(collected.all.length).toBeGreaterThan(50);
@@ -287,143 +431,7 @@ describe("Container resource requests backstop", () => {
   });
 
   it("keeps audited persistent workload reservations exact", () => {
-    const expected = new Map<
-      string,
-      z.infer<typeof ContainerSchema>["resources"]
-    >([
-      [
-        "birmel/main",
-        {
-          requests: { cpu: "50m", memory: "768Mi" },
-          limits: { memory: "2048Mi" },
-        },
-      ],
-      [
-        "buildkitd/buildkitd",
-        {
-          requests: { cpu: "500m", memory: "5120Mi" },
-          limits: { cpu: "8", memory: "32768Mi" },
-        },
-      ],
-      [
-        "media-qbittorrent/qbittorrent-config-seed",
-        { requests: { cpu: "10m", memory: "16Mi" } },
-      ],
-      [
-        "media-qbittorrent/gluetun",
-        { requests: { cpu: "25m", memory: "128Mi" } },
-      ],
-      [
-        "media-qbittorrent/qbittorrent",
-        {
-          requests: { cpu: "200m", memory: "4608Mi" },
-          limits: { cpu: "2000m", memory: "6144Mi" },
-        },
-      ],
-      [
-        "media-qbittorrent/qbittorrent-exporter",
-        { requests: { cpu: "10m", memory: "64Mi" } },
-      ],
-      [
-        "media-plex/main",
-        { requests: { memory: "4096Mi" }, limits: { memory: "16384Mi" } },
-      ],
-      [
-        "media-plex/plex-exporter",
-        { requests: { cpu: "10m", memory: "32Mi" } },
-      ],
-      [
-        "arcade/main",
-        {
-          requests: { cpu: "2", memory: "6144Mi" },
-          limits: { cpu: "12", memory: "16384Mi" },
-        },
-      ],
-      [
-        "pinchtab/main",
-        {
-          requests: { cpu: "250m", memory: "512Mi" },
-          limits: { cpu: "2000m", memory: "4096Mi" },
-        },
-      ],
-      [
-        "scout-beta-scout-backend/main",
-        {
-          requests: { cpu: "50m", memory: "2048Mi" },
-          limits: { memory: "8192Mi" },
-        },
-      ],
-      [
-        "scout-prod-scout-backend/main",
-        {
-          requests: { cpu: "100m", memory: "2560Mi" },
-          limits: { memory: "8192Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-workflows-candidate/temporal-workflows-candidate",
-        {
-          requests: { cpu: "250m", memory: "768Mi" },
-          limits: { cpu: "1000m", memory: "2048Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-gateway/temporal-gateway",
-        { requests: { cpu: "100m", memory: "256Mi" } },
-      ],
-      [
-        "temporal-temporal-home-worker/temporal-home-worker",
-        { requests: { cpu: "100m", memory: "512Mi" } },
-      ],
-      [
-        "temporal-temporal-reports-worker/temporal-reports-worker",
-        { requests: { cpu: "100m", memory: "512Mi" } },
-      ],
-      [
-        "temporal-temporal-infra-worker/temporal-infra-worker",
-        {
-          requests: { cpu: "500m", memory: "768Mi" },
-          limits: { cpu: "1500m", memory: "6144Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-repo-worker/temporal-repo-worker",
-        {
-          requests: { cpu: "250m", memory: "512Mi" },
-          limits: { cpu: "1500m", memory: "4096Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-scout-worker/temporal-scout-worker",
-        {
-          requests: { cpu: "250m", memory: "512Mi" },
-          limits: { cpu: "1500m", memory: "4096Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",
-        {
-          requests: { cpu: "250m", memory: "768Mi" },
-          limits: { cpu: "1", memory: "4096Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-glitter-context-worker/temporal-glitter-context-worker",
-        {
-          requests: { cpu: "250m", memory: "512Mi" },
-          limits: { cpu: "2", memory: "6144Mi" },
-        },
-      ],
-      [
-        "temporal-temporal-agent-worker/temporal-agent-worker",
-        {
-          requests: { cpu: "250m", memory: "768Mi" },
-          limits: { cpu: "1500m", memory: "1024Mi" },
-        },
-      ],
-    ]);
-
-    for (const [key, resources] of expected) {
+    for (const [key, resources] of AUDITED_PERSISTENT_RESERVATIONS) {
       const found = collected.all.find(
         ({ workload, container }) => `${workload}/${container}` === key,
       );

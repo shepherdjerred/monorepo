@@ -20,30 +20,21 @@ export function getClusterHygieneRuleGroups(): PrometheusRuleSpecGroups[] {
               "The alert value is actual referenced bytes. Capture holder diagnostics before targeted recovery; do not force-destroy the dataset or remove its finalizer.",
           },
         },
+        // The unwind table holds 16,384 entries and plateaus near 96% on a
+        // busy node, so a percentage threshold fires permanently. Alert only
+        // when it is full and the profiler starts rejecting executables; the
+        // Loki rule AlloyUnwindInfoArrayFull reports the rejections themselves.
         {
-          alert: "AlloyUnwindTableHigh",
+          alert: "AlloyUnwindTableFull",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'agent_unwind_info_array_size{namespace="alloy"} / 16384 > 0.90',
-          ),
-          for: "15m",
-          labels: { severity: "warning" },
-          annotations: {
-            summary: "Alloy unwind table above 90%",
-            message:
-              "Inspect executable extraction errors and capture evidence before targeted manual recovery. Map scale does not increase this table.",
-          },
-        },
-        {
-          alert: "AlloyUnwindTableCritical",
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'agent_unwind_info_array_size{namespace="alloy"} / 16384 > 0.98',
+            'agent_unwind_info_array_size{namespace="alloy"} >= 16384',
           ),
           for: "5m",
-          labels: { severity: "critical" },
+          labels: { severity: "warning" },
           annotations: {
-            summary: "Alloy unwind table nearly full",
+            summary: "Alloy unwind table is full",
             message:
-              "Capture diagnostics and recover only the affected node profiler after verifying its peer. No automatic restarts.",
+              "The node profiler cannot load unwind info for new executables, so their profiles are missing. Capture diagnostics and recover only the affected node profiler after verifying its peer. Map scale does not increase this table. No automatic restarts.",
           },
         },
         {

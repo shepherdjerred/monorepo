@@ -65,6 +65,16 @@ volume, or reports `PartiallyFailed`, does not prove database recovery. Keep the
 independent full backup and verified restore available throughout the upgrade.
 :::
 
+A failed or partial restore stays on the Ops maintenance list until you
+classify it. When a later restore of the same backup completed and passed these
+checks, record that on the failed Restore with two annotations:
+`ops.sjer.red/restore-failure-classification=superseded-by-accepted-restore`
+and `ops.sjer.red/superseded-by-restore=<completed restore name>`. Ops shows it
+as information only while the named Restore exists in the same namespace, is
+`Completed`, is newer, and has the same `spec.backupName`. Otherwise it stays a
+warning that names the unmet condition. Setting either annotation without the
+other fails the storage collection.
+
 ## 3. Control when the major upgrade starts
 
 Inspect the live operator mode before publishing all database pins together:

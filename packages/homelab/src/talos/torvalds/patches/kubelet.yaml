@@ -51,6 +51,10 @@ machine:
       # 2026-07-11 (usage immediately settled at ~2.2Gi). If this ever needs
       # resizing again, measure /sys/fs/cgroup/podruntime/memory.peak first.
       # See the original investigation.
+      # Re-measured 2026-10-18 before a proposed cut to 3Gi: /podruntime sat
+      # at the 8Gi ceiling (anon 1.9Gi, page cache 4.7Gi, kernel 1.4Gi) with
+      # 271,879 memory.max reclaim events and no OOM kills. The unreclaimable
+      # floor alone exceeds 3Gi, so this stays 8Gi.
       kubeReserved:
         cpu: "1"
         memory: "8Gi"

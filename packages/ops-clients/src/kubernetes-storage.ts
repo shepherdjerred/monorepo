@@ -39,8 +39,25 @@ export type VeleroRestoreStatus = {
   createdAt: string;
   phase: NonNullable<z.infer<typeof VeleroRestoreSchema>["status"]>["phase"];
   errors: number;
-  classification: "unclassified" | "expected-admission-block";
+  classification: VeleroRestoreFailureClassification;
+  /** The accepted Restore named by a `superseded-by-accepted-restore` classification. */
+  supersededBy: string | undefined;
 };
+
+export const VELERO_RESTORE_CLASSIFICATION_ANNOTATION =
+  "ops.sjer.red/restore-failure-classification";
+export const VELERO_RESTORE_SUPERSEDED_BY_ANNOTATION =
+  "ops.sjer.red/superseded-by-restore";
+
+const VeleroRestoreFailureClassificationSchema = z.enum([
+  "unclassified",
+  "expected-admission-block",
+  "superseded-by-accepted-restore",
+]);
+
+export type VeleroRestoreFailureClassification = z.infer<
+  typeof VeleroRestoreFailureClassificationSchema
+>;
 
 export const ZfsVolumeSchema = z.object({
   metadata: z.object({
@@ -62,6 +79,23 @@ export function toVeleroRestoreStatus({
   spec,
   status,
 }: z.infer<typeof VeleroRestoreSchema>): VeleroRestoreStatus {
+  const classification = VeleroRestoreFailureClassificationSchema.parse(
+    metadata.annotations[VELERO_RESTORE_CLASSIFICATION_ANNOTATION] ??
+      "unclassified",
+  );
+  const supersededBy =
+    metadata.annotations[VELERO_RESTORE_SUPERSEDED_BY_ANNOTATION];
+  // The supersession claim and the Restore it names are one contract; either
+  // half without the other is an operator mistake, not a classification.
+  if (
+    supersededBy === "" ||
+    (classification === "superseded-by-accepted-restore") !==
+      (supersededBy !== undefined)
+  ) {
+    throw new Error(
+      `Velero Restore ${metadata.namespace}/${metadata.name} must set ${VELERO_RESTORE_SUPERSEDED_BY_ANNOTATION} exactly when classified superseded-by-accepted-restore`,
+    );
+  }
   return {
     name: metadata.name,
     namespace: metadata.namespace,
@@ -69,11 +103,7 @@ export function toVeleroRestoreStatus({
     backupName: spec.backupName,
     phase: status?.phase,
     errors: status?.errors ?? 0,
-    classification: z
-      .enum(["unclassified", "expected-admission-block"])
-      .parse(
-        metadata.annotations["ops.sjer.red/restore-failure-classification"] ??
-          "unclassified",
-      ),
+    classification,
+    supersededBy,
   };
 }

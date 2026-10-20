@@ -4,6 +4,7 @@ import {
   type LogAttributes,
 } from "@opentelemetry/api-logs";
 import { z } from "zod";
+import { serializeLogErrorFields } from "@shepherdjerred/temporal-observability/log-fields";
 import { getTraceContext } from "#observability/tracing.ts";
 
 type LogLevel = "debug" | "info" | "warning" | "error";
@@ -27,7 +28,7 @@ const LogAttrValueSchema = z.union([
 
 function toLogAttributes(meta: Record<string, unknown>): LogAttributes {
   const out: LogAttributes = {};
-  for (const [key, value] of Object.entries(meta)) {
+  for (const [key, value] of Object.entries(serializeLogErrorFields(meta))) {
     if (value == null) continue;
     const parsed = LogAttrValueSchema.safeParse(value);
     out[key] = parsed.success ? parsed.data : JSON.stringify(value);
@@ -84,7 +85,7 @@ export function log(
     msg: message,
     component: "temporal-worker",
     ...traceContext,
-    ...fields,
+    ...serializeLogErrorFields(fields),
   };
   // Temporal's ESLint config disallows console.log; match the rest of the
   // package by writing all stdout JSON via console.warn / console.error.
