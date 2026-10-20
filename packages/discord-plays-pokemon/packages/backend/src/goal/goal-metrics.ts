@@ -9,7 +9,15 @@ import {
   observeGoalStreamHealth,
 } from "#src/observability/metrics.ts";
 
-const goalStreamObservers = new Map<string, () => void>();
+const activeGoalMetrics = new Map<string, (() => void) | undefined>();
+
+/** Release live gauges once, even if terminal report or process cleanup fails. */
+export function releaseGoalMetrics(goalId: string): void {
+  if (!activeGoalMetrics.has(goalId)) return;
+  activeGoalMetrics.get(goalId)?.();
+  activeGoalMetrics.delete(goalId);
+  goalActive.dec();
+}
 
 export function recordGoalStarted(
   state: GoalState,
@@ -17,17 +25,17 @@ export function recordGoalStarted(
   now: () => Date = () => new Date(),
 ): void {
   goalActive.inc();
-  if (isStreaming !== undefined) {
-    goalStreamObservers.set(
-      state.id,
-      observeGoalStreamHealth({
-        active: () => state.status === "running",
-        streaming: isStreaming,
-        ageSeconds: () =>
-          Math.max(0, (now().getTime() - Date.parse(state.startedAt)) / 1000),
-      }),
-    );
-  }
+  activeGoalMetrics.set(
+    state.id,
+    isStreaming === undefined
+      ? undefined
+      : observeGoalStreamHealth({
+          active: () => state.status === "running",
+          streaming: isStreaming,
+          ageSeconds: () =>
+            Math.max(0, (now().getTime() - Date.parse(state.startedAt)) / 1000),
+        }),
+  );
 }
 
 export function recordGoalFinished(state: GoalState): void {
@@ -40,9 +48,7 @@ export function recordGoalFinished(state: GoalState): void {
     throw new TypeError("Goal metrics require valid lifecycle timestamps");
   }
   const durationSeconds = Math.max(0, (finishedAt - startedAt) / 1000);
-  goalActive.dec();
-  goalStreamObservers.get(state.id)?.();
-  goalStreamObservers.delete(state.id);
+  releaseGoalMetrics(state.id);
   goalRunsTotal.inc({ status: state.status });
   goalDurationSeconds.observe({ status: state.status }, durationSeconds);
 }
