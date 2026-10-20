@@ -3,6 +3,7 @@ import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";
 import { GoalManager } from "./goal-manager.ts";
+import { goalStreamDown } from "#src/observability/metrics.ts";
 import type {
   GoalDiscordMessage,
   GoalProcess,
@@ -147,6 +148,34 @@ describe("GoalManager", () => {
     } else {
       Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
+  });
+
+  test("observes its own stream through goal start, recovery and shutdown", async () => {
+    let streaming = false;
+    const { manager } = await managerHarness({
+      isStreaming: () => streaming,
+    });
+    try {
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+      expect(await startDefaultGoal(manager)).toMatchObject({
+        kind: "started",
+      });
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 1 }],
+      });
+      streaming = true;
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+    } finally {
+      await manager.shutdown();
+    }
+    streaming = false;
+    expect(await goalStreamDown.get()).toMatchObject({
+      values: [{ value: 0 }],
+    });
   });
 
   test("locks a goal from other users for the configured lock window", async () => {

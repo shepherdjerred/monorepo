@@ -58,6 +58,11 @@ subpath imports). This backend supplies the Pokémon-specific pieces: the
 emulator, the game driver, the goal system, game-event/notification metrics,
 and the socket dispatch.
 
+`pokemon_goal_stream_down` counts active goals whose own Go-Live broadcast is
+down. It pairs each goal manager with its session's streamer at scrape time,
+so another Arcade stream cannot hide a failed goal broadcast. The metric has
+no guild or session labels; headless goal benchmarks have no broadcast probe.
+
 The WASM is **built from source** (ottohg pinned at `OTTOHG_SHA` +
 our export patch) by `scripts/build-wasm.ts`. It is not committed; Renovate
 advances the upstream pin. See `wasm-src/PATCHES.md`.

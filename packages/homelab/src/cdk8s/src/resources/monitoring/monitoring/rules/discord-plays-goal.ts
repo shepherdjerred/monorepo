@@ -33,7 +33,7 @@ export function getDiscordPlaysGoalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PokemonGoalStreamDownMidGoal",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max(pokemon_goal_active{namespace="arcade"}) > 0 and on() max(stream_active{namespace="arcade"}) == 0',
+            'max(pokemon_goal_stream_down{namespace="arcade"}) > 0',
           ),
           for: "3m",
           labels: { severity: "warning", category: "discord-plays" },

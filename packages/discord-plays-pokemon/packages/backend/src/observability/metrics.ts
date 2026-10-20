@@ -55,6 +55,33 @@ export const goalActive = new Gauge({
   registers: [registry],
 });
 
+type GoalStreamHealth = {
+  active: () => boolean;
+  streaming: () => boolean;
+};
+const goalStreams = new Set<GoalStreamHealth>();
+
+/** Pair each live goal with its own broadcast without session or guild labels. */
+export function observeGoalStreamHealth(health: GoalStreamHealth): () => void {
+  goalStreams.add(health);
+  return () => {
+    goalStreams.delete(health);
+  };
+}
+
+export const goalStreamDown = new Gauge({
+  name: "pokemon_goal_stream_down",
+  help: "Number of active Pokemon goals whose own Go-Live broadcast is down",
+  registers: [registry],
+  collect() {
+    let down = 0;
+    for (const health of goalStreams) {
+      if (health.active() && !health.streaming()) down += 1;
+    }
+    this.set(down);
+  },
+});
+
 export const goalRunsTotal = new Counter({
   name: "pokemon_goal_runs_total",
   help: "Terminal Pokemon goal runs by process-lifecycle status",

@@ -6,10 +6,25 @@ import {
   goalDurationSeconds,
   goalRunsTotal,
   goalTokensTotal,
+  observeGoalStreamHealth,
 } from "#src/observability/metrics.ts";
 
-export function recordGoalStarted(): void {
+const goalStreamObservers = new Map<string, () => void>();
+
+export function recordGoalStarted(
+  state: GoalState,
+  isStreaming?: () => boolean,
+): void {
   goalActive.inc();
+  if (isStreaming !== undefined) {
+    goalStreamObservers.set(
+      state.id,
+      observeGoalStreamHealth({
+        active: () => state.status === "running",
+        streaming: isStreaming,
+      }),
+    );
+  }
 }
 
 export function recordGoalFinished(state: GoalState): void {
@@ -23,6 +38,8 @@ export function recordGoalFinished(state: GoalState): void {
   }
   const durationSeconds = Math.max(0, (finishedAt - startedAt) / 1000);
   goalActive.dec();
+  goalStreamObservers.get(state.id)?.();
+  goalStreamObservers.delete(state.id);
   goalRunsTotal.inc({ status: state.status });
   goalDurationSeconds.observe({ status: state.status }, durationSeconds);
 }

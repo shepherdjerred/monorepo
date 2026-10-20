@@ -42,6 +42,7 @@ class FakeEmulator extends Emulator {
 
 function fakeStreamer(events: Events, loginError?: Error): SessionStreamer {
   return {
+    isStreaming: false,
     login: async () => {
       events.push("streamer:login");
       if (loginError !== undefined) throw loginError;

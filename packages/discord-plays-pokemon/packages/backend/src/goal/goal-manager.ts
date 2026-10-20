@@ -66,6 +66,8 @@ type GoalManagerOptions = {
   // Overrides the end-of-goal checkpoint retry policy; tests use it to retry
   // without real delays.
   checkpointRetry?: CheckpointRetry;
+  /** The session's own broadcast; absent for headless goal benchmarks. */
+  isStreaming?: () => boolean;
 };
 import { settleGoalProcess } from "./goal-process-helpers.ts";
 import * as leaseHelpers from "./control/goal-lease-helpers.ts";
@@ -89,6 +91,7 @@ export class GoalManager {
   private readonly checkpointGame: () => Promise<void>;
   private readonly checkpointRetry: CheckpointRetry;
   private readonly controlGate = new GoalControlGate();
+  private readonly isStreaming: (() => boolean) | undefined;
   // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
   // system-written session logs, and MEMORY.md archives. Backed by
   // config.memory_dir (the driver points it under saves/<guildId>/). Exposed to
@@ -116,6 +119,7 @@ export class GoalManager {
       options.acquireInputLease ?? leaseHelpers.noOpAcquireInputLease;
     this.checkpointGame = options.checkpointGame ?? (() => Promise.resolve());
     this.checkpointRetry = options.checkpointRetry ?? defaultCheckpointRetry;
+    this.isStreaming = options.isStreaming;
     this.memory = new GoalMemory(
       this.resolveRuntimePath(this.config.memory_dir),
       this.now,
@@ -336,7 +340,7 @@ export class GoalManager {
       updateTimer,
     };
     reporter.activate((text) => void this.forwardMilestone(id, text));
-    recordGoalStarted();
+    recordGoalStarted(state, this.isStreaming);
     void this.observeProcess(id);
 
     return {
