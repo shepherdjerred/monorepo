@@ -4,6 +4,7 @@ import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecy
 import { GameStreamer } from "@discord-plays-mario-kart/backend/stream/game-streamer.ts";
 import type { RuntimeConfig as Config } from "@discord-plays-mario-kart/backend/config/schema.ts";
 import { encodePng } from "@shepherdjerred/discord-plays-core/image/png.ts";
+import { ticksTotal } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import type { MediaFeeds } from "#src/media/feeds.ts";
 import type { StatsStore } from "#src/stats/store.ts";
 import { ResultTracker } from "#src/stats/tracker.ts";
@@ -32,6 +33,7 @@ export function nativeModule(options: {
         ? ["emulator/Wii", "emulator/GC"]
         : ["profile/Default/IndexedDB"],
     create(context) {
+      const metricLabels = { runtime: options.gameId };
       const format = nativeFormats[options.gameId];
       const feed = options.feeds.create(
         context.session.id,
@@ -61,6 +63,7 @@ export function nativeModule(options: {
         selfbotClient: context.session.userbotEntry.userbot.client,
         guildId: context.session.guildId,
         channelId: context.session.voiceChannelId,
+        runtime: options.gameId,
         format: { ...format, rowScale: 1 },
         pixelFormat: format.pixelFormat,
         displayAspect: format.displayAspect,
@@ -105,6 +108,8 @@ export function nativeModule(options: {
       });
       const host = options.host(context.session.sessionDir, {
         frame: (bytes, timeMs) => {
+          if (closing) return;
+          ticksTotal.inc(metricLabels);
           clock.video(bytes, timeMs);
         },
         audio: (bytes, timeMs) => {

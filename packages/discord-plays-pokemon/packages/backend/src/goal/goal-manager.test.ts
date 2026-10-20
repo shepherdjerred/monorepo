@@ -3,6 +3,11 @@ import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";
 import { GoalManager } from "./goal-manager.ts";
+import {
+  goalActive,
+  goalRuntimeSeconds,
+  goalStreamDown,
+} from "#src/observability/metrics.ts";
 import type {
   GoalDiscordMessage,
   GoalProcess,
@@ -134,6 +139,84 @@ function codePointLength(value: string): number {
   return length;
 }
 
+async function observeOverlappingGoalAges(): Promise<void> {
+  let time = Date.parse("2026-06-13T00:00:00.000Z");
+  const now = () => new Date(time);
+  const first = await managerHarness({ now, isStreaming: () => true });
+  const second = await managerHarness({ now, isStreaming: () => true });
+  try {
+    expect(await startDefaultGoal(first.manager)).toMatchObject({
+      kind: "started",
+    });
+    time += 20 * 60 * 1000;
+    expect(await startDefaultGoal(second.manager)).toMatchObject({
+      kind: "started",
+    });
+    time += 20 * 60 * 1000;
+    expect(await goalRuntimeSeconds.get()).toMatchObject({
+      values: [{ value: 40 * 60 }],
+    });
+    await first.manager.shutdown();
+    expect(await goalRuntimeSeconds.get()).toMatchObject({
+      values: [{ value: 20 * 60 }],
+    });
+  } finally {
+    await first.manager.shutdown();
+    await second.manager.shutdown();
+  }
+  expect(await goalRuntimeSeconds.get()).toMatchObject({
+    values: [{ value: 0 }],
+  });
+}
+
+function noBroadcast(): boolean {
+  return false;
+}
+
+async function observeFailedGoalTeardown(): Promise<void> {
+  let time = Date.parse("2026-06-13T00:00:00.000Z");
+  const process = makeProcess();
+  let released = false;
+  const releaseInputLease = () => {
+    released = true;
+  };
+  const before = await goalActive.get();
+  const { manager } = await managerHarness({
+    now: () => new Date(time),
+    isStreaming: noBroadcast,
+    acquireInputLease: () => releaseInputLease,
+    spawner: () => ({
+      ...process,
+      kill: () => {
+        process.kill();
+        throw new Error("process teardown failed");
+      },
+    }),
+  });
+  try {
+    expect(await startDefaultGoal(manager)).toMatchObject({ kind: "started" });
+    time += 60_000;
+    expect(await goalStreamDown.get()).toMatchObject({
+      values: [{ value: 1 }],
+    });
+    expect(await goalRuntimeSeconds.get()).toMatchObject({
+      values: [{ value: 60 }],
+    });
+    await expect(manager.shutdown()).rejects.toThrow("process teardown failed");
+    expect(released).toBe(true);
+    expect(await goalActive.get()).toEqual(before);
+    expect(await goalStreamDown.get()).toMatchObject({
+      values: [{ value: 0 }],
+    });
+    expect(await goalRuntimeSeconds.get()).toMatchObject({
+      values: [{ value: 0 }],
+    });
+  } finally {
+    process.finish(143);
+    await manager.shutdown();
+  }
+}
+
 describe("GoalManager", () => {
   const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
@@ -148,6 +231,46 @@ describe("GoalManager", () => {
       Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
   });
+
+  test("observes its own stream through goal start, recovery and shutdown", async () => {
+    let streaming = false;
+    const before = await goalActive.get();
+    const { manager } = await managerHarness({
+      isStreaming: () => streaming,
+    });
+    try {
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+      expect(await startDefaultGoal(manager)).toMatchObject({
+        kind: "started",
+      });
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 1 }],
+      });
+      streaming = true;
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+    } finally {
+      await manager.shutdown();
+    }
+    streaming = false;
+    expect(await goalActive.get()).toEqual(before);
+    expect(await goalStreamDown.get()).toMatchObject({
+      values: [{ value: 0 }],
+    });
+  });
+
+  test(
+    "observes each goal's age independently across overlapping sessions",
+    observeOverlappingGoalAges,
+  );
+
+  test(
+    "releases live goal metrics when process teardown throws",
+    observeFailedGoalTeardown,
+  );
 
   test("locks a goal from other users for the configured lock window", async () => {
     const runtimeDirectory = await createRuntimeDirectory();

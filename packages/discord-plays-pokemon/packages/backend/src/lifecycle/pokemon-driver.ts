@@ -63,6 +63,7 @@ export type SessionStreamer = Pick<
   | "destroy"
   | "pushFrame"
   | "pushAudio"
+  | "isStreaming"
 >;
 
 /** Seams for building a session's emulator and streamer (tests substitute fakes). */
@@ -270,6 +271,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
             ),
           acquireInputLease: () => emulator.acquireInputLease("goal"),
           checkpointGame: () => emulator.checkpointSave(),
+          isStreaming: () => streamer.isStreaming,
         });
         parts.goalManager = goalManager;
         await goalManager.initialize();

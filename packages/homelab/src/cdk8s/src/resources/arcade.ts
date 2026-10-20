@@ -186,7 +186,7 @@ model = "gpt-5.6-sol"
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
-        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("marioKart")),
+        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("arcade1")),
         // Shared origin for Discord links, OAuth, and browser controller traffic.
         WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://arcade.sjer.red"),
         DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({

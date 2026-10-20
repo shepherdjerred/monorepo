@@ -15,6 +15,7 @@ export const copyMs = new Histogram({
   name: "emulator_frame_copy_ms",
   help: "Time to render the frame and hand it to the stream, in ms",
   buckets: FRAME_MS_BUCKETS,
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
@@ -53,6 +54,47 @@ export const goalActive = new Gauge({
   name: "pokemon_goal_active",
   help: "Whether a Pokemon goal Codex process is currently active",
   registers: [registry],
+});
+
+type GoalStreamHealth = {
+  active: () => boolean;
+  streaming: () => boolean;
+  ageSeconds: () => number;
+};
+const goalStreams = new Set<GoalStreamHealth>();
+
+/** Pair each live goal with its own broadcast without session or guild labels. */
+export function observeGoalStreamHealth(health: GoalStreamHealth): () => void {
+  goalStreams.add(health);
+  return () => {
+    goalStreams.delete(health);
+  };
+}
+
+export const goalStreamDown = new Gauge({
+  name: "pokemon_goal_stream_down",
+  help: "Number of active Pokemon goals whose own Go-Live broadcast is down",
+  registers: [registry],
+  collect() {
+    let down = 0;
+    for (const health of goalStreams) {
+      if (health.active() && !health.streaming()) down += 1;
+    }
+    this.set(down);
+  },
+});
+
+export const goalRuntimeSeconds = new Gauge({
+  name: "pokemon_goal_runtime_seconds",
+  help: "Age of the oldest active broadcast goal, in seconds",
+  registers: [registry],
+  collect() {
+    let oldest = 0;
+    for (const health of goalStreams) {
+      if (health.active()) oldest = Math.max(oldest, health.ageSeconds());
+    }
+    this.set(oldest);
+  },
 });
 
 export const goalRunsTotal = new Counter({

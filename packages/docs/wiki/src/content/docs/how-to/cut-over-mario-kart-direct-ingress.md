@@ -17,9 +17,11 @@ Use the same application and credentials described in
 
 ## 2. Release DNS and the HTTPS listener
 
-Deliver the [shared edge](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/mario-kart.ts)
+Deliver the [Arcade edge](https://github.com/shepherdjerred/monorepo/blob/1f406ffa0be86948f1f423e751752fe4c1ab5b29/packages/homelab/src/cdk8s/src/resources/arcade-edge.ts)
 with both public hostnames through the [homelab release workflow](/how-to/cut-a-homelab-release/).
 Keep the old canonical origin active during this release.
+For an existing listener, complete the [namespace migration](/how-to/migrate-game-bots-to-arcade/#move-the-web-edge-between-namespaces)
+before transferring its ports and aliases.
 
 In the [Cloudflare stack](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/cloudflare/sjer-red.tf),
 point `sjer_red_cname_arcade` at the [IPv4-only dynamic target](/reference/dynamic-dns/)
@@ -34,7 +36,7 @@ curl --fail --show-error https://arcade.sjer.red/
 ```
 
 Require HTTP 200 and a browser-trusted certificate without disabling verification.
-Check Caddy's logs for successful HTTP-01 issuance.
+Check Caddy's certificate-loading or HTTP-01 issuance logs.
 Pod readiness alone does not prove a certificate exists.
 Do not switch the canonical origin if these checks fail.
 
@@ -43,9 +45,9 @@ Do not switch the canonical origin if these checks fail.
 Set `WEB_PUBLIC_ORIGIN` in the
 [Arcade chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/arcade.ts)
 to `https://arcade.sjer.red` in a separate release.
-Deploy the [edge redirects](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/mario-kart-caddyfile.ts)
-and [Pokébot redirects](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/pokemon-web-redirect.ts)
-with it. Retain the edge's health and ACME handlers before redirect handling.
+Deploy the [Arcade Caddy configuration](https://github.com/shepherdjerred/monorepo/blob/1f406ffa0be86948f1f423e751752fe4c1ab5b29/packages/homelab/src/cdk8s/src/resources/arcade-caddyfile.ts)
+with it; it includes both Mario Kart and Pokébot redirects.
+Retain the edge's health and ACME handlers before redirect handling.
 
 Check that old Mario Kart links return HTTP 307 with their path and query intact.
 Check that old Pokébot addresses return HTTP 307 to the Arcade root.

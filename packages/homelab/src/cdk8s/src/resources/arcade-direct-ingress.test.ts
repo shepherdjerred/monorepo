@@ -2,7 +2,7 @@ import { App } from "cdk8s";
 import { describe, expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createMarioKartChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/mario-kart.ts";
+import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/arcade.ts";
 import {
   getRegisteredBackendProbes,
   getRegisteredPublicProbes,
@@ -20,13 +20,13 @@ const Resource = z.object({
 
 function resources() {
   const app = new App();
-  createMarioKartChart(app);
+  createArcadeChart(app);
   return parseAllDocuments(app.synthYaml()).map((document) =>
     Resource.parse(document.toJSON()),
   );
 }
 
-describe("Mario Kart direct ingress", () => {
+describe("Arcade direct ingress", () => {
   test("exposes only HTTP and HTTPS on the public NodePort service", () => {
     const services = resources().filter(
       (resource) => resource.kind === "Service",
@@ -53,7 +53,7 @@ describe("Mario Kart direct ingress", () => {
     });
   });
 
-  test("retains recovery routes for both hostnames without taking DNS ownership", () => {
+  test("retains all recovery routes without taking DNS ownership", () => {
     const synthesized = resources();
     const bootstrap = synthesized.find(
       (resource) =>
@@ -64,7 +64,7 @@ describe("Mario Kart direct ingress", () => {
     const bindings = synthesized.filter(
       (resource) => resource.kind === "TunnelBinding",
     );
-    expect(bindings).toHaveLength(2);
+    expect(bindings).toHaveLength(3);
     expect(bindings.flatMap((binding) => binding.subjects ?? [])).toEqual(
       expect.arrayContaining([
         {
@@ -72,6 +72,7 @@ describe("Mario Kart direct ingress", () => {
           spec: { fqdn: "mariokart.sjer.red" },
         },
         { name: bootstrap?.metadata.name, spec: { fqdn: "arcade.sjer.red" } },
+        { name: "arcade-legacy-redirects", spec: { fqdn: "pokebot.sjer.red" } },
       ]),
     );
     for (const binding of bindings) {
@@ -111,7 +112,7 @@ describe("Mario Kart direct ingress", () => {
               volumeMounts: expect.arrayContaining([
                 expect.objectContaining({
                   mountPath: "/data",
-                  name: "pvc-mario-kart-edge-data",
+                  name: "pvc-arcade-edge-data",
                 }),
               ]),
             }),
@@ -119,7 +120,7 @@ describe("Mario Kart direct ingress", () => {
           volumes: expect.arrayContaining([
             expect.objectContaining({
               persistentVolumeClaim: {
-                claimName: "mario-kart-edge-data",
+                claimName: "arcade-edge-data",
                 readOnly: false,
               },
             }),

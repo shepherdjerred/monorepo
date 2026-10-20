@@ -13,8 +13,8 @@
  * forever. See `packages/discord-stream-lifecycle/src/viewer-presence.ts`.
  */
 export const USERBOT_IDS = {
-  pokemon: "1094072953580310669",
-  marioKart: "1513020384797266004",
+  arcade2: "1094072953580310669",
+  arcade1: "1513020384797266004",
   streambot: "1512972411639955466",
 } as const satisfies Record<string, string>;
 

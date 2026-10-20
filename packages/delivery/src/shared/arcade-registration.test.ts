@@ -28,6 +28,10 @@ test("reviewed Arcade registration matches the catalog and published artifact co
     chartComponent: "chart:arcade",
     artifactParameters: { "delivery.image": "image:arcade" },
     namespace: "arcade",
+    verification: {
+      url: "https://arcade.sjer.red/health",
+      expectedStatus: 200,
+    },
   });
   expect(environment).toMatchObject({
     id: "arcade/prod",

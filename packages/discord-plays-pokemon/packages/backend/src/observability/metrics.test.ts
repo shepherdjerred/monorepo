@@ -1,5 +1,16 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { goalActive, goalDurationSeconds, goalRunsTotal } from "./metrics.ts";
+import {
+  goalActive,
+  goalDurationSeconds,
+  goalRunsTotal,
+  goalStreamDown,
+  observeGoalStreamHealth,
+} from "./metrics.ts";
+import {
+  streamActive,
+  runtimeGauge,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import { contributeGauge } from "@shepherdjerred/discord-plays-core/observability/gauge-contribution.ts";
 
 beforeEach(() => {
   goalActive.reset();
@@ -8,6 +19,49 @@ beforeEach(() => {
 });
 
 describe("goal metrics", () => {
+  test("another goal or game broadcast cannot mask a goal's failed stream", async () => {
+    let active = true;
+    let streaming = false;
+    const detachFailed = observeGoalStreamHealth({
+      active: () => active,
+      streaming: () => streaming,
+      ageSeconds: () => 0,
+    });
+    const detachHealthy = observeGoalStreamHealth({
+      active: () => true,
+      streaming: () => true,
+      ageSeconds: () => 0,
+    });
+    const otherGame = contributeGauge(
+      runtimeGauge(streamActive, "mk64"),
+      "sum",
+    );
+    otherGame.set(1);
+    try {
+      expect(await goalStreamDown.get()).toHaveProperty("values", [
+        { value: 1, labels: {} },
+      ]);
+      streaming = true;
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+      streaming = false;
+      active = false;
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+      detachFailed();
+      active = true;
+      expect(await goalStreamDown.get()).toMatchObject({
+        values: [{ value: 0 }],
+      });
+    } finally {
+      detachFailed();
+      detachHealthy();
+      otherGame.close();
+    }
+  });
+
   test("use only bounded process-lifecycle labels", async () => {
     goalActive.inc();
     goalActive.dec();

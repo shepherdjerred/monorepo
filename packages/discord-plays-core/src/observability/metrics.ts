@@ -32,6 +32,7 @@ export const emulateMs = new Histogram({
   name: "emulator_frame_emulate_ms",
   help: "Time to run one emulator frame (the wasm core step), in ms",
   buckets: FRAME_MS_BUCKETS,
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
@@ -39,29 +40,58 @@ export const lateMs = new Histogram({
   name: "emulator_frame_late_ms",
   help: "How far behind schedule the paced loop is at each tick, in ms (0 when on time)",
   buckets: [0, 1, 2, 4, 8, 16, 33, 66, 133, 250],
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
 export const ticksTotal = new Counter({
   name: "emulator_ticks_total",
-  help: "Emulator ticks executed; rate() gives the achieved frame rate",
+  help: "Emulator frames delivered; rate() gives the achieved frame rate",
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
 export const loopResyncTotal = new Counter({
   name: "emulator_loop_resync_total",
   help: "Times the paced loop fell far enough behind to resync (dropping frames)",
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
 export const sinkBufferBytes = new Gauge({
   name: "stream_sink_buffer_bytes",
   help: "Bytes buffered in the PassThrough feeding ffmpeg; a rising value means the encoder/send path is falling behind",
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
 export const streamActive = new Gauge({
   name: "stream_active",
   help: "Number of Go-Live broadcasts running and accepting frames",
+  labelNames: ["runtime"],
   registers: [registry],
 });
+
+type GaugeWriter = { set: (value: number) => void };
+type RuntimeGauge = { labels: (labels: { runtime: string }) => GaugeWriter };
+const runtimeGauges = new WeakMap<RuntimeGauge, Map<string, GaugeWriter>>();
+
+/** Callers supply a static game key, never a guild, user or session identifier. */
+export function runtimeGauge(
+  gauge: RuntimeGauge,
+  runtime: string,
+): GaugeWriter {
+  let writers = runtimeGauges.get(gauge);
+  if (writers === undefined) {
+    writers = new Map();
+    runtimeGauges.set(gauge, writers);
+  }
+  let writer = writers.get(runtime);
+  if (writer === undefined) {
+    writer = gauge.labels({ runtime });
+    writers.set(runtime, writer);
+  }
+  // Share the writer so contribution aggregation also works for two copies
+  // of the same game, while keeping different runtimes independent.
+  return writer;
+}

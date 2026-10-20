@@ -5,8 +5,6 @@ import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex/codex-auth.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
-import type { CodexTrace } from "./codex/codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game/game-state-summary.ts";
 import { GoalIntervalReporter } from "./goal-progress.ts";
@@ -16,7 +14,6 @@ import { spawnGoalCodex } from "./codex/spawn-goal-codex.ts";
 import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
 import type {
   GoalMessageSender,
-  GoalProcess,
   GoalProcessSpawner,
   GoalState,
   StartGoalInput,
@@ -28,22 +25,9 @@ import {
   recordGoalFinished,
   recordGoalStarted,
   recordGoalUsage,
+  releaseGoalMetrics,
 } from "./goal-metrics.ts";
 import { loadGoalHistory, persistGoalState } from "./goal-state-store.ts";
-type ActiveGoal = {
-  state: GoalState;
-  process: GoalProcess;
-  timeout: ReturnType<typeof setTimeout>;
-  lastProgressSentAt: number;
-  outputPath: string;
-  jsonl: CodexJsonlParser;
-  stdoutPump: Promise<void>;
-  trace: CodexTrace;
-  releaseInputLease: () => void;
-  // Interval updates + milestone forwarding (see goal-progress.ts).
-  reporter: GoalIntervalReporter;
-  updateTimer: ReturnType<typeof setInterval>;
-};
 
 type GoalManagerOptions = {
   config: Config["game"]["goal"];
@@ -66,8 +50,10 @@ type GoalManagerOptions = {
   // Overrides the end-of-goal checkpoint retry policy; tests use it to retry
   // without real delays.
   checkpointRetry?: CheckpointRetry;
+  /** The session's own broadcast; absent for headless goal benchmarks. */
+  isStreaming?: () => boolean;
 };
-import { settleGoalProcess } from "./goal-process-helpers.ts";
+import { settleGoalProcess, type ActiveGoal } from "./goal-process-helpers.ts";
 import * as leaseHelpers from "./control/goal-lease-helpers.ts";
 import { defaultCheckpointRetry, saveOnGoalEnd } from "./goal-checkpoint.ts";
 import type { CheckpointRetry } from "./goal-checkpoint.ts";
@@ -89,6 +75,7 @@ export class GoalManager {
   private readonly checkpointGame: () => Promise<void>;
   private readonly checkpointRetry: CheckpointRetry;
   private readonly controlGate = new GoalControlGate();
+  private readonly isStreaming: (() => boolean) | undefined;
   // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
   // system-written session logs, and MEMORY.md archives. Backed by
   // config.memory_dir (the driver points it under saves/<guildId>/). Exposed to
@@ -116,6 +103,7 @@ export class GoalManager {
       options.acquireInputLease ?? leaseHelpers.noOpAcquireInputLease;
     this.checkpointGame = options.checkpointGame ?? (() => Promise.resolve());
     this.checkpointRetry = options.checkpointRetry ?? defaultCheckpointRetry;
+    this.isStreaming = options.isStreaming;
     this.memory = new GoalMemory(
       this.resolveRuntimePath(this.config.memory_dir),
       this.now,
@@ -336,7 +324,7 @@ export class GoalManager {
       updateTimer,
     };
     reporter.activate((text) => void this.forwardMilestone(id, text));
-    recordGoalStarted();
+    recordGoalStarted(state, this.isStreaming, this.now);
     void this.observeProcess(id);
 
     return {
@@ -435,6 +423,7 @@ export class GoalManager {
         allowedUserIds: [claimed.state.requestedBy],
       });
     } finally {
+      releaseGoalMetrics(claimed.state.id);
       claimed.releaseInputLease();
       claimed.trace.end(claimed.state.exitCode === 0 ? "success" : "error");
       if (this.terminating === claimed) this.terminating = undefined;
@@ -462,6 +451,7 @@ export class GoalManager {
         allowedUserIds: [active.state.requestedBy],
       });
     } finally {
+      releaseGoalMetrics(active.state.id);
       active.releaseInputLease();
       active.trace.end("error");
       if (this.terminating === active) this.terminating = undefined;
@@ -489,6 +479,7 @@ export class GoalManager {
         await this.saveCheckpoint("replaced");
       }
     } finally {
+      releaseGoalMetrics(active.state.id);
       active.releaseInputLease();
       active.trace.end("cancelled");
       if (this.terminating === active) this.terminating = undefined;

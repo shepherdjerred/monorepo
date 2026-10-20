@@ -6,10 +6,36 @@ import {
   goalDurationSeconds,
   goalRunsTotal,
   goalTokensTotal,
+  observeGoalStreamHealth,
 } from "#src/observability/metrics.ts";
 
-export function recordGoalStarted(): void {
+const activeGoalMetrics = new Map<string, (() => void) | undefined>();
+
+/** Release live gauges once, even if terminal report or process cleanup fails. */
+export function releaseGoalMetrics(goalId: string): void {
+  if (!activeGoalMetrics.has(goalId)) return;
+  activeGoalMetrics.get(goalId)?.();
+  activeGoalMetrics.delete(goalId);
+  goalActive.dec();
+}
+
+export function recordGoalStarted(
+  state: GoalState,
+  isStreaming?: () => boolean,
+  now: () => Date = () => new Date(),
+): void {
   goalActive.inc();
+  activeGoalMetrics.set(
+    state.id,
+    isStreaming === undefined
+      ? undefined
+      : observeGoalStreamHealth({
+          active: () => state.status === "running",
+          streaming: isStreaming,
+          ageSeconds: () =>
+            Math.max(0, (now().getTime() - Date.parse(state.startedAt)) / 1000),
+        }),
+  );
 }
 
 export function recordGoalFinished(state: GoalState): void {
@@ -22,7 +48,7 @@ export function recordGoalFinished(state: GoalState): void {
     throw new TypeError("Goal metrics require valid lifecycle timestamps");
   }
   const durationSeconds = Math.max(0, (finishedAt - startedAt) / 1000);
-  goalActive.dec();
+  releaseGoalMetrics(state.id);
   goalRunsTotal.inc({ status: state.status });
   goalDurationSeconds.observe({ status: state.status }, durationSeconds);
 }
