@@ -152,11 +152,24 @@ work.
 
 Live maintenance that acts directly on running systems with no PR in the loop.
 
-The one that touches backups is **detection-only by explicit decision**.
-`velero-orphan-audit` flags PVC snapshots with no matching live backup and emits
-gauges, a JSON summary, and a pointer to the remediation runbook. Auto-pruning
-was considered and declined in 2026-06-06: destructive automation aimed at
-backups is the one place detection confidence is not enough.
+The backup workflows are **detection-only**. `velero-orphan-audit` flags PVC
+snapshots with no matching live backup. `velero-r2-orphan-audit` flags
+off-site data that no retained backup needs. Both emit gauges, a JSON summary,
+and a pointer to the remediation runbook.
+
+Pruning off-site backup data was declined in 2026-06-06 and reversed in
+2026-10. The objection was to an audit inferring from absence that data is
+disposable. Without any pruning, though, every expired backup leaked its R2
+data until an operator ran a manual cleanup. So deletion now happens where
+expiry happens: the
+[Velero ZFS plugin](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/images/velero-plugin/README.md)
+sweeps a schedule and volume's streams whenever Velero deletes one of its
+backups. It keeps every backup Velero, its storage metadata, or a ZFSBackup
+still names, plus anything under a day old. It also keeps every stream those
+backups descend from, following ZFS stream GUIDs as a restore does. If an
+ancestry cannot be proven complete, it deletes nothing and fails the
+deletion. The audits stay read-only and independent, so they check the sweep
+rather than share its logic.
 
 `ci-workspace-reaper` deletes CI state Woodpecker failed to clean up: terminal
 `wp-` step and service pods and `ci-workspace` claims older than any workflow

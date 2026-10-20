@@ -65,6 +65,11 @@ record the blocker.
 Storage deletion, R2 orphan cleanup, state surgery, and resource replacement
 are destructive. Produce and review the exact candidate set first, then use the
 existing revalidation workflow. A successful backup is not restore proof.
+The one automated exception is the Velero plugin's expiry sweep
+(`images/velero-plugin/zfs_gc.go`): its candidate rule is the reviewed,
+tested artifact, it acts only on Velero's own TTL or explicit deletions, and it
+fails closed on any unresolved ancestry. Changing that rule needs the same
+review as a manual candidate set.
 
 ## Verification
 

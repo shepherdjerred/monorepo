@@ -21,9 +21,11 @@ resource "cloudflare_r2_bucket" "homelab" {
 
 # Hygiene only: reap abandoned multipart upload parts (e.g. fragments left by a
 # PartiallyFailed snapshot upload such as 6hourly-backup-20260922181523). There
-# are deliberately no expiry rules here: Velero TTL finalizers own object
-# deletion, and prefix expiry would corrupt the zfspv incremental chains whose
-# fulls anchor later incrementals.
+# are deliberately no expiry rules here. Velero's deletion of `torvalds/backups/`
+# metadata does not touch `zfspv-incr/` data; the openebs Velero plugin deletes
+# that data when a backup expires, keeping every stream a retained backup's
+# GUID ancestry still needs. Age-based prefix expiry cannot see that ancestry
+# and would corrupt incremental chains whose fulls anchor later incrementals.
 resource "cloudflare_r2_bucket_lifecycle" "homelab" {
   account_id  = var.cloudflare_account_id
   bucket_name = cloudflare_r2_bucket.homelab.name

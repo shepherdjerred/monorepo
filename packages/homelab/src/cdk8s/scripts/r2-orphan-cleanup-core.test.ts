@@ -3,6 +3,7 @@ import {
   assertManifestRevalidated,
   buildR2OrphanManifest,
   metadataBackupNames,
+  R2OrphanManifestSchema,
 } from "./r2-orphan-cleanup-core.ts";
 
 const observedAt = "2026-08-11T20:00:00.000Z";
@@ -353,5 +354,46 @@ describe("R2 orphan cleanup safety options", () => {
     expect(
       manifest.candidates.map((candidate) => candidate.backupName),
     ).toEqual(["selected"]);
+  });
+});
+
+function dailyStream(name: string) {
+  return {
+    key: `zfspv-incr/backups/${name}/torvalds/zfs/-daily-backup-pvc-a-${name}`,
+    size: 1,
+    lastModified: "2026-08-09T00:00:00.000Z",
+  };
+}
+
+describe("R2 orphan cleanup ancestry", () => {
+  test("reclaims earlier non-ancestor history and protects ZFSBackup references", () => {
+    // Restores follow GUID ancestry, so an earlier full that no retained
+    // stream descends from is reclaimable even though it sorts first.
+    const manifest = buildR2OrphanManifest({
+      chainProtection: { protectedBackupNames: [], incompleteRoots: [] },
+      observedAt,
+      storage,
+      zfsBackupNames: ["daily-backup-20260803000000"],
+      zfsObjects: [
+        dailyStream("daily-backup-20260801000000"),
+        dailyStream("daily-backup-20260802000000"),
+        dailyStream("daily-backup-20260803000000"),
+      ],
+      liveBackupNames: ["daily-backup-20260802000000"],
+      metadataBackupNames: ["daily-backup-20260802000000"],
+    });
+    expect(
+      manifest.candidates.map((candidate) => candidate.backupName),
+    ).toEqual(["daily-backup-20260801000000"]);
+    expect(manifest.protectedBackupNames).toEqual([
+      "daily-backup-20260802000000",
+      "daily-backup-20260803000000",
+    ]);
+    for (const contractVersion of [3, 4]) {
+      expect(
+        R2OrphanManifestSchema.safeParse({ ...manifest, contractVersion })
+          .success,
+      ).toBe(false);
+    }
   });
 });

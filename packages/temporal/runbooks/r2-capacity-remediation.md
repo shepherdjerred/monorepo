@@ -4,8 +4,13 @@ Procedure for when the `homelab` R2 bucket approaches or exceeds its 1536 GiB
 capacity budget (`R2StorageNearingLimit` / `R2StorageExceedingLimit`), or when the R2
 orphan alerts fire (`VeleroR2OrphanPrefixes` /
 `VeleroR2OrphanBytesExcessive`). Triage first: the inventory distinguishes
-accumulated orphans (the usual cause — TTL-expired backups whose
-`zfspv-incr` data was never deleted) from legitimate chain growth.
+accumulated orphans from legitimate chain growth.
+
+The Velero ZFS plugin deletes an expired backup's `zfspv-incr` data when
+Velero deletes the backup, sweeping its whole schedule+volume family (see
+`packages/homelab/images/velero-plugin/README.md`). Orphans therefore mean a
+failed sweep, a family that will see no further deletions (a retired schedule
+or a manual backup), or data that predates the sweep.
 
 ## When to use this runbook
 
@@ -81,8 +86,25 @@ scripts/onepassword/with-service-account.sh op run -- sh -c 'aws s3api list-mult
 velero backup get | grep -v Completed || true
 ```
 
+Check whether the plugin's sweep is failing. `VeleroBackupDeletionFailed`
+fires when it does, and the failed request carries the plugin's reason:
+
+```bash
+kubectl get deletebackuprequests.velero.io -n velero -o json \
+  | jq -r '.items[] | select((.status.errors // []) | length > 0) | "\(.spec.backupName): \(.status.errors | join("; "))"'
+kubectl get backups.velero.io -n velero -o json \
+  | jq -r '.items[] | select(.status.phase == "Deleting") | .metadata.name'
+```
+
 ## Step 2: Pick a branch
 
+- **Sweep failures** (deletion requests carry `sweeping schedule` errors):
+  fix the named cause first. A missing parent or unreadable header in a
+  retained backup blocks its family until that backup is recovered or deleted.
+  Velero has already removed a failed backup's metadata, so its retry finishes
+  without calling the plugin; the next deletion in the same family reclaims
+  the leftover data. Expired backups left `Deleting` are retried hourly. Re-run
+  `velero backup delete <name>` for unexpired ones.
 - **Incomplete chains** (`incompleteChainRoots` is nonempty): stop cleanup.
   Prove a full isolated recovery, seed the replacement schedules with fulls,
   and explicitly review which broken recovery points may be retired. The
@@ -102,7 +124,7 @@ velero backup get | grep -v Completed || true
   older than 7 days automatically; for anything younger, wait or investigate
   the uploading backup — do not abort uploads belonging to a running backup.
 
-Approve the exact version-4 manifest only after recovery evidence is available.
+Approve the exact version-5 manifest only after recovery evidence is available.
 It records every candidate key, size, modification time and ETag. Apply
 revalidates the complete ancestry and protection set, then conditionally HEADs
 and DELETEs each reviewed key using its approved ETag. It never recursively
