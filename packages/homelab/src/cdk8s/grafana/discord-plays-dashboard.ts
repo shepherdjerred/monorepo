@@ -203,27 +203,7 @@ export function createDiscordPlaysDashboard() {
           legend: "{{runtime}}",
         },
       ],
-      gridPos: { x: 0, y: 40, w: 12, h: 8 },
-      unit: "ms",
-    }),
-  );
-
-  builder.withPanel(
-    timeSeriesPanel({
-      title: "Controller RTT (ms)",
-      description:
-        "Socket round trip measured by the web controller itself (reported every 2s per connected client). One-way controller→backend ≈ RTT/2.",
-      targets: [
-        {
-          expr: `histogram_quantile(0.5, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
-          legend: "p50 {{runtime}}",
-        },
-        {
-          expr: `histogram_quantile(0.95, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
-          legend: "p95 {{runtime}}",
-        },
-      ],
-      gridPos: { x: 12, y: 40, w: 12, h: 8 },
+      gridPos: { x: 0, y: 40, w: 24, h: 8 },
       unit: "ms",
     }),
   );
