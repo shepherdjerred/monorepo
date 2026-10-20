@@ -112,16 +112,16 @@ describe("liskov memory and Woodpecker admission alerts", () => {
 });
 
 describe("production memory request capacity", () => {
-  it("replaces cluster-wide failover assumptions with a torvalds request alert", () => {
+  it("alerts on torvalds wake capacity rather than reservation percentage", () => {
     const group = getResourceMonitoringRuleGroups().find(
       (candidate) => candidate.name === "resource-memory-monitoring-production",
     );
     const alert = group?.rules?.find(
-      (candidate) => candidate.alert === "ProductionNodeMemoryRequestsHigh",
+      (candidate) => candidate.alert === "ProductionWakeCapacityInsufficient",
     );
     expect(alert?.expr.value).toContain('node="torvalds"');
-    expect(alert?.expr.value).toContain("> 0.95");
-    expect(alert?.for).toBe("15m");
+    expect(alert?.expr.value).toContain("kube_pod_status_phase");
+    expect(alert?.for).toBe("30m");
   });
 });
 

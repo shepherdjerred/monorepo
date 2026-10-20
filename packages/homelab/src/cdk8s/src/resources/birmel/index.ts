@@ -122,13 +122,14 @@ done`,
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      // Reserve the baseline while bounding bursts independently.
+      // Reserve the baseline while bounding bursts independently. 30d working
+      // set: p95 201 MiB, peak 262 MiB.
       resources: {
         cpu: {
           request: Cpu.millis(50),
         },
         memory: {
-          request: Size.mebibytes(768),
+          request: Size.mebibytes(384),
           limit: Size.gibibytes(2),
         },
       },

@@ -249,7 +249,7 @@ describe("Stash chart", () => {
           .loose(),
         requests: z.object({
           cpu: z.literal("250m"),
-          memory: z.literal("512Mi"),
+          memory: z.literal("192Mi"),
         }),
       })
       .parse(appContainer.resources);

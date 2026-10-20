@@ -176,8 +176,9 @@ export function createRelayDeployment(chart: Chart) {
           request: Cpu.millis(250),
           limit: Cpu.millis(1000),
         },
+        // 30d working set: p95 8 MiB, peak 9 MiB.
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(64),
           limit: Size.gibibytes(2),
         },
       },

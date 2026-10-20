@@ -171,8 +171,9 @@ export function createStashDeployment(chart: Chart) {
       }),
       resources: {
         cpu: { request: Cpu.millis(250), limit: Cpu.units(4) },
+        // 30d working set: p95 74 MiB, peak 96 MiB.
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(192),
           limit: Size.gibibytes(4),
         },
       },
