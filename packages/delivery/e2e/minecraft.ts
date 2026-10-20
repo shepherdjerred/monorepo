@@ -21,6 +21,13 @@ export async function seedMinecraftRecovery(
   const pipeline = PipelineDefinitionSchema.parse(
     await Bun.file(new URL("pipeline.json", directory)).json(),
   );
+  if (pipeline.kind !== "argocd" || pipeline.minecraftUpgrade === undefined)
+    throw new Error(
+      "Minecraft recovery fixture requires its specialized policy",
+    );
+  // This fixture exercises the legacy controller-journal recovery interface.
+  registration.pipelineRevisionId = "minecraft-tsmc/1";
+  pipeline.minecraftUpgrade.releaseMode = "verified-restore";
   const build = await delivery.publish(
     {
       requestId: "browser/minecraft/ci",
