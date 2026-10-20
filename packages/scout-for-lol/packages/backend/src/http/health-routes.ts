@@ -27,6 +27,28 @@ export const STARTUP_GRACE_PERIOD_MS = 5 * 60 * 1000;
 
 const applicationStartTime = Date.now();
 
+/**
+ * Whether Riot calls are failing: the newest attempt came after the last
+ * success, recently, and that success is stale. A successful call stamps both
+ * clocks, so an idle replica whose last call succeeded is never failing; a
+ * role that only calls Riot on user actions would otherwise read as broken a
+ * few minutes into every quiet stretch.
+ */
+function riotApiFailing(
+  now: number,
+  attemptWindowMs: number,
+  successStaleMs: number,
+): boolean {
+  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
+  if (lastAttemptTimestamp === undefined) return false;
+  const attemptRecent = now - lastAttemptTimestamp < attemptWindowMs;
+  return lastSuccessTimestamp === undefined
+    ? attemptRecent
+    : lastAttemptTimestamp > lastSuccessTimestamp &&
+        attemptRecent &&
+        now - lastSuccessTimestamp > successStaleMs;
+}
+
 export type HealthRouteOptions = {
   readonly cors: Record<string, string>;
   /** Overridden by tests; defaults to this process's own start time. */
@@ -49,7 +71,8 @@ export function handleLivez({
   startedAt = applicationStartTime,
   now = Date.now(),
 }: HealthRouteOptions): Response {
-  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
+  const { lastSuccessTimestamp = null, lastAttemptTimestamp = null } =
+    getRiotApiHealth();
   const uptimeMs = now - startedAt;
 
   // Grace period: first 5 minutes after startup, always healthy
@@ -63,16 +86,9 @@ export function handleLivez({
     );
   }
 
-  // After grace: unhealthy if API attempts exist in last 20 min AND last success >15 min ago
-  const twentyMinutesMs = 20 * 60 * 1000;
-  const fifteenMinutesMs = 15 * 60 * 1000;
-  const hasRecentAttempts =
-    lastAttemptTimestamp !== undefined &&
-    now - lastAttemptTimestamp < twentyMinutesMs;
-  const lastSuccessStale =
-    lastSuccessTimestamp === undefined ||
-    now - lastSuccessTimestamp > fifteenMinutesMs;
-  const riotApiHealthy = !(hasRecentAttempts && lastSuccessStale);
+  // After grace: unhealthy if a failing attempt is under 20 min old AND the
+  // last success is over 15 min old
+  const riotApiHealthy = !riotApiFailing(now, 20 * 60 * 1000, 15 * 60 * 1000);
 
   const discordGateway = evaluateDiscordGatewayLiveness({
     now,
@@ -86,8 +102,8 @@ export function handleLivez({
   return Response.json(
     {
       healthy,
-      lastSuccessTimestamp: lastSuccessTimestamp ?? null,
-      lastAttemptTimestamp: lastAttemptTimestamp ?? null,
+      lastSuccessTimestamp,
+      lastAttemptTimestamp,
       uptimeMs,
       components: { riotApiHealthy, discordGateway },
     },
@@ -110,25 +126,19 @@ export function handleHealthz({
   startedAt = applicationStartTime,
   now = Date.now(),
 }: HealthRouteOptions): Response {
-  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
+  const { lastSuccessTimestamp = null, lastAttemptTimestamp = null } =
+    getRiotApiHealth();
   const uptimeSeconds = (now - startedAt) / 1000;
 
-  // Unhealthy if: API attempts exist in last 10 minutes AND last success was >5 minutes ago
-  const tenMinutesMs = 10 * 60 * 1000;
-  const fiveMinutesMs = 5 * 60 * 1000;
-  const hasRecentAttempts =
-    lastAttemptTimestamp !== undefined &&
-    now - lastAttemptTimestamp < tenMinutesMs;
-  const lastSuccessStale =
-    lastSuccessTimestamp === undefined ||
-    now - lastSuccessTimestamp > fiveMinutesMs;
-  const healthy = !(hasRecentAttempts && lastSuccessStale);
+  // Unhealthy if a failing attempt is under 10 min old AND the last success
+  // is over 5 min old
+  const healthy = !riotApiFailing(now, 10 * 60 * 1000, 5 * 60 * 1000);
 
   return Response.json(
     {
       healthy,
-      lastSuccessTimestamp: lastSuccessTimestamp ?? null,
-      lastAttemptTimestamp: lastAttemptTimestamp ?? null,
+      lastSuccessTimestamp,
+      lastAttemptTimestamp,
       uptimeSeconds,
       components: {
         temporal: getScoutTemporalHealth(),
