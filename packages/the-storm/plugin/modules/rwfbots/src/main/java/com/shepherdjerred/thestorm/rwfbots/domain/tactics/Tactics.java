@@ -247,6 +247,17 @@ public final class Tactics {
           failure,
           DecisionTrace.Recovery.LET_GO);
     }
+    var escape = RecoverySteps.escape(situation, context);
+    if (escape.isPresent()) {
+      var stand = Planner.letGo(situation, context);
+      return new Routed(
+          stand,
+          Planner.decide(stand, situation, context, planning.lifeEpoch())
+              .withWaypoints(List.of(new Waypoint(escape.orElseThrow(), Hop.WALK))),
+          memory,
+          failure,
+          DecisionTrace.Recovery.ESCAPE);
+    }
     var plan = Planner.recovery(situation, context);
     var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
     if (plan.current() instanceof PlanStep.Hold)

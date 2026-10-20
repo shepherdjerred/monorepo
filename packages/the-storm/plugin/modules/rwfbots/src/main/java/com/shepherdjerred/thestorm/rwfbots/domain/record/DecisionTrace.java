@@ -43,7 +43,11 @@ public record DecisionTrace(
     /** Nothing reachable was found; the bot holds. */
     HOLD,
     /** The bot hangs on a climb that reaches no spawn and lets go of it. */
-    LET_GO
+    LET_GO,
+    /**
+     * The bot is stranded where no spawn can be reached and heads for the nearest ground that can.
+     */
+    ESCAPE
   }
 
   /**

@@ -300,4 +300,61 @@ final class StuckSpotsTest {
     }
     assertThat(targets).isNotEmpty();
   }
+
+  @Test
+  void aBotInAPoolTheGraphHasNoExitFromHeadsForTheBank() {
+    // cloned-balance: one-block-deep pools the bake gives no way out of, though a swimmer climbs
+    // onto the stair at their edge. Bots that ended up in them circled in RECOVER for minutes.
+    var nav = nav("cloned-balance");
+    var graph = nav.graph();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    var pool = new Vec3(4151.0, 24.0, 1113.0);
+    assertThat(graph.reachable(graph.nearestNode(pool).orElseThrow(), spawn))
+        .as("the pool is a sink")
+        .isFalse();
+    var goal = graph.feet(spawn);
+    var state =
+        new TacticsState(
+            Optional.of(Plan.of(Option.TAKE_SLOT, 95, new PlanStep.Route(goal, Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    var self = combatant(1, RED, pool).withMotion(false, false);
+    var thought =
+        Tactics.think(
+            state,
+            situation(nav, self, Optional.of(goal), 100),
+            context(nav),
+            new SplittableRandom(1));
+
+    assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.ESCAPE);
+    var bank = thought.decision().waypoints().getFirst().pos();
+    assertThat(bank.distance(pool)).isLessThanOrEqualTo(RecoverySteps.ESCAPE_REACH + 2);
+    assertThat(graph.reachable(graph.nearestNode(bank).orElseThrow(), spawn)).isTrue();
+  }
+
+  @Test
+  void coverIsNeverInWaterOrAPoolWithNoWayOut() {
+    // cloned-balance: slot cover was chosen inside a pool the graph has no exit from, and the
+    // bots sent there never got out.
+    var nav = nav("cloned-balance");
+    var graph = nav.graph();
+    var context = context(nav);
+    var pool = new Vec3(4150.5, 24.0, 1113.5);
+    for (var threat : List.of(pool.plus(20, 0, 0), pool.plus(-20, 0, 0), pool.plus(0, 0, 20))) {
+      var self = combatant(1, RED, pool.plus(0, 2, -6)).withMotion(false, true);
+      var cover =
+          Planner.coverNear(
+              situation(nav, self, Optional.empty(), 100),
+              context,
+              new Planner.CoverSearch(pool, threat, 8));
+      cover.ifPresent(
+          spot -> {
+            assertThat(graph.water().contains(graph.cell(spot.node()))).as("in water").isFalse();
+            assertThat(RecoverySteps.sink(context, spot.node())).as("in a sink").isFalse();
+          });
+    }
+  }
 }
