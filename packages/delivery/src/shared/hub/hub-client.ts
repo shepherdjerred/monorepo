@@ -73,4 +73,3 @@ export function createHubClient(options: RequestOptions) {
       request(`/activity${query(input)}`, ActivityPageSchema),
   };
 }
-export type HubClient = ReturnType<typeof createHubClient>;

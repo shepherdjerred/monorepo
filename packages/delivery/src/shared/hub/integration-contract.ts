@@ -50,7 +50,6 @@ export const CiStepSchema = z.object({
   finishedAt: TimestampSchema.nullable(),
   url: z.url(),
 });
-export type CiStep = z.infer<typeof CiStepSchema>;
 
 export const CiWorkflowSchema = z.object({
   pid: z.number().int().positive(),

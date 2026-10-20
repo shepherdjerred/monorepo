@@ -1,5 +1,4 @@
 import type { PipelineStatus } from "#shared/hub/hub-contract.ts";
-import type { Deployment } from "#shared/contract.ts";
 
 export function buildStatus(status: string): PipelineStatus {
   switch (status) {
@@ -33,10 +32,6 @@ export function stageStatus(status: string): PipelineStatus {
       throw new Error(`Unknown stage status ${status}`);
     }
   }
-}
-
-export function deploymentStatus(status: Deployment["status"]): PipelineStatus {
-  return status;
 }
 
 const PRIORITY: PipelineStatus[] = [

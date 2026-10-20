@@ -95,8 +95,7 @@ test("links keep history: back and forward restore each page", async ({
 test("links are real anchors that open in a new tab", async ({
   page,
   context,
-}, info) => {
-  test.skip(info.project.name === "mobile", "Modifier clicks need a keyboard");
+}) => {
   await page.goto("/");
   const link = page.getByRole("link", { name: "Arcade", exact: true });
   await expect(link).toHaveAttribute("href", "/pipelines/arcade");
@@ -111,8 +110,7 @@ test("links are real anchors that open in a new tab", async ({
 
 test("keyboard users reach content first and dialogs return focus", async ({
   page,
-}, info) => {
-  test.skip(info.project.name === "mobile", "Keyboard-only flow");
+}) => {
   await page.goto("/environments/scout-for-lol/prod");
   await expect(
     page.getByRole("region", { name: "Retained workers" }),

@@ -63,4 +63,3 @@ export function createSnapshotCache(
     }
   };
 }
-export type SnapshotCache = ReturnType<typeof createSnapshotCache>;

@@ -9,12 +9,6 @@ export type Unavailable = {
   detail: string;
   links: Link[];
 };
-export type Available<T> = {
-  state: "available";
-  data: T;
-  fetchedAt: string;
-  links: Link[];
-};
 
 export function unavailable(
   reason: UnavailableReason,

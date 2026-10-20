@@ -30,14 +30,12 @@ export const DeploymentSearchSchema = z.object({
   environment: lenient(Optional),
   status: lenient(DeploymentStatusSchema),
 });
-export type DeploymentSearch = z.infer<typeof DeploymentSearchSchema>;
 
 export const ArtifactSearchSchema = z.object({
   cursor: lenient(Optional),
   service: lenient(Optional),
   status: lenient(z.enum(["pending", "verified", "failed"])),
 });
-export type ArtifactSearch = z.infer<typeof ArtifactSearchSchema>;
 
 export const ActivitySearchSchema = z.object({
   cursor: lenient(Optional),
@@ -45,13 +43,11 @@ export const ActivitySearchSchema = z.object({
   action: lenient(Optional),
   entity: lenient(Optional),
 });
-export type ActivitySearch = z.infer<typeof ActivitySearchSchema>;
 
 export const EnvironmentSearchSchema = z.object({
   release: lenient(z.enum(["deploy", "promote", "rollback"])),
   version: lenient(Optional),
 });
-export type EnvironmentSearch = z.infer<typeof EnvironmentSearchSchema>;
 
 export const VersionSearchSchema = z.object({ compare: lenient(Optional) });
 

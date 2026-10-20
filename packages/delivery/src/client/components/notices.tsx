@@ -13,7 +13,3 @@ export function ErrorNotice({ error }: { error: unknown }) {
     </div>
   );
 }
-
-export function Empty({ children }: { children: string }) {
-  return <p className="empty">{children}</p>;
-}
