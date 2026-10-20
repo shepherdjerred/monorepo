@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
 import com.shepherdjerred.thestorm.arena.domain.game.Member;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -19,19 +20,29 @@ public final class Arenas implements ArenaPresence {
   private final Map<String, ArenaRunner> runners;
   private final Snapshots snapshots;
   private final PublicGameDirectory publicGames;
+  private final SealedWorlds sealed;
   private boolean ready;
   private boolean startupFailed;
 
   Arenas(List<ArenaRunner> runners, Snapshots snapshots) {
-    this(runners, snapshots, new PublicGameDirectory());
+    this(runners, snapshots, new PublicGameDirectory(), new SealedWorlds());
   }
 
   Arenas(List<ArenaRunner> runners, Snapshots snapshots, PublicGameDirectory publicGames) {
+    this(runners, snapshots, publicGames, new SealedWorlds());
+  }
+
+  Arenas(
+      List<ArenaRunner> runners,
+      Snapshots snapshots,
+      PublicGameDirectory publicGames,
+      SealedWorlds sealed) {
     var byId = new TreeMap<String, ArenaRunner>();
     runners.forEach(runner -> byId.put(runner.id(), runner));
     this.runners = byId;
     this.snapshots = snapshots;
     this.publicGames = publicGames;
+    this.sealed = sealed;
   }
 
   @Override
@@ -155,6 +166,10 @@ public final class Arenas implements ArenaPresence {
    * confirmed in saved player data, {@code retry} runs again once it is.
    */
   private boolean admit(Player player, Runnable retry) {
+    if (sealed.isSealed(player.getWorld())) {
+      Texts.error(player, "Leave the sealed world before joining an arena.");
+      return false;
+    }
     if (!ready) {
       Texts.error(
           player,

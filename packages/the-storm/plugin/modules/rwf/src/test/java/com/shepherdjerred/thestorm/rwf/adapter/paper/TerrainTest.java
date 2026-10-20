@@ -56,7 +56,8 @@ final class TerrainTest {
                     InstantSource.fixed(Instant.EPOCH)),
                 new com.shepherdjerred.thestorm.rwf.app.TacticalReportLog(
                     InstantSource.fixed(Instant.EPOCH)),
-                new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin)));
+                new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin),
+                new com.shepherdjerred.thestorm.core.world.SealedWorlds()));
     var terrain =
         new Terrain(
             context,
@@ -104,7 +105,8 @@ final class TerrainTest {
                     InstantSource.fixed(Instant.EPOCH)),
                 new com.shepherdjerred.thestorm.rwf.app.TacticalReportLog(
                     InstantSource.fixed(Instant.EPOCH)),
-                new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin)));
+                new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin),
+                new com.shepherdjerred.thestorm.core.world.SealedWorlds()));
     var terrain =
         new Terrain(
             context,

@@ -13,7 +13,7 @@ import { BRIDGE_BUILD_COMMAND, BRIDGE_JAR } from "#protocol/paths.ts";
 import { basePaperEnv } from "#sandbox/paper-env.ts";
 import {
   STORM_BUILD_COMMAND,
-  STORM_DEV_MODULES,
+  STORM_DEV_WITH_CREATIVE,
   STORM_PATHS,
   stormImageConfig,
 } from "#sandbox/storm.ts";
@@ -160,6 +160,9 @@ function stormDevProfile(
       // are intentionally inert in a disposable local sandbox.
       FLIPT_URL: "http://127.0.0.1:9",
       FLIPT_ENVIRONMENT: "beta",
+      // Loads an empty creative plot world before the module enables. Production
+      // does not set this, so a missing restored world still refuses to start.
+      THESTORM_CREATIVE_BOOTSTRAP: "true",
     },
     plugins: [worldEdit, citizens, coreProtect, luckPerms, multiverseCore],
     staged: [
@@ -190,7 +193,7 @@ function stormDevProfile(
         kind: "storm-config",
         source: path.join(STORM_PATHS.ownedConfigDir, "config.yml"),
         target: path.join("TheStorm", "config.yml"),
-        modules: STORM_DEV_MODULES,
+        modules: STORM_DEV_WITH_CREATIVE,
       },
       {
         kind: "repo-file",

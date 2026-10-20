@@ -58,6 +58,7 @@ val modules =
         "shards",
         "tracks",
         "towns",
+        "creative",
         "npcs",
         "companions",
         "quests",

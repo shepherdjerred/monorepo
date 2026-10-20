@@ -326,8 +326,15 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 25 modules and enables all of them,
-including `rwf` and `rwfbots` (the rwf map world is provisioned on live). RWF
+The shipped `config.yml` registers 27 modules and enables all of them,
+including `creative` (the recovered plot world, which must already be loaded
+with generator `TheStorm:creative`, and whose CoreProtect block and WorldEdit
+history must stay on; players enter with `/creative` and leave with
+`/creative leave`, swapping a stored survival body for an empty creative one;
+`/creative claim`, `name`, `trust`, and `download` are the plot commands, and
+`/plot` stays the survival shop rental),
+and `rwf` and `rwfbots` (the rwf map world
+is provisioned on live). RWF
 creates or loads its declared owned void lobby before gameplay, retaining its
 saved identity and terrain on restart. The boot check, the
 full E2E lane and `dist`'s `ModulesTest` verify that exact enabled set, not a

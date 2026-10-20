@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm;
 
+import static java.util.Comparator.reverseOrder;
+
 import com.shepherdjerred.thestorm.core.analytics.AnalyticsRuntime;
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.compute.ComputeSettings;
@@ -23,13 +25,19 @@ import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
 import com.shepherdjerred.thestorm.core.world.BlockChanges;
 import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
+import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeGenerator;
+import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.random.RandomGenerator;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
@@ -68,6 +76,7 @@ public final class TheStormPlugin extends JavaPlugin {
 
   private void enableModules() {
     var config = readConfig();
+    bootstrapCreativeWorld(config);
     var computeSettings =
         ConfigFiles.load(getDataPath().resolve("compute.yml"), ComputeSettings.class);
     var selected =
@@ -169,6 +178,93 @@ public final class TheStormPlugin extends JavaPlugin {
   /** Typed module ports for integrations; fails if the owning module is disabled. */
   public <T> T service(Class<T> type) {
     return services.require(type);
+  }
+
+  /**
+   * Disposable sandboxes have no restored creative world. When {@code THESTORM_CREATIVE_BOOTSTRAP}
+   * is {@code true} and the creative module is on, load that world with this plugin's generator
+   * before modules enable. Production does not set the variable, so a missing world still refuses
+   * to start.
+   */
+  private void bootstrapCreativeWorld(PluginConfig config) {
+    if (!"true".equalsIgnoreCase(System.getenv("THESTORM_CREATIVE_BOOTSTRAP"))) {
+      return;
+    }
+    if (!Boolean.TRUE.equals(config.modules().get("creative"))) {
+      return;
+    }
+    var existing = getServer().getWorld("creative");
+    if (existing != null && !(existing.getGenerator() instanceof CreativeGenerator)) {
+      replaceSandboxCreative(existing);
+    }
+    if (getServer().getWorld("creative") != null) {
+      return;
+    }
+    var generator = getDefaultWorldGenerator("creative", null);
+    if (!(generator instanceof CreativeGenerator)) {
+      throw new IllegalStateException("Sandbox creative bootstrap has no plot generator");
+    }
+    var created =
+        new WorldCreator("creative").generator(generator).generateStructures(false).createWorld();
+    if (created == null || !(created.getGenerator() instanceof CreativeGenerator)) {
+      throw new IllegalStateException(
+          "Sandbox creative bootstrap loaded " + generatorName(created));
+    }
+    getComponentLogger().info("Sandbox bootstrap loaded creative with the plot generator");
+  }
+
+  /**
+   * A sandbox sometimes has {@code creative} loaded with the vanilla generator before this plugin
+   * can attach the plot generator. Drop that empty world so the next create uses {@link
+   * CreativeGenerator}. Production never sets the bootstrap variable.
+   */
+  private void replaceSandboxCreative(World existing) {
+    var found = generatorName(existing);
+    var folder = existing.getWorldFolder().toPath();
+    getComponentLogger()
+        .warn("Sandbox bootstrap is replacing creative, which is loaded as {}", found);
+    if (!getServer().unloadWorld(existing, false)) {
+      throw new IllegalStateException(
+          "Sandbox creative world is already loaded as " + found + " and could not be unloaded");
+    }
+    deleteSandboxWorld(folder);
+  }
+
+  private static void deleteSandboxWorld(Path folder) {
+    if (!"creative".equals(String.valueOf(folder.getFileName()))) {
+      throw new IllegalStateException("Refusing to remove sandbox world folder " + folder);
+    }
+    if (!Files.exists(folder)) {
+      return;
+    }
+    try (var walk = Files.walk(folder)) {
+      for (var path : walk.sorted(reverseOrder()).toList()) {
+        Files.delete(path);
+      }
+    } catch (IOException e) {
+      throw new UncheckedIOException("Sandbox could not remove creative world " + folder, e);
+    }
+  }
+
+  private static String generatorName(@Nullable World world) {
+    if (world == null) {
+      return "nothing";
+    }
+    var generator = world.getGenerator();
+    return generator == null ? "no generator" : generator.getClass().getName();
+  }
+
+  /**
+   * Plot generator for the recovered creative world. Multiverse and the test fixtures ask for it
+   * while loading that world, which is before {@link #onEnable()}.
+   */
+  @Override
+  public @Nullable ChunkGenerator getDefaultWorldGenerator(String worldName, @Nullable String id) {
+    if (!"creative".equals(worldName) && !"creative".equals(id)) {
+      return null;
+    }
+    var config = ConfigFiles.load(getDataPath().resolve("creative.yml"), CreativeConfig.class);
+    return CreativeGenerator.open(config.grid());
   }
 
   private PluginConfig readConfig() {

@@ -6,6 +6,7 @@ import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import com.mojang.brigadier.Command;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mail.app.Mail;
 import io.papermc.paper.command.brigadier.Commands;
 import java.util.HashSet;
@@ -29,12 +30,20 @@ public final class MailCommands implements Listener {
   private final ModuleContext context;
   private final Mail mail;
   private final LetterCommands letters;
+  private final SealedWorlds sealed;
   private final Set<UUID> busy = new HashSet<>();
 
-  public MailCommands(ModuleContext context, Mail mail, LetterCommands letters) {
+  public MailCommands(
+      ModuleContext context, Mail mail, LetterCommands letters, SealedWorlds sealed) {
     this.context = context;
     this.mail = mail;
     this.letters = letters;
+    this.sealed = sealed;
+  }
+
+  /** Mail stays in the mailbox while the player is in a sealed world. */
+  static boolean withholds(boolean worldSealed) {
+    return worldSealed;
   }
 
   public void register(Commands commands) {
@@ -94,6 +103,10 @@ public final class MailCommands implements Listener {
   }
 
   private int claim(Player player, String id, String option) {
+    if (withholds(sealed.isSealed(player.getWorld()))) {
+      player.sendMessage(Component.text("Collect mail outside of a sealed world."));
+      return Command.SINGLE_SUCCESS;
+    }
     UUID message;
     try {
       message = UUID.fromString(id);

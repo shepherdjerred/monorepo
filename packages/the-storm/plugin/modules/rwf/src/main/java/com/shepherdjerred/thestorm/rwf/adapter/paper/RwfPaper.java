@@ -184,7 +184,8 @@ public final class RwfPaper {
                 module
                     .services()
                     .require(
-                        com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class)));
+                        com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class),
+                sealed));
     var keys = new Keys(module.plugin());
     var kits = KitFactory.build(keys, content.kits());
     var armory = new Armory(context, app.shop(), app.kitGates().kits(), content.kits());

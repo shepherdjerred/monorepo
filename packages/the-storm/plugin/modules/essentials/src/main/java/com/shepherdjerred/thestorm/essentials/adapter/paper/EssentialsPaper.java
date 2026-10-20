@@ -98,7 +98,9 @@ public final class EssentialsPaper {
         new PlayerCommands.Kits(
             config.kits(),
             app.stores().kitClaims(),
-            new KitDeliveries(runtime, app.stores().kitClaims(), kitItems, context.plugin()));
+            new KitDeliveries(
+                new KitDeliveries.Parts(
+                    runtime, app.stores().kitClaims(), kitItems, context.plugin(), app.sealed())));
     var permissions = new EssentialsPermissions(server.getPluginManager());
     permissions.register();
 

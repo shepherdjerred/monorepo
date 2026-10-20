@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.arena.ArenaModule;
 import com.shepherdjerred.thestorm.chat.ChatModule;
 import com.shepherdjerred.thestorm.companions.CompanionsModule;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.creative.CreativeModule;
 import com.shepherdjerred.thestorm.discord.DiscordModule;
 import com.shepherdjerred.thestorm.economy.EconomyModule;
 import com.shepherdjerred.thestorm.essentials.EssentialsModule;
@@ -33,11 +34,11 @@ import java.util.List;
  * Every module, in enable order. A module comes after every module whose ports it requires: tracks
  * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
  * mechanics and spells need Protection. World loads before qol, which teleports into those worlds.
- * Discord reads economy, mail and towns; agent needs tickets and chat, and reads essentials
- * moderation history when that module is on. Quests, arena, rwf (Search and Destroy), skills and
- * seasonal post through discord when it is on, so they come after it; arena and rwf also need
- * economy. Rwfbots provides rwf's bot roster and so comes after rwf. World loads before qol, which
- * teleports into those worlds.
+ * Discord reads economy, mail and towns. Creative follows towns and seals the recovered plot world.
+ * Agent needs tickets and chat, and reads essentials moderation history when that module is on.
+ * Quests, arena, rwf (Search and Destroy), skills and seasonal post through discord when it is on,
+ * so they come after it; arena and rwf also need economy. Rwfbots provides rwf's bot roster and so
+ * comes after rwf. World loads before qol, which teleports into those worlds.
  */
 final class Modules {
 
@@ -52,6 +53,7 @@ final class Modules {
         new MailModule(),
         new TracksModule(),
         new TownsModule(),
+        new CreativeModule(),
         new DiscordModule(),
         new EssentialsModule(),
         new TicketsModule(),

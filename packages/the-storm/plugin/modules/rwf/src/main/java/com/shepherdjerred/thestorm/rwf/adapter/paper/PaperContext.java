@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.core.world.BlockChanges;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import java.time.InstantSource;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -29,6 +30,7 @@ final class PaperContext {
   private final com.shepherdjerred.thestorm.rwf.app.BattleSounds battleSounds;
   private final com.shepherdjerred.thestorm.rwf.app.TacticalReports tacticalReports;
   private final com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility;
+  private final SealedWorlds sealed;
 
   /**
    * What the context is made of.
@@ -53,7 +55,8 @@ final class PaperContext {
       com.shepherdjerred.thestorm.core.analytics.ProductAnalytics analytics,
       com.shepherdjerred.thestorm.rwf.app.BattleSounds battleSounds,
       com.shepherdjerred.thestorm.rwf.app.TacticalReports tacticalReports,
-      com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility) {}
+      com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility,
+      SealedWorlds sealed) {}
 
   PaperContext(Parts parts) {
     this.plugin = parts.plugin();
@@ -68,6 +71,7 @@ final class PaperContext {
     this.battleSounds = parts.battleSounds();
     this.tacticalReports = parts.tacticalReports();
     this.visibility = parts.visibility();
+    this.sealed = parts.sealed();
     this.activity =
         new com.shepherdjerred.thestorm.core.analytics.GameActivity(
             parts.analytics(),
@@ -80,6 +84,10 @@ final class PaperContext {
 
   com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl visibility() {
     return visibility;
+  }
+
+  SealedWorlds sealed() {
+    return sealed;
   }
 
   com.shepherdjerred.thestorm.rwf.app.BattleSounds battleSounds() {

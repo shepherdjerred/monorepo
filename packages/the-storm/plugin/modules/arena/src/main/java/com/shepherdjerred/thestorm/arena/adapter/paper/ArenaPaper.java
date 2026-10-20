@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
@@ -119,7 +120,8 @@ public final class ArenaPaper {
                 app.snapshots(),
                 app.rewards(),
                 texts,
-                module.services().require(SavedPlayerData.class)));
+                module.services().require(SavedPlayerData.class),
+                module.services().require(SealedWorlds.class)));
     var services =
         new GameRunner.Services(
             context,
@@ -199,7 +201,11 @@ public final class ArenaPaper {
       throw new IllegalStateException("Invalid arenas: " + String.join("; ", problems));
     }
     var arenas =
-        new Arenas(runners, snapshots, module.services().require(PublicGameDirectory.class));
+        new Arenas(
+            runners,
+            snapshots,
+            module.services().require(PublicGameDirectory.class),
+            module.services().require(SealedWorlds.class));
     var provisioners =
         data.survivalMaps().stream()
             .map(

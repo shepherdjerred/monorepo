@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore.PendingKit;
 import java.time.Duration;
@@ -22,15 +23,38 @@ final class KitDeliveries {
   private final KitClaimStore claims;
   private final KitItems items;
   private final Plugin plugin;
+  private final SealedWorlds sealed;
   private final Set<UUID> delivering = new HashSet<>();
   private final Set<UUID> rerun = new HashSet<>();
   private final Map<UUID, Set<PendingKit>> deliveredThisSession = new HashMap<>();
 
-  KitDeliveries(PaperRuntime runtime, KitClaimStore claims, KitItems items, Plugin plugin) {
-    this.runtime = runtime;
-    this.claims = claims;
-    this.items = items;
-    this.plugin = plugin;
+  /**
+   * What a delivery needs.
+   *
+   * @param runtime server and scheduler
+   * @param claims pending kit claims
+   * @param items the kit contents
+   * @param plugin the owning plugin, for delivery markers
+   * @param sealed worlds that must not receive kit items
+   */
+  record Parts(
+      PaperRuntime runtime,
+      KitClaimStore claims,
+      KitItems items,
+      Plugin plugin,
+      SealedWorlds sealed) {}
+
+  KitDeliveries(Parts parts) {
+    this.runtime = parts.runtime();
+    this.claims = parts.claims();
+    this.items = parts.items();
+    this.plugin = parts.plugin();
+    this.sealed = parts.sealed();
+  }
+
+  /** A kit stays pending while the player is in a sealed world. */
+  static boolean withholds(boolean worldSealed) {
+    return worldSealed;
   }
 
   /** Forget only volatile delivery guards. The player's inventory and marker save together. */
@@ -62,6 +86,10 @@ final class KitDeliveries {
     }
     var online = runtime.server().getPlayer(player);
     if (online == null) {
+      finished(player);
+      return;
+    }
+    if (withholds(sealed.isSealed(online.getWorld()))) {
       finished(player);
       return;
     }

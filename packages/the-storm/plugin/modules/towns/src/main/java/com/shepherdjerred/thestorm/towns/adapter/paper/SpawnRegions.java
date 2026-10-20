@@ -52,6 +52,10 @@ final class SpawnRegions implements Listener {
   private void refresh() {
     var regions = new ArrayList<>(config.regions());
     for (var world : server.getWorlds()) {
+      // Creative plots protect their own roads. An arrival cuboid would cover the spawn crossing.
+      if ("creative".equals(world.getName())) {
+        continue;
+      }
       var spawn = world.getSpawnLocation();
       var areas = new ArrayList<Cuboid>();
       areas.add(arrival(world, spawn.getBlockX(), spawn.getBlockZ()));
