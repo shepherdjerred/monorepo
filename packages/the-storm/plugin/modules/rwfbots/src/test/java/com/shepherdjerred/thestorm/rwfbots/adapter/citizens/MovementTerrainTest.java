@@ -229,4 +229,54 @@ final class MovementTerrainTest {
                 .reason())
         .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
   }
+
+  @Test
+  void aStepRestingOnlyOnABlockEdgeHasALandingContact() {
+    // rwf lobby: the gate accepts a step whose footprint rests on a block only at its outermost
+    // edge, where grounding measures; the landing forecast measured nearer corners, found none and
+    // threw, aborting the whole lobby tick for every bot after it.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+    }
+    world.getBlockAt(1, 0, 2).setType(Material.STONE);
+    var edge = new Vec3(2.27, 1, 2.5);
+    assertThat(terrain.grounded(edge)).isTrue();
+    assertThat(terrain.contact(edge).y()).isEqualTo(1);
+  }
+
+  @Test
+  void aLandingForecastFollowsAFallBelowAStepAndIntoTheVoid() {
+    // Bodies stepping off a leaf block or a ledge were forecast at a point in mid-air; the
+    // forecast found no floor within a step and threw, hundreds of times a match, aborting the bot
+    // tick for every bot after the one moving.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+    }
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    assertThat(terrain.contact(new Vec3(2.5, 4, 2.5)).y())
+        .as("lands three blocks down")
+        .isEqualTo(1);
+    assertThat(terrain.contact(new Vec3(3.6, 4, 3.6)).y())
+        .as("nothing below: a fall into the void")
+        .isLessThan(world.getMinHeight());
+  }
+
+  @Test
+  void aDropOverAStairsTallHalfStepsUpOnTheWay() {
+    // cloned-balance: a body on a stair's low half dropping past its tall half into the water
+    // beyond had its flight sampled flat at its feet, clipped the tall half and was refused
+    // although vanilla steps up the half block on its way.
+    world.getBlockAt(3, 1, 2).setType(Material.STONE_SLAB);
+    world.getBlockAt(2, 1, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(3.5, 1.5, 2.5),
+            new Vec3(1.5, 1, 2.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
 }

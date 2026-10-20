@@ -6,6 +6,8 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
@@ -24,6 +26,8 @@ final class MovementTerrain implements MovementSafety.Terrain {
   private static final double EPSILON = 0.001;
   // Just inside the body's half width, so a footprint corner never samples the next cell over.
   private static final double FOOTPRINT = 0.29;
+  // How far below the world a fall into the void is forecast to land: always fatal.
+  private static final double VOID = 64;
   private static final Set<Material> HAZARDS =
       Set.of(
           Material.LAVA,
@@ -148,27 +152,44 @@ final class MovementTerrain implements MovementSafety.Terrain {
     return climbable(feet) ? Waypoint.Landing.CLIMB : Waypoint.Landing.GROUND;
   }
 
-  /** Includes the last fraction of a block above the chosen supported landing. */
+  /**
+   * Where a body moving to {@code feet} comes down, for its landing forecast: the floor within a
+   * step under any footprint point the movement gate may accept a step on (the lowest of them),
+   * else the floor it falls onto further down (the highest under its footprint, where it first
+   * touches), else below the world, a fall into the void.
+   */
   Vec3 contact(Vec3 feet) {
     if (landing(feet) != Waypoint.Landing.GROUND) return feet;
-    var height = Double.POSITIVE_INFINITY;
-    for (var dx : new double[] {-0.25, 0.25}) {
-      for (var dz : new double[] {-0.25, 0.25}) {
-        var corner = contactHeight(feet.plus(dx, 0, dz));
-        if (corner.isPresent()) height = Math.min(height, corner.getAsDouble());
-      }
+    var step = Double.POSITIVE_INFINITY;
+    var fall = Double.NEGATIVE_INFINITY;
+    for (var point : footprint(feet)) {
+      var near = floorUnder(point, feet.y() - 1.1);
+      if (near.isPresent()) step = Math.min(step, near.getAsDouble());
+      var far = floorUnder(point, world.getMinHeight());
+      if (far.isPresent()) fall = Math.max(fall, far.getAsDouble());
     }
-    // A walk may cross footing that holds only part of the footprint; its floor is the lowest of
-    // the supported corners. With none supported the chosen movement had no contact at all.
-    if (height == Double.POSITIVE_INFINITY)
-      throw new IllegalStateException(
-          "Chosen ground movement must have a supported contact: " + feet);
-    return feet.withY(Math.min(feet.y(), height));
+    if (step != Double.POSITIVE_INFINITY) return feet.withY(Math.min(feet.y(), step));
+    return feet.withY(fall == Double.NEGATIVE_INFINITY ? world.getMinHeight() - VOID : fall);
   }
 
-  private OptionalDouble contactHeight(Vec3 feet) {
+  /**
+   * The centre, the corners support and footing measure, and the edge corners grounding measures.
+   */
+  private static List<Vec3> footprint(Vec3 feet) {
+    var points = new ArrayList<Vec3>();
+    points.add(feet);
+    for (var reach : new double[] {0.25, FOOTPRINT}) {
+      for (var dx : new double[] {-reach, reach}) {
+        for (var dz : new double[] {-reach, reach}) points.add(feet.plus(dx, 0, dz));
+      }
+    }
+    return points;
+  }
+
+  /** The top of the first floor (or water surface) under {@code feet} no lower than {@code low}. */
+  private OptionalDouble floorUnder(Vec3 feet, double low) {
     var cell = BlockPos.of(feet.plus(0, -EPSILON, 0));
-    var bottom = (int) Math.floor(feet.y() - 1.1);
+    var bottom = (int) Math.floor(low);
     for (var y = cell.y(); y >= bottom; y--) {
       var floor = block(new BlockPos(cell.x(), y, cell.z()));
       if (water(floor)) return OptionalDouble.of(Math.min(feet.y(), y + 1.0));

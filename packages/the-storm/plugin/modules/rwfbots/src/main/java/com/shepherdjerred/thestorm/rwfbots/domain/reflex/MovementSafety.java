@@ -288,7 +288,12 @@ public final class MovementSafety {
     var flightY =
         Math.max(from.y(), target.y())
             + (request.hop() == Hop.LEAP && request.takeoff().isEmpty() ? 1.3 : 0);
-    return "flight " + leg(terrain, from.withY(flightY), target.withY(flightY), Check.CLEAR);
+    var flat = "flight " + leg(terrain, from.withY(flightY), target.withY(flightY), Check.CLEAR);
+    if (request.takeoff().isPresent() || !terrain.grounded(from)) return flat;
+    var stepped = flightY + STEP_HEIGHT;
+    return flat
+        + ", stepped up "
+        + leg(terrain, from.withY(stepped), target.withY(stepped), Check.CLEAR);
   }
 
   /**
@@ -397,7 +402,6 @@ public final class MovementSafety {
   private static boolean traversal(Terrain terrain, Request request) {
     var from = request.from();
     var target = request.target();
-    var distance = from.horizontalDistance(target);
     var origin = request.takeoff().orElse(from);
     var descent = origin.y() - target.y();
     if (origin.horizontalDistance(target) > MAX_LEAP_SPAN
@@ -409,11 +413,17 @@ public final class MovementSafety {
     var flightY =
         Math.max(from.y(), target.y())
             + (request.hop() == Hop.LEAP && request.takeoff().isEmpty() ? 1.3 : 0);
-    var count = Math.max(1, (int) Math.ceil(distance / SAMPLE_GAP));
+    // A grounded body steps up a half block or a stair's tall half on its way, as vanilla does.
+    return clearFlight(terrain, from, target, flightY)
+        || (request.takeoff().isEmpty()
+            && terrain.grounded(from)
+            && clearFlight(terrain, from, target, flightY + STEP_HEIGHT));
+  }
+
+  private static boolean clearFlight(Terrain terrain, Vec3 from, Vec3 target, double flightY) {
+    var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(target) / SAMPLE_GAP));
     for (var index = 0; index <= count; index++) {
-      if (!safe(terrain, from.lerp(target, (double) index / count).withY(flightY))) {
-        return false;
-      }
+      if (!safe(terrain, from.lerp(target, (double) index / count).withY(flightY))) return false;
     }
     return true;
   }
