@@ -44,6 +44,16 @@ final class MovementSafetyTest {
     public boolean inside(Vec3 feet) {
       return feet.x() > -5 && feet.x() < 5 && feet.z() > -5 && feet.z() < 5;
     }
+
+    @Override
+    public boolean climbable(Vec3 feet) {
+      return false;
+    }
+
+    @Override
+    public boolean footing(Vec3 feet, double drop) {
+      return floor.test(feet);
+    }
   }
 
   private static MovementSafety.Result move(Terrain terrain, Vec3 target, Hop hop) {
@@ -56,6 +66,170 @@ final class MovementSafetyTest {
     var result = move(new Terrain(point -> true, point -> false, point -> false), target, Hop.WALK);
     assertThat(result.destination()).contains(target);
     assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
+  void anOrdinaryWalkStepsUpOntoAHalfBlockAsVanillaDoes() {
+    // A stair or slab step half a block high from x = 1: the body collides with it at its current
+    // feet but is clear on top of it. Walking up it is ordinary movement, not a blocked corridor
+    // to be sidestepped along forever.
+    var step =
+        new Terrain(
+            point -> true,
+            point -> point.y() < 1.5 - 1e-9 && point.x() + 0.3 > 1.0,
+            point -> false);
+    var target = new Vec3(2.5, 1.5, 0.5);
+
+    var result = move(step, target, Hop.WALK);
+
+    assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+    assertThat(result.destination()).contains(target);
+  }
+
+  @Test
+  void aBodyPerchedAboveItsRouteStepsOffAsADropWhenTheLandingIsSafe() {
+    // Perched two blocks up on a block edge, a stall counter or a roof, the body is routed from
+    // the graph node beneath it, so its next waypoint is an ordinary walk at ground level.
+    var perch = new Vec3(0.5, 3, 0.5);
+    var ground =
+        new Terrain(
+            point -> point.y() <= 1 + 1e-9 || point.horizontalDistance(perch) < 0.3,
+            point -> false,
+            point -> false);
+    var result =
+        MovementSafety.choose(
+            ground, new MovementSafety.Request(perch, new Vec3(2.5, 1, 0.5), Hop.WALK));
+    assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+
+    var lava =
+        new Terrain(
+            point -> point.y() <= 1 + 1e-9 || point.horizontalDistance(perch) < 0.3,
+            point -> false,
+            point -> point.y() < 2 && point.horizontalDistance(perch) > 1);
+    assertThat(
+            MovementSafety.choose(
+                    lava, new MovementSafety.Request(perch, new Vec3(2.5, 1, 0.5), Hop.WALK))
+                .reason())
+        .as("a hazardous landing is still refused")
+        .isNotEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
+  void aSteppedUpWalkFindsItsFloorOnTopOfTheStep() {
+    // A ladder top or a stair: the floor beyond the step is the step's own top, half a block above
+    // the feet, so floor is found only by looking from the stepped-up height.
+    var onTop = (java.util.function.Predicate<Vec3>) point -> point.x() + 0.3 > 1.0;
+    var step =
+        new Terrain(
+            point -> onTop.test(point) ? point.y() >= 1.5 - 1e-9 : Math.abs(point.y() - 1) < 1e-9,
+            point -> onTop.test(point) && point.y() < 1.5 - 1e-9,
+            point -> false);
+    var target = new Vec3(2.5, 1.5, 0.5);
+
+    var result = move(step, target, Hop.WALK);
+
+    assertThat(result.reason()).isEqualTo(MovementSafety.Reason.CLEAR);
+  }
+
+  /** A column of ladder or vine at x in [0, 1) from y = 1 to 5 against a wall at x < 0. */
+  private static MovementSafety.Terrain climbing(
+      Predicate<Vec3> floor, Predicate<Vec3> obstruction) {
+    return new MovementSafety.Terrain() {
+      @Override
+      public boolean clear(Vec3 feet) {
+        return !obstruction.test(feet);
+      }
+
+      @Override
+      public boolean supported(Vec3 feet, double drop) {
+        return floor.test(feet);
+      }
+
+      @Override
+      public boolean grounded(Vec3 feet) {
+        return floor.test(feet);
+      }
+
+      @Override
+      public boolean hazardous(Vec3 feet) {
+        return false;
+      }
+
+      @Override
+      public boolean inside(Vec3 feet) {
+        return feet.x() > -5 && feet.x() < 5 && feet.z() > -5 && feet.z() < 5;
+      }
+
+      @Override
+      public boolean climbable(Vec3 feet) {
+        return feet.x() >= 0 && feet.x() < 1 && feet.y() >= 1 && feet.y() < 6;
+      }
+
+      @Override
+      public boolean footing(Vec3 feet, double drop) {
+        return floor.test(feet);
+      }
+    };
+  }
+
+  @Test
+  void aClimberLeavesTheTopOfItsLadderByRisingBeforeSteppingOff() {
+    // The ladder pokes through a floor whose top is y = 5 for x >= 1; the climber stands in the
+    // ladder at y = 4 and its next waypoint is on that floor.
+    var terrain =
+        climbing(
+            point -> point.x() >= 1 && Math.abs(point.y() - 5) < 1e-9,
+            point -> point.x() + 0.3 > 1.0 && point.y() < 5 - 1e-9);
+    var result =
+        MovementSafety.choose(
+            terrain,
+            new MovementSafety.Request(new Vec3(0.5, 4, 0.5), new Vec3(1.5, 5, 0.5), Hop.WALK));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(result.destination().orElseThrow().y()).isGreaterThan(4);
+  }
+
+  @Test
+  void aClimberUnderAnOverhangDescendsBeforeSteppingAcross() {
+    // A vine down a wall with an overhang from y = 6 at x >= 1: the next waypoint is one block
+    // across and one lower, so the straight line hits the overhang but down-then-across is clear.
+    var terrain =
+        climbing(
+            point -> point.x() >= 1 && Math.abs(point.y() - 3) < 1e-9,
+            point -> point.x() + 0.3 > 1.0 && (point.y() + 1.8 > 6 || point.y() < 3 - 1e-9));
+    var result =
+        MovementSafety.choose(
+            terrain,
+            new MovementSafety.Request(new Vec3(0.5, 4.5, 0.5), new Vec3(1.5, 3, 0.5), Hop.WALK));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(result.destination().orElseThrow().y()).isLessThan(4.5);
+  }
+
+  @Test
+  void aSwimmerRoundsABlockCornerInsteadOfClippingIt() {
+    // cloned-balance: shallow water beside a stone corner; the straight swim clips the corner, so
+    // the swimmer moves along one axis and then the other.
+    var water =
+        new Terrain(
+            point -> true, point -> point.x() + 0.3 > 1.0 && point.z() - 0.3 < 1.0, point -> false);
+    var result =
+        MovementSafety.choose(
+            water,
+            new MovementSafety.Request(new Vec3(0.5, 1, 1.1), new Vec3(1.5, 1, 1.5), Hop.SWIM));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.BLOCKED);
+    assertThat(result.destination().orElseThrow().x()).isLessThan(1);
+  }
+
+  @Test
+  void aStepTallerThanVanillaStepHeightStillBlocksAnOrdinaryWalk() {
+    var wall =
+        new Terrain(
+            point -> true,
+            point -> point.y() < 2.0 - 1e-9 && point.x() + 0.3 > 1.0,
+            point -> false);
+    var result =
+        MovementSafety.choose(
+            wall, new MovementSafety.Request(START, new Vec3(2.5, 2.0, 0.5), Hop.WALK));
+    assertThat(result.reason()).isNotEqualTo(MovementSafety.Reason.CLEAR);
   }
 
   @Test

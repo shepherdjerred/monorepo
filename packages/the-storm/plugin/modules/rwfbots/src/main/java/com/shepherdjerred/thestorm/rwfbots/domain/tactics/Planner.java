@@ -20,6 +20,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import java.util.ArrayList;
@@ -138,23 +139,38 @@ public final class Planner {
     return bombPlan(Option.ARM, situation, context, situation.snapshot().bomb(bomb).orElseThrow());
   }
 
-  /** A reachable adjacent staging step while a failed goal remains excluded. */
+  /**
+   * A reachable adjacent staging step while a failed goal remains excluded, from the node {@link
+   * #pathTo} starts at so the step and its route agree on where the bot stands; a hold when no node
+   * with an exit is in reach.
+   */
   static Plan recovery(Situation situation, TacticsContext context) {
+    return RecoverySteps.step(situation, context)
+        .map(
+            step ->
+                Plan.of(Option.RECOVER, situation.now(), new PlanStep.Route(step, Stance.CAUTIOUS)))
+        .orElseGet(() -> holdHere(Option.HOLD_ANGLE, situation, context));
+  }
+
+  /** A stranded climber lets go, as a player would, instead of hanging on for the whole match. */
+  static Plan letGo(Situation situation, TacticsContext context) {
+    return holdHere(Option.RECOVER, situation, context);
+  }
+
+  /**
+   * Where a bot whose recovery route also failed walks straight to, ignoring route risk: the feet
+   * of the node it is nearest when it has drifted off it, else the recovery step itself. Empty only
+   * when no node lies within reach.
+   */
+  static Optional<Vec3> reentry(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
-    var from = graph.nearestNodeWithin(situation.self().pos(), 3);
-    if (from.isEmpty()) return holdHere(Option.HOLD_ANGLE, situation, context);
-    var start = from.getAsInt();
-    if (graph.edgeStart(start) == graph.edgeEnd(start))
-      return holdHere(Option.HOLD_ANGLE, situation, context);
-    var edge =
-        graph.edgeStart(start)
-            + Math.floorMod(
-                situation.self().id().value() + situation.now() / 20,
-                graph.edgeEnd(start) - graph.edgeStart(start));
-    return Plan.of(
-        Option.HUNT,
-        situation.now(),
-        new PlanStep.Route(graph.feet(graph.edgeTarget(edge)), Stance.CAUTIOUS));
+    var self = situation.self().pos();
+    var node = RecoverySteps.start(graph, self);
+    if (node.isEmpty()) return Optional.empty();
+    var feet = graph.feet(node.getAsInt());
+    if (feet.horizontalDistance(self) > ROUTE_REACHED || Math.abs(feet.y() - self.y()) >= 1.5)
+      return Optional.of(feet);
+    return RecoverySteps.step(situation, context);
   }
 
   /** The plan carrying out {@code option} from {@code situation}. */
@@ -220,6 +236,7 @@ public final class Planner {
                           .orElseGet(() -> holdHere(option, situation, context)));
       case ESCAPE_POISON ->
           Plan.of(option, now, new PlanStep.Route(poisonExit(situation, context), Stance.CAUTIOUS));
+      case RECOVER -> recovery(situation, context);
       case REWIND ->
           Plan.of(
               option,
@@ -1200,8 +1217,8 @@ public final class Planner {
     var distance = graph.feet(node).horizontalDistance(enemy);
     for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
       var next = graph.feet(graph.edgeTarget(edge));
-      if (graph.edgeHop(edge) != com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP
-          && next.horizontalDistance(enemy) > distance + 0.25) retreats++;
+      if (graph.edgeHop(edge) != Hop.DROP && next.horizontalDistance(enemy) > distance + 0.25)
+        retreats++;
     }
     return retreats;
   }

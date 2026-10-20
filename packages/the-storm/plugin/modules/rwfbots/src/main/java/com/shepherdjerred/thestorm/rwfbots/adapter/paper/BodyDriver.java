@@ -292,35 +292,107 @@ public final class BodyDriver {
               bot.motion(step.state());
               var recovering = step.state().escapingUntil() > frame.tick();
               var hop = recovering ? Hop.WALK : movement.hop();
+              var at = new Vec3(position.getX(), position.getY(), position.getZ());
               var checked =
-                  bodies.moveSafely(
-                      bot.uuid(),
-                      new Bodies.MotionTarget(
-                          location(step.destination()),
+                  recovering
+                      ? escape(
+                          bot,
+                          MotionRecovery.escapes(step.state(), at, movement.waypoint()),
                           movement.sprint(),
-                          hop,
-                          frame.bounds(),
-                          recovering
-                              ? Optional.empty()
-                              : bot.reflex()
+                          frame)
+                      : bodies.moveSafely(
+                          bot.uuid(),
+                          new Bodies.MotionTarget(
+                              location(step.destination()),
+                              movement.sprint(),
+                              hop,
+                              frame.bounds(),
+                              bot.reflex()
                                   .activeJump()
                                   .filter(active -> active.stage() == ActiveJump.Stage.RUN_UP)
                                   .flatMap(active -> active.waypoint().launch())));
-              if (step.jump() && checked != MovementSafety.Reason.BLOCKED) {
+              if (step.jump() && !checked.refused()) {
                 bodies.jump(bot.uuid());
               }
-              if (checked == MovementSafety.Reason.BLOCKED
-                  || checked == MovementSafety.Reason.REDIRECTED) {
-                bot.requestMovementRecovery(checked.name(), frame.tick());
-              }
+              var refusal = new Refusal(checked, hop, recovering);
+              report(bot, refusal, frame.tick());
               if (step.replan()) {
                 bot.requestMovementRecovery("STALLED", frame.tick());
+              }
+              if (step.replan() || checked.refused()) {
+                bot.noteStuck(
+                    snapshot(player, movement, refusal)
+                        + bodies.lastRefusal(bot.uuid()).map(why -> "; why " + why).orElse(""),
+                    frame.tick());
               }
               return !recovering
                   && (checked == MovementSafety.Reason.CLEAR
                       || checked == MovementSafety.Reason.REDIRECTED);
             })
         .orElse(false);
+  }
+
+  /** Takes the first escape step the body's movement gate allows, preferred first. */
+  private MovementSafety.Reason escape(
+      BotBody bot, List<Vec3> escapes, boolean sprint, Frame frame) {
+    var reason = MovementSafety.Reason.BLOCKED;
+    for (var target : escapes) {
+      reason =
+          bodies.moveSafely(
+              bot.uuid(),
+              new Bodies.MotionTarget(
+                  location(target), sprint, Hop.WALK, frame.bounds(), Optional.empty()));
+      if (!reason.refused()) return reason;
+    }
+    return reason;
+  }
+
+  /** What the body's last movement check said about the step it was asked to take. */
+  private record Refusal(MovementSafety.Reason reason, Hop hop, boolean escaping) {}
+
+  /**
+   * Records a refused or redirected step with the primitive refused, so /rwfbots debug shows which
+   * kind of step a body will not take (a DROP off a counter, a SWIM under a roof) and why.
+   */
+  private static void report(BotBody bot, Refusal refusal, long tick) {
+    if (!refusal.reason().refused() && refusal.reason() != MovementSafety.Reason.REDIRECTED) return;
+    bot.requestMovementRecovery(
+        refusal.reason().name() + " " + refusal.hop() + (refusal.escaping() ? " escape" : ""),
+        tick);
+  }
+
+  /**
+   * The body's state when it refused or stalled on a step, for /rwfbots debug: where it stands and
+   * how it moves, whether it is in a climbable block or water, and the waypoint it was given.
+   */
+  private static String snapshot(Player player, BodyCommand.MoveToward movement, Refusal refusal) {
+    var at = Places.at(player);
+    var feet = at.getBlock();
+    var head = feet.getRelative(org.bukkit.block.BlockFace.UP);
+    var below = feet.getRelative(org.bukkit.block.BlockFace.DOWN);
+    var velocity = player.getVelocity();
+    var target = movement.waypoint();
+    return String.format(
+        java.util.Locale.ROOT,
+        "%s %s%s at %.2f,%.2f,%.2f vy %.2f fall %.1f%s%s%s; feet %s head %s below %s;"
+            + " to %.1f,%.1f,%.1f",
+        refusal.reason(),
+        refusal.hop(),
+        refusal.escaping() ? " escape" : "",
+        at.getX(),
+        at.getY(),
+        at.getZ(),
+        velocity.getY(),
+        player.getFallDistance(),
+        player.isFlying() ? " flying" : "",
+        player.getAllowFlight() ? " may-fly" : "",
+        player.hasGravity() ? "" : " no-gravity",
+        feet.getType().getKey().getKey(),
+        head.getType().getKey().getKey(),
+        below.getType().getKey().getKey(),
+        target.x(),
+        target.y(),
+        target.z());
   }
 
   private void releaseUse(BotBody bot, Frame frame) {

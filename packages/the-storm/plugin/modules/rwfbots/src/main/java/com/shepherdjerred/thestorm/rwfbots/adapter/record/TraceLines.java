@@ -10,11 +10,15 @@ import java.util.stream.Collectors;
  *
  * <pre>
  * decision  tick  bot  epoch  option  planLabel  temperature  draw  features  utilities  waypoints
+ *           decided  routeFailure  recovery  x  y  z  fallDistance  onGround
  * </pre>
  *
  * <p>{@code features} is {@code name=quantized} pairs joined by commas, {@code utilities} is {@code
- * option=score} pairs highest first, {@code waypoints} is the path length. Numbers use the root
- * locale so lines are stable across servers.
+ * option=score} pairs highest first, {@code waypoints} is the path length. {@code option} is the
+ * softmax pick; {@code decided} is the option the body follows after commitment, objectives and
+ * route recovery. {@code routeFailure} is why the requested route failed this step ({@code -} when
+ * it did not) and {@code recovery} what replaced it. Positions and fall distance have one decimal.
+ * Numbers use the root locale so lines are stable across servers.
  */
 public final class TraceLines {
 
@@ -23,6 +27,7 @@ public final class TraceLines {
   private TraceLines() {}
 
   public static String decision(DecisionTrace trace, Decision decision) {
+    var movement = trace.movement();
     var features =
         trace.features().stream()
             .map(feature -> feature.name() + "=" + feature.quantized())
@@ -43,8 +48,20 @@ public final class TraceLines {
             format(trace.randomDraw()),
             features,
             utilities,
-            Integer.toString(decision.waypoints().size()))
+            Integer.toString(decision.waypoints().size()),
+            decision.option().name(),
+            movement.routeFailure().map(Enum::name).orElse("-"),
+            movement.recovery().name(),
+            tenth(movement.pos().x()),
+            tenth(movement.pos().y()),
+            tenth(movement.pos().z()),
+            tenth(movement.fallDistance()),
+            Boolean.toString(movement.onGround()))
         + "\n";
+  }
+
+  private static String tenth(double value) {
+    return String.format(Locale.ROOT, "%.1f", value);
   }
 
   private static String format(double value) {

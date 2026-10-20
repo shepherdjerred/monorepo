@@ -209,6 +209,11 @@ public final class CitizensBodies implements Bodies, Listener {
   }
 
   @Override
+  public Optional<String> lastRefusal(UUID bot) {
+    return Optional.ofNullable(movement.get(bot)).flatMap(BodyMovement::lastRefusal);
+  }
+
+  @Override
   public MovementSafety.Reason moveSafely(UUID bot, MotionTarget target) {
     var npc = require(bot);
     npc.setMoveDestination(null);

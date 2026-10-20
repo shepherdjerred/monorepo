@@ -125,7 +125,8 @@ final class TeamPlayTest {
   // Duration-weighted route density avoids needless run-ups; uncovered bounds finish before
   // replanning, with predictive teammate spacing and supported native wall sliding.
   // Composed with certified launch recovery, local squad bounds and committed fuse work.
-  private static final String PINNED_YARD_HASH = "b9bae78678e6a5f2";
+  // Failed routes recover as RECOVER steps with a re-entry walk; landed bodies route as grounded.
+  private static final String PINNED_YARD_HASH = "6ae8da47a92ce0e9";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

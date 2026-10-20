@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.record;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import java.util.List;
@@ -19,7 +20,9 @@ final class TraceHashTest {
             new DecisionTrace.ScoredOption(Option.HUNT, 0.2)),
         Option.ARM,
         0.3,
-        draw);
+        draw,
+        new DecisionTrace.Movement(
+            new Vec3(1, 2, 3), 0, true, java.util.Optional.empty(), DecisionTrace.Recovery.NONE));
   }
 
   @Test

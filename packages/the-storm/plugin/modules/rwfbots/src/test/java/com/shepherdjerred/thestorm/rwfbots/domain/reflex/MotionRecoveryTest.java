@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 final class MotionRecoveryTest {
@@ -46,5 +47,17 @@ final class MotionRecoveryTest {
     assertThat(rising.state().progressAt()).isEqualTo(21);
     var blocked = MotionRecovery.tick(first.state(), position, target, 21);
     assertThat(blocked.jump()).isTrue();
+  }
+
+  @Test
+  void anEscapeOffersBothSidesAndThenStraightBack() {
+    var state = new MotionRecovery.State(Optional.empty(), 0, 12, 1);
+    var at = new Vec3(0.5, 1, 0.5);
+    var escapes = MotionRecovery.escapes(state, at, at.plus(3, 0, 0));
+    assertThat(escapes).hasSize(3);
+    assertThat(escapes.get(0).z()).isNotEqualTo(escapes.get(1).z());
+    assertThat(escapes.get(0).z() - at.z()).isEqualTo(-(escapes.get(1).z() - at.z()));
+    assertThat(escapes.get(2).x()).isLessThan(at.x());
+    assertThat(escapes.get(2).z()).isEqualTo(at.z());
   }
 }

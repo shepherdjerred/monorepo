@@ -1,8 +1,11 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.record;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * One think step, recorded so a match can be replayed and a decision explained.
@@ -14,6 +17,8 @@ import java.util.List;
  * @param choice what was picked
  * @param temperature the softmax temperature used
  * @param randomDraw the uniform draw that picked it
+ * @param movement where the bot stood and why its route was replaced, for diagnosing stuck bots;
+ *     not part of the replay hash
  */
 public record DecisionTrace(
     CombatantId bot,
@@ -22,9 +27,41 @@ public record DecisionTrace(
     List<ScoredOption> utilities,
     Option choice,
     double temperature,
-    double randomDraw) {
+    double randomDraw,
+    Movement movement) {
 
   public static final int MAX_UTILITIES = 5;
+
+  /** How a failed route was replaced. */
+  public enum Recovery {
+    /** The requested route was followed. */
+    NONE,
+    /** A routed step to an adjacent node. */
+    STEP,
+    /** A direct walk back onto the navigation graph after the step could not be routed either. */
+    REENTER,
+    /** Nothing reachable was found; the bot holds. */
+    HOLD,
+    /** The bot hangs on a climb that reaches no spawn and lets go of it. */
+    LET_GO
+  }
+
+  /**
+   * The body's state and the routing outcome of one think step.
+   *
+   * @param pos the bot's feet
+   * @param fallDistance accumulated fall distance the router planned from
+   * @param onGround whether the body stood on solid ground
+   * @param routeFailure why the originally requested route could not be followed this step
+   * @param recovery what replaced it; a recovery without a failure stands in for a goal that a
+   *     recent failure still excludes
+   */
+  public record Movement(
+      Vec3 pos,
+      double fallDistance,
+      boolean onGround,
+      Optional<RouteResult.Problem> routeFailure,
+      Recovery recovery) {}
 
   /** A quantized input, such as {@code health=7} or {@code enemyDistance=12}. */
   public record Feature(String name, int quantized) {

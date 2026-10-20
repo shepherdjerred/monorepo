@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import java.util.List;
 import java.util.Optional;
 
 /** Remembers lack of movement across changing decisions and performs bounded escapes. */
@@ -33,6 +34,23 @@ public final class MotionRecovery {
     }
     var next = new State(Optional.of(position), now, now + ESCAPE_TICKS, state.attempts() + 1);
     return escape(next, position, heading, true);
+  }
+
+  /**
+   * Where an escaping body may step, preferred first: the side it is escaping to, the other side,
+   * then straight back. The body takes the first its movement gate allows, so a sidestep into a
+   * wall or off a ledge does not waste the whole escape.
+   */
+  public static List<Vec3> escapes(State state, Vec3 position, Vec3 destination) {
+    var horizontal = destination.minus(position).horizontal();
+    var forward = horizontal.isZero() ? new Vec3(1, 0, 0) : horizontal.normalized();
+    var sign = state.attempts() % 2 == 0 ? -1 : 1;
+    var side = new Vec3(-forward.z(), 0, forward.x()).scale(sign);
+    var back = forward.scale(0.25);
+    return List.of(
+        position.plus(side).minus(back),
+        position.minus(side).minus(back),
+        position.minus(forward.scale(0.9)));
   }
 
   private static Step escape(State state, Vec3 position, Vec3 heading, boolean beginning) {

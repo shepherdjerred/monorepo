@@ -69,6 +69,11 @@ public interface Bodies {
     return MovementSafety.Reason.CLEAR;
   }
 
+  /** Why the body last refused a step, when production movement recorded one. */
+  default Optional<String> lastRefusal(UUID bot) {
+    return Optional.empty();
+  }
+
   void stop(UUID bot);
 
   void look(UUID bot, float yaw, float pitch);

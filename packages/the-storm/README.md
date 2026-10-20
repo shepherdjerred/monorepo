@@ -3297,10 +3297,50 @@ first contact and over the first 20 s. The full-lane suite keeps its
 recordings under `.cache/e2e/rwf/<matchId>/`.
 
 Decision traces: with `traces.enabled`, every think step appends one
-tab-separated `decision` line (tick, bot, epoch, option, plan label,
-temperature, draw, quantized features, top utilities, path length) to
+tab-separated `decision` line (tick, bot, epoch, softmax option, plan label,
+temperature, draw, quantized features, top utilities, path length, then the
+decided option, why the requested route failed, how it was recovered, the
+bot's feet, its fall distance and whether it stood on ground) to
 `plugins/TheStorm/rwfbots-traces/<matchId>.gz`, written off the main thread;
-lines past `queueCapacity` are dropped and counted.
+lines past `queueCapacity` are dropped and counted. The movement columns are
+diagnostics only and are not part of the replay hash.
+
+When a route fails, tactics records the goal as blocked and substitutes a
+`RECOVER` step to an adjacent node, routed from the same node the failed route
+started at. If that step cannot be routed either, the bot walks straight back
+to its nearest node, so a failed route never leaves a bot standing while any
+node is in reach. A bot hanging on a climb that reaches no spawn (vines that
+hang under an island into the void) lets go instead. `RECOVER` is never scored
+or drawn and earns no commitment bonus. A bot body that has stood on solid ground for two ticks has its fall
+distance cleared, and the router treats a grounded body as landed: an NPC body
+does not refresh vanilla's collision on-ground flag while standing still, so a
+landed fall could otherwise be planned as a fatal drop indefinitely.
+
+The body's last movement gate (`MovementSafety`, read against live terrain by
+`MovementTerrain`) follows vanilla where the graph's primitives meet real
+blocks. A body is grounded when its centre or any footprint corner rests on a
+block top, and floor support comes from blocks' actual collision boxes, so a
+stair's low step, a slab and a block edge hold it. A walk climbs ledges up to
+vanilla's 0.6 step height and finds its floor on top of the step; a walk whose
+target lies more than a step below is taken as a drop when its flight is clear
+and its landing safe; touching a ceiling or a floor is not colliding with it.
+To or from a ladder, vine or other climbable, a refused straight move takes a
+two-leg way (rise or sink, then step across; or step across, then climb or
+drop), and swims and climbs may turn along one axis and then the other to round
+a block corner. Level diagonal walks between two climbable cells through a
+corner that holds nothing are left out of routes. As in vanilla, a body holds
+onto a ladder or vine only while climbing or sneaking; otherwise it slides down.
+A walk may cross a point where only part of its footprint is on a block (a
+one-block walkway, blocks touching at a corner) but must end fully supported,
+and a refused walk leaves an airborne body's momentum alone. When a body still refuses or
+stalls on a step, `/rwfbots debug` shows a snapshot of its state and the first
+check that refused the step.
+
+`bun run bots:match --map <id> --count <n> --output <dir>` plays one bots-only
+showcase on that map in a disposable server and keeps its trace and recording;
+`bun run bots:stuck <trace.gz>` reports, per bot, time spent standing still
+while not holding on purpose, decisions without a path, option flip-flops,
+route failures and recoveries.
 
 ## Product metrics
 

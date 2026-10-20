@@ -18,6 +18,7 @@ import org.bukkit.util.Vector;
 /** Physical movement is checked after every planner, combat controller and recovery proposal. */
 final class BodyMovement {
   private Optional<Flight> flight = Optional.empty();
+  private Optional<String> lastRefusal = Optional.empty();
   private final TraversalCapture survival;
   private final java.util.function.BiConsumer<Player, Vector> doors;
   private final java.util.function.BiPredicate<Player, org.bukkit.util.BoundingBox> collisions;
@@ -70,8 +71,24 @@ final class BodyMovement {
                 new MovementSafety.Request(position, goal, hop, flight.map(Flight::origin)));
     if (checked.destination().isPresent()
         && !survives(player, terrain, checked.destination().orElseThrow(), hop))
-      checked = new MovementSafety.Result(Optional.empty(), MovementSafety.Reason.BLOCKED);
+      checked = new MovementSafety.Result(Optional.empty(), MovementSafety.Reason.UNSAFE_LANDING);
+    if (checked.reason().refused())
+      lastRefusal =
+          Optional.of(
+              checked.reason() == MovementSafety.Reason.UNSAFE_LANDING
+                  ? "landing forecast refused"
+                  : MovementSafety.explain(
+                      terrain, new MovementSafety.Request(position, goal, hop)));
     beginFlight(candidate, checked.reason());
+    if (checked.reason().refused()
+        && hop == Hop.WALK
+        && !grounded
+        && !terrain.inWater(position)
+        && !terrain.climbable(position)) {
+      // In the air a walk cannot be steered anyway; stopping the body here only killed a jump in
+      // mid-flight and landed it where it started. Vanilla keeps its momentum.
+      return checked.reason();
+    }
     var heading = checked.destination().map(point -> point.minus(position)).orElse(Vec3.ZERO);
     steer(
         player,
@@ -114,6 +131,11 @@ final class BodyMovement {
         && (candidate.hop() == Hop.LEAP
             || candidate.hop() == Hop.DROP
             || candidate.hop() == Hop.JUMP)) flight = Optional.of(candidate);
+  }
+
+  /** Why the last refused step was refused, for /rwfbots debug. */
+  Optional<String> lastRefusal() {
+    return lastRefusal;
   }
 
   void stop(Player player) {
@@ -176,11 +198,16 @@ final class BodyMovement {
               : SwimmingMotion.buoyancy(
                   next, position.y(), terrain.waterSurface(position), steering.leavingWater());
     }
-    if (terrain.climbable(position))
+    if (terrain.climbable(position)) {
+      // Vanilla holds a ladder or vine only while sneaking; a body not climbing slides down it.
+      var climbing = steering.hop() == Hop.CLIMB || heading.y() > 0 || player.isSneaking();
       next =
           next.withY(
-              Math.max(
-                  next.y() > 0.2 ? next.y() : -0.15, MovementMotor.climbVertical(heading.y())));
+              climbing
+                  ? Math.max(
+                      next.y() > 0.2 ? next.y() : -0.15, MovementMotor.climbVertical(heading.y()))
+                  : Math.max(next.y(), -0.15));
+    }
     player.setVelocity(new Vector(next.x(), next.y(), next.z()));
   }
 

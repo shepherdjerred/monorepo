@@ -98,4 +98,185 @@ final class MovementTerrainTest {
     world.getBlockAt(2, 1, 2).setType(Material.LADDER);
     assertThat(terrain.climbable(feet)).isTrue();
   }
+
+  @Test
+  void aBodyTouchingACeilingIsNotCollidingWithIt() {
+    // the-harshest-harvest: a pond under a cobblestone roof. Buoyancy pressed a swimmer's head to
+    // the roof at feet 9.2; counting that touch as a collision froze it in place for minutes.
+    world.getBlockAt(2, 1, 2).setType(Material.WATER);
+    world.getBlockAt(2, 3, 2).setType(Material.STONE);
+    assertThat(terrain.clear(new Vec3(2.5, 1.2, 2.5))).isTrue();
+    assertThat(terrain.clear(new Vec3(2.5, 1.25, 2.5))).as("a head inside the roof").isFalse();
+  }
+
+  @Test
+  void aBodyPerchedOnABlockEdgeIsGroundedAndCanStepBackOntoIt() {
+    // hemispheres: bodies resting part of their footprint on a stair or ledge edge, with air under
+    // their centre, read as floorless and refused every step, even back onto the block.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE);
+    var perched = new Vec3(2.2, 2, 2.5);
+    var edge =
+        new MovementTerrain(
+            world,
+            Optional.of(new GridBounds(new BlockPos(0, 0, 0), 5, 8, 5)),
+            world::collides,
+            false);
+    assertThat(edge.grounded(perched)).isTrue();
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    edge,
+                    new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+                        perched,
+                        new Vec3(1.5, 2, 2.5),
+                        com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK))
+                .reason())
+        .isNotEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
+    assertThat(edge.grounded(new Vec3(2.5, 2, 2.5))).as("clear of the edge").isFalse();
+  }
+
+  @Test
+  void aBodyBesideAStairsLowStepStandsOnTheStepNotOnTheStairsWholeBox() {
+    // cloned-balance: slab and stair floors read as floorless one step ahead, because support was
+    // taken from a stair's union box, a full block high over its low step too.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 1, z).setType(Material.STONE_SLAB);
+    }
+    world.getBlockAt(3, 1, 2).setType(Material.STONE_STAIRS);
+    var feet = new Vec3(1.5, 1.5, 2.85);
+    assertThat(terrain.supported(new Vec3(3.5, 1.5, 2.85), 1.1)).isTrue();
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain,
+                    new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+                        feet,
+                        new Vec3(4.4, 1.5, 2.85),
+                        com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK))
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
+  void blocksTouchingOnlyAtACornerHoldABodyCrossingBetweenThem() {
+    // hemispheres: a diagonal wall of corner-touching blocks walked along its top. Crossing the
+    // shared corner, two footprint corners rest on the blocks and two over air.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE);
+    world.getBlockAt(2, 1, 1).setType(Material.STONE);
+    assertThat(terrain.supported(new Vec3(2.0, 2, 2.0), 0.1)).isTrue();
+    assertThat(terrain.supported(new Vec3(2.0, 2, 1.0), 0.1))
+        .as("only one corner on a block")
+        .isFalse();
+  }
+
+  @Test
+  void aBodyAtTheEdgeOfANarrowWalkwayCanStepBackToItsMiddle() {
+    // hemispheres: a one-block slab walkway on a wall; a body near its north edge has two
+    // footprint corners over air, and refused every step, even back toward the walkway's middle.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+      world.getBlockAt(x, 0, 2).setType(Material.STONE);
+    }
+    var edge = new Vec3(3.5, 1, 2.05);
+    assertThat(terrain.supported(edge, 0.1)).as("hanging over the edge").isFalse();
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain,
+                    new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+                        edge,
+                        new Vec3(1.5, 1, 2.5),
+                        com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK))
+                .reason())
+        .isNotEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
+  }
+
+  @Test
+  void aBodyOffCentreUnderAnOverhangTakesOffFromItsCellsCentre() {
+    // hemispheres: a body 0.3 off its node's centre raised its head into a stair overhanging the
+    // next column for every jump onto the step ahead, and stood refused for over five minutes.
+    world.getBlockAt(3, 1, 2).setType(Material.STONE);
+    world.getBlockAt(1, 3, 2).setType(Material.STONE);
+    var from = new Vec3(2.21, 1, 2.5);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            from, new Vec3(3.5, 2, 2.5), com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.JUMP);
+    var result =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, request);
+    assertThat(result.reason())
+        .isEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
+    assertThat(result.destination()).contains(new Vec3(2.5, 1, 2.5));
+  }
+
+  @Test
+  void aWalkRoundTheCornerOfANarrowPathIsClearWhenItsLookAheadPointHangsOverTheCorner() {
+    // hemispheres: on one-block walkways the steering probe's look-ahead point, short of the
+    // target, fell where only part of the footprint was on a block; it was asked for full support
+    // and every walk along the path was refused although its end stood fully on the path.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+      world.getBlockAt(x, 0, 2).setType(Material.STONE);
+    }
+    world.getBlockAt(1, 0, 3).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(3.5, 1, 2.5),
+            new Vec3(1.5, 1, 3.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.WALK);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
+  void aStepRestingOnlyOnABlockEdgeHasALandingContact() {
+    // rwf lobby: the gate accepts a step whose footprint rests on a block only at its outermost
+    // edge, where grounding measures; the landing forecast measured nearer corners, found none and
+    // threw, aborting the whole lobby tick for every bot after it.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+    }
+    world.getBlockAt(1, 0, 2).setType(Material.STONE);
+    var edge = new Vec3(2.27, 1, 2.5);
+    assertThat(terrain.grounded(edge)).isTrue();
+    assertThat(terrain.contact(edge).y()).isEqualTo(1);
+  }
+
+  @Test
+  void aLandingForecastFollowsAFallBelowAStepAndIntoTheVoid() {
+    // Bodies stepping off a leaf block or a ledge were forecast at a point in mid-air; the
+    // forecast found no floor within a step and threw, hundreds of times a match, aborting the bot
+    // tick for every bot after the one moving.
+    for (var x = 0; x < 5; x++) {
+      for (var z = 0; z < 5; z++) world.getBlockAt(x, 0, z).setType(Material.AIR);
+    }
+    world.getBlockAt(2, 0, 2).setType(Material.STONE);
+    assertThat(terrain.contact(new Vec3(2.5, 4, 2.5)).y())
+        .as("lands three blocks down")
+        .isEqualTo(1);
+    assertThat(terrain.contact(new Vec3(3.6, 4, 3.6)).y())
+        .as("nothing below: a fall into the void")
+        .isLessThan(world.getMinHeight());
+  }
+
+  @Test
+  void aDropOverAStairsTallHalfStepsUpOnTheWay() {
+    // cloned-balance: a body on a stair's low half dropping past its tall half into the water
+    // beyond had its flight sampled flat at its feet, clipped the tall half and was refused
+    // although vanilla steps up the half block on its way.
+    world.getBlockAt(3, 1, 2).setType(Material.STONE_SLAB);
+    world.getBlockAt(2, 1, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(3.5, 1.5, 2.5),
+            new Vec3(1.5, 1, 2.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
 }

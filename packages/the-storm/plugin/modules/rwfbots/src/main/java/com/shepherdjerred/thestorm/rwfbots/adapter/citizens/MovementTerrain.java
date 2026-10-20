@@ -6,7 +6,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.Predicate;
 import org.bukkit.Material;
@@ -21,6 +24,10 @@ import org.bukkit.util.BoundingBox;
  */
 final class MovementTerrain implements MovementSafety.Terrain {
   private static final double EPSILON = 0.001;
+  // Just inside the body's half width, so a footprint corner never samples the next cell over.
+  private static final double FOOTPRINT = 0.29;
+  // How far below the world a fall into the void is forecast to land: always fatal.
+  private static final double VOID = 64;
   private static final Set<Material> HAZARDS =
       Set.of(
           Material.LAVA,
@@ -76,17 +83,39 @@ final class MovementTerrain implements MovementSafety.Terrain {
   public boolean supported(Vec3 feet, double drop) {
     var cell = block(BlockPos.of(feet));
     if (water(cell) || Tag.CLIMBABLE.isTagged(cell.getType())) return true;
+    var westNorth = supportAt(feet.plus(-0.25, 0, -0.25), drop, true);
+    var eastSouth = supportAt(feet.plus(0.25, 0, 0.25), drop, true);
+    var westSouth = supportAt(feet.plus(-0.25, 0, 0.25), drop, true);
+    var eastNorth = supportAt(feet.plus(0.25, 0, -0.25), drop, true);
+    // Floor under a diagonal pair of corners holds a body crossing between blocks that touch only
+    // at a corner (a diagonal wall walked along its top); an edge with one side over the void
+    // still does not count.
+    return (westNorth && eastSouth) || (westSouth && eastNorth);
+  }
+
+  @Override
+  public boolean footing(Vec3 feet, double drop) {
+    if (supportAt(feet, drop, true)) return true;
+    // The corners contact() measures, so a walk crossing on footing always has a contact.
     for (var dx : new double[] {-0.25, 0.25}) {
       for (var dz : new double[] {-0.25, 0.25}) {
-        if (!supportAt(feet.plus(dx, 0, dz), drop, true)) return false;
+        if (supportAt(feet.plus(dx, 0, dz), drop, true)) return true;
       }
     }
-    return true;
+    return false;
   }
 
   @Override
   public boolean grounded(Vec3 feet) {
-    return standing && supportAt(feet, EPSILON, false);
+    if (standing && supportAt(feet, EPSILON, false)) return true;
+    // A body whose footprint rests on a block edge is standing, though nothing is under its
+    // centre: vanilla holds it up, and treating the spot as floorless refused every way off it.
+    for (var dx : new double[] {-FOOTPRINT, FOOTPRINT}) {
+      for (var dz : new double[] {-FOOTPRINT, FOOTPRINT}) {
+        if (supportAt(feet.plus(dx, 0, dz), EPSILON, false)) return true;
+      }
+    }
+    return false;
   }
 
   private boolean supportAt(Vec3 point, double drop, boolean allowWater) {
@@ -96,10 +125,10 @@ final class MovementTerrain implements MovementSafety.Terrain {
       var floor = block(new BlockPos(top.x(), y, top.z()));
       if (water(floor)) return allowWater;
       if (!floor.isPassable() && !hazard(floor)) {
-        var surface = floor.getBoundingBox();
-        return surface.contains(point.x(), surface.getMaxY() - EPSILON, point.z())
-            && surface.getMaxY() <= point.y() + EPSILON
-            && surface.getMaxY() >= point.y() - drop;
+        var surface = topUnder(floor, point);
+        if (surface.isEmpty()) continue;
+        return surface.getAsDouble() <= point.y() + EPSILON
+            && surface.getAsDouble() >= point.y() - drop;
       }
     }
     return false;
@@ -111,7 +140,8 @@ final class MovementTerrain implements MovementSafety.Terrain {
         || water(block(BlockPos.of(feet.plus(0, 1.62, 0))));
   }
 
-  boolean climbable(Vec3 feet) {
+  @Override
+  public boolean climbable(Vec3 feet) {
     return Tag.CLIMBABLE.isTagged(block(BlockPos.of(feet)).getType())
         || Tag.CLIMBABLE.isTagged(block(BlockPos.of(feet.plus(0, 1, 0))).getType());
   }
@@ -122,32 +152,54 @@ final class MovementTerrain implements MovementSafety.Terrain {
     return climbable(feet) ? Waypoint.Landing.CLIMB : Waypoint.Landing.GROUND;
   }
 
-  /** Includes the last fraction of a block above the chosen supported landing. */
+  /**
+   * Where a body moving to {@code feet} comes down, for its landing forecast: the floor within a
+   * step under any footprint point the movement gate may accept a step on (the lowest of them),
+   * else the floor it falls onto further down (the highest under its footprint, where it first
+   * touches), else below the world, a fall into the void.
+   */
   Vec3 contact(Vec3 feet) {
     if (landing(feet) != Waypoint.Landing.GROUND) return feet;
-    var height = feet.y();
-    for (var dx : new double[] {-0.25, 0.25}) {
-      for (var dz : new double[] {-0.25, 0.25}) {
-        height = Math.min(height, contactHeight(feet.plus(dx, 0, dz)));
-      }
+    var step = Double.POSITIVE_INFINITY;
+    var fall = Double.NEGATIVE_INFINITY;
+    for (var point : footprint(feet)) {
+      var near = floorUnder(point, feet.y() - 1.1);
+      if (near.isPresent()) step = Math.min(step, near.getAsDouble());
+      var far = floorUnder(point, world.getMinHeight());
+      if (far.isPresent()) fall = Math.max(fall, far.getAsDouble());
     }
-    return feet.withY(height);
+    if (step != Double.POSITIVE_INFINITY) return feet.withY(Math.min(feet.y(), step));
+    return feet.withY(fall == Double.NEGATIVE_INFINITY ? world.getMinHeight() - VOID : fall);
   }
 
-  private double contactHeight(Vec3 feet) {
-    var cell = BlockPos.of(feet.plus(0, -EPSILON, 0));
-    var bottom = (int) Math.floor(feet.y() - 1.1);
-    for (var y = cell.y(); y >= bottom; y--) {
-      var floor = block(new BlockPos(cell.x(), y, cell.z()));
-      if (water(floor)) return Math.min(feet.y(), y + 1.0);
-      if (!floor.isPassable() && !hazard(floor)) {
-        var surface = floor.getBoundingBox();
-        if (surface.contains(feet.x(), surface.getMaxY() - EPSILON, feet.z()))
-          return Math.min(feet.y(), surface.getMaxY());
+  /**
+   * The centre, the corners support and footing measure, and the edge corners grounding measures.
+   */
+  private static List<Vec3> footprint(Vec3 feet) {
+    var points = new ArrayList<Vec3>();
+    points.add(feet);
+    for (var reach : new double[] {0.25, FOOTPRINT}) {
+      for (var dx : new double[] {-reach, reach}) {
+        for (var dz : new double[] {-reach, reach}) points.add(feet.plus(dx, 0, dz));
       }
     }
-    throw new IllegalStateException(
-        "Chosen ground movement must have a supported contact: " + feet);
+    return points;
+  }
+
+  /** The top of the first floor (or water surface) under {@code feet} no lower than {@code low}. */
+  private OptionalDouble floorUnder(Vec3 feet, double low) {
+    var cell = BlockPos.of(feet.plus(0, -EPSILON, 0));
+    var bottom = (int) Math.floor(low);
+    for (var y = cell.y(); y >= bottom; y--) {
+      var floor = block(new BlockPos(cell.x(), y, cell.z()));
+      if (water(floor)) return OptionalDouble.of(Math.min(feet.y(), y + 1.0));
+      if (!floor.isPassable() && !hazard(floor)) {
+        var surface = topUnder(floor, feet);
+        if (surface.isPresent())
+          return OptionalDouble.of(Math.min(feet.y(), surface.getAsDouble()));
+      }
+    }
+    return OptionalDouble.empty();
   }
 
   /** A nearby dry bank, including its whole landing footprint, never the open water surface. */
@@ -200,6 +252,24 @@ final class MovementTerrain implements MovementSafety.Terrain {
     return false;
   }
 
+  /**
+   * The top of {@code block}'s collision under {@code point}'s column, from its actual collision
+   * boxes rather than their union: a stair's union box is a full block high even over its low step,
+   * so a body passing a stair or between slab and stair cells read as having no floor.
+   */
+  private static OptionalDouble topUnder(Block block, Vec3 point) {
+    var top = Double.NEGATIVE_INFINITY;
+    for (var box : block.getCollisionShape().getBoundingBoxes()) {
+      var minX = block.getX() + box.getMinX();
+      var maxX = block.getX() + box.getMaxX();
+      var minZ = block.getZ() + box.getMinZ();
+      var maxZ = block.getZ() + box.getMaxZ();
+      if (point.x() >= minX && point.x() < maxX && point.z() >= minZ && point.z() < maxZ)
+        top = Math.max(top, block.getY() + box.getMaxY());
+    }
+    return top == Double.NEGATIVE_INFINITY ? OptionalDouble.empty() : OptionalDouble.of(top);
+  }
+
   private boolean loaded(BlockPos cell) {
     return world.isChunkLoaded(cell.x() >> 4, cell.z() >> 4);
   }
@@ -219,14 +289,22 @@ final class MovementTerrain implements MovementSafety.Terrain {
         && light.isLit();
   }
 
+  /**
+   * The body at {@code feet}, shrunk by {@link #EPSILON} at the feet and the head: as in vanilla,
+   * touching a floor or a ceiling is not colliding with it. Only lifting the feet made a swimmer
+   * whose head buoyancy had pressed against a ceiling collide where it already floated, so every
+   * move read as blocked and it froze in place. Side faces keep their full extent, so a body flush
+   * against a block still counts as touching it and does not step up onto stall counters or roofs
+   * it could not climb down from.
+   */
   private static BoundingBox box(Vec3 feet) {
-    var body = AABB.playerAt(feet.plus(0, EPSILON, 0), false);
+    var body = AABB.playerAt(feet, false);
     return new BoundingBox(
         body.min().x(),
-        body.min().y(),
+        body.min().y() + EPSILON,
         body.min().z(),
         body.max().x(),
-        body.max().y(),
+        body.max().y() - EPSILON,
         body.max().z());
   }
 }

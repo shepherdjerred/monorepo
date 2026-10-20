@@ -75,7 +75,10 @@ public final class TraversalRisk {
     var motion =
         new NavGraph.EdgeMotion(
             edge -> duration(graph, movement, edge),
-            edge -> graph.edgeHop(edge) != Hop.LEAP || (capabilities.maySprint() && !slowFalling),
+            edge ->
+                !graph.unheldClimbDiagonal(edge)
+                    && (graph.edgeHop(edge) != Hop.LEAP
+                        || (capabilities.maySprint() && !slowFalling)),
             sprint ? 0.76 : 1);
     HealthRoutes.DamageAt damage =
         (edge, elapsed) ->
@@ -115,9 +118,10 @@ public final class TraversalRisk {
         new NavGraph.EdgeMotion(
             edge -> duration(graph, movement, edge),
             edge ->
-                graph.edgeHop(edge) != Hop.LEAP
-                    || (self.traversal().maySprint()
-                        && !FallRisk.active(self.traversal().slowFallingUntilTick(), now)),
+                !graph.unheldClimbDiagonal(edge)
+                    && (graph.edgeHop(edge) != Hop.LEAP
+                        || (self.traversal().maySprint()
+                            && !FallRisk.active(self.traversal().slowFallingUntilTick(), now))),
             previous.sprint() ? 0.76 : 1);
     HealthRoutes.DamageAt damage =
         (edge, elapsed) ->
