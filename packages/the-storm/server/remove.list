@@ -23,6 +23,8 @@ plugins/Essentials/spawn.yml
 plugins/Chunky/tasks/world.properties
 plugins/Chunky/tasks/world_nether.properties
 plugins/Chunky/tasks/world_the_end.properties
+# frontier's 7000-block square, pregenerated once when the world was created.
+plugins/Chunky/tasks/frontier.properties
 
 # LevelledMobs 4 fails to migrate this pre-4.0 copy on every boot; it writes
 # a current one (patched from the next boot on).
