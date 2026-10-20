@@ -301,14 +301,15 @@ final class StuckSpotsTest {
     assertThat(targets).isNotEmpty();
   }
 
-  @Test
-  void aBotInAPoolTheGraphHasNoExitFromHeadsForTheBank() {
-    // cloned-balance: one-block-deep pools the bake gives no way out of, though a swimmer climbs
-    // onto the stair at their edge. Bots that ended up in them circled in RECOVER for minutes.
+  @ParameterizedTest
+  @MethodSource("pools")
+  void aBotInAPoolTheGraphHasNoExitFromSwimsToABankItCanClimbOutOnto(Vec3 pool) {
+    // cloned-balance: one-block-deep pools the bake gives no way out of. Bots in them circled in
+    // RECOVER for minutes; the nearest edge out is a stair's half step above the water, which a
+    // swimmer cannot climb, so the escape must swim to a bank at most a block up.
     var nav = nav("cloned-balance");
     var graph = nav.graph();
     var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
-    var pool = new Vec3(4151.0, 24.0, 1113.0);
     assertThat(graph.reachable(graph.nearestNode(pool).orElseThrow(), spawn))
         .as("the pool is a sink")
         .isFalse();
@@ -330,9 +331,20 @@ final class StuckSpotsTest {
             new SplittableRandom(1));
 
     assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.ESCAPE);
-    var bank = thought.decision().waypoints().getFirst().pos();
-    assertThat(bank.distance(pool)).isLessThanOrEqualTo(RecoverySteps.ESCAPE_REACH + 2);
+    var waypoints = thought.decision().waypoints();
+    var bank = waypoints.getLast().pos();
+    var water =
+        waypoints.size() > 1
+            ? waypoints.get(waypoints.size() - 2).pos()
+            : graph.feet(graph.nearestNode(pool).orElseThrow());
+    assertThat(bank.y() - water.y())
+        .as("bank rise")
+        .isLessThanOrEqualTo(RecoverySteps.BANK_RISE + 1e-6);
     assertThat(graph.reachable(graph.nearestNode(bank).orElseThrow(), spawn)).isTrue();
+  }
+
+  static List<Vec3> pools() {
+    return List.of(new Vec3(4151.0, 24.0, 1113.0), new Vec3(4142.3, 24.6, 1088.5));
   }
 
   @Test

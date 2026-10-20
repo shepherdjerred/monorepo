@@ -4,16 +4,23 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
 /** Where a bot whose route failed steps to, and when it is stranded on a climb instead. */
 final class RecoverySteps {
-  /** How far a stranded bot looks for ground it can get home from, in blocks. */
-  static final int ESCAPE_REACH = 4;
+  /** How many nodes a stranded bot searches for a bank it can climb out onto. */
+  static final int ESCAPE_SEARCH = 512;
+
+  /** The most a bank may rise above the water a swimmer climbs out of, in blocks. */
+  static final double BANK_RISE = 1.0;
 
   private RecoverySteps() {}
 
@@ -33,41 +40,77 @@ final class RecoverySteps {
   }
 
   /**
-   * Where a bot stranded in a sink, off any climb, heads straight for: the nearest node within
-   * {@link #ESCAPE_REACH} blocks from which a spawn can be reached, such as the bank of a pool the
-   * graph has no exit from. Its body climbs out onto the bank as a player does. Empty when the bot
-   * is not stranded or no such node is in reach.
+   * The way out for a bot stranded in a sink, off any climb: along the graph through the sink (a
+   * pool's swim edges) to the nearest node beside a bank at most a block up from which a spawn can
+   * be reached, then onto that bank, which a swimmer climbs as a player does. A higher edge, such
+   * as a stair's half step above the water, cannot be climbed out onto. Empty when the bot is not
+   * stranded or no such bank lies within {@link #ESCAPE_SEARCH} nodes.
    */
-  static Optional<Vec3> escape(Situation situation, TacticsContext context) {
+  static Optional<List<Waypoint>> escape(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
-    var self = situation.self().pos();
-    var start = start(graph, self);
+    var start = start(graph, situation.self().pos());
     var spawns = spawnNodes(context);
     if (start.isEmpty()
         || spawns.isEmpty()
         || graph.climbable(start.getAsInt())
         || reachesAny(graph, start.getAsInt(), spawns)) return Optional.empty();
-    return nearestAnchored(graph, self, spawns);
+    return toBank(graph, start.getAsInt(), spawns);
   }
 
-  /** The node within {@link #ESCAPE_REACH} of {@code self} nearest it that reaches a spawn. */
-  private static Optional<Vec3> nearestAnchored(NavGraph graph, Vec3 self, List<Integer> spawns) {
-    return around(graph, BlockPos.of(self)).stream()
-        .filter(node -> reachesAny(graph, node, spawns))
-        .map(graph::feet)
-        .min(Comparator.comparingDouble(feet -> feet.distance(self)));
-  }
-
-  /** The nodes in the cells within {@link #ESCAPE_REACH} across and a block down to two up. */
-  private static List<Integer> around(NavGraph graph, BlockPos base) {
-    var nodes = new ArrayList<Integer>();
-    for (var dx = -ESCAPE_REACH; dx <= ESCAPE_REACH; dx++) {
-      for (var dz = -ESCAPE_REACH; dz <= ESCAPE_REACH; dz++) {
-        for (var dy = -1; dy <= 2; dy++)
-          graph.nodeAt(base.offset(dx, dy, dz)).ifPresent(nodes::add);
+  /** Breadth first from {@code start} to the first node with a climbable bank beside it. */
+  private static Optional<List<Waypoint>> toBank(NavGraph graph, int start, List<Integer> spawns) {
+    var via = new HashMap<Integer, Integer>();
+    via.put(start, -1);
+    var queue = new ArrayDeque<Integer>();
+    queue.add(start);
+    while (!queue.isEmpty() && via.size() <= ESCAPE_SEARCH) {
+      var node = queue.remove();
+      var bank = bankBeside(graph, node, spawns);
+      if (bank.isPresent()) return Optional.of(path(graph, via, node, bank.orElseThrow()));
+      for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
+        if (via.putIfAbsent(graph.edgeTarget(edge), edge) == null)
+          queue.add(graph.edgeTarget(edge));
       }
     }
-    return nodes;
+    return Optional.empty();
+  }
+
+  /**
+   * The feet of a node beside {@code node}, at most {@link #BANK_RISE} up, that reaches a spawn.
+   */
+  private static Optional<Vec3> bankBeside(NavGraph graph, int node, List<Integer> spawns) {
+    var feet = graph.feet(node);
+    for (var cell : beside(graph.cell(node))) {
+      var bank = graph.nodeAt(cell);
+      if (bank.isEmpty() || bank.getAsInt() == node) continue;
+      var rise = graph.feet(bank.getAsInt()).y() - feet.y();
+      if (rise <= BANK_RISE + 1e-6 && reachesAny(graph, bank.getAsInt(), spawns))
+        return Optional.of(graph.feet(bank.getAsInt()));
+    }
+    return Optional.empty();
+  }
+
+  /** The cells around {@code cell} and the layer above them, level ones first. */
+  private static List<BlockPos> beside(BlockPos cell) {
+    var cells = new ArrayList<BlockPos>();
+    for (var dy = 0; dy <= 1; dy++) {
+      for (var dx = -1; dx <= 1; dx++) {
+        for (var dz = -1; dz <= 1; dz++) cells.add(cell.offset(dx, dy, dz));
+      }
+    }
+    return cells;
+  }
+
+  /** The waypoints from the search's start to {@code end}, then onto {@code bank}. */
+  private static List<Waypoint> path(
+      NavGraph graph, Map<Integer, Integer> via, int end, Vec3 bank) {
+    var waypoints = new ArrayList<Waypoint>();
+    for (var edge = via.getOrDefault(end, -1);
+        edge >= 0;
+        edge = via.getOrDefault(graph.edgeSource(edge), -1)) waypoints.add(graph.waypoint(edge));
+    Collections.reverse(waypoints);
+    waypoints.add(new Waypoint(bank, Hop.WALK));
+    return waypoints;
   }
 
   /**

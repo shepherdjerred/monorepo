@@ -253,7 +253,7 @@ public final class Tactics {
       return new Routed(
           stand,
           Planner.decide(stand, situation, context, planning.lifeEpoch())
-              .withWaypoints(List.of(new Waypoint(escape.orElseThrow(), Hop.WALK))),
+              .withWaypoints(escape.orElseThrow()),
           memory,
           failure,
           DecisionTrace.Recovery.ESCAPE);
