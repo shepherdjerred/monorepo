@@ -26,11 +26,21 @@ UDP Query remains private to the forum's status service.
 
 ## Delivery preservation interface
 
-The reviewed Delivery registration uses a separate routine-upgrade path when
-the Application is explicitly delegated. Until that cutover, the accepted
-production pin above remains authoritative. Delivery automatically waits for an
-empty server before its preservation controller closes admission; a late join
-reopens the unchanged server and defers the request without disconnecting players.
+The delegated TSMC registration explicitly selects
+`minecraftUpgrade.releaseMode: retained-volume-restart` for routine releases.
+Delivery applies the exact published image through the existing one-replica
+StatefulSet and retained world PVC, then requires owned Argo reconciliation and
+the selected image running Ready. A graceful server restart can disconnect
+players briefly. It does not create a backup, restore a second world, or run
+candidate gameplay on every deployment. The separately scheduled Velero backups
+and operator restore procedure remain independent of routine releases.
+
+`verified-restore`, or an older frozen pipeline without `releaseMode`, retains
+the full preservation procedure below. That mode waits for an empty server
+before the controller closes admission; a late join reopens the unchanged server
+and defers the request without disconnecting players. Choosing routine restart
+does not authorize world replacement, a progression reset, or image-only rollback.
+The entrypoint's existing progression-preparation guard still applies.
 
 `delivery_validation.py` exposes `eligibility`, `snapshot`, `verify`, `recover`,
 and read-only `report` for the

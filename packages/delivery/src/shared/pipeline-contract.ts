@@ -41,6 +41,9 @@ export const PipelineDefinitionSchema = z.discriminatedUnion("kind", [
       minecraftUpgrade: z
         .object({
           imageComponent: z.literal("image:the-storm-server"),
+          releaseMode: z
+            .enum(["verified-restore", "retained-volume-restart"])
+            .optional(),
           runnerImage: z
             .string()
             .regex(/^docker\.io\/shepherdjerred\/ci-base@sha256:[a-f0-9]{64}$/),

@@ -98,7 +98,9 @@ export function createRecoveryInspector(options: {
       detail.pipeline.definition.workerRollout !== undefined ||
       detail.pipeline.definition.scoutSite !== undefined ||
       detail.pipeline.definition.forumRelease !== undefined ||
-      detail.pipeline.definition.minecraftUpgrade !== undefined
+      (detail.pipeline.definition.minecraftUpgrade !== undefined &&
+        detail.pipeline.definition.minecraftUpgrade.releaseMode !==
+          "retained-volume-restart")
     )
       throw new DeliveryError(
         "INVALID",

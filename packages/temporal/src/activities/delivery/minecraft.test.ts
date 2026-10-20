@@ -21,6 +21,12 @@ vi.mock("@temporalio/activity", () => ({
 
 async function effectsFixture() {
   const detail = await fixture();
+  if (
+    detail.pipeline.definition.kind !== "argocd" ||
+    detail.pipeline.definition.minecraftUpgrade === undefined
+  )
+    throw new Error("Expected the specialized Minecraft policy");
+  detail.pipeline.definition.minecraftUpgrade.releaseMode = "verified-restore";
   const events: string[] = [];
   const writes: StageInput[] = [];
   const effects: MinecraftEffects = {
@@ -76,6 +82,35 @@ async function effectsFixture() {
 }
 
 describe("TSMC preservation Activity boundaries", () => {
+  test("explicit retained-volume restart skips the restoration controller but retains active-request and target checks", async () => {
+    const { detail, effects, writes, events } = await effectsFixture();
+    if (
+      detail.pipeline.definition.kind !== "argocd" ||
+      !detail.pipeline.definition.minecraftUpgrade
+    )
+      throw new Error("Expected the specialized Minecraft policy");
+    detail.pipeline.definition.minecraftUpgrade.releaseMode =
+      "retained-volume-restart";
+    effects.eligibility = async () => {
+      throw new Error(
+        "Routine restart must not invoke the restoration controller",
+      );
+    };
+    expect(await prepareMinecraftDelivery(detail, effects)).toEqual({
+      status: "ready",
+    });
+    expect(writes).toEqual([]);
+    expect(events).toEqual([]);
+    detail.deployment.cancelRequested = true;
+    await expect(prepareMinecraftDelivery(detail, effects)).rejects.toThrow(
+      "canceled or superseded",
+    );
+    detail.deployment.cancelRequested = false;
+    detail.environment.application = "minecraft-shuxin";
+    await expect(prepareMinecraftDelivery(detail, effects)).rejects.toThrow(
+      "reviewed TSMC target",
+    );
+  });
   test("occupied-server eligibility stays read-only before environment claim", async () => {
     const { detail, effects, writes, events } = await effectsFixture();
     detail.deployment.status = "queued";

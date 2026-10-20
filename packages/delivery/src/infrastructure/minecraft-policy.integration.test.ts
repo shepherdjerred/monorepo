@@ -26,6 +26,15 @@ if (parsed.kind !== "argocd")
 const policy = parsed;
 
 test("Minecraft policy accepts only the reviewed image, fixed destination and immutable runner", async () => {
+  expect(policy.minecraftUpgrade?.releaseMode).toBeUndefined();
+  expect(policy.minecraftUpgrade).not.toHaveProperty("releaseMode");
+  for (const releaseMode of [null, "skip", false])
+    expect(
+      PipelineDefinitionSchema.safeParse({
+        ...policy,
+        minecraftUpgrade: { ...policy.minecraftUpgrade, releaseMode },
+      }).success,
+    ).toBe(false);
   expect(
     PipelineDefinitionSchema.safeParse({
       ...policy,
@@ -48,6 +57,76 @@ test("Minecraft policy accepts only the reviewed image, fixed destination and im
     testOperator,
   );
   expect(await context.cluster.database.pipeline.count()).toBe(2);
+});
+
+test("explicit retained-volume restart finishes through ordinary reconciliation evidence without manufacturing preservation evidence", async () => {
+  const selected = await context.delivery.createDeployment(
+    context.input(),
+    testOperator,
+  );
+  await context.delivery.registerPipeline(
+    "minecraft/restart",
+    {
+      ...policy,
+      minecraftUpgrade: {
+        ...policy.minecraftUpgrade!,
+        releaseMode: "retained-volume-restart",
+      },
+    },
+    testOperator,
+  );
+  // Isolate the same persistence finish boundary as the strict-mode regression.
+  await context.cluster.database.deployment.update({
+    where: { id: selected.id },
+    data: { pipelineRevisionId: "minecraft/restart" },
+  });
+  await context.delivery.claim(selected.id, testExecutor);
+  const evidence = [
+    {
+      kind: "reconciliation" as const,
+      summary: "Owned exact source is Synced and Healthy",
+    },
+    {
+      kind: "acceptance" as const,
+      summary: "Exact selected image observed Ready",
+    },
+  ];
+  for (const incomplete of [
+    [],
+    evidence.filter((entry) => entry.kind !== "acceptance"),
+    evidence.filter((entry) => entry.kind !== "reconciliation"),
+  ])
+    await expect(
+      context.delivery.finish(
+        selected.id,
+        {
+          status: "succeeded",
+          observedRevisionId: context.fixture.versionSet.id,
+          message: "Cannot omit ordinary acceptance",
+          recoveryRequired: false,
+          evidence: incomplete,
+        },
+        testExecutor,
+      ),
+    ).rejects.toThrow("reconciliation and acceptance");
+  expect(
+    await context.delivery.finish(
+      selected.id,
+      {
+        status: "succeeded",
+        observedRevisionId: context.fixture.versionSet.id,
+        message: "Retained world volume restarted",
+        recoveryRequired: false,
+        evidence,
+      },
+      testExecutor,
+    ),
+  ).toMatchObject({ status: "succeeded" });
+  expect(
+    await context.cluster.database.evidence.count({
+      where: { deploymentId: selected.id, kind: "backup" },
+    }),
+  ).toBe(0);
 });
 
 test("TSMC always refuses blind rollback and cannot fall through an ordinary Argo pipeline", async () => {

@@ -99,7 +99,10 @@ export async function validateSpecializedSuccess(
         "Combined Scout success requires completed frontend activation and exact archive acceptance evidence under the backend release lock",
       );
   }
-  if (pipeline.minecraftUpgrade !== undefined) {
+  if (
+    pipeline.minecraftUpgrade !== undefined &&
+    pipeline.minecraftUpgrade.releaseMode !== "retained-volume-restart"
+  ) {
     const expectedOperation = specializedOperationId(
       `${deployment.id}:minecraft-preservation`,
     );

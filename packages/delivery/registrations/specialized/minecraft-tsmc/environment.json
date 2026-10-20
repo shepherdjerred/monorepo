@@ -3,7 +3,7 @@
   "serviceId": "minecraft",
   "name": "tsmc",
   "application": "minecraft-tsmc",
-  "pipelineRevisionId": "minecraft-tsmc/1",
+  "pipelineRevisionId": "minecraft-tsmc/2",
   "configurationRevision": "minecraft-tsmc/1",
   "configuration": {},
   "automatic": true

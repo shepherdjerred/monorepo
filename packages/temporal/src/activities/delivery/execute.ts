@@ -83,7 +83,9 @@ function adapterFlags(current: DeploymentDetail) {
     platform: current.deployment.platformSnapshot !== null,
     workerHosts: current.deployment.workerSnapshot !== null,
     minecraftUpgrade:
-      pipeline.kind === "argocd" && pipeline.minecraftUpgrade !== undefined,
+      pipeline.kind === "argocd" &&
+      pipeline.minecraftUpgrade !== undefined &&
+      pipeline.minecraftUpgrade.releaseMode !== "retained-volume-restart",
     scoutSite:
       pipeline.kind === "argocd" &&
       pipeline.scoutSite !== undefined &&
@@ -154,7 +156,9 @@ export async function applyDelivery(id: string): Promise<void> {
   const current = await detail(id);
   if (
     current.pipeline.definition.kind === "argocd" &&
-    current.pipeline.definition.minecraftUpgrade !== undefined
+    current.pipeline.definition.minecraftUpgrade !== undefined &&
+    current.pipeline.definition.minecraftUpgrade.releaseMode !==
+      "retained-volume-restart"
   )
     requireMinecraftPreservation(current);
   if (current.deployment.cancelRequested)
