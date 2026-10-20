@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.mail;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mail.adapter.db.JooqMail;
 import com.shepherdjerred.thestorm.mail.adapter.paper.MailCommands;
 import com.shepherdjerred.thestorm.mail.app.Mail;
@@ -25,7 +26,8 @@ public final class MailModule implements StormModule {
         new MailCommands(
             context,
             mail,
-            new com.shepherdjerred.thestorm.mail.adapter.paper.LetterCommands(context, letters));
+            new com.shepherdjerred.thestorm.mail.adapter.paper.LetterCommands(context, letters),
+            context.services().require(SealedWorlds.class));
     context.plugin().getServer().getPluginManager().registerEvents(commands, context.plugin());
     context
         .lifecycle()

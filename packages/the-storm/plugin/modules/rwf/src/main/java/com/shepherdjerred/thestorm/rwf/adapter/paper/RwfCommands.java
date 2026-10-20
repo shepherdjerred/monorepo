@@ -9,6 +9,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.rwf.adapter.content.RwfConfig;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
+import com.shepherdjerred.thestorm.rwf.app.SealedParticipants;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
 import com.shepherdjerred.thestorm.rwf.domain.killstreak.Killstreak;
 import com.shepherdjerred.thestorm.rwf.domain.killstreak.StreakLoadout;
@@ -598,6 +599,12 @@ final class RwfCommands {
     runner.recordingStatus(player).forEach(line -> Texts.info(player, line));
   }
 
+  /** Creative and other sealed worlds stay out. The lobby and maps may still play. */
+  private boolean outside(Player player) {
+    var world = player.getWorld();
+    return SealedParticipants.blocked(context.sealed().isSealed(world), context.ours(world));
+  }
+
   /**
    * The managed flag decides, off the main thread; the match decides after. A match already under
    * way makes the player a watcher who joins the next one.
@@ -611,6 +618,10 @@ final class RwfCommands {
             return;
           }
           if (!player.isOnline()) {
+            return;
+          }
+          if (outside(player)) {
+            Texts.error(player, "Leave the sealed world before joining Search and Destroy.");
             return;
           }
           if (watchers.watching(player.getUniqueId())) {
@@ -640,6 +651,10 @@ final class RwfCommands {
             return;
           }
           if (!player.isOnline()) {
+            return;
+          }
+          if (outside(player)) {
+            Texts.error(player, "Leave the sealed world before joining Search and Destroy.");
             return;
           }
           watchers.watch(player).ifPresent(message -> Texts.error(player, message));

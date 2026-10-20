@@ -13,6 +13,8 @@ modules:
   shops: true
   shards: true
   towns: true
+  # Recovered 2016 plot world. It must already be loaded with generator TheStorm:creative.
+  creative: true
   tracks: true
   mechanics: true
   spells: true

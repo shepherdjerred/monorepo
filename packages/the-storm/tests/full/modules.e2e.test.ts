@@ -6,12 +6,13 @@ import { test } from "#e2e/fixtures.ts";
 import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
-/** The modules the shipped config enables: all 25 it registers. */
+/** The modules the shipped config enables: all 27 it registers. */
 const modules = [
   "agent",
   "arena",
   "chat",
   "companions",
+  "creative",
   "discord",
   "economy",
   "essentials",
@@ -24,6 +25,7 @@ const modules = [
   "quests",
   "rwf",
   "rwfbots",
+  "safety",
   "seasonal",
   "shards",
   "shops",
@@ -35,7 +37,7 @@ const modules = [
   "world",
 ].toSorted();
 
-const registeredModules = 25;
+const registeredModules = 27;
 
 const OwnedConfigSchema = z
   .object({ modules: z.record(z.string(), z.boolean()) })
@@ -47,7 +49,7 @@ const ownedConfig = path.join(
 );
 
 describe("all modules together", () => {
-  test("boots all 25 shipped modules with the shipped content", async ({
+  test("boots all 27 shipped modules with the shipped content", async ({
     server,
     rcon,
   }) => {
@@ -68,7 +70,7 @@ describe("all modules together", () => {
     const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
     expect(enabled?.[1]?.split(", ").toSorted()).toEqual(modules);
     expect(logs).toContain(
-      "Prepared synthetic fixtures for Storm modules [world, towns, essentials, npcs, arena, shards, seasonal, rwf]",
+      "Prepared synthetic fixtures for Storm modules [world, towns, essentials, npcs, arena, shards, seasonal, rwf, creative]",
     );
     expect(logs).not.toContain("The Storm failed to enable");
     expect(logs).not.toContain("Could not validate shard altars");

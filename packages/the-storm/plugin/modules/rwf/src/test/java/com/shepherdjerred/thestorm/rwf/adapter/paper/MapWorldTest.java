@@ -43,7 +43,8 @@ class MapWorldTest {
                   com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled(),
                   new BattleSoundLog(harness.clock),
                   new TacticalReportLog(harness.clock),
-                  new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin)));
+                  new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin),
+                  new com.shepherdjerred.thestorm.core.world.SealedWorlds()));
       var resources = new MapResourceRegistry();
       var requests = new ArrayList<CompletableFuture<Void>>();
       var subscription =

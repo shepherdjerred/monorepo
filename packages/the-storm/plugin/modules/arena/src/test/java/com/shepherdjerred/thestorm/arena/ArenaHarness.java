@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.status.PublicGameDirectory;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.economy.app.MoneyFormatter;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.io.IOException;
@@ -140,6 +141,7 @@ public final class ArenaHarness implements AutoCloseable {
     services.provide(MoneyFormatter.class, wallets);
     services.provide(PublicGameDirectory.class, new PublicGameDirectory());
     services.provide(SavedPlayerData.class, saved);
+    services.provide(SealedWorlds.class, new SealedWorlds());
     enabling =
         plugin ->
             new ArenaModule(context -> new ServerHooks(chunks))

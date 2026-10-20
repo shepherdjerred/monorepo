@@ -1,0 +1,2415 @@
+# Recovered 2016 creative plot world. The plugin never writes this file.
+# CoreProtect history is not configured here. plugins/CoreProtect/creative.yml
+# can turn logging off for this world; the module then refuses to start.
+# Grid numbers are the measurement of TheStorm_creative_snapshot-2016-01-10
+# (plot 82 including the stone wall, road 10, surface at y=64). The grass
+# floor inside the wall is 80 by 80. A mismatch with that template refuses
+# to boot. The border starts at the saved regions; raise borderSize to grow
+# the map. Do not shrink it.
+#
+# plots is the 10 Jan 2016 catalog. A row is a claim sign (ID / Owner / name /
+# Claimed, on the road at the plot's north-west corner) or an interior that is
+# not the repeated grass, tree, and flower paste. owner is a UUID from that
+# snapshot's playerdata when the sign name matched one player. A blank owner is
+# staff-held: the name is not in the snapshot, or the build has no claim sign.
+# Those signs have no plot name, description, or trust list. Empty cells are
+# not listed.
+world: creative
+plotWidth: 82
+roadWidth: 10
+roadOffsetX: 0
+roadOffsetZ: 0
+surfaceY: 64
+borderCenterX: 1280
+borderCenterZ: -768
+borderSize: 8704
+claimCap: 2
+entityCap: 200
+brushRadius: 8
+plots:
+  - id: "23;-25"
+    owner: "9539add5-4359-4611-9984-2d23336359a3"
+    signs:
+      - x: 2029
+        y: 65
+        z: -2388
+        lines: ["ID: 23;-25", "Owner:", "_LadehLapis_", "Claimed"]
+  - id: "6;-12"
+    owner: "02146fe2-36eb-4469-80b6-c9949f873364"
+    signs:
+      - x: 465
+        y: 65
+        z: -1192
+        lines: ["ID: 6;-12", "Owner:", "BlockBuster2482", "Claimed"]
+  - id: "2;-10"
+    owner: "bc50e51f-174a-469a-b73a-143d8eff849a"
+    signs:
+      - x: 97
+        y: 65
+        z: -1008
+        lines: ["ID: 2;-10", "Owner:", "Katieee", "Claimed"]
+      - x: 138
+        y: 68
+        z: -965
+        lines: ["tree", "", "", ""]
+  - id: "1;-9"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -916
+        lines: ["ID: 1;-9", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "2;-9"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 97
+        y: 65
+        z: -916
+        lines: ["ID: 2;-9", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "-2;-8"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: -271
+        y: 65
+        z: -824
+        lines: ["ID: -2;-8", "Owner:", "Zynbot", "Claimed"]
+  - id: "-1;-8"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: -179
+        y: 65
+        z: -824
+        lines: ["ID: -1;-8", "Owner:", "Zynbot", "Claimed"]
+  - id: "0;-8"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: -87
+        y: 65
+        z: -824
+        lines: ["ID: 0;-8", "Owner:", "Zynbot", "Claimed"]
+  - id: "1;-8"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -824
+        lines: ["ID: 1;-8", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "2;-8"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 97
+        y: 65
+        z: -824
+        lines: ["ID: 2;-8", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "-2;-7"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: -271
+        y: 65
+        z: -732
+        lines: ["ID: -2;-7", "Owner:", "Zynbot", "Claimed"]
+      - x: -225
+        y: 73
+        z: -676
+        lines: ["Mailbox", "", "", ""]
+  - id: "-1;-7"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: -179
+        y: 65
+        z: -732
+        lines: ["ID: -1;-7", "Owner:", "Zynbot", "Claimed"]
+      - x: -139
+        y: 158
+        z: -730
+        lines: ["BIG", "GRAND", "ANGEL", "STATUE"]
+      - x: -127
+        y: 156
+        z: -723
+        lines: ["Theater", "", "", ""]
+      - x: -151
+        y: 145
+        z: -713
+        lines: ["Garden", "", "(with fountin)", ""]
+      - x: -154
+        y: 145
+        z: -702
+        lines: ["Food Store", "", "", ""]
+      - x: -135
+        y: 156
+        z: -700
+        lines: ["Shop", "", "", ""]
+      - x: -158
+        y: 156
+        z: -688
+        lines: ["Entrence", "", "", ""]
+      - x: -139
+        y: 157
+        z: -688
+        lines: ["Angel Statue", "", "", ""]
+      - x: -160
+        y: 145
+        z: -681
+        lines: ["AirShip", "", "", ""]
+  - id: "0;-7"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: -87
+        y: 65
+        z: -732
+        lines: ["ID: 0;-7", "Owner:", "Zynbot", "Claimed"]
+  - id: "1;-7"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -732
+        lines: ["ID: 1;-7", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "-7;-6"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -731
+        y: 65
+        z: -640
+        lines: ["ID: -7;-6", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "-6;-6"
+    owner: "654daa41-f84b-49ae-b539-e99885eb8a5c"
+    signs:
+      - x: -639
+        y: 65
+        z: -640
+        lines: ["ID: -6;-6", "Owner:", "dockozel", "Claimed"]
+  - id: "-5;-6"
+    owner: ""
+    signs: []
+  - id: "-4;-6"
+    owner: "39ba511d-0ccf-4aff-a740-c179099c3214"
+    signs:
+      - x: -455
+        y: 65
+        z: -640
+        lines: ["ID: -4;-6", "Owner:", "EdeTheWolf", "Claimed"]
+  - id: "-3;-6"
+    owner: "39ba511d-0ccf-4aff-a740-c179099c3214"
+    signs:
+      - x: -363
+        y: 65
+        z: -640
+        lines: ["ID: -3;-6", "Owner:", "EdeTheWolf", "Claimed"]
+      - x: -320
+        y: 68
+        z: -599
+        lines: ["d", "", "", ""]
+  - id: "-2;-6"
+    owner: "e6a3a106-04b5-4c36-91a6-9b5e8ec8359e"
+    signs:
+      - x: -271
+        y: 65
+        z: -640
+        lines: ["ID: -2;-6", "Owner:", "EngRos", "Claimed"]
+  - id: "-1;-6"
+    owner: "af1c824a-8ff5-4912-9470-b32c07ffd1f8"
+    signs:
+      - x: -179
+        y: 65
+        z: -640
+        lines: ["ID: -1;-6", "Owner:", "PikachuPals", "Claimed"]
+  - id: "0;-6"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: -87
+        y: 65
+        z: -640
+        lines: ["ID: 0;-6", "Owner:", "WinterSolstice8", "Claimed"]
+      - x: -45
+        y: 65
+        z: -626
+        lines: ["^", "Block Update", "Detector", ""]
+      - x: -19
+        y: 68
+        z: -625
+        lines: ["", "This block is", "important!", ""]
+      - x: -25
+        y: 65
+        z: -621
+        lines: ["2x2 hidden", "door by button", "", ""]
+      - x: -25
+        y: 65
+        z: -620
+        lines: ["as compact as", "I can figure out!", "", ""]
+      - x: -42
+        y: 65
+        z: -612
+        lines: ["Block Update", "Detector", "", ""]
+      - x: -37
+        y: 65
+        z: -606
+        lines: ["<----", "data update", "detector", ""]
+      - x: -59
+        y: 65
+        z: -601
+        lines: ["<----", "Timing system", "not tuned at all", ""]
+      - x: -59
+        y: 65
+        z: -600
+        lines: ["besides basic", "functions!", "", ""]
+      - x: -34
+        y: 65
+        z: -586
+        lines: ["Teaching myself", "how to 3x3 piston", "door.", ""]
+      - x: -45
+        y: 65
+        z: -572
+        lines: ["Full potion", "brewing machine", "", ""]
+      - x: -33
+        y: 65
+        z: -572
+        lines: ["repeater locks", "so the clock", "isn't always going", ""]
+      - x: -44
+        y: 65
+        z: -571
+        lines: ["Finished Potions", "Output", "", ""]
+      - x: -44
+        y: 67
+        z: -571
+        lines: ["", "Ingredient", "Input", ""]
+  - id: "1;-6"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -640
+        lines: ["ID: 1;-6", "Owner:", "WinterSolstice8", "Claimed"]
+      - x: 54
+        y: 83
+        z: -614
+        lines: ["", "Naturalizing", "Purifying", ""]
+      - x: 57
+        y: 82
+        z: -614
+        lines: ["", "Gentle Leaf", "TM", ""]
+      - x: 57
+        y: 83
+        z: -614
+        lines: ["", "Large Bathing", "Filter", ""]
+      - x: 53
+        y: 82
+        z: -575
+        lines: ["<---------", "Men's", "Women's", "--------->"]
+  - id: "2;-6"
+    owner: "805e7972-ee44-4022-8d6d-a14a9831ae53"
+    signs:
+      - x: 97
+        y: 65
+        z: -640
+        lines: ["ID: 2;-6", "Owner:", "kie28", "Claimed"]
+  - id: "3;-6"
+    owner: "9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"
+    signs:
+      - x: 189
+        y: 65
+        z: -640
+        lines: ["ID: 3;-6", "Owner:", "Zah262", "Claimed"]
+  - id: "4;-6"
+    owner: "9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"
+    signs:
+      - x: 281
+        y: 65
+        z: -640
+        lines: ["ID: 4;-6", "Owner:", "Zah262", "Claimed"]
+  - id: "5;-6"
+    owner: "1d116a1a-973a-4c68-93b8-0e9f8755a749"
+    signs:
+      - x: 373
+        y: 65
+        z: -640
+        lines: ["ID: 5;-6", "Owner:", "Zynbot", "Claimed"]
+  - id: "6;-6"
+    owner: "46378864-8c3e-43cb-a026-1e434326d12e"
+    signs:
+      - x: 465
+        y: 65
+        z: -640
+        lines: ["ID: 6;-6", "Owner:", "ajw912", "Claimed"]
+  - id: "-5;-5"
+    owner: "988fd090-4fec-4b10-ab1c-389aac822587"
+    signs:
+      - x: -547
+        y: 65
+        z: -548
+        lines: ["ID: -5;-5", "Owner:", "Ramen_Beef", "Claimed"]
+  - id: "-4;-5"
+    owner: "7e75dd4d-6f4d-4522-83db-04e59fd7bf94"
+    signs:
+      - x: -455
+        y: 65
+        z: -548
+        lines: ["ID: -4;-5", "Owner:", "OphidianWench", "Claimed"]
+  - id: "-3;-5"
+    owner: "39ba511d-0ccf-4aff-a740-c179099c3214"
+    signs:
+      - x: -363
+        y: 65
+        z: -548
+        lines: ["ID: -3;-5", "Owner:", "EdeTheWolf", "Claimed"]
+  - id: "-2;-5"
+    owner: "43a34fa8-1a45-4508-8854-541596581e7a"
+    signs:
+      - x: -271
+        y: 65
+        z: -548
+        lines: ["ID: -2;-5", "Owner:", "woosal", "Claimed"]
+  - id: "-1;-5"
+    owner: "83d9650b-c4dd-4ad8-9c35-3127d999bac1"
+    signs:
+      - x: -179
+        y: 65
+        z: -548
+        lines: ["ID: -1;-5", "Owner:", "AnaBeatriz1802", "Claimed"]
+  - id: "0;-5"
+    owner: "fa3bf752-ac4a-42cb-9724-5ad83a996ddb"
+    signs:
+      - x: -87
+        y: 65
+        z: -548
+        lines: ["ID: 0;-5", "Owner:", "Vash512", "Claimed"]
+  - id: "1;-5"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -548
+        lines: ["ID: 1;-5", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "2;-5"
+    owner: "805e7972-ee44-4022-8d6d-a14a9831ae53"
+    signs:
+      - x: 97
+        y: 65
+        z: -548
+        lines: ["ID: 2;-5", "Owner:", "kie28", "Claimed"]
+  - id: "3;-5"
+    owner: "9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"
+    signs:
+      - x: 189
+        y: 65
+        z: -548
+        lines: ["ID: 3;-5", "Owner:", "Zah262", "Claimed"]
+  - id: "4;-5"
+    owner: "1f89dffa-ef4e-4e89-9720-cffd9c161542"
+    signs:
+      - x: 281
+        y: 65
+        z: -548
+        lines: ["ID: 4;-5", "Owner:", "X_D", "Claimed"]
+  - id: "5;-5"
+    owner: "1f89dffa-ef4e-4e89-9720-cffd9c161542"
+    signs:
+      - x: 373
+        y: 65
+        z: -548
+        lines: ["ID: 5;-5", "Owner:", "X_D", "Claimed"]
+      - x: 408
+        y: 65
+        z: -546
+        lines: ["", "R04D-TR41N", "", ""]
+      - x: 418
+        y: 76
+        z: -541
+        lines: ["EMERGENCY", "EXIT", "ONLY", "---------------"]
+      - x: 420
+        y: 80
+        z: -536
+        lines: ["AUTHORIZED", "PERSONELL", "ONLY", "---------------"]
+      - x: 407
+        y: 65
+        z: -533
+        lines: ["", "R04D-TR41N", "", ""]
+      - x: 381
+        y: 68
+        z: -529
+        lines: ["WAITING NR:", "51", "DESK:", "1"]
+      - x: 407
+        y: 65
+        z: -529
+        lines: ["", "GLASS", "", ""]
+      - x: 407
+        y: 65
+        z: -528
+        lines: ["", "METAL", "", ""]
+      - x: 407
+        y: 65
+        z: -526
+        lines: ["", "Everything else", "", ""]
+      - x: 443
+        y: 65
+        z: -526
+        lines: ["Abandoned", "factory", "of stone/bricks?", ""]
+      - x: 407
+        y: 65
+        z: -525
+        lines: ["", "BIO", "", ""]
+      - x: 382
+        y: 68
+        z: -523
+        lines: ["Welcome", "", "BLUEHILL", ""]
+      - x: 383
+        y: 68
+        z: -523
+        lines: ["to", "", "BANK", ""]
+      - x: 384
+        y: 67
+        z: -523
+        lines: ["OPEN HOURS:", "7-21", "7-21", "10-14"]
+      - x: 415
+        y: 67
+        z: -523
+        lines: ["MineBLOCK", "Industries Ltd.", "---------------", "WELCOME"]
+      - x: 418
+        y: 67
+        z: -523
+        lines: ["MineBLOCK", "Industries Ltd.", "---------------", "WELCOME"]
+      - x: 386
+        y: 65
+        z: -522
+        lines: ["", "MON-3YY", "", ""]
+      - x: 391
+        y: 65
+        z: -522
+        lines: ["", "RICH-69", "", ""]
+      - x: 409
+        y: 65
+        z: -521
+        lines: ["", "TR-45H", "", ""]
+      - x: 380
+        y: 65
+        z: -520
+        lines: ["", "MIL-0", "", ""]
+      - x: 415
+        y: 65
+        z: -520
+        lines: ["", "B-055", "", ""]
+      - x: 443
+        y: 65
+        z: -519
+        lines:
+          ["Overgrown", "front yard?", "bushes and trees", "or parking spots"]
+      - x: 380
+        y: 65
+        z: -512
+        lines: ["", "", "MIL-0", ""]
+      - x: 385
+        y: 65
+        z: -512
+        lines: ["", "MON-3YY", "", ""]
+      - x: 408
+        y: 65
+        z: -512
+        lines: ["", "TR-45H", "", ""]
+      - x: 415
+        y: 65
+        z: -512
+        lines: ["", "", "B-055", ""]
+      - x: 391
+        y: 65
+        z: -511
+        lines: ["", "RICH-69", "", ""]
+      - x: 385
+        y: 65
+        z: -499
+        lines: ["", "PUSK-4", "", ""]
+      - x: 418
+        y: 66
+        z: -498
+        lines: ["", "0-FF", "", ""]
+      - x: 426
+        y: 65
+        z: -498
+        lines: ["", "0-FF", "", ""]
+      - x: 434
+        y: 67
+        z: -495
+        lines: ["NO", "UNAUTHORIZED", "PERSONELL", "---------"]
+      - x: 388
+        y: 67
+        z: -493
+        lines:
+          [
+            "95 - 0.10 $/l",
+            "98 - 0.12 $/l",
+            "Diesel - 0.05 $/l",
+            "Etanol - 4.20 $/l",
+          ]
+      - x: 390
+        y: 67
+        z: -493
+        lines:
+          [
+            "95 - 0.10 $/l",
+            "98 - 0.12 $/l",
+            "Diesel - 0.05 $/l",
+            "Etanol - 4.20 $/l",
+          ]
+      - x: 400
+        y: 67
+        z: -493
+        lines:
+          [
+            "95 - 0.10 $/l",
+            "98 - 0.12 $/l",
+            "Diesel - 0.05 $/l",
+            "Etanol - 4.20 $/l",
+          ]
+      - x: 418
+        y: 65
+        z: -493
+        lines: ["", "NIC-31", "", ""]
+      - x: 427
+        y: 65
+        z: -493
+        lines: ["", "", "NIC-31", ""]
+      - x: 402
+        y: 67
+        z: -492
+        lines:
+          [
+            "95 - 0.10 $/l",
+            "98 - 0.12 $/l",
+            "Diesel - 0.05 $/l",
+            "Etanol - 4.20 $/l",
+          ]
+      - x: 385
+        y: 65
+        z: -488
+        lines: ["", "", "PUSK-4", ""]
+      - x: 418
+        y: 65
+        z: -488
+        lines: ["", "Gri's farm", "", ""]
+      - x: 426
+        y: 65
+        z: -488
+        lines: ["", "Gri's farm", "", ""]
+      - x: 437
+        y: 67
+        z: -485
+        lines: ["<----", "MEN", "---->", "WOMEN"]
+      - x: 437
+        y: 68
+        z: -485
+        lines: ["", "", "TOILETS", ""]
+      - x: 422
+        y: 65
+        z: -484
+        lines: ["===============", "New delivery", "Beware!", "==============="]
+      - x: 434
+        y: 67
+        z: -484
+        lines: ["Price:", "4.20 $", "Total:", "13.37 $"]
+      - x: 421
+        y: 65
+        z: -483
+        lines: ["===============", "New Delivery", "Beware!", "=============="]
+      - x: 423
+        y: 65
+        z: -483
+        lines: ["===============", "New Delivery", "Beware!", "============="]
+      - x: 422
+        y: 65
+        z: -482
+        lines: ["===============", "New Delivery", "Beware!", "============="]
+      - x: 432
+        y: 68
+        z: -481
+        lines: ["", "", "Delizizziouzz", ""]
+      - x: 433
+        y: 68
+        z: -481
+        lines: ["", "", "Restaurant", ""]
+      - x: 429
+        y: 67
+        z: -480
+        lines: ["OPEN:", "6-24", "7-24", "7-22"]
+      - x: 400
+        y: 65
+        z: -478
+        lines: ["", "P1C-UP", "", ""]
+      - x: 434
+        y: 66
+        z: -478
+        lines: ["Spices", "", "", ""]
+      - x: 435
+        y: 66
+        z: -478
+        lines: ["Paper", "", "", ""]
+      - x: 436
+        y: 66
+        z: -478
+        lines: ["Ketchup", "", "", ""]
+      - x: 436
+        y: 68
+        z: -478
+        lines: ["-----", "ORDER", "HERE!", "-----"]
+      - x: 385
+        y: 65
+        z: -477
+        lines: ["", "_______", "| FA-57 |", "¨¨¨¨¨¨¨¨¨¨¨¨¨¨"]
+      - x: 394
+        y: 66
+        z: -477
+        lines: ["", "X-D", "", ""]
+      - x: 405
+        y: 65
+        z: -477
+        lines: ["", "TR-011", "", ""]
+      - x: 436
+        y: 68
+        z: -477
+        lines: ["-----", "ENJOY", "YOUR MEAL!", "-----"]
+      - x: 376
+        y: 67
+        z: -471
+        lines: ["", "CHEAP", "", "BLAZE IT"]
+      - x: 376
+        y: 68
+        z: -471
+        lines: ["", "CHEAP", "", "CHEAP"]
+      - x: 377
+        y: 67
+        z: -471
+        lines: ["", "0.050 $/l", "", "4.20  $/l"]
+      - x: 377
+        y: 68
+        z: -471
+        lines: ["", "0.100 $/l", "", "0.120 $/l"]
+      - x: 377
+        y: 70
+        z: -471
+        lines: ["", "TEABOIL", "", ""]
+      - x: 378
+        y: 67
+        z: -471
+        lines: ["", "DIESEL", "", "ETANOL"]
+      - x: 378
+        y: 68
+        z: -471
+        lines: ["", "95", "", "98"]
+      - x: 376
+        y: 67
+        z: -469
+        lines: ["", "Diesel", "", "Etanol"]
+      - x: 376
+        y: 68
+        z: -469
+        lines: ["", "95", "", "98"]
+      - x: 377
+        y: 67
+        z: -469
+        lines: ["", "0.050 $/l", "", "4.20 $/l"]
+      - x: 377
+        y: 68
+        z: -469
+        lines: ["", "0.100 $/l", "", "0.120 $/l"]
+      - x: 377
+        y: 70
+        z: -469
+        lines: ["", "TEABOIL", "", ""]
+      - x: 378
+        y: 67
+        z: -469
+        lines: ["", "CHEAP", "", "BLAZE IT"]
+      - x: 378
+        y: 68
+        z: -469
+        lines: ["", "CHEAP", "", "CHEAP"]
+      - x: 385
+        y: 65
+        z: -469
+        lines: ["", "", "FA-57", ""]
+      - x: 394
+        y: 65
+        z: -469
+        lines: ["", "X-D", "", ""]
+      - x: 400
+        y: 65
+        z: -469
+        lines: ["", "P1C-UP", "", ""]
+      - x: 405
+        y: 65
+        z: -469
+        lines: ["", "TR-011", "", ""]
+  - id: "6;-5"
+    owner: "09d0d817-7ef1-4610-be44-468fdfb74c45"
+    signs:
+      - x: 465
+        y: 65
+        z: -548
+        lines: ["ID: 6;-5", "Owner:", "Ella_714", "Claimed"]
+  - id: "-6;-4"
+    owner: "58364a74-7f81-4f2a-b3f3-5fa36ac2d947"
+    signs:
+      - x: -639
+        y: 65
+        z: -456
+        lines: ["ID: -6;-4", "Owner:", "JUniZ1", "Claimed"]
+  - id: "-3;-4"
+    owner: "f53d8529-6e7f-4449-b108-f20709cad6a3"
+    signs:
+      - x: -363
+        y: 65
+        z: -456
+        lines: ["ID: -3;-4", "Owner:", "Dolphingirl1008", "Claimed"]
+  - id: "-2;-4"
+    owner: "1f89dffa-ef4e-4e89-9720-cffd9c161542"
+    signs:
+      - x: -271
+        y: 65
+        z: -456
+        lines: ["ID: -2;-4", "Owner:", "X_D", "Claimed"]
+  - id: "0;-4"
+    owner: "39ba511d-0ccf-4aff-a740-c179099c3214"
+    signs:
+      - x: -87
+        y: 65
+        z: -456
+        lines: ["ID: 0;-4", "Owner:", "EdeTheWolf", "Claimed"]
+      - x: -59
+        y: 66
+        z: -414
+        lines: ["EdeTheWolf's", "museum of", "random", "artifacts"]
+      - x: -10
+        y: 66
+        z: -410
+        lines: ["2 Zah", "", "", ""]
+  - id: "1;-4"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -456
+        lines: ["ID: 1;-4", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "2;-4"
+    owner: "9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"
+    signs:
+      - x: 97
+        y: 65
+        z: -456
+        lines: ["ID: 2;-4", "Owner:", "Zah262", "Claimed"]
+  - id: "3;-4"
+    owner: "9cee5afe-e1e3-4c7a-83b1-eaf5fdcc96a0"
+    signs:
+      - x: 189
+        y: 65
+        z: -456
+        lines: ["ID: 3;-4", "Owner:", "Zah262", "Claimed"]
+      - x: 212
+        y: 67
+        z: -432
+        lines: ["(o)  (o)  (o)", "[=] [=] [=] [=]", "", "[(+)(-)]"]
+      - x: 222
+        y: 66
+        z: -389
+        lines: ["Party Buss", "<3", "Never stop", "Da Partaaaay!"]
+  - id: "4;-4"
+    owner: "1f89dffa-ef4e-4e89-9720-cffd9c161542"
+    signs:
+      - x: 281
+        y: 65
+        z: -456
+        lines: ["ID: 4;-4", "Owner:", "X_D", "Claimed"]
+      - x: 286
+        y: 65
+        z: -442
+        lines: ["", "", "27-HIX", ""]
+  - id: "5;-4"
+    owner: "1f89dffa-ef4e-4e89-9720-cffd9c161542"
+    signs:
+      - x: 373
+        y: 65
+        z: -456
+        lines: ["ID: 5;-4", "Owner:", "X_D", "Claimed"]
+  - id: "6;-4"
+    owner: "acc83cec-07a6-4fe7-a5ec-c8c840ec931a"
+    signs:
+      - x: 465
+        y: 65
+        z: -456
+        lines: ["ID: 6;-4", "Owner:", "WackyNWise", "Claimed"]
+  - id: "-6;-3"
+    owner: "4676967f-4e96-445b-a651-c6f689c9b7a4"
+    signs:
+      - x: -639
+        y: 65
+        z: -364
+        lines: ["ID: -6;-3", "Owner:", "dancegirl02", "Claimed"]
+  - id: "-5;-3"
+    owner: "6a2c28c1-befb-42c5-a1cf-861b0a0e8d62"
+    signs:
+      - x: -547
+        y: 65
+        z: -364
+        lines: ["ID: -5;-3", "Owner:", "amalieberlud", "Claimed"]
+  - id: "-3;-3"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -363
+        y: 65
+        z: -364
+        lines: ["ID: -3;-3", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "-2;-3"
+    owner: "6c90e5f5-b24e-4b6c-a974-ce65d340973f"
+    signs:
+      - x: -271
+        y: 65
+        z: -364
+        lines: ["ID: -2;-3", "Owner:", "ModelJulie", "Claimed"]
+  - id: "-1;-3"
+    owner: "c538a540-3e91-4680-9e98-43f4d811e8e2"
+    signs:
+      - x: -179
+        y: 65
+        z: -364
+        lines: ["ID: -1;-3", "Owner:", "Pigrider102", "Claimed"]
+  - id: "0;-3"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: -87
+        y: 65
+        z: -364
+        lines: ["ID: 0;-3", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "1;-3"
+    owner: "95ac03cb-1e33-4d25-9db4-3b6db46872ed"
+    signs:
+      - x: 5
+        y: 65
+        z: -364
+        lines: ["ID: 1;-3", "Owner:", "WinterSolstice8", "Claimed"]
+  - id: "2;-3"
+    owner: "6c90e5f5-b24e-4b6c-a974-ce65d340973f"
+    signs:
+      - x: 97
+        y: 65
+        z: -364
+        lines: ["ID: 2;-3", "Owner:", "ModelJulie", "Claimed"]
+  - id: "3;-3"
+    owner: "129bf0d3-557d-4aa7-ac30-e9c019204d22"
+    signs:
+      - x: 189
+        y: 65
+        z: -364
+        lines: ["ID: 3;-3", "Owner:", "Groudan", "Claimed"]
+  - id: "4;-3"
+    owner: "6c90e5f5-b24e-4b6c-a974-ce65d340973f"
+    signs:
+      - x: 281
+        y: 65
+        z: -364
+        lines: ["ID: 4;-3", "Owner:", "ModelJulie", "Claimed"]
+  - id: "5;-3"
+    owner: "db30aa23-178c-475e-9c25-f41001884405"
+    signs:
+      - x: 373
+        y: 65
+        z: -364
+        lines: ["ID: 5;-3", "Owner:", "Fraitux", "Claimed"]
+  - id: "6;-3"
+    owner: "27dc1b46-63f3-4bac-819c-7953cc31b77b"
+    signs:
+      - x: 465
+        y: 65
+        z: -364
+        lines: ["ID: 6;-3", "Owner:", "Elementz_Shadow", "Claimed"]
+  - id: "7;-3"
+    owner: "cb7f5913-2e3a-49ce-92d6-eebf51b6d908"
+    signs:
+      - x: 557
+        y: 65
+        z: -364
+        lines: ["ID: 7;-3", "Owner:", "PyreStorm", "Claimed"]
+  - id: "-7;-2"
+    owner: "856ea26e-fa28-4032-99eb-b29fc1fffcf2"
+    signs:
+      - x: -731
+        y: 65
+        z: -272
+        lines: ["ID: -7;-2", "Owner:", "loganb0511", "Claimed"]
+  - id: "-6;-2"
+    owner: ""
+    signs:
+      - x: -639
+        y: 65
+        z: -272
+        lines: ["ID: -6;-2", "Owner:", "KawaiiDino_", "Claimed"]
+  - id: "-5;-2"
+    owner: "cc079872-3246-4e8f-8189-f14faef7f1df"
+    signs:
+      - x: -547
+        y: 65
+        z: -272
+        lines: ["ID: -5;-2", "Owner:", "Meliodas__", "Claimed"]
+  - id: "-4;-2"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: -455
+        y: 65
+        z: -272
+        lines: ["ID: -4;-2", "Owner:", "Detern", "Claimed"]
+  - id: "-2;-2"
+    owner: "c1997ab1-b876-4d11-916f-6d9f904efb49"
+    signs:
+      - x: -271
+        y: 65
+        z: -272
+        lines: ["ID: -2;-2", "Owner:", "XCreep16", "Claimed"]
+      - x: -206
+        y: 69
+        z: -248
+        lines: ["XCreep16's", "house", "", ""]
+  - id: "-1;-2"
+    owner: "1cd1055c-cc17-48c1-b19d-bf3d98e8be24"
+    signs:
+      - x: -179
+        y: 65
+        z: -272
+        lines: ["ID: -1;-2", "Owner:", "Cinderbell", "Claimed"]
+  - id: "0;-2"
+    owner: ""
+    signs:
+      - x: -87
+        y: 65
+        z: -272
+        lines: ["ID: 0;-2", "Owner:", "Grijzejager3", "Claimed"]
+  - id: "2;-2"
+    owner: "f35b5270-e8c8-4aa8-9050-13dd0d203ae0"
+    signs:
+      - x: 97
+        y: 65
+        z: -272
+        lines: ["ID: 2;-2", "Owner:", "dx2tuyen", "Claimed"]
+  - id: "3;-2"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 189
+        y: 65
+        z: -272
+        lines: ["ID: 3;-2", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "4;-2"
+    owner: "6c90e5f5-b24e-4b6c-a974-ce65d340973f"
+    signs:
+      - x: 281
+        y: 65
+        z: -272
+        lines: ["ID: 4;-2", "Owner:", "ModelJulie", "Claimed"]
+  - id: "6;-2"
+    owner: "2d47745e-daa5-45e0-8b33-eaebafaf364a"
+    signs:
+      - x: 465
+        y: 65
+        z: -272
+        lines: ["ID: 6;-2", "Owner:", "MUNIS_NAATTORI", "Claimed"]
+  - id: "-7;-1"
+    owner: "240bc952-5f3f-49a8-ac51-5b5ca73e615c"
+    signs:
+      - x: -731
+        y: 65
+        z: -180
+        lines: ["ID: -7;-1", "Owner:", "Imposibl3_Gam3r", "Claimed"]
+  - id: "-6;-1"
+    owner: "e76d5dcf-5504-4795-9229-1a2c1b7875ac"
+    signs:
+      - x: -639
+        y: 65
+        z: -180
+        lines: ["ID: -6;-1", "Owner:", "Alledrel", "Claimed"]
+  - id: "-5;-1"
+    owner: "d12d3363-f430-4da9-bfe4-fe623bff6e0e"
+    signs:
+      - x: -547
+        y: 65
+        z: -180
+        lines: ["ID: -5;-1", "Owner:", "Aivius", "Claimed"]
+  - id: "-4;-1"
+    owner: "526e1e8b-c3ac-4151-b26a-bb8c3a970115"
+    signs:
+      - x: -455
+        y: 65
+        z: -180
+        lines: ["ID: -4;-1", "Owner:", "KINGLOUIS_", "Claimed"]
+  - id: "-3;-1"
+    owner: "6b39cfcb-9a8d-4b8d-9c08-96cce0c05945"
+    signs:
+      - x: -363
+        y: 65
+        z: -180
+        lines: ["ID: -3;-1", "Owner:", "uUBigGuyUu", "Claimed"]
+  - id: "-2;-1"
+    owner: "c1997ab1-b876-4d11-916f-6d9f904efb49"
+    signs:
+      - x: -271
+        y: 65
+        z: -180
+        lines: ["ID: -2;-1", "Owner:", "XCreep16", "Claimed"]
+  - id: "-1;-1"
+    owner: ""
+    signs: []
+  - id: "0;-1"
+    owner: "f35b5270-e8c8-4aa8-9050-13dd0d203ae0"
+    signs:
+      - x: -87
+        y: 65
+        z: -180
+        lines: ["ID: 0;-1", "Owner:", "dx2tuyen", "Claimed"]
+  - id: "1;-1"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: 5
+        y: 65
+        z: -180
+        lines: ["ID: 1;-1", "Owner:", "HaukFT81", "Claimed"]
+  - id: "2;-1"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: 97
+        y: 65
+        z: -180
+        lines: ["ID: 2;-1", "Owner:", "CookieMage107", "Claimed"]
+  - id: "3;-1"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 189
+        y: 65
+        z: -180
+        lines: ["ID: 3;-1", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "4;-1"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 281
+        y: 65
+        z: -180
+        lines: ["ID: 4;-1", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "5;-1"
+    owner: "3595b3f7-2c97-4746-a475-f5e42bcff228"
+    signs:
+      - x: 373
+        y: 65
+        z: -180
+        lines: ["ID: 5;-1", "Owner:", "iamzzz", "Claimed"]
+  - id: "6;-1"
+    owner: "b5c2dc93-2f1a-4e71-abb6-25cca0781e74"
+    signs:
+      - x: 465
+        y: 65
+        z: -180
+        lines: ["ID: 6;-1", "Owner:", "BeastlyGun", "Claimed"]
+  - id: "-7;0"
+    owner: "6c7bddd9-814c-454c-bd5d-17f15503e5c3"
+    signs:
+      - x: -731
+        y: 65
+        z: -88
+        lines: ["ID: -7;0", "Owner:", "Bman1516", "Claimed"]
+  - id: "-6;0"
+    owner: "4676967f-4e96-445b-a651-c6f689c9b7a4"
+    signs:
+      - x: -639
+        y: 65
+        z: -88
+        lines: ["ID: -6;0", "Owner:", "dancegirl02", "Claimed"]
+  - id: "-5;0"
+    owner: "f40356d7-66e3-4b1a-91c2-97cf1b086508"
+    signs:
+      - x: -547
+        y: 65
+        z: -88
+        lines: ["ID: -5;0", "Owner:", "Triqqs", "Claimed"]
+  - id: "-4;0"
+    owner: "a05667a5-2115-4bc8-8bbb-527426a047b5"
+    signs:
+      - x: -455
+        y: 65
+        z: -88
+        lines: ["ID: -4;0", "Owner:", "TheDiamondPicks", "Claimed"]
+  - id: "-3;0"
+    owner: "ab8607d9-c896-442a-8c47-34d23b9456c3"
+    signs:
+      - x: -363
+        y: 65
+        z: -88
+        lines: ["ID: -3;0", "Owner:", "wrgauthier", "Claimed"]
+  - id: "-2;0"
+    owner: "c1997ab1-b876-4d11-916f-6d9f904efb49"
+    signs:
+      - x: -271
+        y: 65
+        z: -88
+        lines: ["ID: -2;0", "Owner:", "XCreep16", "Claimed"]
+  - id: "-1;0"
+    owner: ""
+    signs: []
+  - id: "0;0"
+    owner: ""
+    signs: []
+  - id: "1;0"
+    owner: ""
+    signs: []
+  - id: "2;0"
+    owner: "d46af017-421d-469c-98da-55f468ca4181"
+    signs:
+      - x: 97
+        y: 65
+        z: -88
+        lines: ["ID: 2;0", "Owner:", "St3ven_", "Claimed"]
+  - id: "3;0"
+    owner: "ab6879f4-1796-44dc-9bcb-15046d9aecee"
+    signs:
+      - x: 189
+        y: 65
+        z: -88
+        lines: ["ID: 3;0", "Owner:", "BoomSoon", "Claimed"]
+  - id: "4;0"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 281
+        y: 65
+        z: -88
+        lines: ["ID: 4;0", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "5;0"
+    owner: "1f0acdf0-e6df-4209-abee-b6f52230570d"
+    signs:
+      - x: 373
+        y: 65
+        z: -88
+        lines: ["ID: 5;0", "Owner:", "Preacher_Boy", "Claimed"]
+  - id: "6;0"
+    owner: "d23b8370-efaf-40d8-9ece-ec60cb9eae39"
+    signs:
+      - x: 465
+        y: 65
+        z: -88
+        lines: ["ID: 6;0", "Owner:", "firework269", "Claimed"]
+  - id: "7;0"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: 557
+        y: 65
+        z: -88
+        lines: ["ID: 7;0", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-7;1"
+    owner: "4704c8d7-36fa-4c57-927c-ae49fd540048"
+    signs:
+      - x: -731
+        y: 65
+        z: 4
+        lines: ["ID: -7;1", "Owner:", "Jolt_the_Dog", "Claimed"]
+  - id: "-6;1"
+    owner: "aa824563-8729-42a8-b1a0-5593096af25b"
+    signs:
+      - x: -639
+        y: 65
+        z: 4
+        lines: ["ID: -6;1", "Owner:", "djghostdj", "Claimed"]
+  - id: "-5;1"
+    owner: "aa824563-8729-42a8-b1a0-5593096af25b"
+    signs:
+      - x: -547
+        y: 65
+        z: 4
+        lines: ["ID: -5;1", "Owner:", "djghostdj", "Claimed"]
+  - id: "-4;1"
+    owner: "3bf52f16-9506-4d46-81be-47efc6fd29ae"
+    signs:
+      - x: -455
+        y: 65
+        z: 4
+        lines: ["ID: -4;1", "Owner:", "1TheMinecrafter6", "Claimed"]
+  - id: "-3;1"
+    owner: "19fb9cbb-30c6-4c4b-a075-1a09c54fb764"
+    signs:
+      - x: -363
+        y: 65
+        z: 4
+        lines: ["ID: -3;1", "Owner:", "Captin_NutJob", "Claimed"]
+  - id: "-2;1"
+    owner: "e6a8203b-955d-4443-b0a6-77c60b68c9b0"
+    signs:
+      - x: -271
+        y: 65
+        z: 4
+        lines: ["ID: -2;1", "Owner:", "Kawithomas", "Claimed"]
+  - id: "-1;1"
+    owner: ""
+    signs: []
+  - id: "0;1"
+    owner: "01e8abf1-f016-4190-ac30-83d423a0d135"
+    signs:
+      - x: -87
+        y: 65
+        z: 4
+        lines: ["ID: 0;1", "Owner:", "lex_mine", "Claimed"]
+  - id: "1;1"
+    owner: ""
+    signs:
+      - x: 82
+        y: 66
+        z: 9
+        lines: ["", "no gris allowed", "", ""]
+      - x: 31
+        y: 66
+        z: 20
+        lines: ["", "knightwolf9", "", ""]
+  - id: "2;1"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: 97
+        y: 65
+        z: 4
+        lines: ["ID: 2;1", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "3;1"
+    owner: "9bd33d48-3d4e-4fa0-8bfc-af21bfe972ee"
+    signs:
+      - x: 189
+        y: 65
+        z: 4
+        lines: ["ID: 3;1", "Owner:", "Madcrisy", "Claimed"]
+  - id: "4;1"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 281
+        y: 65
+        z: 4
+        lines: ["ID: 4;1", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "6;1"
+    owner: "3d8a083c-4564-45c9-9fee-acbeb119ad1e"
+    signs:
+      - x: 465
+        y: 65
+        z: 4
+        lines: ["ID: 6;1", "Owner:", "SuperVin123", "Claimed"]
+  - id: "9;1"
+    owner: "5b6e88ae-7dea-479f-b8d1-7c3e1da148e1"
+    signs:
+      - x: 741
+        y: 65
+        z: 4
+        lines: ["ID: 9;1", "Owner:", "squishypickles3", "Claimed"]
+  - id: "-7;2"
+    owner: "1d099461-4e9c-4302-8da4-7c93688008dc"
+    signs:
+      - x: -731
+        y: 65
+        z: 96
+        lines: ["ID: -7;2", "Owner:", "CuteAsDuck", "Claimed"]
+  - id: "-6;2"
+    owner: "aa824563-8729-42a8-b1a0-5593096af25b"
+    signs:
+      - x: -639
+        y: 65
+        z: 96
+        lines: ["ID: -6;2", "Owner:", "djghostdj", "Claimed"]
+  - id: "-5;2"
+    owner: "aa824563-8729-42a8-b1a0-5593096af25b"
+    signs:
+      - x: -547
+        y: 65
+        z: 96
+        lines: ["ID: -5;2", "Owner:", "djghostdj", "Claimed"]
+  - id: "-4;2"
+    owner: "7f5ee240-7526-48a8-b323-a10197651cbc"
+    signs:
+      - x: -455
+        y: 65
+        z: 96
+        lines: ["ID: -4;2", "Owner:", "CookieRaiderz", "Claimed"]
+  - id: "-3;2"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -363
+        y: 65
+        z: 96
+        lines: ["ID: -3;2", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "-2;2"
+    owner: "26e9ab2f-0831-42dd-9c47-6b493a4ad212"
+    signs:
+      - x: -271
+        y: 65
+        z: 96
+        lines: ["ID: -2;2", "Owner:", "Kirkerbot", "Claimed"]
+  - id: "-1;2"
+    owner: "b562c4c7-eb5d-483d-886e-623d269ae209"
+    signs:
+      - x: -179
+        y: 65
+        z: 96
+        lines: ["ID: -1;2", "Owner:", "TDarkWolf101", "Claimed"]
+  - id: "0;2"
+    owner: "1644b866-1d1e-49a2-b874-4dba7b04affe"
+    signs:
+      - x: -87
+        y: 65
+        z: 96
+        lines: ["ID: 0;2", "Owner:", "Cinnaminty", "Claimed"]
+  - id: "1;2"
+    owner: "484f3fa3-d84a-4b6b-9ea9-daccf224db1c"
+    signs:
+      - x: 5
+        y: 65
+        z: 96
+        lines: ["ID: 1;2", "Owner:", "Zudsi", "Claimed"]
+  - id: "2;2"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: 97
+        y: 65
+        z: 96
+        lines: ["ID: 2;2", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "3;2"
+    owner: "c538a540-3e91-4680-9e98-43f4d811e8e2"
+    signs:
+      - x: 189
+        y: 65
+        z: 96
+        lines: ["ID: 3;2", "Owner:", "Pigrider102", "Claimed"]
+  - id: "4;2"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 281
+        y: 65
+        z: 96
+        lines: ["ID: 4;2", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "5;2"
+    owner: "1f0acdf0-e6df-4209-abee-b6f52230570d"
+    signs:
+      - x: 373
+        y: 65
+        z: 96
+        lines: ["ID: 5;2", "Owner:", "Preacher_Boy", "Claimed"]
+  - id: "6;2"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: 465
+        y: 65
+        z: 96
+        lines: ["ID: 6;2", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-7;3"
+    owner: "96fa3b3d-3fdf-4987-b787-25dc341388e9"
+    signs:
+      - x: -731
+        y: 65
+        z: 188
+        lines: ["ID: -7;3", "Owner:", "rakjak", "Claimed"]
+  - id: "-6;3"
+    owner: "8ccb8f41-4c15-4d39-9f73-b5d9585d0950"
+    signs:
+      - x: -639
+        y: 65
+        z: 188
+        lines: ["ID: -6;3", "Owner:", "grocketman", "Claimed"]
+  - id: "-5;3"
+    owner: "38870eb2-6aa2-4e79-b9f7-8406402ba5cd"
+    signs:
+      - x: -547
+        y: 65
+        z: 188
+        lines: ["ID: -5;3", "Owner:", "Soniblaizer", "Claimed"]
+  - id: "-4;3"
+    owner: "676dc1fe-3523-486c-9f91-31605751dd7a"
+    signs:
+      - x: -455
+        y: 65
+        z: 188
+        lines: ["ID: -4;3", "Owner:", "cmanrocks04", "Claimed"]
+  - id: "-3;3"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -363
+        y: 65
+        z: 188
+        lines: ["ID: -3;3", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "-2;3"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -271
+        y: 65
+        z: 188
+        lines: ["ID: -2;3", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "-1;3"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -179
+        y: 65
+        z: 188
+        lines: ["ID: -1;3", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "0;3"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -87
+        y: 65
+        z: 188
+        lines: ["ID: 0;3", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "1;3"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 5
+        y: 65
+        z: 188
+        lines: ["ID: 1;3", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "2;3"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 97
+        y: 65
+        z: 188
+        lines: ["ID: 2;3", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "3;3"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 189
+        y: 65
+        z: 188
+        lines: ["ID: 3;3", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "4;3"
+    owner: "1f8c8ece-8f60-4752-8914-5027e2403df7"
+    signs:
+      - x: 281
+        y: 65
+        z: 188
+        lines: ["ID: 4;3", "Owner:", "DemonicChild666", "Claimed"]
+  - id: "5;3"
+    owner: "b98d8aa4-4cbc-4e5e-8130-31d7d60f724f"
+    signs:
+      - x: 373
+        y: 65
+        z: 188
+        lines: ["ID: 5;3", "Owner:", "domoman25", "Claimed"]
+  - id: "6;3"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: 465
+        y: 65
+        z: 188
+        lines: ["ID: 6;3", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-9;4"
+    owner: "eaa61741-ac33-42cf-8f02-5fbc03e1479d"
+    signs:
+      - x: -915
+        y: 65
+        z: 280
+        lines: ["ID: -9;4", "Owner:", "HappyTotoro", "Claimed"]
+  - id: "-7;4"
+    owner: "8c035a95-cc28-47d7-b971-d010bde799bf"
+    signs:
+      - x: -731
+        y: 65
+        z: 280
+        lines: ["ID: -7;4", "Owner:", "DannyJ1", "Claimed"]
+  - id: "-6;4"
+    owner: "6a2c28c1-befb-42c5-a1cf-861b0a0e8d62"
+    signs:
+      - x: -639
+        y: 65
+        z: 280
+        lines: ["ID: -6;4", "Owner:", "amalieberlud", "Claimed"]
+  - id: "-5;4"
+    owner: "ff9925e9-c60d-4bfa-bca5-86189053c3a5"
+    signs:
+      - x: -547
+        y: 65
+        z: 280
+        lines: ["ID: -5;4", "Owner:", "Twinti", "Claimed"]
+  - id: "-4;4"
+    owner: "676dc1fe-3523-486c-9f91-31605751dd7a"
+    signs:
+      - x: -455
+        y: 65
+        z: 280
+        lines: ["ID: -4;4", "Owner:", "cmanrocks04", "Claimed"]
+  - id: "-3;4"
+    owner: "cb488c76-08ba-4755-b425-6613fde02f70"
+    signs:
+      - x: -363
+        y: 65
+        z: 280
+        lines: ["ID: -3;4", "Owner:", "BenTheGamer78", "Claimed"]
+  - id: "-2;4"
+    owner: "6ebb7028-42e1-439b-88c9-a7cf80587570"
+    signs:
+      - x: -271
+        y: 65
+        z: 280
+        lines: ["ID: -2;4", "Owner:", "bowman3058", "Claimed"]
+  - id: "-1;4"
+    owner: ""
+    signs:
+      - x: -179
+        y: 65
+        z: 280
+        lines: ["ID: -1;4", "Owner:", "Brooters", "Claimed"]
+  - id: "0;4"
+    owner: "98e13b61-4805-4d73-b6a5-8bd080dc98b4"
+    signs:
+      - x: -87
+        y: 65
+        z: 280
+        lines: ["ID: 0;4", "Owner:", "DragonWIthAIDS", "Claimed"]
+  - id: "1;4"
+    owner: "20ec2b6a-3084-4a6f-bb9f-40577832e480"
+    signs:
+      - x: 5
+        y: 65
+        z: 280
+        lines: ["ID: 1;4", "Owner:", "Mega_Creeper_77", "Claimed"]
+  - id: "3;4"
+    owner: "2ad8aa64-5603-485e-89ad-b8fa117b0b90"
+    signs:
+      - x: 189
+        y: 65
+        z: 280
+        lines: ["ID: 3;4", "Owner:", "ReflectionCraft", "Claimed"]
+  - id: "4;4"
+    owner: "1d517758-626c-4a86-93bf-60d7561ae6b0"
+    signs:
+      - x: 281
+        y: 65
+        z: 280
+        lines: ["ID: 4;4", "Owner:", "Weegee1339", "Claimed"]
+  - id: "5;4"
+    owner: "c741b8a0-fd88-4b95-afe1-90780e3a8ea1"
+    signs:
+      - x: 373
+        y: 65
+        z: 280
+        lines: ["ID: 5;4", "Owner:", "OswaldCakeyz", "Claimed"]
+  - id: "6;4"
+    owner: "83a00876-8ac1-4dcb-b498-e352882d92e7"
+    signs:
+      - x: 465
+        y: 65
+        z: 280
+        lines: ["ID: 6;4", "Owner:", "sweetpiedie", "Claimed"]
+  - id: "-7;5"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: -731
+        y: 65
+        z: 372
+        lines: ["ID: -7;5", "Owner:", "HaukFT81", "Claimed"]
+  - id: "-6;5"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: -639
+        y: 65
+        z: 372
+        lines: ["ID: -6;5", "Owner:", "HaukFT81", "Claimed"]
+      - x: -635
+        y: 65
+        z: 377
+        lines: ["Normani", "Hamilton", "1996-2015", ""]
+      - x: -631
+        y: 65
+        z: 377
+        lines: ["Dinah-Jane", "Hansen", "1997-2015", ""]
+      - x: -627
+        y: 65
+        z: 377
+        lines: ["Ally", "Brooke", "1993-2015", ""]
+      - x: -623
+        y: 65
+        z: 377
+        lines: ["Lauren", "Jauregui", "1996-2015", ""]
+      - x: -620
+        y: 65
+        z: 380
+        lines: ["Camila", "Cabello", "1997-2015", ""]
+      - x: -625
+        y: 65
+        z: 389
+        lines: ["Connor", "S Tryan", "1904-1947", ""]
+      - x: -621
+        y: 65
+        z: 389
+        lines: ["Scott", "Paulson", "1909-1916", ""]
+      - x: -633
+        y: 65
+        z: 395
+        lines: ["Leane", "McCarty", "1989-2001", ""]
+      - x: -629
+        y: 65
+        z: 395
+        lines: ["Liean", "Thomassen", "1991-2008", ""]
+      - x: -625
+        y: 65
+        z: 395
+        lines: ["Kayne", "Conwell", "1934-1992", ""]
+      - x: -621
+        y: 65
+        z: 395
+        lines: ["Amalie", "Bergom Ludvigsen", "2002-2015", ""]
+      - x: -633
+        y: 65
+        z: 399
+        lines: ["Rita", "Olsen", "1949-1999", ""]
+      - x: -629
+        y: 65
+        z: 399
+        lines: ["Kelvin", "Connor", "1956 - 2004", ""]
+      - x: -625
+        y: 65
+        z: 399
+        lines: ["Oda", "Strømmen Holte", "2002-2015", ""]
+      - x: -621
+        y: 65
+        z: 399
+        lines: ["Hauk", "Fosholm Thorsen", "2000-2015", ""]
+      - x: -559
+        y: 65
+        z: 431
+        lines: ["", "Hval Kirke", "", ""]
+  - id: "-5;5"
+    owner: "6a2c28c1-befb-42c5-a1cf-861b0a0e8d62"
+    signs:
+      - x: -547
+        y: 65
+        z: 372
+        lines: ["ID: -5;5", "Owner:", "amalieberlud", "Claimed"]
+      - x: -473
+        y: 72
+        z: 439
+        lines: ["", "HaukFT81", "", ""]
+      - x: -473
+        y: 72
+        z: 440
+        lines: ["", "Twinti", "", ""]
+      - x: -473
+        y: 72
+        z: 441
+        lines: ["", "Amalieberlud", "", ""]
+      - x: -487
+        y: 70
+        z: 442
+        lines: ["", "SCARY", "", ""]
+      - x: -487
+        y: 71
+        z: 442
+        lines: ["", "COMEDY", "", ""]
+      - x: -487
+        y: 72
+        z: 442
+        lines: ["", "NETFLIX", "", ""]
+  - id: "-4;5"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -455
+        y: 65
+        z: 372
+        lines: ["ID: -4;5", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-3;5"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -363
+        y: 65
+        z: 372
+        lines: ["ID: -3;5", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-2;5"
+    owner: "87fd4c14-a59f-43ea-9dd2-44bc416ae80b"
+    signs:
+      - x: -271
+        y: 65
+        z: 372
+        lines: ["ID: -2;5", "Owner:", "Jackerdelta", "Claimed"]
+  - id: "-1;5"
+    owner: "f53d8529-6e7f-4449-b108-f20709cad6a3"
+    signs:
+      - x: -179
+        y: 65
+        z: 372
+        lines: ["ID: -1;5", "Owner:", "Dolphingirl1008", "Claimed"]
+  - id: "0;5"
+    owner: "642b5beb-4be8-41a1-aaa0-918cc090ece1"
+    signs:
+      - x: -87
+        y: 65
+        z: 372
+        lines: ["ID: 0;5", "Owner:", "PixelfightR", "Claimed"]
+  - id: "1;5"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: 5
+        y: 65
+        z: 372
+        lines: ["ID: 1;5", "Owner:", "Detern", "Claimed"]
+  - id: "2;5"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: 97
+        y: 65
+        z: 372
+        lines: ["ID: 2;5", "Owner:", "Detern", "Claimed"]
+  - id: "3;5"
+    owner: "f9632c17-38bd-4433-a62b-74670bf6fc76"
+    signs:
+      - x: 189
+        y: 65
+        z: 372
+        lines: ["ID: 3;5", "Owner:", "PokeGirlJoyce", "Claimed"]
+  - id: "4;5"
+    owner: "c1b633a4-c085-48b2-8a34-c24c93ad5d63"
+    signs:
+      - x: 281
+        y: 65
+        z: 372
+        lines: ["ID: 4;5", "Owner:", "oCoMZz", "Claimed"]
+  - id: "5;5"
+    owner: "c2bec1a8-a736-4013-a7b9-5136bbab39bc"
+    signs:
+      - x: 373
+        y: 65
+        z: 372
+        lines: ["ID: 5;5", "Owner:", "TopiCube", "Claimed"]
+  - id: "6;5"
+    owner: "dfa16151-0ac1-454f-b674-3573f5242210"
+    signs:
+      - x: 465
+        y: 65
+        z: 372
+        lines: ["ID: 6;5", "Owner:", "MrBlueFTW", "Claimed"]
+  - id: "-7;6"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: -731
+        y: 65
+        z: 464
+        lines: ["ID: -7;6", "Owner:", "HaukFT81", "Claimed"]
+  - id: "-6;6"
+    owner: ""
+    signs: []
+  - id: "-5;6"
+    owner: ""
+    signs:
+      - x: -485
+        y: 66
+        z: 467
+        lines: ["", "Mr. O'Brien", "", ""]
+  - id: "-4;6"
+    owner: ""
+    signs: []
+  - id: "-3;6"
+    owner: ""
+    signs: []
+  - id: "-2;6"
+    owner: "02722e10-47bb-42ad-b1ff-b9e8214a63cc"
+    signs:
+      - x: -271
+        y: 65
+        z: 464
+        lines: ["ID: -2;6", "Owner:", "Timothy62100", "Claimed"]
+  - id: "-1;6"
+    owner: "af1c824a-8ff5-4912-9470-b32c07ffd1f8"
+    signs:
+      - x: -179
+        y: 65
+        z: 464
+        lines: ["ID: -1;6", "Owner:", "PikachuPals", "Claimed"]
+      - x: -178
+        y: 36
+        z: 466
+        lines: ["Owner:", "LibraryAddict", "", ""]
+      - x: -177
+        y: 36
+        z: 466
+        lines: ["Staff:", "T_0_E_D", "", ""]
+      - x: -176
+        y: 36
+        z: 466
+        lines: ["Staff:", "CookieRaiderz", "", ""]
+      - x: -175
+        y: 36
+        z: 466
+        lines: ["Staff:", "RiotShielder", "", ""]
+      - x: -174
+        y: 36
+        z: 466
+        lines: ["Staff:", "Smaland47", "", ""]
+      - x: -173
+        y: 36
+        z: 466
+        lines: ["Staff:", "Nightwolf9", "", ""]
+      - x: -172
+        y: 36
+        z: 466
+        lines: ["Staff:", "Tragik_Ending", "", ""]
+      - x: -171
+        y: 36
+        z: 466
+        lines: ["Staff:", "AnimalBlender", "", ""]
+      - x: -178
+        y: 36
+        z: 469
+        lines: ["", "Cinematic3xile", "", ""]
+      - x: -177
+        y: 36
+        z: 469
+        lines: ["", "Yunolucy", "", ""]
+      - x: -176
+        y: 36
+        z: 469
+        lines: ["", "Elacain", "", ""]
+      - x: -175
+        y: 36
+        z: 469
+        lines: ["", "Madcrisy", "", ""]
+      - x: -174
+        y: 36
+        z: 469
+        lines: ["", "Groudan", "", ""]
+      - x: -173
+        y: 36
+        z: 469
+        lines: ["", "Detern", "", ""]
+      - x: -172
+        y: 36
+        z: 469
+        lines: ["", "BigYellowDuck", "", ""]
+      - x: -171
+        y: 36
+        z: 469
+        lines: ["", "Omega_Cuber", "", ""]
+      - x: -170
+        y: 36
+        z: 469
+        lines: ["", "Elacain", "", ""]
+      - x: -169
+        y: 36
+        z: 469
+        lines: ["", "Lex_mine", "", ""]
+      - x: -168
+        y: 36
+        z: 469
+        lines: ["", "Grijzejager3", "", ""]
+      - x: -167
+        y: 36
+        z: 469
+        lines: ["", "MrBlueFTW", "", ""]
+      - x: -166
+        y: 36
+        z: 469
+        lines: ["", "Viico", "", ""]
+      - x: -165
+        y: 36
+        z: 469
+        lines: ["", "Miksu", "", ""]
+      - x: -164
+        y: 36
+        z: 469
+        lines: ["", "PikachuPals", "", ""]
+      - x: -163
+        y: 36
+        z: 469
+        lines: ["", "Setery", "", ""]
+      - x: -162
+        y: 36
+        z: 469
+        lines: ["", "Forcemaster88", "", ""]
+      - x: -161
+        y: 36
+        z: 469
+        lines: ["", "Bena", "", ""]
+      - x: -160
+        y: 36
+        z: 469
+        lines: ["", "Iceyflame7", "", ""]
+      - x: -159
+        y: 36
+        z: 469
+        lines: ["", "Vinex_", "", ""]
+      - x: -158
+        y: 36
+        z: 469
+        lines: ["", "Kinglouis_", "", ""]
+      - x: -157
+        y: 36
+        z: 469
+        lines: ["", "Peppyk", "", ""]
+      - x: -156
+        y: 36
+        z: 469
+        lines: ["", "Squidot", "", ""]
+      - x: -155
+        y: 36
+        z: 469
+        lines: ["", "Cinnaminty", "", ""]
+      - x: -154
+        y: 36
+        z: 469
+        lines: ["", "Mandy200", "", ""]
+      - x: -153
+        y: 36
+        z: 469
+        lines: ["", "Froginator", "", ""]
+      - x: -152
+        y: 36
+        z: 469
+        lines: ["", "Drhatchet", "", ""]
+      - x: -151
+        y: 36
+        z: 469
+        lines: ["", "xSlayerz", "", ""]
+      - x: -150
+        y: 36
+        z: 469
+        lines: ["", "St3ven_", "", ""]
+      - x: -149
+        y: 36
+        z: 469
+        lines: ["", "Colninja", "", ""]
+      - x: -148
+        y: 36
+        z: 469
+        lines: ["", "PigsPotato", "", ""]
+      - x: -147
+        y: 36
+        z: 469
+        lines: ["", "Cookiemage107", "", ""]
+      - x: -146
+        y: 36
+        z: 469
+        lines: ["", "Cakemage108", "", ""]
+      - x: -145
+        y: 36
+        z: 469
+        lines: ["", "Chronoslocke", "", ""]
+      - x: -144
+        y: 36
+        z: 469
+        lines: ["", "SirMallock", "", ""]
+  - id: "0;6"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: -87
+        y: 65
+        z: 464
+        lines: ["ID: 0;6", "Owner:", "Detern", "Claimed"]
+  - id: "1;6"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: 5
+        y: 65
+        z: 464
+        lines: ["ID: 1;6", "Owner:", "Detern", "Claimed"]
+  - id: "2;6"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: 97
+        y: 65
+        z: 464
+        lines: ["ID: 2;6", "Owner:", "Detern", "Claimed"]
+      - x: 118
+        y: 67
+        z: 484
+        lines: ["start", "", "", ""]
+      - x: 133
+        y: 96
+        z: 526
+        lines: ["Witch house", "built", "by", "Cookie"]
+  - id: "3;6"
+    owner: "5b1571a8-1eec-412f-999e-86f8a25f41eb"
+    signs:
+      - x: 189
+        y: 65
+        z: 464
+        lines: ["ID: 3;6", "Owner:", "Detern", "Claimed"]
+  - id: "4;6"
+    owner: "3418d967-e2ec-4f6a-9b6e-9d947bf0edba"
+    signs:
+      - x: 281
+        y: 65
+        z: 464
+        lines: ["ID: 4;6", "Owner:", "PedroCaparelli", "Claimed"]
+  - id: "5;6"
+    owner: ""
+    signs:
+      - x: 418
+        y: 66
+        z: 468
+        lines: ["Cart #6", "", "", ""]
+      - x: 418
+        y: 66
+        z: 469
+        lines: ["Cart #5", "", "", ""]
+      - x: 418
+        y: 66
+        z: 470
+        lines: ["Cart #4", "", "", ""]
+      - x: 418
+        y: 66
+        z: 471
+        lines: ["Cart #3", "", "", ""]
+      - x: 418
+        y: 66
+        z: 472
+        lines: ["Cart #2", "", "", ""]
+      - x: 418
+        y: 66
+        z: 473
+        lines: ["Cart #1", "", "", ""]
+  - id: "6;6"
+    owner: "9c533906-224b-41eb-bbe1-accccc77322d"
+    signs:
+      - x: 465
+        y: 65
+        z: 464
+        lines: ["ID: 6;6", "Owner:", "mtm21", "Claimed"]
+  - id: "-6;7"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: -639
+        y: 65
+        z: 556
+        lines: ["ID: -6;7", "Owner:", "HaukFT81", "Claimed"]
+  - id: "-5;7"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: -547
+        y: 65
+        z: 556
+        lines: ["ID: -5;7", "Owner:", "HaukFT81", "Claimed"]
+  - id: "-4;7"
+    owner: "120336d4-2300-4ff0-b333-cc8005a1fb69"
+    signs:
+      - x: -455
+        y: 65
+        z: 556
+        lines: ["ID: -4;7", "Owner:", "ItzQuiver", "Claimed"]
+  - id: "-3;7"
+    owner: "c34ff50d-577a-47b3-82f1-f33002fdf541"
+    signs:
+      - x: -363
+        y: 65
+        z: 556
+        lines: ["ID: -3;7", "Owner:", "CanIFartOnYouPlz", "Claimed"]
+  - id: "-2;7"
+    owner: "7239e0b5-7a83-42e2-a518-5ca4fad73b54"
+    signs:
+      - x: -271
+        y: 65
+        z: 556
+        lines: ["ID: -2;7", "Owner:", "Midnite_mixr", "Claimed"]
+  - id: "-1;7"
+    owner: "4386bdd3-e153-4036-b10e-d0f204b3f566"
+    signs:
+      - x: -179
+        y: 65
+        z: 556
+        lines: ["ID: -1;7", "Owner:", "JeremyRedhead", "Claimed"]
+  - id: "0;7"
+    owner: "0f5ee486-ca58-4bef-b79b-17152a29d323"
+    signs:
+      - x: -87
+        y: 65
+        z: 556
+        lines: ["ID: 0;7", "Owner:", "Adnan_", "Claimed"]
+  - id: "1;7"
+    owner: "96994151-1b9d-47e0-abb7-ce2925a4b28a"
+    signs:
+      - x: 5
+        y: 65
+        z: 556
+        lines: ["ID: 1;7", "Owner:", "UnjustGamer", "Claimed"]
+  - id: "2;7"
+    owner: "da255da4-1ca5-4e27-871c-3b9e5c3104c9"
+    signs:
+      - x: 97
+        y: 65
+        z: 556
+        lines: ["ID: 2;7", "Owner:", "Rocky56607", "Claimed"]
+  - id: "3;7"
+    owner: "c6d48ae6-d10d-4e25-8047-f92bd8a4d830"
+    signs:
+      - x: 189
+        y: 65
+        z: 556
+        lines: ["ID: 3;7", "Owner:", "Dwatts9", "Claimed"]
+  - id: "4;7"
+    owner: "03ad11ee-0cc5-40a7-8eb7-b343df0a76ea"
+    signs:
+      - x: 281
+        y: 65
+        z: 556
+        lines: ["ID: 4;7", "Owner:", "Bambamarsh", "Claimed"]
+  - id: "5;7"
+    owner: "208ec8f3-19df-44b0-83b1-6c4a691f003d"
+    signs:
+      - x: 373
+        y: 65
+        z: 556
+        lines: ["ID: 5;7", "Owner:", "geertje5000", "Claimed"]
+  - id: "6;7"
+    owner: "4dd5fa6c-cb99-4ea1-a93c-3c5a9b78be6a"
+    signs:
+      - x: 465
+        y: 65
+        z: 556
+        lines: ["ID: 6;7", "Owner:", "PaiXo", "Claimed"]
+  - id: "-5;8"
+    owner: "651dbdf3-ab53-4b83-92d2-200514f48534"
+    signs:
+      - x: -547
+        y: 65
+        z: 648
+        lines: ["ID: -5;8", "Owner:", "Pixie_Haley", "Claimed"]
+  - id: "-4;8"
+    owner: "300d040d-27fe-4c00-895e-a18452d77939"
+    signs:
+      - x: -455
+        y: 65
+        z: 648
+        lines: ["ID: -4;8", "Owner:", "Gwyneth0011", "Claimed"]
+  - id: "-3;8"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -363
+        y: 65
+        z: 648
+        lines: ["ID: -3;8", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-6;9"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -639
+        y: 65
+        z: 740
+        lines: ["ID: -6;9", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-5;9"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -547
+        y: 65
+        z: 740
+        lines: ["ID: -5;9", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-4;9"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -455
+        y: 65
+        z: 740
+        lines: ["ID: -4;9", "Owner:", "CookieMage107", "Claimed"]
+      - x: -397
+        y: 66
+        z: 805
+        lines: ["49", "", "", ""]
+      - x: -446
+        y: 66
+        z: 806
+        lines: ["49", "", "", ""]
+  - id: "-3;9"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -363
+        y: 65
+        z: 740
+        lines: ["ID: -3;9", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-2;9"
+    owner: "f9006d24-ea54-4374-beec-d42b593fc10c"
+    signs:
+      - x: -271
+        y: 65
+        z: 740
+        lines: ["ID: -2;9", "Owner:", "CakeMage108", "Claimed"]
+  - id: "-6;10"
+    owner: ""
+    signs:
+      - x: -618
+        y: 66
+        z: 868
+        lines: ["1 up", "mario", "", ""]
+  - id: "-5;10"
+    owner: ""
+    signs: []
+  - id: "-4;10"
+    owner: "3cf0278e-75f8-4571-aeb2-a1f262bdf1fc"
+    signs:
+      - x: -455
+        y: 65
+        z: 832
+        lines: ["ID: -4;10", "Owner:", "CookieMage107", "Claimed"]
+  - id: "-3;10"
+    owner: ""
+    signs:
+      - x: -330
+        y: 66
+        z: 868
+        lines: ["buy", "", "", ""]
+      - x: -329
+        y: 66
+        z: 868
+        lines: ["buy", "", "", ""]
+      - x: -323
+        y: 66
+        z: 868
+        lines: ["buy", "", "", ""]
+      - x: -322
+        y: 66
+        z: 868
+        lines: ["buy", "", "", ""]
+  - id: "-5;11"
+    owner: ""
+    signs:
+      - x: -533
+        y: 64
+        z: 932
+        lines: ["01111000", "", "", ""]
+      - x: -509
+        y: 64
+        z: 940
+        lines: ["01100101", "", "", ""]
+      - x: -521
+        y: 65
+        z: 946
+        lines: ["01100010", "", "", ""]
+      - x: -529
+        y: 67
+        z: 947
+        lines: ["01101111", "", "", ""]
+      - x: -514
+        y: 65
+        z: 947
+        lines: ["Comparators", "can be used", "to make 1 tick", "clocks"]
+      - x: -517
+        y: 65
+        z: 948
+        lines: ["1 tick to push", "and", "1 tick to pull", ""]
+      - x: -517
+        y: 66
+        z: 948
+        lines: ["Pistons need 2", "ticks to work", "fully", ""]
+      - x: -516
+        y: 65
+        z: 948
+        lines: ["USE:", "You can turn", "levers to fancy", "buttons"]
+      - x: -511
+        y: 65
+        z: 948
+        lines: ["USE:", "quick and", "constant", "activation"]
+      - x: -534
+        y: 65
+        z: 949
+        lines: ["(Repeators", "set the power", "level back to", "max)"]
+      - x: -532
+        y: 65
+        z: 949
+        lines: ["ALWAYS use", "repeaters for", "long redstone", "use"]
+      - x: -526
+        y: 65
+        z: 949
+        lines: ["USE:", "You can make", "redstone flows", "vertical"]
+      - x: -505
+        y: 65
+        z: 949
+        lines: ["USE:", "It's mostly used", "for locks", ""]
+      - x: -527
+        y: 66
+        z: 950
+        lines: ["It also works", "vertically", ":P", ""]
+      - x: -522
+        y: 65
+        z: 950
+        lines: ["Redstone can", "pass through", "certain blocks!", ""]
+      - x: -508
+        y: 65
+        z: 950
+        lines: ["invention by:", "WinterSolstice8", "", ""]
+      - x: -507
+        y: 65
+        z: 950
+        lines: ["Infinite Button", "Pannel", "design", ""]
+      - x: -495
+        y: 65
+        z: 951
+        lines: ["Winner gets", "a prize!", "", ""]
+      - x: -495
+        y: 65
+        z: 952
+        lines: ["The signs", "are", "code", ""]
+      - x: -495
+        y: 66
+        z: 952
+        lines: ["There are signs", "placed near", "each color", ""]
+      - x: -495
+        y: 67
+        z: 952
+        lines: ["HINT", "It's a 7", "letter word", "_______"]
+      - x: -495
+        y: 65
+        z: 953
+        lines: ["+Puzzle using", "visible light", "colors as", "hints"]
+      - x: -495
+        y: 65
+        z: 955
+        lines: ["Also tutorials", "are for", "scrubs", "like Riot"]
+      - x: -495
+        y: 65
+        z: 956
+        lines: ["HOW TO REDSTONE", "FOR SCRUBS", "LIKE", "RIOT"]
+      - x: -509
+        y: 65
+        z: 963
+        lines: ["Just wanted", "to add it", "by random!", ""]
+      - x: -505
+        y: 65
+        z: 963
+        lines: ["NOTE:", "power doesn't go", "through glass", ""]
+      - x: -508
+        y: 65
+        z: 964
+        lines: ["Has nothing to do", "w/ the puzzle", "<--------------", ""]
+      - x: -507
+        y: 65
+        z: 964
+        lines: ["block placement", "01101000", "01101001", ""]
+      - x: -507
+        y: 66
+        z: 964
+        lines: ["|", "|", "|", "\\/"]
+      - x: -506
+        y: 65
+        z: 964
+        lines: ["Purpose:", "Used for", "activation", "through"]
+      - x: -506
+        y: 67
+        z: 964
+        lines: ["Basic", "Block", "Detector", ""]
+      - x: -516
+        y: 65
+        z: 965
+        lines: ["USE:", "Redstone songs", "if you're a", "tryhard :P"]
+      - x: -515
+        y: 65
+        z: 965
+        lines: ["Noteblock sounds!", "", "", ""]
+      - x: -484
+        y: 67
+        z: 966
+        lines: ["AFK", "", "", ""]
+      - x: -504
+        y: 65
+        z: 967
+        lines: ["01110101", "", "", ""]
+      - x: -499
+        y: 65
+        z: 967
+        lines: ["01101010", "", "", ""]
+      - x: -516
+        y: 70
+        z: 971
+        lines: ["01101011", "", "", ""]
+  - id: "-4;11"
+    owner: "09d0d817-7ef1-4610-be44-468fdfb74c45"
+    signs:
+      - x: -455
+        y: 65
+        z: 924
+        lines: ["ID: -4;11", "Owner:", "Ella_714", "Claimed"]
+  - id: "-2;13"
+    owner: "6f2550cc-b225-4ea6-b028-9be7a9fde868"
+    signs:
+      - x: -271
+        y: 65
+        z: 1108
+        lines: ["ID: -2;13", "Owner:", "HaukFT81", "Claimed"]

@@ -30,6 +30,8 @@
   <rule ref="category/java/design.xml/ExcessiveParameterList">
     <properties>
       <property name="minimum" value="5"/>
+      <!-- Paper APIs such as ChunkGenerator.generateNoise fix the parameter list. -->
+      <property name="violationSuppressXPath" value="..[@Override = true()]"/>
     </properties>
   </rule>
   <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>

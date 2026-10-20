@@ -21,13 +21,14 @@ final class ModulesTest {
   private static final Path SHIPPED_CONFIG =
       Path.of("../../server/owned/plugins/TheStorm/config.yml");
 
-  /** The modules the shipped config enables: all 25 registered. */
+  /** The modules the shipped config enables: every registered module. */
   private static final Set<String> SHIPPED_ENABLED =
       Set.of(
           "agent",
           "arena",
           "chat",
           "companions",
+          "creative",
           "discord",
           "economy",
           "essentials",
@@ -72,11 +73,11 @@ final class ModulesTest {
   }
 
   @Test
-  void theShippedConfigEnablesTwentyThreeOfTwentyFiveRegisteredModules() {
+  void theShippedConfigEnablesEveryRegisteredModule() {
     var config = ConfigFiles.load(SHIPPED_CONFIG, PluginConfig.class);
     var registered = ModuleRegistry.ids(Modules.all());
 
-    assertThat(registered).hasSize(26);
+    assertThat(registered).hasSize(27);
     assertThat(config.modules().keySet()).containsExactlyInAnyOrderElementsOf(registered);
     assertThat(
             config.modules().entrySet().stream()

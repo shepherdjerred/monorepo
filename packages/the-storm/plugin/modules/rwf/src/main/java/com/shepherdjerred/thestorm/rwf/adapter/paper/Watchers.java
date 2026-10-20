@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.adapter.paper;
 import com.shepherdjerred.thestorm.core.snapshot.PlayerStates;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
+import com.shepherdjerred.thestorm.rwf.app.SealedParticipants;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import java.util.HashMap;
@@ -48,12 +49,21 @@ final class Watchers {
     return watching.contains(player);
   }
 
+  /** Creative and other sealed worlds stay out. The lobby and maps may still play. */
+  private boolean outside(Player player) {
+    var world = player.getWorld();
+    return SealedParticipants.blocked(context.sealed().isSealed(world), context.ours(world));
+  }
+
   int count() {
     return watching.size();
   }
 
   /** {@code /rwf spectate}: start watching, or return why not. */
   Optional<String> watch(Player player) {
+    if (outside(player)) {
+      return Optional.of("Leave the sealed world before watching.");
+    }
     var id = player.getUniqueId();
     if (runner.memberOf(id).isPresent()) {
       return Optional.of("You are in the match; leave it with /rwf leave before watching.");
@@ -214,6 +224,10 @@ final class Watchers {
    * carried into it anyway.
    */
   void queueForNext(Player player) {
+    if (outside(player)) {
+      Texts.error(player, "Leave the sealed world before joining the next game.");
+      return;
+    }
     if (nextGame.add(player.getUniqueId())) {
       Texts.info(player, "You will join the next game.");
     }
@@ -222,8 +236,11 @@ final class Watchers {
   /** The fallen who asked for the next game join its lobby, unless they were carried into it. */
   private void admitQueued() {
     for (var id : List.copyOf(nextGame)) {
-      nextGame.remove(id);
       var player = context.server().getPlayer(id);
+      if (player != null && outside(player)) {
+        continue;
+      }
+      nextGame.remove(id);
       if (player != null && runner.memberOf(id).isEmpty() && !watching.contains(id)) {
         runner.admit(player).ifPresent(message -> Texts.error(player, message));
       }

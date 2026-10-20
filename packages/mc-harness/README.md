@@ -127,7 +127,7 @@ and the inert local Flipt bootstrap required during plugin startup
 (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=beta`). Rollout checks
 therefore fail closed without requiring credentials or a running Flipt service,
 the repository-owned TheStorm and Citizens config with
-only the economy, mail, chat, tracks, towns and tickets modules on (agent,
+only the economy, mail, chat, tracks, towns, tickets, and creative modules on (agent,
 discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
 mechanics module and builds its bridge and super-push fixtures at x 400-415.
 

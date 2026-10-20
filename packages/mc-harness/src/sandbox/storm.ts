@@ -50,6 +50,16 @@ export const STORM_DEV_MODULES = [
 ] as const;
 
 /**
+ * `storm-dev` also enables creative. The profile sets THESTORM_CREATIVE_BOOTSTRAP
+ * so the plugin loads an empty plot world before the module seals it. Published
+ * image sandboxes stay on STORM_DEV_MODULES and do not bootstrap a world.
+ */
+export const STORM_DEV_WITH_CREATIVE = [
+  ...STORM_DEV_MODULES,
+  "creative",
+] as const;
+
+/**
  * Modules enabled in published-image sandboxes. Companions' local gameplay
  * dependencies are present; RWF stays off because disposable servers do not
  * carry the provisioned `rwf` world or production recording salt.

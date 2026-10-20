@@ -105,8 +105,32 @@ remain local extended acceptance.
 
 ## Plugin and configuration ownership
 
-`owned/plugins/TheStorm/config.yml` registers and enables all 26 Storm modules,
-including `rwf` and `rwfbots`, whose map world is provisioned on live. RWF creates
+`owned/plugins/TheStorm/config.yml` registers and enables all 27 Storm modules,
+including `creative`, `rwf`, and `rwfbots`. The creative world is the recovered
+2016 plot map: load it with generator `TheStorm:creative` before TheStorm enables,
+or that module refuses to start. Players enter with `/creative` and leave with
+`/creative leave`; the visit stores their survival body and gives them an empty
+creative one. Recovered plots are the `plots` list in `creative.yml` (a blank
+owner is staff-held); the plugin reads that list and never writes it. A recovered
+owner can change that plot. Roads, staff-held plots, and every other plot stay
+closed, including a piston, fluid, or explosion that would cross an edge.
+`thestorm.creative.bypass` builds anywhere. Command blocks, structure blocks,
+jigsaws, and command minecarts cannot be placed. Players claim an empty cell
+with `/creative claim` or `/creative auto` (two new claims; catalog plots do
+not count; staff with `thestorm.creative.bypass` or `thestorm.creative.admin`
+are exempt). `/creative name`, `/creative desc`, and `/creative trust` persist
+in the claim store. The plugin never writes `creative.yml`. `/creative download`
+saves one `x_z.schem` under the plugin data folder `creative-schematics` for
+someone to fetch outside the world; it is not mailed. `/creative admin assign`,
+`unclaim`, and `scan` require `thestorm.creative.admin`. Scan reports claim
+drift and does not rewrite the catalog. BlueMap draws a Plots marker set on
+the creative world's maps only; the player-facing map is the map named creative
+on `https://bluemap.ts-mc.net/`, beside survival. GrimAC's owned config has no
+per-world exemption key, so the module pauses flight and creative-break checks
+through Grim's API only while the player's world is creative, then restores the
+checks it paused. The module
+also refuses to start unless CoreProtect is
+recording block, sign, bucket, entity, and WorldEdit changes for that world. The rwf map world is provisioned on live. RWF creates
 or loads its explicitly declared owned void lobby before starting gameplay;
 it preserves the lobby's identity and saved terrain across restarts.
 Storm owns gameplay, economy, chat, towns and locks, quests, NPCs, skills,

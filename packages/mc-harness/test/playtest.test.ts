@@ -196,7 +196,15 @@ describe("profiles and staging", () => {
     expect(storm.env).toMatchObject({
       FLIPT_URL: "http://127.0.0.1:9",
       FLIPT_ENVIRONMENT: "beta",
+      THESTORM_CREATIVE_BOOTSTRAP: "true",
     });
+    const stormConfig = storm.staged.find(
+      (entry) => entry.kind === "storm-config",
+    );
+    expect(stormConfig?.kind).toBe("storm-config");
+    if (stormConfig?.kind === "storm-config") {
+      expect(stormConfig.modules).toContain("creative");
+    }
     expect(storm.staged.map((entry) => entry.target)).toEqual([
       "MCBridge.jar",
       "TheStorm.jar",
@@ -226,6 +234,7 @@ describe("profiles and staging", () => {
         expect(imageConfig.modules).toContain("companions");
         expect(imageConfig.modules).not.toContain("rwf");
         expect(imageConfig.modules).not.toContain("rwfbots");
+        expect(imageConfig.modules).not.toContain("creative");
       }
       expect(image.staged[1]).toMatchObject({
         kind: "repo-file",

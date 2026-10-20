@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotBook;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotKeeper;
 import com.shepherdjerred.thestorm.core.snapshot.SnapshotStore;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,7 @@ final class Snapshots {
   private final RewardStore rewards;
   private final Texts texts;
   private final VaultReceipt vaultReceipt;
+  private final SealedWorlds sealed;
   private final Set<UUID> delivering = new HashSet<>();
   private final Set<UUID> settlingRewards = new HashSet<>();
 
@@ -44,7 +46,12 @@ final class Snapshots {
    * @param texts messages
    * @param saved the server's saved player data, to confirm restores without a new login
    */
-  record Parts(SnapshotStore store, RewardStore rewards, Texts texts, SavedPlayerData saved) {}
+  record Parts(
+      SnapshotStore store,
+      RewardStore rewards,
+      Texts texts,
+      SavedPlayerData saved,
+      SealedWorlds sealed) {}
 
   Snapshots(PaperContext runtime, Parts parts) {
     this.runtime = runtime;
@@ -60,6 +67,24 @@ final class Snapshots {
     this.rewards = parts.rewards();
     this.texts = parts.texts();
     this.vaultReceipt = new VaultReceipt(runtime.plugin());
+    this.sealed = parts.sealed();
+  }
+
+  /**
+   * A reward stays pending while the player is offline, dead, in an arena, or in a sealed world.
+   */
+  static boolean withholdsReward(
+      boolean online, boolean dead, boolean inArena, boolean worldSealed) {
+    return !online || dead || inArena || worldSealed;
+  }
+
+  /** Offline, dead, and in-arena checks run before the sealed-world lookup. */
+  private boolean withheld(Player player) {
+    var online = player.isOnline();
+    var dead = online && player.isDead();
+    var inArena = online && !dead && runtime.inArena(player.getUniqueId());
+    var worldSealed = online && !dead && !inArena && sealed.isSealed(player.getWorld());
+    return withholdsReward(online, dead, inArena, worldSealed);
   }
 
   /**
@@ -218,8 +243,7 @@ final class Snapshots {
     if (pending.isEmpty()) {
       return;
     }
-    var id = player.getUniqueId();
-    if (!player.isOnline() || player.isDead() || runtime.inArena(id)) {
+    if (withheld(player)) {
       return;
     }
     var recorded = vaultReceipt.ids(player);

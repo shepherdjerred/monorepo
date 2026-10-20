@@ -10,6 +10,7 @@ Build a town, trade with your neighbors, and brave The Storm. Our survival serve
 Start with [how to join](/join/), then follow [your first session](/getting-started/) to claim land and save a home. In game, `/guide` opens the welcome book you receive on arrival. No tutorial or forum registration is required to play.
 
 - [Survival](./survival/): information about our survival server.
+- [Creative](./creative/): how to enter the plot world, claim a cell, and download it.
 - [Search and Destroy](./search-and-destroy/): the Red Warfare team
   minigame, its bombs, kits and bots.
 - [Norms](./norms/): how members of The Storm are expected to behave.

@@ -36,8 +36,8 @@ fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.ja
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm MCBridge)
-# The modules owned/plugins/TheStorm/config.yml enables: all 25 registered.
-enabled_modules=(agent arena chat companions discord economy essentials mail mechanics messages mobs npcs qol quests rwf rwfbots seasonal shards shops skills spells tickets towns tracks world)
+# The modules owned/plugins/TheStorm/config.yml enables: all 27 registered.
+enabled_modules=(agent arena chat companions creative discord economy essentials mail mechanics messages mobs npcs qol quests rwf rwfbots safety seasonal shards shops skills spells tickets towns tracks world)
 # Non-secret fixture: MCBridge disables itself without a token of >= 32 chars.
 bridge_token=storm-boot-check-bridge-fixture-token
 
@@ -122,7 +122,7 @@ boot() { # label [docker run args...]
   enabled=$(sed -n 's/.*Enabled modules: \[\(.*\)\].*/\1/p' "$log" | tr -d ' ' | tr ',' '\n' | sort | tr '\n' ' ')
   expected=$(printf '%s\n' "${enabled_modules[@]}" | sort | tr '\n' ' ')
   [[ "$enabled" == "$expected" ]] ||
-    fail "$label: expected all 25 Storm modules enabled: $expected; got: $enabled"
+    fail "$label: expected all 27 Storm modules enabled: $expected; got: $enabled"
   if grep -E 'Could not prepare arenas|Could not validate shard altars|Spawn preparation failed' "$log"; then
     fail "$label: required world fixtures failed"
   fi

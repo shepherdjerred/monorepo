@@ -80,6 +80,9 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     if (enabled(modules, "rwf", prepared)) {
       rwfWorld();
     }
+    if (enabled(modules, "creative", prepared)) {
+      creativeWorld();
+    }
     getLogger().info("Prepared synthetic fixtures for Storm modules " + prepared);
     new PlotFixtures(this).register();
     new DuelFixtures(this).register();
@@ -326,6 +329,18 @@ public final class StormFixtures extends JavaPlugin implements Listener {
         }
       }
     }
+  }
+
+  /**
+   * The creative plot world, loaded with this plugin's generator before the creative module seals
+   * it. Paper asks TheStorm for the generator while this plugin is still starting.
+   */
+  private void creativeWorld() {
+    Objects.requireNonNull(
+        new WorldCreator("creative")
+            .generator("TheStorm:creative")
+            .generateStructures(false)
+            .createWorld());
   }
 
   /**
