@@ -40,10 +40,15 @@ public final class LobbySizing {
 
   private LobbySizing() {}
 
+  /** How much the large preset grows past half again the medium target the spawns can hold. */
+  public static final double LARGE_GROWTH = 1.5;
+
   /**
    * Medium targets are 16, 32 or 48 for footprints up to 128 squared, 200 squared, or larger. Small
-   * halves that target; large adds half. Presets balance the teams without reusing a team's saved
-   * spawn positions. Explicit TEAM overrides may reuse spawns, as the match engine supports.
+   * halves that target and medium keeps it, both without reusing a team's saved spawn positions.
+   * Large adds half to medium within those spawns, then grows by {@link #LARGE_GROWTH} up to the
+   * combatant cap, sharing spawns as the match engine supports (it starts each player at the spawn
+   * furthest from everyone already placed). Explicit TEAM overrides may reuse spawns too.
    */
   public static Recommendations recommend(MapDefinition map, int maximum) {
     var region = map.border();
@@ -54,11 +59,12 @@ public final class LobbySizing {
     var teams = map.teams().size();
     var spawns = map.teams().stream().mapToInt(team -> team.spawns().size()).min().orElseThrow();
     var capacity = Math.min(maximum, spawns * teams);
+    var spawnLarge = balanced(medium * 3 / 2, teams, capacity);
     return new Recommendations(
         footprint,
         balanced(medium / 2, teams, capacity),
         balanced(medium, teams, capacity),
-        balanced(medium * 3 / 2, teams, capacity));
+        balanced(Math.round(spawnLarge * LARGE_GROWTH), teams, maximum));
   }
 
   private static int balanced(long requested, int teams, int maximum) {

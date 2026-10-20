@@ -67,13 +67,17 @@ public final class KitTactics {
     return LEANS.getOrDefault(kit, Map.of());
   }
 
-  /** Leans {@code scores} for {@code kit}; only options already scored are moved. */
+  /**
+   * Leans {@code scores} for {@code kit}; only options already scored are moved. An option the
+   * situation scored zero (a hunt with nothing to hunt, a fight with no one to fight, holding an
+   * angle while a slot waits) stays zero, so a kit's taste never invents an option on its own.
+   */
   public static void lean(Kit kit, Map<Option, Double> scores) {
     var leans = leans(kit);
     for (var option : Option.values()) {
       var lean = leans.get(option);
       if (lean != null) {
-        scores.computeIfPresent(option, (o, score) -> score + lean);
+        scores.computeIfPresent(option, (o, score) -> score > 0 ? score + lean : score);
       }
     }
   }

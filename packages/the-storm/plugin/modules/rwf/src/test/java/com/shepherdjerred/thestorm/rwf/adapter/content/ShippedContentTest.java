@@ -58,49 +58,56 @@ final class ShippedContentTest {
     assertThat(content.config().matchSettings().requiredPlayers(Duration.ofMinutes(5)))
         .isEqualTo(2);
     assertThat(content.config().match().countdown()).isEqualTo(Duration.ofSeconds(90));
-    assertThat(content.config().match().maxCombatants()).isEqualTo(100);
+    assertThat(content.config().match().maxCombatants()).isEqualTo(108);
     assertThat(content.config().match().automaticSizing()).isTrue();
     assertThat(content.config().experience())
         .isEqualTo(com.shepherdjerred.thestorm.rwf.app.ExperienceSettings.DEFAULT);
-    assertThat(content.config().matchSettings().maxPlayers()).isEqualTo(100);
+    assertThat(content.config().matchSettings().maxPlayers()).isEqualTo(108);
   }
 
   @Test
   void everyMapHasBalancedOrderedRecommendationsWithinItsSpawnAndServerCaps() {
+    var maximum = content.config().match().maxCombatants();
     for (var source : content.maps()) {
       var map = source.definition();
-      var sizes = LobbySizing.recommend(map, 100);
+      var sizes = LobbySizing.recommend(map, maximum);
       var teams = map.teams().size();
       var capacity =
           map.teams().stream().mapToInt(team -> team.spawns().size()).min().orElseThrow() * teams;
       assertThat(sizes.small()).as(map.id()).isBetween(teams, sizes.medium());
       assertThat(sizes.medium()).as(map.id()).isLessThanOrEqualTo(sizes.large());
-      assertThat(sizes.large()).as(map.id()).isLessThanOrEqualTo(Math.min(100, capacity));
+      assertThat(sizes.medium()).as(map.id()).isLessThanOrEqualTo(Math.min(maximum, capacity));
+      assertThat(sizes.large())
+          .as("%s large stays within the server cap", map.id())
+          .isLessThanOrEqualTo(maximum);
       assertThat(sizes.small() % teams).isZero();
       assertThat(sizes.medium() % teams).isZero();
       assertThat(sizes.large() % teams).isZero();
-      assertThat(new LobbySizing.Selection(LobbySizing.Mode.AUTO, 0).target(map, 100))
+      assertThat(new LobbySizing.Selection(LobbySizing.Mode.AUTO, 0).target(map, maximum))
           .isEqualTo(sizes.large());
     }
   }
 
   @Test
   void footprintAndSpawnCapacityGiveUsefulTargetsForRealMaps() {
+    // Large grows by half past what the spawns hold: training-yard's eight spawns a side held 16.
     var expected =
         java.util.Map.of(
             "training-yard",
-            16,
-            "the-red-sand-seas",
             24,
+            "the-red-sand-seas",
+            36,
             "apex-expanse",
-            72,
+            108,
             "the-lost-kingdom",
-            48,
+            72,
             "mountains",
-            8);
+            12);
     for (var source : content.maps()) {
       if (expected.containsKey(source.id())) {
-        assertThat(LobbySizing.recommend(source.definition(), 100).large())
+        assertThat(
+                LobbySizing.recommend(source.definition(), content.config().match().maxCombatants())
+                    .large())
             .as(source.id())
             .isEqualTo(expected.get(source.id()));
       }

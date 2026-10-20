@@ -60,8 +60,11 @@ public record Features(
   /** How close a known enemy must be to an own bomb to count as threatening it. */
   public static final double BOMB_THREAT_RANGE = 12;
 
-  /** Within this distance of its slot a bot counts as holding it. */
-  public static final double SLOT_RADIUS = 2.0;
+  /**
+   * Within this distance of its slot a bot counts as holding it: room for a holder to patrol about
+   * the slot ({@link Patrol#SLOT_RADIUS}) instead of standing on it.
+   */
+  public static final double SLOT_RADIUS = 4.0;
 
   /**
    * The features of {@code situation}.

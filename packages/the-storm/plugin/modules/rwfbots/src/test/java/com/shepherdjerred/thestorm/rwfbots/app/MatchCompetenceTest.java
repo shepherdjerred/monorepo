@@ -70,10 +70,10 @@ final class MatchCompetenceTest {
             UUID.fromString("00000000-0000-0000-0000-000000000001"), 31, settings);
     var weak =
         new Director.Request(
-            catalog, Map.of(), List.of(new Rating(12, 2)), 1, Set.of(), Set.of(Kit.TROOPER), 2);
+            catalog, Map.of(), List.of(new Rating(12, 2)), 1, Set.of(), Set.of(Kit.TROOPER), 2, 0);
     var strong =
         new Director.Request(
-            catalog, Map.of(), List.of(new Rating(38, 2)), 1, Set.of(), Set.of(Kit.TROOPER), 2);
+            catalog, Map.of(), List.of(new Rating(38, 2)), 1, Set.of(), Set.of(Kit.TROOPER), 2, 0);
     var a = Director.pick(weak, frozen, new SplittableRandom(7));
     var b = Director.pick(strong, frozen, new SplittableRandom(7));
     assertThat(a.bots().getFirst().levers()).isEqualTo(b.bots().getFirst().levers());

@@ -126,7 +126,9 @@ final class TeamPlayTest {
   // replanning, with predictive teammate spacing and supported native wall sliding.
   // Composed with certified launch recovery, local squad bounds and committed fuse work.
   // Failed routes recover as RECOVER steps with a re-entry walk; landed bodies route as grounded.
-  private static final String PINNED_YARD_HASH = "6ae8da47a92ce0e9";
+  // Bots route around teammates ranked ahead only; idle and recovery plans earn no commitment.
+  // Holders patrol between posts about their hold instead of standing still.
+  private static final String PINNED_YARD_HASH = "693518c449cc11c0";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

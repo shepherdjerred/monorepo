@@ -47,7 +47,8 @@ final class CombatHarnessTest {
             2,
             java.util.Set.of(),
             java.util.Set.of(Kit.TROOPER),
-            2);
+            2,
+            0);
     var ordinary = Director.pick(request, experience, new java.util.SplittableRandom(42));
     var expected =
         ordinary.bots().stream()

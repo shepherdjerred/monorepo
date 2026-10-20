@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.team;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
@@ -99,6 +100,8 @@ public final class Playbook {
 
   private static final int SNAP = 3;
   private static final int SEARCH_RINGS = 8;
+  // How far past a slot that falls in water placement looks for dry ground.
+  private static final int DRY_RINGS = 24;
 
   private Playbook() {}
 
@@ -383,11 +386,7 @@ public final class Playbook {
     }
 
     private Vec3 approach(BombView bomb) {
-      var node =
-          setup
-              .nav()
-              .bombApproach(
-                  com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos.of(bomb.pos()));
+      var node = setup.nav().bombApproach(BlockPos.of(bomb.pos()));
       return node.isPresent() ? graph.feet(node.getAsInt()) : bomb.pos();
     }
 
@@ -490,7 +489,8 @@ public final class Playbook {
             target.isEmpty()
                 || regions.canSee(
                     regions.regionOf(point.node()), regions.regionOf(target.getAsInt()));
-        if (distance < OVERWATCH_MIN
+        if (wet(feet)
+            || distance < OVERWATCH_MIN
             || distance > OVERWATCH_MAX
             || along > OVERWATCH_FURTHEST
             || feet.horizontalDistance(setup.home()) < OVERWATCH_OUT
@@ -535,7 +535,8 @@ public final class Playbook {
         var feet = graph.feet(point.node());
         var offset = feet.minus(guard).horizontal();
         var distance = offset.length();
-        if (distance < Math.max(setup.guardClear(), ANCHOR_MIN)
+        if (wet(feet)
+            || distance < Math.max(setup.guardClear(), ANCHOR_MIN)
             || distance > ANCHOR_MAX
             || nearestPlaced(feet) < SPACING
             || onWayOut(point.node(), feet)) {
@@ -635,34 +636,60 @@ public final class Playbook {
       return point;
     }
 
+    /**
+     * Whether a bot standing at {@code feet} would tread water: a slot there is held swimming in
+     * place, which reads as a bot stuck in water.
+     */
+    private boolean wet(Vec3 feet) {
+      return graph.water().contains(BlockPos.of(feet.plus(0, 0.001, 0)));
+    }
+
     private Vec3 snap(Vec3 point) {
       var node = graph.nearestNodeWithin(point, SNAP * 2);
       return node.isPresent() ? graph.feet(node.getAsInt()) : point;
     }
 
-    /** The walkable point nearest {@code desired} at least {@link #SPACING} from every slot. */
+    /**
+     * The walkable point out of water nearest {@code desired} at least {@link #SPACING} from every
+     * slot. Crowding a teammate beats treading water: with no dry point spaced from the others, the
+     * nearest dry one.
+     */
     private Vec3 place(Vec3 desired) {
       var base = snap(desired);
-      if (nearestPlaced(base) >= SPACING) {
+      if (!wet(base) && nearestPlaced(base) >= SPACING) {
         return keep(base);
       }
       var tried = new HashSet<Integer>();
+      var dry = wet(base) ? Optional.<Vec3>empty() : Optional.of(base);
       for (var ring = 1; ring <= SEARCH_RINGS; ring++) {
-        var steps = 8 * ring;
-        for (var k = 0; k < steps; k++) {
-          var angle = 2 * Math.PI * k / steps;
-          var probe = desired.plus(StrictMath.cos(angle) * ring, 0, StrictMath.sin(angle) * ring);
-          var node = graph.nearestNodeWithin(probe, 1);
-          if (node.isEmpty() || !tried.add(node.getAsInt())) {
-            continue;
-          }
-          var feet = graph.feet(node.getAsInt());
+        for (var feet : ring(desired, ring, tried)) {
           if (nearestPlaced(feet) >= SPACING) {
             return keep(feet);
           }
+          if (dry.isEmpty()) dry = Optional.of(feet);
         }
       }
-      return keep(base);
+      for (var ring = 1; dry.isEmpty() && ring <= DRY_RINGS; ring++) {
+        dry = ring(base, ring, tried).stream().findFirst();
+      }
+      return keep(dry.orElse(base));
+    }
+
+    /** The dry, not yet tried walkable points on the ring {@code radius} blocks about a centre. */
+    private List<Vec3> ring(Vec3 centre, int radius, Set<Integer> tried) {
+      var points = new ArrayList<Vec3>();
+      var steps = 8 * radius;
+      for (var k = 0; k < steps; k++) {
+        var angle = 2 * Math.PI * k / steps;
+        var probe = centre.plus(StrictMath.cos(angle) * radius, 0, StrictMath.sin(angle) * radius);
+        var node = graph.nearestNodeWithin(probe, 1);
+        if (node.isEmpty() || !tried.add(node.getAsInt())) {
+          continue;
+        }
+        var feet = graph.feet(node.getAsInt());
+        if (!wet(feet)) points.add(feet);
+      }
+      return points;
     }
   }
 

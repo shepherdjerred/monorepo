@@ -820,6 +820,49 @@ public final class Planner {
     return pos.horizontalDistance(goal) <= ROUTE_REACHED && Math.abs(pos.y() - goal.y()) < 1.5;
   }
 
+  /**
+   * How a bot holding {@code hold} moves: to the hold first, then about it on {@link Patrol},
+   * standing at the hold only when patrolling does not apply or its next post cannot be routed to.
+   */
+  private static RouteResult holdRoute(
+      Plan plan, Situation situation, TacticsContext context, PlanStep.Hold hold) {
+    var pos = hold.pos();
+    var stance = hold.stance();
+    var self = situation.self().pos();
+    var arrived = atHold(plan, situation, pos);
+    var radius = formationSlot(plan, situation) ? Patrol.SLOT_RADIUS : Patrol.FREE_RADIUS;
+    var patrolling =
+        arrived
+            || (self.horizontalDistance(pos) <= radius + ROUTE_REACHED
+                && Math.abs(self.y() - pos.y()) < 1.5);
+    // A deliberate stand (a late start, a pending elimination, nothing in reach) stays put.
+    var deliberate = plan.option() == Option.HOLD_ANGLE || plan.option() == Option.RECOVER;
+    var patrol =
+        patrolling && !deliberate && stance != Stance.STEALTH
+            ? patrolRoute(situation, context, pos, radius)
+            : Optional.<RouteResult>empty();
+    if (patrol.isPresent()) return patrol.orElseThrow();
+    return arrived
+        ? new RouteResult.Arrived()
+        : pathTo(situation, context, pos, new Way(stance, true));
+  }
+
+  /** The route to the bot's current patrol post, or empty when it has none it can reach. */
+  private static Optional<RouteResult> patrolRoute(
+      Situation situation, TacticsContext context, Vec3 hold, double radius) {
+    var post = Patrol.post(situation, context, hold, radius);
+    if (post.isEmpty()) return Optional.empty();
+    if (reached(situation.self().pos(), post.orElseThrow()))
+      return Optional.of(new RouteResult.Arrived());
+    var route = pathTo(situation, context, post.orElseThrow(), new Way(Stance.CAUTIOUS, false));
+    return route.failure().isEmpty() ? Optional.of(route) : Optional.empty();
+  }
+
+  private static boolean formationSlot(Plan plan, Situation situation) {
+    return (plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT)
+        && situation.slot().isPresent();
+  }
+
   private static boolean atHold(Plan plan, Situation situation, Vec3 goal) {
     var formation = plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT;
     return (formation && situation.slot().isPresent())
@@ -859,21 +902,21 @@ public final class Planner {
       case PlanStep.Fight(var target) -> fight(plan, scene, target);
       case PlanStep.Arm(var bomb) -> atBomb(plan, scene, bomb);
       case PlanStep.Defuse(var bomb) -> atBomb(plan, scene, bomb);
-      case PlanStep.Hold(var pos, var watch, var stance) ->
-          decision(
-              situation,
-              new Parts(
-                  plan.option(),
-                  holdTarget(situation, context, !atHold(plan, situation, pos)),
-                  atHold(plan, situation, pos)
-                      ? new RouteResult.Arrived()
-                      : pathTo(situation, context, pos, new Way(stance, true)),
-                  stance,
-                  Optional.empty(),
-                  Optional.of(watch),
-                  Optional.empty(),
-                  label),
-              lifeEpoch);
+      case PlanStep.Hold hold -> {
+        var route = holdRoute(plan, situation, context, hold);
+        yield decision(
+            situation,
+            new Parts(
+                plan.option(),
+                holdTarget(situation, context, !(route instanceof RouteResult.Arrived)),
+                route,
+                hold.stance(),
+                Optional.empty(),
+                Optional.of(hold.watch()),
+                Optional.empty(),
+                label),
+            lifeEpoch);
+      }
       case PlanStep.Cover(var _, var pos, var watch, var _) ->
           decision(
               situation,
@@ -1390,7 +1433,7 @@ public final class Planner {
             graph,
             context.seed(),
             new RoutePenalty.Tolls(
-                situation.board().pathsOfOthers(situation.self().id()), corridor, extra));
+                situation.board().pathsAhead(situation.self().id()), corridor, extra));
     var points =
         RouteNavigator.find(
             context,

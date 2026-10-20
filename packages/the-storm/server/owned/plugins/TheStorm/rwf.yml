@@ -42,11 +42,13 @@ match:
   # Ordinary play uses the map's large preset. Fixed targets remain available
   # for duel/training profiles; admin size overrides last until module restart.
   automaticSizing: true
-  # The most combatants in a match. 101 (one human, 100 bots) held the bots'
-  # governor at level 0 and the added tick p95 under 8 ms on the production
-  # pod's 4 CPUs in the load profile (plugin/modules/rwfbots/LOAD.md);
-  # nothing measured supports more.
-  maxCombatants: 100
+  # The most combatants in a match: the largest automatic preset (apex-expanse
+  # and the other biggest maps, 72 grown by half). 101 (one human, 100 bots)
+  # held the bots' governor at level 0 and the added tick p95 under 8 ms on the
+  # production pod's 4 CPUs in the load profile (plugin/modules/rwfbots/LOAD.md);
+  # 108 rests on the parallel engine's capacity runs (bun run test:capacity),
+  # and the governor drafts fewer bots next match if the server falls behind.
+  maxCombatants: 108
   # From enough humans to going live, as Red Warfare had it.
   countdown: PT90S
   # How long the result is shown before the map resets.

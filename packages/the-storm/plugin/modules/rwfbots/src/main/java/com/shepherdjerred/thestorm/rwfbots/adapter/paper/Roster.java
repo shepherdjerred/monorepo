@@ -128,7 +128,8 @@ public final class Roster implements BotBodies {
             wanted,
             reservedNames(),
             offered(parts.config().draft().availableKits()),
-            Math.max(2, state.orElseThrow().teams().size()));
+            Math.max(2, state.orElseThrow().teams().size()),
+            parts.config().draft().rangedShare());
     var ordinary =
         harness
             .draft(matchId, slots, parts.personalities())

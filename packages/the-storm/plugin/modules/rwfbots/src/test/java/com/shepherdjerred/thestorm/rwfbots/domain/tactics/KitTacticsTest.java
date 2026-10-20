@@ -43,4 +43,24 @@ final class KitTacticsTest {
       assertThat(Math.abs(lean)).isLessThan(Tactics.PREEMPT_MARGIN);
     }
   }
+
+  @Test
+  void anOptionTheSituationScoredZeroStaysZeroWhateverTheKitLeans() {
+    // A spotter with a slot to reach and a ghost with nobody to hunt: their leans used to turn
+    // these zeros into standing options that out-lasted the slot route under commitment.
+    var spotter = new EnumMap<Option, Double>(Option.class);
+    spotter.put(Option.TAKE_SLOT, 0.45);
+    spotter.put(Option.HOLD_ANGLE, 0.0);
+    KitTactics.lean(Kit.SPOTTER, spotter);
+    assertThat(spotter).containsEntry(Option.HOLD_ANGLE, 0.0);
+
+    var ghost = new EnumMap<Option, Double>(Option.class);
+    ghost.put(Option.HUNT, 0.0);
+    KitTactics.lean(Kit.GHOST, ghost);
+    assertThat(ghost).containsEntry(Option.HUNT, 0.0);
+
+    ghost.put(Option.HUNT, 0.3);
+    KitTactics.lean(Kit.GHOST, ghost);
+    assertThat(ghost.get(Option.HUNT)).isEqualTo(0.3 + KitTactics.LEAN);
+  }
 }

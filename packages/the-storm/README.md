@@ -1748,11 +1748,14 @@ Ordinary matches use `match.automaticSizing: true`: automatic sizing chooses
 the large preset for each map. `/rwf size` shows small, medium and large totals,
 players per team, and the bot deficit after current humans. Medium targets are
 16 combatants for horizontal footprints up to 128×128 blocks, 32 up to
-200×200, and 48 above that. Small halves the target; large adds half. Presets
-round down to equal teams and cap at the smallest team's saved spawn capacity
-and `maxCombatants`. For example, the training yard defaults to 16 total,
-Red Sand Seas to 24, and Apex Expanse to 72. These footprint-based suggestions
-are initial tuning values, rather than measured match-quality ratings.
+200×200, and 48 above that. Small halves the target and medium keeps it, both
+rounded down to equal teams and capped at the smallest team's saved spawn
+capacity and `maxCombatants`. Large adds half to medium within those spawns,
+then grows by half again (`LobbySizing.LARGE_GROWTH`) up to `maxCombatants`,
+sharing spawns: each player starts at the team spawn furthest from everyone
+already placed. For example, the training yard defaults to 24 total, Red Sand
+Seas to 36, and Apex Expanse to 108. These footprint-based suggestions are
+initial tuning values, rather than measured match-quality ratings.
 
 Administrators can use `/rwf admin size auto|small|medium|large` or
 `/rwf admin size team <players>` (humans and bots combined per team). This is
@@ -3113,7 +3116,10 @@ keeps the most balanceable of a few drafts, freezes competence from the selected
 difficulty and recorded seed, and gives
 each a kit from its weights over `draft.kits`; a personality whose weights
 name none of those kits (its favourites ship later) still drafts and plays one
-of them, chosen uniformly. The draft happens when the countdown starts, but
+of them, chosen uniformly. When the drafted personalities are expected to field
+fewer than `draft.rangedShare` bow and crossbow kits over the kits on offer,
+the draft weights every bow kit up by the smallest factor (at most 16) that
+reaches that share; a draft already at or above it is left alone. The draft happens when the countdown starts, but
 rwf walks the drafted bots into the lobby one by one, a seeded 1 to 8 seconds
 apart (`rwf.domain.lobby.Arrivals`, squeezed into the first half of the
 countdown so all are in before the start; personalities with the
@@ -3315,6 +3321,14 @@ or drawn and earns no commitment bonus. A bot body that has stood on solid groun
 distance cleared, and the router treats a grounded body as landed: an NPC body
 does not refresh vanilla's collision on-ground flag while standing still, so a
 landed fall could otherwise be planned as a fatal drop indefinitely.
+
+Holding is a patrol, not a statue (`Patrol`): a bot holding a slot, a retake
+point, or a hunt or fight with nothing to chase, with no enemy in sight, moves
+between reachable posts around its hold (1.5 to 3.5 blocks out from a slot, which
+it holds within 4 blocks, and up to 4 otherwise), never the same post twice in a
+row, lingering 2 to 5 s at each by its patience. It stands
+still to shoot a visible enemy, when sneaking as the last of its team, and for
+deliberate holds (`HOLD_ANGLE` at a late start or a pending elimination).
 
 The body's last movement gate (`MovementSafety`, read against live terrain by
 `MovementTerrain`) follows vanilla where the graph's primitives meet real

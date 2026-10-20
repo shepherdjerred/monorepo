@@ -101,7 +101,7 @@ final class ShippedPersonalitiesTest {
   void aFullLobbyDraftsEveryShippedPersonalityWithAShippedKit() {
     var request =
         new Director.Request(
-            catalog, Map.of(), List.of(), catalog.active().size(), Set.of(), shippedKits, 2);
+            catalog, Map.of(), List.of(), catalog.active().size(), Set.of(), shippedKits, 2, 0);
 
     var pick = Director.pick(request, new SplittableRandom(1));
 
