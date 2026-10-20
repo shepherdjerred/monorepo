@@ -83,13 +83,14 @@ describe("all modules together", () => {
     const roster = await rcon.command("stormnpc list");
     expect(roster).toContain("36 NPCs");
     expect(roster).not.toMatch(/missing|unloaded/u);
-    expect(await rcon.command("worldborder get")).toContain("40000");
+    // world's 7000-radius disc sits inside a native square of twice that.
+    expect(await rcon.command("worldborder get")).toContain("14000");
     expect(
       await rcon.command("execute in minecraft:the_nether run worldborder get"),
-    ).toContain("10000");
+    ).toContain("6000");
     expect(
       await rcon.command("execute in minecraft:the_end run worldborder get"),
-    ).toContain("5000");
+    ).toContain("8000");
     // This suite exercises module wiring with a deliberately malformed token;
     // external Discord login remains a separate production acceptance check.
     expect(logs).toContain("Discord login failed; the bridge is offline");
