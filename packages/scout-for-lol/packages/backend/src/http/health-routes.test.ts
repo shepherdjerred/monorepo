@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   handleHealthz,
   handleLivez,
@@ -19,6 +19,19 @@ const UPTIME_MS = STARTUP_GRACE_PERIOD_MS + 60_000;
 function livez(now: number): Response {
   return handleLivez({ cors: CORS, now, startedAt: now - UPTIME_MS });
 }
+
+/** Record a successful Riot call, then a failing one `failedAfterMs` later. */
+function riotFailsAfterSuccess(successAt: number, failedAfterMs: number): void {
+  vi.setSystemTime(successAt);
+  updateRiotApiHealth(true);
+  vi.setSystemTime(successAt + failedAfterMs);
+  updateRiotApiHealth(false);
+  vi.useRealTimers();
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 /** Put both non-gateway components in their healthy state. */
 function healthyBaseline(now: number): void {
@@ -64,10 +77,10 @@ describe("/livez", () => {
   });
 
   test("fails when recent Riot calls are being attempted but none succeed", async () => {
-    // `updateRiotApiHealth` stamps both clocks with the current time, so the
-    // failure is expressed by reading the probe from far enough in the future
-    // that the last success is stale while the last attempt is not.
-    const now = Date.now() + 16 * 60 * 1000;
+    const start = Date.now();
+    vi.useFakeTimers();
+    riotFailsAfterSuccess(start, 10 * 60 * 1000);
+    const now = start + 16 * 60 * 1000;
     recordDiscordGatewayHeartbeat(now - 30_000);
 
     const response = livez(now);
@@ -76,6 +89,20 @@ describe("/livez", () => {
     await expect(response.json()).resolves.toMatchObject({
       healthy: false,
       components: { riotApiHealthy: false },
+    });
+  });
+
+  test("stays healthy while idle after a successful Riot call", async () => {
+    // The web role calls Riot only on user actions; a quiet stretch after a
+    // success is not a wedged client and must not restart the pod.
+    const now = Date.now() + 16 * 60 * 1000;
+    recordDiscordGatewayHeartbeat(now - 30_000);
+
+    const response = livez(now);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      components: { riotApiHealthy: true },
     });
   });
 
@@ -138,7 +165,10 @@ describe("/healthz", () => {
   test("goes unready on a shorter Riot staleness window than liveness", async () => {
     // Readiness pulls this replica out of the Service after 5 minutes;
     // liveness waits 15 before restarting it.
-    const now = Date.now() + 6 * 60 * 1000;
+    const start = Date.now();
+    vi.useFakeTimers();
+    riotFailsAfterSuccess(start, 4 * 60 * 1000);
+    const now = start + 6 * 60 * 1000;
     recordDiscordGatewayHeartbeat(now - 30_000);
 
     const response = handleHealthz({
@@ -149,6 +179,18 @@ describe("/healthz", () => {
 
     expect(response.status).toBe(503);
     expect(livez(now).status).toBe(200);
+  });
+
+  test("stays ready while idle after a successful Riot call", () => {
+    const now = Date.now() + 6 * 60 * 1000;
+
+    const response = handleHealthz({
+      cors: CORS,
+      now,
+      startedAt: now - UPTIME_MS,
+    });
+
+    expect(response.status).toBe(200);
   });
 
   test("stays ready with a dead gateway, which liveness alone acts on", async () => {
