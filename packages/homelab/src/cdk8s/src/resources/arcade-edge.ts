@@ -1,8 +1,6 @@
 import { Duration, Size, type Chart } from "cdk8s";
 import {
-  Capability,
   ConfigMap,
-  Cpu,
   Deployment,
   DeploymentStrategy,
   Probe,
@@ -17,9 +15,11 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { arcadeCaddyfile } from "./arcade-caddyfile.ts";
+import { caddyEdgeContainerDefaults } from "./caddy-edge-container.ts";
 
 /** Prepare the replacement edge without claiming live ports or hostnames. */
 export function createArcadeEdge(chart: Chart) {
+  const defaults = caddyEdgeContainerDefaults();
   const caddyfile = arcadeCaddyfile(
     "arcade-arcade-ui.arcade.svc.cluster.local:8081",
   );
@@ -56,17 +56,9 @@ export function createArcadeEdge(chart: Chart) {
         { name: "bootstrap", number: 8082 },
         { name: "legacy", number: 8081 },
       ],
-      resources: {
-        cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
-        memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-      },
+      resources: defaults.resources,
       securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        capabilities: { drop: [Capability.ALL] },
+        ...defaults.securityContext,
         seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
       startup: Probe.fromHttpGet("/healthz", {
