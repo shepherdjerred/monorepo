@@ -377,6 +377,35 @@ describe("owned release post-sync observation", () => {
   });
 });
 describe("Delivery Argo operation evidence", () => {
+  it("accepts legacy earlier history without granting it selected-release authority", () => {
+    const current = observation();
+    const legacy = {
+      id: 0,
+      revision: "2.0.0-41",
+      source: {
+        repoURL: selection.repository,
+        chart: selection.chart,
+        targetRevision: "2.0.0-41",
+        helm: { parameters: [{ name: "image.tag", value: "old-image" }] },
+      },
+    };
+    const input = {
+      ...current,
+      status: {
+        ...current.status,
+        history: [legacy, ...current.status.history],
+      },
+    };
+    expect(verifyArgoRelease(input, selection, requestId)).toEqual({
+      requestId,
+      operationId,
+      revision: selection.revision,
+    });
+    legacy.id = 2;
+    expect(() => verifyArgoRelease(input, selection, requestId)).toThrow(
+      "force string",
+    );
+  });
   it("proves exact wire parameters without changing the frozen logical JSON", () => {
     const logical = JSON.stringify({
       versions: [
