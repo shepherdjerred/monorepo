@@ -1168,6 +1168,29 @@ class RestoreTest(unittest.TestCase):
         self.assertEqual(json.loads((staging / restore.JOURNAL).read_text())["phase"], "ACTIVATION_PREPARATION_FAILED")
         self.assertFalse((staging / "activation-layout-receipt.json").exists())
 
+    def test_activation_check_verifies_layout_metadata_against_the_primary_archive(self):
+        calls: list[list[str]] = []
+        receipt = {
+            "status": "VERIFIED",
+            "dataVersion": 4903,
+            "entityUuidCollisions": [],
+            "terrainGeneration": False,
+            "worldTicks": 0,
+        }
+
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[bytes]:
+            calls.append(command)
+            (self.root / "native-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            return subprocess.CompletedProcess(command, 0)
+
+        with patch.object(restore.subprocess, "run", side_effect=run):
+            restore.run_activation_check(self.root / "world", self.root / "modern", self.root, "fixture")
+        layout = next(call for call in calls if call[4].endswith("NativeLayoutMetadata.java"))
+        self.assertEqual(
+            layout[5:],
+            ["verify", "main-map1-2015-07-09", str(self.root / "world"), str(self.root / "metadata-receipt.json")],
+        )
+
     def test_activation_records_only_verified_animal_region_changes(self):
         arguments = self.activation_fixture()
         staging = arguments[0]

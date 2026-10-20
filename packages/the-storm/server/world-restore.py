@@ -1724,7 +1724,7 @@ def run_activation_check(world: Path, modern_world: Path, root: Path, classpath:
     tools = Path(__file__).resolve().parent / "conversion"
     with (root / "native-verification.log").open("x", encoding="utf-8") as log:
         for tool, arguments in (
-            ("NativeLayoutMetadata.java", ["verify", str(world), str(root / "metadata-receipt.json")]),
+            ("NativeLayoutMetadata.java", ["verify", PRIMARY.id, str(world), str(root / "metadata-receipt.json")]),
             ("NativeActivationCheck.java", [str(world), str(modern_world), str(root / "native-receipt.json")]),
         ):
             result = subprocess.run(

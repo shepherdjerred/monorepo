@@ -41,12 +41,13 @@ public final class WorldPaper {
   }
 
   /** The listener that keeps players inside circular borders, when the config has any. */
-  public static java.util.Optional<org.bukkit.event.Listener> circles(WorldConfig config) {
+  public static java.util.Optional<org.bukkit.event.Listener> circles(
+      WorldConfig config, java.util.concurrent.Executor mainThread) {
     var edges = config.borders().stream().flatMap(spec -> spec.circle().stream()).toList();
     if (edges.isEmpty()) {
       return java.util.Optional.empty();
     }
-    return java.util.Optional.of(new CircleBorders(edges));
+    return java.util.Optional.of(new CircleBorders(edges, mainThread));
   }
 
   private static World requireLoaded(Server server, WorldSpec spec) {
