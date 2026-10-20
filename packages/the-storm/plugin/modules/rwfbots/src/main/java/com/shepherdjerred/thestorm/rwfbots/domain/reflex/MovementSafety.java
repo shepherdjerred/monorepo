@@ -42,6 +42,9 @@ public final class MovementSafety {
 
     /** Whether any part of the body's footprint there rests on floor within {@code drop}. */
     boolean footing(Vec3 feet, double drop);
+
+    /** Whether a body there is in water. */
+    boolean submerged(Vec3 feet);
   }
 
   public record Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff) {
@@ -84,7 +87,8 @@ public final class MovementSafety {
       if (traversal(terrain, request))
         return new Result(Optional.of(request.target()), Reason.CLEAR);
       return takeoff(terrain, request)
-          .map(centre -> new Result(Optional.of(centre), Reason.REDIRECTED))
+          .or(() -> sinkFirst(terrain, request))
+          .map(corner -> new Result(Optional.of(corner), Reason.REDIRECTED))
           .orElseGet(() -> new Result(Optional.empty(), Reason.BLOCKED));
     }
     var heading = request.target().minus(request.from()).horizontal();
@@ -113,6 +117,29 @@ public final class MovementSafety {
     return walkCorridor(terrain, from, centre, true)
             && traversal(terrain, new Request(centre, request.target(), request.hop()))
         ? Optional.of(centre)
+        : Optional.empty();
+  }
+
+  /**
+   * For a drop from water whose flight is blocked, the point straight below at the target's height
+   * when the body can sink there through water and then cross to the target: the way out of a well
+   * is down the column and out through its side, not across at the surface.
+   */
+  private static Optional<Vec3> sinkFirst(Terrain terrain, Request request) {
+    var from = request.from();
+    var target = request.target();
+    if (request.hop() != Hop.DROP || !terrain.submerged(from) || target.y() >= from.y())
+      return Optional.empty();
+    var corner = from.withY(target.y());
+    if (corner.horizontalDistance(target) < CENTRED) return Optional.empty();
+    var count = Math.max(1, (int) Math.ceil((from.y() - corner.y()) / SAMPLE_GAP));
+    for (var index = 0; index <= count; index++) {
+      var point = from.lerp(corner, (double) index / count);
+      if (!safe(terrain, point) || (index < count && !terrain.submerged(point)))
+        return Optional.empty();
+    }
+    return clearFlight(terrain, corner, target, corner.y())
+        ? Optional.of(corner)
         : Optional.empty();
   }
 

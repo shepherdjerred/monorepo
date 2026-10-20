@@ -134,6 +134,11 @@ final class MovementTerrain implements MovementSafety.Terrain {
     return false;
   }
 
+  @Override
+  public boolean submerged(Vec3 feet) {
+    return inWater(feet);
+  }
+
   boolean inWater(Vec3 feet) {
     return water(block(BlockPos.of(feet)))
         || water(block(BlockPos.of(feet.plus(0, -0.1, 0))))

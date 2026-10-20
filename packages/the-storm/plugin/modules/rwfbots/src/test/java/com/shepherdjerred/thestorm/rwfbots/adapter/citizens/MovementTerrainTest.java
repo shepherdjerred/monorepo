@@ -279,4 +279,28 @@ final class MovementTerrainTest {
                 .reason())
         .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
   }
+
+  @Test
+  void aDropOutOfAWellSinksDownTheColumnBeforeCrossingIntoItsSideTunnel() {
+    // the-harshest-harvest: a water well opens into a tunnel at its foot. A drop from high in the
+    // column flew across at the surface into the wall above the tunnel and was refused.
+    for (var y = 1; y <= 5; y++) {
+      world.getBlockAt(2, y, 2).setType(Material.WATER);
+      world.getBlockAt(1, y, 2).setType(Material.STONE);
+      world.getBlockAt(3, y, 2).setType(Material.STONE);
+      world.getBlockAt(2, y, 1).setType(Material.STONE);
+      if (y >= 3) world.getBlockAt(2, y, 3).setType(Material.STONE);
+    }
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(2.5, 4.5, 2.5),
+            new Vec3(2.5, 1, 3.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP);
+    var result =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, request);
+    assertThat(result.reason())
+        .isEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
+    assertThat(result.destination()).contains(new Vec3(2.5, 1, 2.5));
+  }
 }

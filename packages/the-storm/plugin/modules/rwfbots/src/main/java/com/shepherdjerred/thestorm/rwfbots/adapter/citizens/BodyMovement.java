@@ -155,7 +155,8 @@ final class BodyMovement {
 
   private static Optional<Vec3> bankExit(
       MovementTerrain terrain, Vec3 position, Vec3 goal, Hop hop) {
-    if (!terrain.inWater(position) || (hop == Hop.SWIM && goal.y() < position.y()))
+    if (!terrain.inWater(position)
+        || ((hop == Hop.SWIM || hop == Hop.DROP) && goal.y() < position.y()))
       return Optional.empty();
     return terrain.bankExit(position, goal);
   }
@@ -193,7 +194,7 @@ final class BodyMovement {
     var next = accelerated(player, steering);
     if (swimming) {
       next =
-          steering.hop() == Hop.SWIM
+          (steering.hop() == Hop.SWIM || (steering.hop() == Hop.DROP && heading.y() < 0))
               ? SwimmingMotion.directed(next, heading.y(), steering.leavingWater())
               : SwimmingMotion.buoyancy(
                   next, position.y(), terrain.waterSurface(position), steering.leavingWater());
