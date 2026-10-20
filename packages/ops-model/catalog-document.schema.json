@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery catalog document",
+  "description": "The one Git-owned catalog: services with typed components, environments, candidate recipe and configuration revisions, and prerequisite edges. It holds no digest, version string, chart revision or image tag of anything that runs; Delivery records what is deployed. Referential rules (every referenced id exists, promotion edges form a tree, prerequisite edges form a DAG, references name a component of the same type, forwardOnly keys exist in the content) are enforced by the per-language validators.",
+  "type": "object",
+  "required": [
+    "groups",
+    "services",
+    "environments",
+    "recipes",
+    "configurations",
+    "edges"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "groups": {
+      "description": "The ops views: the coarse services today's consumers know, each aggregating the services that name it as their group.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/group" }
+    },
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/service" }
+    },
+    "environments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/environment" }
+    },
+    "recipes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/recipe" }
+    },
+    "configurations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/configuration" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    },
+    "legacy": {
+      "description": "Transitional v1 ownership policy; deleted with the root release after the window.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deliveryDelegations": {
+          "type": "object",
+          "propertyNames": { "minLength": 1 },
+          "additionalProperties": { "$ref": "#/$defs/environmentId" }
+        },
+        "platformDeliveryDelegated": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "lifecycle": {
+      "description": "Forward-only lifecycle of services and environments.",
+      "enum": ["active", "retired", "removed"]
+    },
+    "nameList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "group": {
+      "type": "object",
+      "required": ["id", "title", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/serviceId" },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["product", "workload", "platform"] },
+        "package": { "type": "string", "minLength": 1 },
+        "aliases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/serviceId" }
+        }
+      }
+    },
+    "serviceId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "componentName": {
+      "description": "Component names carry their type as a prefix.",
+      "type": "string",
+      "pattern": "^(?:image|chart|archive):[a-z0-9][a-z0-9._-]*$"
+    },
+    "environmentId": {
+      "description": "service/name",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$"
+    },
+    "revisionId": {
+      "description": "A recipe or configuration id with its revision suffix, such as scout-prod/3.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)*/[1-9][0-9]*$"
+    },
+    "componentSource": {
+      "description": "Another service's component filled by reference (A5). A tracking reference follows a source environment; a pinned reference names none.",
+      "type": "object",
+      "required": ["service", "component", "mode"],
+      "additionalProperties": false,
+      "properties": {
+        "service": { "$ref": "#/$defs/serviceId" },
+        "component": { "$ref": "#/$defs/componentName" },
+        "mode": { "enum": ["pinned", "tracking"] },
+        "environment": { "$ref": "#/$defs/environmentId" }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": { "const": "tracking" },
+            "environment": { "$ref": "#/$defs/environmentId" }
+          },
+          "required": ["mode", "environment"]
+        },
+        {
+          "type": "object",
+          "properties": { "mode": { "const": "pinned" }, "environment": false },
+          "required": ["mode"]
+        }
+      ]
+    },
+    "component": {
+      "type": "object",
+      "required": ["name", "producer"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/componentName" },
+        "producer": { "enum": ["first-party", "acquisition", "reference"] },
+        "source": { "$ref": "#/$defs/componentSource" }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "producer": { "const": "reference" },
+            "source": { "$ref": "#/$defs/componentSource" }
+          },
+          "required": ["producer", "source"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "producer": { "enum": ["first-party", "acquisition"] },
+            "source": false
+          },
+          "required": ["producer"]
+        }
+      ]
+    },
+    "service": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "lifecycle",
+        "selfHosted",
+        "group",
+        "components"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/serviceId" },
+        "title": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "selfHosted": {
+          "description": "The service's target hosts the executor, the API or the Kubernetes adapter; its deployments take the dispatch barrier (D8).",
+          "type": "boolean"
+        },
+        "group": {
+          "description": "The ops view that aggregates this service: today's ops-model service id.",
+          "$ref": "#/$defs/serviceId"
+        },
+        "components": {
+          "description": "Ordered component list; a change starts a new lineage (S1).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/component" }
+        },
+        "ops": {
+          "description": "Attributes the ops consumers read and Delivery never does. Images and charts derive from the components.",
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "enum": ["product", "workload", "platform"] },
+            "aliases": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/serviceId" }
+            },
+            "namespaces": { "$ref": "#/$defs/nameList" },
+            "argoApps": { "$ref": "#/$defs/nameList" },
+            "bugsinkProjects": { "$ref": "#/$defs/nameList" },
+            "analyticsSites": { "$ref": "#/$defs/nameList" },
+            "grafanaDashboards": { "$ref": "#/$defs/nameList" }
+          }
+        },
+        "legacy": {
+          "description": "Transitional v1 release-owner material; deleted with the root release after the window.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rootReleaseExclusions": {
+              "type": "object",
+              "propertyNames": { "minLength": 1 },
+              "additionalProperties": { "enum": ["upstream", "inactive"] }
+            },
+            "deploy": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "versionKey", "argoApp"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "versionKey": { "type": "string", "minLength": 1 },
+                  "argoApp": { "type": "string", "minLength": 1 }
+                }
+              }
+            },
+            "bootstrapImages": { "$ref": "#/$defs/nameList" }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "id",
+        "role",
+        "approvalPolicy",
+        "automatic",
+        "recipeRevisionId",
+        "configurationRevisionId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/environmentId" },
+        "role": { "enum": ["durable", "replica", "qualification"] },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "approvalPolicy": { "enum": ["none", "required"] },
+        "automatic": { "type": "boolean" },
+        "promotionSourceEnvironmentId": { "$ref": "#/$defs/environmentId" },
+        "recipeRevisionId": { "$ref": "#/$defs/revisionId" },
+        "configurationRevisionId": { "$ref": "#/$defs/revisionId" },
+        "durableParent": {
+          "description": "The durable environment a replica mirrors (E7).",
+          "$ref": "#/$defs/environmentId"
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "role": { "const": "replica" },
+            "durableParent": { "$ref": "#/$defs/environmentId" }
+          },
+          "required": ["role", "durableParent"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "role": { "enum": ["durable", "qualification"] },
+            "durableParent": false
+          },
+          "required": ["role"]
+        }
+      ]
+    },
+    "recipe": {
+      "type": "object",
+      "required": ["id", "definition"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/revisionId" },
+        "definition": {
+          "description": "Target-typed recipe body; Delivery's RecipeDefinitionSchema types each kind.",
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": {
+              "enum": [
+                "kubernetes-application",
+                "static-site",
+                "tofu",
+                "channel",
+                "operator-run",
+                "compound"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "required": ["id", "content", "forwardOnly"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/revisionId" },
+        "content": {
+          "type": "object",
+          "propertyNames": { "minLength": 1 },
+          "additionalProperties": { "type": "string" }
+        },
+        "forwardOnly": {
+          "description": "Keys whose value may never be lowered by rollback (F3); each holds a dotted numeric version.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["dependent", "prerequisite", "rule"],
+      "additionalProperties": false,
+      "properties": {
+        "dependent": { "$ref": "#/$defs/environmentId" },
+        "prerequisite": { "$ref": "#/$defs/environmentId" },
+        "rule": { "enum": ["any-accepted", "same-or-later-order-key"] }
+      }
+    }
+  }
+}

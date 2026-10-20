@@ -41,3 +41,96 @@ export const CreateDeploymentSchema = z
           "Baseline artifacts must be unique and include the routed candidate",
       });
   });
+
+export const DeploymentKindV2Schema = z.enum([
+  "deploy",
+  "promote",
+  "rollback",
+  "rebind",
+  "retire-host",
+  "channel-publish",
+  "operator-run",
+]);
+export type DeploymentKindV2 = z.infer<typeof DeploymentKindV2Schema>;
+
+const RevisionIdSchema = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\/[1-9]\d*$/u);
+
+/**
+ * A deployment request under the model (4.12). `deploy`, `channel-publish`
+ * and `operator-run` name a set revision; `promote` takes the source's
+ * accepted one; `rollback` names the deployment whose selection it restores
+ * (L1, V2); `rebind` keeps the accepted set revision and names a new recipe
+ * or configuration revision (L2); `retire-host` names the retained host.
+ * `override` asks for the approval a non-eligible `deploy` requires (H4).
+ */
+export const CreateDeploymentV2Schema = z
+  .strictObject({
+    requestId: IdentifierSchema,
+    environmentId: IdentifierSchema,
+    expectedGeneration: z.number().int().nonnegative(),
+    kind: DeploymentKindV2Schema,
+    versionSetRevisionId: IdentifierSchema.optional(),
+    selectionDeploymentId: IdentifierSchema.optional(),
+    recipeRevisionId: RevisionIdSchema.optional(),
+    configurationRevisionId: RevisionIdSchema.optional(),
+    sourceEnvironmentId: IdentifierSchema.optional(),
+    hostId: IdentifierSchema.optional(),
+    override: z.boolean().default(false),
+    message: z.string().max(4000).optional(),
+  })
+  .superRefine((input, context) => {
+    const refuse = (message: string) => {
+      context.addIssue({ code: "custom", message });
+    };
+    const namesSet = input.versionSetRevisionId !== undefined;
+    if (
+      !namesSet &&
+      (input.kind === "deploy" ||
+        input.kind === "channel-publish" ||
+        input.kind === "operator-run")
+    ) {
+      refuse(`${input.kind} names the set revision to realise`);
+    }
+    if (
+      namesSet &&
+      (input.kind === "rollback" ||
+        input.kind === "rebind" ||
+        input.kind === "retire-host")
+    ) {
+      refuse(
+        `${input.kind} takes its set revision from the environment, not the request`,
+      );
+    }
+    if (
+      (input.kind === "rollback") !==
+      (input.selectionDeploymentId !== undefined)
+    ) {
+      refuse(
+        "rollback names the deployment whose selection it restores; no other kind does",
+      );
+    }
+    const rebinds =
+      input.recipeRevisionId !== undefined ||
+      input.configurationRevisionId !== undefined;
+    if ((input.kind === "rebind") !== rebinds) {
+      refuse(
+        "rebind names at least one of a recipe or configuration revision; no other kind does",
+      );
+    }
+    if ((input.kind === "retire-host") !== (input.hostId !== undefined)) {
+      refuse(
+        "retire-host names the retained host to remove; no other kind does",
+      );
+    }
+    if (input.kind !== "promote" && input.sourceEnvironmentId !== undefined) {
+      refuse("Only promote names a source environment");
+    }
+    if (input.override && input.kind !== "deploy") {
+      refuse(
+        "Only a deploy of a non-eligible set revision asks for an override approval (H4)",
+      );
+    }
+  });
+export type CreateDeploymentV2 = z.infer<typeof CreateDeploymentV2Schema>;

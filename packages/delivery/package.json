@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./contract": "./src/shared/contract.ts",
+    "./model-contract": "./src/shared/model/contract.ts",
     "./client": "./src/shared/client.ts",
     "./client-error": "./src/shared/client-error.ts",
     "./artifact-contract": "./src/shared/artifact-contract.ts",

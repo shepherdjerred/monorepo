@@ -73,6 +73,51 @@ failing integration degrades its own panel and still links to the tool.
 types. `@shepherdjerred/delivery/client` exports `createDeliveryClient` with
 injected transport and credentials. Responses are validated before consumption.
 
+### Contracts for the model
+
+`@shepherdjerred/delivery/model-contract` (`src/shared/model/`) carries the
+schemas for the Delivery model specification (`docs/model.md`). They are
+additive and unused by the running system until the cutover: the v1 routes,
+executor and hub keep reading `contract`, and no schema or migration change
+accompanies them.
+
+- Catalog (4.1): `CatalogDocumentSchema` types every recipe body of the
+  ops-model document and checks that a recipe binds only components of its own
+  service and runners the catalog declares (P3, A5) and that each target
+  instance is named by one environment (T6). `catalogRevision` is the
+  `sha256:` fingerprint over `canonicalJson` of the parsed document that a
+  deployment freezes; `serviceLineage` is the hex sha256 of a service's sorted
+  component names (S1, R5). The structure itself is the language-neutral
+  `@shepherdjerred/ops-model/catalog-document.schema.json`, mirrored by
+  `@shepherdjerred/ops-model/catalog-document-shape.ts` and refined by
+  `@shepherdjerred/ops-model/catalog-document.ts`.
+- Recipe (4.7, section 5): `RecipeDefinitionSchema` discriminates on `kind`:
+  `kubernetes-application` (full Application body, `chartComponent`,
+  `artifactParameters`, a `runner` component reference, ordered `steps` with
+  `pointOfNoReturn`, optional `sharedLock`, and an `oracle` of probes, tests
+  and monitor), `static-site`, `tofu` (plan, approve, apply steps under the
+  `platform` lock), `channel`, `operator-run` and `compound`.
+  `recipeFromPipeline` (`model/recipe-adapter.ts`) maps a v1 `PipelineDefinition`
+  onto a recipe: runner digests become the `ci` service's `image:ci-base`
+  reference, `site:` archives become `archive:`, fixed v1 blocks become
+  steps, and Helm `parameters` are refused because they are configuration
+  (P4).
+- Monitor (4.19): `MonitorSchema` (image component, alarm matchers with an
+  `environment` label, evidence thresholds, `automatic` or `hold` policy;
+  queries may use only `$window`, `$version` and `$gitSha`),
+  `MonitorObservationInputSchema`, `MonitorObservationSchema`,
+  `WatchingMonitorSchema`, `MonitorStatusSchema`, and the pure
+  `renderMonitorQuery` and `monitorOutcome` helpers.
+- Selection (4.9, D9): `SelectionSchema` and `RollbackCandidatesSchema`.
+- Deployment and approval (4.12, 4.13): `CreateDeploymentV2Schema` with
+  `deploy`, `promote`, `rollback` (naming `selectionDeploymentId`), `rebind`,
+  `retire-host`, `channel-publish` and `operator-run`, plus the `override`
+  marker; `ApprovalStatusSchema` and `ApprovalV2Schema` with `override`.
+- Recovery (4.15): `RecoveryIntentV2Schema`, one intent shape keyed by
+  deployment and sequence with a `kind` for each v1 recovery path.
+- Evidence: `EvidenceInputSchema` in `contract` accepts the `monitor`,
+  `alarm`, `test`, `drift` and `attestation` kinds beside the v1 kinds.
+
 The API is rooted at `/api/v1`:
 
 | Operation                                                     | Route                                                             |

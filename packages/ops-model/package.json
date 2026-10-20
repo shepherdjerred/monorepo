@@ -17,6 +17,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "^1.4.2",
     "@typescript/native": "npm:typescript@7.0.2",
+    "ajv": "^8.20.0",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
@@ -29,6 +30,7 @@
   "exports": {
     "./services.json": "./services.json",
     "./platform-policy.json": "./platform-policy.json",
+    "./catalog-document.schema.json": "./catalog-document.schema.json",
     "./*": "./src/*"
   }
 }
