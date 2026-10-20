@@ -126,14 +126,16 @@ kubectl get backups.velero.io -n velero -o json \
 
 Approve the exact version-5 manifest only after recovery evidence is available.
 It records every candidate key, size, modification time and ETag. Apply
-revalidates the complete ancestry and protection set, then conditionally HEADs
-and DELETEs each reviewed key using its approved ETag. It never recursively
-deletes a prefix. Before deleting backup data, apply creates an empty, uniquely
-named object under `ops-cleanup-precondition-probes/` and requires the provider
-to reject a mismatched DELETE ETag with `PreconditionFailed`. It removes that
-probe with its correct ETag. Unsupported, ignored, or unauthorized conditional
-deletes stop cleanup. A failed probe may leave this empty diagnostic object;
-it is outside backup data. Keep backup names immutable.
+revalidates the complete ancestry and protection set before each prefix. For
+each reviewed key it issues a HEAD conditioned on the approved ETag, checks the
+ETag and size, then deletes that exact key. It never recursively deletes a
+prefix. R2 ignores If-Match on DELETE, so the conditional HEAD is the check;
+the objects are immutable streams of backups that no longer exist. Before
+deleting backup data, apply creates an empty, uniquely named object under
+`ops-cleanup-precondition-probes/` and requires the provider to reject a
+mismatched HEAD ETag (`412 Precondition Failed`) and accept the correct one,
+then removes the probe. Unsupported, ignored, or unauthorized conditional HEADs
+stop cleanup. Keep backup names immutable.
 
 ## Step 3: Verify post-remediation state
 

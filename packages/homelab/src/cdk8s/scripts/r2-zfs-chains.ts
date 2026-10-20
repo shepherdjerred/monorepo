@@ -1,9 +1,43 @@
+import { z } from "zod";
 import {
   protectZfsBackupChains,
   readZfsStreamHeader,
   type ZfsBackupStream,
 } from "@shepherdjerred/ops-model/zfs-backup-chain.ts";
 import { r2Configuration, type R2Object } from "./r2-prefix-inventory.ts";
+
+// R2 throttles bursts of ranged reads with transient 503s ("Reduce your rate
+// of simultaneous reads on the same object"). Retry only those provider codes;
+// every other error still fails the inspection.
+const TRANSIENT_R2_CODES = new Set([
+  "ServiceUnavailable",
+  "SlowDown",
+  "InternalError",
+]);
+const HEADER_READ_ATTEMPTS = 6;
+
+const TransientR2ErrorSchema = z.object({
+  code: z.string().refine((code) => TRANSIENT_R2_CODES.has(code)),
+});
+
+function isTransientR2Error(error: unknown): boolean {
+  return TransientR2ErrorSchema.safeParse(error).success;
+}
+
+async function readHeaderBytes(
+  client: Bun.S3Client,
+  key: string,
+): Promise<Uint8Array> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return new Uint8Array(await client.file(key).slice(0, 312).arrayBuffer());
+    } catch (error) {
+      if (attempt >= HEADER_READ_ATTEMPTS || !isTransientR2Error(error))
+        throw error;
+      await Bun.sleep(1000 * 2 ** (attempt - 1));
+    }
+  }
+}
 
 export async function inspectR2ZfsChains(
   objects: readonly R2Object[],
@@ -24,9 +58,7 @@ export async function inspectR2ZfsChains(
           const backupName = object.key.split("/backups/")[1]?.split("/")[0];
           if (volume === undefined || backupName === undefined)
             throw new Error(`Unrecognized ZFS stream key: ${object.key}`);
-          const bytes = new Uint8Array(
-            await client.file(object.key).slice(0, 312).arrayBuffer(),
-          );
+          const bytes = await readHeaderBytes(client, object.key);
           return {
             key: object.key,
             volume,
