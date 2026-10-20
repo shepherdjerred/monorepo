@@ -56,28 +56,6 @@ export function createVeleroApp(chart: Chart) {
 
   // Create all backup schedules from configuration
   for (const scheduleConfig of VELERO_SCHEDULES) {
-    // Preserve historical schedule identities while stopping new broken chains.
-    new Schedule(chart, scheduleConfig.id, {
-      metadata: {
-        name: scheduleConfig.legacyName,
-        namespace: "velero",
-        annotations: {
-          "argocd.argoproj.io/sync-options": "Prune=false",
-          ...backupMonitoringAnnotations(scheduleConfig.monitoring),
-        },
-      },
-      spec: {
-        paused: true,
-        schedule: scheduleConfig.cronSchedule,
-        template: {
-          snapshotVolumes: true,
-          labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
-          storageLocation: "default",
-          ttl: scheduleConfig.ttl,
-          volumeSnapshotLocations: ["zfspv-incr"],
-        },
-      },
-    });
     new Schedule(chart, `${scheduleConfig.id}-v2`, {
       metadata: {
         name: scheduleConfig.name,
