@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { DeploymentDetailSchema } from "#shared/contract.ts";
 
 test("quarantined Minecraft release shows independent recovery identity and keeps retry blocked", async ({
   page,
@@ -32,6 +33,46 @@ test("quarantined Minecraft release shows independent recovery identity and keep
         globalThis.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("routine Minecraft restart keeps the ordinary lock notice without preservation-controller instructions", async ({
+  page,
+}) => {
+  // A per-test UI fixture leaves the real shared legacy quarantine unchanged.
+  await page.route("**/api/v1/deployments/*", async (route) => {
+    const response = await route.fetch();
+    const detail = DeploymentDetailSchema.parse(await response.json());
+    if (detail.environment.id === "minecraft/tsmc") {
+      if (
+        detail.pipeline.definition.kind !== "argocd" ||
+        !detail.pipeline.definition.minecraftUpgrade
+      )
+        throw new Error("Expected the specialized Minecraft fixture");
+      detail.pipeline.definition.minecraftUpgrade.releaseMode =
+        "retained-volume-restart";
+      detail.pipeline.id = "minecraft-tsmc/2";
+      detail.deployment.pipelineRevisionId = "minecraft-tsmc/2";
+      detail.environment.pipelineRevisionId = "minecraft-tsmc/2";
+      detail.minecraftRecoveries = [];
+      detail.stages = [];
+    }
+    await route.fulfill({ response, json: detail });
+  });
+  await page.goto("/");
+  await page
+    .locator(".environment-card")
+    .filter({ hasText: "minecraft" })
+    .getByRole("button", { name: "failed", exact: true })
+    .click();
+  const detail = page.getByRole("region", { name: "minecraft/tsmc" });
+  await expect(detail).toContainText("Operator recovery is required");
+  await expect(
+    detail.getByRole("heading", { name: "Original server recovery" }),
+  ).toHaveCount(0);
+  await expect(detail).not.toContainText("toolkit deploy minecraft recover");
+  await expect(
+    detail.getByRole("button", { name: "Retry as a new deployment" }),
+  ).toBeDisabled();
 });
 
 test("select an immutable release, inspect queued execution, and cancel safely", async ({
