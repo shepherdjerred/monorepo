@@ -14,16 +14,11 @@ import { appendFile, cp, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
-import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
-import { ownedConfigDir, packageRoot, stormJar } from "#e2e/harness/paths.ts";
-import {
-  rwfRecordingSalt,
-  rwfTestSettings,
-} from "#e2e/harness/rwf-settings.ts";
-import { startServer } from "#e2e/harness/server.ts";
+import { startLocalStorm } from "./local-storm.ts";
+import { stormJar } from "#e2e/harness/paths.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { status } from "#e2e/harness/rwf-match.ts";
+import { rwfTestSettings } from "#e2e/harness/rwf-settings.ts";
 
 const ArgsSchema = z.object({
   map: z.string().regex(/^[a-z0-9-]+$/u),
@@ -46,47 +41,16 @@ const { values } = parseArgs({
 const args = ArgsSchema.parse(values);
 const output = path.resolve(args.output);
 
-const jar = path.resolve(args.jar);
-if (!(await Bun.file(jar).exists())) {
-  throw new Error(
-    `${jar} is missing; build it first with: bunx turbo run build --filter=@shepherdjerred/the-storm`,
-  );
-}
 await mkdir(output, { recursive: true });
 const dataDir = path.join(output, "data");
 
-const brainToken = crypto.randomUUID();
-const brain = startFakeBrain(brainToken);
-const brainBaseUrl = `http://host.docker.internal:${brain.port.toString()}`;
-const fixtures = await gameplayFixtures(packageRoot, "full");
-const server = await startServer({
-  cacheDir: path.join(packageRoot, ".cache", "e2e", "bots-match"),
+const server = await startLocalStorm({
+  cacheName: "bots-match",
+  stormJar: path.resolve(args.jar),
   dataDir,
-  bootTimeoutMs: 300_000,
-  warmCache: true,
-  stormJar: jar,
-  ...fixtures,
   rwfMap: args.map,
   rwf: { ...rwfTestSettings, countdown: "PT15S", endLinger: "PT5S" },
   resources: { cpus: 4, memoryLimit: "6g", heap: "4G" },
-  ownedConfigDir,
-  env: {
-    FLIPT_URL: brainBaseUrl,
-    FLIPT_ENVIRONMENT: "prod",
-    POSTHOG_API_HOST: brainBaseUrl,
-    POSTHOG_PROJECT_TOKEN: "phc_test",
-    RWF_RECORDING_SALT: rwfRecordingSalt,
-    DISCORD_BOT_TOKEN: "invalid-storm-fixture-token",
-    DISCORD_CHANNEL_ID: "1",
-  },
-  brain: { baseUrl: brainBaseUrl, token: brainToken },
-  sweep: {
-    intervalMinutes: 1,
-    redriveAfterMinutes: 0,
-    redriveBackoffMinutes: 0,
-    slaAfterMinutes: 10_080,
-  },
-  agent: { mode: "shadow", reviewSamplePercent: 100 },
 });
 
 try {
@@ -137,7 +101,6 @@ try {
   console.warn(`match ${matchId ?? "never went live"}`);
 } finally {
   await server.stop();
-  await brain.stop();
 }
 
 const storm = path.join(dataDir, "plugins", "TheStorm");
