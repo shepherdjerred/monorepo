@@ -44,7 +44,11 @@ export function harnessBackupName(now: Date): string {
   return `mc-harness-${stamp}`;
 }
 
-/** The tsmc PVC, snapshotted. */
+/**
+ * The tsmc PVC, snapshotted. The ZFS provider has several snapshot locations
+ * and no default, so the backup names the incremental one, as Delivery's
+ * storm-world backups do.
+ */
 export function harnessBackupManifest(name: string): string {
   return JSON.stringify({
     apiVersion: "velero.io/v1",
@@ -59,6 +63,7 @@ export function harnessBackupManifest(name: string): string {
       labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
       snapshotVolumes: true,
       storageLocation: "default",
+      volumeSnapshotLocations: ["zfspv-incr"],
       ttl: "720h",
     },
   });

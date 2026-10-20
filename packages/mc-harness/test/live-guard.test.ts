@@ -553,6 +553,7 @@ describe("velero backups", () => {
         labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
         snapshotVolumes: true,
         storageLocation: "default",
+        volumeSnapshotLocations: ["zfspv-incr"],
         ttl: "720h",
       },
     });
