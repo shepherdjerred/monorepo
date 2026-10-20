@@ -56,8 +56,9 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     var worldOn = enabled(modules, "world", prepared);
     var townsOn = enabled(modules, "towns", prepared);
     if (worldOn || townsOn) {
-      // world.yml lists these worlds and towns.yml claims in them.
-      survivalWorlds();
+      // world.yml lists these worlds and towns.yml claims in them. The skylands
+      // module generates skylands itself, so it is stood in only while that module is off.
+      survivalWorlds(!switchedOn(modules, "skylands"));
     }
     if (worldOn) {
       merchantStands();
@@ -148,18 +149,26 @@ public final class StormFixtures extends JavaPlugin implements Listener {
 
   /** Whether {@code module} is switched on; a config that omits it is a staging bug. */
   private static boolean enabled(ConfigurationSection modules, String module, List<String> on) {
-    if (!modules.isBoolean(module)) {
-      throw new IllegalStateException("config.yml does not list module " + module);
-    }
-    if (modules.getBoolean(module)) {
+    if (switchedOn(modules, module)) {
       on.add(module);
       return true;
     }
     return false;
   }
 
-  private static void survivalWorlds() {
-    for (var name : List.of("frontier", "map2", "wilds", "peaks")) {
+  private static boolean switchedOn(ConfigurationSection modules, String module) {
+    if (!modules.isBoolean(module)) {
+      throw new IllegalStateException("config.yml does not list module " + module);
+    }
+    return modules.getBoolean(module);
+  }
+
+  private static void survivalWorlds(boolean skylands) {
+    var names = new ArrayList<>(List.of("frontier", "map2", "wilds", "peaks"));
+    if (skylands) {
+      names.add("skylands");
+    }
+    for (var name : names) {
       Objects.requireNonNull(
           new WorldCreator(name).type(WorldType.FLAT).generateStructures(false).createWorld());
     }
