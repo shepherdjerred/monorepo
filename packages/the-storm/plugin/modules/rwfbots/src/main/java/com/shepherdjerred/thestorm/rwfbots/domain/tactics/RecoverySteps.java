@@ -19,6 +19,9 @@ final class RecoverySteps {
   /** How many nodes a stranded bot searches for a bank it can climb out onto. */
   static final int ESCAPE_SEARCH = 512;
 
+  /** How far a node's feet may be from the body's for the body to stand at it, in blocks. */
+  private static final double STANDING = 1.5;
+
   /** The most a bank may rise above the water a swimmer climbs out of, in blocks. */
   static final double BANK_RISE = 1.0;
 
@@ -48,7 +51,7 @@ final class RecoverySteps {
    */
   static Optional<List<Waypoint>> escape(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
-    var start = start(graph, situation.self().pos());
+    var start = standingNode(graph, situation.self().pos());
     var spawns = spawnNodes(context);
     if (start.isEmpty()
         || spawns.isEmpty()
@@ -119,10 +122,32 @@ final class RecoverySteps {
    */
   static boolean strandedOnClimb(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
-    var start = start(graph, situation.self().pos());
+    var start = standingNode(graph, situation.self().pos());
     return start.isPresent()
         && graph.climbable(start.getAsInt())
         && sink(context, start.getAsInt());
+  }
+
+  /**
+   * Whether the bot stands where no spawn can be reached: on a dead-end climb or in a pool or pit
+   * the graph has no way out of. Tactics re-plans its way out every step while it is, rather than
+   * following a plan that would hold it where it stood.
+   */
+  static boolean stranded(Situation situation, TacticsContext context) {
+    var start = standingNode(context.nav().graph(), situation.self().pos());
+    return start.isPresent() && sink(context, start.getAsInt());
+  }
+
+  /**
+   * The route start node when the body stands at it, not merely above or below it: the nearest node
+   * is chosen mostly by horizontal distance, so a bot on an island's rim was matched to the vines
+   * hanging under it and let go of a climb it was not on, standing still for minutes.
+   */
+  private static OptionalInt standingNode(NavGraph graph, Vec3 pos) {
+    var node = start(graph, pos);
+    return node.isPresent() && Math.abs(graph.feet(node.getAsInt()).y() - pos.y()) < STANDING
+        ? node
+        : OptionalInt.empty();
   }
 
   /** The nodes the map's spawns are approached from. */

@@ -369,4 +369,40 @@ final class StuckSpotsTest {
           });
     }
   }
+
+  @Test
+  void aBotLettingGoOfDeadEndVinesIsNotPulledBackUpToWhereItLetGo() {
+    // hemispheres: a bot fell off the rim into a vine shaft and let go, but its RECOVER plan held
+    // the spot it let go at, so every time it slid down the plan climbed it back: 160 s on a vine.
+    var nav = nav("hemispheres");
+    var graph = nav.graph();
+    var letGoAt = new Vec3(2128.5, 38.3, 3253.5);
+    var slid = new Vec3(2128.5, 35.5, 3253.5);
+    var node = graph.nearestNode(slid).orElseThrow();
+    assertThat(graph.climbable(node)).as("on the vines").isTrue();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    assertThat(graph.reachable(node, spawn)).as("the vines lead nowhere").isFalse();
+    var state =
+        new TacticsState(
+            Optional.of(
+                Plan.of(
+                    Option.RECOVER,
+                    95,
+                    new PlanStep.Hold(letGoAt, letGoAt.plus(5, 0, 0), Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    var self = combatant(1, RED, slid).withMotion(false, false);
+    var thought =
+        Tactics.think(
+            state,
+            situation(nav, self, Optional.empty(), 100),
+            context(nav),
+            new SplittableRandom(1));
+
+    assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.LET_GO);
+    assertThat(thought.decision().waypoints()).isEmpty();
+  }
 }
