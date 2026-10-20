@@ -2,8 +2,6 @@
 package plugin
 
 import (
-	"time"
-
 	cloud "github.com/openebs/velero-plugin/pkg/clouduploader"
 	"github.com/openebs/velero-plugin/pkg/velero"
 	"github.com/openebs/velero-plugin/pkg/zfs/utils"
@@ -112,7 +110,7 @@ func (p *Plugin) deleteSnapshot(snapshotID string) error {
 	if err != nil {
 		return err
 	}
-	sweep, err := p.cl.SweepZFSFamily(pvname, schdname, snapname, retained, time.Now())
+	sweep, err := p.cl.SweepZFSFamily(pvname, schdname, snapname, retained)
 	if err != nil {
 		return errors.Wrapf(err, "zfs: sweeping schedule %q volume %s", schdname, pvname)
 	}

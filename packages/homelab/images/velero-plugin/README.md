@@ -52,8 +52,10 @@ A backup is retained while any of these name it:
 - a ZFSBackup `snapName` (other than the deleted backup) or any `prevSnapName`.
 
 The deleted backup is also retained while another backup of its schedule has
-not settled, because that backup may already have chosen it as a parent. Every
-stream modified in the last 24 hours is retained. Retained streams protect
+not settled, because that backup may already have chosen it as a parent.
+Retention comes only from these records, never from object age: an upload in
+progress has an unsettled Velero Backup and a ZFSBackup naming it, so it stays
+retained without a time-based hold. Retained streams protect
 their complete GUID ancestry, read from stream headers, so streams without a
 `.chain.json` are covered.
 

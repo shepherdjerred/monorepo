@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"gocloud.dev/blob/memblob"
@@ -96,8 +95,7 @@ func (f *gcFixture) sweep(volume, schedule, current string, retained ...string) 
 	for _, name := range retained {
 		set[name] = true
 	}
-	// Every fixture object is older than the fence.
-	return f.c.SweepZFSFamily(volume, schedule, current, set, time.Now().Add(ZFSSweepFence+time.Hour))
+	return f.c.SweepZFSFamily(volume, schedule, current, set)
 }
 
 func names(schedule string, days ...int) []string {
@@ -179,38 +177,25 @@ func TestSweepProtectsInFlightParent(t *testing.T) {
 	}
 }
 
-func TestSweepFenceKeepsRecentStreamsAndAncestry(t *testing.T) {
+func TestSweepRetentionRecordsAloneProtectNewStreams(t *testing.T) {
 	f := newGCFixture(t)
 	all := names(daily, 1, 2, 3)
 	f.write(pv, daily, all[0], 1, 0, true)
 	f.write(pv, daily, all[1], 2, 0, true)
-	time.Sleep(20 * time.Millisecond)
-	cut := time.Now()
-	time.Sleep(20 * time.Millisecond)
-	f.write(pv, daily, all[2], 3, 1, true) // recent, unretained, child of all[0]
-	got, err := f.c.SweepZFSFamily(pv, daily, all[2], map[string]bool{}, cut.Add(ZFSSweepFence))
+	// Just uploaded and still recorded (its Backup is in progress): its whole
+	// ancestry stays, with no age-based hold anywhere in the decision.
+	f.write(pv, daily, all[2], 3, 1, true)
+	got, err := f.sweep(pv, daily, all[1], all[2])
 	if err != nil || !reflect.DeepEqual(got.Deleted, all[1:2]) {
 		t.Fatalf("sweep=%+v err=%v", got, err)
 	}
 	if left := f.streamsOf(pv, daily, all...); !reflect.DeepEqual(left, []string{all[0], all[2]}) {
 		t.Fatalf("remaining=%v", left)
 	}
-}
-
-func TestPlanFenceBoundary(t *testing.T) {
-	now := time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)
-	streams := []FamilyStream{
-		{ZFSStream{Backup: backupName(daily, 1), ToGUID: "1", FromGUID: "0"}, now.Add(-ZFSSweepFence)},
-		{ZFSStream{Backup: backupName(daily, 2), ToGUID: "2", FromGUID: "0"}, now.Add(-ZFSSweepFence + time.Second)},
-		{ZFSStream{Backup: backupName(daily, 3), ToGUID: "3", FromGUID: "0"}, now.Add(time.Hour)}, // clock skew
-	}
-	_, deletions, err := PlanZFSSweep(streams, daily, "", nil, now)
-	if err != nil || !reflect.DeepEqual(deletions, names(daily, 1)) {
-		t.Fatalf("deletions=%v err=%v", deletions, err)
-	}
-	streams[0].ModTime = time.Time{}
-	if _, _, err := PlanZFSSweep(streams, daily, "", nil, now); err == nil {
-		t.Fatal("accepted a stream without a modification time")
+	// Once nothing records it, a brand-new stream is reclaimable immediately.
+	got, err = f.sweep(pv, daily, all[2])
+	if err != nil || !reflect.DeepEqual(got.Deleted, []string{all[0], all[2]}) {
+		t.Fatalf("unrecorded sweep=%+v err=%v", got, err)
 	}
 }
 
@@ -347,12 +332,11 @@ func TestSweepUnscheduledDeletesOnlyCurrent(t *testing.T) {
 }
 
 func TestPlanUnscheduledOwnsOnlyCurrent(t *testing.T) {
-	old := time.Now().Add(-2 * ZFSSweepFence)
-	streams := []FamilyStream{
-		{ZFSStream{Backup: "manual-a", ToGUID: "1", FromGUID: "0"}, old},
-		{ZFSStream{Backup: "manual-b", ToGUID: "2", FromGUID: "0"}, old},
+	streams := []ZFSStream{
+		{Backup: "manual-a", ToGUID: "1", FromGUID: "0"},
+		{Backup: "manual-b", ToGUID: "2", FromGUID: "0"},
 	}
-	_, deletions, err := PlanZFSSweep(streams, "", "manual-a", nil, time.Now())
+	_, deletions, err := PlanZFSSweep(streams, "", "manual-a", nil)
 	if err != nil || !reflect.DeepEqual(deletions, []string{"manual-a"}) {
 		t.Fatalf("deletions=%v err=%v", deletions, err)
 	}

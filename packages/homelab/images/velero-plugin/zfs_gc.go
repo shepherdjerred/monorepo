@@ -10,19 +10,8 @@ import (
 	"gocloud.dev/gcerrors"
 )
 
-// ZFSSweepFence retains recent streams whatever the retention records say, so
-// an upload whose Velero and ZFSBackup records are still settling keeps its
-// ancestry.
-const ZFSSweepFence = 24 * time.Hour
-
 // scheduleTimestamp is the suffix Velero appends to scheduled backup names.
 const scheduleTimestamp = "20060102150405"
-
-// FamilyStream is a completed stream in one schedule+volume family.
-type FamilyStream struct {
-	ZFSStream
-	ModTime time.Time
-}
 
 // ZFSSweep reports what one family sweep kept and removed.
 type ZFSSweep struct {
@@ -44,25 +33,20 @@ func ScheduledBackupName(schedule, name string) bool {
 
 // PlanZFSSweep selects the unprotected streams of one family.
 //
-// Retained backups and every stream younger than the fence are roots. A root
+// Retained backups are roots. Retention comes from live evidence, not object
+// age: an upload in progress has a Velero Backup that is not being deleted and
+// a ZFSBackup naming it, so it is retained until its own deletion. A root
 // protects its whole GUID ancestry, and a root whose ancestry cannot be
 // resolved fails the plan rather than exposing its remaining ancestors.
 // Only streams whose names positively identify them as this schedule's
 // backups (or, without a schedule, the current backup) are ever deleted.
-func PlanZFSSweep(streams []FamilyStream, schedule, current string, retained map[string]bool, now time.Time) (map[string]bool, []string, error) {
-	plain := make([]ZFSStream, 0, len(streams))
-	for _, stream := range streams {
-		if stream.ModTime.IsZero() {
-			return nil, nil, fmt.Errorf("ZFS stream %s has no modification time", stream.Key)
-		}
-		plain = append(plain, stream.ZFSStream)
-	}
+func PlanZFSSweep(streams []ZFSStream, schedule, current string, retained map[string]bool) (map[string]bool, []string, error) {
 	protected := map[string]bool{}
 	for _, stream := range streams {
-		if !retained[stream.Backup] && now.Sub(stream.ModTime) >= ZFSSweepFence {
+		if !retained[stream.Backup] {
 			continue
 		}
-		chain, err := ResolveZFSChain(plain, stream.Backup)
+		chain, err := ResolveZFSChain(streams, stream.Backup)
 		if err != nil {
 			return nil, nil, fmt.Errorf("protecting %s: %w", stream.Backup, err)
 		}
@@ -88,27 +72,23 @@ func PlanZFSSweep(streams []FamilyStream, schedule, current string, retained map
 }
 
 // readFamilyStream returns the completed stream at the exact family key.
-func (c *Conn) readFamilyStream(volume, schedule, backup string) (FamilyStream, bool, error) {
+func (c *Conn) readFamilyStream(volume, schedule, backup string) (ZFSStream, bool, error) {
 	key := c.GenerateRemoteFileWithSchd(volume, schedule, backup)
 	exists, err := c.bucket.Exists(c.ctx, key)
 	if err != nil || !exists {
-		return FamilyStream{}, false, err
+		return ZFSStream{}, false, err
 	}
 	stream, err := c.ReadZFSStream(volume, schedule, backup)
 	if err != nil {
-		return FamilyStream{}, false, err
+		return ZFSStream{}, false, err
 	}
-	attrs, err := c.bucket.Attributes(c.ctx, key)
-	if err != nil {
-		return FamilyStream{}, false, err
-	}
-	return FamilyStream{stream, attrs.ModTime}, true, nil
+	return stream, true, nil
 }
 
 // ZFSFamily lists the completed streams of one schedule+volume family: the
 // same universe ZFSChain resolves restores from. Every candidate is confirmed
 // at its exact key, so a listing match on a shared prefix is never a member.
-func (c *Conn) ZFSFamily(volume, schedule, current string, retained map[string]bool) ([]FamilyStream, error) {
+func (c *Conn) ZFSFamily(volume, schedule, current string, retained map[string]bool) ([]ZFSStream, error) {
 	names := []string{current}
 	if schedule != "" {
 		var err error
@@ -118,7 +98,7 @@ func (c *Conn) ZFSFamily(volume, schedule, current string, retained map[string]b
 		}
 	}
 	listed := map[string]bool{}
-	streams := []FamilyStream{}
+	streams := []ZFSStream{}
 	for _, name := range names {
 		if listed[name] {
 			continue
@@ -150,13 +130,13 @@ func (c *Conn) ZFSFamily(volume, schedule, current string, retained map[string]b
 // SweepZFSFamily deletes every unprotected stream of one schedule+volume
 // family with its .zfsvol and .chain.json siblings. It converges whatever
 // order Velero expires backups in, and a repeated run is a no-op.
-func (c *Conn) SweepZFSFamily(volume, schedule, current string, retained map[string]bool, now time.Time) (ZFSSweep, error) {
+func (c *Conn) SweepZFSFamily(volume, schedule, current string, retained map[string]bool) (ZFSSweep, error) {
 	sweep := ZFSSweep{}
 	streams, err := c.ZFSFamily(volume, schedule, current, retained)
 	if err != nil {
 		return sweep, err
 	}
-	protected, deletions, err := PlanZFSSweep(streams, schedule, current, retained, now)
+	protected, deletions, err := PlanZFSSweep(streams, schedule, current, retained)
 	if err != nil {
 		return sweep, err
 	}
