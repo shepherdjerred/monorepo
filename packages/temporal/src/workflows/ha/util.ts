@@ -22,19 +22,28 @@ import type { HaSchema } from "#generated/ha-schema.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // Home Assistant is unreachable for most of a minute while its pod restarts.
-// Back off 2s, 4s, 8s, 16s and 20s between six attempts (50s of waiting) so a
-// routine restart delays an automation instead of failing it.
-export const HA_ACTIVITY_RETRY = {
+// Reads back off 2s, 4s, 8s, 16s and 20s between six attempts (50s of waiting)
+// so a routine restart delays an automation instead of failing it. Only
+// idempotent reads get this budget: a service call or notification whose
+// response is lost may already have been applied, so writes keep the short
+// default and are never retried through a whole restart.
+export const HA_READ_RETRY = {
   initialInterval: "2 seconds",
   backoffCoefficient: 2,
   maximumInterval: "20 seconds",
   maximumAttempts: 6,
 } as const;
 
+const readActivities = proxyActivities<HaActivities>({
+  taskQueue: TASK_QUEUES.HOME,
+  startToCloseTimeout: "30 seconds",
+  retry: HA_READ_RETRY,
+});
+
 const activities = proxyActivities<HaActivities>({
   taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "30 seconds",
-  retry: HA_ACTIVITY_RETRY,
+  retry: { maximumAttempts: 3 },
 });
 
 // Cleanup owns the last chance to turn off a device after the sleep timer. Use
@@ -98,7 +107,7 @@ export async function setOutcome(
 export async function getEntityState<E extends EntityId<HaSchema>>(
   entityId: E,
 ): Promise<EntityState & { entity_id: E }> {
-  const state = await activities.getEntityState(entityId);
+  const state = await readActivities.getEntityState(entityId);
   // HA returns the entity we asked for by ID, so entity_id on the response is
   // guaranteed to equal the input. Re-stamping it here narrows the type to
   // the literal without a cast.
@@ -113,7 +122,7 @@ export async function getEntityState<E extends EntityId<HaSchema>>(
 export async function getEntityStateUnchecked(
   entityId: string,
 ): Promise<EntityState> {
-  return activities.getEntityState(entityId);
+  return readActivities.getEntityState(entityId);
 }
 
 export async function callService<
@@ -161,7 +170,7 @@ export async function sendNotification(
 export async function getEntitiesInDomain(
   domain: Domain<HaSchema>,
 ): Promise<EntityState[]> {
-  return activities.getEntitiesInDomain(domain);
+  return readActivities.getEntitiesInDomain(domain);
 }
 
 /**
@@ -259,7 +268,7 @@ export async function verifyState(
 ): Promise<boolean> {
   await sleep(options.delaySeconds * 1000);
   for (let attempt = 0; attempt <= options.retries; attempt += 1) {
-    const state = await activities.getEntityState(entityId);
+    const state = await readActivities.getEntityState(entityId);
     if (matches(state.state)) {
       return true;
     }
@@ -313,7 +322,7 @@ export async function verifyVacuumStartHistory(
       if (requestTime === undefined)
         throw new Error(`Missing vacuum request time for ${vacuum}`);
       for (let attempt = 0; attempt <= options.retries; attempt += 1) {
-        const evidence = await activities.getVacuumStartEvidence(
+        const evidence = await readActivities.getVacuumStartEvidence(
           vacuum,
           requestTime,
         );

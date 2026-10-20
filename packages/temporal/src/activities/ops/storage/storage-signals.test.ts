@@ -72,6 +72,17 @@ describe("a restore superseded by a later accepted restore", () => {
       restores: [failed, { ...successor, backupName: "other-backup" }],
     },
     {
+      name: "neither restore records a backup name",
+      restores: [
+        { ...failed, backupName: undefined },
+        { ...successor, backupName: undefined },
+      ],
+    },
+    {
+      name: "the named restore records no backup name",
+      restores: [failed, { ...successor, backupName: undefined }],
+    },
+    {
       name: "the named restore is not later",
       restores: [failed, { ...successor, createdAt: "2026-10-08T00:00:00Z" }],
     },

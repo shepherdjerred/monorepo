@@ -22,6 +22,16 @@ function supersessionRejection(
   if (successor.phase !== "Completed") {
     return `the named Restore ${name} is ${successor.phase ?? "without a phase"}, not Completed`;
   }
+  // Schedule-based Restores may omit backupName; two absent names are not
+  // evidence that both restored the same Backup.
+  if (
+    restore.backupName === undefined ||
+    restore.backupName === "" ||
+    successor.backupName === undefined ||
+    successor.backupName === ""
+  ) {
+    return `this Restore or the named Restore ${name} records no Backup name, so the same Backup cannot be confirmed`;
+  }
   if (successor.backupName !== restore.backupName) {
     return `the named Restore ${name} restored a different Backup`;
   }
