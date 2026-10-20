@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createFanout, parseNotification } from "./feed.ts";
+import { createChangeListener } from "./listener.ts";
 
 describe("change feed", () => {
   it("parses audit notifications into domain events", () => {
@@ -38,5 +39,15 @@ describe("change feed", () => {
     fanout.publish({ type: "resync" });
     expect(received).toEqual(["resync"]);
     expect(fanout.size()).toBe(0);
+  });
+
+  it("keeps retrying an unreachable database without failing startup", async () => {
+    const feed = createChangeListener(
+      "postgresql://smoke:smoke@127.0.0.1:1/delivery",
+    );
+    const started = feed.start();
+    await Bun.sleep(100);
+    await feed.stop();
+    await expect(started).resolves.toBeUndefined();
   });
 });
