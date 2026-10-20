@@ -30,7 +30,7 @@ await initFeatureFlags({
 const database = createDatabase(bootstrap.DATABASE_URL);
 const delivery = new Delivery(database, bootstrap.WOODPECKER_REPO_ID);
 const changeFeed = createChangeListener(bootstrap.DATABASE_URL);
-await changeFeed.start();
+void changeFeed.start();
 const enrichment = createEnrichment({
   database,
   enabledSources: () =>

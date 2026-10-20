@@ -52,22 +52,31 @@ export function createChangeListener(connectionString: string) {
     client = next;
   }
 
-  async function reconnect(previous: pg.Client) {
-    if (client !== previous || isStopped()) return;
-    client = null;
-    for (let attempt = 1; !isStopped(); attempt += 1) {
-      await Bun.sleep(Math.min(MAX_BACKOFF_MS, 250 * 2 ** attempt));
+  /**
+   * Retry with backoff until listening or stopped. A database outage must not
+   * stop the server from booting; browsers poll until the feed is live.
+   */
+  async function establish(attempt: number) {
+    for (let current = attempt; !isStopped(); current += 1) {
+      if (current > 0)
+        await Bun.sleep(Math.min(MAX_BACKOFF_MS, 250 * 2 ** current));
       if (isStopped()) return;
       const next = listen();
       try {
         await connect(next);
-        fanout.publish({ type: "resync" });
+        if (current > 0) fanout.publish({ type: "resync" });
         return;
       } catch (error) {
-        warn("delivery_change_feed_reconnect_failed", error);
+        warn("delivery_change_feed_connect_failed", error);
         await next.end().catch(() => null);
       }
     }
+  }
+
+  async function reconnect(previous: pg.Client) {
+    if (client !== previous || isStopped()) return;
+    client = null;
+    await establish(1);
   }
 
   const feed: ChangeFeed & {
@@ -75,7 +84,8 @@ export function createChangeListener(connectionString: string) {
     stop: () => Promise<void>;
   } = {
     subscribe: (listener) => fanout.subscribe(listener),
-    start: () => connect(listen()),
+    /** Resolves once listening, or when stopped first; it never rejects. */
+    start: () => establish(0),
     async stop() {
       stopped = true;
       const current = client;
