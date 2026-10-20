@@ -7,9 +7,9 @@ import { DeploymentSchema } from "#shared/contract.ts";
 import { api, expectNoHorizontalOverflow } from "./helpers.ts";
 
 const ROUTES = [
-  ["/", "Overview"],
-  ["/services/arcade", "Arcade"],
-  ["/services/arcade/executions", "Arcade"],
+  ["/pipelines", "Pipelines"],
+  ["/pipelines/arcade", "Arcade"],
+  ["/pipelines/arcade/executions", "Arcade"],
   ["/environments/arcade/prod", "arcade/prod"],
   ["/environments/gitops/tofu:openai", "gitops/tofu:openai"],
   ["/deployments", "Deployments"],
@@ -44,28 +44,50 @@ test("every route deep-links to its own page and title", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("the pipelines list is home and filters through the URL", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/pipelines$/u);
+  const table = page.getByRole("table");
+  await expect(
+    table.getByRole("row").filter({
+      has: page.getByRole("link", { name: "Arcade", exact: true }),
+    }),
+  ).toContainText("Execution #1");
+  const filters = page.getByRole("search", { name: "Filter pipelines" });
+  await filters.getByLabel("Name").fill("arcade");
+  await filters.getByRole("button", { name: "Filter" }).click();
+  await expect(page).toHaveURL(/\/pipelines\?q=arcade$/u);
+  const rows = table.locator("tbody tr");
+  await expect(rows).toHaveCount(1);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/pipelines$/u);
+  await expect(rows).not.toHaveCount(1);
+});
+
 test("links keep history: back and forward restore each page", async ({
   page,
 }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Arcade", exact: true }).click();
-  await expect(page).toHaveURL(/\/services\/arcade$/u);
+  await expect(page).toHaveURL(/\/pipelines\/arcade$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
   await page
-    .getByRole("navigation", { name: "Service views" })
+    .getByRole("navigation", { name: "Pipeline views" })
     .getByRole("link", { name: "Executions" })
     .click();
-  await expect(page).toHaveURL(/\/services\/arcade\/executions$/u);
+  await expect(page).toHaveURL(/\/pipelines\/arcade\/executions$/u);
   await expect(
     page.getByRole("heading", { level: 2, name: "Executions" }),
   ).toBeVisible();
   await page.goBack();
-  await expect(page).toHaveURL(/\/services\/arcade$/u);
+  await expect(page).toHaveURL(/\/pipelines\/arcade$/u);
   await expect(
     page.getByRole("region", { name: "Arcade pipeline" }),
   ).toBeVisible();
   await page.goBack();
-  await expect(page).toHaveTitle("Overview · Delivery");
+  await expect(page).toHaveTitle("Pipelines · Delivery");
   await page.goForward();
   await expect(page).toHaveTitle("Arcade · Delivery");
 });
@@ -77,13 +99,13 @@ test("links are real anchors that open in a new tab", async ({
   test.skip(info.project.name === "mobile", "Modifier clicks need a keyboard");
   await page.goto("/");
   const link = page.getByRole("link", { name: "Arcade", exact: true });
-  await expect(link).toHaveAttribute("href", "/services/arcade");
+  await expect(link).toHaveAttribute("href", "/pipelines/arcade");
   const opened = context.waitForEvent("page");
   await link.click({ modifiers: ["ControlOrMeta"] });
   const tab = await opened;
   await tab.waitForLoadState();
-  expect(new URL(tab.url()).pathname).toBe("/services/arcade");
-  await expect(page).toHaveURL(/\/$/u);
+  expect(new URL(tab.url()).pathname).toBe("/pipelines/arcade");
+  await expect(page).toHaveURL(/\/pipelines$/u);
   await tab.close();
 });
 

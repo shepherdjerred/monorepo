@@ -12,6 +12,7 @@ import {
   index,
 } from "#infrastructure/delivery-data.ts";
 import { toolLinks } from "./links.ts";
+import { latestExecution } from "./executions.ts";
 import { promotionOrder } from "./topology.ts";
 import { activityEntry, buildView, serviceSummary } from "./views.ts";
 
@@ -121,12 +122,21 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
   const serviceIds = [
     ...new Set([...environments.map((env) => env.serviceId), ...builds.keys()]),
   ].filter((id) => index.byId(id)?.id === id);
+  const executions = new Map(
+    await Promise.all(
+      serviceIds.map(
+        async (serviceId) =>
+          [serviceId, await latestExecution(database, serviceId)] as const,
+      ),
+    ),
+  );
   const services = serviceIds
     .map((serviceId): HubService => {
       const build = builds.get(serviceId);
       return {
         ...serviceSummary(serviceId),
         latestBuild: build === undefined ? null : buildView(build),
+        latestExecution: executions.get(serviceId) ?? null,
         environments: promotionOrder(
           environments.filter((env) => env.serviceId === serviceId),
         ).map((env) => {

@@ -14,7 +14,7 @@ import { DeliveryClientError } from "#shared/client.ts";
 export type RouterContext = { queryClient: QueryClient; feed: ChangeFeed };
 
 const NAVIGATION = [
-  { to: "/", label: "Overview", exact: true },
+  { to: "/pipelines", label: "Pipelines", exact: false },
   { to: "/deployments", label: "Deployments", exact: false },
   { to: "/approvals", label: "Approvals", exact: false },
   { to: "/artifacts", label: "Artifacts", exact: false },
@@ -85,7 +85,7 @@ function RootLayout() {
         Skip to content
       </a>
       <header className="masthead">
-        <Link to="/" className="brand">
+        <Link to="/pipelines" className="brand">
           <span className="brand-mark" aria-hidden="true">
             ⟶
           </span>
@@ -110,7 +110,7 @@ export function NotFound() {
       <PageHeader title="Not found" />
       <p>
         Nothing lives at this address.{" "}
-        <Link to="/">Return to the overview</Link>.
+        <Link to="/pipelines">Return to pipelines</Link>.
       </p>
     </>
   );

@@ -51,7 +51,7 @@ function EnvironmentPage() {
       <PageHeader
         eyebrow={
           <Link
-            to="/services/$serviceId"
+            to="/pipelines/$serviceId"
             params={{ serviceId: detail.service.id }}
           >
             {detail.service.title}

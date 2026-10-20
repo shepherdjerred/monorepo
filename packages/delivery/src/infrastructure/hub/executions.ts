@@ -108,6 +108,45 @@ async function summarize(
   };
 }
 
+function newestFirst(builds: BuildRow[], composed: VersionRow[]): Root[] {
+  return [
+    ...builds.map((row) => ({
+      kind: "build" as const,
+      id: row.id,
+      createdAt: row.createdAt,
+      build: row,
+    })),
+    ...composed.map((row) => ({
+      kind: "version" as const,
+      id: row.id,
+      createdAt: row.createdAt,
+      version: row,
+    })),
+  ].toSorted(
+    (left, right) =>
+      right.createdAt.getTime() - left.createdAt.getTime() ||
+      right.id.localeCompare(left.id),
+  );
+}
+
+const NEWEST = [{ createdAt: "desc" as const }, { id: "desc" as const }];
+
+/** The newest build or hand-composed version set of one service. */
+export async function latestExecution(database: Database, serviceId: string) {
+  const [build, composed] = await Promise.all([
+    database.build.findFirst({ where: { serviceId }, orderBy: NEWEST }),
+    database.versionSet.findFirst({
+      where: { serviceId, qualifiedBuildId: null },
+      orderBy: NEWEST,
+    }),
+  ]);
+  const [root] = newestFirst(
+    build === null ? [] : [build],
+    composed === null ? [] : [composed],
+  );
+  return root === undefined ? null : summarize(database, root);
+}
+
 /** Builds and hand-composed version sets of one service, newest first. */
 export async function serviceExecutions(
   database: Database,
@@ -132,24 +171,7 @@ export async function serviceExecutions(
       take: PAGE_SIZE + 1,
     }),
   ]);
-  const roots: Root[] = [
-    ...builds.map((row) => ({
-      kind: "build" as const,
-      id: row.id,
-      createdAt: row.createdAt,
-      build: row,
-    })),
-    ...composed.map((row) => ({
-      kind: "version" as const,
-      id: row.id,
-      createdAt: row.createdAt,
-      version: row,
-    })),
-  ].toSorted(
-    (left, right) =>
-      right.createdAt.getTime() - left.createdAt.getTime() ||
-      right.id.localeCompare(left.id),
-  );
+  const roots = newestFirst(builds, composed);
   const selected = page(roots, PAGE_SIZE, (root) => root.createdAt);
   return {
     items: await Promise.all(

@@ -153,6 +153,7 @@ export const HubEnvironmentSchema = z.object({
 
 export const HubServiceSchema = ServiceSummarySchema.extend({
   latestBuild: BuildViewSchema.nullable(),
+  latestExecution: ExecutionSummarySchema.nullable(),
   environments: z.array(HubEnvironmentSchema),
 });
 export type HubService = z.infer<typeof HubServiceSchema>;

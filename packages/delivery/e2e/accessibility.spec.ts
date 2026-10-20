@@ -5,9 +5,9 @@ import { DeploymentSchema } from "#shared/contract.ts";
 import { api } from "./helpers.ts";
 
 const PAGES = [
-  "/",
-  "/services/scout-for-lol",
-  "/services/arcade/executions",
+  "/pipelines",
+  "/pipelines/scout-for-lol",
+  "/pipelines/arcade/executions",
   "/environments/scout-for-lol/prod",
   "/environments/gitops/root",
   "/deployments",
@@ -49,7 +49,7 @@ for (const scheme of ["light", "dark"] as const) {
 
 test("reduced motion stops animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/services/arcade");
+  await page.goto("/pipelines/arcade");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   expect(
     await page.evaluate(() => globalThis.document.getAnimations().length),

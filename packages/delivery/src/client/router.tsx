@@ -2,7 +2,7 @@ import { createRouter } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ChangeFeed } from "./change-feed.ts";
 import { Route as rootRoute } from "./routes/root.tsx";
-import { Route as hubRoute } from "./routes/hub.tsx";
+import { pipelineListRoutes } from "./routes/pipelines.tsx";
 import { serviceTree } from "./routes/service.tsx";
 import { Route as buildRoute } from "./routes/build.tsx";
 import { Route as versionRoute } from "./routes/version.tsx";
@@ -11,7 +11,7 @@ import { Route as environmentRoute } from "./routes/environment.tsx";
 import { listRoutes } from "./routes/lists.tsx";
 
 const routeTree = rootRoute.addChildren([
-  hubRoute,
+  ...pipelineListRoutes,
   serviceTree,
   buildRoute,
   versionRoute,

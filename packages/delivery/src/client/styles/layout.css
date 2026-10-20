@@ -214,22 +214,31 @@ main > * {
   h1 {
     font-size: 1.4rem;
   }
-  .build-catalog thead {
+  .build-catalog thead,
+  .pipeline-table thead {
     display: none;
   }
-  .build-catalog tr {
+  .build-catalog tr,
+  .pipeline-table tr {
     display: block;
     padding: var(--space-2) 0;
     border-bottom: 1px solid var(--border);
   }
-  .build-catalog td {
+  .build-catalog td,
+  .pipeline-table td {
     display: grid;
     grid-template-columns: 96px minmax(0, 1fr);
     gap: var(--space-2);
     border: 0;
     padding: var(--space-1) 0;
   }
-  .build-catalog td::before {
+  .pipeline-table th {
+    display: block;
+    border: 0;
+    padding: var(--space-1) 0;
+  }
+  .build-catalog td::before,
+  .pipeline-table td::before {
     content: attr(data-label);
     font-size: 0.75rem;
     color: var(--text-muted);

@@ -42,9 +42,9 @@ TanStack Router definitions in `src/client/router.tsx`:
 
 | URL                            | Page                                                        |
 | ------------------------------ | ----------------------------------------------------------- |
-| `/`                            | Services, attention items, recent activity, tool links      |
-| `/services/:id`                | Pipeline: source, build, test, version set, environments    |
-| `/services/:id/executions`     | Every build or composed version set and where it deployed   |
+| `/pipelines` (home)            | Every pipeline's newest execution, attention items, tools   |
+| `/pipelines/:id`               | Pipeline: source, build, test, version set, environments    |
+| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed   |
 | `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts    |
 | `/deployments/:id`             | Stages, evidence, approval, cancellation, retry, recoveries |
 | `/environments/:id`            | Release state, live ArgoCD runtime, release form, workers   |

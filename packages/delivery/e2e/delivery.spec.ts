@@ -68,8 +68,8 @@ test("select an immutable release, inspect queued execution, and cancel safely",
 }) => {
   await page.goto("/");
   await page
-    .getByRole("listitem")
-    .filter({ has: page.getByRole("heading", { name: "Arcade" }) })
+    .getByRole("row")
+    .filter({ has: page.getByRole("link", { name: "Arcade", exact: true }) })
     .getByRole("link", { name: /prod/u })
     .click();
   await expect(page).toHaveURL(/\/environments\/arcade\/prod$/u);

@@ -16,20 +16,20 @@ function ServiceLayout() {
   return (
     <>
       <PageHeader
-        eyebrow={<Link to="/">Overview</Link>}
+        eyebrow={<Link to="/pipelines">Pipelines</Link>}
         title={data.service.title}
         description={`Pipeline for ${data.service.id}: source to runtime.`}
         actions={<ToolLinks links={data.service.links} />}
       />
-      <nav aria-label="Service views" className="tabs">
+      <nav aria-label="Pipeline views" className="tabs">
         <Link
-          to="/services/$serviceId"
+          to="/pipelines/$serviceId"
           params={{ serviceId }}
           activeOptions={{ exact: true }}
         >
           Pipeline
         </Link>
-        <Link to="/services/$serviceId/executions" params={{ serviceId }}>
+        <Link to="/pipelines/$serviceId/executions" params={{ serviceId }}>
           Executions
         </Link>
       </nav>
@@ -40,7 +40,7 @@ function ServiceLayout() {
 
 const serviceRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/services/$serviceId",
+  path: "/pipelines/$serviceId",
   loader: ({ context, params }) =>
     context.queryClient.query({
       ...queries.pipeline(params.serviceId),
@@ -160,7 +160,7 @@ function ExecutionsPage() {
       <nav aria-label="Pages" className="pager">
         {cursor !== undefined && (
           <Link
-            to="/services/$serviceId/executions"
+            to="/pipelines/$serviceId/executions"
             params={{ serviceId }}
             search={{}}
           >
@@ -169,7 +169,7 @@ function ExecutionsPage() {
         )}
         {data.nextCursor !== null && (
           <Link
-            to="/services/$serviceId/executions"
+            to="/pipelines/$serviceId/executions"
             params={{ serviceId }}
             search={{ cursor: data.nextCursor }}
           >

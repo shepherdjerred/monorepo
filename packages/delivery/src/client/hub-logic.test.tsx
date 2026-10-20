@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { PipelineStage } from "#shared/hub/hub-contract.ts";
+import type {
+  ExecutionSummary,
+  HubService,
+  PipelineStage,
+} from "#shared/hub/hub-contract.ts";
 import type { CiRunIntegration } from "#shared/hub/integration-contract.ts";
 import { keysForChange } from "./change-keys.ts";
 import {
@@ -14,6 +18,7 @@ import {
   ActivitySearchSchema,
   DeploymentSearchSchema,
 } from "./routes/search-schemas.ts";
+import { filterPipelines, lastExecuted } from "./routes/pipeline-list-model.ts";
 
 const build: PipelineStage = {
   key: "build",
@@ -104,6 +109,63 @@ describe("pipeline view model", () => {
     expect(test?.actions[0]?.detail).toBe("Step step-20 exited 2");
     expect(test?.actions[0]?.links[0]?.url).toContain("/pipeline/1/20");
     expect(stageSummary(stages[0] ?? build)).toBe("All actions succeeded");
+  });
+});
+
+function pipeline(id: string, execution: ExecutionSummary | null): HubService {
+  return {
+    id,
+    title: id.toUpperCase(),
+    kind: "product",
+    links: [],
+    latestBuild: null,
+    latestExecution: execution,
+    environments: [],
+  };
+}
+
+describe("pipeline list", () => {
+  const execution: ExecutionSummary = {
+    id: "build:b1",
+    status: "running",
+    build: null,
+    versionSet: null,
+    deployments: [
+      {
+        environmentId: "arcade/beta",
+        deploymentId: "d1",
+        kind: "deploy",
+        status: "succeeded",
+        createdAt: "2026-10-18T10:01:00.000Z",
+        finishedAt: "2026-10-18T10:05:00.000Z",
+      },
+      {
+        environmentId: "arcade/prod",
+        deploymentId: "d2",
+        kind: "promote",
+        status: "running",
+        createdAt: "2026-10-18T10:06:00.000Z",
+        finishedAt: null,
+      },
+    ],
+    createdAt: "2026-10-18T10:00:00.000Z",
+  };
+
+  it("dates the execution by its newest activity", () => {
+    expect(lastExecuted(execution)).toBe("2026-10-18T10:06:00.000Z");
+    expect(lastExecuted({ ...execution, deployments: [] })).toBe(
+      "2026-10-18T10:00:00.000Z",
+    );
+  });
+
+  it("filters by name and most recent execution status", () => {
+    const pipelines = [pipeline("arcade", execution), pipeline("forum", null)];
+    const ids = (search: Parameters<typeof filterPipelines>[1]) =>
+      filterPipelines(pipelines, search).map((entry) => entry.id);
+    expect(ids({})).toEqual(["arcade", "forum"]);
+    expect(ids({ q: "ARC" })).toEqual(["arcade"]);
+    expect(ids({ status: "running" })).toEqual(["arcade"]);
+    expect(ids({ status: "not_started" })).toEqual(["forum"]);
   });
 });
 

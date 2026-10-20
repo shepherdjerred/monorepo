@@ -64,7 +64,7 @@ export function TracePage({
       <PageHeader
         eyebrow={
           <Link
-            to="/services/$serviceId"
+            to="/pipelines/$serviceId"
             params={{ serviceId: trace.service.id }}
           >
             {trace.service.title}

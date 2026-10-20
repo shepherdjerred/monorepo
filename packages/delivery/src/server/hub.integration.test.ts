@@ -113,6 +113,11 @@ describe("hub reads", () => {
       status: "running",
     });
     expect(arcade?.latestBuild?.pipelineNumber).toBe(1);
+    expect(arcade?.latestExecution).toMatchObject({
+      status: "running",
+      build: { id: fixture.publication.buildId },
+      deployments: [{ environmentId: "arcade/prod", status: "running" }],
+    });
     expect(
       hub.activity.some((entry) => entry.action === "deployment.stage"),
     ).toBe(true);

@@ -127,31 +127,21 @@ button:disabled {
   align-items: center;
   gap: var(--space-2) var(--space-3);
 }
-.service-grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-  gap: var(--space-4);
+.pipeline-table th[scope="row"] {
+  font-weight: 600;
 }
-.service-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
-  display: grid;
-  gap: var(--space-2);
-  box-shadow: var(--shadow);
-  align-content: start;
+.pipeline-table th[scope="row"] small {
+  display: block;
+  font-weight: 400;
 }
-.service-build {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-  font-size: 0.85rem;
-  margin: 0;
+.pipeline-table td {
+  vertical-align: middle;
+}
+.execution-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: start;
 }
 .environment-strip {
   list-style: none;
@@ -173,7 +163,12 @@ button:disabled {
   font-size: 0.8rem;
 }
 .env-pill .status-label {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .env-pill .status {
   padding: 1px 5px;
