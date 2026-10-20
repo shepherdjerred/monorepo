@@ -16,28 +16,37 @@ const HomeAssistantPvcSchema = z.object({
   }),
 });
 
-async function synthesizeHomeAssistantPvc(): Promise<
-  z.infer<typeof HomeAssistantPvcSchema>
-> {
+async function synthesizeHomeAssistant(): Promise<unknown[]> {
   const app = new App();
   const chart = new Chart(app, "home", {
     namespace: "home",
     disableResourceNameHashes: true,
   });
   await createHomeAssistantDeployment(chart);
-  const manifests = z.array(z.unknown()).parse(chart.toJson());
-  const claim = manifests
-    .map((manifest) => HomeAssistantPvcSchema.safeParse(manifest))
-    .find((result) => result.success)?.data;
-  if (claim === undefined) {
-    throw new Error("Missing PersistentVolumeClaim/homeassistant-pvc");
+  return z.array(z.unknown()).parse(chart.toJson());
+}
+
+function findManifest<T extends z.ZodType>(
+  manifests: unknown[],
+  schema: T,
+  description: string,
+): z.infer<T> {
+  for (const manifest of manifests) {
+    const result = schema.safeParse(manifest);
+    if (result.success) {
+      return result.data;
+    }
   }
-  return claim;
+  throw new Error(`Missing ${description}`);
 }
 
 describe("Home Assistant persistence", () => {
   test("requests the expanded quota without changing storage or backup policy", async () => {
-    const claim = await synthesizeHomeAssistantPvc();
+    const claim = findManifest(
+      await synthesizeHomeAssistant(),
+      HomeAssistantPvcSchema,
+      "PersistentVolumeClaim/homeassistant-pvc",
+    );
     expect(claim.spec.resources.requests.storage).toBe("96Gi");
     expect(claim.spec.storageClassName).toBe("zfs-ssd");
     expect(claim.spec.accessModes).toEqual(["ReadWriteOnce"]);
@@ -48,53 +57,32 @@ describe("Home Assistant persistence", () => {
   });
 });
 
+// Only the mounts are parsed; stability is asserted on the whole rendering.
+const MountedContainerSchema = z.object({
+  volumeMounts: z.array(
+    z.object({ mountPath: z.string(), subPath: z.string().optional() }),
+  ),
+});
 const HomeAssistantDeploymentSchema = z.object({
   kind: z.literal("Deployment"),
   spec: z.object({
     template: z.object({
-      metadata: z.object({ annotations: z.record(z.string(), z.string()) }),
-      spec: z.object({
-        containers: z.array(
-          z.object({
-            volumeMounts: z.array(
-              z.object({
-                mountPath: z.string(),
-                subPath: z.string().optional(),
-              }),
-            ),
-          }),
-        ),
-      }),
+      spec: z.object({ containers: z.array(MountedContainerSchema) }),
     }),
   }),
 });
 
-async function synthesizeHomeAssistantDeployment(): Promise<
-  z.infer<typeof HomeAssistantDeploymentSchema>
-> {
-  const app = new App();
-  const chart = new Chart(app, "home", {
-    namespace: "home",
-    disableResourceNameHashes: true,
-  });
-  await createHomeAssistantDeployment(chart);
-  const manifests = z.array(z.unknown()).parse(chart.toJson());
-  const deployment = manifests
-    .map((manifest) => HomeAssistantDeploymentSchema.safeParse(manifest))
-    .find((result) => result.success)?.data;
-  if (deployment === undefined) {
-    throw new Error("Missing Deployment/homeassistant");
-  }
-  return deployment;
-}
-
 describe("Home Assistant pod template", () => {
   test("renders config subPath mounts in a stable sorted order", async () => {
-    const first = await synthesizeHomeAssistantDeployment();
-    const second = await synthesizeHomeAssistantDeployment();
-    expect(second.spec.template).toEqual(first.spec.template);
+    const first = await synthesizeHomeAssistant();
+    expect(await synthesizeHomeAssistant()).toEqual(first);
 
-    const [container] = first.spec.template.spec.containers;
+    const deployment = findManifest(
+      first,
+      HomeAssistantDeploymentSchema,
+      "Deployment/homeassistant",
+    );
+    const [container] = deployment.spec.template.spec.containers;
     const subPaths = (container?.volumeMounts ?? []).flatMap((mount) =>
       mount.subPath === undefined ? [] : [mount.subPath],
     );
