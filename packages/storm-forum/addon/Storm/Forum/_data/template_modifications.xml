@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <template_modifications>
+  <modification type="public" template="_help_page_privacy_policy" modification_key="storm_tracking_privacy" description="Explain homepage analytics and Pinterest conversion measurement" execution_order="20" enabled="1" action="str_replace">
+    <find><![CDATA[<!--[XF:captcha_after_policy_text]-->]]></find>
+    <replace><![CDATA[<xf:include template="storm_tracking_privacy" />$0]]></replace>
+  </modification>
   <modification type="public" template="PAGE_CONTAINER" modification_key="storm_card_artwork_revision" description="Refresh public social previews when shared artwork changes" execution_order="20" enabled="1" action="str_replace">
     <find><![CDATA['theme': $stormPublicTheme]]></find>
     <replace><![CDATA['theme': $stormPublicTheme, 'v': $stormBrandRevision]]></replace>

@@ -57,14 +57,18 @@
   </div></div></div>
 </xf:if>
   ]]></template>
-  <template type="public" title="storm_portal" version_id="4010670" version_string="4.1.6"><![CDATA[
+  <template type="public" title="storm_portal" version_id="4010770" version_string="4.1.7"><![CDATA[
 <xf:title>The Storm</xf:title>
 <xf:h1 hidden="true" />
 <xf:css src="storm_forum.less" />
+<script defer src="{{ base_url('styles/storm/posthog.js') }}"></script>
+<script defer src="{{ base_url('styles/storm/pinterest.js') }}"></script>
 <section class="stormWelcome stormJoin">
   <img src="{{ base_url('styles/storm/logo.svg') }}" alt="The Storm" width="270" height="83" />
   <div><h1>Build a town. Brave The Storm.</h1><p>Survival with towns, quests, a player economy, and Storm Shard upgrades. Java + Bedrock.</p><p>Java: <strong>{$status.connections.java.address}</strong><br />Bedrock: <strong>{$status.connections.bedrock.host}</strong> · Port <strong>{$status.connections.bedrock.port}</strong></p>
-    <button type="button" class="button button--primary" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address">Copy Java address</button>
+    <button type="button" class="button button--primary" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" data-storm-edition="java" data-storm-field="address">Copy Java address</button>
+    <button type="button" class="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" data-storm-edition="bedrock" data-storm-field="address">Copy Bedrock address</button>
+    <button type="button" class="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" data-storm-edition="bedrock" data-storm-field="port">Copy Bedrock port</button>
     <a class="button" href="https://docs.ts-mc.net/join/">How to join · Java &amp; Bedrock</a>
     <a class="button" href="https://docs.ts-mc.net/getting-started/">Your first session</a>
     <a class="button" href="https://docs.ts-mc.net/discord/">Discord</a>
@@ -98,14 +102,21 @@
   <xf:widget key="storm_recent_threads" />
 </xf:sidebar>
   ]]></template>
-  <template type="public" title="storm_minecraft_status" version_id="4010570" version_string="4.1.5"><![CDATA[
+  <template type="public" title="storm_minecraft_status" version_id="4010770" version_string="4.1.7"><![CDATA[
 <div class="stormJoinServers">
-  <div class="stormJoinServer"><strong>Java</strong><span data-minecraft-java-version><xf:if is="$status.java.version">{$status.java.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" aria-label="Copy Java address">{$status.connections.java.address}</button></div>
-  <div class="stormJoinServer"><strong>Bedrock</strong><span data-minecraft-bedrock-version><xf:if is="$status.bedrock.version">{$status.bedrock.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" aria-label="Copy Bedrock address">{$status.connections.bedrock.host}</button><span>:</span><button type="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" aria-label="Copy Bedrock port">{$status.connections.bedrock.port}</button></div>
+  <div class="stormJoinServer"><strong>Java</strong><span data-minecraft-java-version><xf:if is="$status.java.version">{$status.java.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.java.address}" data-storm-copy-label="Java address" data-storm-edition="java" data-storm-field="address" aria-label="Copy Java address">{$status.connections.java.address}</button></div>
+  <div class="stormJoinServer"><strong>Bedrock</strong><span data-minecraft-bedrock-version><xf:if is="$status.bedrock.version">{$status.bedrock.version}<xf:else />—</xf:if></span><button type="button" data-storm-copy="{$status.connections.bedrock.host}" data-storm-copy-label="Bedrock address" data-storm-edition="bedrock" data-storm-field="address" aria-label="Copy Bedrock address">{$status.connections.bedrock.host}</button><span>:</span><button type="button" data-storm-copy="{$status.connections.bedrock.port}" data-storm-copy-label="Bedrock port" data-storm-edition="bedrock" data-storm-field="port" aria-label="Copy Bedrock port">{$status.connections.bedrock.port}</button></div>
 </div>
 <span class="stormJoinBadge{{ $status.state == 'online' ? ' stormJoinBadge--online' : '' }}" data-minecraft-state><xf:if is="$status.state == 'online'">Online<xf:if is="$status.players !== null"> · {{ count($status.players.identities) }}/{$status.players.maximum}</xf:if><xf:elseif is="$status.state == 'sleeping'" />Sleeping<xf:elseif is="$status.state == 'starting'" />Starting<xf:else />Unavailable</xf:if></span>
 <div class="stormJoinPlayers" data-minecraft-players aria-label="Online players"><xf:if is="$status.players !== null"><xf:foreach loop="$status.players.identities" value="$player"><span class="stormJoinPlayer" title="{$player.name}"><img src="https://mc-heads.net/avatar/{$player.uuid}/24" alt="{$player.name}" width="24" height="24" loading="lazy" /><span class="stormJoinPlayerName">{$player.name}</span></span></xf:foreach></xf:if></div>
 <div class="stormJoinGames" data-minecraft-games><xf:if is="$status.games !== null"><xf:foreach loop="$status.games" value="$game"><div class="stormJoinGame"><strong><xf:if is="$game.kind == 'ARENA'">Arena<xf:else />RWF</xf:if></strong><span>{$game.name}</span><span><xf:if is="$game.phase == 'WAITING'">Waiting<xf:elseif is="$game.phase == 'STARTING'" />Starting<xf:else />Live</xf:if></span><xf:if is="$game.progress"><span>{$game.progress}</span></xf:if><span>{$game.players} playing</span></div></xf:foreach></xf:if></div>
+  ]]></template>
+  <template type="public" title="storm_tracking_privacy" version_id="4010770" version_string="4.1.7"><![CDATA[
+<section aria-labelledby="storm-tracking-privacy-heading">
+<h2 id="storm-tracking-privacy-heading">Website analytics and Pinterest ads</h2>
+<p>On our homepage, we use PostHog for website analytics and Pinterest's tag to measure visits and interest in joining after people see our ads. These tools can receive page URLs, referral and campaign information, browser and device details, IP addresses, and cookie identifiers. A successful server-address copy is recorded as interest in joining; it does not tell us that you connected to Minecraft.</p>
+<p>PostHog masks page text and form inputs in homepage recordings. Our address-copy conversion code sends the edition, event type, and a random event identifier, without an email address or player name. Pinterest's tag is skipped when your browser sends Do Not Track or Global Privacy Control. PostHog respects Do Not Track. You can also use browser privacy settings and content blockers to limit this tracking.</p>
+</section>
   ]]></template>
   <template type="public" title="storm_forum.less" version_id="4010570" version_string="4.1.5"><![CDATA[
 .stormWelcome {display:flex;gap:2rem;align-items:center;padding:2rem;margin-bottom:2rem;border-radius:12px;background:fade(@xf-paletteColor2, 14%);}
