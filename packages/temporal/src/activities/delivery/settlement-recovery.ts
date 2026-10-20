@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   FinishDeploymentSchema,
+  EvidenceInputSchema,
   deliveryWorkflowId,
 } from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
@@ -9,25 +10,36 @@ export function requireSettlementOwner(input: {
   deploymentId: string;
   status: string;
   activeDeploymentId: string | null;
+  recordedStatus: "succeeded" | "failed" | "canceled";
 }) {
   // A lost Activity acknowledgement may follow a committed finish. Replaying the
   // canonical finish is safe: PostgreSQL compares its immutable result fingerprint.
-  if (["failed", "canceled"].includes(input.status)) return;
+  if (
+    input.status === input.recordedStatus ||
+    (input.recordedStatus === "failed" && input.status === "canceled")
+  )
+    return;
   if (
     input.status !== "running" ||
     input.activeDeploymentId !== input.deploymentId
   )
-    throw new Error("Deployment ownership changed before failure settlement");
+    throw new Error("Deployment ownership changed before result settlement");
 }
 
-const failedResult = FinishDeploymentSchema.pick({
+const recordedResult = FinishDeploymentSchema.pick({
   status: true,
   evidence: true,
-}).refine((value) => value.status !== "succeeded", {
-  message: "Outage settlement cannot manufacture successful acceptance",
 });
 
-/** Recover only a recorded failure settlement, never an external-effect Activity. */
+const acceptanceActivities = new Set([
+  "verifyDelivery",
+  "applyDeliveryScoutSite",
+  "applyDeliveryTrmnlPlugins",
+  "executeDeliveryPlatform",
+  "executeDeliveryControlPlane",
+]);
+
+/** Recover an exact recorded settlement, never an external-effect Activity. */
 export function settlementRecoveryPlan(input: {
   deploymentId: string;
   runId: string;
@@ -37,6 +49,7 @@ export function settlementRecoveryPlan(input: {
   taskQueue: string;
   pending: readonly { id: string; type: string; state: number }[];
   scheduled: readonly { id: string; type: string; args: unknown[] }[];
+  completed: readonly { type: string; result: unknown }[];
 }) {
   z.uuid().parse(input.deploymentId);
   z.uuid().parse(input.runId);
@@ -64,7 +77,23 @@ export function settlementRecoveryPlan(input: {
     throw new Error(
       "Settlement history differs from the requested deployment and Activity",
     );
-  const result = failedResult.parse(scheduled.args[1]);
+  const result = recordedResult.parse(scheduled.args[1]);
+  if (result.status === "succeeded") {
+    const observations = input.completed.filter((item) =>
+      acceptanceActivities.has(item.type),
+    );
+    const evidence = observations.flatMap((item) =>
+      z.array(EvidenceInputSchema).parse(item.result),
+    );
+    if (
+      observations.length === 0 ||
+      evidence.length === 0 ||
+      canonicalJson(evidence) !== canonicalJson(result.evidence)
+    )
+      throw new Error(
+        "Successful settlement lacks its recorded acceptance evidence",
+      );
+  }
   return {
     deploymentId: input.deploymentId,
     runId: input.runId,
@@ -85,7 +114,7 @@ export function requireSettlementTask(
     task.runId !== plan.runId ||
     task.activityId !== plan.activityId ||
     deploymentId !== plan.deploymentId ||
-    canonicalJson(failedResult.parse(result)) !== canonicalJson(plan.result)
+    canonicalJson(recordedResult.parse(result)) !== canonicalJson(plan.result)
   )
     throw new Error(
       "Settlement task no longer matches its inspected immutable history",

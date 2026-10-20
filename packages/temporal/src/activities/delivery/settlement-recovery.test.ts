@@ -8,6 +8,14 @@ import {
 const deploymentId = "9837dcf4-2099-4ae5-b078-9ae352d3a4d8";
 const runId = "01a15b0b-dae6-739e-8a97-f520a3798728";
 function input() {
+  const completed: { type: string; result: unknown }[] = [];
+  const scheduled: { id: string; type: string; args: unknown[] }[] = [
+    {
+      id: "3",
+      type: "finishDelivery",
+      args: [deploymentId, { status: "failed", evidence: [] }],
+    },
+  ];
   return {
     deploymentId,
     runId,
@@ -15,24 +23,28 @@ function input() {
     workflowType: "deliveryDeploymentWorkflow",
     workflowStatus: "RUNNING",
     taskQueue: "delivery-workflows",
+    completed,
     pending: [{ id: "3", type: "finishDelivery", state: 1 }],
-    scheduled: [
-      {
-        id: "3",
-        type: "finishDelivery",
-        args: [deploymentId, { status: "failed", evidence: [] }],
-      },
-    ],
+    scheduled,
   };
 }
 
 describe("independent failure settlement", () => {
-  it("resumes a committed failure after a lost Activity acknowledgement but never accepts success", () => {
+  it("resumes committed outcomes after a lost acknowledgement and rejects a different result", () => {
+    expect(() =>
+      requireSettlementOwner({
+        deploymentId,
+        status: "succeeded",
+        activeDeploymentId: null,
+        recordedStatus: "succeeded",
+      }),
+    ).not.toThrow();
     expect(() =>
       requireSettlementOwner({
         deploymentId,
         status: "failed",
         activeDeploymentId: null,
+        recordedStatus: "failed",
       }),
     ).not.toThrow();
     expect(() =>
@@ -40,6 +52,7 @@ describe("independent failure settlement", () => {
         deploymentId,
         status: "running",
         activeDeploymentId: runId,
+        recordedStatus: "failed",
       }),
     ).toThrow("ownership changed");
     expect(() =>
@@ -47,6 +60,7 @@ describe("independent failure settlement", () => {
         deploymentId,
         status: "succeeded",
         activeDeploymentId: null,
+        recordedStatus: "failed",
       }),
     ).toThrow("ownership changed");
   });
@@ -63,7 +77,7 @@ describe("independent failure settlement", () => {
       ),
     ).not.toThrow();
   });
-  it("refuses a successful result even if it appears in history", () => {
+  it("refuses success without completed acceptance evidence", () => {
     const value = input();
     value.scheduled = [
       {
@@ -72,7 +86,41 @@ describe("independent failure settlement", () => {
         args: [deploymentId, { status: "succeeded", evidence: [] }],
       },
     ];
-    expect(() => settlementRecoveryPlan(value)).toThrow("cannot manufacture");
+    expect(() => settlementRecoveryPlan(value)).toThrow(
+      "recorded acceptance evidence",
+    );
+  });
+  it("reuses successful evidence from completed acceptance Activities without changing it", () => {
+    const value = input();
+    const evidence = [
+      {
+        kind: "acceptance",
+        summary: "Original native Job and plan verified",
+        operationId: "native-job",
+      },
+    ];
+    value.scheduled = [
+      {
+        id: "3",
+        type: "finishDelivery",
+        args: [deploymentId, { status: "succeeded", evidence }],
+      },
+    ];
+    value.completed = [{ type: "executeDeliveryPlatform", result: evidence }];
+    expect(settlementRecoveryPlan(value).result.status).toBe("succeeded");
+    value.completed = [
+      {
+        type: "executeDeliveryPlatform",
+        result: [{ ...evidence[0], summary: "Different evidence" }],
+      },
+    ];
+    expect(() => settlementRecoveryPlan(value)).toThrow(
+      "recorded acceptance evidence",
+    );
+    value.completed = [{ type: "prepareDelivery", result: evidence }];
+    expect(() => settlementRecoveryPlan(value)).toThrow(
+      "recorded acceptance evidence",
+    );
   });
   it.each(["applyDelivery", "verifyDelivery", "executeDeliveryPlatform"])(
     "cannot take over %s",

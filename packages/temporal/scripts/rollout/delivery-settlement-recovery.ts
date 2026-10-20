@@ -70,11 +70,6 @@ async function main() {
       );
       if (observed.runId !== runId)
         throw new Error("Deployment/run ownership changed before settlement");
-      requireSettlementOwner({
-        deploymentId,
-        status: current.deployment.status,
-        activeDeploymentId: current.environment.activeDeploymentId,
-      });
       const history = await handle.fetchHistory();
       const plan = settlementRecoveryPlan({
         deploymentId,
@@ -102,6 +97,30 @@ async function main() {
                 },
               ];
         }),
+        completed: (history.events ?? []).flatMap((event) => {
+          const completion = event.activityTaskCompletedEventAttributes;
+          if (completion === undefined || completion === null) return [];
+          const scheduled = history.events?.find(
+            (item) =>
+              item.eventId?.toString() ===
+              completion.scheduledEventId?.toString(),
+          )?.activityTaskScheduledEventAttributes;
+          const payload = completion.result?.payloads?.[0];
+          return payload === undefined
+            ? []
+            : [
+                {
+                  type: scheduled?.activityType?.name ?? "",
+                  result: defaultPayloadConverter.fromPayload(payload),
+                },
+              ];
+        }),
+      });
+      requireSettlementOwner({
+        deploymentId,
+        status: current.deployment.status,
+        activeDeploymentId: current.environment.activeDeploymentId,
+        recordedStatus: plan.result.status,
       });
       const pending = observed.raw.pendingActivities?.[0];
       const queue = pending?.activityOptions?.taskQueue?.name;
@@ -159,6 +178,7 @@ async function main() {
               deploymentId,
               status: current.deployment.status,
               activeDeploymentId: current.environment.activeDeploymentId,
+              recordedStatus: plan.result.status,
             });
             await finishDelivery(id, plan.result);
           },
@@ -203,12 +223,20 @@ async function main() {
             DeploymentDetailSchema,
           ),
         ]);
+        const workflowStatuses =
+          plan.result.status === "succeeded"
+            ? ["COMPLETED"]
+            : ["FAILED", "CANCELLED"];
+        const deploymentStatuses =
+          plan.result.status === "failed"
+            ? ["failed", "canceled"]
+            : [plan.result.status];
         if (
-          !["FAILED", "CANCELLED"].includes(observed.status.name) ||
-          !["failed", "canceled"].includes(settled.deployment.status)
+          !workflowStatuses.includes(observed.status.name) ||
+          !deploymentStatuses.includes(settled.deployment.status)
         )
           throw new Error(
-            "Independent settlement did not preserve the original failed outcome",
+            "Independent settlement did not preserve the original recorded outcome",
           );
         console.warn(
           JSON.stringify({

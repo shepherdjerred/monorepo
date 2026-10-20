@@ -25,13 +25,15 @@ credentials, and compatible Workflow workers are available. A lost start
 response is inspected by stable Workflow identity before acknowledging the row.
 Paused or occupied environments remain in a durable Workflow admission wait.
 
-`scripts/rollout/delivery-settlement-recovery.ts` provides independent failure
-settlement when an unavailable executor cannot finish its recorded failure.
+`scripts/rollout/delivery-settlement-recovery.ts` provides independent result
+settlement when an unavailable executor cannot finish its recorded result.
 Its required arguments are `--deployment`, `--run`, `--activity`, `--url`, and
 `--mode preview|execute`, with explicit `TEMPORAL_ADDRESS`/`TEMPORAL_TLS` bootstrap.
 It requires paused, drained dispatch and runs only the canonical `finishDelivery`
 Activity on a private, resumable queue bound to the original run and inputs.
-It preserves failure and quarantine; native recovery remains a separate operation.
+It preserves the recorded outcome and quarantine. Successful inputs must exactly
+match completed acceptance Activities in the same history, and the canonical
+API acceptance checks still run. Native recovery remains a separate operation.
 
 TRMNL plugin configuration is a fixed dependency stage of the
 `trmnl-dashboard` release, after its backend image and health are verified.
