@@ -505,7 +505,11 @@ level, and newly introduced identity tables must start empty. Changed migration
 checksums fail validation; the tool never repairs migration history.
 `database-restore.py` requires a fully checkpointed source database and compares
 retained rows using type-preserving hashes. Identity preferences, staff audit
-records and personal letters are retained. World-bound staff state, including
+records and personal letters are retained. Creative plot claims, trust, and
+parked visit bodies are retained with them: a parked body is the survival
+inventory of someone who disconnected inside creative, and those plot
+coordinates belong to the sealed creative world, which this overworld
+restoration does not replace. World-bound staff state, including
 spawn overrides, jail coordinates and logout positions, requires an explicit
 position migration before import; IP bans can be retained without moving
 coordinates. Gameplay tables, teleport usage and migration histories start fresh.
