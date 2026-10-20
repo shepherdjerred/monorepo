@@ -195,6 +195,26 @@ set the classic favicon, cloud application icons, metadata card and email logo;
 the assembly also supplies the original root favicon and touch icon. Share-image
 URLs and cached cards include the shared artwork revision.
 
+The production portal loads the managed PostHog snippet from `assets/posthog.js`.
+Other forum pages, beta and localhost do not load portal analytics. Replay and
+autocapture mask rendered text and attributes, including player names and post
+snippets. Campaign links use `utm_source`, `utm_medium`, `utm_campaign`, and
+`utm_content` to distinguish creatives. The shared browser adapter records
+`storm_server_address_copied` only after a successful clipboard write, with
+`edition`, `field` (`address` or `port`), and `surface`. Address copies measure
+join intent; they do not establish that someone connected to Minecraft. Filter
+to `field = address` when comparing conversions so Bedrock port copies do not
+count as additional address conversions.
+
+The portal also loads `assets/pinterest.js` with the existing Scout advertiser
+tag. It records a PageVisit and one Lead per page after the first successful
+address copy, labelled `lead_type = storm_server_address_copied`. Port copies
+and repeated clicks do not create additional Pinterest Leads. Local and beta
+hosts, Do Not Track, and Global Privacy Control skip the Pinterest tag. Conversion
+data contains only the lead type, edition, and a random event identifier. The native privacy page
+describes both trackers. This is browser measurement only; no conversion API
+or advertising-account automation is involved.
+
 The reviewed `config/welcome-announcement.json` is an editorial post, separate
 from generated seed threads. Run `php cmd.php storm:announce` inside the forum
 runtime to preview it. After live joining and `/guide` have been verified,

@@ -419,6 +419,8 @@ try {
     await run(["exec", app, "mkdir", "-p", "/app/forum/styles/storm"]);
     for (const [source, target] of [
       ["../dist/minecraft.js", "styles/storm/minecraft.js"],
+      ["../assets/posthog.js", "styles/storm/posthog.js"],
+      ["../assets/pinterest.js", "styles/storm/pinterest.js"],
       ["../../storm-theme/assets/.", "styles/storm/"],
       ["../../storm-theme/assets/brand/favicon.ico", "favicon.ico"],
       ["../../storm-theme/assets/brand/icon-180.png", "apple-touch-icon.png"],

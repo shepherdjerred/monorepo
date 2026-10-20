@@ -45,17 +45,29 @@ export async function startStormTheme(root: HTMLElement): Promise<void> {
     const address = button.dataset["stormCopy"];
     if (address === undefined || address === "")
       throw new Error("Missing server address");
+    const edition = z
+      .enum(["java", "bedrock"])
+      .parse(button.dataset["stormEdition"]);
+    const field = z
+      .enum(["address", "port"])
+      .parse(button.dataset["stormField"]);
     const feedback = button
       .closest(".stormJoin")
       ?.querySelector("[data-storm-copy-status]");
     try {
       await navigator.clipboard.writeText(address);
-      if (feedback)
-        feedback.textContent = `${button.dataset["stormCopyLabel"] ?? "Server IP"} copied.`;
     } catch {
       if (feedback)
         feedback.textContent = `Copy ${button.dataset["stormCopyLabel"] ?? "server IP"}: ${address}`;
+      return;
     }
+    if (feedback)
+      feedback.textContent = `${button.dataset["stormCopyLabel"] ?? "Server IP"} copied.`;
+    root.ownerDocument.dispatchEvent(
+      new CustomEvent("storm:server-address-copied", {
+        detail: { edition, field, surface: docs ? "docs" : "forum" },
+      }),
+    );
   }
   root.ownerDocument.addEventListener("click", (event) => {
     void copyAddress(event);

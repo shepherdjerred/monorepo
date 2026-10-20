@@ -76,6 +76,13 @@ const staticTrackers = [
     masksAllText: false,
     wiring: /\bsrc\s*:\s*["']\/posthog\.js["']/,
   },
+  {
+    path: "packages/storm-forum/assets/posthog.js",
+    entrypoint: "packages/storm-forum/addon/Storm/Forum/_data/templates.xml",
+    hostname: "ts-mc.net",
+    masksAllText: true,
+    wiring: /<script[^>]+\bsrc="[^"\n]*styles\/storm\/posthog\.js/,
+  },
 ] as const;
 
 // These three keys are load-bearing by their ABSENCE, and each one silently
@@ -120,6 +127,28 @@ const AUTOCAPTURE_MASKING = [
 const registry = parseAnalyticsRegistry(
   JSON.parse(await Bun.file(registryPath).text()) as unknown,
 );
+
+const scoutMarketing = registry.sites.find(
+  (site) => site.key === "scout-prod",
+)?.marketing;
+if (scoutMarketing === undefined)
+  throw new Error("Scout marketing identifiers are required");
+const stormPinterest = await Bun.file(
+  `${root}/packages/storm-forum/assets/pinterest.js`,
+).text();
+if (
+  !stormPinterest.includes(
+    `window.pintrk("load", "${scoutMarketing.pinterestTagId}")`,
+  )
+)
+  throw new Error("The Storm must use the existing shared Pinterest tag");
+const stormTemplates = await Bun.file(
+  `${root}/packages/storm-forum/addon/Storm/Forum/_data/templates.xml`,
+).text();
+if (
+  !/<script[^>]+\bsrc="[^"\n]*styles\/storm\/pinterest\.js/.test(stormTemplates)
+)
+  throw new Error("The Storm portal must load its Pinterest tracker");
 
 const expectedHostnames = new Set([
   "sjer.red",

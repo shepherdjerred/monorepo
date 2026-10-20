@@ -61,6 +61,8 @@ $copy('/opt/storm-theme/assets/brand/icon-180.png', '/app/forum/apple-touch-icon
 $copy('/opt/storm-forum/assets/gameplay', '/app/forum/styles/storm/gameplay');
 $copy('/opt/storm-theme/dist/browser.js', '/app/forum/styles/storm/browser.js');
 $copy('/opt/storm-forum/dist/minecraft.js', '/app/forum/styles/storm/minecraft.js');
+$copy('/opt/storm-forum/assets/posthog.js', '/app/forum/styles/storm/posthog.js');
+$copy('/opt/storm-forum/assets/pinterest.js', '/app/forum/styles/storm/pinterest.js');
 $copy('/opt/storm-forum/runtime/config.php', '/app/forum/src/config.php');
 foreach (['data', 'internal_data'] as $directory) {
     $target = '/var/lib/storm-forum/' . $directory;
