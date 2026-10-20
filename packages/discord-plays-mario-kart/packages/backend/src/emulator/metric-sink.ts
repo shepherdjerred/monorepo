@@ -19,13 +19,13 @@ export type MetricSink = {
 export function createPromMetricSink(): MetricSink {
   return {
     observeInputApplyDelayMs(valueMs) {
-      inputApplyDelayMs.observe(valueMs);
+      inputApplyDelayMs.observe({ runtime: "mk64" }, valueMs);
     },
     incTicks(count) {
-      ticksTotal.inc(count);
+      ticksTotal.inc({ runtime: "mk64" }, count);
     },
     incRestarts(reason) {
-      emulatorRestartsTotal.inc({ reason });
+      emulatorRestartsTotal.inc({ runtime: "mk64", reason });
     },
   };
 }

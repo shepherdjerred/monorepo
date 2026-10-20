@@ -14,7 +14,12 @@ import {
   DiscordAuth,
   mountAuthRoutes,
 } from "@shepherdjerred/discord-plays-core/auth/discord-oauth.ts";
-import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import {
+  registry,
+  runtimeGauge,
+  streamActive,
+  sinkBufferBytes,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 import { prepareEngine } from "@discord-plays-mario-kart/backend/engine/index.ts";
@@ -199,6 +204,11 @@ const application = createApplication({
       logger,
     }))
       modules.set(module.definition.id, module);
+    // Publish known idle runtimes before the first session starts.
+    for (const gameId of modules.keys()) {
+      runtimeGauge(streamActive, gameId).set(0);
+      runtimeGauge(sinkBufferBytes, gameId).set(0);
+    }
     return modules;
   },
 });

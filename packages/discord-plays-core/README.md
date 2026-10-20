@@ -80,6 +80,13 @@ backends depend on it as a `workspace:*` dependency, and this package owns the
 dependencies on their behalf. Emulators, lifecycle drivers, game-specific
 metrics, socket dispatch, and admission policy stay in the games.
 
+Emulator and Go-Live instruments carry a `runtime` label supplied by the game
+producer. Use a static game key, never a guild, user, or session identifier.
+`runtimeGauge()` shares each runtime's writer so concurrent copies aggregate
+without overwriting each other. Native hosts count delivered frames; their
+child-process CPU time is not represented by in-process WASM histograms.
+Process CPU and event-loop metrics remain process-wide.
+
 `src/driver-feed/protocol.ts` and `src/auth/protocol.ts` import only `zod`, so
 the game frontends import them directly; nothing else under `src/` is
 browser-safe.

@@ -15,6 +15,7 @@ export const copyMs = new Histogram({
   name: "emulator_frame_copy_ms",
   help: "Time to render the frame and hand it to the stream, in ms",
   buckets: FRAME_MS_BUCKETS,
+  labelNames: ["runtime"],
   registers: [registry],
 });
 
@@ -58,6 +59,7 @@ export const goalActive = new Gauge({
 type GoalStreamHealth = {
   active: () => boolean;
   streaming: () => boolean;
+  ageSeconds: () => number;
 };
 const goalStreams = new Set<GoalStreamHealth>();
 
@@ -79,6 +81,19 @@ export const goalStreamDown = new Gauge({
       if (health.active() && !health.streaming()) down += 1;
     }
     this.set(down);
+  },
+});
+
+export const goalRuntimeSeconds = new Gauge({
+  name: "pokemon_goal_runtime_seconds",
+  help: "Age of the oldest active broadcast goal, in seconds",
+  registers: [registry],
+  collect() {
+    let oldest = 0;
+    for (const health of goalStreams) {
+      if (health.active()) oldest = Math.max(oldest, health.ageSeconds());
+    }
+    this.set(oldest);
   },
 });
 

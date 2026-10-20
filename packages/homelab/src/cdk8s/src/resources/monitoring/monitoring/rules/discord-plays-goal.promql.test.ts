@@ -59,3 +59,34 @@ test("goal stream alerts ignore other live Arcade broadcasts", async () => {
     })),
   });
 });
+
+test("stuck-goal alert checks an individual goal age instead of overlapping activity", async () => {
+  const alert = getDiscordPlaysGoalRuleGroups()
+    .flatMap((group) => group.rules)
+    .find((rule) => rule?.alert === "PokemonGoalStuck");
+  if (alert === undefined) throw new Error("Missing stuck-goal alert");
+  expect(alert.for).toBeUndefined();
+  await runPromtoolFixture({
+    evaluation_interval: "1m",
+    tests: [
+      { age: 20 * 60, active: 2, expected: [] },
+      { age: 40 * 60, active: 1, expected: [{ labels: "{}", value: 40 * 60 }] },
+      { age: 0, active: 0, expected: [] },
+    ].map(({ age, active, expected }) => ({
+      interval: "1m",
+      input_series: [
+        {
+          series: 'pokemon_goal_active{namespace="arcade"}',
+          values: `${String(active)}x45`,
+        },
+        {
+          series: 'pokemon_goal_runtime_seconds{namespace="arcade"}',
+          values: `${String(age)}x45`,
+        },
+      ],
+      promql_expr_test: [
+        { expr: alert.expr.value, eval_time: "45m", exp_samples: expected },
+      ],
+    })),
+  });
+});

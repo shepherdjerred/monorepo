@@ -6,7 +6,10 @@ import {
   goalStreamDown,
   observeGoalStreamHealth,
 } from "./metrics.ts";
-import { streamActive } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import {
+  streamActive,
+  runtimeGauge,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { contributeGauge } from "@shepherdjerred/discord-plays-core/observability/gauge-contribution.ts";
 
 beforeEach(() => {
@@ -22,12 +25,17 @@ describe("goal metrics", () => {
     const detachFailed = observeGoalStreamHealth({
       active: () => active,
       streaming: () => streaming,
+      ageSeconds: () => 0,
     });
     const detachHealthy = observeGoalStreamHealth({
       active: () => true,
       streaming: () => true,
+      ageSeconds: () => 0,
     });
-    const otherGame = contributeGauge(streamActive, "sum");
+    const otherGame = contributeGauge(
+      runtimeGauge(streamActive, "mk64"),
+      "sum",
+    );
     otherGame.set(1);
     try {
       expect(await goalStreamDown.get()).toHaveProperty("values", [

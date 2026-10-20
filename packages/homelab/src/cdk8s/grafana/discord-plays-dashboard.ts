@@ -18,7 +18,8 @@ export function createDiscordPlaysDashboard() {
     uid: "Prometheus",
   };
 
-  const SCOPE = `namespace="arcade"`;
+  const SCOPE = `namespace="arcade",runtime!=""`;
+  const PROCESS_SCOPE = `namespace="arcade"`;
 
   const timeSeriesPanel = (options: {
     title: string;
@@ -57,13 +58,13 @@ export function createDiscordPlaysDashboard() {
 
   builder.withPanel(
     timeSeriesPanel({
-      title: "Achieved frame rate (ticks/s)",
+      title: "Runtime frame rate (frames/s)",
       description:
-        "rate of emulator ticks. Compare to the target (pokemon ~59.7, mario-kart 30). Dropping below target ⇒ the emulate+copy loop can't keep up.",
+        "Delivered frames by game runtime. A single Emerald instance targets ~59.7fps and MK64 targets 30fps; native targets follow the host format. Concurrent copies of the same game contribute to that game's total.",
       targets: [
         {
-          expr: `sum(rate(emulator_ticks_total{${SCOPE}}[1m])) by (namespace)`,
-          legend: "{{namespace}}",
+          expr: `sum(rate(emulator_ticks_total{${SCOPE}}[1m])) by (namespace, runtime)`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 1, w: 12, h: 8 },
@@ -78,8 +79,8 @@ export function createDiscordPlaysDashboard() {
         "Rate of paced-loop resyncs — the loop fell far enough behind that frames were dropped.",
       targets: [
         {
-          expr: `sum(rate(emulator_loop_resync_total{${SCOPE}}[5m])) by (namespace)`,
-          legend: "{{namespace}}",
+          expr: `sum(rate(emulator_loop_resync_total{${SCOPE}}[5m])) by (namespace, runtime)`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 12, y: 1, w: 12, h: 8 },
@@ -92,8 +93,8 @@ export function createDiscordPlaysDashboard() {
       title: "Loop lateness p95 (ms behind schedule)",
       targets: [
         {
-          expr: `histogram_quantile(0.95, sum(rate(emulator_frame_late_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "{{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(emulator_frame_late_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 9, w: 24, h: 7 },
@@ -107,11 +108,11 @@ export function createDiscordPlaysDashboard() {
     timeSeriesPanel({
       title: "Emulate time p95 (ms/frame)",
       description:
-        "Time to step the wasm core per frame. High values (vs the frame budget: ~16ms@60, 33ms@30) ⇒ emulation-bound; GPU encoding won't help this.",
+        "Per-frame timings for runtimes that expose in-process WASM instrumentation. Compare each runtime to its own frame budget; these timings do not measure native child-process CPU cost.",
       targets: [
         {
-          expr: `histogram_quantile(0.95, sum(rate(emulator_frame_emulate_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "{{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(emulator_frame_emulate_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 17, w: 12, h: 8 },
@@ -124,8 +125,8 @@ export function createDiscordPlaysDashboard() {
       title: "Frame copy time p95 (ms/frame)",
       targets: [
         {
-          expr: `histogram_quantile(0.95, sum(rate(emulator_frame_copy_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "{{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(emulator_frame_copy_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 12, y: 17, w: 12, h: 8 },
@@ -142,8 +143,8 @@ export function createDiscordPlaysDashboard() {
         "Bytes buffered in the PassThrough feeding ffmpeg. A sustained rise ⇒ the encoder/send path can't keep up (where VAAPI / lower bitrate helps).",
       targets: [
         {
-          expr: `max(stream_sink_buffer_bytes{${SCOPE}}) by (namespace)`,
-          legend: "{{namespace}}",
+          expr: `max(stream_sink_buffer_bytes{${SCOPE}}) by (namespace, runtime)`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 26, w: 12, h: 8 },
@@ -158,11 +159,11 @@ export function createDiscordPlaysDashboard() {
         "nodejs_eventloop_lag_seconds shows when the single JS thread saturates; process CPU is the bot's own usage.",
       targets: [
         {
-          expr: `max(nodejs_eventloop_lag_seconds{${SCOPE}}) by (namespace)`,
+          expr: `max(nodejs_eventloop_lag_seconds{${PROCESS_SCOPE}}) by (namespace)`,
           legend: "loop lag {{namespace}}",
         },
         {
-          expr: `sum(rate(process_cpu_seconds_total{${SCOPE}}[5m])) by (namespace)`,
+          expr: `sum(rate(process_cpu_seconds_total{${PROCESS_SCOPE}}[5m])) by (namespace)`,
           legend: "cpu cores {{namespace}}",
         },
       ],
@@ -174,10 +175,12 @@ export function createDiscordPlaysDashboard() {
   builder.withPanel(
     timeSeriesPanel({
       title: "Broadcast active",
+      description:
+        "Live broadcast count by game runtime; multiple copies of the same game share its series.",
       targets: [
         {
-          expr: `max(stream_active{${SCOPE}}) by (namespace)`,
-          legend: "{{namespace}}",
+          expr: `max(stream_active{${SCOPE}}) by (namespace, runtime)`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 34, w: 24, h: 5 },
@@ -196,8 +199,8 @@ export function createDiscordPlaysDashboard() {
         "Controller input arriving at the backend → latched into the emulator tick that applies it. Expected ≲ one frame budget (33ms@30fps); sustained higher ⇒ the tick loop is starved.",
       targets: [
         {
-          expr: `histogram_quantile(0.95, sum(rate(emulator_input_apply_delay_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "{{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(emulator_input_apply_delay_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 40, w: 12, h: 8 },
@@ -212,12 +215,12 @@ export function createDiscordPlaysDashboard() {
         "Socket round trip measured by the web controller itself (reported every 2s per connected client). One-way controller→backend ≈ RTT/2.",
       targets: [
         {
-          expr: `histogram_quantile(0.5, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "p50 {{namespace}}",
+          expr: `histogram_quantile(0.5, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "p50 {{runtime}}",
         },
         {
-          expr: `histogram_quantile(0.95, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "p95 {{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "p95 {{runtime}}",
         },
       ],
       gridPos: { x: 12, y: 40, w: 12, h: 8 },
@@ -234,8 +237,8 @@ export function createDiscordPlaysDashboard() {
         "Media seconds encoded per wall-clock second (from timemark advance). Sustained <1 ⇒ the encoder can't keep realtime and latency builds.",
       targets: [
         {
-          expr: `max(stream_ffmpeg_speed_ratio{${SCOPE}}) by (namespace)`,
-          legend: "{{namespace}}",
+          expr: `min(stream_ffmpeg_speed_ratio{${SCOPE}}) by (namespace, runtime)`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 49, w: 8, h: 8 },
@@ -248,12 +251,12 @@ export function createDiscordPlaysDashboard() {
       title: "ffmpeg output fps / bitrate",
       targets: [
         {
-          expr: `max(stream_ffmpeg_fps{${SCOPE}}) by (namespace)`,
-          legend: "fps {{namespace}}",
+          expr: `max(stream_ffmpeg_fps{${SCOPE}}) by (namespace, runtime)`,
+          legend: "fps {{runtime}}",
         },
         {
-          expr: `max(stream_ffmpeg_bitrate_kbps{${SCOPE}}) by (namespace)`,
-          legend: "kbps {{namespace}}",
+          expr: `max(stream_ffmpeg_bitrate_kbps{${SCOPE}}) by (namespace, runtime)`,
+          legend: "kbps {{runtime}}",
         },
       ],
       gridPos: { x: 8, y: 49, w: 8, h: 8 },
@@ -268,8 +271,8 @@ export function createDiscordPlaysDashboard() {
         "Fraction of each frame's wall-clock budget spent sending it to Discord; >1 means the frame was sent late.",
       targets: [
         {
-          expr: `histogram_quantile(0.95, sum(rate(stream_send_frametime_ratio_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "{{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(stream_send_frametime_ratio_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 16, y: 49, w: 8, h: 8 },
@@ -282,8 +285,8 @@ export function createDiscordPlaysDashboard() {
       title: "Late RTP sends (frames/s)",
       targets: [
         {
-          expr: `sum(rate(stream_send_late_frames_total{${SCOPE}}[5m])) by (namespace)`,
-          legend: "{{namespace}}",
+          expr: `sum(rate(stream_send_late_frames_total{${SCOPE}}[5m])) by (namespace, runtime)`,
+          legend: "{{runtime}}",
         },
       ],
       gridPos: { x: 0, y: 57, w: 12, h: 7 },
@@ -298,12 +301,12 @@ export function createDiscordPlaysDashboard() {
         "Cadence of frames handed to ffmpeg (should sit at the frame budget) and the pipe-write duration (rises with encoder backpressure).",
       targets: [
         {
-          expr: `histogram_quantile(0.95, sum(rate(stream_frame_interval_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "interval {{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(stream_frame_interval_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "interval {{runtime}}",
         },
         {
-          expr: `histogram_quantile(0.95, sum(rate(stream_frame_write_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
-          legend: "write {{namespace}}",
+          expr: `histogram_quantile(0.95, sum(rate(stream_frame_write_ms_bucket{${SCOPE}}[5m])) by (le, namespace, runtime))`,
+          legend: "write {{runtime}}",
         },
       ],
       gridPos: { x: 12, y: 57, w: 12, h: 7 },
@@ -311,16 +314,20 @@ export function createDiscordPlaysDashboard() {
     }),
   );
 
-  // Goal agent (pokemon only): the `pokemon_goal_*` instruments exist only in
-  // the pokemon backend, so no namespace scoping is needed.
+  // Goal metrics remain process-wide, scoped to Arcade rather than retired pods.
   builder.withRow(new dashboard.RowBuilder("Goal agent (pokemon)"));
 
   builder.withPanel(
     timeSeriesPanel({
       title: "Goal active",
       description:
-        "1 while a goal Codex process is running. Stuck at 1 past max_runtime_minutes ⇒ teardown failed.",
-      targets: [{ expr: `max(pokemon_goal_active)`, legend: "active" }],
+        "Number of active goal Codex processes. The stuck-goal alert checks the oldest individual goal's age, so overlapping goals do not trigger it.",
+      targets: [
+        {
+          expr: `max(pokemon_goal_active{${PROCESS_SCOPE}})`,
+          legend: "active",
+        },
+      ],
       gridPos: { x: 0, y: 65, w: 4, h: 7 },
     }),
   );
@@ -330,7 +337,7 @@ export function createDiscordPlaysDashboard() {
       title: "Goal runs by status (1h)",
       targets: [
         {
-          expr: `sum(increase(pokemon_goal_runs_total[1h])) by (status)`,
+          expr: `sum(increase(pokemon_goal_runs_total{${PROCESS_SCOPE}}[1h])) by (status)`,
           legend: "{{status}}",
         },
       ],
@@ -343,11 +350,11 @@ export function createDiscordPlaysDashboard() {
       title: "Goal duration p50 / p95",
       targets: [
         {
-          expr: `histogram_quantile(0.5, sum(rate(pokemon_goal_duration_seconds_bucket[1h])) by (le))`,
+          expr: `histogram_quantile(0.5, sum(rate(pokemon_goal_duration_seconds_bucket{${PROCESS_SCOPE}}[1h])) by (le))`,
           legend: "p50",
         },
         {
-          expr: `histogram_quantile(0.95, sum(rate(pokemon_goal_duration_seconds_bucket[1h])) by (le))`,
+          expr: `histogram_quantile(0.95, sum(rate(pokemon_goal_duration_seconds_bucket{${PROCESS_SCOPE}}[1h])) by (le))`,
           legend: "p95",
         },
       ],
@@ -363,11 +370,11 @@ export function createDiscordPlaysDashboard() {
         "Goal control-server requests by route, plus the 4xx/5xx error rate.",
       targets: [
         {
-          expr: `sum(rate(pokemon_goal_tool_calls_total[5m])) by (path)`,
+          expr: `sum(rate(pokemon_goal_tool_calls_total{${PROCESS_SCOPE}}[5m])) by (path)`,
           legend: "{{path}}",
         },
         {
-          expr: `sum(rate(pokemon_goal_tool_calls_total{status=~"4..|5.."}[5m]))`,
+          expr: `sum(rate(pokemon_goal_tool_calls_total{${PROCESS_SCOPE},status=~"4..|5.."}[5m]))`,
           legend: "errors",
         },
       ],
@@ -380,7 +387,7 @@ export function createDiscordPlaysDashboard() {
       title: "Tokens by kind (1h)",
       targets: [
         {
-          expr: `sum(increase(pokemon_goal_tokens_total[1h])) by (kind)`,
+          expr: `sum(increase(pokemon_goal_tokens_total{${PROCESS_SCOPE}}[1h])) by (kind)`,
           legend: "{{kind}}",
         },
       ],
@@ -392,7 +399,10 @@ export function createDiscordPlaysDashboard() {
     timeSeriesPanel({
       title: "Goal cost (USD, 1h)",
       targets: [
-        { expr: `increase(pokemon_goal_cost_usd_total[1h])`, legend: "cost" },
+        {
+          expr: `increase(pokemon_goal_cost_usd_total{${PROCESS_SCOPE}}[1h])`,
+          legend: "cost",
+        },
       ],
       gridPos: { x: 0, y: 72, w: 12, h: 6 },
       unit: "currencyUSD",
@@ -406,7 +416,7 @@ export function createDiscordPlaysDashboard() {
         "agent = explicit /progress; milestone = forwarded codex narration; interval = harness floor updates.",
       targets: [
         {
-          expr: `sum(increase(pokemon_goal_progress_updates_total[1h])) by (source)`,
+          expr: `sum(increase(pokemon_goal_progress_updates_total{${PROCESS_SCOPE}}[1h])) by (source)`,
           legend: "{{source}}",
         },
       ],

@@ -39,6 +39,8 @@ export type GameStreamerOptions = {
   selfbotClient: Client;
   guildId: string;
   channelId: string;
+  /** Static game key when this streamer is reused by another runtime. */
+  runtime?: string;
   /** The engine's frames and audio; sizes the raw inputs handed to ffmpeg. */
   format: FrameFormat;
   pixelFormat?: "bgra" | "rgba";
@@ -86,6 +88,7 @@ export type StreamFrameTiming = {
 // richer ffmpeg/session metrics.
 export class GameStreamer extends GameStreamerBase {
   private readonly options: GameStreamerOptions;
+  private readonly metricLabels: { runtime: string };
   private session: SessionStats | undefined;
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
@@ -99,9 +102,11 @@ export class GameStreamer extends GameStreamerBase {
       selfbotClient: options.selfbotClient,
       guildId: options.guildId,
       channelId: options.channelId,
+      runtime: options.runtime ?? "mk64",
       logger,
     });
     this.options = options;
+    this.metricLabels = { runtime: options.runtime ?? "mk64" };
   }
 
   /** Feed one BGRA frame (no-op unless a broadcast is active). */
@@ -110,7 +115,10 @@ export class GameStreamer extends GameStreamerBase {
     if (sink === undefined || !this.frameSink) return;
     const pushAt = performance.now();
     if (this.lastPushAt !== undefined) {
-      streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
+      streamFrameIntervalMs.observe(
+        this.metricLabels,
+        pushAt - this.lastPushAt,
+      );
     }
     this.lastPushAt = pushAt;
     const sourceTiming =
@@ -125,7 +133,7 @@ export class GameStreamer extends GameStreamerBase {
           };
     sink.writeFrame(frame, sourceTiming);
     // A slow write is backpressure showing up before the buffer gauge moves.
-    streamFrameWriteMs.observe(performance.now() - pushAt);
+    streamFrameWriteMs.observe(this.metricLabels, performance.now() - pushAt);
     this.bufferMetric.set(this.videoSink?.bufferedBytes ?? 0);
   }
 
@@ -159,7 +167,7 @@ export class GameStreamer extends GameStreamerBase {
       throw new DOMException("encoder preparation aborted", "AbortError");
     }
 
-    const metrics = createStreamMetrics();
+    const metrics = createStreamMetrics(this.metricLabels.runtime);
     this.streamMetrics = metrics;
     const latencyTracker = new StreamLatencyTracker(
       createLatencyObservations(metrics),
@@ -170,7 +178,7 @@ export class GameStreamer extends GameStreamerBase {
       frameBytes: frameBytes(format),
       maxBufferedFrames: MAX_BUFFERED_FRAMES,
       onFrameEvicted: (timing) => {
-        streamFramesDroppedTotal.inc();
+        streamFramesDroppedTotal.inc(this.metricLabels);
         if (this.session) this.session.framesDropped++;
         latencyTracker.recordDroppedVideoSource(timing);
       },

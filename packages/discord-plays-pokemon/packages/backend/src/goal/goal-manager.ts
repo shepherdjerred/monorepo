@@ -340,7 +340,7 @@ export class GoalManager {
       updateTimer,
     };
     reporter.activate((text) => void this.forwardMilestone(id, text));
-    recordGoalStarted(state, this.isStreaming);
+    recordGoalStarted(state, this.isStreaming, this.now);
     void this.observeProcess(id);
 
     return {

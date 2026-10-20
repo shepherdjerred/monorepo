@@ -3,7 +3,7 @@ import { PcmSink } from "#src/stream/pcm-sink.ts";
 import { Client, ClientUser } from "discord.js-selfbot-v13";
 import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "#src/stream/game-streamer-base.ts";
-import { streamActive } from "#src/observability/metrics.ts";
+import { streamActive, runtimeGauge } from "#src/observability/metrics.ts";
 import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
 
@@ -45,6 +45,7 @@ function makeStreamer(): TestStreamer {
     selfbotClient: new Client(),
     guildId: "guild-1",
     channelId: "channel-1",
+    runtime: "test",
     logger: silentLogger,
   });
 }
@@ -65,7 +66,8 @@ async function gaugeValue(name: string): Promise<number | undefined> {
   const { registry } = await import("#src/observability/metrics.ts");
   const metrics = await registry.getMetricsAsJSON();
   const metric = metrics.find((m) => m.name === name);
-  return metric?.values[0]?.value;
+  return metric?.values.find((entry) => entry.labels["runtime"] === "test")
+    ?.value;
 }
 
 describe("GameStreamerBase", () => {
@@ -77,6 +79,7 @@ describe("GameStreamerBase", () => {
       selfbotClient: client,
       guildId: "100",
       channelId: "200",
+      runtime: "test",
       logger: silentLogger,
     });
     try {
@@ -89,7 +92,7 @@ describe("GameStreamerBase", () => {
     }
   });
   test("constructing and destroying an idle streamer preserves another live stream", async () => {
-    const active = contributeGauge(streamActive, "sum");
+    const active = contributeGauge(runtimeGauge(streamActive, "test"), "sum");
     active.set(1);
     const idle = makeStreamer();
     try {
@@ -164,6 +167,7 @@ describe("GameStreamerBase", () => {
       selfbotClient: client,
       guildId: "guild-1",
       channelId: "channel-1",
+      runtime: "test",
       logger: silentLogger,
     });
     expect(client.listenerCount("raw")).toBe(rawListeners + 1);

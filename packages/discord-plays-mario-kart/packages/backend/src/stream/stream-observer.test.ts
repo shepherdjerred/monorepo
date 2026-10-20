@@ -61,6 +61,46 @@ function makeClock(start = 10_000): {
   };
 }
 
+it("keeps a slow game's encoder metrics separate from a healthy game", async () => {
+  const mk64 = createStreamMetrics("mk64");
+  const brawl = createStreamMetrics("brawl");
+  scopes.push(mk64, brawl);
+  mk64.speedRatio.set(0.5);
+  brawl.speedRatio.set(1);
+  mk64.fps.set(15);
+  brawl.fps.set(30);
+  expect(
+    await metricValue("stream_ffmpeg_speed_ratio", undefined, {
+      runtime: "mk64",
+    }),
+  ).toBe(0.5);
+  expect(
+    await metricValue("stream_ffmpeg_speed_ratio", undefined, {
+      runtime: "brawl",
+    }),
+  ).toBe(1);
+  const before = await metricValue(
+    "stream_packet_ready_delay_ms",
+    "stream_packet_ready_delay_ms_count",
+    { runtime: "brawl", kind: "video" },
+  );
+  createLatencyObservations(brawl).observePacketReady("video", 5);
+  expect(
+    await metricValue(
+      "stream_packet_ready_delay_ms",
+      "stream_packet_ready_delay_ms_count",
+      { runtime: "brawl", kind: "video" },
+    ),
+  ).toBe(before + 1);
+  mk64.close();
+  expect(
+    await metricValue("stream_ffmpeg_fps", undefined, { runtime: "mk64" }),
+  ).toBe(0);
+  expect(
+    await metricValue("stream_ffmpeg_fps", undefined, { runtime: "brawl" }),
+  ).toBe(30);
+});
+
 describe("parseTimemarkSeconds", () => {
   it("parses HH:MM:SS.ss", () => {
     expect(parseTimemarkSeconds("00:01:30.50")).toBe(90.5);

@@ -3,7 +3,10 @@ import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
 import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";
 import { GoalManager } from "./goal-manager.ts";
-import { goalStreamDown } from "#src/observability/metrics.ts";
+import {
+  goalRuntimeSeconds,
+  goalStreamDown,
+} from "#src/observability/metrics.ts";
 import type {
   GoalDiscordMessage,
   GoalProcess,
@@ -135,6 +138,36 @@ function codePointLength(value: string): number {
   return length;
 }
 
+async function observeOverlappingGoalAges(): Promise<void> {
+  let time = Date.parse("2026-06-13T00:00:00.000Z");
+  const now = () => new Date(time);
+  const first = await managerHarness({ now, isStreaming: () => true });
+  const second = await managerHarness({ now, isStreaming: () => true });
+  try {
+    expect(await startDefaultGoal(first.manager)).toMatchObject({
+      kind: "started",
+    });
+    time += 20 * 60 * 1000;
+    expect(await startDefaultGoal(second.manager)).toMatchObject({
+      kind: "started",
+    });
+    time += 20 * 60 * 1000;
+    expect(await goalRuntimeSeconds.get()).toMatchObject({
+      values: [{ value: 40 * 60 }],
+    });
+    await first.manager.shutdown();
+    expect(await goalRuntimeSeconds.get()).toMatchObject({
+      values: [{ value: 20 * 60 }],
+    });
+  } finally {
+    await first.manager.shutdown();
+    await second.manager.shutdown();
+  }
+  expect(await goalRuntimeSeconds.get()).toMatchObject({
+    values: [{ value: 0 }],
+  });
+}
+
 describe("GoalManager", () => {
   const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
@@ -177,6 +210,11 @@ describe("GoalManager", () => {
       values: [{ value: 0 }],
     });
   });
+
+  test(
+    "observes each goal's age independently across overlapping sessions",
+    observeOverlappingGoalAges,
+  );
 
   test("locks a goal from other users for the configured lock window", async () => {
     const runtimeDirectory = await createRuntimeDirectory();

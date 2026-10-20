@@ -75,31 +75,32 @@ const SLOW_RATIO_THRESHOLD = 0.95;
 export function createLatencyObservations(
   metrics: StreamMetrics,
 ): StreamLatencyObservations {
+  const { runtime } = metrics;
   return {
     observePacketReady: (kind, delayMs) => {
-      streamPacketReadyDelayMs.observe({ kind }, delayMs);
+      streamPacketReadyDelayMs.observe({ runtime, kind }, delayMs);
     },
     observeSendComplete: (kind, delayMs) => {
-      streamSendCompleteDelayMs.observe({ kind }, delayMs);
+      streamSendCompleteDelayMs.observe({ runtime, kind }, delayMs);
     },
     observeInputToPacketReady: (delayMs) => {
-      streamInputToPacketReadyMs.observe(delayMs);
+      streamInputToPacketReadyMs.observe({ runtime }, delayMs);
     },
     observeInputToSendComplete: (delayMs) => {
-      streamInputToSendCompleteMs.observe(delayMs);
+      streamInputToSendCompleteMs.observe({ runtime }, delayMs);
     },
     observeAvContentOffset: (offsetMs) => {
       metrics.avOffset.set(offsetMs);
-      streamAvContentSkewAbsMs.observe(Math.abs(offsetMs));
+      streamAvContentSkewAbsMs.observe({ runtime }, Math.abs(offsetMs));
     },
     correlationFailure: (kind, reason) => {
-      streamLatencyCorrelationFailuresTotal.inc({ kind, reason });
+      streamLatencyCorrelationFailuresTotal.inc({ runtime, kind, reason });
     },
     videoSourceDepth: (depth) => {
       metrics.sourceDepth.set(depth);
     },
     sendInterval: (kind, intervalMs) => {
-      streamSendIntervalMs.observe({ kind }, intervalMs);
+      streamSendIntervalMs.observe({ runtime, kind }, intervalMs);
     },
   };
 }
@@ -118,6 +119,7 @@ export function createStreamObserver(
   session: SessionStats,
   options: StreamObserverOptions,
 ): StreamObserver {
+  const { runtime } = options.metrics;
   const now = options.now ?? (() => performance.timeOrigin + performance.now());
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
@@ -186,10 +188,13 @@ export function createStreamObserver(
     },
     onSendStats: (stats) => {
       options.latencyTracker?.onSendStats(stats);
-      streamSendFrametimeRatio.observe({ kind: stats.kind }, stats.ratio);
+      streamSendFrametimeRatio.observe(
+        { runtime, kind: stats.kind },
+        stats.ratio,
+      );
       if (stats.kind === "video") session.videoFramesSent++;
       if (stats.ratio > 1) {
-        streamSendLateFramesTotal.inc({ kind: stats.kind });
+        streamSendLateFramesTotal.inc({ runtime, kind: stats.kind });
         if (stats.kind === "video") session.lateVideoFrames++;
       }
     },

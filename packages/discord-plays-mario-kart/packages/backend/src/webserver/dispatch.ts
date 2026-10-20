@@ -232,7 +232,7 @@ export function handleRequest(
       emulator.setPlayerInput(e.request.seat, e.request.state);
     })
     .with({ request: { kind: "latency-report" } }, (e) => {
-      controllerRttMs.observe(e.request.rttMs);
+      controllerRttMs.observe({ runtime: "mk64" }, e.request.rttMs);
       for (const glassMs of e.request.glassMs ?? []) {
         driverFeedGlassMs.observe(glassMs);
       }

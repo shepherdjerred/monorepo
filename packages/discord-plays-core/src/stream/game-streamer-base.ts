@@ -11,7 +11,11 @@ import type {
 import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
 import { type Actor, createActor, toPromise } from "xstate";
 import type { Logger } from "#src/logger.ts";
-import { streamActive, sinkBufferBytes } from "#src/observability/metrics.ts";
+import {
+  streamActive,
+  sinkBufferBytes,
+  runtimeGauge,
+} from "#src/observability/metrics.ts";
 import { contributeGauge } from "#src/observability/gauge-contribution.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
@@ -25,6 +29,8 @@ export type GameStreamerBaseOptions = {
   selfbotClient: Client;
   guildId: string;
   channelId: string;
+  /** Static backend/game identity; never a user or session identifier. */
+  runtime: string;
   logger: Logger;
 };
 
@@ -53,10 +59,18 @@ export abstract class GameStreamerBase {
   // in the subclass's buildEncoder() and torn down when the broadcast stops.
   protected audioTransport: AudioTransport | null = null;
   private pendingJoin: Promise<void> | undefined;
-  private readonly activeMetric = contributeGauge(streamActive, "sum");
-  protected readonly bufferMetric = contributeGauge(sinkBufferBytes, "sum");
+  private readonly activeMetric: ReturnType<typeof contributeGauge>;
+  protected readonly bufferMetric: ReturnType<typeof contributeGauge>;
 
   constructor(options: GameStreamerBaseOptions) {
+    this.activeMetric = contributeGauge(
+      runtimeGauge(streamActive, options.runtime),
+      "sum",
+    );
+    this.bufferMetric = contributeGauge(
+      runtimeGauge(sinkBufferBytes, options.runtime),
+      "sum",
+    );
     this.logger = options.logger;
     this.streamer = new Streamer(options.selfbotClient);
 

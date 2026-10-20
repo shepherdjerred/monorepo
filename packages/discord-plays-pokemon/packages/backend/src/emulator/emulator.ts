@@ -439,7 +439,7 @@ export class Emulator {
     this.setKeys(mask);
     const emulateStart = performance.now();
     exports.runFrame();
-    emulateMs.observe(performance.now() - emulateStart);
+    emulateMs.observe({ runtime: "emerald" }, performance.now() - emulateStart);
     this.currentFrame += 1;
 
     // The wasm's mixer ran inside WasmRunFrame; we just read the freshly
@@ -453,7 +453,7 @@ export class Emulator {
       const copyStart = performance.now();
       const rgba = this.renderer.render();
       this.onFrameCb(Buffer.from(rgba));
-      copyMs.observe(performance.now() - copyStart);
+      copyMs.observe({ runtime: "emerald" }, performance.now() - copyStart);
     }
     for (const hook of this.frameHooks) {
       try {
@@ -463,7 +463,7 @@ export class Emulator {
         logger.error("frame hook failed", error);
       }
     }
-    ticksTotal.inc();
+    ticksTotal.inc({ runtime: "emerald" });
 
     const interval = this.options.saveIntervalFrames ?? 60;
     if (this.currentFrame % interval === 0) {
@@ -476,9 +476,9 @@ export class Emulator {
     this.nextTickAt += FRAME_MS;
     // behind > 0 means the tick overran its budget.
     const behind = performance.now() - this.nextTickAt;
-    lateMs.observe(Math.max(0, behind));
+    lateMs.observe({ runtime: "emerald" }, Math.max(0, behind));
     if (behind > 250) {
-      loopResyncTotal.inc();
+      loopResyncTotal.inc({ runtime: "emerald" });
       this.nextTickAt = performance.now();
     }
     this.scheduleNext();

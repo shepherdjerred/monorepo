@@ -14,6 +14,7 @@ const goalStreamObservers = new Map<string, () => void>();
 export function recordGoalStarted(
   state: GoalState,
   isStreaming?: () => boolean,
+  now: () => Date = () => new Date(),
 ): void {
   goalActive.inc();
   if (isStreaming !== undefined) {
@@ -22,6 +23,8 @@ export function recordGoalStarted(
       observeGoalStreamHealth({
         active: () => state.status === "running",
         streaming: isStreaming,
+        ageSeconds: () =>
+          Math.max(0, (now().getTime() - Date.parse(state.startedAt)) / 1000),
       }),
     );
   }

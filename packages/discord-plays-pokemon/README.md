@@ -62,6 +62,8 @@ and the socket dispatch.
 down. It pairs each goal manager with its session's streamer at scrape time,
 so another Arcade stream cannot hide a failed goal broadcast. The metric has
 no guild or session labels; headless goal benchmarks have no broadcast probe.
+`pokemon_goal_runtime_seconds` reports the oldest such goal's age, so the
+runtime-cap alert does not mistake overlapping short goals for one stuck run.
 
 The WASM is **built from source** (ottohg pinned at `OTTOHG_SHA` +
 our export patch) by `scripts/build-wasm.ts`. It is not committed; Renovate

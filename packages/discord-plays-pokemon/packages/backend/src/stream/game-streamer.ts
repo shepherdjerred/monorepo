@@ -52,6 +52,7 @@ export class GameStreamer extends GameStreamerBase {
       selfbotClient: options.selfbotClient,
       guildId: options.guildId,
       channelId: options.channelId,
+      runtime: "emerald",
       logger,
     });
     this.options = options;
