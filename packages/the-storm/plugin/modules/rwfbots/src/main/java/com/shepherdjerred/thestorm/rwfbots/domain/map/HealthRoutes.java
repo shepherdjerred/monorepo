@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.map;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,12 @@ import org.jspecify.annotations.Nullable;
  * Exact shortest routes under a cumulative health-point budget, including safer alternate prefixes.
  */
 public final class HealthRoutes {
+  /**
+   * Leeway, in ticks, on the remaining-time bound, so float rounding in it never drops a label that
+   * would arrive just in time.
+   */
+  private static final double LATE_SLACK = 1;
+
   private HealthRoutes() {}
 
   /** Damage budget is available health minus the health the caller requires on arrival. */
@@ -226,6 +233,13 @@ public final class HealthRoutes {
     private final Request request;
     private final EdgePolicy edges;
     private final boolean arrivalMatters;
+
+    /**
+     * The least time from each node to the goal while it fits the deadline, or empty without a
+     * deadline: a label that cannot arrive in time even at that pace is never offered.
+     */
+    private final double[] remaining;
+
     private final Map<Integer, List<Label>> frontier = new HashMap<>();
     private final PriorityQueue<Label> open =
         new PriorityQueue<>(
@@ -241,9 +255,15 @@ public final class HealthRoutes {
       this.request = request;
       this.edges = edges;
       arrivalMatters = edges.timed() || request.risk().deadlineTicks().isPresent();
+      var deadline = request.risk().deadlineTicks();
+      remaining =
+          deadline.isPresent()
+              ? remainingTicks(graph, request.to(), edges.motion(), deadline.orElseThrow())
+              : new double[0];
     }
 
     Optional<Route> find() {
+      if (!inTime(request.from(), 0)) return Optional.empty();
       offer(new Label(request.from(), 0, 0, new Prefix(-1, Optional.empty(), 0)));
       while (!open.isEmpty()) {
         var current = open.remove();
@@ -262,11 +282,11 @@ public final class HealthRoutes {
       if (!Double.isFinite(duration) || duration < 0)
         throw new IllegalArgumentException("motion duration must be finite and non-negative");
       var ticks = current.ticks + duration;
-      if (!request.risk().allows(ticks)) return;
+      var node = graph.edgeTarget(edge);
+      if (!inTime(node, ticks)) return;
       var edgeDamage = checkedDamage(edges.damage(), edge, ticks);
       var totalDamage = Math.addExact(current.damage, edgeDamage);
       if (totalDamage > request.damageBudget()) return;
-      var node = graph.edgeTarget(edge);
       var penalty = request.transitionPenalty(graph, current.node, node);
       var riskCost = edgeDamage * request.risk().ticksPerHealthPoint();
       offer(
@@ -279,6 +299,14 @@ public final class HealthRoutes {
                   + riskCost
                   + checkedToll(edges.toll(), edge, current.node, duration),
               new Prefix(edge, Optional.of(current), ticks)));
+    }
+
+    /** Whether a label at {@code node} after {@code ticks} can still reach the goal in time. */
+    private boolean inTime(int node, double ticks) {
+      return request.risk().allows(ticks)
+          && (remaining.length == 0
+              || ticks + remaining[node]
+                  <= request.risk().deadlineTicks().orElseThrow() + LATE_SLACK);
     }
 
     private void offer(Label candidate) {
@@ -305,5 +333,37 @@ public final class HealthRoutes {
       // NavPath.cost contains terrain time alone; discretionary penalties only choose the route.
       return new Route(new NavPath(nodes, waypoints, goal.ticks), goal.damage, goal.cost);
     }
+  }
+
+  /**
+   * The least physical time from each node to {@code goal} over the edges the motion allows: a
+   * reverse Dijkstra on time alone, which no damage or toll can shorten. It stops past the
+   * deadline, leaving every later node at or above it. With it a bot that can no longer make a lit
+   * fuse is turned away at once, instead of settling every state the deadline admits across most of
+   * a large map first.
+   */
+  private static double[] remainingTicks(
+      NavGraph graph, int goal, NavGraph.EdgeMotion motion, double deadline) {
+    var remaining = new double[graph.nodeCount()];
+    Arrays.fill(remaining, Double.POSITIVE_INFINITY);
+    remaining[goal] = 0;
+    var open = new MinHeap(64);
+    open.push(0, goal);
+    while (!open.isEmpty()) {
+      var key = open.peekKey();
+      var node = open.pop();
+      if (key > (float) remaining[node]) continue;
+      if (remaining[node] > deadline + LATE_SLACK) break;
+      for (var edge : graph.incomingEdges(node)) {
+        if (!motion.allowed().test(edge)) continue;
+        var source = graph.edgeSource(edge);
+        var through = remaining[node] + motion.duration().applyAsDouble(edge);
+        if (through < remaining[source]) {
+          remaining[source] = through;
+          open.push((float) through, source);
+        }
+      }
+    }
+    return remaining;
   }
 }

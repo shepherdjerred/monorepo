@@ -6,7 +6,13 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.OptionalDouble;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 final class HealthRoutesTest {
@@ -120,6 +126,76 @@ final class HealthRoutesTest {
             HealthRoutes.find(
                 course(), new HealthRoutes.Request(0, 4, 2, node -> 0), edge -> DAMAGE[edge]))
         .isEmpty();
+  }
+
+  /**
+   * A square of open ground whose far corner leads into a long corridor, every edge one tick: the
+   * corridor's end lies further than the deadline from anywhere in the square.
+   */
+  private static NavGraph squareAndCorridor(int side, int corridor) {
+    var bounds = new GridBounds(new BlockPos(0, 0, 0), side + corridor, 1, side);
+    var cells = new ArrayList<Integer>();
+    for (var x = 0; x < side; x++) for (var z = 0; z < side; z++) cells.add(bounds.index(x, 0, z));
+    for (var x = side; x < side + corridor; x++) cells.add(bounds.index(x, 0, 0));
+    var nodeOf = new HashMap<Integer, Integer>();
+    for (var node = 0; node < cells.size(); node++) nodeOf.put(cells.get(node), node);
+    var starts = new int[cells.size() + 1];
+    var targets = new ArrayList<Integer>();
+    for (var node = 0; node < cells.size(); node++) {
+      starts[node] = targets.size();
+      targets.addAll(neighbours(bounds, nodeOf, bounds.cell(cells.get(node))));
+    }
+    starts[cells.size()] = targets.size();
+    var hops = new byte[targets.size()];
+    Arrays.fill(hops, Hop.WALK.code());
+    var costs = new float[targets.size()];
+    Arrays.fill(costs, 1);
+    return new NavGraph(
+        bounds,
+        cells.stream().mapToInt(Integer::intValue).toArray(),
+        new NavGraph.Topology(starts, targets.stream().mapToInt(Integer::intValue).toArray()),
+        new NavGraph.EdgeData(hops, costs));
+  }
+
+  private static List<Integer> neighbours(
+      GridBounds bounds, Map<Integer, Integer> nodeOf, BlockPos cell) {
+    var out = new ArrayList<Integer>();
+    for (var step : new int[][] {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+      var x = cell.x() + step[0];
+      var z = cell.z() + step[1];
+      if (!bounds.contains(x, 0, z)) continue;
+      var next = nodeOf.get(bounds.index(x, 0, z));
+      if (next != null) out.add(next);
+    }
+    return out;
+  }
+
+  @Test
+  void aGoalThatCannotBeReachedByTheDeadlineIsRejectedWithoutSearchingTheGroundAroundTheBot() {
+    var side = 60;
+    var graph = squareAndCorridor(side, 150);
+    var checked = new AtomicInteger();
+    var motion =
+        new NavGraph.EdgeMotion(
+            graph::edgeCost,
+            edge -> {
+              checked.incrementAndGet();
+              return true;
+            },
+            1);
+    var late =
+        new HealthRoutes.Request(
+            0,
+            graph.nodeCount() - 1,
+            new HealthRoutes.RiskPolicy(20, 1, OptionalDouble.of(100)),
+            node -> 0);
+    for (var timed : new boolean[] {false, true}) {
+      checked.set(0);
+      var edges = new HealthRoutes.EdgePolicy((edge, arrival) -> 0, motion, timed);
+      assertThat(HealthRoutes.find(graph, late, edges, null)).isEmpty();
+      // The square alone has over 14,000 edges, nearly all within the deadline of the bot.
+      assertThat(checked.get()).isLessThan(side * side);
+    }
   }
 
   @Test
