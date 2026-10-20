@@ -77,6 +77,12 @@ export async function prepareMinecraftDelivery(
   effects: MinecraftEffects = external,
 ) {
   requireActive(detail);
+  if (
+    detail.pipeline.definition.kind === "argocd" &&
+    detail.pipeline.definition.minecraftUpgrade?.releaseMode ===
+      "retained-volume-restart"
+  )
+    return { status: "ready" } as const;
   const result = parseMinecraftEligibility(
     await effects.eligibility(
       detail,

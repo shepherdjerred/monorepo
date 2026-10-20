@@ -74,6 +74,19 @@ evidence identities. Frozen Minecraft upgrade pipelines also append preservation
 proofs under their numbered preservation stage, retaining the initial native
 controller receipt when the independent backup and gameplay proofs arrive.
 
+The TSMC pipeline declares `minecraftUpgrade.releaseMode` in its immutable
+registration. `retained-volume-restart` uses an ordinary graceful StatefulSet
+restart on the retained world PVC and requires the usual exact source, image,
+reconciliation and runtime acceptance. It does not manufacture preservation
+evidence or couple every release to a cloud backup and restored candidate.
+`verified-restore` and existing revisions with no mode retain the independent
+backup/restore gate. Unknown modes fail validation. Neither mode permits an
+image-only rollback of the persistent world.
+Routine-mode reconciliation failures use the ordinary independent Argo recovery
+inspector, which requires the same recorded request, native operation identity
+and settled external work before releasing ownership. Legacy preservation
+recovery still requires its private controller journal.
+
 CI registration is pending until the backend verifies the exact Woodpecker
 main-push pipeline reached success. Artifact selection cannot consume pending
 or failed publications. Qualification and initial version set composition commit

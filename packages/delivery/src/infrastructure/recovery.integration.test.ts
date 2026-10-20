@@ -34,6 +34,46 @@ function observation(phase = "Failed") {
     },
   };
 }
+async function checkMinecraftRecovery(detail: DeploymentDetail) {
+  const selected = structuredClone(detail);
+  if (selected.pipeline.definition.kind !== "argocd")
+    throw new Error("Expected an Argo pipeline");
+  selected.pipeline.definition.application = "minecraft-tsmc";
+  selected.environment.id = "minecraft/tsmc";
+  const current = observation();
+  current.metadata.name = "minecraft-tsmc";
+  current.metadata.annotations["delivery.shepherdjerred.com/environment"] =
+    "minecraft/tsmc";
+  const inspect = createRecoveryInspector({
+    origin: "https://argocd.sjer.red",
+    token: "test-read-only-token",
+    fetch: async () => Response.json(current),
+  });
+  selected.pipeline.definition.minecraftUpgrade = {
+    imageComponent: "image:the-storm-server",
+    runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
+    releaseMode: "retained-volume-restart",
+  };
+  expect(await inspect(selected, recovery)).toHaveLength(1);
+  await expect(
+    inspect(selected, { ...recovery, operationId: requestId }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  current.status.operationState.phase = "Running";
+  await expect(inspect(selected, recovery)).rejects.toMatchObject({
+    code: "CONFLICT",
+  });
+  current.status.operationState.phase = "Failed";
+  selected.pipeline.definition.minecraftUpgrade.releaseMode =
+    "verified-restore";
+  await expect(inspect(selected, recovery)).rejects.toMatchObject({
+    code: "INVALID",
+  });
+  delete selected.pipeline.definition.minecraftUpgrade.releaseMode;
+  await expect(inspect(selected, recovery)).rejects.toMatchObject({
+    code: "INVALID",
+  });
+}
+
 describe("independent Argo recovery", () => {
   let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
   let delivery: Delivery;
@@ -87,6 +127,9 @@ describe("independent Argo recovery", () => {
     await expect(inspect(detail, recovery)).rejects.toMatchObject({
       code: "PAUSED",
     });
+  });
+  test("only explicit retained-volume Minecraft restarts use ordinary owned Argo recovery", async () => {
+    await checkMinecraftRecovery(detail);
   });
   test("dependency-configured Argo targets cannot unlock without independent exact plugin readback", async () => {
     const selected: DeploymentDetail = {

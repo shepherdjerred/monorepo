@@ -443,6 +443,12 @@ result and pool remain unchanged. `scripts/rollout/worker-delivery-recovery.ts`
 runs the same verifier through brokered operator credentials when Activity
 workers are unavailable; it never resumes effects or accepts the failed release.
 
+TSMC's explicit `retained-volume-restart` pipeline mode skips the preservation
+Activity and uses normal owned Argo reconciliation and exact Ready image checks
+against the retained world PVC. Scheduled backups remain independent. The
+`verified-restore` mode and older pipelines without a mode keep the full
+preservation path; existing Workflow histories keep their recorded branch.
+
 TSMC preservation records an original-source snapshot in the controller's private
 durable journal before returning its native Pod receipt. A failed pre-selection
 deployment can request a separate admin Minecraft recovery intent, including

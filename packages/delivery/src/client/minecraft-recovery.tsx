@@ -1,10 +1,20 @@
 import type { DeploymentDetail } from "#shared/contract.ts";
 import { NativeIntentHeading } from "./native-intent-heading.tsx";
 
-export function MinecraftRecovery({ detail }: { detail: DeploymentDetail }) {
+type RecoveryDetail = {
+  pipeline: Pick<DeploymentDetail["pipeline"], "definition">;
+  deployment: Pick<DeploymentDetail["deployment"], "id" | "recoveryRequired">;
+  environment: Pick<DeploymentDetail["environment"], "generation">;
+  stages: Pick<DeploymentDetail["stages"][number], "key">[];
+  minecraftRecoveries: DeploymentDetail["minecraftRecoveries"];
+};
+
+export function MinecraftRecovery({ detail }: { detail: RecoveryDetail }) {
   if (
     detail.pipeline.definition.kind !== "argocd" ||
-    detail.pipeline.definition.minecraftUpgrade === undefined
+    detail.pipeline.definition.minecraftUpgrade === undefined ||
+    detail.pipeline.definition.minecraftUpgrade.releaseMode ===
+      "retained-volume-restart"
   )
     return null;
   const sourceSelected = detail.stages.some(
