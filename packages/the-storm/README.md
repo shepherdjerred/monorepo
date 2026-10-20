@@ -3350,7 +3350,10 @@ corner that holds nothing are left out of routes. As in vanilla, a body holds
 onto a ladder or vine only while climbing or sneaking; otherwise it slides down.
 A walk may cross a point where only part of its footprint is on a block (a
 one-block walkway, blocks touching at a corner) but must end fully supported,
-and a refused walk leaves an airborne body's momentum alone. When a body still refuses or
+and a refused walk leaves an airborne body's momentum alone. A drop whose flight
+clips a low ceiling or a stair is taken when a body walking down the steps,
+half a block at a time, stays clear, rounding a stair turn or column corner
+along one axis and then the other when the straight line cuts through it. When a body still refuses or
 stalls on a step, `/rwfbots debug` shows a snapshot of its state and the first
 check that refused the step.
 

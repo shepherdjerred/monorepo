@@ -303,4 +303,59 @@ final class MovementTerrainTest {
             com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
     assertThat(result.destination()).contains(new Vec3(2.5, 1, 2.5));
   }
+
+  @Test
+  void aDropDownAStairwellUnderALowCeilingFollowsTheStepsDown() {
+    // hemispheres: bots going down a tower's stairs were refused every drop, because the flight
+    // was held at the take-off height into the low ceiling over the stairwell.
+    world.getBlockAt(1, 1, 2).setType(Material.STONE);
+    world.getBlockAt(3, 3, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 2, 2.5),
+            new Vec3(3.5, 1, 2.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
+  }
+
+  @Test
+  void aDropUnderAWallItCannotPassIsStillRefused() {
+    world.getBlockAt(1, 1, 2).setType(Material.STONE);
+    world.getBlockAt(3, 1, 2).setType(Material.STONE);
+    world.getBlockAt(3, 2, 2).setType(Material.STONE);
+    world.getBlockAt(3, 3, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 2, 2.5),
+            new Vec3(4.5, 1, 2.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP);
+    assertThat(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(
+                    terrain, request)
+                .reason())
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.BLOCKED);
+  }
+
+  @Test
+  void aDiagonalDropThroughAColumnTurnsAroundItsCorner() {
+    // hemispheres: drops baked across a stair turn cut through the tower's central column at every
+    // height; a body rounds the corner along one axis and then the other.
+    world.getBlockAt(1, 1, 1).setType(Material.STONE);
+    for (var y = 1; y <= 4; y++) world.getBlockAt(2, y, 2).setType(Material.STONE);
+    var request =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            new Vec3(1.5, 2, 1.5),
+            new Vec3(3.5, 1, 3.5),
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Hop.DROP);
+    var result =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, request);
+    assertThat(result.reason())
+        .isEqualTo(
+            com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.REDIRECTED);
+    assertThat(result.destination()).contains(new Vec3(1.5, 2, 3.5));
+  }
 }
