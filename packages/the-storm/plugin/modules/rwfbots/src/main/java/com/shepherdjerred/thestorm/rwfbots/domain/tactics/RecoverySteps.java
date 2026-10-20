@@ -43,6 +43,17 @@ final class RecoverySteps {
   }
 
   /**
+   * Whether the bot may be sent to stand at {@code node}: {@link #leavable} and reachable from
+   * where it stands. A cover point it cannot route to failed every route and kept a bot stepping
+   * back and forth in recovery for over a minute (the-harshest-harvest).
+   */
+  static boolean usable(Situation situation, TacticsContext context, int node) {
+    var graph = context.nav().graph();
+    var from = start(graph, situation.self().pos());
+    return leavable(context, node) && (from.isEmpty() || graph.reachable(from.getAsInt(), node));
+  }
+
+  /**
    * The way out for a bot stranded in a sink, off any climb: along the graph through the sink (a
    * pool's swim edges) to the nearest node beside a bank at most a block up from which a spawn can
    * be reached, then onto that bank, which a swimmer climbs as a player does. A higher edge, such

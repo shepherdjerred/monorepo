@@ -405,4 +405,30 @@ final class StuckSpotsTest {
     assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.LET_GO);
     assertThat(thought.decision().waypoints()).isEmpty();
   }
+
+  @Test
+  void coverABotCannotRouteToIsNeverOffered() {
+    // the-harshest-harvest: slot cover was chosen where the bot could not route, every route failed
+    // and the bot stepped back and forth in recovery for 80 s.
+    var nav = nav("the-harshest-harvest");
+    var graph = nav.graph();
+    var context = context(nav);
+    var here = new Vec3(6172.9, 13.0, 4138.5);
+    var start = graph.nearestNode(here).orElseThrow();
+    var situation =
+        situation(nav, combatant(1, RED, here).withMotion(false, true), Optional.empty(), 100);
+    var unreachable = 0;
+    var usable = 0;
+    for (var point : nav.cover().points()) {
+      if (!graph.reachable(start, point.node())) {
+        unreachable++;
+        assertThat(RecoverySteps.usable(situation, context, point.node())).isFalse();
+      } else if (RecoverySteps.leavable(context, point.node())) {
+        usable++;
+        assertThat(RecoverySteps.usable(situation, context, point.node())).isTrue();
+      }
+    }
+    assertThat(unreachable).as("cover the bot cannot reach exists").isPositive();
+    assertThat(usable).as("reachable dry cover exists").isPositive();
+  }
 }
