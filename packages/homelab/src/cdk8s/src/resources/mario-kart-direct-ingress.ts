@@ -1,9 +1,7 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject, JsonPatch, Size, type Chart } from "cdk8s";
 import {
-  Capability,
   ConfigMap,
-  Cpu,
   Deployment,
   DeploymentStrategy,
   Probe,
@@ -17,6 +15,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { marioKartCaddyfile } from "./mario-kart-caddyfile.ts";
+import { caddyEdgeContainerDefaults } from "./caddy-edge-container.ts";
 
 export const MARIO_KART_HTTP_NODE_PORT = 30_080;
 export const MARIO_KART_HTTPS_NODE_PORT = 30_443;
@@ -26,6 +25,7 @@ export function createMarioKartDirectIngress(
   chart: Chart,
   upstream: string,
 ): Service {
+  const defaults = caddyEdgeContainerDefaults();
   const caddyfile = marioKartCaddyfile(upstream);
   const config = new ConfigMap(chart, "mario-kart-edge-config", {
     data: { Caddyfile: caddyfile },
@@ -52,18 +52,8 @@ export function createMarioKartDirectIngress(
         { name: "https", number: 8443 },
         { name: "bootstrap", number: 8082 },
       ],
-      resources: {
-        cpu: { request: Cpu.millis(50), limit: Cpu.millis(1000) },
-        memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-      },
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        capabilities: { drop: [Capability.ALL] },
-      },
+      resources: defaults.resources,
+      securityContext: defaults.securityContext,
       readiness: Probe.fromHttpGet("/healthz", { port: 8082 }),
       liveness: Probe.fromHttpGet("/healthz", { port: 8082 }),
     }),

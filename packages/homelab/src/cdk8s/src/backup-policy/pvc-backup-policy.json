@@ -25,6 +25,12 @@
   },
   {
     "namespace": "arcade",
+    "name": "arcade-edge-data",
+    "backup": "enabled",
+    "reason": "Arcade public TLS certificates and ACME account state"
+  },
+  {
+    "namespace": "arcade",
     "name": "arcade-assets",
     "backup": "disabled",
     "reason": "Private immutable game assets can be rebuilt from operator-owned dumps"

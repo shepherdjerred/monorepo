@@ -17,7 +17,10 @@ function chartOwnsDependency(
   image: string,
   reference: string,
 ) {
-  if (image !== "caddy-s3proxy" || Chart.of(resource).node.id !== "temporal")
+  if (
+    image !== "caddy-s3proxy" ||
+    !["temporal", "arcade"].includes(Chart.of(resource).node.id)
+  )
     return false;
   if (
     reference !== "docker.io/shepherdjerred/caddy-s3proxy:delivery-recipe" &&
@@ -26,7 +29,7 @@ function chartOwnsDependency(
     )
   )
     throw new Error(
-      "Central Caddy infrastructure dependency must be pinned by the exact chart digest",
+      "Chart-owned Caddy infrastructure dependency must be pinned by the exact chart digest",
     );
   return true;
 }

@@ -27,6 +27,16 @@ Keep the old Pokémon command application until Arcade acceptance and guild
 installation finish. Retain its streaming user in the Arcade pool.
 Keep the original Pokémon vault item while [Temporal still uses its Codex credential](https://github.com/shepherdjerred/monorepo/blob/9e4dae274c1df081041b8995139f69282b8474ca/packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts).
 
+## Move the web edge between namespaces
+
+Prepare and verify the replacement before transferring its public ports and hostnames.
+
+1. Add an internal-only edge to the [Arcade chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/games/arcade.ts). Give it a backed-up certificate claim and gate Caddy startup until the existing TLS state has been verified. Keep live NodePorts and hostname bindings on the original edge during preparation.
+2. Copy persistent certificate and ACME account data directly between the mounted containers. Exclude transient locks. Verify source hashes before and after the copy, destination hashes, and ownership before releasing the startup gate. Do not write certificate keys to a local archive or logs.
+3. Validate the replacement's internal HTTPS listener using the public hostname and normal certificate verification. Check Arcade forwarding, legacy redirects, health endpoints, and metrics blocking.
+4. Drain game sessions and transfer public ownership in a separate release. Reconcile the legacy charts before Arcade so the fixed ports and aliases have only one owner. Follow the [release ownership and recovery procedure](/how-to/cut-a-homelab-release/); do not bypass Delivery-owned selections with a root sync.
+5. Remove the temporary startup gate after handover. Retain the old certificate claim and original game claims as recovery inputs. For an edge rollback, release the replacement's ports and aliases before restoring the original edge. Preserve current Arcade saves.
+
 ## Related
 
 - [About the homelab](/explanation/homelab/overview/)
