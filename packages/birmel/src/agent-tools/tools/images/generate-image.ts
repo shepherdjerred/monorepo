@@ -10,6 +10,7 @@ import { sanitizeUrlForLogging } from "@shepherdjerred/birmel/utils/safe-url.ts"
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { generateImage } from "ai";
 import { z } from "zod";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const logger = loggers.tools.child("generate-image");
 
@@ -123,7 +124,7 @@ export const generateImageTool = createTool({
       stageAttachment({
         data: imageBuffer,
         name: filename,
-        description: input.prompt.slice(0, 1024),
+        description: graphemePrefix(input.prompt, 1024),
         contentType: "image/png",
       });
 

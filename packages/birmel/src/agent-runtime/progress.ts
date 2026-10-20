@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 /**
  * Live turn progress, rendered into the one Discord message the turn owns.
@@ -40,9 +41,7 @@ export type ProgressState = {
 
 function truncate(value: string, maxLength: number): string {
   const collapsed = value.replaceAll(/\s+/gu, " ").trim();
-  return collapsed.length <= maxLength
-    ? collapsed
-    : `${collapsed.slice(0, maxLength - 1)}…`;
+  return truncateGraphemes(collapsed, maxLength);
 }
 
 /**
@@ -102,9 +101,7 @@ export function renderProgress(state: ProgressState): string {
     `step ${String(state.stepNumber)}/${String(state.maxSteps)} · ${formatDuration(state.elapsedMs)}`,
   ];
   const rendered = lines.join("\n");
-  return rendered.length <= MAX_PROGRESS_CHARACTERS
-    ? rendered
-    : `${rendered.slice(0, MAX_PROGRESS_CHARACTERS - 1)}…`;
+  return truncateGraphemes(rendered, MAX_PROGRESS_CHARACTERS);
 }
 
 export type ProgressReporter = {

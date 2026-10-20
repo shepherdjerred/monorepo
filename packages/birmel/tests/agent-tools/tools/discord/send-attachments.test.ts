@@ -52,6 +52,19 @@ describe("toDiscordAttachments", () => {
     expect(attachment?.description).toHaveLength(1024);
   });
 
+  test("keeps an emoji whole at the description limit", () => {
+    const [attachment] = toDiscordAttachments([
+      {
+        data: Buffer.from("x"),
+        name: "b.png",
+        description: `${"z".repeat(1023)}🎨 trailing`,
+      },
+    ]);
+
+    expect(attachment?.description).toBe("z".repeat(1023));
+    expect(attachment?.description?.isWellFormed()).toBe(true);
+  });
+
   test("omits the description when none was staged", () => {
     const [attachment] = toDiscordAttachments([
       { data: Buffer.from("x"), name: "b.png" },

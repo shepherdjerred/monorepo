@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { fetchSafePublicText } from "@shepherdjerred/birmel/utils/safe-fetch.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 type WebResult = {
   success: boolean;
@@ -46,7 +47,8 @@ export async function handleFetchUrl(
     .trim();
   const max = maxLength;
   if (content.length > max) {
-    content = content.slice(0, Math.max(0, max)) + "...";
+    // The tool schema accepts any number; truncate like `slice` did.
+    content = `${graphemePrefix(content, Math.max(0, Math.trunc(max)))}...`;
   }
   return {
     success: true,

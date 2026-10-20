@@ -4,6 +4,7 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { z } from "zod";
 import { handleFetchUrl, handleSearch } from "./web-actions.ts";
 import { fetchSafePublicText } from "@shepherdjerred/birmel/utils/safe-fetch.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const logger = loggers.tools.child("web-research");
 
@@ -33,7 +34,7 @@ function extractLinks(
     const text = match.groups?.["text"];
     if (href != null && href.length > 0) {
       links.push({
-        text: htmlToText(text ?? "").slice(0, 120),
+        text: graphemePrefix(htmlToText(text ?? ""), 120),
         url: new URL(href, baseUrl).toString(),
       });
     }
@@ -100,7 +101,7 @@ export const webResearchTool = createTool({
             data: {
               url: page.url,
               title: page.title,
-              summary: page.text.slice(0, maxLength),
+              summary: graphemePrefix(page.text, maxLength),
             },
           };
         }

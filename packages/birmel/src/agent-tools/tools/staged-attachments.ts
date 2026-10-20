@@ -1,5 +1,6 @@
 import { AttachmentBuilder } from "discord.js";
 import type { StagedAttachment } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 /** Discord caps an attachment description at this many characters. */
 const MAX_ATTACHMENT_DESCRIPTION_CHARACTERS = 1024;
@@ -21,8 +22,8 @@ export function toDiscordAttachments(
         ...(attachment.description == null
           ? {}
           : {
-              description: attachment.description.slice(
-                0,
+              description: graphemePrefix(
+                attachment.description,
                 MAX_ATTACHMENT_DESCRIPTION_CHARACTERS,
               ),
             }),

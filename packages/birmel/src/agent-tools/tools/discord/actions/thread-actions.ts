@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { z } from "zod";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const logger = loggers.tools.child("discord.threads");
 
@@ -321,11 +322,13 @@ export async function handleSummarizeThread(
   const nonEmptyMessages = messages.filter(
     (message) => message.content.trim().length > 0,
   );
-  const sample = nonEmptyMessages
-    .slice(0, 12)
-    .map((message) => `${message.authorName}: ${message.content}`)
-    .join("\n")
-    .slice(0, 1500);
+  const sample = graphemePrefix(
+    nonEmptyMessages
+      .slice(0, 12)
+      .map((message) => `${message.authorName}: ${message.content}`)
+      .join("\n"),
+    1500,
+  );
   return {
     success: true,
     message: "Thread summarized",

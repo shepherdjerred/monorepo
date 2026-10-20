@@ -290,6 +290,7 @@
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "@shepherdjerred/sentry-config": "workspace:*",
+        "@shepherdjerred/text": "workspace:*",
         "ai": "^7.0.137",
         "chrono-node": "^2.9.1",
         "cron-parser": "^5.5.0",
