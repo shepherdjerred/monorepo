@@ -20,6 +20,31 @@ const activation = {
   serviceItemId: "service-item",
   executorItemId: "executor-item",
 };
+it("keeps the journal API available until its migrating replacement is ready", () => {
+  const resources = createDeliveryChart(new App(), activation).toJson();
+  expect(
+    resources.find((resource) => resource.kind === "Deployment"),
+  ).toMatchObject({
+    spec: {
+      replicas: 1,
+      strategy: {
+        type: "RollingUpdate",
+        rollingUpdate: { maxSurge: 1, maxUnavailable: 0 },
+      },
+      template: {
+        spec: {
+          initContainers: [{ name: "migrate" }],
+          containers: [
+            {
+              name: "delivery",
+              readinessProbe: { httpGet: { path: "/readyz" } },
+            },
+          ],
+        },
+      },
+    },
+  });
+});
 const Resources = z.array(
   z
     .object({

@@ -28,6 +28,11 @@ Recovery tests also use the matching `pg_dump` and `pg_restore` tools to restore
 an independent cluster and verify request, outbox, evidence, and lock identities.
 `bun run migrate:deploy` applies committed Prisma migrations using `DATABASE_URL`.
 
+The hosted API keeps its existing pod serving while one replacement runs
+migrations and becomes ready. Executors need this journal during the API's own
+release. Schema migrations must therefore remain compatible with the serving
+revision until its replacement passes readiness.
+
 The API listens on port 7353 by default. `bun run dev` starts its watcher;
 `bun run dev:client` runs Vite on port 7354 and proxies API requests to the
 backend. The browser requires the same authenticated proxy as production.

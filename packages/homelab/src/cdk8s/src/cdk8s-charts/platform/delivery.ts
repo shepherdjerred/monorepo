@@ -7,6 +7,7 @@ import {
   DeploymentStrategy,
   EnvValue,
   Namespace,
+  PercentOrAbsolute,
   Probe,
   Secret,
   Service,
@@ -87,7 +88,11 @@ export function createDeliveryChart(
     metadata: { labels: { app: "delivery" } },
     podMetadata: { labels: { app: "delivery" } },
     replicas: 1,
-    strategy: DeploymentStrategy.recreate(),
+    // Executors journal native results through this API during its own release.
+    strategy: DeploymentStrategy.rollingUpdate({
+      maxSurge: PercentOrAbsolute.absolute(1),
+      maxUnavailable: PercentOrAbsolute.absolute(0),
+    }),
     automountServiceAccountToken: false,
     securityContext: { fsGroup: 1000 },
   });
