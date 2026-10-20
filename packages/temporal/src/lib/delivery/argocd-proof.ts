@@ -35,7 +35,7 @@ const ObservationSchema = z.object({
         z.object({
           id: z.number(),
           revision: z.string(),
-          source: SourceSchema,
+          source: DeliveryArgoSourceSchema,
         }),
       )
       .min(1),
@@ -63,6 +63,9 @@ function verifyObservedOperation(
   const latest = current.status.history.reduce((left, right) =>
     left.id > right.id ? left : right,
   );
+  // Older entries predate Delivery's string-typed parameter contract. Only the
+  // selected latest entry can prove this release and must satisfy that contract.
+  const latestSource = SourceSchema.parse(latest.source);
   const expectedParameters = Object.fromEntries(
     deliveryArgoParameters(selection.parameters).map(({ name, value }) => [
       name,
@@ -90,7 +93,7 @@ function verifyObservedOperation(
     current.status.operationState.syncResult.revision !== selection.revision ||
     latest.revision !== selection.revision ||
     !sourceMatches(current.spec.source) ||
-    !sourceMatches(latest.source)
+    !sourceMatches(latestSource)
   )
     throw new Error(
       "Argo observation does not prove the exact owned selected release",
