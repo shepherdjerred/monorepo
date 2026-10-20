@@ -121,6 +121,15 @@ describe("classifyPlayError", () => {
     ).toBe(true);
   });
 
+  test("keeps an emoji whole when trimming the generic message", () => {
+    const message = classifyPlayError(
+      new Error(`${"x".repeat(199)}😀${"y".repeat(50)}`),
+      "url",
+    );
+    expect(message).toBe(`Couldn't queue that: ${"x".repeat(199)}…`);
+    expect(message.isWellFormed()).toBe(true);
+  });
+
   test("falls back to a trimmed generic message for anything else", () => {
     const longMessage = `yt-dlp exited with code 1: ${"x".repeat(500)}`;
     const message = classifyPlayError(new Error(longMessage), "url");

@@ -285,6 +285,31 @@ describe("chapter menu", () => {
     });
   });
 
+  test("keeps an emoji whole when a label reaches Discord's 100 limit", () => {
+    // "1. " is 3 units, so the emoji straddles units 99 and 100.
+    const payload = render({
+      current: {
+        title: "Emoji Movie",
+        requesterId: REQUESTER,
+        chapters: [
+          {
+            index: 1,
+            title: `${"a".repeat(96)}😀tail`,
+            startSeconds: 0,
+            endSeconds: 60,
+          },
+        ],
+        kind: "file",
+        mediaKind: null,
+        sourceId: "file:Emoji Movie",
+        durationSeconds: 60,
+      },
+    });
+    const label = payload.select?.options[0]?.label;
+    expect(label).toBe(`1. ${"a".repeat(96)}`);
+    expect(label?.isWellFormed()).toBe(true);
+  });
+
   test("truncates past Discord's 25-option cap and says so", () => {
     const many = Array.from({ length: 40 }, (_, index) => ({
       index: index + 1,

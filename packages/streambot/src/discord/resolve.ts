@@ -1,3 +1,4 @@
+import { graphemePrefix } from "@shepherdjerred/text";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   findBestMatch,
@@ -73,7 +74,7 @@ export function classifyPlayError(
   }
   const trimmed =
     message.length > CHARACTER_BUDGET
-      ? `${message.slice(0, CHARACTER_BUDGET)}…`
+      ? `${graphemePrefix(message, CHARACTER_BUDGET)}…`
       : message;
   return `Couldn't queue that: ${trimmed}`;
 }
