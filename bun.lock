@@ -2407,6 +2407,23 @@
     "packages/terraform-provider-asuswrt": {
       "name": "@shepherdjerred/terraform-provider-asuswrt",
     },
+    "packages/text": {
+      "name": "@shepherdjerred/text",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.3",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.3",
+      },
+    },
     "packages/the-storm": {
       "name": "@shepherdjerred/the-storm",
       "devDependencies": {
@@ -4590,6 +4607,8 @@
     "@shepherdjerred/temporal-observability": ["@shepherdjerred/temporal-observability@workspace:packages/temporal-observability"],
 
     "@shepherdjerred/terraform-provider-asuswrt": ["@shepherdjerred/terraform-provider-asuswrt@workspace:packages/terraform-provider-asuswrt"],
+
+    "@shepherdjerred/text": ["@shepherdjerred/text@workspace:packages/text"],
 
     "@shepherdjerred/the-storm": ["@shepherdjerred/the-storm@workspace:packages/the-storm"],
 

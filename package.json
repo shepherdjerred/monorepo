@@ -178,6 +178,7 @@
     "packages/temporal",
     "packages/temporal-observability",
     "packages/terraform-provider-asuswrt",
+    "packages/text",
     "packages/the-storm",
     "packages/toolkit",
     "packages/tracker",

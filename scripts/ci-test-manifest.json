@@ -714,6 +714,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/text",
+      "directory": "packages/text",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "starlight-karma-bot",
       "directory": "packages/starlight-karma-bot",
       "steps": [
