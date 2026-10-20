@@ -206,7 +206,7 @@ final class TravelHub implements Listener {
                                     Component.text(
                                         primary
                                             + " is where most survival happens. /spawn always"
-                                            + " brings you back here."))))
+                                            + " brings you back to the main spawn."))))
                         .build())
                 .type(
                     DialogType.multiAction(buttons)
