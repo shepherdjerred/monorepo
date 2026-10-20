@@ -77,6 +77,12 @@ export function createDeliveryChart(
       : new OnePasswordItem(chart, "argo-observer", {
           spec: { itemPath: vaultItemPath(activation.observerItemId) },
         });
+  const githubItem =
+    activation.githubReaderItemId === undefined
+      ? undefined
+      : new OnePasswordItem(chart, "github-reader", {
+          spec: { itemPath: vaultItemPath(activation.githubReaderItemId) },
+        });
   const deployment = new Deployment(chart, "delivery", {
     metadata: { labels: { app: "delivery" } },
     podMetadata: { labels: { app: "delivery" } },
@@ -164,6 +170,18 @@ export function createDeliveryChart(
                   observerItem.name,
                 ),
                 key: "ARGOCD_RECOVERY_TOKEN",
+              }),
+            }),
+        ...(githubItem === undefined
+          ? {}
+          : {
+              DELIVERY_GH_TOKEN: EnvValue.fromSecretValue({
+                secret: Secret.fromSecretName(
+                  chart,
+                  "github-reader-secret",
+                  githubItem.name,
+                ),
+                key: "DELIVERY_GH_TOKEN",
               }),
             }),
         WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),

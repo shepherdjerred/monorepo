@@ -34,6 +34,39 @@ backend. The browser requires the same authenticated proxy as production.
 The Playwright harness supplies a separate real proxy and disposable database
 for local interaction tests.
 
+## Browser hub
+
+The React client is the homelab's CI/CD hub. Every page has a URL, so links,
+history, new tabs and bookmarks behave like any website. Routes are code-based
+TanStack Router definitions in `src/client/router.tsx`:
+
+| URL                            | Page                                                        |
+| ------------------------------ | ----------------------------------------------------------- |
+| `/pipelines` (home)            | Every pipeline's newest execution, attention items, tools   |
+| `/pipelines/:id`               | Pipeline: source, build, test, version set, environments    |
+| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed   |
+| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts    |
+| `/deployments/:id`             | Stages, evidence, approval, cancellation, retry, recoveries |
+| `/environments/:id`            | Release state, live ArgoCD runtime, release form, workers   |
+| `/deployments`, `/approvals`   | Deployment history and the approval queue                   |
+| `/artifacts`, `/activity`      | Build qualification and the audit trail                     |
+
+Filters and pages are search parameters. Forms are native `<form>` elements
+and confirmations are native `<dialog>` elements. The server returns
+`index.html` for every non-API path.
+
+`GET /api/v1/events` is a Server-Sent Events stream of committed changes. An
+`Audit` insert trigger issues `pg_notify`, so an event is published only after
+its transaction commits. The browser refetches the visible queries the change
+can affect. After a reconnect it refetches everything, because the stream does
+not replay. While the stream is down, visible queries poll every 30 seconds.
+
+Commit, CI and runtime panels read Woodpecker, GitHub and ArgoCD on request.
+Finished pipelines and merged commits are cached in `IntegrationSnapshot`
+permanently; running pipelines and unmerged commits are refreshed after a short
+TTL; ArgoCD state is only memoized for seconds. A disabled, unconfigured or
+failing integration degrades its own panel and still links to the tool.
+
 ## Public contracts
 
 `@shepherdjerred/delivery/contract` exports browser-safe Zod schemas and domain
@@ -42,24 +75,30 @@ injected transport and credentials. Responses are validated before consumption.
 
 The API is rooted at `/api/v1`:
 
-| Operation                                                     | Route                                                            |
-| ------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Authenticated principal                                       | `GET /identity`                                                  |
-| Environments, recent executions, eligible artifacts           | `GET /overview`                                                  |
-| Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                             |
-| Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…` |
-| Register pending CI publication                               | `POST /builds`                                                   |
-| Compose exact component versions                              | `POST /versions`                                                 |
-| Register immutable pipeline revision                          | `POST /pipelines`                                                |
-| Register environment/configuration                            | `POST /environments`                                             |
-| Request deployment, promotion, or rollback                    | `POST /deployments`                                              |
-| Execution, stages, approval, evidence                         | `GET /deployments/:id`                                           |
-| Human production approval                                     | `POST /deployments/:id/approval`                                 |
-| Cancel or retry                                               | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`    |
-| Independently inspect and recover an ambiguous Argo operation | `POST /deployments/:id/release-lock`                             |
-| Request native site/Forum recovery under the retained lock    | `POST /deployments/:id/content-recovery`                         |
-| Inspect frozen content recovery and native receipts           | `GET /content-recovery/:id`                                      |
-| Retain unverified migration evidence                          | `GET /imports`, `POST /imports`                                  |
+| Operation                                                     | Route                                                             |
+| ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Authenticated principal                                       | `GET /identity`                                                   |
+| Environments, recent executions, eligible artifacts           | `GET /overview`                                                   |
+| Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                              |
+| Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`  |
+| Register pending CI publication                               | `POST /builds`                                                    |
+| Compose exact component versions                              | `POST /versions`                                                  |
+| Register immutable pipeline revision                          | `POST /pipelines`                                                 |
+| Register environment/configuration                            | `POST /environments`                                              |
+| Request deployment, promotion, or rollback                    | `POST /deployments`                                               |
+| Execution, stages, approval, evidence                         | `GET /deployments/:id`                                            |
+| Human production approval                                     | `POST /deployments/:id/approval`                                  |
+| Cancel or retry                                               | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`     |
+| Independently inspect and recover an ambiguous Argo operation | `POST /deployments/:id/release-lock`                              |
+| Request native site/Forum recovery under the retained lock    | `POST /deployments/:id/content-recovery`                          |
+| Inspect frozen content recovery and native receipts           | `GET /content-recovery/:id`                                       |
+| Retain unverified migration evidence                          | `GET /imports`, `POST /imports`                                   |
+| Hub, service pipeline and paginated executions                | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`          |
+| One change, traced from build or version set                  | `GET /builds/:id`, `GET /versions/:id/trace`                      |
+| Paginated deployments, builds and audit activity              | `GET /deployments`, `GET /builds`, `GET /activity`                |
+| Environment detail and approval queue                         | `GET /environments/:id`, `GET /approvals`                         |
+| Woodpecker, GitHub and ArgoCD enrichment                      | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime` |
+| Committed change stream                                       | `GET /events`                                                     |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
 `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
@@ -203,9 +242,10 @@ and the Arcade user flow.
 
 Environment variables are bootstrap and credentials: `DATABASE_URL`, `HOST`,
 `PORT`, `PUBLIC_ORIGIN`, `ENVIRONMENT`, `WOODPECKER_URL`, `WOODPECKER_REPO_ID`,
-`WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`, and
-`ARGOCD_RECOVERY_TOKEN`. The recovery credential is read-only and independent
-of Temporal's mutation credential.
+`WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`,
+`ARGOCD_RECOVERY_TOKEN`, and the optional read-only `DELIVERY_GH_TOKEN`.
+The recovery credential is read-only and independent of Temporal's mutation
+credential; the hub's runtime panel reuses it.
 
 ArgoCD declares three separate API accounts: `delivery` may select and sync the
 reviewed workload Applications; `delivery-observer` can only read their state;
@@ -291,8 +331,13 @@ does not read Kubernetes or inherit proxy identity. Credential values are never
 returned by the identity endpoint. Health checks also require no Kubernetes access.
 
 Typed configuration resolves fresh flag snapshots for `delivery-writes-enabled`,
-`delivery-enabled-environments` and `delivery-operator-logins`. Defaults deny
-writes and authorize no human logins. Proxy trust is verified native ownership,
+`delivery-enabled-environments`, `delivery-operator-logins` and
+`delivery-enrichment-sources`. Defaults deny writes, authorize no human logins
+and query no external integration. The enrichment flag is a JSON list drawn
+from `woodpecker`, `github` and `argocd`. The GitHub token is registered as the
+`githubReader` 1Password item in the homelab Delivery activation, with a
+`DELIVERY_GH_TOKEN` field holding a fine-grained token that can read the
+monorepo's contents and pull requests. Proxy trust is verified native ownership,
 not a feature flag.
 Pausing writes stops admission of new effects while allowing cancellation and
 recording results of already owned operations. Scout and Starlight production

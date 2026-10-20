@@ -1,13 +1,13 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { DeliveryClient } from "#shared/client.ts";
+import { delivery } from "./api.ts";
+import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import type {
   Deployment,
   Environment,
   WorkerPoolSnapshot,
   WorkerVersion,
 } from "#shared/contract.ts";
-import { ErrorNotice } from "./components.tsx";
+import { ErrorNotice } from "#client/components/notices.tsx";
 
 function WorkerIdentity({ worker }: { worker: WorkerVersion }) {
   return (
@@ -97,28 +97,25 @@ export function FrozenWorkerPool({
 }
 
 export function WorkerPoolPanel({
-  client,
   environment,
   deployments,
   permitted,
   onDeployment,
 }: {
-  client: DeliveryClient;
   environment: Environment;
   deployments: Deployment[];
   permitted: boolean;
-  onDeployment: (id: string) => void;
+  onDeployment: (id: string) => Promise<void>;
 }) {
   const queryClient = useQueryClient();
-  const [confirmedWorker, setConfirmedWorker] = useState<string | null>(null);
   const pool = useQuery({
     queryKey: ["workers", environment.id],
-    queryFn: () => client.workers(environment.id),
+    queryFn: () => delivery.workers(environment.id),
   });
   const retirement = useMutation({
     mutationFn: (worker: WorkerVersion) => {
       if (pool.data === undefined) throw new Error("Worker pool unavailable");
-      return client.retireWorker(worker.id, {
+      return delivery.retireWorker(worker.id, {
         requestId: crypto.randomUUID(),
         expectedEnvironmentGeneration: pool.data.generation,
         expectedWorkerGeneration: worker.generation,
@@ -126,7 +123,7 @@ export function WorkerPoolPanel({
     },
     onSuccess: async (deployment) => {
       await queryClient.invalidateQueries();
-      onDeployment(deployment.id);
+      await onDeployment(deployment.id);
     },
   });
   const accepted = deployments.find(
@@ -188,43 +185,21 @@ export function WorkerPoolPanel({
                     selected !== undefined &&
                     worker.buildId !== selected &&
                     permitted && (
-                      <>
-                        {confirmedWorker === worker.id ? (
-                          <div>
-                            <p>
-                              Request retirement of build{" "}
-                              {worker.buildId.slice(0, 12)}?
-                            </p>
-                            <button
-                              className="secondary-button danger"
-                              disabled={busy || retirement.isPending}
-                              onClick={() => {
-                                retirement.mutate(worker);
-                              }}
-                            >
-                              Confirm retirement request
-                            </button>
-                            <button
-                              className="text-button"
-                              onClick={() => {
-                                setConfirmedWorker(null);
-                              }}
-                            >
-                              Keep host
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            className="secondary-button"
-                            disabled={busy || retirement.isPending}
-                            onClick={() => {
-                              setConfirmedWorker(worker.id);
-                            }}
-                          >
-                            Request retirement
-                          </button>
-                        )}
-                      </>
+                      <ConfirmButton
+                        label="Request retirement"
+                        title={`Retire build ${worker.buildId.slice(0, 12)}?`}
+                        confirmLabel="Confirm retirement request"
+                        danger
+                        disabled={busy || retirement.isPending}
+                        onConfirm={() => {
+                          retirement.mutate(worker);
+                        }}
+                      >
+                        <p>
+                          The host keeps running until the executor verifies
+                          every route has drained.
+                        </p>
+                      </ConfirmButton>
                     )}
                 </td>
               </tr>

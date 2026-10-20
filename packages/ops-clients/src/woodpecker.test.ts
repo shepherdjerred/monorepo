@@ -70,3 +70,51 @@ describe("WoodpeckerClient", () => {
     );
   });
 });
+
+describe("WoodpeckerClient.pipeline", () => {
+  test("reads workflows and steps with step URLs", async () => {
+    const { fetch, requests } = sequence({
+      ...pipeline(11_080, "success"),
+      started: 1_790_000_010,
+      event: "push",
+      branch: "main",
+      author: "shepherdjerred",
+      forge_url: "https://github.com/shepherdjerred/monorepo/commit/abc",
+      workflows: [
+        {
+          pid: 1,
+          name: "verify",
+          state: "success",
+          started: 1_790_000_010,
+          finished: 1_790_000_100,
+          children: [
+            {
+              pid: 15,
+              name: "test",
+              state: "success",
+              exit_code: 0,
+              started: 1_790_000_011,
+              finished: 1_790_000_099,
+              type: "commands",
+            },
+          ],
+        },
+        { pid: 2, name: "images", state: "pending", children: null },
+      ],
+    });
+    const detail = await client(fetch).pipeline(11_080);
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe(
+      "/api/repos/1/pipelines/11080",
+    );
+    expect(detail.workflows[0]?.steps[0]).toMatchObject({
+      name: "test",
+      exitCode: 0,
+      url: "https://woodpecker.sjer.red/repos/1/pipeline/11080/15",
+    });
+    expect(detail.workflows[1]).toMatchObject({
+      state: "pending",
+      startedAt: undefined,
+      steps: [],
+    });
+  });
+});

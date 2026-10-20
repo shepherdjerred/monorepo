@@ -23,6 +23,7 @@ export const BootstrapSchema = z
     WOODPECKER_TOKEN: z.string().min(1).optional(),
     ARGOCD_SERVER_URL: z.url().default("https://argocd.sjer.red"),
     ARGOCD_RECOVERY_TOKEN: z.string().min(1).optional(),
+    DELIVERY_GH_TOKEN: z.string().min(1).optional(),
     DELIVERY_FORUM_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
     DELIVERY_FORUM_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     DELIVERY_FORUM_OBSERVATION_TOKEN: z.string().min(1).optional(),
@@ -103,6 +104,12 @@ export function behaviorConfig(stage: string) {
         default: "[]",
         names: { flag: "delivery-operator-logins" },
       },
+      enrichmentSources: {
+        schema: StringListSchema,
+        sources: ["flag", "default"],
+        default: "[]",
+        names: { flag: "delivery-enrichment-sources" },
+      },
     },
     sources: {
       flag: createFlagConfigSource({
@@ -113,6 +120,7 @@ export function behaviorConfig(stage: string) {
           writesEnabled: "boolean",
           enabledEnvironments: "string",
           operatorLogins: "string",
+          enrichmentSources: "string",
         },
       }),
     },

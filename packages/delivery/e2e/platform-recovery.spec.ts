@@ -1,21 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { DeploymentDetailSchema } from "#shared/contract.ts";
+import { expectNoHorizontalOverflow, openDeployment } from "./helpers.ts";
 
 test("controller upgrade shows original cross-owner image and independent chart inputs", async ({
   page,
 }, info) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Deployments", exact: true }).click();
   const selected = page.waitForResponse(
     (response) =>
       response.request().method() === "GET" &&
       /\/api\/v1\/deployments\/[^/]+$/u.test(new URL(response.url()).pathname),
   );
-  await page
-    .getByRole("row")
-    .filter({ hasText: "delivery-control-plane/prod" })
-    .getByRole("button", { name: /Inspect deployment/ })
-    .click();
+  await openDeployment(page, "delivery-control-plane/prod");
   const response = await selected;
   const frozen = DeploymentDetailSchema.parse(await response.json());
   expect(frozen.environment.acceptedControlPlaneDeploymentId).toBeNull();
@@ -26,63 +21,46 @@ test("controller upgrade shows original cross-owner image and independent chart 
     priorChartArtifact: { id: "controller/chart/103" },
     chartArtifact: { id: "controller/chart/104" },
   });
-  const detail = page.getByRole("region", {
-    name: "delivery-control-plane/prod",
-    exact: true,
-  });
+  const main = page.getByRole("main");
   await expect(
-    detail.getByRole("heading", { name: "Independent control-plane upgrade" }),
+    main.getByRole("heading", { name: "Independent control-plane upgrade" }),
   ).toBeVisible();
-  await expect(detail).toContainText("controller/image/101");
-  await expect(detail).toContainText("controller/image/102");
-  await expect(detail).toContainText("Owner temporal");
-  await expect(detail).toContainText("controller/chart/104");
-  await expect(detail).toContainText(
+  await expect(main).toContainText("controller/image/101");
+  await expect(main).toContainText("controller/image/102");
+  await expect(main).toContainText("Owner temporal");
+  await expect(main).toContainText("controller/chart/104");
+  await expect(main).toContainText(
     "Prior source includes the exact Helm image parameter.",
   );
-  await expect(detail).toContainText(
+  await expect(main).toContainText(
     "Independent native verification must prove the frozen original selection before replacement.",
   );
   await page.screenshot({
     path: info.outputPath("control-plane.png"),
     fullPage: true,
   });
-  expect(
-    await page.evaluate(
-      () =>
-        globalThis.document.documentElement.scrollWidth <=
-        globalThis.innerWidth,
-    ),
-  ).toBe(true);
+  await expectNoHorizontalOverflow(page);
 });
+
 test("human recovery approval binds the exact saved plan and leaves the original result failed", async ({
   page,
 }, info) => {
   const stack = info.project.name === "mobile" ? "discord" : "anthropic";
-  await page.goto("/");
-  await page.getByRole("button", { name: "Deployments", exact: true }).click();
-  await page
-    .getByRole("row")
-    .filter({ hasText: `gitops/tofu:${stack}` })
-    .getByRole("button", { name: /Inspect deployment/ })
-    .click();
-  const detail = page.getByRole("region", {
-    name: `gitops/tofu:${stack}`,
-    exact: true,
-  });
+  await openDeployment(page, `gitops/tofu:${stack}`, { status: "failed" });
+  const main = page.getByRole("main");
   await expect(
-    detail.getByRole("heading", {
+    main.getByRole("heading", {
       name: "Independent infrastructure recovery",
     }),
   ).toBeVisible();
-  await expect(detail).toContainText("Recovery plan digest");
-  await expect(detail).toContainText("disposable-state");
-  await expect(detail).toContainText("Serial 7");
-  const approve = detail.getByRole("button", {
+  await expect(main).toContainText("Recovery plan digest");
+  await expect(main).toContainText("disposable-state");
+  await expect(main).toContainText("Serial 7");
+  const approve = main.getByRole("button", {
     name: "Approve exact recovery plan",
   });
   await expect(approve).toBeDisabled();
-  await detail
+  await main
     .getByRole("textbox", { name: "Recovery approval reason" })
     .fill(
       "Reviewed exact native Job, state serial and immutable recovery plan digest",
@@ -92,16 +70,10 @@ test("human recovery approval binds the exact saved plan and leaves the original
     fullPage: true,
   });
   await approve.click();
-  await expect(detail).toContainText("Plan approved by operator@example.com");
-  await expect(detail.getByText("failed", { exact: true })).toBeVisible();
+  await expect(main).toContainText("Plan approved by operator@example.com");
+  await expect(main.getByText("failed", { exact: true })).toBeVisible();
   await expect(
-    detail.getByRole("button", { name: "Retry as a new deployment" }),
+    main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toHaveCount(0);
-  expect(
-    await page.evaluate(
-      () =>
-        globalThis.document.documentElement.scrollWidth <=
-        globalThis.innerWidth,
-    ),
-  ).toBe(true);
+  await expectNoHorizontalOverflow(page);
 });

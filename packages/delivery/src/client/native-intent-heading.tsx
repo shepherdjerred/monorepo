@@ -1,4 +1,4 @@
-import { Status } from "./components.tsx";
+import { Status } from "#client/components/status.tsx";
 
 export function NativeIntentHeading({
   intent,

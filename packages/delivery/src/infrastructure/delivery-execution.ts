@@ -301,7 +301,7 @@ export async function stage(
     const append = mc?.kind === "argocd" && mc.minecraftUpgrade !== undefined;
     const updated = await tx.stage.upsert({
       where: { deploymentId_key: { deploymentId, key: input.key } },
-      create: { id: id(), deploymentId, ...data },
+      create: { id: id(), deploymentId, startedAt: new Date(), ...data },
       update: data,
     });
     await evidence(

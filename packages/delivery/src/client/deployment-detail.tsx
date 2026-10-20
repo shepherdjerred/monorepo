@@ -1,10 +1,10 @@
-import { useState } from "react";
 import type {
   DeploymentDetail as Detail,
   Principal,
 } from "#shared/contract.ts";
-import { canApprove, canDeploy, isTerminal } from "./presentation.ts";
-import { Status } from "./components.tsx";
+import { Status } from "#client/components/status.tsx";
+import { Duration, RelativeTime } from "#client/components/time.tsx";
+import { isTerminal } from "./presentation.ts";
 import { SelectedArtifacts } from "./artifacts.tsx";
 import { FrozenWorkerPool } from "./worker-pool.tsx";
 import { FrozenPlatform } from "./frozen-platform.tsx";
@@ -17,12 +17,7 @@ import { MinecraftRecovery } from "./minecraft-recovery.tsx";
 import { FrozenForumBaseline } from "./forum-baseline.tsx";
 import { ContentRecovery } from "./content-recovery.tsx";
 
-export type DeploymentAction =
-  | { kind: "cancel" | "retry" }
-  | { kind: "approve" | "reject"; reason: string }
-  | ({ kind: "recovery-decision" } & RecoveryDecision);
-
-function sourceLabel(detail: Detail) {
+export function sourceLabel(detail: Detail) {
   const deployment = detail.deployment;
   if (deployment.controlPlaneSnapshot !== null)
     return deployment.controlPlaneSnapshot.source.id;
@@ -54,46 +49,72 @@ function FrozenInputs({ detail }: { detail: Detail }) {
   );
 }
 
-export function DeploymentDetail({
+function StageTimeline({ detail }: { detail: Detail }) {
+  if (detail.stages.length === 0)
+    return <p className="empty">No stages have started.</p>;
+  const stages = detail.stages.toSorted((left, right) =>
+    (left.startedAt ?? left.updatedAt).localeCompare(
+      right.startedAt ?? right.updatedAt,
+    ),
+  );
+  return (
+    <ol className="stages">
+      {stages.map((stage) => (
+        <li key={stage.id} className={`stage-${stage.status}`}>
+          <div>
+            <strong>{stage.key}</strong>
+            <Status value={stage.status} />
+            {stage.startedAt !== null && (
+              <Duration
+                start={stage.startedAt}
+                end={stage.status === "running" ? null : stage.updatedAt}
+              />
+            )}
+          </div>
+          {stage.message !== "" && <p>{stage.message}</p>}
+          <small className="mono">{stage.operationId}</small>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function Evidence({ detail }: { detail: Detail }) {
+  if (detail.evidence.length === 0)
+    return <p className="empty">No verification evidence recorded.</p>;
+  return (
+    <ul className="evidence">
+      {detail.evidence.map((item) => (
+        <li key={item.id}>
+          <span className="eyebrow">{item.kind}</span>
+          <p>{item.summary}</p>
+          {item.url !== undefined && (
+            <a href={item.url}>
+              View evidence<span aria-hidden="true"> ↗</span>
+            </a>
+          )}
+          <RelativeTime value={item.createdAt} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Everything recorded about one deployment; actions live on the page. */
+export function DeploymentRecord({
   detail,
   principal,
   pending,
-  onAction,
-  onClose,
+  onRecoveryDecision,
 }: {
   detail: Detail;
   principal: Principal;
   pending: boolean;
-  onAction: (action: DeploymentAction) => void;
-  onClose: () => void;
+  onRecoveryDecision: (decision: RecoveryDecision) => void;
 }) {
-  const [reason, setReason] = useState("");
   const { deployment } = detail;
-  const producerRestorationPending = detail.contentRecoveries.some(
-    (intent) =>
-      intent.dispatchBarrier !== null && intent.barrierRestoredAt === null,
-  );
   return (
-    <section className="panel" aria-labelledby="deployment-heading">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Deployment details</p>
-          <h2 id="deployment-heading">{deployment.environmentId}</h2>
-          <p className="mono muted">{deployment.id}</p>
-        </div>
-        <button
-          className="icon-button"
-          aria-label="Close deployment details"
-          onClick={onClose}
-        >
-          ×
-        </button>
-      </div>
-      <div className="detail-summary">
-        <Status value={deployment.status} />
-        <span>{sourceLabel(detail)}</span>
-        <span>{deployment.kind}</span>
-      </div>
+    <>
       {deployment.message !== null && (
         <p
           className={`notice ${deployment.status === "failed" ? "error" : ""}`}
@@ -116,161 +137,52 @@ export function DeploymentDetail({
         detail={detail}
         principal={principal}
         pending={pending}
-        onDecision={(decision) => {
-          onAction({ kind: "recovery-decision", ...decision });
-        }}
+        onDecision={onRecoveryDecision}
       />
       <MinecraftRecovery detail={detail} />
       <ContentRecovery detail={detail} />
       <FrozenForumBaseline detail={detail} />
       <div className="detail-grid">
-        <div>
-          <h3>Pipeline progress</h3>
-          {detail.stages.length === 0 ? (
-            <p className="empty">No stages have started.</p>
-          ) : (
-            <ol className="stages">
-              {detail.stages.map((stage) => (
-                <li key={stage.id}>
-                  <div>
-                    <strong>{stage.key}</strong>
-                    <Status value={stage.status} />
-                  </div>
-                  <p>{stage.message}</p>
-                  <small className="mono">{stage.operationId}</small>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-        <div>
-          <h3>Evidence</h3>
-          {detail.evidence.length === 0 ? (
-            <p className="empty">No verification evidence recorded.</p>
-          ) : (
-            <ul className="evidence">
-              {detail.evidence.map((item) => (
-                <li key={item.id}>
-                  <span className="eyebrow">{item.kind}</span>
-                  <p>{item.summary}</p>
-                  {item.url !== undefined && (
-                    <a href={item.url} target="_blank" rel="noreferrer">
-                      View evidence ↗
-                    </a>
-                  )}
-                  <small>{new Date(item.createdAt).toLocaleString()}</small>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <section className="panel" aria-labelledby="progress-heading">
+          <h2 id="progress-heading">Pipeline progress</h2>
+          <StageTimeline detail={detail} />
+        </section>
+        <section className="panel" aria-labelledby="evidence-heading">
+          <h2 id="evidence-heading">Evidence</h2>
+          <Evidence detail={detail} />
+        </section>
       </div>
-      <details>
-        <summary>Pinned pipeline and configuration</summary>
-        <pre>
-          {JSON.stringify(
-            {
-              pipeline: detail.pipeline,
-              configurationRevision: deployment.configurationRevision,
-              configuration: deployment.configuration,
-            },
-            null,
-            2,
-          )}
-        </pre>
-      </details>
-      <FrozenInputs detail={detail} />
+      <section className="panel" aria-labelledby="inputs-heading">
+        <h2 id="inputs-heading">Frozen inputs</h2>
+        <details>
+          <summary>Pinned pipeline and configuration</summary>
+          <pre>
+            {JSON.stringify(
+              {
+                pipeline: detail.pipeline,
+                configurationRevision: deployment.configurationRevision,
+                configuration: deployment.configuration,
+              },
+              null,
+              2,
+            )}
+          </pre>
+        </details>
+        <FrozenInputs detail={detail} />
+      </section>
       {detail.approvals.length > 0 && (
-        <div className="approval-history">
-          <h3>Approval history</h3>
+        <section className="panel" aria-labelledby="approvals-heading">
+          <h2 id="approvals-heading">Approval history</h2>
           {detail.approvals.map((approval) => (
             <p key={approval.id}>
-              <strong>{approval.decision}</strong> · {approval.actor}
+              <strong>{approval.decision}</strong> · {approval.actor} ·{" "}
+              <RelativeTime value={approval.createdAt} />
               <br />
               {approval.reason}
             </p>
           ))}
-        </div>
+        </section>
       )}
-      {deployment.status === "awaiting_approval" && (
-        <div className="approval-form">
-          <h3>Production approval</h3>
-          <p>
-            Approval applies to this exact release, configuration, pipeline, and
-            frozen worker pool or saved platform plan when present.
-          </p>
-          {canApprove(principal) ? (
-            <>
-              <label>
-                Reason
-                <textarea
-                  value={reason}
-                  onChange={(event) => {
-                    setReason(event.target.value);
-                  }}
-                  maxLength={4000}
-                  placeholder="Record the reason for your decision"
-                />
-              </label>
-              <div className="button-row">
-                <button
-                  className="primary-button"
-                  disabled={pending || reason.trim() === ""}
-                  onClick={() => {
-                    onAction({ kind: "approve", reason: reason.trim() });
-                  }}
-                >
-                  Approve release
-                </button>
-                <button
-                  className="secondary-button danger"
-                  disabled={pending || reason.trim() === ""}
-                  onClick={() => {
-                    onAction({ kind: "reject", reason: reason.trim() });
-                  }}
-                >
-                  Reject
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="notice">
-              A human with approval access must review this deployment.
-            </p>
-          )}
-        </div>
-      )}
-      {canDeploy(principal) && (
-        <div className="button-row detail-actions">
-          {!isTerminal(deployment) && (
-            <button
-              className="secondary-button"
-              disabled={pending || deployment.cancelRequested}
-              onClick={() => {
-                onAction({ kind: "cancel" });
-              }}
-            >
-              Request cancellation
-            </button>
-          )}
-          {["deploy", "promote", "rollback"].includes(deployment.kind) &&
-            ["failed", "canceled"].includes(deployment.status) && (
-              <button
-                className="primary-button"
-                disabled={
-                  pending ||
-                  deployment.recoveryRequired ||
-                  producerRestorationPending
-                }
-                onClick={() => {
-                  onAction({ kind: "retry" });
-                }}
-              >
-                Retry as a new deployment
-              </button>
-            )}
-        </div>
-      )}
-    </section>
+    </>
   );
 }

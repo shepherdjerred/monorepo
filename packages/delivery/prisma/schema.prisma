@@ -29,6 +29,7 @@ model Build {
   platformDeployments    Deployment[]             @relation("PlatformSource")
 
   @@index([serviceId, createdAt])
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
 }
 
 model Artifact {
@@ -181,6 +182,8 @@ model Deployment {
 
   @@index([environmentId, createdAt])
   @@index([status, createdAt])
+  @@index([versionSetRevisionId])
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
 }
 
 model ForumBaselineIntent {
@@ -384,6 +387,7 @@ model Stage {
   status       String
   operationId  String
   message      String
+  startedAt    DateTime?
   updatedAt    DateTime   @updatedAt
 
   @@unique([deploymentId, key])
@@ -425,6 +429,17 @@ model Audit {
   occurredAt DateTime @default(now())
 
   @@index([entityId, occurredAt])
+  @@index([occurredAt(sort: Desc), id(sort: Desc)])
+}
+
+model IntegrationSnapshot {
+  source    String
+  key       String
+  payload   Json
+  final     Boolean
+  fetchedAt DateTime
+
+  @@id([source, key])
 }
 
 model ImportedSnapshot {

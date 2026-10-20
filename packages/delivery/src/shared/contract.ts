@@ -163,7 +163,6 @@ export type WorkerRetirementClaim = workers.WorkerRetirementClaim;
 export function workerHostSpecification(target: WorkerPoolTarget) {
   return workers.workerHostSpecification(target);
 }
-
 export const IdentifierSchema = artifacts.IdentifierSchema;
 export const ArtifactOriginSchema = artifacts.ArtifactOriginSchema;
 export const PlatformChangesSchema = artifacts.PlatformChangesSchema;
@@ -342,6 +341,7 @@ export const StageInputSchema = z
 export const StageSchema = StageInputSchema.omit({ evidence: true }).extend({
   id: IdentifierSchema,
   deploymentId: IdentifierSchema,
+  startedAt: TimestampSchema.nullable().default(null),
   updatedAt: TimestampSchema,
 });
 export const FinishDeploymentSchema = z
@@ -457,7 +457,6 @@ export const PrincipalSchema = z.object({
     z.enum(["read", "publish", "deploy", "approve", "execute", "admin"]),
   ),
 });
-
 export type ArtifactVersion = z.infer<typeof ArtifactVersionSchema>;
 export type VersionSetRevision = z.infer<typeof VersionSetRevisionSchema>;
 export type Environment = z.infer<typeof EnvironmentSchema>;
@@ -491,7 +490,6 @@ export const WorkerRolloutSnapshotSchema = z.object({
   versionSet: VersionSetRevisionSchema,
 });
 export type WorkerRolloutSnapshot = z.infer<typeof WorkerRolloutSnapshotSchema>;
-
 export function diffVersionSets(
   from: VersionSetRevision | null,
   to: VersionSetRevision,

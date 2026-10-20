@@ -1,29 +1,25 @@
 import { useState, type SubmitEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { DeliveryClient } from "#shared/client.ts";
+import { delivery } from "./api.ts";
 import type {
   Environment,
   Overview,
   Principal,
   CreatePlatformDeployment,
 } from "#shared/contract.ts";
-import { ErrorNotice } from "./components.tsx";
+import { ErrorNotice } from "#client/components/notices.tsx";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 
 export function PlatformReleaseForm({
   environment,
   overview,
   principal,
-  client,
   onDeployment,
-  onClose,
 }: {
   environment: Environment;
   overview: Overview;
   principal: Principal;
-  client: DeliveryClient;
-  onDeployment: (id: string) => void;
-  onClose: () => void;
+  onDeployment: (id: string) => Promise<void>;
 }) {
   const root = environment.id === "gitops/root";
   const stack = root
@@ -34,10 +30,10 @@ export function PlatformReleaseForm({
   const queryClient = useQueryClient();
   const request = useMutation({
     mutationFn: (input: CreatePlatformDeployment) =>
-      client.createPlatformDeployment(input),
+      delivery.createPlatformDeployment(input),
     onSuccess: async (deployment) => {
       await queryClient.invalidateQueries();
-      onDeployment(deployment.id);
+      await onDeployment(deployment.id);
     },
   });
   const sources = overview.builds.filter(
@@ -72,16 +68,7 @@ export function PlatformReleaseForm({
   }
   return (
     <section className="panel" aria-label="Platform release request">
-      <div className="section-heading">
-        <h2>{root ? "Root release" : <>OpenTofu · {stack}</>}</h2>
-        <button
-          className="icon-button"
-          aria-label="Close platform request"
-          onClick={onClose}
-        >
-          ×
-        </button>
-      </div>
+      <h2>{root ? "Root release" : <>OpenTofu · {stack}</>}</h2>
       <p>
         Request immutable source and original artifacts. Saved-plan application
         uses the existing native state lock, exact state identity and plan
@@ -113,6 +100,7 @@ export function PlatformReleaseForm({
             ? "Successful plan deployment"
             : "Qualified source build"}
           <select
+            required
             value={selected}
             onChange={(event) => {
               setSelected(event.target.value);

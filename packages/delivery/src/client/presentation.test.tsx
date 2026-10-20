@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { EnvironmentSchema, OverviewSchema } from "#shared/contract.ts";
-import { EnvironmentCard } from "./components.tsx";
+import { EnvironmentSchema } from "#shared/contract.ts";
+import { BuildWithArtifactsSchema } from "#shared/hub/hub-contract.ts";
+import { EnvironmentState } from "#client/components/environment-state.tsx";
 import { canApprove, observation, versionLabel } from "./presentation.ts";
 import { BuildCatalog } from "./artifacts.tsx";
+import { renderWithRouter } from "./test-router.tsx";
 
 const environment = EnvironmentSchema.parse({
   id: "arcade/prod",
@@ -27,30 +29,24 @@ const environment = EnvironmentSchema.parse({
 
 describe("release state presentation", () => {
   test("failed CI qualification explains why published artifacts are ineligible", () => {
-    const overview = OverviewSchema.parse({
-      environments: [],
-      deployments: [],
+    const build = BuildWithArtifactsSchema.parse({
+      id: "build:1",
+      serviceId: "arcade",
+      sourceRevision: "a".repeat(40),
+      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/1",
+      status: "failed",
+      qualificationReason:
+        "Selected component requires a different backend digest",
+      createdAt: "2026-10-16T00:00:00.000Z",
+      pipelineNumber: 1,
+      links: [],
       artifacts: [],
-      versionSets: [],
-      builds: [
-        {
-          id: "build:1",
-          serviceId: "arcade",
-          sourceRevision: "a".repeat(40),
-          ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/1",
-          status: "failed",
-          qualificationReason:
-            "Selected component requires a different backend digest",
-          createdAt: "2026-10-16T00:00:00.000Z",
-        },
-      ],
     });
-    const html = renderToStaticMarkup(
-      <BuildCatalog builds={overview.builds} />,
-    );
+    const html = renderWithRouter(<BuildCatalog builds={[build]} />);
     expect(html).toContain("failed");
     expect(html).toContain("requires a different backend digest");
     expect(html).toContain("View CI");
+    expect(html).toContain('href="/builds/build%3A1"');
   });
   test("a machine cannot approve even when its scopes contain approve", () => {
     expect(canApprove({ id: "ci", kind: "machine", scopes: ["approve"] })).toBe(
@@ -76,23 +72,8 @@ describe("release state presentation", () => {
     ).toEqual({ label: "10m ago · stale", fresh: false });
   });
   test("renders desired, observed, and unknown acceptance as separate evidence", () => {
-    const overview = OverviewSchema.parse({
-      environments: [environment],
-      deployments: [],
-      artifacts: [],
-      versionSets: [],
-    });
     const html = renderToStaticMarkup(
-      <EnvironmentCard
-        environment={environment}
-        overview={overview}
-        onSelect={() => {
-          /* Render only. */
-        }}
-        onDeployment={() => {
-          /* Render only. */
-        }}
-      />,
+      <EnvironmentState environment={environment} versions={[]} now={0} />,
     );
     expect(html).toContain("Desired");
     expect(html).toContain("arcade:2");

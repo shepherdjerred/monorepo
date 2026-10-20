@@ -16,6 +16,8 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   forumObserver: string | undefined;
   trmnlArchiveReader: string | undefined;
   trmnlKey: string | undefined;
+  /** Read-only GitHub token (field DELIVERY_GH_TOKEN) for hub commit context. */
+  githubReader: string | undefined;
 } = {
   service: "ahbp4izt7fibvwdjwd4ffhiime",
   executor: "ahbp4izt7fibvwdjwd4ffhiime",
@@ -31,6 +33,7 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   forumObserver: "es5ddbihz4qeylhjt2x2iemvzi",
   trmnlArchiveReader: "542onhpijguqgaukmyvbujbu74",
   trmnlKey: "p7th6tqeel7k2sm47mrrto7oca",
+  githubReader: undefined,
 };
 
 export type DeliveryActivation = {
@@ -41,6 +44,7 @@ export type DeliveryActivation = {
   forumObserverItemId?: string;
   trmnlArchiveReaderItemId?: string;
   trmnlKeyItemId?: string;
+  githubReaderItemId?: string;
 };
 export type DeliveryExecutorActivation = DeliveryActivation & {
   executorItemId: string;
@@ -92,6 +96,9 @@ export function deliveryActivation(): DeliveryActivation | undefined {
         ...(DELIVERY_CREDENTIAL_ITEMS.trmnlKey === undefined
           ? {}
           : { trmnlKeyItemId: DELIVERY_CREDENTIAL_ITEMS.trmnlKey }),
+        ...(DELIVERY_CREDENTIAL_ITEMS.githubReader === undefined
+          ? {}
+          : { githubReaderItemId: DELIVERY_CREDENTIAL_ITEMS.githubReader }),
       };
 }
 

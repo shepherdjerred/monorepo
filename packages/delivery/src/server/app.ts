@@ -42,6 +42,10 @@ import { registerQualificationRoutes } from "./qualification-routes.ts";
 import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
 import { registerOwnershipRoute } from "./ownership-route.ts";
 import { registerRecoveryRoute } from "./recovery-route.ts";
+import { registerHubRoutes, registerIntegrationRoutes } from "./hub-routes.ts";
+import { registerEventsRoute } from "./events-route.ts";
+import type { ChangeFeed } from "#infrastructure/change-feed/feed.ts";
+import type { Enrichment } from "#infrastructure/enrichment/enrichment.ts";
 
 type Options = {
   sourceRevision?: string;
@@ -55,6 +59,8 @@ type Options = {
   verifyForumBundle?: VerifyForumBundle;
   inspectForumBaseline?: InspectForumBaseline;
   upstreamFetch?: UpstreamFetch;
+  changeFeed?: ChangeFeed;
+  enrichment?: Enrichment;
   qualifyBuild: (
     input: Pick<PublishBuild, "ciUrl" | "sourceRevision">,
   ) => Promise<"pending" | "verified" | "failed">;
@@ -148,6 +154,10 @@ export function createApp(options: Options) {
       );
   }
   const delivery = options.delivery;
+  registerEventsRoute(app, options.changeFeed);
+  registerHubRoutes(app, delivery.database, options.config);
+  if (options.enrichment !== undefined)
+    registerIntegrationRoutes(app, options.enrichment);
   registerOwnershipRoute(app, options);
   registerPlatformRecoveryRoutes(app, delivery, enabled);
   registerContentRecoveryRoutes(app, delivery, enabled);

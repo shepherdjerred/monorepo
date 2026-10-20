@@ -1,38 +1,31 @@
 import { expect, test } from "@playwright/test";
 import { DeploymentDetailSchema } from "#shared/contract.ts";
+import {
+  confirm,
+  expectNoHorizontalOverflow,
+  openDeployment,
+} from "./helpers.ts";
 
 test("quarantined Minecraft release shows independent recovery identity and keeps retry blocked", async ({
   page,
 }) => {
-  await page.goto("/");
-  const environment = page
-    .locator(".environment-card")
-    .filter({ hasText: "minecraft" });
-  await environment
-    .getByRole("button", { name: "failed", exact: true })
-    .click();
-  const detail = page.getByRole("region", { name: "minecraft/tsmc" });
+  await openDeployment(page, "minecraft/tsmc", { status: "failed" });
+  const main = page.getByRole("main");
   await expect(
-    detail.getByRole("heading", { name: "Original server recovery" }),
+    main.getByRole("heading", { name: "Original server recovery" }),
   ).toBeVisible();
-  await expect(detail).toContainText("toolkit deploy minecraft recover");
-  await expect(detail).toContainText("--expected-generation 1");
-  await expect(detail).toContainText("browser/minecraft/recovery");
-  await expect(detail.getByText("pending", { exact: true })).toBeVisible();
-  await detail.getByText("Frozen recovery identity", { exact: true }).click();
-  await expect(detail).toContainText(
+  await expect(main).toContainText("toolkit deploy minecraft recover");
+  await expect(main).toContainText("--expected-generation 1");
+  await expect(main).toContainText("browser/minecraft/recovery");
+  await expect(main.getByText("pending", { exact: true })).toBeVisible();
+  await main.getByText("Frozen recovery identity", { exact: true }).click();
+  await expect(main).toContainText(
     "delivery-minecraft-recovery/browser/minecraft/recovery",
   );
   await expect(
-    detail.getByRole("button", { name: "Retry as a new deployment" }),
+    main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toBeDisabled();
-  expect(
-    await page.evaluate(
-      () =>
-        globalThis.document.documentElement.scrollWidth <=
-        globalThis.innerWidth,
-    ),
-  ).toBe(true);
+  await expectNoHorizontalOverflow(page);
 });
 
 test("routine Minecraft restart keeps the ordinary lock notice without preservation-controller instructions", async ({
@@ -58,13 +51,8 @@ test("routine Minecraft restart keeps the ordinary lock notice without preservat
     }
     await route.fulfill({ response, json: detail });
   });
-  await page.goto("/");
-  await page
-    .locator(".environment-card")
-    .filter({ hasText: "minecraft" })
-    .getByRole("button", { name: "failed", exact: true })
-    .click();
-  const detail = page.getByRole("region", { name: "minecraft/tsmc" });
+  await openDeployment(page, "minecraft/tsmc", { status: "failed" });
+  const detail = page.getByRole("main");
   await expect(detail).toContainText("Operator recovery is required");
   await expect(
     detail.getByRole("heading", { name: "Original server recovery" }),
@@ -79,38 +67,38 @@ test("select an immutable release, inspect queued execution, and cancel safely",
   page,
 }) => {
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "Environments", exact: true }),
-  ).toBeVisible();
-  const environment = page
-    .locator(".environment-card")
-    .filter({ hasText: "arcade" });
-  await expect(environment).toContainText("No runtime observation");
-  await expect(environment).toContainText("Unknown");
-  await environment.getByRole("button", { name: "Select release" }).click();
   await page
+    .getByRole("row")
+    .filter({ has: page.getByRole("link", { name: "Arcade", exact: true }) })
+    .getByRole("link", { name: /prod/u })
+    .click();
+  await expect(page).toHaveURL(/\/environments\/arcade\/prod$/u);
+  const main = page.getByRole("main");
+  await expect(
+    main.getByRole("heading", { level: 1, name: "arcade/prod" }),
+  ).toBeVisible();
+  await expect(main).toContainText("No runtime observation");
+  await expect(main).toContainText("Unknown");
+  await main
     .getByRole("combobox", { name: "Version set", exact: true })
     .selectOption({ index: 1 });
   await expect(
-    page.getByRole("heading", { name: "Component changes" }),
+    main.getByRole("heading", { name: "Component changes" }),
   ).toBeVisible();
-  await page
+  await main
     .getByRole("button", { name: "Request deployment", exact: true })
     .click();
-  const detail = page.getByRole("region", { name: "arcade/prod" });
-  await expect(detail.getByText("queued", { exact: true })).toBeVisible();
-  await expect(detail).toContainText("No verification evidence recorded");
-  await detail.getByRole("button", { name: "Request cancellation" }).click();
-  await expect(detail.getByText("canceled", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Version catalog" }).click();
+  await expect(main.getByText("queued", { exact: true })).toBeVisible();
+  await expect(main).toContainText("No verification evidence recorded");
+  await main.getByRole("button", { name: "Request cancellation" }).click();
+  await confirm(page, "Request cancellation");
+  await expect(main.getByText("canceled", { exact: true })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Main" })
+    .getByRole("link", { name: "Artifacts" })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Build qualification" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Version set revisions" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Published artifacts" }),
   ).toBeVisible();
 });
 

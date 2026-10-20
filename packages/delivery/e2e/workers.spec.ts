@@ -1,16 +1,12 @@
-import { approveAndCancel } from "./approval.ts";
+import { approveAndCancel, expectReasonRequired } from "./approval.ts";
 import { expect, test } from "@playwright/test";
+import { confirm, openDeployment } from "./helpers.ts";
 
 test("review exact retained worker retirement before production approval without stopping the host", async ({
   page,
   request,
 }) => {
-  await page.goto("/");
-  await page
-    .locator(".environment-card")
-    .filter({ hasText: "scout-for-lol" })
-    .getByRole("button", { name: "Select release" })
-    .click();
+  await page.goto("/environments/scout-for-lol/prod");
   const pool = page.getByRole("region", {
     name: "Retained workers",
     exact: true,
@@ -21,13 +17,9 @@ test("review exact retained worker retirement before production approval without
   await pool
     .getByRole("button", { name: "Request retirement", exact: true })
     .click();
-  await pool
-    .getByRole("button", { name: "Confirm retirement request" })
-    .click();
-  const detail = page.getByRole("region", {
-    name: "scout-for-lol/prod",
-    exact: true,
-  });
+  await confirm(page, "Confirm retirement request");
+  await expect(page).toHaveURL(/\/deployments\/[\w-]+$/u);
+  const detail = page.getByRole("main");
   await expect(
     detail.getByText("awaiting approval", { exact: true }),
   ).toBeVisible();
@@ -50,31 +42,20 @@ test("review exact retained worker retirement before production approval without
       expect.objectContaining({ buildId: "1".padEnd(40, "0"), replicas: 1 }),
     ]),
   });
-  await expect(
-    detail.getByRole("button", { name: "Approve release" }),
-  ).toBeDisabled();
+  await expectReasonRequired(page);
   await detail
     .getByRole("textbox", { name: "Reason" })
     .fill(
       "Reviewed exact retained artifact and fixed routing before executor drain proof",
     );
-  await approveAndCancel(detail);
+  await approveAndCancel(page);
 });
 
 test("host-only baseline review distinguishes routed worker identity from full-app provenance and acceptance", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Deployments", exact: true }).click();
-  await page
-    .locator("tr")
-    .filter({ hasText: /temporal\/prod.*adopt-worker/s })
-    .getByRole("button", { name: "Inspect" })
-    .click();
-  const detail = page.getByRole("region", {
-    name: "temporal/prod",
-    exact: true,
-  });
+  await openDeployment(page, "temporal/prod", { kind: "adopt-worker" });
+  const detail = page.getByRole("main");
   await expect(
     detail.getByRole("region", { name: "Frozen worker pool" }),
   ).toContainText("Host-only baseline adoption");
@@ -84,21 +65,21 @@ test("host-only baseline review distinguishes routed worker identity from full-a
   await expect(detail).toContainText("1".padEnd(40, "0"));
   await expect(detail).toContainText("3".padEnd(40, "0"));
   await expect(
-    detail.getByRole("region", { name: "Frozen control-plane image" }),
+    detail.getByRole("region", { name: "Frozen control-plane upgrade" }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Environments", exact: true }).click();
   await expect(
-    page.locator(".environment-card").filter({ hasText: "temporal" }),
+    detail.getByRole("region", { name: "Frozen worker pool" }),
+  ).toHaveCount(1);
+  await page.goto("/environments/temporal/prod");
+  await expect(
+    page.getByRole("region", { name: "Release state" }),
   ).toContainText("Unknown");
 });
 
 test("upstream acquisition displays original verification without inventing a CI link", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page
-    .getByRole("button", { name: "Version catalog", exact: true })
-    .click();
+  await page.goto("/artifacts?service=minecraft");
   const builds = page.locator("section").filter({
     has: page.getByRole("heading", {
       name: "Build qualification",
