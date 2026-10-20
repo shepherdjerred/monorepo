@@ -859,16 +859,18 @@ world, with the same underground-upgrade and lighting metadata as Map 1.
 `export-dimension` copies the preserved dimension byte for byte to
 `dimension-export/world/dimensions/minecraft/<dimension>`: region, entity and
 POI stores plus `data/minecraft` and `data/paper` metadata. Paper's per-world
-`paper-world.yml` stays out. The receipt records the archive's world UUID,
-seed, spawn and chunk counts. `prepare-dimension-locks --database <copy>` runs
+`paper-world.yml` stays out. The receipt records the archive's world UUID, seed,
+spawn and chunk counts. `prepare-dimension-locks --database <copy>` runs
 `NativeHistoricalLocks.java` in additional mode against a copy of a stopped
 database. It first founds the world's PLAYER sites as towns with their mayors,
 refusing a town id, name or mayor membership that already exists. It then
 refuses existing locks in that world or a reused request, appends the world's
 container locks and verifies every other row unchanged. Map 2 owners come from
-signs and bed spawns resolved through the archived playerdata. A mayor who
-already leads a Map 1 town keeps construction rights on a HERITAGE site instead
-of a second active town. Grace chunks and unidentified holdings stay in staff
+signs, archived forum rosters and bed spawns, resolved through the archived
+playerdata. Every Map 2 build keeps at least two, normally three, chunks of
+protected buffer, and Map 2 spawn is one 1,024-block square. A mayor who already
+leads a Map 1 town keeps construction rights on a HERITAGE site instead of a
+second active town. Buffer chunks and unidentified holdings stay in staff
 custody. Rerunning the operation after a catalog revision retains the earlier
 preparation under `superseded/`.
 
