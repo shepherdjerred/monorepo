@@ -935,8 +935,10 @@ def writer_manifest(journal: JsonObject) -> JsonObject:
         capabilities={"drop": ["ALL"], "add": ["CHOWN", "DAC_OVERRIDE", "FOWNER"]},
     )
     container["resources"] = {
-        "requests": {"cpu": "100m", "memory": "128Mi", "ephemeral-storage": "32Gi"},
-        "limits": {"cpu": "2", "memory": "512Mi", "ephemeral-storage": "40Gi"},
+        # Complete before/after manifests and the sealed plan coexist in memory.
+        # The production volume has hundreds of thousands of files, including map tiles.
+        "requests": {"cpu": "100m", "memory": "1Gi", "ephemeral-storage": "32Gi"},
+        "limits": {"cpu": "2", "memory": "2Gi", "ephemeral-storage": "40Gi"},
     }
     container["volumeMounts"] = [
         # Kubernetes omits false volumeMount.readOnly values in pod readbacks.
@@ -1824,7 +1826,7 @@ def rollback_proof(journal: JsonObject) -> JsonObject:
     restored = journal.object("restore")
     if restored.get("byteVerification") != "VERIFIED":
         raise ValueError("Rollback requires the verified independent whole-volume proof")
-    proof = backup_contract.whole_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
+    proof = backup_contract.whole_volume_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
     if any(
         proof.get(key) != expected
         for key, expected in {
@@ -2580,7 +2582,7 @@ def verify_rollback(path: Path, journal: JsonObject) -> None:
     restored = journal.object("restore")
     if restored.get("byteVerification") != "VERIFIED":
         raise ValueError("Rollback requires the verified independent whole-volume proof")
-    proof = backup_contract.whole_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
+    proof = backup_contract.whole_volume_proof(Path(restored.string("proofPath")), restored.string("proofSha256"))
     if any(
         proof.get(key) != value
         for key, value in {
@@ -2681,7 +2683,7 @@ def release_rollback(path: Path, journal: JsonObject) -> None:
         or restoration_files.digest(Path(verification.string("path"))) != verification.string("sha256")
     ):
         raise ValueError("Rollback release requires unchanged byte verification and helper cleanup")
-    backup_contract.whole_proof(
+    backup_contract.whole_volume_proof(
         Path(journal.object("restore").string("proofPath")),
         verification.string("backupProofSha256"),
     )

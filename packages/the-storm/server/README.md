@@ -581,6 +581,10 @@ privilege escalation disabled and a read-only container root. The controller
 rejects replaced helper identities, injected credentials, extra containers,
 lifecycle commands, host namespaces and broader privileges. Source-volume
 readers must be removed before its writer can be accepted.
+The writer requests 1 GiB and is limited to 2 GiB of memory because the sealed
+plan and complete before/after file inventories coexist during verification.
+Whole-volume rollback validates that complete original manifest; only a selective
+historical export applies the reviewed native-world allowlist.
 
 `creative_install.py` is the separate additive filesystem transaction for this
 map. Its sealed payload permits only creative terrain, level metadata and the

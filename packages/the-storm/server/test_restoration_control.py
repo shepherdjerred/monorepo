@@ -699,6 +699,22 @@ class RestorationControlTest(unittest.TestCase):
         ):
             control.verify_rollback(self.path, journal)
 
+    def test_whole_rollback_preserves_unselected_worlds_without_authorizing_their_export(self):
+        journal, transaction = self.rollback_fixture()
+        path = Path(journal.object("restore").string("proofPath"))
+        proof = JsonObject.parse(path.read_bytes())
+        for world in ("frontier", "map2"):
+            name = f"world/dimensions/minecraft/{world}/region/r.0.0.mca"
+            proof.strings("files")[name] = "f" * 64
+            transaction.strings("original")[name] = "f" * 64
+        control.save(path, proof)
+        journal.object("restore")["proofSha256"] = control.restoration_files.digest(path)
+        self.assertEqual(control.rollback_proof(journal).strings("files"), transaction.strings("original"))
+        self.verify_rollback_fixture(journal, transaction)
+        self.assertEqual(journal.object("rollbackVerification")["status"], "VERIFIED")
+        with self.assertRaisesRegex(ValueError, "unreviewed native dimension"):
+            control.backup_contract.whole_proof(path, control.restoration_files.digest(path))
+
     def whole_rollback_fixture(self):
         patch.object(
             control,
@@ -2095,7 +2111,16 @@ class RestorationControlTest(unittest.TestCase):
     def test_writer_refuses_replacement_credentials_extra_container_and_privileged_access(self):
         journal = self.initialize()
         journal["writerUid"] = "writer-uid"
-        for change in ("uid", "credentials", "container", "capabilities", "privileged", "lifecycle", "hostPID"):
+        for change in (
+            "uid",
+            "credentials",
+            "container",
+            "capabilities",
+            "privileged",
+            "lifecycle",
+            "hostPID",
+            "resources",
+        ):
             with self.subTest(change=change):
                 pod = control.writer_manifest(journal)
                 pod.object("metadata")["uid"] = "writer-uid"
@@ -2112,6 +2137,8 @@ class RestorationControlTest(unittest.TestCase):
                     container["lifecycle"] = {"postStart": {"exec": {"command": ["unexpected"]}}}
                 elif change == "hostPID":
                     pod.object("spec")["hostPID"] = True
+                elif change == "resources":
+                    container.object("resources").object("limits")["memory"] = "4Gi"
                 else:
                     container.object("securityContext").object("capabilities")["add"] = ["SYS_ADMIN"]
                 with self.assertRaisesRegex(ValueError, "exact credential-free"):
