@@ -11,6 +11,12 @@ export const EvidenceInputSchema = z
       "reconciliation",
       "runtime",
       "acceptance",
+      // Model kinds (4.14, 4.19, G4); the v1 executor never emits them.
+      "monitor",
+      "alarm",
+      "test",
+      "drift",
+      "attestation",
     ]),
     summary: z.string().min(1).max(4000),
     url: z.url().optional(),

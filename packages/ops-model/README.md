@@ -5,17 +5,18 @@ produces an `OpsIngest` payload. The ops dashboard (`packages/alert-dashboard`)
 stores it. The web UI, the TRMNL screen, the email digest, and
 `toolkit ops summary` all render it.
 
-| Module                         | What it owns                                                                                                                                             |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `severity.ts`                  | The `ok < info < unknown < warning < error` scale and its rollup helpers.                                                                                |
-| `snapshot.ts`                  | Zod schemas for `Signal`, `Metric`, `Section`, `SourceStatus`, `Snapshot`, the public `SnapshotResponse`, `ChangeEvent`, and `OpsIngest`.                |
-| `assemble.ts`                  | `assembleSnapshot` (section rollup: a failed source makes its section `unknown`), `applyFreshness` (a stale snapshot is never green), and query helpers. |
-| `policy.ts`                    | `OPS_POLICY` thresholds and budgets shared by the collector and renderers.                                                                               |
-| `backup-policy.ts`             | Owner-published Velero monitoring annotation keys and SeaweedFS backup freshness windows.                                                                |
-| `argocd-release-receipt.ts`    | Exact-operation root release receipt validation shared by the release producer and Ops collector.                                                        |
-| `digest.ts`                    | Shared daily/weekly digest trigger response: period, sent/skipped status, and duplicate handling.                                                        |
-| `metric-ids.ts`                | Headline metric ids that producers emit and renderers read.                                                                                              |
-| `catalog.ts` + `services.json` | The service catalog. It joins namespaces, ArgoCD apps, Bugsink projects, analytics sites, Grafana dashboards, and deploy variants under one service id.  |
+| Module                                                                              | What it owns                                                                                                                                               |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `severity.ts`                                                                       | The `ok < info < unknown < warning < error` scale and its rollup helpers.                                                                                  |
+| `snapshot.ts`                                                                       | Zod schemas for `Signal`, `Metric`, `Section`, `SourceStatus`, `Snapshot`, the public `SnapshotResponse`, `ChangeEvent`, and `OpsIngest`.                  |
+| `assemble.ts`                                                                       | `assembleSnapshot` (section rollup: a failed source makes its section `unknown`), `applyFreshness` (a stale snapshot is never green), and query helpers.   |
+| `policy.ts`                                                                         | `OPS_POLICY` thresholds and budgets shared by the collector and renderers.                                                                                 |
+| `backup-policy.ts`                                                                  | Owner-published Velero monitoring annotation keys and SeaweedFS backup freshness windows.                                                                  |
+| `argocd-release-receipt.ts`                                                         | Exact-operation root release receipt validation shared by the release producer and Ops collector.                                                          |
+| `digest.ts`                                                                         | Shared daily/weekly digest trigger response: period, sent/skipped status, and duplicate handling.                                                          |
+| `metric-ids.ts`                                                                     | Headline metric ids that producers emit and renderers read.                                                                                                |
+| `catalog.ts` + `services.json`                                                      | The service catalog. It joins namespaces, ArgoCD apps, Bugsink projects, analytics sites, Grafana dashboards, and deploy variants under one service id.    |
+| `catalog-document-shape.ts`, `catalog-document.ts` + `catalog-document.schema.json` | The Delivery model's catalog document: services with typed components, environments, candidate recipe and configuration revisions, and prerequisite edges. |
 
 `services.json` is language-neutral and validated by `services.schema.json`
 and `CatalogSchema`. A name may belong to only one service. The homelab
@@ -33,6 +34,26 @@ consumer Application transfers. The Delivery execution control plane owns its
 separate chart/Application while its runtime image remains a Temporal output.
 `static-release-targets.ts` gives CI and homelab registration the same reviewed
 bucket-to-environment ownership, with no selected archive versions.
+
+`catalog-document.schema.json` is the language-neutral structure of the one
+catalog the Delivery model (section 4.1) replaces these files with: services
+with `image:`, `chart:` and `archive:` components and their producer or
+cross-service reference, environments with role, approval policy and
+promotion source, recipe and configuration revisions, and prerequisite edges.
+`catalog-document-shape.ts` mirrors it and `catalog-document.ts` adds the
+rules a JSON Schema cannot express: every referenced id exists, promotion
+edges form a tree inside one service, prerequisite edges form a DAG,
+references name a component of the same type, `forwardOnly` keys exist with
+dotted numeric values, at least one service is self-hosted, and no string
+anywhere in the document is a content digest or a build-numbered chart
+version (C2). `groups` are the ops views today's consumers know (title,
+kind, package, aliases); a service's `group` names the one that aggregates
+it and its optional `ops` block carries the attributes only the ops
+consumers read; images and charts derive from the components. The optional `legacy` blocks
+hold the v1 release-owner policy for the transition and are deleted with the
+root release. The document is additive: nothing reads it until the cutover,
+and `services.json` remains the live service catalog. Delivery's
+`model-contract` types each recipe body on top of it.
 
 `ServiceIndex.rootReleaseCharts()` derives the active first-party root inventory
 from these owners. `rootReleaseExclusions` identifies upstream and inactive
