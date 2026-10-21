@@ -736,6 +736,66 @@ describe("cold-start restore races", () => {
     ).rejects.toThrow("that are not in snapshot " + snapshotId);
   });
 
+  /** Tampers with the first restored key once the second object has landed. */
+  class TamperingStore extends InMemoryObjectStore {
+    private readonly landed: string[] = [];
+
+    public constructor(
+      private readonly tamper: (
+        store: InMemoryObjectStore,
+        bucket: string,
+        key: string,
+      ) => void,
+    ) {
+      super();
+    }
+
+    public override async putObject(
+      ...input: Parameters<InMemoryObjectStore["putObject"]>
+    ) {
+      await super.putObject(...input);
+      this.landed.push(input[0].key);
+      const [first] = this.landed;
+      if (first === undefined) return;
+      if (this.landed.length === 2) {
+        this.tamper(this, input[0].bucket, first);
+      }
+    }
+  }
+
+  test.each([
+    [
+      "deletes",
+      (store: InMemoryObjectStore, bucket: string, key: string) =>
+        store.deleteObject(bucket, key),
+    ],
+    [
+      "overwrites",
+      (store: InMemoryObjectStore, bucket: string, key: string) => {
+        store.seed(bucket, key, "replaced by a workload");
+      },
+    ],
+  ])(
+    "fails a cold start when another writer %s a verified object",
+    async (_name, tamper) => {
+      const { backup, snapshotId } = await backedUp();
+      const store = new TamperingStore(tamper);
+      store.createBucket("source");
+      await expect(
+        restoreSnapshot({
+          backupStore: backup,
+          destinationStore: store,
+          backupBucket: "backup",
+          destinationBucket: "source",
+          sourceBucket: "source",
+          snapshotId,
+          policy: COLD_START_POLICY,
+          coldStart: true,
+        }),
+      ).rejects.toThrow("removed or changed after verification");
+    },
+  );
+
   test("never overwrites an object created between the check and the write", async () => {
     const { backup, snapshotId } = await backedUp();
     class WriteRacedStore extends InMemoryObjectStore {

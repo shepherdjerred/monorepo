@@ -69,24 +69,45 @@ async function assertNotOverwriting(
   if (present !== undefined) throw overwriteRefusal(input, key);
 }
 
+type VerifiedObject = { size: number; etag: string };
+
+function comparableEtag(etag: string): string {
+  return etag.replaceAll(/^"|"$/gu, "");
+}
+
 /**
- * The emptiness check runs once, before the first write. Re-list at the end so
- * a cold start never reports success over a bucket another workload also wrote
- * to while the restore ran.
+ * The emptiness check runs once, before the first write, and each object is
+ * verified right after it lands. Compare the final listing with what was
+ * verified so a cold start never reports success over a bucket another
+ * workload wrote to, overwrote, or deleted from while the restore ran.
  */
-async function assertNothingElseWritten(
+async function assertDestinationUnchanged(
   input: RestoreInput,
-  restoredKeys: ReadonlySet<string>,
+  verified: ReadonlyMap<string, VerifiedObject>,
 ): Promise<void> {
   if (input.coldStart !== true) return;
-  const present = await input.destinationStore.listObjects(
+  const listed = await input.destinationStore.listObjects(
     input.destinationBucket,
   );
-  const stray = present.filter((object) => !restoredKeys.has(object.key));
-  if (stray.length === 0) return;
-  throw new Error(
-    `Cold-start restore found ${String(stray.length)} object(s) in ${input.destinationBucket} that are not in snapshot ${input.snapshotId} (first: ${stray[0]?.key ?? "unknown"}). Another writer used the bucket during the restore`,
-  );
+  const present = new Map(listed.map((object) => [object.key, object]));
+  const stray = [...present.keys()].filter((key) => !verified.has(key));
+  if (stray.length > 0) {
+    throw new Error(
+      `Cold-start restore found ${String(stray.length)} object(s) in ${input.destinationBucket} that are not in snapshot ${input.snapshotId} (first: ${stray[0] ?? "unknown"}). Another writer used the bucket during the restore`,
+    );
+  }
+  const changed = [...verified].filter(([key, expected]) => {
+    const actual = present.get(key);
+    return (
+      actual?.size !== expected.size ||
+      comparableEtag(actual.etag) !== comparableEtag(expected.etag)
+    );
+  });
+  if (changed.length > 0) {
+    throw new Error(
+      `Cold-start restore found ${String(changed.length)} restored object(s) in ${input.destinationBucket} removed or changed after verification (first: ${changed[0]?.[0] ?? "unknown"}). Another writer used the bucket during the restore`,
+    );
+  }
 }
 
 function overwriteRefusal(input: RestoreInput, key: string): Error {
@@ -120,6 +141,7 @@ export async function restoreSnapshot(
     descriptor.sha256,
   );
   let restoredBytes = 0;
+  const verified = new Map<string, VerifiedObject>();
   for (const entry of entries) {
     await assertNotOverwriting(input, entry.sourceKey);
     const source = await input.backupStore.getObject(
@@ -178,6 +200,10 @@ export async function restoreSnapshot(
         `Restored object checksum mismatch for ${input.sourceBucket}`,
       );
     }
+    verified.set(entry.sourceKey, {
+      size: restored.size,
+      etag: restored.etag,
+    });
     restoredBytes += entry.sourceSize;
     await input.onObjectRestored?.({
       key: entry.sourceKey,
@@ -185,9 +211,6 @@ export async function restoreSnapshot(
       sha256: entry.sha256,
     });
   }
-  await assertNothingElseWritten(
-    input,
-    new Set(entries.map((entry) => entry.sourceKey)),
-  );
+  await assertDestinationUnchanged(input, verified);
   return { restoredObjects: entries.length, restoredBytes };
 }
