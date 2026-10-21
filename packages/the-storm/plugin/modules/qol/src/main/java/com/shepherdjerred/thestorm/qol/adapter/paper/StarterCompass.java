@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
 import java.util.HashSet;
 import java.util.List;
@@ -22,10 +24,12 @@ final class StarterCompass {
   private final Set<UUID> pending = new HashSet<>();
   private final ModuleContext context;
   private final QolStore store;
+  private final SealedWorlds sealed;
 
-  StarterCompass(ModuleContext context, QolStore store) {
+  StarterCompass(ModuleContext context, QolStore store, SealedWorlds sealed) {
     this.context = context;
     this.store = store;
+    this.sealed = sealed;
   }
 
   void loaded(Player player, boolean needed) {
@@ -35,7 +39,16 @@ final class StarterCompass {
   }
 
   boolean pending(Player player) {
-    return pending.contains(player.getUniqueId());
+    return manages(player) && pending.contains(player.getUniqueId());
+  }
+
+  boolean manages(Player player) {
+    return !sealed.isSealed(player.getWorld())
+        && context
+            .services()
+            .find(ArenaPresence.class)
+            .map(arena -> arena.arenaOf(player.getUniqueId()).isEmpty())
+            .orElse(true);
   }
 
   static boolean marked(@Nullable ItemStack item) {
@@ -57,6 +70,7 @@ final class StarterCompass {
   }
 
   void reconcile(Player player) {
+    if (!manages(player)) return;
     var inventory = player.getInventory();
     var at = inventory.getItem(SLOT);
     var inPlace =

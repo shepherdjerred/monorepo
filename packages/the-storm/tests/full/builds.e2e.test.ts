@@ -92,6 +92,11 @@ describe("run class builds on real Paper", () => {
         secondBot,
         rcon,
       }) => {
+        const observedMessages: string[] = [];
+        const observeMessage = (message: string) => {
+          observedMessages.push(message);
+        };
+        bot.on("messagestr", observeMessage);
         await rcon.command(`op ${bot.username}`);
         await join(bot, 15);
         await join(secondBot);
@@ -157,7 +162,14 @@ describe("run class builds on real Paper", () => {
             /Ability used · 34 second recharge/u,
           );
           bot.activateItem();
-          await used;
+          try {
+            await used;
+          } catch (error) {
+            throw new Error(
+              `Ability activation failed; client hand ${String(bot.heldItem?.name)}, slot ${String(bot.quickBarSlot)}, native hand ${await rcon.command(`data get entity ${bot.username} SelectedItem`)}; runner ${await rcon.command(`storm-fixture-survival inspect ${bot.username} none`)}; messages ${JSON.stringify(observedMessages)}`,
+              { cause: error },
+            );
+          }
           if (path === "RESCUER") {
             expect(
               await rcon.command(
@@ -182,6 +194,7 @@ describe("run class builds on real Paper", () => {
               () => secondBot.health > 1,
             );
         } finally {
+          bot.off("messagestr", observeMessage);
           await rcon.command("arena stop settlement");
           await rcon.command("difficulty peaceful");
         }

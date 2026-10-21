@@ -8,6 +8,7 @@ dependencies {
   implementation(project(":world"))
   implementation(project(":mobs"))
   implementation(project(":npcs"))
+  implementation(project(":arena"))
   testImplementation(libs.mockito)
 }
 

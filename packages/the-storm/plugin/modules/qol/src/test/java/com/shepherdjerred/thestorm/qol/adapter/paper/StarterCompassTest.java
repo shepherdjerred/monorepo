@@ -1,17 +1,24 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.npcs.app.NpcInteractEvent;
 import com.shepherdjerred.thestorm.npcs.app.NpcRef;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Material;
@@ -19,6 +26,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -37,6 +45,9 @@ final class StarterCompassTest {
   private final QolStore store = mock(QolStore.class);
   private final ArrivalDialog dialog = mock(ArrivalDialog.class);
   private StarterCompassListener listener;
+  private SealedWorlds sealed;
+  private final ArenaPresence presence = mock(ArenaPresence.class);
+  private final ArrayList<Runnable> scheduled = new ArrayList<>();
 
   @BeforeEach
   void start() {
@@ -47,8 +58,19 @@ final class StarterCompassTest {
     var scheduler = mock(Scheduler.class);
     when(context.scheduler()).thenReturn(scheduler);
     when(scheduler.mainThread()).thenReturn(Runnable::run);
+    doAnswer(
+            invocation -> {
+              scheduled.add(invocation.getArgument(0, Runnable.class));
+              return null;
+            })
+        .when(scheduler)
+        .runOnMainThread(any(Runnable.class));
     when(context.logger()).thenReturn(ComponentLogger.logger("starter-compass-test"));
-    compass = new StarterCompass(context, store);
+    var services = new Services();
+    services.provide(ArenaPresence.class, presence);
+    when(context.services()).thenReturn(services);
+    sealed = new SealedWorlds();
+    compass = new StarterCompass(context, store, sealed);
     listener = new StarterCompassListener(compass, dialog);
   }
 
@@ -177,5 +199,70 @@ final class StarterCompassTest {
     when(click.getCurrentItem()).thenReturn(StarterCompass.item(player));
     listener.click(click);
     verify(click).setCancelled(true);
+  }
+
+  @Test
+  void lateProfileAndMenuReconciliationPreserveTheArenaBodyAndResumeAfterLeaving() {
+    var ordinaryWorld = player.getWorld();
+    var arena = server.addSimpleWorld("settlement");
+    when(presence.arenaOf(player.getUniqueId())).thenReturn(Optional.of("settlement"));
+    player.teleport(arena.getSpawnLocation());
+    var ability = new ItemStack(Material.COMPASS);
+    ability.editMeta(
+        meta -> meta.displayName(net.kyori.adventure.text.Component.text("Arena ability")));
+    player.getInventory().setItem(8, ability);
+    player.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD));
+    var before = player.getInventory().getContents();
+    compass.loaded(player, true);
+    compass.reconcile(player);
+    assertThat(player.getInventory().getContents()).containsExactly(before);
+    assertThat(compass.pending(player)).isFalse();
+    var click = mock(InventoryClickEvent.class);
+    when(click.getWhoClicked()).thenReturn(player);
+    when(click.getCurrentItem()).thenReturn(ability);
+    when(click.getHotbarButton()).thenReturn(8);
+    listener.click(click);
+    verify(click, never()).setCancelled(true);
+    // The arena restores the ordinary body before its deferred world-change reconciliation.
+    player.getInventory().clear();
+    player.getInventory().setItem(8, new ItemStack(Material.IRON_SWORD));
+    when(presence.arenaOf(player.getUniqueId())).thenReturn(Optional.empty());
+    player.teleport(ordinaryWorld.getSpawnLocation());
+    listener.world(new PlayerChangedWorldEvent(player, arena));
+    assertThat(StarterCompass.marked(player.getInventory().getItem(8))).isFalse();
+    assertThat(scheduled).hasSize(1);
+    scheduled.removeFirst().run();
+    assertThat(compass.pending(player)).isTrue();
+    assertThat(player.getInventory().getItem(0)).isEqualTo(new ItemStack(Material.IRON_SWORD));
+    assertThat(StarterCompass.marked(player.getInventory().getItem(8))).isTrue();
+  }
+
+  @Test
+  void sealedWorldInteractionsAndDeathLeaveEveryInventoryAndDropToItsOwner() {
+    compass.loaded(player, true);
+    var creative = server.addSimpleWorld("creative");
+    sealed.seal(creative);
+    player.teleport(creative.getSpawnLocation());
+    var original = player.getInventory().getContents();
+    var event =
+        new PlayerInteractEvent(
+            player,
+            Action.RIGHT_CLICK_AIR,
+            StarterCompass.item(player),
+            null,
+            BlockFace.SELF,
+            EquipmentSlot.HAND);
+    listener.use(event);
+    verify(dialog, never()).show(player);
+    var drops = new ArrayList<ItemStack>();
+    drops.add(StarterCompass.item(player));
+    drops.add(new ItemStack(Material.DIAMOND));
+    var death = mock(PlayerDeathEvent.class);
+    when(death.getEntity()).thenReturn(player);
+    when(death.getDrops()).thenReturn(drops);
+    listener.death(death);
+    assertThat(drops).hasSize(2);
+    assertThat(player.getInventory().getContents()).containsExactly(original);
+    verify(death, never()).getItemsToKeep();
   }
 }

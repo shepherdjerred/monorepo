@@ -146,6 +146,10 @@ search throttle, so failed searches, reconnects, restarts and deaths retain it.
 The compass cannot be dropped or transferred and does not enter graves. Existing
 players do not receive one on migration. A successful RTP through either the
 picker or a command clears the entitlement before removing the item.
+Arena sessions and sealed creative worlds own their player inventories. Onboarding keeps
+the entitlement pending there without reserving hotbar slots, changing items,
+blocking inventory actions, or opening its dialog. It reconciles the ordinary
+inventory after the player leaves the sealed world.
 
 The console-only `storm-maintenance begin <owner>` atomically checks for human
 players and closes login admission when empty. Its versioned JSON response

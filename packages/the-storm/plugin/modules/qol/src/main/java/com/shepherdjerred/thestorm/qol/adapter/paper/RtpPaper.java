@@ -39,7 +39,11 @@ public final class RtpPaper {
                     .thenApply(ensured -> ensured.profile().firstSeen()),
             recovered);
     var worlds = context.services().require(WildWorlds.class);
-    var compass = new StarterCompass(context, store);
+    var compass =
+        new StarterCompass(
+            context,
+            store,
+            context.services().require(com.shepherdjerred.thestorm.core.world.SealedWorlds.class));
     var flow =
         new RtpFlow(
             new RtpFlow.Ports(

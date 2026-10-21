@@ -37,7 +37,7 @@ final class JoinListener implements Listener {
                   }
                   if (!player.isOnline()) return;
                   compass.loaded(player, ensured.profile().starterRtpPending());
-                  if (ensured.created()) {
+                  if (ensured.created() && compass.pending(player)) {
                     dialog.show(player);
                   }
                 },
