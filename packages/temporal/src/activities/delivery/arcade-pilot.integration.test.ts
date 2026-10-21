@@ -3,6 +3,7 @@ import {
   createTestDatabase,
   createApp,
   createRecoveryInspector,
+  fakeApplicationReader,
   Delivery,
   testExecutor,
 } from "@shepherdjerred/delivery/testing";
@@ -72,8 +73,10 @@ function startApi() {
     ciRepositoryId: 1,
     qualifyBuild: async () => "verified",
     inspectRecovery: createRecoveryInspector({
-      origin: boundary.url.origin,
-      token: "local-read-only-observer",
+      readApplication: fakeApplicationReader(
+        boundary.url.origin,
+        "local-read-only-observer",
+      ),
     }),
     config: {
       publicOrigin: "http://localhost",
@@ -420,7 +423,7 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
     recovered.evidence.some(
       (entry) =>
         entry.operationId === settled.externalId &&
-        entry.summary.includes("Independent Argo readback"),
+        entry.summary.includes("Independent Application readback"),
     ),
   ).toBe(true);
   const retried = await client().retry(interrupted.id, {

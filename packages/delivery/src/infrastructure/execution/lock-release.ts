@@ -17,7 +17,7 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import { createIntent } from "#infrastructure/recovery-intents.ts";
 
-/** Independent Argo readback settles an ambiguous ordinary release as an `argo` recovery intent. */
+/** Independent Application readback settles an ambiguous ordinary release as an `argo` recovery intent. */
 export async function releaseLock(
   this: Delivery,
   ...args: [

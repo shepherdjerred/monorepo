@@ -8,6 +8,7 @@ import {
   createTestDatabase,
   createApp,
   createRecoveryInspector,
+  fakeApplicationReader,
   Delivery,
   seedDelivery,
   testExecutor,
@@ -277,8 +278,10 @@ describe("guarded recovery before and after Delivery source selection", () => {
         status: { resources: [] },
       };
       const inspector = createRecoveryInspector({
-        origin: server.url.origin,
-        token: "test-only-read-credential",
+        readApplication: fakeApplicationReader(
+          server.url.origin,
+          "test-only-read-credential",
+        ),
       });
       const app = createApp({
         delivery: store,

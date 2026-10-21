@@ -11,6 +11,7 @@ import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { RecoverDeploymentSchema } from "#shared/contract.ts";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 
 export const RecoveryRequestSchema = RecoverDeploymentSchema.clone();
 const ArgoRecoverySchema = z.object({
@@ -85,15 +86,13 @@ function requireSettled(
   return operation.finishedAt;
 }
 
-/** Independent of Temporal: inspect the recorded operation directly through Argo. */
+/**
+ * Independent of Temporal and of ArgoCD's API: inspect the recorded
+ * operation on the Application object through the projected reader (D5).
+ */
 export function createRecoveryInspector(options: {
-  origin: string;
-  token: string | undefined;
+  readApplication: ApplicationReader;
   inspectTrmnl?: (detail: DeploymentDetail) => Promise<EvidenceInput[]>;
-  fetch?: (
-    input: string | URL | Request,
-    init?: RequestInit,
-  ) => Promise<Response>;
 }) {
   return async (
     detail: DeploymentDetail,
@@ -115,11 +114,6 @@ export function createRecoveryInspector(options: {
         "INVALID",
         "This target requires its specialized recovery procedure; retain ownership until its external work is settled",
       );
-    if (options.token === undefined)
-      throw new DeliveryError(
-        "PAUSED",
-        "Argo recovery read credential is not configured",
-      );
     const plugins = trmnlPluginsOf(definition);
     if (plugins !== undefined && options.inspectTrmnl === undefined)
       throw new DeliveryError(
@@ -132,26 +126,12 @@ export function createRecoveryInspector(options: {
         "CONFLICT",
         "Deployment has no recorded reconciliation operation to inspect",
       );
-    const response = await (options.fetch ?? fetch)(
-      new URL(
-        `/api/v1/applications/${encodeURIComponent(application.name)}`,
-        options.origin,
-      ),
-      {
-        headers: {
-          Authorization: `Bearer ${options.token}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(30_000),
-        redirect: "error",
-      },
-    );
-    if (!response.ok)
+    const raw = await options.readApplication(application.name);
+    if (raw === null)
       throw new DeliveryError(
-        "PAUSED",
-        `Argo recovery inspection unavailable (${String(response.status)})`,
+        "CONFLICT",
+        `Application ${application.name} does not exist; keep target ownership`,
       );
-    const raw: unknown = await response.json();
     const current = ArgoRecoverySchema.parse(raw);
     const operation = current.status.operationState;
     const finishedAt = requireSettled(
@@ -168,7 +148,7 @@ export function createRecoveryInspector(options: {
       {
         kind: "reconciliation",
         operationId: input.operationId,
-        summary: `Independent Argo readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${recorded.operationId}, operation ${input.operationId}, phase ${operation.phase}, finished ${finishedAt}. ${input.reason}`,
+        summary: `Independent Application readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${recorded.operationId}, operation ${input.operationId}, phase ${operation.phase}, finished ${finishedAt}. ${input.reason}`,
       },
       ...pluginEvidence,
     ];

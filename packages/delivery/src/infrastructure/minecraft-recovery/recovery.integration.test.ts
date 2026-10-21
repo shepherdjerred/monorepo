@@ -359,25 +359,24 @@ function transport(proof = nativeProof(), native = controller()) {
   const inspect = createMinecraftRecoveryInspector({
     controllerOrigin: "http://controller.test",
     executorToken: "local-executor-test",
-    argoOrigin: "http://argo.test",
-    argoToken: "local-argo-read-test",
+    readApplication: async (name) => {
+      reads++;
+      expect(name).toBe("minecraft-tsmc");
+      return proof.argo;
+    },
     fetch: async (url, init) => {
       reads++;
-      if (
-        (url instanceof Request ? url.url : url.toString()).includes(
-          "controller.test",
-        )
-      ) {
-        expect(init?.body).toContain('"recoveryId":"minecraft/recover"');
-        const reportJson = JSON.stringify(proof.report);
-        return Response.json({
-          requestId: operationId,
-          controller: native,
-          reportJson,
-          reportSha256: `sha256:${createHash("sha256").update(reportJson).digest("hex")}`,
-        });
-      }
-      return Response.json(proof.argo);
+      expect(url instanceof Request ? url.url : url.toString()).toContain(
+        "controller.test",
+      );
+      expect(init?.body).toContain('"recoveryId":"minecraft/recover"');
+      const reportJson = JSON.stringify(proof.report);
+      return Response.json({
+        requestId: operationId,
+        controller: native,
+        reportJson,
+        reportSha256: `sha256:${createHash("sha256").update(reportJson).digest("hex")}`,
+      });
     },
   });
   return { inspect, reads: () => reads };

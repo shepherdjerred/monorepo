@@ -7,6 +7,7 @@ import { createDatabase } from "#infrastructure/database.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
+import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { createMinecraftRecoveryInspector } from "#infrastructure/minecraft-recovery/inspector.ts";
 import {
   createForumBundleReader,
@@ -78,6 +79,7 @@ const forumBundleReader =
         accessKeyId: bootstrap.DELIVERY_FORUM_S3_ACCESS_KEY_ID,
         secretAccessKey: bootstrap.DELIVERY_FORUM_S3_SECRET_ACCESS_KEY,
       });
+const readApplication = createApplicationReader();
 const app = createApp({
   delivery,
   changeFeed,
@@ -98,8 +100,7 @@ const app = createApp({
     token: bootstrap.WOODPECKER_TOKEN,
   }),
   inspectRecovery: createRecoveryInspector({
-    origin: bootstrap.ARGOCD_SERVER_URL,
-    token: bootstrap.ARGOCD_RECOVERY_TOKEN,
+    readApplication,
     ...(inspectTrmnl === undefined ? {} : { inspectTrmnl }),
   }),
   inspectMinecraftRecovery: createMinecraftRecoveryInspector({
@@ -108,8 +109,7 @@ const app = createApp({
     executorToken: bootstrap.DELIVERY_MACHINE_CREDENTIALS.find((credential) =>
       credential.principal.scopes.includes("execute"),
     )?.token,
-    argoOrigin: bootstrap.ARGOCD_SERVER_URL,
-    argoToken: bootstrap.ARGOCD_RECOVERY_TOKEN,
+    readApplication,
   }),
   config: {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
