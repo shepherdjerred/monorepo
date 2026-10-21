@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.chat.app.ChatChannel;
 import com.shepherdjerred.thestorm.chat.app.NpcChat;
 import com.shepherdjerred.thestorm.chat.domain.ChatProfile;
+import com.shepherdjerred.thestorm.chat.domain.Shouting;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
@@ -680,6 +681,7 @@ final class BotChatTest {
         .isEqualTo(1);
     killAlice(alice, killer);
 
+    // Bot lines pass chat's filters like a player's: an ALL CAPS personality is calmed.
     var expected =
         personality.lines().onKill().stream()
             .map(
@@ -687,7 +689,9 @@ final class BotChatTest {
                     "[G][● "
                         + body.name()
                         + " ✦]: "
-                        + line.replace("{victim}", "Alice").replace("{team}", "Red Team"))
+                        + Shouting.calm(
+                            line.replace("{victim}", "Alice").replace("{team}", "Red Team"),
+                            RwfBotsHarness.CHAT_FILTER.maxCapsWords()))
             .toList();
     var aliceHeard = heard(alice);
     assertThat(aliceHeard).singleElement().isIn(expected);
