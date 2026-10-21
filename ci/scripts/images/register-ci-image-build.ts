@@ -1,12 +1,15 @@
 #!/usr/bin/env bun
 /**
  * Register one freshly built CI toolchain image as a Delivery build of the
- * `ci` service. The refresh lane runs this after the pin promotion decided
- * whether main should move to the candidate; Delivery qualifies the build on
- * its own and composition carries the sibling image forward from the base
- * set, so no retained ids are sent.
+ * `ci` service. The refresh lane runs this after the pin promotion recorded
+ * its outcome, and only a candidate the promotion carries is registered: a
+ * declined one (runtime-unchanged, older, superseded or deferred) would add a
+ * redundant `ci` revision or an image CI never adopted, so the current
+ * qualified artifact stays in place. Delivery qualifies the build on its own
+ * and composition carries the sibling image forward from the base set, so no
+ * retained ids are sent.
  *
- * Usage: register-ci-image-build.ts --candidate <candidate.json>
+ * Usage: register-ci-image-build.ts --candidate <candidate.json> --promotion <promotion.json>
  */
 import { createDeliveryClient } from "../../../packages/delivery/src/shared/client.ts";
 import type { PublishBuild } from "../../../packages/delivery/src/shared/contract.ts";
@@ -18,6 +21,7 @@ import { imageRuntimeDigests } from "../../../scripts/lib/ci/image-runtime-diges
 import { requireEnv, run } from "../../../scripts/lib/run.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import { ciImageDefinition } from "./build-ci-image-core.ts";
+import { parseCiImagePromotionOutcome } from "./ci-image-promotion-outcome.ts";
 import {
   parseCiImageCandidate,
   type CiImageCandidate,
@@ -101,13 +105,30 @@ export function ciImageBuild(
 
 export async function registerCiImageBuild(input: {
   readonly candidatePath: string;
+  readonly promotionPath: string;
   readonly context: CiBuildContext;
   readonly client: RegistrationClient;
   readonly inspect: ManifestInspector;
-}): Promise<{ buildId: string; artifacts: string[] }> {
+}): Promise<{ buildId: string; artifacts: string[] } | null> {
   const candidate = parseCiImageCandidate(
     await Bun.file(input.candidatePath).json(),
   );
+  const promotion = parseCiImagePromotionOutcome(
+    await Bun.file(input.promotionPath).json(),
+  );
+  if (
+    promotion.image !== candidate.image ||
+    promotion.digest !== candidate.digest
+  )
+    throw new Error(
+      `Promotion outcome for ${promotion.image} ${promotion.digest} does not describe candidate ${candidate.image} ${candidate.digest}`,
+    );
+  if (!promotion.promoted) {
+    console.log(
+      `${candidate.image} ${candidate.digest} was not promoted (${promotion.reason}); Delivery keeps the current qualified ci artifact`,
+    );
+    return null;
+  }
   const raw = await input.inspect(
     `docker.io/shepherdjerred/${candidate.image}@${candidate.digest}`,
   );
@@ -128,20 +149,26 @@ async function inspectManifest(reference: string): Promise<string> {
 }
 
 async function main(): Promise<void> {
+  const usage =
+    "Usage: register-ci-image-build.ts --candidate <candidate.json> --promotion <promotion.json>";
   const values = Bun.argv.slice(2);
-  if (values.length !== 2 || values[0] !== "--candidate" || values[1] === "")
-    throw new Error(
-      "Usage: register-ci-image-build.ts --candidate <candidate.json>",
-    );
-  const candidatePath = values[1];
-  if (candidatePath === undefined)
-    throw new Error("--candidate requires a path");
+  if (values.length !== 4) throw new Error(usage);
+  const [candidateFlag, candidatePath = "", promotionFlag, promotionPath = ""] =
+    values;
+  if (
+    candidatePath === "" ||
+    promotionPath === "" ||
+    candidateFlag !== "--candidate" ||
+    promotionFlag !== "--promotion"
+  )
+    throw new Error(usage);
   const client = createDeliveryClient({
     baseUrl: requireEnv("DELIVERY_URL"),
     headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
   });
   await registerCiImageBuild({
     candidatePath,
+    promotionPath,
     context: {
       repositoryId: positiveInteger("CI_REPO_ID", requireEnv("CI_REPO_ID")),
       pipelineNumber: positiveInteger(

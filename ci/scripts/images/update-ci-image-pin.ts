@@ -17,6 +17,11 @@ import {
   type CiImageDefinition,
 } from "./build-ci-image-core.ts";
 import {
+  carriedPromotionOutcome,
+  promotionOutcome,
+  type CiImagePromotionOutcome,
+} from "./ci-image-promotion-outcome.ts";
+import {
   checkedOutSourceCommand,
   ciImagePromotionFiles,
   isCurrentSourceCandidate,
@@ -270,8 +275,13 @@ async function sourceFingerprintAtRevision(
   return `sha256:${fingerprint}`;
 }
 
-async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
+async function promote(
+  candidatePath: string,
+  dryRun: boolean,
+): Promise<CiImagePromotionOutcome> {
   const candidate = parseCiImageCandidate(await Bun.file(candidatePath).json());
+  const declined = (reason: string) =>
+    promotionOutcome(candidate, false, reason);
   const definition = ciImageDefinition(candidate.image);
   const currentState = await readPinIfPresent(
     definition.stateFile,
@@ -285,7 +295,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   if (dryRun) {
     // Dry-run never clones or mutates remote state; report the decision only.
     console.log(dryRunReport(definition, candidate, decision));
-    return;
+    return declined("dry run");
   }
 
   const root = new URL("../../..", import.meta.url).pathname;
@@ -293,7 +303,8 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const cloneDir = `${tmpBase()}/monorepo-${definition.name}-pin-${Date.now().toString()}`;
   try {
     const openPr = await readMaintenancePr(definition.branch, auth.env);
-    if (await deferReadyPromotion(openPr, auth.env)) return;
+    if (await deferReadyPromotion(openPr, auth.env))
+      return declined("a ready promotion is already pending");
     assertDraftUnchanged(openPr);
     await run(["git", "clone", MONOREPO_WRITE_URL, cloneDir], {
       env: auth.env,
@@ -323,7 +334,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         reason: "candidate has no runtime digest change",
         env: auth.env,
       });
-      return;
+      return declined("candidate has no runtime digest change");
     }
     if (olderThanPin) {
       await finalizeSkippedPromotion({
@@ -334,7 +345,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         reason: "candidate is older than the committed pin",
         env: auth.env,
       });
-      return;
+      return declined("candidate is older than the committed pin");
     }
 
     const mainSourceFingerprint = await sourceFingerprintAtRevision(
@@ -350,7 +361,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       console.log(
         `${definition.name} candidate source is superseded by current main`,
       );
-      return;
+      return declined("candidate source is superseded by current main");
     }
     const currentPending =
       pending !== undefined &&
@@ -395,7 +406,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
           }),
       })
     ) {
-      return;
+      return declined("candidate adds no runtime change");
     }
 
     await run(
@@ -429,7 +440,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
     );
     if (diff.exitCode === 0) {
       console.log(`${definition.name} pin is already current`);
-      return;
+      return declined("pin is already current");
     }
     if (diff.exitCode !== 1) {
       throw new Error("Could not inspect staged CI image pin changes");
@@ -454,6 +465,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       env: auth.env,
       expectedRemoteSha: pending?.sha,
     });
+    return carriedPromotionOutcome(candidate, promoted);
   } finally {
     await auth.cleanup();
     await rm(cloneDir, { recursive: true, force: true });
@@ -464,16 +476,28 @@ async function main(): Promise<void> {
   const arguments_ = Bun.argv.slice(2);
   const dryRun = arguments_.includes("--dry-run");
   const values = arguments_.filter((value) => value !== "--dry-run");
-  if (values.length !== 2 || values[0] !== "--candidate") {
+  if (
+    (values.length !== 2 && values.length !== 4) ||
+    values[0] !== "--candidate" ||
+    (values.length === 4 && values[2] !== "--outcome-out")
+  ) {
     throw new Error(
-      "Usage: update-ci-image-pin.ts --candidate <candidate.json> [--dry-run]",
+      "Usage: update-ci-image-pin.ts --candidate <candidate.json> [--outcome-out <promotion.json>] [--dry-run]",
     );
   }
   const candidatePath = values[1];
-  if (candidatePath === undefined) {
+  if (candidatePath === undefined || candidatePath === "") {
     throw new Error("--candidate requires a path");
   }
-  await promote(candidatePath, dryRun);
+  const outcomePath = values[3];
+  if (values.length === 4 && (outcomePath === undefined || outcomePath === ""))
+    throw new Error("--outcome-out requires a path");
+  const outcome = await promote(candidatePath, dryRun);
+  console.log(
+    `${outcome.image} ${outcome.promoted ? "promoted" : "not promoted"}: ${outcome.reason}`,
+  );
+  if (outcomePath !== undefined)
+    await Bun.write(outcomePath, `${JSON.stringify(outcome, null, 2)}\n`);
 }
 
 if (import.meta.main) {

@@ -10,7 +10,14 @@ import {
   registerCiImageBuild,
   type CiBuildContext,
 } from "./register-ci-image-build.ts";
-import { parseCiImageCandidate } from "./update-ci-image-pin-core.ts";
+import {
+  promotionOutcome,
+  type CiImagePromotionOutcome,
+} from "./ci-image-promotion-outcome.ts";
+import {
+  parseCiImageCandidate,
+  type CiImageCandidate,
+} from "./update-ci-image-pin-core.ts";
 
 const childDigest = `sha256:${"1".repeat(64)}`;
 const rawManifest = JSON.stringify({
@@ -92,15 +99,29 @@ test.each(["ci-base", "ci-playwright"])(
   },
 );
 
-test("registers the candidate file through the injected client after inspecting its exact manifest", async () => {
+/** Write a candidate and the promotion outcome the pin step recorded for it. */
+async function inputs(
+  built: CiImageCandidate,
+  promotion: CiImagePromotionOutcome = promotionOutcome(
+    built,
+    true,
+    "promotion pull request carries it",
+  ),
+) {
   const directory = await mkdtemp(path.join(tmpdir(), "ci-image-candidate-"));
   directories.push(directory);
-  const candidatePath = path.join(directory, "ci-base-candidate.json");
-  await Bun.write(candidatePath, JSON.stringify(candidate()));
+  const candidatePath = path.join(directory, "candidate.json");
+  const promotionPath = path.join(directory, "promotion.json");
+  await Bun.write(candidatePath, JSON.stringify(built));
+  await Bun.write(promotionPath, JSON.stringify(promotion));
+  return { candidatePath, promotionPath };
+}
+
+test("registers the candidate file through the injected client after inspecting its exact manifest", async () => {
   const published: PublishBuild[] = [];
   const inspected: string[] = [];
   const result = await registerCiImageBuild({
-    candidatePath,
+    ...(await inputs(candidate())),
     context,
     client: {
       publish: async (input) => {
@@ -113,7 +134,7 @@ test("registers the candidate file through the injected client after inspecting 
       return rawManifest;
     },
   });
-  expect(result.buildId).toBe("build/ci-base");
+  expect(result?.buildId).toBe("build/ci-base");
   expect(inspected).toEqual([`docker.io/shepherdjerred/ci-base@${digest}`]);
   expect(published).toEqual([expectedBuild]);
 });
@@ -130,14 +151,10 @@ test.each([
     "is not this pipeline's release 1004321",
   ],
 ])("refuses %s without registering", async (_, build, reason) => {
-  const directory = await mkdtemp(path.join(tmpdir(), "ci-image-candidate-"));
-  directories.push(directory);
-  const candidatePath = path.join(directory, "candidate.json");
-  await Bun.write(candidatePath, JSON.stringify(build()));
   let published = 0;
   await expect(
     registerCiImageBuild({
-      candidatePath,
+      ...(await inputs(build())),
       context,
       client: {
         publish: async () => {
@@ -149,6 +166,53 @@ test.each([
     }),
   ).rejects.toThrow(reason);
   expect(published).toBe(0);
+});
+
+test.each([
+  "candidate has no runtime digest change",
+  "candidate is older than the committed pin",
+  "candidate source is superseded by current main",
+  "a ready promotion is already pending",
+])(
+  "registers nothing when the pin step declined the candidate: %s",
+  async (reason) => {
+    const built = candidate();
+    let calls = 0;
+    const result = await registerCiImageBuild({
+      ...(await inputs(built, promotionOutcome(built, false, reason))),
+      context,
+      client: {
+        publish: async () => {
+          calls += 1;
+          return { buildId: "unexpected", artifacts: [] };
+        },
+      },
+      inspect: async () => {
+        calls += 1;
+        return rawManifest;
+      },
+    });
+    expect(result).toBeNull();
+    expect(calls).toBe(0);
+  },
+);
+
+test("refuses a promotion outcome recorded for another candidate", async () => {
+  const built = candidate();
+  const other = parseCiImageCandidate({
+    ...built,
+    digest: `sha256:${"3".repeat(64)}`,
+  });
+  await expect(
+    registerCiImageBuild({
+      ...(await inputs(built, promotionOutcome(other, true, "promoted"))),
+      context,
+      client: {
+        publish: async () => ({ buildId: "unexpected", artifacts: [] }),
+      },
+      inspect: async () => rawManifest,
+    }),
+  ).rejects.toThrow("does not describe candidate ci-base");
 });
 
 test("refuses a candidate built from another commit and a manifest that is not the pushed digest", () => {

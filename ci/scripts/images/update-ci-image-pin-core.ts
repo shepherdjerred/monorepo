@@ -93,7 +93,7 @@ export type RuntimeFingerprintReader = (
   image: string,
 ) => Promise<string | undefined>;
 
-function exactRecord(
+export function exactRecord(
   value: unknown,
   expectedKeys: readonly string[],
   description: string,
@@ -113,7 +113,7 @@ function exactRecord(
   return record;
 }
 
-function canonicalDigest(value: unknown, description: string): string {
+export function canonicalDigest(value: unknown, description: string): string {
   if (typeof value !== "string" || !DIGEST_PATTERN.test(value)) {
     throw new TypeError(`${description} must be a canonical sha256 digest`);
   }

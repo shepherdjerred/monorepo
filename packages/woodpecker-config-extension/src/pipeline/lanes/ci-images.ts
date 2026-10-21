@@ -23,8 +23,8 @@ const GITHUB_APP: readonly SecretGrant[] = [
 ];
 
 /**
- * Rebuild a family of toolchain images, pin each result and register it as a
- * Delivery build of the `ci` service.
+ * Rebuild a family of toolchain images, pin each result and register each
+ * promoted result as a Delivery build of the `ci` service.
  *
  * The build, the pin and the registration are one step on purpose: an image
  * pushed but never pinned is invisible to every later build, and a pin written
@@ -56,8 +56,8 @@ function refreshStep(
       DOCKERHUB_PUBLISH_LOGIN,
       ...names.flatMap((name) => [
         `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
-        `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json`,
-        `bun --no-install ci/scripts/images/register-ci-image-build.ts --candidate ${name}-candidate.json`,
+        `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json --outcome-out ${name}-promotion.json`,
+        `bun --no-install ci/scripts/images/register-ci-image-build.ts --candidate ${name}-candidate.json --promotion ${name}-promotion.json`,
       ]),
     ],
     dependsOn: ["verify"],

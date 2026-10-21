@@ -288,6 +288,9 @@ test("release lanes include their complete imported helper closure", () => {
     expect(lanePaths[lane]).toContain(
       "ci/scripts/images/update-ci-image-pin-core.ts",
     );
+    expect(lanePaths[lane]).toContain(
+      "ci/scripts/images/ci-image-promotion-outcome.ts",
+    );
   }
 });
 

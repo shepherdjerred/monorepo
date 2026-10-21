@@ -190,11 +190,11 @@ test.each(["ci-base", "ci-playwright"])(
       "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
     );
     const pin = refresh.commands.indexOf(
-      `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${image}-candidate.json`,
+      `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${image}-candidate.json --outcome-out ${image}-promotion.json`,
     );
     expect(pin).toBeGreaterThan(0);
     expect(refresh.commands[pin + 1]).toBe(
-      `bun --no-install ci/scripts/images/register-ci-image-build.ts --candidate ${image}-candidate.json`,
+      `bun --no-install ci/scripts/images/register-ci-image-build.ts --candidate ${image}-candidate.json --promotion ${image}-promotion.json`,
     );
   },
 );
