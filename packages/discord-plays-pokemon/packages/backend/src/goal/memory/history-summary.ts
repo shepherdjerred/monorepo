@@ -3,6 +3,7 @@
 // history doesn't blow out the goal-mode prompt budget.
 
 import type { CompletedGoal } from "#src/goal/goal-history.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const REPORT_SNIPPET_LIMIT = 280;
 
@@ -28,5 +29,5 @@ function snippet(value: string): string {
   const flattened = value.replaceAll(/\s+/g, " ").trim();
   return flattened.length <= REPORT_SNIPPET_LIMIT
     ? flattened
-    : `${flattened.slice(0, REPORT_SNIPPET_LIMIT)}…`;
+    : `${graphemePrefix(flattened, REPORT_SNIPPET_LIMIT)}…`;
 }

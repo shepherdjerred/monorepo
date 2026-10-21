@@ -51,6 +51,7 @@ const config = [
         "src/goal/goal-manager.test.ts",
         "src/goal/goal-process-helpers.test.ts",
         "src/goal/goal-state-store.test.ts",
+        "src/goal/goal-tool-log.test.ts",
         "src/lifecycle/pokemon-driver.test.ts",
         "src/game/input-log.test.ts",
         "src/emulator/audio/pcm-s16.test.ts",

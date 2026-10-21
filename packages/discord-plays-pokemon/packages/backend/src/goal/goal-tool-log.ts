@@ -4,6 +4,7 @@
 
 import { logger } from "#src/logger.ts";
 import { goalToolCallsTotal } from "#src/observability/metrics.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const STATE_LOG_MAX = 4000;
 const GENERIC_BODY_MAX = 2000;
@@ -73,7 +74,7 @@ export function truncateForToolLog(
   value: string,
   max = GENERIC_BODY_MAX,
 ): string {
-  return value.length <= max ? value : `${value.slice(0, max)}…`;
+  return value.length <= max ? value : `${graphemePrefix(value, max)}…`;
 }
 
 export function truncateStateForToolLog(value: string): string {

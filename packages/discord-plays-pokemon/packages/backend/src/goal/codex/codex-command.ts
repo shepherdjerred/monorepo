@@ -3,6 +3,7 @@
 // save-specific context remain an explicitly untrusted user message.
 
 import { PREFERRED_POKEMONCTL_CAPABILITIES } from "#src/goal/goal-capabilities.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 export type PromptContext = {
   gameStateSummary: string;
@@ -121,5 +122,5 @@ function truncateContext(value: string, maximumCharacters: number): string {
   if (trimmed.length <= maximumCharacters) return trimmed;
 
   const marker = `\n… [truncated to ${String(maximumCharacters)} characters]`;
-  return `${trimmed.slice(0, maximumCharacters - marker.length)}${marker}`;
+  return `${graphemePrefix(trimmed, maximumCharacters - marker.length)}${marker}`;
 }

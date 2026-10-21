@@ -10,6 +10,7 @@ import { formatLocationLine } from "./game/game-state-summary.ts";
 import { GoalActivityLog } from "./goal-activity.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import type { GoalMessageSender, GoalState } from "./goal-types.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const MILESTONE_MAX_CHARS = 300;
 
@@ -158,7 +159,7 @@ export class GoalIntervalReporter {
     if (milestone !== undefined) {
       lines.push(
         milestone.length > MILESTONE_MAX_CHARS
-          ? `${milestone.slice(0, MILESTONE_MAX_CHARS)}…`
+          ? `${graphemePrefix(milestone, MILESTONE_MAX_CHARS)}…`
           : milestone,
       );
     }

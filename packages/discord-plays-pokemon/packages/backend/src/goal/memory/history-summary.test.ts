@@ -43,6 +43,14 @@ describe("formatHistoryForPrompt", () => {
     expect(out).toContain(`report: ${"x".repeat(280)}…`);
   });
 
+  test("keeps an emoji at the snippet cap whole", () => {
+    const report = `x${"😀".repeat(200)}`;
+    const out = formatHistoryForPrompt([entry({ finalReport: report })]);
+    // The emoji spanning units 279–280 is dropped rather than split.
+    expect(out).toContain(`report: x${"😀".repeat(139)}…`);
+    expect(out.isWellFormed()).toBe(true);
+  });
+
   test("collapses whitespace in the report to keep the prompt tight", () => {
     const out = formatHistoryForPrompt([
       entry({ finalReport: "line one\n\nline two\n  indented" }),
