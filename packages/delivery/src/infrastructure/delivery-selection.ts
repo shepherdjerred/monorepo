@@ -30,6 +30,9 @@ async function reconcileEnvironment(
   });
   if (specializedPipeline(pipeline.definition)) return null;
   if (row.activeDeploymentId !== null) return null;
+  // An alarmed selection holds the environment until the monitor's
+  // rollback or an operator acts (W2, D2).
+  if (await alarmedAndLatest(this.database, row)) return null;
   const last = await this.database.deployment.findFirst({
     where: {
       environmentId: row.id,
@@ -57,13 +60,62 @@ async function reconcileEnvironment(
     : requestAutomatic.call(this, row, target.id, actor);
 }
 
+async function alarmedAndLatest(
+  database: Delivery["database"],
+  row: { id: string; acceptedDeploymentId: string | null },
+) {
+  if (row.acceptedDeploymentId === null) return false;
+  const accepted = await database.deployment.findUniqueOrThrow({
+    where: { id: row.acceptedDeploymentId },
+  });
+  if (accepted.monitorState !== "alarmed") return false;
+  const newer = await database.deployment.count({
+    where: { environmentId: row.id, createdAt: { gt: accepted.createdAt } },
+  });
+  return newer === 0;
+}
+
+/** W2: alarmed selections under `automatic` policy get their restoration rollback. */
+async function restoreAlarmed(
+  this: Delivery,
+  enabledEnvironments: string[],
+  actor: Principal,
+) {
+  const requested: string[] = [];
+  for (const alarmed of await this.database.deployment.findMany({
+    where: {
+      monitorState: "alarmed",
+      environmentId: { in: enabledEnvironments },
+      acceptedBy: { some: {} },
+    },
+    select: { id: true },
+  })) {
+    const asked = await this.database.request.findUnique({
+      where: { id: `monitor/${alarmed.id}/rollback` },
+    });
+    if (asked !== null) continue;
+    try {
+      const rollback = await this.requestMonitorRollback(alarmed.id, actor);
+      if (rollback !== null) requested.push(rollback.id);
+    } catch (error) {
+      if (!(error instanceof DeliveryError) || error.code !== "CONFLICT")
+        throw error;
+    }
+  }
+  return requested;
+}
+
 export async function reconcile(
   this: Delivery,
   enabledEnvironments: string[],
   actor: Principal,
 ) {
   const leasesExpired = await expireLeases.call(this, actor);
-  const selected: string[] = [];
+  const selected: string[] = await restoreAlarmed.call(
+    this,
+    enabledEnvironments,
+    actor,
+  );
   for (const row of await this.database.environment.findMany({
     where: { automatic: true, id: { in: enabledEnvironments } },
   })) {

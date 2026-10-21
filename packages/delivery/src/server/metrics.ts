@@ -4,6 +4,7 @@ import {
   BuildSummarySchema,
   DeploymentSchema,
   DeploymentStatusSchema,
+  MonitorStateSchema,
 } from "#shared/contract.ts";
 
 const Value = z.number().nonnegative();
@@ -18,7 +19,7 @@ const StateSchema = z.object({
 
 /** Database gauges survive restarts; labels are closed enums, never request IDs. */
 export async function deliveryMetrics(database: Database): Promise<string> {
-  const [deployments, builds, workers, raw] = await Promise.all([
+  const [deployments, builds, workers, raw, monitors] = await Promise.all([
     database.deployment.groupBy({
       by: ["status", "kind"],
       _count: { _all: true },
@@ -47,6 +48,15 @@ export async function deliveryMetrics(database: Database): Promise<string> {
         (SELECT count(*)::float8 FROM "RecoveryIntent" WHERE status = 'pending' OR
            (barrier IS NOT NULL AND "barrierRestoredAt" IS NULL)) AS "recoveriesPending"
     `,
+    // One series per environment with an accepted selection (4.19).
+    database.environment.findMany({
+      where: { acceptedDeploymentId: { not: null } },
+      select: {
+        id: true,
+        acceptedDeployment: { select: { monitorState: true } },
+      },
+      orderBy: { id: "asc" },
+    }),
   ]);
   const [state] = z.array(StateSchema).length(1).parse(raw);
   if (state === undefined)
@@ -99,6 +109,17 @@ export async function deliveryMetrics(database: Database): Promise<string> {
         ),
       },
       value: row._count._all,
+    })),
+  );
+  metric(
+    "delivery_monitor_state",
+    "Monitor state of each environment's accepted selection (1 for its current state).",
+    monitors.map((row) => ({
+      labels: {
+        environment: row.id,
+        state: MonitorStateSchema.parse(row.acceptedDeployment?.monitorState),
+      },
+      value: 1,
     })),
   );
   for (const [name, help, value] of [

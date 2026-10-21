@@ -36,6 +36,8 @@ export const ApprovalV2Schema = z
     actor: z.string().min(1).nullable(),
     status: ApprovalStatusSchema,
     override: z.boolean(),
+    /** H5: the approved, settled deployment a monitor-created rollback restores. */
+    restorationOfDeploymentId: IdentifierSchema.nullable().default(null),
     reason: z.string().min(1).max(4000).nullable(),
     createdAt: z.iso.datetime(),
     decidedAt: z.iso.datetime().nullable(),

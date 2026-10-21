@@ -4,6 +4,12 @@ import {
   type CatalogReconcileRequest,
 } from "./model/catalog-reconcile-contract.ts";
 import { RollbackCandidatesSchema } from "./model/selection-contract.ts";
+import {
+  MonitorObservedSchema,
+  MonitorStatusSchema,
+  WatchingMonitorSchema,
+  type MonitorObservationInput,
+} from "./model/monitor-contract.ts";
 import type { CreateDeploymentV2Schema } from "./deployment-request-contract.ts";
 import * as errors from "./client-error.ts";
 export const DeliveryClientError = errors.DeliveryClientError;
@@ -406,6 +412,22 @@ export function createDeliveryClient(options: RequestOptions) {
       request("/environments", EnvironmentSchema, input),
     reconcileCatalog: (input: CatalogReconcileRequest) =>
       request("/catalog/reconcile", CatalogReconcileResultSchema, input),
+    watchingMonitors: () =>
+      request(
+        "/monitor/watching",
+        z.strictObject({ monitors: z.array(WatchingMonitorSchema) }),
+      ),
+    observeMonitor: (deploymentId: string, input: MonitorObservationInput) =>
+      request(
+        `/deployments/${encodeURIComponent(deploymentId)}/monitor`,
+        MonitorObservedSchema,
+        input,
+      ),
+    monitorStatus: (environmentId: string) =>
+      request(
+        `/environments/${encodeURIComponent(environmentId)}/monitor`,
+        MonitorStatusSchema,
+      ),
     rollbackCandidates: (environmentId: string) =>
       request(
         `/environments/${encodeURIComponent(environmentId)}/rollback-candidates`,

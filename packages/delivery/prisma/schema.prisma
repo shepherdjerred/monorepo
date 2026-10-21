@@ -219,6 +219,7 @@ model Deployment {
   platformLock                         PlatformLock?
   acceptedBy                           Environment[]               @relation("AcceptedSelection")
   triggeredSets                        VersionSet[]                @relation("TrackingTrigger")
+  restorationApprovals                 Approval[]                  @relation("RestorationApproval")
   recoveryIntents                      RecoveryIntent[]
   monitorObservations                  MonitorObservation[]
   expectedGeneration                   Int
@@ -380,16 +381,19 @@ model Evidence {
 
 /// One decision per deployment, bound to its frozen selection (model 4.13).
 model Approval {
-  id               String     @id
-  deploymentId     String     @unique
-  deployment       Deployment @relation(fields: [deploymentId], references: [id])
-  status           String     @default("pending")
-  override         Boolean    @default(false)
-  boundFingerprint String
-  reason           String?
-  actor            String?
-  createdAt        DateTime   @default(now())
-  decidedAt        DateTime?
+  id                        String      @id
+  deploymentId              String      @unique
+  deployment                Deployment  @relation(fields: [deploymentId], references: [id])
+  status                    String      @default("pending")
+  override                  Boolean     @default(false)
+  boundFingerprint          String
+  /// H5: the deployment whose approved, settled selection this restoration approval carries.
+  restorationOfDeploymentId String?
+  restorationOf             Deployment? @relation("RestorationApproval", fields: [restorationOfDeploymentId], references: [id], onDelete: Restrict)
+  reason                    String?
+  actor                     String?
+  createdAt                 DateTime    @default(now())
+  decidedAt                 DateTime?
 }
 
 model Stage {

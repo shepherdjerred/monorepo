@@ -1,6 +1,7 @@
 import type { StaticSitePolicy } from "#shared/static-site-contract.ts";
 import type { WorkerPoolTarget } from "#shared/worker-contract.ts";
 import type { StoredRecipeDefinition } from "./record-contract.ts";
+import type { Monitor } from "./monitor-contract.ts";
 import {
   type ApplicationBody,
   type ArtifactParameter,
@@ -243,6 +244,13 @@ export function pointsOfNoReturn(definition: Stored): string[] {
     : stepsOf(definition)
         .filter((candidate) => candidate.pointOfNoReturn)
         .map((candidate) => candidate.kind);
+}
+
+/** The monitor a recipe's oracle declares, or null when it settles on acceptance (W1). */
+export function monitorOf(definition: Stored): Monitor | null {
+  for (const recipe of kubernetesRecipes(definition))
+    if (recipe.oracle.monitor !== undefined) return recipe.oracle.monitor;
+  return null;
 }
 
 /** A v1 runner digest literal; model recipes bind runners by reference (C2). */

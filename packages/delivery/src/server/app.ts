@@ -130,7 +130,7 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|monitor)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
@@ -231,7 +231,7 @@ export function createApp(options: Options) {
   registerWorkerRoutes(app, { delivery, enabled });
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
-  registerSelectionRoutes(app, delivery);
+  registerSelectionRoutes(app, delivery, options.config.writesEnabled);
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {

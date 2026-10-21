@@ -109,6 +109,15 @@ export const MonitorObservationSchema = MonitorObservationInputSchema.extend({
 });
 export type MonitorObservation = z.infer<typeof MonitorObservationSchema>;
 
+/** The result of recording one observation; an automatic rollback it requested is named (W2). */
+export const MonitorObservedSchema = z.strictObject({
+  deploymentId: IdentifierSchema,
+  sequence: z.number().int().positive(),
+  outcome: MonitorOutcomeSchema,
+  policy: MonitorPolicySchema,
+  rollbackDeploymentId: IdentifierSchema.nullable(),
+});
+
 /** What the executor needs to observe one watching deployment. */
 export const WatchingMonitorSchema = z
   .strictObject({

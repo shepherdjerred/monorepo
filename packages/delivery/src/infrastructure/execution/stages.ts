@@ -30,6 +30,7 @@ import { validateSpecializedSuccess } from "#infrastructure/specialized-success.
 import { validatePlatformSuccess } from "#infrastructure/platform/lifecycle.ts";
 import { validateControlPlaneSuccess } from "#infrastructure/control-plane/lifecycle.ts";
 import { recomposeTracking } from "#infrastructure/composition/automatic.ts";
+import { startMonitor } from "#infrastructure/monitor/monitor.ts";
 import {
   advancesAcceptance,
   leaseExpiry,
@@ -221,9 +222,7 @@ export async function finish(
         finishedAt: now,
         // Acceptance starts the monitor; without a declared monitor the
         // selection settles on acceptance and is recorded as unmonitored (W1).
-        ...(accepted
-          ? { monitorState: "unmonitored", monitorSettledAt: now }
-          : {}),
+        ...(accepted ? await startMonitor(tx, row, now) : {}),
       },
     });
     const suppressed = await manualSelectionBaseline.call(

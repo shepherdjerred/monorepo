@@ -32,6 +32,12 @@ import { claim } from "#infrastructure/execution/claim.ts";
 import { handOff, renewLease } from "#infrastructure/execution/ownership.ts";
 import { releaseLock } from "#infrastructure/execution/lock-release.ts";
 import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
+import {
+  monitorStatus,
+  observeMonitor,
+  watchingMonitors,
+} from "#infrastructure/monitor/monitor.ts";
+import { requestMonitorRollback } from "#infrastructure/monitor/restoration.ts";
 import type { DeliveryPolicy } from "./config.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
@@ -142,6 +148,10 @@ export class Delivery {
   registerPipeline = registerPipeline;
   registerEnvironment = registerEnvironment;
   reconcileCatalog = reconcileCatalog;
+  watchingMonitors = watchingMonitors;
+  observeMonitor = observeMonitor;
+  monitorStatus = monitorStatus;
+  requestMonitorRollback = requestMonitorRollback;
   createDeployment = createDeployment;
   requestTrmnlRepair = requestTrmnlRepair;
   requestContentRecovery = requestContentRecovery;

@@ -228,6 +228,8 @@ ALTER TABLE "Approval" ADD COLUMN "status" TEXT;
 ALTER TABLE "Approval" ADD COLUMN "override" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "Approval" ADD COLUMN "boundFingerprint" TEXT;
 ALTER TABLE "Approval" ADD COLUMN "decidedAt" TIMESTAMP(3);
+-- H5: a monitor-created rollback carries the restored selection's approval.
+ALTER TABLE "Approval" ADD COLUMN "restorationOfDeploymentId" TEXT REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 UPDATE "Approval" a
 SET "status" = CASE a."decision" WHEN 'approve' THEN 'granted' ELSE 'rejected' END,
     "decidedAt" = a."createdAt",
