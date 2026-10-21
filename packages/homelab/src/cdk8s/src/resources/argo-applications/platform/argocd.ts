@@ -10,6 +10,10 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import {
+  humanArgoCdPolicyRows,
+  humanArgoCdSettings,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/argocd-human-access.ts";
 
 export const PROMETHEUS_HEALTH_LUA = `local hs = {
   status = "Progressing",
@@ -328,6 +332,7 @@ export function createArgoCdApp(chart: Chart) {
         "accounts.woodpecker": "apiKey",
         "accounts.woodpecker.enabled": false,
         ...DELIVERY_ARGO_ACCOUNTS,
+        ...humanArgoCdSettings(),
         // ArgoCD removed built-in Application CR health in 1.8. Restore the
         // documented app-of-apps check so the root app inherits child app and
         // workload health without widening the Woodpecker account's RBAC.
@@ -401,7 +406,9 @@ return hs`,
         // the root app-of-apps Application. Receipt publication updates only
         // that root Application after independent release verification.
         "policy.default": "",
-        "policy.csv": deliveryArgoPolicy(),
+        "policy.csv": [deliveryArgoPolicy(), ...humanArgoCdPolicyRows()].join(
+          "\n",
+        ),
       },
     },
   };

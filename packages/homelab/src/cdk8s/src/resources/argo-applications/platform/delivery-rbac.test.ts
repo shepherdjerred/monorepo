@@ -6,6 +6,7 @@ import path from "node:path";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { createArgoCdApp } from "./argocd.ts";
+import { humanArgoCdPolicyRows } from "./argocd-human-access.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import {
   argoRbacAllows,
@@ -78,7 +79,12 @@ beforeAll(async () => {
   expect(rbac["policy.csv"]).not.toContain("*");
   // The rendered chart carries the committed switch state; both states are
   // evaluated from the policy itself.
-  expect(rbac["policy.csv"]).toBe(deliveryArgoPolicy(transitionRendering()));
+  expect(rbac["policy.csv"]).toBe(
+    [
+      deliveryArgoPolicy(transitionRendering()),
+      ...humanArgoCdPolicyRows(),
+    ].join("\n"),
+  );
   for (const [state, csv] of [
     ["off", deliveryArgoPolicy(false)],
     ["on", deliveryArgoPolicy(true)],
