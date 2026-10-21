@@ -159,6 +159,27 @@ function issues(value: unknown): string {
     : result.error.issues.map((issue) => issue.message).join("\n");
 }
 
+type Document = Awaited<ReturnType<typeof document>>;
+type ApplicationRecipe = Extract<
+  Document["recipes"][number]["definition"],
+  { kind: "kubernetes-application" }
+>;
+function withApplicationRecipe(
+  base: Document,
+  id: string,
+  change: (definition: ApplicationRecipe) => ApplicationRecipe,
+): Document {
+  return {
+    ...base,
+    recipes: base.recipes.map((recipe) => {
+      if (recipe.id !== id) return recipe;
+      if (recipe.definition.kind !== "kubernetes-application")
+        throw new Error(`${id} is not a kubernetes-application recipe`);
+      return { ...recipe, definition: change(recipe.definition) };
+    }),
+  };
+}
+
 describe("CatalogDocumentSchema", () => {
   test("accepts recipes converted from the reviewed registrations", async () => {
     const parsed = CatalogDocumentSchema.parse(await document());
@@ -210,6 +231,54 @@ describe("CatalogDocumentSchema", () => {
         ),
       }),
     ).toMatch(/runs on ci image:ci-base, which the catalog does not declare/u);
+  });
+
+  test("refuses an AppProject without an owner or an edge to it (Z3)", async () => {
+    const base = await document();
+    const withProject = (project: string) =>
+      withApplicationRecipe(base, "arcade/3", (definition) => ({
+        ...definition,
+        application: { ...definition.application, project },
+      }));
+    expect(issues(withProject("workloads"))).toMatch(
+      /arcade\/prod names AppProject workloads, which no catalog service owns/u,
+    );
+    const owned = {
+      ...withProject("workloads"),
+      services: base.services.map((service) =>
+        service.id === "delivery"
+          ? { ...service, appProjects: ["workloads"] }
+          : service,
+      ),
+    };
+    // The fixture's arcade/prod -> delivery/prod edge orders it after the owner.
+    expect(CatalogDocumentSchema.safeParse(owned).success).toBe(true);
+    expect(
+      issues({
+        ...owned,
+        edges: base.edges.filter((edge) => edge.dependent !== "arcade/prod"),
+      }),
+    ).toMatch(
+      /arcade\/prod needs a prerequisite edge to an environment of delivery, which owns AppProject workloads/u,
+    );
+  });
+
+  test("refuses an accepted-in binding outside the service (A5)", async () => {
+    const base = await document();
+    const binding = (acceptedIn: string) =>
+      withApplicationRecipe(base, "arcade-beta/1", (definition) => ({
+        ...definition,
+        artifactParameters: {
+          ...definition.artifactParameters,
+          "delivery.images.accepted": { component: "image:arcade", acceptedIn },
+        },
+      }));
+    expect(issues(binding("delivery/prod"))).toMatch(
+      /arcade\/beta binds an image accepted in delivery\/prod, which is not another environment of arcade/u,
+    );
+    expect(
+      CatalogDocumentSchema.safeParse(binding("arcade/prod")).success,
+    ).toBe(true);
   });
 
   test("keeps the ops-model graph rules: promotion tree and prerequisite DAG", async () => {

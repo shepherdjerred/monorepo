@@ -194,6 +194,25 @@ function refineServices(document: CatalogDocumentBase, check: Check): void {
       refineReference(service, component, path, check);
     }
   }
+  refineAppProjects(document, check);
+}
+
+/** An AppProject has one owning service, whose chart renders it. */
+function refineAppProjects(document: CatalogDocumentBase, check: Check): void {
+  const owners = new Map<string, string>();
+  for (const [index, service] of document.services.entries()) {
+    for (const project of service.appProjects ?? []) {
+      const owner = owners.get(project);
+      if (owner !== undefined) {
+        issue(
+          check,
+          ["services", index, "appProjects"],
+          `AppProject ${project} is owned by both ${owner} and ${service.id}`,
+        );
+      }
+      owners.set(project, service.id);
+    }
+  }
 }
 
 function refinePromotionSource(

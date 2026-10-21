@@ -43,7 +43,13 @@ export const ComponentProducerSchema = z.enum([
   "reference",
 ]);
 export const ReferenceModeSchema = z.enum(["pinned", "tracking"]);
-/** Another service's component filled by reference (A5). */
+/**
+ * Another service's component filled by reference (A5). A `tracking`
+ * reference follows the acceptances of one source environment (R7); a
+ * producer with no environment of its own, such as an image only another
+ * service's chart consumes, is referenced `pinned` and moves by a manual
+ * set revision or a catalog change.
+ */
 export const ComponentSourceSchema = z
   .strictObject({
     service: ServiceIdSchema,
@@ -111,6 +117,11 @@ export const LegacyServiceSchema = z.strictObject({
     .optional(),
   bootstrapImages: z.array(z.string().min(1)).optional(),
 });
+/** An ArgoCD AppProject name. */
+export const AppProjectNameSchema = z
+  .string()
+  .regex(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/u)
+  .max(253);
 export const CatalogServiceSchema = z.strictObject({
   id: ServiceIdSchema,
   title: z.string().min(1),
@@ -121,6 +132,12 @@ export const CatalogServiceSchema = z.strictObject({
   group: ServiceGroupSchema,
   /** Ordered; a change starts a new lineage (S1). */
   components: z.array(CatalogComponentSchema),
+  /**
+   * ArgoCD AppProjects this service's chart renders. Every Application a
+   * recipe declares names a project some service owns, so no project loses
+   * its owner when the root release is retired.
+   */
+  appProjects: z.array(AppProjectNameSchema).optional(),
   ops: OpsAttributesSchema.optional(),
   legacy: LegacyServiceSchema.optional(),
 });
@@ -174,6 +191,37 @@ export const CatalogRecipeSchema = z.strictObject({
 });
 
 export const ForwardOnlyValueSchema = z.string().regex(/^\d+(?:\.\d+)*$/u);
+
+/**
+ * The value a forwardOnly key names (F3). A plain key is a content key; a
+ * key of the form `<contentKey>#<dotted.path>` names a field inside a
+ * content value that holds a JSON object, such as `minecraftServer.version`
+ * inside `helm.valuesObject`. Returns undefined when nothing is there.
+ */
+export function forwardOnlyValue(
+  content: Readonly<Record<string, string>>,
+  key: string,
+): string | undefined {
+  const separator = key.indexOf("#");
+  if (separator === -1) {
+    return content[key];
+  }
+  const raw = content[key.slice(0, separator)];
+  if (raw === undefined) {
+    return undefined;
+  }
+  let cursor: unknown = JSON.parse(raw);
+  for (const segment of key.slice(separator + 1).split(".")) {
+    if (typeof cursor !== "object" || cursor === null) {
+      return undefined;
+    }
+    cursor = Object.entries(cursor).find(([name]) => name === segment)?.[1];
+  }
+  if (typeof cursor === "number") {
+    return String(cursor);
+  }
+  return typeof cursor === "string" ? cursor : undefined;
+}
 export const CatalogConfigurationSchema = z
   .strictObject({
     id: RevisionIdSchema,
@@ -193,7 +241,7 @@ export const CatalogConfigurationSchema = z
       });
     }
     for (const key of configuration.forwardOnly) {
-      const value = configuration.content[key];
+      const value = forwardOnlyValue(configuration.content, key);
       if (value === undefined) {
         context.addIssue({
           code: "custom",

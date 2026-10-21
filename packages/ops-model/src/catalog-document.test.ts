@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import documentSchema from "@shepherdjerred/ops-model/catalog-document.schema.json" with { type: "json" };
-import { RevisionIdSchema } from "./catalog-document-shape.ts";
+import {
+  forwardOnlyValue,
+  RevisionIdSchema,
+} from "./catalog-document-shape.ts";
 import {
   CatalogDocumentSchema,
   parseCatalogDocument,
@@ -501,6 +504,34 @@ const invalidCases: InvalidCase[] = [
     },
   },
   {
+    name: "forwardOnly path inside a structured value that holds no version",
+    structural: false,
+    message:
+      /forwardOnly key helm\.valuesObject#minecraftServer\.version is absent/u,
+    mutate: (document) => {
+      const configurations = section(document, "configurations");
+      configurations[4] = {
+        ...configurations[4],
+        content: {
+          "helm.valuesObject": '{"minecraftServer":{"type":"PAPER"}}',
+        },
+        forwardOnly: ["helm.valuesObject#minecraftServer.version"],
+      };
+      return { ...document, configurations };
+    },
+  },
+  {
+    name: "an AppProject owned by two services",
+    structural: false,
+    message: /AppProject workloads is owned by both delivery and temporal/u,
+    mutate: (document) => {
+      const services = section(document, "services");
+      services[0] = { ...services[0], appProjects: ["workloads"] };
+      services[1] = { ...services[1], appProjects: ["workloads"] };
+      return { ...document, services };
+    },
+  },
+  {
     name: "environment naming an unknown recipe revision",
     structural: false,
     message: /unknown recipe revision scout-prod\/9/u,
@@ -582,6 +613,32 @@ describe("catalog document", () => {
       expect(validateStructure(document)).toBe(!structural);
     },
   );
+
+  test("forwardOnly keys may name a version inside a structured value", () => {
+    const content = {
+      "postgres.major": "17",
+      "helm.valuesObject":
+        '{"minecraftServer":{"version":"26.2"},"replicas":3}',
+    };
+    expect(forwardOnlyValue(content, "postgres.major")).toBe("17");
+    expect(
+      forwardOnlyValue(content, "helm.valuesObject#minecraftServer.version"),
+    ).toBe("26.2");
+    expect(forwardOnlyValue(content, "helm.valuesObject#replicas")).toBe("3");
+    expect(
+      forwardOnlyValue(content, "helm.valuesObject#minecraftServer.type"),
+    ).toBeUndefined();
+    const document = fixture();
+    const configurations = section(document, "configurations");
+    configurations[4] = {
+      ...configurations[4],
+      content,
+      forwardOnly: ["helm.valuesObject#minecraftServer.version"],
+    };
+    expect(
+      CatalogDocumentSchema.safeParse({ ...document, configurations }).success,
+    ).toBe(true);
+  });
 
   test("revision ids carry a numeric suffix", () => {
     for (const id of ["scout-prod/3", "static-sites/sjer-red/1"]) {

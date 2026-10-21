@@ -4,12 +4,14 @@ import { recipeFromPipeline } from "./recipe-adapter.ts";
 import {
   ChannelRecipeSchema,
   CompoundRecipeSchema,
+  helmSource,
   KubernetesApplicationRecipeSchema,
   OperatorRunRecipeSchema,
   RecipeDefinitionSchema,
   recipeComponents,
   recipeInstances,
   recipeRunners,
+  renderArtifactParameter,
   TofuRecipeSchema,
 } from "./recipe-contract.ts";
 
@@ -48,24 +50,28 @@ async function registered(file: string) {
   return match.pipeline;
 }
 
+function applicationBody(): Record<string, unknown> {
+  return {
+    name: "arcade",
+    project: "default",
+    destination: {
+      server: "https://kubernetes.default.svc",
+      namespace: "arcade",
+    },
+    source: {
+      repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+      chart: "arcade",
+    },
+    lifecycle: "retain",
+  };
+}
+
 function application(
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     kind: "kubernetes-application",
-    application: {
-      name: "arcade",
-      project: "default",
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "arcade",
-      },
-      source: {
-        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-        chart: "arcade",
-      },
-      lifecycle: "retain",
-    },
+    application: applicationBody(),
     chartComponent: "chart:arcade",
     artifactParameters: { "delivery.image": "image:arcade" },
     runner: { service: "ci", component: "image:ci-base" },
@@ -99,7 +105,9 @@ function expectArgocdMapping(file: string, pipeline: ArgocdPipeline) {
     throw new Error(`${file} did not map to a kubernetes-application`);
   }
   expect(recipe.application.name, file).toBe(pipeline.application);
-  expect(recipe.application.source.chart, file).toBe(pipeline.chartName);
+  expect(recipe.application.source, file).toMatchObject({
+    chart: pipeline.chartName,
+  });
   expect(recipe.chartComponent, file).toBe(pipeline.chartComponent);
   expect(recipe.artifactParameters, file).toEqual(pipeline.artifactParameters);
   expect(recipe.runner, file).toEqual({
@@ -360,7 +368,68 @@ describe("RecipeDefinitionSchema", () => {
     [
       "a chart component that is not the source chart",
       { chartComponent: "chart:other" },
-      /must name the Application's source chart/u,
+      /A Helm source binds the chart component of its chart/u,
+    ],
+    [
+      "a Git source bound to a chart component",
+      {
+        application: {
+          ...applicationBody(),
+          source: {
+            repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+            path: "config/default",
+          },
+        },
+        chartComponent: "chart:arcade",
+        artifactParameters: {},
+      },
+      /a Git source binds an archive of its revision/u,
+    ],
+    [
+      "Helm values on a Git source",
+      {
+        application: {
+          ...applicationBody(),
+          source: {
+            repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+            path: "config/default",
+          },
+        },
+        chartComponent: "archive:cloudflare-operator",
+      },
+      /a Git source takes none/u,
+    ],
+    [
+      "automated pruning",
+      {
+        application: {
+          ...applicationBody(),
+          syncPolicy: { automated: { selfHeal: true, prune: true } },
+        },
+      },
+      /Invalid input/u,
+    ],
+    [
+      "a worker rollout of an image accepted elsewhere",
+      {
+        artifactParameters: {
+          "delivery.image": {
+            component: "image:arcade",
+            acceptedIn: "arcade/beta",
+          },
+        },
+        steps: [
+          { kind: "apply-safety", instance: "application:arcade" },
+          { kind: "sync", instance: "application:arcade" },
+          {
+            kind: "worker-rollout",
+            instance: "worker-pool:central",
+            target: "central",
+            imageComponent: "image:arcade",
+          },
+        ],
+      },
+      /roll out an image bound by artifactParameters/u,
     ],
     [
       "a monitor over an unbound image",
@@ -406,7 +475,84 @@ describe("RecipeDefinitionSchema", () => {
       result.error?.issues.map((issue) => issue.message).join("\n"),
     ).toMatch(message);
   });
+});
 
+describe("RecipeDefinitionSchema source forms", () => {
+  test("accepts OCI and Git sources, self-heal, and images accepted elsewhere", () => {
+    const oci = KubernetesApplicationRecipeSchema.parse(
+      application({
+        application: {
+          ...applicationBody(),
+          name: "kueue",
+          source: { repoURL: "registry.k8s.io/kueue/charts", chart: "kueue" },
+          syncPolicy: { automated: { selfHeal: true, prune: false } },
+        },
+        chartComponent: "chart:kueue",
+        artifactParameters: {},
+        steps: [
+          { kind: "apply-safety", instance: "application:kueue" },
+          { kind: "sync", instance: "application:kueue" },
+        ],
+      }),
+    );
+    expect(oci.application.syncPolicy?.automated.selfHeal).toBe(true);
+    const git = KubernetesApplicationRecipeSchema.parse(
+      application({
+        application: {
+          ...applicationBody(),
+          source: {
+            repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+            path: "config/default",
+          },
+        },
+        chartComponent: "archive:cloudflare-operator",
+        artifactParameters: {},
+      }),
+    );
+    expect(helmSource(git.application.source)).toBeNull();
+    const sandbox = KubernetesApplicationRecipeSchema.parse(
+      application({
+        artifactParameters: {
+          "delivery.images.candidate": "image:arcade",
+          "delivery.images.accepted": {
+            component: "image:arcade",
+            acceptedIn: "arcade/prod",
+          },
+        },
+      }),
+    );
+    expect(recipeComponents(sandbox)).toEqual(["chart:arcade", "image:arcade"]);
+    expect(
+      KubernetesApplicationRecipeSchema.safeParse(
+        application({
+          application: {
+            ...applicationBody(),
+            source: { repoURL: "http://charts.example.com", chart: "arcade" },
+          },
+        }),
+      ).success,
+    ).toBe(false);
+  });
+
+  test("renders an artifact parameter by its Helm path form", () => {
+    const artifact = {
+      uri: "docker.io/openebs/zfs-driver",
+      version: "2.8.0",
+      digest: `sha256:${"a".repeat(64)}`,
+    };
+    expect(
+      renderArtifactParameter("zfs-localpv.zfsPlugin.image.tag", artifact),
+    ).toBe(`2.8.0@sha256:${"a".repeat(64)}`);
+    expect(renderArtifactParameter("delivery.images.arcade", artifact)).toBe(
+      `docker.io/openebs/zfs-driver@sha256:${"a".repeat(64)}`,
+    );
+    expect(renderArtifactParameter("kubectl.image", artifact)).toBe(
+      `docker.io/openebs/zfs-driver@sha256:${"a".repeat(64)}`,
+    );
+  });
+});
+
+describe("RecipeDefinitionSchema target kinds", () => {
   test("tofu plans before it applies on its own stack", () => {
     expect(tofuSteps(["plan", "apply"]).success).toBe(true);
     expect(tofuSteps(["plan", "approve", "apply"]).success).toBe(true);

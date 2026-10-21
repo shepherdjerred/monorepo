@@ -6,6 +6,8 @@ import {
 } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import { refineCatalogDocument } from "@shepherdjerred/ops-model/catalog-document.ts";
 import {
+  type ArtifactParameter,
+  type RecipeDefinition,
   RecipeDefinitionSchema,
   recipeComponents,
   recipeInstances,
@@ -100,11 +102,135 @@ function refineInstanceOwnership(
   }
 }
 
+/** Every Application body a recipe declares, through operator-run and compound wrappers. */
+export function recipeApplications(definition: RecipeDefinition): {
+  project: string;
+  parameters: Record<string, ArtifactParameter>;
+}[] {
+  switch (definition.kind) {
+    case "kubernetes-application":
+      return [
+        {
+          project: definition.application.project,
+          parameters: definition.artifactParameters,
+        },
+      ];
+    case "operator-run":
+      return recipeApplications(definition.wrapped);
+    case "compound":
+      return definition.subRecipes.flatMap((sub) =>
+        recipeApplications(sub.definition),
+      );
+    case "static-site":
+    case "tofu":
+    case "channel":
+      return [];
+  }
+}
+
+type BindingCheck = {
+  projectOwners: Map<string, string>;
+  environments: Set<string>;
+  prerequisites: Map<string, Set<string>>;
+  context: z.RefinementCtx;
+};
+
+/**
+ * An Application names an AppProject some service owns, and its environment
+ * deploys after an environment of that owner (Z3). ArgoCD creates its own
+ * `default` project, which needs no owner.
+ */
+function refineProject(
+  environmentId: string,
+  project: string,
+  path: (string | number)[],
+  check: BindingCheck,
+): void {
+  if (project === "default") return;
+  const owner = check.projectOwners.get(project);
+  const serviceId = environmentService(environmentId);
+  if (owner === undefined) {
+    check.context.addIssue({
+      code: "custom",
+      path,
+      message: `${environmentId} names AppProject ${project}, which no catalog service owns`,
+    });
+    return;
+  }
+  const prerequisites = check.prerequisites.get(environmentId) ?? new Set();
+  if (
+    owner !== serviceId &&
+    ![...prerequisites].some((id) => environmentService(id) === owner)
+  )
+    check.context.addIssue({
+      code: "custom",
+      path,
+      message: `${environmentId} needs a prerequisite edge to an environment of ${owner}, which owns AppProject ${project} (Z3)`,
+    });
+}
+
+/** `acceptedIn` binds an image accepted in another environment of the same service (A5, P3). */
+function refineAcceptedIn(
+  environmentId: string,
+  parameters: Record<string, ArtifactParameter>,
+  path: (string | number)[],
+  check: BindingCheck,
+): void {
+  const serviceId = environmentService(environmentId);
+  for (const value of Object.values(parameters)) {
+    if (typeof value === "string") continue;
+    if (
+      !check.environments.has(value.acceptedIn) ||
+      environmentService(value.acceptedIn) !== serviceId ||
+      value.acceptedIn === environmentId
+    )
+      check.context.addIssue({
+        code: "custom",
+        path,
+        message: `${environmentId} binds an image accepted in ${value.acceptedIn}, which is not another environment of ${serviceId}`,
+      });
+  }
+}
+
+function refineApplicationBindings(
+  document: CatalogDocumentBase,
+  context: z.RefinementCtx,
+): void {
+  const prerequisites = new Map<string, Set<string>>();
+  for (const edge of document.edges) {
+    const known = prerequisites.get(edge.dependent) ?? new Set<string>();
+    prerequisites.set(edge.dependent, known.add(edge.prerequisite));
+  }
+  const check: BindingCheck = {
+    projectOwners: new Map(
+      document.services.flatMap((service) =>
+        (service.appProjects ?? []).map((project) => [project, service.id]),
+      ),
+    ),
+    environments: new Set(document.environments.map((env) => env.id)),
+    prerequisites,
+    context,
+  };
+  const recipes = new Map(
+    document.recipes.map((recipe) => [recipe.id, recipe.definition]),
+  );
+  for (const [index, environment] of document.environments.entries()) {
+    const definition = recipes.get(environment.recipeRevisionId);
+    if (definition === undefined) continue;
+    const path = ["environments", index, "recipeRevisionId"];
+    for (const application of recipeApplications(definition)) {
+      refineProject(environment.id, application.project, path, check);
+      refineAcceptedIn(environment.id, application.parameters, path, check);
+    }
+  }
+}
+
 export const CatalogDocumentSchema = CatalogDocumentBaseSchema.superRefine(
   (document, context) => {
     refineCatalogDocument(document, context);
     refineRecipeBindings(document, context);
     refineInstanceOwnership(document, context);
+    refineApplicationBindings(document, context);
   },
 );
 export type CatalogDocument = z.infer<typeof CatalogDocumentSchema>;

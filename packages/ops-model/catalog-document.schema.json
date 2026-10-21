@@ -179,6 +179,15 @@
           "type": "array",
           "items": { "$ref": "#/$defs/component" }
         },
+        "appProjects": {
+          "description": "ArgoCD AppProjects this service's chart renders. Every Application a recipe declares names a project some service owns.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+          }
+        },
         "ops": {
           "description": "Attributes the ops consumers read and Delivery never does. Images and charts derive from the components.",
           "type": "object",
@@ -306,7 +315,7 @@
           "additionalProperties": { "type": "string" }
         },
         "forwardOnly": {
-          "description": "Keys whose value may never be lowered by rollback (F3); each holds a dotted numeric version.",
+          "description": "Keys whose value may never be lowered by rollback (F3); each names a content key, or `<contentKey>#<dotted.path>` inside a JSON-object content value, holding a dotted numeric version.",
           "type": "array",
           "uniqueItems": true,
           "items": { "type": "string", "minLength": 1 }

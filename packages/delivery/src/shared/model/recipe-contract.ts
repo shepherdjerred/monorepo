@@ -1,7 +1,9 @@
 import { z } from "zod";
 import {
+  AppProjectNameSchema,
   ArchiveComponentNameSchema,
   ChartComponentNameSchema,
+  EnvironmentIdSchema,
   ImageComponentNameSchema,
   ServiceIdSchema,
 } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
@@ -36,10 +38,43 @@ const KubernetesNameSchema = z
   .regex(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/u)
   .max(253);
 const StringMapSchema = z.record(z.string().min(1), z.string());
+/** An OCI Helm repository named without a scheme, as ArgoCD accepts it (`registry.k8s.io/kueue/charts`). */
+export const OciRepositorySchema = z
+  .string()
+  .regex(/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(?::\d+)?(?:\/[a-z0-9._-]+)+$/u);
+const HttpsUrlSchema = z.url({ protocol: /^https$/u });
+/** A Helm chart from an HTTPS or OCI repository; the chart artifact binds its revision. */
+export const HelmSourceSchema = z.strictObject({
+  repoURL: z.union([HttpsUrlSchema, OciRepositorySchema]),
+  chart: IdentifierSchema,
+  helm: z
+    .strictObject({
+      releaseName: KubernetesNameSchema.optional(),
+      skipCrds: z.boolean().optional(),
+      valueFiles: z.array(z.string().min(1)).optional(),
+    })
+    .optional(),
+});
+export type HelmSource = z.infer<typeof HelmSourceSchema>;
 /**
- * The whole Application except the fields a deployment binds: the chart
- * `targetRevision` comes from the chart artifact and `helm.parameters` from
- * `artifactParameters` plus the configuration revision.
+ * A path in a Git repository (kustomize or plain manifests). Its revision is
+ * never a literal (C2): an acquired archive component's version, the exact
+ * commit, binds it.
+ */
+export const GitSourceSchema = z.strictObject({
+  repoURL: HttpsUrlSchema,
+  path: z.string().min(1),
+});
+export type GitSource = z.infer<typeof GitSourceSchema>;
+/** The Helm form of an Application source, or null for a Git source. */
+export function helmSource(source: HelmSource | GitSource): HelmSource | null {
+  const parsed = HelmSourceSchema.safeParse(source);
+  return parsed.success ? parsed.data : null;
+}
+/**
+ * The whole Application except the fields a deployment binds: the source
+ * revision comes from the chart (or Git revision) artifact and Helm values
+ * from `artifactParameters` plus the configuration revision.
  */
 export const ApplicationBodySchema = z.strictObject({
   name: KubernetesNameSchema,
@@ -50,22 +85,25 @@ export const ApplicationBodySchema = z.strictObject({
       finalizers: z.array(z.string().min(1)).default([]),
     })
     .default({ labels: {}, annotations: {}, finalizers: [] }),
-  project: z.string().min(1),
+  project: AppProjectNameSchema,
   destination: z.strictObject({
     server: z.url(),
     namespace: KubernetesNameSchema,
   }),
-  source: z.strictObject({
-    repoURL: z.url(),
-    chart: IdentifierSchema,
-    helm: z
-      .strictObject({
-        releaseName: KubernetesNameSchema.optional(),
-        skipCrds: z.boolean().optional(),
-        valueFiles: z.array(z.string().min(1)).optional(),
-      })
-      .optional(),
-  }),
+  source: z.union([HelmSourceSchema, GitSourceSchema]),
+  /**
+   * Self-heal on the accepted exact source (T4). Delivery enables it only
+   * after acceptance, never prunes automatically, and records any revert as
+   * drift evidence.
+   */
+  syncPolicy: z
+    .strictObject({
+      automated: z.strictObject({
+        selfHeal: z.literal(true),
+        prune: z.literal(false),
+      }),
+    })
+    .optional(),
   syncOptions: z.array(z.string().min(1)).default([]),
   ignoreDifferences: z
     .array(
@@ -85,6 +123,36 @@ export const ApplicationBodySchema = z.strictObject({
   lifecycle: z.enum(["retain", "cascade"]),
 });
 export type ApplicationBody = z.infer<typeof ApplicationBodySchema>;
+
+/**
+ * What fills one Helm value path. A bare image component binds this
+ * deployment's own selection; `acceptedIn` binds the artifact accepted in
+ * another environment of the same service, frozen at admission (A5).
+ */
+export const ArtifactParameterSchema = z.union([
+  ImageComponentNameSchema,
+  z.strictObject({
+    component: ImageComponentNameSchema,
+    acceptedIn: EnvironmentIdSchema,
+  }),
+]);
+export type ArtifactParameter = z.infer<typeof ArtifactParameterSchema>;
+export function artifactParameterComponent(value: ArtifactParameter): string {
+  return typeof value === "string" ? value : value.component;
+}
+/**
+ * The value a Helm path receives, by the path's form: a `.tag` path takes
+ * `tag@digest` (the chart prefixes its own repository), every other path a
+ * complete `repository@digest` reference.
+ */
+export function renderArtifactParameter(
+  path: string,
+  artifact: { uri: string; version: string; digest: string },
+): string {
+  return path.endsWith(".tag")
+    ? `${artifact.version}@${artifact.digest}`
+    : `${artifact.uri}@${artifact.digest}`;
+}
 
 const stepFields = {
   instance: TargetInstanceSchema,
@@ -189,10 +257,17 @@ export const KubernetesApplicationRecipeSchema = z
   .strictObject({
     kind: z.literal("kubernetes-application"),
     application: ApplicationBodySchema,
-    chartComponent: ChartComponentNameSchema,
-    /** Helm value path to the image component whose artifact fills it. */
+    /**
+     * The component whose artifact fixes the source revision: `chart:<chart>`
+     * for a Helm source, an archive of the exact commit for a Git source.
+     */
+    chartComponent: z.union([
+      ChartComponentNameSchema,
+      ArchiveComponentNameSchema,
+    ]),
+    /** Helm value path to what fills it; rendered by the path's form. */
     artifactParameters: z
-      .record(z.string().min(1), ImageComponentNameSchema)
+      .record(z.string().min(1), ArtifactParameterSchema)
       .default({}),
     runner: RunnerReferenceSchema,
     steps: z.array(KubernetesStepSchema).min(2),
@@ -201,11 +276,24 @@ export const KubernetesApplicationRecipeSchema = z
   })
   .superRefine((recipe, context) => {
     const application = `application:${recipe.application.name}`;
-    if (recipe.chartComponent !== `chart:${recipe.application.source.chart}`) {
+    const helm = helmSource(recipe.application.source);
+    if (
+      helm === null
+        ? !recipe.chartComponent.startsWith("archive:")
+        : recipe.chartComponent !== `chart:${helm.chart}`
+    ) {
       context.addIssue({
         code: "custom",
         path: ["chartComponent"],
-        message: "The chart component must name the Application's source chart",
+        message:
+          "A Helm source binds the chart component of its chart; a Git source binds an archive of its revision",
+      });
+    }
+    if (helm === null && Object.keys(recipe.artifactParameters).length > 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["artifactParameters"],
+        message: "Artifact parameters are Helm values; a Git source takes none",
       });
     }
     const kinds = recipe.steps.map((step) => step.kind);
@@ -225,7 +313,12 @@ export const KubernetesApplicationRecipeSchema = z
           "A kubernetes-application recipe runs exactly one apply-safety preflight before exactly one sync",
       });
     }
-    const images = new Set(Object.values(recipe.artifactParameters));
+    // Steps and monitors act on this deployment's own selection only.
+    const images = new Set(
+      Object.values(recipe.artifactParameters).filter(
+        (value) => typeof value === "string",
+      ),
+    );
     for (const [index, step] of recipe.steps.entries()) {
       const expected = stepInstanceExpectation(step, application);
       if (step.instance !== expected) {
@@ -375,7 +468,9 @@ export function recipeComponents(definition: RecipeDefinition): string[] {
       return [
         ...new Set([
           definition.chartComponent,
-          ...Object.values(definition.artifactParameters),
+          ...Object.values(definition.artifactParameters).map((value) =>
+            artifactParameterComponent(value),
+          ),
           ...definition.steps.flatMap((step) => stepComponents(step)),
           ...(definition.oracle.monitor === undefined
             ? []
