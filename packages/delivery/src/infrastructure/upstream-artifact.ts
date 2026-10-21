@@ -87,16 +87,6 @@ function registryUrl(entry: VersionCatalogEntry) {
   return entry.management.registryUrl;
 }
 
-/** Catalog validation guarantees `<tag>@sha256:<digest>` for image components. */
-function pinnedImage(entry: VersionCatalogEntry) {
-  const match = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/.exec(entry.value);
-  const tag = match?.[1];
-  const digest = match?.[2];
-  if (tag === undefined || digest === undefined)
-    throw new Error(`Catalog component ${entry.name} is not pinned by digest`);
-  return { tag, digest };
-}
-
 function refuse(reason: string): never {
   throw new DeliveryError("INVALID", reason);
 }
@@ -133,11 +123,10 @@ function reviewed(
     if (
       origin.repository !== repository ||
       artifact.component !== `chart:${entry.name}` ||
-      artifact.version !== entry.value ||
       (owner !== undefined && owner.id !== serviceId)
     )
       refuse(
-        "Chart acquisition must match the catalog component's repository, name, pinned version and owning service",
+        "Chart acquisition must match the catalog component's repository, name and owning service",
       );
     if (new URL(artifact.uri).protocol !== "https:")
       refuse("Chart archive location must be an https URL");
@@ -145,19 +134,16 @@ function reviewed(
   }
   if (artifact.kind !== "image")
     refuse("Upstream acquisition covers charts and images only");
-  const pinned = pinnedImage(entry);
   const registry = registryLocation(registryUrl(entry), entry.name);
   if (
     origin.repository !== registryUrl(entry) ||
-    origin.version !== pinned.tag ||
-    artifact.digest !== pinned.digest ||
     artifact.component !== `image:${entry.name}` ||
     artifact.uri !== registry.uri
   )
     refuse(
-      "Image acquisition must match the catalog component's registry, name, pinned tag, digest and image URI",
+      "Image acquisition must match the catalog component's registry, name and image URI",
     );
-  return { kind: "image", originKey, registry, tag: pinned.tag };
+  return { kind: "image", originKey, registry, tag: origin.version };
 }
 
 async function boundedRead(
@@ -266,7 +252,7 @@ async function verifyImage(
   );
   if (digest !== input.artifact.digest)
     refuse(
-      "Registry manifest for the pinned tag differs from the catalog digest",
+      "Registry manifest for the requested tag differs from the requested digest",
     );
 }
 

@@ -55,9 +55,11 @@ export async function latestQualifiedArtifact(
             OR: [
               { sourceKind: "ci", repositoryId },
               {
-                sourceKind: {
-                  in: ["upstream", "licensed-bundle", "attested"],
-                },
+                sourceKind: "upstream",
+                OR: [{ repositoryId }, { repositoryId: null }],
+              },
+              {
+                sourceKind: { in: ["licensed-bundle", "attested"] },
                 repositoryId: null,
               },
             ],

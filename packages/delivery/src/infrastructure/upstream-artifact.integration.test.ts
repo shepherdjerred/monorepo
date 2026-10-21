@@ -453,6 +453,53 @@ test("a chart acquired at its upstream archive URL carries the acquiring pipelin
   await context.delivery.qualify(genuine.buildId, "verified", testExecutor);
   const [version] = await context.delivery.versions("minecraft");
   expect(version?.components["chart:minecraft"]?.id).toBe(acquired.artifact.id);
+  expect(
+    await context.delivery.latestQualifiedArtifact(
+      { serviceId: "minecraft", component: "chart:minecraft", kind: "chart" },
+      1,
+    ),
+  ).toEqual(acquired.artifact);
+});
+
+/** Serves an upstream index that attests exactly one chart version. */
+function servedIndex(attested: string) {
+  return (url: string | URL) =>
+    Promise.resolve(
+      url.toString().endsWith("index.yaml")
+        ? chartIndex(attested)
+        : new Response(bytes),
+    );
+}
+function newerChart(version: string, requestId: string) {
+  return {
+    ...input,
+    requestId,
+    pipeline: { repositoryId: 1, pipelineNumber: 11 },
+    artifact: {
+      ...input.artifact,
+      id: `upstream/minecraft/${version}/${requestId}`,
+      uri: archiveUrl(version),
+      version,
+      origin: { ...input.artifact.origin, version },
+    },
+  };
+}
+
+test("a chart version newer than the deployed catalog is acquired when the upstream index attests it", async () => {
+  const acquired = await context.delivery.acquireUpstreamArtifact(
+    newerChart("4.0.1", "upstream/newer"),
+    testPublisher,
+    { transport: servedIndex("4.0.1"), components },
+  );
+  expect(acquired.status).toBe("verified");
+  expect(acquired.artifact.version).toBe("4.0.1");
+  await expect(
+    context.delivery.acquireUpstreamArtifact(
+      newerChart("4.0.2", "upstream/unattested"),
+      testPublisher,
+      { transport: servedIndex("4.0.1"), components },
+    ),
+  ).rejects.toMatchObject({ code: "INVALID" });
 });
 
 test("an image is acquired by resolving the pinned tag through the registry's anonymous bearer challenge without downloading bytes", async () => {
@@ -494,7 +541,7 @@ test("an image is acquired by resolving the pinned tag through the registry's an
   );
 });
 
-test("a manifest whose digest differs from the catalog pin is refused and the acquisition stays pending", async () => {
+test("a manifest whose digest differs from the requested digest is refused and the acquisition stays pending", async () => {
   const { transport: registryTransport } = registry(
     new TextEncoder().encode(JSON.stringify({ schemaVersion: 2, tampered: 1 })),
   );
@@ -537,15 +584,6 @@ test("services and components outside the catalog allowlist are refused before a
     },
     { ...input, requestId: "refused/chart-owner", serviceId: "arcade" },
     { ...input, requestId: "refused/service", serviceId: "not-a-service" },
-    {
-      ...input,
-      requestId: "refused/chart-version",
-      artifact: {
-        ...chart,
-        version: "4.0.1",
-        origin: { ...chartOrigin, version: "4.0.1" },
-      },
-    },
     {
       ...input,
       requestId: "refused/chart-repository",
