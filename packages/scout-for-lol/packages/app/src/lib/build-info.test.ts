@@ -1,9 +1,36 @@
 import { describe, expect, test } from "vitest";
 import {
+  buildInfo,
   isContractMismatch,
+  shortArchiveIdentity,
   shortSha,
   VersionResponseSchema,
 } from "#src/lib/build-info.ts";
+
+describe("buildInfo", () => {
+  test("carries only the content-derived identity, never a baked version", () => {
+    expect(Object.keys(buildInfo).sort()).toEqual(["contractHash", "release"]);
+    // Outside a site-release build both are absent / the dev placeholder.
+    expect(buildInfo.release).toBeUndefined();
+    expect(buildInfo.contractHash).toBe("dev");
+  });
+});
+
+describe("shortArchiveIdentity", () => {
+  test("shortens the archive digest to twelve hex characters", () => {
+    expect(
+      shortArchiveIdentity(`scout-site@sha256:${"0123456789abcdef".repeat(4)}`),
+    ).toBe("scout-site@sha256:0123456789ab");
+  });
+
+  test("reports none outside a release build", () => {
+    expect(shortArchiveIdentity(undefined)).toBe("none");
+  });
+
+  test("passes an unrecognised identity through unchanged", () => {
+    expect(shortArchiveIdentity("custom-release")).toBe("custom-release");
+  });
+});
 
 describe("isContractMismatch", () => {
   test("differing real hashes mismatch", () => {

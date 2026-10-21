@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { expect, test, vi } from "vitest";
 import { pushImages } from "../../ci/scripts/images/bake-images.ts";
 import { buildPublications } from "./publish-delivery.ts";
-import { ArtifactVersionSchema } from "../../packages/delivery/src/shared/contract.ts";
+import {
+  ArtifactVersionSchema,
+  type ArtifactVersion,
+} from "../../packages/delivery/src/shared/contract.ts";
 import {
   CANONICAL_IMAGE_TARGETS,
   chartPublicationImages,
@@ -149,10 +152,24 @@ test("a new sourceCI retains original image IDs without manufacturing new produc
   expect(delivery.sourceRevision).toBe("a".repeat(40));
 });
 
+const arcadeOriginal = ArtifactVersionSchema.parse({
+  id: "ci/1/41/image/arcade",
+  buildId: "original-arcade-build",
+  serviceId: "arcade",
+  component: "image:arcade",
+  kind: "image",
+  uri: "docker.io/shepherdjerred/arcade",
+  digest: pinnedDigest,
+  version: "2.0.0-1000041",
+  sourceRevision: "a".repeat(40),
+  createdAt: "2026-10-17T00:00:00.000Z",
+});
+
 async function publishCandidate(smokeFails = false) {
-  const legacy: Readonly<Record<string, string>>[] = [];
-  const delivery: Readonly<Record<string, string>>[] = [];
-  const candidates: Readonly<Record<string, string>>[] = [];
+  const delivery: {
+    digests: Readonly<Record<string, string>>;
+    retained: readonly ArtifactVersion[];
+  }[] = [];
   const verified: string[] = [];
   const operation = pushImages(
     {
@@ -168,24 +185,7 @@ async function publishCandidate(smokeFails = false) {
         return { exitCode: 0, stdout: "", stderr: "" };
       },
       environment: {},
-      readQualifiedImages: async () =>
-        new Map([
-          [
-            "arcade",
-            ArtifactVersionSchema.parse({
-              id: "ci/1/41/image/arcade",
-              buildId: "original-arcade-build",
-              serviceId: "arcade",
-              component: "image:arcade",
-              kind: "image",
-              uri: "docker.io/shepherdjerred/arcade",
-              digest: pinnedDigest,
-              version: "2.0.0-1000041",
-              sourceRevision: "a".repeat(40),
-              createdAt: "2026-10-17T00:00:00.000Z",
-            }),
-          ],
-        ]),
+      readQualifiedImages: async () => new Map([["arcade", arcadeOriginal]]),
       getManifestDigest: async (candidate) => {
         expect(candidate).toBe(
           `docker.io/shepherdjerred/arcade:candidate-${sourceRevision}`,
@@ -209,36 +209,36 @@ async function publishCandidate(smokeFails = false) {
       },
       // Build identities differ, but the candidate's application bytes match.
       getRuntimeFingerprint: async () => "identical-runtime",
-      writeMetadata: async (digests) => {
-        legacy.push(digests);
-      },
-      writeDeliveryMetadata: async (digests) => {
+      writeDeliveryMetadata: async (digests, retained) => {
         expect(verified).toEqual(["registry", "source", "smoke"]);
-        delivery.push(digests);
-      },
-      writeCandidates: async (digests) => {
-        candidates.push(digests);
+        delivery.push({ digests, retained });
       },
       writeText: () => Promise.resolve(),
     },
   );
-  return { operation, legacy, delivery, candidates };
+  return { operation, delivery };
 }
 
-test("publishes a freshly verified runtime-unchanged Arcade candidate with its own CI provenance", async () => {
+test("retains the qualified original for a verified runtime-unchanged Arcade candidate", async () => {
   const output = await publishCandidate();
   await output.operation;
-  expect(output.legacy).toEqual([{}]);
-  expect(output.candidates).toEqual([
-    { "shepherdjerred/arcade": candidateDigest },
-  ]);
+  // The rebuilt bytes are never registered; the original keeps its own
+  // artifact, build, and source identity under this pipeline's publication.
   expect(output.delivery).toEqual([
-    { "shepherdjerred/arcade": candidateDigest },
+    { digests: {}, retained: [arcadeOriginal] },
   ]);
   const [publication] = await buildPublications(
     {
-      digests: output.delivery[0],
-      charts: [{ name: "arcade", revision: "2.0.0-42" }],
+      digests: output.delivery[0]?.digests,
+      retainedArtifacts: output.delivery[0]?.retained,
+      charts: [
+        {
+          name: "arcade",
+          revision: "2.0.0-42",
+          digest: `sha256:${"d".repeat(64)}`,
+          contentFingerprint: `sha256:${"e".repeat(64)}`,
+        },
+      ],
       sourceRevision,
       ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/42",
       pipelineNumber: 42,
@@ -246,9 +246,8 @@ test("publishes a freshly verified runtime-unchanged Arcade candidate with its o
       capturedAt: "2026-10-17T00:00:00.000Z",
     },
     {
-      inspectImage: async (image) => {
-        expect(image).toBe(reference);
-        return manifest;
+      inspectImage: async () => {
+        throw new Error("A retained image is never inspected as a candidate");
       },
       chartArtifact: async () => ({
         uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-2.0.0-42.tgz",
@@ -261,14 +260,11 @@ test("publishes a freshly verified runtime-unchanged Arcade candidate with its o
     "https://woodpecker.sjer.red/repos/1/pipeline/42",
   );
   expect(publication?.artifacts.map((artifact) => artifact.component)).toEqual([
-    "image:arcade",
     "chart:arcade",
   ]);
-  expect(publication?.artifacts[0]).toMatchObject({
-    id: "ci/1/42/image/arcade",
-    digest: candidateDigest,
-  });
-  expect(publication?.artifacts[0]?.digest).not.toBe(pinnedDigest);
+  expect(publication?.retainedArtifactIds).toEqual(["ci/1/41/image/arcade"]);
+  expect(arcadeOriginal.digest).toBe(pinnedDigest);
+  expect(arcadeOriginal.digest).not.toBe(candidateDigest);
 });
 
 test("does not hand off an image whose exact candidate smoke failed", async () => {
@@ -277,6 +273,4 @@ test("does not hand off an image whose exact candidate smoke failed", async () =
     "Exact candidate smoke failed",
   );
   expect(output.delivery).toEqual([]);
-  expect(output.legacy).toEqual([]);
-  expect(output.candidates).toEqual([]);
 });

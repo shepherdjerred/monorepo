@@ -160,6 +160,45 @@ test("artifact publication preserves build gates and has no deployment-acceptanc
   expect(publication?.defaultBranchOnly).toBe(true);
 });
 
+test.each(["ci-base", "ci-playwright"])(
+  "the %s refresh registers its pushed image as a ci service build with the publisher identity",
+  (image) => {
+    const refresh = steps().find((step) => step.key === `${image}-refresh`);
+    if (refresh === undefined) throw new Error(`${image} refresh missing`);
+    expect(refresh.defaultBranchOnly).toBe(true);
+    expect(refresh.environment?.["DELIVERY_URL"]).toBe(
+      "http://delivery.delivery.svc.cluster.local:7353",
+    );
+    expect(
+      refresh.secrets?.filter(
+        (grant) => grant.secret === "ci-delivery-credentials",
+      ),
+    ).toEqual([
+      {
+        secret: "ci-delivery-credentials",
+        key: "DELIVERY_PUBLISHER_TOKEN",
+        env: "DELIVERY_API_TOKEN",
+      },
+    ]);
+    // The publisher login reads the pushed image back; no reader identity.
+    expect(
+      refresh.secrets?.some(
+        (grant) => grant.env === "DOCKERHUB_READ_CONFIG_JSON",
+      ),
+    ).toBe(false);
+    expect(refresh.commands).toContain(
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+    );
+    const pin = refresh.commands.indexOf(
+      `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${image}-candidate.json`,
+    );
+    expect(pin).toBeGreaterThan(0);
+    expect(refresh.commands[pin + 1]).toBe(
+      `bun --no-install ci/scripts/images/register-ci-image-build.ts --candidate ${image}-candidate.json`,
+    );
+  },
+);
+
 test.each([false, true])(
   "chart publication checks fresh content-unchanged Storm artifacts (fresh=%s)",
   async (fresh) => {

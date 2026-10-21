@@ -73,6 +73,53 @@ test.each([false, true])(
   },
 );
 
+test("retained charts are accepted only at the coordinated inventory revision", async () => {
+  const retained = {
+    name: "apps",
+    revision: "2.0.0-1000030",
+    digest: `sha256:${"a".repeat(64)}`,
+    artifactId: "ci/1/30/chart/apps",
+    contentFingerprint: `sha256:${"b".repeat(64)}`,
+  };
+  const read = (inventory: unknown) => ({
+    optional: () => Promise.resolve(JSON.stringify(inventory)),
+    required: (key: string) =>
+      Promise.resolve(
+        key === "delivery-image-digests"
+          ? "{}"
+          : key === "delivery-chart-publications"
+            ? JSON.stringify({
+                schema: "delivery-chart-publications/v2",
+                sourceRevision: "c".repeat(40),
+                pipelineNumber: 42,
+                repositoryId: 1,
+                charts: [],
+                retained: [retained],
+              })
+            : "[]",
+      ),
+  });
+  // The inventory may pin charts this producer neither pushed nor retained.
+  const result = await readPublicationHandoffs(
+    false,
+    read([
+      { name: "apps", revision: retained.revision },
+      { name: "arcade", revision: "2.0.0-1000029" },
+    ]),
+  );
+  expect(result.retainedCharts).toEqual([retained]);
+  expect(result.charts).toEqual([]);
+  await expect(
+    readPublicationHandoffs(
+      false,
+      read([{ name: "apps", revision: "2.0.0-1000042" }]),
+    ),
+  ).rejects.toThrow("Retained chart publication does not match");
+  await expect(readPublicationHandoffs(false, read([]))).rejects.toThrow(
+    "Retained chart publication does not match",
+  );
+});
+
 test.each([
   { ...publication, serviceId: "static-sites" },
   { ...publication, artifact: { ...artifact, component: "archive:other" } },

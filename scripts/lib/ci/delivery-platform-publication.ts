@@ -123,6 +123,10 @@ export async function attachPlatformPublication(
   input: {
     files: readonly string[] | undefined;
     rootInventory: readonly { name: string; revision: string }[] | undefined;
+    /** Unchanged charts this producer retained by qualified Delivery artifact. */
+    retainedCharts?:
+      | readonly { name: string; revision: string; artifactId: string }[]
+      | undefined;
     sourceRevision: string;
     ciUrl: string;
     pipelineNumber: number;
@@ -149,7 +153,7 @@ export async function attachPlatformPublication(
       const revision = input.rootInventory?.find(
         (chart) => chart.name === expected.name,
       )?.revision;
-      const artifact = publications
+      const fresh = publications
         .find((build) => build.serviceId === expected.serviceId)
         ?.artifacts.find(
           (entry) =>
@@ -157,11 +161,15 @@ export async function attachPlatformPublication(
             entry.kind === "chart" &&
             entry.version === revision,
         );
-      if (artifact === undefined)
+      const retained = input.retainedCharts?.find(
+        (chart) => chart.name === expected.name && chart.revision === revision,
+      );
+      const artifactId = fresh?.id ?? retained?.artifactId;
+      if (artifactId === undefined)
         throw new Error(
-          `Platform release requires a genuine current-CI chart producer receipt for ${expected.name}`,
+          `Platform release requires this CI's chart receipt or its retained qualified chart at the inventory revision for ${expected.name}`,
         );
-      rootArtifacts[expected.name] = artifact.id;
+      rootArtifacts[expected.name] = artifactId;
     }
   }
   const freshSites = publications

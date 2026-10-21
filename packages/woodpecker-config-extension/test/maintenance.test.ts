@@ -63,6 +63,38 @@ test.each(["release-notes", "ci-images"] as const)(
   },
 );
 
+test("the manual image refresh registers no Delivery build and holds no publisher identity", () => {
+  const maintenance = maintenanceSteps(TEST_IMAGES, "ci-images")[0];
+  if (maintenance === undefined) throw new Error("Maintenance lane missing");
+  expect(maintenance.environment?.["DELIVERY_URL"]).toBeUndefined();
+  expect(
+    maintenance.secrets?.some(
+      (grant) =>
+        grant.secret === "ci-delivery-credentials" ||
+        grant.env === "DELIVERY_API_TOKEN",
+    ),
+  ).toBe(false);
+  expect(maintenance.commands.join("\n")).not.toContain(
+    "register-ci-image-build.ts",
+  );
+  // The main-pipeline refresh steps keep the identity they register with.
+  const graph = buildPipelineSteps({
+    images: TEST_IMAGES,
+    changedBase: "base",
+  });
+  for (const key of ["ci-base-refresh", "ci-playwright-refresh"]) {
+    const refresh = graph.find((step) => step.key === key);
+    expect(refresh?.environment?.["DELIVERY_URL"]).toBe(
+      "http://delivery.delivery.svc.cluster.local:7353",
+    );
+    expect(
+      refresh?.secrets?.some(
+        (grant) => grant.secret === "ci-delivery-credentials",
+      ),
+    ).toBe(true);
+  }
+});
+
 test("separation removes only maintenance and retains publication and verification gates", () => {
   const before = buildPipelineSteps({
     images: TEST_IMAGES,

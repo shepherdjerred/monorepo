@@ -10,7 +10,11 @@ import {
   testPublisher,
   testOperator,
 } from "@shepherdjerred/delivery/testing";
-import type { PublishBuild } from "@shepherdjerred/delivery/contract";
+import type {
+  ArtifactVersion,
+  FindQualifiedArtifact,
+  PublishBuild,
+} from "@shepherdjerred/delivery/contract";
 import { buildPublications } from "../ci/publish-delivery.ts";
 import {
   resolveScoutDeliveryBackend,
@@ -40,18 +44,12 @@ afterAll(async () => {
   await cluster.close();
 });
 
-/**
- * Site archive bytes per pipeline. These producers bake the commit and build
- * number into the site, so every pipeline's archive is different bytes and
- * composes over the digest-identical base.
- */
-function siteDigest(build: number) {
-  return `sha256:${createHash("sha256")
-    .update(`scout-site-${String(build)}`)
-    .digest("hex")}`;
-}
-
-function releaseState(build: number, source: string, backend: string) {
+function releaseState(
+  build: number,
+  source: string,
+  backend: string,
+  archive = imageA,
+) {
   return parseScoutReleaseState(
     JSON.stringify({
       schema: "scout-release-state/v1",
@@ -59,11 +57,68 @@ function releaseState(build: number, source: string, backend: string) {
       version: `2.0.0-${String(build)}`,
       sourceCommit: source,
       backendImageDigest: backend,
-      siteArchiveDigest: siteDigest(build),
-      betaSiteArchiveDigest: siteDigest(build),
-      releaseInputDigest: siteDigest(build),
+      siteArchiveDigest: archive,
+      betaSiteArchiveDigest: archive,
+      releaseInputDigest: archive,
     }),
   );
+}
+
+/**
+ * Site bytes per content generation. Different generations are different
+ * bytes; the same generation rebuilt on a later commit is byte-identical, which
+ * is what B2 retains and R2 declines to re-compose.
+ */
+function siteDigest(content: number) {
+  return `sha256:${createHash("sha256")
+    .update(`scout-site-${String(content)}`)
+    .digest("hex")}`;
+}
+
+const dependencies = {
+  inspectImage: async () => manifest,
+  chartArtifact: async () => {
+    throw new Error("Unexpected chart");
+  },
+};
+
+/**
+ * One CI pipeline's Scout handoffs: both site archives built from `content`
+ * (its own build number unless stated) against a frozen backend.
+ */
+function publicationInput(
+  pipeline: { build: number; source: string; content?: number },
+  digests: Record<string, string>,
+  backend: unknown,
+) {
+  const { build, source } = pipeline;
+  const archive = siteDigest(pipeline.content ?? build);
+  const requirements = scoutArchiveRequirements(
+    releaseState(build, source, scoutDeliveryBackendDigest(backend), archive),
+    backend,
+    { sourceRevision: source, repositoryId: 1, pipelineNumber: build },
+  );
+  return {
+    digests,
+    charts: undefined,
+    sourceRevision: source,
+    ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(build)}`,
+    repositoryId: 1,
+    pipelineNumber: build,
+    capturedAt: new Date().toISOString(),
+    siteArtifacts: ["scout-frontend-beta", "scout-frontend"].map((bucket) => ({
+      serviceId: "scout-for-lol",
+      artifact: {
+        id: `ci/1/${String(build)}/site/${bucket}`,
+        component: `site:${bucket}`,
+        kind: "archive",
+        uri: `s3://delivery-artifacts/sites/${bucket}/${archive.slice(7)}.tar`,
+        digest: archive,
+        version: `build-${String(build)}`,
+        requires: requirements,
+      },
+    })),
+  };
 }
 
 async function publication(
@@ -72,44 +127,19 @@ async function publication(
   digests: Record<string, string>,
   backend: unknown,
 ) {
-  const requirements = scoutArchiveRequirements(
-    releaseState(build, source, scoutDeliveryBackendDigest(backend)),
-    backend,
-    { sourceRevision: source, repositoryId: 1, pipelineNumber: build },
-  );
   const [result] = await buildPublications(
-    {
-      digests,
-      charts: undefined,
-      sourceRevision: source,
-      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(build)}`,
-      repositoryId: 1,
-      pipelineNumber: build,
-      capturedAt: new Date().toISOString(),
-      siteArtifacts: ["scout-frontend-beta", "scout-frontend"].map(
-        (bucket) => ({
-          serviceId: "scout-for-lol",
-          artifact: {
-            id: `ci/1/${String(build)}/site/${bucket}`,
-            component: `site:${bucket}`,
-            kind: "archive",
-            uri: `s3://delivery-artifacts/sites/${bucket}/${siteDigest(build).slice(7)}.tar`,
-            digest: siteDigest(build),
-            version: `build-${String(build)}`,
-            requires: requirements,
-          },
-        }),
-      ),
-    },
-    {
-      inspectImage: async () => manifest,
-      chartArtifact: async () => {
-        throw new Error("Unexpected chart");
-      },
-    },
+    publicationInput({ build, source }, digests, backend),
+    dependencies,
   );
   if (result === undefined) throw new Error("Missing Scout publication");
   return result;
+}
+
+/** In-process stand-in for the client's 404: a missing original is "no retention". */
+function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof Error && "code" in error && error.code === "NOT_FOUND"
+  );
 }
 
 async function qualify(build: number, input: PublishBuild, store = delivery) {
@@ -117,7 +147,8 @@ async function qualify(build: number, input: PublishBuild, store = delivery) {
     repositoryId: 1,
     pipelineNumber: build,
   });
-  // Self-hosted site archives verify only with an off-cluster replica (PC1).
+  // PC1: produced self-hosted archives hold `pending` until R2 holds their
+  // bytes. Retained references carry their original receipt and need none.
   await replicateProducedArtifacts(store, registered.buildId);
   expect(
     await store.qualify(registered.buildId, "verified", testExecutor),
@@ -347,6 +378,126 @@ test("late image build cannot replace the backend of a newer coherent site relea
       sourceRevision: sourceD,
       requires: { "image:scout-for-lol": imageA },
     });
+  } finally {
+    await isolated.close();
+  }
+}, 60_000);
+
+test("rebuilding unchanged site bytes on a later commit retains the qualified archives and creates no set revision", async () => {
+  const isolated = await createTestDatabase();
+  try {
+    const store = new Delivery(isolated.database);
+    const sourceA = "a".repeat(40);
+    const revisions = () =>
+      isolated.database.versionSet.count({
+        where: { serviceId: "scout-for-lol" },
+      });
+    // Pipeline 1 builds the image and both site archives from sourceA.
+    const initial = await publication(
+      1,
+      sourceA,
+      {},
+      await resolveScoutDeliveryBackend(
+        {
+          digests: { "shepherdjerred/scout-for-lol": imageA },
+          sourceRevision: sourceA,
+          repositoryId: 1,
+          pipelineNumber: 1,
+        },
+        async () => {
+          throw new Error("Fresh image must not read PG");
+        },
+      ),
+    );
+    initial.artifacts.unshift({
+      id: "ci/1/1/image/scout-for-lol",
+      component: "image:scout-for-lol",
+      kind: "image",
+      uri: "docker.io/shepherdjerred/scout-for-lol",
+      digest: imageA,
+      runtimeDigests: [],
+      requires: {},
+      version: "build-1",
+    });
+    const build1 = await qualify(1, initial, store);
+    expect(await revisions()).toBe(1);
+
+    // Pipeline 2 (sourceB) reuses the qualified image by reference and rebuilds
+    // the sites to byte-identical archives with the same requirement.
+    const reused = await resolveScoutDeliveryBackend(
+      {
+        digests: {},
+        sourceRevision: sourceB,
+        repositoryId: 1,
+        pipelineNumber: 2,
+      },
+      (query) => store.latestQualifiedArtifact(query, 1),
+    );
+    expect(reused).toMatchObject({
+      provenance: "qualified-artifact",
+      artifact: { id: "ci/1/1/image/scout-for-lol", digest: imageA },
+    });
+    const lookups: FindQualifiedArtifact[] = [];
+    const findQualifiedArchive = async (
+      query: FindQualifiedArtifact,
+    ): Promise<ArtifactVersion | undefined> => {
+      lookups.push(query);
+      try {
+        return await store.findQualifiedArtifact(query, 1);
+      } catch (error) {
+        if (isNotFound(error)) return;
+        throw error;
+      }
+    };
+    const [rebuilt] = await buildPublications(
+      publicationInput({ build: 2, source: sourceB, content: 1 }, {}, reused),
+      { ...dependencies, findQualifiedArchive },
+    );
+    if (rebuilt === undefined) throw new Error("Missing Scout publication");
+    expect(
+      lookups
+        .map((query) => query.component)
+        .sort((a, b) => a.localeCompare(b)),
+    ).toEqual(["site:scout-frontend", "site:scout-frontend-beta"]);
+    for (const query of lookups)
+      expect(query).toMatchObject({
+        serviceId: "scout-for-lol",
+        kind: "archive",
+        digest: siteDigest(1),
+        originKind: "first-party",
+      });
+    expect(lookups.every((query) => query.version === undefined)).toBe(true);
+    // Nothing new is registered: both archives are retained by reference.
+    expect(rebuilt.artifacts).toEqual([]);
+    expect(rebuilt.retainedArtifactIds).toHaveLength(2);
+    expect(rebuilt.retainedArtifactIds).toEqual(
+      expect.arrayContaining([
+        "ci/1/1/site/scout-frontend-beta",
+        "ci/1/1/site/scout-frontend",
+      ]),
+    );
+    expect(rebuilt.sourceRevision).toBe(sourceB);
+
+    const build2 = await qualify(2, rebuilt, store);
+    expect(build2.buildId).not.toBe(build1.buildId);
+    // The verified build selects exactly the base set's artifacts, so no set
+    // revision is composed and the selected components keep their provenance.
+    expect(await revisions()).toBe(1);
+    expect(
+      await isolated.database.versionSet.findFirstOrThrow({
+        where: { serviceId: "scout-for-lol" },
+      }),
+    ).toMatchObject({ revision: 1, qualifiedBuildId: build1.buildId });
+    const [selected] = await store.versions("scout-for-lol");
+    expect(selected?.revision).toBe(1);
+    for (const bucket of ["scout-frontend-beta", "scout-frontend"])
+      expect(selected?.components[`site:${bucket}`]).toMatchObject({
+        id: `ci/1/1/site/${bucket}`,
+        buildId: build1.buildId,
+        sourceRevision: sourceA,
+        digest: siteDigest(1),
+        requires: { "image:scout-for-lol": imageA },
+      });
   } finally {
     await isolated.close();
   }

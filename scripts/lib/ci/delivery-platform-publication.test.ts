@@ -151,7 +151,9 @@ test("root inventory uses every exact original artifact ID from this actual coor
       { ...metadata, rootInventory: inventory },
       anchor,
     ),
-  ).rejects.toThrow("genuine current-CI chart producer receipt for woodpecker");
+  ).rejects.toThrow(
+    "retained qualified chart at the inventory revision for woodpecker",
+  );
   await expect(
     attachPlatformPublication(
       builds,
@@ -164,7 +166,67 @@ test("root inventory uses every exact original artifact ID from this actual coor
       },
       anchor,
     ),
-  ).rejects.toThrow("genuine current-CI");
+  ).rejects.toThrow("at the inventory revision");
+});
+
+test("a root chart retained from Delivery satisfies the inventory at its exact revision", async () => {
+  const { builds, inventory } = fullRootPublication();
+  const retainedRevision = "2.0.0-1000030";
+  const withoutWoodpecker = builds.map((build) => ({
+    ...build,
+    artifacts: build.artifacts.filter(
+      (artifact) => artifact.component !== "chart:woodpecker",
+    ),
+  }));
+  const rootInventory = inventory.map((chart) =>
+    chart.name === "woodpecker"
+      ? { ...chart, revision: retainedRevision }
+      : chart,
+  );
+  const fresh = chartInputs.find((chart) => chart.name !== "woodpecker");
+  if (fresh === undefined) throw new Error("fixture needs a fresh root chart");
+  const result = await attachPlatformPublication(
+    withoutWoodpecker,
+    {
+      ...metadata,
+      rootInventory,
+      retainedCharts: [
+        {
+          name: "woodpecker",
+          revision: retainedRevision,
+          artifactId: "ci/1/30/chart/woodpecker",
+        },
+        // A fresh receipt at the inventory revision wins over a stale reference.
+        {
+          name: fresh.name,
+          revision: "2.0.0-1000042",
+          artifactId: `ci/1/30/chart/${fresh.name}`,
+        },
+      ],
+    },
+    anchor,
+  );
+  const rootArtifacts = result.find((build) => build.serviceId === "gitops")
+    ?.platformChanges?.rootArtifacts;
+  expect(rootArtifacts?.["woodpecker"]).toBe("ci/1/30/chart/woodpecker");
+  expect(rootArtifacts?.[fresh.name]).toBe(`ci/1/42/chart/${fresh.name}`);
+  await expect(
+    attachPlatformPublication(
+      withoutWoodpecker,
+      {
+        ...metadata,
+        rootInventory,
+        retainedCharts: [
+          {
+            name: "woodpecker",
+            revision: "2.0.0-1000029",
+            artifactId: "ci/1/29/chart/woodpecker",
+          },
+        ],
+      },
+      anchor,
+    ),
+  ).rejects.toThrow("at the inventory revision for woodpecker");
 });
 
 test("site prerequisites exclude Scout's combined deployment and keep the exact independent archive ID", async () => {

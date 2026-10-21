@@ -194,14 +194,19 @@ coalesces only queued, unapproved automatic requests. Cancellation or rejection
 suppresses that revision until a new eligible revision or explicit operator request.
 
 The image producer writes `delivery-image-digests` for every candidate it
-actually built, pushed, and verified in that pipeline, including candidates
-whose runtime fingerprint matches the current deployment. Delivery requires
-this handoff and records that candidate's exact digest and CI source. The
-build-scoped `image-digests` contains runtime changes; retained image inputs are
-never republished as new builds. The publisher requires the TRMNL archive
-producer's handoff even when it is empty. Its `--static-archives` option also
-requires the sites aggregate and Scout producer receipts, including exact
-agreement on Scout artifacts. CI always produces immutable archives; API
+built, pushed, verified and found changed by runtime fingerprint, and
+`delivery-retained-image-artifacts` for every qualified original it kept:
+images it did not build and candidates whose fingerprint equals the original.
+Delivery requires both handoffs; a retained original is referenced by its
+existing artifact id and never republished as a new build. The runtime
+fingerprint excludes the `VERSION` and `GIT_SHA` build arguments, so a retained
+image keeps the original build's `VERSION` and `GIT_SHA`. That `GIT_SHA` is the
+artifact's `sourceRevision`, and the worker pool stamps
+`TEMPORAL_WORKER_BUILD_ID` from the same value, never from the pipeline number.
+
+The publisher requires the TRMNL archive producer's handoff even when it is
+empty. Its `--static-archives` option also requires the sites aggregate and
+Scout producer receipts, including exact agreement on Scout artifacts. CI always produces immutable archives; API
 registration waits only for the catalog endpoint's bootstrap.
 
 Scout's archive producer freezes an independent Delivery release state.

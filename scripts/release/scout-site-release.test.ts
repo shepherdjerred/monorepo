@@ -270,10 +270,8 @@ test("release source digest changes only with selected input content", async () 
   }
 });
 
-test("release input digest binds to the source commit and displayed version", () => {
+test("release input digest is content identity without commit or build number", () => {
   const base = {
-    version: "2.0.0-42",
-    sourceCommit: "0123456789012345678901234567890123456789",
     backendImageDigest: DIGEST,
     sourceInputsDigest: DIGEST,
     contractHash: "contract-abc",
@@ -281,26 +279,53 @@ test("release input digest binds to the source commit and displayed version", ()
     redditPixelId: "reddit-1",
   };
   const digest = computeReleaseInputDigest(base);
-  // Deterministic for identical inputs.
-  expect(computeReleaseInputDigest(base)).toBe(digest);
-  // A different commit must produce a different identity, even when every other
-  // input is unchanged — the site bytes bake in the commit, so the archive must
-  // not collide across commits.
-  expect(
-    computeReleaseInputDigest({
-      ...base,
-      sourceCommit: "fedcba9876543210fedcba9876543210fedcba98",
-    }),
-  ).not.toBe(digest);
-  // A different displayed version must also produce a different identity —
-  // VITE_APP_VERSION / PUBLIC_APP_VERSION are baked into the site bytes.
-  expect(computeReleaseInputDigest({ ...base, version: "2.0.0-100" })).not.toBe(
-    digest,
+  expect(digest).toMatch(/^sha256:[0-9a-f]{64}$/u);
+  // Deterministic for identical inputs, so a later pipeline rebuilding the
+  // same content on another commit lands on the same archive identity.
+  expect(computeReleaseInputDigest({ ...base })).toBe(digest);
+  // The schema is part of the digest: v4 identities (which bound the commit
+  // and the displayed version) never collide with v5 identities.
+  expect(digest).not.toBe(
+    `sha256:${new Bun.CryptoHasher("sha256")
+      .update(
+        JSON.stringify({
+          schema: "scout-release-input/v4",
+          version: "2.0.0-42",
+          sourceCommit: "0".repeat(40),
+          backendImageDigest: base.backendImageDigest,
+          sourceInputsDigest: base.sourceInputsDigest,
+          contractHash: base.contractHash,
+          analyticsProvider: "posthog-cloud-us",
+          pinterestTagId: base.pinterestTagId,
+          redditPixelId: base.redditPixelId,
+        }),
+      )
+      .digest("hex")}`,
   );
-  // A non-commit input change still changes the identity.
-  expect(
-    computeReleaseInputDigest({ ...base, backendImageDigest: `${DIGEST}0` }),
-  ).not.toBe(digest);
+  // Every content input still changes the identity.
+  for (const change of [
+    { backendImageDigest: `sha256:${"b".repeat(64)}` },
+    { sourceInputsDigest: `sha256:${"b".repeat(64)}` },
+    { contractHash: "contract-def" },
+    { pinterestTagId: "pin-2" },
+    { redditPixelId: "reddit-2" },
+  ] as const)
+    expect(computeReleaseInputDigest({ ...base, ...change })).not.toBe(digest);
+});
+
+test("site builds bake no commit or build number into the bytes", async () => {
+  const source = await Bun.file(
+    new URL("scout-site-release.ts", import.meta.url),
+  ).text();
+  // Any of these would make the bytes commit- or build-dependent and defeat
+  // archive retention across pipelines.
+  expect(source).not.toMatch(
+    /VITE_APP_VERSION|PUBLIC_APP_VERSION|VITE_GIT_SHA|PUBLIC_GIT_SHA/u,
+  );
+  expect(source).toContain("VITE_SENTRY_RELEASE: identity");
+  expect(source).toContain("PUBLIC_SENTRY_RELEASE: identity");
+  expect(source).toContain("VITE_CONTRACT_HASH: await contractHash()");
+  expect(source).toContain('schema: "scout-release-input/v5"');
 });
 
 test("Scout release analytics map both hosts to the shared PostHog project", () => {

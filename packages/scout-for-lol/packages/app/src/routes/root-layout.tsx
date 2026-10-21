@@ -5,7 +5,10 @@ import {
   AppWorkspaceFrame,
   GlobalFooter,
 } from "@scout-for-lol/design-system/layout";
-import { ContractMismatchBanner } from "#src/components/chrome/version-info.tsx";
+import {
+  ContractMismatchBanner,
+  useBackendVersion,
+} from "#src/components/chrome/version-info.tsx";
 import {
   analyticsContextRoute,
   normalizePath,
@@ -18,7 +21,7 @@ import {
 import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
 import { FeedbackPrompt } from "#src/components/dialogs/feedback-prompt.tsx";
 import { UserMenu } from "#src/components/chrome/user-menu.tsx";
-import { buildInfo } from "#src/lib/build-info.ts";
+import { deployedIdentity } from "#src/lib/build-info.ts";
 import {
   docsOrigin,
   marketingOrigin,
@@ -33,13 +36,17 @@ import { useRoutePresentation } from "#src/hooks/use-route-presentation.ts";
 
 /**
  * Top-level chrome shared by every route (login included): the contract
- * mismatch banner above the routed content and the build-identity footer below
- * it. Mirrors the old `App` wrapper — the routed page renders through the
- * {@link Outlet}.
+ * mismatch banner above the routed content and the deployed-release footer
+ * below it. Mirrors the old `App` wrapper — the routed page renders through
+ * the {@link Outlet}.
  */
 export function RootLayout() {
   useRoutePresentation();
   const location = useLocation();
+  // The bundle bakes no build number or commit (its bytes are content-only,
+  // so unchanged rebuilds are retained); the footer names the deployed
+  // backend instead, from the same fetch the mismatch chip uses.
+  const deployed = deployedIdentity(useBackendVersion().data);
 
   // Identity is synced here, not in `RequireSession`, because `/login` is
   // mounted outside that guard — see the hook for why that matters.
@@ -123,8 +130,8 @@ export function RootLayout() {
         footer={
           shouldRenderGlobalFooter(location.pathname) ? (
             <GlobalFooter
-              release={buildInfo.version}
-              commit={buildInfo.gitSha}
+              release={deployed?.release}
+              commit={deployed?.commit}
               origins={{ marketing: marketingOrigin, docs: docsOrigin }}
             />
           ) : undefined

@@ -6,20 +6,23 @@ import {
 
 /**
  * Build identity stamped into this bundle at site-release build time
- * (scripts/release/scout-site-release.ts → VITE_APP_VERSION is 2.0.0-<build>,
- * VITE_GIT_SHA, VITE_CONTRACT_HASH). Sentry keeps the archive digest via
- * VITE_SENTRY_RELEASE. All absent in local dev, where the fallback "dev"
- * values also disable the contract-mismatch banner.
+ * (scripts/release/scout-site-release.ts → VITE_SENTRY_RELEASE is the
+ * content-addressed archive identity `scout-site@sha256:…`, VITE_CONTRACT_HASH
+ * the tRPC contract hash). No build number or commit is baked in: the bytes
+ * depend only on content, so an unchanged rebuild on a later commit reproduces
+ * the same archive and Delivery retains it instead of registering a duplicate.
+ * The human-facing release and commit come from the deployed backend
+ * (GET /api/version). Both values are absent in local dev, where the "dev"
+ * contract hash also disables the contract-mismatch chip.
  */
 const EnvSchema = z.object({
-  VITE_APP_VERSION: z.string().min(1).optional(),
-  VITE_GIT_SHA: z.string().min(1).optional(),
+  VITE_SENTRY_RELEASE: z.string().min(1).optional(),
   VITE_CONTRACT_HASH: z.string().min(1).optional(),
 });
 
 export type BuildInfo = {
-  version: string;
-  gitSha: string;
+  /** Content-addressed archive identity, or undefined outside a release build. */
+  release: string | undefined;
   contractHash: string;
 };
 
@@ -27,8 +30,7 @@ function readBuildInfo(): BuildInfo {
   const parsed = EnvSchema.safeParse(import.meta.env);
   const env = parsed.success ? parsed.data : {};
   return {
-    version: scoutReleaseVersion(env.VITE_APP_VERSION ?? DEV_PLACEHOLDER),
-    gitSha: env.VITE_GIT_SHA ?? DEV_PLACEHOLDER,
+    release: env.VITE_SENTRY_RELEASE,
     contractHash: env.VITE_CONTRACT_HASH ?? DEV_PLACEHOLDER,
   };
 }
@@ -70,4 +72,31 @@ export function isContractMismatch(
 /** First 7 chars of a git SHA (or the whole string when shorter). */
 export function shortSha(sha: string): string {
   return sha.slice(0, 7);
+}
+
+const ARCHIVE_DIGEST_MARKER = "@sha256:";
+
+/**
+ * Short form of the archive identity for the mismatch chip
+ * (`scout-site@sha256:0123456789ab`), or "none" outside a release build.
+ */
+export function shortArchiveIdentity(release: string | undefined): string {
+  if (release === undefined) return "none";
+  const start = release.indexOf(ARCHIVE_DIGEST_MARKER);
+  return start === -1
+    ? release
+    : release.slice(0, start + ARCHIVE_DIGEST_MARKER.length + 12);
+}
+
+/**
+ * Footer release line: the deployed backend's version and commit. Undefined
+ * until GET /api/version has answered, so the footer omits the line rather
+ * than showing a placeholder — this bundle carries no build number of its own.
+ */
+export function deployedIdentity(
+  backend: VersionResponse | undefined,
+): { release: string; commit: string } | undefined {
+  return backend === undefined
+    ? undefined
+    : { release: backend.version, commit: backend.gitSha };
 }

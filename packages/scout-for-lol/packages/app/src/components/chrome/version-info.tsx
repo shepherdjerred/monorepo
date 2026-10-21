@@ -4,7 +4,9 @@ import { AlertCircle } from "lucide-react";
 import {
   buildInfo,
   isContractMismatch,
+  shortArchiveIdentity,
   VersionResponseSchema,
+  type BuildInfo,
   type VersionResponse,
 } from "#src/lib/build-info.ts";
 
@@ -23,13 +25,29 @@ async function fetchBackendVersion(): Promise<VersionResponse> {
   return VersionResponseSchema.parse(body);
 }
 
-function useBackendVersion() {
+/**
+ * The deployed backend's identity. One query key shared by this chip and the
+ * footer's release line, so both read one GET /api/version fetch.
+ */
+export function useBackendVersion() {
   return useQuery({
     queryKey: ["backend-version"],
     queryFn: fetchBackendVersion,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });
+}
+
+/**
+ * Chip text: this bundle's archive identity against the backend's version.
+ * The bundle has no baked build number, so the archive identity is the only
+ * thing that names which site bytes are running.
+ */
+export function mismatchChipLabel(
+  build: BuildInfo,
+  backend: VersionResponse,
+): string {
+  return `Version mismatch (app ${shortArchiveIdentity(build.release)}, api ${backend.version})`;
 }
 
 /**
@@ -64,9 +82,7 @@ export function ContractMismatchBanner() {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-scout-surface px-3 py-1.5 text-xs text-scout-subtle shadow-md">
       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-      <span>
-        Version mismatch (app {buildInfo.version}, api {backend.data.version})
-      </span>
+      <span>{mismatchChipLabel(buildInfo, backend.data)}</span>
       <button
         type="button"
         className="font-medium text-scout-ink underline-offset-2 hover:underline"

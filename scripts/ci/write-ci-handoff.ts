@@ -7,7 +7,7 @@
  * payloads (the version catalog, image digest maps) off the process
  * command line, and matches how the producing steps already pipe `jq` output.
  *
- * Usage: `jq -n '{}' | bun scripts/ci/write-ci-handoff.ts image-digests`
+ * Usage: `jq -n '{}' | bun scripts/ci/write-ci-handoff.ts delivery-image-digests`
  */
 
 import { writeJsonHandoff } from "../lib/ci/ci-handoff.ts";

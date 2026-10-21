@@ -1,12 +1,7 @@
 import { rm } from "node:fs/promises";
 import { teeOutputTail } from "../reporting/command-output.ts";
 import { asRecord } from "../../../scripts/lib/json.ts";
-import { writeJsonHandoff } from "../../../scripts/lib/ci/ci-handoff.ts";
-import {
-  setDigestMetadata,
-  setDeliveryDigestMetadata,
-  imageDigestWriters,
-} from "../../../scripts/lib/ci/image-publication-handoff.ts";
+import { setDeliveryDigestMetadata } from "../../../scripts/lib/ci/image-publication-handoff.ts";
 import {
   classifyRuntimeChange,
   imageRuntimeFingerprint,
@@ -39,7 +34,6 @@ import {
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
-import { pinCandidatesForDigests } from "./pin-candidate-images.ts";
 import {
   lastSuccessfulImageReleaseCommit,
   readQualifiedImages,
@@ -174,23 +168,6 @@ export async function manifestDigest(
   return digest;
 }
 
-async function setPinCandidatesMetadata(
-  digests: Readonly<Record<string, string>>,
-  buildNumber: string,
-  gitSha: string,
-): Promise<void> {
-  const parsedBuildNumber = Number(buildNumber);
-  if (!Number.isSafeInteger(parsedBuildNumber) || parsedBuildNumber <= 0) {
-    throw new Error("Build number must be a positive safe integer");
-  }
-  const candidates = pinCandidatesForDigests(digests, buildNumber, gitSha);
-  await writeJsonHandoff("pin-candidates", {
-    schema: "pin-candidates/v1",
-    buildNumber: parsedBuildNumber,
-    candidates,
-  });
-}
-
 export async function ensureBuilder(
   executor: CommandExecutor = execute,
 ): Promise<void> {
@@ -287,17 +264,9 @@ export async function pushImages(
       candidate: string,
       contractHash: string,
     ) => Promise<void>;
-    readonly writeMetadata?: (
-      digests: Readonly<Record<string, string>>,
-    ) => Promise<void>;
     readonly writeDeliveryMetadata?: (
       digests: Readonly<Record<string, string>>,
-      retained?: readonly ArtifactVersion[],
-    ) => Promise<void>;
-    readonly writeCandidates?: (
-      digests: Readonly<Record<string, string>>,
-      buildNumber: string,
-      gitSha: string,
+      retained: readonly ArtifactVersion[],
     ) => Promise<void>;
     readonly writeText?: TextWriter;
   } = {},
@@ -329,10 +298,8 @@ export async function pushImages(
         executor,
         environment,
       ));
-  const { writeMetadata, writeDeliveryMetadata } =
-    imageDigestWriters(dependencies);
-  const writeCandidates =
-    dependencies.writeCandidates ?? setPinCandidatesMetadata;
+  const writeDeliveryMetadata =
+    dependencies.writeDeliveryMetadata ?? setDeliveryDigestMetadata;
   const writeText = dependencies.writeText ?? Bun.write;
   const originals = await readOriginals();
   const targetsWithPins = targets.map((name) => {
@@ -366,8 +333,8 @@ export async function pushImages(
   if (pushExitCode === 34) process.exit(pushExitCode);
   if (pushExitCode !== 0) throw new Error("Production image push failed");
 
-  const digests: Record<string, string> = {};
   const deliveryDigests: Record<string, string> = {};
+  const retained = unbuiltImageOriginals(originals, targets);
   const outcomes: PushOutcome[] = [];
   for (const { name, original } of targetsWithPins) {
     const image = `${registry}/${name}`;
@@ -394,17 +361,16 @@ export async function pushImages(
             getRuntimeFingerprint,
           );
     outcomes.push({ image: name, outcome });
-    deliveryDigests[`shepherdjerred/${name}`] = digest;
-    if (outcome === "content-unchanged") continue;
+    if (original !== undefined && outcome === "content-unchanged") {
+      // Same runtime bytes (VERSION/GIT_SHA excluded): Delivery keeps the
+      // qualified original instead of registering a duplicate artifact.
+      retained.push(original);
+      continue;
+    }
     await publishStarlightTag(name, candidate, buildNumber, executor);
-    digests[`shepherdjerred/${name}`] = digest;
+    deliveryDigests[`shepherdjerred/${name}`] = digest;
   }
-  await writeMetadata(digests);
-  await writeDeliveryMetadata(
-    deliveryDigests,
-    unbuiltImageOriginals(originals, targets),
-  );
-  await writeCandidates(deliveryDigests, buildNumber, commit);
+  await writeDeliveryMetadata(deliveryDigests, retained);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
@@ -431,9 +397,7 @@ async function main(): Promise<void> {
     console.log("no image-owning packages affected — nothing to build");
     await annotate(["--report", selectionReport]);
     if (options.push) {
-      await setDigestMetadata({});
       await setDeliveryDigestMetadata({}, [...(originals?.values() ?? [])]);
-      await setPinCandidatesMetadata({}, buildNumber, commit);
       await Bun.write(pushOutcomes, "[]\n");
     }
     return;

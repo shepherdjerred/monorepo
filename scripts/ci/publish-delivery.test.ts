@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
+import type { FindQualifiedArtifact } from "@shepherdjerred/delivery/contract";
 import {
   SERVICE_CATALOG,
   ServiceIndex,
@@ -31,6 +32,7 @@ function readPublicationHandoffs(
 }
 
 const childDigest = `sha256:${"a".repeat(64)}`;
+const fingerprint = `sha256:${"d".repeat(64)}`;
 const index = JSON.stringify({
   schemaVersion: 2,
   mediaType: "application/vnd.oci.image.index.v1+json",
@@ -52,6 +54,14 @@ const scoutReceipt = {
     uri: "s3://delivery-artifacts/sites/scout-frontend/archive.tar",
     digest: childDigest,
     version: "build-42",
+  },
+};
+const noChartReads = {
+  inspectImage: async () => {
+    throw new Error("unexpected image read");
+  },
+  chartArtifact: async () => {
+    throw new Error("unexpected chart read");
   },
 };
 
@@ -146,11 +156,26 @@ const ci = {
   capturedAt: "2026-10-16T00:00:00.000Z",
 };
 const freshCharts = {
-  schema: "delivery-chart-publications/v1",
+  schema: "delivery-chart-publications/v2",
   sourceRevision: ci.sourceRevision,
   pipelineNumber: ci.pipelineNumber,
   repositoryId: ci.repositoryId,
-  charts: [{ name: "arcade", revision: "2.0.0-42", digest: childDigest }],
+  charts: [
+    {
+      name: "arcade",
+      revision: "2.0.0-42",
+      digest: childDigest,
+      contentFingerprint: fingerprint,
+    },
+  ],
+  retained: [],
+};
+const retainedApps = {
+  name: "apps",
+  revision: "2.0.0-1000030",
+  digest: childDigest,
+  artifactId: "ci/1/30/chart/apps",
+  contentFingerprint: fingerprint,
 };
 
 test("retained release inventory is never republished as a fresh CI chart", async () => {
@@ -163,6 +188,7 @@ test("retained release inventory is never republished as a fresh CI chart", asyn
       JSON.stringify([{ name: "arcade", revision: "2.0.0-41" }]),
   });
   expect(result.charts).toEqual([]);
+  expect(result.retainedCharts).toEqual([]);
   expect(result.chartPublication?.charts).toEqual([]);
 });
 
@@ -190,6 +216,41 @@ test("a fresh chart must match the coordinated root inventory", async () => {
   ).rejects.toThrow("coordinated release inventory");
 });
 
+test("retained charts must match the coordinated root inventory revision", async () => {
+  const handoffs = (inventory: unknown) => ({
+    required: async (key: string) =>
+      key === "delivery-image-digests"
+        ? "{}"
+        : JSON.stringify({
+            ...freshCharts,
+            charts: [],
+            retained: [retainedApps],
+          }),
+    optional: async () => JSON.stringify(inventory),
+  });
+  const result = await readPublicationHandoffs(
+    false,
+    handoffs([
+      { name: "apps", revision: retainedApps.revision },
+      { name: "arcade", revision: "2.0.0-1000029" },
+    ]),
+  );
+  expect(result.retainedCharts).toEqual([retainedApps]);
+  expect(result.charts).toEqual([]);
+  await expect(
+    readPublicationHandoffs(
+      false,
+      handoffs([{ name: "apps", revision: "2.0.0-1000031" }]),
+    ),
+  ).rejects.toThrow("Retained chart publication does not match");
+  await expect(
+    readPublicationHandoffs(
+      false,
+      handoffs([{ name: "arcade", revision: "2.0.0-1000029" }]),
+    ),
+  ).rejects.toThrow("Retained chart publication does not match");
+});
+
 test("chart provenance cannot be moved to a later CI execution", async () => {
   await expect(
     buildPublications(
@@ -200,14 +261,7 @@ test("chart provenance cannot be moved to a later CI execution", async () => {
         charts: freshCharts.charts,
         chartPublication: freshCharts,
       },
-      {
-        inspectImage: async () => {
-          throw new Error("unexpected image read");
-        },
-        chartArtifact: async () => {
-          throw new Error("unexpected chart read");
-        },
-      },
+      noChartReads,
     ),
   ).rejects.toThrow("another source or CI execution");
 });
@@ -219,7 +273,14 @@ function coordinatedHandoffs(chart: string, revision: string) {
         ? "{}"
         : JSON.stringify({
             ...freshCharts,
-            charts: [{ name: chart, revision, digest: childDigest }],
+            charts: [
+              {
+                name: chart,
+                revision,
+                digest: childDigest,
+                contentFingerprint: fingerprint,
+              },
+            ],
           }),
     optional: async () =>
       JSON.stringify([{ name: "apps", revision: "2.0.0-1000042" }]),
@@ -231,7 +292,12 @@ test("the full catalog publication preserves the smaller coordinated root invent
   const charts = SERVICE_CATALOG.services.flatMap((service) =>
     [...new Set([...service.argoApps, ...service.charts])]
       .filter((name) => service.rootReleaseExclusions?.[name] !== "upstream")
-      .map((name) => ({ name, revision, digest: childDigest })),
+      .map((name) => ({
+        name,
+        revision,
+        digest: childDigest,
+        contentFingerprint: fingerprint,
+      })),
   );
   const rootInventory = new ServiceIndex(SERVICE_CATALOG)
     .rootReleaseCharts()
@@ -330,6 +396,171 @@ test.each([false, true])(
     expect(original.buildId).toBe("upstream/minecraft/build");
   },
 );
+
+test("an unchanged chart becomes a retained reference of its owning service", async () => {
+  const retainedArcade = {
+    ...retainedApps,
+    name: "arcade",
+    artifactId: "ci/1/30/chart/arcade",
+  };
+  const publications = await buildPublications(
+    {
+      ...ci,
+      digests: {},
+      charts: [],
+      retainedCharts: [retainedApps, retainedArcade],
+    },
+    noChartReads,
+  );
+  expect(
+    publications.map((build) => [
+      build.serviceId,
+      build.artifacts,
+      build.retainedArtifactIds,
+    ]),
+  ).toEqual([
+    ["gitops", [], [retainedApps.artifactId]],
+    ["arcade", [], [retainedArcade.artifactId]],
+  ]);
+  await expect(
+    buildPublications(
+      {
+        ...ci,
+        digests: {},
+        charts: [],
+        retainedCharts: [{ ...retainedApps, name: "unregistered" }],
+      },
+      noChartReads,
+    ),
+  ).rejects.toThrow("service catalog owner");
+  await expect(
+    buildPublications(
+      {
+        ...ci,
+        digests: {},
+        charts: freshCharts.charts,
+        retainedCharts: [retainedArcade],
+      },
+      {
+        ...noChartReads,
+        chartArtifact: async () => ({
+          uri: "https://chartmuseum.sjer.red/charts/arcade-2.0.0-42.tgz",
+          digest: childDigest,
+        }),
+      },
+    ),
+  ).rejects.toThrow("replace and retain the same component");
+});
+
+describe("archive retention by qualified bytes", () => {
+  const requires = { "image:scout-for-lol": `sha256:${"e".repeat(64)}` };
+  const receipt = {
+    ...scoutReceipt,
+    artifact: { ...scoutReceipt.artifact, requires },
+  };
+  const original = (overrides: Record<string, unknown> = {}) =>
+    ArtifactVersionSchema.parse({
+      id: "ci/1/30/site/scout-frontend",
+      buildId: "ci/1/30/scout-for-lol",
+      serviceId: "scout-for-lol",
+      component: "site:scout-frontend",
+      kind: "archive",
+      uri: "s3://delivery-artifacts/sites/scout-frontend/original.tar",
+      digest: childDigest,
+      version: "build-30",
+      sourceRevision: "a".repeat(40),
+      createdAt: ci.capturedAt,
+      requires,
+      ...overrides,
+    });
+
+  test("bytes already qualified with the same dependencies are retained, not registered again", async () => {
+    const queries: FindQualifiedArtifact[] = [];
+    const [publication] = await buildPublications(
+      { ...ci, digests: {}, charts: [], siteArtifacts: [receipt] },
+      {
+        ...noChartReads,
+        findQualifiedArchive: async (query) => {
+          queries.push(query);
+          return original();
+        },
+      },
+    );
+    expect(queries).toEqual([
+      {
+        serviceId: "scout-for-lol",
+        component: "site:scout-frontend",
+        kind: "archive",
+        digest: childDigest,
+        originKind: "first-party",
+      },
+    ]);
+    expect(publication).toMatchObject({
+      serviceId: "scout-for-lol",
+      artifacts: [],
+      retainedArtifactIds: ["ci/1/30/site/scout-frontend"],
+    });
+  });
+
+  test("the same bytes with different dependencies are a new artifact", async () => {
+    const [publication] = await buildPublications(
+      { ...ci, digests: {}, charts: [], siteArtifacts: [receipt] },
+      {
+        ...noChartReads,
+        findQualifiedArchive: async () =>
+          original({
+            requires: { "image:scout-for-lol": `sha256:${"f".repeat(64)}` },
+          }),
+      },
+    );
+    expect(publication?.retainedArtifactIds).toEqual([]);
+    expect(publication?.artifacts.map((artifact) => artifact.id)).toEqual([
+      receipt.artifact.id,
+    ]);
+  });
+
+  test("no qualified bytes (404) or no lookup registers the archive fresh", async () => {
+    const absent = new Map<string, ReturnType<typeof original>>();
+    for (const dependencies of [
+      {
+        ...noChartReads,
+        findQualifiedArchive: async (query: FindQualifiedArtifact) =>
+          absent.get(query.digest),
+      },
+      noChartReads,
+    ]) {
+      const [publication] = await buildPublications(
+        { ...ci, digests: {}, charts: [], siteArtifacts: [receipt] },
+        dependencies,
+      );
+      expect(publication?.retainedArtifactIds).toEqual([]);
+      expect(publication?.artifacts).toHaveLength(1);
+    }
+  });
+
+  test("a lookup answered with other bytes or another owner is a broken contract", async () => {
+    await expect(
+      buildPublications(
+        { ...ci, digests: {}, charts: [], siteArtifacts: [receipt] },
+        {
+          ...noChartReads,
+          findQualifiedArchive: async () =>
+            original({ digest: `sha256:${"b".repeat(64)}` }),
+        },
+      ),
+    ).rejects.toThrow("differs from its lookup");
+    await expect(
+      buildPublications(
+        { ...ci, digests: {}, charts: [], siteArtifacts: [receipt] },
+        {
+          ...noChartReads,
+          findQualifiedArchive: async () =>
+            original({ serviceId: "static-sites" }),
+        },
+      ),
+    ).rejects.toThrow("differs from its lookup");
+  });
+});
 function requestUrl(input: string | URL | Request) {
   return input instanceof Request ? input.url : String(input);
 }
@@ -388,7 +619,7 @@ describe("immutable CI artifact publication", () => {
       {
         ...ci,
         digests: { "shepherdjerred/arcade": indexDigest },
-        charts: [{ name: "arcade", revision: "2.0.0-42" }],
+        charts: freshCharts.charts,
       },
       {
         inspectImage: async (reference) => {
@@ -416,18 +647,34 @@ describe("immutable CI artifact publication", () => {
     expect(publications[0]?.artifacts[0]?.runtimeDigests).toEqual([
       childDigest,
     ]);
+    // The planner of the next release compares against this fingerprint.
+    expect(publications[0]?.artifacts[1]).toMatchObject({
+      kind: "chart",
+      version: "2.0.0-42",
+      digest: childDigest,
+      contentFingerprint: fingerprint,
+    });
+  });
+  test("a chart receipt without its content fingerprint or digest is rejected", async () => {
+    for (const chart of [
+      { name: "arcade", revision: "2.0.0-42", digest: childDigest },
+      {
+        name: "arcade",
+        revision: "2.0.0-42",
+        contentFingerprint: fingerprint,
+      },
+    ])
+      await expect(
+        buildPublications(
+          { ...ci, digests: {}, charts: [chart] },
+          noChartReads,
+        ),
+      ).rejects.toThrow();
   });
   test("a legitimate chart no-op and empty image map publish nothing", async () => {
     const publications = await buildPublications(
       { ...ci, digests: {}, charts: undefined },
-      {
-        inspectImage: async () => {
-          throw new Error("unexpected image inspection");
-        },
-        chartArtifact: async () => {
-          throw new Error("unexpected chart read");
-        },
-      },
+      noChartReads,
     );
     expect(publications).toEqual([]);
   });
@@ -454,7 +701,14 @@ describe("immutable CI artifact publication", () => {
         {
           ...ci,
           digests: {},
-          charts: [{ name: "unregistered", revision: "1" }],
+          charts: [
+            {
+              name: "unregistered",
+              revision: "2.0.0-1",
+              digest: childDigest,
+              contentFingerprint: fingerprint,
+            },
+          ],
         },
         dependencies,
       ),

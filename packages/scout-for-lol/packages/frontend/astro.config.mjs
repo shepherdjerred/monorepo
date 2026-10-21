@@ -58,20 +58,10 @@ export default defineConfig({
         optional: true,
       }),
       // Content-addressed site archive (`scout-site@sha256:…`). Optional:
-      // unset in local/dev builds, where Sentry release stays undefined.
+      // unset in local/dev builds, where Sentry release stays undefined. It is
+      // the only release identity baked in: no build number or commit, so an
+      // unchanged rebuild reproduces the same bytes and Delivery retains it.
       PUBLIC_SENTRY_RELEASE: envField.string({
-        context: "client",
-        access: "public",
-        optional: true,
-      }),
-      // Footer version line (2.0.0-<build> + commit SHA). Optional: unset in
-      // local/dev builds, where the footer omits it.
-      PUBLIC_APP_VERSION: envField.string({
-        context: "client",
-        access: "public",
-        optional: true,
-      }),
-      PUBLIC_GIT_SHA: envField.string({
         context: "client",
         access: "public",
         optional: true,

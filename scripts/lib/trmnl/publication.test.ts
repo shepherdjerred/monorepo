@@ -15,12 +15,19 @@ import {
 } from "./publication.ts";
 
 test("actual reviewed source becomes an immutable package with exact backend requirement", async () => {
-  const archive = await buildTrmnlPluginArchive(
-    new URL("../../../packages/trmnl-dashboard/trmnl", import.meta.url)
-      .pathname,
-    "a".repeat(40),
-  );
-  validateTrmnlPluginSettings(parseTrmnlPluginBundle(archive.bytes), parseYaml);
+  const root = new URL(
+    "../../../packages/trmnl-dashboard/trmnl",
+    import.meta.url,
+  ).pathname;
+  const archive = await buildTrmnlPluginArchive(root);
+  const bundle = parseTrmnlPluginBundle(archive.bytes);
+  validateTrmnlPluginSettings(bundle, parseYaml);
+  // v2 bundles are pure content: no source revision, so an unchanged rebuild
+  // reproduces the same bytes, digest and URI.
+  expect(bundle.schema).toBe("delivery-trmnl-plugins/v2");
+  expect(bundle).not.toHaveProperty("sourceRevision");
+  expect(archive.bytes).not.toContain("sourceRevision");
+  expect(await buildTrmnlPluginArchive(root)).toEqual(archive);
   expect(archive.uri).toBe(
     `s3://delivery-artifacts/trmnl-plugins/${archive.digest.slice(7)}.json`,
   );
@@ -54,9 +61,7 @@ test("settings target mismatch is rejected before any publication", async () => 
           name === "settings.yml" ? "id: 1\n" : "fixture",
         );
     }
-    await expect(buildTrmnlPluginArchive(root, "a".repeat(40))).rejects.toThrow(
-      /settings ID/u,
-    );
+    await expect(buildTrmnlPluginArchive(root)).rejects.toThrow(/settings ID/u);
   } finally {
     await rm(root, { recursive: true });
   }

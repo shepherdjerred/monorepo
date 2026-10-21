@@ -1,8 +1,20 @@
+import { createHash } from "node:crypto";
+import { packTar } from "modern-tar";
 import { expect, test } from "vitest";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
+import type { AcquireUpstreamArtifact } from "@shepherdjerred/delivery/contract";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
-import { minecraftChartForPublication } from "./delivery-upstream-artifacts.ts";
+import {
+  parseVersionCatalog,
+  type VersionCatalogEntry,
+} from "@shepherdjerred/version-catalog";
+import {
+  componentArtifactsForPublication,
+  MIRRORED_CHARTS,
+} from "./delivery-upstream-artifacts.ts";
 
+const repository = "https://itzg.github.io/minecraft-server-charts/";
+const imageDigest = `sha256:${"e".repeat(64)}`;
 const original = ArtifactVersionSchema.parse({
   id: "upstream/minecraft/original",
   serviceId: "minecraft",
@@ -16,10 +28,29 @@ const original = ArtifactVersionSchema.parse({
   digest: `sha256:${"b".repeat(64)}`,
   origin: {
     kind: "upstream",
-    repository: "https://itzg.github.io/minecraft-server-charts/",
+    repository,
     name: "minecraft",
     version: "5.2.0",
     checksum: `sha256:${"b".repeat(64)}`,
+  },
+});
+const originalImage = ArtifactVersionSchema.parse({
+  id: "upstream/itzg/minecraft-server/original",
+  serviceId: "minecraft",
+  component: "image:itzg/minecraft-server",
+  kind: "image",
+  buildId: "upstream/original-image-build",
+  version: "2026.1.0",
+  sourceRevision: "a".repeat(40),
+  createdAt: "2026-10-17T10:00:00.000Z",
+  uri: "docker.io/itzg/minecraft-server",
+  digest: imageDigest,
+  origin: {
+    kind: "upstream",
+    repository: "https://docker.io",
+    name: "itzg/minecraft-server",
+    version: "2026.1.0",
+    checksum: imageDigest,
   },
 });
 const producer = {
@@ -27,65 +58,331 @@ const producer = {
   pipelineNumber: 42,
   sourceRevision: "c".repeat(40),
 };
+const minecraftChart: VersionCatalogEntry = {
+  name: "minecraft",
+  category: "upstream",
+  artifactType: "helm-chart",
+  management: {
+    managed: true,
+    datasource: "helm",
+    // The catalog pins the repository without a trailing slash.
+    registryUrl: "https://itzg.github.io/minecraft-server-charts",
+    versioning: "semver",
+  },
+  value: "5.2.0",
+  component: true,
+};
+const minecraftImage: VersionCatalogEntry = {
+  name: "itzg/minecraft-server",
+  category: "upstream",
+  artifactType: "image",
+  management: {
+    managed: true,
+    datasource: "docker",
+    registryUrl: "https://docker.io",
+    versioning: "docker",
+  },
+  value: `2026.1.0@${imageDigest}`,
+  component: true,
+};
+const nonComponent: VersionCatalogEntry = {
+  name: "kueue",
+  category: "upstream",
+  artifactType: "helm-chart",
+  management: { managed: false },
+  value: "0.9.0",
+};
+const catalog = (...entries: VersionCatalogEntry[]) =>
+  parseVersionCatalog({
+    $schema: "./schema.json",
+    schemaVersion: 1,
+    entries: [nonComponent, ...entries],
+  });
 function unexpected(): never {
   throw new Error(
     "Already-qualified original must not depend on upstream or publisher credentials",
   );
 }
+const credentials = () => ({ username: "fixture", password: "fixture" });
+function verified(input: AcquireUpstreamArtifact) {
+  return {
+    buildId: "upstream/acquired-build",
+    artifact: ArtifactVersionSchema.parse({
+      ...input.artifact,
+      serviceId: input.serviceId,
+      buildId: "upstream/acquired-build",
+      sourceRevision: input.sourceRevision,
+      createdAt: "2026-10-18T10:00:00.000Z",
+    }),
+    status: "verified" as const,
+  };
+}
 
-test("unchanged pin reuses original identity without credentials or upstream availability", async () => {
-  const selected = await minecraftChartForPublication(
+test("only the Minecraft chart is still mirrored", () => {
+  expect([...MIRRORED_CHARTS]).toEqual(["minecraft"]);
+});
+
+test("unchanged pins reuse original identities without credentials, upstream availability or the Delivery pipeline key", async () => {
+  const selected = await componentArtifactsForPublication(
     {
-      latestQualifiedArtifact: async () => original,
+      latestQualifiedArtifact: async (query) =>
+        query.kind === "chart" ? original : originalImage,
       acquireUpstreamArtifact: unexpected,
     },
-    "5.2.0",
+    catalog(minecraftChart, minecraftImage),
     producer,
-    { credentials: unexpected, mirror: unexpected },
+    {
+      credentials: unexpected,
+      mirror: unexpected,
+      imageOwners: { "itzg/minecraft-server": "minecraft" },
+    },
   );
-  expect(selected).toBe(original);
-  expect(selected.sourceRevision).not.toBe(producer.sourceRevision);
+  expect(selected).toEqual([original, originalImage]);
+  expect(selected[0]?.sourceRevision).not.toBe(producer.sourceRevision);
 });
 
-test("a missing catalog entry independently acquires the selected bytes once without inventing a current-CI origin", async () => {
-  let acquisitions = 0;
-  const selected = await minecraftChartForPublication(
-    {
-      latestQualifiedArtifact: async () => {
-        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
-      },
-      acquireUpstreamArtifact: async (input) => {
-        acquisitions++;
-        expect(input.artifact.digest).toBe(original.digest);
-        expect(input.sourceRevision).toBe(producer.sourceRevision);
-        return {
-          buildId: original.buildId,
-          artifact: original,
-          status: "verified",
-        };
-      },
+test("an absent or outdated chart is acquired once through this pipeline with the Minecraft mirror", async () => {
+  const requests: AcquireUpstreamArtifact[] = [];
+  const mirrors: { name: string; repository: string; mirror: boolean }[] = [];
+  const outdated = { ...original, version: "5.1.0" };
+  for (const latest of [
+    async () => {
+      throw new DeliveryClientError(404, "NOT_FOUND", "No original");
     },
-    original.version,
-    producer,
-    {
-      credentials: () => ({ username: "fixture", password: "fixture" }),
-      mirror: async () => ({
-        name: "minecraft",
-        revision: original.version,
-        uri: original.uri,
-        digest: original.digest,
-        origin:
-          original.origin.kind === "upstream" ? original.origin : unexpected(),
+    async () => outdated,
+  ]) {
+    const selected = await componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: latest,
+        acquireUpstreamArtifact: async (input) => {
+          requests.push(input);
+          return verified(input);
+        },
+      },
+      catalog(minecraftChart),
+      producer,
+      {
+        credentials,
+        mirror: async (intent, options) => {
+          mirrors.push({
+            name: intent.name,
+            repository: intent.repository,
+            mirror: options.mirror,
+          });
+          return {
+            name: "minecraft",
+            revision: intent.version,
+            uri: original.uri,
+            digest: original.digest,
+            origin:
+              original.origin.kind === "upstream"
+                ? original.origin
+                : unexpected(),
+          };
+        },
+      },
+    );
+    expect(selected.map((artifact) => artifact.digest)).toEqual([
+      original.digest,
+    ]);
+  }
+  expect(mirrors).toEqual([
+    { name: "minecraft", repository, mirror: true },
+    { name: "minecraft", repository, mirror: true },
+  ]);
+  expect(requests).toHaveLength(2);
+  expect(requests[0]).toEqual({
+    requestId: "ci/1/42/acquire/minecraft/5.2.0",
+    serviceId: "minecraft",
+    sourceRevision: producer.sourceRevision,
+    pipeline: { repositoryId: 1, pipelineNumber: 42 },
+    artifact: {
+      id: `upstream/minecraft/5.2.0/${"b".repeat(64)}`,
+      component: "chart:minecraft",
+      kind: "chart",
+      uri: original.uri,
+      digest: original.digest,
+      version: "5.2.0",
+      origin: original.origin,
+    },
+  });
+});
+
+async function chartTransport(name: string, version: string, mirror: boolean) {
+  const body = `name: ${name}\nversion: ${version}\n`;
+  const bytes = Bun.gzipSync(
+    await packTar([
+      {
+        header: {
+          name: `${name}/Chart.yaml`,
+          type: "file",
+          size: Buffer.byteLength(body),
+        },
+        body,
+      },
+    ]),
+  );
+  const digest = createHash("sha256").update(bytes).digest("hex");
+  const index = `https://charts.example.test/${name}/`;
+  const archive = `${index}${name}-${version}.tgz`;
+  const urls: string[] = [];
+  const transport = async (url: string | URL, init?: RequestInit) => {
+    const location = String(url);
+    urls.push(`${init?.method ?? "GET"} ${location}`);
+    if (location === `${index}index.yaml`)
+      return Response.json({
+        entries: { [name]: [{ name, version, digest, urls: [archive] }] },
+      });
+    if (location === archive) return new Response(bytes);
+    if (
+      mirror &&
+      location === `https://chartmuseum.sjer.red/charts/${name}-${version}.tgz`
+    )
+      return new Response(bytes);
+    throw new Error(`Unexpected request ${location}`);
+  };
+  return { index, archive, digest: `sha256:${digest}`, transport, urls };
+}
+
+test.each([
+  ["minecraft", true],
+  ["mc-router", false],
+])(
+  "a chart acquisition reads the catalog repository index through the injected transport (%s mirrored: %s)",
+  async (name, mirrored) => {
+    const fixture = await chartTransport(name, "1.2.3", mirrored);
+    const requests: AcquireUpstreamArtifact[] = [];
+    const [selected] = await componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: async () => {
+          throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+        },
+        acquireUpstreamArtifact: async (input) => {
+          requests.push(input);
+          return verified(input);
+        },
+      },
+      catalog({
+        ...minecraftChart,
+        name,
+        value: "1.2.3",
+        management: {
+          managed: true,
+          datasource: "helm",
+          registryUrl: fixture.index.slice(0, -1),
+          versioning: "semver",
+        },
       }),
+      producer,
+      { credentials, transport: fixture.transport },
+    );
+    expect(selected?.serviceId).toBe("minecraft");
+    expect(requests[0]?.artifact).toEqual({
+      id: `upstream/${name}/1.2.3/${fixture.digest.slice(7)}`,
+      component: `chart:${name}`,
+      kind: "chart",
+      uri: mirrored
+        ? `https://chartmuseum.sjer.red/charts/${name}-1.2.3.tgz`
+        : fixture.archive,
+      digest: fixture.digest,
+      version: "1.2.3",
+      origin: {
+        kind: "upstream",
+        repository: fixture.index,
+        name,
+        version: "1.2.3",
+        checksum: fixture.digest,
+      },
+    });
+    expect(
+      fixture.urls.some((url) => url.includes("chartmuseum.sjer.red")),
+    ).toBe(mirrored);
+    expect(fixture.urls.every((url) => url.startsWith("GET "))).toBe(true);
+  },
+);
+
+test("an image component is acquired from the catalog pin without any network access", async () => {
+  const requests: AcquireUpstreamArtifact[] = [];
+  const retagged = {
+    ...originalImage,
+    digest: `sha256:${"f".repeat(64)}`,
+    origin: { ...originalImage.origin, checksum: `sha256:${"f".repeat(64)}` },
+  };
+  for (const latest of [
+    async () => {
+      throw new DeliveryClientError(404, "NOT_FOUND", "No original");
     },
-  );
-  expect(acquisitions).toBe(1);
-  expect(selected).toBe(original);
+    // The same tag re-pinned to different bytes is a new acquisition.
+    async () => retagged,
+  ]) {
+    const [selected] = await componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: latest,
+        acquireUpstreamArtifact: async (input) => {
+          requests.push(input);
+          return verified(input);
+        },
+      },
+      catalog(minecraftImage),
+      producer,
+      {
+        credentials: unexpected,
+        mirror: unexpected,
+        transport: unexpected,
+        imageOwners: { "itzg/minecraft-server": "minecraft" },
+      },
+    );
+    expect(selected?.digest).toBe(imageDigest);
+  }
+  expect(requests).toHaveLength(2);
+  expect(requests[0]).toEqual({
+    requestId: "ci/1/42/acquire/itzg/minecraft-server/2026.1.0",
+    serviceId: "minecraft",
+    sourceRevision: producer.sourceRevision,
+    pipeline: { repositoryId: 1, pipelineNumber: 42 },
+    artifact: {
+      id: `upstream/itzg/minecraft-server/2026.1.0/${"e".repeat(64)}`,
+      component: "image:itzg/minecraft-server",
+      kind: "image",
+      uri: "docker.io/itzg/minecraft-server",
+      digest: imageDigest,
+      version: "2026.1.0",
+      origin: originalImage.origin,
+    },
+  });
 });
 
-test("a catalog outage and a corrupt original identity fail instead of reacquiring around the contract", async () => {
+test("an image component without a declared Delivery owner is refused before any request", async () => {
   await expect(
-    minecraftChartForPublication(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: unexpected,
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog(minecraftImage),
+      producer,
+      { credentials: unexpected, imageOwners: { other: "minecraft" } },
+    ),
+  ).rejects.toThrow("itzg/minecraft-server has no Delivery owner");
+});
+
+test("a chart without a service catalog owner is refused", async () => {
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: unexpected,
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog({ ...minecraftChart, name: "unowned-chart" }),
+      producer,
+      { credentials: unexpected },
+    ),
+  ).rejects.toThrow("unowned-chart requires a service catalog owner");
+});
+
+test("a catalog outage, a corrupt original identity and an unverified acquisition fail instead of publishing around the contract", async () => {
+  await expect(
+    componentArtifactsForPublication(
       {
         latestQualifiedArtifact: async () => {
           throw new DeliveryClientError(
@@ -96,13 +393,13 @@ test("a catalog outage and a corrupt original identity fail instead of reacquiri
         },
         acquireUpstreamArtifact: unexpected,
       },
-      original.version,
+      catalog(minecraftChart),
       producer,
       { credentials: unexpected, mirror: unexpected },
     ),
   ).rejects.toThrow("Catalog unavailable");
   await expect(
-    minecraftChartForPublication(
+    componentArtifactsForPublication(
       {
         latestQualifiedArtifact: async () => ({
           ...original,
@@ -110,19 +407,43 @@ test("a catalog outage and a corrupt original identity fail instead of reacquiri
         }),
         acquireUpstreamArtifact: unexpected,
       },
-      original.version,
+      catalog(minecraftChart),
       producer,
       { credentials: unexpected, mirror: unexpected },
     ),
   ).rejects.toThrow("reviewed original upstream identity");
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: async () => {
+          throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+        },
+        acquireUpstreamArtifact: async (input) => ({
+          ...verified(input),
+          status: "pending",
+        }),
+      },
+      catalog(minecraftImage),
+      producer,
+      {
+        credentials: unexpected,
+        imageOwners: { "itzg/minecraft-server": "minecraft" },
+      },
+    ),
+  ).rejects.toThrow("acquisition is pending");
 });
 
-test.each([{ version: "5.1.0" }, { checksum: `sha256:${"d".repeat(64)}` }])(
+test.each([
+  { version: "5.1.0" },
+  { checksum: `sha256:${"d".repeat(64)}` },
+  { repository: "https://charts.example.test/" },
+  { name: "other" },
+])(
   "an inconsistent original upstream receipt is not reused: %j",
   async (change) => {
     if (original.origin.kind !== "upstream") unexpected();
     await expect(
-      minecraftChartForPublication(
+      componentArtifactsForPublication(
         {
           latestQualifiedArtifact: async () => ({
             ...original,
@@ -130,7 +451,7 @@ test.each([{ version: "5.1.0" }, { checksum: `sha256:${"d".repeat(64)}` }])(
           }),
           acquireUpstreamArtifact: unexpected,
         },
-        original.version,
+        catalog(minecraftChart),
         producer,
         { credentials: unexpected, mirror: unexpected },
       ),

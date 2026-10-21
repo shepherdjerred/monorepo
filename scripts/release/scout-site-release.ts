@@ -90,20 +90,17 @@ export async function hashReleaseInputFiles(
 }
 
 /**
- * Content-address a Scout release by its build inputs. `sourceCommit` and
- * `version` are part of the identity on purpose: `buildSite` bakes both into
- * the deployable bytes (`VITE_GIT_SHA` / `PUBLIC_GIT_SHA` and
- * `VITE_APP_VERSION` / `PUBLIC_APP_VERSION`), so the bytes are
- * commit- and version-dependent. Leaving either out lets two releases share
- * an archive identity yet produce different bytes, tripping the
- * immutable-archive guard — and, for version, leaving a reused archive
- * displaying a stale `2.0.0-<build>` after `retagScoutReleaseState`.
- * Binding the identity to those baked fields keeps content-addressing
- * honest: same identity ⇒ same bytes.
+ * Content-address a Scout release by its build inputs. Identity is content:
+ * the backend the site is built against, the selected source files, the tRPC
+ * contract hash and the analytics identifiers. The source commit and the
+ * build number are deliberately NOT inputs — `buildSite` no longer bakes
+ * either into the bytes, so rebuilding unchanged inputs on a later commit
+ * yields identical bytes and an identical identity, and Delivery retains the
+ * existing archive instead of registering a duplicate. Commit and build
+ * number stay recorded on the build (`sourceRevision`) and the artifact
+ * (`version: build-<n>`), and the deployed backend reports them at runtime.
  */
 export function computeReleaseInputDigest(inputs: {
-  version: string;
-  sourceCommit: string;
   backendImageDigest: string;
   sourceInputsDigest: string;
   contractHash: string;
@@ -113,9 +110,7 @@ export function computeReleaseInputDigest(inputs: {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(
     JSON.stringify({
-      schema: "scout-release-input/v4",
-      version: inputs.version,
-      sourceCommit: inputs.sourceCommit,
+      schema: "scout-release-input/v5",
       backendImageDigest: inputs.backendImageDigest,
       sourceInputsDigest: inputs.sourceInputsDigest,
       contractHash: inputs.contractHash,
@@ -163,14 +158,12 @@ async function buildSite(
   const identity = siteReleaseIdentity(state);
   const posthogSite = await readScoutPostHogSite(repoRoot(), flavor);
   const env: Record<string, string> = {
+    // Sentry and the archive keep `identity` (scout-site@sha256:…), the
+    // content-addressed id. No build number or commit is baked in: the
+    // deployed backend reports both through GET /api/version, so unchanged
+    // inputs rebuild to identical bytes.
     VITE_SENTRY_RELEASE: identity,
     PUBLIC_SENTRY_RELEASE: identity,
-    // Footer / mismatch chip: 2.0.0-<build>. Sentry and the archive keep
-    // `identity` (scout-site@sha256:…), which is the content-addressed id.
-    VITE_APP_VERSION: state.version,
-    PUBLIC_APP_VERSION: state.version,
-    VITE_GIT_SHA: sourceCommit,
-    PUBLIC_GIT_SHA: sourceCommit,
     VITE_CONTRACT_HASH: await contractHash(),
     VITE_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
     VITE_POSTHOG_API_HOST: posthogSite.proxyHost,
@@ -262,8 +255,6 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
   const marketing = await marketingIdentifiers();
   const version = `2.0.0-${buildNumber.toString()}`;
   const releaseInputDigest = computeReleaseInputDigest({
-    version,
-    sourceCommit,
     backendImageDigest,
     sourceInputsDigest: await releaseSourceDigest(),
     contractHash: await contractHash(),
