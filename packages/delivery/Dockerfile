@@ -25,7 +25,7 @@ COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json p
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/delivery'
 
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/delivery packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/eslint-config ./
+COPY --parents tsconfig.base.json packages/delivery packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/version-catalog packages/eslint-config ./
 RUN cd packages/delivery && bun run generate && bun run build
 
 FROM base AS prod-deps
@@ -36,7 +36,7 @@ FROM base AS runtime
 COPY --from=native-tools /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=prod-deps /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/delivery /app/packages/delivery
-COPY --parents packages/config packages/feature-flags packages/ops-model packages/ops-clients ./
+COPY --parents packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/version-catalog ./
 RUN cd packages/delivery && bunx --no-install --trust prisma generate
 WORKDIR /app/packages/delivery
 ARG VERSION=dev
