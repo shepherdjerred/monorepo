@@ -288,7 +288,7 @@ describe("Delivery infrastructure", () => {
       ).toBe(false);
     }
   });
-  it("confines Delivery API egress to publication and the two archive producers", () => {
+  it("confines Delivery API egress to publication, CI image registration, and the two archive producers", () => {
     const chart = new Chart(new App(), "ci-network");
     createWoodpeckerStepNetworkPolicy(chart);
     const policy = z
@@ -326,6 +326,8 @@ describe("Delivery infrastructure", () => {
         operator: "In",
         values: [
           "images",
+          "ci-base-refresh",
+          "ci-playwright-refresh",
           "helm-push",
           "delivery-publish",
           "scout-site-archives",
@@ -478,7 +480,7 @@ describe("Delivery execution and service bootstrap", () => {
         .every((port) => port.port === 7353),
     ).toBe(true);
     expect(JSON.stringify(spec.ingress)).toContain(
-      '"values":["images","helm-push","delivery-publish","scout-site-archives","trmnl-plugin-archives"]',
+      '"values":["images","ci-base-refresh","ci-playwright-refresh","helm-push","delivery-publish","scout-site-archives","trmnl-plugin-archives"]',
     );
     expect(JSON.stringify(spec.ingress)).toContain(
       '"kubernetes.io/metadata.name":"woodpecker-ci"',

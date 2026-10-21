@@ -25,6 +25,8 @@ import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resou
 export const CI_STEP_POD_LABEL = "ci.sjer.red/step-key";
 export const DELIVERY_CI_API_STEPS = [
   "images",
+  "ci-base-refresh",
+  "ci-playwright-refresh",
   "helm-push",
   "delivery-publish",
   "scout-site-archives",
