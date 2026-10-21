@@ -172,7 +172,8 @@ function expectMapping(file: string, pipeline: Pipeline) {
 describe("recipeFromPipeline", () => {
   test("maps every reviewed registration onto a recipe with no digest literal", async () => {
     const definitions = await registrations();
-    expect(definitions.length).toBeGreaterThan(20);
+    // Shared-site and root registrations are retired (X4, X6).
+    expect(definitions).toHaveLength(19);
     for (const { file, pipeline } of definitions) {
       const recipe = recipeFromPipeline(pipeline);
       expect(RecipeDefinitionSchema.parse(recipe), file).toEqual(recipe);

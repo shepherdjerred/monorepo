@@ -28,20 +28,37 @@ function renderRecovery(
   );
 }
 
+/** A per-site service's static-site recipe (X4); its environment comes from the catalog document. */
+const glitterBoys = {
+  kind: "static-site",
+  archiveComponent: "site:glitter-boys",
+  bucket: "glitter-boys",
+  immutablePrefixes: ["_astro/"],
+  extraExcludes: ["launcher/*"],
+  entrypoints: ["index.html"],
+  verification: { url: "https://glitter-boys.com/", expectedStatus: 200 },
+};
+
+async function registered(registration: string) {
+  if (registration === "glitter-boys") return glitterBoys;
+  const raw: unknown = await Bun.file(
+    new URL(
+      `../../registrations/${registration}/pipeline.json`,
+      import.meta.url,
+    ),
+  ).json();
+  return raw;
+}
+
 test.each([
-  ["static/glitter-boys", "sites", "site", "glitter-boys"],
+  ["glitter-boys", "sites", "site", "glitter-boys"],
   ["specialized/storm-forum", "forum", "forum", "storm-forum"],
   ["specialized/scout-beta", "sites", "site", "scout-beta"],
 ] as const)(
   "%s exposes the held operation and native refusal without offering unsafe acceptance",
   async (registration, domain, label, target) => {
     const definition = PipelineDefinitionSchema.parse(
-      await Bun.file(
-        new URL(
-          `../../registrations/${registration}/pipeline.json`,
-          import.meta.url,
-        ),
-      ).json(),
+      await registered(registration),
     );
     const intent = ContentRecoveryIntentSchema.parse({
       id: "content/recovery/refused",

@@ -1,9 +1,0 @@
-{
-  "id": "static-sites/resume",
-  "serviceId": "static-sites",
-  "name": "resume",
-  "pipelineRevisionId": "static-sites/resume/1",
-  "configurationRevision": "static-sites/resume/1",
-  "configuration": {},
-  "automatic": true
-}

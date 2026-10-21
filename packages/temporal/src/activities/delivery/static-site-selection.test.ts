@@ -22,26 +22,57 @@ function archiveArtifact(component: string, bucket: string, serviceId: string) {
   });
 }
 
+/** Scout keeps its reviewed registrations; every other bucket is its own site service (X4). */
+async function destination(bucket: string, environmentId: string) {
+  const scout =
+    bucket === "scout-frontend"
+      ? "scout-prod"
+      : bucket === "scout-frontend-beta"
+        ? "scout-beta"
+        : null;
+  if (scout === null)
+    return {
+      definition: PipelineDefinitionSchema.parse({
+        kind: "static-site",
+        archiveComponent: `site:${bucket}`,
+        bucket,
+        immutablePrefixes: [],
+        extraExcludes: [],
+        entrypoints: ["index.html"],
+        verification: { url: "https://sjer.red/", expectedStatus: 200 },
+      }),
+      environment: RegisterEnvironmentSchema.parse({
+        id: environmentId,
+        serviceId: bucket,
+        name: "prod",
+        pipelineRevisionId: `${bucket}/1`,
+        configurationRevision: `${bucket}/1`,
+        configuration: {},
+        automatic: true,
+      }),
+    };
+  const registration = new URL(
+    `../../../../delivery/registrations/specialized/${scout}/`,
+    import.meta.url,
+  );
+  return {
+    definition: PipelineDefinitionSchema.parse(
+      await Bun.file(new URL("pipeline.json", registration)).json(),
+    ),
+    environment: RegisterEnvironmentSchema.parse(
+      await Bun.file(new URL("environment.json", registration)).json(),
+    ),
+  };
+}
+
 test("the actual default writer declaration admits all fifteen registered catalog targets", async () => {
   expect(Object.keys(STATIC_SITE_DESTINATIONS)).toHaveLength(15);
   for (const [bucket, environmentId] of Object.entries(
     STATIC_SITE_DESTINATIONS,
   )) {
-    const directory =
-      bucket === "scout-frontend"
-        ? "specialized/scout-prod"
-        : bucket === "scout-frontend-beta"
-          ? "specialized/scout-beta"
-          : `static/${bucket}`;
-    const registration = new URL(
-      `../../../../delivery/registrations/${directory}/`,
-      import.meta.url,
-    );
-    const definition = PipelineDefinitionSchema.parse(
-      await Bun.file(new URL("pipeline.json", registration)).json(),
-    );
-    const environment = RegisterEnvironmentSchema.parse(
-      await Bun.file(new URL("environment.json", registration)).json(),
+    const { definition, environment } = await destination(
+      bucket,
+      environmentId,
     );
     expect(environment.id).toBe(environmentId);
     const policy =

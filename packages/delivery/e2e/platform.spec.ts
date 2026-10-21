@@ -1,7 +1,6 @@
 import { approveAndCancel, expectReasonRequired } from "./approval.ts";
 import { expect, test } from "@playwright/test";
 import { OverviewSchema, DeploymentSchema } from "#shared/contract.ts";
-import { openDeployment } from "./helpers.ts";
 
 test("saved-plan approval exposes exact public identity without encrypted provider data", async ({
   page,
@@ -71,19 +70,10 @@ test("saved-plan approval exposes exact public identity without encrypted provid
   await approveAndCancel(page);
 });
 
-test("root review retains original chart provenance and platform destination uses a dedicated request form", async ({
+test("a platform destination uses a dedicated request form", async ({
   page,
 }) => {
-  await openDeployment(page, "gitops/root", { kind: "root-release" });
-  const frozen = page.getByRole("region", { name: "Frozen platform release" });
-  await expect(frozen).toContainText("Exact root chart inventory");
-  await expect(frozen).toContainText("platform/chart/apps/1");
-  await expect(frozen).toContainText("apps-2.0.0-900.tgz");
-  await page
-    .getByRole("main")
-    .getByRole("link", { name: "gitops/root", exact: true })
-    .click();
-  await expect(page).toHaveURL(/\/environments\/gitops\/root$/u);
+  await page.goto("/environments/gitops/tofu:openai");
   const form = page.getByRole("region", { name: "Platform release request" });
   await expect(
     form.getByRole("combobox", { name: "Qualified source build" }),

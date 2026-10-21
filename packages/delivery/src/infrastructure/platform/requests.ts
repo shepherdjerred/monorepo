@@ -26,21 +26,15 @@ async function anchor(
   tx: Transaction,
   snapshot: ReturnType<typeof PlatformReleaseSnapshotSchema.parse>,
 ) {
-  const selection =
-    snapshot.kind === "root-release"
-      ? null
-      : await tx.buildArtifactSelection.findUnique({
-          where: {
-            buildId_component: {
-              buildId: snapshot.source.id,
-              component: "chart:apps",
-            },
-          },
-        });
-  const root =
-    snapshot.kind === "root-release"
-      ? snapshot.charts.find((chart) => chart.name === "apps")?.artifact.id
-      : selection?.artifactId;
+  const selection = await tx.buildArtifactSelection.findUnique({
+    where: {
+      buildId_component: {
+        buildId: snapshot.source.id,
+        component: "chart:apps",
+      },
+    },
+  });
+  const root = selection?.artifactId;
   if (root === undefined)
     throw new DeliveryError(
       "INVALID",
@@ -146,42 +140,6 @@ export async function createPlatformDeployment(
       },
     });
     if (approval) await requestApproval(tx, deployment);
-    const references = [
-      ...(snapshot.kind === "root-release"
-        ? snapshot.charts.map((chart) => ({
-            kind: "root-chart",
-            selector: chart.name,
-            artifactId: chart.artifact.id,
-          }))
-        : []),
-      ...(snapshot.kind === "root-release"
-        ? Object.entries(snapshot.siteArtifacts).map(
-            ([selector, artifactId]) => ({
-              kind: "site-prerequisite",
-              selector,
-              artifactId,
-            }),
-          )
-        : []),
-      ...snapshot.prerequisites.flatMap((item) =>
-        item.kind === "site"
-          ? [
-              {
-                kind: "site-prerequisite",
-                selector: item.environmentId,
-                artifactId: item.artifactId,
-              },
-            ]
-          : [],
-      ),
-    ];
-    if (references.length > 0)
-      await tx.platformArtifactReference.createMany({
-        data: references.map((reference) => ({
-          ...reference,
-          deploymentId: deployment.id,
-        })),
-      });
     await persistDeploymentRequest(tx, actor, {
       deployment: deployment,
       requestId: input.requestId,

@@ -28,7 +28,6 @@ import {
   requireControlPlaneQuiescence,
   admitControlPlaneUpgrade,
 } from "#infrastructure/control-plane/lifecycle.ts";
-import { requireStaticRootBoundary } from "#infrastructure/platform/static-prerequisite.ts";
 import { claimTrmnlRepair } from "#infrastructure/trmnl-repair/claim.ts";
 import { readmitDeployment } from "#infrastructure/execution/readmission.ts";
 import { holdPlatformLock } from "#infrastructure/platform/lifecycle.ts";
@@ -175,11 +174,6 @@ async function admitQueued(
   const admissionSnapshot = await freezeAdmission(tx, row, pipeline.definition);
   if (shared) await holdPlatformLock(tx, deploymentId, false);
   await admitPlatformDeployment(tx, row, this.catalog, { actor: input.actor });
-  await requireStaticRootBoundary(tx, {
-    row,
-    catalog: this.catalog,
-    repositoryId: this.repositoryId,
-  });
   await admitControlPlaneUpgrade(tx, row, this.catalog);
   await admitRetirement(tx, row, input);
   await tx.targetLock.createMany({

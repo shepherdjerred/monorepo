@@ -1,4 +1,5 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
+import { registerTestService } from "./services.ts";
 import {
   SERVICE_CATALOG,
   ServiceIndex,
@@ -12,7 +13,7 @@ import type {
   ContentRecoveryOwnership,
 } from "#shared/contract.ts";
 
-/** These target-recovery tests isolate content ownership from root rollout policy. */
+/** Content recovery of one site service (X4), outside any platform rollout policy. */
 export const contentRecoveryCatalog = new ServiceIndex({
   ...SERVICE_CATALOG,
   platformDeliveryDelegated: false,
@@ -23,10 +24,11 @@ export async function contentRecoveryFixture(
   delivery: Delivery,
   configuration?: Record<string, string>,
 ) {
+  await registerTestService(delivery.database, "sjer-red");
   const build = await delivery.publish(
     {
       requestId: "content/source",
-      serviceId: "static-sites",
+      serviceId: "sjer-red",
       sourceRevision: "b".repeat(40),
       ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/100",
       verifiedAt: new Date().toISOString(),
@@ -46,7 +48,7 @@ export async function contentRecoveryFixture(
   );
   await replicateProducedArtifacts(delivery, build.buildId);
   await delivery.qualify(build.buildId, "verified", testExecutor);
-  const [version] = await delivery.versions("static-sites");
+  const [version] = await delivery.versions("sjer-red");
   if (version === undefined)
     throw new Error("Qualified static test archive missing");
   const versionId = version.id;
@@ -65,9 +67,9 @@ export async function contentRecoveryFixture(
   );
   const env = await delivery.registerEnvironment(
     {
-      id: "static-sites/sjer-red",
-      serviceId: "static-sites",
-      name: "sjer-red",
+      id: "sjer-red/prod",
+      serviceId: "sjer-red",
+      name: "prod",
       pipelineRevisionId: "content/pipeline",
       configurationRevision: "content/config",
       configuration: {},

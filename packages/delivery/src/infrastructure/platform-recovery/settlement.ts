@@ -22,9 +22,8 @@ import {
   platformIntentView,
   platformSettlements,
   recordedPlatformJobs,
-  stoppedRootPriorMatches,
 } from "./context.ts";
-import { deliveryOperationId } from "#shared/operation-id.ts";
+import { RETIRED_ROOT } from "#infrastructure/platform/policy.ts";
 
 function requireRecoveryEffectOwner(delivery: Delivery, kind: string) {
   if (kind === "upgrade-control-plane")
@@ -124,32 +123,32 @@ export async function admitPlatformRecoveryApply(
       const snapshot = PlatformReleaseSnapshotSchema.parse(
         row.platformSnapshot,
       );
-      if (snapshot.kind !== "root-release") {
-        if (
-          intent.planReceipt === null ||
-          intent.planFingerprint !== input.planFingerprint ||
-          Date.parse(intent.planReceipt.expiresAt) <= Date.now()
-        )
-          throw new DeliveryError(
-            "CONFLICT",
-            "Recovery apply requires its exact unexpired saved plan",
-          );
-        const mode = tofuStackPolicy(snapshot.stack).mode;
-        if (!["automatic", "reviewed-plan"].includes(mode))
-          throw new DeliveryError(
-            "INVALID",
-            "This stack remains outside orchestrated recovery apply policy",
-          );
-        if (
-          mode === "reviewed-plan" &&
-          (intent.planApproval?.decision !== "approved" ||
-            intent.planApproval.planFingerprint !== intent.planFingerprint)
-        )
-          throw new DeliveryError(
-            "FORBIDDEN",
-            "Recovery apply requires human approval of the exact saved plan",
-          );
-      }
+      if (snapshot.kind === "root-release")
+        throw new DeliveryError("INVALID", RETIRED_ROOT);
+      if (
+        intent.planReceipt === null ||
+        intent.planFingerprint !== input.planFingerprint ||
+        Date.parse(intent.planReceipt.expiresAt) <= Date.now()
+      )
+        throw new DeliveryError(
+          "CONFLICT",
+          "Recovery apply requires its exact unexpired saved plan",
+        );
+      const mode = tofuStackPolicy(snapshot.stack).mode;
+      if (!["automatic", "reviewed-plan"].includes(mode))
+        throw new DeliveryError(
+          "INVALID",
+          "This stack remains outside orchestrated recovery apply policy",
+        );
+      if (
+        mode === "reviewed-plan" &&
+        (intent.planApproval?.decision !== "approved" ||
+          intent.planApproval.planFingerprint !== intent.planFingerprint)
+      )
+        throw new DeliveryError(
+          "FORBIDDEN",
+          "Recovery apply requires human approval of the exact saved plan",
+        );
     }
     await audit(tx, actor, {
       action: "platform.recovery_apply_admitted",
@@ -190,43 +189,6 @@ export async function completePlatformRecovery(
       "CONFLICT",
       "Recovery target does not match an exact frozen allowed settlement",
     );
-  if (input.settlement.state === "stopped") {
-    const snapshot = context.deployment.deployment.platformSnapshot;
-    const report = input.stoppedRoot;
-    const recorded = recordedPlatformJobs(context.deployment);
-    if (
-      !stoppedRootPriorMatches(context.deployment, context.priorDeployment) ||
-      snapshot?.kind !== "root-release" ||
-      report?.requestId !==
-        deliveryOperationId(
-          `${context.deployment.deployment.id}:root-release`,
-        ) ||
-      report.revision !==
-        snapshot.charts.find(({ name }) => name === "apps")?.artifact.version ||
-      report.applications.filter(({ name }) => name === "apps").length !== 1 ||
-      snapshot.charts.some(
-        ({ name }) =>
-          !report.applications.some((application) => application.name === name),
-      ) ||
-      new Set(report.applications.map(({ name }) => name)).size !==
-        report.applications.length ||
-      recorded.length !== 1 ||
-      !input.nativeJobs.some(
-        (job) =>
-          job.uid === recorded[0]?.uid &&
-          ["Complete", "Failed"].includes(job.status),
-      )
-    )
-      throw new DeliveryError(
-        "CONFLICT",
-        "Stopped root recovery requires its unchanged accepted prior, complete partial-state report and terminal original native Job",
-      );
-  } else if (input.stoppedRoot !== undefined) {
-    throw new DeliveryError(
-      "CONFLICT",
-      "Stopped root evidence cannot describe a different settlement",
-    );
-  }
   return this.database.$transaction(async (tx) => {
     const { intent, row, env } = await pendingRecovery(tx, id);
     if (

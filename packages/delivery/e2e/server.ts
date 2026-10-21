@@ -109,16 +109,6 @@ async function startHarness() {
   const saved = await checkpointTestPlan(platform.delivery, plan);
   await finishTestPlatform(platform.delivery, plan, saved);
   await testApply(platform.delivery, plan);
-  await platform.delivery.createPlatformDeployment(
-    {
-      kind: "root-release",
-      requestId: "browser/root",
-      environmentId: platform.rootEnvironment.id,
-      expectedGeneration: 0,
-      sourceBuildId: platform.sourceBuildId,
-    },
-    testOperator,
-  );
   await seedPlatformBrowser(
     cluster.database,
     platform.delivery,

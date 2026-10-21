@@ -19,15 +19,25 @@ export async function registration(
 
 /** A small, valid catalog document over the reviewed registrations. */
 export async function catalogDocument() {
-  const [arcade, arcadeBeta, delivery, site] = await Promise.all([
+  const [arcade, arcadeBeta, delivery] = await Promise.all([
     registration("arcade.pipeline.json"),
     registration("arcade.pipeline.json", {
       application: "arcade-beta",
       namespace: "arcade-beta",
     }),
     registration("ordinary/delivery/pipeline.json"),
-    registration("static/sjer-red/pipeline.json"),
   ]);
+  const site = recipeFromPipeline(
+    PipelineDefinitionSchema.parse({
+      kind: "static-site",
+      archiveComponent: "site:sjer-red",
+      bucket: "sjer-red",
+      immutablePrefixes: [],
+      extraExcludes: [],
+      entrypoints: ["index.html"],
+      verification: { url: "https://sjer.red/", expectedStatus: 200 },
+    }),
+  );
   return {
     groups: [
       { id: "ci", title: "CI", kind: "platform" },

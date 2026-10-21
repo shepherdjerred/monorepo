@@ -38,20 +38,23 @@ function probeName(labels: Record<string, string>): string {
   return job;
 }
 
+/** Each site is its own service (X4); a hostname resolves through the catalog's aliases. */
+function siteService(context: OpsContext, site: string | undefined) {
+  const owner = site === undefined ? undefined : context.services.byId(site);
+  return owner === undefined ? {} : { service: owner.id };
+}
+
 export function mapProbes(
   samples: readonly PrometheusSample[],
   context: OpsContext,
 ): OpsCollection {
   const down = samples.filter((sample) => sample.value < 1);
-  const staticSites = context.services.byId("static-sites");
   const signals: SignalInput[] = down.map((sample) => {
     const labels = sample.metric;
     const name = probeName(labels);
     const job = labels["job"] ?? "";
     const service = job.startsWith("static-site-")
-      ? staticSites === undefined
-        ? {}
-        : { service: staticSites.id }
+      ? siteService(context, labels["site"])
       : serviceForNamespace(context, labels["namespace"]);
     return {
       id: `probes:${job}:${labels["instance"] ?? name}`,

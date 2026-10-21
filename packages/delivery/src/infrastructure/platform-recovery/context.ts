@@ -19,10 +19,13 @@ import {
   intentDetail,
   legacyIntentFields,
 } from "#infrastructure/recovery-intents.ts";
-import { nativeReceipt } from "#infrastructure/platform/policy.ts";
+import {
+  RETIRED_ROOT,
+  nativeReceipt,
+} from "#infrastructure/platform/policy.ts";
 
+// Root releases are retired (X6); none can be quarantined after the cutover.
 export const platformRecoveryKinds = new Set([
-  "root-release",
   "tofu-plan",
   "tofu-apply",
   "upgrade-control-plane",
@@ -108,31 +111,13 @@ function targetFingerprint(detail: DeploymentDetail) {
       "INVALID",
       "Recovery target lacks its frozen infrastructure snapshot",
     );
-  return snapshot.kind === "root-release"
-    ? fingerprint({
-        kind: snapshot.kind,
-        source: snapshot.source,
-        charts: snapshot.charts,
-        siteArtifacts: snapshot.siteArtifacts,
-      })
-    : fingerprint({
-        kind: "tofu",
-        source: snapshot.source,
-        stack: snapshot.stack,
-      });
-}
-
-export function stoppedRootPriorMatches(
-  detail: DeploymentDetail,
-  prior: DeploymentDetail | null,
-) {
-  if (detail.deployment.platformSnapshot?.kind !== "root-release") return false;
-  return prior === null
-    ? detail.environment.acceptedDeploymentId === null
-    : prior.deployment.platformSnapshot?.kind === "root-release" &&
-        prior.deployment.status === "succeeded" &&
-        prior.deployment.id !== detail.deployment.id &&
-        prior.deployment.id === detail.environment.acceptedDeploymentId;
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
+  return fingerprint({
+    kind: "tofu",
+    source: snapshot.source,
+    stack: snapshot.stack,
+  });
 }
 
 export function platformSettlements(
@@ -164,38 +149,15 @@ export function platformSettlements(
         stack: snapshot.stack,
       }),
     };
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
   const matching = prior?.deployment.platformSnapshot;
   const hasPrior =
-    matching !== null &&
-    matching !== undefined &&
-    (snapshot.kind === "root-release"
-      ? matching.kind === "root-release"
-      : matching.kind === "tofu-apply" && matching.stack === snapshot.stack);
-  const stoppedRoot = stoppedRootPriorMatches(detail, prior);
+    matching?.kind === "tofu-apply" && matching.stack === snapshot.stack;
   return {
     desired: targetFingerprint(detail),
     ...(hasPrior && prior !== null ? { prior: targetFingerprint(prior) } : {}),
-    ...(stoppedRoot
-      ? {
-          stopped: fingerprint({
-            kind:
-              prior === null ? "stopped-first-root" : "stopped-root-attempt",
-            deploymentId: detail.deployment.id,
-            target: targetFingerprint(detail),
-            ...(prior === null
-              ? {}
-              : {
-                  prior: {
-                    deploymentId: prior.deployment.id,
-                    target: targetFingerprint(prior),
-                  },
-                }),
-          }),
-        }
-      : {}),
-    ...(prior === null &&
-    snapshot.kind === "tofu-apply" &&
-    snapshot.stack === "discord"
+    ...(prior === null && snapshot.stack === "discord"
       ? {
           original: fingerprint({
             kind: "tofu-original-target",

@@ -19,19 +19,22 @@ export async function registerTestServices(
   database: Database,
   catalog: ServiceIndex = new ServiceIndex(),
 ) {
-  const lineage = createHash("sha256").update("").digest("hex");
-  for (const service of catalog.services) {
-    const row = {
-      lifecycle: "active",
-      selfHosted: SELF_HOSTED.has(service.id),
-      components: [],
-      lineage,
-      catalogRevision: "test-catalog",
-    };
-    await database.service.upsert({
-      where: { id: service.id },
-      create: { id: service.id, ...row },
-      update: row,
-    });
-  }
+  for (const service of catalog.services)
+    await registerTestService(database, service.id);
+}
+
+/** One service the v1 test catalog does not list, such as a per-site service (X4). */
+export async function registerTestService(database: Database, id: string) {
+  const row = {
+    lifecycle: "active",
+    selfHosted: SELF_HOSTED.has(id),
+    components: [],
+    lineage: createHash("sha256").update("").digest("hex"),
+    catalogRevision: "test-catalog",
+  };
+  await database.service.upsert({
+    where: { id },
+    create: { id, ...row },
+    update: row,
+  });
 }

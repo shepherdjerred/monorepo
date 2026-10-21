@@ -1,4 +1,0 @@
-{
-  "kind": "root-release",
-  "runnerImage": "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50"
-}

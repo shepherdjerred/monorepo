@@ -171,15 +171,8 @@ const RequestFields = {
   environmentId: IdentifierSchema,
   expectedGeneration: z.number().int().nonnegative(),
 };
+/** Root releases are retired (X6); their stored snapshots stay readable as history. */
 export const CreatePlatformDeploymentSchema = z.discriminatedUnion("kind", [
-  z
-    .object({
-      kind: z.literal("root-release"),
-      ...RequestFields,
-      sourceBuildId: IdentifierSchema,
-      rootArtifacts: z.record(IdentifierSchema, IdentifierSchema).optional(),
-    })
-    .strict(),
   z
     .object({
       kind: z.literal("tofu-plan"),

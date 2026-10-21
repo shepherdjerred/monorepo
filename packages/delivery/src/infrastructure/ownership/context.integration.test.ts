@@ -159,53 +159,58 @@ test("quarantine and ownership counts come from all PG rows, independently of th
   );
 });
 
-test("root handover uses its canonical registration and rejects different runner or application identities", async () => {
+test("the retired root has no reviewed definition and cannot be registered (X6)", async () => {
   const definitions = await reviewedOwnershipDefinitions();
-  const root = definitions.get("gitops/root");
-  if (root === undefined)
-    throw new Error("Canonical root registration missing");
-  expect(root.environment).toMatchObject({
-    application: "apps",
-    pipelineRevisionId: "platform/root/1",
-  });
-  expect(root.pipeline.kind).toBe("root-release");
-  const pipeline = await context.delivery.registerPipeline(
-    root.environment.pipelineRevisionId,
-    root.pipeline,
+  expect(definitions.has("gitops/root")).toBe(false);
+  await context.delivery.registerPipeline(
+    "platform/root/1",
+    {
+      kind: "root-release",
+      runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"f".repeat(64)}`,
+    },
     testOperator,
   );
-  const environment = await context.delivery.registerEnvironment(
-    root.environment,
-    testOperator,
-  );
-  const response = await app().request("/api/v1/ownership-handover-context", {
-    headers: admin,
-  });
-  expect(response.status).toBe(200);
-  expect(
-    OwnershipHandoverContextSchema.parse(await response.json()).targets,
-  ).toContainEqual(
-    expect.objectContaining({
-      environmentId: "gitops/root",
-      application: "apps",
-      pipelineRevisionId: "platform/root/1",
-      pipeline: root.pipeline,
-    }),
-  );
-  expect(() =>
-    requireReviewedOwnershipDefinition(definitions, environment, {
-      ...pipeline,
-      definition: {
-        kind: "root-release",
-        runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"f".repeat(64)}`,
+  await expect(
+    context.delivery.registerEnvironment(
+      {
+        id: "gitops/root",
+        serviceId: "gitops",
+        name: "Root",
+        application: "apps",
+        pipelineRevisionId: "platform/root/1",
+        configurationRevision: "platform/1",
+        configuration: {},
+        automatic: false,
       },
+      testOperator,
+    ),
+  ).rejects.toThrow(/root release is retired/u);
+});
+
+test("handover rejects a different runner or application identity", async () => {
+  const definitions = await reviewedOwnershipDefinitions();
+  const reviewed = definitions.get("arcade/prod");
+  if (reviewed === undefined)
+    throw new Error("Canonical Arcade registration missing");
+  const requested = await context.delivery.createDeployment(
+    context.input("handover/1"),
+    testOperator,
+  );
+  const env = await context.delivery.detail(requested.id);
+  expect(() =>
+    requireReviewedOwnershipDefinition(definitions, env.environment, {
+      ...env.pipeline,
+      definition: PipelineDefinitionSchema.parse({
+        ...reviewed.pipeline,
+        namespace: "unreviewed",
+      }),
     }),
   ).toThrow("exact code-reviewed registered pipeline");
   expect(() =>
     requireReviewedOwnershipDefinition(
       definitions,
-      { ...environment, application: "unreviewed-root" },
-      pipeline,
+      { ...env.environment, application: "unreviewed-root" },
+      env.pipeline,
     ),
   ).toThrow("exact code-reviewed registered pipeline");
 });

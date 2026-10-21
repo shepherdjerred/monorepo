@@ -14,11 +14,11 @@ import { PlatformSourceSchema } from "#shared/platform-contract.ts";
 import { required, fingerprint } from "#infrastructure/delivery-records.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
 
-export function platformPolicyFingerprint(catalog: ServiceIndex) {
-  return fingerprint({
-    charts: catalog.rootReleaseCharts(),
-    policy: PLATFORM_POLICY,
-  });
+export const RETIRED_ROOT =
+  "The root release is retired; per-service environments own their Applications and ordering is a prerequisite edge (X6)";
+
+export function platformPolicyFingerprint() {
+  return fingerprint({ policy: PLATFORM_POLICY });
 }
 
 export function validatePlatformEnvironment(
@@ -28,20 +28,19 @@ export function validatePlatformEnvironment(
   >,
   definition: PipelineDefinition,
 ) {
-  if (definition.kind !== "root-release" && definition.kind !== "tofu") return;
-  const root = definition.kind === "root-release";
-  const expected = root ? "gitops/root" : `gitops/tofu:${definition.stack}`;
+  if (definition.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
+  if (definition.kind !== "tofu") return;
   if (
     input.serviceId !== "gitops" ||
-    input.id !== expected ||
-    input.application !== (root ? "apps" : undefined)
+    input.id !== `gitops/tofu:${definition.stack}` ||
+    input.application !== undefined
   )
     throw new DeliveryError(
       "INVALID",
-      "Platform pipeline requires its fixed gitops environment and root or state-stack ownership",
+      "Platform pipeline requires its fixed gitops environment and state-stack ownership",
     );
   if (
-    !root &&
     ["operator-only", "validate-only"].includes(
       tofuStackPolicy(definition.stack).mode,
     )

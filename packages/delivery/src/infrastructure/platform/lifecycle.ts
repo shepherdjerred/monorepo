@@ -16,6 +16,7 @@ import {
 } from "#infrastructure/delivery-records.ts";
 import {
   PlatformAcceptanceSchema,
+  RETIRED_ROOT,
   nativeReceipt,
   platformPolicyFingerprint,
   requirePlatformOwner,
@@ -39,7 +40,7 @@ export async function holdPlatformLock(
   if (held !== null && held.deploymentId !== deploymentId)
     throw new DeliveryError(
       "BUSY",
-      "Shared platform resources are owned by another root or state apply operation",
+      "Shared platform resources are owned by another state apply or shared-lock operation",
     );
   if (held === null && running)
     throw new DeliveryError(
@@ -60,9 +61,11 @@ export async function admitPlatformDeployment(
 ) {
   if (row.platformSnapshot === null) return;
   const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
   if (
     snapshot.kind !== row.kind ||
-    snapshot.policyFingerprint !== platformPolicyFingerprint(catalog)
+    snapshot.policyFingerprint !== platformPolicyFingerprint()
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -71,19 +74,6 @@ export async function admitPlatformDeployment(
   requirePlatformOwner(catalog, snapshot.kind);
   if (catalog.catalog.platformDeliveryDelegated === true)
     await requirePlatformPrerequisites(tx, snapshot);
-  if (snapshot.kind === "tofu-apply" && snapshot.stack === "cloudflare") {
-    const sites = await tx.deployment.count({
-      where: {
-        serviceId: "static-sites",
-        OR: [{ status: "running" }, { recoveryRequired: true }],
-      },
-    });
-    if (sites !== 0)
-      throw new DeliveryError(
-        "BUSY",
-        "Waiting for independent site effects and recovery before applying exact Cloudflare prerequisites",
-      );
-  }
   if (snapshot.kind !== "tofu-plan") {
     await holdPlatformLock(tx, row.id, options.running === true);
   }
@@ -165,6 +155,8 @@ export async function validatePlatformSuccess(
       "Platform operations cannot report application VersionSet observation",
     );
   const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
   const stage = await tx.stage.findUnique({
     where: { deploymentId_key: { deploymentId: row.id, key: snapshot.kind } },
   });
@@ -194,8 +186,7 @@ export async function validatePlatformSuccess(
         "Plan completion differs from the native producer identity",
       );
     planDigest = saved.planDigest;
-  } else if (snapshot.kind === "tofu-apply")
-    planDigest = snapshot.plan.planDigest;
+  } else planDigest = snapshot.plan.planDigest;
   const evidence = await tx.evidence.findMany({
     where: {
       deploymentId: row.id,
@@ -212,8 +203,7 @@ export async function validatePlatformSuccess(
       parsed.success &&
       parsed.data.kind === snapshot.kind &&
       parsed.data.sourceBuildId === snapshot.source.id &&
-      parsed.data.stack ===
-        (snapshot.kind === "root-release" ? undefined : snapshot.stack) &&
+      parsed.data.stack === snapshot.stack &&
       parsed.data.planDigest === planDigest
     );
   });
