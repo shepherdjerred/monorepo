@@ -32,6 +32,8 @@
     "scripts/argocd/argocd-verified-receipt.test.ts",
     "scripts/argocd/argocd-apply-safety.ts",
     "scripts/argocd/argocd-apply-safety.test.ts",
+    "scripts/argocd/argocd-destructive-changes.ts",
+    "scripts/argocd/argocd-json-path.ts",
     "scripts/argocd/argocd-ignored-differences.ts",
     "scripts/argocd/argocd-ignored-differences.test.ts",
     "scripts/argocd/argocd-auto-sync-policy.ts",
