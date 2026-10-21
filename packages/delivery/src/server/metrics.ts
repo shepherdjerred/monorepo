@@ -41,14 +41,11 @@ export async function deliveryMetrics(database: Database): Promise<string> {
         (SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MIN(o."createdAt"))),0)::float8
           FROM "Outbox" o JOIN "Deployment" d ON d.id = o."deploymentId"
           WHERE o."submittedAt" IS NULL AND d.status NOT IN ('succeeded','failed','canceled')) AS "outboxAge",
-        (SELECT count(*)::float8 FROM "ApplicationLock") AS locks,
-        (SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MIN("acquiredAt"))),0)::float8 FROM "ApplicationLock") AS "lockAge",
+        (SELECT count(*)::float8 FROM "TargetLock") AS locks,
+        (SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MIN("acquiredAt"))),0)::float8 FROM "TargetLock") AS "lockAge",
         (SELECT count(*)::float8 FROM "Deployment" WHERE "recoveryRequired" = true) AS "recoveryRequired",
-        ((SELECT count(*)::float8 FROM "WorkerRecoveryIntent" WHERE status IN ('pending','running')) +
-         (SELECT count(*)::float8 FROM "MinecraftRecoveryIntent" WHERE status IN ('pending','running')) +
-         (SELECT count(*)::float8 FROM "PlatformRecoveryIntent" WHERE status IN ('pending','running')) +
-         (SELECT count(*)::float8 FROM "ContentRecoveryIntent" WHERE status = 'pending' OR
-           ("dispatchBarrier" IS NOT NULL AND "barrierRestoredAt" IS NULL))) AS "recoveriesPending"
+        (SELECT count(*)::float8 FROM "RecoveryIntent" WHERE status = 'pending' OR
+           (barrier IS NOT NULL AND "barrierRestoredAt" IS NULL)) AS "recoveriesPending"
     `,
   ]);
   const [state] = z.array(StateSchema).length(1).parse(raw);
@@ -117,12 +114,12 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     ],
     [
       "delivery_application_locks",
-      "Held application ownership locks.",
+      "Held target instance locks (model T1).",
       state.locks,
     ],
     [
       "delivery_application_lock_oldest_seconds",
-      "Age of the oldest held application ownership lock.",
+      "Age of the oldest held target instance lock.",
       state.lockAge,
     ],
     [

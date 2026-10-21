@@ -144,6 +144,7 @@ test("combined Scout registration binds canonical stage, environment and product
     configurationRevision: "reviewed/1",
     configuration: {},
     automatic: true,
+    approvalPolicy: "required" as const,
   };
   await expect(
     context.delivery.registerEnvironment(
@@ -152,11 +153,11 @@ test("combined Scout registration binds canonical stage, environment and product
     ),
   ).rejects.toMatchObject({ code: "INVALID" });
   const env = await context.delivery.registerEnvironment(input, testOperator);
-  expect(env.approvalRequired).toBe(true);
+  expect(env.approvalPolicy).toBe("required");
   const overview = await context.delivery.overview();
   expect(
-    overview.environments.find((row) => row.id === env.id)?.approvalRequired,
-  ).toBe(true);
+    overview.environments.find((row) => row.id === env.id)?.approvalPolicy,
+  ).toBe("required");
 });
 
 test("frontend stage must finish under the backend lock with exact persisted archive evidence", async () => {
@@ -166,8 +167,8 @@ test("frontend stage must finish under the backend lock with exact persisted arc
     context.delivery.finish(deployment.id, finish, testExecutor),
   ).rejects.toThrow("exact archive acceptance");
   expect(
-    await context.cluster.database.applicationLock.findUnique({
-      where: { application: "scout-beta" },
+    await context.cluster.database.targetLock.findUnique({
+      where: { instance: "application:scout-beta" },
     }),
   ).toMatchObject({ deploymentId: deployment.id });
   await context.delivery.stage(
@@ -205,8 +206,8 @@ test("frontend stage must finish under the backend lock with exact persisted arc
     activeDeploymentId: null,
   });
   expect(
-    await context.cluster.database.applicationLock.findUnique({
-      where: { application: "scout-beta" },
+    await context.cluster.database.targetLock.findUnique({
+      where: { instance: "application:scout-beta" },
     }),
   ).toBeNull();
 });
@@ -251,8 +252,8 @@ test("a different archive cannot satisfy combined acceptance and missing backend
     testExecutor,
   );
   expect(
-    await context.cluster.database.applicationLock.findUnique({
-      where: { application: "scout-beta" },
+    await context.cluster.database.targetLock.findUnique({
+      where: { instance: "application:scout-beta" },
     }),
   ).toMatchObject({ deploymentId: deployment.id });
   await context.cluster.database.artifact.update({

@@ -4,13 +4,21 @@ import {
   TofuPlanReceiptSchema,
   type DeploymentDetail,
 } from "#shared/contract.ts";
-import type { PlatformSettlementFingerprintsSchema } from "#shared/platform-recovery-contract.ts";
+import {
+  PlatformRecoveryIntentSchema,
+  type PlatformSettlementFingerprintsSchema,
+} from "#shared/platform-recovery-contract.ts";
+import type { RecoveryIntent } from "#generated/prisma/client.ts";
 import {
   fingerprint,
   required,
   wire,
 } from "#infrastructure/delivery-records.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
+import {
+  intentDetail,
+  legacyIntentFields,
+} from "#infrastructure/recovery-intents.ts";
 import { nativeReceipt } from "#infrastructure/platform/policy.ts";
 
 export const platformRecoveryKinds = new Set([
@@ -19,6 +27,20 @@ export const platformRecoveryKinds = new Set([
   "tofu-apply",
   "upgrade-control-plane",
 ]);
+
+/** The platform-kind view of a unified recovery intent row. */
+export function platformIntentView(row: RecoveryIntent) {
+  const detail = intentDetail(row);
+  return PlatformRecoveryIntentSchema.parse(
+    wire({
+      ...legacyIntentFields(row),
+      nativeReceipts: detail["nativeReceipts"] ?? [],
+      planReceipt: detail["planReceipt"] ?? null,
+      planFingerprint: detail["planFingerprint"] ?? null,
+      planApproval: detail["planApproval"] ?? null,
+    }),
+  );
+}
 
 export async function heldPlatformRecovery(
   tx: Transaction,
@@ -43,8 +65,9 @@ export async function heldPlatformRecovery(
   const env = await tx.environment.findUniqueOrThrow({
     where: { id: row.environmentId },
   });
-  const target = await tx.applicationLock.findUnique({
+  const target = await tx.targetLock.findFirst({
     where: { deploymentId: row.id },
+    orderBy: { instance: "asc" },
   });
   const global = await tx.platformLock.findUnique({
     where: { deploymentId: row.id },
@@ -66,15 +89,13 @@ export async function heldPlatformRecovery(
       environmentId: env.id,
       generation: env.generation,
       pipelineRevisionId: row.pipelineRevisionId,
-      configurationRevision: row.configurationRevision,
-      configuration: row.configuration,
+      configurationId: row.configurationId,
       platformSnapshot: row.platformSnapshot,
       controlPlaneSnapshot: row.controlPlaneSnapshot,
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
-      target: target.application,
+      target: target.instance,
       global: global?.id ?? null,
-      acceptedPlatformDeploymentId: env.acceptedPlatformDeploymentId,
-      acceptedControlPlaneDeploymentId: env.acceptedControlPlaneDeploymentId,
+      acceptedDeploymentId: env.acceptedDeploymentId,
     }),
   );
   return { row, env, target, global, snapshotFingerprint };
@@ -107,11 +128,11 @@ export function stoppedRootPriorMatches(
 ) {
   if (detail.deployment.platformSnapshot?.kind !== "root-release") return false;
   return prior === null
-    ? detail.environment.acceptedPlatformDeploymentId === null
+    ? detail.environment.acceptedDeploymentId === null
     : prior.deployment.platformSnapshot?.kind === "root-release" &&
         prior.deployment.status === "succeeded" &&
         prior.deployment.id !== detail.deployment.id &&
-        prior.deployment.id === detail.environment.acceptedPlatformDeploymentId;
+        prior.deployment.id === detail.environment.acceptedDeploymentId;
 }
 
 export function platformSettlements(

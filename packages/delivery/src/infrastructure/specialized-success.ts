@@ -48,7 +48,7 @@ export async function validateSpecializedSuccess(
     versionSetRevisionId: string;
   },
 ) {
-  if (["adopt-worker", "retire-worker"].includes(deployment.kind)) return;
+  if (["adopt-worker", "retire-host"].includes(deployment.kind)) return;
   const pipeline = PipelineRevisionSchema.parse(
     wire(
       required(

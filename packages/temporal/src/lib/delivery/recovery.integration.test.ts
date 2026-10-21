@@ -36,9 +36,9 @@ function assertInvalidRecoveryExports(detail: DeploymentDetail) {
   expect(() =>
     deliveryRecoverySelection({
       ...detail,
-      deployment: {
-        ...detail.deployment,
-        configuration: { "database.password": "rejected-fixture" },
+      configuration: {
+        ...detail.configuration,
+        content: { "database.password": "rejected-fixture" },
       },
     }),
   ).toThrow("credential parameter");
@@ -56,6 +56,8 @@ function assertInvalidRecoveryExports(detail: DeploymentDetail) {
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let store: Delivery;
 let server: ReturnType<typeof Bun.serve>;
+/** The registered store the chart is published to (A6); a local fake then serves its bytes. */
+const CHART_REPOSITORY = "https://chartmuseum.tailnet-1a49.ts.net";
 let current: Record<string, unknown>;
 let versionId: string;
 let directory: string;
@@ -147,7 +149,7 @@ async function setup() {
           id: "recovery-chart",
           component: "chart",
           kind: "chart",
-          uri: `${server.url.origin}/charts/arcade-2.0.0-42.tgz`,
+          uri: `${CHART_REPOSITORY}/charts/arcade-2.0.0-42.tgz`,
           version: "2.0.0-42",
           digest: `sha256:${createHash("sha256").update(chartBytes).digest("hex")}`,
         },
@@ -156,6 +158,11 @@ async function setup() {
     testPublisher,
     { repositoryId: 1, pipelineNumber: 2 },
   );
+  // The fake ChartMuseum serves the same bytes locally; the row keeps its store.
+  await cluster.database.artifact.update({
+    where: { id: "recovery-chart" },
+    data: { uri: `${server.url.origin}/charts/arcade-2.0.0-42.tgz` },
+  });
   await store.qualify(publication.buildId, "verified", testExecutor);
   const versions = await store.versions("arcade");
   const selected = versions[0];

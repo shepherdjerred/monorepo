@@ -11,8 +11,8 @@ import {
   type DeliveryJobReceipt,
 } from "#shared/delivery-job.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { controlPlaneJobInput } from "./control-plane.ts";
+import { tofuJobInputFor, tofuJobRequestInput } from "./tofu-input.ts";
 
 export function platformNativeEvidence(
   native: DeliveryJobReceipt,
@@ -42,20 +42,14 @@ function frozenJobInput(
   }
   const snapshot = current.deployment.platformSnapshot;
   if (
-    snapshot === null ||
-    !["root-release", "tofu-apply"].includes(snapshot.kind) ||
+    snapshot?.kind !== "tofu-apply" ||
     snapshot.kind !== request.recipe ||
     snapshot.source.sourceRevision !== request.sourceRevision
   )
     throw new Error(
       "Native platform source differs from its frozen mutation intent",
     );
-  return snapshot.kind === "root-release"
-    ? {
-        requestId: deliveryOperationId(`${request.deploymentId}:root-release`),
-        charts: snapshot.charts,
-      }
-    : snapshot;
+  return tofuJobRequestInput(tofuJobInputFor(current, snapshot));
 }
 
 /** A Job may start before the create response reaches its Activity: checkpoint its own native identity first. */

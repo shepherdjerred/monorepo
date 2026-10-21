@@ -155,9 +155,11 @@ test("TSMC always refuses blind rollback and cannot fall through an ordinary Arg
     versionSetRevisionId: context.fixture.versionSet.id,
     kind: "rollback" as const,
   };
+  // Rollback restores only a previously accepted selection (V2); past a
+  // pointOfNoReturn step it is refused as data (D9), never by service id.
   await expect(
     context.delivery.createDeployment(input, testOperator),
-  ).rejects.toThrow("independent restoration procedure");
+  ).rejects.toThrow("Previously accepted rollback deployment not found");
   await expect(
     context.delivery.createDeployment(
       { ...input, requestId: "minecraft/no-generic-execution", kind: "deploy" },

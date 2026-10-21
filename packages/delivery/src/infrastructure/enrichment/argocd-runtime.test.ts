@@ -8,6 +8,8 @@ const selected = VersionSetRevisionSchema.parse({
   serviceId: "arcade",
   revision: 1,
   baseRevisionId: null,
+  lineage: "0".repeat(64),
+  orderKey: "0000000001.0000000000",
   createdAt: "2026-10-18T00:00:00.000Z",
   components: {
     "image:arcade": {

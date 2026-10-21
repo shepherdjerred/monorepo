@@ -117,7 +117,7 @@ test("actual HTTP accepts non-UUID admin recovery identity while paused and refu
     recoveryRequired: true,
   });
   expect(
-    await scope.cluster.database.applicationLock.count({
+    await scope.cluster.database.targetLock.count({
       where: { deploymentId: fixture.failed.id },
     }),
   ).toBe(1);

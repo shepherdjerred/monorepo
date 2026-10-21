@@ -153,7 +153,7 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
                 ? null
                 : (revisions.get(env.acceptedVersionSetRevisionId) ?? null),
             observedAt: env.observedAt,
-            approvalRequired: env.approvalRequired,
+            approvalRequired: env.approvalPolicy === "required",
             activeDeploymentId: env.activeDeploymentId,
           };
         }),

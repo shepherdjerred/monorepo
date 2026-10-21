@@ -159,7 +159,7 @@ test("database dump and independent restore preserve immutable state, outbox, ev
     expect(retained.versionSet.components["server"]?.digest).toBe(
       fixture.versionSet.components["server"]?.digest,
     );
-    expect(await destination.database.applicationLock.count()).toBe(1);
+    expect(await destination.database.targetLock.count()).toBe(1);
     expect(await destination.database.audit.count()).toBe(
       await source.database.audit.count(),
     );
@@ -195,7 +195,7 @@ test("database dump and independent restore preserve immutable state, outbox, ev
     expect(await destination.database.deployment.count()).toBe(2);
     expect(await destination.database.outbox.count()).toBe(2);
     const queuedDetail = await restored.detail(queued.id);
-    expect(queuedDetail.deployment.configuration).toEqual({
+    expect(queuedDetail.configuration.content).toEqual({
       marker: "preserved",
     });
   } finally {

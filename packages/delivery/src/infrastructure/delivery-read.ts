@@ -11,12 +11,16 @@ import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import { readRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
+import { minecraftIntentView } from "./minecraft-recovery/requests.ts";
+import { platformIntentView } from "./platform-recovery/context.ts";
+import { contentIntentView } from "./content-recovery/context.ts";
 import {
   version as readVersion,
   environment,
   ensureService,
   artifactView,
   qualifiedBuildWhere,
+  configurationRevision,
 } from "./delivery-data.ts";
 
 /** Resolve an exact component from the newest coherent automatic version set. */
@@ -26,7 +30,7 @@ export async function latestQualifiedArtifact(
   repositoryId: number,
 ) {
   const input = LatestQualifiedArtifactQuerySchema.parse(rawInput);
-  ensureService(input.serviceId);
+  await ensureService(this.database, input.serviceId);
   const matches = z.array(z.object({ id: IdentifierSchema })).parse(
     await this.database.$queryRaw`
       SELECT version."id" FROM "VersionSet" version
@@ -66,26 +70,43 @@ export async function detail(this: Delivery, deploymentId: string) {
       where: { id: deploymentId },
       include: {
         evidence: true,
-        approvals: true,
+        approval: true,
         stages: true,
-        minecraftRecoveries: { orderBy: { createdAt: "desc" } },
-        platformRecoveries: { orderBy: { createdAt: "desc" } },
-        contentRecoveries: { orderBy: { createdAt: "desc" } },
+        recoveryIntents: { orderBy: { createdAt: "desc" } },
       },
     }),
     "Deployment",
   );
-  const [env, selected, pipeline, previousAcceptedVersionSet] =
-    await Promise.all([
-      environment(this.database, row.environmentId),
-      readVersion(this.database, row.versionSetRevisionId),
-      this.database.pipeline.findUnique({
-        where: { id: row.pipelineRevisionId },
-      }),
-      row.previousAcceptedVersionSetRevisionId === null
-        ? null
-        : readVersion(this.database, row.previousAcceptedVersionSetRevisionId),
-    ]);
+  const previousAccepted =
+    row.previousAcceptedDeploymentId === null
+      ? null
+      : await this.database.deployment.findUniqueOrThrow({
+          where: { id: row.previousAcceptedDeploymentId },
+          select: { configurationId: true },
+        });
+  const [
+    env,
+    selected,
+    pipeline,
+    configuration,
+    previousAcceptedVersionSet,
+    previousAcceptedConfiguration,
+  ] = await Promise.all([
+    environment(this.database, row.environmentId),
+    readVersion(this.database, row.versionSetRevisionId),
+    this.database.pipeline.findUnique({
+      where: { id: row.pipelineRevisionId },
+    }),
+    configurationRevision(this.database, row.configurationId),
+    row.previousAcceptedVersionSetRevisionId === null
+      ? null
+      : readVersion(this.database, row.previousAcceptedVersionSetRevisionId),
+    previousAccepted === null
+      ? null
+      : configurationRevision(this.database, previousAccepted.configurationId),
+  ]);
+  const intents = (kind: string) =>
+    row.recoveryIntents.filter((intent) => intent.kind === kind);
   return DeploymentDetailSchema.parse(
     wire({
       deployment: row,
@@ -97,16 +118,24 @@ export async function detail(this: Delivery, deploymentId: string) {
       versionSet: selected,
       previousAcceptedVersionSet,
       pipeline: required(pipeline, "Pipeline"),
+      configuration,
+      previousAcceptedConfiguration,
       evidence: row.evidence.map(({ url, operationId, ...entry }) => ({
         ...entry,
         ...(url === null ? {} : { url }),
         ...(operationId === null ? {} : { operationId }),
       })),
-      approvals: row.approvals,
+      approval: approvalView(row.approval),
       stages: row.stages,
-      minecraftRecoveries: row.minecraftRecoveries,
-      platformRecoveries: row.platformRecoveries,
-      contentRecoveries: row.contentRecoveries,
+      minecraftRecoveries: intents("minecraft").map((intent) =>
+        minecraftIntentView(intent),
+      ),
+      platformRecoveries: intents("platform").map((intent) =>
+        platformIntentView(intent),
+      ),
+      contentRecoveries: intents("content").map((intent) =>
+        contentIntentView(intent),
+      ),
     }),
   );
 }
@@ -168,4 +197,13 @@ export async function overview(this: Delivery) {
       ForumBaselineIntentSchema.parse(wire(entry)),
     ),
   };
+}
+
+/** The approval as the API shows it; the bound selection fingerprint stays internal. */
+function approvalView<T extends { boundFingerprint: string }>(
+  row: T | null,
+): Omit<T, "boundFingerprint"> | null {
+  if (row === null) return null;
+  const { boundFingerprint: _bound, ...view } = row;
+  return view;
 }

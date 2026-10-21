@@ -2,18 +2,12 @@ import { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  audit,
-  fingerprint,
-  required,
-  wire,
-} from "#infrastructure/delivery-records.ts";
+import { audit, fingerprint } from "#infrastructure/delivery-records.ts";
 import {
   PlatformReleaseSnapshotSchema,
   type Principal,
 } from "#shared/contract.ts";
 import {
-  PlatformRecoveryIntentSchema,
   PlatformRecoveryNativeReceiptSchema,
   RecordPlatformRecoveryPlanSchema,
   ApprovePlatformRecoveryPlanSchema,
@@ -21,7 +15,13 @@ import {
   type RecordPlatformRecoveryPlan,
   type ApprovePlatformRecoveryPlan,
 } from "#shared/platform-recovery-contract.ts";
+import {
+  findIntent,
+  intentDetail,
+  updateIntentDetail,
+} from "#infrastructure/recovery-intents.ts";
 import { pendingRecovery } from "./ownership.ts";
+import { platformIntentView } from "./context.ts";
 
 export async function recordPlatformRecoveryNative(
   this: Delivery,
@@ -37,11 +37,9 @@ export async function recordPlatformRecoveryNative(
         "INVALID",
         "Recovery native Job must bind its exact intent identity",
       );
-    const receipts = PlatformRecoveryIntentSchema.parse(
-      wire(intent),
-    ).nativeReceipts;
+    const receipts = intent.nativeReceipts;
     if (receipts.some((entry) => fingerprint(entry) === fingerprint(input)))
-      return PlatformRecoveryIntentSchema.parse(wire(intent));
+      return intent;
     if (
       receipts.length >= 20 ||
       receipts.some(
@@ -54,9 +52,8 @@ export async function recordPlatformRecoveryNative(
         "CONFLICT",
         "Recovery native action identity is immutable and bounded",
       );
-    const row = await tx.platformRecoveryIntent.update({
-      where: { id },
-      data: { nativeReceipts: [...receipts, input] },
+    const row = await updateIntentDetail(tx, id, {
+      nativeReceipts: [...receipts, input],
     });
     await audit(tx, actor, {
       action: "platform.recovery_native",
@@ -64,7 +61,7 @@ export async function recordPlatformRecoveryNative(
       requestId: input.receipt.uid,
       metadata: input,
     });
-    return PlatformRecoveryIntentSchema.parse(wire(row));
+    return platformIntentView(row);
   });
 }
 
@@ -88,9 +85,7 @@ export async function recordPlatformRecoveryPlan(
     }
     const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot),
       receipt = input.receipt;
-    const entries = PlatformRecoveryIntentSchema.parse(
-      wire(intent),
-    ).nativeReceipts;
+    const entries = intent.nativeReceipts;
     if (snapshot.kind !== "tofu-apply" && snapshot.kind !== "tofu-plan")
       throw new DeliveryError(
         "INVALID",
@@ -119,13 +114,10 @@ export async function recordPlatformRecoveryPlan(
         "CONFLICT",
         "Recovery plan is outside its execution window",
       );
-    await tx.platformRecoveryIntent.update({
-      where: { id },
-      data: {
-        planReceipt: receipt,
-        encryptedPlan: input.encryptedPlan,
-        planFingerprint: digest,
-      },
+    await updateIntentDetail(tx, id, {
+      planReceipt: receipt,
+      encryptedPlan: input.encryptedPlan,
+      planFingerprint: digest,
     });
     await audit(tx, actor, {
       action: "platform.recovery_plan",
@@ -142,13 +134,10 @@ export async function platformRecoveryPlan(
   actor: Principal,
 ) {
   requireScope(actor, "execute");
-  const row = required(
-    await this.database.platformRecoveryIntent.findUnique({ where: { id } }),
-    "Recovery saved plan",
-  );
+  const detail = intentDetail(await findIntent(this.database, id, "platform"));
   return RecordPlatformRecoveryPlanSchema.parse({
-    receipt: row.planReceipt,
-    encryptedPlan: row.encryptedPlan,
+    receipt: detail["planReceipt"],
+    encryptedPlan: detail["encryptedPlan"],
   });
 }
 export async function approvePlatformRecoveryPlan(
@@ -177,9 +166,7 @@ export async function approvePlatformRecoveryPlan(
         "CONFLICT",
         "Approval must name the exact immutable recovery plan",
       );
-    const current = PlatformRecoveryIntentSchema.parse(
-      wire(intent),
-    ).planApproval;
+    const current = intent.planApproval;
     if (current !== null) {
       if (
         current.actorId !== actor.id ||
@@ -191,16 +178,15 @@ export async function approvePlatformRecoveryPlan(
           "CONFLICT",
           "Recovery plan approval is immutable",
         );
-      return PlatformRecoveryIntentSchema.parse(wire(intent));
+      return intent;
     }
     const approval = {
       ...input,
       actorId: actor.id,
       createdAt: new Date().toISOString(),
     };
-    const updated = await tx.platformRecoveryIntent.update({
-      where: { id },
-      data: { planApproval: approval },
+    const updated = await updateIntentDetail(tx, id, {
+      planApproval: approval,
     });
     await audit(tx, actor, {
       action: "platform.recovery_plan_approval",
@@ -208,6 +194,6 @@ export async function approvePlatformRecoveryPlan(
       requestId: id,
       metadata: approval,
     });
-    return PlatformRecoveryIntentSchema.parse(wire(updated));
+    return platformIntentView(updated);
   });
 }

@@ -57,6 +57,65 @@ function canonical(value: unknown): string {
 export function fingerprint(value: unknown) {
   return createHash("sha256").update(canonical(value)).digest("hex");
 }
+/** The one named shared lock (model T1). */
+export const PLATFORM_LOCK = "platform";
+/** Lock instance of an Argo Application target (model T1). */
+export function applicationInstance(application: string) {
+  return `application:${application}`;
+}
+/** Identity of a frozen selection; approvals bind to it (model D6). Matches the migration's SQL. */
+export function selectionFingerprint(
+  versionSetRevisionId: string,
+  pipelineRevisionId: string,
+  configurationId: string,
+) {
+  return createHash("sha256")
+    .update(
+      [versionSetRevisionId, pipelineRevisionId, configurationId].join("\n"),
+    )
+    .digest("hex");
+}
+/** Registered artifact stores (model A6); an artifact outside them is not selectable. */
+export const ARTIFACT_STORES = [
+  "docker-hub",
+  "chartmuseum",
+  "delivery-artifacts",
+  "storm-forum-releases",
+  "upstream-chart-repository",
+  "upstream-image-registry",
+] as const;
+export type ArtifactStore = (typeof ARTIFACT_STORES)[number];
+const STORE_PREFIXES: [string, ArtifactStore][] = [
+  ["docker.io/", "docker-hub"],
+  ["https://chartmuseum.tailnet-1a49.ts.net/", "chartmuseum"],
+  ["https://chartmuseum.sjer.red/", "chartmuseum"],
+  ["s3://delivery-artifacts/", "delivery-artifacts"],
+  ["s3://storm-forum-releases/", "storm-forum-releases"],
+];
+/**
+ * The registered store holding an artifact's bytes (A6). Self-hosted and
+ * first-party stores are named by URI prefix, exactly as the v2 migration
+ * backfills them; an acquired artifact outside those stores stays in its
+ * upstream chart repository or image registry (X11).
+ */
+export function artifactStore(artifact: {
+  uri: string;
+  kind: string;
+  origin?: { kind: string } | undefined;
+}): ArtifactStore {
+  const match = STORE_PREFIXES.find(([prefix]) =>
+    artifact.uri.startsWith(prefix),
+  );
+  if (match !== undefined) return match[1];
+  if (artifact.origin?.kind === "upstream" && artifact.kind === "chart")
+    return "upstream-chart-repository";
+  if (artifact.origin?.kind === "upstream" && artifact.kind === "image")
+    return "upstream-image-registry";
+  throw new DeliveryError(
+    "INVALID",
+    `Artifact URI ${artifact.uri} belongs to no registered artifact store`,
+  );
+}
 export function wire(value: unknown): unknown {
   if (value instanceof Date) return value.toISOString();
   if (Array.isArray(value)) return value.map((entry: unknown) => wire(entry));

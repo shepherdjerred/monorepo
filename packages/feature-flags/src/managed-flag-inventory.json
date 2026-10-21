@@ -164,6 +164,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "delivery-executor-concurrency",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Global bound on simultaneously owned Delivery deployments (model D10); claims beyond it stay queued.",
+      "type": "variant",
+      "default": "4",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "delivery-lease-seconds",
+      "owner": "delivery",
+      "namespace": "delivery",
+      "source": "code",
+      "purpose": "Seconds an owned Delivery deployment stays provably owned without a lease renewal (model D7); a lapsed lease ends recovery-required.",
+      "type": "variant",
+      "default": "900",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "arcade_enabled",
       "owner": "arcade",
       "namespace": "arcade",

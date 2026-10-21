@@ -59,13 +59,15 @@ export async function minecraftRecoveryOwnership(
   const environment = await tx.environment.findUniqueOrThrow({
     where: { id: deployment.environmentId },
   });
-  const held = await tx.applicationLock.findUnique({ where: { deploymentId } });
+  const held = await tx.targetLock.findUnique({
+    where: { instance: "application:minecraft-tsmc" },
+  });
   if (
     !deployment.recoveryRequired ||
     !["failed", "canceled"].includes(deployment.status) ||
     environment.activeDeploymentId !== deployment.id ||
     environment.generation !== expectedGeneration ||
-    held?.application !== "minecraft-tsmc"
+    held?.deploymentId !== deploymentId
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -121,11 +123,10 @@ export async function minecraftRecoveryOwnership(
     environmentId: deployment.environmentId,
     versionSetRevisionId: deployment.versionSetRevisionId,
     pipelineRevisionId: deployment.pipelineRevisionId,
-    configurationRevision: deployment.configurationRevision,
-    configuration: deployment.configuration,
+    configurationId: deployment.configurationId,
     previousAcceptedVersionSetRevisionId:
       deployment.previousAcceptedVersionSetRevisionId,
-    previousAcceptedConfiguration: deployment.previousAcceptedConfiguration,
+    previousAcceptedDeploymentId: deployment.previousAcceptedDeploymentId,
     pipeline,
     operationId,
     nativeControllers: uniqueReceipts,

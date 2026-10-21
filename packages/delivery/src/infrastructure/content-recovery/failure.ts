@@ -2,17 +2,10 @@ import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  audit,
-  fingerprint,
-  lock,
-  required,
-  wire,
-} from "#infrastructure/delivery-records.ts";
-import {
-  ContentRecoveryIntentSchema,
-  type Principal,
-} from "#shared/contract.ts";
+import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
+import type { Principal } from "#shared/contract.ts";
+import { findIntent } from "#infrastructure/recovery-intents.ts";
+import { contentIntentView } from "./context.ts";
 
 export async function failContentRecovery(
   this: Delivery,
@@ -27,11 +20,8 @@ export async function failContentRecovery(
   return this.database.$transaction(async (tx) => {
     await lock(tx, "delivery:claim");
     await lock(tx, `content-recovery:${id}`);
-    const raw = required(
-      await tx.contentRecoveryIntent.findUnique({ where: { id } }),
-      "Content recovery intent",
-    );
-    const intent = ContentRecoveryIntentSchema.parse(wire(raw));
+    const raw = await findIntent(tx, id, "content");
+    const intent = contentIntentView(raw);
     if (intent.status !== "pending") {
       if (
         intent.status !== "failed" ||
@@ -47,7 +37,7 @@ export async function failContentRecovery(
     // its journal would strand the global barrier or permit unsafe restoration.
     const stopped =
       intent.dispatchBarrier !== null && intent.barrierRestoredAt === null;
-    const updated = await tx.contentRecoveryIntent.update({
+    const updated = await tx.recoveryIntent.update({
       where: { id },
       data: {
         message,
@@ -68,6 +58,6 @@ export async function failContentRecovery(
       requestId: id,
       metadata: input,
     });
-    return ContentRecoveryIntentSchema.parse(wire(updated));
+    return contentIntentView(updated);
   });
 }

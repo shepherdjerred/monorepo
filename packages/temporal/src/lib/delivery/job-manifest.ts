@@ -12,6 +12,7 @@ import {
   DELIVERY_JOB_BOOTSTRAP,
   PREVIOUS_DELIVERY_JOB_BOOTSTRAPS,
   DeliveryJobRequestSchema,
+  deliveryJobArchive,
   deliveryJobNamespace,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
@@ -143,7 +144,6 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                 ...([
                   "tofu-apply",
                   "control-plane",
-                  "root-release",
                   "platform-recovery",
                 ].includes(input.recipe)
                   ? [
@@ -212,29 +212,29 @@ function jobGrants(input: DeliveryJobRequest): Grant[] {
           ]),
     ];
   }
-  if (input.recipe === "worker-images") return [];
-  if (input.recipe === "worker-preflight" || input.recipe === "worker-step")
+  if (
+    ["worker-images", "worker-preflight", "worker-step", "test"].includes(
+      input.recipe,
+    )
+  )
     return [];
-  if (input.recipe === "root-release" || input.recipe === "control-plane")
+  if (input.recipe === "control-plane")
     return [
       {
         env: "ARGOCD_TOKEN",
         secret: "delivery-platform-argocd",
         key: "ARGOCD_TOKEN",
       },
-      ...(["control-plane", "root-release"].includes(input.recipe)
-        ? [
-            {
-              env: "DELIVERY_EXECUTOR_TOKEN",
-              secret: "delivery-platform-api",
-              key: "DELIVERY_EXECUTOR_TOKEN",
-            },
-          ]
-        : []),
+      {
+        env: "DELIVERY_EXECUTOR_TOKEN",
+        secret: "delivery-platform-api",
+        key: "DELIVERY_EXECUTOR_TOKEN",
+      },
     ];
-  const stack = z.object({ stack: z.string() }).parse(input.input).stack;
+  const stack = tofuJobStack(input.input);
   return [
     ...deliveryTofuGrants(stack),
+    ...(deliveryJobArchive(input) === undefined ? [] : ARCHIVE_READER_GRANTS),
     ...(input.recipe === "tofu-apply"
       ? [
           {
@@ -245,6 +245,31 @@ function jobGrants(input: DeliveryJobRequest): Grant[] {
         ]
       : []),
   ];
+}
+
+/** Read-only artifact-store credential; provisioned as a Secret in `delivery-platform-jobs`. */
+const ARCHIVE_READER_GRANTS: Grant[] = [
+  {
+    env: "DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID",
+    secret: "delivery-archive-reader",
+    key: "DELIVERY_ARCHIVE_READER_ACCESS_KEY_ID",
+  },
+  {
+    env: "DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY",
+    secret: "delivery-archive-reader",
+    key: "DELIVERY_ARCHIVE_READER_SECRET_ACCESS_KEY",
+  },
+];
+
+/** Tofu Jobs carry either the bare frozen snapshot or `{ snapshot, archive }`. */
+function tofuJobStack(input: unknown): string {
+  const wrapped = z
+    .object({ snapshot: z.object({ stack: z.string() }).loose() })
+    .loose()
+    .safeParse(input);
+  return wrapped.success
+    ? wrapped.data.snapshot.stack
+    : z.object({ stack: z.string() }).loose().parse(input).stack;
 }
 
 function recoveryVolumes(input: DeliveryJobRequest) {

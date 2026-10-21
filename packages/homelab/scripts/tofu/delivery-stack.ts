@@ -133,7 +133,7 @@ export function deliveryTofuChanges(input: unknown): DeliveryTofuChanges {
 
 async function environment(
   stack: TofuStack,
-  root: string,
+  stackDirectory: string,
   workspace: string,
 ): Promise<Record<string, string>> {
   const env = buildTofuEnvironment(stack);
@@ -141,10 +141,7 @@ async function environment(
   env["TF_IN_AUTOMATION"] = "true";
   const platform = STACK_MANIFEST[stack].platform;
   if (platform !== undefined) {
-    const desired = await loadPlatformDesiredState(
-      path.join(root, "src/tofu", stack),
-      platform,
-    );
+    const desired = await loadPlatformDesiredState(stackDirectory, platform);
     for (const [key, value] of Object.entries(desired))
       env[`TF_VAR_${key}`] = desiredStateVariableValue(value);
   }
@@ -158,11 +155,16 @@ async function environment(
   return env;
 }
 
-/** One saved plan, one stack, and native state locking; callers cannot supply flags or provider values. */
+/**
+ * One saved plan, one stack, and native state locking; callers cannot supply
+ * flags or provider values. `options.directory` runs the stack from an
+ * extracted archive instead of this checkout's `src/tofu/<stack>` (X8).
+ */
 export async function withDeliveryTofuStack<T>(
   rawStack: unknown,
   effect: (context: DeliveryTofuContext) => Promise<T>,
   runner: DeliveryTofuRunner = run,
+  options: { directory?: string } = {},
 ): Promise<T> {
   const stack = TofuStackSchema.parse(rawStack);
   if (!["automatic", "reviewed-plan"].includes(tofuStackPolicy(stack).mode))
@@ -171,13 +173,15 @@ export async function withDeliveryTofuStack<T>(
   await chmod(workspace, 0o700);
   try {
     const root = path.resolve(import.meta.dirname, "../..");
-    const env = await environment(stack, root, workspace);
+    const stackDirectory =
+      options.directory ?? path.join(root, "src/tofu", stack);
+    const env = await environment(stack, stackDirectory, workspace);
     const command = async (
       args: readonly string[],
       allowedCodes: readonly number[] = [0],
     ) =>
       await runner(
-        ["tofu", `-chdir=${path.join(root, "src/tofu", stack)}`, ...args],
+        ["tofu", `-chdir=${stackDirectory}`, ...args],
         env,
         allowedCodes,
       );

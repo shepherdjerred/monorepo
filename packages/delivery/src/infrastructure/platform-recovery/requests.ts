@@ -1,7 +1,6 @@
 import {
   RequestPlatformRecoverySchema,
   PlatformRecoveryContextSchema,
-  PlatformRecoveryIntentSchema,
   type RequestPlatformRecovery,
   type Principal,
 } from "#shared/contract.ts";
@@ -14,9 +13,13 @@ import {
   remember,
   request,
   required,
-  wire,
 } from "#infrastructure/delivery-records.ts";
-import { heldPlatformRecovery, platformSettlements } from "./context.ts";
+import { createIntent, findIntent } from "#infrastructure/recovery-intents.ts";
+import {
+  heldPlatformRecovery,
+  platformIntentView,
+  platformSettlements,
+} from "./context.ts";
 
 export async function requestPlatformRecovery(
   this: Delivery,
@@ -34,15 +37,8 @@ export async function requestPlatformRecovery(
       resultType: "platform-recovery",
     });
     if (previous !== null)
-      return PlatformRecoveryIntentSchema.parse(
-        wire(
-          required(
-            await tx.platformRecoveryIntent.findUnique({
-              where: { id: previous.resultId },
-            }),
-            "Platform recovery",
-          ),
-        ),
+      return platformIntentView(
+        await findIntent(tx, previous.resultId, "platform"),
       );
     await lock(tx, "delivery:claim");
     await lock(tx, `deployment:${deploymentId}`);
@@ -55,7 +51,7 @@ export async function requestPlatformRecovery(
       deploymentId,
       expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
     });
-    const pending = await tx.platformRecoveryIntent.findFirst({
+    const pending = await tx.recoveryIntent.findFirst({
       where: { deploymentId, status: "pending" },
     });
     if (pending !== null)
@@ -63,16 +59,16 @@ export async function requestPlatformRecovery(
         "CONFLICT",
         "This quarantined infrastructure operation already has a pending independent inspection",
       );
-    const intent = await tx.platformRecoveryIntent.create({
-      data: {
-        id: input.requestId,
-        deploymentId,
-        requestedBy: actor.id,
-        reason: input.reason,
-        expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
-        snapshotFingerprint: source.snapshotFingerprint,
-        workflowId: `delivery-platform-recovery/${input.requestId}`,
-      },
+    const intent = await createIntent(tx, {
+      id: input.requestId,
+      kind: "platform",
+      deploymentId,
+      requestedBy: actor.id,
+      reason: input.reason,
+      expectedGeneration: input.expectedEnvironmentGeneration,
+      snapshotFingerprint: source.snapshotFingerprint,
+      workflowId: `delivery-platform-recovery/${input.requestId}`,
+      detail: { nativeReceipts: [] },
     });
     await tx.deployment.update({
       where: { id: deploymentId },
@@ -94,7 +90,7 @@ export async function requestPlatformRecovery(
         snapshotFingerprint: source.snapshotFingerprint,
       },
     });
-    return PlatformRecoveryIntentSchema.parse(wire(intent));
+    return platformIntentView(intent);
   });
 }
 
@@ -104,27 +100,19 @@ export async function platformRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "read");
-  const row = required(
-    await this.database.platformRecoveryIntent.findUnique({
-      where: { id: intentId },
-    }),
-    "Platform recovery intent",
-  );
+  const row = await findIntent(this.database, intentId, "platform");
   const detail = await this.detail(row.deploymentId);
-  const priorId =
-    detail.deployment.controlPlaneSnapshot === null
-      ? detail.environment.acceptedPlatformDeploymentId
-      : detail.environment.acceptedControlPlaneDeploymentId;
+  const priorId = detail.environment.acceptedDeploymentId;
   const prior = priorId === null ? null : await this.detail(priorId);
-  const recoveryHistory = await this.database.platformRecoveryIntent.findMany({
-    where: { deploymentId: row.deploymentId },
+  const recoveryHistory = await this.database.recoveryIntent.findMany({
+    where: { deploymentId: row.deploymentId, kind: "platform" },
     orderBy: { createdAt: "asc" },
   });
   return PlatformRecoveryContextSchema.parse({
-    intent: wire(row),
+    intent: platformIntentView(row),
     deployment: detail,
     priorDeployment: prior,
-    recoveryHistory: wire(recoveryHistory),
+    recoveryHistory: recoveryHistory.map((entry) => platformIntentView(entry)),
     expectedSettlements: platformSettlements(detail, prior),
   });
 }
@@ -134,14 +122,12 @@ export async function pendingPlatformRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "execute");
-  const rows = await this.database.platformRecoveryIntent.findMany({
-    where: { status: "pending" },
+  const rows = await this.database.recoveryIntent.findMany({
+    where: { kind: "platform", status: "pending" },
     orderBy: { createdAt: "asc" },
     take: 100,
   });
-  return {
-    intents: rows.map((row) => PlatformRecoveryIntentSchema.parse(wire(row))),
-  };
+  return { intents: rows.map((row) => platformIntentView(row)) };
 }
 
 export async function submittedPlatformRecovery(
@@ -151,23 +137,16 @@ export async function submittedPlatformRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "execute");
-  const row = required(
-    await this.database.platformRecoveryIntent.findUnique({
-      where: { id: intentId },
-    }),
-    "Platform recovery intent",
-  );
+  const row = await findIntent(this.database, intentId, "platform");
   if (row.status !== "pending" || row.workflowId !== workflowId)
     throw new DeliveryError(
       "CONFLICT",
       "Infrastructure recovery submission differs from the immutable pending Workflow",
     );
-  return PlatformRecoveryIntentSchema.parse(
-    wire(
-      await this.database.platformRecoveryIntent.update({
-        where: { id: intentId },
-        data: { submittedAt: row.submittedAt ?? new Date() },
-      }),
-    ),
+  return platformIntentView(
+    await this.database.recoveryIntent.update({
+      where: { id: intentId },
+      data: { submittedAt: row.submittedAt ?? new Date() },
+    }),
   );
 }

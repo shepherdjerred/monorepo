@@ -16,11 +16,11 @@ import { EnvironmentSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 
 function policy(detail: {
-  approvalRequired: boolean;
+  approvalPolicy: "none" | "required";
   automatic: boolean;
   promotionSourceEnvironmentId: string | null;
 }) {
-  if (detail.approvalRequired) return "Approval required";
+  if (detail.approvalPolicy === "required") return "Approval required";
   if (detail.automatic) return "Deploys automatically";
   return detail.promotionSourceEnvironmentId === null
     ? "Deploys on request"

@@ -253,11 +253,12 @@ test("genuine PostgreSQL pool bootstraps only exact retained images without a Gi
     }),
   );
   expect(stored.environment.activeDeploymentId).toBe(detail.deployment.id);
+  // The Application and the worker pool are both held instances (T1).
   expect(
-    await cluster.database.applicationLock.count({
+    await cluster.database.targetLock.count({
       where: { deploymentId: detail.deployment.id },
     }),
-  ).toBe(1);
+  ).toBe(2);
 });
 test("an uncovered legacy build blocks before any Argo mutation or external-intent stage", async () => {
   const external = boundary({ uncovered: true });
@@ -286,11 +287,12 @@ test("missing replacement Pod proof leaves the bootstrap intent running and the 
       status: "running",
     }),
   );
+  // The Application and the worker pool are both held instances (T1).
   expect(
-    await cluster.database.applicationLock.count({
+    await cluster.database.targetLock.count({
       where: { deploymentId: detail.deployment.id },
     }),
-  ).toBe(1);
+  ).toBe(2);
 });
 
 async function observeComparisonDrift(

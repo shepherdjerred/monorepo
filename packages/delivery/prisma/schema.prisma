@@ -9,10 +9,30 @@ datasource db {
   provider = "postgresql"
 }
 
+/// A catalog-defined unit of ownership and release (model 4.2).
+model Service {
+  id              String               @id
+  lifecycle       String               @default("active")
+  selfHosted      Boolean              @default(false)
+  group           String?
+  components      Json                 @default("[]")
+  lineage         String
+  catalogRevision String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  builds          Build[]
+  versionSets     VersionSet[]
+  environments    Environment[]
+  deployments     Deployment[]
+  references      ComponentReference[] @relation("ReferencingService")
+  referencedBy    ComponentReference[] @relation("SourceService")
+}
+
 model Build {
   id                     String                   @id
   requestId              String                   @unique
   serviceId              String
+  service                Service                  @relation(fields: [serviceId], references: [id])
   sourceRevision         String
   sourceKind             String                   @default("ci")
   ciUrl                  String?
@@ -42,6 +62,7 @@ model Artifact {
   component            String
   kind                 String
   uri                  String
+  store                String
   digest               String
   runtimeDigests       String[]                    @default([])
   requires             Json                        @default("{}")
@@ -78,12 +99,17 @@ model VersionSet {
   id               String            @id
   qualifiedBuildId String?           @unique
   serviceId        String
+  service          Service           @relation(fields: [serviceId], references: [id])
   revision         Int
   baseRevisionId   String?
+  lineage          String
+  orderMajor       Int?
+  orderMinor       Int?
   createdAt        DateTime          @default(now())
   entries          VersionSetEntry[]
 
   @@unique([serviceId, revision])
+  @@index([serviceId, lineage, orderMajor, orderMinor], map: "VersionSet_serviceId_lineage_order_idx")
 }
 
 model VersionSetEntry {
@@ -96,6 +122,7 @@ model VersionSetEntry {
   @@id([revisionId, component])
 }
 
+/// Immutable recipe revision (model 4.7; the code name is retained).
 model Pipeline {
   id             String                @id
   definition     Json
@@ -104,34 +131,46 @@ model Pipeline {
   forumBaselines ForumBaselineIntent[]
 }
 
+/// Immutable configuration revision (model 4.8).
+model Configuration {
+  id           String        @id
+  content      Json
+  forwardOnly  String[]      @default([])
+  createdAt    DateTime      @default(now())
+  environments Environment[]
+  deployments  Deployment[]
+}
+
 model Environment {
   id                                 String                @id
   serviceId                          String
+  service                            Service               @relation(fields: [serviceId], references: [id])
   name                               String
   application                        String?               @unique
   pipelineRevisionId                 String
   pipeline                           Pipeline              @relation(fields: [pipelineRevisionId], references: [id])
-  configurationRevision              String
-  configuration                      Json
+  declaredConfigurationId            String
+  declaredConfiguration              Configuration         @relation(fields: [declaredConfigurationId], references: [id])
   automatic                          Boolean               @default(false)
   automaticSuppressedThroughRevision Int                   @default(0)
   promotionSourceEnvironmentId       String?
+  role                               String                @default("durable")
+  lifecycle                          String                @default("active")
+  approvalPolicy                     String                @default("none")
   generation                         Int                   @default(0)
   desiredVersionSetRevisionId        String?
   observedVersionSetRevisionId       String?
   acceptedVersionSetRevisionId       String?
-  acceptedPlatformDeploymentId       String?
-  acceptedPlatformDeployment         Deployment?           @relation("AcceptedPlatform", fields: [acceptedPlatformDeploymentId], references: [id])
-  acceptedControlPlaneDeploymentId   String?
-  acceptedControlPlaneDeployment     Deployment?           @relation("AcceptedControlPlane", fields: [acceptedControlPlaneDeploymentId], references: [id])
-  acceptedForumBaselineIntentId      String?
-  acceptedForumBaselineIntent        ForumBaselineIntent?  @relation("AcceptedForumBaseline", fields: [acceptedForumBaselineIntentId], references: [id])
+  acceptedDeploymentId               String?
+  acceptedDeployment                 Deployment?           @relation("AcceptedSelection", fields: [acceptedDeploymentId], references: [id], onDelete: Restrict)
   observedAt                         DateTime?
   activeDeploymentId                 String?
   createdAt                          DateTime              @default(now())
   deployments                        Deployment[]
   workerVersions                     WorkerVersion[]
   forumBaselines                     ForumBaselineIntent[] @relation("ForumEnvironmentBaseline")
+  dependentEdges                     PrerequisiteEdge[]    @relation("DependentEnvironment")
+  prerequisiteEdges                  PrerequisiteEdge[]    @relation("PrerequisiteEnvironment")
 
   @@index([serviceId])
 }
@@ -142,32 +181,37 @@ model Deployment {
   environmentId                        String
   environment                          Environment                 @relation(fields: [environmentId], references: [id])
   serviceId                            String
+  service                              Service                     @relation(fields: [serviceId], references: [id])
   versionSetRevisionId                 String
   sourceEnvironmentId                  String?
   repairOfDeploymentId                 String?
-  repairOfDeployment                   Deployment? @relation("TrmnlRepairSource",fields:[repairOfDeploymentId],references:[id])
-  trmnlRepairs                         Deployment[] @relation("TrmnlRepairSource")
+  repairOfDeployment                   Deployment?                 @relation("TrmnlRepairSource", fields: [repairOfDeploymentId], references: [id], onDelete: Restrict)
+  trmnlRepairs                         Deployment[]                @relation("TrmnlRepairSource")
   previousAcceptedVersionSetRevisionId String?
-  previousAcceptedConfiguration        Json?
+  previousAcceptedDeploymentId         String?
+  previousAcceptedDeployment           Deployment?                 @relation("PreviousAcceptedSelection", fields: [previousAcceptedDeploymentId], references: [id], onDelete: Restrict)
+  previousAcceptedOf                   Deployment[]                @relation("PreviousAcceptedSelection")
+  restoredDeploymentId                 String?
+  restoredDeployment                   Deployment?                 @relation("RestoredSelection", fields: [restoredDeploymentId], references: [id], onDelete: Restrict)
+  restoredBy                           Deployment[]                @relation("RestoredSelection")
   pipelineRevisionId                   String
-  configurationRevision                String
-  configuration                        Json
+  configurationId                      String
+  configuration                        Configuration               @relation(fields: [configurationId], references: [id])
+  catalogRevision                      String
   workerSnapshot                       Json?
   platformSnapshot                     Json?
   controlPlaneSnapshot                 Json?
   forumBaselineSnapshot                Json?
+  prerequisiteSnapshot                 Json?
   platformSourceBuildId                String?
-  platformSourceBuild                  Build?                      @relation("PlatformSource", fields: [platformSourceBuildId], references: [id])
+  platformSourceBuild                  Build?                      @relation("PlatformSource", fields: [platformSourceBuildId], references: [id], onDelete: Restrict)
   platformArtifacts                    PlatformArtifactReference[]
   preparedPlatformPlan                 PlatformPlan?               @relation("PreparedPlatformPlan")
   appliedPlatformPlan                  PlatformPlan?               @relation("AppliedPlatformPlan")
   platformLock                         PlatformLock?
-  platformAcceptedBy                   Environment[]               @relation("AcceptedPlatform")
-  controlPlaneAcceptedBy               Environment[]               @relation("AcceptedControlPlane")
-  workerRecoveries                     WorkerRecoveryIntent[]
-  minecraftRecoveries                  MinecraftRecoveryIntent[]
-  platformRecoveries                   PlatformRecoveryIntent[]
-  contentRecoveries                    ContentRecoveryIntent[]
+  acceptedBy                           Environment[]               @relation("AcceptedSelection")
+  recoveryIntents                      RecoveryIntent[]
+  monitorObservations                  MonitorObservation[]
   expectedGeneration                   Int
   kind                                 String
   automatic                            Boolean                     @default(false)
@@ -175,97 +219,88 @@ model Deployment {
   requestedBy                          String
   message                              String?
   cancelRequested                      Boolean                     @default(false)
+  workflowId                           String?
+  workflowRunId                        String?
+  leaseExpiresAt                       DateTime?
+  monitorState                         String?
+  monitorSettledAt                     DateTime?
+  monitorAlarmedAt                     DateTime?
   createdAt                            DateTime                    @default(now())
   startedAt                            DateTime?
   finishedAt                           DateTime?
   recoveryRequired                     Boolean                     @default(false)
   resultFingerprint                    String?
   evidence                             Evidence[]
-  approvals                            Approval[]
+  approval                             Approval?
   stages                               Stage[]
   outbox                               Outbox?
-  lock                                 ApplicationLock?
+  locks                                TargetLock[]
   introducedWorkers                    WorkerVersion[]
 
   @@index([environmentId, createdAt])
   @@index([status, createdAt])
   @@index([versionSetRevisionId])
   @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([monitorState])
 }
 
+/// Original-runtime baseline observation retained as evidence; never an accepted pointer.
 model ForumBaselineIntent {
-  id                            String        @id
+  id                            String      @id
   environmentId                 String
-  environment                   Environment   @relation("ForumEnvironmentBaseline", fields: [environmentId], references: [id])
+  environment                   Environment @relation("ForumEnvironmentBaseline", fields: [environmentId], references: [id])
   imageArtifactId               String
-  imageArtifact                 Artifact      @relation("ForumBaselineImage", fields: [imageArtifactId], references: [id])
+  imageArtifact                 Artifact    @relation("ForumBaselineImage", fields: [imageArtifactId], references: [id])
   bundleArtifactId              String
-  bundleArtifact                Artifact      @relation("ForumBaselineBundle", fields: [bundleArtifactId], references: [id])
+  bundleArtifact                Artifact    @relation("ForumBaselineBundle", fields: [bundleArtifactId], references: [id])
   requestedBy                   String
   reason                        String
   expectedEnvironmentGeneration Int
   pipelineRevisionId            String
-  pipeline                      Pipeline      @relation(fields: [pipelineRevisionId], references: [id])
+  pipeline                      Pipeline    @relation(fields: [pipelineRevisionId], references: [id])
   configurationRevision         String
   snapshotFingerprint           String
-  status                        String        @default("pending")
-  workflowId                    String        @unique
+  status                        String      @default("pending")
+  workflowId                    String      @unique
   submittedAt                   DateTime?
   proof                         Json?
   message                       String?
   resultFingerprint             String?
-  createdAt                     DateTime      @default(now())
+  createdAt                     DateTime    @default(now())
   finishedAt                    DateTime?
-  acceptedBy                    Environment[] @relation("AcceptedForumBaseline")
 
   @@index([status, createdAt])
   @@index([environmentId, createdAt])
 }
 
-model PlatformRecoveryIntent {
-  id                            String     @id
-  deploymentId                  String
-  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
-  requestedBy                   String
-  reason                        String
-  expectedEnvironmentGeneration Int
-  snapshotFingerprint           String
-  status                        String     @default("pending")
-  workflowId                    String     @unique
-  submittedAt                   DateTime?
-  message                       String?
-  resultFingerprint             String?
-  nativeReceipts                Json       @default("[]")
-  planReceipt                   Json?
-  encryptedPlan                 Json?
-  planFingerprint               String?
-  planApproval                  Json?
-  createdAt                     DateTime   @default(now())
-  finishedAt                    DateTime?
+/// One operator-authorised inspection of a recovery-required deployment (model 4.15).
+model RecoveryIntent {
+  id                 String     @id
+  kind               String
+  deploymentId       String
+  deployment         Deployment @relation(fields: [deploymentId], references: [id])
+  sequence           Int
+  step               String?
+  requestedBy        String
+  reason             String
+  expectedGeneration Int
+  fingerprint        String
+  status             String     @default("pending")
+  workflowId         String?    @unique
+  submittedAt        DateTime?
+  detail             Json       @default("{}")
+  evidence           Json       @default("[]")
+  barrier            Json?
+  barrierRestoredAt  DateTime?
+  outcome            Json?
+  message            String?
+  resultFingerprint  String?
+  createdAt          DateTime   @default(now())
+  finishedAt         DateTime?
 
+  @@unique([deploymentId, sequence])
   @@index([status, createdAt])
-  @@index([deploymentId, createdAt])
-}
-
-model ContentRecoveryIntent {
-  id                            String     @id
-  deploymentId                  String
-  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
-  targetKind                    String
-  requestedBy                   String
-  reason                        String
-  expectedEnvironmentGeneration Int
-  snapshotFingerprint           String
-  status                        String     @default("pending")
-  nativeReceipts                Json       @default("[]")
-  dispatchBarrier               Json?
-  barrierRestoredAt             DateTime?
-  message                       String?
-  resultFingerprint             String?
-  createdAt                     DateTime   @default(now())
-  finishedAt                    DateTime?
-
-  @@index([status, createdAt])
+  @@index([kind, status, createdAt])
   @@index([deploymentId, createdAt])
 }
 
@@ -289,48 +324,6 @@ model WorkerVersion {
   @@index([environmentId, replicas])
 }
 
-model WorkerRecoveryIntent {
-  id                            String     @id
-  deploymentId                  String
-  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
-  requestedBy                   String
-  reason                        String
-  expectedEnvironmentGeneration Int
-  snapshotFingerprint           String
-  poolFingerprint               String
-  status                        String     @default("pending")
-  workflowId                    String     @unique
-  submittedAt                   DateTime?
-  message                       String?
-  resultFingerprint             String?
-  createdAt                     DateTime   @default(now())
-  finishedAt                    DateTime?
-
-  @@index([status, createdAt])
-  @@index([deploymentId, createdAt])
-}
-
-model MinecraftRecoveryIntent {
-  id                            String     @id
-  deploymentId                  String
-  deployment                    Deployment @relation(fields: [deploymentId], references: [id])
-  requestedBy                   String
-  reason                        String
-  expectedEnvironmentGeneration Int
-  snapshotFingerprint           String
-  controllerReceipt             Json?
-  status                        String     @default("pending")
-  workflowId                    String     @unique
-  submittedAt                   DateTime?
-  message                       String?
-  resultFingerprint             String?
-  createdAt                     DateTime   @default(now())
-  finishedAt                    DateTime?
-
-  @@index([status, createdAt])
-  @@index([deploymentId, createdAt])
-}
-
 model PlatformArtifactReference {
   deploymentId String
   deployment   Deployment @relation(fields: [deploymentId], references: [id])
@@ -350,10 +343,11 @@ model PlatformPlan {
   encryptedPlan     Json
   fingerprint       String
   applyDeploymentId String?     @unique
-  applyDeployment   Deployment? @relation("AppliedPlatformPlan", fields: [applyDeploymentId], references: [id])
+  applyDeployment   Deployment? @relation("AppliedPlatformPlan", fields: [applyDeploymentId], references: [id], onDelete: Restrict)
   createdAt         DateTime    @default(now())
 }
 
+/// The one named shared lock (model T1); its id is `platform`.
 model PlatformLock {
   id           String     @id
   deploymentId String     @unique
@@ -374,16 +368,18 @@ model Evidence {
   @@unique([deploymentId, id])
 }
 
+/// One decision per deployment, bound to its frozen selection (model 4.13).
 model Approval {
-  id           String     @id
-  deploymentId String
-  deployment   Deployment @relation(fields: [deploymentId], references: [id])
-  decision     String
-  reason       String
-  actor        String
-  createdAt    DateTime   @default(now())
-
-  @@unique([deploymentId])
+  id               String     @id
+  deploymentId     String     @unique
+  deployment       Deployment @relation(fields: [deploymentId], references: [id])
+  status           String     @default("pending")
+  override         Boolean    @default(false)
+  boundFingerprint String
+  reason           String?
+  actor            String?
+  createdAt        DateTime   @default(now())
+  decidedAt        DateTime?
 }
 
 model Stage {
@@ -410,11 +406,55 @@ model Outbox {
   @@index([submittedAt, createdAt])
 }
 
-model ApplicationLock {
-  application  String     @id
-  deploymentId String     @unique
+/// One lock per target instance; a deployment may hold several (model T1).
+model TargetLock {
+  instance     String     @id
+  deploymentId String
   deployment   Deployment @relation(fields: [deploymentId], references: [id])
   acquiredAt   DateTime   @default(now())
+
+  @@index([deploymentId])
+}
+
+/// Catalog edge: the dependent deploys only after the prerequisite accepted (model 4.18).
+model PrerequisiteEdge {
+  dependentId    String
+  dependent      Environment @relation("DependentEnvironment", fields: [dependentId], references: [id])
+  prerequisiteId String
+  prerequisite   Environment @relation("PrerequisiteEnvironment", fields: [prerequisiteId], references: [id])
+  rule           String
+
+  @@id([dependentId, prerequisiteId])
+  @@index([prerequisiteId])
+}
+
+/// One monitor observation of the accepted deployment it watches (model 4.19).
+model MonitorObservation {
+  deploymentId String
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  sequence     Int
+  observedAt   DateTime
+  alarms       Json       @default("[]")
+  evidence     Json       @default("{}")
+  outcome      String
+  createdAt    DateTime   @default(now())
+
+  @@id([deploymentId, sequence])
+}
+
+/// A component filled by another service's artifact (model A5).
+model ComponentReference {
+  serviceId         String
+  service           Service @relation("ReferencingService", fields: [serviceId], references: [id])
+  component         String
+  sourceServiceId   String
+  sourceService     Service @relation("SourceService", fields: [sourceServiceId], references: [id])
+  sourceComponent   String
+  mode              String
+  sourceEnvironment String?
+
+  @@id([serviceId, component])
+  @@index([sourceServiceId, sourceComponent])
 }
 
 model Request {
@@ -447,18 +487,4 @@ model IntegrationSnapshot {
   fetchedAt DateTime
 
   @@id([source, key])
-}
-
-model ImportedSnapshot {
-  id            String   @id
-  requestId     String   @unique
-  serviceId     String
-  environmentId String?
-  capturedAt    DateTime
-  source        String
-  components    Json
-  evidence      String
-  createdAt     DateTime @default(now())
-
-  @@index([serviceId, createdAt])
 }

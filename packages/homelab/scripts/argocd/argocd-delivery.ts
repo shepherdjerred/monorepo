@@ -77,13 +77,16 @@ const ApplicationSchema = z.object({
     source: DeliveryArgoSourceSchema,
     sources: z.unknown().optional(),
     destination: z.object({ namespace: z.string() }),
-    syncPolicy: z.object({
-      automated: z.object({ enabled: z.literal(false) }),
-    }),
+    syncPolicy: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 
-/** Never let the service take an application away from its existing owner. */
+/**
+ * Never let the service take an application away from its existing owner.
+ * Between deployments the accepted exact source may be self-healed by ArgoCD;
+ * the selection patch switches automation off in the same write so the owned
+ * `sync-managed` operation is the only sync of the new source (T4, T5).
+ */
 export function deliverySelectionPatch(
   input: unknown,
   desired: DeliverySelection,
@@ -135,6 +138,17 @@ export function deliverySelectionPatch(
       value: selection.environmentId,
     },
     { op: "replace", path: "/spec/source", value: selected },
+    application.spec.syncPolicy === undefined
+      ? {
+          op: "add",
+          path: "/spec/syncPolicy",
+          value: { automated: { enabled: false } },
+        }
+      : {
+          op: "add",
+          path: "/spec/syncPolicy/automated",
+          value: { enabled: false },
+        },
   ];
 }
 

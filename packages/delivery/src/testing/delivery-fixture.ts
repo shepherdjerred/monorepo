@@ -32,7 +32,7 @@ export function useDeliveryFixture(
     await cluster.close();
   });
   beforeEach(async () => {
-    await resetDeliveryTables(cluster.database);
+    await resetDeliveryTables(cluster.database, options.catalog);
     fixture = await seedDelivery(delivery, options.registration);
   });
   return {

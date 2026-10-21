@@ -1,4 +1,5 @@
 import { beforeEach, expect, test } from "vitest";
+import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { DeliveryError } from "#domain/error.ts";
@@ -41,7 +42,7 @@ test("first upgrade retains original baseline, rechecks native ownership before 
     requestId: "forum/first-upgrade",
     environmentId: "storm-forum/prod",
     versionSetRevisionId: selected.id,
-    expectedGeneration: 1,
+    expectedGeneration: 0,
     kind: "deploy" as const,
   };
   const deployment = await delivery.createDeployment(input, testOperator);
@@ -164,9 +165,11 @@ test("a fresh native baseline accepts only original proof and never invents an a
   const environment = await database.environment.findUniqueOrThrow({
     where: { id: "storm-forum/prod" },
   });
-  expect(environment.generation).toBe(1);
+  // A baseline is evidence; settling it moves no generation (E1).
+  expect(environment.generation).toBe(0);
   expect(environment.acceptedVersionSetRevisionId).toBeNull();
-  expect(environment.acceptedForumBaselineIntentId).toBe(result.id);
+  const baseline = await acceptedForumBaseline(database, environment.id);
+  expect(baseline?.id).toBe(result.id);
   await expect(
     delivery.completeForumBaseline(
       context.intent.id,
@@ -275,7 +278,7 @@ test("failed baseline is immutable and cannot set original provenance or deploym
   const row = await database.environment.findUniqueOrThrow({
     where: { id: context.environment.id },
   });
-  expect(row.acceptedForumBaselineIntentId).toBeNull();
+  expect(await acceptedForumBaseline(database, row.id)).toBeNull();
   expect(row.acceptedVersionSetRevisionId).toBeNull();
 });
 
@@ -295,7 +298,7 @@ test("a fresh admin observation may replace stale original provenance while prio
     {
       requestId: "forum/fresh-original",
       environmentId: "storm-forum/prod",
-      expectedEnvironmentGeneration: 1,
+      expectedEnvironmentGeneration: 0,
       imageArtifactId: "forum-image",
       bundleArtifactId: "forum-bundle",
       reason:
@@ -306,7 +309,7 @@ test("a fresh admin observation may replace stale original provenance while prio
   await delivery.completeForumBaseline(
     second.id,
     {
-      expectedEnvironmentGeneration: 1,
+      expectedEnvironmentGeneration: 0,
       snapshotFingerprint: second.snapshotFingerprint,
     },
     testExecutor,
@@ -318,8 +321,12 @@ test("a fresh admin observation may replace stale original provenance while prio
     });
   expect(previous.intent.status).toBe("succeeded");
   expect(previous.intent.proof).toEqual(original.proof);
-  expect(environment.acceptedForumBaselineIntentId).toBe(second.id);
-  expect(environment.generation).toBe(2);
+  const baseline = await acceptedForumBaseline(
+    delivery.database,
+    environment.id,
+  );
+  expect(baseline?.id).toBe(second.id);
+  expect(environment.generation).toBe(0);
   expect(environment.acceptedVersionSetRevisionId).toBeNull();
 });
 

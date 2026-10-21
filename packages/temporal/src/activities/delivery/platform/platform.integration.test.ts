@@ -117,6 +117,16 @@ const nativeJob: typeof runDeliveryJob = async (request, onReceipt) => {
     planDigest: snapshot.plan.planDigest,
     state: { lineage: "original-state", serial: 5 },
     outcome: "applied-saved-plan",
+    // The apply reads back the state marker naming its deployment (T5).
+    marker: {
+      schema: "delivery-tofu-marker/v1",
+      deploymentId: request.deploymentId,
+      stack: snapshot.stack,
+      stateLineage: "original-state",
+      stateSerial: 5,
+      archiveDigest: null,
+      appliedAt: new Date().toISOString(),
+    },
   };
 };
 
@@ -136,7 +146,7 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
   const evidence = await executePlatformWithJob(planned.id, nativeJob);
   await finishDelivery(planned.id, { status: "succeeded", evidence });
   const afterPlan = await fixture.delivery.detail(planned.id);
-  expect(afterPlan.environment.acceptedPlatformDeploymentId).toBeNull();
+  expect(afterPlan.environment.acceptedDeploymentId).toBeNull();
   expect(JSON.stringify(afterPlan)).not.toContain("ciphertext");
   expect(afterPlan.environment.acceptedVersionSetRevisionId).toBeNull();
   const apply = await operator.createPlatformDeployment({
@@ -154,7 +164,7 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
   const accepted = await executePlatformWithJob(apply.id, nativeJob);
   await finishDelivery(apply.id, { status: "succeeded", evidence: accepted });
   const done = await fixture.delivery.detail(apply.id);
-  expect(done.environment.acceptedPlatformDeploymentId).toBe(apply.id);
+  expect(done.environment.acceptedDeploymentId).toBe(apply.id);
   expect(done.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(done.deployment.platformSnapshot).toMatchObject({
     kind: "tofu-apply",

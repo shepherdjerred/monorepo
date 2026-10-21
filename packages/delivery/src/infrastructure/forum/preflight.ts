@@ -82,13 +82,13 @@ export async function verifyForumDeploymentBaseline(
         }),
         "Forum environment",
       ),
-      held = await tx.applicationLock.findUnique({ where: { deploymentId } });
+      held = await tx.targetLock.findFirst({ where: { deploymentId } });
     if (
       held === null ||
       deployment.status !== "running" ||
       deployment.cancelRequested ||
       environment.activeDeploymentId !== deploymentId ||
-      environment.generation !== deployment.expectedGeneration + 1 ||
+      environment.generation !== deployment.expectedGeneration ||
       fingerprint(deployment.forumBaselineSnapshot) !== fingerprint(snapshot) ||
       (await tx.stage.findFirst({
         where: { deploymentId, key: "reconcile" },

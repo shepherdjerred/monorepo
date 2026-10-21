@@ -10,9 +10,34 @@ import {
   type DeploymentDetail,
   type PipelineDefinition,
   ContentRecoveryNativeReceiptSchema,
+  ContentRecoveryIntentSchema,
 } from "#shared/contract.ts";
+import type { RecoveryIntent } from "#generated/prisma/client.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { nativeReceipt } from "#infrastructure/platform/policy.ts";
+import {
+  intentDetail,
+  legacyIntentFields,
+} from "#infrastructure/recovery-intents.ts";
+
+/** The content-kind view of a unified recovery intent row. */
+export function contentIntentView(row: RecoveryIntent) {
+  const detail = intentDetail(row);
+  const {
+    workflowId: _workflowId,
+    submittedAt: _submittedAt,
+    ...fields
+  } = legacyIntentFields(row);
+  return ContentRecoveryIntentSchema.parse(
+    wire({
+      ...fields,
+      targetKind: detail["targetKind"],
+      nativeReceipts: detail["nativeReceipts"] ?? [],
+      dispatchBarrier: row.barrier,
+      barrierRestoredAt: row.barrierRestoredAt,
+    }),
+  );
+}
 
 export function contentRecoveryKind(pipeline: PipelineDefinition) {
   if (pipeline.kind === "static-site") return "static-site";
@@ -69,26 +94,22 @@ export async function heldContentRecovery(
     await tx.environment.findUnique({ where: { id: row.environmentId } }),
     "Content environment",
   );
-  const target = await tx.applicationLock.findUnique({
+  const locks = await tx.targetLock.findMany({
     where: { deploymentId: row.id },
   });
-  if (target === null)
-    throw new DeliveryError(
-      "CONFLICT",
-      "Content recovery requires the retained native target lock",
-    );
-  const targetName =
+  const target =
     pipeline.definition.kind === "static-site"
-      ? `static-site:${pipeline.definition.bucket}`
+      ? `bucket:${pipeline.definition.bucket}`
       : pipeline.definition.kind === "argocd"
-        ? pipeline.definition.application
+        ? `application:${pipeline.definition.application}`
         : null;
   if (
-    !["failed", "canceled"].includes(row.status) ||
+    target === null ||
     !row.recoveryRequired ||
+    !["failed", "canceled"].includes(row.status) ||
     env.activeDeploymentId !== row.id ||
     env.generation !== input.expectedEnvironmentGeneration ||
-    target.application !== targetName
+    !locks.some((held) => held.instance === target)
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -100,14 +121,13 @@ export async function heldContentRecovery(
       targetKind,
       environmentId: env.id,
       generation: env.generation,
-      target: target.application,
+      target,
       pipelineRevisionId: row.pipelineRevisionId,
       versionSetRevisionId: row.versionSetRevisionId,
-      configurationRevision: row.configurationRevision,
-      configuration: row.configuration,
+      configurationId: row.configurationId,
       previousAcceptedVersionSetRevisionId:
         row.previousAcceptedVersionSetRevisionId,
-      previousAcceptedConfiguration: row.previousAcceptedConfiguration,
+      previousAcceptedDeploymentId: row.previousAcceptedDeploymentId,
       forumBaselineSnapshot: row.forumBaselineSnapshot,
       acceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
@@ -136,7 +156,7 @@ export function contentSettlement(
     environment: { id: string };
     deployment: Pick<
       DeploymentDetail["deployment"],
-      "id" | "configuration" | "forumBaselineSnapshot"
+      "id" | "configurationId" | "forumBaselineSnapshot"
     >;
   },
 ) {
@@ -146,7 +166,7 @@ export function contentSettlement(
     environmentId: detail.environment.id,
     versionSet: detail.versionSet,
     pipeline: detail.pipeline,
-    configuration: detail.deployment.configuration,
+    configurationId: detail.deployment.configurationId,
     forumBaselineSnapshot: detail.deployment.forumBaselineSnapshot,
     forumRecoveredRuntime: detail.forumRecoveredRuntime,
   });

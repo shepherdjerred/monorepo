@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:net";
 import { createDatabase } from "#infrastructure/database.ts";
+import { registerTestServices } from "./services.ts";
 import { z } from "zod";
 
 async function availablePort() {
@@ -62,8 +63,32 @@ async function postgresOwner(argv: string[]) {
   return ["su", "-s", "/bin/sh", "nobody", "-c", quoted];
 }
 
-/** Disposable cluster, unique data directory and port; never uses a production URL. */
-export async function createTestDatabase() {
+const migrationsRoot = new URL("../../prisma/migrations/", import.meta.url);
+
+/** Committed migration directories in application order. */
+export function migrationNames() {
+  const names = [
+    ...new Bun.Glob("*/migration.sql").scanSync({
+      cwd: migrationsRoot.pathname,
+      onlyFiles: true,
+    }),
+  ]
+    .map((file) => path.dirname(file))
+    .sort();
+  if (names.length === 0)
+    throw new Error("Delivery database migrations are missing");
+  return names;
+}
+
+/**
+ * Disposable cluster, unique data directory and port; never uses a production
+ * URL. `through` stops after the named migration so a test can seed rows in
+ * that schema and apply the rest with `migrate()`.
+ */
+export async function createTestDatabase(options: { through?: string } = {}) {
+  const names = migrationNames();
+  if (options.through !== undefined && !names.includes(options.through))
+    throw new Error(`Unknown Delivery migration ${options.through}`);
   const root = await mkdtemp(path.join(tmpdir(), "delivery-pg-"));
   const directory = path.join(root, "data");
   const port = await availablePort();
@@ -97,17 +122,13 @@ export async function createTestDatabase() {
   );
   const url = `postgres://delivery@127.0.0.1:${String(port)}/postgres`;
   const database = createDatabase(url);
-  try {
-    const migrations = new URL("../../prisma/migrations/", import.meta.url);
-    const files = [
-      ...new Bun.Glob("*/migration.sql").scanSync({
-        cwd: migrations.pathname,
-        onlyFiles: true,
-      }),
-    ].sort();
-    if (files.length === 0)
-      throw new Error("Delivery database migrations are missing");
-    for (const file of files) {
+  const applied = new Set<string>();
+  async function migrate(through?: string) {
+    if (through !== undefined && !names.includes(through))
+      throw new Error(`Unknown Delivery migration ${through}`);
+    for (const name of names) {
+      if (applied.has(name)) continue;
+      if (through !== undefined && name > through) break;
       await run([
         "psql",
         "--no-psqlrc",
@@ -115,10 +136,12 @@ export async function createTestDatabase() {
         "--dbname",
         url,
         "--file",
-        new URL(file, migrations).pathname,
+        new URL(`${name}/migration.sql`, migrationsRoot).pathname,
       ]);
+      applied.add(name);
     }
-  } catch (error) {
+  }
+  const close = async () => {
     await database.$disconnect();
     await run(
       await postgresOwner([
@@ -126,31 +149,31 @@ export async function createTestDatabase() {
         "-D",
         directory,
         "-m",
-        "immediate",
+        applied.size === names.length ? "fast" : "immediate",
         "-w",
         "stop",
       ]),
     );
     await rm(root, { recursive: true });
+  };
+  try {
+    await migrate(options.through);
+    // A fully migrated cluster starts with the catalog's services registered,
+    // as after a reconcile; a partial one is a migration test's v1 record.
+    if (options.through === undefined) await registerTestServices(database);
+  } catch (error) {
+    await close();
     throw error;
   }
   return {
     database,
     url,
-    close: async () => {
-      await database.$disconnect();
-      await run(
-        await postgresOwner([
-          "pg_ctl",
-          "-D",
-          directory,
-          "-m",
-          "fast",
-          "-w",
-          "stop",
-        ]),
-      );
-      await rm(root, { recursive: true });
+    /** Apply the remaining committed migrations, optionally stopping after one. */
+    migrate,
+    /** Names applied so far, in order. */
+    get applied() {
+      return names.filter((name) => applied.has(name));
     },
+    close,
   };
 }

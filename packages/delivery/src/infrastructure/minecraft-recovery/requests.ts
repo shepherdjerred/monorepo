@@ -8,6 +8,7 @@ import type {
   RequestMinecraftRecovery,
   MinecraftControllerReceipt,
 } from "#shared/minecraft-recovery-contract.ts";
+import type { RecoveryIntent } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
@@ -17,10 +18,27 @@ import {
   lock,
   remember,
   request,
-  required,
   wire,
 } from "#infrastructure/delivery-records.ts";
+import {
+  bareFingerprint,
+  createIntent,
+  findIntent,
+  intentDetail,
+  legacyIntentFields,
+  updateIntentDetail,
+} from "#infrastructure/recovery-intents.ts";
 import { minecraftRecoveryOwnership } from "./ownership.ts";
+
+/** The minecraft-kind view of a unified recovery intent row. */
+export function minecraftIntentView(row: RecoveryIntent) {
+  return MinecraftRecoveryIntentSchema.parse(
+    wire({
+      ...legacyIntentFields(row),
+      controllerReceipt: intentDetail(row)["controllerReceipt"] ?? null,
+    }),
+  );
+}
 
 export async function requestMinecraftRecovery(
   this: Delivery,
@@ -41,15 +59,8 @@ export async function requestMinecraftRecovery(
       resultType: "minecraft-recovery",
     });
     if (prior !== null)
-      return MinecraftRecoveryIntentSchema.parse(
-        wire(
-          required(
-            await tx.minecraftRecoveryIntent.findUnique({
-              where: { id: prior.resultId },
-            }),
-            "Minecraft recovery intent",
-          ),
-        ),
+      return minecraftIntentView(
+        await findIntent(tx, prior.resultId, "minecraft"),
       );
     const context = await minecraftRecoveryOwnership(
       tx,
@@ -57,7 +68,7 @@ export async function requestMinecraftRecovery(
       input.expectedEnvironmentGeneration,
     );
     if (
-      (await tx.minecraftRecoveryIntent.findFirst({
+      (await tx.recoveryIntent.findFirst({
         where: { deploymentId, status: "pending" },
       })) !== null
     )
@@ -69,16 +80,15 @@ export async function requestMinecraftRecovery(
       where: { id: deploymentId },
       data: { cancelRequested: true },
     });
-    const intent = await tx.minecraftRecoveryIntent.create({
-      data: {
-        id: input.requestId,
-        deploymentId,
-        requestedBy: actor.id,
-        reason: input.reason,
-        expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
-        snapshotFingerprint: context.snapshotFingerprint,
-        workflowId: `delivery-minecraft-recovery/${input.requestId}`,
-      },
+    const intent = await createIntent(tx, {
+      id: input.requestId,
+      kind: "minecraft",
+      deploymentId,
+      requestedBy: actor.id,
+      reason: input.reason,
+      expectedGeneration: input.expectedEnvironmentGeneration,
+      snapshotFingerprint: context.snapshotFingerprint,
+      workflowId: `delivery-minecraft-recovery/${input.requestId}`,
     });
     await remember(tx, actor, {
       requestId: input.requestId,
@@ -95,7 +105,7 @@ export async function requestMinecraftRecovery(
         snapshotFingerprint: context.snapshotFingerprint,
       },
     });
-    return MinecraftRecoveryIntentSchema.parse(wire(intent));
+    return minecraftIntentView(intent);
   });
 }
 
@@ -105,15 +115,8 @@ export async function minecraftRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "read");
-  const intent = MinecraftRecoveryIntentSchema.parse(
-    wire(
-      required(
-        await this.database.minecraftRecoveryIntent.findUnique({
-          where: { id: intentId },
-        }),
-        "Minecraft recovery intent",
-      ),
-    ),
+  const intent = minecraftIntentView(
+    await findIntent(this.database, intentId, "minecraft"),
   );
   return { intent, deployment: await this.detail(intent.deploymentId) };
 }
@@ -123,16 +126,12 @@ export async function pendingMinecraftRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "execute");
-  const intents = await this.database.minecraftRecoveryIntent.findMany({
-    where: { status: "pending" },
+  const intents = await this.database.recoveryIntent.findMany({
+    where: { kind: "minecraft", status: "pending" },
     orderBy: { createdAt: "asc" },
     take: 100,
   });
-  return {
-    intents: intents.map((intent) =>
-      MinecraftRecoveryIntentSchema.parse(wire(intent)),
-    ),
-  };
+  return { intents: intents.map((intent) => minecraftIntentView(intent)) };
 }
 
 export async function submittedMinecraftRecovery(
@@ -141,24 +140,17 @@ export async function submittedMinecraftRecovery(
 ) {
   const [intentId, workflowId, actor] = args;
   requireScope(actor, "execute");
-  const intent = required(
-    await this.database.minecraftRecoveryIntent.findUnique({
-      where: { id: intentId },
-    }),
-    "Minecraft recovery intent",
-  );
+  const intent = await findIntent(this.database, intentId, "minecraft");
   if (intent.workflowId !== workflowId || intent.status !== "pending")
     throw new DeliveryError(
       "CONFLICT",
       "Recovery submission does not match the pending immutable Workflow",
     );
-  return MinecraftRecoveryIntentSchema.parse(
-    wire(
-      await this.database.minecraftRecoveryIntent.update({
-        where: { id: intentId },
-        data: { submittedAt: intent.submittedAt ?? new Date() },
-      }),
-    ),
+  return minecraftIntentView(
+    await this.database.recoveryIntent.update({
+      where: { id: intentId },
+      data: { submittedAt: intent.submittedAt ?? new Date() },
+    }),
   );
 }
 
@@ -175,29 +167,27 @@ export async function recordMinecraftRecoveryController(
   const receipt = MinecraftControllerReceiptSchema.parse(rawReceipt);
   return this.database.$transaction(async (tx) => {
     await lock(tx, `minecraft-recovery:${intentId}`);
-    const intent = required(
-      await tx.minecraftRecoveryIntent.findUnique({ where: { id: intentId } }),
-      "Minecraft recovery intent",
-    );
+    const intent = await findIntent(tx, intentId, "minecraft");
     if (intent.status !== "pending")
       throw new DeliveryError("CONFLICT", "Recovery result is immutable");
     const context = await minecraftRecoveryOwnership(
       tx,
       intent.deploymentId,
-      intent.expectedEnvironmentGeneration,
+      intent.expectedGeneration,
     );
     if (
-      context.snapshotFingerprint !== intent.snapshotFingerprint ||
+      context.snapshotFingerprint !== bareFingerprint(intent.fingerprint) ||
       receipt.requestId !== context.operationId
     )
       throw new DeliveryError(
         "CONFLICT",
         "Recovery native receipt no longer matches its frozen source owner",
       );
+    const recorded = intentDetail(intent)["controllerReceipt"];
     const prior =
-      intent.controllerReceipt === null
+      recorded === undefined || recorded === null
         ? null
-        : MinecraftControllerReceiptSchema.parse(intent.controllerReceipt);
+        : MinecraftControllerReceiptSchema.parse(recorded);
     if (
       prior !== null &&
       (prior.specFingerprint !== receipt.specFingerprint ||
@@ -218,9 +208,8 @@ export async function recordMinecraftRecoveryController(
         "CONFLICT",
         "Recovery controller differs from the original preservation source snapshot",
       );
-    const updated = await tx.minecraftRecoveryIntent.update({
-      where: { id: intentId },
-      data: { controllerReceipt: receipt },
+    const updated = await updateIntentDetail(tx, intentId, {
+      controllerReceipt: receipt,
     });
     await audit(tx, actor, {
       action: "minecraft.recovery_controller_recorded",
@@ -231,6 +220,6 @@ export async function recordMinecraftRecoveryController(
         controllerUid: receipt.uid,
       },
     });
-    return MinecraftRecoveryIntentSchema.parse(wire(updated));
+    return minecraftIntentView(updated);
   });
 }

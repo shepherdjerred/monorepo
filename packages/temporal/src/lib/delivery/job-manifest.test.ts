@@ -20,7 +20,7 @@ const request: DeliveryJobRequest = {
   input: { stack: "github", proof: { a: 1, b: 2 } },
 };
 
-it.each(["worker-images", "worker-step"] as const)(
+it.each(["worker-images", "worker-step", "test"] as const)(
   "prepares only the dependencies needed by %s",
   (recipe) => {
     const preparation = DELIVERY_JOB_BOOTSTRAP.split(
@@ -39,7 +39,13 @@ ${preparation}`,
       {
         env: {
           PATH: Bun.env["PATH"],
-          DELIVERY_JOB_REQUEST: JSON.stringify({ ...request, recipe }),
+          DELIVERY_JOB_REQUEST: JSON.stringify({
+            ...request,
+            recipe,
+            ...(recipe === "test"
+              ? { input: { suite: "test", workspace: "packages/delivery" } }
+              : {}),
+          }),
         },
         stdout: "pipe",
         stderr: "pipe",
@@ -56,6 +62,9 @@ ${preparation}`,
             "bunx:turbo run generate --filter=@shepherdjerred/temporal^...",
             "bun:run --cwd packages/llm-models build:runtime",
             "bun:build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit",
+            ...(recipe === "test"
+              ? ["bunx:turbo run generate --filter={./packages/delivery}..."]
+              : []),
           ],
     );
   },
@@ -195,7 +204,31 @@ describe("bounded revision-pinned Delivery Jobs", () => {
       );
     }
   });
-  it.each(["control-plane", "root-release"] as const)(
+  it("runs a test suite as a tokenless worker-namespace Job with no grants", () => {
+    const job = deliveryJobManifest({
+      ...request,
+      recipe: "test",
+      stageKey: "test-e2e",
+      input: { suite: "test:e2e", workspace: "packages/delivery" },
+    });
+    expect(job.metadata?.namespace).toBe("delivery-worker-jobs");
+    expect(job.metadata?.labels).toMatchObject({
+      app: "delivery-stage",
+      "kueue.x-k8s.io/queue-name": "delivery",
+    });
+    const spec = job.spec!.template.spec!;
+    expect(spec.nodeSelector).toEqual({ "kubernetes.io/hostname": "liskov" });
+    expect(spec.automountServiceAccountToken).toBe(false);
+    expect(
+      spec.containers[0]?.env?.filter((entry) => entry.valueFrom !== undefined),
+    ).toEqual([]);
+    expect(
+      spec.containers[0]?.env?.some(
+        (entry) => entry.name === "DELIVERY_API_URL",
+      ),
+    ).toBe(false);
+  });
+  it.each(["control-plane"] as const)(
     "keeps %s in an independent tokenless platform Job with only its fixed transport grants",
     (recipe) => {
       const job = deliveryJobManifest({

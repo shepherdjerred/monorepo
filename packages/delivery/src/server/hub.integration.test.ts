@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { audit } from "#infrastructure/delivery-records.ts";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
@@ -38,17 +39,14 @@ async function body(path: string): Promise<unknown> {
   return response.json();
 }
 
+/** One audited write in its own domain; pagination and the feed read audit rows only. */
 function snapshot(requestId: string) {
-  return delivery.importSnapshot(
-    {
+  return delivery.database.$transaction((tx) =>
+    audit(tx, testOperator, {
+      action: "snapshot.imported",
+      entityId: requestId,
       requestId,
-      serviceId: "arcade",
-      capturedAt: new Date().toISOString(),
-      source: "runtime",
-      components: {},
-      evidence: "Hub fixture",
-    },
-    testOperator,
+    }),
   );
 }
 

@@ -29,7 +29,7 @@ async function prepare(status: "failed" | "pending") {
       name: environment.name,
       application: "temporal",
       pipelineRevisionId: fixture.workerPipeline.id,
-      configurationRevision: environment.configurationRevision,
+      configurationRevision: environment.declaredConfigurationId,
       configuration: {},
       automatic: false,
     },

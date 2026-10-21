@@ -3,15 +3,24 @@ import type { RuntimeConfig } from "#infrastructure/config.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createApp } from "#server/app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
+import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import { createTestDatabase } from "./postgres.ts";
+import { registerTestServices } from "./services.ts";
 
 type TestCluster = Awaited<ReturnType<typeof createTestDatabase>>;
 
-/** Empties every Delivery-owned table so each test starts from a blank control plane. */
-export async function resetDeliveryTables(database: TestCluster["database"]) {
+/**
+ * Empties every Delivery-owned table so each test starts from a blank control
+ * plane, then registers the test catalog's services as a reconcile would.
+ */
+export async function resetDeliveryTables(
+  database: TestCluster["database"],
+  catalog?: ServiceIndex,
+) {
   await database.$executeRawUnsafe(
-    'TRUNCATE "ApplicationLock", "Outbox", "Evidence", "Approval", "Stage", "Deployment", "Environment", "Pipeline", "VersionSetEntry", "VersionSet", "Artifact", "Build", "Request", "Audit", "ImportedSnapshot" CASCADE',
+    'TRUNCATE "Service", "Configuration", "TargetLock", "PlatformLock", "RecoveryIntent", "PrerequisiteEdge", "MonitorObservation", "ComponentReference", "Outbox", "Evidence", "Approval", "Stage", "Deployment", "Environment", "Pipeline", "VersionSetEntry", "VersionSet", "Artifact", "Build", "Request", "Audit" CASCADE',
   );
+  await registerTestServices(database, catalog);
 }
 
 /**

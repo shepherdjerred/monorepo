@@ -123,13 +123,6 @@ export async function completeForumBaseline(
           "Read-only original runtime, installed XenForo, bundle and completed release Job independently observed; no deployment accepted",
       },
     });
-    await tx.environment.update({
-      where: { id: intent.environmentId },
-      data: {
-        acceptedForumBaselineIntentId: intent.id,
-        generation: { increment: 1 },
-      },
-    });
     await audit(tx, actor, {
       action: "forum.baseline_completed",
       entityId: intent.environmentId,

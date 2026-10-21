@@ -12,7 +12,6 @@ import {
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import {
   IdentifierSchema,
-  ImportSnapshotSchema,
   PipelineDefinitionSchema,
   RegisterEnvironmentSchema,
   RecoverDeploymentSchema,
@@ -28,8 +27,6 @@ artifact --file <PATH> --machine       Resolve an exact original qualified artif
 qualify <BUILD_ID> --machine           Ask the independent verifier to check actual CI provenance
 pipeline register <ID> --file <PATH>   Register a reviewed pipeline definition
 environment register --file <PATH>     Register reviewed environment metadata
-import --file <PATH>                   Save an unverified migration snapshot
-imports                               List unverified migration snapshots
 workers list <ENVIRONMENT>             Inspect retained worker artifacts and hosts
 workers baseline --file <PATH> --machine  Request independent host-only baseline proof
 workers adopt --file <PATH> --machine  Adopt an original qualified worker artifact
@@ -116,8 +113,6 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   qualify: 1,
   pipeline: 2,
   environment: 1,
-  import: 0,
-  imports: 0,
   workers: [1, 2, 3],
   minecraft: 2,
   forum: [1, 2],
@@ -187,8 +182,6 @@ function validateRegistration(
         "Registration requires an admin machine credential; use --machine",
       );
   }
-  if (command === "import" && (options.file === undefined || !options.machine))
-    throw new Error("Import requires --file and an admin --machine credential");
 }
 
 function validateApproval(options: DeployOptions) {
@@ -252,7 +245,6 @@ export async function runDeployCommand(
       "diff",
       "status",
       "inventory",
-      "imports",
       "handover-context",
     ].includes(command)
   )
@@ -279,7 +271,6 @@ export async function runDeployCommand(
   switch (command) {
     case "pipeline":
     case "environment":
-    case "import":
       return registerCommand(client, command, positionals, options);
     case "start":
     case "rollback": {
@@ -372,9 +363,6 @@ async function readCommand(
           ? await client.overview()
           : await client.deployment(target);
       break;
-    case "imports":
-      result = await client.imports();
-      break;
     case "inventory": {
       const overview = await client.overview();
       result = overview.environments;
@@ -391,21 +379,17 @@ async function readCommand(
 
 async function registerCommand(
   client: DeliveryClient,
-  command: "pipeline" | "environment" | "import",
+  command: "pipeline" | "environment",
   positionals: string[],
   options: DeployOptions,
 ) {
   const raw: unknown = await Bun.file(required(options.file)).json();
-  let result: unknown;
-  if (command === "pipeline")
-    result = await client.registerPipeline(
-      IdentifierSchema.parse(required(positionals[1])),
-      PipelineDefinitionSchema.parse(raw),
-    );
-  else if (command === "environment")
-    result = await client.registerEnvironment(
-      RegisterEnvironmentSchema.parse(raw),
-    );
-  else result = await client.importSnapshot(ImportSnapshotSchema.parse(raw));
+  const result: unknown =
+    command === "pipeline"
+      ? await client.registerPipeline(
+          IdentifierSchema.parse(required(positionals[1])),
+          PipelineDefinitionSchema.parse(raw),
+        )
+      : await client.registerEnvironment(RegisterEnvironmentSchema.parse(raw));
   return { result, exitCode: 0 };
 }

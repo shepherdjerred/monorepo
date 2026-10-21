@@ -138,7 +138,7 @@ test("worker-only lifecycle operations and missing flavor artifacts cannot touch
     staticSiteSelection(
       {
         ...detail,
-        deployment: { ...detail.deployment, kind: "retire-worker" },
+        deployment: { ...detail.deployment, kind: "retire-host" },
       },
       owners,
     ),

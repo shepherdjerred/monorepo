@@ -172,7 +172,7 @@ export function ReleaseForm({
         )}
         <div className="form-footer">
           <p>
-            {environment.approvalRequired
+            {environment.approvalPolicy === "required"
               ? "This request will wait for a human approval."
               : "The pipeline will begin after its gates pass."}{" "}
             {kind === "rollback" &&

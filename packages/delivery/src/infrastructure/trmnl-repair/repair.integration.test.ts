@@ -134,7 +134,7 @@ test("repair intent is immutable, admin-only, and does not transfer quarantine b
   const { delivery, source } = await quarantined();
   const input = {
     requestId: "repair/1",
-    expectedEnvironmentGeneration: 1,
+    expectedEnvironmentGeneration: 0,
     reason,
   };
   await expect(
@@ -162,12 +162,12 @@ test("repair intent is immutable, admin-only, and does not transfer quarantine b
   });
   await expect(
     delivery.claim(repair.id, testExecutor, {
-      ...proof(source.id, 1),
+      ...proof(source.id, 0),
       observedAt: new Date(Date.now() - 61_000).toISOString(),
     }),
   ).rejects.toMatchObject({ code: "CONFLICT" });
   await expect(
-    delivery.claim(repair.id, testExecutor, proof("foreign", 1)),
+    delivery.claim(repair.id, testExecutor, proof("foreign", 0)),
   ).rejects.toMatchObject({ code: "CONFLICT" });
   await expect(
     delivery.requestTrmnlRepair(
@@ -181,17 +181,17 @@ test("proof-bound transfer and exact remote acceptance repair dependencies witho
   const { delivery, source, selected } = await quarantined();
   const repair = await delivery.requestTrmnlRepair(
     source.id,
-    { requestId: "repair/success", expectedEnvironmentGeneration: 1, reason },
+    { requestId: "repair/success", expectedEnvironmentGeneration: 0, reason },
     testOperator,
   );
   const frozen = await delivery.claim(
     repair.id,
     testExecutor,
-    proof(source.id, 1),
+    proof(source.id, 0),
   );
   expect(frozen.environment).toMatchObject({
     activeDeploymentId: repair.id,
-    generation: 2,
+    generation: 0,
     acceptedVersionSetRevisionId: null,
   });
   expect(frozen.deployment).toMatchObject({
@@ -205,10 +205,11 @@ test("proof-bound transfer and exact remote acceptance repair dependencies witho
     message: "Plugin 2 write lost its response",
     recoveryRequired: false,
   });
+  // A proof naming any other generation is stale; claim moves none (E1).
   await expect(
     delivery.claim(repair.id, testExecutor, proof(source.id, 1)),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  await delivery.claim(repair.id, testExecutor, proof(source.id, 2));
+  await delivery.claim(repair.id, testExecutor, proof(source.id, 0));
   await expect(
     delivery.finish(
       repair.id,
@@ -281,8 +282,8 @@ test("proof-bound transfer and exact remote acceptance repair dependencies witho
     observedVersionSetRevisionId: null,
   });
   expect(
-    await context.cluster.database.applicationLock.count({
-      where: { application: "trmnl-dashboard" },
+    await context.cluster.database.targetLock.count({
+      where: { instance: "application:trmnl-dashboard" },
     }),
   ).toBe(0);
   expect(
@@ -293,10 +294,10 @@ test("failed repair retains the transferred lock and supports a new identity-bou
   const { delivery, source } = await quarantined();
   const repair = await delivery.requestTrmnlRepair(
     source.id,
-    { requestId: "repair/fail", expectedEnvironmentGeneration: 1, reason },
+    { requestId: "repair/fail", expectedEnvironmentGeneration: 0, reason },
     testOperator,
   );
-  await delivery.claim(repair.id, testExecutor, proof(source.id, 1));
+  await delivery.claim(repair.id, testExecutor, proof(source.id, 0));
   await delivery.finish(
     repair.id,
     {
@@ -311,10 +312,10 @@ test("failed repair retains the transferred lock and supports a new identity-bou
   expect(failed.environment.activeDeploymentId).toBe(repair.id);
   const successor = await delivery.requestTrmnlRepair(
     repair.id,
-    { requestId: "repair/successor", expectedEnvironmentGeneration: 2, reason },
+    { requestId: "repair/successor", expectedEnvironmentGeneration: 0, reason },
     testOperator,
   );
-  await delivery.claim(successor.id, testExecutor, proof(repair.id, 2));
+  await delivery.claim(successor.id, testExecutor, proof(repair.id, 0));
   const retried = await delivery.detail(successor.id);
   expect(retried.environment.activeDeploymentId).toBe(successor.id);
 });
@@ -345,7 +346,7 @@ test("real HTTP repair admission separates admin and executor authority and pars
     });
   const input = {
     requestId: "repair/http",
-    expectedEnvironmentGeneration: 1,
+    expectedEnvironmentGeneration: 0,
     reason,
   };
   const denied = await submit(
@@ -365,16 +366,16 @@ test("real HTTP repair admission separates admin and executor authority and pars
   expect(noProof.status).toBe(400);
   const claimed = await submit(
     `/deployments/${repair.id}/claim`,
-    proof(source.id, 1),
+    proof(source.id, 0),
     "e",
   );
   expect(claimed.status).toBe(200);
   expect(
     DeploymentDetailSchema.parse(await claimed.json()).environment.generation,
-  ).toBe(2);
+  ).toBe(0);
   const repeated = await submit(
     `/deployments/${repair.id}/claim`,
-    proof(source.id, 2),
+    proof(source.id, 0),
     "e",
   );
   expect(repeated.status).toBe(200);

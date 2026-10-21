@@ -48,16 +48,19 @@ describe("exact rollback and promotion retries", () => {
     );
     expect(rollback).toMatchObject({
       pipelineRevisionId: "arcade/1",
-      configurationRevision: "config/1",
-      configuration: {},
+      configurationId: "config/1",
       expectedGeneration: updated.generation,
     });
     const claimed = await context.delivery.claim(rollback.id, testExecutor);
     expect(claimed.pipeline.id).toBe("arcade/1");
+    expect(claimed.configuration).toMatchObject({
+      id: "config/1",
+      content: {},
+    });
+    // Claim never rewrites the environment's declared binding (E1, C3).
     expect(claimed.environment).toMatchObject({
-      pipelineRevisionId: "arcade/1",
-      configurationRevision: "config/1",
-      configuration: {},
+      pipelineRevisionId: "arcade/2",
+      declaredConfigurationId: "config/2",
     });
     await accept(rollback.id, context.fixture.versionSet.id);
   });
@@ -138,7 +141,8 @@ describe("exact rollback and promotion retries", () => {
         },
         body: JSON.stringify({
           requestId: "promotion-retry",
-          expectedGeneration: 1,
+          // A failed deployment moves no generation (E1).
+          expectedGeneration: 0,
         }),
       },
     );

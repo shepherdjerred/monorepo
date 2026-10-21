@@ -111,7 +111,6 @@ function reviewed(
     refuse(
       "Independent acquisition is restricted to the version catalog's component entries",
     );
-  ensureService(serviceId);
   const originKey = fingerprint({
     kind: origin.kind,
     repository: origin.repository,
@@ -309,6 +308,7 @@ export async function acquireUpstreamArtifact(
       resultType: "upstream-build",
     });
     if (prior !== null) return prior.resultId;
+    await ensureService(tx, input.serviceId);
     await lock(tx, `artifact-origin:${originKey}`);
     const original = await tx.artifact.findUnique({
       where: { originKey },

@@ -110,6 +110,20 @@ export function behaviorConfig(stage: string) {
         default: "[]",
         names: { flag: "delivery-enrichment-sources" },
       },
+      /** Simultaneously owned deployments across the executor (model D10). */
+      executorConcurrency: {
+        schema: z.number().int().min(1).max(64),
+        sources: ["flag", "default"],
+        default: 4,
+        names: { flag: "delivery-executor-concurrency" },
+      },
+      /** How long an owned deployment stays provably owned without renewal (model D7). */
+      leaseSeconds: {
+        schema: z.number().int().min(60).max(7200),
+        sources: ["flag", "default"],
+        default: 900,
+        names: { flag: "delivery-lease-seconds" },
+      },
     },
     sources: {
       flag: createFlagConfigSource({
@@ -121,6 +135,8 @@ export function behaviorConfig(stage: string) {
           enabledEnvironments: "string",
           operatorLogins: "string",
           enrichmentSources: "string",
+          executorConcurrency: "number",
+          leaseSeconds: "number",
         },
       }),
     },
@@ -137,6 +153,11 @@ export function behaviorConfig(stage: string) {
     },
   });
 }
+/** Operational bounds the record enforces at admission; typed configuration, never literals. */
+export type DeliveryPolicy = {
+  executorConcurrency: () => Promise<number>;
+  leaseSeconds: () => Promise<number>;
+};
 export type RuntimeConfig = {
   publicOrigin: string;
   machineCredentials: z.infer<typeof MachineCredentialSchema>[];

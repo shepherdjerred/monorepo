@@ -126,12 +126,11 @@ test("quarantine and ownership counts come from all PG rows, independently of th
     where: { id: deployment.id },
   });
   const {
-    configuration: _configuration,
     workerSnapshot: _worker,
     platformSnapshot: _platform,
     controlPlaneSnapshot: _control,
     forumBaselineSnapshot: _forum,
-    previousAcceptedConfiguration: _previous,
+    prerequisiteSnapshot: _prerequisites,
     ...columns
   } = raw;
   await context.cluster.database.deployment.createMany({
@@ -139,7 +138,6 @@ test("quarantine and ownership counts come from all PG rows, independently of th
       ...columns,
       id: `terminal-${String(index)}`,
       requestId: `terminal/${String(index)}`,
-      configuration: {},
       status: "canceled",
       createdAt: new Date(Date.now() + index + 1000),
     })),
@@ -157,7 +155,7 @@ test("quarantine and ownership counts come from all PG rows, independently of th
     activeEnvironments: 1,
   });
   expect(observed.targets[0]?.generation).toBe(
-    context.fixture.environment.generation + 1,
+    context.fixture.environment.generation,
   );
 });
 
@@ -228,5 +226,5 @@ test("fresh admission changes during the same PG observation fail closed", async
     { headers: admin },
   );
   expect(response.status).toBe(503);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
 });

@@ -142,7 +142,7 @@ test("retirement intent freezes selection, accepts no caller proof, and never gr
     beforeAcceptance.versions.find((row) => row.id === workerA.id)?.replicas,
   ).toBe(1);
   expect(
-    await context.cluster.database.applicationLock.count({
+    await context.cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
@@ -162,7 +162,7 @@ test("paused writes stop retirement intent while preserving read-only pool inspe
   ).rejects.toMatchObject({ status: 503, code: "PAUSED" });
   expect(
     await context.cluster.database.deployment.count({
-      where: { kind: "retire-worker" },
+      where: { kind: "retire-host" },
     }),
   ).toBe(0);
 });

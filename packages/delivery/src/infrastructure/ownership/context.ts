@@ -3,11 +3,13 @@ import {
   environment,
   pendingDeliveryObservations,
   type Transaction,
+  configurationContent,
 } from "#infrastructure/delivery-data.ts";
 import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { freezeForumBaseline } from "#infrastructure/forum/freezer.ts";
+import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { readWorkerVersions } from "#infrastructure/worker-pool/pool.ts";
 import {
   reviewedOwnershipDefinitions,
@@ -73,7 +75,7 @@ async function target(
     definition.kind === "argocd" &&
     definition.forumRelease !== undefined &&
     env.acceptedVersionSetRevisionId === null &&
-    env.acceptedForumBaselineIntentId !== null
+    (await acceptedForumBaseline(tx, env.id)) !== null
   ) {
     const original = await freezeForumBaseline(tx, {
       environment: env,
@@ -97,8 +99,8 @@ async function target(
     generation: env.generation,
     pipelineRevisionId: pipeline.id,
     pipeline: definition,
-    configurationRevision: env.configurationRevision,
-    configuration: env.configuration,
+    configurationRevision: env.declaredConfigurationId,
+    configuration: await configurationContent(tx, env.declaredConfigurationId),
     acceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
     baseline,
   };
@@ -129,7 +131,7 @@ export async function ownershipHandoverContext(
         pendingObservations,
         rows,
       ] = await Promise.all([
-        tx.applicationLock.count(),
+        tx.targetLock.count(),
         tx.platformLock.count(),
         tx.environment.count({ where: { activeDeploymentId: { not: null } } }),
         tx.deployment.count({ where: active }),

@@ -353,10 +353,10 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
   expect(frozenRollback.deployment.pipelineRevisionId).toBe(
     registration.pipelineRevisionId,
   );
-  expect(frozenRollback.deployment.configurationRevision).toBe(
+  expect(frozenRollback.deployment.configurationId).toBe(
     registration.configurationRevision,
   );
-  expect(frozenRollback.deployment.configuration).toEqual(
+  expect(frozenRollback.configuration.content).toEqual(
     registration.configuration,
   );
   const rolledBack = await accept(rollback.id, frozenRollback);

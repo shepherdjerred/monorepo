@@ -15,10 +15,19 @@ export async function minecraftDetailFixture() {
     await Bun.file(new URL("environment.json", directory)).json(),
   );
   const timestamp = "2026-10-17T20:00:00.000Z";
+  const {
+    configurationRevision,
+    configuration,
+    promotionSourceEnvironmentId: _source,
+    ...declared
+  } = environment;
   const env = DeploymentDetailSchema.shape.environment.parse({
-    ...environment,
+    ...declared,
+    application: declared.application ?? null,
+    declaredConfigurationId: configurationRevision,
+    lifecycle: "active",
+    acceptedDeploymentId: null,
     generation: 1,
-    approvalRequired: false,
     promotionSourceEnvironmentId: null,
     desiredVersionSetRevisionId: "set/1",
     observedVersionSetRevisionId: null,
@@ -35,8 +44,8 @@ export async function minecraftDetailFixture() {
       serviceId: "minecraft",
       versionSetRevisionId: "set/1",
       pipelineRevisionId: "minecraft-tsmc/1",
-      configurationRevision: "minecraft-tsmc/1",
-      configuration: {},
+      configurationId: configurationRevision,
+      catalogRevision: "test-catalog",
       expectedGeneration: 0,
       kind: "deploy",
       status: "running",
@@ -54,6 +63,8 @@ export async function minecraftDetailFixture() {
       serviceId: "minecraft",
       revision: 1,
       baseRevisionId: null,
+      lineage: "0".repeat(64),
+      orderKey: "0000000001.0000000000",
       createdAt: timestamp,
       components: {
         "image:the-storm-server": {
@@ -71,8 +82,8 @@ export async function minecraftDetailFixture() {
       },
     },
     pipeline: { id: "minecraft-tsmc/1", createdAt: timestamp, definition },
+    configuration: { id: configurationRevision, content: configuration },
     evidence: [],
-    approvals: [],
     stages: [],
   });
 }

@@ -154,7 +154,7 @@ export function environmentTransition(
   enabled: string[],
 ): Transition {
   let mode: Transition["mode"] = "manual";
-  if (env.approvalRequired) mode = "approval";
+  if (env.approvalPolicy === "required") mode = "approval";
   else if (env.automatic) mode = "automatic";
   else if (env.promotionSourceEnvironmentId !== null) mode = "promotion";
   return {

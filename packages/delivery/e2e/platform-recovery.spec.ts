@@ -13,7 +13,7 @@ test("controller upgrade shows original cross-owner image and independent chart 
   await openDeployment(page, "delivery-control-plane/prod");
   const response = await selected;
   const frozen = DeploymentDetailSchema.parse(await response.json());
-  expect(frozen.environment.acceptedControlPlaneDeploymentId).toBeNull();
+  expect(frozen.environment.acceptedDeploymentId).toBeNull();
   expect(frozen.deployment.controlPlaneSnapshot).toMatchObject({
     priorSelectionManaged: true,
     previousArtifact: { id: "controller/image/101" },

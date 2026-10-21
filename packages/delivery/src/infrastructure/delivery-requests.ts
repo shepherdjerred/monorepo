@@ -1,6 +1,5 @@
 import { beginDeploymentRequest } from "#infrastructure/deployment-request-store.ts";
 import { persistDeploymentRequest } from "#infrastructure/delivery-records.ts";
-import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import {
   DeploymentSchema,
@@ -8,15 +7,27 @@ import {
   deliveryWorkflowId,
 } from "#shared/contract.ts";
 import type { CreateDeployment, Principal } from "#shared/contract.ts";
-import { wire, lock, required, audit, request } from "./delivery-records.ts";
+import {
+  ApprovalV2InputSchema,
+  type ApprovalV2Request,
+} from "#shared/model/approval-contract.ts";
+import {
+  wire,
+  lock,
+  required,
+  audit,
+  request,
+  selectionFingerprint,
+} from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import {
   terminal,
   id,
   version,
   environment,
+  ensureService,
+  requestApproval,
   validateSelection,
-  approvalRequired,
 } from "./delivery-data.ts";
 import { deploymentSelection } from "./delivery-request-selection.ts";
 import {
@@ -76,6 +87,12 @@ export async function createDeployment(
     });
     if (selection.kind === "replayed") return selection.deployment;
     const env = selection.environment;
+    const service = await ensureService(tx, env.serviceId);
+    if (env.lifecycle !== "active")
+      throw new DeliveryError(
+        "INVALID",
+        `Environment ${env.id} is ${env.lifecycle} and admits no deployment`,
+      );
     const selectedInputs = await deploymentSelection(tx, input, env);
     const { pipeline } = selectedInputs;
     if (
@@ -119,21 +136,19 @@ export async function createDeployment(
       );
     await validateSelection(tx, input, env, selected);
     const previousAccepted =
-      env.acceptedVersionSetRevisionId === null
+      env.acceptedDeploymentId === null
         ? null
         : required(
-            await tx.deployment.findFirst({
-              where: {
-                environmentId: env.id,
-                versionSetRevisionId: env.acceptedVersionSetRevisionId,
-                status: "succeeded",
-                kind: { notIn: ["adopt-worker", "repair-trmnl"] },
-              },
-              orderBy: { finishedAt: "desc" },
+            await tx.deployment.findUnique({
+              where: { id: env.acceptedDeploymentId },
             }),
             "Accepted deployment snapshot",
           );
-    validateForumCandidate(pipeline, selected, selectedInputs.configuration);
+    validateForumCandidate(
+      pipeline,
+      selected,
+      selectedInputs.configuration.content,
+    );
     const forumRecoveredRuntime = await freezeRecoveredForumRuntime(tx, {
       environmentId: env.id,
       pipeline,
@@ -144,15 +159,9 @@ export async function createDeployment(
       pipeline,
       recoveredRuntime: forumRecoveredRuntime !== null,
     });
-    const previousConfiguration =
-      previousAccepted === null
-        ? null
-        : z
-            .record(z.string(), z.string())
-            .parse(previousAccepted.configuration);
     const deploymentId = id();
     const workerSnapshot = await freezeWorkerDeployment(tx, {
-      environment: { ...env, configuration: selectedInputs.configuration },
+      environment: env,
       pipeline,
       versionSet: selected,
       deploymentId,
@@ -160,6 +169,7 @@ export async function createDeployment(
       baseline: input.workerBaseline,
       repositoryId: this.repositoryId,
     });
+    const approvalRequired = env.approvalPolicy === "required";
     const row = await tx.deployment.create({
       data: {
         id: deploymentId,
@@ -168,30 +178,24 @@ export async function createDeployment(
         serviceId: env.serviceId,
         versionSetRevisionId: selected.id,
         previousAcceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
-        ...(previousConfiguration === null
-          ? {}
-          : { previousAcceptedConfiguration: previousConfiguration }),
+        previousAcceptedDeploymentId: env.acceptedDeploymentId,
+        restoredDeploymentId: selectedInputs.restoredDeploymentId,
         pipelineRevisionId: pipeline.id,
-        configurationRevision: selectedInputs.configurationRevision,
-        configuration: selectedInputs.configuration,
+        configurationId: selectedInputs.configuration.id,
+        catalogRevision: service.catalogRevision,
         ...(workerSnapshot === null ? {} : { workerSnapshot }),
         ...(forumBaselineSnapshot === null ? {} : { forumBaselineSnapshot }),
         sourceEnvironmentId: input.sourceEnvironmentId ?? null,
         expectedGeneration: env.generation,
         kind: input.kind,
         automatic,
-        status:
-          env.approvalRequired ||
-          approvalRequired(env.serviceId, {
-            application: env.application,
-            name: env.name,
-            pipeline: pipeline.definition,
-          })
-            ? "awaiting_approval"
-            : "queued",
+        status: approvalRequired ? "awaiting_approval" : "queued",
         requestedBy: actor.id,
       },
     });
+    // The approval row exists from the request on, bound to the frozen
+    // selection, and is decided by a distinct human act (model H1, D6).
+    if (approvalRequired) await requestApproval(tx, row);
     await persistDeploymentRequest(tx, actor, {
       deployment: row,
       requestId: input.requestId,
@@ -204,6 +208,7 @@ export async function createDeployment(
       metadata: {
         versionSetRevisionId: selected.id,
         environmentId: env.id,
+        catalogRevision: service.catalogRevision,
         ...(forumRecoveredRuntime === null ? {} : { forumRecoveredRuntime }),
       },
     });
@@ -213,14 +218,11 @@ export async function createDeployment(
 
 export async function approve(
   this: Delivery,
-  ...args: [
-    deploymentId: string,
-    decision: "approve" | "reject",
-    reason: string,
-    actor: Principal,
-  ]
+  deploymentId: string,
+  rawInput: ApprovalV2Request,
+  actor: Principal,
 ) {
-  const [deploymentId, decision, reason, actor] = args;
+  const input = ApprovalV2InputSchema.parse(rawInput);
   if (actor.kind !== "human")
     throw new DeliveryError(
       "FORBIDDEN",
@@ -231,16 +233,23 @@ export async function approve(
     const row = required(
       await tx.deployment.findUnique({
         where: { id: deploymentId },
-        include: { approvals: true },
+        include: { approval: true },
       }),
       "Deployment",
     );
-    const prior = row.approvals[0];
-    if (prior !== undefined) {
+    const approval = row.approval;
+    if (approval === null)
+      throw new DeliveryError(
+        "CONFLICT",
+        "Deployment requires no approval under its environment's policy",
+      );
+    const status = input.decision === "approve" ? "granted" : "rejected";
+    if (approval.status !== "pending") {
       if (
-        prior.decision !== decision ||
-        prior.actor !== actor.id ||
-        prior.reason !== reason
+        approval.status !== status ||
+        approval.actor !== actor.id ||
+        approval.reason !== input.reason ||
+        approval.override !== input.override
       )
         throw new DeliveryError(
           "CONFLICT",
@@ -254,30 +263,69 @@ export async function approve(
         "Deployment is not awaiting approval",
       );
     const env = await environment(tx, row.environmentId);
-    if (env.generation !== row.expectedGeneration)
+    const now = new Date();
+    if (env.generation !== row.expectedGeneration) {
+      // The binding generation moved on, so the frozen selection can no
+      // longer be approved: the approval expires and the request fails (H2).
+      await tx.approval.update({
+        where: { id: approval.id },
+        data: { status: "expired", decidedAt: now },
+      });
+      const failed = await tx.deployment.update({
+        where: { id: deploymentId },
+        data: {
+          status: "failed",
+          message:
+            "Deployment inputs changed before approval; the approval expired",
+          finishedAt: now,
+        },
+      });
+      await audit(tx, actor, {
+        action: "deployment.approval_expired",
+        entityId: deploymentId,
+        requestId: id(),
+      });
+      return DeploymentSchema.parse(wire(failed));
+    }
+    if (
+      approval.boundFingerprint !==
+      selectionFingerprint(
+        row.versionSetRevisionId,
+        row.pipelineRevisionId,
+        row.configurationId,
+      )
+    )
       throw new DeliveryError(
         "CONFLICT",
-        "Deployment inputs changed; request a new deployment",
+        "Approval is bound to a different frozen selection",
       );
-    await tx.approval.create({
-      data: { id: id(), deploymentId, decision, reason, actor: actor.id },
+    await tx.approval.update({
+      where: { id: approval.id },
+      data: {
+        status,
+        actor: actor.id,
+        reason: input.reason,
+        override: input.override,
+        decidedAt: now,
+      },
     });
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
       data: {
-        status: decision === "approve" ? "queued" : "canceled",
-        message: reason,
-        ...(decision === "reject" ? { finishedAt: new Date() } : {}),
+        status: input.decision === "approve" ? "queued" : "canceled",
+        message: input.reason,
+        ...(input.decision === "reject" ? { finishedAt: now } : {}),
       },
     });
-    if (decision === "approve")
+    if (input.decision === "approve")
       await tx.outbox.create({
         data: { deploymentId, workflowId: deliveryWorkflowId(deploymentId) },
       });
     await audit(tx, actor, {
-      action: `deployment.${decision}`,
+      action: `deployment.${input.decision}`,
       entityId: deploymentId,
       requestId: id(),
+      metadata: { override: input.override },
     });
     return DeploymentSchema.parse(wire(updated));
   });

@@ -3,8 +3,6 @@ import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import { index } from "./delivery-data.ts";
 import type { Database } from "./database.ts";
 import {
-  importSnapshot,
-  importedSnapshots,
   publish,
   compose,
   registerPipeline,
@@ -29,7 +27,11 @@ import {
   restoredContentRecovery,
 } from "./content-recovery/restoration.ts";
 import { failContentRecovery } from "./content-recovery/failure.ts";
-import { claim, stage, finish, releaseLock } from "./delivery-execution.ts";
+import { stage, finish } from "#infrastructure/execution/stages.ts";
+import { claim } from "#infrastructure/execution/claim.ts";
+import { renewLease } from "#infrastructure/execution/ownership.ts";
+import { releaseLock } from "#infrastructure/execution/lock-release.ts";
+import type { DeliveryPolicy } from "./config.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
   detail,
@@ -118,6 +120,12 @@ import {
   failMinecraftRecovery,
 } from "./minecraft-recovery/settlement.ts";
 
+/** Defaults match the typed configuration defaults; production injects fresh flag reads. */
+export const defaultDeliveryPolicy: DeliveryPolicy = {
+  executorConcurrency: () => Promise.resolve(4),
+  leaseSeconds: () => Promise.resolve(900),
+};
+
 /** PostgreSQL delivery operations, grouped by transactional responsibility. */
 export class Delivery {
   constructor(
@@ -126,8 +134,8 @@ export class Delivery {
     readonly catalog: ServiceIndex = index,
     readonly forumPolicyReader: ForumPolicyReader = createForumPolicyReader(),
   ) {}
-  importSnapshot = importSnapshot;
-  importedSnapshots = importedSnapshots;
+  /** Operational bounds read at admission; the server injects flag-backed reads. */
+  policy: DeliveryPolicy = defaultDeliveryPolicy;
   publish = publish;
   compose = compose;
   registerPipeline = registerPipeline;
@@ -146,6 +154,7 @@ export class Delivery {
   approve = approve;
   cancel = cancel;
   claim = claim;
+  renewLease = renewLease;
   stage = stage;
   finish = finish;
   releaseLock = releaseLock;

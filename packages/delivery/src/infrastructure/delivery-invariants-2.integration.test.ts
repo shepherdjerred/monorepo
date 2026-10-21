@@ -136,12 +136,12 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       },
       testExecutor,
     );
+    await context.cluster.database.configuration.create({
+      data: { id: "config/2", content: { mode: "next" } },
+    });
     await context.cluster.database.environment.update({
       where: { id: context.fixture.environment.id },
-      data: {
-        configurationRevision: "config/2",
-        configuration: { mode: "next" },
-      },
+      data: { declaredConfigurationId: "config/2" },
     });
     const next = await context.delivery.createDeployment(
       { ...context.input("next"), expectedGeneration: 1 },
@@ -150,41 +150,15 @@ describe("PostgreSQL delivery invariants 2.2", () => {
     expect(next.previousAcceptedVersionSetRevisionId).toBe(
       context.fixture.versionSet.id,
     );
-    expect(next.previousAcceptedConfiguration).toEqual({});
+    expect(next.previousAcceptedDeploymentId).toBe(first.id);
     const snapshot = await context.delivery.detail(next.id);
     expect(snapshot.previousAcceptedVersionSet?.id).toBe(
       context.fixture.versionSet.id,
     );
-    expect(snapshot.deployment.configuration).toEqual({ mode: "next" });
-  });
-  test("unverified imports cannot become version sets or deployment acceptance", async () => {
-    const snapshot = await context.delivery.importSnapshot(
-      {
-        requestId: "import/1",
-        serviceId: "arcade",
-        environmentId: context.fixture.environment.id,
-        capturedAt: new Date().toISOString(),
-        source: "argocd",
-        components: {
-          server: { uri: "docker.io/shepherdjerred/arcade", version: "legacy" },
-        },
-        evidence:
-          "Imported source pin; runtime acceptance has not been checked",
-      },
-      testOperator,
-    );
-    expect(snapshot.verified).toBe(false);
-    expect(await context.cluster.database.importedSnapshot.count()).toBe(1);
-    await expect(
-      context.delivery.compose(
-        {
-          requestId: "bad-import-compose",
-          serviceId: "arcade",
-          components: { server: snapshot.id },
-        },
-        testPublisher,
-      ),
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(snapshot.configuration).toMatchObject({
+      id: "config/2",
+      content: { mode: "next" },
+    });
   });
   test("Scout production approval is human-only and bound to the frozen generation", async () => {
     const build = await context.delivery.publish(
@@ -225,6 +199,7 @@ describe("PostgreSQL delivery invariants 2.2", () => {
         configurationRevision: "config/1",
         configuration: {},
         automatic: true,
+        approvalPolicy: "required",
       },
       testOperator,
     );
@@ -243,8 +218,7 @@ describe("PostgreSQL delivery invariants 2.2", () => {
     await expect(
       context.delivery.approve(
         deployment.id,
-        "approve",
-        "not a human",
+        { decision: "approve", reason: "not a human" },
         testExecutor,
       ),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -252,14 +226,19 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       where: { id: "scout/prod" },
       data: { generation: { increment: 1 } },
     });
-    await expect(
-      context.delivery.approve(
-        deployment.id,
-        "approve",
-        "reviewed exact inputs",
-        testOperator,
-      ),
-    ).rejects.toMatchObject({ code: "CONFLICT" });
+    // A stale binding generation expires the approval and fails the request (H2).
+    const expired = await context.delivery.approve(
+      deployment.id,
+      { decision: "approve", reason: "reviewed exact inputs" },
+      testOperator,
+    );
+    expect(expired.status).toBe("failed");
+    expect(
+      await context.cluster.database.approval.findUniqueOrThrow({
+        where: { deploymentId: deployment.id },
+      }),
+    ).toMatchObject({ status: "expired", actor: null });
+    expect(await context.cluster.database.outbox.count()).toBe(0);
   });
   test("environment configuration cannot change while a deployment is pending or active", async () => {
     const deployment = await context.delivery.createDeployment(

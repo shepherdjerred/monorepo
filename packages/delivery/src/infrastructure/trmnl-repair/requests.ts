@@ -1,4 +1,3 @@
-import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   DeploymentSchema,
@@ -69,8 +68,8 @@ export async function requestTrmnlRepair(
         "INVALID",
         "Repair is limited to the fixed TRMNL dashboard plugin bundle",
       );
-    const held = await tx.applicationLock.findUnique({
-      where: { application: "trmnl-dashboard" },
+    const held = await tx.targetLock.findUnique({
+      where: { instance: "application:trmnl-dashboard" },
     });
     if (
       !["failed", "canceled"].includes(source.status) ||
@@ -105,11 +104,10 @@ export async function requestTrmnlRepair(
         versionSetRevisionId: source.versionSetRevisionId,
         previousAcceptedVersionSetRevisionId:
           source.previousAcceptedVersionSetRevisionId,
-        previousAcceptedConfiguration:
-          source.previousAcceptedConfiguration ?? Prisma.JsonNull,
+        previousAcceptedDeploymentId: source.previousAcceptedDeploymentId,
         pipelineRevisionId: source.pipelineRevisionId,
-        configurationRevision: source.configurationRevision,
-        configuration: DeploymentSchema.parse(wire(source)).configuration,
+        configurationId: source.configurationId,
+        catalogRevision: source.catalogRevision,
         expectedGeneration: env.generation,
         kind: "repair-trmnl",
         status: "queued",

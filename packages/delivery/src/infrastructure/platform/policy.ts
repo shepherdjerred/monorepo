@@ -22,7 +22,10 @@ export function platformPolicyFingerprint(catalog: ServiceIndex) {
 }
 
 export function validatePlatformEnvironment(
-  input: RegisterEnvironment,
+  input: Pick<
+    RegisterEnvironment,
+    "id" | "serviceId" | "application" | "promotionSourceEnvironmentId"
+  >,
   definition: PipelineDefinition,
 ) {
   if (definition.kind !== "root-release" && definition.kind !== "tofu") return;
@@ -115,5 +118,7 @@ export const PlatformAcceptanceSchema = z
       .string()
       .regex(/^sha256:[a-f0-9]{64}$/u)
       .optional(),
+    /** The state serial the apply read back from its deployment marker (T5). */
+    stateSerial: z.number().int().nonnegative().optional(),
   })
   .strict();

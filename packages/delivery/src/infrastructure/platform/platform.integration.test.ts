@@ -57,7 +57,7 @@ test("private saved plans bind exact native identity, immutable ciphertext and o
   await finishTestPlatform(fixture.delivery, plan, saved);
   const detail = await fixture.delivery.detail(plan.id);
   expect(JSON.stringify(detail)).not.toContain("ciphertext");
-  expect(detail.environment.acceptedPlatformDeploymentId).toBeNull();
+  expect(detail.environment.acceptedDeploymentId).toBeNull();
   expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(detail.environment.observedVersionSetRevisionId).toBeNull();
 });
@@ -82,14 +82,13 @@ test("routine apply is automatic, sensitive apply approves the exact public save
     if (stack === "openai")
       await fixture.delivery.approve(
         apply.id,
-        "approve",
-        "Reviewed exact plan digest and state",
+        { decision: "approve", reason: "Reviewed exact plan digest and state" },
         testOperator,
       );
     await fixture.delivery.claim(apply.id, testExecutor);
     await finishTestPlatform(fixture.delivery, apply);
     const detail = await fixture.delivery.detail(apply.id);
-    expect(detail.environment.acceptedPlatformDeploymentId).toBe(apply.id);
+    expect(detail.environment.acceptedDeploymentId).toBe(apply.id);
     expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
     expect(detail.environment.desiredVersionSetRevisionId).toBeNull();
     await expect(testApply(fixture.delivery, plan)).rejects.toThrow(
@@ -120,7 +119,7 @@ test("global root/apply lock serializes separate state stacks and retains ambigu
     attempts.filter((result) => result.status === "fulfilled"),
   ).toHaveLength(1);
   const owner = await context.cluster.database.platformLock.findUniqueOrThrow({
-    where: { id: "shared-resources" },
+    where: { id: "platform" },
   });
   const waiting = owner.deploymentId === first.id ? second : first;
   await fixture.delivery.finish(
@@ -175,7 +174,7 @@ test("same-stack exclusion and exact source prerequisites apply before native ef
   await expect(fixture.delivery.claim(plan.id, testExecutor)).rejects.toThrow(
     "seaweedfs",
   );
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   await expect(
     requestTestPlan(fixture.delivery, fixture.sourceBuildId, "tailscale"),
   ).rejects.toThrow("pending");
@@ -268,7 +267,7 @@ test("root freezes the complete original chart map after same-source ordered pre
       sourceRevision: fixture.sourceRevision,
     },
   ]);
-  expect(detail.environment.acceptedPlatformDeploymentId).toBe(root.id);
+  expect(detail.environment.acceptedDeploymentId).toBe(root.id);
   expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(
     await context.cluster.database.platformArtifactReference.count({

@@ -7,7 +7,6 @@ import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
 import { arcadeSyncPrunes } from "#lib/delivery/arcade/prune.ts";
 import {
   deliverySelectionPatch,
-  assertDeliveryRootPreservesSelection,
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
 
@@ -22,8 +21,8 @@ export async function argoRequest(
   );
 }
 
+/** The retired root Application is never consulted; Delivery owns each Application body. */
 export async function selectArgoRelease(selection: DeliverySelection) {
-  assertDeliveryRootPreservesSelection(await argoRequest("apps"));
   const path = encodeURIComponent(selection.application);
   const current = await argoRequest(path);
   const patch = deliverySelectionPatch(current, selection);

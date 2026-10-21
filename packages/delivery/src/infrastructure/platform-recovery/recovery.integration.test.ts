@@ -1,3 +1,4 @@
+import type { DeploymentDetail } from "#shared/contract.ts";
 import { beforeEach, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { controlPlaneFixture } from "#testing/control-plane-fixture.ts";
@@ -16,6 +17,20 @@ import { platformSettlements } from "./context.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 const context = useDeliveryFixture();
+
+/** Settlement preserves the failed result and accepts nothing, releasing ownership (I3). */
+async function expectReleasedFailure(
+  delivery: { detail: (id: string) => Promise<DeploymentDetail> },
+  deploymentId: string,
+) {
+  const after = await delivery.detail(deploymentId);
+  expect(after.deployment.status).toBe("failed");
+  expect(after.deployment.recoveryRequired).toBe(false);
+  expect(after.environment.acceptedDeploymentId).toBeNull();
+  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
+  expect(await context.cluster.database.platformLock.count()).toBe(0);
+  return after;
+}
 let fixture: Awaited<ReturnType<typeof controlPlaneFixture>>;
 beforeEach(async () => {
   fixture = await controlPlaneFixture(context.cluster.database);
@@ -117,13 +132,8 @@ test("independent recovery preserves failed result and accepts the observed desi
       testExecutor,
     ),
   ).toEqual(recovered);
-  const after = await fixture.delivery.detail(deployment.id);
-  expect(after.deployment.status).toBe("failed");
-  expect(after.deployment.recoveryRequired).toBe(false);
-  expect(after.environment.acceptedControlPlaneDeploymentId).toBeNull();
-  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
-  expect(await context.cluster.database.platformLock.count()).toBe(0);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  const after = await expectReleasedFailure(fixture.delivery, deployment.id);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   const next = await fixture.delivery.requestControlPlaneUpgrade(
     fixture.environment.id,
     {
@@ -229,8 +239,7 @@ test("first Discord apply may settle its authenticated original target without a
   const apply = await testApply(delivery, plan);
   await delivery.approve(
     apply.id,
-    "approve",
-    "Reviewed exact original Discord plan",
+    { decision: "approve", reason: "Reviewed exact original Discord plan" },
     testOperator,
   );
   await delivery.claim(apply.id, testExecutor);
@@ -309,12 +318,7 @@ test("first Discord apply may settle its authenticated original target without a
     testExecutor,
   );
   expect(completed.status).toBe("succeeded");
-  const after = await delivery.detail(apply.id);
-  expect(after.deployment.status).toBe("failed");
-  expect(after.deployment.recoveryRequired).toBe(false);
-  expect(after.environment.acceptedPlatformDeploymentId).toBeNull();
-  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
-  expect(await context.cluster.database.platformLock.count()).toBe(0);
+  await expectReleasedFailure(delivery, apply.id);
 });
 
 test.each([false, true])(
@@ -485,7 +489,7 @@ test.each([false, true])(
       recoveryRequired: false,
     });
     expect(after.stages).toEqual(failed.stages);
-    expect(after.environment.acceptedPlatformDeploymentId).toBe(priorId);
+    expect(after.environment.acceptedDeploymentId).toBe(priorId);
     if (priorId !== null) {
       const priorAfter = await delivery.detail(priorId);
       expect(priorAfter.deployment).toEqual(
@@ -495,7 +499,7 @@ test.each([false, true])(
     expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
     expect(after.environment.activeDeploymentId).toBeNull();
     expect(await context.cluster.database.platformLock.count()).toBe(0);
-    expect(await context.cluster.database.applicationLock.count()).toBe(0);
+    expect(await context.cluster.database.targetLock.count()).toBe(0);
     const next = await delivery.createPlatformDeployment(
       {
         kind: "root-release",

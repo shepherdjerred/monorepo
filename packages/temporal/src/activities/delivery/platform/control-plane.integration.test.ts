@@ -131,7 +131,7 @@ test("genuine qualified bootstrap originals authorize the first managed controll
   );
   const detail = await api.operator.deployment(deployment.id);
   const selections = controlPlaneSelections(controlPlaneJobInput(detail));
-  expect(detail.environment.acceptedControlPlaneDeploymentId).toBeNull();
+  expect(detail.environment.acceptedDeploymentId).toBeNull();
   expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(detail.deployment.controlPlaneSnapshot?.previousArtifact.id).toBe(
     fixture.previous.artifactId,
@@ -229,7 +229,7 @@ test("real PG+HTTP control-plane intent resumes the same native Job across execu
   );
   const checkpoint = await fixture.delivery.detail(deployment.id);
   expect(checkpoint.deployment.status).toBe("running");
-  expect(checkpoint.environment.acceptedControlPlaneDeploymentId).toBeNull();
+  expect(checkpoint.environment.acceptedDeploymentId).toBeNull();
   expect(
     checkpoint.stages.find((stage) => stage.key === "control-plane")?.message,
   ).toBe(JSON.stringify(native));
@@ -237,9 +237,7 @@ test("real PG+HTTP control-plane intent resumes the same native Job across execu
   expect(starts).toBe(1);
   await finishDelivery(deployment.id, { status: "succeeded", evidence });
   const accepted = await fixture.delivery.detail(deployment.id);
-  expect(accepted.environment.acceptedControlPlaneDeploymentId).toBe(
-    deployment.id,
-  );
+  expect(accepted.environment.acceptedDeploymentId).toBe(deployment.id);
   expect(accepted.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(accepted.environment.observedVersionSetRevisionId).toBeNull();
   expect(accepted.deployment.controlPlaneSnapshot?.nextArtifact.id).toBe(

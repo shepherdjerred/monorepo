@@ -17,6 +17,14 @@ import * as platformRecovery from "./platform-recovery-contract.ts";
 import * as pipelines from "./pipeline-contract.ts";
 import * as trmnlRepair from "./trmnl-repair-contract.ts";
 import * as ownership from "./ownership-contract.ts";
+import { ApprovalV2Schema } from "./model/approval-contract.ts";
+import * as monitors from "./model/monitor-contract.ts";
+import * as records from "./model/record-contract.ts";
+export const ConfigurationRevisionSchema = records.ConfigurationRevisionSchema;
+export const ExecutorIdentitySchema = records.ExecutorIdentitySchema;
+export type ConfigurationRevision = records.ConfigurationRevision;
+export type ExecutorIdentity = records.ExecutorIdentity;
+import * as catalogShape from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 export const RequestContentRecoverySchema =
   contentRecovery.RequestContentRecoverySchema;
 export const ContentRecoveryIntentSchema =
@@ -189,7 +197,6 @@ export const PendingReplicationSchema = artifacts.PendingReplicationSchema;
 export const RecordArtifactReplicationSchema =
   artifacts.RecordArtifactReplicationSchema;
 const TimestampSchema = z.iso.datetime();
-const DigestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 export const ArtifactInputSchema = artifacts.ArtifactInputSchema;
 export const PublishBuildSchema = artifacts.PublishBuildSchema;
 export const ArtifactVersionSchema = artifacts.ArtifactVersionSchema;
@@ -221,6 +228,12 @@ export const VersionSetRevisionSchema = z.object({
   serviceId: IdentifierSchema,
   revision: z.number().int().positive(),
   baseRevisionId: IdentifierSchema.nullable(),
+  lineage: z.string().regex(/^[a-f0-9]{64}$/u),
+  /** Zero-padded `major.minor`; lexicographic order is the order key (B4). Null for manual sets. */
+  orderKey: z
+    .string()
+    .regex(/^\d{10}\.\d{10}$/u)
+    .nullable(),
   components: z.record(z.string(), ArtifactVersionSchema),
   createdAt: TimestampSchema,
 });
@@ -232,6 +245,9 @@ export const PipelineRevisionSchema = z.object({
   definition: PipelineDefinitionSchema,
   createdAt: TimestampSchema,
 });
+export const EnvironmentRoleSchema = catalogShape.EnvironmentRoleSchema;
+export const LifecycleSchema = catalogShape.LifecycleSchema;
+export const ApprovalPolicySchema = catalogShape.ApprovalPolicySchema;
 export const RegisterEnvironmentSchema = z
   .object({
     id: IdentifierSchema,
@@ -243,24 +259,33 @@ export const RegisterEnvironmentSchema = z
     configuration: z.record(z.string(), z.string()),
     automatic: z.boolean().default(false),
     promotionSourceEnvironmentId: IdentifierSchema.optional(),
+    role: EnvironmentRoleSchema.default("durable"),
+    approvalPolicy: ApprovalPolicySchema.default("none"),
   })
   .strict();
-export const EnvironmentSchema = RegisterEnvironmentSchema.extend({
+export const EnvironmentSchema = z.object({
+  id: IdentifierSchema,
+  serviceId: IdentifierSchema,
+  name: z.string().min(1).max(100),
   application: IdentifierSchema.nullable(),
+  pipelineRevisionId: IdentifierSchema,
+  declaredConfigurationId: IdentifierSchema,
+  automatic: z.boolean(),
   automaticSuppressedThroughRevision: z.number().int().nonnegative().default(0),
   promotionSourceEnvironmentId: IdentifierSchema.nullable(),
+  role: EnvironmentRoleSchema,
+  lifecycle: LifecycleSchema,
+  approvalPolicy: ApprovalPolicySchema,
   generation: z.number().int().nonnegative(),
-  approvalRequired: z.boolean(),
   desiredVersionSetRevisionId: IdentifierSchema.nullable(),
   observedVersionSetRevisionId: IdentifierSchema.nullable(),
   acceptedVersionSetRevisionId: IdentifierSchema.nullable(),
-  acceptedPlatformDeploymentId: IdentifierSchema.nullable().default(null),
-  acceptedControlPlaneDeploymentId: IdentifierSchema.nullable().default(null),
-  acceptedForumBaselineIntentId: IdentifierSchema.nullable().default(null),
+  acceptedDeploymentId: IdentifierSchema.nullable(),
   observedAt: TimestampSchema.nullable(),
   activeDeploymentId: IdentifierSchema.nullable(),
   createdAt: TimestampSchema,
 });
+export const MonitorStateSchema = monitors.MonitorStateSchema;
 export const DeploymentStatusSchema = z.enum([
   "awaiting_approval",
   "queued",
@@ -278,8 +303,7 @@ export const DeploymentSchema = z.object({
   serviceId: IdentifierSchema,
   versionSetRevisionId: IdentifierSchema,
   pipelineRevisionId: IdentifierSchema,
-  configurationRevision: z.string(),
-  configuration: z.record(z.string(), z.string()),
+  configurationId: IdentifierSchema,
   workerSnapshot: WorkerPoolSnapshotSchema.nullable().default(null),
   platformSnapshot: PlatformReleaseSnapshotSchema.nullable().default(null),
   controlPlaneSnapshot:
@@ -287,23 +311,26 @@ export const DeploymentSchema = z.object({
   forumBaselineSnapshot: ForumBaselineSnapshotSchema.nullable().default(null),
   previousAcceptedVersionSetRevisionId:
     IdentifierSchema.nullable().default(null),
+  previousAcceptedDeploymentId: IdentifierSchema.nullable().default(null),
+  restoredDeploymentId: IdentifierSchema.nullable().default(null),
   sourceEnvironmentId: IdentifierSchema.nullable().default(null),
-  previousAcceptedConfiguration: z
-    .record(z.string(), z.string())
-    .nullable()
-    .default(null),
+  catalogRevision: z.string().min(1),
   expectedGeneration: z.number().int().nonnegative(),
   kind: z.enum([
     "deploy",
     "promote",
     "rollback",
-    "retire-worker",
-    "upgrade-control-plane",
+    "rebind",
+    "retire-host",
+    "channel-publish",
+    "operator-run",
     "adopt-worker",
+    "repair-trmnl",
+    // Readable history only; no longer creatable.
+    "upgrade-control-plane",
     "root-release",
     "tofu-plan",
     "tofu-apply",
-    "repair-trmnl",
   ]),
   status: DeploymentStatusSchema,
   automatic: z.boolean().default(false),
@@ -311,27 +338,21 @@ export const DeploymentSchema = z.object({
   message: z.string().nullable(),
   cancelRequested: z.boolean(),
   recoveryRequired: z.boolean(),
+  workflowId: z.string().nullable().default(null),
+  workflowRunId: z.string().nullable().default(null),
+  leaseExpiresAt: TimestampSchema.nullable().default(null),
+  monitorState: MonitorStateSchema.nullable().default(null),
+  monitorSettledAt: TimestampSchema.nullable().default(null),
+  monitorAlarmedAt: TimestampSchema.nullable().default(null),
   createdAt: TimestampSchema,
   startedAt: TimestampSchema.nullable(),
   finishedAt: TimestampSchema.nullable(),
 });
 export const EvidenceInputSchema = evidenceContracts.EvidenceInputSchema;
 export const EvidenceSchema = evidenceContracts.EvidenceSchema;
-export const ApprovalInputSchema = z
-  .object({
-    decision: z.enum(["approve", "reject"]),
-    reason: z.string().min(1).max(4000),
-  })
-  .strict();
 export const RecoverDeploymentSchema = z
   .object({ operationId: z.uuid(), reason: z.string().min(20).max(4000) })
   .strict();
-export const ApprovalSchema = ApprovalInputSchema.extend({
-  id: IdentifierSchema,
-  deploymentId: IdentifierSchema,
-  actor: z.string(),
-  createdAt: TimestampSchema,
-});
 export const StageInputSchema = z
   .object({
     key: IdentifierSchema,
@@ -363,8 +384,12 @@ export const DeploymentDetailSchema = z.object({
   versionSet: VersionSetRevisionSchema,
   previousAcceptedVersionSet: VersionSetRevisionSchema.nullable().default(null),
   pipeline: PipelineRevisionSchema,
+  configuration: ConfigurationRevisionSchema,
+  /** The configuration of the selection this deployment moves away from (4.9). */
+  previousAcceptedConfiguration:
+    ConfigurationRevisionSchema.nullable().default(null),
   evidence: z.array(EvidenceSchema),
-  approvals: z.array(ApprovalSchema),
+  approval: ApprovalV2Schema.nullable().default(null),
   stages: z.array(StageSchema),
   minecraftRecoveries: z.array(MinecraftRecoveryIntentSchema).default([]),
   platformRecoveries: z.array(PlatformRecoveryIntentSchema).default([]),
@@ -428,31 +453,6 @@ export const ApiErrorSchema = z.object({
     requestId: z.string(),
   }),
 });
-export const ImportSnapshotSchema = z
-  .object({
-    requestId: IdentifierSchema,
-    serviceId: IdentifierSchema,
-    environmentId: IdentifierSchema.optional(),
-    capturedAt: TimestampSchema,
-    source: z.enum(["version-catalog", "argocd", "runtime"]),
-    components: z.record(
-      IdentifierSchema,
-      z
-        .object({
-          uri: z.string().min(1),
-          version: z.string().min(1),
-          digest: DigestSchema.optional(),
-        })
-        .strict(),
-    ),
-    evidence: z.string().min(1).max(4000),
-  })
-  .strict();
-export const ImportedSnapshotSchema = ImportSnapshotSchema.extend({
-  id: IdentifierSchema,
-  verified: z.literal(false),
-  createdAt: TimestampSchema,
-});
 export const PrincipalSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(["human", "machine"]),
@@ -474,9 +474,11 @@ export type PublishBuild = z.input<typeof PublishBuildSchema>;
 export type ComposeVersionSet = z.infer<typeof ComposeVersionSetSchema>;
 export type CreateDeployment = z.infer<typeof CreateDeploymentSchema>;
 export type RegisterEnvironment = z.infer<typeof RegisterEnvironmentSchema>;
+export type RegisterEnvironmentInput = z.input<
+  typeof RegisterEnvironmentSchema
+>;
 export type StageInput = z.infer<typeof StageInputSchema>;
 export type FinishDeployment = z.infer<typeof FinishDeploymentSchema>;
-export type ImportSnapshot = z.infer<typeof ImportSnapshotSchema>;
 export function deliveryWorkflowId(deploymentId: string) {
   return `delivery/${deploymentId}`;
 }

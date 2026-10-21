@@ -1,5 +1,9 @@
 import type { Database } from "#infrastructure/database.ts";
-import { artifact, environment } from "#infrastructure/delivery-data.ts";
+import {
+  artifact,
+  configurationRevision,
+  environment,
+} from "#infrastructure/delivery-data.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
 import {
   fingerprint,
@@ -10,6 +14,21 @@ import {
 import { PipelineRevisionSchema } from "#shared/contract.ts";
 import type { ArtifactVersion } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
+
+/**
+ * The independently observed original runtime of a forum environment: its
+ * latest succeeded baseline intent. The baseline is evidence, never an
+ * accepted pointer, and settling it does not move the generation (E1).
+ */
+export async function acceptedForumBaseline(
+  tx: Transaction | Database,
+  environmentId: string,
+) {
+  return tx.forumBaselineIntent.findFirst({
+    where: { environmentId, status: "succeeded" },
+    orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
+  });
+}
 
 function originalRuntime(image: ArtifactVersion, component: string) {
   if (
@@ -65,8 +84,8 @@ export async function forumBaselineInputs(
       "INVALID",
       "Forum baseline requires its reviewed canonical release pipeline",
     );
-  const held = await tx.applicationLock.findUnique({
-    where: { application: definition.application },
+  const held = await tx.targetLock.findUnique({
+    where: { instance: `application:${definition.application}` },
   });
   if (held !== null)
     throw new DeliveryError(
@@ -89,13 +108,13 @@ export async function forumBaselineInputs(
       "INVALID",
       "Forum baseline requires an independently qualified original licensed bundle",
     );
+  const previousBaseline = await acceptedForumBaseline(tx, env.id);
   const snapshotFingerprint = fingerprint({
     environmentId: env.id,
     generation: env.generation,
-    previousBaselineIntentId: env.acceptedForumBaselineIntentId,
+    previousBaselineIntentId: previousBaseline?.id ?? null,
     pipeline,
-    configurationRevision: env.configurationRevision,
-    configuration: env.configuration,
+    configuration: await configurationRevision(tx, env.declaredConfigurationId),
     image,
     bundle,
   });

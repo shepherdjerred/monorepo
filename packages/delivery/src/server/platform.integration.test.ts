@@ -129,7 +129,7 @@ test("paused writes preserve a native UID checkpoint without admitting new opera
   expect(newStage.status).toBe(503);
   expect(changedOperation.status).toBe(503);
   expect(claim.status).toBe(503);
-  expect(await context.cluster.database.applicationLock.count()).toBe(1);
+  expect(await context.cluster.database.targetLock.count()).toBe(1);
 });
 
 test("encrypted plan records above1MiB are bounded separately and remain execute-only", async () => {

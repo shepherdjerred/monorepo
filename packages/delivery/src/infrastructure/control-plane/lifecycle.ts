@@ -8,7 +8,12 @@ import {
   pendingDeliveryObservations,
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
-import { fingerprint, required } from "#infrastructure/delivery-records.ts";
+import {
+  PLATFORM_LOCK,
+  applicationInstance,
+  fingerprint,
+  required,
+} from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { holdPlatformLock } from "#infrastructure/platform/lifecycle.ts";
@@ -34,7 +39,7 @@ export async function requireControlPlaneQuiescence(
   row: Operation,
 ) {
   const held = await tx.platformLock.findUnique({
-    where: { id: "shared-resources" },
+    where: { id: PLATFORM_LOCK },
     include: { deployment: true },
   });
   if (row.kind !== "upgrade-control-plane") {
@@ -90,26 +95,24 @@ export async function admitControlPlaneUpgrade(
     where: { id: row.environmentId },
   });
   const running = row.status === "running";
-  if (env.generation !== row.expectedGeneration + (running ? 1 : 0))
+  // Only acceptance moves the generation (E1); ownership is checked directly.
+  if (env.generation !== row.expectedGeneration)
     throw new DeliveryError(
       "CONFLICT",
       "Control-plane environment generation changed",
     );
   if (running) {
-    const held = await tx.applicationLock.findUnique({
-      where: { deploymentId: row.id },
+    const held = await tx.targetLock.findUnique({
+      where: { instance: applicationInstance("delivery-control-plane") },
     });
-    if (
-      env.activeDeploymentId !== row.id ||
-      held?.application !== "delivery-control-plane"
-    )
+    if (env.activeDeploymentId !== row.id || held?.deploymentId !== row.id)
       throw new DeliveryError(
         "CONFLICT",
         "Control-plane upgrade lost native Application ownership",
       );
   }
   const previous = await previousControlPlane(tx, {
-    acceptedDeploymentId: env.acceptedControlPlaneDeploymentId,
+    acceptedDeploymentId: env.acceptedDeploymentId,
     previousImageArtifactId: snapshot.previousArtifact.id,
     priorChartArtifactId: snapshot.priorChartArtifact.id,
     repositoryId: snapshot.source.repositoryId,
@@ -185,7 +188,7 @@ export async function validateControlPlaneSuccess(
       "Controller acceptance lacks exact original artifacts, native producer and owned Argo readback evidence",
     );
   const held = required(
-    await tx.platformLock.findUnique({ where: { id: "shared-resources" } }),
+    await tx.platformLock.findUnique({ where: { id: PLATFORM_LOCK } }),
     "Global controller execution barrier",
   );
   if (held.deploymentId !== row.id)

@@ -48,15 +48,18 @@ export async function recordTofuPlan(
     const stage = await tx.stage.findUnique({
       where: { deploymentId_key: { deploymentId: row.id, key: "tofu-plan" } },
     });
-    const held = await tx.applicationLock.findUnique({
-      where: { deploymentId: row.id },
-    });
+    const held =
+      snapshot.kind === "tofu-plan"
+        ? await tx.targetLock.findUnique({
+            where: { instance: `stack:${snapshot.stack}` },
+          })
+        : null;
     if (
       row.kind !== "tofu-plan" ||
       snapshot.kind !== "tofu-plan" ||
       row.status !== "running" ||
       row.environment.activeDeploymentId !== row.id ||
-      held?.application !== `tofu:${snapshot.stack}`
+      held?.deploymentId !== row.id
     )
       throw new DeliveryError(
         "CONFLICT",

@@ -30,6 +30,8 @@ export const DELIVERY_VARIANT_FLAG_KEYS = [
   "delivery-enabled-environments",
   "delivery-enrichment-sources",
   "delivery-operator-logins",
+  "delivery-executor-concurrency",
+  "delivery-lease-seconds",
 ] as const;
 
 export type DeliveryVariantFlagKey =

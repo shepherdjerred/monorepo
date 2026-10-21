@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testOperator, testExecutor } from "#testing/seed.ts";
 import {
@@ -378,7 +379,11 @@ test("legacy adoption establishes only a baseline and repeats the same native pr
     where: { id: input.environment.id },
   });
   expect(env.acceptedVersionSetRevisionId).toBeNull();
-  expect(env.acceptedForumBaselineIntentId).toBe(input.intent.id);
+  const baseline = await acceptedForumBaseline(
+    fixture.delivery.database,
+    env.id,
+  );
+  expect(baseline?.id).toBe(input.intent.id);
   const candidate = await qualifyForumReleaseFixture(
     fixture.delivery,
     "forum/native-legacy-first",
@@ -387,7 +392,7 @@ test("legacy adoption establishes only a baseline and repeats the same native pr
     {
       requestId: "forum/native-legacy-upgrade",
       environmentId: input.environment.id,
-      expectedGeneration: 1,
+      expectedGeneration: 0,
       versionSetRevisionId: candidate.id,
       kind: "deploy",
     },

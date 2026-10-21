@@ -34,6 +34,8 @@ export async function workerFixture(
       configurationRevision: "worker-fixture/1",
       configuration: {},
       automatic: false,
+      // Scout production's approval policy is catalog data (4.10).
+      approvalPolicy: target === "scout-prod" ? "required" : "none",
     },
     testOperator,
   );
@@ -116,8 +118,7 @@ export async function workerFixture(
     if (deployment.status === "awaiting_approval")
       await delivery.approve(
         deployment.id,
-        "approve",
-        "Accepted persistence fixture",
+        { decision: "approve", reason: "Accepted persistence fixture" },
         testOperator,
       );
     await delivery.claim(deployment.id, testExecutor);

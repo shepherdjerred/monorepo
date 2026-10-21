@@ -20,7 +20,7 @@ import {
   required,
   wire,
 } from "#infrastructure/delivery-records.ts";
-import { id } from "#infrastructure/delivery-data.ts";
+import { id, serviceCatalogRevision } from "#infrastructure/delivery-data.ts";
 import { requireIdleWorkerEnvironment } from "#infrastructure/worker-pool/registration.ts";
 import {
   controlPlaneArtifact,
@@ -96,7 +96,7 @@ export async function requestControlPlaneUpgrade(
     );
     requireControlPlaneCompatibility(next.artifact, chart.artifact);
     const prior = await previousControlPlane(tx, {
-      acceptedDeploymentId: env.acceptedControlPlaneDeploymentId,
+      acceptedDeploymentId: env.acceptedDeploymentId,
       repositoryId: this.repositoryId,
       ...(input.previousImageArtifactId === undefined
         ? {}
@@ -131,8 +131,8 @@ export async function requestControlPlaneUpgrade(
         serviceId: env.serviceId,
         versionSetRevisionId: anchor.id,
         pipelineRevisionId: pipeline.id,
-        configurationRevision: env.configurationRevision,
-        configuration: env.configuration,
+        configurationId: env.declaredConfigurationId,
+        catalogRevision: await serviceCatalogRevision(tx, env.serviceId),
         expectedGeneration: env.generation,
         kind: "upgrade-control-plane",
         requestedBy: actor.id,

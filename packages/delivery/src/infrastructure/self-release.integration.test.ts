@@ -103,8 +103,8 @@ test("API self-release preserves exact original selection and ownership through 
     sourceRevision: "d".repeat(40),
   });
   expect(
-    await context.cluster.database.applicationLock.findUnique({
-      where: { application: "delivery" },
+    await context.cluster.database.targetLock.findUnique({
+      where: { instance: "application:delivery" },
     }),
   ).toMatchObject({ deploymentId: requested.id });
   const evidence = [

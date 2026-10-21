@@ -46,7 +46,7 @@ export async function requirePlatformPrerequisites(
         platformSourceBuildId: requirement.sourceBuildId,
         kind,
         status: "succeeded",
-        platformAcceptedBy: { some: {} },
+        acceptedBy: { some: {} },
       },
       orderBy: { finishedAt: "desc" },
     });

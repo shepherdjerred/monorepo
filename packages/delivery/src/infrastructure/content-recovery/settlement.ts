@@ -1,25 +1,21 @@
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  audit,
-  fingerprint,
-  required,
-  wire,
-} from "#infrastructure/delivery-records.ts";
+import { audit, fingerprint } from "#infrastructure/delivery-records.ts";
 import { evidence } from "#infrastructure/delivery-data.ts";
 import {
   AdmitContentRecoveryRepairSchema,
   CompleteContentRecoverySchema,
-  ContentRecoveryIntentSchema,
   type AdmitContentRecoveryRepair,
   type CompleteContentRecovery,
   type Principal,
 } from "#shared/contract.ts";
+import { findIntent } from "#infrastructure/recovery-intents.ts";
 import {
   pendingContentIntent,
   requireFreshContentObservation,
 } from "./ownership.ts";
+import { contentIntentView } from "./context.ts";
 import { inspectContentProof } from "./proof.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 
@@ -43,7 +39,7 @@ export async function admitContentRecoveryRepair(
         "Content recovery native checkpoints changed after inspection",
       );
     const global = await tx.platformLock.findUnique({
-      where: { id: "shared-resources" },
+      where: { id: "platform" },
     });
     if (global?.deploymentId !== held.row.id)
       throw new DeliveryError(
@@ -68,10 +64,7 @@ export async function completeContentRecovery(
 ) {
   requireScope(actor, "execute");
   const input = CompleteContentRecoverySchema.parse(raw);
-  const existing = required(
-    await this.database.contentRecoveryIntent.findUnique({ where: { id } }),
-    "Content recovery intent",
-  );
+  const existing = await findIntent(this.database, id, "content");
   if (existing.status !== "pending") {
     if (
       existing.status !== "succeeded" ||
@@ -81,7 +74,7 @@ export async function completeContentRecovery(
         "CONFLICT",
         "Content recovery settlement is immutable",
       );
-    return ContentRecoveryIntentSchema.parse(wire(existing));
+    return contentIntentView(existing);
   }
   const before = await inspectContentProof(this, id, input);
   if (
@@ -101,7 +94,7 @@ export async function completeContentRecovery(
         "Content native checkpoints changed after independent settlement",
       );
     const global = await tx.platformLock.findUnique({
-      where: { id: "shared-resources" },
+      where: { id: "platform" },
     });
     if (global?.deploymentId !== row.id)
       throw new DeliveryError(
@@ -132,7 +125,7 @@ export async function completeContentRecovery(
       expectedGeneration: env.generation,
       releaseGlobal: false,
     });
-    const updated = await tx.contentRecoveryIntent.update({
+    const updated = await tx.recoveryIntent.update({
       where: { id },
       data: {
         status: "succeeded",
@@ -147,6 +140,6 @@ export async function completeContentRecovery(
       requestId: id,
       metadata: input,
     });
-    return ContentRecoveryIntentSchema.parse(wire(updated));
+    return contentIntentView(updated);
   });
 }

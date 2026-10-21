@@ -165,9 +165,7 @@ test("controller native admission, dispatch journal, replay and final acceptance
     testExecutor,
   );
   const accepted = await replacement.detail(selected.id);
-  expect(accepted.environment.acceptedControlPlaneDeploymentId).toBe(
-    selected.id,
-  );
+  expect(accepted.environment.acceptedDeploymentId).toBe(selected.id);
 });
 
 test("ordinary stages cannot opt into controller evidence append by choosing its stage key", async () => {
@@ -252,7 +250,7 @@ test("independent controller selection retains original cross-owner provenance a
   await fixture.delivery.claim(selected.id, testExecutor);
   await acceptTestController(fixture.delivery, selected);
   const detail = await fixture.delivery.detail(selected.id);
-  expect(detail.environment.acceptedControlPlaneDeploymentId).toBe(selected.id);
+  expect(detail.environment.acceptedDeploymentId).toBe(selected.id);
   expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(detail.environment.observedVersionSetRevisionId).toBeNull();
   expect(detail.environment.desiredVersionSetRevisionId).toBeNull();
@@ -405,26 +403,30 @@ test.each(["worker", "minecraft", "platform", "forum"] as const)(
       snapshotFingerprint: "a".repeat(64),
       workflowId: `pending/${kind}`,
     };
+    const intent = {
+      id: pending.id,
+      deploymentId: source.id,
+      sequence: 1,
+      requestedBy: pending.requestedBy,
+      reason: pending.reason,
+      expectedGeneration: 0,
+      fingerprint: `sha256:${"a".repeat(64)}`,
+      workflowId: pending.workflowId,
+    };
     // Pending durable identities must block replacement even if a crash left incomplete semantic evidence.
     switch (kind) {
       case "worker":
-        await database.workerRecoveryIntent.create({
+        await database.recoveryIntent.create({
           data: {
-            ...pending,
-            deploymentId: source.id,
-            poolFingerprint: "b".repeat(64),
+            ...intent,
+            kind,
+            detail: { poolFingerprint: "b".repeat(64) },
           },
         });
         break;
       case "minecraft":
-        await database.minecraftRecoveryIntent.create({
-          data: { ...pending, deploymentId: source.id },
-        });
-        break;
       case "platform":
-        await database.platformRecoveryIntent.create({
-          data: { ...pending, deploymentId: source.id },
-        });
+        await database.recoveryIntent.create({ data: { ...intent, kind } });
         break;
       case "forum":
         await database.forumBaselineIntent.create({
@@ -545,5 +547,5 @@ test("controller barrier also excludes infrastructure plans and requires full na
     ),
   ).rejects.toThrow("exact completed independent native Job");
   const unchanged = await fixture.delivery.detail(controller.id);
-  expect(unchanged.environment.acceptedControlPlaneDeploymentId).toBeNull();
+  expect(unchanged.environment.acceptedDeploymentId).toBeNull();
 });

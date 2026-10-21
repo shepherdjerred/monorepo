@@ -8,6 +8,7 @@ import {
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
 import {
+  PLATFORM_LOCK,
   audit,
   fingerprint,
   required,
@@ -33,7 +34,7 @@ export async function holdPlatformLock(
   running: boolean,
 ) {
   const held = await tx.platformLock.findUnique({
-    where: { id: "shared-resources" },
+    where: { id: PLATFORM_LOCK },
   });
   if (held !== null && held.deploymentId !== deploymentId)
     throw new DeliveryError(
@@ -47,7 +48,7 @@ export async function holdPlatformLock(
     );
   if (held === null)
     await tx.platformLock.create({
-      data: { id: "shared-resources", deploymentId },
+      data: { id: PLATFORM_LOCK, deploymentId },
     });
 }
 
@@ -136,13 +137,14 @@ export async function readmitPlatformDeployment(
   const owned = await tx.environment.findUniqueOrThrow({
     where: { id: row.environmentId },
   });
-  const held = await tx.applicationLock.findUnique({
+  const held = await tx.targetLock.findFirst({
     where: { deploymentId: row.id },
   });
+  // Only acceptance moves the generation (E1); ownership is checked directly.
   if (
     held === null ||
     owned.activeDeploymentId !== row.id ||
-    owned.generation !== row.expectedGeneration + 1
+    owned.generation !== row.expectedGeneration
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -222,7 +224,7 @@ export async function validatePlatformSuccess(
     );
   if (snapshot.kind !== "tofu-plan") {
     const held = await tx.platformLock.findUnique({
-      where: { id: "shared-resources" },
+      where: { id: PLATFORM_LOCK },
     });
     if (held?.deploymentId !== row.id)
       throw new DeliveryError(

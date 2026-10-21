@@ -21,6 +21,8 @@ export const ApprovalV2InputSchema = z.strictObject({
   override: z.boolean().default(false),
 });
 export type ApprovalV2Input = z.infer<typeof ApprovalV2InputSchema>;
+/** The request shape before defaults: `override` may be omitted. */
+export type ApprovalV2Request = z.input<typeof ApprovalV2InputSchema>;
 
 /**
  * One row per deployment, created `pending` with the request and without an

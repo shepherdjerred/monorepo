@@ -40,10 +40,12 @@ import {
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,
 } from "./platform/recovery.ts";
+import { runDeliveryTestStage } from "./test-stage.ts";
 
 export const deliveryActivities = {
   listDeliveryReplications,
   recordDeliveryReplication,
+  runDeliveryTestStage,
   applyDeliveryTrmnlPlugins,
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,

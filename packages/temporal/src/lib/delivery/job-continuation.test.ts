@@ -5,11 +5,11 @@ import { deliveryJobManifest } from "./job-manifest.ts";
 function fixture() {
   const expected = deliveryJobManifest({
     deploymentId: "continuation/1",
-    stageKey: "root-release",
-    recipe: "root-release",
+    stageKey: "tofu-apply",
+    recipe: "tofu-apply",
     runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
     sourceRevision: "b".repeat(40),
-    input: {},
+    input: { stack: "github" },
   });
   const native = structuredClone(expected);
   native.metadata!.uid = crypto.randomUUID();

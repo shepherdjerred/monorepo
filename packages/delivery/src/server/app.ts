@@ -8,15 +8,14 @@ import { authenticate, requireScope } from "#infrastructure/auth.ts";
 import { RetrySchema } from "#infrastructure/delivery.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import type { RuntimeConfig } from "#infrastructure/config.ts";
+import { ApprovalV2InputSchema } from "#shared/model/approval-contract.ts";
 import {
-  ApprovalInputSchema,
   ComposeVersionSetSchema,
   CreateDeploymentSchema,
   FinishDeploymentSchema,
   LatestQualifiedArtifactQuerySchema,
   PublishBuildSchema,
   StageInputSchema,
-  ImportSnapshotSchema,
 } from "#shared/contract.ts";
 import type { Principal, PublishBuild } from "#shared/contract.ts";
 import { ciIdentity } from "#infrastructure/qualification.ts";
@@ -123,7 +122,7 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
@@ -177,19 +176,6 @@ export function createApp(options: Options) {
       : { transport: options.upstreamFetch }),
   });
   app.get("/api/v1/identity", (c) => c.json(c.get("principal")));
-  app.get("/api/v1/imports", async (c) =>
-    c.json(await delivery.importedSnapshots()),
-  );
-  app.post("/api/v1/imports", async (c) => {
-    requireScope(c.get("principal"), "admin");
-    return c.json(
-      await delivery.importSnapshot(
-        ImportSnapshotSchema.parse(await c.req.json()),
-        c.get("principal"),
-      ),
-      201,
-    );
-  });
   app.get("/api/v1/overview", async (c) => c.json(await delivery.overview()));
   app.get("/api/v1/artifacts/latest-qualified", async (c) =>
     c.json(
@@ -256,16 +242,11 @@ export function createApp(options: Options) {
   });
   app.post("/api/v1/deployments/:id/approval", async (c) => {
     requireScope(c.get("principal"), "approve");
-    const input = ApprovalInputSchema.parse(await c.req.json());
+    const input = ApprovalV2InputSchema.parse(await c.req.json());
     const detail = await delivery.detail(c.req.param("id"));
     await enabled(detail.environment.id);
     return c.json(
-      await delivery.approve(
-        detail.deployment.id,
-        input.decision,
-        input.reason,
-        c.get("principal"),
-      ),
+      await delivery.approve(detail.deployment.id, input, c.get("principal")),
     );
   });
   app.post("/api/v1/deployments/:id/cancel", async (c) => {

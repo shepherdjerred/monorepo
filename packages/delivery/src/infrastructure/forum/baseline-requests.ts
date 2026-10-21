@@ -66,7 +66,7 @@ export async function requestForumBaseline(
         reason: input.reason,
         expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
         pipelineRevisionId: context.pipeline.id,
-        configurationRevision: context.environment.configurationRevision,
+        configurationRevision: context.environment.declaredConfigurationId,
         snapshotFingerprint: context.snapshotFingerprint,
         workflowId: `delivery-forum-baseline/${input.requestId}`,
       },

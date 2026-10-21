@@ -12,7 +12,7 @@ export const RecoveryJobInputSchema = z.strictObject({
   attempt: z.number().int().min(1).max(20),
   expectedEnvironmentGeneration: z.number().int().nonnegative(),
   snapshotFingerprint: z.string().regex(/^[a-f0-9]{64}$/u),
-  target: z.enum(["root-release", "control-plane", "tofu"]),
+  target: z.enum(["control-plane", "tofu"]),
   stack: z.string().optional(),
 });
 export type RecoveryAction = z.infer<typeof RecoveryActionSchema>;
@@ -33,15 +33,9 @@ export function recoveryExecutionJob(
     detail.deployment.controlPlaneSnapshot;
   if (
     snapshot === null ||
-    !["root-release", "tofu", "control-plane"].includes(pipeline.kind)
+    (pipeline.kind !== "tofu" && pipeline.kind !== "control-plane")
   )
     throw new Error("Recovery lacks an immutable supported platform source");
-  if (
-    pipeline.kind !== "root-release" &&
-    pipeline.kind !== "tofu" &&
-    pipeline.kind !== "control-plane"
-  )
-    throw new Error("Recovery lacks a fixed runner image");
   return {
     deploymentId: input.intent.id,
     stageKey: `platform-recovery-${input.action}-${String(input.attempt)}`,

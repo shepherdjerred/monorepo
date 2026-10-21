@@ -10,12 +10,7 @@ import {
   id,
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
-import {
-  audit,
-  fingerprint,
-  lock,
-  required,
-} from "#infrastructure/delivery-records.ts";
+import { audit, lock, required } from "#infrastructure/delivery-records.ts";
 
 function requireSameTarget(row: Deployment, source: Deployment) {
   if (
@@ -23,8 +18,7 @@ function requireSameTarget(row: Deployment, source: Deployment) {
     !["failed", "canceled"].includes(source.status) ||
     row.pipelineRevisionId !== source.pipelineRevisionId ||
     row.versionSetRevisionId !== source.versionSetRevisionId ||
-    row.configurationRevision !== source.configurationRevision ||
-    fingerprint(row.configuration) !== fingerprint(source.configuration)
+    row.configurationId !== source.configurationId
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -64,8 +58,8 @@ export async function claimTrmnlRepair(
   const running = row.status === "running";
   requireSameTarget(row, source);
   const owner = running ? row.id : source.id;
-  const held = await tx.applicationLock.findUnique({
-    where: { application: "trmnl-dashboard" },
+  const held = await tx.targetLock.findUnique({
+    where: { instance: "application:trmnl-dashboard" },
   });
   if (
     env.application !== "trmnl-dashboard" ||
@@ -73,7 +67,7 @@ export async function claimTrmnlRepair(
     (!running && !source.recoveryRequired) ||
     env.activeDeploymentId !== owner ||
     held?.deploymentId !== owner ||
-    env.generation !== row.expectedGeneration + (running ? 1 : 0) ||
+    env.generation !== row.expectedGeneration ||
     proof.expectedEnvironmentGeneration !== env.generation
   )
     throw new DeliveryError(
@@ -83,13 +77,15 @@ export async function claimTrmnlRepair(
   if (!running) {
     if (row.status !== "queued")
       throw new DeliveryError("CONFLICT", "TRMNL repair is not queued");
-    await tx.applicationLock.update({
-      where: { application: "trmnl-dashboard" },
+    // Every lock of the quarantined source moves to the repair (T1); only
+    // acceptance moves the generation (E1).
+    await tx.targetLock.updateMany({
+      where: { deploymentId: source.id },
       data: { deploymentId: row.id },
     });
     await tx.environment.update({
       where: { id: env.id },
-      data: { activeDeploymentId: row.id, generation: { increment: 1 } },
+      data: { activeDeploymentId: row.id },
     });
     await tx.deployment.update({
       where: { id: source.id },

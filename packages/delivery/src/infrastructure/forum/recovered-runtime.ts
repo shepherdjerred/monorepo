@@ -1,6 +1,11 @@
+import { bareFingerprint } from "#infrastructure/recovery-intents.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
-import { version, type Transaction } from "#infrastructure/delivery-data.ts";
+import {
+  configurationContent,
+  version,
+  type Transaction,
+} from "#infrastructure/delivery-data.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   fingerprint,
@@ -56,10 +61,11 @@ export async function freezeRecoveredForumRuntime(
   const policy = input.pipeline.definition;
   if (policy.kind !== "argocd" || policy.forumRelease === undefined)
     return null;
-  const recovery = await tx.contentRecoveryIntent.findFirst({
+  const recovery = await tx.recoveryIntent.findFirst({
     where: {
+      kind: "content",
       status: "succeeded",
-      targetKind: "forum",
+      detail: { path: ["targetKind"], equals: "forum" },
       deployment: {
         environmentId: input.environmentId,
         serviceId: "storm-forum",
@@ -81,7 +87,7 @@ export async function freezeRecoveredForumRuntime(
   const proof = CompleteContentRecoverySchema.parse(event.metadata);
   if (
     recovery.resultFingerprint !== fingerprint(proof) ||
-    proof.snapshotFingerprint !== recovery.snapshotFingerprint
+    proof.snapshotFingerprint !== bareFingerprint(recovery.fingerprint)
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -131,7 +137,7 @@ export async function freezeRecoveredForumRuntime(
     ...originalRuntime(
       selected,
       original.definition.forumRelease,
-      source.configuration,
+      await configurationContent(tx, source.configurationId),
     ),
   });
 }

@@ -28,7 +28,14 @@ await initFeatureFlags({
   },
 });
 const database = createDatabase(bootstrap.DATABASE_URL);
+const policy = {
+  executorConcurrency: () =>
+    behaviorConfig(bootstrap.ENVIRONMENT).value("executorConcurrency"),
+  leaseSeconds: () =>
+    behaviorConfig(bootstrap.ENVIRONMENT).value("leaseSeconds"),
+};
 const delivery = new Delivery(database, bootstrap.WOODPECKER_REPO_ID);
+delivery.policy = policy;
 const changeFeed = createChangeListener(bootstrap.DATABASE_URL);
 void changeFeed.start();
 const enrichment = createEnrichment({
@@ -114,6 +121,7 @@ const app = createApp({
     operatorLogins: () =>
       behaviorConfig(bootstrap.ENVIRONMENT).value("operatorLogins"),
     trustedProxyAddresses: createTrustedProxyAddresses(),
+    ...policy,
   },
   peerAddress: (request) => server.requestIP(request)?.address ?? null,
 });

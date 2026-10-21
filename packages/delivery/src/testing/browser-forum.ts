@@ -39,7 +39,7 @@ export async function seedBrowserForum(delivery: Delivery) {
       requestId: "browser/forum/first-upgrade",
       environmentId: "storm-forum/prod",
       versionSetRevisionId: version.id,
-      expectedGeneration: 1,
+      expectedGeneration: 0,
       kind: "deploy",
     },
     testOperator,

@@ -201,7 +201,7 @@ test("independent recovery works through authenticated HTTP while workflows/writ
   expect(
     await context.delivery.workers(pool.environmentId, testOperator),
   ).toEqual(pool);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   const env = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: pool.environmentId },
   });
@@ -279,7 +279,7 @@ test("pool CAS and immutable recovery failures keep original quarantine intact",
       testExecutor,
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  expect(await context.cluster.database.applicationLock.count()).toBe(1);
+  expect(await context.cluster.database.targetLock.count()).toBe(1);
   const quarantined =
     await context.cluster.database.deployment.findUniqueOrThrow({
       where: { id: deployment.id },

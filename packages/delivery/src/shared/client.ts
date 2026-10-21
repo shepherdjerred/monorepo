@@ -11,7 +11,6 @@ import {
   DeploymentDetailSchema,
   DeploymentSchema,
   EnvironmentSchema,
-  ImportedSnapshotSchema,
   OverviewSchema,
   PipelineRevisionSchema,
   PrincipalSchema,
@@ -44,9 +43,8 @@ import type {
   PublishBuild,
   ComposeVersionSet,
   PipelineDefinition,
-  RegisterEnvironment,
+  RegisterEnvironmentInput,
   LatestQualifiedArtifactQuery,
-  ImportSnapshotSchema,
   RegisterWorkerVersion,
   RetireWorkerVersion,
   FindQualifiedArtifact,
@@ -397,7 +395,7 @@ export function createDeliveryClient(options: RequestOptions) {
       request("/versions", VersionSetRevisionSchema, input),
     registerPipeline: (id: string, definition: PipelineDefinition) =>
       request("/pipelines", PipelineRevisionSchema, { id, definition }),
-    registerEnvironment: (input: RegisterEnvironment) =>
+    registerEnvironment: (input: RegisterEnvironmentInput) =>
       request("/environments", EnvironmentSchema, input),
     workers: (environmentId: string) =>
       request(
@@ -412,7 +410,6 @@ export function createDeliveryClient(options: RequestOptions) {
         DeploymentSchema,
         input,
       ),
-    imports: () => request("/imports", z.array(ImportedSnapshotSchema)),
     ownershipHandoverContext: () =>
       request("/ownership-handover-context", OwnershipHandoverContextSchema),
     qualifyBuild: (id: string) =>
@@ -421,8 +418,6 @@ export function createDeliveryClient(options: RequestOptions) {
         z.object({ status: z.enum(["pending", "verified", "failed"]) }),
         {},
       ),
-    importSnapshot: (input: z.infer<typeof ImportSnapshotSchema>) =>
-      request("/imports", ImportedSnapshotSchema, input),
   };
 }
 export type DeliveryClient = ReturnType<typeof createDeliveryClient>;

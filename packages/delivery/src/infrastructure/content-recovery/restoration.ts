@@ -7,17 +7,17 @@ import {
   fingerprint,
   lock,
   required,
-  wire,
 } from "#infrastructure/delivery-records.ts";
 import {
   ContentBarrierRestorationSchema,
   ContentRecoveryOwnershipSchema,
-  ContentRecoveryIntentSchema,
   type ContentBarrierRestoration,
   type ContentRecoveryOwnership,
   type Principal,
 } from "#shared/contract.ts";
+import { findIntent } from "#infrastructure/recovery-intents.ts";
 import { requireFreshContentObservation } from "./ownership.ts";
+import { contentIntentView } from "./context.ts";
 import { inspectContentProof } from "./proof.ts";
 
 async function restoreOwnership(
@@ -27,11 +27,8 @@ async function restoreOwnership(
 ) {
   await lock(tx, "delivery:claim");
   await lock(tx, `content-recovery:${id}`);
-  const raw = required(
-    await tx.contentRecoveryIntent.findUnique({ where: { id } }),
-    "Content recovery intent",
-  );
-  const intent = ContentRecoveryIntentSchema.parse(wire(raw));
+  const raw = await findIntent(tx, id, "content");
+  const intent = contentIntentView(raw);
   const row = required(
     await tx.deployment.findUnique({ where: { id: intent.deploymentId } }),
     "Content recovery source",
@@ -42,15 +39,17 @@ async function restoreOwnership(
     "Content environment",
   );
   const global = await tx.platformLock.findUnique({
-    where: { id: "shared-resources" },
+    where: { id: "platform" },
   });
+  // Settlement released ownership without moving the generation (E1), so
+  // the restoring observation names the generation the intent froze.
   if (
     intent.status !== "succeeded" ||
     intent.dispatchBarrier === null ||
     row.recoveryRequired ||
     !["failed", "canceled"].includes(row.status) ||
     env.activeDeploymentId !== null ||
-    env.generation !== intent.expectedEnvironmentGeneration + 1 ||
+    env.generation !== intent.expectedEnvironmentGeneration ||
     env.generation !== generation ||
     (intent.barrierRestoredAt === null && global?.deploymentId !== row.id)
   )
@@ -129,7 +128,7 @@ export async function restoredContentRecovery(
       );
     if (intent.barrierRestoredAt !== null) return intent;
     await tx.platformLock.delete({ where: { deploymentId: row.id } });
-    const updated = await tx.contentRecoveryIntent.update({
+    const updated = await tx.recoveryIntent.update({
       where: { id },
       data: { barrierRestoredAt: new Date(input.observedAt) },
     });
@@ -139,6 +138,6 @@ export async function restoredContentRecovery(
       requestId: id,
       metadata: input,
     });
-    return ContentRecoveryIntentSchema.parse(wire(updated));
+    return contentIntentView(updated);
   });
 }

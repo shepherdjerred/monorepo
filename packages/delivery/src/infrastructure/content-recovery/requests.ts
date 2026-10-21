@@ -6,17 +6,20 @@ import {
   remember,
   request,
   required,
-  wire,
 } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   RequestContentRecoverySchema,
-  ContentRecoveryIntentSchema,
   ContentRecoveryContextSchema,
   type RequestContentRecovery,
   type Principal,
 } from "#shared/contract.ts";
-import { heldContentRecovery, contentSettlements } from "./context.ts";
+import { createIntent, findIntent } from "#infrastructure/recovery-intents.ts";
+import {
+  contentIntentView,
+  heldContentRecovery,
+  contentSettlements,
+} from "./context.ts";
 import { requireNoContentBarrier } from "./ownership.ts";
 
 export async function requestContentRecovery(
@@ -35,15 +38,8 @@ export async function requestContentRecovery(
       resultType: "content-recovery",
     });
     if (previous !== null)
-      return ContentRecoveryIntentSchema.parse(
-        wire(
-          required(
-            await tx.contentRecoveryIntent.findUnique({
-              where: { id: previous.resultId },
-            }),
-            "Content recovery intent",
-          ),
-        ),
+      return contentIntentView(
+        await findIntent(tx, previous.resultId, "content"),
       );
     await lock(tx, "delivery:claim");
     await requireNoContentBarrier(tx);
@@ -58,7 +54,7 @@ export async function requestContentRecovery(
       expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
     });
     if (
-      (await tx.contentRecoveryIntent.findFirst({
+      (await tx.recoveryIntent.findFirst({
         where: { deploymentId, status: "pending" },
       })) !== null
     )
@@ -66,16 +62,15 @@ export async function requestContentRecovery(
         "CONFLICT",
         "The failed content release already has an independent recovery intent",
       );
-    const intent = await tx.contentRecoveryIntent.create({
-      data: {
-        id: input.requestId,
-        deploymentId,
-        targetKind: held.targetKind,
-        requestedBy: actor.id,
-        reason: input.reason,
-        expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
-        snapshotFingerprint: held.snapshotFingerprint,
-      },
+    const intent = await createIntent(tx, {
+      id: input.requestId,
+      kind: "content",
+      deploymentId,
+      requestedBy: actor.id,
+      reason: input.reason,
+      expectedGeneration: input.expectedEnvironmentGeneration,
+      snapshotFingerprint: held.snapshotFingerprint,
+      detail: { targetKind: held.targetKind, nativeReceipts: [] },
     });
     await tx.deployment.update({
       where: { id: deploymentId },
@@ -97,7 +92,7 @@ export async function requestContentRecovery(
         snapshotFingerprint: held.snapshotFingerprint,
       },
     });
-    return ContentRecoveryIntentSchema.parse(wire(intent));
+    return contentIntentView(intent);
   });
 }
 
@@ -107,41 +102,21 @@ export async function contentRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "read");
-  const intent = required(
-    await this.database.contentRecoveryIntent.findUnique({ where: { id } }),
-    "Content recovery intent",
-  );
+  const intent = await findIntent(this.database, id, "content");
   const detail = await this.detail(intent.deploymentId);
-  const prior =
-    detail.deployment.previousAcceptedVersionSetRevisionId === null ||
-    detail.deployment.previousAcceptedConfiguration === null
-      ? null
-      : await this.database.deployment.findFirst({
-          where: {
-            environmentId: detail.environment.id,
-            status: "succeeded",
-            versionSetRevisionId:
-              detail.deployment.previousAcceptedVersionSetRevisionId,
-            serviceId: detail.deployment.serviceId,
-            configuration: {
-              equals: detail.deployment.previousAcceptedConfiguration,
-            },
-            kind: { in: ["deploy", "promote", "rollback"] },
-            finishedAt: { lte: new Date(detail.deployment.createdAt) },
-          },
-          orderBy: { finishedAt: "desc" },
-        });
-  const priorDetail = prior === null ? null : await this.detail(prior.id);
+  // The prior selection is the accepted deployment the failed one replaced,
+  // named exactly by the request rather than reconstructed by matching.
+  const priorId = detail.deployment.previousAcceptedDeploymentId;
+  const priorDetail = priorId === null ? null : await this.detail(priorId);
+  const history = await this.database.recoveryIntent.findMany({
+    where: { deploymentId: intent.deploymentId, kind: "content" },
+    orderBy: { createdAt: "asc" },
+  });
   return ContentRecoveryContextSchema.parse({
-    intent: wire(intent),
+    intent: contentIntentView(intent),
     deployment: detail,
     priorDeployment: priorDetail,
     expectedSettlements: contentSettlements(detail, priorDetail),
-    recoveryHistory: wire(
-      await this.database.contentRecoveryIntent.findMany({
-        where: { deploymentId: intent.deploymentId },
-        orderBy: { createdAt: "asc" },
-      }),
-    ),
+    recoveryHistory: history.map((entry) => contentIntentView(entry)),
   });
 }

@@ -4,7 +4,6 @@ import {
   type DeploymentDetail,
   type EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
-import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { deliverySelection } from "#lib/delivery/selection.ts";
 import { closedPlatformWorkflow } from "#lib/delivery/platform/recovery/native-proof.ts";
@@ -70,8 +69,7 @@ export async function verifyTrmnlRepairBackend(
         detail.deployment.versionSetRevisionId ||
       original.deployment.pipelineRevisionId !==
         detail.deployment.pipelineRevisionId ||
-      canonicalJson(original.deployment.configuration) !==
-        canonicalJson(detail.deployment.configuration)
+      original.deployment.configurationId !== detail.deployment.configurationId
     )
       throw new Error(
         "TRMNL repair lineage changed its frozen application release",

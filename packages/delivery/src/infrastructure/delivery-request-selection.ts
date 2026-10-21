@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   PipelineRevisionSchema,
   WorkerPoolSnapshotSchema,
@@ -6,29 +5,45 @@ import {
   type Environment,
 } from "#shared/contract.ts";
 import { required, wire } from "./delivery-records.ts";
-import type { Transaction } from "./delivery-data.ts";
+import { configurationRevision, type Transaction } from "./delivery-data.ts";
 import { DeliveryError } from "#domain/error.ts";
 
-/** Rollback restores a proven complete release, including its frozen settings. */
+/**
+ * The selection a request freezes: the environment's declared recipe and
+ * configuration revisions for a deploy or promote, the previously accepted
+ * selection for a rollback (model 4.9, P2, F1).
+ */
+async function pipelineRevision(tx: Transaction, id: string) {
+  return PipelineRevisionSchema.parse(
+    wire(required(await tx.pipeline.findUnique({ where: { id } }), "Pipeline")),
+  );
+}
+
+/** A step past its point of no return is not reversible by reselecting bytes (D9). */
+function refuseIrreversibleRollback(
+  pipeline: Awaited<ReturnType<typeof pipelineRevision>>,
+  input: CreateDeployment,
+) {
+  if (
+    pipeline.definition.kind === "argocd" &&
+    pipeline.definition.minecraftUpgrade !== undefined &&
+    input.kind === "rollback"
+  )
+    throw new DeliveryError(
+      "INVALID",
+      "Minecraft upgrade rollback requires the independent restoration procedure",
+    );
+}
+
 export async function deploymentSelection(
   tx: Transaction,
   input: CreateDeployment,
   env: Environment,
 ) {
-  if (input.kind === "rollback" && env.serviceId === "storm-forum")
-    throw new DeliveryError(
-      "INVALID",
-      "Forum rollback requires the independent database and licensed-bundle restoration procedure; reversing an image cannot restore migrated data",
-    );
-  if (
-    input.kind === "rollback" &&
-    env.serviceId === "minecraft" &&
-    env.application === "minecraft-tsmc"
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "TSMC rollback requires the independent restoration procedure; reversing the server image cannot restore its persistent world",
-    );
+  refuseIrreversibleRollback(
+    await pipelineRevision(tx, env.pipelineRevisionId),
+    input,
+  );
   const accepted =
     input.kind === "rollback"
       ? required(
@@ -43,16 +58,10 @@ export async function deploymentSelection(
           }),
           "Previously accepted rollback deployment",
         )
-      : env;
-  const pipeline = PipelineRevisionSchema.parse(
-    wire(
-      required(
-        await tx.pipeline.findUnique({
-          where: { id: accepted.pipelineRevisionId },
-        }),
-        "Pipeline",
-      ),
-    ),
+      : null;
+  const pipeline = await pipelineRevision(
+    tx,
+    accepted?.pipelineRevisionId ?? env.pipelineRevisionId,
   );
   if (
     env.application === "minecraft-tsmc" &&
@@ -63,29 +72,20 @@ export async function deploymentSelection(
       "INVALID",
       "TSMC deployments require the independent restored-copy preservation pipeline",
     );
-  if (
-    pipeline.definition.kind === "argocd" &&
-    pipeline.definition.minecraftUpgrade !== undefined &&
-    input.kind === "rollback"
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "Minecraft upgrade rollback requires the independent restoration procedure",
-    );
+  refuseIrreversibleRollback(pipeline, input);
   return {
     pipeline,
+    restoredDeploymentId: accepted?.id ?? null,
     restoredWorkerSnapshot:
-      input.kind === "rollback" &&
-      "workerSnapshot" in accepted &&
-      accepted.workerSnapshot !== null
+      accepted !== null && accepted.workerSnapshot !== null
         ? {
             deploymentId: accepted.id,
             snapshot: WorkerPoolSnapshotSchema.parse(accepted.workerSnapshot),
           }
         : undefined,
-    configurationRevision: accepted.configurationRevision,
-    configuration: z
-      .record(z.string(), z.string())
-      .parse(accepted.configuration),
+    configuration: await configurationRevision(
+      tx,
+      accepted?.configurationId ?? env.declaredConfigurationId,
+    ),
   };
 }

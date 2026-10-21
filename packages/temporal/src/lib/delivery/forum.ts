@@ -42,13 +42,14 @@ function licensedBundle(
 
 type ForumDetail = Pick<
   DeploymentDetail,
-  "pipeline" | "versionSet" | "previousAcceptedVersionSet"
+  | "pipeline"
+  | "versionSet"
+  | "previousAcceptedVersionSet"
+  | "configuration"
+  | "previousAcceptedConfiguration"
 > & {
   forumRecoveredRuntime?: DeploymentDetail["forumRecoveredRuntime"];
-  deployment: Pick<
-    DeploymentDetail["deployment"],
-    "id" | "serviceId" | "configuration" | "previousAcceptedConfiguration"
-  > & {
+  deployment: Pick<DeploymentDetail["deployment"], "id" | "serviceId"> & {
     forumBaselineSnapshot?: DeploymentDetail["deployment"]["forumBaselineSnapshot"];
     kind?: DeploymentDetail["deployment"]["kind"];
   };
@@ -80,7 +81,7 @@ function previousRelease(
   const previous = detail.previousAcceptedVersionSet;
   if (previous !== null) {
     const version =
-      detail.deployment.previousAcceptedConfiguration?.["forum.xenforoVersion"];
+      detail.previousAcceptedConfiguration?.content["forum.xenforoVersion"];
     if (version === undefined || version.length === 0)
       throw new Error(
         "Forum upgrade requires an accepted XenForo version before migration",
@@ -132,7 +133,7 @@ export function forumReleaseParameters(
   if (
     !Object.values(pipeline.artifactParameters).includes(imageComponent) ||
     !/^\d+\.\d+\.\d+$/u.test(
-      detail.deployment.configuration["forum.xenforoVersion"] ?? "",
+      detail.configuration.content["forum.xenforoVersion"] ?? "",
     )
   ) {
     throw new Error(
@@ -142,7 +143,7 @@ export function forumReleaseParameters(
   const selectedBundle = bundle(detail.versionSet, bundleComponent);
   if (
     selectedBundle.version !==
-    detail.deployment.configuration["forum.xenforoVersion"]
+    detail.configuration.content["forum.xenforoVersion"]
   )
     throw new Error(
       "Forum selected bundle differs from the exact configured XenForo version",

@@ -2,13 +2,7 @@ import { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  audit,
-  fingerprint,
-  lock,
-  required,
-  wire,
-} from "#infrastructure/delivery-records.ts";
+import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
 import {
   PlatformReleaseSnapshotSchema,
   type Principal,
@@ -16,7 +10,6 @@ import {
 import {
   CompletePlatformRecoverySchema,
   FailPlatformRecoverySchema,
-  PlatformRecoveryIntentSchema,
   AdmitPlatformRecoveryApplySchema,
   type CompletePlatformRecovery,
   type AdmitPlatformRecoveryApply,
@@ -24,7 +17,9 @@ import {
 import { pendingRecovery } from "./ownership.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.ts";
+import { findIntent } from "#infrastructure/recovery-intents.ts";
 import {
+  platformIntentView,
   platformSettlements,
   recordedPlatformJobs,
   stoppedRootPriorMatches,
@@ -69,15 +64,13 @@ async function freshOwnershipProof(
       "CONFLICT",
       "Recovery proof must complete within sixty seconds",
     );
-  const previous = await delivery.database.platformRecoveryIntent.findMany({
-    where: { deploymentId: context.intent.deploymentId },
+  const previous = await delivery.database.recoveryIntent.findMany({
+    where: { deploymentId: context.intent.deploymentId, kind: "platform" },
   });
   const jobs = [
     ...recordedPlatformJobs(context.deployment),
     ...previous.flatMap((row) =>
-      PlatformRecoveryIntentSchema.parse(wire(row)).nativeReceipts.map(
-        (entry) => entry.receipt,
-      ),
+      platformIntentView(row).nativeReceipts.map((entry) => entry.receipt),
     ),
   ];
   const currentApply = context.intent.nativeReceipts.find(
@@ -120,9 +113,8 @@ export async function admitPlatformRecoveryApply(
     const { intent, row } = await pendingRecovery(tx, id);
     requireRecoveryEffectOwner(this, row.kind);
     if (
-      fingerprint(
-        PlatformRecoveryIntentSchema.parse(wire(intent)).nativeReceipts,
-      ) !== fingerprint(context.intent.nativeReceipts)
+      fingerprint(intent.nativeReceipts) !==
+      fingerprint(context.intent.nativeReceipts)
     )
       throw new DeliveryError(
         "CONFLICT",
@@ -133,11 +125,10 @@ export async function admitPlatformRecoveryApply(
         row.platformSnapshot,
       );
       if (snapshot.kind !== "root-release") {
-        const parsed = PlatformRecoveryIntentSchema.parse(wire(intent));
         if (
-          parsed.planReceipt === null ||
-          parsed.planFingerprint !== input.planFingerprint ||
-          Date.parse(parsed.planReceipt.expiresAt) <= Date.now()
+          intent.planReceipt === null ||
+          intent.planFingerprint !== input.planFingerprint ||
+          Date.parse(intent.planReceipt.expiresAt) <= Date.now()
         )
           throw new DeliveryError(
             "CONFLICT",
@@ -151,8 +142,8 @@ export async function admitPlatformRecoveryApply(
           );
         if (
           mode === "reviewed-plan" &&
-          (parsed.planApproval?.decision !== "approved" ||
-            parsed.planApproval.planFingerprint !== parsed.planFingerprint)
+          (intent.planApproval?.decision !== "approved" ||
+            intent.planApproval.planFingerprint !== intent.planFingerprint)
         )
           throw new DeliveryError(
             "FORBIDDEN",
@@ -169,7 +160,7 @@ export async function admitPlatformRecoveryApply(
         planFingerprint: input.planFingerprint ?? null,
       },
     });
-    return PlatformRecoveryIntentSchema.parse(wire(intent));
+    return intent;
   });
 }
 
@@ -180,17 +171,14 @@ export async function completePlatformRecovery(
   const [id, raw, actor] = args;
   requireScope(actor, "execute");
   const input = CompletePlatformRecoverySchema.parse(raw);
-  const existing = required(
-    await this.database.platformRecoveryIntent.findUnique({ where: { id } }),
-    "Platform recovery intent",
-  );
+  const existing = await findIntent(this.database, id, "platform");
   if (existing.status !== "pending") {
     if (
       existing.status !== "succeeded" ||
       existing.resultFingerprint !== fingerprint(input)
     )
       throw new DeliveryError("CONFLICT", "Recovery result is immutable");
-    return PlatformRecoveryIntentSchema.parse(wire(existing));
+    return platformIntentView(existing);
   }
   const context = await freshOwnershipProof(this, input, id);
   const expected = platformSettlements(
@@ -242,9 +230,8 @@ export async function completePlatformRecovery(
   return this.database.$transaction(async (tx) => {
     const { intent, row, env } = await pendingRecovery(tx, id);
     if (
-      fingerprint(
-        PlatformRecoveryIntentSchema.parse(wire(intent)).nativeReceipts,
-      ) !== fingerprint(context.intent.nativeReceipts)
+      fingerprint(intent.nativeReceipts) !==
+      fingerprint(context.intent.nativeReceipts)
     )
       throw new DeliveryError(
         "CONFLICT",
@@ -256,7 +243,7 @@ export async function completePlatformRecovery(
       expectedGeneration: env.generation,
       releaseGlobal: true,
     });
-    const result = await tx.platformRecoveryIntent.update({
+    const result = await tx.recoveryIntent.update({
       where: { id },
       data: {
         status: "succeeded",
@@ -271,7 +258,7 @@ export async function completePlatformRecovery(
       requestId: id,
       metadata: { proof: input },
     });
-    return PlatformRecoveryIntentSchema.parse(wire(result));
+    return platformIntentView(result);
   });
 }
 export async function failPlatformRecovery(
@@ -283,19 +270,16 @@ export async function failPlatformRecovery(
   const input = FailPlatformRecoverySchema.parse({ message });
   return this.database.$transaction(async (tx) => {
     await lock(tx, `platform-recovery:${id}`);
-    const row = required(
-      await tx.platformRecoveryIntent.findUnique({ where: { id } }),
-      "Platform recovery intent",
-    );
+    const row = await findIntent(tx, id, "platform");
     if (row.status !== "pending") {
       if (
         row.status !== "failed" ||
         row.resultFingerprint !== fingerprint(input)
       )
         throw new DeliveryError("CONFLICT", "Recovery result is immutable");
-      return PlatformRecoveryIntentSchema.parse(wire(row));
+      return platformIntentView(row);
     }
-    const result = await tx.platformRecoveryIntent.update({
+    const result = await tx.recoveryIntent.update({
       where: { id },
       data: {
         status: "failed",
@@ -310,6 +294,6 @@ export async function failPlatformRecovery(
       requestId: id,
       metadata: input,
     });
-    return PlatformRecoveryIntentSchema.parse(wire(result));
+    return platformIntentView(result);
   });
 }

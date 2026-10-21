@@ -390,7 +390,7 @@ function completion(intent: { snapshotFingerprint: string }) {
 }
 async function retained() {
   expect(
-    await context.cluster.database.applicationLock.count({
+    await context.cluster.database.targetLock.count({
       where: { deploymentId },
     }),
   ).toBe(1);
@@ -421,7 +421,7 @@ test("completed preservation can independently recover the exact original withou
     ),
   ).toMatchObject({ status: "succeeded" });
   expect(boundary.reads()).toBe(2);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   expect(
     await context.cluster.database.deployment.findUniqueOrThrow({
       where: { id: deploymentId },

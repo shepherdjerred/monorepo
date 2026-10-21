@@ -11,7 +11,12 @@ import {
   type Principal,
 } from "#shared/contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
-import { id, type Transaction } from "#infrastructure/delivery-data.ts";
+import {
+  serviceCatalogRevision,
+  id,
+  requestApproval,
+  type Transaction,
+} from "#infrastructure/delivery-data.ts";
 import { audit, required, wire } from "#infrastructure/delivery-records.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { freezePlatformSnapshot } from "./snapshot.ts";
@@ -129,8 +134,8 @@ export async function createPlatformDeployment(
         serviceId: "gitops",
         versionSetRevisionId: selected.id,
         pipelineRevisionId: pipeline.id,
-        configurationRevision: env.configurationRevision,
-        configuration: env.configuration,
+        configurationId: env.declaredConfigurationId,
+        catalogRevision: await serviceCatalogRevision(tx, env.serviceId),
         expectedGeneration: env.generation,
         kind: input.kind,
         automatic,
@@ -140,6 +145,7 @@ export async function createPlatformDeployment(
         platformSourceBuildId: snapshot.source.id,
       },
     });
+    if (approval) await requestApproval(tx, deployment);
     const references = [
       ...(snapshot.kind === "root-release"
         ? snapshot.charts.map((chart) => ({

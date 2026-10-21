@@ -99,12 +99,20 @@ async function automaticSet(tx: Transaction, build: BuildRow) {
     }
     if (unchanged) return null;
   }
+  const service = await tx.service.findUniqueOrThrow({
+    where: { id: build.serviceId },
+  });
+  // A ci build's order key is its pipeline number with a zero minor key;
+  // attested builds take the registration sequence as minor (B4).
   return {
     id: id(),
     qualifiedBuildId: build.id,
     serviceId: build.serviceId,
     revision: (highest._max.revision ?? 0) + 1,
     baseRevisionId: base?.id ?? null,
+    lineage: service.lineage,
+    orderMajor: build.pipelineNumber,
+    orderMinor: 0,
     entries: {
       create: Object.entries(components).map(([component, artifactId]) => ({
         component,

@@ -9,7 +9,11 @@ import {
   evidence,
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
-import { required, wire } from "#infrastructure/delivery-records.ts";
+import {
+  PLATFORM_LOCK,
+  required,
+  wire,
+} from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { nativeReceipt } from "./policy.ts";
 
@@ -41,14 +45,14 @@ async function acceptedRoot(tx: Transaction) {
       "BUSY",
       "Waiting for root infrastructure reconciliation or recovery before site activation",
     );
-  if (env.acceptedPlatformDeploymentId === null)
+  if (env.acceptedDeploymentId === null)
     throw new DeliveryError(
       "BUSY",
       "Waiting for genuine root infrastructure acceptance before site activation",
     );
   const row = required(
     await tx.deployment.findUnique({
-      where: { id: env.acceptedPlatformDeploymentId },
+      where: { id: env.acceptedDeploymentId },
     }),
     "Accepted root infrastructure deployment",
   );
@@ -211,7 +215,7 @@ export async function requireStaticRootBoundary(
       "Root infrastructure is reconciling or quarantined; site activation waits for its settled native state",
     );
   const held = await tx.platformLock.findUnique({
-    where: { id: "shared-resources" },
+    where: { id: PLATFORM_LOCK },
     include: { deployment: true },
   });
   if (held !== null && held.deployment.kind === "tofu-apply") {
