@@ -43,6 +43,8 @@ async function fixture(
     /** Index archive URL; relative values resolve against the repository. */
     archiveUrl?: string;
     duplicate?: boolean;
+    /** Unpinned charts and versions in the shared index that break the strict entry shape. */
+    nonconformingNeighbours?: boolean;
   } = {},
 ) {
   const bytes = await chartBytes(
@@ -58,6 +60,20 @@ async function fixture(
     digest: options.corrupt === true ? "0".repeat(64) : digest(bytes),
     urls: [options.archiveUrl ?? upstreamArchive],
   };
+  const neighbours = options.nonconformingNeighbours === true;
+  const index = {
+    entries: {
+      minecraft: [
+        ...(options.duplicate === true ? [entry, entry] : [entry]),
+        ...(neighbours
+          ? [{ name: "minecraft", version: "5.1.0", urls: [] }]
+          : []),
+      ],
+      other: neighbours
+        ? [{ name: "other", version, urls: ["a.tgz", "b.tgz"] }]
+        : [{ ...entry, name: "other" }],
+    },
+  };
   const transport = async (url: string | URL, init?: RequestInit) => {
     const location = String(url);
     calls.push({
@@ -65,13 +81,7 @@ async function fixture(
       method: init?.method ?? "GET",
       authorization: new Headers(init?.headers).get("Authorization"),
     });
-    if (location === `${repository}index.yaml`)
-      return Response.json({
-        entries: {
-          minecraft: options.duplicate === true ? [entry, entry] : [entry],
-          other: [{ ...entry, name: "other" }],
-        },
-      });
+    if (location === `${repository}index.yaml`) return Response.json(index);
     if (
       location === upstreamArchive ||
       location === `${repository}charts/minecraft-5.2.0.tgz`
@@ -162,6 +172,15 @@ test("an unmirrored chart is identified by its upstream archive URL and never to
     upstreamArchive,
   ]);
   expect(calls.every((call) => call.method === "GET")).toBe(true);
+});
+
+test("only the pinned entry of a shared repository index is held to the strict entry shape", async () => {
+  const { transport, bytes } = await fixture({ nonconformingNeighbours: true });
+  const result = await acquireUpstreamChart(
+    { name: "minecraft", version, repository },
+    { mirror: false, credentials, transport },
+  );
+  expect(result.digest).toBe(`sha256:${digest(bytes)}`);
 });
 
 test("a relative index archive URL resolves against the repository", async () => {

@@ -149,12 +149,15 @@ export async function acquireUpstreamChart(
   const rawIndex = await boundedBytes(
     await request(new URL("index.yaml", repository)),
   );
+  // A shared repository's other charts and versions are not this artifact's
+  // contract; only the pinned entry is held to the strict shape below.
   const index = z
-    .object({ entries: z.record(z.string(), z.array(EntrySchema)) })
+    .object({ entries: z.record(z.string(), z.array(z.unknown())) })
     .parse(parseYaml(new TextDecoder().decode(rawIndex)));
-  const matches = (index.entries[name] ?? []).filter(
-    (entry) => entry.version === version,
-  );
+  const matches = z
+    .array(z.object({ version: z.string() }).loose())
+    .parse(index.entries[name] ?? [])
+    .filter((entry) => entry.version === version);
   if (matches.length !== 1)
     throw new Error("Pinned upstream chart version must occur exactly once");
   const selected = EntrySchema.extend({ name: z.literal(name) }).parse(
