@@ -1,0 +1,5012 @@
+{
+  "groups": [
+    {
+      "id": "delivery",
+      "title": "Delivery",
+      "kind": "platform",
+      "package": "delivery"
+    },
+    {
+      "id": "delivery-data",
+      "title": "Delivery data layer",
+      "kind": "platform",
+      "package": "homelab"
+    },
+    {
+      "id": "arcade",
+      "title": "Arcade",
+      "kind": "product",
+      "package": "arcade"
+    },
+    {
+      "id": "scout-for-lol",
+      "title": "Scout for LoL",
+      "kind": "product",
+      "package": "scout-for-lol",
+      "aliases": ["scout"]
+    },
+    {
+      "id": "birmel",
+      "title": "Birmel",
+      "kind": "product",
+      "package": "birmel"
+    },
+    {
+      "id": "tasknotes-server",
+      "title": "TaskNotes",
+      "kind": "product",
+      "package": "tasknotes-server",
+      "aliases": ["tasknotes"]
+    },
+    {
+      "id": "discord-plays-pokemon",
+      "title": "Discord Plays Pokémon",
+      "kind": "product",
+      "package": "discord-plays-pokemon",
+      "aliases": ["pokemon"]
+    },
+    {
+      "id": "discord-plays-mario-kart",
+      "title": "Discord Plays Mario Kart",
+      "kind": "product",
+      "package": "discord-plays-mario-kart",
+      "aliases": ["mario-kart"]
+    },
+    {
+      "id": "starlight-karma-bot",
+      "title": "Starlight Karma Bot",
+      "kind": "product",
+      "package": "starlight-karma-bot",
+      "aliases": ["karma", "starlight"]
+    },
+    {
+      "id": "streambot",
+      "title": "Streambot & media",
+      "kind": "product",
+      "package": "streambot"
+    },
+    {
+      "id": "static-sites",
+      "title": "Static sites",
+      "kind": "product",
+      "package": "homelab",
+      "aliases": ["caddy-s3proxy"]
+    },
+    {
+      "id": "minecraft",
+      "title": "Minecraft",
+      "kind": "product",
+      "package": "the-storm"
+    },
+    {
+      "id": "tracker",
+      "title": "Tracker",
+      "kind": "product",
+      "package": "tracker"
+    },
+    {
+      "id": "storm-forum",
+      "title": "The Storm forum",
+      "kind": "product",
+      "package": "storm-forum",
+      "aliases": ["xenforo"]
+    },
+    {
+      "id": "glitter-boys-launcher",
+      "title": "Glitter Boys launcher",
+      "kind": "product",
+      "package": "glitter-boys-launcher"
+    },
+    {
+      "id": "temporal",
+      "title": "Temporal",
+      "kind": "workload",
+      "package": "temporal",
+      "aliases": ["temporal-worker", "worker"]
+    },
+    {
+      "id": "cluster-admission",
+      "title": "Cluster admission policies",
+      "kind": "platform",
+      "package": "homelab"
+    },
+    {
+      "id": "cluster-platform",
+      "title": "Cluster platform baseline",
+      "kind": "platform",
+      "package": "homelab"
+    },
+    {
+      "id": "cluster-observability",
+      "title": "Cluster observability baseline",
+      "kind": "platform",
+      "package": "homelab"
+    },
+    {
+      "id": "temporal-data",
+      "title": "Temporal data layer",
+      "kind": "platform",
+      "package": "homelab"
+    },
+    {
+      "id": "delivery-control-plane",
+      "title": "Delivery execution control plane",
+      "kind": "platform",
+      "package": "temporal"
+    },
+    {
+      "id": "trmnl-dashboard",
+      "title": "TRMNL dashboard",
+      "kind": "workload",
+      "package": "trmnl-dashboard",
+      "aliases": ["trmnl"]
+    },
+    {
+      "id": "ops-dashboard",
+      "title": "Ops dashboard",
+      "kind": "workload",
+      "package": "alert-dashboard",
+      "aliases": ["alert-dashboard", "ops"]
+    },
+    {
+      "id": "storm-brain",
+      "title": "Storm brain",
+      "kind": "workload",
+      "package": "storm-brain"
+    },
+    {
+      "id": "home",
+      "title": "Home Assistant",
+      "kind": "workload"
+    },
+    {
+      "id": "self-hosted-apps",
+      "title": "Self-hosted apps",
+      "kind": "workload",
+      "package": "homelab"
+    },
+    {
+      "id": "obsidian-headless",
+      "title": "Obsidian headless",
+      "kind": "workload",
+      "package": "homelab"
+    },
+    {
+      "id": "gitops",
+      "title": "GitOps & charts",
+      "kind": "platform"
+    },
+    {
+      "id": "observability",
+      "title": "Observability stack",
+      "kind": "platform"
+    },
+    {
+      "id": "bugsink",
+      "title": "Bugsink",
+      "kind": "platform"
+    },
+    {
+      "id": "ci",
+      "title": "CI (Woodpecker)",
+      "kind": "platform"
+    },
+    {
+      "id": "storage",
+      "title": "Storage & backups",
+      "kind": "platform"
+    },
+    {
+      "id": "networking",
+      "title": "Networking & edge",
+      "kind": "platform"
+    },
+    {
+      "id": "mail",
+      "title": "Postal mail",
+      "kind": "platform"
+    },
+    {
+      "id": "platform-services",
+      "title": "Platform services",
+      "kind": "platform"
+    }
+  ],
+  "services": [
+    {
+      "id": "delivery",
+      "title": "Delivery",
+      "package": "delivery",
+      "lifecycle": "active",
+      "selfHosted": true,
+      "group": "delivery",
+      "components": [
+        {
+          "name": "image:delivery",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:delivery",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["delivery"],
+        "argoApps": ["delivery"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "delivery": "inactive"
+        },
+        "charts": ["delivery"]
+      }
+    },
+    {
+      "id": "delivery-data",
+      "title": "Delivery data layer",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "delivery-data",
+      "components": [
+        {
+          "name": "chart:delivery-data",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["delivery-data"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "delivery-data": "inactive"
+        }
+      }
+    },
+    {
+      "id": "arcade",
+      "title": "Arcade",
+      "package": "arcade",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "arcade",
+      "components": [
+        {
+          "name": "image:arcade",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:arcade",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:caddy-s3proxy",
+          "producer": "reference",
+          "source": {
+            "service": "static-site-proxy",
+            "component": "image:caddy-s3proxy",
+            "mode": "pinned"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["arcade"],
+        "argoApps": ["arcade"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/arcade",
+            "argoApp": "arcade"
+          }
+        ]
+      }
+    },
+    {
+      "id": "scout-for-lol",
+      "title": "Scout for LoL",
+      "package": "scout-for-lol",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "scout-for-lol",
+      "components": [
+        {
+          "name": "image:scout-for-lol",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:scout-beta",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:scout-prod",
+          "producer": "first-party"
+        },
+        {
+          "name": "archive:scout-frontend-beta",
+          "producer": "first-party"
+        },
+        {
+          "name": "archive:scout-frontend",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["scout-beta", "scout-prod"],
+        "argoApps": ["scout-beta", "scout-prod"],
+        "bugsinkProjects": ["scout-for-lol", "sentinel"],
+        "analyticsSites": ["scout-prod", "scout-beta"],
+        "grafanaDashboards": ["scout-for-lol-durable"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "beta",
+            "versionKey": "shepherdjerred/scout-for-lol/beta",
+            "argoApp": "scout-beta"
+          },
+          {
+            "name": "prod",
+            "versionKey": "shepherdjerred/scout-for-lol/prod",
+            "argoApp": "scout-prod"
+          }
+        ]
+      }
+    },
+    {
+      "id": "birmel",
+      "title": "Birmel",
+      "package": "birmel",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "birmel",
+      "components": [
+        {
+          "name": "image:birmel",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:birmel",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["birmel"],
+        "argoApps": ["birmel"],
+        "bugsinkProjects": ["birmel"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/birmel",
+            "argoApp": "birmel"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tasknotes-server",
+      "title": "TaskNotes",
+      "package": "tasknotes-server",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "tasknotes-server",
+      "components": [
+        {
+          "name": "image:tasknotes-server",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:obsidian-headless",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:tasknotes",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["tasknotes"],
+        "argoApps": ["tasknotes"],
+        "bugsinkProjects": ["tasknotes-api", "tasknotes-app"],
+        "grafanaDashboards": ["tasknotes-dashboard"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/tasknotes-server",
+            "argoApp": "tasknotes"
+          }
+        ]
+      }
+    },
+    {
+      "id": "discord-plays-pokemon",
+      "title": "Discord Plays Pokémon",
+      "package": "discord-plays-pokemon",
+      "lifecycle": "retired",
+      "selfHosted": false,
+      "group": "discord-plays-pokemon",
+      "components": [
+        {
+          "name": "image:discord-plays-pokemon",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:pokemon",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["pokemon"],
+        "argoApps": ["pokemon"],
+        "bugsinkProjects": ["discord-plays-pokemon"],
+        "analyticsSites": ["pokemon"],
+        "grafanaDashboards": ["discord-plays-stream-health"]
+      }
+    },
+    {
+      "id": "discord-plays-mario-kart",
+      "title": "Discord Plays Mario Kart",
+      "package": "discord-plays-mario-kart",
+      "lifecycle": "retired",
+      "selfHosted": false,
+      "group": "discord-plays-mario-kart",
+      "components": [
+        {
+          "name": "image:discord-plays-mario-kart",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:mario-kart",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["mario-kart"],
+        "argoApps": ["mario-kart"],
+        "bugsinkProjects": ["discord-plays-mario-kart"],
+        "analyticsSites": ["mario-kart"],
+        "grafanaDashboards": ["discord-plays-stream-health"]
+      }
+    },
+    {
+      "id": "starlight-karma-bot",
+      "title": "Starlight Karma Bot",
+      "package": "starlight-karma-bot",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "starlight-karma-bot",
+      "components": [
+        {
+          "name": "image:starlight-karma-bot",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:starlight-karma-bot-beta",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:starlight-karma-bot-prod",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["starlight-karma-bot-beta", "starlight-karma-bot-prod"],
+        "argoApps": ["starlight-karma-bot-beta", "starlight-karma-bot-prod"],
+        "bugsinkProjects": ["starlight"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "beta",
+            "versionKey": "shepherdjerred/starlight-karma-bot/beta",
+            "argoApp": "starlight-karma-bot-beta"
+          },
+          {
+            "name": "prod",
+            "versionKey": "shepherdjerred/starlight-karma-bot/prod",
+            "argoApp": "starlight-karma-bot-prod"
+          }
+        ]
+      }
+    },
+    {
+      "id": "streambot",
+      "title": "Streambot & media",
+      "package": "streambot",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "streambot",
+      "components": [
+        {
+          "name": "image:streambot",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:media",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["media"],
+        "argoApps": ["media"],
+        "bugsinkProjects": ["streambot"],
+        "grafanaDashboards": ["streambot", "streambot-voice"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/streambot",
+            "argoApp": "media"
+          }
+        ]
+      }
+    },
+    {
+      "id": "static-site-proxy",
+      "title": "Static site proxy",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "image:caddy-s3proxy",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:s3-static-sites",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["s3-static-sites"],
+        "argoApps": ["s3-static-sites"],
+        "grafanaDashboards": ["static-site-probes"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/caddy-s3proxy",
+            "argoApp": "s3-static-sites"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sjer-red",
+      "title": "sjer.red",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:sjer-red",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "bugsinkProjects": ["sjerred"],
+        "analyticsSites": ["sjer-red"]
+      }
+    },
+    {
+      "id": "resume",
+      "title": "Resume",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:resume",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["resume"]
+      }
+    },
+    {
+      "id": "webring",
+      "title": "Webring",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:webring",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["webring"]
+      }
+    },
+    {
+      "id": "better-skill-capped",
+      "title": "Better Skill Capped",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:better-skill-capped",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "bugsinkProjects": ["better-skill-capped"],
+        "analyticsSites": ["better-skill-capped"]
+      }
+    },
+    {
+      "id": "glitter-boys-ppl",
+      "title": "Glitter Boys people",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:glitter-boys-ppl",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["glitter-boys-ppl"]
+      }
+    },
+    {
+      "id": "cook",
+      "title": "Cook",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:cook",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["cook"]
+      }
+    },
+    {
+      "id": "stocks-sjer-red",
+      "title": "Stocks",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:stocks-sjer-red",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["stocks"]
+      }
+    },
+    {
+      "id": "wiki-sjer-red",
+      "title": "Wiki",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:wiki-sjer-red",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "analyticsSites": ["wiki"]
+      }
+    },
+    {
+      "id": "statically-typed",
+      "title": "Statically Typed",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:statically-typed",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "scout-design-system",
+      "title": "Scout design system",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:scout-design-system",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "ts-mc-docs",
+      "title": "The Storm docs",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:ts-mc-docs",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "glitter-boys",
+      "title": "Glitter Boys",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:glitter-boys",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "cross-compilers",
+      "title": "Cross compilers",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "static-sites",
+      "components": [
+        {
+          "name": "archive:cross-compilers",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "minecraft-shuxin",
+      "title": "Minecraft shuxin server",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "minecraft",
+      "components": [
+        {
+          "name": "chart:minecraft",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:minecraft-server",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:yq",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:busybox",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:minecraft-shuxin-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["minecraft-shuxin"],
+        "argoApps": ["minecraft-shuxin"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "minecraft-shuxin": "upstream",
+          "minecraft-shuxin-companion": "inactive"
+        },
+        "charts": ["minecraft-shuxin-companion"]
+      }
+    },
+    {
+      "id": "minecraft-sjerred",
+      "title": "Minecraft sjerred server",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "minecraft",
+      "components": [
+        {
+          "name": "chart:minecraft",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:minecraft-server-java8",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:busybox",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:haproxy",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:minecraft-sjerred-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["minecraft-sjerred"],
+        "argoApps": ["minecraft-sjerred"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "minecraft-sjerred": "upstream",
+          "minecraft-sjerred-companion": "inactive"
+        },
+        "charts": ["minecraft-sjerred-companion"]
+      }
+    },
+    {
+      "id": "minecraft",
+      "title": "Minecraft (The Storm)",
+      "package": "the-storm",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "minecraft",
+      "components": [
+        {
+          "name": "image:the-storm-server",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:minecraft",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:mc-sandbox",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:minecraft-tsmc-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["minecraft-tsmc", "mc-router", "mc-sandbox"],
+        "argoApps": ["minecraft-tsmc", "mc-router", "mc-sandbox"],
+        "analyticsSites": ["ts-mc", "ts-mc-docs"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "minecraft": "upstream",
+          "minecraft-tsmc": "upstream",
+          "minecraft-tsmc-companion": "inactive"
+        },
+        "charts": ["minecraft", "minecraft-tsmc-companion"],
+        "deploy": [
+          {
+            "name": "tsmc",
+            "versionKey": "shepherdjerred/the-storm-server",
+            "argoApp": "minecraft-tsmc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mc-router",
+      "title": "Minecraft router",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "minecraft",
+      "components": [
+        {
+          "name": "chart:mc-router",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:mc-router",
+          "producer": "acquisition"
+        }
+      ],
+      "legacy": {
+        "rootReleaseExclusions": {
+          "mc-router": "upstream"
+        }
+      }
+    },
+    {
+      "id": "tracker",
+      "title": "Tracker",
+      "package": "tracker",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "tracker",
+      "components": [
+        {
+          "name": "image:tracker",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:tracker",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["tracker"],
+        "argoApps": ["tracker"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/tracker",
+            "argoApp": "tracker"
+          }
+        ]
+      }
+    },
+    {
+      "id": "storm-forum",
+      "title": "The Storm forum",
+      "package": "storm-forum",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storm-forum",
+      "components": [
+        {
+          "name": "image:storm-forum",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:storm-forum",
+          "producer": "first-party"
+        },
+        {
+          "name": "archive:forum-bundle",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["storm-forum"],
+        "argoApps": ["storm-forum"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "storm-forum-beta": "inactive"
+        },
+        "charts": ["storm-forum-beta"]
+      }
+    },
+    {
+      "id": "glitter-boys-launcher",
+      "title": "Glitter Boys launcher",
+      "package": "glitter-boys-launcher",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "glitter-boys-launcher",
+      "components": [
+        {
+          "name": "image:glitter-boys-launcher",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:glitter-boys-launcher",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["glitter-boys-launcher"],
+        "grafanaDashboards": ["glitter-boys-launcher"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "glitter-boys-launcher": "inactive"
+        },
+        "charts": ["glitter-boys-launcher"]
+      }
+    },
+    {
+      "id": "temporal",
+      "title": "Temporal",
+      "package": "temporal",
+      "lifecycle": "active",
+      "selfHosted": true,
+      "group": "temporal",
+      "components": [
+        {
+          "name": "image:temporal-worker",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:temporal",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:caddy-s3proxy",
+          "producer": "reference",
+          "source": {
+            "service": "static-site-proxy",
+            "component": "image:caddy-s3proxy",
+            "mode": "pinned"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["temporal"],
+        "argoApps": ["temporal"],
+        "bugsinkProjects": ["temporal"],
+        "grafanaDashboards": ["temporal-dashboard"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/temporal-worker",
+            "argoApp": "temporal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cluster-admission",
+      "title": "Cluster admission policies",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "cluster-admission",
+      "components": [
+        {
+          "name": "chart:cluster-admission",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform"
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "cluster-admission": "inactive"
+        },
+        "charts": ["cluster-admission"]
+      }
+    },
+    {
+      "id": "cluster-platform",
+      "title": "Cluster platform baseline",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "cluster-platform",
+      "components": [
+        {
+          "name": "chart:cluster-platform",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform"
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "cluster-platform": "inactive"
+        },
+        "charts": ["cluster-platform"]
+      }
+    },
+    {
+      "id": "cluster-observability",
+      "title": "Cluster observability baseline",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "cluster-observability",
+      "components": [
+        {
+          "name": "chart:cluster-observability",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform"
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "cluster-observability": "inactive"
+        },
+        "charts": ["cluster-observability"]
+      }
+    },
+    {
+      "id": "temporal-data",
+      "title": "Temporal data layer",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "temporal-data",
+      "components": [
+        {
+          "name": "chart:temporal-data",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["temporal-data"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "temporal-data": "inactive"
+        }
+      }
+    },
+    {
+      "id": "delivery-control-plane",
+      "title": "Delivery execution control plane",
+      "package": "temporal",
+      "lifecycle": "active",
+      "selfHosted": true,
+      "group": "delivery-control-plane",
+      "components": [
+        {
+          "name": "chart:delivery-control-plane",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:temporal-worker",
+          "producer": "reference",
+          "source": {
+            "service": "temporal",
+            "component": "image:temporal-worker",
+            "mode": "tracking",
+            "environment": "temporal/prod"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": [
+          "delivery-tsmc-controller",
+          "delivery-platform-jobs",
+          "delivery-worker-jobs",
+          "minecraft-tsmc-delivery-validation"
+        ],
+        "argoApps": ["delivery-control-plane"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "delivery-control-plane": "inactive"
+        },
+        "bootstrapImages": ["temporal-worker"]
+      }
+    },
+    {
+      "id": "trmnl-dashboard",
+      "title": "TRMNL dashboard",
+      "package": "trmnl-dashboard",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "trmnl-dashboard",
+      "components": [
+        {
+          "name": "image:trmnl-dashboard",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:trmnl-dashboard",
+          "producer": "first-party"
+        },
+        {
+          "name": "archive:trmnl-plugins",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["trmnl-dashboard"],
+        "argoApps": ["trmnl-dashboard"],
+        "bugsinkProjects": ["trmnl-dashboard"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/trmnl-dashboard",
+            "argoApp": "trmnl-dashboard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ops-dashboard",
+      "title": "Ops dashboard",
+      "package": "alert-dashboard",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ops-dashboard",
+      "components": [
+        {
+          "name": "image:alert-dashboard",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:alert-dashboard",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["alert-dashboard"],
+        "argoApps": ["alert-dashboard"],
+        "grafanaDashboards": ["alert-dashboard"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/alert-dashboard",
+            "argoApp": "alert-dashboard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "storm-brain",
+      "title": "Storm brain",
+      "package": "storm-brain",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storm-brain",
+      "components": [
+        {
+          "name": "image:storm-brain",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:storm-brain",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["storm-brain"],
+        "argoApps": ["storm-brain"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/storm-brain",
+            "argoApp": "storm-brain"
+          }
+        ]
+      }
+    },
+    {
+      "id": "home",
+      "title": "Home Assistant",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "home",
+      "components": [
+        {
+          "name": "chart:home",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["home"],
+        "argoApps": ["home"],
+        "bugsinkProjects": ["home-assistant-workflows"]
+      }
+    },
+    {
+      "id": "freshrss",
+      "title": "FreshRSS",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "chart:freshrss",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["freshrss"],
+        "argoApps": ["freshrss"]
+      }
+    },
+    {
+      "id": "golink",
+      "title": "golink",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "chart:golink",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["golink"],
+        "argoApps": ["golink"]
+      }
+    },
+    {
+      "id": "redlib",
+      "title": "Redlib",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "image:redlib",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:redlib",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["redlib"],
+        "argoApps": ["redlib"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "redlib",
+            "versionKey": "shepherdjerred/redlib",
+            "argoApp": "redlib"
+          }
+        ]
+      }
+    },
+    {
+      "id": "relay",
+      "title": "Relay",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "chart:relay",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["relay"],
+        "argoApps": ["relay"]
+      }
+    },
+    {
+      "id": "stash",
+      "title": "Stash",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "chart:stash",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["stash"],
+        "argoApps": ["stash"]
+      }
+    },
+    {
+      "id": "syncthing",
+      "title": "Syncthing",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "chart:syncthing",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["syncthing"],
+        "argoApps": ["syncthing"]
+      }
+    },
+    {
+      "id": "pinchtab",
+      "title": "PinchTab",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "self-hosted-apps",
+      "components": [
+        {
+          "name": "chart:pinchtab",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:birmel",
+          "producer": "reference",
+          "source": {
+            "service": "birmel",
+            "component": "image:birmel",
+            "mode": "tracking",
+            "environment": "birmel/prod"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "workload",
+        "namespaces": ["pinchtab"],
+        "argoApps": ["pinchtab"]
+      }
+    },
+    {
+      "id": "argocd",
+      "title": "Argo CD",
+      "lifecycle": "active",
+      "selfHosted": true,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "chart:argo-cd",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:argocd-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["argocd"],
+        "argoApps": ["apps", "argocd"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "argocd": "upstream",
+          "argocd-companion": "inactive"
+        },
+        "charts": ["argocd-companion"]
+      }
+    },
+    {
+      "id": "chartmuseum",
+      "title": "ChartMuseum",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "chart:chartmuseum",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:chartmuseum-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["chartmuseum"],
+        "argoApps": ["chartmuseum"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "chartmuseum": "upstream",
+          "chartmuseum-companion": "inactive"
+        },
+        "charts": ["chartmuseum-companion"]
+      }
+    },
+    {
+      "id": "tofu-application-secrets",
+      "title": "OpenTofu application-secrets stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-application-secrets",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-anthropic",
+      "title": "OpenTofu anthropic stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-anthropic",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-anthropic-federation",
+      "title": "OpenTofu anthropic-federation stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-anthropic-federation",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-argocd",
+      "title": "OpenTofu argocd stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-argocd",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-arr",
+      "title": "OpenTofu arr stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-arr",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-asuswrt",
+      "title": "OpenTofu asuswrt stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-asuswrt",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-cloudflare",
+      "title": "OpenTofu cloudflare stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-cloudflare",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-cloudflare-tokens",
+      "title": "OpenTofu cloudflare-tokens stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-cloudflare-tokens",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-discord",
+      "title": "OpenTofu discord stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-discord",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-dockerhub",
+      "title": "OpenTofu dockerhub stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-dockerhub",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-dockerhub-tokens",
+      "title": "OpenTofu dockerhub-tokens stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-dockerhub-tokens",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-github",
+      "title": "OpenTofu github stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-github",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-google",
+      "title": "OpenTofu google stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-google",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-openai",
+      "title": "OpenTofu openai stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-openai",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-posthog",
+      "title": "OpenTofu posthog stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-posthog",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-seaweedfs",
+      "title": "OpenTofu seaweedfs stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-seaweedfs",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "tofu-tailscale",
+      "title": "OpenTofu tailscale stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-tailscale",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "prometheus",
+      "title": "Prometheus stack",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:kube-prometheus-stack",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:grafana-image-renderer",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:caddy-s3proxy",
+          "producer": "reference",
+          "source": {
+            "service": "static-site-proxy",
+            "component": "image:caddy-s3proxy",
+            "mode": "pinned"
+          }
+        },
+        {
+          "name": "chart:prometheus-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["prometheus"],
+        "argoApps": ["prometheus"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "prometheus": "upstream",
+          "prometheus-companion": "inactive"
+        },
+        "charts": ["prometheus-companion"]
+      }
+    },
+    {
+      "id": "prometheus-adapter",
+      "title": "Prometheus adapter",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:prometheus-adapter",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["prometheus-adapter"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "prometheus-adapter": "upstream"
+        }
+      }
+    },
+    {
+      "id": "blackbox-exporter",
+      "title": "Blackbox exporter",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:prometheus-blackbox-exporter",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["blackbox-exporter"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "blackbox-exporter": "upstream"
+        }
+      }
+    },
+    {
+      "id": "service-probes",
+      "title": "Service probes",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:service-probes",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["service-probes"]
+      }
+    },
+    {
+      "id": "grafana-db",
+      "title": "Grafana database",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:grafana-db",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["grafana-db"]
+      }
+    },
+    {
+      "id": "loki",
+      "title": "Loki",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:loki",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:loki-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["loki"],
+        "argoApps": ["loki"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "loki": "upstream",
+          "loki-companion": "inactive"
+        },
+        "charts": ["loki-companion"]
+      }
+    },
+    {
+      "id": "tempo",
+      "title": "Tempo",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:tempo",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:tempo-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["tempo"],
+        "argoApps": ["tempo"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "tempo": "upstream",
+          "tempo-companion": "inactive"
+        },
+        "charts": ["tempo-companion"]
+      }
+    },
+    {
+      "id": "pyroscope",
+      "title": "Pyroscope",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:pyroscope",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:pyroscope-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["pyroscope"],
+        "argoApps": ["pyroscope"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "pyroscope": "upstream",
+          "pyroscope-companion": "inactive"
+        },
+        "charts": ["pyroscope-companion"]
+      }
+    },
+    {
+      "id": "alloy",
+      "title": "Alloy",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:alloy",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["alloy"],
+        "argoApps": ["alloy"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "alloy": "upstream"
+        }
+      }
+    },
+    {
+      "id": "alloy-gateway",
+      "title": "Alloy gateway",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:alloy",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:alloy-gateway-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["alloy-gateway"],
+        "argoApps": ["alloy-gateway"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "alloy-gateway": "upstream",
+          "alloy-gateway-companion": "inactive"
+        },
+        "charts": ["alloy-gateway-companion"]
+      }
+    },
+    {
+      "id": "promtail",
+      "title": "Promtail",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:promtail",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["promtail"],
+        "argoApps": ["promtail"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "promtail": "upstream"
+        }
+      }
+    },
+    {
+      "id": "phoenix",
+      "title": "Phoenix",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "observability",
+      "components": [
+        {
+          "name": "chart:phoenix",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["phoenix"],
+        "argoApps": ["phoenix"]
+      }
+    },
+    {
+      "id": "bugsink",
+      "title": "Bugsink",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "bugsink",
+      "components": [
+        {
+          "name": "chart:bugsink",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["bugsink"],
+        "argoApps": ["bugsink"]
+      }
+    },
+    {
+      "id": "ci",
+      "title": "CI runtime images",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
+        {
+          "name": "image:ci-base",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:ci-playwright",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:macos-cross-compiler",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:windows-cross-compiler",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:windows-cross-compiler-winui",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "woodpecker",
+      "title": "Woodpecker",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
+        {
+          "name": "chart:woodpecker",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:woodpecker-config-extension",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:temporal-worker",
+          "producer": "reference",
+          "source": {
+            "service": "temporal",
+            "component": "image:temporal-worker",
+            "mode": "pinned"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["woodpecker", "woodpecker-ci"],
+        "argoApps": ["woodpecker"],
+        "grafanaDashboards": ["ci-capacity-dashboard"]
+      }
+    },
+    {
+      "id": "buildkitd",
+      "title": "BuildKit daemon",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
+        {
+          "name": "chart:buildkitd",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["buildkitd"],
+        "argoApps": ["buildkitd"],
+        "grafanaDashboards": ["buildkitd-dashboard"]
+      }
+    },
+    {
+      "id": "turbo-cache",
+      "title": "Turborepo cache",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
+        {
+          "name": "chart:turbo-cache",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["turbo-cache"],
+        "argoApps": ["turbo-cache"]
+      }
+    },
+    {
+      "id": "kueue",
+      "title": "Kueue",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
+        {
+          "name": "chart:kueue",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["kueue-system"],
+        "argoApps": ["kueue"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "kueue": "upstream"
+        }
+      }
+    },
+    {
+      "id": "velero-plugin",
+      "title": "Velero ZFS plugin image",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "image:velero-plugin",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "zfs-driver",
+      "title": "OpenEBS ZFS driver image",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "image:zfs-driver",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
+      "id": "openebs",
+      "title": "OpenEBS",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "chart:openebs",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:zfs-driver",
+          "producer": "reference",
+          "source": {
+            "service": "zfs-driver",
+            "component": "image:zfs-driver",
+            "mode": "pinned"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["openebs"],
+        "argoApps": ["openebs"],
+        "grafanaDashboards": ["zfs-dashboard"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "openebs": "upstream"
+        }
+      }
+    },
+    {
+      "id": "seaweedfs",
+      "title": "SeaweedFS",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "chart:seaweedfs",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:caddy-s3proxy",
+          "producer": "reference",
+          "source": {
+            "service": "static-site-proxy",
+            "component": "image:caddy-s3proxy",
+            "mode": "pinned"
+          }
+        },
+        {
+          "name": "chart:seaweedfs-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["seaweedfs"],
+        "argoApps": ["seaweedfs"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "seaweedfs": "upstream",
+          "seaweedfs-companion": "inactive"
+        },
+        "charts": ["seaweedfs-companion"]
+      }
+    },
+    {
+      "id": "velero",
+      "title": "Velero",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "chart:velero",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:velero-plugin-for-aws",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:kubectl",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:velero-plugin",
+          "producer": "reference",
+          "source": {
+            "service": "velero-plugin",
+            "component": "image:velero-plugin",
+            "mode": "pinned"
+          }
+        },
+        {
+          "name": "chart:velero-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["velero"],
+        "argoApps": ["velero"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "velero": "upstream",
+          "velero-companion": "inactive"
+        },
+        "charts": ["velero-companion"]
+      }
+    },
+    {
+      "id": "postgres-operator",
+      "title": "Postgres operator",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "chart:postgres-operator",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["postgres-operator"],
+        "argoApps": ["postgres-operator"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "postgres-operator": "upstream"
+        }
+      }
+    },
+    {
+      "id": "gickup",
+      "title": "Gickup",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storage",
+      "components": [
+        {
+          "name": "chart:gickup",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["gickup"],
+        "argoApps": ["gickup"],
+        "grafanaDashboards": ["gitckup-dashboard"]
+      }
+    },
+    {
+      "id": "tailscale",
+      "title": "Tailscale operator",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "networking",
+      "components": [
+        {
+          "name": "chart:tailscale-operator",
+          "producer": "acquisition"
+        },
+        {
+          "name": "chart:tailscale-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["tailscale"],
+        "argoApps": ["tailscale"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "tailscale": "upstream",
+          "tailscale-companion": "inactive"
+        },
+        "charts": ["tailscale-companion"]
+      }
+    },
+    {
+      "id": "cloudflare-tunnel",
+      "title": "Cloudflare tunnel",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "networking",
+      "components": [
+        {
+          "name": "chart:cloudflare-tunnel",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["cloudflare-tunnel"],
+        "argoApps": ["cloudflare-tunnel"]
+      }
+    },
+    {
+      "id": "cloudflare-operator",
+      "title": "Cloudflare operator",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "networking",
+      "components": [
+        {
+          "name": "chart:cloudflare-operator-companion",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["cloudflare-operator-system"],
+        "argoApps": ["cloudflare-operator"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "cloudflare-operator": "upstream",
+          "cloudflare-operator-companion": "inactive"
+        },
+        "charts": ["cloudflare-operator-companion"]
+      }
+    },
+    {
+      "id": "cert-manager",
+      "title": "cert-manager",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "networking",
+      "components": [
+        {
+          "name": "chart:cert-manager",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["cert-manager"],
+        "argoApps": ["cert-manager"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "cert-manager": "upstream"
+        }
+      }
+    },
+    {
+      "id": "ddns",
+      "title": "Dynamic DNS",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "networking",
+      "components": [
+        {
+          "name": "chart:ddns",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["ddns"],
+        "argoApps": ["ddns"]
+      }
+    },
+    {
+      "id": "postal",
+      "title": "Postal",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "mail",
+      "components": [
+        {
+          "name": "chart:postal",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["postal"],
+        "argoApps": ["postal", "postal-mariadb"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "postal-mariadb": "upstream"
+        }
+      }
+    },
+    {
+      "id": "1password",
+      "title": "1Password Connect",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "platform-services",
+      "components": [
+        {
+          "name": "chart:connect",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["1password"],
+        "argoApps": ["1password"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "1password": "upstream"
+        }
+      }
+    },
+    {
+      "id": "flipt",
+      "title": "Flipt",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "platform-services",
+      "components": [
+        {
+          "name": "chart:flipt",
+          "producer": "first-party"
+        },
+        {
+          "name": "image:caddy-s3proxy",
+          "producer": "reference",
+          "source": {
+            "service": "static-site-proxy",
+            "component": "image:caddy-s3proxy",
+            "mode": "pinned"
+          }
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["flipt"],
+        "argoApps": ["flipt"]
+      }
+    },
+    {
+      "id": "intel-device-plugin-operator",
+      "title": "Intel device plugin operator",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "platform-services",
+      "components": [
+        {
+          "name": "chart:intel-device-plugins-operator",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["intel-device-plugin-operator"],
+        "argoApps": ["intel-device-plugin-operator"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "intel-device-plugin-operator": "upstream"
+        }
+      }
+    },
+    {
+      "id": "intel-gpu-device-plugin",
+      "title": "Intel GPU device plugin",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "platform-services",
+      "components": [
+        {
+          "name": "chart:intel-device-plugins-gpu",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "argoApps": ["intel-gpu-device-plugin"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "intel-gpu-device-plugin": "upstream"
+        }
+      }
+    },
+    {
+      "id": "nfd",
+      "title": "Node feature discovery",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "platform-services",
+      "components": [
+        {
+          "name": "chart:node-feature-discovery",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["node-feature-discovery"],
+        "argoApps": ["nfd"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "nfd": "upstream"
+        }
+      }
+    }
+  ],
+  "environments": [
+    {
+      "id": "delivery/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "delivery/3",
+      "configurationRevisionId": "delivery/1"
+    },
+    {
+      "id": "delivery-data/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "delivery-data/prod/1",
+      "configurationRevisionId": "delivery-data/prod/1"
+    },
+    {
+      "id": "arcade/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "arcade/3",
+      "configurationRevisionId": "arcade/1"
+    },
+    {
+      "id": "scout-for-lol/beta",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "scout-beta/2",
+      "configurationRevisionId": "scout-beta/1"
+    },
+    {
+      "id": "scout-for-lol/prod",
+      "role": "durable",
+      "approvalPolicy": "required",
+      "automatic": true,
+      "promotionSourceEnvironmentId": "scout-for-lol/beta",
+      "recipeRevisionId": "scout-prod/2",
+      "configurationRevisionId": "scout-prod/1"
+    },
+    {
+      "id": "birmel/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "birmel/prod/2",
+      "configurationRevisionId": "birmel/prod/1"
+    },
+    {
+      "id": "tasknotes-server/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tasknotes-server/prod/2",
+      "configurationRevisionId": "tasknotes-server/prod/1"
+    },
+    {
+      "id": "discord-plays-pokemon/prod",
+      "role": "durable",
+      "lifecycle": "retired",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "discord-plays-pokemon/prod/1",
+      "configurationRevisionId": "discord-plays-pokemon/prod/1"
+    },
+    {
+      "id": "discord-plays-mario-kart/prod",
+      "role": "durable",
+      "lifecycle": "retired",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "discord-plays-mario-kart/prod/1",
+      "configurationRevisionId": "discord-plays-mario-kart/prod/1"
+    },
+    {
+      "id": "starlight-karma-bot/beta",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "starlight-karma-bot/beta/2",
+      "configurationRevisionId": "starlight-karma-bot/beta/1"
+    },
+    {
+      "id": "starlight-karma-bot/prod",
+      "role": "durable",
+      "approvalPolicy": "required",
+      "automatic": true,
+      "promotionSourceEnvironmentId": "starlight-karma-bot/beta",
+      "recipeRevisionId": "starlight-karma-bot/prod/2",
+      "configurationRevisionId": "starlight-karma-bot/prod/1"
+    },
+    {
+      "id": "streambot/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "streambot/prod/2",
+      "configurationRevisionId": "streambot/prod/1"
+    },
+    {
+      "id": "static-site-proxy/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "static-site-proxy/prod/1",
+      "configurationRevisionId": "static-site-proxy/prod/1"
+    },
+    {
+      "id": "sjer-red/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "sjer-red/prod/1",
+      "configurationRevisionId": "sjer-red/prod/1"
+    },
+    {
+      "id": "resume/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "resume/prod/1",
+      "configurationRevisionId": "resume/prod/1"
+    },
+    {
+      "id": "webring/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "webring/prod/1",
+      "configurationRevisionId": "webring/prod/1"
+    },
+    {
+      "id": "better-skill-capped/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "better-skill-capped/prod/1",
+      "configurationRevisionId": "better-skill-capped/prod/1"
+    },
+    {
+      "id": "glitter-boys-ppl/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "glitter-boys-ppl/prod/1",
+      "configurationRevisionId": "glitter-boys-ppl/prod/1"
+    },
+    {
+      "id": "cook/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cook/prod/1",
+      "configurationRevisionId": "cook/prod/1"
+    },
+    {
+      "id": "stocks-sjer-red/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "stocks-sjer-red/prod/1",
+      "configurationRevisionId": "stocks-sjer-red/prod/1"
+    },
+    {
+      "id": "wiki-sjer-red/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "wiki-sjer-red/prod/1",
+      "configurationRevisionId": "wiki-sjer-red/prod/1"
+    },
+    {
+      "id": "statically-typed/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "statically-typed/prod/1",
+      "configurationRevisionId": "statically-typed/prod/1"
+    },
+    {
+      "id": "scout-design-system/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "scout-design-system/prod/1",
+      "configurationRevisionId": "scout-design-system/prod/1"
+    },
+    {
+      "id": "ts-mc-docs/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "ts-mc-docs/prod/1",
+      "configurationRevisionId": "ts-mc-docs/prod/1"
+    },
+    {
+      "id": "glitter-boys/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "glitter-boys/prod/1",
+      "configurationRevisionId": "glitter-boys/prod/1"
+    },
+    {
+      "id": "cross-compilers/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cross-compilers/prod/1",
+      "configurationRevisionId": "cross-compilers/prod/1"
+    },
+    {
+      "id": "minecraft-shuxin/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "minecraft-shuxin/prod/1",
+      "configurationRevisionId": "minecraft-shuxin/prod/1"
+    },
+    {
+      "id": "minecraft-sjerred/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "minecraft-sjerred/prod/1",
+      "configurationRevisionId": "minecraft-sjerred/prod/1"
+    },
+    {
+      "id": "minecraft/sandbox",
+      "role": "qualification",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "minecraft/sandbox/1",
+      "configurationRevisionId": "minecraft/sandbox/1"
+    },
+    {
+      "id": "minecraft/tsmc",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "promotionSourceEnvironmentId": "minecraft/sandbox",
+      "recipeRevisionId": "minecraft-tsmc/3",
+      "configurationRevisionId": "minecraft-tsmc/2"
+    },
+    {
+      "id": "mc-router/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "mc-router/prod/1",
+      "configurationRevisionId": "mc-router/prod/1"
+    },
+    {
+      "id": "tracker/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tracker/prod/2",
+      "configurationRevisionId": "tracker/prod/1"
+    },
+    {
+      "id": "storm-forum/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "storm-forum/2",
+      "configurationRevisionId": "storm-forum/2"
+    },
+    {
+      "id": "temporal/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "temporal/2",
+      "configurationRevisionId": "temporal/1"
+    },
+    {
+      "id": "cluster-admission/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "cluster-admission/prod/1",
+      "configurationRevisionId": "cluster-admission/prod/1"
+    },
+    {
+      "id": "cluster-platform/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cluster-platform/prod/1",
+      "configurationRevisionId": "cluster-platform/prod/1"
+    },
+    {
+      "id": "cluster-observability/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cluster-observability/prod/1",
+      "configurationRevisionId": "cluster-observability/prod/1"
+    },
+    {
+      "id": "temporal-data/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "temporal-data/prod/1",
+      "configurationRevisionId": "temporal-data/prod/1"
+    },
+    {
+      "id": "delivery-control-plane/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "delivery-control-plane/2",
+      "configurationRevisionId": "delivery-control-plane/1"
+    },
+    {
+      "id": "trmnl-dashboard/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "trmnl-dashboard/prod/2",
+      "configurationRevisionId": "trmnl-dashboard/prod/1"
+    },
+    {
+      "id": "ops-dashboard/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "ops-dashboard/prod/2",
+      "configurationRevisionId": "ops-dashboard/prod/1"
+    },
+    {
+      "id": "storm-brain/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "storm-brain/prod/2",
+      "configurationRevisionId": "storm-brain/prod/1"
+    },
+    {
+      "id": "home/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "home/prod/1",
+      "configurationRevisionId": "home/prod/1"
+    },
+    {
+      "id": "freshrss/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "freshrss/prod/1",
+      "configurationRevisionId": "freshrss/prod/1"
+    },
+    {
+      "id": "golink/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "golink/prod/1",
+      "configurationRevisionId": "golink/prod/1"
+    },
+    {
+      "id": "redlib/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "redlib/prod/1",
+      "configurationRevisionId": "redlib/prod/1"
+    },
+    {
+      "id": "relay/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "relay/prod/1",
+      "configurationRevisionId": "relay/prod/1"
+    },
+    {
+      "id": "stash/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "stash/prod/1",
+      "configurationRevisionId": "stash/prod/1"
+    },
+    {
+      "id": "syncthing/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "syncthing/prod/1",
+      "configurationRevisionId": "syncthing/prod/1"
+    },
+    {
+      "id": "pinchtab/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "pinchtab/prod/1",
+      "configurationRevisionId": "pinchtab/prod/1"
+    },
+    {
+      "id": "argocd/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "argocd/prod/1",
+      "configurationRevisionId": "argocd/prod/1"
+    },
+    {
+      "id": "chartmuseum/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "chartmuseum/prod/1",
+      "configurationRevisionId": "chartmuseum/prod/1"
+    },
+    {
+      "id": "tofu-anthropic/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-anthropic/prod/1",
+      "configurationRevisionId": "tofu-anthropic/prod/1"
+    },
+    {
+      "id": "tofu-anthropic-federation/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-anthropic-federation/prod/1",
+      "configurationRevisionId": "tofu-anthropic-federation/prod/1"
+    },
+    {
+      "id": "tofu-argocd/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-argocd/prod/1",
+      "configurationRevisionId": "tofu-argocd/prod/1"
+    },
+    {
+      "id": "tofu-arr/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-arr/prod/1",
+      "configurationRevisionId": "tofu-arr/prod/1"
+    },
+    {
+      "id": "tofu-asuswrt/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-asuswrt/prod/1",
+      "configurationRevisionId": "tofu-asuswrt/prod/1"
+    },
+    {
+      "id": "tofu-cloudflare/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-cloudflare/prod/1",
+      "configurationRevisionId": "tofu-cloudflare/prod/1"
+    },
+    {
+      "id": "tofu-cloudflare-tokens/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-cloudflare-tokens/prod/1",
+      "configurationRevisionId": "tofu-cloudflare-tokens/prod/1"
+    },
+    {
+      "id": "tofu-discord/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-discord/prod/1",
+      "configurationRevisionId": "tofu-discord/prod/1"
+    },
+    {
+      "id": "tofu-dockerhub/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-dockerhub/prod/1",
+      "configurationRevisionId": "tofu-dockerhub/prod/1"
+    },
+    {
+      "id": "tofu-dockerhub-tokens/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-dockerhub-tokens/prod/1",
+      "configurationRevisionId": "tofu-dockerhub-tokens/prod/1"
+    },
+    {
+      "id": "tofu-github/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-github/prod/1",
+      "configurationRevisionId": "tofu-github/prod/1"
+    },
+    {
+      "id": "tofu-google/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-google/prod/1",
+      "configurationRevisionId": "tofu-google/prod/1"
+    },
+    {
+      "id": "tofu-openai/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-openai/prod/1",
+      "configurationRevisionId": "tofu-openai/prod/1"
+    },
+    {
+      "id": "tofu-posthog/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-posthog/prod/1",
+      "configurationRevisionId": "tofu-posthog/prod/1"
+    },
+    {
+      "id": "tofu-seaweedfs/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-seaweedfs/prod/1",
+      "configurationRevisionId": "tofu-seaweedfs/prod/1"
+    },
+    {
+      "id": "tofu-tailscale/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tofu-tailscale/prod/1",
+      "configurationRevisionId": "tofu-tailscale/prod/1"
+    },
+    {
+      "id": "prometheus/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "prometheus/prod/1",
+      "configurationRevisionId": "prometheus/prod/1"
+    },
+    {
+      "id": "prometheus-adapter/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "prometheus-adapter/prod/1",
+      "configurationRevisionId": "prometheus-adapter/prod/1"
+    },
+    {
+      "id": "blackbox-exporter/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "blackbox-exporter/prod/1",
+      "configurationRevisionId": "blackbox-exporter/prod/1"
+    },
+    {
+      "id": "service-probes/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "service-probes/prod/1",
+      "configurationRevisionId": "service-probes/prod/1"
+    },
+    {
+      "id": "grafana-db/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "grafana-db/prod/1",
+      "configurationRevisionId": "grafana-db/prod/1"
+    },
+    {
+      "id": "loki/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "loki/prod/1",
+      "configurationRevisionId": "loki/prod/1"
+    },
+    {
+      "id": "tempo/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tempo/prod/1",
+      "configurationRevisionId": "tempo/prod/1"
+    },
+    {
+      "id": "pyroscope/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "pyroscope/prod/1",
+      "configurationRevisionId": "pyroscope/prod/1"
+    },
+    {
+      "id": "alloy/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "alloy/prod/1",
+      "configurationRevisionId": "alloy/prod/1"
+    },
+    {
+      "id": "alloy-gateway/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "alloy-gateway/prod/1",
+      "configurationRevisionId": "alloy-gateway/prod/1"
+    },
+    {
+      "id": "promtail/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "promtail/prod/1",
+      "configurationRevisionId": "promtail/prod/1"
+    },
+    {
+      "id": "phoenix/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "phoenix/prod/1",
+      "configurationRevisionId": "phoenix/prod/1"
+    },
+    {
+      "id": "bugsink/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "bugsink/prod/1",
+      "configurationRevisionId": "bugsink/prod/1"
+    },
+    {
+      "id": "woodpecker/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "woodpecker/prod/1",
+      "configurationRevisionId": "woodpecker/prod/1"
+    },
+    {
+      "id": "buildkitd/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "buildkitd/prod/1",
+      "configurationRevisionId": "buildkitd/prod/1"
+    },
+    {
+      "id": "turbo-cache/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "turbo-cache/prod/1",
+      "configurationRevisionId": "turbo-cache/prod/1"
+    },
+    {
+      "id": "openebs/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "openebs/prod/1",
+      "configurationRevisionId": "openebs/prod/1"
+    },
+    {
+      "id": "seaweedfs/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "seaweedfs/prod/1",
+      "configurationRevisionId": "seaweedfs/prod/1"
+    },
+    {
+      "id": "velero/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "velero/prod/1",
+      "configurationRevisionId": "velero/prod/1"
+    },
+    {
+      "id": "postgres-operator/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "postgres-operator/prod/1",
+      "configurationRevisionId": "postgres-operator/prod/1"
+    },
+    {
+      "id": "gickup/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "gickup/prod/1",
+      "configurationRevisionId": "gickup/prod/1"
+    },
+    {
+      "id": "tailscale/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "tailscale/prod/1",
+      "configurationRevisionId": "tailscale/prod/1"
+    },
+    {
+      "id": "cloudflare-tunnel/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cloudflare-tunnel/prod/1",
+      "configurationRevisionId": "cloudflare-tunnel/prod/1"
+    },
+    {
+      "id": "cert-manager/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cert-manager/prod/1",
+      "configurationRevisionId": "cert-manager/prod/1"
+    },
+    {
+      "id": "ddns/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "ddns/prod/1",
+      "configurationRevisionId": "ddns/prod/1"
+    },
+    {
+      "id": "postal/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "postal/prod/1",
+      "configurationRevisionId": "postal/prod/1"
+    },
+    {
+      "id": "1password/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "1password/prod/1",
+      "configurationRevisionId": "1password/prod/1"
+    },
+    {
+      "id": "flipt/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "flipt/prod/1",
+      "configurationRevisionId": "flipt/prod/1"
+    },
+    {
+      "id": "intel-device-plugin-operator/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "intel-device-plugin-operator/prod/1",
+      "configurationRevisionId": "intel-device-plugin-operator/prod/1"
+    },
+    {
+      "id": "intel-gpu-device-plugin/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "intel-gpu-device-plugin/prod/1",
+      "configurationRevisionId": "intel-gpu-device-plugin/prod/1"
+    },
+    {
+      "id": "nfd/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "nfd/prod/1",
+      "configurationRevisionId": "nfd/prod/1"
+    }
+  ],
+  "edges": [
+    {
+      "dependent": "1password/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "alloy-gateway/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "alloy-gateway/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "alloy/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "intel-gpu-device-plugin/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "argocd/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "better-skill-capped/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "blackbox-exporter/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "buildkitd/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "buildkitd/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "buildkitd/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cert-manager/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "chartmuseum/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "chartmuseum/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "chartmuseum/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "chartmuseum/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cloudflare-tunnel/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-observability/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-observability/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-observability/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-platform/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-platform/prod",
+      "prerequisite": "cert-manager/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-platform/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-platform/prod",
+      "prerequisite": "tailscale/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cook/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cross-compilers/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ddns/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ddns/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "temporal/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-data/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-data/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-data/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-data/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery/prod",
+      "prerequisite": "delivery-data/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-mario-kart/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-mario-kart/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-mario-kart/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-pokemon/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-pokemon/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-pokemon/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flipt/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flipt/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flipt/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flipt/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flipt/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "freshrss/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "freshrss/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "freshrss/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "freshrss/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gickup/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gickup/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gickup/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gickup/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gickup/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys-ppl/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "glitter-boys/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "grafana-db/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "grafana-db/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "grafana-db/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "grafana-db/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "home/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "home/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "home/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "home/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "intel-device-plugin-operator/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "intel-gpu-device-plugin/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "intel-gpu-device-plugin/prod",
+      "prerequisite": "intel-device-plugin-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "intel-gpu-device-plugin/prod",
+      "prerequisite": "nfd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "loki/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "loki/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "loki/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "mc-router/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-shuxin/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-shuxin/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-shuxin/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-sjerred/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-sjerred/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-sjerred/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-sjerred/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/sandbox",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/sandbox",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/sandbox",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/tsmc",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/tsmc",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/tsmc",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/tsmc",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "nfd/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "openebs/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "phoenix/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "phoenix/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "phoenix/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "phoenix/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "phoenix/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pinchtab/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pinchtab/prod",
+      "prerequisite": "birmel/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pinchtab/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pinchtab/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pinchtab/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "cert-manager/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postal/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postgres-operator/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus-adapter/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus/prod",
+      "prerequisite": "cert-manager/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "promtail/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pyroscope/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pyroscope/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pyroscope/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "redlib/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "redlib/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "relay/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "relay/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "relay/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "resume/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-design-system/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "seaweedfs/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "seaweedfs/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "seaweedfs/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "seaweedfs/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "service-probes/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "service-probes/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "sjer-red/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/beta",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/beta",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/beta",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/beta",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/beta",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stash/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stash/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stash/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stash/prod",
+      "prerequisite": "intel-gpu-device-plugin/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stash/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "static-site-proxy/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "static-site-proxy/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "static-site-proxy/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "static-site-proxy/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "statically-typed/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stocks-sjer-red/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-brain/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-brain/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-brain/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-brain/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-brain/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "cert-manager/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "intel-gpu-device-plugin/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "syncthing/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "syncthing/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "syncthing/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tailscale/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tailscale/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tailscale/prod",
+      "prerequisite": "tofu-tailscale/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tempo/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tempo/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tempo/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tempo/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "cert-manager/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "temporal-data/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-arr/prod",
+      "prerequisite": "streambot/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-arr/prod",
+      "prerequisite": "tofu-tailscale/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "arcade/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "better-skill-capped/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "bugsink/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "chartmuseum/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "cloudflare-tunnel/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "cook/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "cross-compilers/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "freshrss/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "glitter-boys-ppl/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "glitter-boys/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "home/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "minecraft-shuxin/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "minecraft-sjerred/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "minecraft/tsmc",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "relay/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "resume/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "scout-design-system/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "sjer-red/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "static-site-proxy/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "statically-typed/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "stocks-sjer-red/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "storm-forum/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "streambot/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "temporal/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "trmnl-dashboard/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "ts-mc-docs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "webring/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "wiki-sjer-red/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "woodpecker/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-tailscale/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "trmnl-dashboard/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "trmnl-dashboard/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "trmnl-dashboard/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ts-mc-docs/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "turbo-cache/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "turbo-cache/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "turbo-cache/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "turbo-cache/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "velero/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "velero/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "webring/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "wiki-sjer-red/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    }
+  ],
+  "legacy": {
+    "deliveryDelegations": {
+      "arcade": "arcade/prod",
+      "birmel": "birmel/prod",
+      "tasknotes": "tasknotes-server/prod",
+      "tracker": "tracker/prod",
+      "delivery": "delivery/prod",
+      "trmnl-dashboard": "trmnl-dashboard/prod",
+      "alert-dashboard": "ops-dashboard/prod",
+      "storm-brain": "storm-brain/prod",
+      "starlight-karma-bot-beta": "starlight-karma-bot/beta",
+      "starlight-karma-bot-prod": "starlight-karma-bot/prod",
+      "redlib": "self-hosted-apps/redlib",
+      "media": "streambot/prod",
+      "s3-static-sites": "static-sites/proxy",
+      "temporal": "temporal/prod",
+      "delivery-control-plane": "delivery-control-plane/prod",
+      "scout-beta": "scout-for-lol/beta",
+      "scout-prod": "scout-for-lol/prod",
+      "storm-forum": "storm-forum/prod",
+      "minecraft-tsmc": "minecraft/tsmc"
+    },
+    "platformDeliveryDelegated": true
+  }
+}

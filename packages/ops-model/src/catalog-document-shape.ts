@@ -116,6 +116,8 @@ export const LegacyServiceSchema = z.strictObject({
     )
     .optional(),
   bootstrapImages: z.array(z.string().min(1)).optional(),
+  /** Packaged charts the v1 ops view owns beyond its ArgoCD Applications. */
+  charts: z.array(z.string().min(1)).optional(),
 });
 /** An ArgoCD AppProject name. */
 export const AppProjectNameSchema = z
