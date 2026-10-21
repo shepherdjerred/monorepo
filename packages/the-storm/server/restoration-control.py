@@ -255,6 +255,33 @@ def assert_empty() -> None:
         raise MaintenanceBusy("Maintenance requires a verified empty server")
 
 
+def assert_container_stopped() -> None:
+    """A crash-looping process cannot answer RCON; require native termination evidence instead."""
+    server = read("statefulset", SERVER)
+    pod = read("pod", SERVER + "-0")
+    containers = pod.object("spec").objects("containers")
+    statuses = pod.object("status").objects("containerStatuses", [])
+    if (
+        len(containers) != 1
+        or containers[0].get("name") != SERVER
+        or len(statuses) != 1
+        or statuses[0].get("name") != SERVER
+        or statuses[0].get("ready") is not False
+        or statuses[0].object("state").object("waiting", {}).get("reason") != "CrashLoopBackOff"
+        or not statuses[0].object("lastState", {}).object("terminated", {}).get("finishedAt")
+        or "running" in statuses[0].object("state")
+        or not any(
+            owner.get("controller") is True and owner.get("uid") == server.object("metadata").string("uid")
+            for owner in pod.object("metadata").objects("ownerReferences")
+        )
+        or any(
+            "running" in status.object("state", {})
+            for status in pod.object("status").objects("initContainerStatuses", [])
+        )
+    ):
+        raise MaintenanceBusy("Stopped-container acquisition requires an owned, terminated crash-looping server")
+
+
 def assert_denied(arguments: list[str], message: str) -> None:
     completed = subprocess.run(
         ["kubectl", "--context", CONTEXT, "-n", NAMESPACE, *arguments],
@@ -389,7 +416,7 @@ def assert_rollback_template(server: JsonObject, journal: JsonObject) -> None:
         raise ValueError("Server pod template changed before the rollback capture")
 
 
-def acquire(path: Path, journal: JsonObject) -> None:
+def acquire(path: Path, journal: JsonObject, *, stopped_container: bool = False) -> None:
     claim = read("pvc", CLAIM)
     volume = read("pv", journal.string("volumeName"), "")
     if (
@@ -405,7 +432,7 @@ def acquire(path: Path, journal: JsonObject) -> None:
         assert_rollback_template(server, journal)
     if journal["phase"] == "PREPARED":
         if server.object("spec").integer("replicas") != 0:
-            assert_empty()
+            assert_container_stopped() if stopped_container else assert_empty()
         journal["phase"] = "CLOSING_ADMISSION"
         save(path, journal)
     if journal["phase"] == "CLOSING_ADMISSION":
@@ -421,7 +448,7 @@ def acquire(path: Path, journal: JsonObject) -> None:
         if annotations(server).get(LEASE) is None:
             assert_rollback_template(server, journal)
         if server.object("spec").integer("replicas") != 0:
-            assert_empty()
+            assert_container_stopped() if stopped_container else assert_empty()
             patch("statefulset", SERVER, server, [{"op": "add", "path": "/spec/replicas", "value": 0}])
         # Waiting does not force-delete Paper; its normal grace period drains and saves.
         if run(["-n", NAMESPACE, "get", "pod", SERVER + "-0", "--ignore-not-found", "-o", "json"]).strip():
@@ -933,11 +960,18 @@ def verification_stage(stage: str):
         code = codes.get(str(error), "operation-failed")
         if isinstance(error, tarfile.ReadError):
             message = str(error).lower()
-            code = next((label for needle, label in (
-                ("unexpected end", "tar-unexpected-eof"),
-                ("truncated", "tar-truncated"),
-                ("header", "tar-invalid-header"),
-            ) if needle in message), "tar-read-error")
+            code = next(
+                (
+                    label
+                    for needle, label in (
+                        ("unexpected end", "tar-unexpected-eof"),
+                        ("truncated", "tar-truncated"),
+                        ("header", "tar-invalid-header"),
+                    )
+                    if needle in message
+                ),
+                "tar-read-error",
+            )
         report = {"stage": stage, "errorClass": error_class, "code": code}
         print("MINECRAFT_VERIFIER_FAILURE " + json.dumps(report), file=sys.stderr, flush=True)
         raise
@@ -1001,15 +1035,22 @@ def remote_fingerprint(journal: JsonObject, namespace: str, exclude_workspace: b
             remote_exit = int(remote.group(1)) if remote is not None else None
             if remote_exit is not None and remote_exit > 255:
                 remote_exit = None
-            code = next((label for needle, label in (
-                ("permission denied", "permission-denied"),
-                ("forbidden", "forbidden"),
-                ("input/output error", "io-error"),
-                ("file changed as we read", "file-changed"),
-                ("timeout", "timeout"),
-                ("unexpected eof", "unexpected-eof"),
-                ("connection", "connection-error"),
-            ) if needle in text), "unclassified")
+            code = next(
+                (
+                    label
+                    for needle, label in (
+                        ("permission denied", "permission-denied"),
+                        ("forbidden", "forbidden"),
+                        ("input/output error", "io-error"),
+                        ("file changed as we read", "file-changed"),
+                        ("timeout", "timeout"),
+                        ("unexpected eof", "unexpected-eof"),
+                        ("connection", "connection-error"),
+                    )
+                    if needle in text
+                ),
+                "unclassified",
+            )
             report = {
                 "side": "source" if namespace == NAMESPACE else "restored",
                 "producerExit": exit_code,
@@ -2577,13 +2618,26 @@ def reopen(
     save(path, journal)
 
 
+def bind_restore_namespace(journal: JsonObject, namespace: str) -> None:
+    if not re.fullmatch(r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", namespace):
+        raise ValueError("Restore namespace must be a bounded Storm restoration namespace")
+    recorded = journal.get("restoreNamespace")
+    if recorded is None and journal.get("restore"):
+        recorded = "minecraft-tsmc-restore"
+    if recorded is not None and recorded != namespace:
+        raise ValueError("Restore namespace differs from this journal's original storage target")
+    journal["restoreNamespace"] = namespace
+
+
 def main() -> None:
+    global RESTORED_NAMESPACE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "operation",
         choices=(
             "preflight",
             "acquire",
+            "acquire-stopped",
             "backup",
             "restore-backup",
             "verify-backup",
@@ -2614,7 +2668,11 @@ def main() -> None:
     parser.add_argument("--staging", type=Path)
     parser.add_argument("--candidate", type=Path)
     parser.add_argument("--evidence", type=Path)
+    parser.add_argument("--restore-namespace", default=RESTORED_NAMESPACE)
     arguments = parser.parse_args()
+    if not re.fullmatch(r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", arguments.restore_namespace):
+        parser.error("Restore namespace must be a bounded Storm restoration namespace")
+    RESTORED_NAMESPACE = arguments.restore_namespace
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
     if arguments.operation in ("plan-install", "install", "revise-installation", "bootstrap-resources") and (
@@ -2630,8 +2688,12 @@ def main() -> None:
                 raise ValueError("Revision requires an existing regular maintenance journal")
             image = JsonObject.parse(arguments.journal.read_bytes()).string("candidateImage")
         journal = initialize(arguments.journal, arguments.request, image)
+        bind_restore_namespace(journal, RESTORED_NAMESPACE)
+        save(arguments.journal, journal)
         if arguments.operation == "acquire":
             acquire(arguments.journal, journal)
+        elif arguments.operation == "acquire-stopped":
+            acquire(arguments.journal, journal, stopped_container=True)
         elif arguments.operation == "backup":
             backup(arguments.journal, journal)
         elif arguments.operation == "restore-backup":

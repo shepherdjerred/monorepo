@@ -589,6 +589,14 @@ disables router wake, stops Paper through its normal grace period, and acquires
 the request-owned offline lease. Updates use resource-version comparisons.
 Live dry-run probes must demonstrate that StatefulSet, scale and deletion requests
 are denied, together with attempts to reopen or delete each of the four Services.
+For a server already in `CrashLoopBackOff`, use `acquire-stopped` instead of
+`acquire`. It requires the owned container's termination record and refuses a
+running process, sidecar, or init container; an RCON failure alone is never
+evidence of an empty server. Route closure and all lease admission probes still
+apply. To retain a previous restoration's independent storage, pass a new
+`--restore-namespace minecraft-tsmc-restore-<request-prefix>` on every command.
+The journal binds that namespace before creating its first Restore and refuses
+later changes.
 Service admission binds the parent lease, requires closed selectors and the same
 request owner, and refuses replacement until the parent lease is released.
 Before that parent exists, normal Service creation is allowed for bootstrap;
