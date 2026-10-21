@@ -5,8 +5,10 @@
  * Off until the window's lock-down step, which follows acceptance; the
  * operator-run bootstrap and account tools use the built-in `admin` account
  * until then. On, `admin` is disabled and the human `operator` login holds
- * ArgoCD's built-in read-only role. The break-glass is the wiki how-to
- * `/how-to/regain-write-access-to-argocd/`.
+ * ArgoCD's built-in read-only role. ArgoCD reads that login's password only
+ * from `argocd-secret`, so it is provisioned and verified there before this
+ * turns on: `/how-to/set-the-argocd-operator-password/`. The break-glass is
+ * the wiki how-to `/how-to/regain-write-access-to-argocd/`.
  */
 export function humanArgoCdReadOnly(): boolean {
   return false;

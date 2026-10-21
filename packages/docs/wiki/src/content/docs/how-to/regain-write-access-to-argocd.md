@@ -47,15 +47,20 @@ through the ArgoCD UI, the `argocd` CLI, or the operator-run bootstrap tools.
 ## 3. Write a source directly only if ArgoCD is down
 
 Skip this step while the ArgoCD API answers: writes made through it pass the
-source policy. If the API is down and an Application's source must change, lift
-the policy binding:
+source policy. If the API is down and an Application's source must change,
+first stop the `cluster-admission` Application's automated sync. Otherwise it
+recreates the binding on its next reconciliation:
+
+```bash
+kubectl -n argocd patch application cluster-admission --type merge \
+  -p '{"spec":{"syncPolicy":{"automated":null}}}'
+```
+
+Then lift the policy binding:
 
 ```bash
 kubectl delete validatingadmissionpolicybinding argocd-application-source.sjer.red
 ```
-
-Stop the `cluster-admission` Application's automated sync first, as in step 1.
-Otherwise it recreates the binding on its next reconciliation.
 
 ## 4. Return to read-only
 
@@ -76,5 +81,6 @@ is the only evidence.
 
 ## Related
 
+- [Set the ArgoCD operator password](/how-to/set-the-argocd-operator-password/)
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
 - [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/)
