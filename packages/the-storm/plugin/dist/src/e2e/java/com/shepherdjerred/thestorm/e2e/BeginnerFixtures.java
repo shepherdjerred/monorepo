@@ -68,7 +68,11 @@ final class BeginnerFixtures implements BasicCommand {
   private static void probe(
       CommandSourceStack source, Player player, Player control, MobLevels levels) {
     var at = requireNonNull(player.getLocation());
-    var zombie = at.getWorld().spawn(at.clone().add(2, 0, 0), Zombie.class, SpawnReason.NATURAL);
+    // Natural spawn initialization can choose a baby, which the real level policy excludes.
+    // Set the intended adult body before CreatureSpawnEvent runs through that policy.
+    var zombie =
+        at.getWorld()
+            .spawn(at.clone().add(2, 0, 0), Zombie.class, SpawnReason.NATURAL, Zombie::setAdult);
     zombie.setAI(false);
     zombie.setSilent(true);
     var creeper = at.getWorld().spawn(at.clone().add(3, 0, 0), Creeper.class, SpawnReason.NATURAL);
@@ -94,6 +98,8 @@ final class BeginnerFixtures implements BasicCommand {
       var normalBlast = damage(control, () -> control.damage(10, explosion));
       var result =
           Map.of(
+              "zombieAdult",
+              zombie.isAdult(),
               "zombieLevel",
               levels.levelOf(zombie).orElseThrow(),
               "creeperLevel",

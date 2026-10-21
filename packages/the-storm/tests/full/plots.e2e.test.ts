@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect } from "vitest";
 import { Vec3 } from "vec3";
+import { z } from "zod";
 import type { RconClient } from "#e2e/harness/rcon.ts";
 import type { Bot } from "mineflayer";
 import { test } from "#e2e/fixtures.ts";
@@ -106,11 +107,51 @@ describe("protected shop recovery", () => {
     );
     await rcon.command(`minecraft:tp ${bot.username} 65.5 69 -181.5`);
     await waitUntil(
-      "source chunk received",
-      () => bot.blockAt(new Vec3(65, 69, -183))?.name === "chest",
+      "owner arrives beside the source chest",
+      () =>
+        bot.entity.position.distanceTo(new Vec3(65.5, 69, -181.5)) < 0.3 &&
+        bot.blockAt(new Vec3(65, 69, -183))?.name === "chest",
     );
+    await bot.waitForChunksToLoad();
     await bot.lookAt(new Vec3(65.5, 69.5, -182.5), true);
     await bot.waitForTicks(2);
+    // Mineflayer's cursor helper uses body height; lookAt and native Paper use eye height.
+    const eyeHeight = z
+      .object({ eyeHeight: z.number().positive() })
+      .parse(bot.entity).eyeHeight;
+    const { yaw, pitch } = bot.entity;
+    const ray = bot.world.raycast(
+      bot.entity.position.offset(0, eyeHeight, 0),
+      new Vec3(
+        -Math.sin(yaw) * Math.cos(pitch),
+        Math.sin(pitch),
+        -Math.cos(yaw) * Math.cos(pitch),
+      ),
+      5,
+    );
+    const target = z
+      .object({
+        name: z.string(),
+        position: z.object({ x: z.number(), y: z.number(), z: z.number() }),
+      })
+      .nullable()
+      .parse(ray);
+    expect(
+      target?.name,
+      JSON.stringify({
+        feet: bot.entity.position,
+        height: bot.entity.height,
+        yaw: bot.entity.yaw,
+        pitch: bot.entity.pitch,
+        target: target?.position,
+        nativePosition: await rcon.command(
+          `data get entity ${bot.username} Pos`,
+        ),
+        nativeRotation: await rcon.command(
+          `data get entity ${bot.username} Rotation`,
+        ),
+      }),
+    ).toBe("chest");
     const locked = waitForMessage(bot, /Locked\. You can grant/u);
     bot.chat("/lock");
     await locked;

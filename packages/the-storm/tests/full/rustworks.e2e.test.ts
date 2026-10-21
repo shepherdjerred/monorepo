@@ -40,8 +40,10 @@ async function interact(bot: Bot, rcon: RconClient, at: Position) {
     "Rustworks fixture approach",
     () =>
       bot.entity.position.distanceTo(beside) < 0.7 &&
-      bot.blockAt(new Vec3(at.x, at.y, at.z)) !== null,
+      bot.blockAt(new Vec3(at.x, at.y, at.z)) !== null &&
+      bot.blockAt(new Vec3(at.x, at.y, at.z))?.name !== "air",
   );
+  await bot.waitForChunksToLoad();
   const fixture = bot.blockAt(new Vec3(at.x, at.y, at.z));
   if (fixture === null)
     throw new Error("Authored Rustworks fixture was not loaded");

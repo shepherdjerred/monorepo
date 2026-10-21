@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { expect } from "vitest";
+import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
 import { disconnectBot } from "#e2e/harness/bot.ts";
 import { count } from "#e2e/harness/rwf-humans.ts";
@@ -11,6 +12,23 @@ import {
   waitForLobby,
 } from "#e2e/harness/rwf-match.ts";
 import { packageRoot } from "#e2e/harness/paths.ts";
+
+/** Minecraft serializes the same component set in different orders after restore. */
+function inventorySnapshot(slots: unknown) {
+  return z
+    .array(z.record(z.string(), z.unknown()).nullable())
+    .parse(structuredClone(slots))
+    .map((item) => {
+      if (item === null) return null;
+      const components = z
+        .array(z.looseObject({ type: z.string() }))
+        .parse(item["components"]);
+      return {
+        ...item,
+        components: components.toSorted((a, b) => a.type.localeCompare(b.type)),
+      };
+    });
+}
 
 test(
   "a queued watcher joins the next lobby after uncached preferences load",
@@ -47,7 +65,7 @@ test(
         async () => count(watcher, "diamond") === 3,
       );
       const home = {
-        inventory: structuredClone(watcher.inventory.slots),
+        inventory: inventorySnapshot(watcher.inventory.slots),
         mode: watcher.game.gameMode,
         dimension: watcher.game.dimension,
         position: watcher.entity.position.clone(),
@@ -101,7 +119,9 @@ test(
           count(watcher, "diamond") === 3,
         20_000,
       );
-      expect(watcher.inventory.slots).toEqual(home.inventory);
+      expect(inventorySnapshot(watcher.inventory.slots)).toEqual(
+        home.inventory,
+      );
       expect(watcher.health).toBe(home.health);
       expect(watcher.food).toBe(home.food);
       expect(watcher.entity.yaw).toBeCloseTo(home.yaw, 4);

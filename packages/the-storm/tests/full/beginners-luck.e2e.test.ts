@@ -9,6 +9,7 @@ import {
 } from "#e2e/harness/bot.ts";
 
 const Probe = z.object({
+  zombieAdult: z.boolean(),
   zombieLevel: z.number(),
   creeperLevel: z.number(),
   melee: z.number(),
@@ -121,6 +122,7 @@ describe("beginner's luck on native Paper", () => {
           ),
         ),
       );
+      expect(result.zombieAdult).toBe(true);
       expect(result.zombieLevel).toBe(1);
       expect(result.creeperLevel).toBe(1);
       expect(result.melee).toBeGreaterThan(0);
