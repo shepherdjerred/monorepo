@@ -75,3 +75,49 @@ run "committed_cache_uses_existing_user_token_provider" {
     error_message = "The committed purge token must use the existing user-token provider, preserve the existing managed token and retain its exact expiry and credential handoff."
   }
 }
+
+run "s3_credential_hands_off_the_derived_r2_keys" {
+  command = plan
+  variables {
+    cloudflare_api_tokens = {
+      wal = {
+        name = "Postgres WAL archive"
+        policies = [{
+          effect = "allow"
+          permission_groups = [{
+            id   = "2efd5506f9c8494dacb1fa10a3e7d5b6"
+            name = "Workers R2 Storage Bucket Item Write"
+          }]
+          resources = { "com.cloudflare.edge.r2.bucket.account_postgres-wal" = "*" }
+        }]
+        vault_item_id = "wal-item"
+        vault_field   = "credential"
+        s3_credential = true
+      }
+      plain = {
+        name = "Plain token"
+        policies = [{
+          effect = "allow"
+          permission_groups = [{
+            id   = "82e64a83756745bbbb1c9c2701bf816b"
+            name = "DNS Read"
+          }]
+          resources = { "com.cloudflare.api.account.zone.*" = "*" }
+        }]
+        vault_item_id = "plain-item"
+        vault_field   = "credential"
+      }
+    }
+  }
+  assert {
+    condition = (
+      keys(nonsensitive(output.cloudflare_api_token_handoffs)) == ["plain", "wal", "wal.s3-access-key-id", "wal.s3-secret-access-key"] &&
+      nonsensitive(output.cloudflare_api_token_handoffs["wal.s3-access-key-id"].vault_item_id) == "wal-item" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["wal.s3-access-key-id"].vault_field) == "CLOUDFLARE_R2_ACCESS_KEY_ID" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["wal.s3-secret-access-key"].vault_item_id) == "wal-item" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["wal.s3-secret-access-key"].vault_field) == "CLOUDFLARE_R2_SECRET_ACCESS_KEY" &&
+      nonsensitive(output.cloudflare_api_token_handoffs["wal"].vault_field) == "credential"
+    )
+    error_message = "A token with s3_credential must hand off its token plus the derived R2 access key id and secret access key to its own item; other tokens hand off only themselves."
+  }
+}

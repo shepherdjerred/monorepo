@@ -342,6 +342,7 @@ const cloudflareToken = z.strictObject({
   vault_item_id: nonEmptyString,
   vault_field: nonEmptyString,
   vault_json_path: optionalNonEmptyString,
+  s3_credential: z.boolean().optional(),
 });
 const cloudflareDesiredState = z.strictObject({
   $schema: schemaReference,

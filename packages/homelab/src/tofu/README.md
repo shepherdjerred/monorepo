@@ -219,6 +219,10 @@ tokens do not receive token-administration permissions.
 
 Set a token's `managed` field to `false` to retain its policy and handoff
 metadata without creating a replacement. An omitted field defaults to `true`.
+Set `s3_credential` to `true` on a token that an S3 client uses with R2. The
+stack then also hands off the token id and the SHA-256 of its value to the
+item's `CLOUDFLARE_R2_ACCESS_KEY_ID` and `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+fields, each as its own rotation unit.
 Only Woodpecker is enabled during the initial token-stack bootstrap; the other
 consumers retain their existing credentials. Enable each remaining replacement
 in a separate reviewed rollout. Disabling an already managed token plans its

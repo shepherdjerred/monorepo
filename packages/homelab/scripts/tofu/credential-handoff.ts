@@ -284,26 +284,45 @@ function targetOwners(desired: unknown, stack: string): Map<string, string> {
   return owners;
 }
 
-/** Cloudflare emits sensitive handoffs only for generated, managed tokens. */
+/** The 1Password fields of an R2 S3 credential, by handoff unit suffix (cloudflare-tokens/api-tokens.tf). */
+export const R2_S3_CREDENTIAL_FIELDS = {
+  "s3-access-key-id": "CLOUDFLARE_R2_ACCESS_KEY_ID",
+  "s3-secret-access-key": "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+} as const;
+
+/**
+ * Cloudflare emits sensitive handoffs only for generated, managed tokens, plus
+ * one unit per derived R2 S3 credential field for a token that opts in.
+ */
 export function handoffDesiredState(desired: unknown, stack: string): unknown {
   if (stack !== "cloudflare-tokens") return desired;
   const parsed = z
     .looseObject({
       cloudflare_api_tokens: z.record(
         z.string(),
-        // Match cloudflare-tokens/variables.tf: omitted managed means true.
-        z.looseObject({ managed: z.boolean().default(true) }),
+        // Match cloudflare-tokens/variables.tf: omitted managed means true
+        // and omitted s3_credential means false.
+        z.looseObject({
+          managed: z.boolean().default(true),
+          s3_credential: z.boolean().optional(),
+          vault_item_id: z.string().min(1),
+        }),
       ),
     })
     .parse(desired);
-  return {
-    ...parsed,
-    cloudflare_api_tokens: Object.fromEntries(
-      Object.entries(parsed.cloudflare_api_tokens).filter(
-        ([, token]) => token.managed,
-      ),
-    ),
-  };
+  const managed = Object.entries(parsed.cloudflare_api_tokens).filter(
+    ([, token]) => token.managed,
+  );
+  const tokens: Record<string, unknown> = Object.fromEntries(managed);
+  for (const [name, token] of managed) {
+    if (token.s3_credential !== true) continue;
+    for (const [unit, field] of Object.entries(R2_S3_CREDENTIAL_FIELDS))
+      tokens[`${name}.${unit}`] = {
+        vault_item_id: token.vault_item_id,
+        vault_field: field,
+      };
+  }
+  return { ...parsed, cloudflare_api_tokens: tokens };
 }
 
 export async function assertCleanHandoffSource(

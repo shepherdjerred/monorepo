@@ -18,6 +18,7 @@ import {
   handoffEnvironment,
   handoffDesiredState,
   assertCleanHandoffSource,
+  R2_S3_CREDENTIAL_FIELDS,
 } from "./credential-handoff.ts";
 import { collectOnePasswordTargets } from "#scripts/platform-desired-state.ts";
 import { parsePrivateJson, capturedRead } from "./secret-read.ts";
@@ -90,6 +91,116 @@ describe("generated Cloudflare handoffs", () => {
       managed: false,
       ...existing,
     });
+  });
+});
+
+describe("R2 S3 credential handoffs", () => {
+  const token = {
+    vault_item_id: "wal",
+    vault_field: "credential",
+    s3_credential: true,
+  };
+
+  test("a token that opts in owns its derived S3 fields as separate units", () => {
+    const desired = handoffDesiredState(
+      {
+        cloudflare_api_tokens: {
+          wal: token,
+          plain: { vault_item_id: "plain", vault_field: "credential" },
+        },
+      },
+      "cloudflare-tokens",
+    );
+    expect(desired).toEqual({
+      cloudflare_api_tokens: {
+        wal: { managed: true, ...token },
+        plain: {
+          managed: true,
+          vault_item_id: "plain",
+          vault_field: "credential",
+        },
+        "wal.s3-access-key-id": {
+          vault_item_id: "wal",
+          vault_field: R2_S3_CREDENTIAL_FIELDS["s3-access-key-id"],
+        },
+        "wal.s3-secret-access-key": {
+          vault_item_id: "wal",
+          vault_field: R2_S3_CREDENTIAL_FIELDS["s3-secret-access-key"],
+        },
+      },
+    });
+  });
+
+  test("an unmanaged token publishes no derived S3 units", () => {
+    expect(
+      handoffDesiredState(
+        { cloudflare_api_tokens: { wal: { ...token, managed: false } } },
+        "cloudflare-tokens",
+      ),
+    ).toEqual({ cloudflare_api_tokens: {} });
+  });
+
+  test("verification requires the token and both derived fields", () => {
+    const desired = handoffDesiredState(
+      { cloudflare_api_tokens: { wal: token } },
+      "cloudflare-tokens",
+    );
+    const targets = collectOnePasswordTargets(desired).map((reference) =>
+      CredentialTargetSchema.parse(reference),
+    );
+    expect(targets).toHaveLength(3);
+    const vault = [
+      {
+        id: "wal",
+        title: "wal",
+        fields: [
+          { id: "credential", label: "credential", value: "fixture-token" },
+          {
+            id: "access",
+            label: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+            value: "fixture-id",
+          },
+          {
+            id: "secret",
+            label: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+            value: "fixture-digest",
+          },
+        ],
+      },
+    ];
+    const handoff = {
+      wal: {
+        api_token: "fixture-token",
+        vault_item_id: "wal",
+        vault_field: "credential",
+      },
+      "wal.s3-access-key-id": {
+        value: "fixture-id",
+        vault_item_id: "wal",
+        vault_field: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+      },
+      "wal.s3-secret-access-key": {
+        value: "fixture-digest",
+        vault_item_id: "wal",
+        vault_field: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+      },
+    };
+    const owners = new Map(
+      Object.entries(handoff).map(([unit, entry]) => [
+        JSON.stringify([entry.vault_item_id, entry.vault_field, null]),
+        unit,
+      ]),
+    );
+    const report = verifyHandoffs(handoff, targets, vault, owners);
+    expect(report.map(({ unit, status }) => [unit, status])).toEqual([
+      ["wal", "matches"],
+      ["wal.s3-access-key-id", "matches"],
+      ["wal.s3-secret-access-key", "matches"],
+    ]);
+    const { ["wal.s3-secret-access-key"]: _omitted, ...partial } = handoff;
+    expect(() => verifyHandoffs(partial, targets, vault, owners)).toThrow(
+      /does not cover every declared target/u,
+    );
   });
 });
 

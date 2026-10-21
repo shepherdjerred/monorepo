@@ -1052,6 +1052,11 @@
           "vault_json_path": {
             "type": "string",
             "minLength": 1
+          },
+          "s3_credential": {
+            "type": "boolean",
+            "default": false,
+            "description": "Also hand off the R2 S3 credential derived from this token (access key id is the token id, secret access key the SHA-256 of its value) to the item's CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY fields"
           }
         }
       }

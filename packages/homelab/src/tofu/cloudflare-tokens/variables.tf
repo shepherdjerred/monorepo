@@ -24,6 +24,7 @@ variable "cloudflare_api_tokens" {
     vault_item_id   = string
     vault_field     = string
     vault_json_path = optional(string)
+    s3_credential   = optional(bool, false)
   }))
 }
 
