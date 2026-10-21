@@ -6,7 +6,7 @@ import { test } from "#e2e/fixtures.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
-/** The modules the shipped config enables: all 27 it registers. */
+/** The modules the shipped config enables: all 28 it registers. */
 const modules = [
   "agent",
   "arena",
@@ -38,7 +38,7 @@ const modules = [
   "world",
 ].toSorted();
 
-const registeredModules = 27;
+const registeredModules = 28;
 
 const OwnedConfigSchema = z
   .object({ modules: z.record(z.string(), z.boolean()) })
@@ -50,7 +50,7 @@ const ownedConfig = path.join(
 );
 
 describe("all modules together", () => {
-  test("boots all 27 shipped modules with the shipped content", async ({
+  test("boots all 28 shipped modules with the shipped content", async ({
     server,
     rcon,
   }) => {
