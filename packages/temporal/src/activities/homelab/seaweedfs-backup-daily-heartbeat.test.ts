@@ -8,25 +8,12 @@ import * as BackupSnapshot from "@shepherdjerred/seaweedfs-backup/snapshot";
 import type * as BackupStore from "@shepherdjerred/seaweedfs-backup/store";
 import { seaweedFsBackupActivities } from "./seaweedfs-backup.ts";
 
-const activity = vi.hoisted(() => ({
-  cancellation: new AbortController(),
-  heartbeat: vi.fn(),
-  stores: vi.fn(),
-}));
-
-vi.mock("@temporalio/activity", () => ({
-  Context: {
-    current: () => ({
-      cancellationSignal: activity.cancellation.signal,
-      heartbeat: activity.heartbeat,
-    }),
-  },
-}));
-
-vi.mock("@shepherdjerred/seaweedfs-backup/store", async (importOriginal) => ({
-  ...(await importOriginal<typeof BackupStore>()),
-  storesFromEnvironment: activity.stores,
-}));
+const support = await vi.hoisted(
+  () => import("#activities/testing/seaweedfs-backup-activity.ts"),
+);
+const { activity, resetBackupActivity } = support;
+vi.mock("@temporalio/activity", support.activityContextModule);
+vi.mock("@shepherdjerred/seaweedfs-backup/store", support.backupStoreModule);
 
 let source: BackupStore.ObjectStore;
 let destination: BackupStore.ObjectStore;
@@ -100,16 +87,11 @@ beforeEach(() => {
   ({ source, destination } = emptyInventoryStores());
   execution = undefined;
   heartbeatTimes = [];
-  activity.cancellation = new AbortController();
-  activity.heartbeat.mockReset();
+  resetBackupActivity((options) => {
+    execution = options;
+    return { source, destination, backupBucket: "test-backup" };
+  });
   activity.heartbeat.mockImplementation(() => heartbeatTimes.push(Date.now()));
-  activity.stores.mockReset();
-  activity.stores.mockImplementation(
-    (_environment: unknown, options?: BackupStore.ObjectStoreExecution) => {
-      execution = options;
-      return { source, destination, backupBucket: "test-backup" };
-    },
-  );
 });
 
 afterEach(() => {

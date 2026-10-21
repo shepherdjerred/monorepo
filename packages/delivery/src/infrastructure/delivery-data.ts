@@ -76,6 +76,32 @@ export function artifactRow<
     ...(contentFingerprint === undefined ? {} : { contentFingerprint }),
   };
 }
+/**
+ * Builds that qualify an artifact for this repository: CI builds owned by it,
+ * acquisitions it ran (older rows carry no pipeline), and the licensed or
+ * attested bundles that never belong to a repository.
+ */
+export function qualifiedBuildWhere(
+  serviceId: string,
+  repositoryId: number,
+): Prisma.BuildWhereInput {
+  return {
+    serviceId,
+    status: "verified",
+    OR: [
+      { sourceKind: "ci", repositoryId },
+      // Acquisitions carry the acquiring pipeline (B3); older rows have none.
+      {
+        sourceKind: "upstream",
+        OR: [{ repositoryId }, { repositoryId: null }],
+      },
+      {
+        sourceKind: { in: ["licensed-bundle", "attested"] },
+        repositoryId: null,
+      },
+    ],
+  };
+}
 export async function artifact(tx: Transaction | Database, artifactId: string) {
   const row = required(
     await tx.artifact.findUnique({

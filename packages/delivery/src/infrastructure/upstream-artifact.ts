@@ -34,6 +34,7 @@ import {
   artifactRow,
   artifactView,
   ensureService,
+  qualifiedBuildWhere,
 } from "./delivery-data.ts";
 import {
   boundedBody,
@@ -270,22 +271,7 @@ export async function findQualifiedArtifact(
         digest: input.digest,
         ...(input.version === undefined ? {} : { version: input.version }),
         origin: { path: ["kind"], equals: input.originKind },
-        build: {
-          serviceId: input.serviceId,
-          status: "verified",
-          OR: [
-            { sourceKind: "ci", repositoryId },
-            // Acquisitions carry the acquiring pipeline (B3); older rows have none.
-            {
-              sourceKind: "upstream",
-              OR: [{ repositoryId }, { repositoryId: null }],
-            },
-            {
-              sourceKind: { in: ["licensed-bundle", "attested"] },
-              repositoryId: null,
-            },
-          ],
-        },
+        build: qualifiedBuildWhere(input.serviceId, repositoryId),
       },
       include: { build: true },
       orderBy: { createdAt: "asc" },
