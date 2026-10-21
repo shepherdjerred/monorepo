@@ -1754,7 +1754,39 @@ async function assertRootPruneSafe(
     ? status["resources"]
     : [];
   const candidates = new Map<string, string>();
+  const nonApplicationCandidates = new Set<string>();
   for (const resource of resources) {
+    // Root charts also own objects such as Probes and PrometheusRules. Argo's
+    // native prune marker and the exact rendered absence identify these; an
+    // OutOfSync status alone does not. Keep them in completion coverage so a
+    // later prune wave cannot be terminated after only Applications finish.
+    if (
+      isRecord(resource) &&
+      resource["requiresPruning"] === true &&
+      resource["kind"] !== "Application"
+    ) {
+      if (
+        (resource["group"] !== undefined &&
+          typeof resource["group"] !== "string") ||
+        typeof resource["kind"] !== "string" ||
+        typeof resource["name"] !== "string"
+      ) {
+        throw new Error(
+          "Root prune candidate has an invalid resource identity",
+        );
+      }
+      const identity = resourceIdentity(
+        resource["group"] ?? "",
+        resource["kind"],
+        resource["name"],
+      );
+      if (desiredResources.has(identity)) {
+        throw new Error(
+          `Root prune candidate is still present in the exact rendered inventory: ${identity}`,
+        );
+      }
+      nonApplicationCandidates.add(identity);
+    }
     if (
       !isRecord(resource) ||
       resource["kind"] !== "Application" ||
@@ -1794,7 +1826,7 @@ async function assertRootPruneSafe(
   }
   return {
     desired: desiredResources,
-    pruned: new Set(candidates.values()),
+    pruned: new Set([...candidates.values(), ...nonApplicationCandidates]),
   };
 }
 

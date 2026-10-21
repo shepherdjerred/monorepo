@@ -413,6 +413,12 @@ test("root release finalization applies every exact wave before accepting a part
   let deleteRequests = 0;
   let finalPruneReads = 0;
   const removedApplication = "removed-worker";
+  const removedRule = {
+    group: "monitoring.coreos.com",
+    kind: "PrometheusRule",
+    namespace: "pokemon",
+    name: "retired-goal-rules",
+  };
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -483,6 +489,7 @@ test("root release finalization applies every exact wave before accepting a part
           return Response.json({
             status: {
               resources: [
+                { ...removedRule, requiresPruning: true, status: "OutOfSync" },
                 {
                   group: "argoproj.io",
                   kind: "Application",
@@ -501,7 +508,12 @@ test("root release finalization applies every exact wave before accepting a part
               ...resource,
               status: "Synced",
             }))
-          : finalPruneResources(removedApplication, finalPruneReads > 1);
+          : [
+              ...finalPruneResources(removedApplication, finalPruneReads > 1),
+              ...(finalPruneReads > 2
+                ? [{ ...removedRule, status: "Pruned" }]
+                : []),
+            ];
         return Response.json({
           operation: requestedOperation,
           status: {
@@ -534,7 +546,7 @@ test("root release finalization applies every exact wave before accepting a part
     expect(stdout).toContain("syncing exact root batch 3/3 (1 resources)");
     expect(syncBodies).toHaveLength(4);
     expect(deleteRequests).toBe(4);
-    expect(finalPruneReads).toBeGreaterThanOrEqual(2);
+    expect(finalPruneReads).toBeGreaterThanOrEqual(3);
 
     const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
     expect(applicationRequest.revision).toBe("2.0.0-43");
@@ -571,6 +583,12 @@ test("root release finalization applies every exact wave before accepting a part
     const pruneRequest = RootSyncRequestSchema.parse(syncBodies[3]);
     expect(pruneRequest.prune).toBe(true);
     expect(pruneRequest.infos).toContainEqual(PRUNE_PHASE_INFO);
+    const pruneCandidates = pruneRequest.infos.find(
+      (info) => info.name === "ci.sjer.red/prune-candidates",
+    );
+    expect(JSON.parse(pruneCandidates?.value ?? "null")).toContain(
+      JSON.stringify([removedRule.group, removedRule.kind, removedRule.name]),
+    );
     const rawPruneRequest = z
       .record(z.string(), z.unknown())
       .parse(syncBodies[3]);
