@@ -36,10 +36,13 @@ async function loadServerConfigs(
 
   try {
     const glob = new Glob("**/*.{yml,yaml,properties,json,conf,txt}");
-    for await (const entry of glob.scan({
-      cwd: configDir,
-      followSymlinks: true,
-    })) {
+    // Glob order follows the filesystem's directory order, which differs
+    // between macOS, a CI pod and the next CI pod. Sort so the rendered
+    // volumes, ConfigMap items and catalog configuration are reproducible.
+    const entries = await Array.fromAsync(
+      glob.scan({ cwd: configDir, followSymlinks: true }),
+    );
+    for (const entry of entries.sort()) {
       // Validate no __ in filenames (would conflict with path encoding)
       if (entry.includes("__")) {
         throw new Error(
