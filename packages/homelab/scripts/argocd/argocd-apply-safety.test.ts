@@ -1078,7 +1078,9 @@ describe("ArgoCD PostgreSQL cluster safety", () => {
     ).toEqual([]);
   });
 
-  test("respects a resource-scoped force replace like the other rules", () => {
+  test("still refuses under a resource-scoped force replace", () => {
+    // Replacement skips the update-path checks, but recreating the cluster
+    // loses exactly the data these checks protect.
     expect(
       analyzeApplySafety([
         cluster(
@@ -1086,7 +1088,10 @@ describe("ArgoCD PostgreSQL cluster safety", () => {
           { forceReplace: true },
         ),
       ]),
-    ).toEqual([]);
+    ).toEqual([
+      `${clusterIdentity} changes /spec/postgresql/version from 18 to 19; major-version changes use the reviewed upgrade procedure`,
+      `${clusterIdentity} removes /spec/users temporal`,
+    ]);
   });
 
   test("checks only the Zalando group", () => {
@@ -1101,7 +1106,12 @@ describe("ArgoCD PostgreSQL cluster safety", () => {
   });
 });
 
-function claim(liveStorage: string, targetStorage: string, name = "data") {
+function claim(
+  liveStorage: string,
+  targetStorage: string,
+  name = "data",
+  forceReplace = false,
+) {
   return {
     kind: "PersistentVolumeClaim",
     namespace: "media",
@@ -1110,6 +1120,15 @@ function claim(liveStorage: string, targetStorage: string, name = "data") {
       spec: { resources: { requests: { storage: liveStorage } } },
     }),
     targetState: state({
+      ...(forceReplace
+        ? {
+            metadata: {
+              annotations: {
+                "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
+              },
+            },
+          }
+        : {}),
       spec: { resources: { requests: { storage: targetStorage } } },
     }),
   };
@@ -1127,6 +1146,14 @@ describe("ArgoCD PersistentVolumeClaim storage safety", () => {
     ).toEqual([
       "/PersistentVolumeClaim media/data shrinks /spec/resources/requests/storage from 100Gi to 50Gi",
       "/PersistentVolumeClaim media/decimal-looking shrinks /spec/resources/requests/storage from 1Ti to 1000Gi",
+    ]);
+  });
+
+  test("refuses a shrink that a force replace would apply", () => {
+    expect(
+      analyzeApplySafety([claim("100Gi", "50Gi", "replaced", true)]),
+    ).toEqual([
+      "/PersistentVolumeClaim media/replaced shrinks /spec/resources/requests/storage from 100Gi to 50Gi",
     ]);
   });
 });

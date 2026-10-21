@@ -587,15 +587,12 @@ export function analyzeApplySafety(
           ...embeddedListFindings(live, target, list, identity(resource)),
         );
       }
-      findings.push(
-        ...destructiveChangeFindings(
-          resource,
-          identity(resource),
-          live,
-          target,
-        ),
-      );
     }
+    // Replacement bypasses the update path, not the data: a recreated
+    // database or claim loses exactly what these checks protect.
+    findings.push(
+      ...destructiveChangeFindings(resource, identity(resource), live, target),
+    );
     findings.push(...imageDowngradeFindings(live, target, identity(resource)));
     if (forceReplace) {
       continue;
