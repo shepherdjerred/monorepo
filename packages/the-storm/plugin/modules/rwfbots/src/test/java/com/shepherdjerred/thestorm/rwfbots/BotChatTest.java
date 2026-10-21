@@ -8,7 +8,6 @@ import com.shepherdjerred.thestorm.chat.app.ChatChannel;
 import com.shepherdjerred.thestorm.chat.app.NpcChat;
 import com.shepherdjerred.thestorm.chat.domain.ChatProfile;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
-import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.rwf.app.MatchNotification;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
@@ -79,6 +78,7 @@ final class BotChatTest {
 
   @TempDir Path directory;
   private @Nullable RwfBotsHarness running;
+  private @Nullable SpeechClock speechClock;
 
   @AfterEach
   void stop() {
@@ -370,9 +370,10 @@ final class BotChatTest {
       heard(watcher);
       harness.clock.advance(Duration.ofSeconds(70));
       assertThat(harness.paper().roster().live()).allMatch(body -> !speech.typing(body.uuid()));
+      requireNonNull(speechClock).pulse();
       var typing = false;
       for (var step = 0; step < 40 && !typing; step++) {
-        harness.tick();
+        speechTicks(speech, 1);
         typing =
             harness.paper().roster().live().stream().anyMatch(body -> speech.typing(body.uuid()));
       }
@@ -447,13 +448,41 @@ final class BotChatTest {
         .teleport(
             new Location(harness.world, anchor.pos().x(), anchor.pos().y(), anchor.pos().z()));
     for (var step = 0; step < 120 && !holds(harness, anchor.id()); step++) {
+      arriveAtHoldingPost(harness, uuid);
       harness.paper().loop().requestReplan(anchor.id());
       harness.tick();
     }
     assertThat(holds(harness, anchor.id()))
-        .as("the real anchor settled at its published slot, away from enemies and moving allies")
+        .as(
+            "the real anchor settled away from enemies and moving allies: %s",
+            harness.paper().loop().board().of(anchor.id()))
         .isTrue();
     return uuid;
+  }
+
+  /** Complete the real issued patrol route when arranging the stationary chat precondition. */
+  private static void arriveAtHoldingPost(RwfBotsHarness harness, UUID uuid) {
+    var id = harness.paper().roster().session().orElseThrow().ids().known(uuid).orElseThrow();
+    harness
+        .paper()
+        .loop()
+        .board()
+        .of(id)
+        .map(thought -> thought.decision())
+        .filter(decision -> decision.option() == Option.HOLD_SLOT)
+        .filter(decision -> decision.target().isEmpty() && decision.ability().isEmpty())
+        .filter(decision -> decision.routeFailure().isEmpty() && !decision.waypoints().isEmpty())
+        .ifPresent(
+            decision -> {
+              var position = decision.waypoints().getLast().pos();
+              harness
+                  .paper()
+                  .roster()
+                  .bodies()
+                  .entity(uuid)
+                  .orElseThrow()
+                  .teleport(new Location(harness.world, position.x(), position.y(), position.z()));
+            });
   }
 
   private record Anchor(
@@ -482,6 +511,7 @@ final class BotChatTest {
         .filter(decision -> decision.waypoints().isEmpty())
         .filter(decision -> decision.target().isEmpty())
         .filter(decision -> decision.ability().isEmpty())
+        .filter(decision -> decision.routeFailure().isEmpty())
         .isPresent();
   }
 
@@ -509,6 +539,7 @@ final class BotChatTest {
       throw new UncheckedIOException(failure);
     }
     var owner = requireNonNull(harness.server.getPluginManager().getPlugin("TheStorm"));
+    speechClock = new SpeechClock(harness.clock);
     var speech =
         new BotChat(
             new BotChat.Parts(
@@ -518,12 +549,11 @@ final class BotChatTest {
                 harness.paper().roster(),
                 List.of(harness.world),
                 harness.services.require(NpcChat.class),
-                new PaperScheduler(owner),
+                speechClock,
                 harness.clock,
                 owner.getComponentLogger()));
     speech.compose(harness.paper().loop(), owner);
     speech.start(harness.match);
-    harness.tick();
     assertThat(speech.enabled()).isTrue();
     return speech;
   }
