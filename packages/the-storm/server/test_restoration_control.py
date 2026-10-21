@@ -257,6 +257,132 @@ class RestorationControlTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "fresh resource metadata"):
                 control.private_start(self.path, journal)
 
+    def creative_fixture(self) -> JsonObject:
+        journal = self.installation_fixture()
+        journal.pop("resourceBootstrap")
+        journal.object("installation").update(scope="additive-creative", unrelatedFiles="UNCHANGED")
+        journal["installationPlan"] = {
+            "scope": "additive-creative",
+            "candidateImage": IMAGE,
+            "candidateJarSha256": "b" * 64,
+        }
+        journal["restore"] = {"byteVerification": "VERIFIED"}
+        return journal
+
+    def test_creative_start_preserves_resource_worlds_and_requires_its_own_native_installation(self):
+        journal = self.creative_fixture()
+        for key, value in (("unrelatedFiles", "CHANGED"), ("candidateJarSha256", "c" * 64)):
+            original = copy.deepcopy(journal.object("installation"))
+            journal.object("installation")[key] = value
+            before = len(self.cluster.mutations)
+            with self.assertRaisesRegex(ValueError, "exact additive installation"):
+                control.private_start(self.path, journal)
+            self.assertEqual(len(self.cluster.mutations), before)
+            journal["installation"] = original
+        control.private_start(self.path, journal)
+        control.assert_closed(journal)
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 1)
+        self.assertFalse(journal.object("resourceBootstrap"))
+
+    def test_creative_acceptance_requires_every_creative_check_and_exact_pod_incarnation(self):
+        journal = self.creative_fixture()
+        control.private_start(self.path, journal)
+        evidence = self.acceptance_evidence()
+        with self.assertRaisesRegex(ValueError, "every required behavior"):
+            control.accept(self.path, journal, evidence)
+        data = JsonObject.parse(evidence.read_bytes())
+        data["checks"] = dict.fromkeys(control.CREATIVE_ACCEPTANCE_CHECKS, "VERIFIED")
+        data["containerId"] = "containerd://other"
+        evidence.write_text(json.dumps(data))
+        with self.assertRaisesRegex(ValueError, "every required behavior"):
+            control.accept(self.path, journal, evidence)
+        data["containerId"] = "containerd://accepted-instance"
+        evidence.write_text(json.dumps(data))
+        control.accept(self.path, journal, evidence)
+        self.assertEqual(journal.object("acceptance").string("status"), "VERIFIED")
+
+    def test_creative_candidate_selection_resumes_the_owned_annotation_without_selecting_gitops(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        journal["restore"] = {"byteVerification": "VERIFIED"}
+        image = IMAGE.replace("fixture", "recovered-creative")
+        saving = control.save
+
+        def interrupted(path: Path, state: JsonObject):
+            if state.get("candidateImage") == image:
+                raise OSError("interrupted after owned image annotation update")
+            saving(path, state)
+
+        with (
+            patch.object(control, "require_restore"),
+            patch.object(control, "save", side_effect=interrupted),
+            self.assertRaises(OSError),
+        ):
+            control.select_creative_candidate(self.path, journal, image)
+        resumed = JsonObject.parse(self.path.read_bytes())
+        self.assertEqual(resumed.string("candidateImage"), IMAGE)
+        self.assertEqual(control.annotations(self.cluster.server)[control.IMAGE], image)
+        with patch.object(control, "require_restore"):
+            control.select_creative_candidate(self.path, resumed, image)
+        self.assertEqual(resumed.string("candidateImage"), image)
+        self.assertEqual(control.server_image(self.cluster.server), IMAGE)
+        self.assertEqual(resumed.string("rollbackImage"), IMAGE)
+        control.assert_closed(resumed)
+
+    def test_creative_candidate_selection_refuses_any_installation_or_writer_authorization(self):
+        journal = self.installation_fixture()
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "without writer authorization"):
+            control.select_creative_candidate(self.path, journal, IMAGE)
+        self.assertEqual(len(self.cluster.mutations), before)
+
+    def test_creative_install_requires_the_baked_jar_before_uploading_and_stays_closed(self):
+        journal = self.initialize()
+        control.acquire(self.path, journal)
+        prepared = JsonObject(
+            {
+                "scope": "additive-creative",
+                "requestId": REQUEST,
+                "candidateJarSha256": "b" * 64,
+                "files": {"creative/level.dat": "c" * 64},
+            }
+        )
+        native = {
+            "phase": "INSTALLED",
+            "requestId": REQUEST,
+            "candidateJarSha256": "b" * 64,
+            "files": 1,
+            "unrelatedFiles": "UNCHANGED",
+            "privateStartup": "PENDING",
+        }
+        original_run = self.cluster.run
+        matching = False
+
+        def remote(arguments: list[str], timeout: float = 30) -> str:
+            if "sha256sum" in arguments:
+                return ("b" if matching else "d") * 64 + "  /plugins/TheStorm.jar\n"
+            if "python3" in arguments:
+                return json.dumps(native)
+            return original_run(arguments, timeout)
+
+        with (
+            patch.object(control, "require_restore"),
+            patch.object(control.creative_activation, "plan", return_value=prepared),
+            patch.object(control, "create_writer"),
+            patch.object(control, "upload_installation") as upload,
+            patch.object(control, "run", side_effect=remote),
+        ):
+            with self.assertRaisesRegex(ValueError, "different gameplay plugin"):
+                control.install_creative(self.path, journal, self.path.parent, self.path)
+            upload.assert_not_called()
+            self.assertNotIn("installation", journal)
+            matching = True
+            control.install_creative(self.path, journal, self.path.parent, self.path)
+            upload.assert_called_once_with(journal, prepared, creative=True)
+        self.assertEqual(journal.object("installation").string("scope"), "additive-creative")
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 0)
+        control.assert_closed(journal)
+
     def test_private_probe_repair_requires_real_status_and_preserves_other_probe_fields(self):
         journal = self.installation_fixture()
         container = self.cluster.server.object("spec").object("template").object("spec").objects("containers")[0]

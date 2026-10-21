@@ -14,6 +14,12 @@ from restoration_json import JsonObject
 REGISTRY = "plugins/Multiverse-Core/worlds.yml"
 
 
+def volume_files(data: Path, request: str) -> dict[str, str]:
+    """Exclude only this transaction; retain and verify earlier recovery archives."""
+    prefix = f"{storage.WORKSPACE}/{request}/creative-install/"
+    return {name: checksum for name, checksum in storage.files(data).items() if not name.startswith(prefix)}
+
+
 def installation_files(plan: JsonObject) -> dict[str, str]:
     expected = storage.checked_manifest(plan.strings("files"))
     if (
@@ -35,15 +41,17 @@ def installation_files(plan: JsonObject) -> dict[str, str]:
 def install(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> JsonObject:
     expected = installation_files(plan)
     original = storage.checked_manifest(plan.strings("originalFiles"))
+    request = plan.string("requestId")
     if (
         REGISTRY not in original
+        or any(name.startswith(f"{storage.WORKSPACE}/{request}/creative-install/") for name in original)
         or any(name.startswith("creative/") for name in original)
         or storage.digest(baked_jar) != plan.string("candidateJarSha256")
         or storage.files(payload) != expected
     ):
         raise ValueError("Creative installation inputs or original storage identity differ")
     workspace = data / storage.WORKSPACE
-    root = workspace / plan.string("requestId") / "creative-install"
+    root = workspace / request / "creative-install"
     if workspace.is_symlink() or root.parent.is_symlink() or root.is_symlink():
         raise ValueError("Creative installation workspace cannot be linked")
     with storage.stopped(data):
@@ -53,7 +61,7 @@ def install(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> Jso
         if not root.exists():
             if (data / "creative").exists() or (data / "creative").is_symlink():
                 raise ValueError("Creative already exists; refusing to overwrite it")
-            if storage.files(data, exclude_workspace=True) != original:
+            if volume_files(data, request) != original:
                 raise ValueError("Stopped volume changed since independent backup verification")
             root.mkdir(parents=True, mode=0o700)
             storage.save(receipt_path, {"phase": "STAGING", "plan": plan})
@@ -63,7 +71,7 @@ def install(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> Jso
         if receipt.object("plan") != plan:
             raise ValueError("Creative installation belongs to different sealed inputs")
         if receipt.get("phase") == "STAGING":
-            if storage.files(data, exclude_workspace=True) != original:
+            if volume_files(data, request) != original:
                 raise ValueError("Stopped volume changed while preparing creative")
             if staged.exists() or staged.is_symlink():
                 storage.files(staged)
@@ -83,12 +91,12 @@ def install(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> Jso
             for directory in (staged, *[path for path in staged.rglob("*") if path.is_dir()]):
                 os.chown(directory, 1000, 2000)
                 directory.chmod(0o2775)
-            if storage.files(staged) != expected or storage.files(data, exclude_workspace=True) != original:
+            if storage.files(staged) != expected or volume_files(data, request) != original:
                 raise ValueError("Creative payload or original data changed before commit")
             receipt["phase"] = "PREPARED"
             storage.save(receipt_path, receipt)
         if receipt.get("phase") == "PREPARED":
-            observed = storage.files(data, exclude_workspace=True)
+            observed = volume_files(data, request)
 
             def unrelated(entries: dict[str, str]) -> dict[str, str]:
                 return {
@@ -132,13 +140,13 @@ def install(data: Path, payload: Path, plan: JsonObject, baked_jar: Path) -> Jso
             if storage.digest(registry) != expected[REGISTRY]:
                 raise ValueError("Creative world registry differs after commit")
             result = {**original, **expected}
-            if storage.files(data, exclude_workspace=True) != dict(sorted(result.items())):
+            if volume_files(data, request) != dict(sorted(result.items())):
                 raise ValueError("Creative installation changed unrelated survival or player data")
             receipt["phase"] = "INSTALLED"
             storage.save(receipt_path, receipt)
         if receipt.get("phase") != "INSTALLED":
             raise ValueError("Unknown creative installation phase")
-        if storage.files(data, exclude_workspace=True) != dict(sorted({**original, **expected}.items())):
+        if volume_files(data, request) != dict(sorted({**original, **expected}.items())):
             raise ValueError("Installed creative or original data changed; private startup remains unauthorized")
         return JsonObject(
             {

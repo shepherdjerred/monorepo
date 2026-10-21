@@ -20,6 +20,7 @@ class CreativeInstallationTest(unittest.TestCase):
             "world/level.dat": b"survival terrain",
             "world/playerdata/player.dat": b"survival inventory",
             "plugins/TheStorm/the-storm.db": b"live identities",
+            ".storm-restoration/earlier-request/original.tar": b"retain previous recovery evidence",
             creative_install.REGISTRY: b"existing worlds",
         }.items():
             target = self.data / name
@@ -92,14 +93,14 @@ class CreativeInstallationTest(unittest.TestCase):
         self.jar.write_bytes(b"different image")
         with self.assertRaisesRegex(ValueError, "inputs"):
             self.install()
-        self.assertFalse((self.data / storage.WORKSPACE).exists())
+        self.assertFalse((self.data / storage.WORKSPACE / self.plan.string("requestId")).exists())
         self.jar.write_bytes(b"exact candidate")
         target = self.payload / "creative/level.dat"
         target.unlink()
         target.symlink_to(self.jar)
         with self.assertRaisesRegex(ValueError, "linked"):
             self.install()
-        self.assertFalse((self.data / storage.WORKSPACE).exists())
+        self.assertFalse((self.data / storage.WORKSPACE / self.plan.string("requestId")).exists())
 
 
 if __name__ == "__main__":

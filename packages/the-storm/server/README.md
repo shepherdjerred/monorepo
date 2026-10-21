@@ -589,6 +589,33 @@ independent backup, retains the previous registry, resumes owned renames, and
 verifies every unrelated survival and player file remains unchanged. It runs
 inside the same guarded writer and grants no private startup or acceptance.
 
+For additive creative recovery, use `creative_activation.prepare` on the operator
+host to seal only the pinned 110-region archive and its level metadata, plus a
+Multiverse registry merge that preserves every existing world. The original
+registry export must match the whole-volume backup's file hash. Preparation uses
+the repository's Bun YAML parser and never imports old player data. The creative
+entry disables Multiverse auto-load so TheStorm can attach its enabled generator.
+
+After independent byte verification and reader cleanup,
+`select-creative-candidate --image <qualified-immutable-image>` binds the
+unstarted maintenance annotation to the candidate while preserving the original
+rollback image and template. It does not select the production GitOps source.
+Then use `plan-creative` and `install-creative` with `--staging` and `--candidate`
+(the exact gameplay JAR). Installation checks that JAR against the baked image,
+uses the same tokenless writer, and records preservation of every unrelated file.
+Remove the writer before `private-start`. This additive path retains the current
+resource worlds and uses separate creative acceptance checks; it cannot borrow a
+historical installation or resource-bootstrap receipt. Once private startup has
+occurred, replacement requires whole-volume recovery.
+
+Keep routes closed while the registered retained-volume Delivery pipeline selects
+the same qualified candidate and reconciles ArgoCD. Run private acceptance against
+the final Pod/container incarnation after that reconciliation. Acceptance covers
+creative terrain/generator, claims/permissions, inventory isolation, CoreProtect
+lookup/rollback, original survival/player preservation, other modules, maps and
+private admission. Only the accepted, gracefully stopped incarnation can release
+the restoration lease and restore its captured public selectors.
+
 `restoration-control.py preflight --journal <private-receipt> --request <uuid>
 --image <immutable-image>` checks the reconciled Kubernetes admission guards and
 records the exact server, claim, volume and Service identities.
@@ -608,6 +635,9 @@ apply. To retain a previous restoration's independent storage, pass a new
 `--restore-namespace minecraft-tsmc-restore-<request-prefix>` on every command.
 The journal binds that namespace before creating its first Restore and refuses
 later changes.
+Classify that exact namespace and claim in the homelab backup policy and reconcile
+it through GitOps before creating the restore. A new namespace does not inherit
+the default restore namespace's admission classification.
 Service admission binds the parent lease, requires closed selectors and the same
 request owner, and refuses replacement until the parent lease is released.
 Before that parent exists, normal Service creation is allowed for bootstrap;
@@ -627,6 +657,12 @@ refuses active backups, replaced owners, any writer authorization, or an existin
 independent restore. After retrying, use `backup` to poll the new attempt. Never
 accept a partially failed copy as rollback evidence. The restore claim is
 explicitly excluded from scheduled backups.
+If a native Restore fails before creating its claim, `retry-restore` retains the
+failed identity and requests a numbered Restore from the same completed Backup.
+It requires the same stopped lease, exact failed native owner, no production
+write authorization and no existing target claim. It never deletes a failed
+restore's independent storage. Fix admission failures before retrying; never
+accept the partially failed Restore as a completed rollback proof.
 The recorded claim, PV and native CSI volume handle must all identify distinct
 storage. Both commands report pending controller work and can be repeated.
 Controller warnings remain recorded for operator review. A completed restore

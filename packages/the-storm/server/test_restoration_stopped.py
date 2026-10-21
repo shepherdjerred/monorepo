@@ -161,5 +161,77 @@ class BackupRetryTest(unittest.TestCase):
             self.retry()
 
 
+class RestoreRetryTest(unittest.TestCase):
+    def setUp(self):
+        self.journal = JsonObject(
+            {
+                "requestId": "3e5117f2-3f1b-46f6-a41c-2d9fb22026dc",
+                "productionWriteAuthorized": False,
+                "backup": {"name": "completed-backup", "uid": "backup-uid"},
+                "restore": {"name": "failed-restore", "uid": "restore-uid"},
+            }
+        )
+        self.resource = JsonObject(
+            {
+                "metadata": {"uid": "restore-uid", "labels": {control.LEASE: self.journal.string("requestId")}},
+                "spec": {
+                    "backupName": "completed-backup",
+                    "namespaceMapping": {control.NAMESPACE: control.restored_namespace},
+                },
+                "status": {"phase": "PartiallyFailed", "completionTimestamp": "2026-10-21T18:16:21Z"},
+            }
+        )
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.path = Path(temporary.name) / "journal.json"
+
+    def retry(self, claim: str = ""):
+        with (
+            patch.object(control, "require_offline"),
+            patch.object(control, "read", return_value=self.resource),
+            patch.object(control, "run", return_value=claim),
+            patch.object(control, "restore_backup") as fresh,
+        ):
+            control.retry_restore(self.path, self.journal)
+            return fresh
+
+    def test_owned_failed_restore_is_retained_before_new_native_request(self):
+        fresh = self.retry()
+        fresh.assert_called_once_with(self.path, self.journal)
+        self.assertEqual(self.journal["restoreAttempt"], 1)
+        self.assertEqual(self.journal.objects("failedRestores")[0].string("uid"), "restore-uid")
+        self.assertNotIn("restore", self.journal)
+        self.assertEqual(self.journal.object("backup").string("uid"), "backup-uid")
+
+    def test_foreign_active_or_retargeted_restores_are_refused(self):
+        original = copy.deepcopy(self.resource)
+        for mutation in ("uid", "owner", "active", "unfinished", "namespace", "backup"):
+            with self.subTest(mutation=mutation):
+                self.resource = copy.deepcopy(original)
+                if mutation == "uid":
+                    self.resource.object("metadata")["uid"] = "foreign"
+                elif mutation == "owner":
+                    self.resource.object("metadata").strings("labels")[control.LEASE] = "foreign"
+                elif mutation == "active":
+                    self.resource.object("status")["phase"] = "InProgress"
+                elif mutation == "unfinished":
+                    self.resource.object("status").pop("completionTimestamp")
+                elif mutation == "namespace":
+                    self.resource.object("spec")["namespaceMapping"] = {control.NAMESPACE: "other"}
+                else:
+                    self.resource.object("spec")["backupName"] = "other"
+                with self.assertRaisesRegex(ValueError, "terminal failed"):
+                    self.retry()
+                self.assertFalse(self.path.exists())
+
+    def test_existing_storage_and_any_write_authorization_prevent_retry(self):
+        with self.assertRaisesRegex(ValueError, "existing target claim"):
+            self.retry('{"metadata":{"uid":"retain-this-claim"}}')
+        self.journal["productionWriteAuthorized"] = True
+        with self.assertRaisesRegex(ValueError, "writer authorization"):
+            self.retry()
+        self.assertFalse(self.path.exists())
+
+
 if __name__ == "__main__":
     unittest.main()

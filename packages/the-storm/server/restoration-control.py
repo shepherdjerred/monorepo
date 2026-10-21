@@ -22,6 +22,8 @@ from pathlib import Path, PurePosixPath
 from typing import IO
 from urllib.request import Request, urlopen
 
+import creative_activation
+import creative_install
 import restoration_activation
 import restoration_files
 import restoration_resources
@@ -667,6 +669,37 @@ def retry_backup(path: Path, journal: JsonObject) -> None:
     backup(path, journal)
 
 
+def retry_restore(path: Path, journal: JsonObject) -> None:
+    """Retain a failed restore and request a fresh independent copy without deleting storage."""
+    require_offline(journal)
+    if journal.get("productionWriteAuthorized") is not False:
+        raise ValueError("Restore retry requires no production writer authorization")
+    prior = journal.object("restore")
+    actual = read("restore", prior.string("name"), "velero")
+    status = actual.object("status")
+    if (
+        actual.object("metadata").get("uid") != prior.string("uid")
+        or actual.object("metadata").strings("labels").get(LEASE) != journal.string("requestId")
+        or status.get("phase") not in ("Failed", "PartiallyFailed", "FailedValidation")
+        or not status.get("completionTimestamp")
+        or actual.object("spec").get("namespaceMapping") != {NAMESPACE: restored_namespace}
+        or actual.object("spec").get("backupName") != journal.object("backup").string("name")
+    ):
+        raise ValueError("Restore retry requires its exact owned terminal failed native restore")
+    if run(["-n", restored_namespace, "get", "pvc", CLAIM, "--ignore-not-found", "-o", "json"]).strip():
+        raise ValueError("Restore retry refuses an existing target claim; preserve and inspect its storage")
+    attempt = journal.get("restoreAttempt", 0)
+    if not isinstance(attempt, int) or isinstance(attempt, bool) or not 0 <= attempt < 9:
+        raise ValueError("Independent restore retry limit reached")
+    history = journal.objects("failedRestores", [])
+    history.append(JsonObject({**prior, "phase": status.string("phase")}))
+    journal["failedRestores"] = history
+    journal["restoreAttempt"] = attempt + 1
+    journal.pop("restore")
+    save(path, journal)
+    restore_backup(path, journal)
+
+
 def assert_managed_restore_namespace(journal: JsonObject) -> bool:
     if journal.get("managedRestoreNamespace") is not True:
         return False
@@ -694,7 +727,10 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
                 "metadata": {"name": restored_namespace, "labels": {LEASE: journal.string("requestId")}},
             }
         )
-    name = "storm-verify-" + journal.string("requestId")
+    attempt = journal.get("restoreAttempt", 0)
+    if not isinstance(attempt, int) or isinstance(attempt, bool) or not 0 <= attempt <= 9:
+        raise ValueError("Invalid independent restore retry attempt")
+    name = "storm-verify-" + journal.string("requestId") + (f"-retry-{attempt}" if attempt else "")
     restored = ensure_resource(
         {
             "apiVersion": "velero.io/v1",
@@ -1447,13 +1483,21 @@ def create_writer(path: Path, journal: JsonObject) -> JsonObject:
     return pod
 
 
-def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: bool = False) -> None:
+def upload_installation(
+    journal: JsonObject, plan: JsonObject, *, resources: bool = False, creative: bool = False
+) -> None:
     """Stream only approved world/identity files and operator code into bounded scratch storage."""
     name = writer_manifest(journal).object("metadata").string("name")
+    if resources and creative:
+        raise ValueError("Installation payload must have one explicit scope")
     expected = (
-        restoration_resources.validate_files(plan.strings("installationFiles"))
-        if resources
-        else restoration_files.installation_manifest(plan.strings("installationFiles"))
+        creative_install.installation_files(plan)
+        if creative
+        else (
+            restoration_resources.validate_files(plan.strings("installationFiles"))
+            if resources
+            else restoration_files.installation_manifest(plan.strings("installationFiles"))
+        )
     )
     layout = Path(plan.string("layout"))
     owned = Path(__file__).resolve().parent
@@ -1495,6 +1539,7 @@ def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: boo
                 "restoration_revision.py",
                 "restoration_json.py",
                 "restoration_resources.py",
+                "creative_install.py",
             ):
                 source = owned / script
                 if source.is_symlink() or not source.is_file():
@@ -1514,6 +1559,94 @@ def upload_installation(journal: JsonObject, plan: JsonObject, *, resources: boo
         process.kill()
         process.wait()
         raise
+
+
+def select_creative_candidate(path: Path, journal: JsonObject, image: str) -> None:
+    """Bind an unstarted additive recovery to its pinned image; Delivery still owns GitOps selection."""
+    if not re.fullmatch(
+        r"(?:docker\.io|ghcr\.io)/shepherdjerred/the-storm-server:[A-Za-z0-9._-]+@sha256:[a-f0-9]{64}", image
+    ):
+        raise ValueError("Creative candidate requires an immutable Storm image")
+    if journal.get("productionWriteAuthorized") is not False or any(
+        key in journal for key in ("installation", "installationPlan", "writerUid", "privateStartup", "acceptance")
+    ):
+        raise ValueError("Creative candidate selection requires an unstarted recovery without writer authorization")
+    selection = journal.object("creativeCandidateSelection", {})
+    if not selection:
+        require_offline(journal)
+        require_restore(journal)
+        if journal.object("restore").get("byteVerification") != "VERIFIED":
+            raise ValueError("Creative candidate selection requires independent byte verification")
+        selection = JsonObject({"before": journal.string("candidateImage"), "after": image, "phase": "PREPARED"})
+        journal["creativeCandidateSelection"] = selection
+        save(path, journal)
+    if selection.get("after") != image:
+        raise ValueError("Creative image selection belongs to different sealed inputs")
+    server = read("statefulset", SERVER)
+    bound = annotations(server).get(IMAGE)
+    if bound not in (selection.string("before"), image):
+        raise ValueError("Creative maintenance image changed outside this selection")
+    require_offline(JsonObject({**journal, "candidateImage": bound}))
+    require_restore(journal)
+    if bound != image:
+        patch(
+            "statefulset",
+            SERVER,
+            server,
+            [{"op": "replace", "path": "/metadata/annotations/" + pointer(IMAGE), "value": image}],
+        )
+    journal["candidateImage"] = image
+    selection["phase"] = "SELECTED_FOR_PRIVATE_RECOVERY"
+    save(path, journal)
+
+
+def install_creative(path: Path, journal: JsonObject, staging: Path, candidate: Path) -> None:
+    if journal.get("privateStartup") is not None or journal.get("wholeVolumeRecovery"):
+        raise ValueError("A started or rolled-back creative installation requires whole-volume recovery")
+    recover_writer_identity(path, journal)
+    require_offline(journal, writer=bool(journal.get("writerUid")))
+    require_restore(journal)
+    plan = creative_activation.plan(staging, journal, candidate)
+    if journal.get("installationPlan") is not None and journal.object("installationPlan") != plan:
+        raise ValueError("Creative installation inputs changed after sealing")
+    journal["installationPlan"] = plan
+    save(path, journal)
+    create_writer(path, journal)
+    name = writer_manifest(journal).object("metadata").string("name")
+    published = run(["-n", NAMESPACE, "exec", name, "-c", "writer", "--", "sha256sum", "/plugins/TheStorm.jar"])
+    if published.split()[:1] != [plan.string("candidateJarSha256")]:
+        raise ValueError("Published creative candidate contains a different gameplay plugin")
+    upload_installation(journal, plan, creative=True)
+    require_offline(journal, writer=True)
+    result = JsonObject.parse(
+        run(
+            [
+                "-n",
+                NAMESPACE,
+                "exec",
+                name,
+                "-c",
+                "writer",
+                "--",
+                "python3",
+                "/scratch/operator/creative_install.py",
+                "--plan",
+                "/scratch/plan.json",
+            ],
+            1800,
+        )
+    )
+    if (
+        result.get("phase") != "INSTALLED"
+        or result.get("unrelatedFiles") != "UNCHANGED"
+        or result.get("privateStartup") != "PENDING"
+        or result.get("files") != len(plan.strings("files"))
+        or any(result.get(key) != plan.get(key) for key in ("requestId", "candidateJarSha256"))
+    ):
+        raise ValueError("Creative installation returned different native evidence")
+    require_offline(journal, writer=True)
+    journal["installation"] = {**result, "scope": "additive-creative"}
+    save(path, journal)
 
 
 def revise_installation(path: Path, journal: JsonObject, staging: Path, candidate: Path, image: str) -> None:
@@ -1995,7 +2128,20 @@ def private_start(path: Path, journal: JsonObject) -> None:
     if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
         raise ValueError("Private startup requires verified installation and writer cleanup")
     resources = journal.object("resourceBootstrap", {})
-    if (
+    if journal.object("installation").get("scope") == "additive-creative":
+        plan = journal.object("installationPlan")
+        if (
+            plan.get("scope") != "additive-creative"
+            or plan.get("candidateImage") != journal.string("candidateImage")
+            or plan.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+            or journal.object("installation").get("unrelatedFiles") != "UNCHANGED"
+            or journal.object("restore").get("byteVerification") != "VERIFIED"
+            or resources
+        ):
+            raise ValueError(
+                "Creative private startup requires its exact additive installation and unchanged original data"
+            )
+    elif (
         resources.get("phase") != "VERIFIED"
         or resources.get("requestId") != journal.string("requestId")
         or resources.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
@@ -2215,6 +2361,21 @@ ACCEPTANCE_CHECKS = (
     "privateAdmission",
 )
 
+CREATIVE_ACCEPTANCE_CHECKS = (
+    "startup",
+    "creativeTerrain",
+    "creativeGenerator",
+    "plotClaims",
+    "plotPermissions",
+    "inventoryIsolation",
+    "coreProtectLookup",
+    "coreProtectRollback",
+    "survivalPlayerPreservation",
+    "otherModules",
+    "maps",
+    "privateAdmission",
+)
+
 
 def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     assert_closed(journal)
@@ -2228,6 +2389,11 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     statuses = pod.object("status").objects("containerStatuses")
     server_status = server.object("status")
     revision = server_status.string("updateRevision")
+    checks = (
+        CREATIVE_ACCEPTANCE_CHECKS
+        if journal.object("installation").get("scope") == "additive-creative"
+        else ACCEPTANCE_CHECKS
+    )
     if (
         annotations(server).get(PHASE) != "VALIDATING"
         or server_image(server) != journal.string("candidateImage")
@@ -2239,8 +2405,8 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
         or server_status.get("currentRevision") != revision
         or pod.object("metadata").strings("labels", {}).get("controller-revision-hash") != revision
         or evidence.get("testOnly")
-        or set(evidence.object("checks")) != set(ACCEPTANCE_CHECKS)
-        or any(evidence.object("checks").get(key) != "VERIFIED" for key in ACCEPTANCE_CHECKS)
+        or set(evidence.object("checks")) != set(checks)
+        or any(evidence.object("checks").get(key) != "VERIFIED" for key in checks)
         or len(containers) != 1
         or containers[0].get("image") != journal.string("candidateImage")
         or len(statuses) != 1
@@ -2673,12 +2839,16 @@ def main() -> None:
             "backup",
             "retry-backup",
             "restore-backup",
+            "retry-restore",
             "verify-backup",
             "export-backup",
             "remove-readers",
             "plan-install",
             "install",
             "revise-installation",
+            "select-creative-candidate",
+            "plan-creative",
+            "install-creative",
             "bootstrap-resources",
             "remove-writer",
             "private-start",
@@ -2708,15 +2878,20 @@ def main() -> None:
     restored_namespace = arguments.restore_namespace
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
-    if arguments.operation in ("plan-install", "install", "revise-installation", "bootstrap-resources") and (
-        arguments.staging is None or arguments.candidate is None
-    ):
+    if arguments.operation in (
+        "plan-install",
+        "install",
+        "revise-installation",
+        "bootstrap-resources",
+        "plan-creative",
+        "install-creative",
+    ) and (arguments.staging is None or arguments.candidate is None):
         parser.error("Installation requires --staging and --candidate")
     if arguments.operation == "accept" and arguments.evidence is None:
         parser.error("accept requires --evidence")
     with journal_lock(arguments.journal):
         image = arguments.image
-        if arguments.operation == "revise-installation":
+        if arguments.operation in ("revise-installation", "select-creative-candidate"):
             if arguments.journal.is_symlink() or not arguments.journal.is_file():
                 raise ValueError("Revision requires an existing regular maintenance journal")
             image = JsonObject.parse(arguments.journal.read_bytes()).string("candidateImage")
@@ -2733,6 +2908,8 @@ def main() -> None:
             retry_backup(arguments.journal, journal)
         elif arguments.operation == "restore-backup":
             restore_backup(arguments.journal, journal)
+        elif arguments.operation == "retry-restore":
+            retry_restore(arguments.journal, journal)
         elif arguments.operation == "verify-backup":
             verify_backup(arguments.journal, journal)
         elif arguments.operation == "export-backup":
@@ -2748,6 +2925,18 @@ def main() -> None:
             install(arguments.journal, journal, arguments.staging, arguments.candidate)
         elif arguments.operation == "revise-installation":
             revise_installation(arguments.journal, journal, arguments.staging, arguments.candidate, arguments.image)
+        elif arguments.operation == "select-creative-candidate":
+            select_creative_candidate(arguments.journal, journal, arguments.image)
+        elif arguments.operation == "plan-creative":
+            require_offline(journal)
+            require_restore(journal)
+            prepared = creative_activation.plan(arguments.staging, journal, arguments.candidate)
+            if journal.get("installationPlan") is not None and journal.object("installationPlan") != prepared:
+                raise ValueError("Creative installation plan changed after sealing")
+            journal["installationPlan"] = prepared
+            save(arguments.journal, journal)
+        elif arguments.operation == "install-creative":
+            install_creative(arguments.journal, journal, arguments.staging, arguments.candidate)
         elif arguments.operation == "remove-writer":
             remove_writer(arguments.journal, journal)
         elif arguments.operation == "bootstrap-resources":
