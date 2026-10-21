@@ -30,6 +30,7 @@ import {
   id,
   ensureService,
   artifact,
+  artifactRow,
   version,
   environment,
   validateRequirements,
@@ -168,7 +169,9 @@ export async function publish(
         ...(input.platformChanges === undefined
           ? {}
           : { platformChanges: input.platformChanges }),
-        artifacts: { create: input.artifacts },
+        artifacts: {
+          create: input.artifacts.map((entry) => artifactRow(entry)),
+        },
       },
     });
     await tx.buildArtifactSelection.createMany({

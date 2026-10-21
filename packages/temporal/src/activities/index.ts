@@ -46,6 +46,7 @@ import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
+import { deliveryReplicationActivities } from "./delivery/replication/copy.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { miningResetActivities } from "./homelab/mining-reset.ts";
@@ -165,6 +166,7 @@ export const maintenanceWorkerActivities = {
 };
 export const backupWorkerActivities = {
   ...seaweedFsBackupActivities,
+  ...deliveryReplicationActivities,
 };
 
 export const billingActivities = {

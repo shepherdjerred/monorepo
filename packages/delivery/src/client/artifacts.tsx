@@ -1,9 +1,28 @@
 import { Link } from "@tanstack/react-router";
+import type { BuildSourceKind } from "#shared/artifact-contract.ts";
 import type { VersionSetRevision } from "#shared/contract.ts";
 import type { BuildWithArtifacts } from "#shared/hub/hub-contract.ts";
 import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
 import { Status } from "#client/components/status.tsx";
 import { ShortSha, ToolLinks } from "#client/components/links.tsx";
+
+/** What qualified a build that has no CI run to link. */
+function evidenceSummary(sourceKind: BuildSourceKind) {
+  switch (sourceKind) {
+    case "ci": {
+      return "CI verification";
+    }
+    case "upstream": {
+      return "Original upstream bytes verified";
+    }
+    case "licensed-bundle": {
+      return "Licensed bundle verification";
+    }
+    case "attested": {
+      return "Operator attestation";
+    }
+  }
+}
 
 export function BuildCatalog({ builds }: { builds: BuildWithArtifacts[] }) {
   return (
@@ -67,11 +86,7 @@ export function BuildCatalog({ builds }: { builds: BuildWithArtifacts[] }) {
                   </td>
                   <td data-label="Evidence">
                     {build.ciUrl === null ? (
-                      <span>
-                        {build.sourceKind === "upstream"
-                          ? "Original upstream bytes verified"
-                          : "Licensed bundle verification"}
-                      </span>
+                      <span>{evidenceSummary(build.sourceKind)}</span>
                     ) : (
                       <a href={build.ciUrl}>
                         View CI<span aria-hidden="true"> ↗</span>

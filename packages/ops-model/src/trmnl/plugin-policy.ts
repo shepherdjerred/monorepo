@@ -28,23 +28,35 @@ export const TRMNL_PLUGIN_POLICY = z
   )
   .parse(source);
 export const MAX_TRMNL_PLUGIN_BYTES = 2 * 1024 * 1024;
+const TrmnlPluginsSchema = z
+  .array(
+    z
+      .object({
+        slug: z.string(),
+        id: z.number().int().positive(),
+        files: z.record(z.string(), z.string().max(512 * 1024)),
+      })
+      .strict(),
+  )
+  .length(3);
 export const TrmnlPluginBundleSchema = z
-  .object({
-    schema: z.literal("delivery-trmnl-plugins/v1"),
-    sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
-    plugins: z
-      .array(
-        z
-          .object({
-            slug: z.string(),
-            id: z.number().int().positive(),
-            files: z.record(z.string(), z.string().max(512 * 1024)),
-          })
-          .strict(),
-      )
-      .length(3),
-  })
-  .strict()
+  .discriminatedUnion("schema", [
+    z
+      .object({
+        schema: z.literal("delivery-trmnl-plugins/v1"),
+        sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
+        plugins: TrmnlPluginsSchema,
+      })
+      .strict(),
+    // v2 carries no producer revision: the bundle's identity is its content,
+    // so an unchanged bundle is retained across commits instead of republished.
+    z
+      .object({
+        schema: z.literal("delivery-trmnl-plugins/v2"),
+        plugins: TrmnlPluginsSchema,
+      })
+      .strict(),
+  ])
   .superRefine((bundle, context) => {
     const targets = new Set<string>();
     for (const plugin of bundle.plugins) {
@@ -101,9 +113,12 @@ export function validateTrmnlPluginSettings(
 }
 export function serializeTrmnlPluginBundle(input: TrmnlPluginBundle): string {
   const parsed = TrmnlPluginBundleSchema.parse(input);
+  // Key order is part of the bytes, so v1 keeps its digest-stable layout.
   const canonical = {
     schema: parsed.schema,
-    sourceRevision: parsed.sourceRevision,
+    ...(parsed.schema === "delivery-trmnl-plugins/v1"
+      ? { sourceRevision: parsed.sourceRevision }
+      : {}),
     plugins: TRMNL_PLUGIN_POLICY.plugins.map((target) => {
       const plugin = parsed.plugins.find((entry) => entry.slug === target.slug);
       if (plugin === undefined)

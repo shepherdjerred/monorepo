@@ -248,8 +248,8 @@
   {
     "namespace": "chartmuseum",
     "name": "chartmuseum",
-    "backup": "disabled",
-    "reason": "Published charts are reproducible from Git"
+    "backup": "enabled",
+    "reason": "Published chart bytes embed frozen image digests and Delivery selection state, so they are not reproducible from Git; Delivery set revisions and accepted selections reference them by digest (PC1)"
   },
   {
     "namespace": "freshrss",

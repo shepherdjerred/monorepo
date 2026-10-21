@@ -6,6 +6,7 @@ import {
 import { Delivery } from "#infrastructure/delivery.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { deliveryWorkflowId, type TrmnlRepairClaim } from "#shared/contract.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { createTestApp } from "#testing/http-app.ts";
@@ -61,6 +62,7 @@ async function quarantined() {
     testPublisher,
     { repositoryId: 1, pipelineNumber: 90 },
   );
+  await replicateProducedArtifacts(delivery, build.buildId);
   await delivery.qualify(build.buildId, "verified", testExecutor);
   const [selected] = await delivery.versions("trmnl-dashboard");
   if (selected === undefined)

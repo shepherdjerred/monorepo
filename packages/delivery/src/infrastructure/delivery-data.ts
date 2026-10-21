@@ -66,6 +66,42 @@ export function approvalRequired(
     ["scout-for-lol", "starlight-karma-bot"].includes(serviceId) && production
   );
 }
+/** Row input for a published artifact; an absent fingerprint stays an absent column. */
+export function artifactRow<
+  T extends { contentFingerprint?: string | undefined },
+>(input: T): Omit<T, "contentFingerprint"> & { contentFingerprint?: string } {
+  const { contentFingerprint, ...fields } = input;
+  return {
+    ...fields,
+    ...(contentFingerprint === undefined ? {} : { contentFingerprint }),
+  };
+}
+/**
+ * Builds that qualify an artifact for this repository: CI builds owned by it,
+ * acquisitions it ran (older rows carry no pipeline), and the licensed or
+ * attested bundles that never belong to a repository.
+ */
+export function qualifiedBuildWhere(
+  serviceId: string,
+  repositoryId: number,
+): Prisma.BuildWhereInput {
+  return {
+    serviceId,
+    status: "verified",
+    OR: [
+      { sourceKind: "ci", repositoryId },
+      // Acquisitions carry the acquiring pipeline (B3); older rows have none.
+      {
+        sourceKind: "upstream",
+        OR: [{ repositoryId }, { repositoryId: null }],
+      },
+      {
+        sourceKind: { in: ["licensed-bundle", "attested"] },
+        repositoryId: null,
+      },
+    ],
+  };
+}
 export async function artifact(tx: Transaction | Database, artifactId: string) {
   const row = required(
     await tx.artifact.findUnique({
@@ -84,10 +120,19 @@ export async function artifact(tx: Transaction | Database, artifactId: string) {
 export function artifactView(
   row: Prisma.ArtifactGetPayload<{ include: { build: true } }>,
 ) {
-  const { build, originKey: _originKey, ...fields } = row;
+  const {
+    build,
+    originKey: _originKey,
+    contentFingerprint,
+    replication,
+    ...fields
+  } = row;
+  // Null columns are omitted so a reader without the field keeps its shape.
   return ArtifactVersionSchema.parse(
     wire({
       ...fields,
+      ...(contentFingerprint === null ? {} : { contentFingerprint }),
+      ...(replication === null ? {} : { replication }),
       serviceId: build.serviceId,
       sourceRevision: build.sourceRevision,
     }),

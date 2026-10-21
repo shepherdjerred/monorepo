@@ -23,6 +23,8 @@ model Build {
   platformChanges        Json?
   repositoryId           Int?
   pipelineNumber         Int?
+  /// Global registration order; the order key of an `attested` build (B4). Null only for rows older than the sequence.
+  registrationSequence   Int?                     @default(dbgenerated("nextval('\"Build_registrationSequence_seq\"'::regclass)"))
   createdAt              DateTime                 @default(now())
   artifacts              Artifact[]
   selections             BuildArtifactSelection[]
@@ -30,6 +32,7 @@ model Build {
 
   @@index([serviceId, createdAt])
   @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([serviceId, registrationSequence])
 }
 
 model Artifact {
@@ -45,6 +48,10 @@ model Artifact {
   version              String
   origin               Json                        @default("{\"kind\":\"first-party\"}")
   originKey            String?                     @unique
+  /// Chart content identity with the version excluded (X10); null for images, archives and older charts.
+  contentFingerprint   String?
+  /// Off-cluster replica receipt for bytes in a self-hosted store (PC1); null until the executor copies them.
+  replication          Json?
   createdAt            DateTime                    @default(now())
   entries              VersionSetEntry[]
   workerVersions       WorkerVersion[]

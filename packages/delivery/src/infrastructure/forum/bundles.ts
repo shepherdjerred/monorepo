@@ -20,9 +20,16 @@ import {
   request,
   required,
 } from "#infrastructure/delivery-records.ts";
-import { id, artifactView } from "#infrastructure/delivery-data.ts";
+import {
+  id,
+  artifactRow,
+  artifactView,
+} from "#infrastructure/delivery-data.ts";
+import { replicationPending } from "#infrastructure/artifact-stores/replication.ts";
 
 export type VerifyForumBundle = (artifact: ArtifactVersion) => Promise<void>;
+/** Operator-registered bundle builds: `attested` now, `licensed-bundle` for rows older than that kind. */
+const BUNDLE_SOURCE_KINDS = ["licensed-bundle", "attested"];
 export async function qualifiedForumBundle(
   this: Delivery,
   rawQuery: QualifiedForumBundleQuery,
@@ -39,7 +46,7 @@ export async function qualifiedForumBundle(
         origin: { path: ["manifestDigest"], equals: query.manifestDigest },
         build: {
           serviceId: "storm-forum",
-          sourceKind: "licensed-bundle",
+          sourceKind: { in: BUNDLE_SOURCE_KINDS },
           status: "verified",
           repositoryId: null,
         },
@@ -126,9 +133,9 @@ export async function publishForumBundle(
           requestId: input.requestId,
           serviceId: "storm-forum",
           sourceRevision: origin.producerSourceRevision,
-          sourceKind: "licensed-bundle",
+          sourceKind: "attested",
           verifiedAt: new Date(),
-          artifacts: { create: { ...input.artifact, originKey } },
+          artifacts: { create: { ...artifactRow(input.artifact), originKey } },
         },
       });
     await remember(tx, actor, {
@@ -157,7 +164,7 @@ async function forumBundle(this: Delivery, buildId: string) {
     "Licensed bundle build",
   );
   if (
-    build.sourceKind !== "licensed-bundle" ||
+    !BUNDLE_SOURCE_KINDS.includes(build.sourceKind) ||
     build.serviceId !== "storm-forum" ||
     build.artifacts.length !== 1
   )
@@ -180,7 +187,7 @@ export async function pendingForumBundles(this: Delivery, actor: Principal) {
   const builds = await this.database.build.findMany({
     where: {
       serviceId: "storm-forum",
-      sourceKind: "licensed-bundle",
+      sourceKind: { in: BUNDLE_SOURCE_KINDS },
       status: "pending",
     },
     orderBy: [
@@ -205,6 +212,8 @@ export async function qualifyForumBundle(
     where: { id: buildId },
     data: { qualificationCheckedAt: new Date() },
   });
+  // PC1: the licensed bytes get an off-cluster replica before anything reads them.
+  if (await replicationPending(this.database, buildId)) return current;
   let status: "verified" | "failed" = "verified",
     reason: string | null = null;
   try {

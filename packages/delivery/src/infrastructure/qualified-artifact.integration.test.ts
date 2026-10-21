@@ -1,16 +1,7 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
-import { createTestDatabase } from "#testing/postgres.ts";
+import { describe, expect, test } from "vitest";
+import { useDeliveryHttp } from "#testing/delivery-http-fixture.ts";
 import { testExecutor, testPublisher, testOperator } from "#testing/seed.ts";
-import { createApp } from "#server/app.ts";
-import { createDeliveryClient } from "#shared/client.ts";
-import { Delivery } from "./delivery.ts";
+import { replicateProducedArtifacts } from "#testing/replication.ts";
 
 const query = {
   serviceId: "scout-for-lol",
@@ -18,52 +9,21 @@ const query = {
   kind: "image" as const,
 };
 const readerToken = "read-only-qualified-artifact-test-credential";
-let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let delivery: Delivery;
-let app: ReturnType<typeof createApp>;
-beforeAll(async () => {
-  cluster = await createTestDatabase();
-  delivery = new Delivery(cluster.database);
-  app = createApp({
-    delivery,
-    ciOrigin: "https://woodpecker.sjer.red",
-    ciRepositoryId: 1,
-    qualifyBuild: async () => "verified",
-    peerAddress: () => "127.0.0.1",
-    config: {
-      publicOrigin: "http://delivery.test",
-      machineCredentials: [
-        {
-          token: readerToken,
-          principal: {
-            id: "artifact-reader",
-            kind: "machine",
-            scopes: ["read"],
-          },
-        },
-      ],
-      writesEnabled: async () => false,
-      enabledEnvironments: async () => [],
-      trustedProxyAddresses: async () => [],
-      operatorLogins: async () => [],
+const harness = useDeliveryHttp({
+  machineCredentials: [
+    {
+      token: readerToken,
+      principal: {
+        id: "artifact-reader",
+        kind: "machine",
+        scopes: ["read"],
+      },
     },
-  });
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
+  ],
+  writesEnabled: false,
+  defaultToken: readerToken,
 });
-beforeEach(async () => {
-  await cluster.database.$executeRawUnsafe(
-    'TRUNCATE "ApplicationLock", "Outbox", "Evidence", "Approval", "Stage", "Deployment", "Environment", "Pipeline", "VersionSetEntry", "VersionSet", "Artifact", "Build", "Request", "Audit", "ImportedSnapshot" CASCADE',
-  );
-});
-function client() {
-  return createDeliveryClient({
-    baseUrl: "http://delivery.test",
-    headers: { Authorization: `Bearer ${readerToken}` },
-    fetch: async (input, init) => app.request(input, init),
-  });
-}
+const { client } = harness;
 async function publication(
   number: number,
   status: "pending" | "verified" | "failed" = "pending",
@@ -71,7 +31,7 @@ async function publication(
 ) {
   const sourceRevision = String(number).padStart(40, "0");
   const artifactId = `image/${String(repositoryId)}/${String(number)}`;
-  const build = await delivery.publish(
+  const build = await harness.delivery.publish(
     {
       requestId: `qualified/${String(repositoryId)}/${String(number)}`,
       serviceId: query.serviceId,
@@ -93,7 +53,7 @@ async function publication(
     { repositoryId, pipelineNumber: number },
   );
   if (status !== "pending")
-    await delivery.qualify(build.buildId, status, testExecutor);
+    await harness.delivery.qualify(build.buildId, status, testExecutor);
   return { artifactId, buildId: build.buildId, sourceRevision };
 }
 
@@ -101,9 +61,15 @@ async function sitePublication(input: {
   number: number;
   requiredDigest: string;
   imageId?: string;
+  siteDigest?: string;
 }) {
-  const { number, requiredDigest, imageId } = input;
-  return delivery.publish(
+  const {
+    number,
+    requiredDigest,
+    imageId,
+    siteDigest = "a".repeat(64),
+  } = input;
+  return harness.delivery.publish(
     {
       requestId: `release/${String(number)}`,
       serviceId: query.serviceId,
@@ -127,9 +93,9 @@ async function sitePublication(input: {
           id: `site/${String(number)}`,
           component: "site:scout-frontend-beta",
           kind: "archive",
-          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"a".repeat(64)}.tar`,
+          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${siteDigest}.tar`,
           version: `build-${String(number)}`,
-          digest: `sha256:${"a".repeat(64)}`,
+          digest: `sha256:${siteDigest}`,
           requires: { [query.component]: requiredDigest },
         },
       ],
@@ -145,7 +111,7 @@ describe("latest qualified artifact reads over PostgreSQL and the authenticated 
     await publication(11);
     await publication(12, "failed");
     const lateOlder = await publication(9, "verified");
-    await delivery.compose(
+    await harness.delivery.compose(
       {
         requestId: "manual-select-old",
         serviceId: query.serviceId,
@@ -165,7 +131,7 @@ describe("latest qualified artifact reads over PostgreSQL and the authenticated 
       version: "build-10",
     });
     expect(
-      await cluster.database.request.count({
+      await harness.cluster.database.request.count({
         where: { resultType: "deployment" },
       }),
     ).toBe(0);
@@ -192,7 +158,7 @@ describe("latest qualified artifact reads over PostgreSQL and the authenticated 
   test("requires read authentication and validates all query fields while writes are paused", async () => {
     await publication(1, "verified");
     const path = "/api/v1/artifacts/latest-qualified";
-    const anonymous = await app.request(
+    const anonymous = await harness.app.request(
       `${path}?${new URLSearchParams(query).toString()}`,
     );
     expect(anonymous.status).toBe(401);
@@ -202,7 +168,9 @@ describe("latest qualified artifact reads over PostgreSQL and the authenticated 
       "serviceId=scout-for-lol&component=image:scout-for-lol",
       "serviceId=scout-for-lol&component=bad%20component&kind=image",
     ]) {
-      const response = await app.request(`${path}?${params}`, { headers });
+      const response = await harness.app.request(`${path}?${params}`, {
+        headers,
+      });
       expect(response.status).toBe(400);
     }
     const selected = await client().latestQualifiedArtifact(query);
@@ -224,16 +192,24 @@ test("late verified outputs cannot replace the image in the newest coherent auto
     imageId: "image/b",
   });
   const three = await sitePublication({ number: 3, requiredDigest: a });
-  for (const build of [one, three, two])
+  for (const build of [one, three, two]) {
+    await replicateProducedArtifacts(harness.delivery, build.buildId);
     expect(
-      await delivery.qualify(build.buildId, "verified", testExecutor),
+      await harness.delivery.qualify(build.buildId, "verified", testExecutor),
     ).toEqual({ status: "verified" });
+  }
+  // Build three republished the same site bytes, so it composed no revision.
   expect(
-    await cluster.database.versionSet.count({
+    await harness.cluster.database.versionSet.count({
+      where: { qualifiedBuildId: three.buildId },
+    }),
+  ).toBe(0);
+  expect(
+    await harness.cluster.database.versionSet.count({
       where: { qualifiedBuildId: two.buildId },
     }),
   ).toBe(0);
-  await delivery.compose(
+  await harness.delivery.compose(
     {
       requestId: "manual-late-b",
       serviceId: query.serviceId,
@@ -251,14 +227,16 @@ test("late verified outputs cannot replace the image in the newest coherent auto
   const four = await sitePublication({
     number: 4,
     requiredDigest: selected.digest,
+    siteDigest: "4".repeat(64),
   });
+  await replicateProducedArtifacts(harness.delivery, four.buildId);
   expect(
-    await delivery.qualify(four.buildId, "verified", testExecutor),
+    await harness.delivery.qualify(four.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });
-  const latest = await cluster.database.versionSet.findUniqueOrThrow({
+  const latest = await harness.cluster.database.versionSet.findUniqueOrThrow({
     where: { qualifiedBuildId: four.buildId },
   });
-  const coherent = await delivery.version(latest.id);
+  const coherent = await harness.delivery.version(latest.id);
   expect(coherent.components[query.component]?.id).toBe(selected.id);
   expect(coherent.components["site:scout-frontend-beta"]?.id).toBe("site/4");
 });
@@ -266,11 +244,11 @@ test("late verified outputs cannot replace the image in the newest coherent auto
 test("a missing component in the newest coherent set does not fall back to an older set", async () => {
   await publication(1, "verified");
   const newest = await publication(2, "verified");
-  const version = await cluster.database.versionSet.findUniqueOrThrow({
+  const version = await harness.cluster.database.versionSet.findUniqueOrThrow({
     where: { qualifiedBuildId: newest.buildId },
   });
   // Model a newest set without this component; the older set still has it.
-  await cluster.database.versionSetEntry.deleteMany({
+  await harness.cluster.database.versionSetEntry.deleteMany({
     where: { revisionId: version.id, component: query.component },
   });
   await expect(client().latestQualifiedArtifact(query)).rejects.toMatchObject({
@@ -281,10 +259,10 @@ test("a missing component in the newest coherent set does not fall back to an ol
 
 test("automatic qualification retains qualified image B across a manual A composition when site C requires B", async () => {
   const a = await publication(1, "verified");
-  const versionA = await cluster.database.versionSet.findUniqueOrThrow({
+  const versionA = await harness.cluster.database.versionSet.findUniqueOrThrow({
     where: { qualifiedBuildId: a.buildId },
   });
-  await delivery.registerPipeline(
+  await harness.delivery.registerPipeline(
     "scout-beta/test",
     {
       kind: "manual",
@@ -292,7 +270,7 @@ test("automatic qualification retains qualified image B across a manual A compos
     },
     testOperator,
   );
-  const env = await delivery.registerEnvironment(
+  const env = await harness.delivery.registerEnvironment(
     {
       id: "scout/beta",
       serviceId: query.serviceId,
@@ -305,7 +283,7 @@ test("automatic qualification retains qualified image B across a manual A compos
     },
     testOperator,
   );
-  const accepted = await delivery.createDeployment(
+  const accepted = await harness.delivery.createDeployment(
     {
       requestId: "accept-a",
       environmentId: env.id,
@@ -315,8 +293,8 @@ test("automatic qualification retains qualified image B across a manual A compos
     },
     testOperator,
   );
-  await delivery.claim(accepted.id, testExecutor);
-  await delivery.finish(
+  await harness.delivery.claim(accepted.id, testExecutor);
+  await harness.delivery.finish(
     accepted.id,
     {
       status: "succeeded",
@@ -331,10 +309,10 @@ test("automatic qualification retains qualified image B across a manual A compos
     testExecutor,
   );
   const b = await publication(2, "verified");
-  const versionB = await cluster.database.versionSet.findUniqueOrThrow({
+  const versionB = await harness.cluster.database.versionSet.findUniqueOrThrow({
     where: { qualifiedBuildId: b.buildId },
   });
-  const manual = await delivery.compose(
+  const manual = await harness.delivery.compose(
     {
       requestId: "manual-a",
       serviceId: query.serviceId,
@@ -343,7 +321,7 @@ test("automatic qualification retains qualified image B across a manual A compos
     testPublisher,
   );
   const selectedImage = await client().latestQualifiedArtifact(query);
-  const c = await delivery.publish(
+  const c = await harness.delivery.publish(
     {
       requestId: "site-c",
       serviceId: query.serviceId,
@@ -365,30 +343,35 @@ test("automatic qualification retains qualified image B across a manual A compos
     testPublisher,
     { repositoryId: 1, pipelineNumber: 3 },
   );
-  expect(await delivery.qualify(c.buildId, "verified", testExecutor)).toEqual({
+  await replicateProducedArtifacts(harness.delivery, c.buildId);
+  expect(
+    await harness.delivery.qualify(c.buildId, "verified", testExecutor),
+  ).toEqual({
     status: "verified",
   });
-  const versionC = await cluster.database.versionSet.findUniqueOrThrow({
+  const versionC = await harness.cluster.database.versionSet.findUniqueOrThrow({
     where: { qualifiedBuildId: c.buildId },
   });
   expect(versionC.baseRevisionId).toBe(versionB.id);
   expect(versionC.revision).toBe(manual.revision + 1);
-  const preservedManual = await delivery.version(manual.id);
+  const preservedManual = await harness.delivery.version(manual.id);
   expect(preservedManual.components[query.component]?.id).toBe(a.artifactId);
-  const automated = await delivery.reconcile([env.id], testExecutor);
+  const automated = await harness.delivery.reconcile([env.id], testExecutor);
   expect(automated.deployments).toHaveLength(1);
   const requestedId = automated.deployments[0];
   if (requestedId === undefined) throw new Error("Automatic selection missing");
-  const requested = await cluster.database.deployment.findUniqueOrThrow({
-    where: { id: requestedId },
-  });
+  const requested = await harness.cluster.database.deployment.findUniqueOrThrow(
+    {
+      where: { id: requestedId },
+    },
+  );
   expect(requested.versionSetRevisionId).toBe(versionC.id);
   const unchangedAcceptance =
-    await cluster.database.environment.findUniqueOrThrow({
+    await harness.cluster.database.environment.findUniqueOrThrow({
       where: { id: env.id },
     });
   expect(unchangedAcceptance.acceptedVersionSetRevisionId).toBe(versionA.id);
-  const selected = await delivery.version(versionC.id);
+  const selected = await harness.delivery.version(versionC.id);
   expect(selected.components[query.component]?.id).toBe(b.artifactId);
   expect(selected.components["site:scout-frontend-beta"]?.id).toBe("site/c");
 });

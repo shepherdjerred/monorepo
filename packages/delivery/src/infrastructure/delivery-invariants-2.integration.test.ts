@@ -91,8 +91,16 @@ describe("PostgreSQL delivery invariants 2.1", () => {
         pipelineNumber: 2,
       },
     );
+    const publication = testPublication(3);
     const newer = await context.delivery.publish(
-      testPublication(3),
+      {
+        ...publication,
+        // Distinct bytes: identical bytes compose no new revision (R2).
+        artifacts: publication.artifacts.map((entry) => ({
+          ...entry,
+          digest: `sha256:${"d".repeat(64)}`,
+        })),
+      },
       testPublisher,
       {
         repositoryId: 1,

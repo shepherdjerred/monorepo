@@ -87,7 +87,7 @@ function identityMatches(entry: ManifestEntry, object: ListedObject): boolean {
   );
 }
 
-function opaqueObjectKey(bucket: string, object: ListedObject): string {
+export function opaqueObjectKey(bucket: string, object: ListedObject): string {
   return `objects/${createHash("sha256")
     .update(bucket)
     .update("\0")
@@ -101,7 +101,7 @@ function opaqueObjectKey(bucket: string, object: ListedObject): string {
     .digest("hex")}`;
 }
 
-async function copyChangedObject(input: {
+export async function copyChangedObject(input: {
   source: ObjectStore;
   destination: ObjectStore;
   backupBucket: string;

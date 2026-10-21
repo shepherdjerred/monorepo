@@ -88,7 +88,11 @@ export async function readTrmnlArchive(
       "TRMNL selected archive bytes differ from their qualified original digest",
     );
   const bundle = parseTrmnlPluginBundle(bytes);
-  if (bundle.sourceRevision !== artifact.sourceRevision)
+  // v1 bundles bound a producer revision; v2 identity is the content digest alone.
+  if (
+    bundle.schema === "delivery-trmnl-plugins/v1" &&
+    bundle.sourceRevision !== artifact.sourceRevision
+  )
     throw new Error(
       "TRMNL bundle source differs from its original qualified publication",
     );

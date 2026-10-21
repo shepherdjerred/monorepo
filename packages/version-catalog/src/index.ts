@@ -21,6 +21,14 @@ export const VersionCatalogEntrySchema = z
     artifactType: z.enum(["image", "helm-chart", "package", "source"]),
     management: VersionCatalogManagementSchema,
     imagePublisher: z.enum(["ci", "local"]).optional(),
+    /**
+     * The pinned version is an independently selectable Delivery component:
+     * every main pipeline acquires it as an upstream artifact verified against
+     * the upstream's published checksum (chart index digest or image manifest
+     * digest). Omitted means false; the version rides inside a first-party
+     * chart instead.
+     */
+    component: z.boolean().optional(),
     notes: z.array(z.string().min(1)).optional(),
     releaseNotesOverride: z
       .object({
@@ -42,7 +50,31 @@ export const VersionCatalogEntrySchema = z
         message: "imagePublisher requires an internal image entry",
       });
     }
+    if (
+      entry.component === true &&
+      (entry.category !== "upstream" ||
+        (entry.artifactType !== "image" &&
+          entry.artifactType !== "helm-chart") ||
+        !entry.management.managed ||
+        entry.management.registryUrl === undefined ||
+        (entry.artifactType === "image" &&
+          !/^[^@\s]+@sha256:[a-f0-9]{64}$/u.test(entry.value)))
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["component"],
+        message:
+          "component entries are managed upstream charts or digest-pinned images with a registryUrl",
+      });
+    }
   });
+
+/** Entries acquired as Delivery components, in catalog order. */
+export function componentEntries(
+  catalog: VersionCatalog,
+): VersionCatalogEntry[] {
+  return catalog.entries.filter((entry) => entry.component === true);
+}
 
 export const VersionCatalogSchema = z
   .object({
@@ -110,6 +142,7 @@ export function serializeVersionCatalog(catalog: VersionCatalog): string {
       ...(entry.imagePublisher === undefined
         ? {}
         : { imagePublisher: entry.imagePublisher }),
+      ...(entry.component === undefined ? {} : { component: entry.component }),
       ...(entry.notes === undefined ? {} : { notes: entry.notes }),
       ...(entry.releaseNotesOverride === undefined
         ? {}

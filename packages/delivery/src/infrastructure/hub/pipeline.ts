@@ -14,6 +14,7 @@ import {
   environment as readEnvironment,
   version,
 } from "#infrastructure/delivery-data.ts";
+import { buildSourceLabel } from "#shared/artifact-contract.ts";
 import { deploymentLinks } from "./links.ts";
 import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
 import { buildStatus, stageStatus } from "./status.ts";
@@ -45,7 +46,7 @@ function sourceStage(
             key: "commit",
             title: `Commit ${build.sourceRevision.slice(0, 7)}`,
             status: "succeeded",
-            detail: build.sourceKind === "ci" ? "main" : build.sourceKind,
+            detail: buildSourceLabel(build.sourceKind),
             startedAt: null,
             finishedAt: build.createdAt.toISOString(),
             target: { kind: "build", id: build.id },
@@ -79,7 +80,7 @@ function buildStage(
             key: "qualification",
             title:
               build.pipelineNumber === null
-                ? `Build ${build.sourceKind}`
+                ? buildSourceLabel(build.sourceKind)
                 : `Woodpecker #${String(build.pipelineNumber)}`,
             status: buildStatus(build.status),
             detail: build.qualificationReason,

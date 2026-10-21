@@ -48,6 +48,10 @@
             "enum": ["ci", "local"],
             "description": "Internal image publisher. Omitted means CI; local pins are owned by local publication and never advanced by CI handoffs."
           },
+          "component": {
+            "type": "boolean",
+            "description": "The pinned version is an independently selectable Delivery component: every main pipeline acquires it as an upstream artifact verified against the upstream's published checksum. Omitted means false; the version rides inside a first-party chart instead."
+          },
           "notes": {
             "type": "array",
             "items": { "type": "string", "minLength": 1 }

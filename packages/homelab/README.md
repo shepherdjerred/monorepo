@@ -74,7 +74,10 @@ some things I'm proud of:
 - Close to zero host setup — a few commands deploy the entire cluster
 - Entirely written in TypeScript built with [cdk8s](https://cdk8s.io/) and
   [Bun](https://bun.sh/)
-- Automated backups
+- Automated backups: Velero backs up PVCs by an explicit per-volume policy, and
+  the Temporal `backup` worker snapshots SeaweedFS buckets to R2. The same
+  worker copies each new Delivery artifact in `delivery-artifacts` and
+  `storm-forum-releases` to R2 before Delivery verifies its build
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
 - Declarative GitOps deployment via ArgoCD, selected and verified by Delivery

@@ -16,6 +16,7 @@ import {
   environment,
   ensureService,
   artifactView,
+  qualifiedBuildWhere,
 } from "./delivery-data.ts";
 
 /** Resolve an exact component from the newest coherent automatic version set. */
@@ -49,17 +50,7 @@ export async function latestQualifiedArtifact(
         component: input.component,
         artifact: {
           kind: input.kind,
-          build: {
-            serviceId: input.serviceId,
-            status: "verified",
-            OR: [
-              { sourceKind: "ci", repositoryId },
-              {
-                sourceKind: { in: ["upstream", "licensed-bundle"] },
-                repositoryId: null,
-              },
-            ],
-          },
+          build: qualifiedBuildWhere(input.serviceId, repositoryId),
         },
       },
       include: { artifact: { include: { build: true } } },

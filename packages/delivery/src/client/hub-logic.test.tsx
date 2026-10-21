@@ -11,6 +11,7 @@ import {
   pipelineStages,
   stageSummary,
 } from "./components/pipeline/pipeline-view-model.ts";
+import { traceStages } from "./components/pipeline/trace-view-model.ts";
 import { Status } from "./components/status.tsx";
 import { ConfirmButton } from "./components/confirm-dialog.tsx";
 import { duration, relativeTime } from "./components/time.tsx";
@@ -238,4 +239,44 @@ describe("presentation", () => {
     ).toBe("1h 5m");
     expect(duration("2026-10-18T11:59:30.000Z", null, now)).toBe("30s");
   });
+});
+
+describe("trace source stage", () => {
+  it.each([
+    ["ci", "main", 1],
+    ["attested", "Operator attestation", 0],
+    ["upstream", "Upstream acquisition", 0],
+  ] as const)(
+    "labels a %s build as %s and links only CI commits",
+    (sourceKind, label, links) => {
+      const [source] = traceStages({
+        service: {
+          id: "storm-forum",
+          title: "Storm forum",
+          kind: "product",
+          links: [],
+        },
+        status: "succeeded",
+        build: {
+          id: "build-1",
+          serviceId: "storm-forum",
+          sourceRevision: "a".repeat(40),
+          sourceKind,
+          ciUrl: null,
+          status: "verified",
+          qualificationReason: null,
+          platformChanges: null,
+          createdAt: "2026-10-21T00:00:00.000Z",
+          pipelineNumber: null,
+          links: [],
+        },
+        artifacts: [],
+        versionSet: null,
+        environments: [],
+        deployments: [],
+      });
+      expect(source?.actions[0]?.detail).toBe(label);
+      expect(source?.actions[0]?.links).toHaveLength(links);
+    },
+  );
 });

@@ -19,10 +19,11 @@ function encodeZip(files: Record<string, string>) {
     ),
   );
 }
+const SOURCE_REVISION = "a".repeat(40);
 function fixture() {
   const bundle = TrmnlPluginBundleSchema.parse({
     schema: "delivery-trmnl-plugins/v1",
-    sourceRevision: "a".repeat(40),
+    sourceRevision: SOURCE_REVISION,
     plugins: TRMNL_PLUGIN_POLICY.plugins.map((target) => ({
       ...target,
       files: Object.fromEntries(
@@ -40,7 +41,7 @@ function fixture() {
   const artifact = {
     uri: `s3://delivery-artifacts/trmnl-plugins/${digest.slice(7)}.json`,
     digest,
-    sourceRevision: bundle.sourceRevision,
+    sourceRevision: SOURCE_REVISION,
   };
   return {
     bundle,
@@ -165,4 +166,32 @@ test("independent inspector binds exact content address and original source befo
       client: { matches: async () => false },
     }),
   ).rejects.toThrow("frozen archive");
+});
+test("v2 archives bind their content digest alone; the descriptor's source revision is not compared", async () => {
+  const { bundle } = fixture();
+  const v2 = {
+    schema: "delivery-trmnl-plugins/v2" as const,
+    plugins: bundle.plugins,
+  };
+  const bytes = new TextEncoder().encode(serializeTrmnlPluginBundle(v2));
+  const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+  const artifact = {
+    uri: `s3://delivery-artifacts/trmnl-plugins/${digest.slice(7)}.json`,
+    digest,
+    sourceRevision: "b".repeat(40),
+  };
+  await expect(readTrmnlArchive(artifact, async () => bytes)).resolves.toEqual(
+    v2,
+  );
+  const other = "0".repeat(64);
+  await expect(
+    readTrmnlArchive(
+      {
+        ...artifact,
+        uri: `s3://delivery-artifacts/trmnl-plugins/${other}.json`,
+        digest: `sha256:${other}`,
+      },
+      async () => bytes,
+    ),
+  ).rejects.toThrow("differ from their qualified original digest");
 });

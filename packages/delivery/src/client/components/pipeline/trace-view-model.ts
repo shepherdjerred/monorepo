@@ -7,6 +7,7 @@ import type {
   TraceDeployment,
 } from "#shared/hub/hub-contract.ts";
 import { githubCommitLink } from "@shepherdjerred/ops-model/tool-links.ts";
+import { buildSourceLabel } from "#shared/artifact-contract.ts";
 
 export function buildPipelineStatus(
   status: BuildView["status"],
@@ -75,7 +76,7 @@ export function traceStages(trace: ExecutionTrace): PipelineStage[] {
             key: "commit",
             title: `Commit ${build.sourceRevision.slice(0, 7)}`,
             status: "succeeded",
-            detail: build.sourceKind,
+            detail: buildSourceLabel(build.sourceKind),
             startedAt: null,
             finishedAt: build.createdAt,
             target: null,

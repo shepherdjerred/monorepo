@@ -113,7 +113,7 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 60 included and 53 excluded PVCs without duplicates including independent Storm recovery storage", () => {
+it("classifies 61 included and 52 excluded PVCs without duplicates including independent Storm recovery storage", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
@@ -121,10 +121,10 @@ it("classifies 60 included and 53 excluded PVCs without duplicates including ind
   expect(new Set(keys).size).toBe(113);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(60);
+  ).toHaveLength(61);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(53);
+  ).toHaveLength(52);
   expect(
     getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
       .backup,

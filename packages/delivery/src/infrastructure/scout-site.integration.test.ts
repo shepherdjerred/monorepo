@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { workerFixture } from "#testing/worker-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import { replicateProducedArtifacts } from "#testing/replication.ts";
 import {
   PipelineDefinitionSchema,
   type FinishDeployment,
@@ -54,6 +55,7 @@ async function selectedRelease() {
     testPublisher,
     { repositoryId: 1, pipelineNumber: 2 },
   );
+  await replicateProducedArtifacts(context.delivery, published.buildId);
   await context.delivery.qualify(published.buildId, "verified", testExecutor);
   const version = await context.cluster.database.versionSet.findUniqueOrThrow({
     where: { qualifiedBuildId: published.buildId },

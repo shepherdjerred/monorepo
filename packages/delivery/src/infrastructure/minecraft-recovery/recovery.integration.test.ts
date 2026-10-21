@@ -11,8 +11,14 @@ import sourceFixture from "@shepherdjerred/ops-model/fixtures/minecraft-recovery
 import { createMinecraftRecoveryInspector } from "./inspector.ts";
 import { createApp } from "#server/app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
+import { catalogComponents } from "#infrastructure/upstream-artifact.ts";
 
 const context = useDeliveryFixture();
+// Acquisition follows the committed catalog pin, so a Renovate bump keeps this fixture valid.
+const pinned = catalogComponents.find((entry) => entry.name === "minecraft");
+if (pinned === undefined)
+  throw new Error("The version catalog no longer pins the Minecraft chart");
+const chartVersion = pinned.value;
 const reason =
   "Inspect and reopen the original before any candidate source selection";
 const directory = new URL(
@@ -42,36 +48,38 @@ beforeEach(async () => {
         id: "minecraft/chart",
         component: "chart:minecraft",
         kind: "chart",
-        uri: "https://chartmuseum.sjer.red/charts/minecraft-5.2.0.tgz",
-        version: "5.2.0",
+        uri: `https://chartmuseum.sjer.red/charts/minecraft-${chartVersion}.tgz`,
+        version: chartVersion,
         digest,
         origin: {
           kind: "upstream",
           repository: "https://itzg.github.io/minecraft-server-charts/",
           name: "minecraft",
-          version: "5.2.0",
+          version: chartVersion,
           checksum: digest,
         },
       },
     },
     testPublisher,
-    async (url) =>
-      url.toString().endsWith("index.yaml")
-        ? Response.json({
-            entries: {
-              minecraft: [
-                {
-                  name: "minecraft",
-                  version: "5.2.0",
-                  digest: digest.slice(7),
-                  urls: [
-                    "https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-5.2.0/minecraft-5.2.0.tgz",
-                  ],
-                },
-              ],
-            },
-          })
-        : new Response(bytes),
+    {
+      transport: async (url) =>
+        url.toString().endsWith("index.yaml")
+          ? Response.json({
+              entries: {
+                minecraft: [
+                  {
+                    name: "minecraft",
+                    version: chartVersion,
+                    digest: digest.slice(7),
+                    urls: [
+                      `https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-${chartVersion}/minecraft-${chartVersion}.tgz`,
+                    ],
+                  },
+                ],
+              },
+            })
+          : new Response(bytes),
+    },
   );
   const build = await context.delivery.publish(
     {

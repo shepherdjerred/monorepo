@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach } from "vitest";
 import type { CreateDeployment, PublishBuild } from "#shared/contract.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createTestDatabase } from "./postgres.ts";
+import { resetDeliveryTables } from "./delivery-http-fixture.ts";
 import { seedDelivery, testExecutor, testPublisher } from "./seed.ts";
 import type { ForumPolicyReader } from "#infrastructure/forum/source-policy.ts";
 import type { TestRegistration } from "./seed.ts";
@@ -31,9 +32,7 @@ export function useDeliveryFixture(
     await cluster.close();
   });
   beforeEach(async () => {
-    await cluster.database.$executeRawUnsafe(
-      'TRUNCATE "ApplicationLock", "Outbox", "Evidence", "Approval", "Stage", "Deployment", "Environment", "Pipeline", "VersionSetEntry", "VersionSet", "Artifact", "Build", "Request", "Audit", "ImportedSnapshot" CASCADE',
-    );
+    await resetDeliveryTables(cluster.database);
     fixture = await seedDelivery(delivery, options.registration);
   });
   return {
