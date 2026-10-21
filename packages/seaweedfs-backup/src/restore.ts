@@ -6,7 +6,9 @@ import { getManifest } from "./manifest.ts";
 import type { ObjectStore } from "./store.ts";
 import { findCompletionMarker } from "./verify.ts";
 
-export async function restoreSnapshot(input: {
+export type RestoredObject = { key: string; size: number; sha256: string };
+
+type RestoreInput = {
   backupStore: ObjectStore;
   destinationStore: ObjectStore;
   backupBucket: string;
@@ -14,20 +16,68 @@ export async function restoreSnapshot(input: {
   sourceBucket: string;
   snapshotId: string;
   policy: BackupPolicy;
-}): Promise<{ restoredObjects: number; restoredBytes: number }> {
-  const forbidden = new Set([
-    input.backupBucket,
-    ...input.policy.buckets.map((bucket) => bucket.name),
-  ]);
-  if (forbidden.has(input.destinationBucket)) {
+  /**
+   * Permit restoring a production bucket from its own backup into a fresh,
+   * empty SeaweedFS. Every other check still applies and nothing is overwritten.
+   */
+  coldStart?: boolean;
+  /** Called after each object's read-back checksum has been verified. */
+  onObjectRestored?: (object: RestoredObject) => Promise<void> | void;
+};
+
+function assertDestinationAllowed(input: RestoreInput): void {
+  if (input.destinationBucket === input.backupBucket) {
     throw new Error("Restore destination must not be a production bucket");
   }
+  const production = input.policy.buckets.some(
+    (bucket) => bucket.name === input.destinationBucket,
+  );
+  if (!production) return;
+  if (input.coldStart !== true) {
+    throw new Error(
+      `Restore destination must not be a production bucket: ${input.destinationBucket}. Only a cold start into an empty bucket may pass --cold-start`,
+    );
+  }
+  if (input.destinationBucket !== input.sourceBucket) {
+    throw new Error(
+      `Cold-start restore must return a production bucket to itself: source ${input.sourceBucket} cannot restore into ${input.destinationBucket}`,
+    );
+  }
+}
+
+async function assertDestinationEmpty(input: RestoreInput): Promise<void> {
   const existing = await input.destinationStore.listObjects(
     input.destinationBucket,
   );
-  if (existing.length > 0) {
-    throw new Error("Restore destination bucket must be empty");
+  if (existing.length === 0) return;
+  throw new Error(
+    input.coldStart === true
+      ? `Restore destination bucket must be empty: cold start found ${String(existing.length)} existing object(s) in ${input.destinationBucket} (first: ${existing[0]?.key ?? "unknown"}). Cold start never overwrites or merges`
+      : "Restore destination bucket must be empty",
+  );
+}
+
+async function assertNotOverwriting(
+  input: RestoreInput,
+  key: string,
+): Promise<void> {
+  if (input.coldStart !== true) return;
+  const present = await input.destinationStore.headObject(
+    input.destinationBucket,
+    key,
+  );
+  if (present !== undefined) {
+    throw new Error(
+      `Cold-start restore refused to overwrite ${input.destinationBucket}/${key}`,
+    );
   }
+}
+
+export async function restoreSnapshot(
+  input: RestoreInput,
+): Promise<{ restoredObjects: number; restoredBytes: number }> {
+  assertDestinationAllowed(input);
+  await assertDestinationEmpty(input);
   const marker = await findCompletionMarker(
     input.backupStore,
     input.backupBucket,
@@ -49,6 +99,7 @@ export async function restoreSnapshot(input: {
   );
   let restoredBytes = 0;
   for (const entry of entries) {
+    await assertNotOverwriting(input, entry.sourceKey);
     const source = await input.backupStore.getObject(
       input.backupBucket,
       entry.backupObjectKey,
@@ -96,6 +147,11 @@ export async function restoreSnapshot(input: {
       );
     }
     restoredBytes += entry.sourceSize;
+    await input.onObjectRestored?.({
+      key: entry.sourceKey,
+      size: entry.sourceSize,
+      sha256: entry.sha256,
+    });
   }
   return { restoredObjects: entries.length, restoredBytes };
 }

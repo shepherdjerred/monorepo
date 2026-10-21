@@ -7,7 +7,9 @@ sidebar:
 
 Use this procedure to inspect or recover one protected SeaweedFS bucket. The
 restore command refuses every production bucket named in policy and refuses a
-destination containing any object.
+destination containing any object. The one exception is the explicit
+`--cold-start` mode for rebuilding a cluster from nothing, which restores a
+production bucket onto itself only while it is empty and never overwrites.
 
 ## 1. Choose a completed recovery point
 

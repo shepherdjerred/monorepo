@@ -47,3 +47,37 @@ toolkit backup seaweedfs verify --snapshot <id> --full
 toolkit backup seaweedfs restore --snapshot <id> --bucket <source> \
   --destination-bucket <empty-isolated-bucket>
 ```
+
+## Cold-start restore
+
+Restore refuses every bucket named in `policy.json` and the backup bucket. A
+cold start, where the cluster is rebuilt from nothing, must still return
+`delivery-artifacts` and `storm-forum-releases` to the fresh SeaweedFS before
+Delivery can verify or redeploy. `--cold-start` is the only way to do that:
+
+```bash
+toolkit backup seaweedfs restore --cold-start \
+  --record cold-start-delivery-artifacts.ndjson \
+  --snapshot <id> --bucket delivery-artifacts \
+  --destination-bucket delivery-artifacts
+```
+
+The mode relaxes only the production-bucket refusal. Every other check stays:
+
+- The destination must be the same bucket as `--bucket`; a production bucket
+  never receives another bucket's backup. The backup bucket is always refused.
+- The destination bucket must already exist, and a full listing must return no
+  objects. Any object fails the restore, naming the count and the first key.
+- Each key is checked with `HEAD` immediately before it is written, so an
+  object that appears mid-restore stops the run instead of being overwritten.
+- Transfer and read-back SHA-256 verification are unchanged.
+
+`--record <file>` is required with `--cold-start`. The file is created
+exclusively (an existing file is an error) and holds NDJSON: a
+`cold-start-restore` header, one `object` line per verified key with its size
+and SHA-256, then a `complete` or `failed` line. A refused or interrupted run
+therefore leaves evidence of what, if anything, was restored. Retry with a new
+record path once the destination bucket is empty again.
+
+The full cold-start recovery order is the Delivery model's bootstrap chain
+([`packages/delivery/docs/model.md`](../delivery/docs/model.md), section 6).
