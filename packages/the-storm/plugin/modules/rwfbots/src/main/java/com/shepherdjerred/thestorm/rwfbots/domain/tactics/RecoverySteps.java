@@ -156,7 +156,10 @@ final class RecoverySteps {
    */
   private static OptionalInt standingNode(NavGraph graph, Vec3 pos) {
     var node = start(graph, pos);
-    return node.isPresent() && Math.abs(graph.feet(node.getAsInt()).y() - pos.y()) < STANDING
+    if (node.isEmpty()) return node;
+    // A deep water column keeps only its portal nodes, which may lie far above or below a swimmer.
+    var swimming = graph.water().contains(BlockPos.of(pos));
+    return swimming || Math.abs(graph.feet(node.getAsInt()).y() - pos.y()) < STANDING
         ? node
         : OptionalInt.empty();
   }

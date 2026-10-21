@@ -845,7 +845,9 @@ public final class Planner {
             ? patrolRoute(situation, context, pos, radius)
             : Optional.<RouteResult>empty();
     if (patrol.isPresent()) return patrol.orElseThrow();
-    return arrived
+    // A RECOVER hold only stands: routing back to it pulled a bot that had swum out of a pool, or
+    // slid down vines it let go of, back to where it stood when it recovered.
+    return arrived || plan.option() == Option.RECOVER
         ? new RouteResult.Arrived()
         : pathTo(situation, context, pos, new Way(stance, true));
   }
