@@ -6,7 +6,6 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  Namespace,
   PercentOrAbsolute,
   Probe,
   Secret,
@@ -14,7 +13,10 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { createDeliveryNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/namespace.ts";
 import { createSingleAppPostgreSQL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/single-app-postgresql.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
+import { createDeliveryApplicationReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/application-reader.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -52,9 +54,13 @@ export function createDeliveryChart(
   }
   const selectedImage =
     '{{ required `Delivery requires image` (get (.Values.delivery | default dict) "image") }}';
-  new Namespace(chart, "namespace", { metadata: { name: "delivery" } });
+  // Under transition rendering the operator-run `delivery-data` chart owns the
+  // Namespace and the `delivery-postgresql` cluster this chart connects to.
+  if (!transitionRendering())
+    createDeliveryNamespace(chart, { retained: false });
   createDeliveryCatalogRecovery(chart);
-  createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
+  if (transitionRendering()) createDeliveryApplicationReader(chart);
+  else createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
   const database = Secret.fromSecretName(
     chart,
     "postgres",

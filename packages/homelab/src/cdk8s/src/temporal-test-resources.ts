@@ -2,6 +2,7 @@ import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
+import { createTemporalDataChart } from "./cdk8s-charts/platform/temporal-data.ts";
 import { ContainerEnvSchema } from "./testing/container-env-schema.ts";
 
 const TemporalResourceSchema = z
@@ -30,15 +31,30 @@ export type TemporalWorkerContainer = z.infer<
   typeof TemporalWorkerPodSchema
 >["spec"]["containers"][number];
 
-export function synthesizeTemporalResources(
+function synthesize(
   outdir: string,
+  create: (app: App) => unknown,
 ): TemporalResource[] {
   const app = new App({ outdir });
-  createTemporalChart(app);
+  create(app);
   return parseAllDocuments(app.synthYaml()).flatMap((document) => {
     const resource = TemporalResourceSchema.safeParse(document.toJSON());
     return resource.success ? [resource.data] : [];
   });
+}
+
+/** The `temporal` application chart: workloads, migration Job, policies. */
+export function synthesizeTemporalResources(
+  outdir: string,
+): TemporalResource[] {
+  return synthesize(outdir, createTemporalChart);
+}
+
+/** The `temporal-data` chart: Namespace, TLS chain, cluster, DB netpol. */
+export function synthesizeTemporalDataResources(
+  outdir: string,
+): TemporalResource[] {
+  return synthesize(outdir, createTemporalDataChart);
 }
 
 export function findTemporalResource(

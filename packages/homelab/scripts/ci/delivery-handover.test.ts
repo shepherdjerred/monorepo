@@ -17,6 +17,7 @@ import {
   handoverJson,
 } from "./delivery-handover-native.ts";
 import { createHandoverArgo } from "./delivery-handover-access.ts";
+import { applicationProject } from "#cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 function native(name = "arcade") {
   return BootstrapApplicationSchema.parse({
@@ -563,7 +564,8 @@ test("control-plane handover requires only the exact producer resource update ca
       const allowed =
         action === "get" ||
         (!workload &&
-          application === "default/delivery-control-plane" &&
+          application ===
+            `${applicationProject("delivery-control-plane")}/delivery-control-plane` &&
           (action === "update" ||
             (!missing &&
               action ===

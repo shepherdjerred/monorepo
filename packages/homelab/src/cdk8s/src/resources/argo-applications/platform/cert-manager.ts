@@ -10,6 +10,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/cert-manager.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export const HOMELAB_CLUSTER_CA_SECRET = "homelab-cluster-ca";
 export const HOMELAB_CLUSTER_ISSUER_NAME = "homelab-ca-issuer";
@@ -159,7 +160,7 @@ export function createCertManagerApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("cert-manager"),
       source: {
         // https://artifacthub.io/packages/search?org=cert-manager
         repoUrl: "https://charts.jetstack.io",

@@ -41,6 +41,8 @@ import { createStormForumCharts } from "./resources/storm-forum/releases.ts";
 import { firstPartyImageRecipe } from "./versions.ts";
 import { createTrackerChart } from "./cdk8s-charts/platform/tracker.ts";
 import { createDeliveryChart } from "./cdk8s-charts/platform/delivery.ts";
+import { createDeliveryDataChart } from "./cdk8s-charts/platform/delivery-data.ts";
+import { createTemporalDataChart } from "./cdk8s-charts/platform/temporal-data.ts";
 import { createDeliveryControlPlaneChart } from "./cdk8s-charts/platform/delivery-control-plane.ts";
 import { createClusterAdmissionChart } from "./cdk8s-charts/platform/cluster-admission.ts";
 import { createClusterPlatformChart } from "./cdk8s-charts/platform/cluster-platform.ts";
@@ -69,6 +71,10 @@ export async function setupCharts(app: App): Promise<void> {
   await createClusterObservabilityChart(app);
   const trackerImage = firstPartyImageRecipe("tracker");
   createTrackerChart(app, trackerImage);
+  // Operator-run data layers precede the application charts that connect to
+  // them; each owns its Namespace jointly with the application chart.
+  createDeliveryDataChart(app);
+  createTemporalDataChart(app);
   createDeliveryChart(app, deliveryActivation());
   createScoutChart(app, "beta");
   createScoutChart(app, "prod");

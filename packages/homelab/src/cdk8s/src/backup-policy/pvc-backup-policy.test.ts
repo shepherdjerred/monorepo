@@ -7,6 +7,7 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import { CLUSTER_ADMISSION_CHART } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
@@ -227,8 +228,12 @@ describe("PVC backup policy", () => {
     // observer CONNECT guard.
     expect(admissionKinds.get("copy:ValidatingAdmissionPolicy")).toBe(1);
     expect(admissionKinds.get("copy:ValidatingAdmissionPolicyBinding")).toBe(1);
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(22);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(22);
+    // Transition rendering adds the Application source-writer policy.
+    const validating = transitionRendering() ? 23 : 22;
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(validating);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(
+      validating,
+    );
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {

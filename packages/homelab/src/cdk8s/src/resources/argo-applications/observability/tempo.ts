@@ -7,6 +7,7 @@ import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/stora
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const MAX_TRACE_BYTES = 50_000_000;
 
@@ -184,7 +185,7 @@ metrics_generator:
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("tempo"),
       source: {
         // https://github.com/grafana/helm-charts/tree/main/charts/tempo
         repoUrl: "https://grafana.github.io/helm-charts",

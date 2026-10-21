@@ -2,6 +2,7 @@ import { Construct } from "constructs";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export type RedisProps = {
   /**
@@ -47,7 +48,7 @@ export class Redis extends Construct {
         namespace: "argocd",
       },
       spec: {
-        project: "default",
+        project: applicationProject(id),
         source: {
           repoUrl: "https://charts.bitnami.com/bitnami",
           targetRevision: versions.redis,

@@ -4,6 +4,8 @@ import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { POSTGRES_CLUSTER_NAME_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+
 export function createPostgresOperatorNamespace(chart: Chart): void {
   new Namespace(chart, "postgres-operator-namespace", {
     metadata: {
@@ -68,7 +70,7 @@ export function createPostgresOperatorApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("postgres-operator"),
       source: {
         // https://github.com/zalando/postgres-operator
         repoUrl:

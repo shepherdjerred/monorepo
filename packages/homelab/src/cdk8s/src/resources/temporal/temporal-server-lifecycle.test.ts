@@ -7,6 +7,8 @@ import {
   TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-release-budgets.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
+import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 const ResourceSchema = z
   .object({
@@ -22,23 +24,52 @@ const ResourceSchema = z
   })
   .loose();
 
-function resources() {
-  const app = new App({ outdir: ".test-synth-temporal-server-lifecycle" });
-  createTemporalChart(app);
+function synthesize(outdir: string, create: (app: App) => unknown) {
+  const app = new App({ outdir });
+  create(app);
   return parseAllDocuments(app.synthYaml()).flatMap((document) => {
     const parsed = ResourceSchema.safeParse(document.toJSON());
     return parsed.success ? [parsed.data] : [];
   });
 }
 
-function findResource(kind: string, name: string) {
-  const resource = resources().find(
+function resources() {
+  return synthesize(
+    ".test-synth-temporal-server-lifecycle",
+    createTemporalChart,
+  );
+}
+
+/**
+ * The chart that renders the database, its TLS chain and its ingress policy:
+ * the `temporal` chart itself until transition rendering moves them to the
+ * operator-run `temporal-data` chart, released ahead of it.
+ */
+function databaseResources() {
+  return transitionRendering()
+    ? synthesize(
+        ".test-synth-temporal-server-lifecycle-data",
+        createTemporalDataChart,
+      )
+    : resources();
+}
+
+function findIn(
+  synthesized: ReturnType<typeof resources>,
+  kind: string,
+  name: string,
+) {
+  const resource = synthesized.find(
     (candidate) => candidate.kind === kind && candidate.metadata.name === name,
   );
   if (resource === undefined) {
     throw new Error(`Missing ${kind}/${name}`);
   }
   return resource;
+}
+
+function findResource(kind: string, name: string) {
+  return findIn(resources(), kind, name);
 }
 
 const ContainerSchema = z.object({
@@ -136,21 +167,29 @@ describe("Temporal server lifecycle", () => {
     const migrationWave = wave("Job", "temporal-schema-migration");
     expect(phase("Job", "temporal-schema-migration")).toBe("Sync");
 
-    // Each prerequisite is an ordinary Sync-phase resource, so it must both
-    // share the phase and sort strictly earlier.
-    for (const [kind, name] of [
+    // Each prerequisite in this chart is an ordinary Sync-phase resource, so
+    // it must both share the phase and sort strictly earlier. Under
+    // transition rendering the Certificate and the cluster belong to the
+    // earlier `temporal-data` release and must not render here.
+    const database = [
       ["Certificate", "temporal-postgresql"],
       ["postgresql", "temporal-postgresql"],
+    ] as const;
+    for (const [kind, name] of [
+      ...(transitionRendering() ? [] : database),
       ["NetworkPolicy", "temporal-schema-migration-netpol"],
     ] as const) {
       expect(phase(kind, name)).toBe("Sync");
       expect(wave(kind, name)).toBeLessThan(migrationWave);
     }
+    if (transitionRendering())
+      for (const [kind, name] of database)
+        expect(() => findResource(kind, name)).toThrow(`Missing ${kind}`);
 
     // The secret the migration mounts is the one that Certificate issues.
     const certificate = z
       .object({ spec: z.object({ secretName: z.string() }).loose() })
-      .parse(findResource("Certificate", "temporal-postgresql"));
+      .parse(findIn(databaseResources(), "Certificate", "temporal-postgresql"));
     expect(certificate.spec.secretName).toBe("temporal-postgresql-tls");
     expect(
       JSON.stringify(findResource("Job", "temporal-schema-migration")),
@@ -164,7 +203,11 @@ describe("Temporal server lifecycle", () => {
   });
 
   test("stages the PostgreSQL ingress netpol ahead of the schema migration Job", () => {
-    const netpol = findResource("NetworkPolicy", "temporal-postgresql-netpol");
+    const netpol = findIn(
+      databaseResources(),
+      "NetworkPolicy",
+      "temporal-postgresql-netpol",
+    );
     expect(netpol.metadata.annotations).toMatchObject({
       "argocd.argoproj.io/hook": "PreSync",
       "argocd.argoproj.io/sync-wave": "-3",

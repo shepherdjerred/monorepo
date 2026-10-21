@@ -18,6 +18,7 @@ import {
   CI_COMPUTE_WORKFLOWS,
   CI_GATE_WORKFLOWS,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 const ClusterQueueSchema = z.object({
   apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
@@ -244,6 +245,8 @@ describe("kueue-config", () => {
                     "woodpecker-ci",
                     "delivery-worker-jobs",
                     "delivery-platform-jobs",
+                    // Qualification runs join under transition rendering.
+                    ...(transitionRendering() ? ["mc-sandbox"] : []),
                   ],
                 },
               ],

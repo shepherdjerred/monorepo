@@ -3,6 +3,7 @@ import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
+import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
 
 const SecurityContextSchema = z.object({
   allowPrivilegeEscalation: z.boolean(),
@@ -88,9 +89,11 @@ const NetworkPolicySchema = z.object({
   }),
 });
 
+/** The Temporal workloads plus the data layer, which owns the Namespace under transition rendering. */
 function resources(): unknown[] {
   const app = new App({ outdir: ".test-synth-temporal-agent-boundary" });
   createTemporalChart(app);
+  createTemporalDataChart(app);
   return parseAllDocuments(app.synthYaml()).map((document) =>
     document.toJSON(),
   );

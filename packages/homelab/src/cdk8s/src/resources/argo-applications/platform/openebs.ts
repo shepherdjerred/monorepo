@@ -6,6 +6,8 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+
 export function createOpenEBSNamespace(chart: Chart): void {
   new Namespace(chart, `openebs-namespace`, {
     metadata: {
@@ -81,7 +83,7 @@ export function createOpenEBSApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("openebs"),
       source: {
         repoUrl: "https://openebs.github.io/openebs",
         targetRevision: versions.openebs,

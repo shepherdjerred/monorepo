@@ -5,12 +5,70 @@ import {
   PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
 import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import {
   TEMPORAL_POSTGRES_TLS_CA_FILE,
   TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
   TEMPORAL_POSTGRES_TLS_PRIVATE_KEY_FILE,
   TEMPORAL_POSTGRES_TLS_SECRET,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
+
+export const TEMPORAL_POSTGRES_CLUSTER = "temporal-postgresql";
+
+/**
+ * Ingress policy for the Temporal PostgreSQL pods: only the server and the
+ * schema-migration hook may connect.
+ *
+ * This must itself be a PreSync hook, staged ahead of the schema-migration
+ * Job's own PreSync wave (-1): PreSync hooks run in a phase that completes
+ * in full before ANY ordinary (non-hook) resource is applied, regardless of
+ * sync-wave. Left as a plain resource, ArgoCD would only add the
+ * temporal-schema-migration ingress rule below during the later Sync
+ * phase — after the schema-migration Job has already run (and had its
+ * PostgreSQL connection dropped by the netpol that predates this rule).
+ * No hook-delete-policy is set, so this persists as an ordinary tracked
+ * resource after creation and simply keeps being reconciled in PreSync on
+ * every subsequent sync. It lives in the data-layer chart with the cluster it
+ * selects; the migration Job it admits is released by the `temporal` chart.
+ */
+export function createTemporalPostgreSQLNetworkPolicy(chart: Chart) {
+  return new KubeNetworkPolicy(chart, "temporal-postgresql-netpol", {
+    metadata: {
+      name: "temporal-postgresql-netpol",
+      annotations: {
+        "argocd.argoproj.io/hook": "PreSync",
+        "argocd.argoproj.io/sync-wave": "-3",
+      },
+    },
+    spec: {
+      podSelector: {
+        matchLabels: postgresClusterPodLabels(TEMPORAL_POSTGRES_CLUSTER),
+      },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-server" },
+              },
+            },
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-schema-migration" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+}
 
 // The gid of the `postgres` user inside the Spilo image, confirmed against the
 // running container (`id postgres` -> uid=101(postgres) gid=103(postgres)).
@@ -32,9 +90,9 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
   // in Kubernetes secrets with the naming pattern:
   // {username}.{clustername}.credentials.postgresql.acid.zalan.do
 
-  return new Postgresql(chart, "temporal-postgresql", {
+  return new Postgresql(chart, TEMPORAL_POSTGRES_CLUSTER, {
     metadata: {
-      name: "temporal-postgresql",
+      name: TEMPORAL_POSTGRES_CLUSTER,
       labels: {
         "velero.io/backup": "enabled",
         "velero.io/exclude-from-backup": "false",

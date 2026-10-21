@@ -9,6 +9,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export const PROMETHEUS_HEALTH_LUA = `local hs = {
   status = "Progressing",
@@ -411,7 +412,7 @@ return hs`,
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("argocd"),
       source: {
         // https://argoproj.github.io/argo-helm/
         repoUrl: "https://argoproj.github.io/argo-helm/",

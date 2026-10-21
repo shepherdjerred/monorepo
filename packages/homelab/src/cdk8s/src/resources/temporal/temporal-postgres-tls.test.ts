@@ -2,11 +2,13 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   findTemporalResource,
-  synthesizeTemporalResources,
+  synthesizeTemporalDataResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
 
+// The TLS chain and the cluster it secures are owned by the operator-run
+// `temporal-data` chart, not the automatically released `temporal` chart.
 function resources() {
-  return synthesizeTemporalResources(".test-synth-temporal-postgres-tls");
+  return synthesizeTemporalDataResources(".test-synth-temporal-postgres-tls");
 }
 
 describe("Temporal PostgreSQL TLS", () => {

@@ -36,6 +36,15 @@
       "deploy": []
     },
     {
+      "id": "delivery-data",
+      "rootReleaseExclusions": { "delivery-data": "inactive" },
+      "title": "Delivery data layer",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": ["delivery-data"]
+    },
+    {
       "id": "arcade",
       "images": ["arcade"],
       "title": "Arcade",
@@ -335,6 +344,15 @@
       "namespaces": [],
       "argoApps": [],
       "charts": ["cluster-observability"]
+    },
+    {
+      "id": "temporal-data",
+      "rootReleaseExclusions": { "temporal-data": "inactive" },
+      "title": "Temporal data layer",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": ["temporal-data"]
     },
     {
       "id": "delivery-control-plane",

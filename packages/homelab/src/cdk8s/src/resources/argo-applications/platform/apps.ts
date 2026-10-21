@@ -1,6 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { DELIVERY_ROOT_IGNORE_EXPRESSIONS } from "homelab/src/delivery-ownership.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export function createAppsApp(chart: Chart) {
   return new Application(chart, "apps-app", {
@@ -12,7 +13,7 @@ export function createAppsApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("apps"),
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
         // Self-selection follows this immutable chart, including full-source pruning.

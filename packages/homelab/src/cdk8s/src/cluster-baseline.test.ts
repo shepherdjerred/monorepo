@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { setupCharts } from "./setup-charts.ts";
+import { transitionRendering } from "./release-configuration.ts";
+import { APPLICATION_SOURCE_POLICY } from "./resources/argocd-application-admission.ts";
 import {
   BASELINE_CHART_APPLICATIONS,
   BASELINE_CHART_NAMESPACE,
@@ -34,6 +36,10 @@ function objectKey(manifest: Manifest): string {
   return `${manifest.apiVersion}/${manifest.kind}/${manifest.metadata.namespace ?? "-"}/${manifest.metadata.name}`;
 }
 
+/** Under transition rendering only Delivery writes Application sources. */
+const sourceWriterPolicy: [name: string, flavor: "Mutating" | "Validating"][] =
+  transitionRendering() ? [[APPLICATION_SOURCE_POLICY, "Validating"]] : [];
+
 const admissionPolicies: readonly [
   name: string,
   flavor: "Mutating" | "Validating",
@@ -52,6 +58,7 @@ const admissionPolicies: readonly [
   ["woodpecker-ci-pod-guard.sjer.red", "Validating"],
   ["woodpecker-ram-scratch.sjer.red", "Mutating"],
   ["woodpecker-ram-scratch-guard.sjer.red", "Validating"],
+  ...sourceWriterPolicy,
 ];
 
 const CLUSTER_ADMISSION_INVENTORY = admissionPolicies.flatMap(

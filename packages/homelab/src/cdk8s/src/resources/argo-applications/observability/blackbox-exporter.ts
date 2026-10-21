@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export function createBlackboxExporterApp(chart: Chart) {
   const values: HelmValuesForChart<"prometheus-blackbox-exporter"> = {
@@ -16,7 +17,7 @@ export function createBlackboxExporterApp(chart: Chart) {
     metadata: { name: "blackbox-exporter" },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("blackbox-exporter"),
       source: {
         repoUrl: "https://prometheus-community.github.io/helm-charts",
         chart: "prometheus-blackbox-exporter",

@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 export function createOnePasswordApp(chart: Chart) {
   // TODO: create the 1password secrets here
 
@@ -44,7 +45,7 @@ export function createOnePasswordApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("1password"),
       source: {
         // https://github.com/1Password/connect-helm-charts
         repoUrl: "https://1password.github.io/connect-helm-charts/",

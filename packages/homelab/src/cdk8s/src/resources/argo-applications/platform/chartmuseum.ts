@@ -7,6 +7,7 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { SATA_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 export function createChartMuseumApp(chart: Chart) {
   createIngress(chart, "chartmuseum-ingress", {
     namespace: "chartmuseum",
@@ -59,7 +60,7 @@ export function createChartMuseumApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("chartmuseum"),
       source: {
         repoUrl: "https://chartmuseum.github.io/charts",
         targetRevision: versions.chartmuseum,

@@ -4,6 +4,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import type { TailscaleProxyClass } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const PROXY_REQUESTS: Record<
   TailscaleProxyClass,
@@ -66,7 +67,7 @@ export function createTailscaleApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("tailscale"),
       source: {
         repoUrl: "https://pkgs.tailscale.com/helmcharts",
         chart: "tailscale-operator",

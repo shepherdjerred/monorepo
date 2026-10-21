@@ -27,6 +27,7 @@ import {
   createMonitoringAuthGateways,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 function createPrometheusIngresses(chart: Chart): void {
   createIngress(chart, "alertmanager-ingress", {
@@ -541,7 +542,7 @@ export async function createPrometheusApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("prometheus"),
       source: {
         // https://github.com/prometheus-community/helm-charts/
         repoUrl: "https://prometheus-community.github.io/helm-charts",

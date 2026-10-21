@@ -7,6 +7,7 @@ import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/stora
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { ConfigMap } from "cdk8s-plus-31";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Loki alerting rules for Kubernetes events
 // Note: Go template syntax escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
@@ -426,7 +427,7 @@ export function createLokiApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("loki"),
       source: {
         // https://github.com/grafana/loki/tree/main/production/helm/loki
         repoUrl: "https://grafana.github.io/helm-charts",

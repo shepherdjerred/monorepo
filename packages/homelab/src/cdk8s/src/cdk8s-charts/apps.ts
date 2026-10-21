@@ -54,6 +54,9 @@ import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-db.ts";
+import { createDeliveryDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/delivery-data.ts";
+import { createTemporalDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/temporal-data.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/s3-static-sites.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
@@ -161,6 +164,12 @@ export async function createAppsChart(app: App) {
   createArcadeApp(chart);
   createGickupApp(chart);
   createGrafanaDbApp(chart);
+  // Operator-run data layers take the self-hosted PostgreSQL clusters over
+  // from the application charts in the cutover window's final root release.
+  if (transitionRendering()) {
+    createDeliveryDataApp(chart);
+    createTemporalDataApp(chart);
+  }
   createBugsinkApp(chart);
   createPhoenixApp(chart);
   createTasknotesApp(chart);

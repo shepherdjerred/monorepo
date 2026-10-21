@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Grafana Alloy River config: eBPF-sample every pod on the local node kernel-side
 // and push profiles to Pyroscope. No application instrumentation — works for the
@@ -147,7 +148,7 @@ export function createAlloyApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("alloy"),
       source: {
         // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
         repoUrl: "https://grafana.github.io/helm-charts",

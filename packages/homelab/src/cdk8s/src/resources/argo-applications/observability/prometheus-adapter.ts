@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export function createPrometheusAdapterApp(chart: Chart) {
   const prometheusAdapterValues: HelmValuesForChart<"prometheus-adapter"> = {
@@ -65,7 +66,7 @@ export function createPrometheusAdapterApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("prometheus-adapter"),
       source: {
         repoUrl: "https://prometheus-community.github.io/helm-charts",
         targetRevision: versions["prometheus-adapter"],

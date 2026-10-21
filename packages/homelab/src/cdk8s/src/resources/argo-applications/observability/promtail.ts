@@ -4,6 +4,8 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+
 export function createPromtailNamespace(chart: Chart): void {
   new Namespace(chart, "promtail-namespcae", {
     metadata: {
@@ -46,7 +48,7 @@ export function createPromtailApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("promtail"),
       source: {
         // https://github.com/grafana/helm-charts/tree/main/charts/promtail
         repoUrl: "https://grafana.github.io/helm-charts",

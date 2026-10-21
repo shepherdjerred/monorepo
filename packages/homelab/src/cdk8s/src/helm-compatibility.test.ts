@@ -3,6 +3,8 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { App } from "cdk8s";
 import { setupCharts } from "./setup-charts.ts";
+import { ARGOCD_SYNC_OPTIONS_ANNOTATION } from "./application-release-policy.ts";
+import { transitionRendering } from "./release-configuration.ts";
 import {
   BASELINE_CHART_APPLICATIONS,
   ROOT_CHART,
@@ -59,10 +61,41 @@ async function synthesizeChartResources(): Promise<
   );
 }
 
+/** Data-layer charts and the application chart each takes its cluster from. */
+const DATA_LAYER_CHARTS: Readonly<Record<string, string>> = {
+  "delivery-data": "delivery",
+  "temporal-data": "temporal",
+};
+
+function withoutRetention(resource: unknown): unknown {
+  const parsed = z
+    .looseObject({
+      metadata: z.looseObject({
+        annotations: z.record(z.string(), z.string()).optional(),
+      }),
+    })
+    .parse(resource);
+  const annotations = Object.fromEntries(
+    Object.entries(parsed.metadata.annotations ?? {}).filter(
+      ([key]) => key !== ARGOCD_SYNC_OPTIONS_ANNOTATION,
+    ),
+  );
+  return {
+    ...parsed,
+    metadata: {
+      ...parsed.metadata,
+      annotations:
+        Object.keys(annotations).length === 0 ? undefined : annotations,
+    },
+  };
+}
+
 /**
- * The duplication the Delivery v2 cutover declares: a cluster baseline chart
- * mirroring the root's own object (`cluster-baseline.test.ts`). The pair must
- * be the same object; anything else is an accidental duplicate.
+ * The two duplications the Delivery v2 cutover declares: a cluster baseline
+ * chart mirroring the root's own object (`cluster-baseline.test.ts`), and,
+ * until transition rendering moves them, a data-layer chart rendering the
+ * application chart's database objects plus retention. Each pair must be the
+ * same object; anything else is an accidental duplicate.
  */
 function isDeclaredMirror(
   occurrences: readonly { chart: string; resource: unknown }[],
@@ -71,10 +104,25 @@ function isDeclaredMirror(
   const [first, second] = occurrences;
   if (first === undefined || second === undefined) return false;
   const charts = new Set([first.chart, second.chart]);
-  return (
+  if (
     charts.has(ROOT_CHART) &&
-    [...BASELINE_CHART_APPLICATIONS].some((chart) => charts.has(chart)) &&
-    Bun.deepEquals(first.resource, second.resource, true)
+    [...BASELINE_CHART_APPLICATIONS].some((chart) => charts.has(chart))
+  )
+    return Bun.deepEquals(first.resource, second.resource, true);
+  const data = [first, second].find(
+    (occurrence) => DATA_LAYER_CHARTS[occurrence.chart] !== undefined,
+  );
+  const application = [first, second].find((occurrence) => occurrence !== data);
+  return (
+    !transitionRendering() &&
+    data !== undefined &&
+    application !== undefined &&
+    DATA_LAYER_CHARTS[data.chart] === application.chart &&
+    Bun.deepEquals(
+      withoutRetention(data.resource),
+      withoutRetention(application.resource),
+      true,
+    )
   );
 }
 

@@ -15,6 +15,8 @@ import {
   CI_GATE_WORKFLOWS,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { MC_SANDBOX_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 /** The CI ClusterQueue. Its name is what the queue alerts and dashboards select. */
 export const CI_CLUSTER_QUEUE = "woodpecker";
@@ -105,17 +107,23 @@ const NEVER_PREEMPT = {
  * "24000m"): ArgoCD diffs the raw string, and a mismatch is a permanent
  * phantom OutOfSync that wedges the app-of-apps sync.
  */
-export function createKueueConfig(chart: Chart) {
+export function createKueueConfig(
+  chart: Chart,
+  transition: boolean = transitionRendering(),
+) {
   new ResourceFlavorV1Beta2(chart, "kueue-resource-flavor", {
     metadata: { name: "default", annotations: SYNC_WAVE },
   });
 
   const quota = CI_ADMISSION_BUDGET.computeQuota;
   createClusterQueue(chart, "kueue-cluster-queue", CI_CLUSTER_QUEUE, {
-    cpu: quota.cpu,
-    memory: quota.memory,
-    pods: String(CI_COMPUTE_WORKFLOWS * CI_PODS_PER_WORKFLOW),
-    "ephemeral-storage": quota["ephemeral-storage"],
+    quotas: {
+      cpu: quota.cpu,
+      memory: quota.memory,
+      pods: String(CI_COMPUTE_WORKFLOWS * CI_PODS_PER_WORKFLOW),
+      "ephemeral-storage": quota["ephemeral-storage"],
+    },
+    transition,
   });
   createLocalQueue(
     chart,
@@ -125,8 +133,11 @@ export function createKueueConfig(chart: Chart) {
   );
 
   createClusterQueue(chart, "kueue-gate-cluster-queue", CI_GATE_CLUSTER_QUEUE, {
-    ...CI_ADMISSION_BUDGET.gateQuota,
-    pods: String(CI_GATE_WORKFLOWS),
+    quotas: {
+      ...CI_ADMISSION_BUDGET.gateQuota,
+      pods: String(CI_GATE_WORKFLOWS),
+    },
+    transition,
   });
   createLocalQueue(
     chart,
@@ -152,7 +163,15 @@ export function createKueueConfig(chart: Chart) {
     chart,
     "kueue-maintenance-cluster-queue",
     CI_MAINTENANCE_CLUSTER_QUEUE,
-    { cpu: "1", memory: "2Gi", pods: "1", "ephemeral-storage": "2Gi" },
+    {
+      quotas: {
+        cpu: "1",
+        memory: "2Gi",
+        pods: "1",
+        "ephemeral-storage": "2Gi",
+      },
+      transition,
+    },
   );
   createLocalQueue(
     chart,
@@ -199,11 +218,16 @@ function resourceGroups(quotas: Readonly<Record<string, string>>) {
   ];
 }
 
+type ClusterQueueOptions = {
+  quotas: Readonly<Record<string, string>>;
+  transition: boolean;
+};
+
 function createClusterQueue(
   chart: Chart,
   id: string,
   name: string,
-  quotas: Readonly<Record<string, string>>,
+  { quotas, transition }: ClusterQueueOptions,
 ): void {
   new ClusterQueueV1Beta2(chart, id, {
     metadata: { name, annotations: SYNC_WAVE },
@@ -219,6 +243,8 @@ function createClusterQueue(
                     WOODPECKER_CI_NAMESPACE,
                     "delivery-worker-jobs",
                     "delivery-platform-jobs",
+                    // Minecraft qualification runs share the CI node's budget.
+                    ...(transition ? [MC_SANDBOX_NAMESPACE] : []),
                   ],
                 },
               ],

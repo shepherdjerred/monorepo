@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { Namespace } from "cdk8s-plus-31";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export function createGrafanaApp(chart: Chart) {
   new Namespace(chart, "prometheus-namespcae", {
@@ -27,7 +28,7 @@ export function createGrafanaApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("grafana"),
       source: {
         repoUrl: "https://github.com/dotdc/grafana-dashboards-kubernetes",
         path: ".",

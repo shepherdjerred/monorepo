@@ -6,6 +6,7 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Phoenix ingests whole LLM traces per project; the project is selected by
 // the x-project-name header on the exporter, and projects are created
@@ -431,7 +432,7 @@ export function createAlloyGatewayApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("alloy-gateway"),
       source: {
         // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
         repoUrl: "https://grafana.github.io/helm-charts",

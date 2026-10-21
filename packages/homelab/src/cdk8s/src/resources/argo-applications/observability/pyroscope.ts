@@ -9,6 +9,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 /**
  * Grafana Pyroscope — continuous-profiling store. Profiles are pushed by the
@@ -93,7 +94,7 @@ export function createPyroscopeApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("pyroscope"),
       source: {
         // https://github.com/grafana/pyroscope/tree/main/operations/pyroscope/helm/pyroscope
         repoUrl: "https://grafana.github.io/helm-charts",
