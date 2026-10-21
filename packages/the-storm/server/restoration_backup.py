@@ -5,6 +5,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 
+import restoration_files as storage
 from restoration_json import JsonObject
 
 DIMENSIONS = frozenset(
@@ -60,7 +61,8 @@ def selected_files(files: object) -> dict[str, str]:
     return dict(sorted(result.items()))
 
 
-def whole_proof(path: Path, expected_sha256: str) -> JsonObject:
+def whole_volume_proof(path: Path, expected_sha256: str) -> JsonObject:
+    """Validate the complete retained copy without selecting data for replacement."""
     if path.is_symlink() or not path.is_file():
         raise ValueError("Whole-volume proof must be a regular file")
     encoded = path.read_bytes()
@@ -74,6 +76,15 @@ def whole_proof(path: Path, expected_sha256: str) -> JsonObject:
         or proof["sourceVolumeUid"] == proof["restoredVolumeUid"]
     ):
         raise ValueError("Export requires verified independent whole-volume storage identities")
+    manifest = storage.checked_manifest(proof.strings("files"))
+    if not REQUIRED.issubset(manifest):
+        raise ValueError("Whole-volume proof must include the Storm world and identity database")
+    return proof
+
+
+def whole_proof(path: Path, expected_sha256: str) -> JsonObject:
+    """Also enforce the reviewed native-world selection for replacement and export."""
+    proof = whole_volume_proof(path, expected_sha256)
     selected_files(proof.get("files"))
     return proof
 

@@ -83,7 +83,7 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
         raise ValueError(
             "Creative installation requires its stopped lease and verified independent whole-volume restore"
         )
-    proof = restoration_backup.whole_proof(Path(restore.string("proofPath")), restore.string("proofSha256"))
+    proof = restoration_backup.whole_volume_proof(Path(restore.string("proofPath")), restore.string("proofSha256"))
     bindings = {
         "requestId": control.string("requestId"),
         "backupUid": control.object("backup").string("uid"),

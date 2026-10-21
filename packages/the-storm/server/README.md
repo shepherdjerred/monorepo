@@ -595,8 +595,11 @@ Multiverse registry merge that preserves every existing world. The original
 registry export must match the whole-volume backup's file hash. Preparation keeps
 its original bytes, including 64-bit world seeds and comments, and appends only
 the creative entry. The repository's Bun YAML parser validates the merge; it does
-not reserialize existing worlds. Preparation never imports old player data. The creative
-entry disables Multiverse auto-load so TheStorm can attach its enabled generator.
+not reserialize existing worlds. Preparation never imports old player data. The
+plan validates the complete retained-volume manifest and preserves existing native
+worlds without selecting them for replacement. Selective historical exports retain
+their separate reviewed world allowlist.
+The creative entry disables Multiverse auto-load so TheStorm can attach its enabled generator.
 It explicitly selects creative game mode so Multiverse's survival default cannot
 override the creative visit body during teleportation.
 

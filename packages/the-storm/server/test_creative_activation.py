@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import creative_activation as activation
 import creative_install
+import restoration_backup
 import restoration_files as storage
 from restoration_json import JsonObject
 
@@ -102,6 +103,26 @@ class CreativeActivationTest(unittest.TestCase):
                 self.control["admissionProbes"] = "UNVERIFIED"
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 activation.plan(self.staging, self.control, self.jar)
+
+    def test_additive_install_preserves_other_worlds_without_authorizing_their_export(self):
+        proof = JsonObject.parse(self.proof.read_bytes())
+        retained = "world/dimensions/minecraft/frontier/region/r.0.0.mca"
+        proof.strings("files")[retained] = "c" * 64
+        self.proof.write_text(json.dumps(proof))
+        self.control.object("restore")["proofSha256"] = storage.digest(self.proof)
+        plan = self.prepare()
+        self.assertEqual(plan.strings("originalFiles")[retained], "c" * 64)
+        self.assertNotIn(retained, plan.strings("files"))
+        with self.assertRaisesRegex(ValueError, "unreviewed native dimension"):
+            restoration_backup.whole_proof(self.proof, storage.digest(self.proof))
+
+    def test_additive_install_refuses_invalid_complete_file_manifest(self):
+        proof = JsonObject.parse(self.proof.read_bytes())
+        proof.strings("files")["../outside"] = "c" * 64
+        self.proof.write_text(json.dumps(proof))
+        self.control.object("restore")["proofSha256"] = storage.digest(self.proof)
+        with self.assertRaisesRegex(ValueError, "Invalid sealed file"):
+            self.prepare()
 
     def test_modified_terrain_or_removed_existing_world_is_refused(self):
         self.prepare()
