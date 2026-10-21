@@ -68,8 +68,10 @@ The mode relaxes only the production-bucket refusal. Every other check stays:
   never receives another bucket's backup. The backup bucket is always refused.
 - The destination bucket must already exist, and a full listing must return no
   objects. Any object fails the restore, naming the count and the first key.
-- Each key is checked with `HEAD` immediately before it is written, so an
-  object that appears mid-restore stops the run instead of being overwritten.
+- Each key is checked with `HEAD` before it is read from the backup, and the
+  write itself is create-only (`If-None-Match: *`). An object that appears
+  mid-restore, even between the check and the write, stops the run instead of
+  being overwritten.
 - Transfer and read-back SHA-256 verification are unchanged.
 
 `--record <file>` is required with `--cold-start`. The file is created

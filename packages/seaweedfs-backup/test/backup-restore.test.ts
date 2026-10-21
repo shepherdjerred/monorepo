@@ -703,6 +703,37 @@ describe("cold-start restore", () => {
     const survivor = await raced.getObject("source", "nested/release.tgz");
     expect(survivor.size).toBe("late arrival".length);
   });
+
+  test("never overwrites an object created between the check and the write", async () => {
+    const { backup, snapshotId } = await backedUp();
+    class WriteRacedStore extends InMemoryObjectStore {
+      public override async headObject(
+        ...input: Parameters<InMemoryObjectStore["headObject"]>
+      ) {
+        const present = await super.headObject(...input);
+        if (present === undefined) {
+          this.seed(input[0], input[1], "created by another workload");
+        }
+        return present;
+      }
+    }
+    const raced = new WriteRacedStore();
+    raced.createBucket("source");
+    await expect(
+      restoreSnapshot({
+        backupStore: backup,
+        destinationStore: raced,
+        backupBucket: "backup",
+        destinationBucket: "source",
+        sourceBucket: "source",
+        snapshotId,
+        policy: COLD_START_POLICY,
+        coldStart: true,
+      }),
+    ).rejects.toThrow("refused to overwrite source/nested/release.tgz");
+    const survivor = await raced.getObject("source", "nested/release.tgz");
+    expect(survivor.size).toBe("created by another workload".length);
+  });
 });
 
 describe("metadata preservation", () => {

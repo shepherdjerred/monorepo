@@ -3,7 +3,7 @@ import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { BackupPolicy } from "./schemas.ts";
 import { getManifest } from "./manifest.ts";
-import type { ObjectStore } from "./store.ts";
+import { isPreconditionFailed, type ObjectStore } from "./store.ts";
 import { findCompletionMarker } from "./verify.ts";
 
 export type RestoredObject = { key: string; size: number; sha256: string };
@@ -66,11 +66,13 @@ async function assertNotOverwriting(
     input.destinationBucket,
     key,
   );
-  if (present !== undefined) {
-    throw new Error(
-      `Cold-start restore refused to overwrite ${input.destinationBucket}/${key}`,
-    );
-  }
+  if (present !== undefined) throw overwriteRefusal(input, key);
+}
+
+function overwriteRefusal(input: RestoreInput, key: string): Error {
+  return new Error(
+    `Cold-start restore refused to overwrite ${input.destinationBucket}/${key}`,
+  );
 }
 
 export async function restoreSnapshot(
@@ -123,8 +125,18 @@ export async function restoreSnapshot(
       body: hashingStream,
       contentLength: entry.sourceSize,
       headers: entry.headers,
+      // The HEAD above only refuses early. The write itself must be atomic so
+      // an object created in between is never replaced.
+      createOnly: input.coldStart === true,
     });
-    await Promise.all([pipeline(source.body, hashingStream), upload]);
+    await Promise.all([
+      pipeline(source.body, hashingStream),
+      upload.catch((error: unknown) => {
+        throw input.coldStart === true && isPreconditionFailed(error)
+          ? overwriteRefusal(input, entry.sourceKey)
+          : error;
+      }),
+    ]);
     if (hash.digest("hex") !== entry.sha256) {
       throw new Error(
         `Restore transfer checksum mismatch for ${input.sourceBucket}`,

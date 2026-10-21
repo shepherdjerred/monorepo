@@ -33,6 +33,12 @@ export type PutObjectInput = {
   body: Readable | Uint8Array;
   contentLength?: number;
   headers: ObjectHeaders;
+  /**
+   * Commit only if no object exists at the key when the write lands, sent as
+   * `If-None-Match: *`. A concurrent creator makes the write fail with a
+   * precondition error instead of being overwritten.
+   */
+  createOnly?: boolean;
 };
 
 export type GetObjectConditions = {
@@ -60,6 +66,18 @@ export type ObjectStore = {
   putObject: (input: PutObjectInput) => Promise<void>;
   deleteObject: (bucket: string, key: string) => Promise<void>;
 };
+
+/** True when the store rejected a conditional write because the key exists. */
+export function isPreconditionFailed(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === "PreconditionFailed") return true;
+  const metadata: unknown = Reflect.get(error, "$metadata");
+  return (
+    typeof metadata === "object" &&
+    metadata !== null &&
+    Reflect.get(metadata, "httpStatusCode") === 412
+  );
+}
 
 function requiredString(
   value: string | undefined,
@@ -273,6 +291,7 @@ export class S3ObjectStore implements ObjectStore {
         ? {}
         : { ContentType: input.headers.contentType }),
       ...(expires === undefined ? {} : { Expires: expires }),
+      ...(input.createOnly === true ? { IfNoneMatch: "*" } : {}),
       Metadata: input.headers.metadata,
     };
     // Maintenance publishes buffered manifests and candidate sets. Upload's

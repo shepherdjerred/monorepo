@@ -179,6 +179,16 @@ export class InMemoryObjectStore implements ObjectStore {
       throw new Error(`Injected put failure for ${this.failPutPrefix}`);
     }
     const body = await readBody(input.body);
+    if (
+      input.createOnly === true &&
+      this.requireBucket(input.bucket).has(input.key)
+    ) {
+      const error = new Error(
+        `PreconditionFailed: ${input.bucket}/${input.key}`,
+      );
+      error.name = "PreconditionFailed";
+      throw error;
+    }
     const bytes = this.corruptWrites
       ? new TextEncoder().encode("corrupt")
       : body;
