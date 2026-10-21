@@ -1163,6 +1163,8 @@ def require_restore(journal: JsonObject) -> None:
 def verify_backup(path: Path, journal: JsonObject) -> None:
     require_offline(journal, readers=True)
     require_restore(journal)
+    journal["readersRemoved"] = False
+    save(path, journal)
     for namespace in (NAMESPACE, restored_namespace):
         pod = ensure_reader(journal, namespace)
         assert_reader(pod, journal, namespace)
@@ -1374,13 +1376,24 @@ def export_backup(path: Path, journal: JsonObject, destination: Path, proof_path
         raise
 
 
+def record_removed_reader(path: Path, journal: JsonObject, namespace: str, identity: str) -> None:
+    if journal.strings("readers").get(namespace) != identity:
+        raise ValueError("Removed reader differs from its recorded identity")
+    history = journal.objects("removedReaders", [])
+    history.append(JsonObject({"namespace": namespace, "uid": identity}))
+    journal["removedReaders"] = history
+    journal.strings("readers").pop(namespace)
+    save(path, journal)
+
+
 def remove_readers(path: Path, journal: JsonObject) -> None:
     """Remove only the recorded read-only helpers, with API-side identity preconditions."""
     require_offline(journal, readers=True)
-    for namespace, identity in journal.strings("readers", {}).items():
+    for namespace, identity in list(journal.strings("readers", {}).items()):
         name = reader_manifest(journal, namespace).object("metadata").string("name")
         existing = run(["-n", namespace, "get", "pod", name, "--ignore-not-found", "-o", "json"]).strip()
         if not existing:
+            record_removed_reader(path, journal, namespace, identity)
             continue
         pod = JsonObject.parse(existing)
         assert_reader(pod, journal, namespace)
@@ -1414,6 +1427,7 @@ def remove_readers(path: Path, journal: JsonObject) -> None:
         if completed.returncode:
             raise RuntimeError("Owned reader deletion failed; admission remains closed")
         run(["-n", namespace, "wait", "--for=delete", "pod/" + name, "--timeout=45s"], 50)
+        record_removed_reader(path, journal, namespace, identity)
     require_offline(journal)
     journal["readersRemoved"] = True
     save(path, journal)

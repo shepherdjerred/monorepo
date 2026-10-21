@@ -595,6 +595,8 @@ Multiverse registry merge that preserves every existing world. The original
 registry export must match the whole-volume backup's file hash. Preparation uses
 the repository's Bun YAML parser and never imports old player data. The creative
 entry disables Multiverse auto-load so TheStorm can attach its enabled generator.
+It explicitly selects creative game mode so Multiverse's survival default cannot
+override the creative visit body during teleportation.
 
 After independent byte verification and reader cleanup,
 `select-creative-candidate --image <qualified-immutable-image>` binds the
@@ -692,7 +694,9 @@ failed copies remain private for inspection. Its separate receipt pins the
 whole-volume proof and exact storage identities. Native arena transplantation and
 identity import verify this complete selection again before using it.
 `remove-readers` deletes only those recorded helpers with
-UID and resource-version preconditions. These operations leave the independently
+UID and resource-version preconditions. It retains removed UIDs as history and
+clears their current bindings only after observing deletion, so a later
+verification can bind newly created read-only helpers. These operations leave the independently
 restored rollback volume in place and do not activate or reopen Storm.
 
 `plan-install --staging <private-historical-preparation> --candidate <exact-jar>`

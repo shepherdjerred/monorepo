@@ -2762,6 +2762,30 @@ class RestorationControlTest(unittest.TestCase):
             control.remove_readers(self.path, journal)
         self.assertEqual(calls, [control.NAMESPACE, control.restored_namespace])
         self.assertTrue(journal["readersRemoved"])
+        self.assertEqual(journal.strings("readers"), {})
+        self.assertEqual(len(journal.objects("removedReaders")), 2)
+        # A later verification must bind actual replacement UIDs, rather than
+        # treating the explicitly deleted helpers as still current.
+        original_create = control.ensure_resource
+
+        def recreated(manifest: Mapping[str, object]) -> JsonObject:
+            result = original_create(manifest)
+            resource = JsonObject(manifest)
+            if resource.get("kind") == "Pod":
+                namespace = resource.object("metadata").string("namespace")
+                pods[namespace].object("metadata")["uid"] = namespace + "-replacement-reader"
+                result = copy.deepcopy(pods[namespace])
+            return result
+
+        with (
+            patch.object(control, "ensure_resource", side_effect=recreated),
+            patch.object(control, "remote_fingerprint", return_value={"file": "checksum"}),
+        ):
+            control.verify_backup(self.path, journal)
+        self.assertTrue(
+            all(identity.endswith("-replacement-reader") for identity in journal.strings("readers").values())
+        )
+        self.assertFalse(journal["readersRemoved"])
 
     def test_reader_cleanup_refuses_an_unrelated_namespace_before_deleting_anything(self):
         journal, _ = self.reader_fixture()

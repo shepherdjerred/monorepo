@@ -84,6 +84,7 @@ class CreativeActivationTest(unittest.TestCase):
         after = activation.registry((self.staging / "payload" / creative_install.REGISTRY).read_bytes())
         self.assertEqual(after.object("world"), {"version": 1.3, "auto-load": True})
         self.assertEqual(after["creative"], activation.CREATIVE_ENTRY)
+        self.assertEqual(after.object("creative").string("gamemode"), "creative")
         self.assertEqual(activation.plan(self.staging, self.control, self.jar), plan)
 
     def test_foreign_proof_pending_verification_and_missing_lease_refuse_a_plan(self):

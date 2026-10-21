@@ -18,6 +18,7 @@ REGION_BYTES = 225415168
 CREATIVE_ENTRY = {
     "version": 1.3,
     "generator": "TheStorm:creative",
+    "gamemode": "creative",
     "auto-load": False,
     "adjust-spawn": False,
     "read-only": {"legacy-world-name": "creative", "environment": "NORMAL"},
