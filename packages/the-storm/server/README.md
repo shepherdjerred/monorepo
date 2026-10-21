@@ -592,8 +592,10 @@ inside the same guarded writer and grants no private startup or acceptance.
 For additive creative recovery, use `creative_activation.prepare` on the operator
 host to seal only the pinned 110-region archive and its level metadata, plus a
 Multiverse registry merge that preserves every existing world. The original
-registry export must match the whole-volume backup's file hash. Preparation uses
-the repository's Bun YAML parser and never imports old player data. The creative
+registry export must match the whole-volume backup's file hash. Preparation keeps
+its original bytes, including 64-bit world seeds and comments, and appends only
+the creative entry. The repository's Bun YAML parser validates the merge; it does
+not reserialize existing worlds. Preparation never imports old player data. The creative
 entry disables Multiverse auto-load so TheStorm can attach its enabled generator.
 It explicitly selects creative game mode so Multiverse's survival default cannot
 override the creative visit body during teleportation.

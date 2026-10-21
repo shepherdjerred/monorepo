@@ -129,6 +129,31 @@ class CreativeActivationTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "registry export"):
             self.prepare()
 
+    def test_existing_seed_and_comments_are_preserved_byte_for_byte(self):
+        original = b"# existing native world\nworld:\n  read-only:\n    seed: -7243611913275695533\n"
+        self.before.write_bytes(original)
+        proof = json.loads(self.proof.read_text())
+        proof["files"][creative_install.REGISTRY] = storage.digest(self.before)
+        self.proof.write_text(json.dumps(proof))
+        self.control.object("restore")["proofSha256"] = storage.digest(self.proof)
+        self.prepare()
+        replacement = self.staging / "payload" / creative_install.REGISTRY
+        self.assertTrue(replacement.read_bytes().startswith(original))
+        self.assertIn(b"seed: -7243611913275695533\n", replacement.read_bytes())
+        # These integers round to the same JavaScript Number; byte preservation
+        # must reject the change even when the YAML parser cannot distinguish it.
+        replacement.write_bytes(replacement.read_bytes().replace(b"-7243611913275695533", b"-7243611913275695534"))
+        with self.assertRaisesRegex(ValueError, "preserve every existing world"):
+            activation.plan(self.staging, self.control, self.jar)
+
+    def test_existing_creative_and_non_appendable_registries_are_refused(self):
+        for original in (b"creative: {}\n", b"minecraft:creative: {}\n"):
+            with self.subTest(original=original), self.assertRaisesRegex(ValueError, "already declares creative"):
+                activation.extended_registry(original)
+        for original in (b'{"world": {}}\n', b"world: {}\n...\n"):
+            with self.subTest(original=original), self.assertRaises(ValueError):
+                activation.extended_registry(original)
+
 
 if __name__ == "__main__":
     unittest.main()

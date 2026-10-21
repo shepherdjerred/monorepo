@@ -54,6 +54,22 @@ def registry(contents: bytes) -> JsonObject:
     return JsonObject.parse(result.stdout)
 
 
+def extended_registry(contents: bytes) -> bytes:
+    """Append the new root entry without reserializing existing 64-bit world seeds."""
+    previous = registry(contents)
+    if "creative" in previous or "minecraft:creative" in previous:
+        raise ValueError("Original Multiverse registry already declares creative")
+    separator = b"\n" if contents.endswith(b"\n") else b"\n\n"
+    merged = contents + separator + b"creative: " + json.dumps(CREATIVE_ENTRY).encode() + b"\n"
+    try:
+        parsed = registry(merged)
+    except (subprocess.CalledProcessError, ValueError) as error:
+        raise ValueError("Original Multiverse registry cannot accept an additive root entry") from error
+    if parsed != {**previous, "creative": CREATIVE_ENTRY}:
+        raise ValueError("Creative registry must preserve every existing world and disable early auto-load")
+    return merged
+
+
 def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
     if staging.is_symlink() or candidate.is_symlink() or not candidate.is_file():
         raise ValueError("Creative preparation requires regular staging and candidate files")
@@ -88,12 +104,9 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
         )
     ):
         raise ValueError("Creative registry export or original world inventory differs from the independent backup")
-    previous = registry(before.read_bytes())
-    if "creative" in previous or "minecraft:creative" in previous:
-        raise ValueError("Original Multiverse registry already declares creative")
-    expected_registry = {**previous, "creative": CREATIVE_ENTRY}
+    expected_registry = extended_registry(before.read_bytes())
     replacement = payload / creative_install.REGISTRY
-    if replacement.is_symlink() or registry(replacement.read_bytes()) != expected_registry:
+    if replacement.is_symlink() or replacement.read_bytes() != expected_registry:
         raise ValueError("Creative registry must preserve every existing world and disable early auto-load")
     verify_terrain(payload / "creative")
     result = JsonObject(
@@ -126,8 +139,7 @@ def prepare(staging: Path, archive: Path, before: Path, control: JsonObject, can
     for source in files:
         shutil.copyfile(source, payload / "creative" / source.relative_to(archive))
     shutil.copyfile(before, staging / "worlds-before.yml")
-    previous = registry(before.read_bytes())
     replacement = payload / creative_install.REGISTRY
     replacement.parent.mkdir(parents=True, mode=0o700)
-    replacement.write_text(json.dumps({**previous, "creative": CREATIVE_ENTRY}, indent=2) + "\n")
+    replacement.write_bytes(extended_registry(before.read_bytes()))
     return plan(staging, control, candidate)
