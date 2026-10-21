@@ -19,6 +19,11 @@ import {
 } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Catalog, Service } from "@shepherdjerred/ops-model/catalog.ts";
 import {
+  CATALOG_CORE,
+  type CatalogCore,
+  catalogOwnsService,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import {
   ChartPublicationSchema,
   PublishedChartReceiptSchema,
   RetainedChartReceiptSchema,
@@ -68,6 +73,8 @@ type PublicationInput = {
   repositoryId: number;
   capturedAt: string;
   catalog?: Catalog;
+  /** The catalog document whose per-site services own standalone archives. */
+  catalogCore?: CatalogCore;
   chartPublication?: unknown;
   retainedArtifacts?: unknown;
 };
@@ -257,10 +264,10 @@ async function addChartPublications(
 async function addSitePublication(
   ledger: PublicationLedger,
   site: z.output<typeof SitePublicationSchema>,
-  catalog: Catalog,
+  catalogCore: CatalogCore,
   dependencies: PublicationDependencies,
 ) {
-  if (!catalog.services.some((service) => service.id === site.serviceId))
+  if (!catalogOwnsService(site.serviceId, catalogCore))
     throw new Error(
       `Static artifact references an unknown service ${site.serviceId}`,
     );
@@ -299,13 +306,19 @@ export async function buildPublications(
 ): Promise<PublishBuild[]> {
   const catalog = input.catalog ?? SERVICE_CATALOG;
   verifyChartProducer(input);
-  const ledger = new PublicationLedger(catalog);
+  const catalogCore = input.catalogCore ?? CATALOG_CORE;
+  // Until the window retires services.json, a retained artifact's owner is a
+  // service of either registry: the ops groups the v1 producers use, or a
+  // document service such as a standalone site.
+  const ledger = new PublicationLedger(catalog, (serviceId) =>
+    catalogOwnsService(serviceId, catalogCore),
+  );
   await addImagePublications(ledger, input, catalog, dependencies);
   await addChartPublications(ledger, input, catalog, dependencies);
   for (const site of z
     .array(SitePublicationSchema.strict())
     .parse(input.siteArtifacts ?? []))
-    await addSitePublication(ledger, site, catalog, dependencies);
+    await addSitePublication(ledger, site, catalogCore, dependencies);
   for (const artifact of z
     .array(ArtifactVersionSchema)
     .parse(input.retainedArtifacts ?? []))

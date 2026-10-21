@@ -25,9 +25,14 @@ export class PublicationLedger {
   readonly #publications = new Map<string, Artifact[]>();
   readonly #retained = new Map<string, RetainedReference[]>();
   readonly #catalog: Catalog;
+  readonly #alsoOwns: (serviceId: string) => boolean;
 
-  constructor(catalog: Catalog) {
+  constructor(
+    catalog: Catalog,
+    alsoOwns: (serviceId: string) => boolean = () => false,
+  ) {
     this.#catalog = catalog;
+    this.#alsoOwns = alsoOwns;
   }
 
   add(serviceId: string, rawArtifact: z.input<typeof ArtifactInputSchema>) {
@@ -56,7 +61,10 @@ export class PublicationLedger {
   }
 
   retain(serviceId: string, reference: RetainedReference) {
-    if (!this.#catalog.services.some((service) => service.id === serviceId))
+    if (
+      !this.#catalog.services.some((service) => service.id === serviceId) &&
+      !this.#alsoOwns(serviceId)
+    )
       throw new Error("Retained artifact requires a canonical service owner");
     if (
       (this.#publications.get(serviceId) ?? []).some(

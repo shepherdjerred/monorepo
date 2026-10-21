@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { buildPublications } from "./publish-delivery.ts";
 import { siteArchivePublications } from "./write-site-archive-handoff.ts";
-import { staticSiteCatalog } from "../lib/ci/testing/service-catalog.ts";
 
 const digest = `sha256:${"a".repeat(64)}`;
 function siteArchive(bucket: string, overrides: Record<string, unknown> = {}) {
@@ -24,7 +23,14 @@ const scout = [
     }),
   },
 ];
-const catalog = staticSiteCatalog();
+const catalog = CATALOG_CORE;
+/** The catalog document as it would read without the sjer.red site service. */
+const withoutSjerRed = {
+  ...CATALOG_CORE,
+  services: CATALOG_CORE.services.filter(
+    (service) => service.id !== "sjer-red",
+  ),
+};
 
 describe("static site handoff ownership", () => {
   test("stamps each independent archive with its own bucket-named service and keeps Scout's owner", () => {
@@ -47,11 +53,7 @@ describe("static site handoff ownership", () => {
 
   test("a bucket without a catalog service, a non-site archive, or a foreign Scout owner fails in the producing step", () => {
     expect(() =>
-      siteArchivePublications(
-        scout,
-        [siteArchive("sjer-red")],
-        SERVICE_CATALOG,
-      ),
+      siteArchivePublications(scout, [siteArchive("sjer-red")], withoutSjerRed),
     ).toThrow("requires a service catalog owner sjer-red");
     expect(() =>
       siteArchivePublications(
@@ -85,7 +87,6 @@ describe("static site handoff ownership", () => {
         pipelineNumber: 42,
         repositoryId: 1,
         capturedAt: "2026-10-17T10:00:00.000Z",
-        catalog,
       },
       {
         inspectImage: () => {
@@ -117,7 +118,7 @@ describe("static site handoff ownership", () => {
           pipelineNumber: 42,
           repositoryId: 1,
           capturedAt: "2026-10-17T10:00:00.000Z",
-          catalog: SERVICE_CATALOG,
+          catalogCore: withoutSjerRed,
         },
         {
           inspectImage: () => {

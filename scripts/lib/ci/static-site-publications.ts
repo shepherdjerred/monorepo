@@ -7,7 +7,11 @@
  * the reviewed destination map assigns to that bucket. No service name is
  * hard-coded anywhere on this path.
  */
-import type { Catalog } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  CATALOG_CORE,
+  type CatalogCore,
+  catalogOwnsService,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 
 const SITE_COMPONENT = /^site:(?<bucket>[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])$/u;
@@ -41,20 +45,13 @@ export function staticSiteEnvironment(bucket: string): string {
   return environmentId;
 }
 
-export function catalogOwnsService(
-  catalog: Catalog,
-  serviceId: string,
-): boolean {
-  return catalog.services.some((service) => service.id === serviceId);
-}
-
 /**
- * Buckets that release on their own: those whose service the catalog owns.
- * A bucket that rides a combined deployment (Scout's frontends publish under
- * the Scout service) has no service of its own and is excluded.
+ * Buckets that release on their own: those whose service the catalog document
+ * declares. A bucket that rides a combined deployment (Scout's frontends
+ * publish under the Scout service) has no service of its own and is excluded.
  */
 export function independentStaticSites(
-  catalog: Catalog,
+  catalog: CatalogCore = CATALOG_CORE,
 ): readonly { bucket: string; serviceId: string; environmentId: string }[] {
   return Object.entries(STATIC_SITE_DESTINATIONS)
     .map(([bucket, environmentId]) => ({
@@ -62,5 +59,5 @@ export function independentStaticSites(
       serviceId: staticSiteServiceId(bucket),
       environmentId,
     }))
-    .filter((site) => catalogOwnsService(catalog, site.serviceId));
+    .filter((site) => catalogOwnsService(site.serviceId, catalog));
 }

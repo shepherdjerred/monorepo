@@ -4,16 +4,18 @@
  *
  * Each independent site registers under its own Delivery service, derived
  * from the archive's `site:<bucket>` component and checked against the
- * service catalog here so a bucket without an owner fails in the producing
+ * catalog document here so a bucket without an owner fails in the producing
  * step. Scout's receipts keep their combined-deployment owner.
  */
 import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
-import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
-import type { Catalog } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  CATALOG_CORE,
+  type CatalogCore,
+  catalogOwnsService,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { z } from "zod";
 import { readRequiredHandoff, writeJsonHandoff } from "../lib/ci/ci-handoff.ts";
 import {
-  catalogOwnsService,
   isStaticSiteArtifact,
   staticSiteBucket,
   staticSiteServiceId,
@@ -36,7 +38,7 @@ export type SiteArchivePublication = {
 export function siteArchivePublications(
   scout: unknown,
   archives: readonly unknown[],
-  catalog: Catalog = SERVICE_CATALOG,
+  catalog: CatalogCore = CATALOG_CORE,
 ): SiteArchivePublication[] {
   const publications: SiteArchivePublication[] = z
     .array(ScoutPublicationSchema)
@@ -48,7 +50,7 @@ export function siteArchivePublications(
         `Static site handoff requires a site archive, not ${artifact.component}`,
       );
     const serviceId = staticSiteServiceId(staticSiteBucket(artifact.component));
-    if (!catalogOwnsService(catalog, serviceId))
+    if (!catalogOwnsService(serviceId, catalog))
       throw new Error(
         `Static site ${artifact.component} requires a service catalog owner ${serviceId}`,
       );

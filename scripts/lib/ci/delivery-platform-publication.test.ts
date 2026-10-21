@@ -12,10 +12,7 @@ import {
   changedPlatformStacks,
   platformDependencyClosure,
 } from "./delivery-platform-publication.ts";
-import {
-  INDEPENDENT_SITE_BUCKETS,
-  staticSiteCatalog,
-} from "./testing/service-catalog.ts";
+import { independentStaticSites } from "./static-site-publications.ts";
 
 const files: string[] = [];
 const metadata = {
@@ -28,7 +25,6 @@ const metadata = {
   rootInventory: undefined,
 };
 const anchor = async () => "original-qualified-apps";
-const siteCatalog = staticSiteCatalog();
 const chartInputs = new ServiceIndex().rootReleaseCharts();
 function fullRootPublication() {
   const builds = new Map<string, ReturnType<typeof PublishBuildSchema.parse>>();
@@ -286,7 +282,7 @@ test("a newer root freezes unchanged original site archives so an older queued s
   const lookups: string[] = [];
   const result = await attachPlatformPublication(
     builds,
-    { ...metadata, rootInventory: inventory, catalog: siteCatalog },
+    { ...metadata, rootInventory: inventory },
     anchor,
     async (bucket) => {
       lookups.push(bucket);
@@ -316,7 +312,7 @@ test("a newer root freezes unchanged original site archives so an older queued s
   await expect(
     attachPlatformPublication(
       builds,
-      { ...metadata, rootInventory: inventory, catalog: siteCatalog },
+      { ...metadata, rootInventory: inventory },
       anchor,
       async (bucket) =>
         ArtifactVersionSchema.parse({
@@ -337,7 +333,7 @@ test("a newer root freezes unchanged original site archives so an older queued s
 
 test("a first full root publication needs no retained sites when every active site archive is fresh", async () => {
   const { builds, inventory } = fullRootPublication();
-  const sitePublications = INDEPENDENT_SITE_BUCKETS.map((bucket) =>
+  const sitePublications = independentStaticSites().map(({ bucket }) =>
     PublishBuildSchema.parse({
       requestId: `ci/1/42/${bucket}`,
       serviceId: bucket,
@@ -358,7 +354,7 @@ test("a first full root publication needs no retained sites when every active si
   );
   const result = await attachPlatformPublication(
     [...builds, ...sitePublications],
-    { ...metadata, rootInventory: inventory, catalog: siteCatalog },
+    { ...metadata, rootInventory: inventory },
     anchor,
     async () => {
       throw new Error(

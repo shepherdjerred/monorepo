@@ -147,8 +147,7 @@ export async function attachPlatformPublication(
     bucket: string,
   ) => Promise<z.infer<typeof ArtifactVersionSchema>>,
 ): Promise<PublishBuild[]> {
-  const services = input.catalog ?? SERVICE_CATALOG;
-  const catalog = new ServiceIndex(services);
+  const catalog = new ServiceIndex(input.catalog ?? SERVICE_CATALOG);
   const charts = publications.flatMap((build) =>
     build.artifacts.filter((artifact) => artifact.kind === "chart"),
   );
@@ -201,7 +200,7 @@ export async function attachPlatformPublication(
   );
   if (retainedSite !== undefined && closure.root) {
     const originals = await Promise.all(
-      independentStaticSites(services)
+      independentStaticSites()
         .filter((site) => !selectedSites.has(site.environmentId))
         .map(async ({ bucket, serviceId, environmentId }) => {
           const artifact = await retainedSite(bucket);

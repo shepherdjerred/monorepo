@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PublishBuildSchema } from "@shepherdjerred/delivery/contract";
-import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { readTofuArchiveMetadata } from "../../ci/write-tofu-archive-handoff.ts";
@@ -17,7 +17,6 @@ import {
   attachTofuArchivePublications,
   parseTofuArchivePublications,
 } from "./delivery-tofu-publication.ts";
-import { tofuArchiveCatalog } from "./testing/service-catalog.ts";
 
 const digest = `sha256:${"c".repeat(64)}`;
 const execution = { repositoryId: 1, pipelineNumber: 42 };
@@ -26,7 +25,6 @@ const metadata = {
   sourceRevision: "a".repeat(40),
   ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/42",
   capturedAt: "2026-10-17T10:00:00.000Z",
-  catalog: tofuArchiveCatalog(),
 };
 function artifact(stack: TofuStack, overrides: Record<string, unknown> = {}) {
   return {
@@ -170,7 +168,12 @@ describe("OpenTofu archive registration", () => {
     expect(() =>
       attachTofuArchivePublications([], complete(), {
         ...metadata,
-        catalog: SERVICE_CATALOG,
+        catalog: {
+          ...CATALOG_CORE,
+          services: CATALOG_CORE.services.filter(
+            (service) => service.id !== "tofu-application-secrets",
+          ),
+        },
       }),
     ).toThrow("requires a service catalog owner tofu-application-secrets");
     const duplicate = PublishBuildSchema.parse({

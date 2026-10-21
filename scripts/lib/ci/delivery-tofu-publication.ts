@@ -4,8 +4,11 @@ import {
   PublishBuildSchema,
 } from "@shepherdjerred/delivery/contract";
 import type { PublishBuild } from "@shepherdjerred/delivery/contract";
-import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
-import type { Catalog } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  CATALOG_CORE,
+  type CatalogCore,
+  catalogOwnsService,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
@@ -102,16 +105,16 @@ export function attachTofuArchivePublications(
     pipelineNumber: number;
     repositoryId: number;
     capturedAt: string;
-    catalog?: Catalog;
+    catalog?: CatalogCore;
   },
 ): PublishBuild[] {
-  const catalog = input.catalog ?? SERVICE_CATALOG;
+  const catalog = input.catalog ?? CATALOG_CORE;
   const entries = parseTofuArchivePublications(artifacts, {
     repositoryId: input.repositoryId,
     pipelineNumber: input.pipelineNumber,
   });
   const builds = entries.map((entry) => {
-    if (!catalog.services.some((service) => service.id === entry.serviceId))
+    if (!catalogOwnsService(entry.serviceId, catalog))
       throw new Error(
         `OpenTofu archive ${entry.artifact.component} requires a service catalog owner ${entry.serviceId}`,
       );
