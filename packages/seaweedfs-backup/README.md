@@ -19,6 +19,13 @@ ETag, and modification time. A snapshot becomes visible only when every
 compressed NDJSON bucket manifest has been written and the run completion
 marker is published.
 
+`replicateObject` (`@shepherdjerred/seaweedfs-backup/replicate`) copies one
+object ahead of the next snapshot, at the content-addressed key that snapshot
+would choose, and checks the read-back SHA-256 against the digest the caller
+already holds. Delivery uses it from the `backup` Temporal worker to replicate
+self-hosted artifacts to R2 before a build is verified; the next daily snapshot
+reuses the copy and its manifest references the same bytes.
+
 Retention keeps 28 six-hourly, 30 Pacific daily, 8 Pacific weekly, and 12
 Pacific monthly recovery points. Garbage collection is two-phase: candidates
 must be unreferenced for 35 days, belong to a candidate set at least seven days

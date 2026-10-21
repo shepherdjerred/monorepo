@@ -2,6 +2,7 @@ import type { Database } from "#infrastructure/database.ts";
 import type { Deployment } from "#shared/contract.ts";
 import { platformFixture } from "./platform-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "./seed.ts";
+import { replicateProducedArtifacts } from "./replication.ts";
 import {
   requestTestPlan,
   checkpointTestPlan,
@@ -61,6 +62,7 @@ export async function staticRootFixture(database: Database) {
       testPublisher,
       { repositoryId: 1, pipelineNumber: number },
     );
+    await replicateProducedArtifacts(delivery, build.buildId);
     await delivery.qualify(build.buildId, "verified", testExecutor);
     const version = await database.versionSet.findFirstOrThrow({
       where: { qualifiedBuildId: build.buildId },

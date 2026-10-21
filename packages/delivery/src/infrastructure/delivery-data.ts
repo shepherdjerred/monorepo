@@ -66,6 +66,16 @@ export function approvalRequired(
     ["scout-for-lol", "starlight-karma-bot"].includes(serviceId) && production
   );
 }
+/** Row input for a published artifact; an absent fingerprint stays an absent column. */
+export function artifactRow<
+  T extends { contentFingerprint?: string | undefined },
+>(input: T): Omit<T, "contentFingerprint"> & { contentFingerprint?: string } {
+  const { contentFingerprint, ...fields } = input;
+  return {
+    ...fields,
+    ...(contentFingerprint === undefined ? {} : { contentFingerprint }),
+  };
+}
 export async function artifact(tx: Transaction | Database, artifactId: string) {
   const row = required(
     await tx.artifact.findUnique({
@@ -84,10 +94,19 @@ export async function artifact(tx: Transaction | Database, artifactId: string) {
 export function artifactView(
   row: Prisma.ArtifactGetPayload<{ include: { build: true } }>,
 ) {
-  const { build, originKey: _originKey, ...fields } = row;
+  const {
+    build,
+    originKey: _originKey,
+    contentFingerprint,
+    replication,
+    ...fields
+  } = row;
+  // Null columns are omitted so a reader without the field keeps its shape.
   return ArtifactVersionSchema.parse(
     wire({
       ...fields,
+      ...(contentFingerprint === null ? {} : { contentFingerprint }),
+      ...(replication === null ? {} : { replication }),
       serviceId: build.serviceId,
       sourceRevision: build.sourceRevision,
     }),

@@ -49,6 +49,51 @@ async function execute(failApply: boolean, waits = 0) {
   }
 }
 
+function replicationArtifacts() {
+  return [
+    {
+      artifactId: "ci/monorepo/41/archive/site",
+      buildId: "ci/monorepo/41",
+      serviceId: "sjer-red",
+      uri: "s3://delivery-artifacts/sites/sjer.red/41.tar",
+      digest: `sha256:${"a".repeat(64)}`,
+    },
+    {
+      artifactId: "forum/original/archive",
+      buildId: "forum/original",
+      serviceId: "storm-forum",
+      uri: `s3://storm-forum-releases/releases/${"b".repeat(64)}.zip`,
+      digest: `sha256:${"b".repeat(64)}`,
+    },
+  ];
+}
+
+function quietDispatchActivities() {
+  return {
+    dispatchDeliveryWorkerRecoveries: () => Promise.resolve(),
+    dispatchDeliveryMinecraftRecoveries: () => Promise.resolve(),
+    qualifyDeliveryForumBundles: () => Promise.resolve(),
+    dispatchDeliveryForumBaselines: () => Promise.resolve(),
+    dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+  };
+}
+
+function createBackupWorker(
+  environment: TestWorkflowEnvironment,
+  replicateDeliveryObject: (input: {
+    sourceBucket: string;
+    sourceKey: string;
+    expectedSha256: string;
+  }) => { backupBucket: string; backupObjectKey: string; sha256: string },
+) {
+  return Worker.create({
+    connection: environment.nativeConnection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.BACKUP,
+    activities: { replicateDeliveryObject },
+  });
+}
+
 async function mutationHeartbeatHistory(
   environment: TestWorkflowEnvironment,
   workflowId: string,
@@ -167,6 +212,7 @@ describe("Delivery Workflow", () => {
       forumObserved = false,
       minecraftRecovered = false;
     const { workflows, activities } = await createDeliveryWorkers(environment, {
+      listDeliveryReplications: () => ({ artifacts: [] }),
       qualifyDeliveryBuilds: () => {
         throw ApplicationFailure.nonRetryable(
           "CI unavailable",
@@ -262,6 +308,180 @@ describe("Delivery Workflow", () => {
       "verify",
       "finish",
     ]);
+  }, 60_000);
+});
+
+describe("Delivery replication", () => {
+  it("replicates pending self-hosted artifacts through the backup queue and records receipts before qualifying", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const receipts: unknown[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      listDeliveryReplications: () => {
+        calls.push("list");
+        return { artifacts: replicationArtifacts() };
+      },
+      recordDeliveryReplication: (receipt: unknown) => {
+        calls.push("record");
+        receipts.push(receipt);
+      },
+      qualifyDeliveryBuilds: () => {
+        calls.push("qualify");
+      },
+      dispatchPendingDeliveries: () => {
+        calls.push("dispatch");
+        return { submitted: 0 };
+      },
+      ...quietDispatchActivities(),
+    });
+    const backup = await createBackupWorker(environment, (input) => {
+      calls.push(`replicate:${input.sourceBucket}/${input.sourceKey}`);
+      return {
+        backupBucket: "seaweedfs-backups",
+        backupObjectKey: `objects/${input.expectedSha256}`,
+        sha256: input.expectedSha256,
+      };
+    });
+    try {
+      const workflowId = `dispatch-replication-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          backup.runUntil(
+            environment.client.workflow.execute("deliveryDispatchWorkflow", {
+              workflowId,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            }),
+          ),
+        ),
+      );
+      expect(calls[0]).toBe("list");
+      expect(
+        calls.filter((call) => call.startsWith("replicate:")).sort(),
+      ).toEqual([
+        "replicate:delivery-artifacts/sites/sjer.red/41.tar",
+        `replicate:storm-forum-releases/releases/${"b".repeat(64)}.zip`,
+      ]);
+      expect(calls.indexOf("qualify")).toBeGreaterThan(
+        calls.lastIndexOf("record"),
+      );
+      expect(calls).toContain("dispatch");
+      expect(receipts).toHaveLength(2);
+      expect(receipts).toEqual(
+        expect.arrayContaining(
+          replicationArtifacts().map((artifact) => ({
+            artifactId: artifact.artifactId,
+            replication: {
+              store: "r2",
+              bucket: "seaweedfs-backups",
+              key: `objects/${artifact.digest.slice(7)}`,
+              digest: artifact.digest,
+              replicatedAt: expect.stringMatching(
+                /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u,
+              ),
+            },
+          })),
+        ),
+      );
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+  it("one artifact's failed replication neither blocks the others nor dispatch, and still fails the run", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const recorded: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      listDeliveryReplications: () => ({ artifacts: replicationArtifacts() }),
+      recordDeliveryReplication: (receipt: { artifactId: string }) => {
+        recorded.push(receipt.artifactId);
+      },
+      qualifyDeliveryBuilds: () => {
+        calls.push("qualify");
+      },
+      dispatchPendingDeliveries: () => {
+        calls.push("dispatch");
+        return { submitted: 0 };
+      },
+      ...quietDispatchActivities(),
+    });
+    const backup = await createBackupWorker(environment, (input) => {
+      if (input.sourceBucket === "storm-forum-releases")
+        throw ApplicationFailure.nonRetryable(
+          "Replication source does not exist",
+          "ReplicationSourceMissing",
+        );
+      return {
+        backupBucket: "seaweedfs-backups",
+        backupObjectKey: `objects/${input.expectedSha256}`,
+        sha256: input.expectedSha256,
+      };
+    });
+    try {
+      await expect(
+        workflows.runUntil(
+          activities.runUntil(
+            backup.runUntil(
+              environment.client.workflow.execute("deliveryDispatchWorkflow", {
+                workflowId: `dispatch-replication-${crypto.randomUUID()}`,
+                taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+              }),
+            ),
+          ),
+        ),
+      ).rejects.toThrow("Workflow execution failed");
+      expect(recorded).toEqual(["ci/monorepo/41/archive/site"]);
+      expect(calls).toEqual(expect.arrayContaining(["qualify", "dispatch"]));
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});
+
+describe("Delivery replication patch", () => {
+  it("replays a dispatch tick recorded before replication existed", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const connection = {
+      connection: environment.nativeConnection,
+      namespace: "default",
+    };
+    const before = await Worker.create({
+      ...connection,
+      taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+      workflowsPath: new URL(
+        "replay-fixtures/delivery-dispatch-before-replication.ts",
+        import.meta.url,
+      ).pathname,
+    });
+    const activities = await Worker.create({
+      ...connection,
+      taskQueue: TASK_QUEUES.DELIVERY,
+      activities: {
+        qualifyDeliveryBuilds: () => Promise.resolve(),
+        dispatchPendingDeliveries: () => ({ submitted: 0 }),
+        ...quietDispatchActivities(),
+      },
+    });
+    try {
+      const workflowId = `dispatch-before-replication-${crypto.randomUUID()}`;
+      await before.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryDispatchWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+          }),
+        ),
+      );
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
   }, 60_000);
 });
 

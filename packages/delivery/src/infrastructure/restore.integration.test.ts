@@ -10,6 +10,7 @@ import {
   testPublisher,
 } from "#testing/seed.ts";
 import { createApp } from "#server/app.ts";
+import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { DeploymentSchema } from "#shared/contract.ts";
 import { Delivery } from "./delivery.ts";
 
@@ -90,6 +91,7 @@ test("database dump and independent restore preserve immutable state, outbox, ev
       testPublisher,
       { repositoryId: 1, pipelineNumber: 2 },
     );
+    await replicateProducedArtifacts(delivery, archive.buildId);
     await delivery.qualify(archive.buildId, "verified", testExecutor);
     await delivery.registerPipeline(
       "restore/site",

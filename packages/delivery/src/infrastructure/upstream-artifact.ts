@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import rawCatalog from "@shepherdjerred/version-catalog/catalog.json" with { type: "json" };
+import {
+  componentEntries,
+  parseVersionCatalog,
+} from "@shepherdjerred/version-catalog";
+import type { VersionCatalogEntry } from "@shepherdjerred/version-catalog";
+import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import {
   AcquireUpstreamArtifactSchema,
   ArtifactAcquisitionSchema,
@@ -22,56 +29,141 @@ import {
   required,
   wire,
 } from "./delivery-records.ts";
-import { id, artifactView } from "./delivery-data.ts";
+import {
+  id,
+  artifactRow,
+  artifactView,
+  ensureService,
+} from "./delivery-data.ts";
+import {
+  boundedBody,
+  registryLocation,
+  resolveManifestDigest,
+} from "./artifact-stores/oci-registry.ts";
+import type { RegistryLocation } from "./artifact-stores/oci-registry.ts";
 
 export type UpstreamFetch = (
   url: string | URL,
   init?: RequestInit,
 ) => Promise<Response>;
-const REPOSITORY = "https://itzg.github.io/minecraft-server-charts/";
+/** Reviewed acquisition targets: the committed version catalog's component entries. */
+export const catalogComponents: readonly VersionCatalogEntry[] =
+  componentEntries(parseVersionCatalog(rawCatalog));
 const MAX_BYTES = 16 * 1024 * 1024;
+/** Transitional (X11): the Minecraft chart stays mirrored until its pipeline is re-registered. */
+const CHART_MIRRORS = [
+  "https://chartmuseum.sjer.red",
+  "https://chartmuseum.tailnet-1a49.ts.net",
+];
+const GITHUB_ASSET_HOSTS = [
+  "github.com",
+  "release-assets.githubusercontent.com",
+  "objects.githubusercontent.com",
+];
+const ChartIndexEntrySchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  digest: z.string().regex(/^[a-f0-9]{64}$/),
+  urls: z.tuple([z.string()], z.string()),
+});
+const ChartIndexSchema = z.object({
+  entries: z.record(z.string(), z.unknown()),
+});
 
-function reviewed(input: z.output<typeof AcquireUpstreamArtifactSchema>) {
-  const { artifact } = input;
+type Input = z.output<typeof AcquireUpstreamArtifactSchema>;
+type Reviewed =
+  | { kind: "chart"; originKey: string; name: string; repository: string }
+  | {
+      kind: "image";
+      originKey: string;
+      registry: RegistryLocation;
+      tag: string;
+    };
+
+function registryUrl(entry: VersionCatalogEntry) {
+  // Catalog validation guarantees this for component entries.
+  if (!entry.management.managed || entry.management.registryUrl === undefined)
+    throw new Error(`Catalog component ${entry.name} has no registry URL`);
+  return entry.management.registryUrl;
+}
+
+/** Catalog validation guarantees `<tag>@sha256:<digest>` for image components. */
+function pinnedImage(entry: VersionCatalogEntry) {
+  const match = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/.exec(entry.value);
+  const tag = match?.[1];
+  const digest = match?.[2];
+  if (tag === undefined || digest === undefined)
+    throw new Error(`Catalog component ${entry.name} is not pinned by digest`);
+  return { tag, digest };
+}
+
+function refuse(reason: string): never {
+  throw new DeliveryError("INVALID", reason);
+}
+
+/** Map the intent onto exactly one catalog component entry; nothing is read before this passes. */
+function reviewed(
+  input: Input,
+  components: readonly VersionCatalogEntry[],
+  services: ServiceIndex,
+): Reviewed {
+  const { artifact, serviceId } = input;
   const origin = artifact.origin;
-  if (
-    origin.kind !== "upstream" ||
-    origin.repository !== REPOSITORY ||
-    origin.name !== "minecraft" ||
-    artifact.kind !== "chart" ||
-    artifact.component !== "chart:minecraft" ||
-    !/^\d+\.\d+\.\d+(?:-[0-9a-z.-]+)?$/i.test(artifact.version)
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "Independent acquisition is restricted to the reviewed upstream Minecraft chart",
+  if (origin.kind !== "upstream")
+    refuse("Upstream acquisition requires explicit original origin");
+  const artifactType = artifact.kind === "chart" ? "helm-chart" : "image";
+  const entry = components.find(
+    (candidate) =>
+      candidate.name === origin.name && candidate.artifactType === artifactType,
+  );
+  if (entry === undefined)
+    refuse(
+      "Independent acquisition is restricted to the version catalog's component entries",
     );
-  const uri = new URL(artifact.uri);
+  ensureService(serviceId);
+  const originKey = fingerprint({
+    kind: origin.kind,
+    repository: origin.repository,
+    name: origin.name,
+    version: origin.version,
+  });
+  if (artifact.kind === "chart") {
+    const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
+    const owner = services.byChart(entry.name);
+    if (
+      origin.repository !== repository ||
+      artifact.component !== `chart:${entry.name}` ||
+      artifact.version !== entry.value ||
+      (owner !== undefined && owner.id !== serviceId)
+    )
+      refuse(
+        "Chart acquisition must match the catalog component's repository, name, pinned version and owning service",
+      );
+    if (new URL(artifact.uri).protocol !== "https:")
+      refuse("Chart archive location must be an https URL");
+    return { kind: "chart", originKey, name: entry.name, repository };
+  }
+  if (artifact.kind !== "image")
+    refuse("Upstream acquisition covers charts and images only");
+  const pinned = pinnedImage(entry);
+  const registry = registryLocation(registryUrl(entry), entry.name);
   if (
-    ![
-      "https://chartmuseum.sjer.red",
-      "https://chartmuseum.tailnet-1a49.ts.net",
-    ].includes(uri.origin) ||
-    uri.href !== `${uri.origin}/charts/minecraft-${artifact.version}.tgz`
+    origin.repository !== registryUrl(entry) ||
+    origin.version !== pinned.tag ||
+    artifact.digest !== pinned.digest ||
+    artifact.component !== `image:${entry.name}` ||
+    artifact.uri !== registry.uri
   )
-    throw new DeliveryError(
-      "INVALID",
-      "Upstream chart mirror must be the exact reviewed ChartMuseum archive",
+    refuse(
+      "Image acquisition must match the catalog component's registry, name, pinned tag, digest and image URI",
     );
-  return {
-    originKey: fingerprint({
-      kind: origin.kind,
-      repository: origin.repository,
-      name: origin.name,
-      version: origin.version,
-    }),
-    archive: `https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-${artifact.version}/minecraft-${artifact.version}.tgz`,
-  };
+  return { kind: "image", originKey, registry, tag: pinned.tag };
 }
 
 async function boundedRead(
   url: string,
   transport: UpstreamFetch,
+  redirectHosts: ReadonlySet<string>,
   redirects = 0,
 ): Promise<Uint8Array> {
   const response = await transport(url, {
@@ -79,95 +171,103 @@ async function boundedRead(
     redirect: "manual",
   });
   if ([301, 302, 303, 307, 308].includes(response.status)) {
+    await response.body?.cancel();
     const next = new URL(
       required(response.headers.get("location"), "Upstream archive redirect"),
       url,
     );
     if (
       redirects >= 3 ||
-      ![
-        "github.com",
-        "release-assets.githubusercontent.com",
-        "objects.githubusercontent.com",
-      ].includes(next.hostname) ||
+      !redirectHosts.has(next.hostname) ||
       next.protocol !== "https:" ||
       next.username !== "" ||
       next.password !== ""
     )
-      throw new DeliveryError(
-        "INVALID",
-        "Upstream archive redirected outside reviewed release hosts",
-      );
-    return boundedRead(next.href, transport, redirects + 1);
+      refuse("Upstream archive redirected outside reviewed release hosts");
+    return boundedRead(next.href, transport, redirectHosts, redirects + 1);
   }
-  if (!response.ok || response.body === null)
+  if (!response.ok) {
+    await response.body?.cancel();
     throw new DeliveryError(
       "PAUSED",
       `Independent upstream byte verification unavailable (${String(response.status)})`,
     );
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    for (;;) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      size += chunk.value.length;
-      if (size > MAX_BYTES)
-        throw new DeliveryError(
-          "INVALID",
-          "Upstream index or archive exceeds verification size limit",
-        );
-      chunks.push(chunk.value);
-    }
-  } finally {
-    await reader.cancel();
   }
-  return Buffer.concat(chunks);
+  return boundedBody(response, MAX_BYTES, "Upstream index or archive");
 }
 
-async function verify(
-  input: z.output<typeof AcquireUpstreamArtifactSchema>,
+function sha256(bytes: Uint8Array) {
+  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+}
+
+async function verifyChart(
+  input: Input,
+  plan: Extract<Reviewed, { kind: "chart" }>,
   transport: UpstreamFetch,
 ) {
-  const locations = reviewed(input);
-  const bytes = await boundedRead(`${REPOSITORY}index.yaml`, transport);
-  const index = z
-    .object({
-      entries: z.object({
-        minecraft: z.array(
-          z.object({
-            name: z.literal("minecraft"),
-            version: z.string(),
-            digest: z.string().regex(/^[a-f0-9]{64}$/),
-            urls: z.array(z.string()).length(1),
-          }),
-        ),
-      }),
-    })
-    .parse(Bun.YAML.parse(new TextDecoder().decode(bytes)));
-  const selected = index.entries.minecraft.filter(
-    (entry) => entry.version === input.artifact.version,
+  const indexUrl = new URL("index.yaml", plan.repository);
+  const redirectHosts = new Set([indexUrl.hostname, ...GITHUB_ASSET_HOSTS]);
+  const index = ChartIndexSchema.safeParse(
+    Bun.YAML.parse(
+      new TextDecoder().decode(
+        await boundedRead(indexUrl.href, transport, redirectHosts),
+      ),
+    ),
+  );
+  const versions = z
+    .array(ChartIndexEntrySchema)
+    .safeParse(index.success ? index.data.entries[plan.name] : undefined);
+  if (!versions.success)
+    refuse(
+      "Upstream index is not a readable Helm repository index for the pinned chart",
+    );
+  const selected = versions.data.filter(
+    (entry) =>
+      entry.name === plan.name && entry.version === input.artifact.version,
   );
   const entry = selected[0];
-  if (
-    selected.length !== 1 ||
-    entry?.urls[0] !== locations.archive ||
-    `sha256:${entry.digest}` !== input.artifact.digest
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "Upstream index does not attest the exact reviewed chart version, archive and checksum",
+  if (entry === undefined || selected.length !== 1)
+    refuse("Upstream index must attest the pinned chart version exactly once");
+  const archive = new URL(entry.urls[0], plan.repository);
+  if (archive.protocol !== "https:")
+    refuse("Upstream index names a non-https chart archive");
+  if (`sha256:${entry.digest}` !== input.artifact.digest)
+    refuse("Upstream index checksum differs from the acquisition digest");
+  const locations = new Set([
+    archive.href,
+    ...CHART_MIRRORS.map(
+      (mirror) => `${mirror}/charts/${plan.name}-${input.artifact.version}.tgz`,
+    ),
+  ]);
+  if (!locations.has(input.artifact.uri))
+    refuse(
+      "Chart artifact location must be the upstream archive or its reviewed ChartMuseum mirror",
     );
-  for (const location of [locations.archive, input.artifact.uri]) {
-    const archive = await boundedRead(location, transport);
-    const digest = `sha256:${createHash("sha256").update(archive).digest("hex")}`;
-    if (digest !== input.artifact.digest)
-      throw new DeliveryError(
-        "INVALID",
-        "Upstream or mirrored archive bytes differ from original upstream checksum",
+  redirectHosts.add(archive.hostname);
+  for (const location of new Set([archive.href, input.artifact.uri]))
+    if (
+      sha256(await boundedRead(location, transport, redirectHosts)) !==
+      input.artifact.digest
+    )
+      refuse(
+        "Upstream or mirrored archive bytes differ from the attested checksum",
       );
-  }
+}
+
+async function verifyImage(
+  input: Input,
+  plan: Extract<Reviewed, { kind: "image" }>,
+  transport: UpstreamFetch,
+) {
+  const digest = await resolveManifestDigest(
+    plan.registry,
+    plan.tag,
+    transport,
+  );
+  if (digest !== input.artifact.digest)
+    refuse(
+      "Registry manifest for the pinned tag differs from the catalog digest",
+    );
 }
 
 export async function findQualifiedArtifact(
@@ -182,15 +282,20 @@ export async function findQualifiedArtifact(
         component: input.component,
         kind: input.kind,
         digest: input.digest,
-        version: input.version,
+        ...(input.version === undefined ? {} : { version: input.version }),
         origin: { path: ["kind"], equals: input.originKind },
         build: {
           serviceId: input.serviceId,
           status: "verified",
           OR: [
             { sourceKind: "ci", repositoryId },
+            // Acquisitions carry the acquiring pipeline (B3); older rows have none.
             {
-              sourceKind: { in: ["upstream", "licensed-bundle"] },
+              sourceKind: "upstream",
+              OR: [{ repositoryId }, { repositoryId: null }],
+            },
+            {
+              sourceKind: { in: ["licensed-bundle", "attested"] },
               repositoryId: null,
             },
           ],
@@ -204,15 +309,27 @@ export async function findQualifiedArtifact(
   return artifactView(row);
 }
 
+export type AcquisitionOptions = {
+  transport?: UpstreamFetch;
+  /** Reviewed component entries; production uses the committed catalog. */
+  components?: readonly VersionCatalogEntry[];
+};
+
 export async function acquireUpstreamArtifact(
   this: Delivery,
   rawInput: AcquireUpstreamArtifact,
   actor: Principal,
-  transport: UpstreamFetch = fetch,
+  options: AcquisitionOptions = {},
 ) {
   requireScope(actor, "publish");
+  const transport = options.transport ?? fetch;
   const input = AcquireUpstreamArtifactSchema.parse(rawInput);
-  const { originKey } = reviewed(input);
+  const plan = reviewed(
+    input,
+    options.components ?? catalogComponents,
+    this.catalog,
+  );
+  const { originKey } = plan;
   const buildId = await this.database.$transaction(async (tx) => {
     const prior = await request(tx, actor, {
       requestId: input.requestId,
@@ -247,8 +364,14 @@ export async function acquireUpstreamArtifact(
           serviceId: input.serviceId,
           sourceRevision: input.sourceRevision,
           sourceKind: "upstream",
+          ...(input.pipeline === undefined
+            ? {}
+            : {
+                repositoryId: input.pipeline.repositoryId,
+                pipelineNumber: input.pipeline.pipelineNumber,
+              }),
           verifiedAt: new Date(),
-          artifacts: { create: { ...input.artifact, originKey } },
+          artifacts: { create: { ...artifactRow(input.artifact), originKey } },
         },
       });
     }
@@ -264,7 +387,8 @@ export async function acquireUpstreamArtifact(
     where: { id: buildId },
   });
   if (build.status !== "verified") {
-    await verify(input, transport);
+    if (plan.kind === "chart") await verifyChart(input, plan, transport);
+    else await verifyImage(input, plan, transport);
     await this.database.$transaction(async (tx) => {
       const changed = await tx.build.updateMany({
         where: { id: buildId, status: { in: ["pending", "failed"] } },

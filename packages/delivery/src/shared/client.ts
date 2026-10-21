@@ -4,7 +4,7 @@ export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
   typeof errors.DeliveryClientError
 >;
-import { createRequester, type RequestOptions } from "./http-request.ts";
+import { createRequester, query, type RequestOptions } from "./http-request.ts";
 import {
   ArtifactVersionSchema,
   LatestQualifiedArtifactQuerySchema,
@@ -37,6 +37,7 @@ import {
   OwnershipHandoverContextSchema,
   ContentRecoveryIntentSchema,
   ContentRecoveryContextSchema,
+  PendingReplicationSchema,
 } from "./contract.ts";
 import type {
   CreateDeployment,
@@ -74,6 +75,7 @@ import type {
   DispatchBarrier,
   ContentBarrierRestoration,
 } from "./contract.ts";
+import type { RecordArtifactReplication } from "./artifact-contract.ts";
 
 export function createDeliveryClient(options: RequestOptions) {
   const request = createRequester(options);
@@ -295,11 +297,15 @@ export function createDeliveryClient(options: RequestOptions) {
       ),
     findQualifiedArtifact: (input: FindQualifiedArtifact) =>
       request(
-        `/artifacts/qualified-exact?${new URLSearchParams(FindQualifiedArtifactSchema.parse(input))}`,
+        `/artifacts/qualified-exact${query(FindQualifiedArtifactSchema.parse(input))}`,
         ArtifactVersionSchema,
       ),
     acquireUpstreamArtifact: (input: AcquireUpstreamArtifact) =>
       request("/artifacts/upstream", ArtifactAcquisitionSchema, input),
+    pendingReplication: () =>
+      request("/replication/pending", PendingReplicationSchema),
+    recordReplication: (input: RecordArtifactReplication) =>
+      request("/artifacts/replication", ArtifactVersionSchema, input),
     requestWorkerRecovery: (
       deploymentId: string,
       input: RequestWorkerRecovery,

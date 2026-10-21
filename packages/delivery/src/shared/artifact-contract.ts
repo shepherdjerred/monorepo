@@ -69,6 +69,30 @@ export const ArtifactOriginSchema = z.discriminatedUnion("kind", [
     .strict(),
 ]);
 export type ArtifactOrigin = z.infer<typeof ArtifactOriginSchema>;
+/**
+ * Off-cluster replica of bytes that live in a self-hosted store. Recorded by
+ * the executor after it copies the object to R2 and reads the copy back; a
+ * build that produced such bytes is not verified until every one has a receipt
+ * (PC1).
+ */
+export const ArtifactReplicationSchema = z
+  .object({
+    store: z.literal("r2"),
+    bucket: z.string().min(1).max(255),
+    key: z.string().min(1).max(1024),
+    digest: Digest,
+    replicatedAt: z.iso.datetime(),
+  })
+  .strict();
+export type ArtifactReplication = z.infer<typeof ArtifactReplicationSchema>;
+/** Self-hosted object stores whose bytes must be replicated before a build is verified. */
+export const REPLICATED_STORE_URI_PREFIXES = [
+  "s3://delivery-artifacts/",
+  "s3://storm-forum-releases/",
+] as const;
+export function requiresReplication(uri: string): boolean {
+  return REPLICATED_STORE_URI_PREFIXES.some((prefix) => uri.startsWith(prefix));
+}
 export const ArtifactInputSchema = z
   .object({
     id: IdentifierSchema,
@@ -80,20 +104,32 @@ export const ArtifactInputSchema = z
     requires: z.record(IdentifierSchema, Digest).default({}),
     version: z.string().min(1).max(160),
     origin: ArtifactOriginSchema.default({ kind: "first-party" }),
+    /**
+     * Content identity with the version string excluded (X10). Charts carry
+     * the producer's `fingerprintChart` so an unchanged chart is retained
+     * instead of republished under a new version.
+     */
+    contentFingerprint: Digest.optional(),
   })
   .strict()
   .superRefine((artifact, ctx) => {
     const origin = artifact.origin;
     if (
       origin.kind === "upstream" &&
-      (artifact.kind !== "chart" ||
+      ((artifact.kind !== "chart" && artifact.kind !== "image") ||
         origin.version !== artifact.version ||
         origin.checksum !== artifact.digest)
     )
       ctx.addIssue({
         code: "custom",
         message:
-          "Upstream chart origin must identify the exact acquired version and bytes",
+          "Upstream origin must identify the exact acquired chart or image version and bytes",
+      });
+    if (artifact.contentFingerprint !== undefined && artifact.kind !== "chart")
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Content fingerprints identify chart bytes with the version excluded",
       });
     if (
       origin.kind === "licensed-bundle" &&
@@ -113,7 +149,32 @@ export const ArtifactVersionSchema = ArtifactInputSchema.safeExtend({
   buildId: IdentifierSchema,
   sourceRevision: Source,
   createdAt: z.iso.datetime(),
+  replication: ArtifactReplicationSchema.optional(),
 });
+export const BuildSourceKindSchema = z.enum([
+  "ci",
+  "upstream",
+  "licensed-bundle",
+  "attested",
+]);
+export type BuildSourceKind = z.infer<typeof BuildSourceKindSchema>;
+/** How a build entered Delivery, as operators read it on a pipeline. */
+export function buildSourceLabel(sourceKind: string): string {
+  switch (BuildSourceKindSchema.parse(sourceKind)) {
+    case "ci": {
+      return "main";
+    }
+    case "upstream": {
+      return "Upstream acquisition";
+    }
+    case "licensed-bundle": {
+      return "Licensed bundle";
+    }
+    case "attested": {
+      return "Operator attestation";
+    }
+  }
+}
 export const PublishBuildSchema = z
   .object({
     requestId: IdentifierSchema,
@@ -134,7 +195,7 @@ export const BuildSummarySchema = z.object({
   id: IdentifierSchema,
   serviceId: IdentifierSchema,
   sourceRevision: Source,
-  sourceKind: z.enum(["ci", "upstream", "licensed-bundle"]).default("ci"),
+  sourceKind: BuildSourceKindSchema.default("ci"),
   ciUrl: z.url().nullable(),
   status: z.enum(["pending", "verified", "failed"]),
   qualificationReason: z.string().nullable(),
@@ -147,7 +208,8 @@ export const FindQualifiedArtifactSchema = z
     component: IdentifierSchema,
     kind: ArtifactInputSchema.shape.kind,
     digest: Digest,
-    version: z.string().min(1).max(160),
+    /** Omitted: match the bytes regardless of the producer's version string. */
+    version: z.string().min(1).max(160).optional(),
     originKind: z
       .enum(["first-party", "upstream", "licensed-bundle"])
       .default("first-party"),
@@ -157,8 +219,19 @@ export type FindQualifiedArtifact = z.infer<typeof FindQualifiedArtifactSchema>;
 export const AcquireUpstreamArtifactSchema = z
   .object({
     requestId: IdentifierSchema,
-    serviceId: z.literal("minecraft"),
+    serviceId: IdentifierSchema,
     sourceRevision: Source,
+    /**
+     * The main pipeline that performed the acquisition (B3); its order key
+     * (B4). Absent only from producers older than this field.
+     */
+    pipeline: z
+      .object({
+        repositoryId: z.number().int().positive(),
+        pipelineNumber: z.number().int().positive(),
+      })
+      .strict()
+      .optional(),
     artifact: ArtifactInputSchema,
   })
   .strict()
@@ -174,3 +247,27 @@ export const ArtifactAcquisitionSchema = z.object({
   artifact: ArtifactVersionSchema,
   status: z.enum(["pending", "verified", "failed"]),
 });
+/** One produced artifact whose self-hosted bytes still lack an off-cluster replica. */
+export const PendingReplicationSchema = z.object({
+  artifacts: z.array(
+    z
+      .object({
+        artifactId: IdentifierSchema,
+        buildId: IdentifierSchema,
+        serviceId: IdentifierSchema,
+        uri: z.string().min(1).max(2048),
+        digest: Digest,
+      })
+      .strict(),
+  ),
+});
+export type PendingReplication = z.infer<typeof PendingReplicationSchema>;
+export const RecordArtifactReplicationSchema = z
+  .object({
+    artifactId: IdentifierSchema,
+    replication: ArtifactReplicationSchema,
+  })
+  .strict();
+export type RecordArtifactReplication = z.infer<
+  typeof RecordArtifactReplicationSchema
+>;

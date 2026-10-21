@@ -287,3 +287,111 @@ describe("PostgreSQL delivery invariants 1.2", () => {
     expect(overview.environments[0]?.acceptedVersionSetRevisionId).toBeNull();
   });
 });
+describe("automatic composition compares digests and admits sibling CI builds", () => {
+  test("a new artifact whose bytes equal the base creates no set revision; changed bytes do", async () => {
+    const { delivery, cluster } = context;
+    const changed = await delivery.publish(testPublication(2), testPublisher, {
+      repositoryId: 1,
+      pipelineNumber: 2,
+    });
+    await delivery.qualify(changed.buildId, "verified", testExecutor);
+    const [second] = await delivery.versions("arcade");
+    expect(second?.components["server"]?.id).toBe("image/2");
+    const same = await delivery.publish(testPublication(3), testPublisher, {
+      repositoryId: 1,
+      pipelineNumber: 3,
+    });
+    expect(
+      await delivery.qualify(same.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+    const verified = await delivery.build(same.buildId);
+    expect(verified.status).toBe("verified");
+    expect(
+      await cluster.database.versionSet.findUnique({
+        where: { qualifiedBuildId: same.buildId },
+      }),
+    ).toBeNull();
+    expect(await delivery.versions("arcade")).toHaveLength(2);
+    const publication = testPublication(4);
+    const different = await delivery.publish(
+      {
+        ...publication,
+        artifacts: publication.artifacts.map((entry) => ({
+          ...entry,
+          digest: `sha256:${"d".repeat(64)}`,
+        })),
+      },
+      testPublisher,
+      { repositoryId: 1, pipelineNumber: 4 },
+    );
+    expect(
+      await delivery.qualify(different.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+    const [latest] = await delivery.versions("arcade");
+    expect(latest).toMatchObject({ revision: 3, baseRevisionId: second?.id });
+    expect(latest?.components["server"]).toMatchObject({
+      id: "image/4",
+      digest: `sha256:${"d".repeat(64)}`,
+    });
+    expect(latest?.components["chart"]?.id).toBe("arcade-chart");
+  });
+  test("two ci builds of service ci from one pipeline both compose, the second carrying the first's ci-base forward", async () => {
+    const { delivery, cluster } = context;
+    const register = (name: string, digest: string) =>
+      delivery.publish(
+        {
+          requestId: `ci/1/7/ci/${name}`,
+          serviceId: "ci",
+          sourceRevision: "7".repeat(40),
+          ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/7",
+          verifiedAt: new Date().toISOString(),
+          artifacts: [
+            {
+              id: `ci/1/7/image/${name}`,
+              component: `image:${name}`,
+              kind: "image",
+              uri: `docker.io/shepherdjerred/${name}`,
+              digest: `sha256:${digest.repeat(64)}`,
+              version: "2.0.0-7",
+            },
+          ],
+        },
+        testPublisher,
+        { repositoryId: 1, pipelineNumber: 7 },
+      );
+    const base = await register("ci-base", "1");
+    expect(
+      await delivery.qualify(base.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+    const playwright = await register("ci-playwright", "2");
+    expect(
+      await delivery.qualify(playwright.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+    const [second, first] = await delivery.versions("ci");
+    expect(Object.keys(first?.components ?? {})).toEqual(["image:ci-base"]);
+    expect(second).toMatchObject({
+      revision: 2,
+      baseRevisionId: first?.id,
+      components: {
+        "image:ci-base": {
+          id: "ci/1/7/image/ci-base",
+          buildId: base.buildId,
+        },
+        "image:ci-playwright": {
+          id: "ci/1/7/image/ci-playwright",
+          buildId: playwright.buildId,
+        },
+      },
+    });
+    expect(
+      await cluster.database.versionSet.findUnique({
+        where: { qualifiedBuildId: playwright.buildId },
+      }),
+    ).toMatchObject({ id: second?.id });
+    expect(
+      await cluster.database.buildArtifactSelection.count({
+        where: { buildId: playwright.buildId },
+      }),
+    ).toBe(1);
+  });
+});

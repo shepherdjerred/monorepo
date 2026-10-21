@@ -37,6 +37,7 @@
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/ops-clients": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",
+    "@shepherdjerred/version-catalog": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "1.170.32",
     "fflate": "^0.8.3",

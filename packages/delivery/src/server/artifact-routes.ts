@@ -4,6 +4,7 @@ import {
   FindQualifiedArtifactSchema,
 } from "#shared/contract.ts";
 import type { Principal } from "#shared/contract.ts";
+import { DeliveryError } from "#domain/error.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
 
@@ -20,14 +21,24 @@ export function registerArtifactRoutes(
       ),
     ),
   );
-  app.post("/api/v1/artifacts/upstream", async (c) =>
-    c.json(
+  app.post("/api/v1/artifacts/upstream", async (c) => {
+    const input = AcquireUpstreamArtifactSchema.parse(await c.req.json());
+    // An acquisition's order key (B4) only means something inside the configured CI repository.
+    if (
+      input.pipeline !== undefined &&
+      input.pipeline.repositoryId !== options.repositoryId
+    )
+      throw new DeliveryError(
+        "INVALID",
+        "Acquisition pipeline must belong to the configured CI repository",
+      );
+    return c.json(
       await delivery.acquireUpstreamArtifact(
-        AcquireUpstreamArtifactSchema.parse(await c.req.json()),
+        input,
         c.get("principal"),
-        options.transport,
+        options.transport === undefined ? {} : { transport: options.transport },
       ),
       201,
-    ),
-  );
+    );
+  });
 }

@@ -8,6 +8,7 @@ import {
 } from "vitest";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { testExecutor, testPublisher, testOperator } from "#testing/seed.ts";
+import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { createApp } from "#server/app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
 import { Delivery } from "./delivery.ts";
@@ -101,8 +102,14 @@ async function sitePublication(input: {
   number: number;
   requiredDigest: string;
   imageId?: string;
+  siteDigest?: string;
 }) {
-  const { number, requiredDigest, imageId } = input;
+  const {
+    number,
+    requiredDigest,
+    imageId,
+    siteDigest = "a".repeat(64),
+  } = input;
   return delivery.publish(
     {
       requestId: `release/${String(number)}`,
@@ -127,9 +134,9 @@ async function sitePublication(input: {
           id: `site/${String(number)}`,
           component: "site:scout-frontend-beta",
           kind: "archive",
-          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"a".repeat(64)}.tar`,
+          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${siteDigest}.tar`,
           version: `build-${String(number)}`,
-          digest: `sha256:${"a".repeat(64)}`,
+          digest: `sha256:${siteDigest}`,
           requires: { [query.component]: requiredDigest },
         },
       ],
@@ -224,10 +231,18 @@ test("late verified outputs cannot replace the image in the newest coherent auto
     imageId: "image/b",
   });
   const three = await sitePublication({ number: 3, requiredDigest: a });
-  for (const build of [one, three, two])
+  for (const build of [one, three, two]) {
+    await replicateProducedArtifacts(delivery, build.buildId);
     expect(
       await delivery.qualify(build.buildId, "verified", testExecutor),
     ).toEqual({ status: "verified" });
+  }
+  // Build three republished the same site bytes, so it composed no revision.
+  expect(
+    await cluster.database.versionSet.count({
+      where: { qualifiedBuildId: three.buildId },
+    }),
+  ).toBe(0);
   expect(
     await cluster.database.versionSet.count({
       where: { qualifiedBuildId: two.buildId },
@@ -251,7 +266,9 @@ test("late verified outputs cannot replace the image in the newest coherent auto
   const four = await sitePublication({
     number: 4,
     requiredDigest: selected.digest,
+    siteDigest: "4".repeat(64),
   });
+  await replicateProducedArtifacts(delivery, four.buildId);
   expect(
     await delivery.qualify(four.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });
@@ -365,6 +382,7 @@ test("automatic qualification retains qualified image B across a manual A compos
     testPublisher,
     { repositoryId: 1, pipelineNumber: 3 },
   );
+  await replicateProducedArtifacts(delivery, c.buildId);
   expect(await delivery.qualify(c.buildId, "verified", testExecutor)).toEqual({
     status: "verified",
   });

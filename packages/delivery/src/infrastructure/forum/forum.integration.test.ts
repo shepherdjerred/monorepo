@@ -9,6 +9,7 @@ import {
 } from "./fixtures.ts";
 import { freezeForumBaseline } from "./freezer.ts";
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
+import { forumBundlePolicyDigest } from "@shepherdjerred/ops-model/forum-bundle-digest.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 let sourceUnavailable = false;
@@ -114,8 +115,9 @@ test("license publication remains outside CI, fair pending queue, terminal inval
   const { delivery } = fixture,
     database = delivery.database;
   const build = await database.build.findFirstOrThrow({
-    where: { sourceKind: "licensed-bundle" },
+    where: { sourceKind: "attested" },
   });
+  expect(build.registrationSequence).not.toBeNull();
   expect(build.repositoryId).toBeNull();
   expect(build.pipelineNumber).toBeNull();
   expect(build.ciUrl).toBeNull();
@@ -319,4 +321,55 @@ test("a fresh admin observation may replace stale original provenance while prio
   expect(environment.acceptedForumBaselineIntentId).toBe(second.id);
   expect(environment.generation).toBe(2);
   expect(environment.acceptedVersionSetRevisionId).toBeNull();
+});
+
+test("operator-published bundles are attested builds that every bundle reader accepts alongside rows registered as licensed-bundle", async () => {
+  const { delivery } = fixture,
+    database = delivery.database;
+  const build = await database.build.findFirstOrThrow({
+    where: { serviceId: "storm-forum", sourceKind: "attested" },
+  });
+  expect(build).toMatchObject({
+    ciUrl: null,
+    repositoryId: null,
+    pipelineNumber: null,
+    status: "verified",
+  });
+  expect(build.registrationSequence).not.toBeNull();
+  const query = {
+    xenforoVersion: forumBundlePolicy.xenforoVersion,
+    manifestDigest: forumBundlePolicyDigest(),
+  };
+  const latest = {
+    serviceId: "storm-forum",
+    component: "archive:forum-bundle",
+    kind: "archive" as const,
+  };
+  await qualifyForumReleaseFixture(delivery, "forum/attested-ci");
+  for (const sourceKind of ["attested", "licensed-bundle"]) {
+    // Rows registered before the attested kind keep their original label.
+    await database.build.update({
+      where: { id: build.id },
+      data: { sourceKind, status: "verified" },
+    });
+    const qualified = await delivery.qualifiedForumBundle(query, testExecutor);
+    expect(qualified.id).toBe("forum-bundle");
+    const selected = await delivery.latestQualifiedArtifact(latest, 1);
+    expect(selected.buildId).toBe(build.id);
+    await database.build.update({
+      where: { id: build.id },
+      data: { status: "pending" },
+    });
+    const pending = await delivery.pendingForumBundles(testExecutor);
+    expect(pending.builds).toEqual([{ id: build.id }]);
+    await expect(
+      delivery.qualifiedForumBundle(query, testExecutor),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    const verified = await delivery.qualifyForumBundle(
+      build.id,
+      testExecutor,
+      () => Promise.resolve(),
+    );
+    expect(verified.status).toBe("verified");
+  }
 });

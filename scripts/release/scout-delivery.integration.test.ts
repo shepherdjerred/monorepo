@@ -5,6 +5,7 @@ import {
   createApp,
   createTestDatabase,
   Delivery,
+  replicateProducedArtifacts,
   testExecutor,
   testPublisher,
   testOperator,
@@ -39,6 +40,17 @@ afterAll(async () => {
   await cluster.close();
 });
 
+/**
+ * Site archive bytes per pipeline. These producers bake the commit and build
+ * number into the site, so every pipeline's archive is different bytes and
+ * composes over the digest-identical base.
+ */
+function siteDigest(build: number) {
+  return `sha256:${createHash("sha256")
+    .update(`scout-site-${String(build)}`)
+    .digest("hex")}`;
+}
+
 function releaseState(build: number, source: string, backend: string) {
   return parseScoutReleaseState(
     JSON.stringify({
@@ -47,9 +59,9 @@ function releaseState(build: number, source: string, backend: string) {
       version: `2.0.0-${String(build)}`,
       sourceCommit: source,
       backendImageDigest: backend,
-      siteArchiveDigest: imageA,
-      betaSiteArchiveDigest: imageA,
-      releaseInputDigest: imageA,
+      siteArchiveDigest: siteDigest(build),
+      betaSiteArchiveDigest: siteDigest(build),
+      releaseInputDigest: siteDigest(build),
     }),
   );
 }
@@ -81,8 +93,8 @@ async function publication(
             id: `ci/1/${String(build)}/site/${bucket}`,
             component: `site:${bucket}`,
             kind: "archive",
-            uri: `s3://delivery-artifacts/sites/${bucket}/${"a".repeat(64)}.tar`,
-            digest: imageA,
+            uri: `s3://delivery-artifacts/sites/${bucket}/${siteDigest(build).slice(7)}.tar`,
+            digest: siteDigest(build),
             version: `build-${String(build)}`,
             requires: requirements,
           },
@@ -105,6 +117,8 @@ async function qualify(build: number, input: PublishBuild, store = delivery) {
     repositoryId: 1,
     pipelineNumber: build,
   });
+  // Self-hosted site archives verify only with an off-cluster replica (PC1).
+  await replicateProducedArtifacts(store, registered.buildId);
   expect(
     await store.qualify(registered.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });

@@ -69,6 +69,33 @@ describe("exact CI qualification", () => {
     });
     await expect(qualify(build)).rejects.toMatchObject({ code: "INVALID" });
   });
+  test("a ci service image build registered from its main push pipeline verifies", async () => {
+    const lane = {
+      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/77",
+      sourceRevision: "c".repeat(40),
+    };
+    const qualify = createQualifier({
+      origin: "https://woodpecker.sjer.red",
+      repositoryId: 1,
+      token: "test-only-credential",
+      fetch: async (input) => {
+        if (!(input instanceof URL))
+          throw new TypeError("Qualifier must request an exact pipeline URL");
+        expect(input.href).toBe(
+          "https://woodpecker.sjer.red/api/repos/1/pipelines/77",
+        );
+        return Response.json({
+          number: 77,
+          commit: lane.sourceRevision,
+          branch: "main",
+          event: "push",
+          status: "success",
+          finished: 456,
+        });
+      },
+    });
+    expect(await qualify(lane)).toBe("verified");
+  });
   test("missing credentials and upstream failures fail closed", async () => {
     await expect(
       createQualifier({

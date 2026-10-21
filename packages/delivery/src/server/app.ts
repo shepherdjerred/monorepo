@@ -39,6 +39,7 @@ import type { InspectMinecraftRecovery } from "#infrastructure/minecraft-recover
 import { deliveryMetrics } from "./metrics.ts";
 import { registerArtifactRoutes } from "./artifact-routes.ts";
 import { registerQualificationRoutes } from "./qualification-routes.ts";
+import { registerReplicationRoutes } from "./replication-routes.ts";
 import type { UpstreamFetch } from "#infrastructure/upstream-artifact.ts";
 import { registerOwnershipRoute } from "./ownership-route.ts";
 import { registerRecoveryRoute } from "./recovery-route.ts";
@@ -168,6 +169,7 @@ export function createApp(options: Options) {
     options.inspectMinecraftRecovery,
   );
   registerQualificationRoutes(app, delivery, options.qualifyBuild);
+  registerReplicationRoutes(app, delivery);
   registerArtifactRoutes(app, delivery, {
     repositoryId: options.ciRepositoryId,
     ...(options.upstreamFetch === undefined

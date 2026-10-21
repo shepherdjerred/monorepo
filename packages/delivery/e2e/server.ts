@@ -19,6 +19,7 @@ import {
 } from "#testing/platform-execution.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
+import { VersionCatalogEntrySchema } from "@shepherdjerred/version-catalog";
 
 // This executable is an isolated acceptance harness, never a production entrypoint.
 const cluster = await createTestDatabase();
@@ -59,25 +60,43 @@ async function startHarness() {
       },
     },
     testPublisher,
-    (url) =>
-      Promise.resolve(
-        url.toString().endsWith("index.yaml")
-          ? Response.json({
-              entries: {
-                minecraft: [
-                  {
-                    name: "minecraft",
-                    version: "4.0.0",
-                    digest: digest.slice(7),
-                    urls: [
-                      "https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-4.0.0/minecraft-4.0.0.tgz",
-                    ],
-                  },
-                ],
-              },
-            })
-          : new Response(chart),
-      ),
+    {
+      transport: (url) =>
+        Promise.resolve(
+          url.toString().endsWith("index.yaml")
+            ? Response.json({
+                entries: {
+                  minecraft: [
+                    {
+                      name: "minecraft",
+                      version: "4.0.0",
+                      digest: digest.slice(7),
+                      urls: [
+                        "https://github.com/itzg/minecraft-server-charts/releases/download/minecraft-4.0.0/minecraft-4.0.0.tgz",
+                      ],
+                    },
+                  ],
+                },
+              })
+            : new Response(chart),
+        ),
+      // The harness pins its own fixture version instead of the live catalog's.
+      components: [
+        VersionCatalogEntrySchema.parse({
+          name: "minecraft",
+          category: "upstream",
+          artifactType: "helm-chart",
+          management: {
+            managed: true,
+            datasource: "helm",
+            registryUrl: "https://itzg.github.io/minecraft-server-charts",
+            versioning: "semver",
+          },
+          value: "4.0.0",
+          component: true,
+        }),
+      ],
+    },
   );
   await seedMinecraftRecovery(delivery, upstream.artifact.id);
   const origin = "http://127.0.0.1:17353";

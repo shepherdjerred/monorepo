@@ -44,6 +44,10 @@ import {
   markQualificationAttempt,
   qualify,
 } from "./delivery-qualification.ts";
+import {
+  pendingReplication,
+  recordReplication,
+} from "./artifact-stores/replication.ts";
 import { reconcile } from "./delivery-selection.ts";
 import { registerWorker, workers } from "./worker-pool/registration.ts";
 import { retireWorker } from "./worker-pool/retirement.ts";
@@ -158,6 +162,8 @@ export class Delivery {
   build = findBuild;
   markQualificationAttempt = markQualificationAttempt;
   qualify = qualify;
+  pendingReplication = pendingReplication;
+  recordReplication = recordReplication;
   reconcile = reconcile;
   workers = workers;
   registerWorker = registerWorker;

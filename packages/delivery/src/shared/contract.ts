@@ -185,6 +185,9 @@ export const AcquireUpstreamArtifactSchema =
   artifacts.AcquireUpstreamArtifactSchema;
 export const ArtifactAcquisitionSchema = artifacts.ArtifactAcquisitionSchema;
 export type AcquireUpstreamArtifact = artifacts.AcquireUpstreamArtifact;
+export const PendingReplicationSchema = artifacts.PendingReplicationSchema;
+export const RecordArtifactReplicationSchema =
+  artifacts.RecordArtifactReplicationSchema;
 const TimestampSchema = z.iso.datetime();
 const DigestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 export const ArtifactInputSchema = artifacts.ArtifactInputSchema;
@@ -490,9 +493,6 @@ export const WorkerRolloutSnapshotSchema = z.object({
   versionSet: VersionSetRevisionSchema,
 });
 export type WorkerRolloutSnapshot = z.infer<typeof WorkerRolloutSnapshotSchema>;
-export function diffVersionSets(
-  from: VersionSetRevision | null,
-  to: VersionSetRevision,
-) {
-  return compareVersions(from, to);
+export function diffVersionSets(...args: Parameters<typeof compareVersions>) {
+  return compareVersions(...args);
 }

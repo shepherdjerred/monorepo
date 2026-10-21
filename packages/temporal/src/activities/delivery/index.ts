@@ -33,11 +33,17 @@ import {
 import { dispatchDeliveryForumBaselines } from "./forum/dispatch.ts";
 import { applyDeliveryTrmnlPlugins } from "./trmnl.ts";
 import {
+  listDeliveryReplications,
+  recordDeliveryReplication,
+} from "./replication/receipts.ts";
+import {
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,
 } from "./platform/recovery.ts";
 
 export const deliveryActivities = {
+  listDeliveryReplications,
+  recordDeliveryReplication,
   applyDeliveryTrmnlPlugins,
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,

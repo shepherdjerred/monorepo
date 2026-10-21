@@ -580,7 +580,8 @@
         "registryUrl": "https://itzg.github.io/minecraft-server-charts",
         "versioning": "semver"
       },
-      "value": "5.2.0"
+      "value": "5.2.0",
+      "component": true
     },
     {
       "name": "mc-router",

@@ -8,6 +8,7 @@
     "./manifest": "./src/manifest.ts",
     "./maintenance": "./src/maintenance.ts",
     "./policy": "./src/policy.ts",
+    "./replicate": "./src/replicate.ts",
     "./restore": "./src/restore.ts",
     "./retention": "./src/retention.ts",
     "./schemas": "./src/schemas.ts",

@@ -151,7 +151,7 @@ The API is rooted at `/api/v1`:
 | Committed change stream                                       | `GET /events`                                                     |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
-`/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
+`/replication/pending`, `/artifacts/replication`, `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
 and deployment `claim`, `stages`, `finish`, and `orphan` operations. Workflow IDs come from the shared
 `deliveryWorkflowId` helper.
 
@@ -655,8 +655,37 @@ CI builds identify genuine first-party outputs. External artifacts additionally
 record their original origin: upstream repository/name/version/checksum, or the
 licensed bundle's manifest identity, XenForo version and original producer source.
 An acquisition's first-party source revision identifies its verification checkout,
-not the upstream chart's source. External builds have no invented CI URL or
-pipeline number.
+not the upstream chart's source. External builds have no invented CI URL. An
+acquisition records the main pipeline that performed it (`repositoryId` and
+`pipelineNumber`, its order key); rows acquired before that field keep NULLs.
+
+Build source kinds are `ci` (the exact main-branch pipeline), `upstream` (an
+acquisition verified against the upstream's published checksum), `attested`
+(an operator-run producer whose evidence is recorded with the build) and the
+older `licensed-bundle` rows that `attested` replaces. Every new build receives
+`registrationSequence` from a global PostgreSQL sequence; it is the order key of
+an attested build. Forum bundle publication creates an `attested` build whose
+artifact keeps the `licensed-bundle` origin.
+
+Bytes are the identity. Automatic composition compares every component's digest
+with the base set revision; a build whose artifacts carry new ids but identical
+digests composes nothing, and its rows stay unselected. Chart artifacts also
+carry `contentFingerprint`, the producer's chart content hash with the version
+string excluded, so CI can retain an unchanged chart instead of republishing it
+under a new version.
+
+Bytes in self-hosted stores (`s3://delivery-artifacts/`,
+`s3://storm-forum-releases/`) are replicated off-cluster before their build is
+verified. The executor lists `GET /api/v1/replication/pending`, copies each
+object to the R2 backup bucket through the SeaweedFS backup package (the same
+object key the daily snapshot uses, so the next snapshot reuses it), and records
+the receipt with `POST /api/v1/artifacts/replication`. `qualify` answers
+`pending` for a build whose produced archive lacks a receipt; images and charts
+in external registries rely on registry retention, an accepted risk. The copy
+runs on the Temporal `backup` worker, which runs one Activity at a time: while a
+daily snapshot holds it, each dispatch tick reports the replication as failed
+and retries on the next tick, so affected builds stay `pending` until the
+snapshot ends.
 
 Forum adoption preserves the original runtime's genuine CI/source identity and
 the original licensed archive's digest and producer revision. When that immutable
@@ -677,12 +706,20 @@ accepted application version. New observer-capable runtimes use the authenticate
 HTTP reader. The API's observer token is not mounted into migration or Tailscale
 containers, and its identity cannot read Secrets or create Pods.
 
-Independent upstream acquisition is restricted to the reviewed Minecraft chart
-repository and exact ChartMuseum archive. Bounded index/archive reads verify the
-official checksum against both original and mirrored bytes. An immutable origin
-key makes concurrent acquisitions reuse one original artifact/build/source; an
-unrelated acquiring CI failure does not invalidate those independently verified
-bytes. `findQualifiedArtifact` returns exact original metadata or a useful 404.
+Independent upstream acquisition is restricted to version-catalog entries that
+declare `component: true` (`packages/version-catalog/src/catalog.json`). A chart
+entry is verified by bounded reads of the upstream index and archive against
+the index checksum; an image entry is verified by resolving its tag to the
+manifest digest through the registry API and comparing it with the pinned
+digest. The artifact URI is the upstream location; nothing new is mirrored. The
+Minecraft chart stays mirrored into ChartMuseum because the registered
+`minecraft-tsmc` pipeline pulls it from there, and the server verifies mirror
+bytes against the upstream checksum as well. Existing mirrored rows are never
+rewritten. An immutable origin key makes concurrent acquisitions reuse one
+original artifact/build/source; an unrelated acquiring CI failure does not
+invalidate those independently verified bytes. `findQualifiedArtifact` returns
+exact original metadata or a useful 404; omitting `version` matches bytes by
+digest alone, which is how producers retain an unchanged archive.
 
 A genuine CI publication may select `retainedArtifactIds`. PostgreSQL records
 these references separately from artifact ownership, verifies qualification and
