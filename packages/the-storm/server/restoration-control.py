@@ -2831,8 +2831,14 @@ def reopen(
 
 
 def bind_restore_namespace(journal: JsonObject, namespace: str) -> None:
-    if not re.fullmatch(r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", namespace):
+    if namespace != DELIVERY_VALIDATION_NAMESPACE and not re.fullmatch(
+        r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", namespace
+    ):
         raise ValueError("Restore namespace must be a bounded Storm restoration namespace")
+    if namespace == DELIVERY_VALIDATION_NAMESPACE:
+        assert_managed_restore_namespace(journal)
+        if journal.get("managedRestoreNamespace") is not True:
+            raise ValueError("Managed restore target requires a sealed renewal")
     recorded = journal.get("restoreNamespace")
     if recorded is None and journal.get("restore"):
         recorded = "minecraft-tsmc-restore"
@@ -2854,6 +2860,7 @@ def main() -> None:
             "retry-backup",
             "restore-backup",
             "retry-restore",
+            "renew-restore",
             "verify-backup",
             "export-backup",
             "remove-readers",
@@ -2887,7 +2894,9 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path)
     parser.add_argument("--restore-namespace", default=restored_namespace)
     arguments = parser.parse_args()
-    if not re.fullmatch(r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", arguments.restore_namespace):
+    if arguments.restore_namespace != DELIVERY_VALIDATION_NAMESPACE and not re.fullmatch(
+        r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", arguments.restore_namespace
+    ):
         parser.error("Restore namespace must be a bounded Storm restoration namespace")
     restored_namespace = arguments.restore_namespace
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
@@ -2924,6 +2933,10 @@ def main() -> None:
             restore_backup(arguments.journal, journal)
         elif arguments.operation == "retry-restore":
             retry_restore(arguments.journal, journal)
+        elif arguments.operation == "renew-restore":
+            import restoration_retry
+
+            restored_namespace = restoration_retry.renew_restore(sys.modules[__name__], arguments.journal, journal)
         elif arguments.operation == "verify-backup":
             verify_backup(arguments.journal, journal)
         elif arguments.operation == "export-backup":

@@ -667,6 +667,15 @@ It requires the same stopped lease, exact failed native owner, no production
 write authorization and no existing target claim. It never deletes a failed
 restore's independent storage. Fix admission failures before retrying; never
 accept the partially failed Restore as a completed rollback proof.
+If OpenEBS has already created a copy and refuses another restore to that
+namespace, `renew-restore` preserves all failed objects and starts a new Backup
+in the same stopped lease. It seals the new restore target to Delivery's
+source-owned validation namespace, requiring that namespace to contain no pods
+or claims. This transition is allowed once, before any writer authorization or
+retained reader. Poll `backup`, then `restore-backup`, using
+`--restore-namespace minecraft-tsmc-delivery-validation` for this journal's
+remaining operations. The new independent restore must complete and pass the
+same whole-volume byte verification; retained failed copies never become proof.
 The recorded claim, PV and native CSI volume handle must all identify distinct
 storage. Both commands report pending controller work and can be repeated.
 Controller warnings remain recorded for operator review. A completed restore

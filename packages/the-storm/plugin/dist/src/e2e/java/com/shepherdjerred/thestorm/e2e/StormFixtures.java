@@ -336,11 +336,12 @@ public final class StormFixtures extends JavaPlugin implements Listener {
    * it. Paper asks TheStorm for the generator while this plugin is still starting.
    */
   private void creativeWorld() {
+    var storm =
+        (JavaPlugin) Objects.requireNonNull(getServer().getPluginManager().getPlugin("TheStorm"));
+    // Paper's string resolver rejects a plugin before enable; the fixture runs before Storm.
+    var generator = Objects.requireNonNull(storm.getDefaultWorldGenerator("creative", "creative"));
     Objects.requireNonNull(
-        new WorldCreator("creative")
-            .generator("TheStorm:creative")
-            .generateStructures(false)
-            .createWorld());
+        new WorldCreator("creative").generator(generator).generateStructures(false).createWorld());
   }
 
   /**
