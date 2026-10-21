@@ -164,7 +164,7 @@ under the 16 GiB `zfs_arc_max` and adds nothing to the kubelet's 24Gi
 `systemReserved`. Raising the dirty budget further means raising `zfs_arc_max`
 and `systemReserved` in lockstep, and lowering `computeQuota.memory` in
 `src/cdk8s/src/misc/ci-admission-budget.json` by the same amount: the Kueue
-quotas (82Gi) plus buildkitd (5Gi) already sit within ~4Gi of the ~91.5Gi
+quotas (82Gi, including Delivery's 8Gi reserve) plus buildkitd (5Gi) already sit within ~4Gi of the ~91.5Gi
 allocatable. Canaries: `ZfsArcHitRateLow` (cache squeezed), `ZfsAnonDataHigh`
 (now 12 GiB), `LiskovMemoryAvailableLow`.
 
@@ -194,7 +194,7 @@ under normal CI load; the targets are under 0.3 TB/day on `nvme0n1` and under
 Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Kubernetes
 currently reports approximately 91.5Gi of allocatable memory on liskov. CI pods
 are admitted by Kueue against the budget in
-`src/cdk8s/src/misc/ci-admission-budget.json` (80Gi memory / 24 CPU), and the
+`src/cdk8s/src/misc/ci-admission-budget.json` (72Gi memory / 24 CPU), beside Delivery's separate 8Gi / 2 CPU Job reserve, and the
 Woodpecker agent's workflow cap is the count backstop. Keep watching liskov's
 available-memory and eviction signals before raising either limit; see
 [Why CI jobs queue instead of failing](../../../../docs/wiki/src/content/docs/explanation/homelab/ci-admission.md).

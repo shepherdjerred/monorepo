@@ -198,7 +198,7 @@ describe("pooled CI admission budget", () => {
     );
     expect(budget.quota).toEqual({
       cpu: "24",
-      memory: "80Gi",
+      memory: "72Gi",
       "ephemeral-storage": "60Gi",
     });
   });

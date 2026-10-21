@@ -83,8 +83,9 @@ claims are smaller too.
 
 ## Why Delivery Jobs have their own reserve
 
-Delivery runs its executor stages as Jobs on liskov. Each Job requests two
-CPUs, 8Gi of memory, and 32Gi of scratch storage.
+Delivery runs its executor stages as [Jobs](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/delivery/job-manifest.ts)
+on liskov. Each Job requests two CPUs, 8Gi of memory, and 32Gi of scratch
+storage.
 
 Those Jobs used to queue with CI. Their `batch-low` pod priority already
 outranked every CI priority, so a waiting Job sat at the head of the queue.
@@ -92,12 +93,16 @@ Priority orders waiting work, but it reserves nothing. Without preemption,
 Kueue admits smaller CI pods past a head that does not fit. Under steady CI
 load, a Delivery Job waited until enough CI happened to finish at once.
 
-Delivery's ClusterQueue now holds exactly one Job's requests, and it joins no
-cohort. CI cannot borrow the idle slot, so a Delivery Job never waits for CI.
+Delivery's [ClusterQueue](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/kueue-config.ts)
+now holds exactly one Job's requests, and it joins no cohort. CI cannot borrow
+the idle slot, so a Delivery Job never waits for CI.
 Delivery cannot borrow CI quota either, so CI keeps its whole budget. CI's
 scratch quota never fitted two Delivery Jobs, so one slot keeps Delivery's
-existing concurrency. The cost is liskov capacity: the slot sits beside the CI
-budget rather than inside it.
+existing concurrency. The slot sits beside the CI budget, so the CI compute
+memory quota in the
+[admission budget](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json)
+gives up the Job's 8Gi. Every queue plus buildkitd then stays under liskov's
+allocatable memory, which is what lets an admitted Job schedule at once.
 
 ## Admission priority does not preempt production
 

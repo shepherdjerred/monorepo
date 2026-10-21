@@ -178,16 +178,35 @@ describe("kueue-config", () => {
 
   it("takes the CI budget from its language-neutral source", () => {
     expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("23");
-    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("78Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("70Gi");
     expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("56Gi");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "cpu")).toBe("1");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "memory")).toBe("2Gi");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "ephemeral-storage")).toBe("4Gi");
     expect(CI_ADMISSION_BUDGET.quota).toEqual({
       cpu: "24",
-      memory: "80Gi",
+      memory: "72Gi",
       "ephemeral-storage": "60Gi",
     });
+  });
+
+  it("keeps every queue's memory plus buildkitd within liskov's allocatable memory", () => {
+    // Kueue admits against each queue alone, so an admitted pod can still sit
+    // unschedulable when the queues together exceed the node. liskov reports
+    // about 91.5Gi allocatable, and buildkitd permanently requests 5Gi
+    // (`resources/buildkitd.ts`).
+    const LISKOV_ALLOCATABLE_GIB = 91.5;
+    const BUILDKITD_REQUEST_GIB = 5;
+    const queuedGib = CLUSTER_QUEUES.map((name) => {
+      const memory = quota(name, "memory") ?? "";
+      if (!/^\d+Gi$/u.test(memory)) {
+        throw new Error(`${name} memory quota is not whole Gi: ${memory}`);
+      }
+      return Number.parseInt(memory, 10);
+    }).reduce((total, gib) => total + gib, 0);
+    expect(queuedGib + BUILDKITD_REQUEST_GIB).toBeLessThanOrEqual(
+      LISKOV_ALLOCATABLE_GIB,
+    );
   });
 
   /**

@@ -42,7 +42,9 @@ export const CI_MAINTENANCE_LOCAL_QUEUE = "ci-maintenance";
  * CI pods past a head that does not fit, so a Job needing 32Gi of scratch
  * waited until enough CI happened to finish at once. That quota also never
  * fitted two Jobs, so one reserved slot keeps Delivery's concurrency. The slot
- * sits beside the CI budget, not inside it, and liskov's allocatable covers it.
+ * sits beside the CI budget, and the CI compute memory quota in
+ * `misc/ci-admission-budget.json` gives up the Job's 8Gi so every queue plus
+ * buildkitd still fits liskov's allocatable memory.
  */
 export const DELIVERY_CLUSTER_QUEUE = "delivery";
 const DELIVERY_JOB_NAMESPACES = [

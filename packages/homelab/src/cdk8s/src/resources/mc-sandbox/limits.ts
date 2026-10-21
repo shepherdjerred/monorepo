@@ -9,7 +9,7 @@ import { MC_SANDBOX_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resource
 /**
  * Hard cap on everything the harness can run at once. Sandboxes run on the CI
  * node (liskov) next to Woodpecker, whose admission budget Kueue enforces in
- * `resources/kueue-config.ts` (24 CPU / 80Gi of liskov's ~29 CPU / 91.5Gi).
+ * `resources/kueue-config.ts` (24 CPU / 72Gi of liskov's ~29 CPU / 91.5Gi).
  * The requests below fit in the remaining headroom, and the pods run at
  * `batch-low`, so service work can preempt them.
  *
