@@ -31,13 +31,13 @@ Woodpecker builds. 1Password holds secrets. Target adapters reconcile.
 
 ## 2. Guarantees
 
-| Id  | Property        | Meaning                                                                                                                                                                                                            | Delivered by                         |
-| --- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
-| G1  | Reproducibility | Any previously accepted selection can be identified, fetched byte-for-byte, and redeployed.                                                                                                                        | A1, A6, R1, P1, F1, precondition PC1 |
-| G2  | Consistency     | An environment's accepted selection is one set revision whose components satisfied every declared constraint; only the accepted selection and retained hosts are ever live.                                        | K1, R2, A3, E4, M2, T3               |
-| G3  | Independence    | One service's release never waits on, or is broken by, another service's release unless a declared edge (a tracking reference or a prerequisite) says so.                                                          | S2, T1, A5, Z1                       |
-| G4  | Evidence        | Every change to a running system is a recorded deployment with recorded acceptance, or, for `operator-run`, an operator attestation recorded with its evidence. Nothing is believed because a file in Git says so. | C3, D1, V1, V3, T5                   |
-| G5  | Recoverability  | Any ambiguous effect leaves ownership held until an independent inspection settles it. The record survives loss of the executor, and loss of the record is detectable and reconcilable.                            | D1, D5, D7, I1, precondition PC2     |
+| Id  | Property        | Meaning                                                                                                                                                                                                                                                  | Delivered by                         |
+| --- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| G1  | Reproducibility | Any previously accepted selection can be identified, fetched byte-for-byte, and redeployed.                                                                                                                                                              | A1, A6, R1, P1, F1, precondition PC1 |
+| G2  | Consistency     | An environment's accepted selection is one set revision whose components satisfied every declared constraint; in settled state only the accepted selection and retained hosts are live; while a deployment is owned, its desired selection is also live. | K1, R2, A3, E4, M2, T3               |
+| G3  | Independence    | One service's release never waits on, or is broken by, another service's release unless a declared edge (a tracking reference or a prerequisite) says so.                                                                                                | S2, T1, A5, Z1                       |
+| G4  | Evidence        | Every change to a running system is a recorded deployment with recorded acceptance, or, for `operator-run`, an operator attestation recorded with its evidence. Nothing is believed because a file in Git says so.                                       | C3, D1, V1, V3, T5                   |
+| G5  | Recoverability  | Any ambiguous effect leaves ownership held until an independent inspection settles it. The record survives loss of the executor, and loss of the record is detectable and reconcilable.                                                                  | D1, D5, D7, I1, precondition PC2     |
 
 Preconditions the guarantees rest on and the model cannot provide by itself:
 
@@ -500,10 +500,11 @@ hosts, prerequisite acceptances, plan identity), stages, evidence, approvals,
 result, executor lease, `recoveryRequired`.
 
 **States.** `queued`; `owned` once every lock is held and a lease is
-recorded; then exactly one terminal result: `accepted`, `failed`, or
-`canceled`. `recovery-required` is an ownership flag on a terminal result,
-not a fifth state: the result is kept (I3) and the deployment keeps its
-locks until a recovery intent settles it.
+recorded, optionally carrying a `handoff` marker for a self-hosted
+deployment awaiting its successor executor (D8); then exactly one terminal
+result: `accepted`, `failed`, or `canceled`. `recovery-required` is an
+ownership flag on a terminal result, not a fifth state: the result is kept
+(I3) and the deployment keeps its locks until a recovery intent settles it.
 
 **Invariants.**
 
@@ -526,13 +527,17 @@ locks until a recovery intent settles it.
 - D7. `owned` records the executor workflow id and a lease. A deployment
   whose lease expires without renewal, or whose workflow is closed, becomes
   `recovery-required`. A deployment is never owned by a different executor
-  identity; the same workflow may resume after a transient failure.
+  identity, except the successor executor of a self-hosted handoff (D8); the
+  same workflow may resume after a transient failure.
 - D8. A deployment of a `self-hosted` service acquires a global dispatch
   barrier before effects: no other deployment is claimed while the barrier
   is held, queues are drained first, and the deployment's evidence source is
-  frozen before applying. It is accepted only by the successor executor
-  reading the frozen record; until then it is `recovery-required` by
-  construction. An ambiguous result retains the barrier.
+  frozen before applying. After applying, the outgoing executor leaves the
+  deployment `owned` with a `handoff` marker and a frozen lease that does
+  not expire; the successor executor takes ownership by reading the frozen
+  record, verifies acceptance and finishes it. If no successor finishes it
+  while the barrier is held, an operator settles it through a recovery
+  intent. An ambiguous result retains the barrier.
 - D9. The API computes an environment's rollback candidates from previously
   accepted selections, excluding any that would cross a `forwardOnly`
   configuration key or a `pointOfNoReturn` sub-step since acceptance, or
@@ -952,13 +957,6 @@ ArgoCD becomes the limiting factor for cold start.
   so consumers recompose in a declared order.
 - How the retained host set and non-durable environments are bounded so
   retained hosts and sandboxes cannot grow without limit.
-- Whether the global dispatch barrier (D8) should also cover ArgoCD's own
-  upgrade, given that the independent reader bypasses the ArgoCD server.
-- Whether a monitor may use elapsed time as its threshold (Amazon's bake
-  time). The repository's standing rule forbids fixed waiting periods in
-  rollouts and gates on evidence instead; W4 follows that rule and allows
-  time only where no evidence signal exists. If bake time is wanted for
-  services with little traffic, W4 is the invariant to relax.
 
 ## 11. Glossary
 
