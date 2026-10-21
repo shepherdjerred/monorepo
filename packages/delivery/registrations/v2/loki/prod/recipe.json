@@ -28,6 +28,7 @@
               "chart": "loki-companion"
             },
             "syncOptions": [
+              "CreateNamespace=true",
               "ServerSideApply=true",
               "RespectIgnoreDifferences=true"
             ],

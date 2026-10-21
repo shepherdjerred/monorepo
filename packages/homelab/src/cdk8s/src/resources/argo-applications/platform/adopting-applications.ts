@@ -8,7 +8,9 @@ import { TUNNEL_BINDING_IGNORE_DIFFERENCES } from "@shepherdjerred/homelab/cdk8s
  * ownership flip from its catalog recipe, and it adopts objects the root
  * applied (the cluster baseline charts and the upstream services' companion
  * charts). Server-side apply and the root's TunnelBinding ignore rule keep
- * that adoption free of field-manager and operator-default churn.
+ * that adoption free of field-manager and operator-default churn. A compound
+ * recipe syncs a companion before its upstream Application, so the companion
+ * creates the destination namespace on a cold start or after a deletion.
  */
 export function createAdoptingApplication(
   chart: Chart,
@@ -32,7 +34,11 @@ export function createAdoptingApplication(
       ignoreDifferences: [TUNNEL_BINDING_IGNORE_DIFFERENCES],
       syncPolicy: {
         automated: { enabled: true },
-        syncOptions: ["ServerSideApply=true", "RespectIgnoreDifferences=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
     },
   });

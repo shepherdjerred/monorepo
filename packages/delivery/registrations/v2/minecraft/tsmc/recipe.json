@@ -28,6 +28,7 @@
               "chart": "minecraft-tsmc-companion"
             },
             "syncOptions": [
+              "CreateNamespace=true",
               "ServerSideApply=true",
               "RespectIgnoreDifferences=true"
             ],

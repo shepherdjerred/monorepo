@@ -28,6 +28,7 @@
               "chart": "tempo-companion"
             },
             "syncOptions": [
+              "CreateNamespace=true",
               "ServerSideApply=true",
               "RespectIgnoreDifferences=true"
             ],

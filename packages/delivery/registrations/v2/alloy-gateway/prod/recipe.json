@@ -28,6 +28,7 @@
               "chart": "alloy-gateway-companion"
             },
             "syncOptions": [
+              "CreateNamespace=true",
               "ServerSideApply=true",
               "RespectIgnoreDifferences=true"
             ],

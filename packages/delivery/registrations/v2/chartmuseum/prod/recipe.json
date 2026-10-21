@@ -28,6 +28,7 @@
               "chart": "chartmuseum-companion"
             },
             "syncOptions": [
+              "CreateNamespace=true",
               "ServerSideApply=true",
               "RespectIgnoreDifferences=true"
             ],

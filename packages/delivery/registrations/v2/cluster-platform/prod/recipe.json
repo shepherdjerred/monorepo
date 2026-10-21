@@ -21,7 +21,11 @@
         "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
         "chart": "cluster-platform"
       },
-      "syncOptions": ["ServerSideApply=true", "RespectIgnoreDifferences=true"],
+      "syncOptions": [
+        "CreateNamespace=true",
+        "ServerSideApply=true",
+        "RespectIgnoreDifferences=true"
+      ],
       "ignoreDifferences": [
         {
           "group": "networking.cfargotunnel.com",

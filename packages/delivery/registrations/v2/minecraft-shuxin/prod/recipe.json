@@ -28,6 +28,7 @@
               "chart": "minecraft-shuxin-companion"
             },
             "syncOptions": [
+              "CreateNamespace=true",
               "ServerSideApply=true",
               "RespectIgnoreDifferences=true"
             ],
