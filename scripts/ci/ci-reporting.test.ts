@@ -422,6 +422,7 @@ describe("CI reporting manifest", () => {
           "scripts/argocd/argocd-release-result.test.ts",
           "scripts/argocd/argocd-verified-receipt.test.ts",
           "scripts/tofu/tofu-stack.test.ts",
+          "scripts/tofu/tofu-external-files.test.ts",
           "scripts/tofu/delivery-stack.test.ts",
           "scripts/helm/helm-delivery-publication.test.ts",
           "scripts/ci/bootstrap-selection.test.ts",

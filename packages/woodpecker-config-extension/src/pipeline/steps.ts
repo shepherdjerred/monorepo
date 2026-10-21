@@ -13,7 +13,11 @@ import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
 import { trmnlSteps } from "#src/pipeline/lanes/trmnl.ts";
-import { HANDOFF_KEYS, tofuValidationSteps } from "#src/pipeline/lanes/tofu.ts";
+import {
+  HANDOFF_KEYS,
+  tofuArchiveSteps,
+  tofuValidationSteps,
+} from "#src/pipeline/lanes/tofu.ts";
 import { playwrightSteps } from "#src/pipeline/lanes/playwright.ts";
 import { artifactPublicationSteps } from "#src/pipeline/lanes/artifacts.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
@@ -175,6 +179,7 @@ export function buildPipelineSteps({
     ...resumeSteps(images),
     ...trmnlSteps(images),
     ...tofuValidationSteps(images),
+    ...tofuArchiveSteps(images),
     ...playwrightSteps(images, changedBase),
     ...artifactPublicationSteps(images, sharedEnvironment),
     ...deliveryPublicationSteps(images, deliveryPublication, true),

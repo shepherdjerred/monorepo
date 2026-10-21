@@ -53,12 +53,32 @@ export async function staticArchiveFiles(directory: string): Promise<string[]> {
   return files.sort();
 }
 
-/** Standard tar, deterministic names/modes/timestamps, streamed to bounded disk. */
+/** An explicit member list: validated names, no duplicates, sorted for determinism. */
+function explicitArchiveFiles(names: readonly string[]): string[] {
+  const files = [...new Set(names.map((name) => staticArchivePath(name)))];
+  if (files.length === 0) throw new Error("Static archive source is empty");
+  if (files.length > MAX_ARCHIVE_FILES)
+    throw new Error("Static archive has too many files");
+  return files.sort();
+}
+
+/**
+ * Standard tar, deterministic names/modes/timestamps, streamed to bounded disk.
+ *
+ * Without `files`, every regular file under `source` is archived by its
+ * source-relative name. With `files`, exactly those source-relative names are
+ * archived, which lets a producer freeze a subtree plus declared inputs under
+ * repository-relative paths.
+ */
 export async function createStaticArchive(
   source: string,
   output: string,
+  members?: readonly string[],
 ): Promise<{ digest: string; files: string[] }> {
-  const files = await staticArchiveFiles(source);
+  const files =
+    members === undefined
+      ? await staticArchiveFiles(source)
+      : explicitArchiveFiles(members);
   const { readable, controller } = createTarPacker();
   await mkdir(path.dirname(output), { recursive: true });
   const writing = Bun.write(output, new Response(readable));

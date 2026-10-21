@@ -9,6 +9,13 @@ export type CredentialMapping = {
 
 export type StackDefinition = {
   credentials: readonly CredentialMapping[];
+  /**
+   * Repository files outside the stack directory that its configuration reads
+   * at plan time through `file()` and friends. The archive producer freezes
+   * exactly these next to the stack, and the external-file lint fails on any
+   * other reference that escapes the directory.
+   */
+  externalFiles: readonly string[];
   secretObject?: {
     target: string;
     entries: Readonly<Record<string, string>>;
@@ -33,6 +40,7 @@ export const STATE_CREDENTIALS: readonly CredentialMapping[] = [
 
 export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   "application-secrets": {
+    externalFiles: [],
     encrypted: true,
     credentials: [
       {
@@ -42,6 +50,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   anthropic: {
+    externalFiles: [],
     platform: "anthropic",
     encrypted: true,
     credentials: [
@@ -59,6 +68,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   // short-lived `org:admin` OAuth token minted with `ant auth login`, so there is
   // no credential CI could hold; workspaces still take the Admin API key.
   "anthropic-federation": {
+    externalFiles: [],
     platform: "anthropic-federation",
     encrypted: true,
     credentials: [
@@ -76,6 +86,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   argocd: {
+    externalFiles: [],
     credentials: [
       { source: "ARGOCD_AUTH_TOKEN", target: "TF_VAR_argocd_auth_token" },
       {
@@ -85,6 +96,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   arr: {
+    externalFiles: [],
     credentials: [
       { source: "RADARR_API_KEY", target: "TF_VAR_radarr_api_key" },
       { source: "SONARR_API_KEY", target: "TF_VAR_sonarr_api_key" },
@@ -102,6 +114,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   asuswrt: {
+    externalFiles: [],
     localProvider: "asuswrt",
     credentials: [
       { source: "ASUSWRT_USERNAME", target: "TF_VAR_asuswrt_username" },
@@ -109,6 +122,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   cloudflare: {
+    externalFiles: ["packages/homelab/src/domain-registry.json"],
     credentials: [
       {
         source: "CLOUDFLARE_ACCOUNT_ID",
@@ -118,6 +132,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   "cloudflare-tokens": {
+    externalFiles: [],
     platform: "cloudflare-tokens",
     encrypted: true,
     credentials: [
@@ -129,6 +144,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   discord: {
+    externalFiles: [],
     platform: "discord",
     encrypted: true,
     credentials: [
@@ -150,11 +166,13 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     },
   },
   github: {
+    externalFiles: [],
     credentials: [
       { source: "TOFU_GITHUB_TOKEN", target: "TF_VAR_github_token" },
     ],
   },
   dockerhub: {
+    externalFiles: ["packages/version-catalog/src/image-registry.json"],
     encrypted: true,
     credentials: [
       { source: "DOCKERHUB_USERNAME", target: "DOCKER_USERNAME" },
@@ -166,6 +184,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   "dockerhub-tokens": {
+    externalFiles: [],
     encrypted: true,
     operatorOnly: true,
     credentials: [
@@ -180,6 +199,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   // organization only a user account can create projects, so there is no
   // bootstrap key CI could hold that would do this stack's job.
   google: {
+    externalFiles: [],
     platform: "google",
     encrypted: true,
     credentials: [
@@ -192,6 +212,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   openai: {
+    externalFiles: [],
     platform: "openai",
     encrypted: true,
     credentials: [
@@ -208,6 +229,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   posthog: {
+    externalFiles: ["config/analytics-sites.json"],
     validationPassphraseVariable: "state_passphrase",
     credentials: [
       { source: "POSTHOG_CLI_API_KEY", target: "POSTHOG_API_KEY" },
@@ -218,6 +240,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   seaweedfs: {
+    externalFiles: [],
     credentials: [
       {
         source: "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",
@@ -230,6 +253,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     ],
   },
   tailscale: {
+    externalFiles: [],
     credentials: [
       {
         source: "TAILSCALE_OAUTH_CLIENT_ID",

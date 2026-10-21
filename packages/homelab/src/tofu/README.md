@@ -125,6 +125,19 @@ Woodpecker runs backend-disabled OpenTofu validation on PRs when infrastructure
 inputs change, without provider or remote-state credentials. CI does not plan
 or apply infrastructure.
 
+Every default-branch build also freezes each stack as an immutable,
+content-addressed archive (`s3://delivery-artifacts/tofu/<stack>/<digest>.tar`)
+and registers it with Delivery under the `tofu-<stack>` service. An archive
+holds the stack directory under its repository path, including
+`.terraform.lock.hcl` and local `modules/`, plus the repository files the
+stack's `externalFiles` entry in `scripts/tofu/tofu-stack-manifest.ts`
+declares; `.terraform/`, state, saved plans, `tests/` and `desired-state.json`
+are left out. A configuration that reads a file outside its directory must
+declare it there: `bun run lint:tofu` and the homelab test suite fail on an
+undeclared read, an unread declaration, or a declared file that does not
+exist. Every `backend.tf` sets `use_lockfile = true`, so concurrent runs
+serialize on the state bucket's lock object rather than on a shared checkout.
+
 Delivery owns operational plans and applies for registered stacks. Applies
 consume the exact encrypted saved plan; stacks marked `reviewed-plan` require
 a human decision on that plan. Stack modes and prerequisites are declared in

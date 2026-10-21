@@ -70,6 +70,7 @@ logs/
 coverage/
 /.ci-reports/
 /.delivery-artifacts/
+/.delivery-tofu-artifacts/
 # Written by `release-root`, including its dry run; a receipt for one
 # execution, never source.
 /packages/homelab/homelab-release-result.json

@@ -270,6 +270,7 @@ describe("signed workflow routing", () => {
       "sites",
       "scout-site-archives",
       "trmnl-plugin-archives",
+      "tofu-archives",
       "delivery-publish",
     ]) {
       const config = result.configs.find(

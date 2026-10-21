@@ -70,13 +70,13 @@ test.each([false, true])(
   },
 );
 
-test("static and Scout producers always publish immutable archives, independently of API bootstrap", () => {
+test("static, Scout and OpenTofu producers always publish immutable archives, independently of API bootstrap", () => {
   const graph = buildPipelineSteps({
     images: TEST_IMAGES,
     changedBase: "base",
   });
   expect(graph.some((step) => step.key === "delivery-publish")).toBe(false);
-  for (const key of ["sites", "scout-site-archives"]) {
+  for (const key of ["sites", "scout-site-archives", "tofu-archives"]) {
     const producer = graph.find((step) => step.key === key);
     expect(producer?.defaultBranchOnly).toBe(true);
     expect(
@@ -141,6 +141,7 @@ test("artifact publication preserves build gates and has no deployment-acceptanc
       "sites",
       "scout-site-archives",
       "trmnl-plugin-archives",
+      "tofu-archives",
     ]),
   );
   expect(publication?.commands).toContain(

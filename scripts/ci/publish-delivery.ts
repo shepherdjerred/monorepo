@@ -39,6 +39,12 @@ import {
   platformSourceFiles,
 } from "../lib/ci/delivery-platform-publication.ts";
 import { PublicationLedger } from "../lib/ci/delivery-publication-ledger.ts";
+import {
+  attachTofuArchivePublications,
+  TOFU_ARCHIVE_HANDOFF,
+} from "../lib/ci/delivery-tofu-publication.ts";
+import { staticSiteServiceId } from "../lib/ci/static-site-publications.ts";
+import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/u);
 const DigestsSchema = z.record(
@@ -416,13 +422,27 @@ async function main() {
     options.staticArchives
       ? (bucket) =>
           client.latestQualifiedArtifact({
-            serviceId: "static-sites",
+            serviceId: staticSiteServiceId(bucket),
             component: `site:${bucket}`,
             kind: "archive",
           })
       : undefined,
   );
-  for (const publication of platformPublications) {
+  const rawTofuArchives: unknown = JSON.parse(
+    await readRequiredHandoff(TOFU_ARCHIVE_HANDOFF),
+  );
+  const tofuPublications = attachTofuArchivePublications(
+    platformPublications,
+    rawTofuArchives,
+    {
+      sourceRevision,
+      pipelineNumber,
+      repositoryId,
+      ciUrl: requireEnv("CI_PIPELINE_URL"),
+      capturedAt: new Date().toISOString(),
+    },
+  );
+  for (const publication of tofuPublications) {
     const result = await client.publish(publication);
     console.log(
       `Registered pending Delivery build ${result.buildId} for ${publication.serviceId}`,
