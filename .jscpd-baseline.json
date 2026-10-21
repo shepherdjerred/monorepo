@@ -393,8 +393,8 @@
       "tokens": 227
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 10,
-      "tokens": 904
+      "clones": 8,
+      "tokens": 735
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
       "clones": 1,
