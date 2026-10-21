@@ -3,12 +3,15 @@ import path from "node:path";
 import { z } from "zod";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import type { ServerInfo } from "./server.ts";
+import {
+  readServerFile,
+  STORM_DATA_ROOT,
+} from "#e2e/harness/external/files.ts";
 
 /**
  * Files under the server's plugins/TheStorm data folder: the SQLite database
  * and the rwf recordings. A local Docker server gives them up through `docker
- * cp`; the CI sidecar shares the folder into the workspace and names it in
- * STORM_E2E_STORM_DATA_DIR.
+ * cp`; an external server through its declared transport (`external/files.ts`).
  */
 const containerDataDir = "/data/plugins/TheStorm";
 
@@ -40,17 +43,14 @@ export async function stormDataFile(
       return target;
     }
     case "external": {
-      const shared = Bun.env["STORM_E2E_STORM_DATA_DIR"];
-      if (shared === undefined) {
-        throw new Error(
-          "STORM_E2E_STORM_DATA_DIR must name the sidecar's shared plugins/TheStorm folder",
-        );
-      }
-      const source = Bun.file(path.join(shared, relative));
-      if (!(await source.exists())) {
+      const bytes = await readServerFile(
+        info.files,
+        path.posix.join(STORM_DATA_ROOT, relative),
+      );
+      if (bytes === undefined) {
         return undefined;
       }
-      await Bun.write(target, source);
+      await Bun.write(target, bytes);
       return target;
     }
   }

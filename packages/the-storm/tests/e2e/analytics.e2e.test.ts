@@ -2,6 +2,7 @@ import { describe, expect } from "vitest";
 import { z } from "zod";
 import { test } from "./fixtures.ts";
 import { disconnectBot, waitForMessage } from "./harness/bot.ts";
+import { brainControlUrl } from "./harness/fake-brain.ts";
 
 const EventsSchema = z.array(
   z.object({
@@ -16,7 +17,7 @@ async function captured(port: number, player: string) {
   const deadline = Date.now() + 10_000;
   while (Date.now() < deadline) {
     const response = await fetch(
-      `http://127.0.0.1:${port.toString()}/v1/__control/analytics`,
+      brainControlUrl(port, "/v1/__control/analytics"),
     );
     const seen = EventsSchema.parse(await response.json()).filter(
       (event) => event.distinct_id === `the-storm:prod:player:${player}`,

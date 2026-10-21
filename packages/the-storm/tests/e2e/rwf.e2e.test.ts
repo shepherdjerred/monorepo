@@ -12,7 +12,7 @@ import {
   lookAround,
   readRecording,
 } from "./harness/rwfbots.ts";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import type { ServerInfo } from "./harness/server.ts";
 import {
   arrives,

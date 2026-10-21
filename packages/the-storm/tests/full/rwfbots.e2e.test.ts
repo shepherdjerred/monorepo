@@ -53,7 +53,7 @@ import {
   readTrails,
   type Trails,
 } from "#e2e/harness/rwf-trails.ts";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import type { ServerInfo } from "#e2e/harness/server.ts";
 import { querySqlite } from "#e2e/harness/storm-data.ts";
 import type { RconClient } from "#e2e/harness/rcon.ts";

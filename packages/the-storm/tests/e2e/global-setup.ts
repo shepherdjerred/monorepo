@@ -12,7 +12,8 @@ import {
   type E2eProfile,
 } from "./gameplay-fixtures.ts";
 import { rwfRecordingSalt } from "./harness/rwf-settings.ts";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { parseExternalServer } from "#e2e/harness/external/inputs.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import { startServer, type ServerInfo } from "./harness/server.ts";
 import {
   configureCapacityFeatures,
@@ -53,23 +54,6 @@ const ownedConfigDir = path.join(
   "TheStorm",
 );
 
-const ExternalServerSchema = z.object({
-  STORM_E2E_HOST: z.string().min(1),
-  STORM_E2E_GAME_PORT: z.coerce.number().int().positive(),
-  STORM_E2E_RCON_PORT: z.coerce.number().int().positive(),
-  STORM_E2E_RCON_PASSWORD: z.string().min(16),
-  STORM_E2E_LOG_FILE: z.string().min(1),
-  STORM_E2E_BRAIN_HOST: z.string().min(1),
-  STORM_E2E_BRAIN_PORT: z.coerce.number().int().positive(),
-  STORM_E2E_BRAIN_TOKEN: z.string().min(1),
-});
-
-function externalServerEnvironment(profile: E2eProfile) {
-  if (profile === "capacity")
-    throw new Error("Capacity requires its owned preboot feature fixture");
-  return ExternalServerSchema.parse(Bun.env);
-}
-
 async function arenaAdmission(server: ServerInfo): Promise<void> {
   // An idle runner can report "open" before asynchronous map validation finishes.
   for (let attempt = 0; attempt < 120; attempt++) {
@@ -109,22 +93,14 @@ export default async function setup(project: TestProject) {
   const bootstrap = capacityBootstrapEnvironment(profile);
   // The load profile is full plus the load-test switch and production limits.
   const full = profile !== "e2e";
-  // The agent refuses to start without its token, so both local and sidecar
+  // The agent refuses to start without its token, so both local and external
   // runs use the same strict fake brain contract.
   const external = Bun.env["STORM_E2E_HOST"] !== undefined;
   if (external) {
-    const env = externalServerEnvironment(profile);
-    const server: ServerInfo = {
-      kind: "external",
-      host: env.STORM_E2E_HOST,
-      gamePort: env.STORM_E2E_GAME_PORT,
-      rconPort: env.STORM_E2E_RCON_PORT,
-      rconPassword: env.STORM_E2E_RCON_PASSWORD,
-      logFile: env.STORM_E2E_LOG_FILE,
-    };
+    const { server, brain } = parseExternalServer(Bun.env, profile);
     if (full) await arenaAdmission(server);
     project.provide("server", server);
-    project.provide("brain", { port: env.STORM_E2E_BRAIN_PORT });
+    project.provide("brain", { port: brain.port });
     project.provide("capacityFeatures", null);
     return;
   }

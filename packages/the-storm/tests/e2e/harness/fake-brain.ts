@@ -116,6 +116,19 @@ async function controlRwfKits(
 }
 
 /**
+ * A control route on the suite's fake brain: the declared
+ * `STORM_E2E_BRAIN_HOST` beside an external server, else this process's own
+ * brain on loopback.
+ */
+export function brainControlUrl(port: number, route: string): string {
+  const host =
+    Bun.env["STORM_E2E_HOST"] === undefined
+      ? "127.0.0.1"
+      : z.string().min(1).parse(Bun.env["STORM_E2E_BRAIN_HOST"]);
+  return `http://${host}:${port.toString()}${route}`;
+}
+
+/**
  * Opens the full kit list and shop for exactly `kits`, and the killstreaks for
  * exactly `killstreaks` (player UUIDs), through the Flipt double's control hook.
  */
@@ -124,9 +137,8 @@ export async function setRwfKits(
   kits: string[],
   killstreaks: string[] = kits,
 ): Promise<void> {
-  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
   const response = await fetch(
-    `http://${host}:${port.toString()}/v1/__control/rwf-kits`,
+    brainControlUrl(port, "/v1/__control/rwf-kits"),
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -235,15 +247,11 @@ export async function setRwfDenied(
   port: number,
   denied: string[],
 ): Promise<void> {
-  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
-  const response = await fetch(
-    `http://${host}:${port.toString()}/v1/__control/rwf`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ denied }),
-    },
-  );
+  const response = await fetch(brainControlUrl(port, "/v1/__control/rwf"), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ denied }),
+  });
   if (!response.ok) {
     throw new Error(`rwf flag control failed: ${response.status.toString()}`);
   }
@@ -258,9 +266,8 @@ export async function setRwfFeatures(
   port: number,
   enabled: RwfFeature[],
 ): Promise<RwfFeature[]> {
-  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
   const response = await fetch(
-    `http://${host}:${port.toString()}/v1/__control/rwf-features`,
+    brainControlUrl(port, "/v1/__control/rwf-features"),
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -285,15 +292,11 @@ export async function setBrainMode(
   port: number,
   mode: FakeBrainMode,
 ): Promise<void> {
-  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
-  const response = await fetch(
-    `http://${host}:${port.toString()}/v1/__control`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ mode }),
-    },
-  );
+  const response = await fetch(brainControlUrl(port, "/v1/__control"), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ mode }),
+  });
   if (!response.ok) {
     throw new Error(`brain control failed: ${response.status.toString()}`);
   }

@@ -5,7 +5,7 @@ import path from "node:path";
 import { z } from "zod";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { stormModuleConfig } from "@shepherdjerred/mc-harness/sandbox/storm.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";

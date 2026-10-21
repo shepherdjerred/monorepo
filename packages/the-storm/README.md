@@ -129,6 +129,101 @@ running the Minecraft client. Sandbox gameplay scenarios use
 follow the repository's `minecraft-harness` skill for sandbox ownership and
 cleanup. These checks are also committer-run.
 
+### External servers
+
+Setting `STORM_E2E_HOST` runs `test:smoke`, `test:e2e` or `test:full` against
+an already-running Paper server instead of a local Docker container. No Docker
+CLI or `host.docker.internal` is involved. `tests/e2e/harness/external/inputs.ts`
+validates every input before the first test and names every missing or
+malformed one.
+
+| Variable                                         | Required                   | Meaning                                                                                                    |
+| ------------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `STORM_E2E_HOST`                                 | always                     | Server DNS name or IP for game and RCON traffic                                                            |
+| `STORM_E2E_GAME_PORT`, `STORM_E2E_RCON_PORT`     | always                     | TCP ports                                                                                                  |
+| `STORM_E2E_RCON_PASSWORD`                        | always                     | RCON password, at least 16 characters                                                                      |
+| `STORM_E2E_BRAIN_HOST`, `STORM_E2E_BRAIN_PORT`   | always                     | The fake brain (`tests/e2e/harness/fake-brain.ts`) the server was booted against; its control routes       |
+| `STORM_E2E_FILES_URL`, `STORM_E2E_FILES_TOKEN`   | one transport              | Origin and bearer token of the server files service (below)                                                |
+| `STORM_E2E_LOG_FILE`, `STORM_E2E_STORM_DATA_DIR` | one transport              | Shared folders: Paper's `logs/latest.log` and `plugins/TheStorm`, as the Woodpecker smoke lane mounts them |
+| `STORM_E2E_QUERY_PORT`                           | every profile except `e2e` | Paper's UDP Query port, read by the public-status test                                                     |
+
+The server must be booted fresh for that one run: staged for the suite's
+profile exactly as `tests/e2e/gameplay-fixtures.ts` and
+`tests/e2e/prepare-sidecar.ts` stage it, with the fake brain reachable before
+Paper starts, and never reused. Two tests that need local Docker report as
+skipped: active enforcement boots its own second server, and the Flight
+Recorder diagnostic reads the container's cgroup and copies the JFR file out.
+
+The server files service lets a runner read the server's log and TheStorm data
+without sharing its disk. Run it beside Paper with `/data` mounted read-only
+and the same uid or group as Paper:
+
+```bash
+STORM_E2E_SERVER_DATA_DIR=/data STORM_E2E_FILES_PORT=18082 \
+  STORM_E2E_FILES_TOKEN=<token> bun tests/e2e/harness/external/files-service.ts
+```
+
+It answers `GET /v1/server-files/<path>` for `logs/latest.log` and files under
+`plugins/TheStorm/` only, requires `Authorization: Bearer <token>`, and refuses
+symlinks that leave `/data`. It is test-only and never ships in a server image.
+
+### Sandbox qualification
+
+Delivery's `minecraft/sandbox` qualification environment runs the extended
+suites as deployment stages, outside CI, through one entrypoint:
+
+```bash
+bun run --cwd packages/the-storm qualify:sandbox \
+  --report /evidence/qualification.json \
+  --server-image docker.io/shepherdjerred/the-storm-server@sha256:<digest> \
+  --source-revision <40-character commit SHA> \
+  --suite e2e --suite full
+```
+
+Each named suite runs in order against its own freshly booted server, declared
+by `STORM_QUALIFY_<SUITE>_{HOST,GAME_PORT,RCON_PORT,RCON_PASSWORD,BRAIN_HOST,BRAIN_PORT,FILES_URL,FILES_TOKEN}`
+plus `STORM_QUALIFY_FULL_QUERY_PORT`. Each suite sees only its own variables as
+the `STORM_E2E_*` inputs above, and only the files service transport is
+accepted. Before a suite starts, the entrypoint claims its server by creating
+the `storm_qualified` scoreboard objective over RCON; a server that already
+served a run refuses the claim, so a retry needs a new server. A failing suite
+does not stop the later ones.
+
+| Suite  | Script      | Profile | Ceiling     |
+| ------ | ----------- | ------- | ----------- |
+| `e2e`  | `test:e2e`  | `e2e`   | 60 minutes  |
+| `full` | `test:full` | `full`  | 120 minutes |
+
+At its ceiling the suite's process group is stopped and the suite records an
+error. Exit status 0 means every suite passed; 1 means the report records a
+failure; 2 means an argument or variable was missing or malformed, nothing ran
+and no report was written. A missing report is always an execution error. The
+report file must not exist yet; evidence is never overwritten.
+
+`tools/sandbox-qualification/report.ts` defines the report and validates it
+before writing:
+
+| Field                                            | Meaning                                                                                 |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `schemaVersion`                                  | `1`                                                                                     |
+| `sourceRevision`                                 | Commit the suites ran from, as declared                                                 |
+| `serverImage`                                    | `docker.io/shepherdjerred/the-storm-server@sha256:…` under test, as declared            |
+| `outcome`                                        | `passed` exactly when every suite passed, else `failed`                                 |
+| `startedAt`, `finishedAt`                        | UTC ISO-8601 timestamps                                                                 |
+| `durationMs`                                     | Whole run                                                                               |
+| `suites[].name`, `command`                       | Suite and the package script it ran                                                     |
+| `suites[].target`                                | `host` and `gamePort` of its server; credentials are never recorded                     |
+| `suites[].outcome`                               | `passed`, `failed` (tests failed) or `error` (claim refused, ceiling, no Vitest report) |
+| `suites[].exitCode`                              | Vitest's exit code, or `null` when it never started or was stopped                      |
+| `suites[].tests`                                 | `total`, `passed`, `failed`, `skipped`, `todo`                                          |
+| `suites[].failures[]`                            | `file`, `test` (full name, or `null` for a file-level error), `messages`, `durationMs`  |
+| `suites[].skipped[]`                             | `file` and `test` of every skipped test                                                 |
+| `suites[].error`                                 | Why the suite errored or failed beyond its failing tests, else `null`                   |
+| `suites[].startedAt`, `finishedAt`, `durationMs` | Per-suite timing                                                                        |
+
+A suite passes only when Vitest exits 0, no test or file failed, and at least
+one test passed.
+
 ## Essentials command surface
 
 `/guide` opens the same welcome book delivered by the starter kit. It is optional

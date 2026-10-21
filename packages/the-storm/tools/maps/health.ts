@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import { connectBot, disconnectBot, waitForMessage } from "#e2e/harness/bot.ts";
 import { startFakeBrain, setRwfKits } from "#e2e/harness/fake-brain.ts";
 import type { startServer } from "#e2e/harness/server.ts";
