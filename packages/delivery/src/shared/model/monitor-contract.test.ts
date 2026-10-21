@@ -203,4 +203,57 @@ describe("observations", () => {
       }).success,
     ).toBe(false);
   });
+
+  test.each([
+    ["a watching monitor with a settlement time", { state: "watching" }],
+    [
+      "a watching monitor with an alarm time",
+      {
+        state: "watching",
+        settledAt: null,
+        alarmedAt: "2026-10-20T12:05:00.000Z",
+      },
+    ],
+    [
+      "a settled monitor with an alarm time",
+      { state: "settled", alarmedAt: "2026-10-20T12:05:00.000Z" },
+    ],
+    [
+      "an alarmed monitor with a settlement time",
+      { state: "alarmed", alarmedAt: "2026-10-20T12:05:00.000Z" },
+    ],
+    [
+      "an unmonitored selection with an alarm time",
+      {
+        state: "unmonitored",
+        policy: null,
+        alarmedAt: "2026-10-20T12:05:00.000Z",
+      },
+    ],
+  ])("refuses %s", (_name, fields) => {
+    const status = {
+      deploymentId: "dep-1",
+      state: "settled",
+      policy: "automatic",
+      settledAt: "2026-10-20T12:00:00.000Z",
+      alarmedAt: null,
+      observations: 3,
+    };
+    expect(
+      MonitorStatusSchema.safeParse({ ...status, ...fields }).success,
+    ).toBe(false);
+  });
+
+  test("accepts an unmonitored selection that settled on acceptance", () => {
+    expect(
+      MonitorStatusSchema.safeParse({
+        deploymentId: "dep-1",
+        state: "unmonitored",
+        policy: null,
+        settledAt: "2026-10-20T12:00:00.000Z",
+        alarmedAt: null,
+        observations: 0,
+      }).success,
+    ).toBe(true);
+  });
 });

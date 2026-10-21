@@ -215,13 +215,14 @@ export const KubernetesApplicationRecipeSchema = z
       safety === -1 ||
       sync === -1 ||
       safety > sync ||
-      kinds.filter((kind) => kind === "sync").length !== 1
+      kinds.filter((kind) => kind === "sync").length !== 1 ||
+      kinds.filter((kind) => kind === "apply-safety").length !== 1
     ) {
       context.addIssue({
         code: "custom",
         path: ["steps"],
         message:
-          "A kubernetes-application recipe runs the apply-safety preflight before exactly one sync",
+          "A kubernetes-application recipe runs exactly one apply-safety preflight before exactly one sync",
       });
     }
     const images = new Set(Object.values(recipe.artifactParameters));

@@ -68,7 +68,19 @@ describe("CreateDeploymentV2Schema", () => {
       },
     ],
     ["a retire-host without a host", { kind: "retire-host" }],
-    ["an override on a promote", { kind: "promote", override: true }],
+    [
+      "an override on a promote",
+      { kind: "promote", sourceEnvironmentId: "arcade/beta", override: true },
+    ],
+    ["a promote without its source environment", { kind: "promote" }],
+    [
+      "a promote that also names a set revision",
+      {
+        kind: "promote",
+        sourceEnvironmentId: "arcade/beta",
+        versionSetRevisionId: "arcade/12",
+      },
+    ],
     [
       "a source environment on a deploy",
       {

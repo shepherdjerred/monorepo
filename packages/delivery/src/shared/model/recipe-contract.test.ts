@@ -323,7 +323,29 @@ describe("RecipeDefinitionSchema", () => {
     [
       "a sync without the apply-safety preflight",
       { steps: [{ kind: "sync", instance: "application:arcade" }] },
-      /apply-safety preflight before exactly one sync/u,
+      /exactly one apply-safety preflight before exactly one sync/u,
+    ],
+    [
+      "an apply-safety step after the sync",
+      {
+        steps: [
+          { kind: "apply-safety", instance: "application:arcade" },
+          { kind: "sync", instance: "application:arcade" },
+          { kind: "apply-safety", instance: "application:arcade" },
+        ],
+      },
+      /exactly one apply-safety preflight before exactly one sync/u,
+    ],
+    [
+      "two apply-safety preflights",
+      {
+        steps: [
+          { kind: "apply-safety", instance: "application:arcade" },
+          { kind: "apply-safety", instance: "application:arcade" },
+          { kind: "sync", instance: "application:arcade" },
+        ],
+      },
+      /exactly one apply-safety preflight before exactly one sync/u,
     ],
     [
       "a step on another instance",

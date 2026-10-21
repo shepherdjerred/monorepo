@@ -95,12 +95,13 @@ export const CreateDeploymentV2Schema = z
     }
     if (
       namesSet &&
-      (input.kind === "rollback" ||
+      (input.kind === "promote" ||
+        input.kind === "rollback" ||
         input.kind === "rebind" ||
         input.kind === "retire-host")
     ) {
       refuse(
-        `${input.kind} takes its set revision from the environment, not the request`,
+        `${input.kind} takes its set revision from the environment it reads, not the request`,
       );
     }
     if (
@@ -124,8 +125,13 @@ export const CreateDeploymentV2Schema = z
         "retire-host names the retained host to remove; no other kind does",
       );
     }
-    if (input.kind !== "promote" && input.sourceEnvironmentId !== undefined) {
-      refuse("Only promote names a source environment");
+    if (
+      (input.kind === "promote") !==
+      (input.sourceEnvironmentId !== undefined)
+    ) {
+      refuse(
+        "promote names the source environment whose accepted selection it takes; no other kind does",
+      );
     }
     if (input.override && input.kind !== "deploy") {
       refuse(

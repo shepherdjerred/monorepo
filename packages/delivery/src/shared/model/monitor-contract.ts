@@ -130,6 +130,21 @@ export const WatchingMonitorSchema = z
   );
 export type WatchingMonitor = z.infer<typeof WatchingMonitorSchema>;
 
+/**
+ * Which timestamps each monitor state carries. An unmonitored selection may
+ * record the moment it settled on acceptance (W1) or, with no accepted
+ * deployment yet, none.
+ */
+const monitorStateTimestamps: Record<
+  z.infer<typeof MonitorStateSchema>,
+  { settledAt: boolean | "optional"; alarmedAt: boolean }
+> = {
+  unmonitored: { settledAt: "optional", alarmedAt: false },
+  watching: { settledAt: false, alarmedAt: false },
+  settled: { settledAt: true, alarmedAt: false },
+  alarmed: { settledAt: false, alarmedAt: true },
+};
+
 export const MonitorStatusSchema = z
   .strictObject({
     deploymentId: IdentifierSchema.nullable(),
@@ -140,16 +155,24 @@ export const MonitorStatusSchema = z
     observations: z.number().int().nonnegative(),
   })
   .superRefine((status, context) => {
-    if (status.state === "settled" && status.settledAt === null) {
+    const timestamps = monitorStateTimestamps[status.state];
+    if (
+      (status.settledAt !== null) !== timestamps.settledAt &&
+      timestamps.settledAt !== "optional"
+    ) {
       context.addIssue({
         code: "custom",
-        message: "A settled monitor records when it settled",
+        message: timestamps.settledAt
+          ? `A ${status.state} monitor records when it settled`
+          : `A ${status.state} monitor has no settlement time`,
       });
     }
-    if (status.state === "alarmed" && status.alarmedAt === null) {
+    if ((status.alarmedAt !== null) !== timestamps.alarmedAt) {
       context.addIssue({
         code: "custom",
-        message: "An alarmed monitor records when the alarm fired",
+        message: timestamps.alarmedAt
+          ? `A ${status.state} monitor records when the alarm fired`
+          : `A ${status.state} monitor has no alarm time`,
       });
     }
     if ((status.state === "unmonitored") !== (status.policy === null)) {
