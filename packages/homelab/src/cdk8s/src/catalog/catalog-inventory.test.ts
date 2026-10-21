@@ -9,7 +9,16 @@ import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts
 import { loadCatalogDocument } from "@shepherdjerred/ops-model/delivery-catalog/files.ts";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import type * as ReleaseConfiguration from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
-import { catalogApplications } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-applications.ts";
+import {
+  catalogApplications,
+  recipeApplications,
+} from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-applications.ts";
+import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
+import {
+  ORDINARY_DELIVERY_ENVIRONMENTS,
+  SPECIALIZED_DELIVERY_ENVIRONMENTS,
+  applicationReleasePolicy,
+} from "homelab/src/delivery-target-policy.ts";
 import {
   catalogRevisions,
   type CatalogRevisions,
@@ -78,6 +87,32 @@ async function desiredStates(): Promise<Record<string, string>> {
   );
 }
 
+const RenderedApplicationSchema = z.looseObject({
+  kind: z.literal("Application"),
+  metadata: z.looseObject({ name: z.string() }),
+});
+
+/**
+ * Rendered Applications no environment owns: the root, which the window
+ * orphans; postal-mariadb, which rides inside chart:postal; and the two
+ * operators the recipe contract cannot express yet (a Kustomize path and a
+ * scheme-less OCI repository).
+ */
+const UNOWNED_APPLICATIONS: ReadonlySet<string> = new Set([
+  "apps",
+  "cloudflare-operator",
+  "kueue",
+  "postal-mariadb",
+]);
+
+function applicationOwners(): Map<string, string[]> {
+  const owners = new Map<string, string[]>();
+  for (const [environmentId, revision] of revisions)
+    for (const name of recipeApplications(revision.recipe.definition))
+      owners.set(name, [...(owners.get(name) ?? []), environmentId]);
+  return owners;
+}
+
 async function formatted(value: unknown, file: string): Promise<string> {
   return prettier.format(JSON.stringify(value), {
     ...(await prettier.resolveConfig(file)),
@@ -87,6 +122,7 @@ async function formatted(value: unknown, file: string): Promise<string> {
 
 let revisions: Map<string, CatalogRevisions>;
 let edges: ReturnType<typeof derivedEdges>;
+let renderedApplications: string[];
 beforeAll(async () => {
   const app = new App({ outdir: ".test-synth-catalog" });
   await setupCharts(app);
@@ -94,6 +130,11 @@ beforeAll(async () => {
   // limits); read the charts as `dist` publishes them.
   app.synthYaml();
   const applications = catalogApplications(app);
+  renderedApplications = app.charts
+    .flatMap((chart) => z.array(z.unknown()).parse(chart.toJson()))
+    .map((manifest) => RenderedApplicationSchema.safeParse(manifest))
+    .filter((result) => result.success)
+    .map((result) => result.data.metadata.name);
   revisions = catalogRevisions({
     core: CATALOG_CORE,
     app,
@@ -119,6 +160,48 @@ describe("catalog revisions", () => {
         );
         await expect(await formatted(value, file)).toMatchFileSnapshot(file);
       }
+  });
+
+  test("every rendered Application belongs to exactly one environment's recipe", () => {
+    const owners = applicationOwners();
+    expect(
+      renderedApplications
+        .filter((name) => !UNOWNED_APPLICATIONS.has(name))
+        .filter((name) => owners.get(name)?.length !== 1),
+    ).toEqual([]);
+    for (const name of UNOWNED_APPLICATIONS)
+      expect(owners.has(name), name).toBe(false);
+  });
+
+  test("the homelab target policy's Applications are their environments' recipes", () => {
+    const owners = applicationOwners();
+    for (const [application, v1] of Object.entries({
+      ...ORDINARY_DELIVERY_ENVIRONMENTS,
+      ...SPECIALIZED_DELIVERY_ENVIRONMENTS,
+    })) {
+      // Neither renders an Application today: the launcher's chart is
+      // prepared and the forum's beta chart is inactive.
+      if (
+        application === "glitter-boys-launcher" ||
+        application === "storm-forum-beta"
+      ) {
+        expect(owners.has(application), application).toBe(false);
+        continue;
+      }
+      expect(owners.get(application), application).toEqual([
+        catalogEnvironmentOf(v1),
+      ]);
+    }
+    for (const name of ["pokemon", "mario-kart"]) {
+      expect(applicationReleasePolicy(name).owner).toBe("release-root");
+      const environmentId = owners.get(name)?.[0];
+      expect(
+        CATALOG_CORE.environments.find(
+          (environment) => environment.id === environmentId,
+        )?.lifecycle,
+        name,
+      ).toBe("retired");
+    }
   });
 
   test("the catalog declares exactly the edges today's ordering contracts imply", () => {

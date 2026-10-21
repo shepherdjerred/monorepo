@@ -1,6 +1,5 @@
 import type { App } from "cdk8s";
 import { z } from "zod";
-import type { RecipeDefinition } from "@shepherdjerred/delivery/model-contract";
 import type { CatalogCore } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import {
   environmentService,
@@ -9,6 +8,7 @@ import {
 import { TOFU_STACK_POLICIES } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { CLUSTER_PLATFORM_CHART } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
 import type { CatalogRevisions } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-revisions.ts";
+import { recipeApplications } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-applications.ts";
 
 /**
  * Prerequisite edges (Delivery model, 4.18) derived from the ordering
@@ -89,25 +89,6 @@ const ValuesSchema = z.looseObject({
 function apiGroup(apiVersion: string): string {
   const separator = apiVersion.indexOf("/");
   return separator === -1 ? "" : apiVersion.slice(0, separator);
-}
-
-function recipeApplications(definition: RecipeDefinition): string[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-      return [definition.application.name];
-    case "operator-run":
-      return definition.wrapped.kind === "kubernetes-application"
-        ? [definition.wrapped.application.name]
-        : [];
-    case "compound":
-      return definition.subRecipes.flatMap((sub) =>
-        recipeApplications(sub.definition),
-      );
-    case "static-site":
-    case "tofu":
-    case "channel":
-      return [];
-  }
 }
 
 type EnvironmentContent = {

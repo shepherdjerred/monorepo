@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   type ApplicationBody,
   ApplicationBodySchema,
+  type RecipeDefinition,
 } from "@shepherdjerred/delivery/model-contract";
 import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import { createAdoptingApplication } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/adopting-applications.ts";
@@ -254,4 +255,24 @@ export function helmPath(path: readonly (string | number)[]): string {
         : `${index === 0 ? "" : "."}${segment}`,
     )
     .join("");
+}
+
+/** The Applications a recipe creates or updates, in step order. */
+export function recipeApplications(definition: RecipeDefinition): string[] {
+  switch (definition.kind) {
+    case "kubernetes-application":
+      return [definition.application.name];
+    case "operator-run":
+      return definition.wrapped.kind === "kubernetes-application"
+        ? [definition.wrapped.application.name]
+        : [];
+    case "compound":
+      return definition.subRecipes.flatMap((sub) =>
+        recipeApplications(sub.definition),
+      );
+    case "static-site":
+    case "tofu":
+    case "channel":
+      return [];
+  }
 }
