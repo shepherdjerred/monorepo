@@ -129,7 +129,7 @@ test("explicit retained-volume restart finishes through ordinary reconciliation 
   ).toBe(0);
 });
 
-test("TSMC always refuses blind rollback and cannot fall through an ordinary Argo pipeline", async () => {
+test("TSMC rollback restores only an accepted selection and never another service's set", async () => {
   await context.delivery.registerPipeline(
     "minecraft/ordinary",
     { kind: "manual", reason: "Unverified legacy pipeline" },
@@ -148,24 +148,32 @@ test("TSMC always refuses blind rollback and cannot fall through an ordinary Arg
     },
     testOperator,
   );
-  const input = {
-    requestId: "minecraft/no-blind-rollback",
-    environmentId: env.id,
-    expectedGeneration: env.generation,
-    versionSetRevisionId: context.fixture.versionSet.id,
-    kind: "rollback" as const,
-  };
   // Rollback restores only a previously accepted selection (V2); past a
   // pointOfNoReturn step it is refused as data (D9), never by service id.
   await expect(
-    context.delivery.createDeployment(input, testOperator),
-  ).rejects.toThrow("Previously accepted rollback deployment not found");
-  await expect(
     context.delivery.createDeployment(
-      { ...input, requestId: "minecraft/no-generic-execution", kind: "deploy" },
+      {
+        requestId: "minecraft/no-blind-rollback",
+        environmentId: env.id,
+        expectedGeneration: env.generation,
+        selectionDeploymentId: "never-accepted",
+        kind: "rollback",
+      },
       testOperator,
     ),
-  ).rejects.toThrow("independent restored-copy preservation pipeline");
+  ).rejects.toThrow(/was never accepted in minecraft\/tsmc/u);
+  await expect(
+    context.delivery.createDeployment(
+      {
+        requestId: "minecraft/no-generic-execution",
+        environmentId: env.id,
+        expectedGeneration: env.generation,
+        versionSetRevisionId: context.fixture.versionSet.id,
+        kind: "deploy",
+      },
+      testOperator,
+    ),
+  ).rejects.toThrow("Version set belongs to another service");
   expect(await context.cluster.database.deployment.count()).toBe(0);
 });
 

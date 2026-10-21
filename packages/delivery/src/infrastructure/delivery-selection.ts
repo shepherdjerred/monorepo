@@ -208,18 +208,34 @@ export async function requestAutomatic(
   targetId: string,
   actor: Principal,
 ) {
+  // Automatic request identity keys on the environment's last terminal
+  // deployment, not on the binding generation (D3).
+  const lastTerminal = await this.database.deployment.findFirst({
+    where: {
+      environmentId: row.id,
+      status: { in: ["succeeded", "failed", "canceled"] },
+    },
+    orderBy: [{ finishedAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true },
+  });
+  const requestId = `automatic/${row.id}/${targetId}/${lastTerminal?.id ?? "initial"}`;
   try {
     return await this.createDeployment(
-      {
-        requestId: `automatic/${row.id}/${targetId}/${String(row.generation)}`,
-        environmentId: row.id,
-        versionSetRevisionId: targetId,
-        expectedGeneration: row.generation,
-        kind: row.promotionSourceEnvironmentId === null ? "deploy" : "promote",
-        ...(row.promotionSourceEnvironmentId === null
-          ? {}
-          : { sourceEnvironmentId: row.promotionSourceEnvironmentId }),
-      },
+      row.promotionSourceEnvironmentId === null
+        ? {
+            requestId,
+            environmentId: row.id,
+            versionSetRevisionId: targetId,
+            expectedGeneration: row.generation,
+            kind: "deploy",
+          }
+        : {
+            requestId,
+            environmentId: row.id,
+            expectedGeneration: row.generation,
+            kind: "promote",
+            sourceEnvironmentId: row.promotionSourceEnvironmentId,
+          },
       actor,
       true,
     );

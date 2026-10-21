@@ -1,3 +1,4 @@
+import { forumReleaseOf } from "#shared/model/recipe-view.ts";
 import type {
   Environment,
   PipelineRevision,
@@ -16,10 +17,9 @@ export function validateForumCandidate(
   selected: VersionSetRevision,
   configuration: Record<string, string>,
 ) {
-  const definition = pipeline.definition;
-  if (definition.kind !== "argocd" || definition.forumRelease === undefined)
-    return;
-  const bundle = selected.components[definition.forumRelease.bundleComponent];
+  const forum = forumReleaseOf(pipeline.definition);
+  if (forum === undefined) return;
+  const bundle = selected.components[forum.bundleComponent];
   if (
     bundle?.origin.kind !== "licensed-bundle" ||
     bundle.serviceId !== "storm-forum" ||
@@ -70,11 +70,7 @@ export async function freezeForumBaseline(
   },
 ) {
   const { environment, pipeline } = input;
-  if (
-    pipeline.definition.kind !== "argocd" ||
-    pipeline.definition.forumRelease === undefined
-  )
-    return null;
+  if (forumReleaseOf(pipeline.definition) === undefined) return null;
   if (
     (await tx.forumBaselineIntent.findFirst({
       where: { environmentId: environment.id, status: "pending" },

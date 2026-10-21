@@ -96,17 +96,22 @@ model BuildArtifactSelection {
 }
 
 model VersionSet {
-  id               String            @id
-  qualifiedBuildId String?           @unique
-  serviceId        String
-  service          Service           @relation(fields: [serviceId], references: [id])
-  revision         Int
-  baseRevisionId   String?
-  lineage          String
-  orderMajor       Int?
-  orderMinor       Int?
-  createdAt        DateTime          @default(now())
-  entries          VersionSetEntry[]
+  id                  String            @id
+  qualifiedBuildId    String?           @unique
+  serviceId           String
+  service             Service           @relation(fields: [serviceId], references: [id])
+  revision            Int
+  baseRevisionId      String?
+  lineage             String
+  orderMajor          Int?
+  orderMinor          Int?
+  /// Composed by qualification or a tracking recomposition (R2, R7); false for a manual hotfix (R3).
+  automatic           Boolean           @default(false)
+  /// The source environment's accepting deployment that triggered a tracking recomposition (R7).
+  triggerDeploymentId String?
+  triggerDeployment   Deployment?       @relation("TrackingTrigger", fields: [triggerDeploymentId], references: [id], onDelete: Restrict)
+  createdAt           DateTime          @default(now())
+  entries             VersionSetEntry[]
 
   @@unique([serviceId, revision])
   @@index([serviceId, lineage, orderMajor, orderMinor], map: "VersionSet_serviceId_lineage_order_idx")
@@ -205,7 +210,7 @@ model Deployment {
   platformSnapshot                     Json?
   controlPlaneSnapshot                 Json?
   forumBaselineSnapshot                Json?
-  prerequisiteSnapshot                 Json?
+  admissionSnapshot                    Json?
   platformSourceBuildId                String?
   platformSourceBuild                  Build?                      @relation("PlatformSource", fields: [platformSourceBuildId], references: [id], onDelete: Restrict)
   platformArtifacts                    PlatformArtifactReference[]
@@ -213,6 +218,7 @@ model Deployment {
   appliedPlatformPlan                  PlatformPlan?               @relation("AppliedPlatformPlan")
   platformLock                         PlatformLock?
   acceptedBy                           Environment[]               @relation("AcceptedSelection")
+  triggeredSets                        VersionSet[]                @relation("TrackingTrigger")
   recoveryIntents                      RecoveryIntent[]
   monitorObservations                  MonitorObservation[]
   expectedGeneration                   Int
@@ -225,6 +231,7 @@ model Deployment {
   workflowId                           String?
   workflowRunId                        String?
   leaseExpiresAt                       DateTime?
+  handoffAt                            DateTime?
   monitorState                         String?
   monitorSettledAt                     DateTime?
   monitorAlarmedAt                     DateTime?

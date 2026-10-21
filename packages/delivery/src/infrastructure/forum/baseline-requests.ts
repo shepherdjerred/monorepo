@@ -1,6 +1,6 @@
 import {
   ForumBaselineContextSchema,
-  LegacyPipelineRevisionSchema,
+  PipelineRevisionSchema,
 } from "#shared/contract.ts";
 import type { Principal } from "#shared/contract.ts";
 import {
@@ -109,7 +109,7 @@ export async function forumBaseline(
   return ForumBaselineContextSchema.parse({
     intent,
     environment: await environment(this.database, intent.environmentId),
-    pipeline: LegacyPipelineRevisionSchema.parse(
+    pipeline: PipelineRevisionSchema.parse(
       wire(
         required(
           await this.database.pipeline.findUnique({

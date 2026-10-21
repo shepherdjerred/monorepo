@@ -130,7 +130,7 @@ test("quarantine and ownership counts come from all PG rows, independently of th
     platformSnapshot: _platform,
     controlPlaneSnapshot: _control,
     forumBaselineSnapshot: _forum,
-    prerequisiteSnapshot: _prerequisites,
+    admissionSnapshot: _admission,
     ...columns
   } = raw;
   await context.cluster.database.deployment.createMany({

@@ -1,3 +1,4 @@
+import { applicationOf, forumReleaseOf } from "#shared/model/recipe-view.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
@@ -81,15 +82,18 @@ async function observe(
   context: ForumBaselineContext,
   options: Options & { argoToken: string; legacy: boolean },
 ) {
-  const definition = context.pipeline.definition;
-  if (definition.kind !== "argocd" || definition.forumRelease === undefined)
+  const definition = applicationOf(context.pipeline.definition);
+  if (
+    definition === null ||
+    forumReleaseOf(context.pipeline.definition) === undefined
+  )
     throw new DeliveryError(
       "INVALID",
       "Forum baseline requires its canonical Argo policy",
     );
   const transport = options.fetch ?? fetch,
-    path = `/api/v1/applications/${encodeURIComponent(definition.application)}`;
-  const namespace = definition.application;
+    path = `/api/v1/applications/${encodeURIComponent(definition.name)}`;
+  const namespace = definition.name;
   if (definition.namespace !== namespace)
     throw new DeliveryError(
       "INVALID",
@@ -99,7 +103,7 @@ async function observe(
     await json(new URL(path, options.argoOrigin), options.argoToken, transport),
   );
   if (
-    argo.metadata.name !== definition.application ||
+    argo.metadata.name !== definition.name ||
     (argo.operation !== undefined && argo.operation !== null)
   )
     throw new DeliveryError(

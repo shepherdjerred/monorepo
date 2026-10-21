@@ -179,6 +179,16 @@ UPDATE "VersionSet" vs SET
 FROM "Build" b
 WHERE b."id" = vs."qualifiedBuildId" AND b."sourceKind" = 'attested';
 ALTER TABLE "VersionSet" ALTER COLUMN "lineage" SET NOT NULL;
+-- R2, R3, R7: automatic sets come from a qualifying build or a tracking
+-- recomposition, whose trigger is the source environment's accepting
+-- deployment; manual sets are hotfixes and never become a base.
+ALTER TABLE "VersionSet" ADD COLUMN "automatic" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "VersionSet" ADD COLUMN "triggerDeploymentId" TEXT;
+UPDATE "VersionSet" SET "automatic" = true WHERE "qualifiedBuildId" IS NOT NULL;
+ALTER TABLE "VersionSet" ADD CONSTRAINT "VersionSet_automatic_origin_check" CHECK (
+  "automatic" = ("qualifiedBuildId" IS NOT NULL OR "triggerDeploymentId" IS NOT NULL)
+  AND NOT ("qualifiedBuildId" IS NOT NULL AND "triggerDeploymentId" IS NOT NULL)
+);
 ALTER TABLE "VersionSet" ADD CONSTRAINT "VersionSet_order_key_check" CHECK (("orderMajor" IS NULL) = ("orderMinor" IS NULL));
 CREATE INDEX "VersionSet_serviceId_lineage_order_idx" ON "VersionSet"("serviceId", "lineage", "orderMajor", "orderMinor");
 
@@ -286,7 +296,9 @@ ALTER TABLE "Deployment" ADD COLUMN "workflowRunId" TEXT;
 ALTER TABLE "Deployment" ADD COLUMN "leaseExpiresAt" TIMESTAMP(3);
 ALTER TABLE "Deployment" ADD COLUMN "previousAcceptedDeploymentId" TEXT;
 ALTER TABLE "Deployment" ADD COLUMN "restoredDeploymentId" TEXT;
-ALTER TABLE "Deployment" ADD COLUMN "prerequisiteSnapshot" JSONB;
+ALTER TABLE "Deployment" ADD COLUMN "admissionSnapshot" JSONB;
+-- D8: a self-hosted deployment the outgoing executor handed to its successor.
+ALTER TABLE "Deployment" ADD COLUMN "handoffAt" TIMESTAMP(3);
 ALTER TABLE "Deployment" ADD COLUMN "monitorState" TEXT;
 ALTER TABLE "Deployment" ADD COLUMN "monitorSettledAt" TIMESTAMP(3);
 ALTER TABLE "Deployment" ADD COLUMN "monitorAlarmedAt" TIMESTAMP(3);
@@ -310,6 +322,7 @@ WHERE env."acceptedDeploymentId" = d."id";
 ALTER TABLE "Deployment" DROP COLUMN "configurationRevision";
 ALTER TABLE "Deployment" DROP COLUMN "configuration";
 ALTER TABLE "Deployment" DROP COLUMN "previousAcceptedConfiguration";
+ALTER TABLE "VersionSet" ADD CONSTRAINT "VersionSet_triggerDeploymentId_fkey" FOREIGN KEY ("triggerDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_previousAcceptedDeploymentId_fkey" FOREIGN KEY ("previousAcceptedDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_restoredDeploymentId_fkey" FOREIGN KEY ("restoredDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_kind_check" CHECK ("kind" IN ('deploy', 'promote', 'rollback', 'rebind', 'retire-host', 'channel-publish', 'operator-run', 'adopt-worker', 'repair-trmnl', 'upgrade-control-plane', 'tofu-plan', 'tofu-apply', 'root-release'));

@@ -126,13 +126,33 @@ export async function staticRootFixture(database: Database) {
     const env = await database.environment.findUniqueOrThrow({
       where: { id: environmentId },
     });
+    if (kind === "deploy")
+      return delivery.createDeployment(
+        {
+          kind,
+          requestId: crypto.randomUUID(),
+          environmentId,
+          expectedGeneration: env.generation,
+          versionSetRevisionId: versionId,
+        },
+        testOperator,
+      );
+    // A rollback names the deployment that froze the selection (L1).
+    const restored = await database.deployment.findFirstOrThrow({
+      where: {
+        environmentId,
+        versionSetRevisionId: versionId,
+        status: "succeeded",
+      },
+      orderBy: { finishedAt: "desc" },
+    });
     return delivery.createDeployment(
       {
         kind,
         requestId: crypto.randomUUID(),
         environmentId,
         expectedGeneration: env.generation,
-        versionSetRevisionId: versionId,
+        selectionDeploymentId: restored.id,
       },
       testOperator,
     );

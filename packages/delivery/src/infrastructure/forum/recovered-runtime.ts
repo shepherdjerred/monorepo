@@ -1,3 +1,4 @@
+import { applicationOf, forumReleaseOf } from "#shared/model/recipe-view.ts";
 import { bareFingerprint } from "#infrastructure/recovery-intents.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
@@ -16,7 +17,7 @@ import {
   CompleteContentRecoverySchema,
   DeploymentSchema,
   ForumRecoveredRuntimeSchema,
-  LegacyPipelineRevisionSchema,
+  PipelineRevisionSchema,
   type PipelineRevision,
   type VersionSetRevision,
 } from "#shared/contract.ts";
@@ -58,8 +59,11 @@ export async function freezeRecoveredForumRuntime(
     acceptedAt: Date | null;
   },
 ) {
-  const policy = input.pipeline.definition;
-  if (policy.kind !== "argocd" || policy.forumRelease === undefined)
+  const policy = applicationOf(input.pipeline.definition);
+  if (
+    policy === null ||
+    forumReleaseOf(input.pipeline.definition) === undefined
+  )
     return null;
   const recovery = await tx.recoveryIntent.findFirst({
     where: {
@@ -95,7 +99,7 @@ export async function freezeRecoveredForumRuntime(
     );
   if (proof.settlement.state !== "desired") return null;
   const source = recovery.deployment;
-  const original = LegacyPipelineRevisionSchema.parse(
+  const original = PipelineRevisionSchema.parse(
     wire(
       await tx.pipeline.findUniqueOrThrow({
         where: { id: source.pipelineRevisionId },
@@ -107,10 +111,10 @@ export async function freezeRecoveredForumRuntime(
       "CONFLICT",
       "Forum recovery cannot replace an accepted release",
     );
+  const originalForum = forumReleaseOf(original.definition);
   if (
-    original.definition.kind !== "argocd" ||
-    original.definition.application !== policy.application ||
-    original.definition.forumRelease === undefined
+    originalForum === undefined ||
+    applicationOf(original.definition)?.name !== policy.name
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -136,7 +140,7 @@ export async function freezeRecoveredForumRuntime(
     deploymentId: source.id,
     ...originalRuntime(
       selected,
-      original.definition.forumRelease,
+      originalForum,
       await configurationContent(tx, source.configurationId),
     ),
   });

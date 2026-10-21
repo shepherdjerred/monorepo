@@ -201,21 +201,32 @@ async function publish(number: number) {
   return selected;
 }
 
+/** Deploy a set revision, or roll back to the deployment that froze a selection (L1). */
 async function request(
   versionId: string,
   requestId: string,
-  kind: "deploy" | "rollback" = "deploy",
+  rollbackTo?: string,
 ) {
   const overview = await client().overview();
   const environment = overview.environments[0];
   if (environment === undefined) throw new Error("Pilot environment missing");
-  return await client().createDeployment({
-    requestId,
-    environmentId: registration.id,
-    versionSetRevisionId: versionId,
-    expectedGeneration: environment.generation,
-    kind,
-  });
+  return await client().createDeployment(
+    rollbackTo === undefined
+      ? {
+          requestId,
+          environmentId: registration.id,
+          versionSetRevisionId: versionId,
+          expectedGeneration: environment.generation,
+          kind: "deploy",
+        }
+      : {
+          requestId,
+          environmentId: registration.id,
+          selectionDeploymentId: rollbackTo,
+          expectedGeneration: environment.generation,
+          kind: "rollback",
+        },
+  );
 }
 
 function observe(
@@ -348,7 +359,7 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
   const second = await publish(2);
   const newer = await request(second.id, "pilot/newer");
   await accept(newer.id, await claim(newer.id));
-  const rollback = await request(first.id, "pilot/rollback", "rollback");
+  const rollback = await request(first.id, "pilot/rollback", baseline.id);
   const frozenRollback = await claim(rollback.id);
   expect(frozenRollback.deployment.pipelineRevisionId).toBe(
     registration.pipelineRevisionId,

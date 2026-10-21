@@ -40,7 +40,7 @@ describe("exact rollback and promotion retries", () => {
       {
         requestId: "restore-accepted-snapshot",
         environmentId: updated.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
+        selectionDeploymentId: baseline.id,
         expectedGeneration: updated.generation,
         kind: "rollback",
       },
@@ -97,7 +97,6 @@ describe("exact rollback and promotion retries", () => {
       {
         requestId: "failed-promotion",
         environmentId: target.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
         expectedGeneration: target.generation,
         kind: "promote",
         sourceEnvironmentId: context.fixture.environment.id,
@@ -181,21 +180,27 @@ async function publish(number: number) {
     { repositoryId: 1, pipelineNumber: number },
   );
 }
-async function select(
-  revision: string,
-  kind: "deploy" | "rollback" = "deploy",
-) {
+/** Deploy a set revision, or roll back to the deployment that froze a selection (L1). */
+async function select(revision: string, rollbackTo?: string) {
   const env = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: context.fixture.environment.id },
   });
   const selected = await context.delivery.createDeployment(
-    {
-      requestId: crypto.randomUUID(),
-      environmentId: env.id,
-      versionSetRevisionId: revision,
-      expectedGeneration: env.generation,
-      kind,
-    },
+    rollbackTo === undefined
+      ? {
+          requestId: crypto.randomUUID(),
+          environmentId: env.id,
+          versionSetRevisionId: revision,
+          expectedGeneration: env.generation,
+          kind: "deploy",
+        }
+      : {
+          requestId: crypto.randomUUID(),
+          environmentId: env.id,
+          selectionDeploymentId: rollbackTo,
+          expectedGeneration: env.generation,
+          kind: "rollback",
+        },
     testOperator,
   );
   await context.delivery.claim(selected.id, testExecutor);
@@ -237,7 +242,7 @@ describe("selection recovery and qualification fairness", () => {
       },
       testExecutor,
     );
-    const rollback = await select(context.fixture.versionSet.id, "rollback");
+    const rollback = await select(context.fixture.versionSet.id, baseline.id);
     await accept(rollback.id, context.fixture.versionSet.id);
     expect(
       await context.delivery.reconcile(

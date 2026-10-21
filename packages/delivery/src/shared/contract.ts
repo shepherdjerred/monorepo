@@ -20,6 +20,7 @@ import * as ownership from "./ownership-contract.ts";
 import { ApprovalV2Schema } from "./model/approval-contract.ts";
 import * as monitors from "./model/monitor-contract.ts";
 import * as records from "./model/record-contract.ts";
+import * as deployments from "#shared/model/deployment-contract.ts";
 export const ConfigurationRevisionSchema = records.ConfigurationRevisionSchema;
 export const ExecutorIdentitySchema = records.ExecutorIdentitySchema;
 export type ConfigurationRevision = records.ConfigurationRevision;
@@ -285,68 +286,9 @@ export const EnvironmentSchema = z.object({
   createdAt: TimestampSchema,
 });
 export const MonitorStateSchema = monitors.MonitorStateSchema;
-export const DeploymentStatusSchema = z.enum([
-  "awaiting_approval",
-  "queued",
-  "running",
-  "succeeded",
-  "failed",
-  "canceled",
-]);
+export const DeploymentStatusSchema = deployments.DeploymentStatusSchema;
 export const CreateDeploymentSchema = deploymentRequests.CreateDeploymentSchema;
-export const DeploymentSchema = z.object({
-  repairOfDeploymentId: IdentifierSchema.nullable().default(null),
-  id: IdentifierSchema,
-  requestId: IdentifierSchema,
-  environmentId: IdentifierSchema,
-  serviceId: IdentifierSchema,
-  versionSetRevisionId: IdentifierSchema,
-  pipelineRevisionId: IdentifierSchema,
-  configurationId: IdentifierSchema,
-  workerSnapshot: WorkerPoolSnapshotSchema.nullable().default(null),
-  platformSnapshot: PlatformReleaseSnapshotSchema.nullable().default(null),
-  controlPlaneSnapshot:
-    ControlPlaneUpgradeSnapshotSchema.nullable().default(null),
-  forumBaselineSnapshot: ForumBaselineSnapshotSchema.nullable().default(null),
-  previousAcceptedVersionSetRevisionId:
-    IdentifierSchema.nullable().default(null),
-  previousAcceptedDeploymentId: IdentifierSchema.nullable().default(null),
-  restoredDeploymentId: IdentifierSchema.nullable().default(null),
-  sourceEnvironmentId: IdentifierSchema.nullable().default(null),
-  catalogRevision: z.string().min(1),
-  expectedGeneration: z.number().int().nonnegative(),
-  kind: z.enum([
-    "deploy",
-    "promote",
-    "rollback",
-    "rebind",
-    "retire-host",
-    "channel-publish",
-    "operator-run",
-    "adopt-worker",
-    "repair-trmnl",
-    // Readable history only; no longer creatable.
-    "upgrade-control-plane",
-    "root-release",
-    "tofu-plan",
-    "tofu-apply",
-  ]),
-  status: DeploymentStatusSchema,
-  automatic: z.boolean().default(false),
-  requestedBy: z.string(),
-  message: z.string().nullable(),
-  cancelRequested: z.boolean(),
-  recoveryRequired: z.boolean(),
-  workflowId: z.string().nullable().default(null),
-  workflowRunId: z.string().nullable().default(null),
-  leaseExpiresAt: TimestampSchema.nullable().default(null),
-  monitorState: MonitorStateSchema.nullable().default(null),
-  monitorSettledAt: TimestampSchema.nullable().default(null),
-  monitorAlarmedAt: TimestampSchema.nullable().default(null),
-  createdAt: TimestampSchema,
-  startedAt: TimestampSchema.nullable(),
-  finishedAt: TimestampSchema.nullable(),
-});
+export const DeploymentSchema = deployments.DeploymentSchema;
 export const EvidenceInputSchema = evidenceContracts.EvidenceInputSchema;
 export const EvidenceSchema = evidenceContracts.EvidenceSchema;
 export const RecoverDeploymentSchema = z

@@ -7,13 +7,7 @@ import {
   EnvironmentSchema,
   VersionSetRevisionSchema,
 } from "#shared/contract.ts";
-import type {
-  CreateDeployment,
-  EvidenceInput,
-  ArtifactVersion,
-  Environment,
-  VersionSetRevision,
-} from "#shared/contract.ts";
+import type { EvidenceInput, ArtifactVersion } from "#shared/contract.ts";
 import type { Database } from "./database.ts";
 import {
   ARTIFACT_STORES,
@@ -292,64 +286,28 @@ export async function evidence(
   }
 }
 
-export async function validateSelection(
-  tx: Transaction,
-  input: CreateDeployment,
-  env: Environment,
-  selected: VersionSetRevision,
-) {
-  if (input.kind === "promote") {
-    if (input.sourceEnvironmentId === undefined)
-      throw new DeliveryError(
-        "INVALID",
-        "Promotion requires a source environment",
-      );
-    const source = await environment(tx, input.sourceEnvironmentId);
-    if (
-      source.serviceId !== env.serviceId ||
-      source.acceptedVersionSetRevisionId !== selected.id ||
-      (env.promotionSourceEnvironmentId !== null &&
-        env.promotionSourceEnvironmentId !== source.id)
-    )
-      throw new DeliveryError(
-        "CONFLICT",
-        "Promotion requires the selected revision to be accepted in the configured source environment",
-      );
-  } else if (
-    env.promotionSourceEnvironmentId !== null &&
-    input.kind !== "rollback" &&
-    input.kind !== "adopt-worker"
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "This environment requires promotion from its configured source",
-    );
-  if (input.kind === "rollback") {
-    const accepted = await tx.deployment.findFirst({
-      where: {
-        environmentId: env.id,
-        versionSetRevisionId: selected.id,
-        status: "succeeded",
-        kind: { notIn: ["adopt-worker", "repair-trmnl"] },
-      },
-    });
-    if (accepted === null)
-      throw new DeliveryError(
-        "INVALID",
-        "Rollback target has never passed acceptance in this environment",
-      );
-  }
-}
-
+/**
+ * The set revision an automatic environment should run: the live set of its
+ * service (R4: the automatic set revision of the current lineage with the
+ * highest order key), or what its promotion source accepted.
+ */
 export async function automaticTarget(
   database: Database,
   env: { serviceId: string; promotionSourceEnvironmentId: string | null },
 ) {
-  if (env.promotionSourceEnvironmentId === null)
-    return database.versionSet.findFirst({
-      where: { serviceId: env.serviceId, qualifiedBuildId: { not: null } },
-      orderBy: { revision: "desc" },
+  if (env.promotionSourceEnvironmentId === null) {
+    const service = await database.service.findUniqueOrThrow({
+      where: { id: env.serviceId },
     });
+    return database.versionSet.findFirst({
+      where: {
+        serviceId: env.serviceId,
+        lineage: service.lineage,
+        automatic: true,
+      },
+      orderBy: [{ orderMajor: "desc" }, { orderMinor: "desc" }],
+    });
+  }
   const source = await database.environment.findUnique({
     where: { id: env.promotionSourceEnvironmentId },
   });
@@ -386,12 +344,15 @@ export async function requestApproval(
     pipelineRevisionId: string;
     configurationId: string;
   },
+  options?: { override: boolean },
 ) {
   await tx.approval.create({
     data: {
       id: id(),
       deploymentId: deployment.id,
       status: "pending",
+      // An override approval authorises a non-eligible deploy (H4).
+      override: options?.override ?? false,
       boundFingerprint: selectionFingerprint(
         deployment.versionSetRevisionId,
         deployment.pipelineRevisionId,

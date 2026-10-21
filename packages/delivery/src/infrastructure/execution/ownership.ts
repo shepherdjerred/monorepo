@@ -70,20 +70,30 @@ export function leaseExpiry(leaseSeconds: number) {
   return new Date(Date.now() + leaseSeconds * 1000);
 }
 
-/** A deployment is never owned by a different executor identity (model D7). */
+/**
+ * A deployment is never owned by a different executor identity (D7),
+ * except the successor executor of a self-hosted handoff (D8). Returns
+ * whether this claim is that successor taking ownership.
+ */
 export function requireSameExecutor(
-  row: { workflowId: string | null; workflowRunId: string | null },
+  row: {
+    workflowId: string | null;
+    workflowRunId: string | null;
+    handoffAt: Date | null;
+  },
   executor: ExecutorIdentity | undefined,
 ) {
-  if (executor === undefined || row.workflowId === null) return;
+  if (executor === undefined || row.workflowId === null) return false;
   if (
-    row.workflowId !== executor.workflowId ||
-    row.workflowRunId !== executor.workflowRunId
+    row.workflowId === executor.workflowId &&
+    row.workflowRunId === executor.workflowRunId
   )
-    throw new DeliveryError(
-      "CONFLICT",
-      "Deployment is owned by another executor identity; it is never re-owned",
-    );
+    return false;
+  if (row.handoffAt !== null) return true;
+  throw new DeliveryError(
+    "CONFLICT",
+    "Deployment is owned by another executor identity; it is never re-owned",
+  );
 }
 
 /** A request whose frozen binding generation moved can no longer be approved (H2). */
@@ -130,6 +140,46 @@ export async function renewLease(
     });
     await audit(tx, actor, {
       action: "deployment.lease_renewed",
+      entityId: deploymentId,
+      requestId: id(),
+      metadata: executor,
+    });
+    return DeploymentSchema.parse(wire(updated));
+  });
+}
+
+/**
+ * D8: after applying a self-hosted change the outgoing executor leaves the
+ * deployment owned with a handoff marker and a frozen lease that does not
+ * expire; its successor takes ownership by claiming it.
+ */
+export async function handOff(
+  this: Delivery,
+  deploymentId: string,
+  executor: ExecutorIdentity,
+  actor: Principal,
+) {
+  return this.database.$transaction(async (tx) => {
+    const row = await runningDeployment(
+      tx,
+      deploymentId,
+      "Only a running deployment can be handed to a successor executor",
+    );
+    requireSameExecutor(row, executor);
+    const service = await tx.service.findUniqueOrThrow({
+      where: { id: row.serviceId },
+    });
+    if (!service.selfHosted)
+      throw new DeliveryError(
+        "INVALID",
+        "Only a self-hosted service's deployment is handed to a successor executor (D8)",
+      );
+    const updated = await tx.deployment.update({
+      where: { id: deploymentId },
+      data: { handoffAt: new Date(), leaseExpiresAt: null },
+    });
+    await audit(tx, actor, {
+      action: "deployment.handed_off",
       entityId: deploymentId,
       requestId: id(),
       metadata: executor,

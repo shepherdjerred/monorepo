@@ -3,6 +3,8 @@ import {
   CatalogReconcileResultSchema,
   type CatalogReconcileRequest,
 } from "./model/catalog-reconcile-contract.ts";
+import { RollbackCandidatesSchema } from "./model/selection-contract.ts";
+import type { CreateDeploymentV2Schema } from "./deployment-request-contract.ts";
 import * as errors from "./client-error.ts";
 export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
@@ -106,8 +108,9 @@ export function createDeliveryClient(options: RequestOptions) {
       ]);
       return diffVersionSets(from, to);
     },
-    createDeployment: (input: CreateDeployment) =>
-      request("/deployments", DeploymentSchema, input),
+    createDeployment: (
+      input: CreateDeployment | z.input<typeof CreateDeploymentV2Schema>,
+    ) => request("/deployments", DeploymentSchema, input),
     createPlatformDeployment: (input: CreatePlatformDeployment) =>
       request("/platform/deployments", DeploymentSchema, input),
     requestPlatformRecovery: (id: string, input: RequestPlatformRecovery) =>
@@ -403,6 +406,11 @@ export function createDeliveryClient(options: RequestOptions) {
       request("/environments", EnvironmentSchema, input),
     reconcileCatalog: (input: CatalogReconcileRequest) =>
       request("/catalog/reconcile", CatalogReconcileResultSchema, input),
+    rollbackCandidates: (environmentId: string) =>
+      request(
+        `/environments/${encodeURIComponent(environmentId)}/rollback-candidates`,
+        RollbackCandidatesSchema,
+      ),
     workers: (environmentId: string) =>
       request(
         `/environments/${encodeURIComponent(environmentId)}/workers`,

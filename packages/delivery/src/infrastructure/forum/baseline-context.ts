@@ -1,3 +1,4 @@
+import { applicationOf, forumReleaseOf } from "#shared/model/recipe-view.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   artifact,
@@ -11,7 +12,7 @@ import {
   required,
   wire,
 } from "#infrastructure/delivery-records.ts";
-import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
 import type { ArtifactVersion } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 
@@ -65,7 +66,7 @@ export async function forumBaselineInputs(
       "CONFLICT",
       "Forum baseline requires an idle original environment at the exact generation, before any accepted deployment",
     );
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  const pipeline = PipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({ where: { id: env.pipelineRevisionId } }),
@@ -73,19 +74,20 @@ export async function forumBaselineInputs(
       ),
     ),
   );
-  const definition = pipeline.definition;
+  const forum = forumReleaseOf(pipeline.definition);
+  const application = applicationOf(pipeline.definition)?.name;
   if (
-    definition.kind !== "argocd" ||
-    definition.forumRelease === undefined ||
-    definition.application !== env.application ||
-    !["storm-forum", "storm-forum-beta"].includes(definition.application)
+    forum === undefined ||
+    application === undefined ||
+    application !== env.application ||
+    !["storm-forum", "storm-forum-beta"].includes(application)
   )
     throw new DeliveryError(
       "INVALID",
       "Forum baseline requires its reviewed canonical release pipeline",
     );
   const held = await tx.targetLock.findUnique({
-    where: { instance: `application:${definition.application}` },
+    where: { instance: `application:${application}` },
   });
   if (held !== null)
     throw new DeliveryError(
@@ -94,11 +96,11 @@ export async function forumBaselineInputs(
     );
   const image = await artifact(tx, input.imageArtifactId),
     bundle = await artifact(tx, input.bundleArtifactId);
-  originalRuntime(image, definition.forumRelease.imageComponent);
+  originalRuntime(image, forum.imageComponent);
   if (
     bundle.serviceId !== "storm-forum" ||
     bundle.kind !== "archive" ||
-    bundle.component !== definition.forumRelease.bundleComponent ||
+    bundle.component !== forum.bundleComponent ||
     bundle.origin.kind !== "licensed-bundle" ||
     bundle.version !== bundle.origin.xenforoVersion ||
     bundle.uri !==

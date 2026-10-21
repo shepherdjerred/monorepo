@@ -8,7 +8,9 @@ import type {
   Environment,
   PipelineDefinition,
   PipelineRevision,
+  StoredRecipeDefinition,
 } from "#shared/contract.ts";
+import { workerRolloutOf } from "#shared/model/recipe-view.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { required } from "#infrastructure/delivery-records.ts";
@@ -27,15 +29,11 @@ import {
 export async function requireWorkerAdmission(
   tx: Transaction,
   environment: Environment,
-  definition: PipelineDefinition,
-  kind: CreateDeployment["kind"],
+  definition: StoredRecipeDefinition,
+  kind: string,
 ) {
-  if (
-    kind === "adopt-worker" ||
-    definition.kind !== "argocd" ||
-    definition.workerRollout === undefined
-  )
-    return;
+  const rollout = workerRolloutOf(definition);
+  if (kind === "adopt-worker" || rollout === undefined) return;
   const baseline = await tx.deployment.findFirst({
     where: {
       environmentId: environment.id,
@@ -56,7 +54,7 @@ export async function requireWorkerAdmission(
   if (
     snapshot.workerOperation !== "baseline" ||
     snapshot.environmentId !== environment.id ||
-    snapshot.target !== definition.workerRollout.target
+    snapshot.target !== rollout.target
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -123,12 +121,13 @@ export async function freezeWorkerBaseline(
   },
 ) {
   const definition = input.pipeline.definition;
-  if (definition.kind !== "argocd" || definition.workerRollout === undefined)
+  const rollout = workerRolloutOf(definition);
+  if (rollout === undefined)
     throw new DeliveryError(
       "INVALID",
       "Host adoption requires a reviewed worker pipeline",
     );
-  validateWorkerPipeline(definition);
+  if (definition.kind === "argocd") validateWorkerPipeline(definition);
   const existing = await readWorkerVersions(tx, input.environment.id);
   if (existing.length > 0)
     throw new DeliveryError(
@@ -146,7 +145,7 @@ export async function freezeWorkerBaseline(
       WorkerVersionSchema.parse({
         ...workerArtifactIdentity({
           environment: input.environment,
-          target: definition.workerRollout.target,
+          target: rollout.target,
           artifact: selected,
         }),
         id: id(),
@@ -167,7 +166,7 @@ export async function freezeWorkerBaseline(
     schema: "delivery-worker-pool/v1",
     environmentId: input.environment.id,
     environmentGeneration: input.environment.generation,
-    target: definition.workerRollout.target,
+    target: rollout.target,
     candidateBuildId: candidate.buildId,
     workerOperation: "baseline",
     retiringWorkerId: null,

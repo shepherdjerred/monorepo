@@ -1,7 +1,11 @@
+import {
+  minecraftUpgradeOf,
+  siteReleaseOf,
+} from "#shared/model/recipe-view.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
-import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { required, wire } from "./delivery-records.ts";
 import { version, type Transaction } from "./delivery-data.ts";
 import { validateTrmnlSuccess } from "./trmnl-policy.ts";
@@ -49,7 +53,7 @@ export async function validateSpecializedSuccess(
   },
 ) {
   if (["adopt-worker", "retire-host"].includes(deployment.kind)) return;
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  const pipeline = PipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({
@@ -60,15 +64,16 @@ export async function validateSpecializedSuccess(
     ),
   ).definition;
   await validateTrmnlSuccess(tx, { ...deployment, pipeline });
-  if (pipeline.kind !== "argocd") return;
+  const site = siteReleaseOf(pipeline);
+  const upgrade = minecraftUpgradeOf(pipeline);
+  if (site === undefined && upgrade === undefined) return;
   const stages = await tx.stage.findMany({
     where: { deploymentId: deployment.id },
   });
   const evidence = await tx.evidence.findMany({
     where: { deploymentId: deployment.id },
   });
-  if (pipeline.scoutSite !== undefined) {
-    const site = pipeline.scoutSite;
+  if (site !== undefined) {
     const selected = await version(tx, deployment.versionSetRevisionId);
     const archive = selected.components[site.archiveComponent];
     const expectedOperation = specializedOperationId(
@@ -100,8 +105,8 @@ export async function validateSpecializedSuccess(
       );
   }
   if (
-    pipeline.minecraftUpgrade !== undefined &&
-    pipeline.minecraftUpgrade.releaseMode !== "retained-volume-restart"
+    upgrade !== undefined &&
+    upgrade.releaseMode !== "retained-volume-restart"
   ) {
     const expectedOperation = specializedOperationId(
       `${deployment.id}:minecraft-preservation`,

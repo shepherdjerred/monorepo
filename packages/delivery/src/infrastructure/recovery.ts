@@ -1,3 +1,12 @@
+import {
+  applicationOf,
+  applicationsOf,
+  forumReleaseOf,
+  minecraftUpgradeOf,
+  siteReleaseOf,
+  trmnlPluginsOf,
+  workerRolloutOf,
+} from "#shared/model/recipe-view.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
@@ -35,10 +44,7 @@ function requireSettled(
   requestId: string,
 ) {
   const operation = current.status.operationState;
-  const application =
-    detail.pipeline.definition.kind === "argocd"
-      ? detail.pipeline.definition.application
-      : null;
+  const application = applicationOf(detail.pipeline.definition)?.name ?? null;
   if (
     current.metadata.name !== application ||
     current.metadata.annotations["delivery.shepherdjerred.com/environment"] !==
@@ -93,14 +99,17 @@ export function createRecoveryInspector(options: {
     detail: DeploymentDetail,
     input: z.infer<typeof RecoveryRequestSchema>,
   ): Promise<EvidenceInput[]> => {
+    const definition = detail.pipeline.definition;
+    const application = applicationOf(definition);
+    const upgrade = minecraftUpgradeOf(definition);
     if (
-      detail.pipeline.definition.kind !== "argocd" ||
-      detail.pipeline.definition.workerRollout !== undefined ||
-      detail.pipeline.definition.scoutSite !== undefined ||
-      detail.pipeline.definition.forumRelease !== undefined ||
-      (detail.pipeline.definition.minecraftUpgrade !== undefined &&
-        detail.pipeline.definition.minecraftUpgrade.releaseMode !==
-          "retained-volume-restart")
+      application === null ||
+      applicationsOf(definition).length !== 1 ||
+      workerRolloutOf(definition) !== undefined ||
+      siteReleaseOf(definition) !== undefined ||
+      forumReleaseOf(definition) !== undefined ||
+      (upgrade !== undefined &&
+        upgrade.releaseMode !== "retained-volume-restart")
     )
       throw new DeliveryError(
         "INVALID",
@@ -111,10 +120,8 @@ export function createRecoveryInspector(options: {
         "PAUSED",
         "Argo recovery read credential is not configured",
       );
-    if (
-      detail.pipeline.definition.trmnlPlugins !== undefined &&
-      options.inspectTrmnl === undefined
-    )
+    const plugins = trmnlPluginsOf(definition);
+    if (plugins !== undefined && options.inspectTrmnl === undefined)
       throw new DeliveryError(
         "PAUSED",
         "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
@@ -127,7 +134,7 @@ export function createRecoveryInspector(options: {
       );
     const response = await (options.fetch ?? fetch)(
       new URL(
-        `/api/v1/applications/${encodeURIComponent(detail.pipeline.definition.application)}`,
+        `/api/v1/applications/${encodeURIComponent(application.name)}`,
         options.origin,
       ),
       {
@@ -154,8 +161,7 @@ export function createRecoveryInspector(options: {
       recorded.operationId,
     );
     const pluginEvidence =
-      detail.pipeline.definition.trmnlPlugins !== undefined &&
-      options.inspectTrmnl !== undefined
+      plugins !== undefined && options.inspectTrmnl !== undefined
         ? await options.inspectTrmnl(detail)
         : [];
     return [

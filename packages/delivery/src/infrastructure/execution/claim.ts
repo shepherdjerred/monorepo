@@ -1,6 +1,6 @@
 import { DeliveryError } from "#domain/error.ts";
 import {
-  LegacyPipelineRevisionSchema,
+  PipelineRevisionSchema,
   WorkerPoolSnapshotSchema,
 } from "#shared/contract.ts";
 import type {
@@ -31,13 +31,19 @@ import {
 import { requireStaticRootBoundary } from "#infrastructure/platform/static-prerequisite.ts";
 import { claimTrmnlRepair } from "#infrastructure/trmnl-repair/claim.ts";
 import { readmitDeployment } from "#infrastructure/execution/readmission.ts";
+import { holdPlatformLock } from "#infrastructure/platform/lifecycle.ts";
+import {
+  admissionTargets,
+  freezeAdmission,
+  recheckAdmission,
+  requireDispatchBarrier,
+} from "#infrastructure/execution/admission.ts";
 import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
 import {
   expireApproval,
   leaseExpiry,
   observesApplication,
   requireSameExecutor,
-  targetInstances,
   type DeploymentRow,
 } from "#infrastructure/execution/ownership.ts";
 
@@ -151,7 +157,7 @@ async function admitQueued(
       "BUSY",
       "Executor concurrency bound is reached; the deployment stays queued",
     );
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  const pipeline = PipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),
@@ -159,8 +165,15 @@ async function admitQueued(
       ),
     ),
   );
-  const instances = targetInstances(pipeline.definition, env.application);
+  const { instances, shared } = admissionTargets(
+    pipeline.definition,
+    env.application,
+  );
   await requireFreeInstances(tx, deploymentId, instances);
+  // Prerequisite edges, runners and accepted-elsewhere artifacts are frozen
+  // before any lock is taken; an unmet one keeps the deployment queued (Z1).
+  const admissionSnapshot = await freezeAdmission(tx, row, pipeline.definition);
+  if (shared) await holdPlatformLock(tx, deploymentId, false);
   await admitPlatformDeployment(tx, row, this.catalog, { actor: input.actor });
   await requireStaticRootBoundary(tx, {
     row,
@@ -195,7 +208,12 @@ async function admitQueued(
   });
   await tx.deployment.update({
     where: { id: deploymentId },
-    data: { status: "running", startedAt: new Date(), ...input.owned },
+    data: {
+      status: "running",
+      startedAt: new Date(),
+      admissionSnapshot,
+      ...input.owned,
+    },
   });
   await audit(tx, input.actor, {
     action: "deployment.claimed",
@@ -216,7 +234,8 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
     "Deployment",
   );
   await requireControlPlaneQuiescence(tx, row);
-  requireSameExecutor(row, input.executor);
+  await requireDispatchBarrier(tx, row, { id: row.environmentId });
+  const successor = requireSameExecutor(row, input.executor);
   if (row.kind === "repair-trmnl") {
     await claimTrmnlRepair(tx, row, repairClaimProof(input.claimProof), actor);
     await tx.deployment.update({
@@ -231,9 +250,11 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
       actor,
       retirementProof: retirementClaimProof(input.claimProof),
     });
+    await recheckAdmission(tx, row);
     await tx.deployment.update({
       where: { id: deploymentId },
-      data: input.owned,
+      // A successor executor takes a handed-off self-hosted deployment (D8).
+      data: { ...input.owned, ...(successor ? { handoffAt: null } : {}) },
     });
     return { status: "claimed" } as const;
   }

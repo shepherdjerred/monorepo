@@ -1,12 +1,8 @@
 import { beginDeploymentRequest } from "#infrastructure/deployment-request-store.ts";
 import { persistDeploymentRequest } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
-import {
-  DeploymentSchema,
-  CreateDeploymentSchema,
-  deliveryWorkflowId,
-} from "#shared/contract.ts";
-import type { CreateDeployment, Principal } from "#shared/contract.ts";
+import { DeploymentSchema, deliveryWorkflowId } from "#shared/contract.ts";
+import type { Principal } from "#shared/contract.ts";
 import {
   ApprovalV2InputSchema,
   type ApprovalV2Request,
@@ -23,13 +19,25 @@ import type { Delivery } from "./delivery.ts";
 import {
   terminal,
   id,
-  version,
   environment,
   ensureService,
   requestApproval,
-  validateSelection,
 } from "./delivery-data.ts";
-import { deploymentSelection } from "./delivery-request-selection.ts";
+import {
+  requireKindForRecipe,
+  selectDeployment,
+} from "./selection/selection.ts";
+import {
+  adoptionSelection,
+  candidateSetRevision,
+  type DeploymentRequest,
+  type ParsedRequest,
+  parseDeploymentRequest,
+  refuseLegacyPlatform,
+  requireEligibleOrOverride,
+  requireIdleEnvironment,
+  restoredWorkerSnapshot,
+} from "./selection/request.ts";
 import {
   freezeWorkerDeployment,
   requireWorkerAdmission,
@@ -44,14 +52,20 @@ import {
 } from "./forum/freezer.ts";
 import { freezeRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
 
+/**
+ * Request one deployment of an environment: freeze its selection, check
+ * eligibility and the binding generation (E2), and record the request,
+ * audit and outbox together (D1).
+ */
 export async function createDeployment(
   this: Delivery,
-  rawInput: CreateDeployment,
+  rawInput: DeploymentRequest,
   actor: Principal,
   automatic = false,
 ) {
-  const input = CreateDeploymentSchema.parse(rawInput);
-  if (input.kind === "adopt-worker") requireScope(actor, "admin");
+  const parsed = parseDeploymentRequest(rawInput);
+  const input: ParsedRequest = parsed.adoption ?? parsed.model;
+  if (parsed.adoption !== null) requireScope(actor, "admin");
   const requestInput = { ...input, automatic };
   if (
     (await this.database.request.findUnique({
@@ -78,34 +92,43 @@ export async function createDeployment(
         ),
       );
     });
-  await verifyForumCandidateSource.call(this, input, this.forumPolicyReader);
+  const candidate = await candidateSetRevision.call(this, input);
+  if (candidate !== undefined)
+    await verifyForumCandidateSource.call(
+      this,
+      {
+        kind: input.kind,
+        environmentId: input.environmentId,
+        versionSetRevisionId: candidate,
+      },
+      this.forumPolicyReader,
+    );
   return this.database.$transaction(async (tx) => {
-    const selection = await beginDeploymentRequest(tx, actor, {
+    const begun = await beginDeploymentRequest(tx, actor, {
       requestId: input.requestId,
       input: requestInput,
       environmentId: input.environmentId,
     });
-    if (selection.kind === "replayed") return selection.deployment;
-    const env = selection.environment;
+    if (begun.kind === "replayed") return begun.deployment;
+    const env = begun.environment;
     const service = await ensureService(tx, env.serviceId);
     if (env.lifecycle !== "active")
       throw new DeliveryError(
         "INVALID",
         `Environment ${env.id} is ${env.lifecycle} and admits no deployment`,
       );
-    const selectedInputs = await deploymentSelection(tx, input, env);
-    const { pipeline } = selectedInputs;
-    if (
-      pipeline.definition.kind === "root-release" ||
-      pipeline.definition.kind === "tofu" ||
-      pipeline.definition.kind === "control-plane"
-    )
-      throw new DeliveryError(
-        "INVALID",
-        "Specialized control-plane and platform pipelines require their exact typed source, artifact, inventory or saved-plan request",
-      );
-    const selected = await version(tx, input.versionSetRevisionId);
-    if (selected.serviceId !== env.serviceId)
+    const selection =
+      parsed.adoption === null
+        ? await selectDeployment(tx, parsed.model, env)
+        : await adoptionSelection(tx, parsed.adoption, env);
+    if (parsed.model !== null)
+      requireKindForRecipe(parsed.model.kind, selection.pipeline);
+    refuseLegacyPlatform(selection);
+    const override = requireEligibleOrOverride(input, selection);
+    const { pipeline, versionSet: selected, configuration } = selection;
+    // A rollback restores its selection exactly, even one composed for the
+    // service an environment had before a catalog rename (R5).
+    if (input.kind !== "rollback" && selected.serviceId !== env.serviceId)
       throw new DeliveryError(
         "INVALID",
         "Version set belongs to another service",
@@ -113,28 +136,7 @@ export async function createDeployment(
     validateScoutSiteSelection(pipeline.definition, selected);
     validateTrmnlSelection(pipeline.definition, selected);
     await requireWorkerAdmission(tx, env, pipeline.definition, input.kind);
-    if (env.generation !== input.expectedGeneration)
-      throw new DeliveryError(
-        "CONFLICT",
-        "Environment generation changed; inspect current state before retrying",
-      );
-    if (env.activeDeploymentId !== null)
-      throw new DeliveryError(
-        "CONFLICT",
-        "Environment already has an active deployment",
-      );
-    const pending = await tx.deployment.findFirst({
-      where: {
-        environmentId: env.id,
-        status: { in: ["queued", "awaiting_approval"] },
-      },
-    });
-    if (pending !== null)
-      throw new DeliveryError(
-        "CONFLICT",
-        "Environment already has a pending deployment; cancel it before selecting another revision",
-      );
-    await validateSelection(tx, input, env, selected);
+    await requireIdleEnvironment(tx, env, input.expectedGeneration);
     const previousAccepted =
       env.acceptedDeploymentId === null
         ? null
@@ -144,11 +146,7 @@ export async function createDeployment(
             }),
             "Accepted deployment snapshot",
           );
-    validateForumCandidate(
-      pipeline,
-      selected,
-      selectedInputs.configuration.content,
-    );
+    validateForumCandidate(pipeline, selected, configuration.content);
     const forumRecoveredRuntime = await freezeRecoveredForumRuntime(tx, {
       environmentId: env.id,
       pipeline,
@@ -165,11 +163,14 @@ export async function createDeployment(
       pipeline,
       versionSet: selected,
       deploymentId,
-      restored: selectedInputs.restoredWorkerSnapshot,
-      baseline: input.workerBaseline,
+      restored: await restoredWorkerSnapshot(
+        tx,
+        selection.restoredDeploymentId,
+      ),
+      baseline: parsed.adoption?.workerBaseline,
       repositoryId: this.repositoryId,
     });
-    const approvalRequired = env.approvalPolicy === "required";
+    const approvalRequired = env.approvalPolicy === "required" || override;
     const row = await tx.deployment.create({
       data: {
         id: deploymentId,
@@ -179,23 +180,24 @@ export async function createDeployment(
         versionSetRevisionId: selected.id,
         previousAcceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
         previousAcceptedDeploymentId: env.acceptedDeploymentId,
-        restoredDeploymentId: selectedInputs.restoredDeploymentId,
+        restoredDeploymentId: selection.restoredDeploymentId,
         pipelineRevisionId: pipeline.id,
-        configurationId: selectedInputs.configuration.id,
+        configurationId: configuration.id,
         catalogRevision: service.catalogRevision,
         ...(workerSnapshot === null ? {} : { workerSnapshot }),
         ...(forumBaselineSnapshot === null ? {} : { forumBaselineSnapshot }),
-        sourceEnvironmentId: input.sourceEnvironmentId ?? null,
+        sourceEnvironmentId: selection.sourceEnvironmentId,
         expectedGeneration: env.generation,
         kind: input.kind,
         automatic,
         status: approvalRequired ? "awaiting_approval" : "queued",
         requestedBy: actor.id,
+        ...("message" in input && input.message !== undefined
+          ? { message: input.message }
+          : {}),
       },
     });
-    // The approval row exists from the request on, bound to the frozen
-    // selection, and is decided by a distinct human act (model H1, D6).
-    if (approvalRequired) await requestApproval(tx, row);
+    if (approvalRequired) await requestApproval(tx, row, { override });
     await persistDeploymentRequest(tx, actor, {
       deployment: row,
       requestId: input.requestId,
@@ -209,6 +211,9 @@ export async function createDeployment(
         versionSetRevisionId: selected.id,
         environmentId: env.id,
         catalogRevision: service.catalogRevision,
+        ...(selection.ineligible.length === 0
+          ? {}
+          : { override: selection.ineligible }),
         ...(forumRecoveredRuntime === null ? {} : { forumRecoveredRuntime }),
       },
     });
@@ -244,12 +249,19 @@ export async function approve(
         "Deployment requires no approval under its environment's policy",
       );
     const status = input.decision === "approve" ? "granted" : "rejected";
+    // An override approval is decided as one; an ordinary one never is (H4).
+    if (approval.override !== input.override)
+      throw new DeliveryError(
+        "INVALID",
+        approval.override
+          ? "This non-eligible deploy needs an approval marked override"
+          : "Only a non-eligible deploy takes an override approval",
+      );
     if (approval.status !== "pending") {
       if (
         approval.status !== status ||
         approval.actor !== actor.id ||
-        approval.reason !== input.reason ||
-        approval.override !== input.override
+        approval.reason !== input.reason
       )
         throw new DeliveryError(
           "CONFLICT",
@@ -305,7 +317,6 @@ export async function approve(
         status,
         actor: actor.id,
         reason: input.reason,
-        override: input.override,
         decidedAt: now,
       },
     });

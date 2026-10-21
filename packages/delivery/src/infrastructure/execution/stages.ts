@@ -29,6 +29,7 @@ import { acceptWorkerBaseline } from "#infrastructure/worker-pool/baseline.ts";
 import { validateSpecializedSuccess } from "#infrastructure/specialized-success.ts";
 import { validatePlatformSuccess } from "#infrastructure/platform/lifecycle.ts";
 import { validateControlPlaneSuccess } from "#infrastructure/control-plane/lifecycle.ts";
+import { recomposeTracking } from "#infrastructure/composition/automatic.ts";
 import {
   advancesAcceptance,
   leaseExpiry,
@@ -235,6 +236,9 @@ export async function finish(
       where: { id: env.id },
       data: settledEnvironment(row, input, { accepted, suppressed, now }),
     });
+    // Services tracking a component from this environment recompose in the
+    // accepting transaction (R7).
+    if (accepted && observesApplication(row)) await recomposeTracking(tx, row);
     if (!input.recoveryRequired) {
       await tx.targetLock.deleteMany({ where: { deploymentId } });
       await tx.platformLock.deleteMany({ where: { deploymentId } });

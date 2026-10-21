@@ -2,8 +2,10 @@ import { DeliveryError } from "#domain/error.ts";
 import type {
   PipelineDefinition,
   RegisterEnvironment,
+  StoredRecipeDefinition,
   VersionSetRevision,
 } from "#shared/contract.ts";
+import { siteReleaseOf } from "#shared/model/recipe-view.ts";
 
 export function validateScoutSitePipeline(pipeline: PipelineDefinition) {
   if (pipeline.kind !== "argocd" || pipeline.scoutSite === undefined) return;
@@ -41,7 +43,7 @@ export function validateScoutSiteEnvironment(
 }
 
 export function validateScoutSiteSelection(
-  pipeline: PipelineDefinition,
+  pipeline: StoredRecipeDefinition,
   version: VersionSetRevision,
 ) {
   if (pipeline.kind === "static-site" && version.serviceId === "scout-for-lol")
@@ -49,8 +51,9 @@ export function validateScoutSiteSelection(
       "INVALID",
       "Scout frontend activation requires the combined backend release lock",
     );
-  if (pipeline.kind !== "argocd" || pipeline.scoutSite === undefined) return;
-  const archive = version.components[pipeline.scoutSite.archiveComponent];
+  const site = siteReleaseOf(pipeline);
+  if (site === undefined) return;
+  const archive = version.components[site.archiveComponent];
   const image = version.components["image:scout-for-lol"];
   if (
     archive?.kind !== "archive" ||

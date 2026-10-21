@@ -177,13 +177,13 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
       {
         requestId: "no-baseline-rollback",
         environmentId: fixture.environmentId,
-        versionSetRevisionId: c.version.id,
+        selectionDeploymentId: c.deployment.id,
         expectedGeneration: pool.generation,
         kind: "rollback",
       },
       testOperator,
     ),
-  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  ).rejects.toMatchObject({ code: "INVALID" });
   const rollout = await context.delivery.createDeployment(
     {
       requestId: "verified-baseline-rollout",

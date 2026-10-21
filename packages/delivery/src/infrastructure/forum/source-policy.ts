@@ -1,8 +1,9 @@
+import { forumReleaseOf } from "#shared/model/recipe-view.ts";
 import { ForumBundlePolicySchema } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import type { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import { forumBundlePolicyDigest } from "@shepherdjerred/ops-model/forum-bundle-digest.ts";
-import type { ArtifactVersion, CreateDeployment } from "#shared/contract.ts";
-import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
+import type { ArtifactVersion } from "#shared/contract.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { required, wire } from "#infrastructure/delivery-records.ts";
@@ -94,13 +95,13 @@ export function requireBundlePolicy(
 /** Run before the PG admission transaction; qualified artifact identities and source revisions are immutable. */
 export async function verifyForumCandidateSource(
   this: Delivery,
-  input: CreateDeployment,
+  input: { kind: string; environmentId: string; versionSetRevisionId: string },
   read: ForumPolicyReader = createForumPolicyReader(),
 ) {
   if (input.kind === "rollback") return;
   const env = await environment(this.database, input.environmentId);
   if (env.serviceId !== "storm-forum") return;
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  const pipeline = PipelineRevisionSchema.parse(
       wire(
         required(
           await this.database.pipeline.findUnique({
@@ -110,15 +111,15 @@ export async function verifyForumCandidateSource(
         ),
       ),
     ),
-    definition = pipeline.definition;
-  if (definition.kind !== "argocd" || definition.forumRelease === undefined)
+    forum = forumReleaseOf(pipeline.definition);
+  if (forum === undefined)
     throw new DeliveryError(
       "INVALID",
       "Forum candidate requires its canonical release pipeline",
     );
   const selected = await version(this.database, input.versionSetRevisionId),
-    image = selected.components[definition.forumRelease.imageComponent],
-    bundle = selected.components[definition.forumRelease.bundleComponent];
+    image = selected.components[forum.imageComponent],
+    bundle = selected.components[forum.bundleComponent];
   if (
     bundle === undefined ||
     image?.origin.kind !== "first-party" ||

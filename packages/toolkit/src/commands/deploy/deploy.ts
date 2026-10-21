@@ -51,7 +51,7 @@ platform recovery-approve <INTENT_ID>  Human decision for exact reviewed recover
 diff <FROM|none> <TO>                  Compare component artifacts
 start <ENVIRONMENT> <VERSION>          Request an exact release
 promote <SOURCE_ENV> <DEST_ENV>        Promote source's accepted release
-rollback <ENVIRONMENT> <VERSION>       Request a previous exact release
+rollback <ENVIRONMENT> <DEPLOYMENT>    Restore a previously accepted selection
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required
@@ -272,28 +272,39 @@ export async function runDeployCommand(
     case "pipeline":
     case "environment":
       return registerCommand(client, command, positionals, options);
-    case "start":
-    case "rollback": {
+    case "start": {
       const destination = await environment(required(target));
       result = await client.createDeployment({
         requestId: requestId(),
         environmentId: destination.id,
         versionSetRevisionId: required(positionals[1]),
         expectedGeneration: expectedGeneration(destination.generation),
-        kind: command === "start" ? "deploy" : "rollback",
+        kind: "deploy",
+      });
+      break;
+    }
+    case "rollback": {
+      // A rollback names the deployment whose selection it restores (L1).
+      const destination = await environment(required(target));
+      result = await client.createDeployment({
+        requestId: requestId(),
+        environmentId: destination.id,
+        selectionDeploymentId: required(positionals[1]),
+        expectedGeneration: expectedGeneration(destination.generation),
+        kind: "rollback",
       });
       break;
     }
     case "promote": {
       const source = await environment(required(target));
       const destination = await environment(required(positionals[1]));
-      if (source.acceptedVersionSetRevisionId === null)
+      if (source.acceptedDeploymentId === null)
         throw new Error(`No accepted release in ${source.id}`);
+      // A promotion takes the source's accepted selection (M2).
       result = await client.createDeployment({
         requestId: requestId(),
         environmentId: destination.id,
         sourceEnvironmentId: source.id,
-        versionSetRevisionId: source.acceptedVersionSetRevisionId,
         expectedGeneration: expectedGeneration(destination.generation),
         kind: "promote",
       });

@@ -122,6 +122,7 @@ describe("Delivery API authorization and kill switch", () => {
         environmentId: fixture.environment.id,
         versionSetRevisionId: fixture.versionSet.id,
         expectedGeneration: 0,
+        kind: "deploy",
       }),
     });
     expect(response.status).toBe(503);

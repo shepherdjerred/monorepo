@@ -143,6 +143,8 @@ describe("PostgreSQL delivery invariants 2.2", () => {
       where: { id: context.fixture.environment.id },
       data: { declaredConfigurationId: "config/2" },
     });
+    // A deploy keeps the accepted selection's configuration; the declared
+    // revision reaches the environment only through a rebind (L2).
     const next = await context.delivery.createDeployment(
       { ...context.input("next"), expectedGeneration: 1 },
       testOperator,
@@ -155,9 +157,23 @@ describe("PostgreSQL delivery invariants 2.2", () => {
     expect(snapshot.previousAcceptedVersionSet?.id).toBe(
       context.fixture.versionSet.id,
     );
-    expect(snapshot.configuration).toMatchObject({
-      id: "config/2",
-      content: { mode: "next" },
+    expect(snapshot.configuration.id).toBe(first.configurationId);
+    await context.delivery.cancel(next.id, testOperator);
+    const rebind = await context.delivery.createDeployment(
+      {
+        requestId: "rebind",
+        environmentId: context.fixture.environment.id,
+        expectedGeneration: 1,
+        kind: "rebind",
+        configurationRevisionId: "config/2",
+      },
+      testOperator,
+    );
+    expect(rebind).toMatchObject({
+      kind: "rebind",
+      versionSetRevisionId: context.fixture.versionSet.id,
+      configurationId: "config/2",
+      previousAcceptedDeploymentId: first.id,
     });
   });
   test("Scout production approval is human-only and bound to the frozen generation", async () => {
